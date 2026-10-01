@@ -63,8 +63,26 @@
  *     means reusing `nextState`, which is a larger change than a measurement
  *     correction and would itself need re-measuring.
  *
+ *   · THE RETRY-CONDITIONED RE-REFUSAL SHARE, which every bullet above is
+ *     silent about because until 2026-09-30 nothing produced it. It does NOT
+ *     come from the corpus: it is read from the gate's own shadow records under
+ *     `agents/runtime/state/turn-end-gate/*.shadow.json`, written live on an
+ *     allow path by the instrument `turn-end-detector-demotion.md` registers as
+ *     instrument 1. Reported per LAYER and then per detector, never pooled, and
+ *     never as `0.0%` where it has no denominator — see `renderQ1`.
+ *   · It does NOT print that contract's **Q1**, and the distinction is in the
+ *     report's own header rather than only here. Q1 conditions BOTH its halves
+ *     on the detector; the shadow record cannot, because it never stores which
+ *     refusal produced a retry. The two disagree in direction and neither
+ *     bounds the other, so no number this prints may be read against a bar.
+ *   · It does not report promissory, completion or untested at all. Those three
+ *     are skipped by the gate when a dispatch is open and the shadow record
+ *     carries no dispatch flag, so their denominators would absorb silences
+ *     nobody observed. The contract's attribution clause already forbids it.
+ *
  * Usage:
  *   ./scripts-run src/scripts/measure_turn_end_gate --store <dir> [--limit N] [--show-fires]
+ *   ./scripts-run src/scripts/measure_turn_end_gate --q1 [--workspace <dir>]
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -82,6 +100,14 @@ import {
     extractToolCalls,
     type ToolCall,
 } from './hooks/turn_end_gate_hook.js';
+import {
+    DETECTOR_IDS,
+    DISPATCH_CENSORED_DETECTORS,
+    SHADOW_LAYERS,
+    collectShadowStats,
+    retryConditionedShare,
+    type ShadowStats,
+} from './_lib/turn_end_refusals.js';
 
 interface Counts {
     /**
@@ -495,16 +521,169 @@ export function render(c: Counts): string {
     ].join('\n');
 }
 
+/** `n` with a unit that agrees with it. One place, so no line has to remember. */
+function plural(n: number, one: string, many = `${one}s`): string {
+    return `${String(n)} ${n === 1 ? one : many}`;
+}
+
+/**
+ * The retry-conditioned re-refusal share, read from the shadow records rather
+ * than from a transcript. `road-to-a-stop-that-holds` step 2.2; the producer is
+ * step 2.1.
+ *
+ * ```
+ * THIS IS NOT THE Q1 `turn-end-detector-demotion.md` REGISTERS BARS AGAINST,
+ * AND THE REPORT SAYS SO IN ITS OWN HEADER.
+ * ```
+ *
+ * The first version of this renderer called the number Q1 outright. An
+ * independent review (2026-10-01) showed the two are different quantities that
+ * disagree in direction, not one quantity with a looser denominator — see
+ * `retryConditionedShare` for the worked ten-retry example. The rename and this
+ * header are that finding, acted on rather than noted.
+ *
+ * A DIFFERENT SOURCE FROM EVERY OTHER NUMBER THIS SCRIPT PRINTS, which is why
+ * it is a separate renderer rather than another line in `render`. The fire
+ * rates above are replayed out of a transcript corpus; this comes out of
+ * `agents/runtime/state/turn-end-gate/*.shadow.json`, written live by the gate
+ * on an allow path. The two cannot be joined — a shadow record carries no
+ * transcript and a transcript carries no shadow record — so printing them from
+ * one `Counts` object would invite exactly the cross-instrument arithmetic R2
+ * finding 7 removed from the language totals.
+ *
+ * NULL IS PRINTED AS `—`, NEVER AS `0.0%`. The two mean opposite things and
+ * `retryConditionedShare` keeps them apart for that reason; collapsing them at
+ * the render layer would undo the distinction one line before a human reads it.
+ *
+ * THE RESOLVED WORKSPACE IS PRINTED, because the one failure mode here is quiet:
+ * `--workspace` takes any path, a worktree carries no `agents/runtime/`, and the
+ * report for a wrong directory is a confident "no shadow record". A reading
+ * pasted into an evidence file must carry the directory that produced it.
+ */
+export function renderQ1(stats: ShadowStats, today: string, workspace?: string): string {
+    const lines: string[] = [
+        `measure-turn-end-gate · retry-conditioned re-refusal share · ${plural(stats.files, 'shadow record')} · read ${today}`,
+        '  NOT the Q1 `turn-end-detector-demotion.md` registers bars against — see',
+        '  the note below the table before comparing any number here to a bar.',
+    ];
+    if (workspace !== undefined) {
+        lines.push(`  workspace: ${path.resolve(workspace)}`);
+    }
+    lines.push('');
+    if (stats.files === 0) {
+        lines.push(
+            '  No readable shadow record under this workspace. The share has no',
+            '  denominator and is not reported as zero — a gate that has never been',
+            '  retried is not a gate whose retries all came back clean.',
+        );
+        if (stats.unreadable > 0) {
+            lines.push(
+                '',
+                `  ${plural(stats.unreadable, 'shadow file')} present but UNREADABLE, so "none" above`,
+                '  means none could be parsed rather than none exists. That is a defect to',
+                '  investigate, not an empty sample.',
+            );
+        }
+        return lines.join('\n');
+    }
+    for (const layer of SHADOW_LAYERS) {
+        const bucket = stats.byLayer.find((b) => b.layer === layer);
+        if (bucket === undefined) continue;
+        lines.push(
+            `  layer ${layer} — ${plural(bucket.retries, 'retry', 'retries')} observed, ${plural(bucket.rows, 'shadow row')}`,
+        );
+        if (bucket.retries === 0) {
+            lines.push('    (no retry on this layer; every share below would have no denominator)');
+        }
+        for (const id of DETECTOR_IDS) {
+            if (DISPATCH_CENSORED_DETECTORS.has(id)) {
+                lines.push(`    ${id.padEnd(17)} censored   (dispatch-suppressed retries are indistinguishable)`);
+                continue;
+            }
+            const share = retryConditionedShare(stats, layer, id);
+            // A dash denies a measurement; a count beside it reads like one. The
+            // `(0 / 0)` the first version printed there was the denial and the
+            // measurement on the same line.
+            if (share === null) {
+                lines.push(`    ${id.padEnd(17)}      —`);
+                continue;
+            }
+            const shown = `${(100 * share).toFixed(1)}%`.padStart(6);
+            lines.push(`    ${id.padEnd(17)} ${shown}   (${String(bucket.byDetector[id])} / ${String(bucket.retries)})`);
+        }
+        lines.push('');
+    }
+    lines.push(
+        '  WHAT THIS IS, precisely, because the contract defines a DIFFERENT number',
+        '  under a similar name. Printed here: of the retries observed on a layer,',
+        "  the share a detector would have refused. The contract's Q1: of a",
+        "  DETECTOR'S OWN initial refusals, the share whose retry that same detector",
+        '  refuses again. Both halves of the contract definition are conditioned on',
+        '  the detector; neither half here is, because `ShadowRecord` does not record',
+        '  which refusal produced a retry. The two disagree in direction and neither',
+        '  bounds the other, so no number above may be read against a bar in',
+        "  `turn-end-detector-demotion.md` § The bars. Closing that needs the",
+        '  PRODUCER to record the originating detector.',
+        '',
+        '  THREE DETECTORS ARE CENSORED, and the contract requires it rather than',
+        '  this renderer choosing it. `runDetectors` skips promissory, completion and',
+        "  untested when a dispatch is open, and the shadow record carries no dispatch",
+        '  flag — so those retries would enter their denominators as observations of',
+        '  silence that nobody made. The attribution clause already forbids reporting',
+        '  a detector a rollup cannot separate that way.',
+        '',
+        '  GROUPED BY LAYER FIRST, and the grouping is load-bearing rather than',
+        '  cosmetic. A `stop_hook_active` retry follows ANY stop concern\'s block, not',
+        '  only this gate\'s, so a pooled share divides another concern\'s retries into',
+        '  this gate\'s refusals. `retries_observed` is keyed by layer so the',
+        '  denominator splits with the numerator.',
+        '',
+        '  TWO FURTHER BOUNDS ON EVERY NUMBER ABOVE, both properties of the instrument:',
+        '    1. A retry whose transcript is absent, oversized or textless records',
+        '       NOTHING — no row and no retry. Numerator and denominator shrink',
+        '       together, so each share is an UPPER bound, never a point estimate.',
+        '    2. On a host that sends no `session_id` every session shares one record.',
+        '       The record count above is FILES; it equals sessions only where the',
+        '       host sends an id.',
+        '',
+        '  A share above may be well-formed and still unreadable as a rate if the',
+        '  record count is small. The count is printed first for that reason.',
+    );
+    if (stats.dropped > 0) {
+        lines.push(
+            '',
+            `  ${plural(stats.dropped, 'row')} dropped to the per-session cap: every numerator above is a FLOOR.`,
+        );
+    }
+    if (stats.unreadable > 0) {
+        lines.push(
+            '',
+            `  ${plural(stats.unreadable, 'shadow file')} present but unreadable — same reading, same direction.`,
+        );
+    }
+    if (stats.earliest !== null && stats.latest !== null) {
+        lines.push('', `  Window observed: ${stats.earliest} … ${stats.latest}`);
+    }
+    return lines.join('\n');
+}
+
 export function main(argv: string[] = process.argv.slice(2)): number {
     let store = '';
     let limit = 30;
     let showFires = false;
+    let q1Only = false;
+    let workspace = process.cwd();
     for (let i = 0; i < argv.length; i += 1) {
         if (argv[i] === '--store' && argv[i + 1] !== undefined) {
             store = argv[i + 1]!;
             i += 1;
         } else if (argv[i] === '--show-fires') {
             showFires = true;
+        } else if (argv[i] === '--q1') {
+            q1Only = true;
+        } else if (argv[i] === '--workspace' && argv[i + 1] !== undefined) {
+            workspace = argv[i + 1]!;
+            i += 1;
         } else if (argv[i] === '--limit' && argv[i + 1] !== undefined) {
             // R2 finding 15: an unvalidated parseInt made `--limit abc` yield
             // NaN, `slice(0, NaN)` return nothing, and the script exit 2 with
@@ -521,6 +700,16 @@ export function main(argv: string[] = process.argv.slice(2)): number {
             i += 1;
         }
     }
+    const today = new Date().toISOString().slice(0, 10);
+    // `--q1` needs no transcript corpus: the shadow records are the source, and
+    // requiring a `--store` for them would make the one reading this roadmap
+    // asks for contingent on an unrelated input. Deliberately NOT a silent
+    // default of the store path — a reading over the wrong workspace is the
+    // failure mode here, and it is quiet.
+    if (q1Only) {
+        process.stdout.write(`${renderQ1(collectShadowStats(workspace), today, workspace)}\n`);
+        return 0;
+    }
     if (!store) {
         process.stderr.write('measure-turn-end-gate: --store <transcript dir> is required\n');
         return 2;
@@ -533,6 +722,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
         return 2;
     }
     process.stdout.write(`${render(counts)}\n`);
+    // Q1 rides on the default report because step 2.2 asks that
+    // `measure_turn_end_gate` PRINT it, not that it offer to. A reader who
+    // never learns the flag exists still sees the number.
+    process.stdout.write(`\n${renderQ1(collectShadowStats(workspace), today, workspace)}\n`);
     if (showFires) {
         process.stdout.write(`\n  detector F fired here — read these turns before\n  calling any of them a false positive:\n${renderFires(counts)}\n`);
         process.stdout.write(`\n  detector E fired here — same reading, same reason:\n${renderDroppedFires(counts)}\n`);

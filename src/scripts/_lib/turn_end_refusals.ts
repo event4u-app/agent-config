@@ -7,14 +7,24 @@
  * none, and a gate that blocks unobserved is the shape that discipline exists to
  * prevent.
  *
- * This module is the reader. It owns three things and deliberately not a fourth:
+ * This module is the reader. It owns five things and deliberately not a sixth:
  *
  *   1. the on-disk record shape, extended so a session's refusals are COUNTED
  *      rather than overwritten (§ Phase 1 step 1.1);
  *   2. a TTL prune, which the gate's own header admits is missing (step 1.2);
  *   3. the split by recorded package version, so claim 10's prediction — that
  *      refusals correlate with the local 12.1 install — is TESTED rather than
- *      assumed (step 1.3).
+ *      assumed (step 1.3);
+ *   4. the SHADOW record — what a retry would have been refused for, written on
+ *      an allow path (`road-to-a-stop-that-holds` step 2.1);
+ *   5. the rollup over those records (step 2.2). Read `ShadowLayerStats` before
+ *      quoting anything it produces: the share it computes is NOT the Q1 the
+ *      demotion contract registers bars against, and the difference is named
+ *      there rather than left to a reader of the number.
+ *
+ * (This list read "three things and deliberately not a fourth" until 2026-10-01.
+ * It was accurate when written and silently false for the two steps after it —
+ * an independent review caught it. Items 4 and 5 are the two that landed.)
  *
  * The fourth thing it does not own is a **rate over all sessions**, and the
  * reason is structural rather than an omission. A record is written only when a
@@ -825,4 +835,224 @@ export function collectRefusalStats(workspaceRoot: string): RefusalStats {
     stats.byPeriod = [...periods.values()].sort((a, b) => (a.period < b.period ? 1 : -1));
     stats.byVersion = [...versions.values()].sort((a, b) => (a.version < b.version ? 1 : -1));
     return stats;
+}
+
+// ---------------------------------------------------------------------------
+// Q1 — the shadow rollup (step 2.2)
+// ---------------------------------------------------------------------------
+
+/**
+ * One layer's Q1 inputs, kept as counts so the ratio is computed where it is
+ * read rather than stored.
+ *
+ * SPLIT BY LAYER BEFORE DETECTOR, and that order is the shape's whole point
+ * rather than a presentation choice. A `stop_hook_active` retry follows ANY
+ * stop concern's block — not only this gate's — so pooling the two layers
+ * divides another concern's retries into this gate's refusals and calls the
+ * result a re-refusal share. `ShadowRecord.retries_observed` is keyed the same
+ * way so the denominator splits with the numerator; an independent review
+ * found the first version pooling the denominator, which left the per-layer
+ * ratio uncomputable even though every row already carried its `layer`.
+ */
+export interface ShadowLayerStats {
+    layer: ShadowLayer;
+    /**
+     * Retries observed on this layer across every readable record — the
+     * denominator, counting retries that came back CLEAN as well as refusing
+     * ones. A clean retry writes no row, so without this a zero numerator and
+     * "no retry happened" are the same empty list.
+     */
+    retries: number;
+    /** Shadow rows on this layer, by detector — the numerators. */
+    byDetector: DetectorCounts;
+    /**
+     * Rows on this layer, summed.
+     *
+     * MAY EXCEED `retries`, legitimately: one retry that would have been
+     * refused by two detectors writes two rows, and the demotion contract's
+     * attribution rule counts it once for each. A per-detector ratio stays
+     * within [0, 1]; this total is not a share and is printed as a count.
+     */
+    rows: number;
+}
+
+/**
+ * Rollup over every session's shadow record under a workspace.
+ *
+ * Two bounds travel with every number this carries. Both are properties of the
+ * instrument rather than of a particular reading, both are stated on
+ * `ShadowRecord`, and both are repeated here because a consumer reads this
+ * type and not that comment:
+ *
+ *   - A retry whose transcript is unreadable or oversized records NOTHING —
+ *     no row and no retry. The denominator shrinks with the numerator, so a
+ *     Q1 read off this is an UPPER bound rather than a point estimate.
+ *   - On a host that sends no `session_id`, every session shares one record
+ *     and one counter. `files` below then counts FILES and not sessions, and
+ *     a reader taking one for the other over-states the sample.
+ */
+export interface ShadowStats {
+    /**
+     * Shadow FILES parsed. Deliberately not named `sessions`: one file is one
+     * session only on a host that sends a `session_id`.
+     */
+    files: number;
+    /** Files present but unparseable. A non-zero value makes every rate a floor. */
+    unreadable: number;
+    /**
+     * Rows dropped to `SHADOW_MAX_ROWS`, summed. Non-zero means the row arrays
+     * are samples of their own sessions and every numerator is a floor.
+     */
+    dropped: number;
+    byLayer: ShadowLayerStats[];
+    earliest: string | null;
+    latest: string | null;
+}
+
+/** A zeroed rollup, DERIVED from `SHADOW_LAYERS` for the reason `emptyCounts` gives. */
+export function emptyShadowStats(): ShadowStats {
+    return {
+        files: 0,
+        unreadable: 0,
+        dropped: 0,
+        byLayer: SHADOW_LAYERS.map((layer) => ({
+            layer,
+            retries: 0,
+            byDetector: emptyCounts(),
+            rows: 0,
+        })),
+        earliest: null,
+        latest: null,
+    };
+}
+
+/**
+ * Aggregate every shadow record under a workspace.
+ *
+ * Reads through `parseShadowRecord`, never by hand: the gate writes these
+ * files, and a reader carrying its own idea of their shape is how a producer
+ * and a consumer drift apart — the exact seam the 2026-09-30 review round
+ * found uncrossed between the verification recorder and its classifier.
+ */
+export function collectShadowStats(workspaceRoot: string): ShadowStats {
+    const dir = refusalStateDir(workspaceRoot);
+    const stats = emptyShadowStats();
+    const byLayer = new Map(stats.byLayer.map((b) => [b.layer, b]));
+    let entries: string[];
+    try {
+        entries = fs.readdirSync(dir);
+    } catch {
+        return stats;
+    }
+    for (const name of entries) {
+        if (!name.endsWith(SHADOW_SUFFIX)) continue;
+        let rec: ShadowRecord | null = null;
+        try {
+            rec = parseShadowRecord(fs.readFileSync(path.join(dir, name), 'utf-8'));
+        } catch {
+            rec = null;
+        }
+        if (rec === null) {
+            stats.unreadable += 1;
+            continue;
+        }
+        stats.files += 1;
+        stats.dropped += rec.dropped;
+        for (const layer of SHADOW_LAYERS) {
+            const bucket = byLayer.get(layer);
+            if (bucket !== undefined) bucket.retries += rec.retries_observed[layer] ?? 0;
+        }
+        for (const row of rec.would_refuse_again) {
+            const bucket = byLayer.get(row.layer);
+            if (bucket === undefined) continue;
+            bucket.byDetector[row.detector] += 1;
+            bucket.rows += 1;
+        }
+        // EMPTY STRINGS ARE SKIPPED, NOT COMPARED. `parseShadowRecord` coerces a
+        // missing `first_at` to `''`, and `'' < <any ISO stamp>` is true, so a
+        // record lacking the field would win the earliest comparison and the
+        // report would print an empty window start beside a real end. An absent
+        // timestamp is not an earlier one.
+        if (rec.first_at !== '' && (stats.earliest === null || rec.first_at < stats.earliest)) {
+            stats.earliest = rec.first_at;
+        }
+        if (rec.last_at !== '' && (stats.latest === null || rec.last_at > stats.latest)) {
+            stats.latest = rec.last_at;
+        }
+    }
+    return stats;
+}
+
+/**
+ * Detectors whose share may NOT be reported off a shadow rollup, because the
+ * record cannot tell a dispatch-suppressed retry from a clean one.
+ *
+ * `runDetectors` in `turn_end_gate_hook.ts` skips A, D and F when a subagent
+ * dispatch is open — they did not run, so the turn is not an observation of
+ * them staying silent. `recordShadow` then increments `retries_observed`
+ * unconditionally and writes no dispatch flag, so every dispatch-suppressed
+ * retry lands in those three denominators as a "would not have refused" that
+ * nobody observed. In a suite whose delegation policy dispatches by default
+ * that is not a rare branch.
+ *
+ * The demotion contract already forbids publishing it: *"A rollup that cannot
+ * tell a dispatch-suppressed turn from a clean one may not report Q2 for A or
+ * D at all."* This set is that clause applied to the shadow rollup, extended to
+ * F — the contract's attribution paragraph names only A and D because it
+ * predates F, while its own § The six detectors table and the gate both gate
+ * all three. The wider set is the safe reading of a censoring rule.
+ *
+ * Closing this needs a `dispatch_open` flag on the shadow row, which is a
+ * PRODUCER change. Until then these three are censored rather than estimated.
+ */
+export const DISPATCH_CENSORED_DETECTORS: ReadonlySet<RefusalDetectorId> =
+    new Set<RefusalDetectorId>(['promissory', 'completion', 'untested']);
+
+/**
+ * The **retry-conditioned re-refusal share** for one detector on one layer, or
+ * `null` when the layer observed no retry.
+ *
+ * ```
+ * THIS IS NOT THE Q1 `turn-end-detector-demotion.md` REGISTERS BARS AGAINST.
+ * NEVER COMPARE IT TO A BAR IN THAT TABLE.
+ * ```
+ *
+ * The contract defines Q1 as *"of **a detector's** eligible initial refusals,
+ * the share whose immediate retry is refused again by the same detector"*. Both
+ * halves of that are conditioned on the detector. This function conditions
+ * NEITHER: the denominator is every retry observed on the layer, whatever
+ * refusal produced it, and the numerator is every row where this detector would
+ * have fired, whatever refusal produced the retry.
+ *
+ * **They disagree in direction, so this is not a bound either.** Take ten
+ * retries on a layer, nine following `verification` refusals and one following
+ * a `language` refusal, with one `language` row. The contract's Q1 for B is
+ * 1/1 = 100 % — bar crossed, a demotion study authorised. This function returns
+ * 1/10 = 10 % — bar not crossed. Opposite verdicts on identical evidence. The
+ * numerator can also run the other way, since a `language` row on a retry that
+ * followed a `verification` refusal counts here and does not count there.
+ *
+ * **Why it is shaped this way, which is a producer limit rather than a choice.**
+ * `ShadowRecord` carries no originating detector: `retries_observed` is keyed by
+ * layer alone and a row records only what WOULD fire, never what did. The
+ * session's `RefusalRecord` holds per-detector COUNTS for the whole session and
+ * `refused_turn` for the last refused turn, so the per-turn origin needed to
+ * condition this denominator is not on disk anywhere. Computing the registered
+ * Q1 needs the producer to record it; that is named as the open residue on
+ * `road-to-a-stop-that-holds` step 2.2 rather than papered over here.
+ *
+ * `null` RATHER THAN ZERO on an empty denominator, and that distinction is why
+ * `retries_observed` exists at all: zero means "retries happened and this
+ * detector would not have refused any of them", a finding about the detector,
+ * while null means "nothing was observed", a finding about the sample.
+ * Collapsing them publishes the second as the first.
+ */
+export function retryConditionedShare(
+    stats: ShadowStats,
+    layer: ShadowLayer,
+    detector: RefusalDetectorId,
+): number | null {
+    const bucket = stats.byLayer.find((b) => b.layer === layer);
+    if (bucket === undefined || bucket.retries === 0) return null;
+    return bucket.byDetector[detector] / bucket.retries;
 }

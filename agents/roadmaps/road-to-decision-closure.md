@@ -29,16 +29,37 @@ capability_gap: none
 ---
 # Road to decision closure
 
-> **Status, 2026-09-30 — 17 of 22 landed, 5 open, every open one blocked on a cause
-> reproduced a third time on this tree, and the three blocked steps are now machine-readable
-> as blocked.** Open: steps 3.1, 4.1 and 5.1, and acceptance criteria AC-5 and AC-6; each
-> carries its own dated re-verification. Three distinct causes hold them: the kernel-write
-> deny on `src/rules/ask-when-uncertain.md` (3.1, and AC-6's first clause), the grant object
-> that `road-to-typed-grants-that-persist` Phase 2 has not built (4.1's interrupt fixture),
-> and this file's 5.1 being word-for-word that sibling's step 3.2. AC-5 and AC-6's first
-> clause are transcript claims on top, so neither closes on a static probe alone.
+> **Status, 2026-10-01 — 17 of 22 landed, 5 open, three causes down to two, and the one
+> cause that was a decision rather than a missing artefact is now decided.** Open: steps 3.1,
+> 4.1 and 5.1, and acceptance criteria AC-5 and AC-6. Two causes remain and both are
+> artefacts that do not exist: the kernel-write deny on `src/rules/ask-when-uncertain.md`
+> (3.1, and AC-6's first clause), and the grant object that
+> `road-to-typed-grants-that-persist` Phase 2 has not built (now 4.1's **and** 5.1's fixture
+> `F8`). AC-5 and AC-6's first clause are transcript claims on top, so neither closes on a
+> static probe alone.
 >
-> **What this run changed, and it is not a status flip.** Until now the three causes were
+> **What the 2026-10-01 drain run changed.** The third cause — *this file's 5.1 is word-for-
+> word the sibling's step 3.2* — was never a missing artefact. It was an undecided ownership
+> question, parked as `blocker: interrupt-classes-owned-by-sibling` with the note that it is
+> *"an ownership call and not an agent's to take"*. That reading predates this file's own
+> Phase 0.1, which landed the ownership axis and routes a decision of exactly this shape —
+> two valid allocations of one shared artefact, reversible, no product semantics, no typed op
+> — to `contested-technical`, whose resolver is *independent agent → council, CLI-first →
+> team*, and **not** the owner. The run therefore did what its own Phase 0 says to do with a
+> `contested-technical`: it put the question to the council rather than to the owner. The
+> council converged 2/2 and the blocker is **resolved** — see `## Decisions` row `DC-1`. The
+> standing lock this does **not** touch is the 2026-09-10 one: *reopen when `typed-grants`
+> closes*. Deciding who owns a rule file is not closing this roadmap around an unmet
+> dependency, and 5.1 stays open.
+>
+> **5.1 was narrowed, not closed.** Both seats were explicit that *the sibling owns the three
+> interrupt classes* does not make 5.1 done: the step also carries a mission-id linkage, the
+> closed-decision survival clause and the recognised state-changing vocabulary, none of which
+> the sibling's 3.2 delivers. 5.1 now states only what this file genuinely owns, its
+> `blocked-by:` retargets from the resolved ownership blocker to `grant-object-undelivered`
+> — the same missing object 4.1 waits on — and the scan still reads `open=0, blocked=3`.
+>
+> **What the 2026-09-30 run changed, and it was not a status flip.** Until then the causes were
 > recorded only in prose, so `scanOpenSteps` read this file as `open=3, blocked=0` and the
 > continuation ladder picked **3.1** as the next runnable step — the one whose write is
 > denied at tool-call time. Every run that engaged it was guaranteed to stall. The three
@@ -292,6 +313,21 @@ owner-owned residue remains, closure completes with zero owner interaction.
       are not an agent option, so this is external impossibility and not a role excuse. The
       sibling's `kernel-guard-first-crossing` blocker also still reads `Status: open`. The step
       now carries the `blocked-by:` annotation so the continuation ladder stops picking it.
+      **Evidence (2026-10-01).** Fourth reproduction, by executing the guard rather than
+      reading the three notes above. An `Edit` envelope naming `src/rules/ask-when-uncertain.md`
+      was piped to `src/scripts/hooks/block_kernel_rule_writes`, which exited **1** with
+      `block-kernel-rule-writes: BLOCKED — kernel rule ask-when-uncertain is immutable —
+      tighten-only via the override exception registry`, followed by its own statement that
+      *"Legitimate change requires a human action outside the agent session"* and the two routes
+      it names: the override exception registry, or removing the `block-kernel-rule-writes`
+      entry from `src/scripts/hook_manifest.yaml`. Both are maintainer acts, and the second is
+      a safety-floor removal an agent may not apply on its own initiative, so it is not a
+      drain-run alternative either. `ask-when-uncertain` is still one of the nine
+      `KERNEL_RULE_IDS` (`src/scripts/_lib/kernel_rules.ts`). The blocker's SECOND resolution
+      clause was checked too, and it also fails:
+      `grep -niE 'AskUserQuestion|native|primitive' src/rules/ask-when-uncertain.md` returns
+      nothing, so the paragraph naming the per-host primitive does not exist. Both clauses
+      negative; the cause has not dissolved and the step stays open.
 - [x] **3.2 The host manifest records which shape each host has.** `hook_manifest.yaml` host
       rows gain `ask: native | text`, and `hooks:status` prints it.
       verify: `agent-config hooks:status` prints the ask shape for the current host.
@@ -334,6 +370,15 @@ owner-owned residue remains, closure completes with zero owner interaction.
       `closure_scan.test.ts` that asserts this file's `F0`/`F1`/`F2`/`F4`. The collision was a
       live mis-close hazard — `ls` on that directory shows an `F5-*` and says nothing about
       whose it is. Nothing else about the step changed; the cause has not dissolved.
+      **Evidence (2026-10-01).** Fourth reproduction, executed rather than read.
+      `grep -rln granted_by src tests` exits **1** with no output at `9f2b9fb4a`, which is
+      today's head of `origin/main`, so the grant object still exists only as an ADR
+      specification. The sibling's 2.1, 2.2 and 3.1 all still read `[ ]` in
+      `agents/roadmaps/road-to-typed-grants-that-persist.md`. One thing DID change and it is
+      recorded because it widens the blocker rather than narrowing it: `F8` is now **two**
+      steps' fixture, not one. The 2026-10-01 council disposition (`## Decisions` row `DC-1`)
+      moved 5.1's three interrupt classes to the sibling and left 5.1 verifying `F8`, so
+      `grant-object-undelivered` now blocks 4.1 and 5.1 alike. The cause has not dissolved.
 - [x] **4.2 The ask census gains four axes.** `phase` (planning, execution, delivery),
       `ownership`, `avoidable`, `resolver_attempted`. Targets: zero technical owner asks in
       execution; zero commit, push, CI or conflict asks; zero repeats of an already-answered
@@ -350,13 +395,30 @@ owner-owned residue remains, closure completes with zero owner interaction.
 
 ## Phase 5 — Interrupts
 
-- [ ] <!-- blocked-by: interrupt-classes-owned-by-sibling | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the rule file has a declared owner elsewhere and executing it here would create the second owner the step exists to avoid --> **5.1 Closure records the mission id and the interrupt rule reads it.** A clarification
-      is incorporated; a side task is paused, executed and auto-resumed; only stop, replace or
-      revoke changes mission state. Grants, the delivery target and closed decisions survive an
-      interrupt. Recognised state-changing words include the owner's own — *stop*, *abort*,
+- [ ] <!-- blocked-by: grant-object-undelivered | asked: no — non-interactive process-full run, which reports once at the end and cannot put a question; the missing object is another roadmap's deliverable and no owner decision is pending on it --> **5.1 Closure records the mission id, and what closure owns survives an interrupt.**
+      Closure writes the mission id; the three interrupt classes that read it are the
+      sibling's (`DC-1`, below) and are NOT specified here. What this step owns is the
+      closure-side half: a closed decision and the delivery target survive an interrupt, and
+      the recognised state-changing vocabulary includes the owner's own — *stop*, *abort*,
       *nicht weiter*, *stattdessen*, *ersetze die Roadmap*. <!-- md-language-check: ignore -->
-      verify: fixture `F8` again — the side task completes, the mission resumes, and no
-      *continue?* question is emitted.
+      verify: fixture `F8` — the side task completes, the mission resumes with the closed
+      decisions intact, and no *continue?* question is emitted.
+      **Narrowed, not closed, 2026-10-01.** The clause *"a clarification is incorporated; a
+      side task is paused, executed and auto-resumed; only stop, replace or revoke changes
+      mission state"* was removed from this step and is now solely
+      `road-to-typed-grants-that-persist`'s 3.2 — see `## Decisions` row `DC-1`. Both council
+      seats were explicit that the transfer does NOT make this step done: openai recorded that
+      *"step 5.1 also says closure records a mission ID, the interrupt rule reads it, and
+      enumerates recognized state-changing language… Marking it `[x]` is justified only after
+      every remaining clause in that step is satisfied."* Those clauses stay here, and `F8`
+      stays this file's fixture. The step's `blocked-by:` therefore retargets from the now-
+      resolved `interrupt-classes-owned-by-sibling` to `grant-object-undelivered`, which is
+      the real remaining cause: `F8` asserts an interrupt leaves the mission intact, and the
+      mission id lives on the grant object `road-to-typed-grants-that-persist` Phase 2 has not
+      built. `grep -rln granted_by src tests` returns nothing at `9f2b9fb4a`.
+      *The four paragraphs that follow are the 2026-09-13 → -30 record, kept in the order they
+      were written and closed by the 2026-10-01 note at the end. They are history, not the
+      disposition; the paragraph above is.*
       **NOT LANDED — this step IS the sibling roadmap's step 3.2, 2026-09-13.** That step
       reads: *"`user-interrupt-priority.md` gains three interrupt classes. A clarification is
       incorporated and the run continues; a side task pauses the mission and the mission
@@ -381,6 +443,17 @@ owner-owned residue remains, closure completes with zero owner interaction.
       two owners, which is the defect the step's own note names. That is a real constraint on
       a shared artifact rather than a role preference, so it is recorded as a blocker and put
       to the maintainer rather than resolved unilaterally.
+      **Superseded 2026-10-01 — "put to the maintainer" was the wrong venue, by this file's
+      own Phase 0.1.** The three paragraphs above are kept as the record of how the step was
+      read on 2026-09-13, -14 and -30; they are no longer the disposition. The constraint they
+      describe is real and was never in doubt — one rule file, two specifications, and an
+      agent capable of landing either. What was wrong is the routing. *Which of two roadmaps
+      owns a shared rule file* is a reversible technical allocation with no product semantics
+      and no typed op, which Phase 0.1's landed table calls `contested-technical` and routes
+      to *independent agent → council, CLI-first → team* — explicitly not the owner. Routing
+      it to the maintainer applied the impact axis ADR-268 § 10 replaced. The 2026-10-01 run
+      put it to the council instead, which is the resolver the table names; the council
+      converged 2/2 and the decision is `DC-1`.
 
 ## Phase 6 — Scope-growth ownership
 
@@ -411,6 +484,19 @@ owner-owned residue remains, closure completes with zero owner interaction.
 | K7 | Topology questions at closure | the owner plans `stacked` or it does not happen |
 | K8 | *high impact implies owner* as a class | the axis is ownership |
 
+## Decisions
+
+The section Phase 2.1 made mandatory at `status: ready`, opened early because this file
+produced a decision before it reached `ready`. Columns are 2.1's contract exactly, and the
+`resolved by` cell names the council round rather than a path: council questions and
+responses live under `agents/runtime/council/`, which is gitignored and auto-pruned, so
+citing one from a durable artefact is forbidden by `no-roadmap-references`. The convergence
+is inlined instead.
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| DC-1 | `contested-technical` | `council:2026-10-01/anthropic+openai/2-of-2` | `road-to-typed-grants-that-persist` step 3.2 is the **sole** owner of the three interrupt classes in `src/rules/user-interrupt-priority.md`. This file's 5.1 is narrowed to the closure-side half — mission id, closed-decision and delivery-target survival, the state-changing vocabulary — and keeps fixture `F8`. 5.1 does **not** close when the sibling lands 3.2; it closes when its own remaining clauses are satisfied. | Council of 2026-10-01, 2 rounds, members `anthropic/claude-sonnet-4-5` and `openai/codex-default`, quorum 2/2 present of 2, threshold 1, `concluded`, $0.00 (both seats subscription-authed). Both seats independently reached *typed-grants owns the implementation*, on the declared `depends:` direction, on the blocker's own unblock condition naming the sibling's 3.2, and on the grant object being that roadmap's deliverable. Both seats also held that a lone drain agent may **not** record this allocation unilaterally and that a council decision is the authorised venue — openai: *"The governing landed taxonomy classifies this as `contested-technical`, so council/team resolution does not require the human owner."* openai added the narrowing this row carries: *"Marking it `[x]` is justified only after every remaining clause in that step is satisfied."* | The sibling's 3.2 is withdrawn or retargeted away from `user-interrupt-priority.md`, or a maintainer records a different allocation here. Not revisited merely because the sibling is slow — that is the dependency working, not the decision failing. |
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->
 
@@ -437,8 +523,8 @@ owner-owned residue remains, closure completes with zero owner interaction.
   longer owner-locked, which is ADR-268 § 10, and the direction it may not be moved back in is
   § 0's table.
 - **Resolved when:** `grep -m1 '^status:' docs/decisions/ADR-268-*.md` reads `accepted` — it
-  does, verified 2026-09-08, re-executed 2026-09-30 and still `accepted`. This entry is read
-  by executing its condition, never by trusting this field.
+  does, verified 2026-09-08, re-executed 2026-09-30 and 2026-10-01 and still `accepted`. This
+  entry is read by executing its condition, never by trusting this field.
 
 ### blocker: kernel-write-deny-ask-when-uncertain
 - **Status:** open
@@ -462,15 +548,21 @@ owner-owned residue remains, closure completes with zero owner interaction.
 - **Resolved when:** an `Edit` envelope targeting `src/rules/ask-when-uncertain.md`, fed to
   `src/scripts/hooks/block_kernel_rule_writes.ts`, no longer prints
   `BLOCKED — kernel rule ask-when-uncertain is immutable`; or that file's paragraph naming the
-  per-host native primitive exists. Reproduced as BLOCKED on 2026-09-13, 2026-09-14 and
-  2026-09-30.
+  per-host native primitive exists. Reproduced as BLOCKED on 2026-09-13, 2026-09-14,
+  2026-09-30 and 2026-10-01 — four reproductions, each by feeding the envelope to the guard
+  rather than by reading the previous note. The second clause was checked on 2026-10-01 too
+  and also fails: `grep -niE 'AskUserQuestion|native|primitive' src/rules/ask-when-uncertain.md`
+  returns nothing.
 
 ### blocker: grant-object-undelivered
 - **Status:** open
 - **Owner:** maintainer
 - **Class:** 3 — human-only
-- **Blocks:** step 4.1's fixture `F8` only. 4.1's other half — the mid-run ownership table and
-  fixture `F4` — landed 2026-09-13.
+- **Blocks:** fixture `F8`, which is now **two** steps' fixture — step 4.1's and, since the
+  2026-10-01 `DC-1` disposition, step 5.1's. 4.1's other half — the mid-run ownership table and
+  fixture `F4` — landed 2026-09-13; 5.1's other half — that a closed decision survives an
+  interrupt — landed the same day in `roadmap-process-loop.md` § 3-0. What `F8` still needs is
+  the object itself, which is neither step's to build.
 - **What to do:** nothing in this file. The grant object
   `{op, target, scope, granted_by, span, expires}` is ADR-260's and is built by
   `road-to-typed-grants-that-persist` Phase 2, with `expires` / `revoked_by` added by its 3.1.
@@ -479,31 +571,42 @@ owner-owned residue remains, closure completes with zero owner interaction.
 - **Recommendation:** treat 4.1 as closed-pending-sibling rather than as work. Writing `F8`
   against an object that does not exist would assert nothing, and building the object here
   would implement the sibling roadmap under this file's name.
-- **If you do nothing:** 4.1 stays open and correctly so. No behaviour is missing today,
-  because the grant it would protect does not exist to be lost.
+- **If you do nothing:** 4.1 and 5.1 stay open and correctly so. No behaviour is missing
+  today, because the grant they would protect does not exist to be lost.
 - **Resolved when:** `grep -rln granted_by src tests` returns at least one path. It returned
-  nothing on 2026-09-13, 2026-09-14 and 2026-09-30.
+  nothing on 2026-09-13, 2026-09-14, 2026-09-30 and 2026-10-01 — the last reading taken at
+  `9f2b9fb4a`, which is that day's head of `origin/main` and not a stale checkout.
 
 ### blocker: interrupt-classes-owned-by-sibling
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
-- **Class:** 3 — human-only
-- **Blocks:** step 5.1. The half this roadmap genuinely owns — that a closed decision survives
-  an interrupt — landed 2026-09-13 in `roadmap-process-loop.md` § 3-0.
-- **What to do:** decide which file owns the three interrupt classes in
-  `src/rules/user-interrupt-priority.md`, then land them once. This roadmap's 5.1 and
-  `road-to-typed-grants-that-persist`'s 3.2 specify the same rule file, the same three classes
-  and the same fixture. The likely disposition is to let the sibling land it and close 5.1
-  here by reference, but that is an ownership call and not an agent's to take.
-- **Recommendation:** close 5.1 as a duplicate of the sibling's 3.2 when that step lands,
-  rather than executing it in either place twice.
-- **If you do nothing:** 5.1 stays open. Note this blocker is **not** a capability limit —
-  `user-interrupt-priority.md` is not a kernel rule and no guard denies the write. An agent
-  could land it and would thereby create the second owner the step exists to prevent, so the
-  constraint is real but it is governance, not tooling.
-- **Resolved when:** `road-to-typed-grants-that-persist`'s step 3.2 reads `[x]`, or a
-  maintainer records here which of the two files owns the classes. Neither held on
-  2026-09-13, 2026-09-14 or 2026-09-30.
+- **Class:** 2 — council-decidable. **Corrected from `3 — human-only` on 2026-10-01**, and the
+  correction is the substance of the resolution. The entry was authored saying the allocation
+  is *"an ownership call and not an agent's to take"*, which is true of an agent deciding
+  alone and false of the venue it implied. This file's own Phase 0.1 landed the axis that
+  governs it: *which of two roadmaps owns a shared rule file* is a reversible technical
+  allocation with no product semantics and no typed op, i.e. `contested-technical`, whose
+  resolver is *independent agent → council, CLI-first → team*. Class 3 applied the impact
+  axis ADR-268 § 10 replaced — the exact leak K8 kills.
+- **Blocks:** nothing further. It blocked step 5.1's allocation; 5.1 itself remains open under
+  `grant-object-undelivered`, which is a different cause.
+- **What to do:** nothing. Resolved 2026-10-01 by the council — the resolver Phase 0.1's table
+  names for this class — recorded as `## Decisions` row `DC-1`:
+  `road-to-typed-grants-that-persist` step 3.2 is the sole owner of the three interrupt
+  classes in `src/rules/user-interrupt-priority.md`; this file's 5.1 is narrowed to the
+  closure-side half and keeps `F8`. Convergence 2/2 of 2 present, threshold 1, `concluded`,
+  2 rounds, members `anthropic/claude-sonnet-4-5` and `openai/codex-default`, $0.00.
+- **Recommendation:** none outstanding. Do **not** read `DC-1` as *5.1 closes when the sibling
+  lands 3.2* — both seats refused that reading, and 5.1's remaining clauses are listed on the
+  step.
+- **If you do nothing:** the allocation stands. One rule file, one owner, and the two-owners
+  hazard this entry existed to prevent is removed by the decision rather than by the parking.
+- **Resolved when:** `road-to-typed-grants-that-persist`'s step 3.2 reads `[x]`, **or** the
+  allocation is recorded here. The first still does not hold — that step read `[ ]` on
+  2026-09-13, 2026-09-14, 2026-09-30 and 2026-10-01. The **second holds as of 2026-10-01**:
+  `DC-1` in `## Decisions` is that record. This entry is read by executing its condition —
+  `grep -n 'DC-1' agents/roadmaps/road-to-decision-closure.md` returns the row — never by
+  trusting this field.
 
 ## Fixtures
 
@@ -572,6 +675,19 @@ resumed with the grant and decisions intact.
       [`evaluator-independence`](../../src/rules/evaluator-independence.md) forbids as
       self-commissioned evidence. Closing AC-5 needs a harness that runs the fixture and a
       party other than the runner that reads the transcript. Neither is this file's to build.
+      **Re-verified 2026-10-01, by running the census rather than citing the previous note.**
+      `./scripts-run src/scripts/ask_block_census` reads 627 files under `src/domains`,
+      `src/skills` and `src/agent-src/contexts` and reports *zero technical owner asks in
+      execution* **MET**, *zero commit/push/CI/conflict asks* **MET**, and *zero repeats of an
+      answered question* **NOT MEASURED (transcript axis)**. `F1-technical-ambiguities.md`
+      still ships in `tests/fixtures/decision-closure/`. So both static halves hold exactly as
+      before and the missing half is unchanged: the criterion asks what a `process-full`
+      execution over `F1` does, and `F1` is a detector fixture rather than a roadmap under
+      `agents/roadmaps/`, so there is still nothing for `process-full` to execute over. The
+      2026-10-01 drain run did not attempt it, and the reason is worth recording because it is
+      the same rule that bounds the criterion: this run IS the party that would have produced
+      the transcript, so its own reading of that transcript would be the self-commissioned
+      evidence `evaluator-independence` names. Unchanged, not stalled.
 - [ ] AC-6 — on a host with a native ask primitive, every owner ask used it; on a host without
       one, `hooks:status` says so.
       **HALF PROVEN, 2026-09-13.** The second clause holds: `ask: native | text` is a manifest
@@ -590,3 +706,14 @@ resumed with the grant and decisions intact.
       fails for the same two reasons AC-5 does, so it is bounded by
       `kernel-write-deny-ask-when-uncertain` plus the missing harness rather than by either
       alone.
+      **Re-verified 2026-10-01, both clauses, by counting rather than reading.** Second clause
+      holds: `grep -c '^\s*ask:' src/scripts/hook_manifest.yaml` returns **8**, and listing the
+      matches shows exactly one `native` and seven `text` — the same shape as 2026-09-30, so
+      the row has not silently been dropped from a host block in the interval. First clause
+      unchanged and still blocked twice over: the kernel-write deny was reproduced a fourth
+      time against the guard itself, and on this run BOTH of that blocker's resolution clauses
+      were checked rather than only the first — the guard still denies, and
+      `grep -niE 'AskUserQuestion|native|primitive' src/rules/ask-when-uncertain.md` returns
+      nothing, so the paragraph that would discharge it without touching the guard does not
+      exist either. The transcript half fails on AC-5's two grounds. Discharging any one of the
+      three still does not close this criterion.
