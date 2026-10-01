@@ -40,7 +40,7 @@ refuses.
 
 ## Phase 1 — Make the stale text true
 
-- [ ] **1.1 Correct the settings comment and the two prose mentions, keep the key.**
+- [x] **1.1 Correct the settings comment and the two prose mentions, keep the key.**
       The comment block above `code_graph: enabled: false`
       (`src/config/agent-settings.template.yml:1579-1606`) says the parser is a
       devDependency; `package.json:138` lists `web-tree-sitter` under `dependencies` and
@@ -53,24 +53,24 @@ refuses.
 
 ## Phase 2 — A hook that reaches the search, and a staleness that sees the edit
 
-- [ ] **2.1 Match `Bash` and read the command.** Add `Bash` to the matcher at
+- [x] **2.1 Match `Bash` and read the command.** Add `Bash` to the matcher at
       `hook_manifest.yaml:511` and to the pin test; in `classifyTool`
       (`code_graph_context_hook.ts:66-81`) treat a command whose head is `grep`, `rg`,
       `ag`, `find` or `git grep` as a structure search. Any other Bash command is silent
       and does not latch.
       verify: `npx vitest run tests/scripts/code_graph_context_hook.test.ts` -> 0
-- [ ] **2.2 Latch once per target, cap five per session.** Key the latch
+- [x] **2.2 Latch once per target, cap five per session.** Key the latch
       (`code_graph_context_hook.ts:88-114`) on the search token as well as the session,
       so the line fires once per distinct token, at most five times per session.
       verify: fixture — three distinct patterns yield three lines, the same pattern twice yields one, a sixth pattern yields none
-- [ ] **2.3 Staleness reports `edited` from `git status --porcelain`.** In `detect.ts`,
+- [x] **2.3 Staleness reports `edited` from `git status --porcelain`.** In `detect.ts`,
       after the commit count, a non-empty porcelain result over indexed paths yields a
       fourth state `edited` beside `fresh` / `behind:N` / `absent` (`:201`); `behind:0`
       stays the unknown-count fallback. The mtime variant is not used: restoring a
       stashed file rewrites its mtime and would never return to `fresh`.
       `corrected-from-reproduction`.
       verify: fixture in a temporary repository — modify an indexed file -> `edited`; revert with `git checkout -- <file>` -> `fresh`
-- [ ] **2.4 The MCP answers carry the new state.** `graph_tools.ts:258-260,287-289`
+- [x] **2.4 The MCP answers carry the new state.** `graph_tools.ts:258-260,287-289`
       already print `graphState`; add a fixture that the MCP `graph_query` envelope's
       `staleness` reads `edited`. The CLI `query` verb has no `--json`, so the supplied
       CLI verify was unexecutable. `corrected-from-reproduction`.
