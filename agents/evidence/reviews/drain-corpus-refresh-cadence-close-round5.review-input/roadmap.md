@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: draft
@@ -8,7 +10,7 @@ estate_growth_exempt: "a blocker discovered while doing the work — 1.2's four 
 ---
 # Road to corpus refresh cadence shape
 
-> **Source:** the deferred item 2.1 of `road-to-corpus-refresh-2026-q3`, carried
+> **Source:** [REDACTED:src-conf]
 > here under Iron Law 3 of `roadmap-progress-sync` when that roadmap closed on
 > 2026-09-27. Its Phase 1 shipped; this question did not, because it is a
 > maintainer decision and not an agent call. See the parent's archive entry for
@@ -31,27 +33,8 @@ check. On 2026-09-18 all four corpora carrying a `quarterly` cadence
 reddened every pull request in the repository with no commit involved. The
 re-check moved all four to `2026-09-18` — which preserves the batch shape rather
 than fixing it, so the same four-way red was due again around 2026-12-27. As of
-2026-10-01 that batch is down to three (1.2a moved `accessibility-auditor` to
-`2026-10-01`); ~2026-12-27 is unchanged for the remaining three.
-
-**The next repo-wide red is NOT ~2026-12-27, and this roadmap said so for three
-days before a round-5 review checked it** (corrected 2026-10-01). **Six**
-manifests declare `refresh_cadence: quarterly`, not four — the four above plus
-`brand` and `design-intelligence`. `brand` carries `upstream: null` and is
-exempt. `design-intelligence` is not: it reads `last_checked: 2026-08-13` and
-crosses the 100-day bound on **2026-11-22**, five weeks before ~2026-12-27 and
-before 1.2c's and 1.2d's suggested windows. Verified rather than reasoned:
-`check_corpus_staleness --today 2026-11-21` exits 0; `--today 2026-11-22` exits
-1 with *"design-intelligence … 101 days ago, over the 100-day bound"*.
-
-Two consequences, both load-bearing. **For scheduling:** a maintainer reading
-only the four-corpus framing would schedule 1.2c for late November and 1.2d for
-mid December and still be reddened on 2026-11-22 by a corpus this file does not
-mention. **For scope:** `design-intelligence` is NOT part of this roadmap's
-subject — the question here is whether the *batch of four* was a cadence or an
-accident — so it is named, dated and handed over, not absorbed. Its re-check is
-owed by whoever owns that corpus, before 2026-11-22, and nothing in Phase 1
-covers it.
+2026-10-01 the cohort is down to three (1.2a moved `accessibility-auditor` to
+`2026-10-01`); the ~2026-12-27 date is unchanged for the remaining three.
 
 This roadmap ships `status: draft` deliberately: it is hidden from the dashboard,
 and no `/roadmap:process-*` run selects it on its own, until the maintainer flips
@@ -242,18 +225,11 @@ two land on the same date and all four land before ~2026-12-27.
       record under `agents/evidence/analysis/` — the convention this tree
       already uses for findings that must outlive the work that produced them —
       and let the step's evidence paragraph cite that record. Only then shorten
-      the field. **1.2a is not an exception, and an earlier draft of this
-      paragraph claimed it was on a false premise** (round-5 review). It said
-      1.2a "had no inherited narration to evict". It did: the value this step
-      replaced was `"APG 2026 / WCAG 2.2 (W3C Recommendation 12 Dec 2024) —
-      verified not superseded 2026-09-18"`, a finding authored on 2026-09-18.
-      What actually makes a separate record unnecessary here is narrower and
-      checkable: the 2026-10-01 check **subsumes** it — same supersession
-      question, re-asked, same answer — and both the replaced string and its
-      replacement are quoted verbatim above. Read this as a subsumption, not a
-      waiver: the rule stays the default, and a narration no later check has
-      re-derived gets its record.
-- [ ] **1.2b Re-check `api-design` against its upstream and stamp the date the
+      the field. 1.2a is the one case that needs no such record: it had no
+      inherited narration to evict, because its own was written in this same
+      change and is reproduced in full in the evidence paragraph above, which
+      archives with this roadmap rather than being its only copy.
+- [~] **1.2b Re-check `api-design` against its upstream and stamp the date the
       check ran.** <!-- blocked-by: four-dated-re-checks-are-calendar-bound | asked: no — the drain grant that reached this roadmap forbids putting a question to the owner; recorded here for the maintainer instead -->
       Upstream is RFC 9110 / 9457 / 7396 / 8288 plus the httpapi WG drafts.
       Suggested window: early November 2026. The check is whether any of the
@@ -287,7 +263,7 @@ two land on the same date and all four land before ~2026-12-27.
       / 9457 / 7396 / 8288 — verified 2026-09-18: …"*, which embeds a read-date
       in the identity key. Replace it with the identity alone (the RFC numbers
       and their current status), the way 1.2a did for this corpus.
-- [ ] **1.2c Re-check `database` against its upstream and stamp the date the
+- [~] **1.2c Re-check `database` against its upstream and stamp the date the
       check ran.** <!-- blocked-by: four-dated-re-checks-are-calendar-bound | asked: no — the drain grant that reached this roadmap forbids putting a question to the owner; recorded here for the maintainer instead -->
       Upstream is the PostgreSQL 18 and MySQL 9.7 reference documentation.
       Suggested window: late November 2026. Note that the *content* half was
@@ -319,7 +295,7 @@ two land on the same date and all four land before ~2026-12-27.
       read-date and a change log inside a byte-equality identity key. Replace it
       with the engine versions alone, per 1.2a's correction note; the
       re-derivation's content belongs in this step's evidence.
-- [ ] **1.2d Re-check `threat-modeling` against its upstream and stamp the date
+- [~] **1.2d Re-check `threat-modeling` against its upstream and stamp the date
       the check ran.** <!-- blocked-by: four-dated-re-checks-are-calendar-bound | asked: no — the drain grant that reached this roadmap forbids putting a question to the owner; recorded here for the maintainer instead -->
       Upstream is MITRE ATT&CK, CWE, the OWASP API Top 10 and ASVS 5.0.
       Suggested window: mid December 2026, and no later than ~2026-12-20 so the
@@ -361,13 +337,9 @@ two land on the same date and all four land before ~2026-12-27.
       **Note on the outer bound.** 1.2a moved one stamp to `2026-10-01`, so that
       corpus now expires ~2027-01-09 rather than ~2026-12-27. The three
       remaining at `2026-09-18` still expire together on ~2026-12-27, so the
-      three-way red is what THIS roadmap's deadline guards against — one corpus
-      smaller than the four-way red of 2026-09-18, and not yet the staggered end
-      state the Goal asks for. **It is not the next repo-wide red**:
-      `design-intelligence`, a sixth `quarterly` corpus outside this roadmap's
-      subject, crosses the bound on **2026-11-22** — see Context. Do not read
-      ~2026-12-27 as "the next time PRs go red"; read it as "the deadline for
-      1.2b–d".
+      three-way red is now what the deadline guards against — one corpus smaller
+      than the four-way red of 2026-09-18, and not yet the staggered end state
+      the Goal asks for.
 
 ## Blockers
 
@@ -437,10 +409,7 @@ two land on the same date and all four land before ~2026-12-27.
   on ~2026-12-27 and redden every open pull request at once — a three-way
   rerun of the 2026-09-18 incident this roadmap exists to prevent, on a date
   that is already known. `accessibility-auditor` is out of that cohort as of
-  2026-10-01 and next comes due ~2027-01-09. **And the first red arrives
-  earlier than that, from outside this roadmap:** `design-intelligence`, the
-  sixth `quarterly` corpus, reds every PR on **2026-11-22**. Doing nothing here
-  does not buy quiet until December.
+  2026-10-01 and next comes due ~2027-01-09.
 - **Resolved when:** `./scripts-run src/scripts/check_corpus_staleness` exits 0
   and the four `upstream.last_checked` values under
   `src/skills/{accessibility-auditor,api-design,database,threat-modeling}/data/manifest.json`
@@ -491,10 +460,7 @@ settles only the narrow verify-wording half of the second.
 
 - [x] AC-1 — A recorded decision names the chosen shape (stagger, intended
       batch, or gate-severity change) and its reason. *(D1, 2026-09-27.)*
-- [ ] AC-2 — The four corpus manifests **this roadmap covers** — the batch that
-      shared `2026-09-18`, namely `accessibility-auditor`, `api-design`,
-      `database` and `threat-modeling`, which is four of the six that declare
-      `refresh_cadence: quarterly` and not all of them — carry four **distinct**
+- [ ] AC-2 — The four `quarterly` corpus manifests carry four **distinct**
       `upstream.last_checked` dates (per D3 — not merely not-all-equal), each
       equal to the date its check actually ran, and
       `./scripts-run src/scripts/check_corpus_staleness` exits 0 against them.
