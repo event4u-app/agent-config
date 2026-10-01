@@ -394,6 +394,37 @@ deny message names its own kill switch.
       nothing else. That is precisely Risk 1 — reached one level above the
       harness flag that register entry already records, at the machine instead.
 
+      **Independently reviewed, and it found two real defects in the first
+      version of this work.** AI council 2026-10-01, 2/2 provider-diverse
+      (anthropic/claude-sonnet-4-5 + openai/codex-default), 2 rounds, $0.00
+      (subscription seats). Verdict on the governed file:
+      `confirmed-non-expanding`, both seats, with the same qualifier from each
+      — step 3.3 is a separate authority-affecting change and needs its own
+      review when it wires these numbers into a runtime decision. (HIGH) The
+      ask probe contaminated every unfiltered neighbour on its slot: it
+      dispatches the whole event, so the neighbours ran under the ask payload
+      too and pooled into one sink. It was visible in this report's own output
+      — n per `pre_tool_use` concern went 20 → 40 the moment the probe landed
+      — and went unread; the registered values above were re-derived from
+      uncontaminated runs after the fix. (MEDIUM) The summary line could call
+      an incomplete window clean, because the success marker counted off the
+      REGISTERED total while `slaOverruns` skips a concern it could not
+      measure. Both fixed with their own cases. The remaining findings — no
+      executable window exit criterion, and the bench-is-not-runtime
+      substitution — are answered in the blocker rather than here. Full
+      findings table and dispositions:
+      `agents/evidence/ratifications/drain-kernel-guards-plumbing-close.md`.
+
+      **The in-process claim's coverage, since both seats named it
+      load-bearing and neither could check it.** First half pinned by a live
+      test: `tests/hooks/concern_registry_parity.test.ts` reds if any manifest
+      concern lacks an in-process registry entry, so a fallback to the spawn
+      path cannot land silently. Second half is structural — `_run_concern_inproc`
+      calls `main_fn` directly and takes no timeout argument, and no test can
+      falsify the absence of a mechanism that does not exist; a source-string
+      assertion would read as coverage without being any. Half pinned, half
+      named.
+
       **What a future session needs, exactly.** Nothing to re-measure and
       nothing to re-derive. Read the `warn-only window:` line the bench prints
       on every CI push; the readings accumulate with no action. A span of
@@ -473,6 +504,33 @@ dashboard, the archival sweep and the continuation ladder can act on.
      flip, not that the flip waits longer.
   5. Only then land 3.3 — the severity-based fail-closed switch — with the
      window's readings behind it.
+- **Exit criterion, quantified — an independent review refused "a span of runs
+  a human can read" as a judgement rather than a specification, and it was
+  right.** The window closes when ALL of: (a) at least **10** bench runs print
+  a `warn-only window:` line with no overrun; (b) those runs span at least
+  **two distinct CI runner sessions**, not ten pushes on one machine — the
+  same floor and the same reason as `per_turn_composite.arming_precondition`,
+  which exists because single-machine under-sampling was measured on a sibling
+  metric in this tree; (c) **no run reports INCOMPLETE** — a run that could not
+  measure a bounded concern observed nothing about it and does not count
+  toward (a); (d) the 1 vCPU class named in `hardware_reference.floor` has
+  either been sampled once, or step 3.3 records an explicit decision to flip
+  without it. (d) is the honest half: both classes behind the registered
+  numbers are faster than the documented floor, so a window that never touches
+  it validates the bound against two fast machines and says so.
+- **Reset rule:** a run naming an overrun ENDS the window rather than
+  extending it. The registered value was then wrong, and 3.3's own "warn-only
+  for the first measured window, then deny" re-derives the bound before the
+  flip — a counter that merely keeps waiting would turn a falsified bound into
+  a patience problem.
+- **What this window does NOT cover, stated rather than implied.** It is
+  observed through the bench, not through the dispatcher: synthetic payloads,
+  on the machines that happen to run the bench, when someone runs it. It does
+  not see production payload diversity, contention, or a slow consumer host.
+  An independent review named this a substitution unless the roadmap narrows
+  the requirement explicitly, so it is narrowed here: harness observation is
+  what this blocker asks for. Widening it to a runtime warn-only path is a
+  dispatcher change and belongs to step 3.3, which must say which it is doing.
 - **Recommendation:** let it run. The readings cost nothing and accumulate on
   every push; the alternative is flipping a blocking concern to fail-closed on
   a bound validated by one machine, which is Risk 1 of this register reached
