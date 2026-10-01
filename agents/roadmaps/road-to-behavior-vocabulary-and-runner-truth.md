@@ -90,13 +90,17 @@ get there.
       grep in Fact 1 returns ≥ 1 file where it returned 0.
 
       **Evidence (2026-10-01).** The suite went from 10 queries (5 positives,
-      5 near-misses) to 26 — **15 exemplars** (10 new: EN *does this change owe
-      a Gherkin feature file*, *BDD scenarios for the refund rule*,
-      *given-when-then from acceptance criteria*, *executable specification*,
-      *specification by example*, *living documentation*; DE
-      *Cucumber-Feature oder Unit-Tests*, *Akzeptanzkriterien als ausführbare
-      Szenarien*, *Behat-Szenario*, *Szenarien in der Feature-Datei*) — and
-      **11 negatives**: 9 near-misses and 2 counterexamples. The four the step
+      5 near-misses) to 26 — **15 exemplars**, 10 of them new and split across
+      both languages. The six English ones ask whether a change owes a Gherkin
+      feature file, request BDD scenarios for a refund rule, turn acceptance
+      criteria into given-when-then, weigh an executable specification against
+      a unit case, use specification-by-example phrasing, and use
+      living-documentation phrasing. The four German ones — quoted verbatim in
+      `evals/triggers.json` rather than here, since this file is English — ask
+      the cucumber-versus-unit-tests question, request acceptance criteria as
+      executable scenarios, weigh a Behat scenario against plain cases, and ask
+      which scenarios belong in a feature file. Alongside them: **11
+      negatives**, 9 near-misses and 2 counterexamples. The four the step
       names are all present and all carry the discriminator's own reason:
       the refactor with no observable change (`SKILL.md` no-case 1), the
       scenario-per-unit-case translation job, the selector-and-click step
@@ -455,16 +459,104 @@ get there.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `grep -rliE 'gherkin|bdd|cucumber|behat' src/skills/*/evals/*.json`
+All six verified 2026-10-01 at branch `drain/behavior-vocabulary-close`.
+
+- [x] AC-1 — `grep -rliE 'gherkin|bdd|cucumber|behat' src/skills/*/evals/*.json`
       returns at least one file, and `description_route_check` is green.
-- [ ] AC-2 — No command in `src/` describes itself as stack-adaptive while its
+
+      Returns `src/skills/test-case-discovery/evals/triggers.json` — 1 file
+      where Fact 1 measured 0 across 102 suites. `description_route_check`
+      exits 0 on the advisory path (no `description:` field changed), and the
+      scoped-dry tier CI runs on a `SKILL.md` diff forces exit 0 by
+      construction. Recorded because it is a limit, not a pass: the dry
+      backend is substring-on-unit-name, so it cannot confirm that a
+      behaviour-driven prompt reaches this skill in production — that is the
+      proxy gap the checker documents about itself.
+- [x] AC-2 — No command in `src/` describes itself as stack-adaptive while its
       frontmatter binds a single stack's skill unconditionally.
-- [ ] AC-3 — `KNOWN_RUNNERS` contains `rspec`, `junit` and `dotnet-test`, each
+
+      `grep -rln 'description:.*stack-adaptive' src/domains/` returns exactly
+      the two `/tests` sub-commands, and their bindings are now
+      `[test-case-discovery, quality-tools]` and `[quality-tools]` — no
+      single-stack skill in either. The sweep is over all of `src/domains/`,
+      not only the two the roadmap named, so the claim is about the estate
+      rather than about the files that were already known.
+- [x] AC-3 — `KNOWN_RUNNERS` contains `rspec`, `junit` and `dotnet-test`, each
       asserted by a presence fixture and an absence fixture.
-- [ ] AC-4 — The behaviour-runner axis returns per-scope rows; a monorepo fixture
+
+      All three present and asserted by name in the constants test. Presence
+      and absence fixtures exist for each; the rspec absence fixture was seen
+      red under a neutralised guard, failing exactly 1 test with no
+      collateral. 70 tests green in `stack_runner.test.ts`.
+- [x] AC-4 — The behaviour-runner axis returns per-scope rows; a monorepo fixture
       returns more than one row and a conflict fixture returns a refusal naming
       both runners.
-- [ ] AC-5 — No file this roadmap touches recommends installing a dependency, and
+
+      The monorepo fixture returns a row for `packages/web` (cucumber-js) and
+      `packages/legacy` (behat) and none for `packages/api`; the conflict
+      fixture returns one row with `runner: "unknown"` and
+      `conflict: ["behat", "cucumber-js"]`. Both were seen red — collapsing
+      the scope list fails exactly 4 tests, turning the refusal into a pick
+      fails exactly 2, neither with collateral.
+- [x] AC-5 — No file this roadmap touches recommends installing a dependency, and
       `src/skills` gains no new skill.
-- [ ] AC-6 — The blocker above is resolved or carries a dated note recording
+
+      **No new skill:** `ls src/skills | wc -l` is 299 on both `origin/main`
+      and this branch; `git diff --name-status origin/main...HEAD -- src/skills/`
+      shows two `M` lines and no `A`.
+
+      **No recommendation:** the grep over all seven touched source files
+      returns 8 lines, every one classified in step 3.3's evidence — one
+      pre-existing native-axis basis string naming the composer manifest
+      section, one comment explaining why the behaviour axis avoids the
+      phrase, one pre-existing test title, and the forbidden-substring list
+      inside the assertion that enforces the prohibition. Two further strings
+      are worth naming rather than leaving for a reader to find: the new
+      trigger corpus carries *"install Cucumber and wire a step-definition
+      folder into this repository"* and the skill body is unchanged on this
+      point. The corpus line is a **near-miss with `trigger: false`** — a
+      prompt the skill must NOT fire on, i.e. the inverse of a
+      recommendation, and the only place in the diff where adopting a runner
+      is mentioned at all.
+- [x] AC-6 — The blocker above is resolved or carries a dated note recording
       option (b); step 1.3 is not silently closed.
+
+      The blocker's `Resolved when` was executed rather than read off its
+      status line: `grep -n 'behavior contract' src/config/canonical-terms.yml`
+      returns nothing, which is the state option (b) describes, and the
+      blocker now carries a dated resolution note taking (b) with its
+      argument re-checked. Step 1.3 stays `[~]` with a paragraph naming what
+      a future session needs — a second surface using the terms — and a
+      `revisit-if`. Deferred by decision, visibly, rather than closed.
+
+## Status on close — 13/13 done, 1 deferred, NOT archived
+
+All three phases are closed, the blocker is resolved, and every acceptance
+criterion is verified. The file stays in `agents/roadmaps/` rather than moving
+to `archive/`, and the reason is a gate rather than a preference:
+`update_roadmap_progress --archive` refuses it under **Iron Law 3** —
+*roadmaps with unresolved `[~]` deferred items must NOT auto-archive; resolve
+via `roadmap-management § 4b` (spawn follow-up, restore, or cancel)*. That
+resolution is an owner decision about step 1.3's future, and an execution
+session has no standing to take it by moving the file.
+
+So the one thing left here is a choice between three dispositions for 1.3,
+all of which are cheap:
+
+1. **Spawn a follow-up** carrying the `revisit-if` (a second surface in `src/`
+   using *behavior contract* or *acceptance scenario*), and archive this file.
+2. **Restore 1.3 to `[ ]`** and register the two terms in
+   `src/config/canonical-terms.yml` now — option (a) of the resolved blocker,
+   accepting the ratchet while there is one consumer.
+3. **Cancel 1.3** as not-wanted, and archive this file.
+
+The recommendation is 1: it preserves the condition under which registering
+the terms becomes worth its ratchet, and it is the only one of the three that
+neither spends the ratchet early nor loses the trigger.
+
+`task roadmap-progress-check` exits 1 on this Iron-Law-3 notice and also names
+`road-to-host-claims-the-tree-contradicts.md` (8/8 done, 2 deferred), which
+predates this work — the notice is estate-wide, not a defect of this roadmap.
+CI runs the narrow `roadmap-dashboard-untracked-check` instead, deliberately,
+so a pre-existing estate condition is not a merge block; that narrow check is
+green.
