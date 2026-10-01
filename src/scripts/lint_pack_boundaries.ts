@@ -34,10 +34,19 @@
  *   this gate now matches that definition.
  * - **BROKEN deliberately:** exit code 2 is new (dead scan scope). 0 and 1
  *   keep their meanings.
+ * - **BROKEN deliberately (2026-10-01):** the always-installed set is the
+ *   hard-coded `core` PLUS every pack flagged `always_on: true`. The original
+ *   knew only `core`, so it reported a violation for a target the resolver
+ *   provably does install — the same defect shape as the direct-vs-transitive
+ *   `requires` comparison above. `config/packs.resolve_active_packs` seeds the
+ *   active set with the always-on packs before expanding any selection, and
+ *   `docs/contracts/capability-packs.md` § Always-on packs states such a pack
+ *   "cannot be deselected". One-way: a link OUT of an always-on pack into a
+ *   gated one still dangles and is still reported.
  * - **STILL HOLDS:** the CLI surface (`--format text|json`, `--quiet`, `-h`),
  *   the link regex and its fragment/query stripping, link-resolution semantics
  *   (external / absolute / out-of-tree targets ignored), the allow rule
- *   (same pack · `core` · declared `requires`), the per-violation text and
+ *   (same pack · always-installed · declared `requires`), the per-violation text and
  *   JSON shapes, the stdout/stderr split, and exit 0 clean / 1 violations.
  *
  * ## Where the `requires` graph is read from
@@ -114,6 +123,47 @@ const LINK_RE = /\[[^\]]*\]\(([^)#?]+)(?:[#?][^)]*)?\)/g;
 
 /** A pack every install carries — a link into it can never dangle. */
 const ALWAYS_INSTALLED = 'core';
+
+/**
+ * Packs every projection carries, so a link INTO one can never dangle.
+ *
+ * `core` is the hard-coded floor. Beyond it, `always_on: true` in the pack
+ * vocabulary means exactly this: `config/packs.resolve_active_packs` seeds the
+ * active set with every always-on pack BEFORE expanding the selected profile's
+ * `requires` closure, and `docs/contracts/capability-packs.md` § Always-on
+ * packs states the pack "is never gated by the selected profile, workspace, or
+ * pack set, and it cannot be deselected".
+ *
+ * Reading only `core` was the same class of defect this file's header already
+ * records for the direct-vs-transitive `requires` comparison: the gate reported
+ * a violation for a target the resolver provably does install. The direction is
+ * one-way — a link OUT of an always-on pack into a gated one still dangles and
+ * is still a violation.
+ */
+function _always_installed_packs(): Set<string> {
+    const out = new Set<string>([ALWAYS_INSTALLED]);
+    if (_exists(VOCAB)) {
+        const vocab = parseYaml(fs.readFileSync(VOCAB, 'utf-8'), { version: '1.1' });
+        if (Array.isArray(vocab)) {
+            for (const entry of vocab) {
+                if (entry !== null && typeof entry === 'object' && !Array.isArray(entry)) {
+                    const e = entry as Record<string, unknown>;
+                    if (typeof e['id'] === 'string' && e['always_on'] === true) {
+                        out.add(e['id']);
+                    }
+                }
+            }
+        }
+    }
+    for (const dir of _pack_home_dirs()) {
+        const meta = _load_pack_meta(dir);
+        if (meta['always_on'] === true) {
+            const id = typeof meta['id'] === 'string' ? meta['id'] : path.basename(dir);
+            out.add(id);
+        }
+    }
+    return out;
+}
 
 type ViolationKind =
     /** Link crosses into a pack the source pack does not require. */
@@ -479,11 +529,16 @@ function _scan_file(p: string): string[] {
     return out;
 }
 
-function _is_allowed(source_pack: string, target_pack: string, requires: string[]): boolean {
+function _is_allowed(
+    source_pack: string,
+    target_pack: string,
+    requires: string[],
+    always_installed: ReadonlySet<string> = new Set([ALWAYS_INSTALLED]),
+): boolean {
     if (source_pack === target_pack) {
         return true;
     }
-    if (target_pack === ALWAYS_INSTALLED) {
+    if (always_installed.has(target_pack)) {
         return true;
     }
     return (requires || []).includes(target_pack);
@@ -501,10 +556,11 @@ function _link_allowed(
     source_packs: readonly string[],
     target_packs: readonly string[],
     closureOf: (pack: string) => Set<string>,
+    always_installed: ReadonlySet<string> = new Set([ALWAYS_INSTALLED]),
 ): boolean {
     return source_packs.every((s) => {
         const reach = [...closureOf(s)];
-        return target_packs.some((t) => _is_allowed(s, t, reach));
+        return target_packs.some((t) => _is_allowed(s, t, reach, always_installed));
     });
 }
 
@@ -597,6 +653,7 @@ function main(argv?: readonly string[]): number {
     }
 
     const pack_requires = _pack_requires();
+    const always_installed = _always_installed_packs();
     const closureCache = new Map<string, Set<string>>();
     const closureOf = (pack: string): Set<string> => {
         let c = closureCache.get(pack);
@@ -635,7 +692,7 @@ function main(argv?: readonly string[]): number {
             if (target_packs === undefined) {
                 continue; // docs/, scripts/, root files, unassigned — not pack-scoped
             }
-            if (_link_allowed(src_packs, target_packs, closureOf)) {
+            if (_link_allowed(src_packs, target_packs, closureOf, always_installed)) {
                 continue;
             }
             violations.push({
@@ -743,6 +800,7 @@ export {
     _build_artefact_index,
     _resolve_link,
     _scan_file,
+    _always_installed_packs,
     _is_allowed,
     _link_allowed,
     _load_pack_meta,
