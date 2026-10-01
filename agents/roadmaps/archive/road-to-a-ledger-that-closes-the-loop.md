@@ -147,7 +147,7 @@ may choose to pay.
 
 ## Phase 6 — Arm the detector, conditional like its siblings
 
-- [ ] **6.1 Arm it only after the pre-registered bar holds.**
+- [~] **6.1 Arm it only after the pre-registered bar holds.**
       verify: the claim carries a verdict measured over the declared window before the arming
       commit.
       **OPEN BY CONSTRUCTION, 2026-09-13 — and this is the pre-registration working, not failing.**
@@ -260,6 +260,55 @@ may choose to pay.
       `by: ratification:<artifact-id>` discharge channel. That roadmap already knows about the
       2026-09-29 reset; this one did not. A reader who finds only this file will take a fourth
       reading of a window whose successor is tracking it.
+      **Evidence (2026-10-01). READING 2026-10-01 — the fifth, and the last one this file takes.
+      The bar does not hold. The window is 1.15 of 30 days old, and this step is CARRIED rather
+      than re-read here a sixth time.**
+      Measured 2026-10-01 from the `docs/CLAIMS.md` clause-(9) boundary at `5c9415258`
+      (`git log -1 5c9415258` → `2026-09-29 23:24:55 +0200`, i.e. `2026-09-29T21:24:55Z`), counting
+      by row `at` and never by file mtime:
+      **calendar 1.15 of >= 30 days · affected sessions 3 of >= 50 · shadow rows 0 of >= 100.**
+      Ten ledgers now exist under `agents/runtime/state/obligations/` carrying **229 `delivered`,
+      0 `discharged`, 0 `shadow`** all-time across ten sessions, spanning row timestamps
+      2026-09-18T07:02:50Z to 2026-10-01T00:47:56Z; **42** of those delivered rows fall inside the
+      window, written by **3** sessions. The mtime trap the 2026-09-30 reading named is live in this
+      reading too — `8da0688f4a3782b1bfc3e75f3db3860b.json` straddles the boundary (first row
+      2026-09-29T07:47:40Z, last 2026-09-30T01:56:34Z) — so a file-level count reads four in-window
+      ledgers against three in-window sessions. The `writer` field of clause (8) has begun
+      populating: **39 `package`, 190 `absent`**, the latter being rows written before the field
+      existed.
+      **A FOURTH boundary candidate exists, it is behaviourally inert, and no claim edit is owed.**
+      `b8a7037e3` (2026-09-30 00:35:53 +0200) touches both `obligation_settle_hook.ts` and
+      `rule_inject_hook.ts` and is missed by the three candidates the 2026-09-30 reading
+      enumerated. Its entire diff on those two files replaces locally-declared `EXIT_ALLOW` /
+      `EXIT_WARN` constants with an import of the same values from `./exit_codes.js` — 2 insertions,
+      5 deletions, no change to `touchedPaths`, `computeVerdict`, `REFUSABLE_CLASSES`, the dispatch
+      gate or the injector's delivered-row write. It does not even need clause (2)'s additive
+      carve-out; the behaviour is identical. Read from it the calendar measure is still **0 of 30
+      whole days**, so clause (9)'s pin stands as filed and `docs/CLAIMS.md` is left unedited.
+      **`discharged` is still 0 across all ten ledgers and all 229 rows**, so the 2026-09-30
+      observation stands unchanged rather than being restated as new: until some run produces a
+      discharge, every path-matched refusable candidate is `missing` by construction.
+      **DISPOSITION — CARRIED to `road-to-a-stop-that-holds` 3.3, not held open here.** The
+      2026-09-30 reading named the defect that this flip closes: that roadmap carries this step
+      verbatim as its **3.3** and AC-6 as its **3.4**, under `parent_roadmap:
+      road-to-a-ledger-that-closes-the-loop`, with the arming mechanics this file never had — the
+      `severity: blocking` flip, the `BLOCKING_ALLOWLIST` extension in
+      `tests/hooks/concern_severity.test.ts`, and the `by: ratification:<artifact-id>` discharge
+      channel — and its § Context already cites this file at its *archived* path. Two files tracking
+      one window produce two readings of it, which is exactly how the 2026-09-14 reading's refuted
+      cause survived into two later readings. **Nothing is waived:** the bar, the sample floor, the
+      window and the demotion condition in `docs/CLAIMS.md` are untouched, no code able to refuse is
+      added by this change, and the glyph is `[~]` (carried) and never `[-]` (cancelled).
+      **Exact inputs the receiving session needs, so it re-derives nothing.** Boundary:
+      `5c9415258`, pinned by `docs/CLAIMS.md` clause (9). Floors: `>= 30 calendar days` AND
+      `>= 50 affected sessions` AND `>= 100 shadow rows`, all three, never whichever arrives first.
+      Measure: the `shadow` array, never `delivered`. Counting: by row `at`, never by file mtime.
+      Reset: any change to `touchedPaths`, `computeVerdict`, `REFUSABLE_CLASSES`, the dispatch gate
+      or the injector's delivered-row write — and a pure-refactor touch of those files, such as
+      `b8a7037e3`, is not one. Interim: clause (5) makes an under-floor window UNDERPOWERED and
+      citable for neither direction. Earliest arming on the calendar measure alone is
+      **2026-10-29**, and the session floor is very likely to govern past it.
+      <!-- deferred-resolution: carried-to=road-to-a-stop-that-holds -->
 - [x] **6.2 The new detector respects an open subagent dispatch** the way two of the four existing
       detectors do. Both are gated on the dispatch being closed, and neither parent records this —
       an open dispatch would otherwise be refused for a file that dispatch is still writing.
@@ -404,7 +453,7 @@ may choose to pay.
 - **Resolved when:** the choice is stated in this file with its reason.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-30 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -414,7 +463,7 @@ may choose to pay.
 | 4 | The evidence the plans want to read lives in a consumer template | implementation | The work-engine delivery state the source cites sits under the agent-source template tree, which ships into consumer projects and which the hook dispatcher cannot import | Phase 4 discharges only from artefacts the dispatcher already reaches; the template boundary is out of scope until it is designed | Phase 4 — Discharge, read from the diff and not from the tool event |
 | 5 | Phase 3 lands and Phase 4 never does | product | The roadmap would then have added a second write-only state file beside the one it exists to give a reader — the exact defect, doubled | Phase 3 forbids a reader by its own exit criterion, and Phase 4 is the only phase that adds one; a Phase-3-only merge is the stated failure condition | Phase 3 — The ledger, write side only |
 | 6 | The corrected figures are adopted from the source anyway | implementation | Nine of the source's claims were wrong at its own drafting commit, and the three load-bearing counts read plausibly | Phase 1.2 names all three with their measurement, and Phase 1.1 commits the census output so a later reader checks a file rather than a memory | Phase 1 — Re-census, because the source's own numbers are wrong |
-| 7 | The session measure fills far slower than the calendar one, so the pre-registered bar stalls on the session floor rather than on time | implementation | The window needs `>= 50 affected sessions`. Re-measured 2026-09-30, superseding the 2026-09-27 entry: the window RESET on 2026-09-29 (`docs/CLAIMS.md` clause 9, commit `5c9415258`), so the sample restarted at zero and reads **0.77 of >= 30 days, 2 of >= 50 sessions, 0 of >= 100 shadow rows**. The ~0.28/day and ~0.35/day rate estimates are WITHDRAWN, not revised — both were computed over the invalidated window, and two sessions across 0.77 days is not a rate. Only sessions run inside this maintainer checkout write rows at all, so the bound named in the 2026-09-27 entry still holds even though its arithmetic does not | Recorded at step 6.1 in both directions: `delivered` rows are not `shadow` rows and the latter remain 0 of >= 100; count by row `at` and never by file mtime, which over-reports the in-window sample six-fold; and neither 6.1 nor AC-6 may be flipped on the calendar measure alone. The criterion is additionally carried as `road-to-a-stop-that-holds` 3.3 / 3.4, so a stalled window here is tracked in a second place | Phase 6 — Arm the detector, conditional like its siblings |
+| 7 | The session measure fills far slower than the calendar one, so the pre-registered bar stalls on the session floor rather than on time | implementation | The window needs `>= 50 affected sessions`. Re-measured 2026-10-01, superseding the 2026-09-30 entry: from the 2026-09-29 clause-(9) reset (`5c9415258`) the sample reads **1.15 of >= 30 days, 3 of >= 50 sessions, 0 of >= 100 shadow rows** — one further session and 42 further `delivered` rows in a day, and still no `shadow` row and no `discharged` row across all ten ledgers and all 229 rows. The ~0.28/day and ~0.35/day rate estimates stay WITHDRAWN rather than revised; three sessions across 1.15 days is still not a rate. Only sessions run inside this maintainer checkout write rows at all | **Transferred rather than mitigated here.** Steps 6.1 and AC-6 are `[~]` carried to `road-to-a-stop-that-holds` 3.3 / 3.4, which holds the arming mechanics and the live window; this file stops tracking it, which removes the duplicate-reading failure the 2026-09-30 entry predicted. The reading discipline travels with the carry and is restated at 6.1: the measure is `shadow` and never `delivered`; count by row `at` and never by file mtime, which over-reports the in-window ledger count; a pure-refactor touch of the five exposure surfaces (`b8a7037e3`) is not a reset; and neither item may be flipped on the calendar measure alone | Phase 6 — Arm the detector, conditional like its siblings |
 
 ## Acceptance Criteria
 
@@ -428,17 +477,21 @@ may choose to pay.
       reports the ledger — with no reader and no new concern in that phase.
 - [x] AC-5 — A file written by a shell heredoc on a governed path appears in the discharge set;
       post-tool p95 is not above the Phase 1 baseline.
-- [ ] AC-6 — The shadow window produced zero refusals, and its bar, sample floor and demotion
+- [~] AC-6 — The shadow window produced zero refusals, and its bar, sample floor and demotion
       condition were registered before any code able to refuse existed.
-      OPEN. Registration is done; the window is not, and as of 2026-09-29 it is a *different*
-      window. Reading 2026-09-30 at step 6.1 — **0.77 of >= 30 calendar days, 2 of >= 50 affected
-      sessions, 0 of >= 100 shadow rows**, measured from the `docs/CLAIMS.md` clause-(9) reset at
-      `5c9415258`. The 2026-09-14, -19 and -27 readings recorded here previously are spent: they
-      measured a window that clause (9) invalidated, and their zero-shadow half is explained by
-      the session-key defect that reset it rather than by clean turns. Zero refusals is still not
-      a pass — clause (5) makes an under-floor window UNDERPOWERED, citable for neither direction,
-      and this window is now 2 sessions old rather than 4. Earliest arming on the calendar measure
-      is 2026-10-29. The criterion is carried as `road-to-a-stop-that-holds` **3.4**.
+      **Evidence (2026-10-01). CARRIED to `road-to-a-stop-that-holds` 3.4, with step 6.1.**
+      Registration is done and was never in question — it is the half of this criterion that was
+      satisfiable by effort, and it was satisfied on 2026-09-13, in the same change that shipped
+      the detector and before any code able to refuse existed. The *window* half is not, and since
+      the 2026-09-29 clause-(9) reset it is a **different** window. Reading 2026-10-01 at step 6.1
+      — **1.15 of >= 30 calendar days, 3 of >= 50 affected sessions, 0 of >= 100 shadow rows**,
+      measured from `5c9415258`. The 2026-09-14, -19 and -27 readings recorded here previously are
+      spent: they measured a window clause (9) invalidated, and their zero-shadow half is explained
+      by the session-key defect that reset it rather than by clean turns. Zero refusals is still
+      not a pass — clause (5) makes an under-floor window UNDERPOWERED and citable for neither
+      direction. Earliest arming on the calendar measure alone is 2026-10-29, with the session
+      floor likely to govern past it. The criterion now has exactly one live owner rather than two.
+      <!-- deferred-resolution: carried-to=road-to-a-stop-that-holds -->
 - [x] AC-7 — The armed detector is silent while a subagent dispatch is open, emits one continuation
       per missing set rather than one per obligation, and never refuses on classes `none` or
       `judge`.
