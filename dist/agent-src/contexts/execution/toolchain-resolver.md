@@ -131,8 +131,13 @@ which behavior runner each scope already owns, across the same ecosystems.
   DIFFERENT ecosystems are a polyglot repository, not a conflict: a PHP app
   with a JS frontend returns two rows.
 - **Detection, never adoption.** No row recommends installing anything and the
-  axis is unreachable from `selected`: a suite the repository owns is
-  reported, never run.
+  axis is unreachable from `selected`, so nothing runs *because* this axis
+  reported it. That is reachability, not execution: for four of the eight
+  labels the behavior command equals a native command already in `selected`
+  (`pytest-bdd`/`pytest`, `cucumber-jvm`/`jvm.command`, `reqnroll` and
+  `specflow`/`dotnet test`), and those rows are `SPEED_FAST`, so the suite
+  runs anyway as part of the native run. The axis adds nothing to what
+  executes and removes nothing from it.
 
 ## 3. Confidence tiers — declarative, shared with the non-interactive contract
 

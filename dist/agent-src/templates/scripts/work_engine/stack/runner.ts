@@ -252,8 +252,18 @@ export class ToolchainResult {
     readonly mtime: number;
     /**
      * Per-scope behavior inventory — detection only, deliberately NOT merged
-     * into `runners` nor reachable from `selected`: a suite this repository
-     * happens to own is not something `/tests execute` may start running.
+     * into `runners` nor reachable from `selected`, so nothing is ever run
+     * BECAUSE this axis detected it.
+     *
+     * That is a claim about reachability, not about execution, and the two
+     * came apart in review: for four of the eight labels the behavior command
+     * is byte-identical to a native command already in `selected` —
+     * `pytest-bdd`/`pytest`, `cucumber-jvm`/`jvm.command`, and both
+     * `reqnroll` and `specflow`/`dotnet test`. Those native rows are
+     * SPEED_FAST, so the suite does run by default; it runs as the native
+     * runner's work, which this axis neither caused nor can prevent. Stating
+     * it as "reported, never run" overreached in exactly the half a reader
+     * would act on.
      */
     readonly behavior_runners: readonly BehaviorRunnerResult[];
 

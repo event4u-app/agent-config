@@ -70,8 +70,6 @@ ask interactively, or emit `ambiguous_routing` in CI.
   (`./gradlew test` / `./mvnw test`), .NET (`dotnet test`) → run on the host,
   or in the relevant container when the project containerises it. PHP is the
   only ecosystem with a standing container rule.
-- **A behavior-axis command runs from its `scope_root`**, not the repository
-  root — see `contexts/execution/toolchain-resolver.md` § 2b.
 - If the user named a specific file or filter, pass it through the
   resolved runner's native flag: `--filter=…` or a path for pest/phpunit, a
   path or `-t` for vitest/jest, a node-id for pytest, `-e`/a path for rspec,
