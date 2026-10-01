@@ -8,8 +8,8 @@ inputs:
   diff_sha: 84ed54ac76975cf6b512aa6f6a0be25bd729e949
   scope_hash: 4c0752bd3f75076d29420f5d638bc18b46ff9e878559b069c5fa5c2ebe3da249
   roadmap: agents/roadmaps/road-to-behavior-vocabulary-and-runner-truth.md
-  roadmap_hash: 164e41ee77d3257afdefcacdddefdd37bf96ccc67024194adbb4b960aac06527
-  ac_hash: 01c83fedc353c1d9b154bba02bae3621956400a8f4049358f225c4d194b88931
+  roadmap_hash: c4b7b8c1dc1aee012dc56db361e3e7e6fc8bbe5c2e3f7c76b9f1a0cbc3249af5
+  ac_hash: 4fb10336640c0a53c4c7ab714aba13edb52d2753381d46e7a6d2e294fd46cfb8
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-10-01T01:31:30Z
@@ -69,3 +69,12 @@ here are terminal, so the artefact is re-bound in place rather than archived as
 a closed round, and what it reviewed is the pre-round-21 state of that content.
 The two findings and their fixes are recorded in the round-21 artefact beside
 this one rather than appended here, so neither file claims the other's work.
+
+The same re-bind also moves `roadmap_hash` and `ac_hash`, which the manifest
+re-derivation flagged as diverged. Neither moved because of this review's own
+fixes: the roadmap and its acceptance criteria were edited by the branch's
+later rounds and by its merges from `main`, both after this artefact was
+written. What the recorded hashes now pin is the state the artefact is bound
+to, not the state its reviewer read — the paragraph above is what says which
+is which, and it is the only thing standing between a re-bind and a quiet
+re-attestation.
