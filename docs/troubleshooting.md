@@ -237,6 +237,30 @@ npm install -g @event4u/agent-config
 agent-config doctor   # verifies PATH + plugin wiring
 ```
 
+### `doctor` is slow, or you need it to make no network calls
+
+`agent-config doctor` reads one thing from the network: the `forge_protection`
+block of `--json`, which asks the forge whether the default branch is protected,
+required checks exist, force-push is off, auto-merge is available, and
+deployments are restricted to the pipeline. It shells out to `gh api` — up to
+five calls, each capped at 10 s, with a 15 s ceiling on the whole read.
+
+Everything else in `doctor` is offline, and the forge read is **best-effort**:
+with no `gh`, no credentials, no network, a non-GitHub remote, or a blown
+budget, the five rows report `unread` — each still naming the API call its value
+would have come from — and nothing else about the report changes.
+
+To switch the read off entirely, before any subprocess starts:
+
+```bash
+AGENT_CONFIG_DOCTOR_NO_FORGE=1 agent-config doctor --json   # or AGENT_CONFIG_OFFLINE=1
+```
+
+Use it in CI, on an air-gapped machine, or when you want `doctor` to stay purely
+local. The rows then read `unread` rather than `false`: a row nobody looked at
+and a row the forge refuted are different repairs, and the block keeps them
+apart.
+
 ### Project files look stale after a package update
 
 Project-local projections are only rewritten on an explicit refresh:
