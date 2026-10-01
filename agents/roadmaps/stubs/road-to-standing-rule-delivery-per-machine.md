@@ -16,7 +16,17 @@ review_by: 2026-12-24
 > automation can supply: another person's filesystem, and a write to a
 > per-machine settings file.
 
-> **Arrivals:** the standing-payload subject appears in **15** consumed inbox
+> **Arrivals:** re-measured 2026-10-01 by the same command: **22** consumed
+> rounds, plus `inbox-2026-10-c` (2026-10-01), which reproduced the per-machine
+> notice (120 files, 377.7k chars) and traced it to the installer never thinning
+> `~/.claude/rules` — so this stub's AC-0 becomes dischargeable only through
+> `road-to-an-installed-layer-that-is-thinned`. **Owner question, posed
+> 2026-10-01:** apply the `claudeMdExcludes` remedy below on machines showing
+> the notice now (it removes rule bodies nothing delivers back until the carrier
+> works outside the repo), or leave the advisory notice until the thinned layer
+> ships? Recommendation: leave it.
+>
+> Earlier reading: the standing-payload subject appears in **15** consumed inbox
 > rounds under `agents/tmp.old/` (measured 2026-09-06, `grep -rl "standing
 > payload\|138k\|138,273"`, distinct round directories). Latest
 > `inbox-2026-09-r`. A floor on the recurrence, not a count of asks for this
