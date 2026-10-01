@@ -60,7 +60,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  bb2df6f4fc870dfe94809add5e0e9cda264f1e8bff96b1db79d8081a1f14376e
+SET-SHA256  c63c1030a3ab184b212548b3081f42f3babd6d6dad3362981c1c66fc36628ab8
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -157,6 +157,74 @@ capability.
 Because the bytes have not moved since a commit that precedes the first proposer
 commit, the re-pin changes which number is written down and changes nothing about
 what the number certifies.
+
+## Re-pin 2026-10-01 — a TRAIN corpus grew; the seal did not move
+
+```
+ONE TRAIN ROW CHANGED. ZERO HOLDOUT ROWS CHANGED.
+THE SEAL AND THE ORDERING CLAIM ARE UNAFFECTED AND ARE RESTATED, NOT ASSUMED.
+```
+
+**What changed.** `road-to-behavior-vocabulary-and-runner-truth` rewrote
+`src/skills/test-case-discovery/evals/triggers.json` from 10 queries to 26, so
+that corpus's content hash moved and the set hash over all rows moved with it.
+
+| Row | Was | Now |
+|---|---|---|
+| `test-case-discovery` | `ab3208cc…` | `563ff838…` |
+
+**That `Now` value has already been re-pinned once, and the reason belongs
+here rather than in a quieter place.** It read `d3de03bc…` until round 17 of
+this branch's completion review edited the same corpus file's `description`
+field — a one-word removal, which is all it takes, because the row is a hash
+over the file's bytes and not over its meaning. Nobody re-pinned in that
+commit, so the published row and the published set hash were both stale on
+arrival for the fourth time in this file's life, and
+`trigger_corpus_holdout_pin.test.ts` is what caught it rather than a reader.
+The standing repair below says to run that test as the LAST act before
+publishing, after the final edit to any corpus file — round 17 is the case it
+describes, and it is recorded rather than quietly corrected.
+
+The `SET-SHA256` moved with it, and this table deliberately stops carrying
+it: it is a hash over every row, so any later re-pin by any branch changes it,
+and a number in a WAS/NOW table goes stale the moment someone else's corpus
+moves. It did — this section was merged with a concurrent re-pin and the
+figure it originally carried was already a third value out of date. The live
+number is the `SET-SHA256` block above; where later sections quote it to
+narrate that reconciliation they are describing a moment, not pinning a value,
+and `tests/scripts/trigger_corpus_holdout_pin.test.ts` is what keeps the block
+itself true.
+
+**Why this does not touch the seal.** The partition is keyed on
+`sha256(<skill name>)`, never on the file's contents, so editing a corpus
+cannot move it across the boundary. `test-case-discovery` hashes to bucket
+**92**, against a `HOLDOUT_CEILING` of 51 — it is a **train** corpus and was
+one before this edit. Recomputing the recipe over the whole tree reports
+exactly one stale row, and **zero** holdout rows are among them.
+
+**The ordering claim is untouched** rather than re-argued: it asserts that the
+holdout partition's content hash predates the first proposer commit, and no
+holdout byte moved here. What was re-pinned is the number that describes the
+train half of the same table.
+
+The guard that caught this is `tests/scripts/trigger_corpus_holdout_pin.test.ts`,
+which recomputes the recipe rather than trusting the published number — the
+check this file's 2026-08-31 correction exists because nobody had.
+
+**A second growth landed the same day, on the other half of the table.**
+`road-to-corpus-refresh-cadence-shape` grew the HOLDOUT side (its
+`## Growth 2026-10-01` section below) while this branch grew the train side,
+and the two met in a merge. Each per-row pin is independent and neither moved
+the other's — the live values are in the `## Train` and `## Holdout` tables
+below, and are deliberately not re-quoted in this sentence for the reason the
+round-17 note above gives. Only the set hash depends on both, which is why it was
+recomputed over the merged list rather than taken from either side — and why
+this section no longer quotes it at all.
+
+The seal argument survives the reconciliation unchanged, and is restated
+rather than assumed: zero holdout rows moved on THIS branch. The holdout
+count itself moved — the other growth added one — which is the second reason
+no count is written down here.
 
 ## Holdout — sealed
 
@@ -268,7 +336,7 @@ open and which this file does not settle.
 | `spreadsheet-authoring` | `959466aba0e7f34aae0d8eb69ee427d94049627d905410b322045ac6be0a1599` |
 | `storybook-workshop` | `3aff4c3fddd06e0e265ca4afbb02cdbce16b000dd2d3fd6405504d015a1efd27` |
 | `supply-chain-intake` | `e61b2fcb6409cf0817ea8527a1fda3b1cdabb35e28264146a0d449991e9fe87c` |
-| `test-case-discovery` | `ab3208cc89e8c4c18c4ad4886e6a8893a184d801c57699f6037dbf2bc9d46ef3` |
+| `test-case-discovery` | `563ff838264c39c9e132e1e18206c7b0d52639bd42203f790109f9ec0df2603d` |
 | `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |
 | `ui-apply-generic` | `e3f02e3ba53fb96def30fca6752f400d15b6b63209072928bff9e239aaac7ec5` |
 | `ui-component-architect` | `a9b864a568aa32d2bccd96f524a69d24042f05cdd29b339d45bf9ff6b95b9da5` |
@@ -379,6 +447,25 @@ gate's remedy — ten cases, not a coverage push. The corpus is **103 files, 19
 holdout and 84 train**, and `SET-SHA256` is re-pinned to `bb2df6f4…` from
 `034f791e…`.
 
+**`bb2df6f4…` is superseded and the reason is a merge, not an error** (recorded
+2026-10-01, at the merge). This section measured a tree in which the
+`accessibility-auditor` holdout growth was the only growth of the day. It was
+not: `road-to-behavior-vocabulary-and-runner-truth` rewrote
+`src/skills/test-case-discovery/evals/triggers.json` on the **train** side in
+parallel — § Re-pin 2026-10-01 above — and the two landed in one merge. The set
+hash is computed over the undivided list, so it cannot be the value either
+branch measured alone. It is whatever § The set hash publishes — not repeated
+here, because a value copied into prose is a value that goes stale on the next
+re-pin, which is what happened to this very sentence — and
+`trigger_corpus_holdout_pin.test.ts` recomputes it over the merged tree. The row
+counts in this section are unaffected (the train growth edited a file already in
+the set, it did not add one), and so is every per-row pin, including
+`accessibility-auditor`'s `b5fcf7cb…`. This is the fourth time a figure in this
+file has been overtaken between measurement and publication, and the first time
+the cause was a concurrent branch rather than a later edit on the same one — the
+standing repair below is the same either way, and the shape it guards is now
+one branch wider than it was.
+
 **Recorded rather than re-pinned quietly**, per § The partition rule: *"A change
 is legal; a silent change is the compromise this step exists to prevent."*
 
@@ -398,7 +485,8 @@ later edits to that same file's `description` field in the same branch. The
 provenance was proved rather than guessed by the round-4 reviewer: dropping the
 new row from the computed list reproduces the OLD pin `034f791e…` exactly, and
 substituting the stale row hash reproduces the first-published `7445c18a…`
-exactly. The live values below are `b5fcf7cb…` and `bb2df6f4…`, and
+exactly. The live row value below is `b5fcf7cb…`; the live SET hash is
+whatever § The set hash publishes, deliberately not repeated here, and
 `tests/scripts/trigger_corpus_holdout_pin.test.ts` passes 5 of 5 against them.
 
 **This is the same defect as § Correction 2026-08-31**, where the commit that
