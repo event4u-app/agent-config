@@ -1,0 +1,80 @@
+# Findings: behavior-vocabulary-close
+<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 4c0752bd3f75076d29420f5d638bc18b46ff9e878559b069c5fa5c2ebe3da249 | diff: 84ed54ac76975cf6b512aa6f6a0be25bd729e949 | reviewer: r2-fresh-subagent-behavior-vocabulary-close | prompt_hash: 9cc607c5d57342eca6934149cda9373a2c34cd0a7612dc0e6f1609dce563ba23 -->
+<!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-behavior-vocabulary-close"]}} -->
+<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-01 -->
+
+<!-- context-manifest: v1
+inputs:
+  diff_sha: 84ed54ac76975cf6b512aa6f6a0be25bd729e949
+  scope_hash: 4c0752bd3f75076d29420f5d638bc18b46ff9e878559b069c5fa5c2ebe3da249
+  roadmap: agents/roadmaps/road-to-behavior-vocabulary-and-runner-truth.md
+  roadmap_hash: c4b7b8c1dc1aee012dc56db361e3e7e6fc8bbe5c2e3f7c76b9f1a0cbc3249af5
+  ac_hash: 4fb10336640c0a53c4c7ab714aba13edb52d2753381d46e7a6d2e294fd46cfb8
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-10-01T01:31:30Z
+-->
+
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | medium | src/agent-src/templates/scripts/work_engine/stack/runner.ts:873-879 | `_behavior_scopes` reads `pnpm-workspace.yaml` by matching every YAML sequence item in the whole file (`/^\s*-\s*['"]?([^'"#]+?)['"]?\s*$/`) with no check of the parent key, while its own doc comment states it reads `pnpm-workspace.yaml#packages`. Real pnpm workspace files routinely carry sibling sequences — `onlyBuiltDependencies`, `neverBuiltDependencies`, `ignoredBuiltDependencies`, `patchedDependencies` — so `- esbuild` under `onlyBuiltDependencies` is pushed as the workspace scope `esbuild`. Usually this only burns per-scope file reads and consumes the 200-scope cap, but a repo that happens to have a top-level directory of that name gets a `behavior_runners` row whose `scope_root` is not a workspace package at all. The pnpm fixture in stack_runner.test.ts contains only a `packages:` key, so the near-miss is untested. | fixed | `_pnpm_packages` tracks the top-level key and accepts items only under `packages:`; a sibling-sequence fixture (`onlyBuiltDependencies`, `patchedDependencies`, plus a real `esbuild/` directory carrying behat) asserts neither becomes a scope. Proven red against the old all-items matcher — exactly 2 tests, no collateral. (`17fb479e5`) |
+| 2 | medium | src/agent-src/templates/scripts/work_engine/stack/runner.ts:402 | `behavior_runners` is now part of the cached `ToolchainResult`, but none of the files it is derived from feed `latest_manifest_mtime` (runner.ts:436-444), which stats only root-level `_MANIFESTS`. Every per-scope read — `packages/*/package.json`, `packages/*/composer.json`, `packages/*/Gemfile` — plus root `behat.yml*`, `cucumber.{js,cjs,mjs,json}`, `requirements.txt`, `features/support/env.rb`, `pnpm-workspace.yaml` and `*.csproj` is invisible to the cache key. Adding Behat to a workspace package therefore does not move `mtime`, so a persisted `toolchain.json` keeps reporting the old (usually empty) behaviour inventory until some unrelated root manifest is touched. The diff declares this hazard explicitly, but only for the narrow project-file-only .NET case (runner.ts:120-131); the axis it ships widens the same gap by an order of magnitude without saying so. | fixed | `latest_manifest_mtime` now stats `_MANIFESTS` plus a new `_BEHAVIOR_MARKERS` list across EVERY scope rather than the root alone, so Behat arriving in `packages/legacy` moves the key. Widening a cache key only ever invalidates more often, so the direction is safe. The residual is narrowed to three globbed-name signals (`*.csproj`-only scope, `*.gemspec`, `features/support/env.rb`) and the note now states that set in full instead of the .NET case alone. (`17fb479e5`) |
+| 3 | medium | tests/scripts/work_engine/stack_runner.test.ts:96-100 | The new comment justifies the three added labels with "the set is the single source of truth the state schema and these tests validate against", but nothing in the diff validates anything against it: `KNOWN_RUNNERS` and `KNOWN_BEHAVIOR_RUNNERS` are never read by `resolve_toolchain`, by `resolve_behavior_runners`, by `RunnerResult`/`BehaviorRunnerResult`, or by `to_config`, and the only assertions over them are the two set-equality tests in this same block. A label emitted with a typo (`dotnet_test`, `cucumber_js`) or a new detector branch added later would pass the full suite while the "source of truth" set silently stops describing the emitter. The claim creates assurance the code does not carry; the missing piece is a test asserting every emitted `runner` is a member of the matching set. | fixed | Two membership tests over a 16-fixture corpus (one per detector branch) assert every emitted native label is in `KNOWN_RUNNERS` and every emitted behaviour label is in `KNOWN_BEHAVIOR_RUNNERS`, plus that the corpus actually reaches all three added natives and all eight behaviour labels — a corpus that never exercised them would pass vacuously. Proven by the exact drift the finding describes: a probe branch emitting an undeclared `rake-test` failed ONLY these tests, and a typo'd emitter label failed them too. The over-claiming comment is rewritten to point at the binding instead of asserting it. (`17fb479e5`) |
+| 4 | low | src/agent-src/templates/scripts/work_engine/stack/runner.ts:693-697 | The `names.length === 1` branch in `resolve_behavior_runners` is unreachable. It only runs when `found.length > 1`, and `_behavior_runners_in_scope` pushes at most one row per label (one `if` per runner; reqnroll/specflow are `if`/`else if`), so two rows in one scope always carry two distinct names. The test named for exactly this case — "the SAME runner matched by two signals is one answer, not a conflict" (stack_runner.test.ts:680) — writes `composer.json` plus `behat.yml`, which the behat branch collapses into a single row before the dedupe is reached, so it exercises the `found.length <= 1` path instead. The branch reads as covered and is not. | fixed | The guard is KEPT and relabelled rather than deleted: a future branch able to emit one label twice would otherwise produce a refusal naming a runner against itself, which is worse than a redundant guard. Its comment now states it is unreachable as the detector stands, and why. The test is renamed to "two behat signals collapse inside the branch, so one scope yields one row" — what it actually exercises — and asserts `conflict: []`, so nothing in the suite claims coverage the guard does not have. (`17fb479e5`) |
+| 5 | low | src/agent-src/templates/scripts/work_engine/stack/runner.ts:641 | `_dotnet_basis` takes `names.find(...)` over an unsorted `fs.readdirSync(root)`, so on a root carrying more than one project or solution file the emitted `basis` string depends on directory-entry order, which differs between filesystems and after a rename. The same unsorted order reaches `behavior_runners` row order through the glob expansion in `_behavior_scopes`. Both land in `to_config()` and then in the file `write_config` persists, so a config meant to be stable churns for reasons unrelated to the repository. Sorting the listing in both places would make the serialized output deterministic. | fixed | All three listings sort: `_dotnet_basis`, `_dotnet_project_text`, and the `dir/*` expansion in `_behavior_scopes`. A fixture with `pkg/{zeta,alpha,mid}` asserts the emitted `scope_root` order is alphabetical, so the serialized row order no longer depends on directory-entry order. (`17fb479e5`) |
+| 6 | low | src/agent-src/templates/scripts/work_engine/stack/runner.ts:770-771 | `py_text` concatenates `pyproject.toml` and `requirements.txt` with no separator, so a `pyproject.toml` lacking a trailing newline fuses its last token to the first token of `requirements.txt` — the regexes on the following lines are then matched against a string containing a token present in neither file. The sibling helper added in the same diff, `_dotnet_project_text` (runner.ts:843), joins its parts with a newline; two helpers written together disagree about the same concern. | fixed | `py_text` joins its two parts with a newline, matching `_dotnet_project_text`. A fixture pairs a `pyproject.toml` with no trailing newline against a `requirements.txt` and asserts the detection is still exactly `['behave']`. (`17fb479e5`) |
+| 7 | low | src/agent-src/templates/scripts/work_engine/stack/runner.ts:772 | `/\bbehave\b/` is matched against the full text of `pyproject.toml` plus `requirements.txt` and emits a HIGH-confidence `behave` row. Unlike every sibling signal in this function — `behat/behat`, `@cucumber/cucumber`, `pytest-bdd`, `io.cucumber`, `Reqnroll` — the token is an ordinary English verb, so a `description = "... describes how widgets behave"` line, a comment, or a changelog string inside the manifest produces a false detection at the top confidence tier. A dependency-section lookup (the shape the behat and cucumber-js branches already use) or a tighter anchor would close it. | fixed | `_PY_BEHAVE` requires a declaration SHAPE — `behave` at the start of its own line, optionally quoted, followed by end-of-line or an assignment/version/separator character — which covers both the `requirements.txt` and the TOML forms. The basis string becomes "behave declared as a python dependency". Three fixtures: the prose case (`description = "... how widgets behave"` → no row), the TOML case, the requirements case. Proven red against the old `\bbehave\b` — exactly 1 test, no collateral. (`17fb479e5`) |
+| 8 | low | src/agent-src/templates/scripts/work_engine/stack/runner.ts:569 | `_ruby_runners` returns early whenever `Gemfile` is absent, so the `.rspec present` and `spec/spec_helper.rb present` bases below it are only ever reachable in a repository that also has a Gemfile. A Bundler project using `gems.rb`, or a gemspec-only gem that ships `.rspec` and `spec/spec_helper.rb`, reports no rspec row at all. The documentation row added in the same diff (toolchain-resolver.md:52) reads "rspec in Gemfile / .rspec" as if either signal alone were sufficient, and the absence fixture "no Gemfile at all" locks the behaviour in without distinguishing "no Ruby here" from "Ruby, rspec, no Gemfile". | fixed | The `Gemfile` early-return is gone — each of the three signals now stands on its own, which is what the contract row says. `_ruby_gemfile_text` additionally reads `gems.rb`, Bundler's supported alternative name, and the cucumber-ruby branch uses the same helper, so a `gems.rb` project is no longer invisible to either. `gems.rb` added to `_BEHAVIOR_MARKERS` so it moves the cache key, and a `gems.rb` cucumber fixture asserts the detection. (`17fb479e5`) |
+| 9 | low | src/agent-src/contexts/execution/toolchain-resolver.md:52-54 | The three new resolver-table rows understate what the code detects, so a reader using the table as the contract will mis-predict the resolver. The JVM command column lists only `./mvnw test` and `./gradlew test`, but `_jvm_build` falls back to the ambient `mvn test` / `gradle test` when no wrapper file exists — and that fallback is what two of the junit tests assert. The .NET marker column omits `Directory.Build.props`, which `_dotnet_basis` accepts as a MEDIUM marker, and the Ruby marker column omits `spec/spec_helper.rb`, which `_ruby_runners` accepts as a basis. | fixed | All three rows corrected: the JVM command column carries the ambient `mvn test` / `gradle test` fallback beside the wrappers, the .NET marker column adds `Directory.Build.props`, and the Ruby marker column lists `Gemfile`/`gems.rb`, `.rspec` and `spec/spec_helper.rb` as independent signals. The prose below the table now states the MEDIUM/HIGH gradation per ecosystem and that the wrapper is a preference, not the contract. The file's size budget moved to its final 7,500 in the same header line rather than being shaved out of the prose. (`17fb479e5`) |
+
+## Reviewer-disclosed contract deviation — recorded, not resolved
+
+Recorded 2026-10-01 by the implementing session, transcribed from the
+reviewer's own return envelope. It is here rather than only in a transcript
+because it bears on how the independence metadata above should be read, and a
+disclosure that lives only in a chat message is not a record.
+
+The prompt's tool allowlist (contract §5) named branch-scoped `git diff` plus
+reads of branch-touched files **only**. The reviewer states it exceeded that:
+to check assertions the diff makes about the wider tree it ran repo-wide greps
+and read four files outside the branch scope — `src/scripts/generate_pack_manifests.ts`,
+`src/scripts/lint_eval_freshness.ts`, `src/scripts/lint_skill_trigger_corpus.ts`,
+`src/scripts/lint_roadmap_blockers.ts` — and listed `src/skills` and
+`agents/roadmaps`. It reports all four checks came back clean and **produced no
+finding**, so no row above rests on the extra context. It reports reading
+nothing under `agents/runtime/`, no session artifacts, no implementation
+history, and not running `git log`.
+
+Two consequences, stated rather than smoothed over:
+
+1. **The blind-review property is weaker than `context_relation: fresh`
+   suggests.** The reviewer acquired context the pattern excludes. The
+   metadata block is left unedited because it records what was *dispatched*;
+   this note records what was *done*.
+2. **One finding's blast radius is explicitly unassessed.** The reviewer notes
+   that `resolve_behavior_runners` has no production consumer in this diff
+   beyond `to_config()`, so finding 2's practical impact depends on how
+   `agents/runtime/state/toolchain.json` is consumed — the one surface the
+   allowlist forbade, and which it did not read.
+
+The reviewer also states it did not run the test suite, so every row is a
+reading of the source rather than an observed failure.
+
+<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->
+
+**Re-bind 2026-10-01 (§ 2.7 path 1).** Round 21 found two documentation
+overreaches in content this artefact had reviewed; fixing them (`62741f8c8`)
+moved the scope, which forces a re-review under contract § 2.1. All nine rows
+here are terminal, so the artefact is re-bound in place rather than archived as
+a closed round, and what it reviewed is the pre-round-21 state of that content.
+The two findings and their fixes are recorded in the round-21 artefact beside
+this one rather than appended here, so neither file claims the other's work.
+
+The same re-bind also moves `roadmap_hash` and `ac_hash`, which the manifest
+re-derivation flagged as diverged. Neither moved because of this review's own
+fixes: the roadmap and its acceptance criteria were edited by the branch's
+later rounds and by its merges from `main`, both after this artefact was
+written. What the recorded hashes now pin is the state the artefact is bound
+to, not the state its reviewer read — the paragraph above is what says which
+is which, and it is the only thing standing between a re-bind and a quiet
+re-attestation.
