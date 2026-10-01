@@ -88,15 +88,25 @@ not the whole branch. Three asks, all taken:
    the run on this pull request; this record is written before it, and that
    ordering is stated rather than hidden.
 
-3. **"Name an owner for the known collateral."** Taken. The collateral is PR
-   **#2144** (`drain/behavior-vocabulary-close`), which adds three bare clauses:
+3. **"Name an owner for the known collateral."** Taken, and then the collateral
+   resolved itself before this branch pushed. The named PR was **#2144**
+   (`drain/behavior-vocabulary-close`), carrying three bare clauses:
    `wc -w src/skills/test-case-discovery/SKILL.md` in
    `road-to-behavior-vocabulary-and-runner-truth.md`, and `npm ls fastify hono`
    plus `npm audit --omit=dev --audit-level=high` in
-   `road-to-upstream-advisory-bump.md`. The two `npm` clauses take `-> 0`; the
-   `wc -w` clause needs a regex, because `wc` exits 0 on any file. The owner of
-   that branch owns the edit, and this is written here so the requirement
-   arrives with a name and a diff rather than as a surprise red.
+   `road-to-upstream-advisory-bump.md`. It merged as `00612c1f2` while this
+   branch was being reviewed, so those three clauses are now base content and
+   the diff-scoped gate never reads them — grandfathered by exactly the
+   mechanism that makes this gate shippable at all.
+
+   **This is luck, not design, and the ask stands answered rather than
+   dissolved.** Had #2144 landed after this branch, its owner would have owed
+   three edits: the two `npm` clauses take `-> 0`, and the `wc -w` clause needs
+   a regex, because `wc` exits 0 on any file. The record keeps the name and the
+   diff so the next enforcing gate over this surface starts from a worked
+   example of what the disclosure has to contain. Re-measured against the moved
+   base after the merge: this branch's own diff adds one verify clause and the
+   gate is green on it.
 
 ## What seat B's dissent does NOT cover, said plainly
 
