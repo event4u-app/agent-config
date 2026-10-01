@@ -39,11 +39,14 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // a second copy (road-to-skill-delivery-over-mcp risk 6). Everything below is
 // the disk half — globbing, frontmatter, the CLI — which stays here.
 import {
+    buildTermStats,
     scoreSkill,
     skillTerms as _sharedSkillTerms,
     tokenize as _sharedTokenize,
     triggerTextFromFlatLines,
+    widensTermSource,
     type RankOptions,
+    type TermStats,
 } from '../../shared/skillRanking.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -100,7 +103,17 @@ export interface Frontmatter {
 export function _parse_frontmatter(filePath: string): Frontmatter {
     // text.read_text(errors="replace") — Node `utf-8` decode replaces the same
     // way for the inputs these tools see (well-formed SKILL.md files).
-    const text = fs.readFileSync(filePath, 'utf-8');
+    return _parse_frontmatter_text(fs.readFileSync(filePath, 'utf-8'));
+}
+
+/**
+ * The same reader over text already in hand.
+ *
+ * The loader needs the body as well as the frontmatter, and reading each
+ * SKILL.md twice to get them would double the per-call I/O of a ranker that
+ * runs on a hook path.
+ */
+export function _parse_frontmatter_text(text: string): Frontmatter {
     if (!text.startsWith('---')) {
         return {};
     }
@@ -169,6 +182,43 @@ export interface Skill {
     terms: Set<string>;
     /** `triggers[].keyword` / `.phrase` prose. Indexed only under keyword-v2. */
     triggerText: string[];
+    /** The body's `## When to use` section. Indexed only behind its own flag. */
+    whenToUseText: string;
+    /** The body's `##` / `###` heading lines. Indexed only behind its own flag. */
+    headingText: string[];
+}
+
+/**
+ * The `## When to use` section, and every `##` / `###` heading, out of a body.
+ *
+ * Line-oriented and deliberately bounded: the section ends at the next heading
+ * of the same or a higher level, so a skill whose whole file is one section
+ * cannot put its entire procedure into the index under a flag whose name says
+ * "when to use".
+ */
+/** Everything after the frontmatter block, or the whole text when there is none. */
+export function _body_of(text: string): string {
+    if (!text.startsWith('---')) return text;
+    const end = text.indexOf('\n---', 3);
+    if (end === -1) return text;
+    return text.slice(end + 4);
+}
+
+export function _body_signals(body: string): { whenToUse: string; headings: string[] } {
+    const lines = body.split('\n');
+    const headings: string[] = [];
+    const when: string[] = [];
+    let inWhen = false;
+    for (const raw of lines) {
+        const h = /^(#{2,3})\s+(.*)$/.exec(raw.trimEnd());
+        if (h) {
+            headings.push((h[2] as string).trim());
+            inWhen = /^when to use\b/i.test((h[2] as string).trim());
+            continue;
+        }
+        if (inWhen) when.push(raw);
+    }
+    return { whenToUse: when.join(' ').trim(), headings };
 }
 
 /**
@@ -179,11 +229,11 @@ export interface Skill {
  * owns what that order means. Reading only the first root is the defect this
  * replaced; silently ranking one name twice would be the next one.
  */
-function _load_skills_across(roots: readonly string[]): Skill[] {
+function _load_skills_across(roots: readonly string[], opts: RankOptions = {}): Skill[] {
     const out: Skill[] = [];
     const seen = new Set<string>();
     for (const root of roots) {
-        for (const s of _load_skills(root)) {
+        for (const s of _load_skills(root, opts)) {
             if (seen.has(s.name)) continue;
             seen.add(s.name);
             out.push(s);
@@ -192,10 +242,15 @@ function _load_skills_across(roots: readonly string[]): Skill[] {
     return out;
 }
 
-function _load_skills(skillsDir: string): Skill[] {
+function _load_skills(skillsDir: string, opts: RankOptions = {}): Skill[] {
+    // The body is parsed only when a flag indexes it. Under keyword-v1 the
+    // loader's work is exactly what it always was, which is what keeps the
+    // default path's per-prompt cost comparable to the pre-flag reading.
+    const wantsBody = Boolean(opts.includeWhenToUse || opts.includeHeadings);
     const skills: Skill[] = [];
     for (const skillMd of _globSkillMd(skillsDir)) {
-        const fm = _parse_frontmatter(skillMd);
+        const text = fs.readFileSync(skillMd, 'utf-8');
+        const fm = _parse_frontmatter_text(text);
         const rawName = fm['name'];
         const name = _truthyStr(rawName) ? String(rawName) : path.basename(path.dirname(skillMd));
         const rawDesc = fm['description'];
@@ -209,12 +264,17 @@ function _load_skills(skillsDir: string): Skill[] {
         const triggerText = Array.isArray(rawTriggers)
             ? triggerTextFromFlatLines(rawTriggers as string[])
             : [];
+        const { whenToUse, headings } = wantsBody
+            ? _body_signals(_body_of(text))
+            : { whenToUse: '', headings: [] as string[] };
         skills.push({
             name,
             description: desc,
             personas: personaList,
             terms: _tokenize(name + ' ' + desc),
             triggerText,
+            whenToUseText: whenToUse,
+            headingText: headings,
         });
     }
     return skills;
@@ -257,19 +317,32 @@ function _globSkillMd(root: string): string[] {
     return dirs.map((name) => path.join(root, name, 'SKILL.md'));
 }
 
-function _score(taskTerms: Set<string>, skill: Skill, opts: RankOptions = {}): number {
-    // Single-sourced in `src/shared/skillRanking.ts`. Under keyword-v1 (the
-    // default) `skill.terms` is already `tokenize(name + ' ' + description)`, so
-    // the precomputed set is reused unchanged; keyword-v2 re-derives the term
-    // set with the skill's trigger prose folded in.
-    const rankable = {
+function _rankable(skill: Skill): {
+    name: string;
+    description: string;
+    personas: string[];
+    triggerText: string[];
+    whenToUseText: string;
+    headingText: string[];
+} {
+    return {
         name: skill.name,
         description: skill.description,
         personas: skill.personas,
         triggerText: skill.triggerText,
+        whenToUseText: skill.whenToUseText,
+        headingText: skill.headingText,
     };
-    const terms = opts.includeTriggers ? _sharedSkillTerms(rankable, opts) : skill.terms;
-    return scoreSkill(taskTerms, rankable, terms);
+}
+
+function _score(taskTerms: Set<string>, skill: Skill, opts: RankOptions = {}, stats?: TermStats): number {
+    // Single-sourced in `src/shared/skillRanking.ts`. With no term-source flag
+    // set, `skill.terms` is already `tokenize(name + ' ' + description)` and the
+    // precomputed set is reused unchanged; a flag that widens the source
+    // re-derives the term set with that source folded in.
+    const rankable = _rankable(skill);
+    const terms = widensTermSource(opts) ? _sharedSkillTerms(rankable, opts) : skill.terms;
+    return scoreSkill(taskTerms, rankable, terms, opts, stats);
 }
 
 export type RankRow = [string, number, string[]];
@@ -283,10 +356,11 @@ export function rank(
     opts: RankOptions = {},
 ): RankRow[] {
     const taskTerms = _tokenize(task);
-    const skills = _load_skills_across(typeof skillsDir === 'string' ? [skillsDir] : skillsDir);
+    const skills = _load_skills_across(typeof skillsDir === 'string' ? [skillsDir] : skillsDir, opts);
+    const stats = opts.idfWeighting ? buildTermStats(skills.map(_rankable), opts) : undefined;
     const rows: RankRow[] = [];
     for (const s of skills) {
-        const score = _score(taskTerms, s, opts);
+        const score = _score(taskTerms, s, opts, stats);
         if (score > 0) {
             rows.push([s.name, score, [...s.personas]]);
         }
