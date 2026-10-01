@@ -1,12 +1,12 @@
 # Findings: drain-graph-feeds-the-gate-20261001
-<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 65fb98d97e45680ca3cb2937d81193fe6d82d914ee56239852e42b690d6f155e | diff: fdbd50f28547e18b0779d2fedde34f6b16d56460 | reviewer: r2-fresh-subagent-drain-graph-feeds-the-gate-20261001 | prompt_hash: 6a75356d6a420849511c3f51150ae2704bb2a3b1820b41a838352eca627004ca -->
+<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 29bdcd8b75df04b688411a956158b95c243506174a7400cbea858df6377787cb | diff: b3c801424df6e33f863883167e8bada930969465 | reviewer: r2-fresh-subagent-drain-graph-feeds-the-gate-20261001 | prompt_hash: 6a75356d6a420849511c3f51150ae2704bb2a3b1820b41a838352eca627004ca -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-graph-feeds-the-gate-20261001"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-01 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: fdbd50f28547e18b0779d2fedde34f6b16d56460
-  scope_hash: 65fb98d97e45680ca3cb2937d81193fe6d82d914ee56239852e42b690d6f155e
+  diff_sha: b3c801424df6e33f863883167e8bada930969465
+  scope_hash: 29bdcd8b75df04b688411a956158b95c243506174a7400cbea858df6377787cb
   roadmap: agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
   roadmap_hash: e08f28d09188c34b9c9ea6e3671ffe7a73691b9d08900254597a598249adf212
   ac_hash: 416225dbcfd411c82d6adcce236de5dd8e2cc1c28f2c2527109a7786afb65d5f
