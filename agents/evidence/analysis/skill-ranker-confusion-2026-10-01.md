@@ -286,6 +286,27 @@ Readings, in the order they matter:
    below the baseline's 0.320 — which step 3.1's "top-3 does not fall" clause
    would refuse on its own.
 
+### An independent reading of the body signal, landed the same day
+
+`agents/evidence/analysis/routing-body-signal-verdict.json` reached `main` on
+2026-10-01 from a different roadmap (`road-to-governed-harness-evolution` 5.1)
+and measures something adjacent enough to be worth naming here: indexing a
+skill's **body** alongside its description, pre-registered, over 406 positives
+and 404 negatives. Its verdict is **`harmful`** — recall +5.91 pp, but false
+activation +8.17 pp against a +2.0 pp guard.
+
+**The two are different instruments and they point the same way.** That one
+measures a routing harness with a false-activation guard; this one measures
+top-1 / top-3 / MRR over the labelled matrix. Neither is the other's
+replication. But `includeWhenToUse` and `includeHeadings` here lower tuning
+top-1 while buying a single sealed row, and the pre-registered reading there
+finds the fuller version of the same idea actively harmful on the metric this
+report cannot see. Both flags therefore stay **off**, and anyone minded to turn
+one on should read that verdict first rather than only this table.
+
+The reading is recorded as corroboration, not as a lock: it did not change any
+decision taken above, which were all reached before it was read.
+
 ## The null
 
 Step 3.1, and the answer is the null rather than a promotion.
