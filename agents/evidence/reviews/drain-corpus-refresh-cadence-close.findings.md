@@ -1,6 +1,6 @@
-**Skipped:** no code surface for this completion — the diff is one roadmap file plus two grounding-corpus data files (a CSV citation and a manifest date stamp) and their byte-identical `dist/` projections; no script, test, hook or config logic changed, scope f84f607387b9a5b8f744dfcfaf09b81ca310e67d31730528c1693e6e580bd842, declared 2026-10-01
+**Skipped:** no code surface for this completion — the diff is one roadmap file plus grounding-corpus and eval data (a CSV citation, a manifest date stamp, one new triggers.json) and their byte-identical `dist/` projections; no script, test, hook or config logic changed, scope 4e31eea77d9d9d36506902dd94dfdb1ffe4378b1da346beacc4eb2a2cf3b2947, declared 2026-10-01
 
-The gate's own reading agrees: `0 code path(s) of 5 changed file(s)`.
+The gate's own reading agrees: it counts zero code paths across the changed files.
 
 What the change actually does, for a reader deciding whether that skip is
 honest: it records one of the four corpus re-checks `D1` of
@@ -10,3 +10,9 @@ renamed pattern, fixed the one stale citation it found, and moved that corpus's
 `upstream.last_checked` to the date the check ran. The behaviour of
 `check_corpus_staleness` is unchanged — it reads the same fields it always did
 and still exits 0.
+
+Touching the skill's `data/` pulled it into `check_routing_coverage`'s
+touched-skill scope, so a 10-case `evals/triggers.json` was written for it. That
+file is a routing corpus — declarative test data read by
+`lint_skill_trigger_corpus` and `check_trigger_evals` — not executable surface,
+which is why the skip still holds after it landed.
