@@ -1,5 +1,5 @@
 ---
-complexity: lightweight
+complexity: structural
 status: ready
 parent_roadmap: road-to-a-ledger-that-closes-the-loop
 execution:
@@ -336,7 +336,7 @@ its pre-registered bar can be read — armed only by that reading.
       the non-termination valve's unreachability no longer shares a cause with
       Q1's. The word "inert" is deliberately NOT removed — that is 2.2's work and
       removing it now would claim a reading nobody has. -->
-- [x] **2.2 Q1 in the detector report.** `measure_turn_end_gate.ts` prints
+- [~] **2.2 Q1 in the detector report.** <!-- blocked-by: q1-shadow-reading-window --> `measure_turn_end_gate.ts` prints
       Q1 = `would_refuse_again` rows / eligible initial refusals per detector;
       the contract's § Q1 loses the word "inert" and names the reader.
       verify: report shows a non-null Q1 after one week of sessions; contract
@@ -356,52 +356,94 @@ its pre-registered bar can be read — armed only by that reading.
       bound; and on a host that sends no `session_id` every session shares one
       record. Both are stated on `ShadowRecord` and belong beside the number
       when 2.3 publishes it. -->
-      <!-- closed 2026-10-01. `collectShadowStats` / `q1For` in
-      `src/scripts/_lib/turn_end_refusals.ts`; `renderQ1` and the `--q1` /
-      `--workspace` flags in `src/scripts/measure_turn_end_gate.ts`; the
-      contract's § Q1 edited in the same commit. `turn_end_refusals.test.ts` 31
-      green (23 pre-existing untouched, 8 added), `measure_turn_end_gate.test.ts`
-      21 green (16 pre-existing untouched, 5 added), and the three suites this
-      module feeds — `turn_end_gate_hook`, `turn_end_verify_allowlist`,
-      `verification_record_roundtrip` — 227 green and untouched.
-      THE 2026-09-29 NOTE THIS REPLACES SAID "NOT AGENT-CLOSABLE", AND IT
-      CONFLATED TWO THINGS. It was right that no work inside one session
-      produces a week of sessions. It then reasoned from that to the whole STEP
-      being unclosable — but this step's deliverable is a READER and a contract
-      edit, and neither needs a week. What needed the window was the READING,
-      which is 2.3's work and is where the window now sits, alone. The note's
-      second half was already false the next day: 2.1 landed 2026-09-30 and the
-      numerator stopped being structurally zero, which the blocker records and
-      the note did not.
-      THE READING THIS PRODUCES TODAY, published here and deliberately NOT as a
-      file under `agents/evidence/analysis/turn-end-q1-*`: that path is the
-      artefact 2.3 owes, `d1-stop-ladder-after-reading` resolves partly on its
-      existence, and one landing early is the laundered-evidence trap this
-      roadmap has already recorded twice. `--q1` over the package workspace,
-      2026-10-01: **1 shadow record**; layer `stop_hook_active` 1 retry observed
-      and 1 row, so `language` reads 100.0 % (1/1) and the other five read 0.0 %
-      (0/1); layer `refused_turn` 0 retries, so all six print `—` rather than a
-      zero. n=1. That is an INSTRUMENT PROOF and not a measurement of anything —
-      one retry is not a rate, which is what the verify's "after one week of
-      sessions" exists to say.
-      THE DENOMINATOR IS `retries_observed[layer]`, NOT a refusal count, and the
-      substitution is written into the contract rather than left for a reader of
-      the code to infer. This step says "eligible initial refusals"; a shadow
-      read cannot see those, because a retry that came back clean leaves no row
-      at all. The only population it can count is retries observed on an allow
-      path. The two differ wherever a retry occurred without this gate having
-      refused — the same fact the layer split exists for.
-      SABOTAGE, three times, each restored from a copy. Pooling the denominator
-      across layers failed exactly 2 and no others — the layer-split case and
-      the null-vs-zero case. Globbing `*.json` rather than the shadow suffix
-      failed exactly 1, the mixed-directory case. Collapsing `null` to `0.0%` in
-      the renderer failed exactly 1, the em-dash case.
-      TWO OF THE NEW FIXTURES WERE RED BEFORE THEY WERE GREEN, and the reds were
-      real rather than arranged: both wrote their shadow file from a raw object
-      instead of the record-shaping helper, `parseShadowRecord` rejected it, and
-      `files` read 0 where the case expected 1. Recorded because it is the
-      cheapest available evidence that these cases have sensitivity — they
-      caught a malformed fixture before they caught a malformed reader. -->
+      <!-- PARTLY LANDED 2026-10-01 AND DELIBERATELY NOT CLOSED. It was flipped
+      `[x]` earlier that day and reopened the same day by an independent review
+      of the pushed branch. The review was right and the reopen is the finding:
+      a reader shipped, and it does not print the number this step names.
+      WHAT SHIPPED. `collectShadowStats` / `retryConditionedShare` /
+      `DISPATCH_CENSORED_DETECTORS` in `src/scripts/_lib/turn_end_refusals.ts`;
+      `renderQ1` and the `--q1` / `--workspace` flags in
+      `src/scripts/measure_turn_end_gate.ts`; the contract's § Q1 rewritten in
+      the same change. `turn_end_refusals.test.ts` 33 green (23 pre-existing
+      untouched, 10 added), `measure_turn_end_gate.test.ts` 28 green (16
+      pre-existing untouched, 12 added), `turn_end_gate_hook.test.ts` 146 green
+      and untouched. `npm run typecheck` and eslint clean on all four files.
+      WHY IT IS NOT CLOSED, which is the review's finding and not a scheduling
+      note. This step says `Q1 = would_refuse_again rows / ELIGIBLE INITIAL
+      REFUSALS per detector`. Q1's definition conditions BOTH halves on the
+      detector — a detector's own refusals, refused again by that same detector.
+      The shipped reader conditions NEITHER: it divides rows where D would fire
+      by every retry observed on the layer, whatever refusal produced it. Ten
+      retries, nine after `verification` refusals and one after a `language`
+      refusal, one `language` row → Q1 for B is 1/1 = 100 % while the reader
+      prints 1/10 = 10 %. Opposite verdicts, and neither bounds the other, so
+      this is not Q1 with a looser denominator — it is a neighbouring quantity.
+      It is now named one: `retryConditionedShare`, with the report's own header
+      saying it may not be read against a bar.
+      THE OBSTACLE IS ONE PRODUCER FIELD, which is why this is `[~]` rather than
+      a redesign. `ShadowRecord` never records which refusal produced a retry:
+      `retries_observed` is keyed by layer alone, a row says only what WOULD
+      fire, and `RefusalRecord` holds whole-session counts rather than a
+      per-turn origin. Add the originating detector to the shadow row in
+      `recordShadow` and Q1 becomes computable from the same rollup.
+      A SECOND PRODUCER FIELD IS OWED TOO, found by the same review. The gate
+      skips promissory, completion and untested when a dispatch is open and
+      `recordShadow` increments `retries_observed` anyway, so those three would
+      absorb silences nobody observed — which the contract's attribution clause
+      already forbids reporting. They now print `censored`. A `dispatch_open`
+      flag on the row closes it. (That clause said "A and D" until today; the
+      gate has gated three since F landed 2026-09-11. Corrected in the contract,
+      and `DISPATCH_CENSORED_DETECTORS` is now the one set both sides read.)
+      WHAT IS GENUINELY DONE AND NEED NOT BE REDONE: the contract half. § Q1 no
+      longer calls the quantity inert, states precisely which half of its
+      obstacle fell and which did not, names the reader by path and command, and
+      keeps both superseded wordings — including the one written this morning
+      and wrong by the afternoon — rather than overwriting them.
+      THE READING THIS PRODUCES, recorded here and deliberately NOT as a file
+      under `agents/evidence/analysis/turn-end-q1-*`: that path is the artefact
+      2.3 owes and `d1-stop-ladder-after-reading` resolves partly on its
+      existence, so one landing early is the laundered-evidence trap this
+      roadmap has already recorded twice. `--q1` over the package root,
+      2026-10-01: **2 shadow records**; layer `stop_hook_active` 2 retries and 1
+      row — `language` 50.0 % (1/2), `verification` and `pending-decision` 0.0 %
+      (0/2), the other three `censored`; layer `refused_turn` 0 retries, so
+      every reportable detector prints `—`. n=2, and not a rate.
+      THAT NUMBER MOVED WHILE THIS BRANCH WAS BEING REVIEWED — it read 100 %
+      (1/1) a few hours earlier, and a clean retry at 01:14Z made it 50 % (1/2).
+      The review caught the staleness, which is the third time this roadmap has
+      recorded a figure ageing inside its own change. Taken last this time.
+      SABOTAGE, six times across the two rounds, each restored from a copy.
+      Pooling the denominator across layers → exactly 2 (layer-split,
+      null-vs-zero). Globbing `*.json` rather than the shadow suffix → exactly 1
+      (mixed-directory). Collapsing `null` to `0.0%` in the renderer → exactly 1
+      (em-dash). Removing the empty-timestamp guard → exactly 1
+      (absent-timestamp). Removing the censoring branch → exactly 1
+      (censored-detectors). Dropping the workspace echo → exactly 1
+      (resolved-workspace). No collateral in any of the six.
+      TWO OF THE FIRST-ROUND FIXTURES WERE RED BEFORE THEY WERE GREEN, and the
+      reds were real rather than arranged: both wrote their shadow file from a
+      raw object instead of the record-shaping helper, `parseShadowRecord`
+      rejected it, and `files` read 0 where the case expected 1.
+      COST TO THE HOOK BUNDLE: **+0 bytes, 0.000 %**, measured rather than
+      argued. `npm run build:hooks` at the merge base and at HEAD in this
+      worktree both produce `dist/hooks/dispatch.js` at **1,565,516 bytes**,
+      byte-identical (digest `bc62ee1a…`), and `grep -c collectShadowStats` over
+      the bundle returns **0** — esbuild tree-shakes the whole rollup, because
+      the hook path imports `turn_end_refusals` for the record types and never
+      for the reader. Worth stating rather than skipping: § Cost this branch
+      added records a LIVE `pre_tool_use` cap red whose own `revisit_if` has
+      fired, every concern shares one bundle, and a reader arriving there should
+      know this pass contributed nothing to it.
+      WHAT A FUTURE SESSION NEEDS TO CLOSE THIS, in order, with no decision from
+      anyone: (1) add the originating `detector` and `dispatch_open` to the
+      shadow row in `recordShadow`; (2) extend `ShadowRecord` /
+      `parseShadowRecord` / `foldShadow` to carry them, keeping existing rows
+      readable; (3) add a Q1 function beside `retryConditionedShare` that
+      conditions both halves on the detector, and uncensor A, D and F for rows
+      carrying `dispatch_open: false`; (4) amend the contract's § The two
+      quantities and § The two instruments, both of which already name these two
+      fields as the obstacle. The retry-conditioned share stays — it is a real
+      reading over the same corpus and the two answer different questions. -->
 - [~] **2.3 Publish the reading** <!-- blocked-by: q1-shadow-reading-window --> to `agents/evidence/analysis/turn-end-q1-<date>.md`
       and open programme blocker `d1-stop-ladder-after-reading`.
       verify: file exists; the blocker's `What to do` cites it.
@@ -724,6 +766,15 @@ precisely so it could not be spent silently.
 - **`--legal-comments=none` was measured as a mitigation and recovers 635
   bytes.** The growth is code, not prose, so it cannot be given back without
   removing the feature.
+- **The 2026-10-01 pass (step 2.2, partial) added +0 bytes**, measured the same way:
+  `npm run build:hooks` at the merge base and at HEAD both produce 1,565,516
+  bytes, byte-identical. The Q1 rollup is tree-shaken out — the hook path
+  imports `turn_end_refusals` for the record types and never for the reader,
+  and `measure_turn_end_gate.ts` is a CLI script no bundle entry reaches.
+  Recorded here beside the other two deltas so the trend across passes is
+  readable in one place: +19,110 B, then +4,732 B, then 0. It does not relieve
+  the cap red, which this block already attributes to the first pass; it means
+  the third pass is not a contributor to it.
 - **The cap is NOT raised.** The budget block states that raising it again
   without a measured distribution beside it is the config-bending the block
   exists to make visible. Its own routing sends a fired trigger to
@@ -832,17 +883,22 @@ dashboard and the archival sweep can act on.
 - **Class:** 1 — agent-executable
 - **Run:** `find agents/runtime/state/turn-end-gate -name '*.shadow.json' 2>/dev/null | wc -l`
 - **Budget:** one command, no spend.
-- **Blocks:** Phase 2 — step 2.3, and AC-2's reading half. **Narrowed
-  2026-10-01: it no longer blocks 2.2, which closed that day.** The entry held
-  the reader and the reading behind one date because 2.2's verify line mentions
-  a week; the reader needs no week, and keeping it here was the broader-than-
-  its-cause shape this file has corrected twice before. Item 2 below is kept
-  verbatim as the specification 2.2 was built to, rather than rewritten to
-  describe what was built.
+- **Blocks:** Phase 2 — steps 2.2 and 2.3, and AC-2.
+  **Narrowed and then un-narrowed on 2026-10-01, which is worth recording
+  because the first move was wrong.** It was narrowed to 2.3 alone on the
+  grounds that 2.2's deliverable is a reader and a reader needs no week. An
+  independent review then found that the reader does not compute Q1 at all —
+  it conditions on the retry rather than on the detector — so 2.2 is blocked by
+  something this entry never named: a missing producer field, not a window.
+  Both now sit here, because splitting them again would hide the second.
 - **What to do:**
   1. Run the probe above. Zero files means no session has retried since step
      2.1 landed, and there is nothing to read yet.
-  2. **Done 2026-10-01 — the spec below is what shipped.** When rows exist and the date is on or after 2026-10-07, do 2.2: teach
+  2. **Partly done 2026-10-01 — a reader shipped and it is not a Q1 reader.**
+     Closing 2.2 additionally needs the originating detector and a
+     `dispatch_open` flag recorded on each shadow row; step 2.2's own note
+     carries the four-step procedure. The spec below is what that session was
+     built to and is kept verbatim. When rows exist and the date is on or after 2026-10-07, do 2.2: teach
      `measure_turn_end_gate.ts` to divide `would_refuse_again` rows by
      eligible initial refusals, **grouped by `layer` first and then by
      detector**, reading the shadow records through `readShadowRecord` /
@@ -891,9 +947,12 @@ dashboard and the archival sweep can act on.
   opposite of what the tree holds. Recorded here because the probe line above
   cannot carry it and a wrong reading here is silent.
 
-  **2.2 closed on 2026-10-01 without this entry resolving, and that is correct
-  rather than a bypass.** The reader is the deliverable; the week is the
-  sample. `Blocks:` above is narrowed to match.
+  **A SECOND LIVE READING THE SAME DAY, because the first one aged inside its
+  own change.** At 01:14Z a clean retry landed: the probe now returns **2**
+  files and the layer reads 2 retries / 1 row, so the share for `language` moved
+  from 100.0 % (1/1) to 50.0 % (1/2). Nothing was wrong with the first figure
+  when taken; it was stale within hours, which is this roadmap's recorded lesson
+  for the third time. Neither figure is a rate — n is 2.
 
 ### blocker: d1-stop-ladder-after-reading
 - **Status:** open
@@ -1160,30 +1219,35 @@ closed rather than left standing:
       verdict — `not_a_verification_command` — rather than restating the rule. -->
 - [~] AC-2 — <!-- blocked-by: q1-shadow-reading-window --> `measure_turn_end_gate` prints a non-null Q1 per detector and the
       contract no longer calls Q1 inert.
-      <!-- SPLIT 2026-10-01, because its two clauses are now in different states
-      and a single box would misreport whichever it did not describe.
-      SECOND CLAUSE — CLOSED. `docs/contracts/turn-end-detector-demotion.md` no
-      longer calls Q1 inert anywhere: the quantities heading, the Iron-Law
-      block, the bars table header, the `revisit-if` Q1 half, both instrument
-      entries and the closing honest-description paragraph were all edited in
-      the 2.2 commit, and the reader is named by path and command. The old
-      wording and both overtaken own-analysis findings are kept in place rather
-      than overwritten, so a citation from the 2026-08-to-10 window still lands
-      somewhere truthful.
-      FIRST CLAUSE — MET ON ONE LAYER, STRUCTURALLY UNMET ON THE OTHER, and the
-      distinction is a fact about the sample rather than about the instrument.
-      On `stop_hook_active` all six detectors print a non-null Q1 (one 100.0 %,
-      five 0.0 %). On `refused_turn` all six print `—`, because that layer has
-      observed zero retries and therefore has no denominator. `renderQ1` is
-      doing exactly what it should there: a zero would claim retries happened
-      and nothing fired, which is a different and unevidenced finding.
-      SO THIS CLOSES WHEN a `refused_turn` retry is observed — or when the
-      2026-10-07 reading is published and records the layer as unobserved, which
-      is also a complete outcome. Either way it is 2.3's reading that settles
-      it, not more code. n at 2026-10-01 is 1 record / 1 retry, which is why
-      this is `[~]` and not `[x]`: the clause is literally satisfied on one
-      layer and satisfying it on a sample of one is not what an acceptance
-      criterion about a measurement means. -->
+      <!-- SPLIT 2026-10-01, because its two clauses are in different states and
+      a single box would misreport whichever it did not describe. Revised the
+      same day after an independent review; the first version of this note
+      overstated both halves and the corrections are kept visible.
+      SECOND CLAUSE — CLOSED, and on narrower terms than first claimed.
+      `docs/contracts/turn-end-detector-demotion.md` no longer calls Q1 inert
+      anywhere. What it says instead is NOT "readable" — that was the first
+      wording and the review refuted it. It says the re-entrancy obstacle has
+      fallen and a different one has not: the shipped reader conditions on the
+      retry, Q1 conditions on the detector, and one producer field separates
+      them. The criterion asks only that the contract stop calling Q1 inert, and
+      it has, with the reason stated precisely rather than optimistically.
+      FIRST CLAUSE — NOT MET, and the earlier note was wrong about why. It said
+      Q1 was printed on one layer and absent on the other, with the gap "a fact
+      about the sample rather than about the instrument". Two errors there.
+      (a) What is printed is not Q1 — it is the retry-conditioned share, which
+      disagrees with Q1 in direction, so the clause is unmet on BOTH layers
+      rather than met on one. (b) The sample-versus-instrument claim carried no
+      evidence: layer 2 is reached only when the payload lacks `stop_hook_active`,
+      which on this host is set on the retry a block triggers, so that layer may
+      be close to structurally unreachable — an instrument fact, if true. It is
+      not established either way here and is no longer asserted.
+      THREE DETECTORS ARE NOW CENSORED OUTRIGHT — promissory, completion and
+      untested — because the gate skips them when a dispatch is open and the
+      shadow record carries no dispatch flag. So "a non-null Q1 per detector"
+      cannot be satisfied for half the set until a second producer field lands.
+      SO THIS CLOSES WHEN both producer fields are recorded (step 2.2's note
+      carries the procedure) and a reading over a real window is published by
+      2.3. n at 2026-10-01 is 2 records / 2 retries, which is not a rate. -->
 - [~] AC-3 — <!-- blocked-by: obligation-shadow-rows-live --> The obligation ledger in this repository's own sessions gains
       shadow rows within seven days of 3.1.
       <!-- DEFERRED 2026-10-01 on elapsed time: 3.1 landed 2026-09-29 at
@@ -1204,8 +1268,9 @@ closed rather than left standing:
       population (this session delivered `roadmap-progress-sync`/`hook` and
       `secret-vcs-guard`/`validator`, both in `REFUSABLE_CLASSES`). Both arrays
       the settle path writes — `shadow` AND `discharged` — are empty while the
-      injector-written `delivered` array holds 10 rows. The open question is
-      whether the settle path reaches a write at all. Full reading under
+      injector-written `delivered` array holds 10 rows. Either the settle path
+      never reached a write, or it reached one and computed "nothing to record"
+      on both arms — that is the thing to establish first. Full reading under
       `### blocker: obligation-shadow-rows-live`. -->
 - [~] AC-4 — <!-- blocked-by: obligation-shadow-bar-window --> (carried AC-6) once armed, the detector refuses an undischarged
       write and allows a discharged one.
