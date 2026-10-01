@@ -1,38 +1,22 @@
 /**
  * Toolchain resolution — pick the right test/quality runner per stack.
  *
- * TypeScript twin of `work_engine/stack/runner.py` (ADR-200 py2ts). Leaf
- * module — stdlib only, NO intra-`work_engine` imports — so the public API
- * names stay snake_case to mirror the Python module 1:1 (per ADR-200: Python
- * style is part of the contract).
+ * **The contract lives in `contexts/execution/toolchain-resolver.md`**: what
+ * each axis answers, detection order, confidence tiers, the refusal doctrine,
+ * the cache key and what resolution costs. This header carries only what a
+ * reader OF THIS FILE needs and what the contract page cannot enforce.
  *
- * Sibling of {@link "./detect"} (which labels the *frontend* stack). This
- * module answers a different question: *given a project root, which test
- * runner and quality tools does this stack actually use, and what is the
- * exact command to invoke them?* It is the engine behind 6.1.0 Step 6 — the
- * toolchain resolver that lets one set of commands (`/tests execute`,
- * `/tests create`, `/fix quality`, `/review changes`, `/work`) adapt to
- * phpunit / pest / vitest / jest / playwright / pytest / go / cargo instead
- * of exploding into per-stack command variants.
+ * Originally the TypeScript twin of `work_engine/stack/runner.py` (ADR-200
+ * py2ts). Leaf module — stdlib only, NO intra-`work_engine` imports — and the
+ * public API names stay snake_case, because that style IS the contract. The
+ * 1:1 parity claim no longer holds: the behavior-runner axis and the rspec /
+ * junit / dotnet-test labels are TypeScript-only, and the parity test was
+ * renamed rather than quietly widened. Sibling of {@link "./detect"}, which
+ * labels the *frontend* stack.
  *
- * Detection is filesystem-cheap and **never crashes**: a malformed manifest,
- * a missing file, or an unknown stack degrades to a LOW-confidence empty
- * result rather than raising — a wrong toolchain label is recoverable (the
- * agent can ask), a crash mid-run is not. This mirrors the recoverable-error
- * contract in {@link "./detect"}.
- *
- * Three opt-in flags shape the *selected* command set (the monorepo guard):
- *
- * - `include_e2e` — by default e2e suites (playwright / cypress) are
- *   excluded; fast unit tests run first. Pass to add them.
- * - `include_slow` — by default a script tagged `test:slow` /
- *   `test:integration` is excluded. Pass to add it.
- * - `php_only` — keep only the PHP ecosystem (the `--php` narrowing the
- *   roadmap calls for; "only genuine PHP-space commands stay PHP-locked").
- *
- * The full per-stack inventory is always returned (`runners`); the
- * `selected` tuple is what a command should actually run after applying
- * the flags + the fast-by-default monorepo guard.
+ * Detection **never crashes** — a malformed manifest, a missing file or an
+ * unknown stack degrades to a LOW-confidence empty result, and EVERY
+ * filesystem helper here is guarded, which is what makes that true.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -40,8 +24,10 @@ import * as path from 'node:path';
 /**
  * Every test-runner label the resolver can emit.
  *
- * Single source of truth so the state schema, fixtures, and tests validate
- * against one set without re-deriving it. Mirrors Python's `frozenset`.
+ * Single source of truth: the fixtures validate against this set without
+ * re-deriving it, and a membership test binds it to what the resolver emits —
+ * without that binding it would assert set-equality with itself. Mirrors
+ * Python's `frozenset`.
  */
 export const KNOWN_RUNNERS: ReadonlySet<string> = new Set([
     'pest',
@@ -53,6 +39,31 @@ export const KNOWN_RUNNERS: ReadonlySet<string> = new Set([
     'pytest',
     'go-test',
     'cargo-test',
+    'rspec',
+    'junit',
+    'dotnet-test',
+]);
+
+/**
+ * Every behavior-runner label the resolver can emit, plus the refusal.
+ *
+ * A **separate** set from {@link KNOWN_RUNNERS}: the two answer different
+ * questions — *what runs the tests* versus *does this repository already own a
+ * tool that reads a specification* — and merging them would put a suite nobody
+ * asked to run into `selected`. {@link BEHAVIOR_UNKNOWN} is the refusal label.
+ */
+export const BEHAVIOR_UNKNOWN = 'unknown';
+
+export const KNOWN_BEHAVIOR_RUNNERS: ReadonlySet<string> = new Set([
+    'behat',
+    'cucumber-js',
+    'cucumber-ruby',
+    'cucumber-jvm',
+    'behave',
+    'pytest-bdd',
+    'reqnroll',
+    'specflow',
+    BEHAVIOR_UNKNOWN,
 ]);
 
 // Speed buckets. `fast` runs by default; `slow` needs `include_slow`;
@@ -77,6 +88,84 @@ const _MANIFESTS = [
     'Makefile',
     'Taskfile.yml',
     'Taskfile.yaml',
+    'Gemfile',
+    'pom.xml',
+    'build.gradle',
+    'build.gradle.kts',
+    // `settings.gradle[.kts]` is a Gradle signal `_jvm_build` acts on, so it
+    // must be in the key: a settings-only multi-project root emits a junit row
+    // and would otherwise report the greenfield `mtime: 0` forever.
+    'settings.gradle',
+    'settings.gradle.kts',
+    'global.json',
+    'Directory.Build.props',
+];
+
+/**
+ * .NET project / solution extensions, matched by a root listing.
+ *
+ * .NET is the one ecosystem whose marker has no fixed FILENAME (the project
+ * file is `<whatever>.csproj`), so this is an extension list over the root.
+ *
+ * **Residual cache gap.** {@link latest_manifest_mtime} stats fixed NAMES, so
+ * a signal it does not list is invisible to the key: a project-only .NET
+ * scope, `features/support/env.rb`, `spec/spec_helper.rb`, `setup.cfg`,
+ * `pytest.ini` and the `mvnw` / `gradlew` wrappers. Known, not closed.
+ */
+const _DOTNET_PROJECT_EXTS = ['.sln', '.slnx', '.csproj', '.fsproj', '.vbproj'];
+
+/** The packages that make a .NET project a TEST project, for the HIGH tier. */
+const _DOTNET_TEST_STACK = /Microsoft\.NET\.Test\.Sdk|xunit|nunit|mstest/i;
+
+/**
+ * How deep `_dotnet_project_text` looks. The conventional layout keeps the
+ * solution at the root and projects at `src/<Name>/<Name>.csproj`, which a
+ * root-only scan misses entirely. Depth 2 reaches it; a flat root still costs
+ * one listing, since the walk descends only when the scope holds no project.
+ */
+const _DOTNET_SCAN_DEPTH = 2;
+
+/** Ceiling on project files read per scope, once the descent is entered at all. */
+const _DOTNET_MAX_PROJECTS = 50;
+
+/** Solution extensions — named once, so the descent and its hit test agree. */
+const _DOTNET_SOLUTION_EXTS = ['.sln', '.slnx'];
+
+/** Does this scope hold a solution file? The precondition for descending. */
+function _has_dotnet_solution(dir: string): boolean {
+    try {
+        // `withFileTypes`: an extension list over bare NAMES counts a
+        // DIRECTORY called `x.sln` as a target. The walk already filters.
+        return fs
+            .readdirSync(dir, { withFileTypes: true })
+            .some((e) => e.isFile() && _DOTNET_SOLUTION_EXTS.includes(path.extname(e.name).toLowerCase()));
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Fixed-name files the BEHAVIOR axis reads that `_MANIFESTS` does not cover.
+ *
+ * **The split is historical and no rule separates them.** `_MANIFESTS` was
+ * once "what selects an ecosystem", but selection happens through individual
+ * `_is_file` / `_read_text` calls, and `.rspec` is a native signal in THIS
+ * list. Both are read in one place — so **a new fixed name goes in either;
+ * what matters is ONE.** What escapes: {@link _DOTNET_PROJECT_EXTS}.
+ */
+const _BEHAVIOR_MARKERS = [
+    'pnpm-workspace.yaml',
+    'requirements.txt',
+    'gems.rb',
+    '.rspec',
+    'behat.yml',
+    'behat.yaml',
+    'behat.yml.dist',
+    'behat.dist.yml',
+    'cucumber.js',
+    'cucumber.cjs',
+    'cucumber.mjs',
+    'cucumber.json',
 ];
 
 /** A heterogeneous JSON object, mirroring a Python `dict[str, object]`. */
@@ -88,16 +177,10 @@ type Wrappers = { [role: string]: string };
 /**
  * One detected test runner for one ecosystem.
  *
- * `command` is the exact invocation to run the suite (a task-runner
- * wrapper like `make test` when one exists, otherwise the direct tool).
- * `speed` is one of {@link SPEED_FAST} / {@link SPEED_SLOW} /
- * {@link SPEED_E2E}; the monorepo guard filters on it. `basis` names the
- * concrete signal that matched (dependency, binary, marker file) so the
- * routing decision is auditable, exactly like the non-interactive-contract's
- * `basis` column.
- *
- * Mirrors the Python `@dataclass(frozen=True)` with positional construction
- * and the documented field defaults.
+ * `command` is the exact invocation (a wrapper like `make test` when one
+ * exists, else the direct tool) and is ROOT-relative. `speed` is
+ * {@link SPEED_FAST} / {@link SPEED_SLOW} / {@link SPEED_E2E}; `basis` names
+ * the signal that matched.
  */
 export class RunnerResult {
     readonly ecosystem: string;
@@ -125,15 +208,40 @@ export class RunnerResult {
 }
 
 /**
+ * One behavior runner found in one scope — DETECTION ONLY.
+ *
+ * **`command` is relative to `scope_root`, not the project root** — built from
+ * files inside the scope (`vendor/bin/behat`, `./gradlew test`), so a consumer
+ * runs it WITH `scope_root` as the working directory. The native axis is
+ * root-relative; this one is the exception.
+ *
+ * {@link RunnerResult}'s fields plus `scope_root`, because the axis is
+ * **per-scope, not a repository-wide scalar**: one answer would erase which
+ * package owns which runner, and would break the tie the refusal exists to
+ * refuse. `scope_root` is POSIX-relative, `'.'` for the root; `conflict` is
+ * non-empty only on a refusal row. **It never instructs adoption.**
+ */
+export class BehaviorRunnerResult {
+    constructor(
+        readonly ecosystem: string,
+        readonly runner: string,
+        readonly command: string,
+        readonly scope_root: string,
+        readonly confidence: string = HIGH,
+        readonly basis = '',
+        readonly conflict: readonly string[] = [],
+    ) {}
+}
+
+/**
  * Outcome of one toolchain-resolution pass over a project root.
  *
- * `runners` is the full inventory (every ecosystem detected, every speed
- * bucket). `selected` is what a command should actually run after the flags
- * + fast-by-default guard. `quality` is the ordered list of quality/lint
- * commands per detected ecosystem. `confidence` is the overall tier (HIGH
- * when ≥1 runner matched deterministically and no cross-ecosystem conflict;
- * LOW when nothing matched). `mtime` is the latest manifest mtime, used for
- * cache invalidation just like {@link "./detect".StackResult}.
+ * `runners` is the full inventory; `selected` what a command runs after the
+ * flags + guard; `quality` the ordered lint commands per ecosystem;
+ * `confidence` the overall tier, about the RUNNER and never about `quality`
+ * (ruby, jvm and dotnet contribute a runner and no quality commands, so an
+ * empty `quality` means none was RESOLVED, not that none is needed — contract
+ * page § 3); `mtime` the cache key, as in {@link "./detect".StackResult}.
  */
 export class ToolchainResult {
     readonly ecosystems: readonly string[];
@@ -142,6 +250,22 @@ export class ToolchainResult {
     readonly quality: readonly string[];
     readonly confidence: string;
     readonly mtime: number;
+    /**
+     * Per-scope behavior inventory — detection only, deliberately NOT merged
+     * into `runners` nor reachable from `selected`, so nothing is ever run
+     * BECAUSE this axis detected it.
+     *
+     * That is a claim about reachability, not about execution, and the two
+     * came apart in review: for four of the eight labels the behavior command
+     * is byte-identical to a native command already in `selected` —
+     * `pytest-bdd`/`pytest`, `cucumber-jvm`/`jvm.command`, and both
+     * `reqnroll` and `specflow`/`dotnet test`. Those native rows are
+     * SPEED_FAST, so the suite does run by default; it runs as the native
+     * runner's work, which this axis neither caused nor can prevent. Stating
+     * it as "reported, never run" overreached in exactly the half a reader
+     * would act on.
+     */
+    readonly behavior_runners: readonly BehaviorRunnerResult[];
 
     constructor(args: {
         ecosystems: readonly string[];
@@ -150,6 +274,7 @@ export class ToolchainResult {
         quality: readonly string[];
         confidence: string;
         mtime: number;
+        behavior_runners?: readonly BehaviorRunnerResult[];
     }) {
         this.ecosystems = args.ecosystems;
         this.runners = args.runners;
@@ -157,6 +282,7 @@ export class ToolchainResult {
         this.quality = args.quality;
         this.confidence = args.confidence;
         this.mtime = args.mtime;
+        this.behavior_runners = args.behavior_runners ?? [];
     }
 
     /**
@@ -183,6 +309,15 @@ export class ToolchainResult {
             })),
             selected: this.selected.map((r) => r.command),
             quality: [...this.quality],
+            behavior_runners: this.behavior_runners.map((r) => ({
+                ecosystem: r.ecosystem,
+                runner: r.runner,
+                command: r.command,
+                scope_root: r.scope_root,
+                confidence: r.confidence,
+                basis: r.basis,
+                conflict: [...r.conflict],
+            })),
         };
     }
 }
@@ -190,20 +325,14 @@ export class ToolchainResult {
 /**
  * Inspect `project_root` and resolve its test/quality toolchain.
  *
- * @param project_root
- *   Directory carrying the manifests (`composer.json` / `package.json` /
- *   `pyproject.toml` / `go.mod` / `Cargo.toml`). The resolver does not walk
- *   upwards — the caller picks the scope, matching `detect.detect_stack`.
- * @param opts.include_slow @param opts.include_e2e
- *   Monorepo guard. Off by default → `selected` carries only fast unit
- *   suites. Turn on to add the slow / e2e buckets.
- * @param opts.php_only
- *   The `--php` narrowing — keep only the PHP ecosystem in `selected` (the
- *   full inventory is still returned in `runners`).
- * @returns
- *   A {@link ToolchainResult}. Never raises. No manifest / unknown stack →
- *   an empty result with `confidence == LOW` so the caller can fall back to
- *   asking.
+ * @param project_root Manifest directory; no upward walk, the caller picks
+ *   the scope, matching `detect.detect_stack`.
+ * @param opts.include_slow @param opts.include_e2e Monorepo guard, off by
+ *   default: `selected` carries only fast unit suites.
+ * @param opts.php_only The `--php` narrowing — PHP only in `selected`; the
+ *   full inventory stays in `runners`.
+ * @returns A {@link ToolchainResult}. Never raises; no manifest or unknown
+ *   stack → empty at LOW confidence, so the caller can ask.
  */
 export function resolve_toolchain(
     project_root: string,
@@ -228,6 +357,9 @@ export function resolve_toolchain(
         _is_file(path.join(project_root, 'pytest.ini'));
     const has_go = _is_file(path.join(project_root, 'go.mod'));
     const has_cargo = _is_file(path.join(project_root, 'Cargo.toml'));
+    const gemfile_text = _ruby_gemfile_text(project_root);
+    const jvm = _jvm_build(project_root);
+    const dotnet_basis = _dotnet_basis(project_root);
 
     const wrappers = _task_runner_wrappers(project_root, pkg);
 
@@ -255,10 +387,18 @@ export function resolve_toolchain(
         );
         quality.push('cargo clippy');
     }
+    runners.push(..._ruby_runners(project_root, gemfile_text));
+    if (jvm !== null) {
+        runners.push(..._jvm_runners(jvm));
+    }
+    if (dotnet_basis !== null) {
+        runners.push(..._dotnet_runners(dotnet_basis));
+    }
 
     const ecosystems = _dictFromKeys(runners.map((r) => r.ecosystem));
     const selected = _apply_guard(runners, { include_slow, include_e2e, php_only });
     const confidence = _overall_confidence(runners);
+    const scopes = _behavior_scopes(project_root);
 
     return new ToolchainResult({
         ecosystems,
@@ -266,7 +406,11 @@ export function resolve_toolchain(
         selected: [...selected],
         quality: _dictFromKeys(quality),
         confidence,
-        mtime: latest_manifest_mtime(project_root),
+        // Computed ONCE and threaded into both consumers: workspace discovery
+        // reads a manifest and lists per glob parent, and both the cache probe
+        // and the behavior axis need the same list.
+        mtime: latest_manifest_mtime(project_root, scopes),
+        behavior_runners: resolve_behavior_runners(project_root, scopes),
     });
 }
 
@@ -300,20 +444,31 @@ export function write_config(project_root: string, result: ToolchainResult): str
  * when no manifest exists (greenfield) — a stable sentinel, not a
  * missing-file error.
  */
-export function latest_manifest_mtime(project_root: string): number {
+export function latest_manifest_mtime(
+    project_root: string,
+    scopes?: readonly string[],
+): number {
     const mtimes: number[] = [];
-    for (const name of _MANIFESTS) {
-        const p = path.join(project_root, name);
-        if (_is_file(p)) {
-            mtimes.push(_stat_mtime(p));
+    const names = [..._MANIFESTS, ..._BEHAVIOR_MARKERS];
+    // Every scope, not only the root: `behavior_runners` is cached per scope,
+    // so a root-only key cannot see Behat arriving in a package — stale forever
+    // in the common case, and widening only invalidates more often. Cost as a
+    // SHAPE, since the arithmetic was published wrong once: both name lists
+    // stat-ed per scope, bounded by _MAX_BEHAVIOR_SCOPES, plus
+    // `_behavior_scopes` when `scopes` is omitted.
+    for (const scope of scopes ?? _behavior_scopes(project_root)) {
+        const dir = scope === '.' ? project_root : path.join(project_root, scope);
+        for (const name of names) {
+            const p = path.join(dir, name);
+            if (_is_file(p)) {
+                mtimes.push(_stat_mtime(p));
+            }
         }
     }
     return mtimes.length > 0 ? Math.max(...mtimes) : 0.0;
 }
 
-// --------------------------------------------------------------------------
 // Ecosystem resolvers
-// --------------------------------------------------------------------------
 
 function _php_runners(root: string, composer: Manifest, wrappers: Wrappers): RunnerResult[] {
     const deps = _all_dependencies(composer, 'require', 'require-dev');
@@ -422,6 +577,533 @@ function _python_runners(pyproject_text: string): RunnerResult[] {
     ];
 }
 
+/**
+ * Ruby — `rspec` ONLY on an explicit signal, never a default: Ruby ships
+ * minitest in the stdlib, so a Gemfile with no rspec signal is probably
+ * minitest, and a MEDIUM `rspec` would be a guess wearing a label.
+ */
+/**
+ * The Ruby dependency declaration, under either name Bundler accepts —
+ * reading only `Gemfile` made a `gems.rb` project invisible to both branches.
+ */
+interface Gemfile {
+    text: string;
+    file: string;
+    /** The FILE exists — `bundle exec` keys on this, never on the text parsing. */
+    present: boolean;
+}
+
+function _ruby_gemfile_text(dir: string): Gemfile {
+    let present = false;
+    for (const name of ['Gemfile', 'gems.rb']) {
+        const full = path.join(dir, name);
+        // Same presence-not-content split the Gradle branch makes.
+        present = present || _is_file(full);
+        const text = _read_text(full);
+        if (text !== '') {
+            // The NAME travels with the text: the basis is serialised and
+            // names the file that matched, so a `gems.rb` project is not told
+            // its signal came from a `Gemfile` it does not have.
+            return { text, file: name, present: true };
+        }
+    }
+    return { text: '', file: '', present };
+}
+
+/** `gem 'rspec'` / `gem "cucumber"` — a DECLARATION, not the word anywhere. */
+function _gem_declared(text: string, gem: string): boolean {
+    // Same discipline as `_PY_BEHAVE`: a bare `\brspec\b` fires on a
+    // commented-out gem, a changelog line, or any name containing the word. A
+    // hyphenated SUFFIX is allowed (`rspec-rails`, `cucumber-rails`) but a
+    // suffix ONLY, so `cucumber` matches no gem merely ending in it.
+    return new RegExp(`^[ \\t]*gem[ \\t]+["']${gem}(-[A-Za-z0-9_-]+)?["']`, 'm').test(text);
+}
+
+function _ruby_runners(root: string, gemfile: Gemfile): RunnerResult[] {
+    const dot_rspec = _is_file(path.join(root, '.rspec'));
+    const spec_helper = _is_file(path.join(root, 'spec', 'spec_helper.rb'));
+    const in_gemfile = _gem_declared(gemfile.text, 'rspec');
+    // No `Gemfile` precondition: each of the three signals stands on its own,
+    // as the contract table says. Gating on the Gemfile made the two marker
+    // bases unreachable in the projects that have only markers.
+    if (!in_gemfile && !dot_rspec && !spec_helper) {
+        return [];
+    }
+    const basis = in_gemfile
+        ? `rspec in ${gemfile.file}`
+        : dot_rspec
+          ? '.rspec present'
+          : 'spec/spec_helper.rb present';
+    // `bundle exec` ABORTS without a Gemfile, and the marker signals exist
+    // precisely for projects that have none — so the prefix keys on the file
+    // that makes it work, not on the signal that found the suite.
+    const cmd = gemfile.present ? 'bundle exec rspec' : 'rspec';
+    return [new RunnerResult('ruby', 'rspec', cmd, SPEED_FAST, HIGH, basis)];
+}
+
+/** Which JVM build system answered, its text, and the command prefix to use. */
+interface JvmBuild {
+    tool: 'maven' | 'gradle';
+    text: string;
+    command: string;
+}
+
+/**
+ * Locate the JVM build file and pick the invocation.
+ *
+ * Wrapper-first, like `_task_runner_wrappers`: `./gradlew` / `./mvnw` pin the
+ * build-tool version, so the ambient `gradle` / `mvn` can fail on one the
+ * project never used.
+ */
+function _jvm_build(root: string): JvmBuild | null {
+    const pom = _read_text(path.join(root, 'pom.xml'));
+    if (pom !== '') {
+        const wrapper = _is_file(path.join(root, 'mvnw'));
+        return { tool: 'maven', text: pom, command: wrapper ? './mvnw test' : 'mvn test' };
+    }
+    // PRESENCE, not content: a Gradle multi-project root routinely has an
+    // empty `build.gradle`, or none with `settings.gradle[.kts]` declaring
+    // the modules, and both looked like "no Gradle here". Maven above still
+    // gates on content — recorded in the roadmap residue.
+    const gradleFile = ['build.gradle', 'build.gradle.kts', 'settings.gradle', 'settings.gradle.kts'].find(
+        (n) => _is_file(path.join(root, n)),
+    );
+    if (gradleFile !== undefined) {
+        const wrapper = _is_file(path.join(root, 'gradlew'));
+        return {
+            tool: 'gradle',
+            text:
+                _read_text(path.join(root, 'build.gradle')) +
+                '\n' +
+                _read_text(path.join(root, 'build.gradle.kts')),
+            command: wrapper ? './gradlew test' : 'gradle test',
+        };
+    }
+    return null;
+}
+
+function _jvm_runners(build: JvmBuild): RunnerResult[] {
+    const named = /\bjunit\b/i.test(build.text);
+    const conf = named ? HIGH : MEDIUM;
+    const basis = named
+        ? `junit in the ${build.tool} build file`
+        : `${build.tool} build file present, no explicit runner`;
+    return [new RunnerResult('jvm', 'junit', build.command, SPEED_FAST, conf, basis)];
+}
+
+/**
+ * .NET — the basis string, or `null` when nothing marks a .NET project.
+ *
+ * Mirrors the PHP gradation, awarding HIGH only for a NAMED runner: HIGH
+ * needs a PROJECT file naming a TEST stack (`Microsoft.NET.Test.Sdk`, xunit,
+ * nunit, mstest); a bare project or solution is MEDIUM, the analogue of the
+ * bare manifest. That stops a bare non-test project raising the WHOLE
+ * repository to HIGH, but does NOT keep the row out of `selected` —
+ * `_apply_guard` has never read `confidence` — which is why a marker with no
+ * project anywhere emits no row.
+ */
+function _dotnet_basis(root: string): { basis: string; confidence: string } | null {
+    let names: string[];
+    try {
+        // SORTED: the basis names the matched file and is serialised, so an
+        // unsorted listing churns a stable config on rename. FILES only — a
+        // directory named `x.csproj` is no target, and this row reaches
+        // `selected`.
+        names = fs
+            .readdirSync(root, { withFileTypes: true })
+            .filter((e) => e.isFile())
+            .map((e) => e.name)
+            .sort();
+    } catch {
+        names = [];
+    }
+    // A ROOT TARGET, not a target anywhere. `dotnet test` is NOT recursive:
+    // with no project or solution in the working directory it fails MSB1003,
+    // whatever sits below. So the row is gated on this listing, and a scope
+    // whose only .NET evidence is an SDK pin gets NO row — confidence does not
+    // gate `selected`, so a row here would be a command that cannot run.
+    const target = names.find((n) => _DOTNET_PROJECT_EXTS.includes(path.extname(n).toLowerCase()));
+    if (target === undefined) {
+        return null;
+    }
+    // The DESCENT still matters for the tier: a root `.sln` is a valid target
+    // whose own body names no package, so the projects it references decide
+    // HIGH vs MEDIUM.
+    return _DOTNET_TEST_STACK.test(_dotnet_project_text(root))
+        ? { basis: 'test stack named in a .NET project file', confidence: HIGH }
+        : { basis: `${target} present, no test stack named`, confidence: MEDIUM };
+}
+
+function _dotnet_runners(found: { basis: string; confidence: string }): RunnerResult[] {
+    return [
+        new RunnerResult(
+            'dotnet',
+            'dotnet-test',
+            'dotnet test',
+            SPEED_FAST,
+            found.confidence,
+            found.basis,
+        ),
+    ];
+}
+
+// --- Behavior-runner axis — per scope, list-shaped, detection only -------
+
+/**
+ * Resolve every behavior runner this repository carries, one row per scope.
+ *
+ * Scopes are the root plus each declared workspace package: one row cannot
+ * represent the ordinary monorepo, a behavior runner in one package and plain
+ * unit tests in another. Two runners of ONE ecosystem in one scope refuse,
+ * naming both, never a pick. Never raises — an unreadable manifest yields
+ * fewer rows.
+ */
+export function resolve_behavior_runners(
+    project_root: string,
+    scopes?: readonly string[],
+): BehaviorRunnerResult[] {
+    const out: BehaviorRunnerResult[] = [];
+    for (const scope of scopes ?? _behavior_scopes(project_root)) {
+        const dir = scope === '.' ? project_root : path.join(project_root, scope);
+        // Grouped by ECOSYSTEM: two ecosystems' behavior runners are a
+        // polyglot repository, not a conflict — a PHP app with a JS frontend
+        // is the commonest shape there is, and `unknown` throws both answers
+        // away. Only two runners in ONE ecosystem are mutually exclusive.
+        const rows = _behavior_runners_in_scope(dir, scope);
+        for (const ecosystem of _dictFromKeys(rows.map((r) => r.ecosystem))) {
+            const found = rows.filter((r) => r.ecosystem === ecosystem);
+            const names = [...new Set(found.map((r) => r.runner))].sort();
+            if (names.length <= 1) {
+                // One answer per ecosystem, however many signals produced it.
+                // The `>1 row, 1 name` case is unreachable today; without it a
+                // future branch emitting a label twice refuses it against itself.
+                out.push(found[0] as BehaviorRunnerResult);
+                continue;
+            }
+            out.push(
+                new BehaviorRunnerResult(
+                    ecosystem,
+                    BEHAVIOR_UNKNOWN,
+                    '',
+                    scope,
+                    LOW,
+                    `two ${ecosystem} behavior runners in one scope ` +
+                        `(${names.join(', ')}) — refusing to choose, as the frontend ` +
+                        'detector refuses between mutually exclusive workspaces',
+                    names,
+                ),
+            );
+        }
+    }
+    return out;
+}
+
+/** Behavior runners inside ONE scope directory, before conflict handling. */
+function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerResult[] {
+    const out: BehaviorRunnerResult[] = [];
+    const at = (n: string): string => path.join(dir, n);
+    const row = (ecosystem: string, runner: string, command: string, basis: string): void => {
+        out.push(new BehaviorRunnerResult(ecosystem, runner, command, scope, HIGH, basis));
+    };
+
+    const php_deps = _all_dependencies(_read_json(at('composer.json')), 'require', 'require-dev');
+    const behat_config = ['behat.yml', 'behat.yaml', 'behat.yml.dist', 'behat.dist.yml'].find((n) =>
+        _is_file(at(n)),
+    );
+    if ('behat/behat' in php_deps || behat_config !== undefined) {
+        // "in the composer manifest", NOT "in composer require": the literal
+        // reads as an install instruction to a grep, and this axis may never be
+        // mistaken for one. And `vendor/bin/behat` exists only after a composer
+        // install, so a config-only scope gets the bare binary.
+        const declared = 'behat/behat' in php_deps;
+        const basis = declared
+            ? 'behat/behat in the composer manifest'
+            : `${behat_config} present`;
+        row('php', 'behat', declared ? 'vendor/bin/behat' : 'behat', basis);
+    }
+
+    // OWN dependencies only, unlike the native axis: a peer or optional
+    // declaration says a CONSUMER must supply cucumber — which is exactly how a
+    // formatter or preset declares it. On an axis whose doctrine is no guessing,
+    // reading one as ownership is the guess.
+    const js_deps = _all_dependencies(
+        _read_json(at('package.json')),
+        'dependencies',
+        'devDependencies',
+    );
+    const cucumber_config = ['cucumber.js', 'cucumber.cjs', 'cucumber.mjs', 'cucumber.json'].find(
+        (n) => _is_file(at(n)),
+    );
+    if ('@cucumber/cucumber' in js_deps || 'cucumber' in js_deps || cucumber_config !== undefined) {
+        const dep = '@cucumber/cucumber' in js_deps ? '@cucumber/cucumber' : 'cucumber';
+        // `npx` FETCHES when the package is absent, so on the config-only
+        // path it would let a detection-only axis install. Degrades like the
+        // behat and ruby rows.
+        const declared = dep in js_deps;
+        const basis = declared ? `${dep} in package deps` : `${cucumber_config} present`;
+        row('js', 'cucumber-js', declared ? 'npx cucumber-js' : 'cucumber-js', basis);
+    }
+
+    // Joined with a newline, like `_dotnet_project_text`: concatenated bare, a
+    // `pyproject.toml` with no trailing newline fuses its last token to the
+    // first of `requirements.txt`, making a token present in neither.
+    const py_text = [_read_text(at('pyproject.toml')), _read_text(at('requirements.txt'))].join('\n');
+    if (_PY_BEHAVE.test(py_text)) {
+        row('python', 'behave', 'behave', 'behave declared as a python dependency');
+    }
+    // Anchored like `_PY_BEHAVE`, for a sharper reason than symmetry: an
+    // unanchored match on a commented-out `# pytest-bdd` beside a real
+    // `behave` declaration made TWO python rows, which the grouping turned
+    // into a FALSE refusal. A false positive here deletes a true row.
+    if (_PY_BDD.test(py_text)) {
+        row('python', 'pytest-bdd', 'pytest', 'pytest-bdd declared as a python dependency');
+    }
+
+    const gemfile = _ruby_gemfile_text(dir);
+    const cucumber_gem = _gem_declared(gemfile.text, 'cucumber');
+    if (cucumber_gem || _is_file(path.join(dir, 'features', 'support', 'env.rb'))) {
+        // `bundle exec` ABORTS without a Gemfile and `env.rb` is the signal
+        // for scopes that have none — same guard as `_ruby_runners`.
+        const basis = cucumber_gem
+            ? `cucumber in ${gemfile.file}`
+            : 'features/support/env.rb present';
+        const cmd = gemfile.present ? 'bundle exec cucumber' : 'cucumber';
+        row('ruby', 'cucumber-ruby', cmd, basis);
+    }
+
+    // NOTE: `jvm.text` is the ROOT build files only, so a Gradle multi-project
+    // root whose modules declare cucumber is missed — recorded in the roadmap
+    // residue rather than fixed, because reading the included modules is new
+    // detection work rather than a correction.
+    const jvm = _jvm_build(dir);
+    if (jvm !== null && /io\.cucumber|cucumber-java|cucumber-junit/i.test(jvm.text)) {
+        row('jvm', 'cucumber-jvm', jvm.command, `cucumber in the ${jvm.tool} build file`);
+    }
+
+    // Two rows, not an `else if`. The chain was a silent pick: this reads the
+    // CONCATENATED text of every project, so a Reqnroll project beside a
+    // SpecFlow one collapsed into one HIGH row — the guess the refusal exists
+    // to prevent. Two rows let the grouping refuse, as it does for python.
+    const dotnet_text = _dotnet_project_text(dir);
+    if (/\bReqnroll\b/i.test(dotnet_text)) {
+        row('dotnet', 'reqnroll', 'dotnet test', 'Reqnroll in a project file');
+    }
+    if (/\bSpecFlow\b/i.test(dotnet_text)) {
+        row('dotnet', 'specflow', 'dotnet test', 'SpecFlow in a project file');
+    }
+
+    return out;
+}
+
+/**
+ * Concatenated text of the .NET project files belonging to this scope.
+ *
+ * Scans the scope and, holding no project file of its own, descends to
+ * {@link _DOTNET_SCAN_DEPTH}: the `root/src/<Name>/<Name>.csproj` layout,
+ * where the root carries only a `.sln` and a `.sln` names no package. Sorted
+ * at every level, so deterministic. Depth is bounded, and files READ are
+ * bounded — directories LISTED are not, and the max-projects exits fire only
+ * once a project was found.
+ */
+function _dotnet_project_text(dir: string): string {
+    const texts: string[] = [];
+    // Gated on a solution. The gate suppresses the DESCENT only: this
+    // directory is listed here and again by the walk, in every scope of every
+    // repository. NOT pruned at scope boundaries either, so a root solution
+    // plus package scopes can still double-attribute — both residue.
+    const solution = _has_dotnet_solution(dir);
+    const walk = (at: string, depth: number): void => {
+        if (texts.length >= _DOTNET_MAX_PROJECTS) {
+            return;
+        }
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(at, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+        let hit = false;
+        for (const e of entries) {
+            if (!e.isFile() || !_DOTNET_PROJECT_EXTS.includes(path.extname(e.name).toLowerCase())) {
+                continue;
+            }
+            // A SOLUTION's body is project NAMES, never packages — neither
+            // read as project text nor a reason to stop descending. Read,
+            // `MyApp.SpecFlow.Tests` emits a HIGH `specflow` row no project
+            // supports, and a legacy SpecFlow name beside a Reqnroll one makes
+            // two dotnet rows the grouping REFUSES — a false positive deleting
+            // a true row. Presence is still a descent signal.
+            if (_DOTNET_SOLUTION_EXTS.includes(path.extname(e.name).toLowerCase())) {
+                continue;
+            }
+            if (texts.length >= _DOTNET_MAX_PROJECTS) {
+                return;
+            }
+            texts.push(_read_text(path.join(at, e.name)));
+            hit = true;
+        }
+        if (hit || !solution || depth >= _DOTNET_SCAN_DEPTH) {
+            return;
+        }
+        for (const e of entries) {
+            if (e.isDirectory() && !e.name.startsWith('.') && e.name !== 'node_modules') {
+                walk(path.join(at, e.name), depth + 1);
+            }
+        }
+    };
+    walk(dir, 0);
+    return texts.join('\n');
+}
+
+/** Hard ceiling on scopes scanned — a pathological glob cannot stall a turn. */
+const _MAX_BEHAVIOR_SCOPES = 200;
+
+/**
+ * `behave` DECLARED AS A DEPENDENCY, never merely mentioned.
+ *
+ * `behave` is an ordinary English verb, unlike every sibling token here, so a
+ * bare `\bbehave\b` fires HIGH on a description or changelog line. Anchored to
+ * a line-start declaration, terminated by a version specifier, a separator or
+ * a `#` comment. Misses the SINGLE-LINE array form only — the multi-line
+ * array and the poetry inline table both match — a missed row either way,
+ * which is the cheap direction here.
+ */
+const _PY_BEHAVE = /^[ \t]*["']?behave["']?[ \t]*(?:$|[=<>~!,;[#])/m;
+
+/** `pytest-bdd` declared as a dependency — same anchoring, same reason. */
+const _PY_BDD = /^[ \t]*["']?pytest-bdd["']?[ \t]*(?:$|[=<>~!,;[#])/m;
+
+/**
+ * The `packages:` sequence of a `pnpm-workspace.yaml`, and ONLY that key.
+ *
+ * Matching every `- item` line is wrong in a way that reads as working: a
+ * real workspace file carries sibling sequences (`onlyBuiltDependencies`,
+ * `patchedDependencies`), so `- esbuild` under one became the scope
+ * `esbuild`. A line-state reader, not a YAML parse, because this module is
+ * leaf by contract: track whether the current top-level key is `packages`
+ * and accept items only while it is; any column-0 key ends the section.
+ *
+ * KNOWN GAP: a MULTI-LINE flow sequence (`packages: [` then item lines) is
+ * dropped whole — the single-line flow branch consumes the opener. Residue.
+ */
+export function _pnpm_packages(text: string): string[] {
+    const out: string[] = [];
+    let inPackages = false;
+    const push = (raw: string): void => {
+        // A trailing `# comment` is legal YAML; strip before unquoting.
+        const v = raw.replace(/\s+#.*$/, '').trim().replace(/^['"]|['"]$/g, '').trim();
+        if (v !== '') out.push(v);
+    };
+    // `\r?\n`, not `\n`: `.` never matches `\r`, so on a CRLF file the key
+    // regex below matched NOTHING and the whole workspace silently collapsed
+    // to the root scope — the same silent-drop class as the flow gap above.
+    for (const line of text.split(/\r?\n/)) {
+        if (line.trim() === '' || /^\s*#/.test(line)) {
+            continue;
+        }
+        const key = /^([A-Za-z0-9_-]+)\s*:(.*)$/.exec(line);
+        if (key) {
+            inPackages = key[1] === 'packages';
+            // A FLOW sequence on the key line is the same declaration
+            // inline; consuming the line discarded the whole workspace.
+            const rest = (key[2] ?? '').trim();
+            if (inPackages && rest.startsWith('[')) {
+                for (const part of rest.replace(/^\[|\]$/g, '').split(',')) {
+                    push(part);
+                }
+                inPackages = false;
+            }
+            continue;
+        }
+        if (!inPackages) {
+            continue;
+        }
+        // `^\s*-`, not `^\s+-`: a zero-indent block sequence is valid YAML.
+        const item = /^\s*-\s*(.+?)\s*$/.exec(line);
+        if (item && item[1] !== undefined) {
+            push(item[1]);
+        }
+    }
+    return out;
+}
+
+/**
+ * The scopes to scan: the root, plus each declared workspace package.
+ *
+ * A LOCAL re-read, not an import of the frontend detector: this module is
+ * leaf by contract. Only the two forms that declare package locations are
+ * read; a `turbo.json` / `nx.json` root sits beside one in practice.
+ */
+/** A segment no workspace package lives in — `node_modules`, dot-dirs. */
+function _excluded_scope(name: string): boolean {
+    return name.split('/').some((seg) => seg.startsWith('.') || seg === 'node_modules');
+}
+
+export function _behavior_scopes(project_root: string): string[] {
+    const globs: string[] = [];
+    const pkg = _read_json(path.join(project_root, 'package.json'));
+    const ws = pkg['workspaces'];
+    if (Array.isArray(ws)) {
+        globs.push(...ws.filter((g): g is string => typeof g === 'string'));
+    } else if (_isDict(ws) && Array.isArray(ws['packages'])) {
+        globs.push(...(ws['packages'] as unknown[]).filter((g): g is string => typeof g === 'string'));
+    }
+    globs.push(..._pnpm_packages(_read_text(path.join(project_root, 'pnpm-workspace.yaml'))));
+
+    const scopes = ['.'];
+    for (const raw of globs) {
+        // Checked DURING expansion, not sliced off the result, which bounds
+        // only after the listing is paid. Non-resolvers still cost a syscall.
+        if (scopes.length >= _MAX_BEHAVIOR_SCOPES) {
+            break;
+        }
+        const g = raw.replace(/^\.\//, '').replace(/\/+$/, '');
+        if (g === '' || g.startsWith('!') || g.startsWith('/') || g.includes('..')) {
+            continue;
+        }
+        // One predicate over the WHOLE pattern, before the fork: checking only
+        // the glob child let `node_modules/*` admit what the literal refuses.
+        if (_excluded_scope(g)) {
+            continue;
+        }
+        if (g.endsWith('/*')) {
+            const parent = g.slice(0, -2);
+            let children: fs.Dirent[];
+            try {
+                children = fs.readdirSync(path.join(project_root, parent), { withFileTypes: true });
+            } catch {
+                continue;
+            }
+            // SORTED: scope order becomes serialised row order.
+            children.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+            for (const c of children) {
+                if (scopes.length >= _MAX_BEHAVIOR_SCOPES) {
+                    break;
+                }
+                if (c.isDirectory() && !_excluded_scope(c.name)) {
+                    scopes.push(`${parent}/${c.name}`);
+                }
+            }
+        } else if (!g.includes('*')) {
+            // Existence-checked; the exclusion already ran above the fork.
+            try {
+                // `lstatSync`, matching the glob branch's `Dirent.isDirectory()`:
+                // `statSync` follows a symlink, so one package was a scope when
+                // declared literally and skipped when matched by a glob.
+                if (fs.lstatSync(path.join(project_root, g)).isDirectory()) {
+                    scopes.push(g);
+                }
+            } catch {
+                /* declared but absent — not a scope */
+            }
+        }
+        // A deeper or mid-path glob (`a/*/b`, `**`) is skipped, not
+        // half-expanded: a scope that does not exist is worse than one fewer.
+    }
+    return _dictFromKeys(scopes);
+}
+
 function _php_quality(root: string, composer: Manifest, _wrappers: Wrappers): string[] {
     const deps = _all_dependencies(composer, 'require', 'require-dev');
     const out: string[] = [];
@@ -463,9 +1145,7 @@ function _python_quality(pyproject_text: string): string[] {
     return out;
 }
 
-// --------------------------------------------------------------------------
 // Task-runner wrappers (Makefile / Taskfile / package scripts)
-// --------------------------------------------------------------------------
 
 /**
  * Map logical roles to a wrapper command when one exists.
@@ -531,16 +1211,12 @@ export interface PackageManagerResolution {
 /**
  * Resolve the package manager per `monorepo-workspace/SKILL.md` § 1.
  *
- * Two behaviours the previous three-branch version did not have, and both are
- * in the skill rather than invented here:
- *
- *  - `packageManager` in the root `package.json` is the DECLARATION and wins
- *    when present, because it is what Corepack enforces. A lockfile is an
- *    inference; a declaration is not.
- *  - **Two lockfiles is a finding, not a tie to break.** The old code returned
- *    `pnpm` for a repository carrying both `pnpm-lock.yaml` and `yarn.lock`,
- *    silently picking the first branch it tested. That is a guess presented as
- *    an answer, and the skill says to report both and stop.
+ * Two behaviors the previous three-branch version lacked, both from the skill
+ * rather than invented here: `packageManager` in the root `package.json` is
+ * the DECLARATION and wins when present, because Corepack enforces it and a
+ * lockfile is only an inference; and **two lockfiles is a finding, not a tie
+ * to break** — the old code returned `pnpm` for a repository carrying both
+ * `pnpm-lock.yaml` and `yarn.lock`, a guess presented as an answer.
  */
 export function _resolve_package_manager(
     root: string,
@@ -583,9 +1259,7 @@ function _package_manager(root: string, pkg?: Manifest): string {
     return _resolve_package_manager(root, pkg).manager ?? 'npm';
 }
 
-// --------------------------------------------------------------------------
 // Monorepo guard + confidence
-// --------------------------------------------------------------------------
 
 function _apply_guard(
     runners: RunnerResult[],
@@ -617,9 +1291,7 @@ function _overall_confidence(runners: RunnerResult[]): string {
     return MEDIUM;
 }
 
-// --------------------------------------------------------------------------
 // Shared readers (mirror detect.py's recoverable-error contract)
-// --------------------------------------------------------------------------
 
 function _read_json(p: string): Manifest {
     if (!_is_file(p)) {
@@ -677,9 +1349,7 @@ function _script_command(scripts: Manifest, names: string[], manager: string): s
     return '';
 }
 
-// --------------------------------------------------------------------------
 // stdlib parity helpers
-// --------------------------------------------------------------------------
 
 /** Python `Path.is_file()` — true only for a regular file (follows symlinks). */
 function _is_file(p: string): boolean {
@@ -696,8 +1366,15 @@ function _is_file(p: string): boolean {
  * the parity tests treat the serialized `mtime` as non-deterministic.
  */
 function _stat_mtime(p: string): number {
-    const st = fs.statSync(p, { bigint: true });
-    return Number(st.mtimeNs) / 1e9;
+    // GUARDED, like every sibling helper. `latest_manifest_mtime` stats after
+    // a SEPARATE `_is_file`, so a file deleted between the two threw out of
+    // `resolve_toolchain` and broke its never-raises contract. A missing file
+    // contributes no mtime, exactly as one that was never there.
+    try {
+        return Number(fs.statSync(p, { bigint: true }).mtimeNs) / 1e9;
+    } catch {
+        return 0;
+    }
 }
 
 /** Python `isinstance(x, dict)` — a plain (non-array, non-null) object. */
@@ -723,30 +1400,18 @@ function _dictFromKeys(seq: string[]): string[] {
     return [...new Set(seq)];
 }
 
-// --------------------------------------------------------------------------
 // JSON serialisation — byte-parity with `json.dumps(..., indent=2,
 // sort_keys=True)` for `write_config`.
-// --------------------------------------------------------------------------
 
 /**
  * Mirror Python `json.dumps(obj, indent=2, sort_keys=True)` byte-for-byte.
  *
- * Two CPython behaviours that `JSON.stringify` does NOT reproduce on its own
- * and are reproduced here:
- *
- * - `sort_keys=True` — object keys emitted in code-point ascending order.
- *   `JSON.stringify` preserves insertion order; we pre-sort recursively.
- * - integer-valued floats render as `N.0` (e.g. `1767222000.0`). JSON has no
- *   float/int tag, so a JS `number` that is integral renders without `.0`.
- *   In this module the only float is `mtime`; the parity tests normalize it
- *   (its exact byte-repr is not reproducible across CPython/V8), but the
- *   serialiser still applies the `N.0` rule via a tagged float wrapper so the
- *   *shape* matches. `mtime` is the sole value passed through that wrapper.
- *
- * 2-space indent, `": "` key separator, `","` item separator with the
- * indent-driven newline, `{}` / `[]` for empties, non-ASCII verbatim
- * (`ensure_ascii` defaults to `True` in CPython, but `to_config` carries no
- * non-ASCII, so the distinction never surfaces).
+ * Two CPython behaviors `JSON.stringify` does NOT reproduce, done here:
+ * `sort_keys=True` (code-point key order — pre-sorted recursively) and
+ * integer-valued floats rendering `N.0`, which JSON cannot tag. The only
+ * float is `mtime`; the parity tests normalize its value (not reproducible
+ * across CPython/V8) while the tagged wrapper keeps the *shape*. Also:
+ * 2-space indent, `": "` / `","` separators, `{}` / `[]` for empties.
  */
 function jsonDumps(obj: unknown, opts: { indent: number; sort_keys: boolean }): string {
     return _encode(obj, opts, 0);
