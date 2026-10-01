@@ -38,6 +38,7 @@ import {
     _behavior_scopes,
     _pnpm_packages,
     _resolve_package_manager,
+    latest_manifest_mtime,
     resolve_behavior_runners,
     resolve_toolchain,
     write_config,
@@ -997,6 +998,53 @@ describe('stack/runner — behaviour-runner axis', () => {
         expect(_pnpm_packages("packages: ['a/*']\nonlyBuiltDependencies:\n  - esbuild\n")).toEqual(['a/*']);
     });
 
+    it('a SOLUTION naming a SpecFlow project emits no specflow row', () => {
+        // R10 finding 1. `.sln` is in `_DOTNET_PROJECT_EXTS`, so its body used
+        // to be concatenated into the "project text" the package regexes read.
+        // A solution lists project NAMES and `.` is a word boundary, so
+        // `MyApp.SpecFlow.Tests` matched `/\\bSpecFlow\\b/i` and emitted a HIGH
+        // row whose basis claimed a project file that references nothing.
+        write('App.sln', 'Project("{X}") = "MyApp.SpecFlow.Tests", "src/T/T.csproj", "{Y}"\n');
+        write('src/T/T.csproj', '<Project Sdk="Microsoft.NET.Sdk" />');
+        expect(resolve_behavior_runners(tmp).map((r) => r.runner)).not.toContain('specflow');
+    });
+
+    it('a SOLUTION naming two behavior frameworks does not force a false refusal', () => {
+        // The expensive half of the same defect: two dotnet names in one scope
+        // make the per-ecosystem grouping REFUSE, so a mid-migration solution
+        // naming a legacy SpecFlow project beside a Reqnroll one destroyed the
+        // true answer. The project file is the only thing that may speak.
+        write(
+            'App.sln',
+            'Project = "Legacy.SpecFlow.Tests"\nProject = "New.Reqnroll.Tests"\n',
+        );
+        write('src/T/T.csproj', '<Project><PackageReference Include="Reqnroll" /></Project>');
+        const dotnet = resolve_behavior_runners(tmp).filter((r) => r.ecosystem === 'dotnet');
+        expect(dotnet.map((r) => r.runner)).toEqual(['reqnroll']);
+        expect(dotnet[0]?.conflict).toEqual([]);
+    });
+
+    it('a SOLUTION naming a test stack does not raise dotnet-test to HIGH', () => {
+        // Same read, native axis: `_DOTNET_TEST_STACK` matched the solution's
+        // project names too, so `MyApp.NUnit.Tests` graduated a repository to
+        // HIGH on a file that declares no package at all.
+        write('App.sln', 'Project("{X}") = "MyApp.NUnit.Tests", "src/T/T.csproj", "{Y}"\n');
+        write('src/T/T.csproj', '<Project Sdk="Microsoft.NET.Sdk" />');
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'dotnet-test');
+        expect(found?.confidence).toBe(MEDIUM);
+    });
+
+    it('a glob scope skips node_modules and dot-directories', () => {
+        // R10 finding 5. The glob expander admitted every child directory while
+        // the sibling .NET walk skipped these, so a `pkg/*` workspace reported
+        // `pkg/node_modules` as a scope and paid a full probe for it.
+        write('package.json', JSON.stringify({ workspaces: ['pkg/*'] }));
+        write('pkg/real/composer.json', JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } }));
+        write('pkg/node_modules/dep/package.json', '{}');
+        write('pkg/.turbo/x.json', '{}');
+        expect(_behavior_scopes(tmp)).toEqual(['.', 'pkg/real']);
+    });
+
     it('scope order is sorted, so the serialized row order is stable', () => {
         write('package.json', JSON.stringify({ workspaces: ['pkg/*'] }));
         for (const name of ['zeta', 'alpha', 'mid']) {
@@ -1074,5 +1122,55 @@ describe('stack/runner — every emitted label is a declared label', () => {
         for (const label of ['behat', 'cucumber-js', 'cucumber-ruby', 'cucumber-jvm', 'behave', 'pytest-bdd', 'reqnroll', 'specflow']) {
             expect(seen).toContain(label);
         }
+    });
+});
+
+describe('stack/runner — latest_manifest_mtime', () => {
+    // R10 finding 2: this function changed signature AND semantics (root-only
+    // -> every scope, `_MANIFESTS` -> `_MANIFESTS + _BEHAVIOR_MARKERS`) with
+    // no fixture, and both snapshot helpers normalise its value away — so a
+    // regression back to a root-only key passed the whole suite. It is the one
+    // change in the branch that governs cache correctness.
+
+    it('no manifest anywhere is the 0 sentinel, not an error', () => {
+        expect(latest_manifest_mtime(tmp)).toBe(0.0);
+    });
+
+    it('a root manifest is seen', () => {
+        write('composer.json', '{}');
+        expect(latest_manifest_mtime(tmp)).toBeGreaterThan(0);
+    });
+
+    it('a manifest in a workspace PACKAGE moves the key — the whole point', () => {
+        // The stated motivation, asserted instead of believed: a root-only key
+        // cannot see Behat arriving in a package, so the cache would be stale
+        // forever in the common case.
+        write('package.json', JSON.stringify({ workspaces: ['pkg/*'] }));
+        write('pkg/a/.gitkeep', '');
+        const before = latest_manifest_mtime(tmp);
+        write('pkg/a/composer.json', JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } }));
+        expect(latest_manifest_mtime(tmp)).toBeGreaterThan(before);
+    });
+
+    it('a BEHAVIOR marker moves the key, not only a native manifest', () => {
+        // The second half of the widening: `behat.yml` is a behavior marker
+        // with no native manifest beside it, and it selects a behat row.
+        write('behat.yml', 'default: {}\n');
+        expect(latest_manifest_mtime(tmp)).toBeGreaterThan(0);
+    });
+
+    it('an explicit `scopes` argument bounds what is stat-ed', () => {
+        // The caller-supplied path: passing scopes skips `_behavior_scopes`,
+        // and a scope not named is not read — which is what makes the
+        // expensive probe avoidable for a caller that already has them.
+        write('package.json', JSON.stringify({ workspaces: ['pkg/*'] }));
+        write('pkg/a/composer.json', '{}');
+        write('pkg/empty/.gitkeep', '');
+        // Named scope with no manifest reads nothing, however many exist
+        // elsewhere in the tree — the bound is the argument, not the tree.
+        expect(latest_manifest_mtime(tmp, ['pkg/empty'])).toBe(0.0);
+        expect(latest_manifest_mtime(tmp, ['pkg/a'])).toBeGreaterThan(0);
+        // And the default walk does see `pkg/a`, which that scope list did not.
+        expect(latest_manifest_mtime(tmp)).toBeGreaterThan(0);
     });
 });

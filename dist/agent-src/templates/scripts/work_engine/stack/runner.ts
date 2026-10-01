@@ -137,12 +137,12 @@ const _MANIFESTS = [
  * **Residual cache gap.** {@link latest_manifest_mtime} stats fixed NAMES, so
  * a signal whose filename it does not list stays invisible to the cache key:
  * a project-file-only .NET scope, `features/support/env.rb`,
- * `spec/spec_helper.rb`, and the `mvnw` / `gradlew` wrappers, which change
- * the emitted JVM command without changing a manifest. Closing these needs
- * the key to glob or track nested paths — a cost decision, written down
- * rather than discovered from a stale cache. An earlier version of this note
- * claimed exhaustiveness, named a `*.gemspec` nothing reads and omitted two
- * real signals; it no longer claims to be closed.
+ * `spec/spec_helper.rb`, `setup.cfg` and `pytest.ini` — the last two turn
+ * on the whole python ecosystem — and the `mvnw` / `gradlew` wrappers, which
+ * change the emitted JVM command without changing a manifest. Closing these
+ * needs the key to glob or track nested paths: a cost decision, written down
+ * rather than discovered from a stale cache. This list has now been wrong by
+ * omission twice; read it as the known set, never as a closed one.
  */
 const _DOTNET_PROJECT_EXTS = ['.sln', '.slnx', '.csproj', '.fsproj', '.vbproj'];
 
@@ -175,18 +175,16 @@ function _has_dotnet_solution(dir: string): boolean {
 }
 
 /**
- * Fixed-name files the BEHAVIOUR axis reads that `_MANIFESTS` does not cover.
+ * Fixed-name files the BEHAVIOR axis reads that `_MANIFESTS` does not cover.
  *
- * Two lists rather than one because they are SOURCED differently, not because
- * they are consulted differently: `_MANIFESTS` is the set whose presence
- * selects an ecosystem, and this is the rest of what the resolver reads —
- * mostly behavior markers, plus `.rspec`, which only the NATIVE ruby branch
- * opens and which lives here because it has nowhere better to go. The
- * one place both are used — {@link latest_manifest_mtime} — concatenates them
- * and stats every name in every scope, so an earlier version of this note
- * claiming they are "consulted at different scopes" described a distinction
- * the code does not make. See the cache-coverage note on
- * {@link _DOTNET_PROJECT_EXTS} for what still escapes the key.
+ * Two lists because they are SOURCED differently, not consulted differently:
+ * `_MANIFESTS` is the set whose presence selects an ecosystem, this is the
+ * rest of what the resolver reads — mostly behavior markers, plus `.rspec`,
+ * which only the NATIVE ruby branch opens and has nowhere better to go. The
+ * one place both are used, {@link latest_manifest_mtime}, concatenates them
+ * and stats every name in every scope, so an earlier note claiming they are
+ * "consulted at different scopes" described a distinction the code does not
+ * make. What still escapes the key: the note on {@link _DOTNET_PROJECT_EXTS}.
  */
 const _BEHAVIOR_MARKERS = [
     'pnpm-workspace.yaml',
@@ -212,16 +210,13 @@ type Wrappers = { [role: string]: string };
 /**
  * One detected test runner for one ecosystem.
  *
- * `command` is the exact invocation to run the suite (a task-runner
- * wrapper like `make test` when one exists, otherwise the direct tool).
- * `speed` is one of {@link SPEED_FAST} / {@link SPEED_SLOW} /
- * {@link SPEED_E2E}; the monorepo guard filters on it. `basis` names the
- * concrete signal that matched (dependency, binary, marker file) so the
- * routing decision is auditable, exactly like the non-interactive-contract's
- * `basis` column.
- *
- * Mirrors the Python `@dataclass(frozen=True)` with positional construction
- * and the documented field defaults.
+ * `command` is the exact invocation (a task-runner wrapper like `make test`
+ * when one exists, otherwise the direct tool). `speed` is {@link SPEED_FAST}
+ * / {@link SPEED_SLOW} / {@link SPEED_E2E}, which the monorepo guard filters
+ * on. `basis` names the concrete signal that matched — dependency, binary,
+ * marker file — so the routing decision is auditable, like the
+ * non-interactive contract's `basis` column. Mirrors the Python
+ * `@dataclass(frozen=True)`: positional construction, documented defaults.
  */
 export class RunnerResult {
     readonly ecosystem: string;
@@ -357,7 +352,7 @@ export class ToolchainResult {
 /**
  * Inspect `project_root` and resolve its test/quality toolchain.
  *
- * @param project_root Directory carrying the manifests. No upward walk — the
+ * @param project_root Directory carrying the manifests; no upward walk, the
  *   caller picks the scope, matching `detect.detect_stack`.
  * @param opts.include_slow @param opts.include_e2e Monorepo guard, off by
  *   default: `selected` carries only fast unit suites.
@@ -484,9 +479,11 @@ export function latest_manifest_mtime(
     const names = [..._MANIFESTS, ..._BEHAVIOR_MARKERS];
     // Every scope, not only the root: `behavior_runners` is cached and derived
     // per scope, so a root-only key cannot see Behat arriving in a package —
-    // stale forever in the common case. Widening a key only invalidates more
-    // often, which is the safe direction. Cost: this is no longer a cheap
-    // probe; see the § 1 note in the resolver contract.
+    // stale forever in the common case. Widening only invalidates more often,
+    // the safe direction. Cost, stated rather than conceded: 29 names × up to
+    // _MAX_BEHAVIOR_SCOPES (200) = ~5,800 `statSync`, each hit paying a second,
+    // plus `_behavior_scopes` when `scopes` is omitted. On a wide workspace
+    // this can cost more than the work it guards — pass `scopes` when known.
     for (const scope of scopes ?? _behavior_scopes(project_root)) {
         const dir = scope === '.' ? project_root : path.join(project_root, scope);
         for (const name of names) {
@@ -714,14 +711,12 @@ function _jvm_runners(build: JvmBuild): RunnerResult[] {
  * .NET — the basis string, or `null` when nothing marks a .NET project.
  *
  * Mirrors the PHP gradation, which awards HIGH only for a NAMED runner: HIGH
- * here needs a project naming a TEST stack (`Microsoft.NET.Test.Sdk`, xunit,
- * nunit, mstest); a bare project or solution file is MEDIUM, the analogue of
- * the bare manifest.
- *
- * That stops a bare non-test project raising the WHOLE repository to HIGH.
- * It does NOT keep the row out of `selected` — `_apply_guard` has never read
- * `confidence`, for any ecosystem — and an earlier version of this comment
- * wrongly claimed it did.
+ * needs a PROJECT file naming a TEST stack (`Microsoft.NET.Test.Sdk`, xunit,
+ * nunit, mstest); a bare project or a solution is MEDIUM, the analogue of the
+ * bare manifest. That stops a bare non-test project raising the WHOLE
+ * repository to HIGH. It does NOT keep the row out of `selected` —
+ * `_apply_guard` has never read `confidence`, for any ecosystem — and an
+ * earlier version of this comment wrongly claimed it did.
  */
 function _dotnet_basis(root: string): { basis: string; confidence: string } | null {
     let names: string[];
@@ -919,12 +914,11 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
 function _dotnet_project_text(dir: string): string {
     const texts: string[] = [];
     // Entered ONLY for a scope carrying a solution — the layout that
-    // motivates it — which closes two defects. Cost: no `.sln`, no walk, so a
-    // wide monorepo stops paying a listing per scope for an ecosystem it does
-    // not use. Ownership: a package's `*.csproj` reaches the root scope only
-    // when the root holds a solution. NOT fully closed — the walk is not
-    // pruned at scope boundaries, so a root solution plus package scopes can
-    // still double-attribute; recorded in the roadmap residue.
+    // motivates it — closing two defects: no `.sln`, no walk, so a wide
+    // monorepo stops paying a listing per scope for an ecosystem it does not
+    // use; and a package's `*.csproj` reaches the root only when the root
+    // holds a solution. NOT closed — the walk is not pruned at scope
+    // boundaries, so root-plus-package can still double-attribute (residue).
     const solution = _has_dotnet_solution(dir);
     const walk = (at: string, depth: number): void => {
         if (texts.length >= _DOTNET_MAX_PROJECTS) {
@@ -939,17 +933,25 @@ function _dotnet_project_text(dir: string): string {
         entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
         let hit = false;
         for (const e of entries) {
-            if (e.isFile() && _DOTNET_PROJECT_EXTS.includes(path.extname(e.name).toLowerCase())) {
-                if (texts.length >= _DOTNET_MAX_PROJECTS) {
-                    return;
-                }
-                texts.push(_read_text(path.join(at, e.name)));
-                // A SOLUTION names no packages, so one is no reason to stop
-                // descending; a real project file is. `.slnx` counts as a
-                // solution — testing only `.sln` made such a root stop at
-                // itself and never descend.
-                hit = hit || !_DOTNET_SOLUTION_EXTS.includes(path.extname(e.name).toLowerCase());
+            if (!e.isFile() || !_DOTNET_PROJECT_EXTS.includes(path.extname(e.name).toLowerCase())) {
+                continue;
             }
+            // A SOLUTION's body is project NAMES, never packages, so it is
+            // neither read as project text nor a reason to stop descending.
+            // Read, `MyApp.SpecFlow.Tests` in a `.sln` emits a HIGH `specflow`
+            // row no project file supports — and a solution naming a legacy
+            // SpecFlow project beside a migrated Reqnroll one emits two dotnet
+            // rows, which the grouping REFUSES: a false positive deleting a
+            // true row, the reason `_PY_BDD` is anchored. Presence is still a
+            // descent signal, read by `_has_dotnet_solution`.
+            if (_DOTNET_SOLUTION_EXTS.includes(path.extname(e.name).toLowerCase())) {
+                continue;
+            }
+            if (texts.length >= _DOTNET_MAX_PROJECTS) {
+                return;
+            }
+            texts.push(_read_text(path.join(at, e.name)));
+            hit = true;
         }
         if (hit || !solution || depth >= _DOTNET_SCAN_DEPTH) {
             return;
@@ -987,14 +989,13 @@ const _PY_BDD = /^[ \t]*["']?pytest-bdd["']?[ \t]*(?:$|[=<>~!,;[])/m;
  * Matching every `- item` line is wrong in a way that reads as working: a
  * real workspace file carries sibling sequences (`onlyBuiltDependencies`,
  * `patchedDependencies`), so `- esbuild` under one became the scope
- * `esbuild` — usually just wasted reads, but a repository with a top-level
+ * `esbuild` — usually wasted reads, but a repository with a top-level
  * directory of that name gets a `behavior_runners` row whose `scope_root` is
- * no workspace package at all.
- *
- * A line-state reader rather than a YAML parse, because this module is leaf
- * by contract: track whether the current top-level key is `packages` and
- * accept sequence items only while it is. Any column-0 key ends the section,
- * which makes a sibling sequence invisible rather than merely unlikely.
+ * no workspace package at all. A line-state reader rather than a YAML parse,
+ * because this module is leaf by contract: track whether the current
+ * top-level key is `packages` and accept sequence items only while it is. Any
+ * column-0 key ends the section, which makes a sibling sequence invisible
+ * rather than merely unlikely.
  */
 export function _pnpm_packages(text: string): string[] {
     const out: string[] = [];
@@ -1054,9 +1055,8 @@ export function _behavior_scopes(project_root: string): string[] {
 
     const scopes = ['.'];
     for (const raw of globs) {
-        // Checked DURING expansion, not sliced off the result, which would
-        // bound the output after the listing is paid. Bounds only globs that
-        // RESOLVE; non-resolving ones still cost a syscall each.
+        // Checked DURING expansion, not sliced off the result, which bounds
+        // only after the listing is paid. Non-resolvers still cost a syscall.
         if (scopes.length >= _MAX_BEHAVIOR_SCOPES) {
             break;
         }
@@ -1078,14 +1078,16 @@ export function _behavior_scopes(project_root: string): string[] {
                 if (scopes.length >= _MAX_BEHAVIOR_SCOPES) {
                     break;
                 }
-                if (c.isDirectory()) {
+                // Same exclusions as the .NET walk below: a `packages/*`
+                // glob otherwise admits `node_modules`, `.turbo` and `dist`
+                // as scopes, each costing a full behavior probe.
+                if (c.isDirectory() && !c.name.startsWith('.') && c.name !== 'node_modules') {
                     scopes.push(`${parent}/${c.name}`);
                 }
             }
         } else if (!g.includes('*')) {
-            // Existence-checked, like the mid-path glob below is skipped:
-            // a scope that does not exist is worse than one fewer, and a
-            // phantom one costs every per-scope probe.
+            // Existence-checked for the same reason: a phantom scope costs
+            // every per-scope probe.
             try {
                 if (fs.statSync(path.join(project_root, g)).isDirectory()) {
                     scopes.push(g);
@@ -1094,10 +1096,8 @@ export function _behavior_scopes(project_root: string): string[] {
                 /* declared but absent — not a scope */
             }
         }
-        // A deeper or mid-path glob (`a/*/b`, `**`) is skipped rather than
-        // half-expanded: reporting a scope that does not exist would be worse
-        // than reporting one fewer, and the two common declarations above are
-        // what real workspace roots use.
+        // A deeper or mid-path glob (`a/*/b`, `**`) is skipped, not
+        // half-expanded: a scope that does not exist is worse than one fewer.
     }
     return _dictFromKeys(scopes);
 }

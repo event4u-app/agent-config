@@ -35,12 +35,22 @@ for (const r of result.selected) {
 }
 ```
 
-Resolution costs **per scope**, not per repository: a fixed name list stat-ed,
+Resolution costs **per scope**, not per repository: 29 fixed names stat-ed,
 six-or-so manifests read, and two directory listings for the .NET probe —
 which run in every repository, .NET or not. A wide workspace pays that times
-its package count, so the cost is proportional and not negligible. It
-**never raises** — a malformed manifest or unknown stack degrades to a
-`LOW`-confidence empty result so the command can ask, never crash. This
+its package count, so the cost is proportional and not negligible.
+
+The **cache probe is the expensive path**, with the magnitude stated, not
+implied: `latest_manifest_mtime` stats those 29 names per scope, bounded at
+200 scopes — up to ~5,800 `statSync`, each hit paying a second — and without
+an explicit `scopes` it also expands the globs. The guard can cost more than
+the resolution it guards, so a caller holding the scope list passes it. The
+widening is still right: a root-only key cannot see a behavior runner
+arriving in a package, and a key invalidating too often is recoverable where
+one that never invalidates is not.
+
+Resolution **never raises** — a malformed manifest or unknown stack degrades
+to a `LOW`-confidence empty result so the command can ask, never crash. This
 mirrors the recoverable-error contract of the frontend `detect_stack`.
 
 ## 2. Detection order — per ecosystem, first match wins
