@@ -98,16 +98,18 @@ export function build_claude_hook_matrix(manifest_path: string): ClaudeHookMatri
     const aliasesAll = (manifest['native_event_aliases'] ?? {}) as Record<string, unknown>;
     const aliases = ((aliasesAll['claude'] ?? {}) as Record<string, unknown>) || {};
 
-    const ac_to_native: Record<string, string> = {};
-    for (const [native, ac] of Object.entries(aliases)) {
-        ac_to_native[String(ac)] = native;
-    }
-
+    // Iterating the ALIAS map, not the event map, because the relation is
+    // many-natives-to-one-event and the inversion this replaced silently lost
+    // every native but the last. `PostToolUse` and `PostToolUseFailure` both
+    // lower to `post_tool_use`; building `ac_to_native` would have kept one of
+    // them and UNBOUND the other, turning a routing fix into a routing
+    // regression that no existing test could see. Pinned by
+    // `before_complete_failure_envelope.test.ts` ("both natives stay bound").
     const matrix: ClaudeHookMatrix = {};
-    for (const [ac_event, concerns] of Object.entries(claude_events)) {
+    for (const [native, ac_raw] of Object.entries(aliases)) {
+        const ac_event = String(ac_raw);
+        const concerns = claude_events[ac_event];
         if (!concerns || (Array.isArray(concerns) && concerns.length === 0)) continue;
-        const native = ac_to_native[ac_event];
-        if (native === undefined) continue;
         // Bundle fast path (road-to-hook-latency-repair Phase 2): invoke the
         // precompiled dispatcher bundle directly — no bash shim, no CLI boot
         // (measured ~450-500 ms CLI vs ~110 ms bundle per event on a 1-vCPU

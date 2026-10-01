@@ -402,6 +402,21 @@ function _cap_runs(runs: unknown[]): unknown[] {
  */
 const _ERROR_EXIT_PREFIX = /^Error:\s*Exit code\s*(\d+)/i;
 
+/**
+ * The same statement without the `Error:` word, which is how the host words it
+ * on its FAILURE event.
+ *
+ * Measured 2026-10-01 on Claude Code 2.1.286: a failing `Bash` call fires
+ * `PostToolUseFailure`, whose envelope carries NO `tool_response` at all. The
+ * exit status is a top-level `error` string whose first line reads
+ * `Exit code N`, with the command's own diagnostics on the lines after it. The
+ * prefix above never matches that, so for as long as only the success event was
+ * bound this recorder could not have written a non-zero exit even once — which
+ * is exactly what 24 consecutive all-zero records on this host turned out to
+ * mean.
+ */
+const _BARE_EXIT_PREFIX = /^\s*Exit code\s*(\d+)/i;
+
 /** The status a post-tool payload actually reports, and HOW it reported it. */
 interface ExitReading {
   readonly code: number | null;
@@ -454,6 +469,23 @@ function _extract_exit_reading(payload: StateDict): ExitReading {
   const direct = _numeric_exit_field(payload);
   if (direct !== null) return { code: direct, source: "field", interrupted: false };
 
+  // The FAILURE envelope, read before the success keys because it carries none
+  // of them: no `tool_response`, the status in a top-level `error` string, and
+  // the interrupt flag spelled `is_interrupt` rather than the nested
+  // `interrupted` below. Interruption is checked FIRST — a killed call is a
+  // statement about the kill and not a verdict on the work, so a host that
+  // sends both must not have its kill read as a failing exit.
+  const interrupted_top = payload["is_interrupt"] === true;
+  const err = payload["error"];
+  if (typeof err === "string") {
+    if (interrupted_top) return { code: null, source: null, interrupted: true };
+    const bare = _BARE_EXIT_PREFIX.exec(err) ?? _ERROR_EXIT_PREFIX.exec(err);
+    if (bare?.[1] !== undefined) {
+      return { code: Number(bare[1]), source: "error_prefix", interrupted: false };
+    }
+  }
+  if (interrupted_top) return { code: null, source: null, interrupted: true };
+
   for (const key of ["tool_response", "toolResponse", "result", "output"]) {
     const v = payload[key];
     if (typeof v === "string") {
@@ -504,10 +536,21 @@ function _extract_run_streams(payload: StateDict): { stdout: string; stderr: str
   }
   const topOut = payload["stdout"] ?? payload["output"];
   const topErr = payload["stderr"];
-  return {
-    stdout: typeof topOut === "string" ? topOut : "",
-    stderr: typeof topErr === "string" ? topErr : "",
-  };
+  if (typeof topOut === "string" || typeof topErr === "string") {
+    return {
+      stdout: typeof topOut === "string" ? topOut : "",
+      stderr: typeof topErr === "string" ? topErr : "",
+    };
+  }
+  // The failure envelope's one text field. Recorded as `stdout` because the
+  // host collapses both streams into it and says nothing about which was
+  // which — a recorder that split them would be inventing a fact — and because
+  // every parser in `verification_evidence` is line-anchored over stdout. The
+  // alternative, dropping it, would leave a red run recorded with its exit code
+  // and no reason, which is the half the reader actually needs.
+  const errText = payload["error"];
+  if (typeof errText === "string") return { stdout: errText, stderr: "" };
+  return { stdout: "", stderr: "" };
 }
 
 function _reset_turn(state: StateDict, session_id: string): StateDict {
@@ -557,6 +600,16 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
     state["ci_last"] = null;
     state = _reset_turn(state, session_id);
   }
+
+  // The host that wrote this file. Recorded because the instrument-gap reading
+  // is a PER-HOST question and the witness carried no answer to it: every
+  // coverage number had to be attributed by hand, and a file from an unknown
+  // host is indistinguishable from a host with nothing to report. Written on
+  // every update rather than once, so a file predating this field acquires it
+  // the first time the host touches it; until then a reader sees it absent,
+  // which is the honest reading and not a default.
+  const platform = envelope["platform"];
+  if (typeof platform === "string" && platform) state["platform"] = platform;
 
   let payload = envelope["payload"];
   if (!(typeof payload === "object" && payload !== null && !Array.isArray(payload))) {
