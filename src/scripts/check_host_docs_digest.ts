@@ -65,6 +65,7 @@ import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { sanitize_text } from './_lib/retrieval_sanitize.js';
 import { HOST_LOWERING_PATH, parseHostLowering, type HostLowering } from './hooks/host_lowering.js';
 
 /** sha256, hex — the digest shape `verified.docs_digest` carries. */
@@ -244,7 +245,15 @@ async function fetchBody(url: string, timeoutMs: number): Promise<{ body: string
         if (!res.ok) return { body: null, detail: `HTTP ${res.status}` };
         return { body: await res.text() };
     } catch (exc) {
-        return { body: null, detail: exc instanceof Error ? exc.message : String(exc) };
+        // The ONE fetch-derived string this script ever prints, so it is the one
+        // that gets the sanitize floor. The body is hashed and discarded — a
+        // sha256 cannot carry a bidi override — but an exception message can
+        // quote a server-supplied URL or header, and this text lands on stdout
+        // in a CI log a human reads. Stripping hidden-instruction vectors here
+        // is what makes this module's `covered` row in
+        // `docs/contracts/retrieval-read-surfaces.md` a true statement rather
+        // than an import that satisfies a generator.
+        return { body: null, detail: sanitize_text(exc instanceof Error ? exc.message : String(exc)) };
     } finally {
         clearTimeout(timer);
     }
