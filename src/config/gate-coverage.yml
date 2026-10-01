@@ -3139,3 +3139,28 @@ gates:
       inside the gate by `assertScanned` — observed red on 2026-09-19 by
       pointing the folder list at a non-existent directory, which exits 1 with
       "scanned 0 roadmap file(s)" rather than certifying an empty corpus.
+  - id: check_host_docs_digest
+    argv: []
+    min_scanned: 8
+    corpus: "verified ROWS of src/scripts/hooks/host_lowering.yaml — the (host, surface) pairs carrying a `verified:` block, which are the rows that can cite a page at all. Nine today; the floor is 8 because a host legitimately leaving the table is a one-row move, while a resolver that stopped seeing the table would read zero. Counting rows and not URLs is deliberate: `cowork` carries a verified block with `docs_url: null` and is a real row the watcher must still see and skip, so a URL count would make a correct no-url row look like corpus loss."
+    status: enforced
+    ci_invocation: .github/workflows/host-docs-digest.yml
+    no_canary_reason: >-
+      A planted file cannot express this gate's violation. The corpus is ONE
+      configuration file plus the live bodies of eight vendor pages, so there is
+      no tree a canary could be added to: the only way to make the floor fire is
+      to remove rows from `host_lowering.yaml`, which is the thing the floor
+      exists to notice and not something a canary may do to a plumbing source
+      under `check_kernel_edit_ratified`. Discrimination is proven instead by
+      two things that run. `--self-test` drives the real decision functions over
+      the real table, including both directions of every state — unchanged vs
+      changed, filled vs missed, 404 (`gone`) vs 503 (`unreachable`), and drift
+      write vs no write. And `tests/scripts/host_docs_digest.test.ts` (20 cases)
+      runs the REAL `lint_hook_manifest._check_host_lowering` over the REAL
+      writer's output, so the full drift-to-refusal chain is exercised end to
+      end rather than asserted. Both were seen RED deliberately: neutralising
+      `isDrift` fails 4 of 20, and reverting the `gone` write-skip fails the
+      case that pins it. The `filled`-vs-`missed` direction named above is
+      asserted in BOTH places — it was credited to `--self-test` before it was
+      actually there, which a review caught and which is why the assertion now
+      exists rather than the sentence being softened.

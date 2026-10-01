@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import {
     classifyPoll,
     classifyTarget,
+    parseArgs,
     FOREGROUND_CEILING_MIN,
     type RemoteTip,
 } from '../../src/scripts/ci_settle.js';
@@ -206,5 +207,266 @@ describe('classifyTarget', () => {
 
     it('is case-insensitive on state, so a lowercase `open` is not refused', () => {
         expect(classifyTarget(pr('open', sha), '', 0, found(sha)).kind).toBe('open');
+    });
+});
+
+// The failure this block exists to prevent, measured 2026-10-01 on PR #2130:
+// the call was written `ci_settle 2130 --timeout 1700`. Every other waiting
+// tool spells that flag `--timeout`, this one spells it `--timeout-min`, and
+// the old parser did two silent things with the mistake rather than one. It
+// ignored the unknown flag, so the wait fell back to the 9-minute default; and
+// because `1700` carries no leading dashes it survived the positional filter,
+// so the stray value became `positional[1]` and vanished. The caller believed
+// they had asked for 28 minutes, got 9, and read the resulting
+// `DID NOT SETTLE` as a slow CI rather than as their own typo. A waiter whose
+// whole product is a trustworthy verdict must not accept an argument it does
+// not honour.
+describe('parseArgs', () => {
+    it('accepts the documented form', () => {
+        const r = parseArgs(['2130', '--timeout-min', '20', '--interval-sec', '30']);
+        expect(r.kind).toBe('ok');
+        if (r.kind !== 'ok') return;
+        expect(r.pr).toBe('2130');
+        expect(r.timeoutMin).toBe(20);
+        expect(r.intervalSec).toBe(30);
+    });
+
+    it('defaults both knobs when neither is given', () => {
+        const r = parseArgs(['2130']);
+        expect(r.kind).toBe('ok');
+        if (r.kind !== 'ok') return;
+        expect(r.timeoutMin).toBe(FOREGROUND_CEILING_MIN);
+        expect(r.intervalSec).toBe(60);
+    });
+
+    it('REFUSES an unknown flag instead of ignoring it — the measured case', () => {
+        const r = parseArgs(['2130', '--timeout', '1700']);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('--timeout');
+        expect(r.message).toContain('--timeout-min');
+    });
+
+    it('refuses any other unknown flag, not just the one that was measured', () => {
+        for (const flag of ['--wait', '--max-min', '--poll', '--timeoutmin']) {
+            const r = parseArgs(['2130', flag, '5']);
+            expect(r.kind, flag).toBe('usage');
+        }
+    });
+
+    it('refuses a second positional rather than swallowing it', () => {
+        const r = parseArgs(['2130', '1700']);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('1700');
+    });
+
+    it('refuses a flag value it cannot parse, rather than falling back to the default', () => {
+        for (const bad of ['abc', '', '-5', '0', '1.5min']) {
+            const r = parseArgs(['2130', '--timeout-min', bad]);
+            expect(r.kind, bad).toBe('usage');
+        }
+    });
+
+    it('refuses a flag given with no value at all', () => {
+        expect(parseArgs(['2130', '--timeout-min']).kind).toBe('usage');
+        expect(parseArgs(['2130', '--interval-sec']).kind).toBe('usage');
+    });
+
+    it('still refuses a missing PR, and says so', () => {
+        const r = parseArgs([]);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('usage: ci_settle');
+    });
+
+    it('accepts `--flag=value` as well, since that is the other spelling a caller reaches for', () => {
+        const r = parseArgs(['2130', '--timeout-min=20']);
+        expect(r.kind).toBe('ok');
+        if (r.kind !== 'ok') return;
+        expect(r.timeoutMin).toBe(20);
+    });
+
+    it('keeps a timeout above the foreground ceiling — it warns, it does not refuse', () => {
+        const r = parseArgs(['2130', '--timeout-min', '30']);
+        expect(r.kind).toBe('ok');
+        if (r.kind !== 'ok') return;
+        expect(r.timeoutMin).toBe(30);
+    });
+});
+
+// R2 completion review, 2026-10-01 (drain-ci-settle-arg-guard, findings 1-4).
+// The first guard validated every flag and left the one MANDATORY argument
+// unchecked, so the shape it was written to remove stayed reachable through
+// the front door: `ci_settle PR-2130` parsed as ok, every poll came back
+// unreadable because `gh pr view PR-2130` exits non-zero, and the run spent
+// its whole budget to end at `DID NOT SETTLE` — verbatim the outcome a caller
+// reads as slow CI rather than as their own typo. A guard that refuses the
+// optional arguments and waves the required one through is not a guard.
+describe('parseArgs — the PR argument itself', () => {
+    it('accepts a plain number', () => {
+        const r = parseArgs(['2130']);
+        expect(r.kind).toBe('ok');
+        if (r.kind !== 'ok') return;
+        expect(r.pr).toBe('2130');
+    });
+
+    it('accepts a #-prefixed number and hands on the bare digits', () => {
+        const r = parseArgs(['#2130']);
+        expect(r.kind).toBe('ok');
+        if (r.kind !== 'ok') return;
+        expect(r.pr).toBe('2130');
+    });
+
+    it('accepts a PR URL and hands on the number', () => {
+        const r = parseArgs(['https://github.com/event4u-app/agent-config/pull/2130']);
+        expect(r.kind).toBe('ok');
+        if (r.kind !== 'ok') return;
+        expect(r.pr).toBe('2130');
+    });
+
+    it('REFUSES a PR argument that is not a number — the reachable failure shape', () => {
+        for (const bad of ['PR-2130', 'pr2130', '2130x', 'drain/archive-host-claims', '', '-1', '0', '2130.0']) {
+            const r = parseArgs([bad]);
+            expect(r.kind, bad).toBe('usage');
+        }
+    });
+
+    it('names the PR argument in its refusal, not a flag', () => {
+        const r = parseArgs(['PR-2130']);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('PR-2130');
+        expect(r.message.toLowerCase()).toContain('pr number');
+    });
+});
+
+describe('parseArgs — the branches the first round left untested', () => {
+    it('refuses a repeated flag', () => {
+        const r = parseArgs(['2130', '--timeout-min', '10', '--timeout-min', '20']);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('twice');
+    });
+
+    it('refuses a flag whose value is the NEXT flag, not just a missing tail', () => {
+        const r = parseArgs(['2130', '--timeout-min', '--interval-sec', '5']);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('--timeout-min');
+    });
+
+    it('refuses a bad --interval-sec value and says SECONDS, not minutes', () => {
+        const r = parseArgs(['2130', '--interval-sec', 'abc']);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('seconds');
+    });
+
+    it('refuses a digits-only value that parses to Infinity — the finiteness guard the rewrite dropped', () => {
+        const huge = '9'.repeat(400);
+        const r = parseArgs(['2130', '--timeout-min', huge]);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message.toLowerCase()).toContain('too large');
+    });
+
+    it('names the real constraint on an extra positional, never a guessed flag', () => {
+        const r = parseArgs(['2130', 'notes.txt']);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('notes.txt');
+        // The old message interpolated the stray value into `--timeout-min <it>`,
+        // which for a non-numeric stray is advice parseArgs would itself refuse.
+        expect(r.message).not.toContain('--timeout-min notes.txt');
+    });
+});
+
+// Measured 2026-10-01 on PR #2135, whose rollup carried TWO rows named
+// `lint commit subjects` — one CANCELLED, one SUCCESS. A concurrency group had
+// superseded its own earlier run. `gh pr checks` reports that check SUCCESS;
+// this classifier reported the PR RED, because CANCELLED sat in the bad set
+// unconditionally and nothing looked at the twin.
+//
+// A false RED is the same defect class as a silently-shortened wait: a verdict
+// the caller cannot act on. It is the more expensive direction here, because a
+// red verdict sends an agent hunting a failure that does not exist — which is
+// exactly what it did, costing that run a diagnosis it did not owe.
+//
+// The narrow reading is the only safe one. A CANCELLED row is superseded ONLY
+// when another row of the SAME NAME concluded SUCCESS. A genuine cancellation —
+// a human stopping a run, a timeout killing one — has no successful twin and
+// must stay failing, or this fix trades a false red for a false green.
+describe('classifyPoll — a superseded duplicate is not a failure', () => {
+    it('does not fail on a CANCELLED row whose same-named twin succeeded', () => {
+        const s = classifyPoll(
+            roll([
+                { name: 'lint commit subjects', conclusion: 'CANCELLED' },
+                { name: 'lint commit subjects', conclusion: 'SUCCESS' },
+                { name: 'other', conclusion: 'SUCCESS' },
+            ]),
+            '',
+            0,
+        );
+        expect(s.kind).toBe('settled');
+        if (s.kind !== 'settled') return;
+        expect(s.failing).toEqual([]);
+    });
+
+    it('STILL fails a CANCELLED row with no successful twin — the false-green direction', () => {
+        const s = classifyPoll(
+            roll([
+                { name: 'cancelled alone', conclusion: 'CANCELLED' },
+                { name: 'other', conclusion: 'SUCCESS' },
+            ]),
+            '',
+            0,
+        );
+        expect(s.kind).toBe('settled');
+        if (s.kind !== 'settled') return;
+        expect(s.failing).toEqual(['cancelled alone']);
+    });
+
+    it('still fails a CANCELLED row whose twin also did not succeed', () => {
+        const s = classifyPoll(
+            roll([
+                { name: 'twice bad', conclusion: 'CANCELLED' },
+                { name: 'twice bad', conclusion: 'FAILURE' },
+            ]),
+            '',
+            0,
+        );
+        expect(s.kind).toBe('settled');
+        if (s.kind !== 'settled') return;
+        expect(s.failing).toContain('twice bad');
+    });
+
+    it('does not extend the reprieve to any other bad conclusion', () => {
+        for (const bad of ['FAILURE', 'TIMED_OUT', 'ACTION_REQUIRED', 'STARTUP_FAILURE']) {
+            const s = classifyPoll(
+                roll([
+                    { name: 'dup', conclusion: bad },
+                    { name: 'dup', conclusion: 'SUCCESS' },
+                ]),
+                '',
+                0,
+            );
+            expect(s.kind, bad).toBe('settled');
+            if (s.kind !== 'settled') continue;
+            expect(s.failing, bad).toContain('dup');
+        }
+    });
+
+    it('reports a superseded name once, not twice, when it does fail', () => {
+        const s = classifyPoll(
+            roll([
+                { name: 'dup', conclusion: 'CANCELLED' },
+                { name: 'dup', conclusion: 'FAILURE' },
+            ]),
+            '',
+            0,
+        );
+        if (s.kind !== 'settled') return;
+        expect(s.failing.filter((n) => n === 'dup')).toHaveLength(1);
     });
 });

@@ -237,9 +237,30 @@ export function classifyPoll(stdout: string, stderr: string, status: number | nu
         return { kind: 'pending', total: rows.length, done };
     }
     const bad = new Set(['FAILURE', 'TIMED_OUT', 'CANCELLED', 'ACTION_REQUIRED', 'STARTUP_FAILURE']);
-    const failing = rows
-        .filter((r) => bad.has(String(r.conclusion).toUpperCase()))
-        .map((r) => String(r.name ?? '?'));
+    // A concurrency group that supersedes its own earlier run leaves TWO rows
+    // under one name: the superseded one CANCELLED, the one that counts
+    // SUCCESS. The forge reports that check green; this classifier reported the
+    // whole PR red, because CANCELLED sat in `bad` and nothing looked at the
+    // twin. Measured 2026-10-01 on PR #2135 (`lint commit subjects`), where the
+    // false red cost a run a diagnosis it did not owe.
+    //
+    // The reprieve is deliberately the narrowest one that fixes it: CANCELLED
+    // only, and only when a row of the SAME NAME concluded SUCCESS. A genuine
+    // cancellation — a human stopping a run, a timeout killing one — has no
+    // successful twin and stays failing. Widening this to every bad conclusion,
+    // or to CANCELLED unconditionally, would trade a false red for a false
+    // green, which is the worse error in a tool whose output is acted on.
+    const nameOf = (r: (typeof rows)[number]): string => String(r.name ?? '?');
+    const concl = (r: (typeof rows)[number]): string => String(r.conclusion).toUpperCase();
+    const succeeded = new Set(rows.filter((r) => concl(r) === 'SUCCESS').map(nameOf));
+    const failing = [
+        ...new Set(
+            rows
+                .filter((r) => bad.has(concl(r)))
+                .filter((r) => !(concl(r) === 'CANCELLED' && succeeded.has(nameOf(r))))
+                .map(nameOf),
+        ),
+    ];
     return { kind: 'settled', failing, total: rows.length };
 }
 
@@ -293,25 +314,131 @@ function sleepSync(seconds: number): void {
     });
 }
 
-export function main(argv: readonly string[]): number {
-    const positional = argv.filter((a) => !a.startsWith('--'));
-    const pr = positional[0];
-    if (pr === undefined) {
-        process.stderr.write(
-            'usage: ci_settle <pr> [--timeout-min N] [--interval-sec N]\n' +
-                `  default --timeout-min is ${String(FOREGROUND_CEILING_MIN)}, which fits inside one foreground Bash call (600 s cap).\n` +
-                '  a longer wait is a BACKGROUND job, not a bigger number — a foreground call past the cap is killed and reports nothing.\n',
+/** The only flags this waiter honours. Anything else is a caller mistake. */
+const KNOWN_FLAGS = ['--timeout-min', '--interval-sec'] as const;
+
+const USAGE =
+    'usage: ci_settle <pr> [--timeout-min N] [--interval-sec N]\n' +
+    `  default --timeout-min is ${String(FOREGROUND_CEILING_MIN)}, which fits inside one foreground Bash call (600 s cap).\n` +
+    '  a longer wait is a BACKGROUND job, not a bigger number — a foreground call past the cap is killed and reports nothing.\n';
+
+export type ParsedArgs =
+    | { kind: 'ok'; pr: string; timeoutMin: number; intervalSec: number }
+    | { kind: 'usage'; message: string };
+
+/**
+ * Parse argv, REFUSING anything this waiter would not honour.
+ *
+ * Refusal rather than a default is the whole point. The previous parser read
+ * its two knobs with `argv.indexOf(flag)` and filtered positionals on a leading
+ * `--`, so a caller who wrote the near-universal `--timeout 1700` got two
+ * silent substitutions at once: the unknown flag was ignored, and its value —
+ * carrying no dashes — survived as a second positional and was dropped. The
+ * wait then ran for the 9-minute default while the caller believed they had
+ * asked for 28, and the resulting `DID NOT SETTLE` read as a slow CI rather
+ * than as their own typo.
+ *
+ * That is the one failure a waiter must not have. Its entire product is a
+ * verdict somebody will act on, and a verdict produced under arguments the
+ * caller did not actually give is worse than no verdict, because it looks like
+ * one. So every unrecognised flag, every unusable value and every extra
+ * positional is a usage refusal, exit 2 — the code this tool already reserves
+ * for "no verdict is claimed".
+ *
+ * `--flag=value` is accepted beside `--flag value` because it is the other
+ * spelling a caller reaches for, and refusing it would trade one silent
+ * surprise for a noisy one with no safety gained.
+ */
+export function parseArgs(argv: readonly string[]): ParsedArgs {
+    const refuse = (why: string): ParsedArgs => ({ kind: 'usage', message: `ci_settle: ${why}\n${USAGE}` });
+
+    const positional: string[] = [];
+    const given = new Map<string, string>();
+
+    for (let i = 0; i < argv.length; i++) {
+        const a = argv[i] as string;
+        if (!a.startsWith('--')) {
+            positional.push(a);
+            continue;
+        }
+        const eq = a.indexOf('=');
+        const name = eq === -1 ? a : a.slice(0, eq);
+        if (!(KNOWN_FLAGS as readonly string[]).includes(name)) {
+            return refuse(
+                `unknown flag ${name}. This waiter spells its deadline --timeout-min (in MINUTES), not --timeout`,
+            );
+        }
+        if (given.has(name)) return refuse(`${name} given twice`);
+        if (eq !== -1) {
+            given.set(name, a.slice(eq + 1));
+            continue;
+        }
+        const v = argv[i + 1];
+        if (v === undefined || v.startsWith('--')) return refuse(`${name} needs a value`);
+        given.set(name, v);
+        i++;
+    }
+
+    const raw = positional[0];
+    if (raw === undefined) return refuse('no PR number given');
+    if (positional.length > 1) {
+        return refuse(
+            `unexpected argument ${JSON.stringify(positional[1])} — this tool takes exactly one positional, the PR number; ` +
+                'a flag value must follow its own flag',
         );
+    }
+
+    // Finding 1 of the 2026-10-01 R2 review: the first version of this guard
+    // validated every OPTIONAL argument and waved the mandatory one through, so
+    // the failure it exists to remove stayed reachable through the front door.
+    // `ci_settle PR-2130` parsed as ok; `gh pr view PR-2130` then exits non-zero
+    // on every poll, each one classifies as unreadable, no streak caps the loop,
+    // and the run spends its entire budget to arrive at `DID NOT SETTLE` — which
+    // is read as a slow CI rather than as the typo it is. A guard that refuses
+    // the arguments a caller may omit and accepts the one they cannot is not a
+    // guard. `#123` and a PR URL are admitted because both are what a caller
+    // copies out of the forge; a branch name is NOT, because this tool's whole
+    // verdict is bound to one head and a branch makes that binding ambiguous.
+    const pr = /^#?[0-9]+$/.test(raw)
+        ? raw.replace(/^#/, '')
+        : (/^https?:\/\/[^\s]*\/pull\/([0-9]+)(?:[/?#].*)?$/.exec(raw)?.[1] ?? null);
+    if (pr === null || pr === '0' || /^0+$/.test(pr)) {
+        return refuse(
+            `${JSON.stringify(raw)} is not a PR number — give the number itself (2130), #2130, or the pull-request URL`,
+        );
+    }
+
+    const num = (flag: string, dflt: number): number | string => {
+        const v = given.get(flag);
+        if (v === undefined) return dflt;
+        const unit = flag === '--timeout-min' ? 'minutes' : 'seconds';
+        if (!/^[0-9]+$/.test(v)) return `${flag} wants a whole number of ${unit}, got ${JSON.stringify(v)}`;
+        const n = parseInt(v, 10);
+        // Finding 2: the parser this replaced guarded with `Number.isFinite`, and
+        // the digits-only test that replaced it does not. A long enough run of
+        // digits parses to Infinity, clears `n > 0`, and makes `deadline`
+        // unreachable — an unbounded wait in a tool whose contract is that it
+        // always returns a stated verdict or a stated non-verdict.
+        if (!Number.isFinite(n)) return `${flag} is too large to be a number of ${unit}`;
+        if (n <= 0) return `${flag} wants a positive number, got ${v}`;
+        return n;
+    };
+
+    const timeoutMin = num('--timeout-min', FOREGROUND_CEILING_MIN);
+    if (typeof timeoutMin === 'string') return refuse(timeoutMin);
+    const intervalSec = num('--interval-sec', 60);
+    if (typeof intervalSec === 'string') return refuse(intervalSec);
+
+    return { kind: 'ok', pr, timeoutMin, intervalSec };
+}
+
+export function main(argv: readonly string[]): number {
+    const parsed = parseArgs(argv);
+    if (parsed.kind === 'usage') {
+        process.stderr.write(parsed.message);
         return 2;
     }
-    const num = (flag: string, dflt: number): number => {
-        const i = argv.indexOf(flag);
-        if (i === -1) return dflt;
-        const v = argv[i + 1];
-        const n = v === undefined ? NaN : parseInt(v, 10);
-        return Number.isFinite(n) && n > 0 ? n : dflt;
-    };
-    const timeoutMin = num('--timeout-min', FOREGROUND_CEILING_MIN);
+    const { pr, timeoutMin, intervalSec } = parsed;
     if (timeoutMin > FOREGROUND_CEILING_MIN) {
         // Said once, up front, rather than discovered when the call is killed:
         // a truncated wait produces no line at all, so the warning has to come
@@ -322,7 +449,6 @@ export function main(argv: readonly string[]): number {
                 'the deadline and will report nothing — run it as a background job for a wait this long.\n',
         );
     }
-    const intervalSec = num('--interval-sec', 60);
 
     // Up front, because waiting nine minutes to learn the PR was merged before
     // the wait began is the expensive way to find out.

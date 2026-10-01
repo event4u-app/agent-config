@@ -67,6 +67,7 @@ reason `unclassified` exists and the reason this paragraph does.
 | `ai_team/team_dispatch.ts` | `inter-agent-reply` | `stdout-write` | **covered** | imports the sanitize floor |
 | `check_branch_freshness.ts` | `remote-subprocess` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `check_finding_dispositions.ts` | `remote-subprocess` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
+| `check_host_docs_digest.ts` | `network-fetch` | `file-write` | **covered** | imports the sanitize floor |
 | `check_platform_anchor.ts` | `remote-subprocess` | `stdout-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `check_release_adjacent_health.ts` | `network-fetch` | `stdout-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `check_release_pr_shape.ts` | `remote-subprocess` | `stdout-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
@@ -84,7 +85,7 @@ reason `unclassified` exists and the reason this paragraph does.
 | `tools/jira_adapter.ts` | `remote-subprocess` | `undecided` | **unclassified** | inbound bytes with no recognised emit — the onward path is undecided |
 | `update_prices.ts` | `node-http-request` | `file-write` | **covered** | imports the sanitize floor |
 
-24 read surface(s): 6 covered, 15 uncovered, 3 unclassified.
+25 read surface(s): 7 covered, 15 uncovered, 3 unclassified.
 <!-- END read-surface-table -->
 ## The second layer — structural hiding in fetched markup
 

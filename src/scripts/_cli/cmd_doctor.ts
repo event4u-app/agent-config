@@ -114,7 +114,7 @@ import {
     resolve_project_root,
     type TraceRecord,
 } from '../_lib/agent_settings.js';
-import { executionJson, forgeProtectionJson, UNREAD_FORGE } from './doctor_execution.js';
+import { executionJson, forgeProtectionJsonFor } from './doctor_execution.js';
 import { checkOfflineReadiness, trafficEnvironmentJson } from './doctor_network_posture.js';
 import * as ai_council_clients from '../ai_council/clients.js';
 import * as ai_council_config from '../ai_council/config.js';
@@ -3062,7 +3062,7 @@ function _emit_json(
     };
     if (origin !== null) payload['project_root_origin'] = origin;
     payload['execution'] = executionJson(() => iter_setting_overrides({ cwd: project_root }));
-    payload['forge_protection'] = forgeProtectionJson(UNREAD_FORGE); // 3.2
+    payload['forge_protection'] = forgeProtectionJsonFor(String(project_root)); // 3.2 · AC-5
     payload['traffic_environment'] = trafficEnvironmentJson(process.env);
     if (checks !== null) {
         payload['checks'] = checks;

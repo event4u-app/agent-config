@@ -26,12 +26,18 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import type { ConcernLatencyRow } from '../../src/scripts/bench_hook_latency.js';
 import {
+    ASK_PROBE,
     blockingConcerns,
+    mergeProbeSamples,
     NOT_MEASURED,
     perConcernRows,
     readConcernTimings,
+    PROBE_TARGET,
     renderConcernRow,
+    slaOverruns,
+    windowState,
 } from '../../src/scripts/bench_hook_latency.js';
 import { writeConcernTimings } from '../../src/scripts/hooks/concern_timings.js';
 
@@ -273,5 +279,173 @@ describe('writeConcernTimings — the dispatcher sink', () => {
                 path.join(tmp, 'no', 'such', 'dir', 'x.jsonl'),
             ),
         ).not.toThrow();
+    });
+});
+
+// The ask-shaped probe (step 3.3's measurement prerequisite).
+//
+// `one-question-per-ask` is `severity: blocking` and filtered by the manifest's
+// per-concern `tools:` key to `AskUserQuestion` and five aliases, so the default
+// `Read` payload can never produce a sample for it — it printed `not_measured`
+// on every run, honestly and uselessly. The owning roadmap's Phase-3 blocker
+// offered two ways out: shape a payload, or decide the concern keeps the 30 s
+// timeout. These pin the first.
+describe('ASK_PROBE — the payload that reaches the ninth blocking concern', () => {
+    it('names a tool the manifest filter for one-question-per-ask admits', () => {
+        const raw = fs.readFileSync('src/scripts/hook_manifest.yaml', 'utf-8');
+        // The `tools:` line of the concern, read from the live manifest rather
+        // than restated here: a probe pinned against a copy of the filter would
+        // keep passing after the filter moved.
+        const block = raw.slice(raw.indexOf('  one-question-per-ask:'));
+        const tools = /^\s*tools:\s*\[([^\]]*)\]/m.exec(block.slice(0, 600));
+        expect(tools).not.toBeNull();
+        const names = (tools?.[1] ?? '').split(',').map((s) => s.trim());
+        expect(names).toContain(ASK_PROBE.tool_name);
+    });
+
+    it('carries ONE question — the allow path, which is what an ordinary call costs', () => {
+        const qs = ASK_PROBE.tool_input['questions'];
+        expect(Array.isArray(qs)).toBe(true);
+        expect((qs as unknown[]).length).toBe(1);
+    });
+});
+
+// The warn-only window, as an instrument.
+//
+// Step 3.3 derives a timeout of `sla_ms x 3` and flips to deny only after a
+// warn-only window. A window nothing reads is not a window, so the bench names
+// any blocking concern whose measured p95 crossed its registered bound. The two
+// directions that matter are the overrun (the flip must not happen) and the
+// three states that are NOT overruns and must not be reported as clean either.
+describe('slaOverruns — observe-only window reporting', () => {
+    const row = (over: Partial<Parameters<typeof renderConcernRow>[0]>) => ({
+        concern: 'c',
+        fail_closed: false,
+        n: 10,
+        p95_us: 1000,
+        p95_event: 'pre_tool_use',
+        sla_ms: 1,
+        sla_malformed: false,
+        ...over,
+    });
+
+    it('names a concern whose p95 exceeds sla_ms x 3', () => {
+        // sla 1 ms -> bound 3000 us; p95 3001 us is over by one microsecond.
+        const got = slaOverruns([row({ p95_us: 3001 })]);
+        expect(got).toEqual([{ concern: 'c', p95_us: 3001, bound_us: 3000 }]);
+    });
+
+    it('does NOT fire exactly at the bound — the timeout is an excess, not a tie', () => {
+        expect(slaOverruns([row({ p95_us: 3000 })])).toEqual([]);
+    });
+
+    it('an unregistered SLA is an unknown, never a clean reading', () => {
+        // The failure this excludes: treating "no bound" as "within bound"
+        // would let a wholly unregistered tree report an empty overrun list and
+        // read as a window that passed.
+        expect(slaOverruns([row({ sla_ms: null })])).toEqual([]);
+        expect(slaOverruns([row({ sla_ms: null })]).length).toBe(0);
+    });
+
+    it('an unmeasured concern is skipped rather than compared against null', () => {
+        expect(slaOverruns([row({ p95_us: null })])).toEqual([]);
+    });
+
+    it('a malformed budget value is skipped, not coerced into a bound', () => {
+        expect(slaOverruns([row({ sla_malformed: true, sla_ms: null })])).toEqual([]);
+    });
+});
+
+// Probe isolation — the defect an independent review caught on 2026-10-01.
+//
+// The ask probe dispatches the whole `pre_tool_use` event, not one concern;
+// only the manifest's `tools:` filter isolates the target. Writing that pass to
+// the main sink pools it with the default `Read` pass under the same event key,
+// so every UNFILTERED concern on the slot gets a p95 describing a mixture of
+// two payload shapes — while the code comment claims their number comes from
+// the default shape alone. It showed in the report's own output: n went from 20
+// to 40 for every `pre_tool_use` concern the day the probe landed.
+describe('mergeProbeSamples — the probe measures the slot and keeps one concern', () => {
+    const write = (p: string, rows: Record<string, unknown>[]): void => {
+        fs.writeFileSync(p, rows.map((r) => JSON.stringify(r)).join('\n') + '\n', 'utf-8');
+    };
+
+    it('carries the target across and leaves every neighbour behind', () => {
+        const main = path.join(tmp, 'main.jsonl');
+        const probe = path.join(tmp, 'main.jsonl.probe');
+        write(main, [{ concern: 'block-no-verify', duration_us: 500, event: 'pre_tool_use' }]);
+        write(probe, [
+            { concern: 'block-no-verify', duration_us: 9999, event: 'pre_tool_use' },
+            { concern: PROBE_TARGET, duration_us: 200, event: 'pre_tool_use' },
+            { concern: 'evidence-independence', duration_us: 8888, event: 'pre_tool_use' },
+        ]);
+        mergeProbeSamples(probe, main, PROBE_TARGET);
+        const got = readConcernTimings(main);
+        // The neighbour keeps ONLY its default-shape sample. 9999 would have
+        // been its ask-shaped one, and it must not reach the main sink.
+        expect(got.byConcernEvent.get('block-no-verify')?.get('pre_tool_use')).toEqual([500]);
+        expect(got.byConcernEvent.has('evidence-independence')).toBe(false);
+        expect(got.byConcernEvent.get(PROBE_TARGET)?.get('pre_tool_use')).toEqual([200]);
+    });
+
+    it('is a no-op when the probe sink does not exist', () => {
+        const main = path.join(tmp, 'main.jsonl');
+        write(main, [{ concern: 'a', duration_us: 1, event: 'pre_tool_use' }]);
+        expect(() => mergeProbeSamples(path.join(tmp, 'nope'), main, PROBE_TARGET)).not.toThrow();
+        expect(readConcernTimings(main).byConcernEvent.get('a')?.get('pre_tool_use')).toEqual([1]);
+    });
+
+    it('names the target rather than inferring it from the tools filter', () => {
+        // A future concern sharing the filter would otherwise be measured under
+        // a payload chosen for this one — the same contamination, one step out.
+        expect(blockingConcerns().map((c) => c.name)).toContain(PROBE_TARGET);
+    });
+});
+
+// The summary line must not call an incomplete window clean — the second
+// finding of the same review. `slaOverruns` skips a registered concern it could
+// not measure, so counting the success marker off the REGISTERED count prints
+// "none over" for a run that observed nothing about those concerns.
+describe('windowState — bounded is not the same as measured', () => {
+    const row = (over: Record<string, unknown>): ConcernLatencyRow =>
+        ({
+            concern: 'c',
+            fail_closed: false,
+            n: 10,
+            p95_us: 1000,
+            p95_event: 'pre_tool_use',
+            sla_ms: 1,
+            sla_malformed: false,
+            ...over,
+        }) as ConcernLatencyRow;
+
+    it('separates registered from usable', () => {
+        expect(
+            windowState([
+                row({ concern: 'measured' }),
+                row({ concern: 'unmeasured', p95_us: null }),
+                row({ concern: 'unbounded', sla_ms: null }),
+            ]),
+        ).toEqual({ registered: 2, usable: 1, unusable: 1 });
+    });
+
+    it('counts a malformed bound as registered-but-unusable, never as absent', () => {
+        // Absent and malformed are different states: absent is "not yet
+        // bounded", malformed is "bounded with a typo". Folding the second into
+        // the first shrinks the denominator and makes the window look more
+        // complete than it is.
+        expect(windowState([row({ sla_ms: null, sla_malformed: true })])).toEqual({
+            registered: 1,
+            usable: 0,
+            unusable: 1,
+        });
+    });
+
+    it('a fully measured, fully bounded set has no gap', () => {
+        expect(windowState([row({}), row({ concern: 'd' })])).toEqual({
+            registered: 2,
+            usable: 2,
+            unusable: 0,
+        });
     });
 });
