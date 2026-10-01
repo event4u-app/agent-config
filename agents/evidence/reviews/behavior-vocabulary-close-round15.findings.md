@@ -1,6 +1,19 @@
-# R2 completion review — behavior-vocabulary-close-round15
+# Findings: behavior-vocabulary-close-round15
+<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: cfd1225e9f80038250afbc7e28873e8c8b789a0a15e7fb79e4e320b0611bf3b3 | diff: 1841374ea4d166fc32a7fb355b67a73e0e5795a4 | reviewer: r2-fresh-subagent-behavior-vocabulary-close-round15 | prompt_hash: 001c9ebcdeecdb18d47b5fb2e856749fef540539951ce62fffe1e379418dc0e1 -->
+<!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-behavior-vocabulary-close-round15"]}} -->
+<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-01 -->
 
-Scope `cfd1225e9f80038250afbc7e28873e8c8b789a0a15e7fb79e4e320b0611bf3b3`, reviewed 2026-10-01.
+<!-- context-manifest: v1
+inputs:
+  diff_sha: 1841374ea4d166fc32a7fb355b67a73e0e5795a4
+  scope_hash: cfd1225e9f80038250afbc7e28873e8c8b789a0a15e7fb79e4e320b0611bf3b3
+  roadmap: none
+  roadmap_hash: none
+  ac_hash: none
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-10-01T07:52:00Z
+-->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
