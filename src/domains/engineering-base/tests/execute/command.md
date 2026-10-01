@@ -5,7 +5,7 @@ pack: engineering-base
 visibility: internal
 cluster: tests
 sub: execute
-skills: [pest-testing, quality-tools]
+skills: [quality-tools]
 description: Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 argument-hint: "[file | filter] [--include-e2e] [--include-slow] [--php]"
 suggestion:
@@ -31,6 +31,15 @@ returns the runner(s) to invoke per ecosystem:
   phpunit (`vendor/bin/phpunit`).
 - **JS/TS** → vitest (`npx vitest run`) or jest (`npx jest`).
 - **Python** → pytest. **Go** → `go test ./...`. **Rust** → `cargo test`.
+
+**The resolver is the only stack authority, and `skills:` deliberately names
+none.** The frontmatter used to bind `pest-testing` unconditionally, which
+contradicted the sentence directly above it: a React-only repository was handed
+PHP testing guidance before it read the instruction not to hard-code a stack.
+There is no per-stack skill to bind instead — `ls src/skills | grep -iE
+'jest|vitest|pytest|rspec|junit'` is empty — and a static list cannot express a
+per-repository answer, so the binding keeps only the stack-neutral
+`quality-tools`.
 
 **Wrappers win.** When a `Makefile`/`Taskfile.yml` `test:` target or a
 `package.json` `test` script exists, the resolver returns the wrapper

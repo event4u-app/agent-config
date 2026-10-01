@@ -5,7 +5,7 @@ pack: engineering-base
 visibility: internal
 cluster: tests
 sub: create
-skills: [test-case-discovery, pest-testing, quality-tools]
+skills: [test-case-discovery, quality-tools]
 description: Write meaningful tests for the current branch — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 suggestion:
   eligible: false
@@ -28,6 +28,15 @@ tests in the framework the project actually uses, never a hard-coded one:
 - **PHP** → Pest (`pestphp/pest`) or PHPUnit.
 - **JS/TS** → Vitest or Jest. **Python** → pytest. **Go** → `testing`.
   **Rust** → `#[test]`.
+
+**The resolver is the only stack authority, and `skills:` deliberately names
+none.** The frontmatter used to bind `pest-testing` unconditionally, so a
+React-only repository loaded PHP testing guidance before reading the sentence
+above telling it not to. There is no per-stack skill to bind instead — `ls
+src/skills | grep -iE 'jest|vitest|pytest|rspec|junit'` is empty — and a static
+list cannot express a per-repository answer, so the binding drops to the
+stack-neutral pair and the stack skill, where one exists for the resolved
+runner, is loaded on the resolver's verdict rather than ahead of it.
 
 Then read the existing tests under the project's test directory to match
 the style and conventions already in use (assertion shape, naming, fixtures).
