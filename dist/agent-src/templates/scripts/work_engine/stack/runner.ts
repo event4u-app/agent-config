@@ -703,8 +703,7 @@ function _jvm_runners(build: JvmBuild): RunnerResult[] {
 function _dotnet_basis(root: string): { basis: string; confidence: string } | null {
     let names: string[];
     try {
-        // SORTED: the basis names the matched file and is serialised, so an
-        // unsorted listing would make a stable config churn on rename.
+        // SORTED: the basis names the matched file and is serialised, so an unsorted listing would churn a stable config on rename.
         names = fs.readdirSync(root).sort();
     } catch {
         names = [];
@@ -809,16 +808,18 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
         _is_file(at(n)),
     );
     if ('behat/behat' in php_deps || behat_config !== undefined) {
-        // "in the composer manifest", NOT "in composer require": the sibling
-        // native-axis strings name the manifest SECTION, and the literal
-        // `composer require` reads as an install instruction to a grep that
-        // cannot tell the two apart. This axis may never be mistaken for an
-        // adoption recommendation, so its strings avoid the phrase outright.
-        const basis =
-            'behat/behat' in php_deps
-                ? 'behat/behat in the composer manifest'
-                : `${behat_config} present`;
-        row('php', 'behat', 'vendor/bin/behat', basis);
+        // "in the composer manifest", NOT "in composer require": the literal
+        // reads as an install instruction to a grep that cannot tell a
+        // manifest SECTION from one, and this axis may never be mistaken for
+        // an adoption recommendation. And `vendor/bin/behat` exists only
+        // after a composer install, so a config-only scope gets the bare
+        // binary — the row is reported either way; the COMMAND is what
+        // changes.
+        const declared = 'behat/behat' in php_deps;
+        const basis = declared
+            ? 'behat/behat in the composer manifest'
+            : `${behat_config} present`;
+        row('php', 'behat', declared ? 'vendor/bin/behat' : 'behat', basis);
     }
 
     // OWN dependencies only, unlike the native axis: a peer or optional
@@ -858,10 +859,14 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
     const gemfile = _ruby_gemfile_text(dir);
     const cucumber_gem = _gem_declared(gemfile.text, 'cucumber');
     if (cucumber_gem || _is_file(path.join(dir, 'features', 'support', 'env.rb'))) {
+        // `bundle exec` ABORTS without a Gemfile and `env.rb` is the signal
+        // for scopes that have none — same guard as `_ruby_runners`, on the
+        // file that makes the prefix work rather than the signal that matched.
         const basis = cucumber_gem
             ? `cucumber in ${gemfile.file}`
             : 'features/support/env.rb present';
-        row('ruby', 'cucumber-ruby', 'bundle exec cucumber', basis);
+        const cmd = gemfile.text === '' ? 'cucumber' : 'bundle exec cucumber';
+        row('ruby', 'cucumber-ruby', cmd, basis);
     }
 
     // NOTE: `jvm.text` is the ROOT build files only, so a Gradle multi-project
@@ -893,14 +898,11 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
  * Concatenated text of the .NET project files belonging to this scope.
  *
  * Scans the scope and, holding no project file of its own, descends to
- * {@link _DOTNET_SCAN_DEPTH} — the `root/src/<Name>/<Name>.csproj` layout,
- * where the root carries only a `.sln` and a `.sln` has no
- * `PackageReference`. Without it `reqnroll` and `specflow` were undetectable
- * outside a flat root: two of eight declared labels unemittable. Sorted at
- * every level, so deterministic. {@link _DOTNET_SCAN_DEPTH} bounds depth and
- * {@link _DOTNET_MAX_PROJECTS} bounds files READ — neither bounds directories
- * LISTED, and the max-projects exits fire only once a project was found, so a
- * no-projects descent lists every eligible directory to the depth cap.
+ * {@link _DOTNET_SCAN_DEPTH}: the `root/src/<Name>/<Name>.csproj` layout,
+ * where the root carries only a `.sln` and a `.sln` names no package. Sorted
+ * at every level, so deterministic. Depth is bounded, and files READ are
+ * bounded — directories LISTED are not, and the max-projects exits fire only
+ * once a project was found.
  */
 function _dotnet_project_text(dir: string): string {
     const texts: string[] = [];
@@ -955,22 +957,22 @@ function _dotnet_project_text(dir: string): string {
     return texts.join('\n');
 }
 
-/** Hard ceiling on scopes scanned, so a pathological workspace glob cannot stall a turn. */
+/** Hard ceiling on scopes scanned — a pathological glob cannot stall a turn. */
 const _MAX_BEHAVIOR_SCOPES = 200;
 
 /**
  * `behave` DECLARED AS A DEPENDENCY, never merely mentioned.
  *
- * `behave` is an ordinary English verb, unlike every sibling token here, so
- * a bare `\bbehave\b` fires HIGH on a description line or a changelog string.
- * Anchored to a line-start declaration: a `requirements.txt` line, or a
- * pyproject assignment. Misses the single-line PEP 621 array and inline-table
- * forms — a missed row, which is the cheap direction on this axis.
+ * `behave` is an ordinary English verb, unlike every sibling token here, so a
+ * bare `\bbehave\b` fires HIGH on a description or changelog line. Anchored to
+ * a line-start declaration and terminated by a version specifier, a separator
+ * or a `#` comment. Misses the single-line PEP 621 array and inline-table
+ * forms — a missed row, the cheap direction here.
  */
-const _PY_BEHAVE = /^[ \t]*["']?behave["']?[ \t]*(?:$|[=<>~!,;[])/m;
+const _PY_BEHAVE = /^[ \t]*["']?behave["']?[ \t]*(?:$|[=<>~!,;[#])/m;
 
 /** `pytest-bdd` declared as a dependency — same anchoring, same reason. */
-const _PY_BDD = /^[ \t]*["']?pytest-bdd["']?[ \t]*(?:$|[=<>~!,;[])/m;
+const _PY_BDD = /^[ \t]*["']?pytest-bdd["']?[ \t]*(?:$|[=<>~!,;[#])/m;
 
 /**
  * The `packages:` sequence of a `pnpm-workspace.yaml`, and ONLY that key.

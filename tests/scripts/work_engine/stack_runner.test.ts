@@ -1074,6 +1074,54 @@ describe('stack/runner — behaviour-runner axis', () => {
         expect(found?.confidence).toBe(MEDIUM);
     });
 
+    it('cucumber-ruby without a Gemfile drops the `bundle exec` prefix', () => {
+        // R14 finding 1: the IDENTICAL defect round 13 fixed in `_ruby_runners`,
+        // 226 lines away on the behavior axis, which that round's sibling sweep
+        // never ran. `bundle exec` aborts with no Gemfile, and `env.rb` is the
+        // signal for scopes that have none.
+        write('features/support/env.rb', "require 'cucumber'\n");
+        const found = resolve_behavior_runners(tmp).find((r) => r.runner === 'cucumber-ruby');
+        expect(found?.command).toBe('cucumber');
+        expect(found?.basis).toBe('features/support/env.rb present');
+    });
+
+    it('cucumber-ruby WITH a Gemfile keeps it', () => {
+        write('Gemfile', "gem 'cucumber'\n");
+        const found = resolve_behavior_runners(tmp).find((r) => r.runner === 'cucumber-ruby');
+        expect(found?.command).toBe('bundle exec cucumber');
+    });
+
+    it('behat from a config alone does not promise a vendor binary', () => {
+        // `vendor/bin/behat` exists only after a composer install; a scope with
+        // a behat config and no composer manifest has no vendor directory.
+        write('behat.yml', 'default: {}\n');
+        const found = resolve_behavior_runners(tmp).find((r) => r.runner === 'behat');
+        expect(found?.command).toBe('behat');
+        expect(found?.basis).toBe('behat.yml present');
+    });
+
+    it('behat declared in the composer manifest keeps the vendor path', () => {
+        write('composer.json', JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } }));
+        const found = resolve_behavior_runners(tmp).find((r) => r.runner === 'behat');
+        expect(found?.command).toBe('vendor/bin/behat');
+    });
+
+    it('a cucumber config alone is a cucumber-js row', () => {
+        // R14 finding 2: every marker-ONLY basis branch this change added was
+        // unreachable from the suite. Per-LABEL coverage was met and per-SIGNAL
+        // coverage was not, which is exactly where finding 1 was hiding.
+        write('cucumber.json', '{}');
+        const found = resolve_behavior_runners(tmp).find((r) => r.runner === 'cucumber-js');
+        expect(found?.basis).toBe('cucumber.json present');
+    });
+
+    it('behave survives a trailing pip comment', () => {
+        // R14 finding 6: `#` was missing from the terminator set, so a
+        // `behave  # bdd` line — valid pip syntax — was dropped.
+        write('requirements.txt', 'behave  # bdd\n');
+        expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toContain('behave');
+    });
+
     it('a CRLF pnpm-workspace.yaml is read, not silently dropped', () => {
         // R13 finding 5: `.` never matches `\r`, so splitting on `\n` alone
         // left a trailing `\r` that made the key regex match NOTHING — the

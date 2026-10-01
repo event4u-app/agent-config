@@ -147,10 +147,13 @@ get there.
       sentence added directly under the
       `## Does this change owe an executable behavior contract?` heading — the
       decision the vocabulary is meant to reach — naming **five** terms:
-      *Gherkin*, *BDD*, *Cucumber*, *Behat* and *given-when-then*, plus
-      "their German phrasings". Each occurs in at least one should-trigger
-      query, checked against the corpus rather than against the sentence. It
-      points at
+      *Gherkin*, *BDD*, *Cucumber*, *Behat* and *given-when-then*. The German
+      claim is narrower than the five: the shipped sentence reads "with German
+      exemplars for *Cucumber* and *Behat*", which round 7 narrowed it to and
+      which an earlier version of THIS paragraph went on quoting as "their
+      German phrasings" — a quote of a sentence its own next paragraph records
+      as replaced. Each term occurs in at least one should-trigger query,
+      checked against the corpus rather than against the sentence. It points at
       `evals/triggers.json` as where they are pinned, and closes the promise
       exactly where Risk 1 says it must close: it is a decision, not a guide
       to writing a contract. No new section and no new heading.
@@ -711,7 +714,7 @@ neither spends the ratchet early nor loses the trigger.
 
 ### Residue carried out of the review rounds
 
-Thirteen completion-review rounds produced 117 findings; 89 are fixed and 28
+Fourteen completion-review rounds produced 123 findings; 94 are fixed and 29
 are `accepted-risk`, each with a stated `revisit-if`. Nothing is `open`.
 
 **The dominant defect class was never the code.** Four highs across rounds 2–4
@@ -771,7 +774,24 @@ repository loses its true answer entirely. And the cost estimate was wrong.
 Nothing needs the solution's TEXT, only its PRESENCE, which
 `_has_dotnet_solution` already reads separately. The fix is one `continue`.
 
-**Round 12 then found the same class twice more, inside the fix for it.**
+**Round 14 found the sweep round 13 owed and never ran.** Round 13 fixed
+`bundle exec rspec` on the native axis, where no Gemfile means the command
+aborts. The identical construct sat 226 lines away on the behavior axis
+(`bundle exec cucumber`, reached by the `features/support/env.rb` signal —
+which exists precisely for scopes with no Gemfile) and in the PHP row
+(`vendor/bin/behat` on a config-only scope, where no composer install has
+run). `downstream-changes` § Defect-pattern search says in as many words that
+one instance is a sample and not the population, and that the fix is not
+complete until the construct is named, grepped and counted. That was not done;
+the sweep ran this round instead, and the count is three sites, two of them
+real — `npx cucumber-js` is the third and is fine, because `npx` fetches on
+demand.
+
+Round 14 also named WHY the suite did not catch it: per-LABEL presence and
+absence were covered, per-SIGNAL was not, so every marker-only basis branch
+this change added was unreachable from a fixture. Six were added.
+
+**Round 12 found the same class twice more, inside the fix for it.**
 The commit that retracted "filesystem-cheap" on the contract page left the
 claim standing in the module header a reader actually opens; the commit that
 corrected one wrong premise in the `_BEHAVIOR_MARKERS` docblock wrote a
@@ -797,7 +817,7 @@ it names the measurement it waits on rather than an estimate.
   scope-set parameter threaded through `_behavior_runners_in_scope` into the
   walk, plus a membership test in the descent loop, call it ten lines. What
   blocks it is not the shape but the per-file line ceiling — `runner.ts` sits
-  at exactly 1,500 — and the move that unblocks it is splitting the behavior
+  at its per-file ceiling — and the move that unblocks it is splitting the behavior
   axis into its own leaf module. REVISIT-IF: that split happens, or a consumer
   reports the false root row (it is detection-only and unreachable from
   `selected`, so today it misleads a reader rather than running anything).
