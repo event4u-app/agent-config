@@ -1,24 +1,26 @@
 # Findings: drain-hooks-every-host-close
-<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 15c2e4dd79f3a86926dd3176c0eaf7d20d4f58f48d92ee5ba50b665f97b9f19c | diff: af0b1668b167872bb7ef966322ab7013fa2c8fce | reviewer: r2-fresh-subagent-drain-hooks-every-host-close | prompt_hash: 6188c8176a35845071297ab815754994a7a2eb0a912039d1f8d17d67fcd64d81 -->
-<!-- {"review-independence":{"review_independence":"multi-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"multi-pass","reviewers":["r2-fresh-subagent-drain-hooks-every-host-close","r2-fresh-subagent-round2","r2-fresh-subagent-round3","r2-fresh-subagent-round4","council/anthropic+openai-2026-10-01"]}} -->
+<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: b77418b4f8e8b771be3076d68fb4ede2103089174e2e18c1a9271ac3a609fd46 | diff: fc46660c1399722fa6906646b759ce87066e52d6 | reviewer: r2-fresh-subagent-drain-hooks-every-host-close | prompt_hash: 1b53cb005de9a316fd26be9ed42b1db5016330d1afb9de9b083d50755836e929 -->
+<!-- {"review-independence":{"review_independence":"multi-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"multi-pass","reviewers":["r2-fresh-subagent-drain-hooks-every-host-close","r2-round2","r2-round3","r2-round4","r2-round5","council/anthropic+openai-2026-10-01"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-01 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: af0b1668b167872bb7ef966322ab7013fa2c8fce
-  scope_hash: 15c2e4dd79f3a86926dd3176c0eaf7d20d4f58f48d92ee5ba50b665f97b9f19c
+  diff_sha: fc46660c1399722fa6906646b759ce87066e52d6
+  scope_hash: b77418b4f8e8b771be3076d68fb4ede2103089174e2e18c1a9271ac3a609fd46
   roadmap: agents/roadmaps/archive/road-to-hooks-on-every-host.md
   roadmap_hash: 5bd92c90916806a1a592464cf2e1e2b4a14e4abbe52f876ef7be0aa9acfd506c
   ac_hash: 098bdb3afcece6e3169f4a28232bc67e549237d6850779bd1e8e601e01dc6dbb
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-10-01T03:24:52Z
+dispatched: 2026-10-01T03:43:41Z
 -->
-**Five rounds, each a fresh subagent with no implementation context, plus a
-two-provider council on the ratification question.** The rounds found **20
+**Six rounds, each a fresh subagent with no implementation context, plus a
+two-provider council on the ratification question.** The rounds found **21
 defects, 3 of them high**; each round's findings were fixed and the next round
-ran against the result. The fifth and last round found **no high and no medium
-findings**.
+ran against the result. The fifth round found no high and no medium findings; the sixth and final
+round returned **"the branch is sound"** with one low polish item, fixed in
+`fc46660c1` and recorded as row 6 below — the one row whose fix legitimately
+postdates this artifact.
 
 **What the table below carries, and why it is not the twenty.** The R2 contract
 (§2.5) requires a findings artifact to be committed BEFORE the commits that fix
@@ -38,6 +40,8 @@ this scope.
 | 3 | low | src/scripts/install.ts:1611 | Being listed in `SMOKE_PROBE_SLOTS` is only half of being probed: `_smoke_test_hooks` resolves `SMOKE_BRIDGE_PATHS[platform] ?? ''` and counts a platform with no entry as `skipped`, so a host could be listed as probed and silently never exercised. | accepted-risk | No live instance — all six listed platforms have a bridge path today. Closing it means exporting the constant, which edits `src/scripts/install.ts` and reds two committed-build-output freshness gates (`build:cli` + `build:install-bundle`), with the bundle needing a rebuild against a real `node_modules` this worktree does not have. Recorded in `tests/install/global_install_hooks_smoke.test.ts`'s own comment so the next reader meets it rather than rediscovering it.  |
 | 4 | low | src/scripts/hooks/host_lowering.yaml:306 | The codex deny probe is n=1, one build, one operator, and did not separate "the hook fired and was ignored" from "the matcher never matched" — the instrumented re-run was blocked by the harness it ran under. | accepted-risk | The row states both unexcluded explanations and names the one cheap experiment that would separate them (a marker-file re-run on >= 0.159.3). Every observable the probe rests on was independently re-verified by two later rounds: `codex --version` 0.148.0, `codex features list` reporting `hooks stable true`, registry latest 0.159.3, `command -v copilot` absent, and the 24-stable-release gap re-derived from the registry. What is claimed is only that this package has demonstrated no refusal path there.  |
 | 5 | low | agents/roadmaps/road-to-host-claims-the-tree-contradicts.md | `task roadmap-progress-check` fails on an unrelated roadmap carrying 2 unresolved `[~]` deferrals. | deferred | Pre-existing on `origin/main` (verified: the same 2 deferrals are present there) and not in this diff. CI deliberately runs the narrow `task roadmap-dashboard-untracked-check` instead, precisely so a pre-existing estate defect does not block every unrelated PR — which is why this is reported rather than fixed. Resolving it is an owner decision under `roadmap-management § 4b`.  |
+
+| 6 | low | src/scripts/check_host_docs_digest.ts:616 | `reportScanned()` was called outside any `try`, so a `DeadScopeError` — an empty or moved corpus, which is an ANTICIPATED input condition — escaped to the module-entry catch-all and printed a seven-frame stack. The exit code was already correct, so this was cosmetic; it was also inconsistent with 280 of the 312 `assertScanned`/`reportScanned` call sites in this tree, and with this module's own header, which argues twice that an anticipated condition must not surface as a bare stack trace and then let this one through. | fixed | Caught and reported as one line with exit 2, per the house pattern. Verified against an empty fixture table: `--lowering <empty> --quiet` now prints the `scanned 0 verified row(s)` diagnostic and exits 2 with no stack. (`fc46660c1`) |
 
 ## Review history — the twenty findings of rounds 1-5
 

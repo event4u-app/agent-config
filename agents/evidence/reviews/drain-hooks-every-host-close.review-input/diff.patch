@@ -1009,10 +1009,10 @@ index aa6fe6a44a45badf318c7cc3ec5960a1c948e584..3d92e55278e0cb654cb86fcc3d84c327
 +      exists rather than the sentence being softened.
 diff --git a/src/scripts/check_host_docs_digest.ts b/src/scripts/check_host_docs_digest.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..92f2ec33bd1a099ff0f8fc5e94d6734cd21d04bd
+index 0000000000000000000000000000000000000000..2a4e3fab37cb1e7e6393f6d5ab14e499f2cf896b
 --- /dev/null
 +++ b/src/scripts/check_host_docs_digest.ts
-@@ -0,0 +1,773 @@
+@@ -0,0 +1,786 @@
 +#!/usr/bin/env tsx
 +/**
 + * check_host_docs_digest — the docs-drift watcher over `verified.docs_digest`.
@@ -1103,7 +1103,7 @@ index 0000000000000000000000000000000000000000..92f2ec33bd1a099ff0f8fc5e94d6734c
 +import { asOf } from './_lib/as_of.js';
 +import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 +import { sanitize_text } from './_lib/retrieval_sanitize.js';
-+import { reportScanned } from './_lib/scan_scope.js';
++import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 +import { HOST_LOWERING_PATH, parseHostLowering, type HostLowering } from './hooks/host_lowering.js';
 +
 +/** sha256, hex — the digest shape `verified.docs_digest` carries. */
@@ -1628,12 +1628,25 @@ index 0000000000000000000000000000000000000000..92f2ec33bd1a099ff0f8fc5e94d6734c
 +    // indistinguishable from a gate that works. If the table is ever moved or
 +    // its shape changes so `watchable` resolves nothing, this exits non-zero
 +    // instead of reporting no drift across zero rows.
-+    reportScanned({
-+        gate: 'check_host_docs_digest',
-+        scanned: rows.length,
-+        units: 'verified row(s)',
-+        roots: ['src/scripts/hooks/host_lowering.yaml'],
-+    });
++    try {
++        reportScanned({
++            gate: 'check_host_docs_digest',
++            scanned: rows.length,
++            units: 'verified row(s)',
++            roots: ['src/scripts/hooks/host_lowering.yaml'],
++        });
++    } catch (exc) {
++        // An empty or moved corpus is an ANTICIPATED input condition, so it
++        // gets the house treatment — one line, exit 2 — rather than escaping to
++        // the module-entry catch-all as a stack trace. The catch-all is for the
++        // unanticipated; this header argues that twice and then let this one
++        // through, which a completion review caught.
++        if (exc instanceof DeadScopeError) {
++            process.stderr.write(`❌  ${exc.message}\n`);
++            return 2;
++        }
++        throw exc;
++    }
 +
 +    if (!doFetch) {
 +        const withDigest = rows.filter((r) => r.digest !== null).length;
