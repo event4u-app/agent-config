@@ -22,6 +22,11 @@
  *   PROMOTED lesson is surfaced as a one-line visibility marker pointing
  *   at the existing /memory:propose flow. Nothing auto-writes curated
  *   `agents/memory/*.yml`.
+ * - Measured: every run appends one line to the gitignored dogfood ledger
+ *   (`agents/runtime/state/learning-dogfood.jsonl`) BEFORE the early
+ *   returns, so the 30-day window the default flip is gated on can read a
+ *   zero rather than a silence. See `runLearn` for why that distinction is
+ *   the whole point.
  *
  * Exit codes (dispatcher contract): 0 always (allow).
  */
@@ -44,8 +49,9 @@ import type { SettingsClass } from '../shared/settingsClasses.js';
 import { consentVerdict, type ConsentVerdict } from '../shared/settingsConsent.js';
 
 import {
-    buildSidecar,
+    buildSidecarFromSignals,
     LESSONS_NAME,
+    readSignals,
     renderLessonsMd,
     SIDECAR_NAME,
 } from './learning_sidecar.js';
@@ -175,23 +181,101 @@ export function enabled(root: string): boolean {
     return learnConsent(root) === 'granted';
 }
 
-/** Run the aggregation. Returns the one-line marker to emit, or null. */
+/**
+ * The dogfood ledger: repo-relative POSIX path, one JSON object per line.
+ *
+ * Under `agents/runtime/` — gitignored wholesale — because it is one machine's
+ * timings and counts, not a shared artefact. Its continuity-surface row records
+ * it as `excluded`: nothing restores a session from it.
+ */
+export const DOGFOOD_LEDGER_POSIX = 'agents/runtime/state/learning-dogfood.jsonl';
+
+/** One session end, as the ledger records it. */
+export interface DogfoodLine {
+    /** The `now` the aggregation ran against. */
+    at: string;
+    /** Wall-clock ms for read + aggregate — the portion the 2 s budget governs. */
+    wall_ms: number;
+    /** Well-formed signal records read from the intake. */
+    signals_in: number;
+    /** Lessons the aggregation produced. */
+    lessons_out: number;
+    /** Of those, how many carry the `preferred` verdict. */
+    preferred: number;
+}
+
+/**
+ * Append one measurement line. Never throws: the ledger is a measurement, and
+ * a measurement that can break the thing it measures is worse than no ledger.
+ */
+export function appendDogfoodLine(root: string, line: DogfoodLine): void {
+    try {
+        const file = path.join(root, ...DOGFOOD_LEDGER_POSIX.split('/'));
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.appendFileSync(file, `${JSON.stringify(line)}\n`, 'utf8');
+    } catch {
+        // fail-open, same contract as the aggregation itself.
+    }
+}
+
+/** Read the ledger back. Malformed lines are skipped, an absent file is empty. */
+export function readDogfoodLines(root: string): DogfoodLine[] {
+    let text: string;
+    try {
+        text = fs.readFileSync(path.join(root, ...DOGFOOD_LEDGER_POSIX.split('/')), 'utf8');
+    } catch {
+        return [];
+    }
+    const out: DogfoodLine[] = [];
+    for (const raw of text.split('\n')) {
+        const line = raw.trim();
+        if (!line) continue;
+        try {
+            out.push(JSON.parse(line) as DogfoodLine);
+        } catch {
+            continue;
+        }
+    }
+    return out;
+}
+
+/**
+ * Run the aggregation. Returns the one-line marker to emit, or null.
+ *
+ * MEASURE FIRST, THEN DECIDE. The flip condition this hook's default is gated
+ * on (`src/config/agent-settings.template.yml:1376-1378`) names two numbers —
+ * non-trivial signal AND session-end p95 < 2 s — and until the ledger below
+ * existed, neither was recorded: every early return here fired before any
+ * measurement point, so a checkout with an empty intake produced an unbroken
+ * silence. A silence and a measured zero read identically to whoever opens the
+ * window, which is the one failure a 30-day window cannot recover from. So the
+ * read, the aggregation and the ledger line all happen before the first return.
+ */
 export function runLearn(root: string, nowIso: string, budgetMs: number = BUDGET_MS): string | null {
     const started = Date.now();
     const intakeDir = path.join(root, 'agents', 'memory', 'intake');
     const outDir = path.join(root, 'agents', 'memory');
+    // An absent intake directory is a zero-signal session, not an absent one.
+    const signals = fs.existsSync(intakeDir) ? readSignals(intakeDir) : [];
+    const sidecar = buildSidecarFromSignals(signals, nowIso);
+    const preferred = sidecar.lessons.filter((l) => l.verdict === 'preferred').length;
+    appendDogfoodLine(root, {
+        at: nowIso,
+        wall_ms: Date.now() - started,
+        signals_in: signals.length,
+        lessons_out: sidecar.lessons.length,
+        preferred,
+    });
     if (!fs.existsSync(intakeDir)) return null;
-    const sidecar = buildSidecar(intakeDir, nowIso);
     if (Date.now() - started > budgetMs) return null; // over budget — skip the write
     if (sidecar.lessons.length === 0) return null;
     fs.writeFileSync(path.join(outDir, SIDECAR_NAME), `${JSON.stringify(sidecar, null, 2)}\n`, 'utf8');
     fs.writeFileSync(path.join(outDir, LESSONS_NAME), renderLessonsMd(sidecar), 'utf8');
-    const promoted = sidecar.lessons.filter((l) => l.verdict === 'preferred').length;
     const deadEnds = sidecar.lessons.filter((l) => l.verdict === 'dead_end').length;
     // Memory-visibility contract shape: one line, ids/counters only, no bodies.
     return (
         `🧠 Memory: sidecar refreshed — ${sidecar.lessons.length} lesson(s) ` +
-        `(${promoted} preferred · ${deadEnds} dead-end); promote via /memory:propose`
+        `(${preferred} preferred · ${deadEnds} dead-end); promote via /memory:propose`
     );
 }
 
