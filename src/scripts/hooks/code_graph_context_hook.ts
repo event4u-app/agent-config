@@ -39,6 +39,7 @@
  * fail_closed: false — every error path returns allow; a context line must
  * never break a tool call.
  */
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -178,14 +179,36 @@ function latchFile(root: string): string {
 export const MAX_CONTEXT_LINES_PER_SESSION = 5;
 
 /**
+ * What the latch file records for a target: a truncated digest, never the
+ * target itself.
+ *
+ * A council review of step 2.1 (2026-10-01, anthropic + openai) asked for one
+ * concrete thing before the shell tool was routed here — that command text is
+ * neither persisted nor carried into diagnostics. Routing on the shell tool
+ * makes the target a search TERM an operator typed, and a term can be a
+ * customer name, a token fragment or an internal hostname. Nothing downstream
+ * needs to read it back: the latch answers "have I spoken about this one", and
+ * equality over a digest answers that exactly as well.
+ *
+ * Not a security boundary and not claimed as one — a short digest of a short
+ * term is guessable by anyone who can enumerate terms. It is the same
+ * PII-exclusion-by-construction move `domain-safety-pii` § Surface 2 asks for:
+ * the file is shaped so the plaintext is not in it to leak.
+ */
+export function latchKey(target: string): string {
+    return createHash('sha256').update(target).digest('hex').slice(0, 16);
+}
+
+/**
  * Should this target get a line, given what this session already heard?
  *
  * Pure, so the two rules it encodes can be tested without a filesystem: a
  * repeat is silent at any count, and a NEW target is silent once the cap is
- * reached.
+ * reached. Takes the target in the clear and hashes here, so no caller can
+ * forget to.
  */
 export function speaksFor(spoken: readonly string[], target: string): boolean {
-    if (spoken.includes(target)) return false;
+    if (spoken.includes(latchKey(target))) return false;
     return spoken.length < MAX_CONTEXT_LINES_PER_SESSION;
 }
 
@@ -228,7 +251,7 @@ export function latchTarget(root: string, session: string, target: string): bool
     const spoken = state[session] ?? [];
     if (!speaksFor(spoken, target)) return false;
     try {
-        state[session] = [...spoken, target];
+        state[session] = [...spoken, latchKey(target)];
         const p = latchFile(root);
         fs.mkdirSync(path.dirname(p), { recursive: true });
         fs.writeFileSync(p, JSON.stringify(state));

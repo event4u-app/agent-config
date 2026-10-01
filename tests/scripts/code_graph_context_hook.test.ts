@@ -21,6 +21,7 @@ import {
     classifyTool,
     contextLine,
     graphState,
+    latchKey,
     latchTarget,
     MAX_CONTEXT_LINES_PER_SESSION,
     speaksFor,
@@ -228,13 +229,33 @@ describe('classifyTool — step 2.1 routes the shell tool, and every call names 
 
 describe('the latch — step 2.2, once per target and five per session', () => {
     it('speaksFor: a repeat is silent at any count, a new target is silent at the cap', () => {
+        // The stored form is the DIGEST, so the spoken list is built with
+        // `latchKey` — a test that passed plaintext here would pass against a
+        // latch that stores plaintext and is exactly what must not regress.
         expect(speaksFor([], 'a')).toBe(true);
-        expect(speaksFor(['a'], 'a')).toBe(false);
-        expect(speaksFor(['a', 'b'], 'c')).toBe(true);
-        const full = ['a', 'b', 'c', 'd', 'e'];
+        expect(speaksFor([latchKey('a')], 'a')).toBe(false);
+        expect(speaksFor([latchKey('a'), latchKey('b')], 'c')).toBe(true);
+        const targets = ['a', 'b', 'c', 'd', 'e'];
+        const full = targets.map(latchKey);
         expect(full.length).toBe(MAX_CONTEXT_LINES_PER_SESSION);
-        expect(full.every((t) => !speaksFor(full, t))).toBe(true);
+        expect(targets.every((t) => !speaksFor(full, t))).toBe(true);
         expect(speaksFor(full, 'f')).toBe(false);
+    });
+
+    it('persists a digest of the search term, never the term — the council condition on 2.1', () => {
+        // Routing the shell tool here makes the latch key a search TERM an
+        // operator typed, which can carry a customer name, a token fragment or
+        // an internal hostname. Nothing reads it back, so nothing needs it.
+        const root = tmpRoot();
+        expect(latchTarget(root, 's', 'ACME-Corp-secret-token')).toBe(true);
+        const raw = fs.readFileSync(
+            path.join(root, 'agents', 'runtime', 'state', 'code-graph-context.json'),
+            'utf-8',
+        );
+        expect(raw).not.toContain('ACME-Corp-secret-token');
+        expect(raw).toContain(latchKey('ACME-Corp-secret-token'));
+        // And the digest still answers the only question the latch asks.
+        expect(latchTarget(root, 's', 'ACME-Corp-secret-token')).toBe(false);
     });
 
     it('three distinct patterns yield three lines, the same pattern twice yields one, a sixth yields none', () => {
