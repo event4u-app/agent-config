@@ -14,7 +14,17 @@ execution:
 > were proposal IDs; § 1 below records which of its claims survived verification,
 > which were overtaken, and the one that is refuted as written.
 
-> **Arrivals:** the delivery/`eager-all` subject appears in **20** consumed inbox
+> **Arrivals:** re-measured 2026-10-01 by the same command: `eager-all` in
+> **50** consumed rounds, `lean_projection` in **48**, plus `inbox-2026-10-c`
+> (2026-10-01). That round's roadmaps take this file's blocker instrument
+> (`road-to-a-rule-carrier-that-works-outside-the-repo` step 0.2) and correct
+> its trigger table (`road-to-rule-triggers-and-links-that-hold` step 1.1:
+> `roadmap-progress-sync` is not path-only, its `command` triggers are dropped).
+> **Owner question, posed 2026-10-01:** once step 0.2 there has merged, archive
+> this file into that round's roadmaps, or keep it parked for its Phase 3
+> measurement? Recommendation: keep it parked until 0.2's first record exists.
+>
+> Earlier reading: the delivery/`eager-all` subject appears in **20** consumed inbox
 > rounds under `agents/tmp.old/` (measured 2026-09-06, `grep -rl "eager-all"`,
 > distinct round directories); `lean_projection` in **18**. Latest
 > `inbox-2026-09-ab` (2026-09-29); earlier: `inbox-2026-09-r`, which proposed
