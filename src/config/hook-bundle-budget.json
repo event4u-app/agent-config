@@ -1,0 +1,15 @@
+{
+    "_comment": "Byte ceiling and parser cap for the self-hosted hook bundle (dist/hooks/dispatch.js). Registered by road-to-a-hook-bundle-with-one-yaml-reader step 2.1. Read by src/scripts/check_hook_bundle_composition.ts, which builds the bundle from source with --metafile and compares. WHY A CEILING AT ALL: every concern is inlined into one bundle that every hook event loads, so a dependency added for one concern is paid by all of them, on every dispatch. The second YAML parser that opened this roadmap cost 95,846 bytes and reached a release as a review finding rather than as a red check. A ceiling makes the next one a red check.",
+    "schema_version": 1,
+    "registered_at": "2026-10-01",
+    "owner": "maintainer",
+    "review_by": "2027-10-01",
+    "max_bytes": 1500000,
+    "max_bytes_derivation": "Measured 1,469,738 bytes after step 1.2 removed js-yaml from the module graph (agents/evidence/analysis/hook-bundle-composition-2026-10-01.md). The ceiling is that reading plus ~2.1 % of headroom, rounded to 1,500,000. The headroom is deliberate and is NOT a creep allowance: a bundle is rebuilt from source on every run, so an esbuild minor that renames symbols differently moves the figure by hundreds of bytes with no change to this tree, and a ceiling sitting one byte above the reading would red on that. It sits BELOW the 1,564,211 bytes measured before the swap, so the exact regression this roadmap closed cannot reappear under it.",
+    "shrink_only": true,
+    "shrink_only_note": "A RAISE needs a recorded reason in `raise_log` below naming what was added and why it could not be avoided; the gate prints the rule but cannot enforce it, because a raise and a lowering are the same edit to a number. The enforcement is review reading `raise_log`, and an empty log beside a raised ceiling is the finding.",
+    "raise_log": [],
+    "max_yaml_packages": 1,
+    "max_yaml_packages_note": "The dispatch path reads YAML for the hook manifest, the host-lowering table and the settings contract. One reader covers all three. Two cost 95,846 bytes for a single call site and were invisible until an external rescore counted them — which is why this is a cap rather than prose. The package set the cap counts over is YAML_PACKAGES in the gate.",
+    "what_this_does_not_bound": "Latency. A smaller bundle is not a measured speed-up; src/config/hook-latency-budget.json owns the wall-clock axis and is not derived from this file. Nor does it bound dist/install/install.mjs or dist/mcp/server.mjs, which carry their own module graphs."
+}

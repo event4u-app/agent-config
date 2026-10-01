@@ -8,6 +8,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { load as jsYamlLoad } from 'js-yaml';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -21,6 +22,7 @@ import {
     findPackageRoot,
     count_entries,
     decide,
+    parseSettingsDoc,
 } from '../../../src/scripts/hooks/block_config_weakening.js';
 import {
     buildSettingsClassIndex,
@@ -294,5 +296,199 @@ describe('block_config_weakening — class-c, the reviewed defects', () => {
         const pkgPath = path.resolve(__dirname, '..', '..', '..', 'package.json');
         const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as { files: string[] };
         expect(pkg.files).toContain('docs/contracts/settings-classes.md');
+    });
+});
+
+// Characterization of the settings parser, written BEFORE the dispatch path was
+// moved off `js-yaml` onto the `yaml` package the bundle already carried
+// (`road-to-a-hook-bundle-with-one-yaml-reader` 1.2). Every assertion below is a
+// READING of the behaviour the guard had under `js-yaml`, taken while it still
+// ran under `js-yaml` — so a swap that changes any of them is a behaviour change
+// wearing a dependency change's clothes, which is Risk 1 of that roadmap made
+// mechanical rather than argued.
+describe('block_config_weakening — parseSettingsDoc, pinned across the parser swap', () => {
+    // YAML 1.1 resolved `on` / `yes` / `off` / `no` to booleans; YAML 1.2 core
+    // leaves them strings. Both readers implement 1.2 here, so a class-C key
+    // written `on` is the STRING "on" under either. Pinned because the opposite
+    // would silently change what `changedKeys` reports as changed.
+    it('reads YAML 1.1 boolean words as 1.2 strings', () => {
+        for (const word of ['on', 'yes', 'off', 'no', 'On', 'YES']) {
+            expect(parseSettingsDoc(`k: ${word}\n`, '.agent-settings.yml')).toEqual({ k: word });
+        }
+    });
+
+    it('still reads real booleans as booleans', () => {
+        expect(parseSettingsDoc('k: true\n', '.agent-settings.yml')).toEqual({ k: true });
+        expect(parseSettingsDoc('k: false\n', '.agent-settings.yml')).toEqual({ k: false });
+    });
+
+    // The fail-closed half. `null` from this function is NOT "no keys" — the
+    // caller treats it as an unreadable corpus and refuses. An emptied settings
+    // file must land there, never on "parsed fine, nothing changed". `js-yaml`
+    // threw on an empty document and the `yaml` package returns `null` for one,
+    // so this is the single place the two readers genuinely differ and the one
+    // the port has to normalise.
+    it('treats an empty or value-less document as unparseable, not as an empty settings doc', () => {
+        for (const text of ['', '   \n', '~\n', 'null\n']) {
+            expect(parseSettingsDoc(text, '.agent-settings.yml')).toBeNull();
+        }
+    });
+
+    it('returns null for a document that does not parse at all', () => {
+        expect(parseSettingsDoc('a: [unclosed\n', '.agent-settings.yml')).toBeNull();
+        expect(parseSettingsDoc('a: 1\na: 2\n', '.agent-settings.yml')).toBeNull();
+    });
+
+    it('still reads JSON settings through JSON.parse, not the YAML reader', () => {
+        expect(parseSettingsDoc('{"a": {"b": 1}}', 'settings.json')).toEqual({ a: { b: 1 } });
+        expect(parseSettingsDoc('{a: 1}', 'settings.json')).toBeNull();
+    });
+
+    // The explicit-tag class, which is the one the swap would have WEAKENED. The
+    // old reader threw on each of these and the guard refused; the `yaml`
+    // package resolves them by default and the guard would have gone on to allow
+    // an edit it used to refuse. Found by an independent council review
+    // (openai/codex-default, 2026-10-01) and closed by `resolveKnownTags: false`
+    // plus treating a warning as a refusal.
+    it('refuses a document carrying an explicit YAML 1.1 tag, as the old reader did', () => {
+        for (const text of [
+            'k: !!timestamp 2026-10-01\n',
+            'k: !!binary aGk=\n',
+            'k: !!set\n  ? a\n  ? b\n',
+            'k: !!omap\n  - a: 1\n',
+            'k: !!pairs\n  - a: 1\n',
+            'k: !custom 1\n',
+        ]) {
+            expect(parseSettingsDoc(text, '.agent-settings.yml'), text).toBeNull();
+        }
+    });
+
+    // …and the near-miss in the other direction: the CORE tags both readers
+    // carry must still parse, or the constraint above would be a refuse-anything
+    // gate wearing an equivalence test's name.
+    it('still reads the core tags both readers carry', () => {
+        expect(parseSettingsDoc('k: !!str 1\n', '.agent-settings.yml')).toEqual({ k: '1' });
+        expect(parseSettingsDoc('k: !!int 3\n', '.agent-settings.yml')).toEqual({ k: 3 });
+        expect(parseSettingsDoc('k: !!bool true\n', '.agent-settings.yml')).toEqual({ k: true });
+        expect(parseSettingsDoc('k: !!seq [1]\n', '.agent-settings.yml')).toEqual({ k: [1] });
+    });
+
+    // A merge key was raised as a difference by one seat and is not one at these
+    // versions. Pinned so the question is settled by a reading rather than
+    // re-litigated from documentation.
+    it('leaves a merge key literal, which is what the old reader did too', () => {
+        expect(parseSettingsDoc('d: &d\n  p: false\npersonal:\n  <<: *d\n', '.agent-settings.yml')).toEqual({
+            d: { p: false },
+            personal: { '<<': { p: false } },
+        });
+    });
+
+    // The second review round's follow-up: `yaml` documents `merge` as
+    // defaulting to the document's YAML VERSION, so a `%YAML 1.1` directive was
+    // proposed as a route past the schema pin. It is not one here — measured —
+    // and `merge: false` is set explicitly so a future default cannot make it
+    // one silently. This asserts the measurement, not the option.
+    it('leaves a merge key literal even under a %YAML 1.1 directive', () => {
+        expect(
+            parseSettingsDoc('%YAML 1.1\n---\nd: &d\n  p: false\npersonal:\n  <<: *d\n', '.agent-settings.yml'),
+        ).toEqual({ d: { p: false }, personal: { '<<': { p: false } } });
+    });
+
+    it('a version directive does not reopen the 1.1 scalar or tag resolutions', () => {
+        expect(parseSettingsDoc('%YAML 1.1\n---\nk: on\n', '.agent-settings.yml')).toEqual({ k: 'on' });
+        expect(parseSettingsDoc('%YAML 1.1\n---\nk: !!timestamp 2026-10-01\n', '.agent-settings.yml')).toBeNull();
+    });
+
+    // End-to-end through the guard, on a real class-C key: flipping between two
+    // YAML 1.1 boolean words is still a refusal, under either reader.
+    it('sees a class C key flip between two 1.1 boolean words', () => {
+        const REAL = path.resolve(__dirname, '..', '..', '..', 'docs', 'contracts', 'settings-classes.md');
+        const idx = buildSettingsClassIndex(parseSettingsClassRows(fs.readFileSync(REAL, 'utf-8')));
+        const cKey = [...idx.entries()].find(([, cls]) => cls === 'C')?.[0];
+        expect(cKey).toBeDefined();
+        const segments = (cKey as string).split('.');
+        const before =
+            segments
+                .map((seg, i) => (i === segments.length - 1 ? `${'  '.repeat(i)}${seg}: off` : `${'  '.repeat(i)}${seg}:`))
+                .join('\n') + '\n';
+        const reason = classCVerdict(
+            { old_string: ': off', new_string: ': on' },
+            before,
+            '.agent-settings.yml',
+            idx,
+        );
+        expect(reason).not.toBeNull();
+        expect(reason).toContain(cKey as string);
+    });
+});
+
+// The differential suite the council asked for: BOTH readers, ONE corpus, the
+// same refusal set asserted — not a reading of either one alone. It exists
+// because an independent review (2026-10-01, anthropic + openai seats) refused
+// the swap on the grounds that characterizing the OLD reader proves the old
+// behaviour and not that the new one matches it. That objection was correct and
+// found a real hole (explicit YAML 1.1 tags); this is the evidence it asked for.
+//
+// `js-yaml` is still a package dependency — ≈30 modules outside the hook bundle
+// import it — so the old reader is importable here and this is a measurement
+// rather than a transcription of what it used to do. The day that stops being
+// true this suite stops compiling, which is the correct failure: an equivalence
+// claim whose other side is gone is not an equivalence claim.
+describe('block_config_weakening — differential: the two readers refuse the same set', () => {
+    /** What the guard did BEFORE the swap: `js-yaml.load`, nullish collapsed to null. */
+    function oldReader(text: string): unknown | null {
+        try {
+            return (jsYamlLoad(text) as unknown) ?? null;
+        } catch {
+            return null;
+        }
+    }
+
+    const CORPUS: readonly string[] = [
+        // explicit tags — the class that would have weakened the guard
+        'k: !!timestamp 2026-10-01\n', 'k: !!binary aGk=\n', 'k: !!set\n  ? a\n  ? b\n',
+        'k: !!omap\n  - a: 1\n', 'k: !!pairs\n  - a: 1\n', 'k: !custom 1\n',
+        // core tags both readers carry
+        'k: !!str 1\n', 'k: !!int 3\n', 'k: !!float 1.5\n', 'k: !!bool true\n',
+        'k: !!null ~\n', 'k: !!map {a: 1}\n', 'k: !!seq [1]\n',
+        // YAML 1.1 scalar words and number forms
+        'k: on\n', 'k: yes\n', 'k: off\n', 'k: no\n', 'k: On\n', 'k: YES\n',
+        'k: true\n', 'k: false\n', 'k: .inf\n', 'k: .nan\n', 'k: 1_000\n',
+        'k: 0b101\n', 'k: 0o17\n', 'k: 012\n', 'k: 2026-10-01\n', 'k: 12:30\n',
+        // emptiness and absent values — the fail-closed path
+        '', '   \n', '~\n', 'null\n', 'k:\n', 'k: ~\n',
+        // malformed and multi-document
+        'a: 1\na: 2\n', '---\na: 1\n---\nb: 2\n', '\ttab: 1\n', 'a: [unclosed\n',
+        // anchors, aliases, merge keys — including under an explicit version
+        // directive, which `yaml` documents as the thing `merge` defaults off
+        // and the second review round named as the way past the schema pin
+        'a: &x 1\nb: *x\n', 'd: &d\n  p: false\npersonal:\n  <<: *d\n',
+        '%YAML 1.1\n---\nd: &d\n  p: false\npersonal:\n  <<: *d\n',
+        '%YAML 1.1\n---\nk: on\nj: 012\n',
+        '%YAML 1.2\n---\nk: on\n',
+        '%YAML 1.1\n---\nk: !!timestamp 2026-10-01\n',
+        // scalars and nesting that must keep working
+        'k: "q"\n', "k: 'q'\n", 'k: |\n  block\n', 'k: >\n  folded\n',
+        'a:\n  b:\n    c: 1\n', 'a:\n  - 1\n  - 2\n',
+        // a realistic settings shape
+        'personal:\n  play_by_play: false\nhooks:\n  injection_scan:\n    enabled: false\n',
+    ];
+
+    it('agrees with the old reader on every entry of the corpus', () => {
+        const disagreements: string[] = [];
+        for (const text of CORPUS) {
+            const before = JSON.stringify(oldReader(text));
+            const after = JSON.stringify(parseSettingsDoc(text, '.agent-settings.yml'));
+            if (before !== after) disagreements.push(`${JSON.stringify(text)}: ${before} -> ${after}`);
+        }
+        expect(disagreements).toEqual([]);
+    });
+
+    // The corpus must contain both outcomes, or an all-refused or all-parsed
+    // corpus would pass the comparison while proving nothing.
+    it('the corpus exercises both outcomes, so the agreement is not vacuous', () => {
+        const refused = CORPUS.filter((t) => parseSettingsDoc(t, '.agent-settings.yml') === null);
+        expect(refused.length).toBeGreaterThan(8);
+        expect(CORPUS.length - refused.length).toBeGreaterThan(20);
     });
 });
