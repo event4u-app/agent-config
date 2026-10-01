@@ -198,45 +198,25 @@ export function _parse_concern_stdout(stdout_text: string): JsonObject {
  * path (`yaml.safe_load(text) or {}`); version 1.1 matches PyYAML.safe_load.
  */
 /**
- * Content fingerprint of a manifest source — SHA-256 over the UTF-8 bytes plus
- * the byte length, delegated to the shared `tableFingerprint`.
+ * Content fingerprint of a manifest source — delegated to `tableFingerprint`,
+ * which owns the algorithm and the measurement.
  *
- * THIS COMMENT USED TO ARGUE AGAINST A CRYPTO HASH and the argument had already
- * been retired under it. It said `require('node:crypto')` costs about eight
- * milliseconds of process start, "which is most of what the precompiled
- * manifest exists to save", and that an FNV-1a loop at roughly a fifth of a
- * millisecond was the right trade. Both halves were
- * re-measured when `table_fingerprint.ts` was extracted, and both had gone
- * stale: `node:crypto` is ALREADY LOADED — `dist/hooks/dispatch.js` carries 23
- * top-level imports of it from other parts of the graph, so there is no startup
- * cost left to avoid — and SHA-256 measured FASTER here, 0.106 ms against
- * 0.113 ms over the 99,792-byte manifest, because Node's digest is native while
- * the FNV-1a loop was that many interpreted `charCodeAt` calls.
- *
- * The body was already delegating when the comment still said otherwise, which
- * is the worse half: a reader checking whether the dispatcher resists a crafted
- * sibling would have read a disclaimer the code had stopped making.
- * road-to-blocking-severities 3.1 is the correction. The measurement and the
- * reasoning live once, in `table_fingerprint.ts`; this points at it rather than
- * restating it, so the two cannot part company again.
+ * road-to-blocking-severities 3.1: this comment used to argue against a crypto
+ * hash for a function that already used one. The retired argument and the
+ * numbers that retired it live there now.
  */
 export function _manifest_fingerprint(text: string): string {
   return tableFingerprint(text);
 }
 
 export function _load_yaml(p: string): JsonObject {
-  // Precompiled fast path. The manifest is ~61 kB of YAML and is parsed on
-  // EVERY dispatch, which measured 12 ms of a ~103 ms dispatch (plus 8 ms to
-  // load the `yaml` module itself). The sibling `.json` is the same data with
-  // comments stripped — 14.7 kB — and JSON.parse of it is sub-millisecond.
+  // Precompiled fast path. The manifest is ~61 kB of YAML parsed on EVERY
+  // dispatch — 12 ms of a ~103 ms dispatch, plus 8 ms to load the `yaml` module
+  // itself. The sibling `.json` is the same data with comments stripped,
+  // 14.7 kB, and JSON.parse of it is sub-millisecond.
   //
-  // Freshness is decided by the SOURCE CONTENT, not by mtime. The first version
-  // of this compared mtimes and that was a measured defect, not a theoretical
-  // one: on a fresh `actions/checkout` both files get the checkout timestamp in
-  // whatever order git wrote them, so whether the optimisation applied at all
-  // was a coin flip. It won on the PR (p95 129 ms) and lost on the trunk
-  // (p95 186 ms) for the same commit. A fingerprint is deterministic wherever
-  // the tree came from.
+  // Freshness is SOURCE CONTENT, never mtime — the measured defect behind that
+  // is in `table_fingerprint.ts`, told once rather than in all three readers.
   //
   // Reading the YAML unconditionally costs ~0 ms (it is the PARSE that is
   // expensive), so the fast path still skips ~20 ms.
@@ -250,14 +230,11 @@ export function _load_yaml(p: string): JsonObject {
         raw["fingerprint"] === _manifest_fingerprint(text) &&
         _isObject(raw["manifest"]) &&
         // road-to-blocking-severities 2.3, the manifest twin of the check in
-        // `host_lowering.resolveTable`. The label above binds this file to the
-        // YAML SOURCE; it says nothing about the body underneath, so an edited
-        // `manifest` body with an untouched label was served — and this is the
-        // table that decides which concern runs on which slot at all. The body
-        // label is the fingerprint of the exact bytes the compiler emitted.
-        //
-        // Absent field → fall through, same as `host_lowering`: a compiled file
-        // from before this change is slow and correct rather than trusted.
+        // `host_lowering.resolveTable`, which carries the full reasoning. In
+        // one line: the label above binds this file to the YAML SOURCE and says
+        // nothing about the body underneath, so an edited `manifest` body with
+        // an untouched label was served — on the table that decides which
+        // concern runs on which slot at all. Absent field → fall through.
         raw["body_fingerprint"] === _manifest_fingerprint(JSON.stringify(raw["manifest"]))
       ) {
         return raw["manifest"];

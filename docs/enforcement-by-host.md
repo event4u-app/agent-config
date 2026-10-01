@@ -276,7 +276,7 @@ A concern's `severity` is a property of the **concern**; whether a refusal can
 leave a slot is a property of the **host slot**. The table below publishes both,
 side by side, and never folds them into one number.
 
-That separation is the decision, not an artefact of the layout. An AI council
+That separation is the decision, not an artifact of the layout. An AI council
 took the question on 2026-10-01 and both seats converged on publishing the
 effective picture rather than editing the manifest or dropping the binding — and
 one seat refused the phrase *effective severity* outright: severity has not

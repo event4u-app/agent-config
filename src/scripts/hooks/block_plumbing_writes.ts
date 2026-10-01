@@ -113,7 +113,7 @@ export const PLUMBING_BUILD_OUTPUTS: readonly string[] = [
  * road-to-blocking-severities 2.2 added the two compiled tables. They are the
  * same KIND of file as the first two — written by a build, never by hand — and
  * until this step they were refused by nothing, which mattered more here than
- * it would have for an ordinary generated artefact: `dispatch_hook._load_yaml`
+ * it would have for an ordinary generated artifact: `dispatch_hook._load_yaml`
  * and `host_lowering.resolveTable` both serve the compiled body IN PREFERENCE
  * to the YAML whenever its fingerprint matches, so an edited JSON is what every
  * host is told about which concern runs and which slot can refuse.
