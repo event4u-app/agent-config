@@ -262,8 +262,18 @@ describe('candidate ranking signals — off by default, measurable alone', () =>
     }
 
     it('with no options the score is the name+description one, unchanged', () => {
+        // Against the ARITHMETIC, not against `rank(..., {})` — the third
+        // parameter already defaults to `{}`, so comparing the two called the
+        // same function twice and could not fail. `alpha` matches `containers`
+        // and `images` out of {containers, images}, so overlap is 1 and the
+        // score is round(1 * 70 + 0 * 30) = 70; `gamma` and `delta` match
+        // `containers` only, i.e. round(0.5 * 70) = 35.
         catalogue(tmp);
-        expect(rank('containers and images', tmp)).toEqual(rank('containers and images', tmp, {}));
+        expect(rank('containers and images', tmp)).toEqual([
+            ['alpha', 70, []],
+            ['delta', 35, []],
+            ['gamma', 35, []],
+        ]);
     });
 
     it('includeWhenToUse surfaces a skill its description never mentions', () => {

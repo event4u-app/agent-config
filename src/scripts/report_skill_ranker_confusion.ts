@@ -34,7 +34,6 @@
  *     ./scripts-run src/scripts/report_skill_ranker_confusion --ranker keyword-v2
  */
 
-import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -54,7 +53,7 @@ import {
     sliceForId,
     sliceSizes,
 } from './measure_skill_ranker_baseline.js';
-import { rank, type RankRow } from './skill_tools/score_skill_relevance.js';
+import { _globSkillMd, rank, type RankRow } from './skill_tools/score_skill_relevance.js';
 
 /** How deep "outside the top ten" is. 1.3's own number, not a derived one. */
 export const DEEP_MISS_DEPTH = 10;
@@ -145,7 +144,11 @@ export function perPackTop1(
             n: total.get(pack) ?? 0,
             top1: round3((hit.get(pack) ?? 0) / Math.max(total.get(pack) ?? 1, 1)),
         }))
-        .sort((a, b) => a.top1 - b.top1 || b.n - a.n || (a.pack < b.pack ? -1 : 1));
+        // A TOTAL order, for the same reason `confusionPairs` below needs one:
+        // a comparator that never returns 0 leaves equal rows engine-ordered.
+        // Harmless here because `total` is a Map and its keys cannot collide —
+        // which is exactly why it would have stayed in place beside its own cure.
+        .sort((a, b) => a.top1 - b.top1 || b.n - a.n || (a.pack < b.pack ? -1 : a.pack > b.pack ? 1 : 0));
 }
 
 export interface ConfusionPair {
@@ -312,7 +315,13 @@ export function renderReport(opts: {
     L.push(`| …in the sealed slice | ${String(sizes.sealed)} |`);
     L.push(`| rows this report read (\`${opts.slice}\`) | ${String(n)} |`);
     L.push(`| deliberate \`expected_skills: []\` rows in the same slice | ${String(empties.length)} |`);
-    L.push(`| skills indexed | ${String(fs.readdirSync(opts.skillsDir).filter((s) => fs.existsSync(path.join(opts.skillsDir, s, 'SKILL.md'))).length)} |`);
+    // The LOADER's own glob, not a second one written here. This count is
+    // published as the population behind the document-frequency denominator, so
+    // a reimplementation that diverged would print a count of something the
+    // ranker did not index — and this one did diverge: it used `existsSync`
+    // where the loader uses `statSync().isDirectory()` and swallows errors, and
+    // it threw on an absent directory where `rank()` returns [].
+    L.push(`| skills indexed | ${String(_globSkillMd(opts.skillsDir).length)} |`);
     L.push('');
     if (opts.slice === 'tuning') {
         L.push('The sealed slice is **not** read here. A confusion class derived from rows a');

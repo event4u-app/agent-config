@@ -345,7 +345,15 @@ describe('holdout — the sealed slice is a function of the id and nothing else'
     const ids = Array.from({ length: 2000 }, (_, i) => `rule-${String(i % 97)}#positives[${String(i)}]`);
 
     it('is deterministic — the same id lands in the same slice every call', () => {
-        for (const id of ids.slice(0, 200)) expect(sliceForId(id)).toBe(sliceForId(id));
+        // Against a snapshot taken first, not against a second call in the same
+        // expression: `expect(f(x)).toBe(f(x))` is a self-comparison of a pure
+        // function and cannot fail, which is the shape this file's other
+        // comments condemn.
+        const sample = ids.slice(0, 200);
+        const first = sample.map(sliceForId);
+        const interleaved = ids.slice(200, 400).map(sliceForId);
+        expect(interleaved).toHaveLength(200);
+        expect(sample.map(sliceForId)).toEqual(first);
     });
 
     it('assigns every id to exactly one of the two slices', () => {

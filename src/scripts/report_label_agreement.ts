@@ -33,6 +33,20 @@
  *   - `polarity` — the two seats agree only on whether a skill answer exists at
  *                  all. The weakest, and the floor under the other two.
  *
+ * **`polarity` IS ONE-SIDED ON THIS DENOMINATOR and must not be compared with a
+ * two-sided figure.** The first seat's labels arrive through
+ * `readMatrixLabelledPrompts`, which keeps only NON-EMPTY lists, so "seat one
+ * thinks a skill answer exists" is true for every row here by construction and
+ * the `agrees` both-empty branch is unreachable from this caller. The number
+ * therefore reads "the second seat also wrote a non-empty label", not "the two
+ * seats agree about whether an answer exists". It is still worth reporting — it
+ * counts the rows the second seat declined — and it is NOT the published
+ * two-sided agreement figure wearing the same name.
+ *
+ * `second_seat_rows` and `relabelled_and_labelled` differ by exactly the rows
+ * the second seat relabelled that the first seat had left empty: those are
+ * absent from `first` and so cannot be paired.
+ *
  * Usage:
  *     ./scripts-run src/scripts/report_label_agreement
  *     ./scripts-run src/scripts/report_label_agreement --ranker idf

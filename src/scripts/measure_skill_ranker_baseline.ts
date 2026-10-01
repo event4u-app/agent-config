@@ -497,10 +497,17 @@ export const RANKER_LABELS: Readonly<Record<string, RankOptions>> = {
     'idf+when-to-use': { idfWeighting: true, includeWhenToUse: true },
 };
 
+/**
+ * The message carries NO tool name.
+ *
+ * Three scripts resolve `--ranker` through this module now, so a hardcoded
+ * prefix would print one tool's name when another was the failing command. The
+ * caller's own `process.stderr` line is where the command is identified.
+ */
 export class UnknownRankerLabel extends Error {
     constructor(label: string) {
         super(
-            `measure_skill_ranker_baseline: unknown --ranker ${label || '(nothing)'}; ` +
+            `unknown --ranker ${label || '(nothing)'}; ` +
                 `known: ${Object.keys(RANKER_LABELS).join(' | ')}`,
         );
         this.name = 'UnknownRankerLabel';
@@ -602,7 +609,7 @@ export function parseRanker(argv: readonly string[]): string {
     const raw = argv[i + 1];
     if (!raw || raw.startsWith('--')) {
         throw new Error(
-            `measure_skill_ranker_baseline: --ranker expects one of ${Object.keys(RANKER_LABELS).join(' | ')}, got ${raw ?? '(nothing)'}`,
+            `--ranker expects one of ${Object.keys(RANKER_LABELS).join(' | ')}, got ${raw ?? '(nothing)'}`,
         );
     }
     return raw;

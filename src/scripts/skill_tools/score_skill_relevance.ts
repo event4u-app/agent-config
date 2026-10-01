@@ -339,7 +339,7 @@ function _truthyStr(v: string | string[] | undefined): boolean {
  * Python sorts `Path` objects component-wise. Since every match is
  * `<dir>/SKILL.md`, sorting by the directory component reproduces that order.
  */
-function _globSkillMd(root: string): string[] {
+export function _globSkillMd(root: string): string[] {
     let names: string[];
     try {
         names = fs.readdirSync(root);

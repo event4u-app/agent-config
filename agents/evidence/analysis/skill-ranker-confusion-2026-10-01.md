@@ -176,10 +176,22 @@ width of the ground truth with a narrower number that means less.
 | polarity only (does a skill answer exist at all) | 231 / 240 | 96.3 % |
 
 The exact-set figure is **lower** than the 70.9 % published on 55 rows, over a
-denominator four times larger. The other two are higher than their published
-counterparts. Both readings are consistent with the earlier sample: a second or
-third slot in a three-skill label is where reasonable seats differ, and that
-difference does not change a hit.
+denominator four times larger, and is comparable to it: both are exact-set
+agreement over rows both seats labelled.
+
+**The polarity row is NOT comparable to the published 90.9 %, and an earlier
+draft of this section claimed it was.** The fourth blind review established why:
+the first seat's labels are read through `readMatrixLabelledPrompts`, which drops
+every row the first seat wrote `[]` for, so on this denominator "does seat one
+think a skill answer exists" is true by construction. The 96.3 % therefore
+measures only "the second seat also wrote a non-empty label" — one-sided — while
+the published 90.9 % is two-sided over a sample that included the deliberate
+empties. The two answer different questions and the larger number is not the
+better one. What the row does say, and it is still worth having: of 240 rows the
+first seat labelled, the second seat declined to label 9.
+
+The exact and shared-skill rows are unaffected, and so is the conclusion drawn
+from them, which rests on the exact-agreed subset and not on polarity.
 
 **Top-1 restricted to the rows the seats agree on:**
 
@@ -240,6 +252,18 @@ what the two real findings point at:
 | same, and the one the archived roadmap already tried | widen it to `triggers[].keyword` / `.phrase` prose | re-measured here at n = 390 rather than at n = 26 | `includeTriggers` (pre-existing) |
 | 57.3 % of misses put the expected skill outside the top ten while something else wins — a **ranking** failure, not a recall one | weight a matched term by its inverse document frequency over the catalogue | a prompt term carried by 80 skills stops outvoting a term carried by two, which is what lets a generic skill win a specific prompt | `idfWeighting` |
 | `meta` at 0.137 over 95 rows and seven packs at 0.000 | fold the skill's declared `packs:` into its terms | **implemented, measured, and REMOVED** — see § The sweep | (removed) |
+
+**The mechanism in the `idfWeighting` row is what was EXPECTED, and the
+measurement says otherwise.** The fourth blind review counted it: `idf` raises
+the number of distinct score values in a ranking from 6 to 14, and cuts
+tie-decided misses from 67 → 20 on tuning and 15 → 5 on sealed, while its whole
+top-1 lift is +5 rows and +1 row. So what `idf` buys is **granularity** — it
+breaks ties that integer rounding had collapsed — and not the re-ordering on term
+rarity the row claims. The row is left as written because it is the honest record
+of the reasoning that produced the candidate; the correction belongs directly
+under it, because a reader deriving the next signal from the stated mechanism
+would derive it from the wrong cause. The real cause is the tie class in
+§ The classes the null could not separate.
 
 ## The sweep — each signal alone, both slices
 
@@ -350,6 +374,27 @@ as a first measurement.
 
 Named, as step 3.1 requires:
 
+- **Ties decided by the alphabet (67 of 315 tuning rows, 21.3 %; 15 of 75
+  sealed, 20.0 %).** The largest class after zero-recall, found by the fourth
+  blind review and absent from the first three readings of this report. The
+  score is `roundHalfToEven(overlap * 70 + personaHit * 30)` — an INTEGER — so a
+  whole 299-skill ranking carries **at most 6 distinct values** under
+  `keyword-v1`, and `rank` breaks the resulting ties alphabetically on skill
+  name. On one row in five the expected skill scored **exactly** the winner's
+  score and lost on its initial. Had those ties broken the other way, tuning
+  top-1 would read 0.432 against 0.219 and sealed 0.360 against 0.160 — the
+  latter straddling the entire 0.251 promotion bar.
+
+  **This is not fixed here, and the reason is the same one that kept the
+  partition key fixed.** `scoreSkill` is the live ranking path behind the
+  `skill-route` hook and the MCP tool, and its integer rounding is pinned by the
+  Python-parity suite; changing either the rounding or the tiebreak re-measures
+  every figure in this report and every figure that suite exists to protect. It
+  is a re-measurement, not a patch, and it belongs to whoever reopens this with a
+  larger corpus — at which point it is the **first** thing to try, because it is
+  the cheapest deterministic change on the table and it moves more rows than any
+  signal measured here.
+
 - **Zero-recall misses (82 rows, 33.3 % of misses).** The expected skill scores
   0: no term of the prompt appears in its `name + description`. `idfWeighting`
   cannot reach these by construction — it reweights matched terms and there is
@@ -389,12 +434,19 @@ named rather than quietly absorbed:
   it.
 - **The `headings` row moved.** The body extractor ended the `## When to use`
   capture at any heading — including that section's own `###` subsections — and
-  treated a `## …` line inside a fenced code block as a real heading. These
-  skills are documentation and fence markdown samples routinely, so the flag was
-  partly indexing fence contents. Fixed to terminate at the same-or-higher level
-  and to ignore fenced regions, and the sweep re-run: `headings` tuning top-1
-  moved 0.206 → **0.216** and MRR 0.308 → 0.313. No other cell in the table
-  changed, and the null is unaffected.
+  treated a `## …` line inside a fenced code block as a real heading, so a
+  fenced markdown sample both contributed a bogus topic and truncated the
+  section. Fixed to terminate at the same-or-higher level, to stop treating a
+  fenced line as a heading, and to drop the fence delimiter and its info string.
+  The sweep re-run: `headings` tuning top-1 moved 0.206 → **0.216** and MRR
+  0.308 → 0.313. No other cell in the table changed, and the null is unaffected.
+
+  **Fenced CONTENT inside `## When to use` is still indexed, deliberately**, and
+  an earlier draft of this bullet said "ignore fenced regions", which the code
+  does not do. A fenced command or snippet inside a when-to-use section is part
+  of what that section says the skill is for; what is not prose is the
+  delimiter and its language tag, and those are what the fix excludes. The test
+  suite pins the surviving behaviour rather than the sentence.
 - **"Byte-identical on every column" was false**, by this report's own MRR
   column. Reading 1 above now states what the table shows.
 
