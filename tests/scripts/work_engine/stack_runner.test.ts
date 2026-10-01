@@ -559,6 +559,19 @@ describe('stack/runner — rspec, junit, dotnet-test', () => {
         expect(found?.command).toBe('./gradlew test');
     });
 
+    it('junit PRESENT: an EMPTY build.gradle is still a Gradle project', () => {
+        // A multi-project root routinely has an empty root build file; reading
+        // for non-empty content made it look like "no Gradle here".
+        write('build.gradle', '');
+        expect(resolve_toolchain(tmp).runners.map((r) => r.runner)).toContain('junit');
+    });
+
+    it('junit PRESENT: settings.gradle alone declares a Gradle project', () => {
+        write('settings.gradle', "rootProject.name = 'x'\ninclude 'app'\n");
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'junit');
+        expect(found?.confidence).toBe(MEDIUM);
+    });
+
     it('junit ABSENT: no pom and no gradle build', () => {
         write('composer.json', JSON.stringify({ require: { 'pestphp/pest': '^2' } }));
         expect(labels(tmp)).not.toContain('junit');
@@ -800,6 +813,7 @@ describe('stack/runner — behaviour-runner axis', () => {
             JSON.stringify({ workspaces: ['packages/*', 'tools/one', 'a/*/deep', '!ignored'] }),
         );
         write('packages/x/package.json', '{}');
+        write('tools/one/package.json', '{}');
         const scopes = _behavior_scopes(tmp);
         expect(scopes[0]).toBe('.');
         expect(scopes).toContain('packages/x');
@@ -808,6 +822,26 @@ describe('stack/runner — behaviour-runner axis', () => {
         // scope that does not exist is worse than one fewer scope.
         expect(scopes.some((s) => s.includes('*'))).toBe(false);
         expect(scopes).not.toContain('!ignored');
+    });
+
+    it('a declared-but-absent literal workspace entry is NOT a scope', () => {
+        write('package.json', JSON.stringify({ workspaces: ['tools/present', 'tools/absent'] }));
+        write('tools/present/package.json', '{}');
+        const scopes = _behavior_scopes(tmp);
+        expect(scopes).toContain('tools/present');
+        expect(scopes).not.toContain('tools/absent');
+    });
+
+    it('rspec-rails and cucumber-rails are declarations', () => {
+        write('Gemfile', "gem 'rspec-rails'\ngem 'cucumber-rails'\n");
+        expect(resolve_toolchain(tmp).runners.map((r) => r.runner)).toContain('rspec');
+        expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toEqual(['cucumber-ruby']);
+    });
+
+    it('a gem merely ENDING in the name is not a declaration', () => {
+        write('Gemfile', "gem 'my-cucumber'\ngem 'not-rspec'\n");
+        expect(resolve_behavior_runners(tmp)).toEqual([]);
+        expect(resolve_toolchain(tmp).runners.map((r) => r.runner)).not.toContain('rspec');
     });
 
     it('an unreadable scope degrades to fewer rows, never a throw', () => {
@@ -887,6 +921,20 @@ describe('stack/runner — behaviour-runner axis', () => {
         write('App.sln', 'Microsoft Visual Studio Solution File\n');
         write('src/App.Specs/App.Specs.csproj', '<Project><PackageReference Include="Reqnroll" /></Project>');
         expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toEqual(['reqnroll']);
+    });
+
+    it('with NO solution at the root, a workspace package stays its own scope', () => {
+        // The descent is gated on a solution file. Without one, a `.csproj`
+        // inside a package no longer leaks into the root scope — which would
+        // both duplicate the row and let two packages with different .NET
+        // behaviour runners collapse into a silent pick.
+        write('package.json', JSON.stringify({ workspaces: ['pkg/*'] }));
+        write('pkg/a/A.csproj', '<Project><PackageReference Include="Reqnroll" /></Project>');
+        write('pkg/b/B.csproj', '<Project><PackageReference Include="SpecFlow" /></Project>');
+        const rows = resolve_behavior_runners(tmp);
+        expect(rows.map((r) => r.scope_root).sort()).toEqual(['pkg/a', 'pkg/b']);
+        expect(rows.find((r) => r.scope_root === 'pkg/a')?.runner).toBe('reqnroll');
+        expect(rows.find((r) => r.scope_root === 'pkg/b')?.runner).toBe('specflow');
     });
 
     it('_pnpm_packages reads a zero-indent sequence, a flow sequence and a trailing comment', () => {

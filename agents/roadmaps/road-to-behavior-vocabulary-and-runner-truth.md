@@ -139,17 +139,24 @@ get there.
       spend that headroom.
       verify: `wc -w src/skills/test-case-discovery/SKILL.md` ≤ 1,900.
 
-      **Evidence (2026-10-01).** One sentence added directly under the
+      **Evidence (2026-10-01, figures re-measured after round 3).** One
+      sentence added directly under the
       `## Does this change owe an executable behavior contract?` heading — the
-      decision the vocabulary routes to — naming *Gherkin*, *BDD*, *Cucumber*,
-      *Behat*, *given-when-then*, *feature file*, *acceptance scenario*,
-      *executable specification* and their German phrasings, pointing at
-      `evals/triggers.json` as where they are carried deliberately, and closing
-      the promise exactly where Risk 1 says it must close: what they reach is
-      this decision, never a guide to writing a contract well. No new section
-      and no new heading. `wc -w src/skills/test-case-discovery/SKILL.md` →
-      **1,896**, inside the ≤ 1,900 budget the step sets and well under
-      ADR-225's 3,000-word tripwire; the file is 209 lines.
+      decision the vocabulary is meant to reach — naming **six** terms:
+      *Gherkin*, *BDD*, *Cucumber*, *Behat*, *given-when-then*, *acceptance
+      scenario*, plus "their German phrasings". It points at
+      `evals/triggers.json` as where they are pinned, and closes the promise
+      exactly where Risk 1 says it must close: it is a decision, not a guide
+      to writing a contract. No new section and no new heading.
+      `wc -w src/skills/test-case-discovery/SKILL.md` → **1,895**, inside the
+      ≤ 1,900 budget the step sets and well under ADR-225's 3,000-word
+      tripwire; the file is 209 lines.
+
+      Round 3 caught both figures here: this paragraph first claimed eight
+      terms — including *feature file* and *executable specification*, which
+      the committed sentence does not contain — and recorded 1,896 words. Both
+      were written against a draft of the sentence that round 2's finding 4
+      then replaced, and neither was re-measured against the final text.
       `./scripts-run src/scripts/skill_linter --path
       src/skills/test-case-discovery/SKILL.md` → `[PASS] … No issues found`.
 - [~] **1.3 Register the canonical spellings.** Deferred by decision, not by
@@ -309,7 +316,7 @@ get there.
       label has a presence case AND an absence case, plus wrapper cases, a
       polyglot case asserting all three ecosystems in one root, and a case
       proving `--php` still narrows `selected` now that more ecosystems
-      exist. 70 tests green in that file.
+      exist. 93 tests green in that file (88 `it()` blocks, 6 of them parameterised by the suite's shared helpers).
 
       **The absence fixtures were seen red.** Neutralising the rspec guard
       (`if (false && …)`, so a Gemfile always emits rspec) fails exactly 1
@@ -359,14 +366,24 @@ get there.
         legacy and **none** for api. Collapsing `_behavior_scopes` to the
         root alone — the scalar this step rejects — fails exactly 4 tests,
         all four scope-dependent, with no collateral.
-      - **Conflict** — behat and cucumber-js in ONE scope returns a single
-        row: `runner: "unknown"`, `confidence: LOW`, `command: ""`,
-        `conflict: ["behat", "cucumber-js"]`, and a basis naming both.
-        Turning the refusal into a pick (`names.length >= 1`) fails exactly
-        2 tests, both conflict cases, with no collateral. A sibling case
-        proves a conflicted package does not poison a clean sibling, and
-        another proves the SAME runner matched by two signals is one answer
-        rather than a conflict.
+      - **Conflict** — two runners of the SAME ecosystem in one scope
+        (`behave` + `pytest-bdd`) return a single row: `runner: "unknown"`,
+        `ecosystem: "python"`, `confidence: LOW`, `command: ""`,
+        `conflict: ["behave", "pytest-bdd"]`, and a basis naming both.
+        Collapsing the ecosystem grouping fails exactly 2 tests, both the
+        polyglot and the conflict case, with no collateral. A sibling case
+        proves a conflicted ecosystem does not poison a clean one in the same
+        package, and another proves the same runner matched by two signals is
+        one answer rather than a conflict.
+
+        **Corrected 2026-10-01 by round 3 of the completion review.** This
+        bullet first recorded the conflict fixture as *behat and cucumber-js*
+        — which the branch's own test now asserts is the opposite case. Two
+        ecosystems' behaviour runners are not mutually exclusive, so a PHP app
+        with a JS frontend returns TWO rows; round 2 found the code refusing
+        it, and this record still described the refused behaviour as correct
+        after the code was fixed. The evidence had been written against an
+        earlier state of the branch and not re-run against the final commit.
 
       Doc-Impact: `src/agent-src/contexts/execution/toolchain-resolver.md`
       gains the three native rows and a `## 2b` section for the axis. Its
@@ -424,15 +441,22 @@ get there.
       is the honest discharge.** Run over the two files this phase touches it
       returns 8 lines, every one classified:
 
-      - `runner.ts:457` — `'pestphp/pest in composer require'`, the
-        **pre-existing** native-axis basis string. A manifest-section
-        reference on a line this change did not author; left alone under
-        `minimal-safe-diff` rather than rewritten for a grep's benefit.
-      - `runner.ts:732–734` — my own comment explaining why the behaviour
-        axis avoids the phrase.
-      - `stack_runner.test.ts:188` — a pre-existing test TITLE.
-      - `stack_runner.test.ts:735–739` — the forbidden-substring list inside
-        the assertion that enforces this step.
+      Anchored by CONSTRUCT rather than by line, because round 3 found all
+      four line numbers here already dead — they were captured mid-branch and
+      every later commit moved them:
+
+      - `runner.ts`, the `_php_runners` basis
+        `'pestphp/pest in composer require'` — the **pre-existing**
+        native-axis string. A manifest-section reference on a line this change
+        did not author; left alone under `minimal-safe-diff` rather than
+        rewritten for a grep's benefit.
+      - `runner.ts`, the comment above the behat basis in
+        `_behavior_runners_in_scope`, explaining why the behaviour axis avoids
+        the phrase.
+      - `stack_runner.test.ts`, the pre-existing test titled
+        `php: pest in composer require`.
+      - `stack_runner.test.ts`, the forbidden-substring list inside the
+        assertion that enforces this step.
 
       Nothing in that list recommends installing anything; three of the four
       groups exist BECAUSE of the prohibition. The substantive condition —
@@ -509,17 +533,25 @@ All six verified 2026-10-01 at branch `drain/behavior-vocabulary-close`.
       All three present and asserted by name in the constants test. Presence
       and absence fixtures exist for each; the rspec absence fixture was seen
       red under a neutralised guard, failing exactly 1 test with no
-      collateral. 70 tests green in `stack_runner.test.ts`.
+      collateral. 93 tests green in `stack_runner.test.ts`.
 - [x] AC-4 — The behaviour-runner axis returns per-scope rows; a monorepo fixture
       returns more than one row and a conflict fixture returns a refusal naming
       both runners.
 
       The monorepo fixture returns a row for `packages/web` (cucumber-js) and
       `packages/legacy` (behat) and none for `packages/api`; the conflict
-      fixture returns one row with `runner: "unknown"` and
-      `conflict: ["behat", "cucumber-js"]`. Both were seen red — collapsing
-      the scope list fails exactly 4 tests, turning the refusal into a pick
+      fixture — two runners of the SAME ecosystem, `behave` + `pytest-bdd` —
+      returns one row with `runner: "unknown"` and
+      `conflict: ["behave", "pytest-bdd"]`. Both were seen red: collapsing the
+      scope list fails exactly 4 tests, collapsing the ecosystem grouping
       fails exactly 2, neither with collateral.
+
+      **Corrected 2026-10-01 by round 3.** This criterion was first marked
+      verified on the behat + cucumber-js pair, which is the POLYGLOT
+      non-conflict case the branch's own test asserts returns two rows. The
+      criterion's substance held — a refusal naming both runners does exist —
+      but the narrative it was verified against was refuted by the diff's own
+      suite.
 - [x] AC-5 — No file this roadmap touches recommends installing a dependency, and
       `src/skills` gains no new skill.
 

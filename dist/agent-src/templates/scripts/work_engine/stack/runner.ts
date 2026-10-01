@@ -130,15 +130,19 @@ const _MANIFESTS = [
  * project file is `<whatever>.csproj`. That is why it is an extension list
  * scanned over the root rather than a `_MANIFESTS` entry.
  *
- * **Residual cache gap, stated in full.** {@link latest_manifest_mtime} stats
- * fixed NAMES across every scope, so three signals stay invisible to the cache
- * key and only these three: a project-file-only .NET scope (`*.csproj` with no
- * `global.json` / `Directory.Build.props`), a `*.gemspec`, and
- * `features/support/env.rb`. Everything else the behaviour axis reads is a
- * fixed name in `_MANIFESTS` or `_BEHAVIOR_MARKERS` and does move the key.
- * Closing the rest would need the key to glob, which is a cost decision rather
- * than an oversight — so it is written down instead of discovered from a stale
- * cache.
+ * **Residual cache gap.** {@link latest_manifest_mtime} stats fixed NAMES, so
+ * a signal whose filename it does not list stays invisible to the cache key:
+ * a project-file-only .NET scope (`*.csproj` with no `global.json` /
+ * `Directory.Build.props`), `features/support/env.rb`, `spec/spec_helper.rb`,
+ * and the `mvnw` / `gradlew` wrappers — which change the emitted JVM command
+ * without changing any manifest. Closing these would need the key to glob or
+ * to track nested paths, a cost decision rather than an oversight, so it is
+ * written down instead of discovered from a stale cache.
+ *
+ * An earlier version of this note said "three signals and only these three".
+ * It named a `*.gemspec`, which nothing in this module reads, and omitted two
+ * that are real. An exhaustiveness claim is worth more than a list only when
+ * it is true, so this one no longer claims to be closed.
  */
 const _DOTNET_PROJECT_EXTS = ['.sln', '.slnx', '.csproj', '.fsproj', '.vbproj'];
 
@@ -156,17 +160,31 @@ const _DOTNET_TEST_STACK = /Microsoft\.NET\.Test\.Sdk|xunit|nunit|mstest/i;
  */
 const _DOTNET_SCAN_DEPTH = 2;
 
-/** Ceiling on project files read per scope, so a deep tree cannot stall a turn. */
+/** Ceiling on project files read per scope, once the descent is entered at all. */
 const _DOTNET_MAX_PROJECTS = 50;
+
+/** Does this scope hold a solution file? The precondition for descending. */
+function _has_dotnet_solution(dir: string): boolean {
+    try {
+        return fs
+            .readdirSync(dir)
+            .some((n) => ['.sln', '.slnx'].includes(path.extname(n).toLowerCase()));
+    } catch {
+        return false;
+    }
+}
 
 /**
  * Fixed-name files the BEHAVIOUR axis reads that `_MANIFESTS` does not cover.
  *
- * Kept beside `_MANIFESTS` rather than merged into it because the two are
- * consulted at different scopes: `_MANIFESTS` names the root manifests whose
- * presence selects an ecosystem, while these are markers the behaviour
- * detector reads in EVERY scope. Both feed {@link latest_manifest_mtime} — see
- * the cache-coverage note there for what still escapes it.
+ * Two lists rather than one because they are SOURCED differently, not because
+ * they are consulted differently: `_MANIFESTS` is the set whose presence
+ * selects an ecosystem, and this is the set the behaviour detector reads. The
+ * one place both are used — {@link latest_manifest_mtime} — concatenates them
+ * and stats every name in every scope, so an earlier version of this note
+ * claiming they are "consulted at different scopes" described a distinction
+ * the code does not make. See the cache-coverage note on
+ * {@link _DOTNET_PROJECT_EXTS} for what still escapes the key.
  */
 const _BEHAVIOR_MARKERS = [
     'pnpm-workspace.yaml',
@@ -662,7 +680,13 @@ function _gem_declared(text: string, gem: string): boolean {
     // `\brspec\b` over the whole manifest fires on a commented-out
     // `# gem 'cucumber'`, on a changelog line, and on any gem whose name
     // merely contains the word.
-    return new RegExp(`^[ \\t]*gem[ \\t]+["']${gem}["']`, 'm').test(text);
+    //
+    // The name may carry a hyphenated SUFFIX — `rspec-rails`, `cucumber-rails`
+    // are the ordinary Rails spellings, and anchoring the closing quote
+    // straight after the bare name rejected both, leaving detection to the
+    // marker files alone while the contract table promised the Gemfile branch.
+    // A suffix only; `cucumber` must not match a gem merely ending in it.
+    return new RegExp(`^[ \\t]*gem[ \\t]+["']${gem}(-[A-Za-z0-9_-]+)?["']`, 'm').test(text);
 }
 
 function _ruby_runners(root: string, gemfile: { text: string; file: string }): RunnerResult[] {
@@ -707,12 +731,24 @@ function _jvm_build(root: string): JvmBuild | null {
         const wrapper = _is_file(path.join(root, 'mvnw'));
         return { tool: 'maven', text: pom, command: wrapper ? './mvnw test' : 'mvn test' };
     }
-    const gradle =
-        _read_text(path.join(root, 'build.gradle')) ||
-        _read_text(path.join(root, 'build.gradle.kts'));
-    if (gradle !== '') {
+    // PRESENCE, not content. A Gradle multi-project root routinely has an
+    // empty `build.gradle` — or none at all, with `settings.gradle[.kts]`
+    // declaring the modules — and reading for a non-empty string made both
+    // shapes look like "no Gradle here", against a contract table promising a
+    // MEDIUM `junit` default whenever a Gradle build file is present.
+    const gradleFile = ['build.gradle', 'build.gradle.kts', 'settings.gradle', 'settings.gradle.kts'].find(
+        (n) => _is_file(path.join(root, n)),
+    );
+    if (gradleFile !== undefined) {
         const wrapper = _is_file(path.join(root, 'gradlew'));
-        return { tool: 'gradle', text: gradle, command: wrapper ? './gradlew test' : 'gradle test' };
+        return {
+            tool: 'gradle',
+            text:
+                _read_text(path.join(root, 'build.gradle')) +
+                '\n' +
+                _read_text(path.join(root, 'build.gradle.kts')),
+            command: wrapper ? './gradlew test' : 'gradle test',
+        };
     }
     return null;
 }
@@ -987,6 +1023,15 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
  */
 function _dotnet_project_text(dir: string): string {
     const texts: string[] = [];
+    // The descent is entered ONLY for a scope carrying a solution file — the
+    // layout that motivates it. Two defects close at once. Cost: a repository
+    // with no `.sln` never walks, so a wide monorepo does not pay a directory
+    // walk per scope for an ecosystem it does not use; `_DOTNET_MAX_PROJECTS`
+    // counts files READ and therefore bounded nothing when there were none.
+    // Ownership: a `*.csproj` inside a workspace package can now only reach the
+    // root scope when the ROOT itself holds the solution that owns it, which is
+    // the one case where attributing it there is correct.
+    const solution = _has_dotnet_solution(dir);
     const walk = (at: string, depth: number): void => {
         if (texts.length >= _DOTNET_MAX_PROJECTS) {
             return;
@@ -1010,7 +1055,7 @@ function _dotnet_project_text(dir: string): string {
                 hit = hit || path.extname(e.name).toLowerCase() !== '.sln';
             }
         }
-        if (hit || depth >= _DOTNET_SCAN_DEPTH) {
+        if (hit || !solution || depth >= _DOTNET_SCAN_DEPTH) {
             return;
         }
         for (const e of entries) {
@@ -1160,7 +1205,17 @@ export function _behavior_scopes(project_root: string): string[] {
                 }
             }
         } else if (!g.includes('*')) {
-            scopes.push(g);
+            // Existence-checked, for the same reason the mid-path glob below
+            // is skipped: reporting a scope that does not exist is worse than
+            // reporting one fewer. A phantom scope also costs every per-scope
+            // probe — stats in the cache key, a listing in the .NET branch.
+            try {
+                if (fs.statSync(path.join(project_root, g)).isDirectory()) {
+                    scopes.push(g);
+                }
+            } catch {
+                /* declared but absent — not a scope */
+            }
         }
         // A deeper or mid-path glob (`a/*/b`, `**`) is skipped rather than
         // half-expanded: reporting a scope that does not exist would be worse

@@ -51,14 +51,14 @@ mirrors the recoverable-error contract of the frontend `detect_stack`.
 | Python | `pytest` in pyproject / `pytest.ini` | pytest | `pytest` |
 | Go | `go.mod` present | go-test | `go test ./...` |
 | Rust | `Cargo.toml` present | cargo-test | `cargo test` |
-| Ruby | `rspec` in `Gemfile`/`gems.rb`, `.rspec`, or `spec/spec_helper.rb` | rspec | `bundle exec rspec` |
-| JVM | `pom.xml` / `build.gradle[.kts]` | junit | `./mvnw test` · `./gradlew test`, else `mvn test` · `gradle test` |
+| Ruby | `rspec` gem in `Gemfile`/`gems.rb`, `.rspec`, `spec/spec_helper.rb` | rspec | `bundle exec rspec` |
+| JVM | `pom.xml`, `build.gradle[.kts]`, `settings.gradle[.kts]` | junit | `./mvnw`/`./gradlew test`, else `mvn`/`gradle test` |
 | .NET | `*.csproj` / `*.sln` / `global.json` / `Directory.Build.props` | dotnet-test | `dotnet test` |
 
-Each Ruby signal stands alone — no `Gemfile` precondition — and Ruby has **no
-MEDIUM default** (minitest is in the stdlib), so no signal means no row rather
-than a guess. JVM does default to `junit` at MEDIUM when the build file names
-no runner; .NET is HIGH on a project file, MEDIUM on the two markers alone. A
+Each Ruby signal stands alone, and Ruby has **no MEDIUM default** (minitest is
+in the stdlib): no signal, no row. JVM defaults to `junit` at MEDIUM when the
+build file names no runner. .NET is HIGH only when a project names a test
+stack (`Microsoft.NET.Test.Sdk`, xunit, nunit, mstest), MEDIUM otherwise. A
 wrapper wins where one exists, since it pins the build-tool version.
 
 **Task-runner wrappers win.** When the project root has a `Makefile`
@@ -73,20 +73,20 @@ The package manager is read from the lockfile (`pnpm-lock.yaml` → pnpm,
 ## 2b. Behaviour-runner axis — per scope, detection only
 
 `result.behavior_runners` is a **separate list** from `runners`: it reports
-which behaviour runner (behat, cucumber-js/-ruby/-jvm, behave, pytest-bdd,
-reqnroll, specflow) each scope already owns.
+which behaviour runner each scope already owns, across the same ecosystems.
 
 - **Per scope, never repository-wide.** Each row carries `scope_root` (the
-  root plus every declared workspace package, read from
-  `package.json#workspaces` and `pnpm-workspace.yaml#packages`). A monorepo
+  root plus every declared workspace package). A monorepo
   returns a row per owning package and none for the others; one answer would
   erase which package owns it.
-- **Two in one scope is a refusal, not a pick** — `runner: "unknown"` plus
-  `conflict: [both names]`, the same refusal the frontend detector makes
-  between two mutually exclusive workspaces.
-- **Detection, never adoption.** No row recommends installing anything, and
-  the axis is unreachable from `selected`: a suite the repository owns is
-  reported, never run. Choosing one is an owner call.
+- **Two of the SAME ecosystem in one scope is a refusal, not a pick** —
+  `runner: "unknown"` plus `conflict: [both names]`, the same refusal the
+  frontend detector makes between two mutually exclusive workspaces. Two
+  DIFFERENT ecosystems are a polyglot repository, not a conflict: a PHP app
+  with a JS frontend returns two rows.
+- **Detection, never adoption.** No row recommends installing anything and the
+  axis is unreachable from `selected`: a suite the repository owns is
+  reported, never run.
 
 ## 3. Confidence tiers — declarative, shared with the non-interactive contract
 
