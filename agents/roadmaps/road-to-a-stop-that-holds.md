@@ -9,7 +9,7 @@ estate_offset_exempt: "Supersedes road-to-a-ledger-that-closes-the-loop, but doe
 relates:
   - slug: road-to-a-ledger-that-closes-the-loop
     relation: supersedes
-    note: "carries its 6.1 and AC-6 verbatim (§ Phase 3) under a deferred-resolution annotation; archiving the ledger file is this roadmap's own work, not done in the diff that adds this file"
+    note: "carries its 6.1 and AC-6 verbatim (§ Phase 3) under a deferred-resolution annotation; the ledger file was archived 2026-10-01 by its own closing round, which flipped those two items to `[~] carried-to=road-to-a-stop-that-holds` against the `parent_roadmap:` back-link above — so this roadmap is now the single live owner of the shadow window, and no archive step is owed here"
   - slug: road-to-adversarial-verification-and-long-runs
     relation: extends
     note: "its open blocker daemon-host-kill-switch receives the kill-switch table of step 1.4"
