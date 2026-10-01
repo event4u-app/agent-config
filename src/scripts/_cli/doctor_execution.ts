@@ -61,12 +61,17 @@ export function executionJson(overrides: () => OverrideStream): Dict {
 /**
  * The `forge_protection` block of `doctor --json` — Phase 3.2.
  *
- * **`doctor` does NOT reach the network on its own.** A diagnostic that makes a
- * `gh` call on every invocation is one nobody runs offline, and the sibling
- * anchor gate already declined that cost for the same reason. So the reading is
- * INJECTED: a caller that has queried the forge passes it, and a caller that has
- * not passes the all-null reading, which produces five `unread` rows that still
- * name the call each value would come from.
+ * **THIS function does not reach the network; `doctor` now does.** The mapper
+ * stays pure and takes an INJECTED reading — a caller that queried the forge
+ * passes it, one that did not passes the all-null reading, which produces five
+ * `unread` rows that still name the call each value would come from. What
+ * changed is the caller: `forgeProtectionJsonFor` below acquires that reading,
+ * so `doctor --json` does make `gh` calls. Phase 3.2's "`doctor` does not reach
+ * the network" is SUPERSEDED, and this header said otherwise for three review
+ * rounds while the function forty lines down called it a reversal — the third
+ * copy of a refuted argument in this diff, each found by a different round.
+ * Corrected here for the reason the others were: a header is where a dead
+ * argument gets reused.
  *
  * That is the honest shape for *read, never guessed*: the block is always
  * present, a value appears only when a named call produced it, and `unread` is a

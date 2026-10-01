@@ -47,6 +47,7 @@ import { describe, expect, it } from 'vitest';
 import {
     FORGE_CALL_TIMEOUT_MS,
     budgetOf,
+    callTimeout,
     forgeReadingFor,
     liveForgeApi,
     readForge,
@@ -240,6 +241,27 @@ describe('readForge — every failure degrades to unread, never to false', () =>
         });
         expect(readForge('o/r', a).deployRestricted).toBe(true);
         expect(a.calls).toContain('repos/o/r/environments/prod%20eu/deployment-branch-policies');
+    });
+
+    it('a non-boolean policy FLAG makes the row unread, not unsatisfied', () => {
+        // Omitting it collapsed into `false` one rung down, because
+        // `deployRestrictedFrom` tests `=== true` and cannot tell absent from
+        // unparseable. An ABSENT flag is a different input and still absent.
+        const reading = readForge(
+            'o/r',
+            api({
+                ...FULL,
+                'repos/o/r/environments': {
+                    environments: [
+                        {
+                            name: 'github-pages',
+                            deployment_branch_policy: { custom_branch_policies: 'yes' },
+                        },
+                    ],
+                },
+            }),
+        );
+        expect(reading.deployRestricted).toBeNull();
     });
 
     it('a non-string branch-policy name makes the row unread, not unsatisfied', () => {
@@ -593,22 +615,37 @@ describe('liveForgeApi — the adapter the degradation claim rests on', () => {
         expect(ran).toBe(0);
     });
 
-    it('always hands the runner an INTEGER timeout', () => {
-        // `budgetOf` reads `performance.now()`, which is fractional, and
-        // `spawnSync`'s `timeout` must be an integer. Unfloored, every call
-        // made once the remainder became the minimum threw ERR_OUT_OF_RANGE,
-        // was swallowed, and returned null — a read that degraded to `unread`
-        // without ever starting a subprocess.
+    it('never hands the runner a timeout Node would ignore', () => {
+        // TWO Node behaviours, and the first fix walked into the second.
+        // `spawnSync`'s `timeout` must be an INTEGER, so a fractional
+        // `performance.now()` remainder threw ERR_OUT_OF_RANGE, was swallowed,
+        // and the read degraded with no subprocess started. But `timeout: 0`
+        // installs NO kill timer, so flooring alone turned a sub-millisecond
+        // remainder into an UNBOUNDED spawn — the ceiling failing OPEN in the
+        // one case it exists for, which is the worse direction of the two.
+        //
+        // The property asserted is therefore the one the mechanism needs — a
+        // positive integer — rather than mere integerness, which was the first
+        // defect's symptom and would have codified the second as intended.
         const seen: number[] = [];
         const rec: Runner = (_c, _a, timeoutMs) => {
             seen.push(timeoutMs);
             return { status: 0, stdout: '{}' };
         };
-        for (const left of [9_999.7, 0.5, 4_321.000001, 10_000.9]) {
+        for (const left of [9_999.7, 0.5, 0.0001, 4_321.000001, 10_000.9]) {
             liveForgeApi(() => left, rec).get('x');
         }
-        expect(seen.every((t) => Number.isInteger(t))).toBe(true);
-        expect(seen).toEqual([9_999, 0, 4_321, FORGE_CALL_TIMEOUT_MS]);
+        expect(seen.every((t) => Number.isInteger(t) && t >= 1)).toBe(true);
+        expect(seen).toEqual([9_999, 1, 1, 4_321, FORGE_CALL_TIMEOUT_MS]);
+    });
+
+    it('callTimeout never returns zero, a fraction, or more than the per-call cap', () => {
+        for (const left of [0, 0.4, 1, 999.9, FORGE_CALL_TIMEOUT_MS, 1e9]) {
+            const t = callTimeout(left);
+            expect(Number.isInteger(t)).toBe(true);
+            expect(t).toBeGreaterThanOrEqual(1);
+            expect(t).toBeLessThanOrEqual(FORGE_CALL_TIMEOUT_MS);
+        }
     });
 
     it('shortens the per-call timeout to whatever the budget has left', () => {

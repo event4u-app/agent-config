@@ -135,6 +135,26 @@ const defaultRunner: Runner = (cmd, args, timeoutMs, cwd) =>
         ...(cwd === undefined ? {} : { cwd }),
     });
 
+/**
+ * The `timeout` for one call, given the milliseconds left of the whole budget.
+ *
+ * **Two Node behaviours meet here, and both bite in the same place.**
+ * `spawnSync`'s `timeout` must be an INTEGER — `budgetOf` reads
+ * `performance.now()`, which is fractional, so an unfloored value threw
+ * `ERR_OUT_OF_RANGE`, was swallowed, and the read degraded with no subprocess
+ * started. And `timeout: 0` installs NO kill timer at all, so flooring alone
+ * turned a sub-millisecond remainder into an UNBOUNDED spawn — the ceiling
+ * failing open in exactly the budget-exhaustion case it exists for, which is
+ * the worse of the two directions.
+ *
+ * So the floor is 1 ms, not 0: a call admitted with a sliver of budget left is
+ * started and killed almost immediately, which lands on `unread` the way every
+ * other failure does. Never `0`, never fractional.
+ */
+export function callTimeout(remainingMs: number): number {
+    return Math.max(1, Math.floor(Math.min(FORGE_CALL_TIMEOUT_MS, remainingMs)));
+}
+
 /** The repository to read, and the host it lives on. */
 export interface ForgeTarget {
     readonly host: string;
@@ -179,15 +199,7 @@ export function liveForgeApi(
                 : ['api', ...hostArgs, apiPath];
             let r: SpawnResult;
             try {
-                // FLOORED to an integer. `budgetOf` reads `performance.now()`,
-                // which is fractional, and `spawnSync`'s `timeout` must be an
-                // integer — so once enough of the budget had elapsed for the
-                // remainder to become the minimum, every call threw
-                // `ERR_OUT_OF_RANGE`, was swallowed by the catch below, and
-                // returned `null`. The read degraded to `unread` with no
-                // subprocess ever started, which looks exactly like a forge
-                // that would not answer.
-                r = run('gh', args, Math.floor(Math.min(FORGE_CALL_TIMEOUT_MS, budget)), where.cwd);
+                r = run('gh', args, callTimeout(budget), where.cwd);
             } catch {
                 return null;
             }
@@ -355,11 +367,22 @@ function readDeployRestricted(repo: string, api: ForgeApi): boolean | null {
         const name = env?.['name'];
         if (typeof name !== 'string') return null;
         const policy = asObject(env?.['deployment_branch_policy']);
-        // Each flag is OMITTED rather than set to `undefined` when the payload
-        // did not carry it as a boolean. `deployRestrictedFrom` distinguishes
-        // absent from false, so writing a non-boolean through as `undefined`
-        // under `exactOptionalPropertyTypes` would be a type error here and a
-        // silent "the forge said no" one rung down.
+        // A flag PRESENT but not a boolean makes the whole row `unread`. The
+        // first version omitted it, and the comment justified that with
+        // "`deployRestrictedFrom` distinguishes absent from false" — which is
+        // simply wrong: that function tests `=== true` and `!== true`, so
+        // absent, `undefined` and `false` collapse identically. The effect was
+        // the row rendering "at least one environment accepts a deployment from
+        // any branch" — a positive claim about the forge built out of data
+        // nobody could parse. Every sibling unparseable input here already
+        // takes the null route: a non-string environment name, a non-numeric
+        // ruleset id, a non-boolean `allow_auto_merge`, a non-string
+        // branch-policy name. An ABSENT flag is a different input and stays
+        // absent.
+        for (const k of ['protected_branches', 'custom_branch_policies'] as const) {
+            const v = policy?.[k];
+            if (v !== undefined && typeof v !== 'boolean') return null;
+        }
         envs.push({
             name,
             deployment_branch_policy:
