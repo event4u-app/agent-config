@@ -79,7 +79,7 @@ Scope column: `pkg` = source repo only · `consumer` = consumer projects only ·
 | Directory | Scope | Git policy | Retention | Owner | Purpose |
 |---|---|---|---|---|---|
 | `decisions/` | pkg | tracked-durable | permanent | council + humans | Low-impact council corpus, open questions, per-decision ADRs |
-| `evidence/` | pkg | tracked-durable (see notes) | permanent | tooling + humans | Research, analysis, audits, eval findings, metrics — everything evidential. Sub-dirs: `analysis/`, `audits/`, `architectural-drift/`, `archived-skills/`, `council/`, `eval-findings/`, `eval-corpora/`, `investigations/`, `mcp-sessions/`, `metrics/`, `notes/`, `reports/` |
+| `evidence/` | pkg | tracked-durable (see notes) | permanent, **no cold location** (see Evidence temperature below) | tooling + humans | Research, analysis, audits, eval findings, metrics — everything evidential. Sub-dirs: `analysis/`, `audits/`, `architectural-drift/`, `archived-skills/`, `council/`, `eval-findings/`, `eval-corpora/`, `investigations/`, `mcp-sessions/`, `metrics/`, `notes/`, `reports/` |
 | `features/` | pkg | tracked-durable | permanent | maintainer | Feature-flag status docs (long-form complement to `.agent-tools.yml`) |
 | `knowledge/` | both | tracked-durable | permanent | human-gated (`/team-knowledge` skills) | Curated committed knowledge pages (sessions/, concepts/, procedures/, decisions/). Committed only after human review; never auto-written |
 | `memory/` | both | mixed (see notes) | permanent (durable) / TTL (intake) | `/memory:*` skills | Layer 1 memory pipeline: `intake/` (gitignored JSONL), `knowledge/` subdir (mirrors top-level knowledge/). Intake is local-only; curated YAML in subdirs is committed |
@@ -182,6 +182,49 @@ Entries that are **not** expected in consumers (and that `agent-config doctor`
 will warn about): `evidence/`, `decisions/`, `features/`, `reports/`,
 `recruit-sessions/`, `settings/`, `roles/`, `reference/`, `roadmap-assets/`,
 `notes/`, `tickets/`, `templates/`, `runtime/`, `state/`.
+
+---
+
+## Evidence temperature — the classification rule, and why there is no cold location
+
+`evidence/` retention stays **permanent and in place**. Every file is
+classified, nothing is moved, and no file is excluded from a scan root on the
+ground of being cold.
+
+The classification rule, by reference and never by age:
+
+| Class | Definition |
+|---|---|
+| cold | No tracked file anywhere in the repository references its path, or — when the filename is unique repo-wide — its bare filename. |
+| warm | Referenced only by archived or skipped roadmaps, or only by other files that are themselves under `evidence/`. |
+| hot | Referenced by at least one live tracked file outside `evidence/`, or sitting under a directory a gate enumerates as its corpus (`reviews/`, `release-findings/`, `archived-skills/`, `ratifications/`). |
+
+`src/scripts/report_evidence_temperature.ts` is the instrument. It runs
+report-only from `task release-prepare` on every release, names the files that
+became cold since the previous census, and refuses nothing — a census that can
+fail a release is a gate, and no gate is warranted here.
+
+**Why no cold location.** The first census (2026-10-01, at `8fdd9e9ed`) measured
+61 of 1,319 tracked files and 0.68 of 29.61 MiB cold — 2.3 % of the bytes. The
+mass is `reviews/` at 23.79 MiB, every file of which five gates read, one of them
+specifically to validate archived round records in place. A cold location would
+therefore move 2.3 % of the tree and leave the size concern that asked for it
+untouched, while costing a contract amendment and a policy. An AI council ruled
+on it on 2026-10-01 with that census attached — 2/2 present,
+`openai/codex-default` and `anthropic/claude-sonnet-4-5`. The seats converged on
+the census refuting the size premise, on report-only with nothing automatic, and
+on no deletion. They split on the destination: one ruled none of the three
+options now, the other a `cold/` directory for files that stay cold across two
+consecutive censuses. That precondition cannot be met from one census, so both
+readings agree that nothing moves in this change, and the split is recorded as a
+split rather than resolved into a convergence it was not.
+
+**Deletion is owner-reserved** and the council did not recommend it: absence of
+references is not evidence of absence of value, and an uncited measurement can
+still be the only place that measurement exists.
+
+**Revisit if** cold evidence exceeds 10 % of total evidence bytes across two
+consecutive releases, **or** a single release adds more than 50 newly cold files.
 
 ---
 

@@ -13,6 +13,7 @@ import {
     classify,
     coldPathsIn,
     extractPathTokens,
+    latestReportBefore,
     normaliseToken,
     parseAddDates,
     referrerClass,
@@ -182,5 +183,28 @@ describe('subtreeOf', () => {
     it('names the top-level subtree and the root itself', () => {
         expect(subtreeOf('agents/evidence/reviews/a/b.md')).toBe('reviews');
         expect(subtreeOf('agents/evidence/README.md')).toBe('(root)');
+    });
+});
+
+describe('latestReportBefore — what `--since latest` resolves to', () => {
+    // The fixture dates are deliberately 1970: a real report filename written
+    // here would be a live citation of a real artefact, and the census would
+    // read its own test as a reason to call that artefact hot.
+    it('picks the newest report and never the one about to be written', () => {
+        const names = [
+            'evidence-temperature-1970-01-01.md',
+            'evidence-temperature-1970-01-02.md',
+            'other-analysis.md',
+        ];
+        expect(latestReportBefore(names, 'evidence-temperature-1970-01-02.md')).toBe(
+            'evidence-temperature-1970-01-01.md',
+        );
+    });
+
+    it('returns null on a first run rather than failing', () => {
+        // A release with no previous census is a legitimate first run. Treating
+        // it as an error would make the release pipeline refuse, which is the
+        // one thing a report-only census must never do.
+        expect(latestReportBefore(['other-analysis.md'], 'evidence-temperature-1970-01-02.md')).toBeNull();
     });
 });

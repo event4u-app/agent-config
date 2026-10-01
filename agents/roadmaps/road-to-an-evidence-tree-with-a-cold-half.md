@@ -57,28 +57,40 @@ Measured on 2026-10-01:
 
 ## Phase 2 — Decide the location and the rule
 
-- [ ] **2.1 Council ruling.** Put three options to the council with 1.1 and 1.2
+- [x] **2.1 Council ruling.** Put three options to the council with 1.1 and 1.2
       attached: (a) `agents/evidence/cold/` inside the tree, excluded from every
       scan root and from the published package; (b) delete cold files, leaving
       git history as the archive; (c) keep everything and only exclude cold paths
       from scan roots. Record the verdict, both seats and a `revisit-if` in
       `## Decisions`.
       verify: `grep -c 'council' agents/roadmaps/road-to-an-evidence-tree-with-a-cold-half.md` -> /^[1-9]/
-- [ ] **2.2 Amend the contract.** Change `agents-layout.md`'s `evidence/` row to
+- [x] **2.2 Amend the contract.** Change `agents-layout.md`'s `evidence/` row to
       state the cold location and the classification rule the verdict chose.
       verify: `grep -c 'cold' docs/contracts/agents-layout.md` -> /^[1-9]/
 
 ## Phase 3 — Move, and keep it moved
 
-- [ ] **3.1 Move the cold set.** Apply the verdict to the files 1.1 classed
+- [x] **3.1 Move the cold set.** Apply the verdict to the files 1.1 classed
       cold, in one change whose message names the census file and the count.
       Every reference checker must stay green: a moved file that something still
       cites was not cold.
       verify: `./scripts-run src/scripts/check_references` -> 0
-- [ ] **3.2 A gate keeps new cold files from staying hot by default.** The
+      **Outcome: the verdict is a null move.** D1 ruled no cold location, so the
+      62 files the census classes cold stay where they are and nothing was
+      moved. `check_references` is green at 2,227 scanned, which is the same
+      assertion the step asked for and the only one a null move can offer. The
+      count and the census file are named in the commit message.
+
+      Recorded plainly so a later reader is not misled by a ticked box: this
+      step closed without moving a file, by decision rather than by omission.
+- [x] **3.2 A gate keeps new cold files from staying hot by default.** The
       census runs report-only on each release and lists files newly cold since
       the last run; nothing refuses.
       verify: `npx vitest run tests/scripts/report_evidence_temperature.test.ts` -> 0
+      Wired into `task release-prepare`, which `task release` step 2 runs, as
+      `report_evidence_temperature --write --since latest --quiet || true`.
+      `--since latest` resolves to the newest previous census and treats a first
+      run with none as a legitimate null, so the release can never fail on it.
 
 ## Phase 4 — The two readings the archive still owes
 
@@ -104,8 +116,44 @@ Measured on 2026-10-01:
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| D1 | contested-technical | council:step-2.1 | Location and rule for cold evidence | Pending 2.1 | Council verdict lands |
+| D1 | contested-technical | council:step-2.1 | No cold location. Evidence stays permanent and in place; the census runs report-only on every release and refuses nothing | AI council 2026-10-01, 2/2 present (`openai/codex-default`, `anthropic/claude-sonnet-4-5`), census attached. `agents/evidence/analysis/evidence-temperature-2026-10-01.md` | Cold evidence exceeds 10 % of total evidence bytes across two consecutive releases, OR one release adds more than 50 newly cold files |
 | D2 | reversible-technical | evidence | Classify by reference, not by age | An old file a contract cites is load-bearing; a new file nothing cites is not | 1.1 shows referenced files that are demonstrably dead |
+| D3 | reversible-technical | evidence | Cold means zero inbound references from anywhere, the evidence tree included — not merely "nothing outside evidence cites it" | The weaker reading classes a file a live analysis document links to as cold, and `check_references` scans the whole of `agents/`, so moving it would break the gate. Zero-inbound is the only definition under which the cold set moves without rewriting a link | A cold location is ever created and intra-evidence links are rewritten as part of the move |
+
+### D1 — the council record
+
+**Convergent, both seats.** The census refutes the premise the reviews asked
+for: there is no cold half. 61 of 1,319 tracked files and 0.68 of 29.61 MiB are
+cold — 2.3 % of the bytes — while 849 files and 24.57 MiB sit under a gate
+corpus, 821 of them under `reviews/`, which five gates read. Becoming cold
+triggers no automatic move, exclusion or deletion; a report-only census on each
+release is the right ceiling. Deletion is refused on the ground that absence of
+references is not evidence of absence of value.
+
+**Split, recorded as a split.** `openai/codex-default` ruled *none of (a), (b) or
+(c) now* — and specifically that calling the outcome (c) would be inconsistent,
+because (c) requires changing scan exclusions and the evidence shows no target
+worth excluding. `anthropic/claude-sonnet-4-5` ruled a *modified (a)*: create
+`agents/evidence/cold/`, but move only files that stay cold across two or more
+consecutive release censuses, carry zero inbound references, and sit under no
+gate-enumerated directory, preserving the original path in a manifest.
+
+**Why the split does not block the step.** The modified (a) precondition is two
+consecutive censuses. Exactly one census exists. So under either seat nothing
+moves in this change, and the two disagree about a future state rather than
+about this one. The `revisit-if` recorded in D1 is the union of both seats:
+`codex-default`'s sustained 10 % byte threshold and `claude-sonnet-4-5`'s
+rate threshold of more than 50 newly cold files in one release — the rate half
+is kept because sudden accumulation signals a process problem that a byte share
+would not catch for several releases.
+
+**Not adopted, and why.** `claude-sonnet-4-5` also argued that the 152 warm
+files deserve a policy of their own. They do not get one here: a warm file is
+cited from inside the evidence tree or from an archived roadmap, so moving it
+breaks a link that exists, which makes it a harder case than the cold set rather
+than an easier one. Nothing in the census supports acting on them, and inventing
+a policy for them in this change would be the scope creep the split above
+already argues against.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->

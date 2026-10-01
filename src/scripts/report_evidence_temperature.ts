@@ -45,6 +45,7 @@
  *   ./scripts-run src/scripts/report_evidence_temperature --write
  *   ./scripts-run src/scripts/report_evidence_temperature --json
  *   ./scripts-run src/scripts/report_evidence_temperature --since <report.md>
+ *   ./scripts-run src/scripts/report_evidence_temperature --write --since latest
  *
  * Exit codes: 0 always, except 2 for a usage error.
  */
@@ -378,6 +379,21 @@ function mib(bytes: number): string {
     return `${(bytes / (1024 * 1024)).toFixed(2)} MiB`;
 }
 
+/**
+ * The newest existing report other than `exclude`, or null when there is none.
+ *
+ * `--since latest` resolves through this so the release pipeline needs no date
+ * arithmetic: the names sort lexicographically because they carry an ISO date,
+ * and the file about to be written is excluded so a same-day re-run compares
+ * against the previous release rather than against itself.
+ */
+export function latestReportBefore(names: readonly string[], exclude: string): string | null {
+    const candidates = names
+        .filter((n) => n.startsWith(REPORT_PREFIX) && n.endsWith('.md') && n !== exclude)
+        .sort();
+    return candidates.length === 0 ? null : candidates[candidates.length - 1];
+}
+
 /** The cold paths a previous report listed, read back out of its own fenced block. */
 export function coldPathsIn(reportText: string): Set<string> {
     const out = new Set<string>();
@@ -567,8 +583,16 @@ export function main(argv: readonly string[]): number {
         return 0;
     }
 
+    const dest = out ?? path.join(REPORT_DIR, `${REPORT_PREFIX}${census.generatedAt}.md`);
+
     let previousCold: Set<string> | null = null;
-    if (since !== null) {
+    if (since === 'latest') {
+        // No previous report is a legitimate first run, never an error.
+        const dir = path.join(REPO_ROOT, REPORT_DIR);
+        const names = fs.existsSync(dir) ? fs.readdirSync(dir) : [];
+        const prev = latestReportBefore(names, path.posix.basename(dest));
+        previousCold = prev === null ? null : coldPathsIn(fs.readFileSync(path.join(dir, prev), 'utf8'));
+    } else if (since !== null) {
         const abs = path.isAbsolute(since) ? since : path.join(REPO_ROOT, since);
         if (!fs.existsSync(abs)) {
             process.stderr.write(`--since: no such report: ${since}\n`);
@@ -579,7 +603,6 @@ export function main(argv: readonly string[]): number {
 
     const body = renderReport(census, previousCold);
     if (write) {
-        const dest = out ?? path.join(REPORT_DIR, `evidence-temperature-${census.generatedAt}.md`);
         const abs = path.isAbsolute(dest) ? dest : path.join(REPO_ROOT, dest);
         fs.mkdirSync(path.dirname(abs), { recursive: true });
         fs.writeFileSync(abs, `${body}\n`, 'utf8');
@@ -597,5 +620,7 @@ export function main(argv: readonly string[]): number {
 }
 
 if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
-    process.exit(main(process.argv.slice(2)));
+    // `process.exitCode`, never `process.exit`: the JSON mode writes megabytes
+    // and an immediate exit truncates a pipe mid-string.
+    process.exitCode = main(process.argv.slice(2));
 }
