@@ -65,8 +65,16 @@ import {
   owns_session_state,
 } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
+import { hookSectionValue } from "./_lib/hook_settings.js";
 import { isVerificationCommand, mightBeVerification } from "./_lib/verification_command.js";
+import {
+  advisoryLine,
+  runTouchedFileQuality,
+  touchedFilesAtStop,
+  type QualityRun,
+} from "./_lib/touched_file_quality.js";
 import { runnerOf } from "./_lib/verification_evidence.js";
+import { resolve_toolchain } from "../agent-src/templates/scripts/work_engine/stack/runner.js";
 
 // NOTE: the Python docstring says `agents/runtime/state/`, but the code
 // constant is `agents/state/`. Replicated verbatim — latent docstring/code
@@ -179,8 +187,85 @@ function _empty_state(): StateDict {
     // a reader must never have to distinguish "no runs yet" from "key absent".
     verification_runs: [],
     edits_this_turn: 0,
+    // NOTE — `quality_runs` and `quality_files_source` are deliberately ABSENT
+    // here, against the convention `verification_runs` above follows.
+    //
+    // That convention ("present in the empty state so a reader never has to tell
+    // 'no runs yet' from 'key absent'") is the right default and it loses to a
+    // stronger one: the roadmap's first acceptance criterion is that with
+    // `touched_file_quality: off` the record is BYTE-IDENTICAL to the base ref.
+    // Seeding two keys would break that for every install that never opted in,
+    // and "the default-off feature changed my state file" is exactly the kind of
+    // silent shape drift a consumer cannot audit. The convention's cost here is
+    // zero, because the only reader of these keys is 2.1's analysis, which counts
+    // stops — and a stop with no key is a stop where the pass did not run, which
+    // is a distinction it needs rather than one it must not make.
     checked_at: _now(),
   };
+}
+
+/** The three values `hooks.verify_before_complete.touched_file_quality` may take. */
+export type TouchedFileQualityMode = "off" | "shadow" | "warn";
+
+/**
+ * The configured mode, defaulting to `off`.
+ *
+ * FAIL-CLOSED ON THE FLAG, FAIL-OPEN ON THE READ, exactly as
+ * `hookSectionEnabled` does: an unreadable settings file, a missing key, or a
+ * value outside the enum all resolve to `off`. A typo must never turn a pass
+ * ON — `warn` emits a line the operator did not ask for, and `shadow` spawns
+ * processes, so an unrecognised string is the one case where guessing is
+ * strictly worse than doing nothing.
+ */
+export function readTouchedFileQualityMode(consumer_root: string): TouchedFileQualityMode {
+  const raw = hookSectionValue(consumer_root, "verify_before_complete", "touched_file_quality");
+  return raw === "shadow" || raw === "warn" ? raw : "off";
+}
+
+/**
+ * Run the shadow quality pass for this stop, or return nothing.
+ *
+ * Kept OUTSIDE the state lock on purpose. `update_json_under_lock` holds a lock
+ * around its mutator, and a mutator that spawns `tsc` would hold it for the
+ * whole typecheck — every concurrent concern writing this session's state would
+ * block behind a linter. The pass runs first, the result is handed to `_update`
+ * as data, and the lock stays as short as it was.
+ */
+export function collectTouchedFileQuality(
+  consumer_root: string,
+  session_id: string,
+): { runs: QualityRun[]; source: string } | null {
+  let touched: { files: readonly string[]; source: string };
+  try {
+    touched = touchedFilesAtStop(consumer_root, session_id);
+  } catch {
+    return null;
+  }
+  if (touched.files.length === 0) {
+    // Nothing to measure. Recorded as an empty run list with its source, not as
+    // silence: 2.1 counts "stops with edits" against "stops with at least one
+    // entry", and a stop that produced no entry has to be distinguishable from
+    // a stop where the pass never ran.
+    return { runs: [], source: touched.source };
+  }
+  let commands: readonly string[] = [];
+  try {
+    commands = resolve_toolchain(consumer_root).quality;
+  } catch {
+    commands = [];
+  }
+  try {
+    return {
+      runs: runTouchedFileQuality({
+        root: consumer_root,
+        commands,
+        files: touched.files,
+      }),
+      source: touched.source,
+    };
+  } catch {
+    return null;
+  }
 }
 
 
@@ -521,6 +606,12 @@ function _reset_turn(state: StateDict, session_id: string): StateDict {
   // turn's edits, which is the freshness argument `verify-before-complete` makes.
   state["verification_runs"] = [];
   state["edits_this_turn"] = 0;
+  // TURN-scoped for the same reason as its neighbour: a quality verdict from
+  // the previous turn describes files this turn may already have changed, and a
+  // stale PASS is the direction that misleads. DELETED rather than emptied, so
+  // that a turn boundary restores the base-ref shape — see `_empty_state`.
+  delete state["quality_runs"];
+  delete state["quality_files_source"];
   // FC-3b turn-scoped counters: a CI settle must be witnessed within the same
   // turn that claims it, so the in-flight observation does not survive a turn.
   state["ci_saw_pending"] = false;
@@ -539,7 +630,19 @@ function _asInt(v: unknown): number {
   return Number.isFinite(n) ? Math.trunc(n) : 0;
 }
 
-function _update(state: StateDict, event: string, envelope: StateDict): StateDict {
+/**
+ * Apply one event to the state.
+ *
+ * `quality` is the shadow pass's already-computed result, handed in rather than
+ * fetched: this function runs INSIDE the state lock, and a spawn in here would
+ * hold that lock for the duration of a typecheck.
+ */
+function _update(
+  state: StateDict,
+  event: string,
+  envelope: StateDict,
+  quality: { runs: QualityRun[]; source: string } | null = null,
+): StateDict {
   const session_id = (envelope["session_id"] || state["session_id"] || "") as string;
   if (session_id && session_id !== state["session_id"]) {
     // Session boundary — reset session-scoped counters.
@@ -699,6 +802,10 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
     }
   } else if (event === "stop") {
     state["last_stop_at"] = _now();
+    if (quality !== null) {
+      state["quality_runs"] = quality.runs;
+      state["quality_files_source"] = quality.source;
+    }
   }
 
   state["checked_at"] = _now();
@@ -760,6 +867,15 @@ export function run(
 
   const target = path.join(consumer_root, statePathFor(session_id));
 
+  // The shadow quality pass, computed BEFORE the lock (see `_update`'s header)
+  // and only at `stop`. `off` is the template default and the resolved value of
+  // every unreadable or unrecognised setting, so an install that never opted in
+  // spawns nothing, reads no manifest and writes no new field — the acceptance
+  // criterion is that its record is byte-identical to the base ref.
+  const quality_mode = event === "stop" ? readTouchedFileQualityMode(consumer_root) : "off";
+  const quality =
+    quality_mode === "off" ? null : collectTouchedFileQuality(consumer_root, session_id);
+
   // LOAD → UPDATE → PUBLISH under ONE lock, not three separate steps.
   //
   // This was `_load_state` / `_update` / `atomic_write_json`, which makes the
@@ -790,7 +906,7 @@ export function run(
     // treats a missing counter as 0 and the `=== true` guards treat a missing
     // flag as false, so every assertion would still pass while `schema_version`
     // and an explicit `ci_last: null` vanished from a freshly created file.
-    state = _update({ ..._empty_state(), ...loaded } as StateDict, event, envelope);
+    state = _update({ ..._empty_state(), ...loaded } as StateDict, event, envelope, quality);
     return state;
   });
   if (outcome === "failed") {
@@ -809,6 +925,21 @@ export function run(
       Date.now(),
       STATE_RETENTION_DAYS,
     );
+  }
+
+  // `warn` — ONE advisory line, and the exit code does not move.
+  //
+  // In this tree a warn is conventionally an exit of 2, and on the one host that
+  // honours a deny that reads as a BLOCK. D3 of the roadmap settles it the other
+  // way for this field: shadow → warn only, never a block, on the strength of
+  // this hook's own contract ("the hook itself never blocks — it is
+  // observability infra, not control flow"). So the line goes to stderr and the
+  // function returns 0 on this path exactly as on every other.
+  if (quality_mode === "warn" && quality !== null) {
+    const line = advisoryLine(quality.runs);
+    if (line !== null) {
+      process.stderr.write(`${line}\n`);
+    }
   }
 
   if (verbose) {
