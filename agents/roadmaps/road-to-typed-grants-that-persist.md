@@ -41,6 +41,26 @@ capability_gap: none
 > per-step loop for a reversible operation, and it may not reverse the outcome. § 0 carries
 > the table that decides which of the two a proposed change is.
 
+> **STATE AS OF 2026-10-01 — read this before re-deriving anything below.** 4 done · 14
+> deferred `[~]` · 7 open-and-blocked `[ ]`. `scanOpenSteps` reads `{open: 0, blocked: 7}`.
+> **This file is not agent-executable, and that is a property of its subject rather than a
+> stall.** Every remaining step either edits a kernel rule behind a deny reproduced three times
+> at tool-call time, or widens the agent's own authority, or waits on a mechanism whose
+> construction would do one of those two. Three facts a later run should not re-measure from
+> scratch: the deny is live and was exercised this run rather than inspected; `LedgerState` is
+> a type with no writer, no reader and no file, which is what holds 3.1 → 4.3 → 1.7 → 4.1 in
+> that order; and `check_platform_anchor` went green again on 2026-09-28 after the 2026-09-14
+> regression, which restores a precondition and performs no retirement.
+> **The one step a future session should build FIRST is 4.3.** A gate that reds a typed op
+> lacking a grant only ever refuses, so it cannot produce a state weaker than today's and it is
+> in bounds for an agent to author — and Risk 1 wants it to exist *before* the floor narrows.
+> It needs 3.1's store and nothing else, and 3.1 needs one owner decision — *who may append to
+> the ledger, and what makes an append owner-attributable* — before it needs any code.
+> **The 14 `[~]` glyphs are deliberate and they block archival.** They were `[ ]` until
+> 2026-10-01, which meant the continuation ladder offered step 1.4 — the autonomy self-grant —
+> as the next action on every autonomous fire. Restoring any of them to `[ ]` without closing
+> the step re-opens that path.
+
 ## Goal
 
 One grant object — ADR-260's `{op, target, scope, granted_by, span, expires}` — governs every
