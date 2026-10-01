@@ -8,7 +8,10 @@ blocker_opened: 2026-08-27
 
 # Road to a runtime orchestration substrate — stub
 
-> **Arrivals:** 13 (at least) - latest `inbox-2026-10-a` (2026-10-01), where three of
+> **Arrivals:** 14 (at least) - latest `inbox-2026-10-b` (2026-10-01), a two-author
+> bundle proposing a session task envelope with leases and a join packet; killed as
+> K18 in `road-to-leading-every-row` because the typed return already exists and the
+> rest is this stub's gated tracks; `inbox-2026-10-a` (2026-10-01), where three of
 > sixteen release reviews name runtime-state convergence (a shared primitive over
 > mission, verification, continuity, refusal, obligation and design-pass state, or
 > an inventory of producer, consumer, truth type and retention per store) and one

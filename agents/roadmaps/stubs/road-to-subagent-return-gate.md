@@ -5,11 +5,14 @@ review_by: 2026-12-24
 
 # Stub: road to a subagent return gate
 
-> **Arrivals:** 27 (at least) - latest `inbox-2026-10-a` (2026-10-01), where one of
-> sixteen release reviews asks for producer enforcement until adoption nears the
-> whole population and another reads 26 arrivals as no reason to build without a
-> recorded false-done incident; earlier: `inbox-2026-09-ab` (2026-09-29),
-> `inbox-2026-09-aa` (2026-09-12), a round of
+> **Arrivals:** 28 (at least) - latest `inbox-2026-10-b` (2026-10-01), whose programme
+> (`road-to-leading-every-row` blocker b1) recommends option 4 keyed on `no_envelope` —
+> read that day in a maintainer checkout's ledger: `no_envelope` 24,964, `absent` 4,543,
+> `foreign_object` 54, `fail` 42, `ok` 0, `no_message` 0; `inbox-2026-10-a` (2026-10-01),
+> where one of sixteen release reviews asks for producer enforcement until adoption nears
+> the whole population and another reads 26 arrivals as no reason to build without a
+> recorded false-done incident; earlier: `inbox-2026-09-ab`
+> (2026-09-29), `inbox-2026-09-aa` (2026-09-12), a round of
 > fourteen independent external reviews of which two reach this subject - and both
 > answer the posed question the same way: keep the parking, because the promotion
 > preconditions are still absent. One states it as "not on 24 arrivals = build it, but
