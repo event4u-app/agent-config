@@ -1,52 +1,165 @@
 {
     "skill": "test-case-discovery",
     "last_eval": "2026-07-10",
-    "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger covers DE + EN phrasings for pre-write test-case enumeration (what to test, edge cases, coverage breadth). Should-not-trigger covers near-miss neighbours: assertion quality (testing-anti-patterns), after-the-fact coverage review (judge-test-coverage), failing-test diagnosis (systematic-debugging), stack-specific execution.",
+    "_eval_note": "The behaviour-contract rows added 2026-10-01 (road-to-behavior-vocabulary-and-runner-truth step 1.1) have NOT been through a live `skill_trigger_eval` pass — that runner needs an on-disk key and a controlling-terminal confirmation, neither of which an execution session clears. `last_eval` therefore still dates the last pass that actually ran and is deliberately not bumped: the rows are corpus, not a measurement. THESE ROWS ARE EXPECTED TO FAIL A LIVE PASS TODAY, and saying so is the point of this note rather than a hedge. The production routing condition is this skill's frontmatter `description`, which step 1.1 deliberately did not touch and which carries none of this vocabulary; the corpus is not itself a routing surface. So the exemplars record the behaviour the suite SHOULD have, not behaviour it has — a specification, red until the description changes or a router reads bodies. Whoever next runs a live pass should expect these rows red and read that as the known gap, not as a regression. Annotation, never input — nothing reads it at run time, hence the underscore prefix.",
+    "description": "15 exemplars + 9 near-misses + 2 counterexamples. Exemplars cover DE + EN phrasings for pre-write test-case enumeration (what to test, edge cases, coverage breadth) and — added 2026-10-01 — for the behaviour-contract discriminator at SKILL.md § 'Does this change owe an executable behavior contract?': gherkin, BDD, cucumber, behat, given-when-then, feature file, executable specification, specification by example, living documentation, Szenarien, Akzeptanzkriterien. Near-misses cover the adjacent skills (testing-anti-patterns, judge-test-coverage, systematic-debugging, pest-testing, playwright-testing) and the four the discriminator's own no-cases protect — a refactor with no observable change, scenario-per-unit-case, a selector-and-click step script, and an internal invariant with no external vocabulary. Counterexamples guard the two directions the vocabulary over-claims: adopting a runner the repository does not have, and an unrelated use of the word 'test'.",
     "queries": [
         {
             "q": "what should we test here — I don't want happy-path-only coverage",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar"
         },
         {
             "q": "enumerate the edge cases for this endpoint before we write the tests",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar"
         },
         {
             "q": "welche Testfälle brauchen wir für dieses Feature — auch Grenzfälle und Fehlerpfade?",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
         },
         {
             "q": "build a case matrix for this behavior — happy, boundary, error, abuse",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar"
         },
         {
             "q": "ask a subagent what else we could test so coverage is broad",
-            "trigger": true
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "does this change owe a Gherkin feature file, or are unit cases enough?",
+            "trigger": true,
+            "class": "exemplar",
+            "note": "the behaviour-contract discriminator itself — the yes/no question SKILL.md § 'Does this change owe an executable behavior contract?' answers"
+        },
+        {
+            "q": "we want BDD scenarios for the refund rule — which ones actually belong there?",
+            "trigger": true,
+            "class": "exemplar",
+            "note": "BDD vocabulary plus a case-selection question; owed-or-not is decided first, then the cases are enumerated"
+        },
+        {
+            "q": "turn the product owner's acceptance criteria into given-when-then scenarios we can run",
+            "trigger": true,
+            "class": "exemplar",
+            "note": "acceptance criteria → executable scenarios; enumeration before anything is written"
+        },
+        {
+            "q": "is this behaviour worth an executable specification, or just a case in the unit runner?",
+            "trigger": true,
+            "class": "exemplar",
+            "note": "the observable-behavior test stated in the asker's own words"
+        },
+        {
+            "q": "specification by example for the coupon rules — what scenarios do we need?",
+            "trigger": true,
+            "class": "exemplar",
+            "note": "specification-by-example phrasing of the same enumeration step"
+        },
+        {
+            "q": "living documentation for this flow — which behaviours are worth stating as scenarios?",
+            "trigger": true,
+            "class": "exemplar",
+            "note": "living-documentation phrasing; still the owed-or-not plus enumeration pair"
+        },
+        {
+            "q": "brauchen wir hier ein Cucumber-Feature oder reichen Unit-Tests?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de",
+            "note": "DE — the discriminator question in cucumber vocabulary"
+        },
+        {
+            "q": "Akzeptanzkriterien als ausführbare Szenarien formulieren — welche Fälle gehören rein?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de",
+            "note": "DE — acceptance criteria as executable scenarios, with case selection"
+        },
+        {
+            "q": "soll ich für den Stornoprozess ein Behat-Szenario schreiben oder nur Testfälle?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de",
+            "note": "DE — behat vocabulary, contract-versus-case decision"
+        },
+        {
+            "q": "welche Szenarien gehören in die Feature-Datei für den Export-Block?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de",
+            "note": "DE — feature-file scenario enumeration"
         },
         {
             "q": "this assertion looks tautological — is the test overfit?",
             "trigger": false,
+            "class": "near-miss",
             "note": "assertion quality → testing-anti-patterns"
         },
         {
             "q": "are the tests on this finished diff enough?",
             "trigger": false,
+            "class": "near-miss",
             "note": "after-the-fact coverage review → judge-test-coverage"
         },
         {
             "q": "this Pest test keeps failing and I don't understand why",
             "trigger": false,
+            "class": "near-miss",
             "note": "failing-test diagnosis → systematic-debugging"
         },
         {
             "q": "how do I mock Http in a Laravel feature test?",
             "trigger": false,
+            "class": "near-miss",
             "note": "stack-specific execution → pest-testing"
         },
         {
             "q": "schreib die Playwright-Specs für den Login-Flow, die Fälle stehen schon im Ticket",
             "trigger": false,
+            "class": "near-miss",
+            "language": "de",
             "note": "case list already exists → playwright-testing executes it"
+        },
+        {
+            "q": "I extracted the pricing calculator into its own class — nothing a caller can observe changed; does that need a scenario?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the discriminator's first no-case: a refactor with no behavior change. The behaviour vocabulary is present and the answer is still no, which is exactly why routing on vocabulary alone would be wrong"
+        },
+        {
+            "q": "generate one Gherkin scenario for every unit test we already have",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "scenario-per-unit-case is the degraded second unit suite the discriminator exists to prevent — a translation job over an existing list, not discovery"
+        },
+        {
+            "q": "write the Given-When-Then steps: click #apply-coupon, wait 2 seconds, then assert .cart-total",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a click script wearing Given-When-Then — SKILL.md § 'The anti-script rule' calls this a defect in the contract; the request is interface scripting, not case enumeration"
+        },
+        {
+            "q": "should the cache-key derivation get a behaviour scenario?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the discriminator's second no-case: an internal invariant with no external vocabulary — real behaviour, no audience outside the code"
+        },
+        {
+            "q": "install Cucumber and wire a step-definition folder into this repository",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "adopting a behaviour runner the repository does not have is tooling and an owner-gated choice; this skill decides whether a contract is owed, never which runner to install"
+        },
+        {
+            "q": "add a test account to the staging database so QA can log in",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the word 'test' with no case-enumeration question anywhere in it — guards the shortest keyword this corpus could over-claim on"
         }
     ]
 }
