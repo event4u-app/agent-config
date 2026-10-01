@@ -1249,6 +1249,18 @@ export function _count_from_list_result(
 }
 
 /**
+ * `npx` argv for the test-count probe.
+ *
+ * `--staticParse=false` is load-bearing: since vitest 4, `vitest list` parses
+ * files statically by default, which cannot see a `describe` registered from
+ * an imported helper or an `it.each` over a runtime array. The golden replay
+ * shards (`defineReplayShard`) are exactly that, so after the vitest 5 upgrade
+ * every shard reported "No test suite found", the probe exited 1, and 16.2.0
+ * was cut without its `Tests:` footer.
+ */
+export const _TEST_LIST_ARGV = ['vitest', 'list', '--staticParse=false'] as const;
+
+/**
  * Return the collected vitest test-case count on the current tree
  * (`npx vitest list`, one line per case; ~14s wall). Returns null when
  * collection fails — the trend line is informational, never a release
@@ -1267,7 +1279,7 @@ export function _count_tests_current(): number | null {
     if (process.env['VITEST'] !== undefined) {
         return null;
     }
-    const res = spawnSync('npx', ['vitest', 'list'], {
+    const res = spawnSync('npx', [..._TEST_LIST_ARGV], {
         cwd: REPO_ROOT,
         encoding: 'utf-8',
         stdio: ['ignore', 'pipe', 'pipe'],
