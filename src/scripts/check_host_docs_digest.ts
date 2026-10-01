@@ -88,7 +88,7 @@ import { fileURLToPath } from 'node:url';
 import { asOf } from './_lib/as_of.js';
 import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { sanitize_text } from './_lib/retrieval_sanitize.js';
-import { reportScanned } from './_lib/scan_scope.js';
+import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 import { HOST_LOWERING_PATH, parseHostLowering, type HostLowering } from './hooks/host_lowering.js';
 
 /** sha256, hex — the digest shape `verified.docs_digest` carries. */
@@ -613,12 +613,25 @@ export async function main(argv: readonly string[]): Promise<number> {
     // indistinguishable from a gate that works. If the table is ever moved or
     // its shape changes so `watchable` resolves nothing, this exits non-zero
     // instead of reporting no drift across zero rows.
-    reportScanned({
-        gate: 'check_host_docs_digest',
-        scanned: rows.length,
-        units: 'verified row(s)',
-        roots: ['src/scripts/hooks/host_lowering.yaml'],
-    });
+    try {
+        reportScanned({
+            gate: 'check_host_docs_digest',
+            scanned: rows.length,
+            units: 'verified row(s)',
+            roots: ['src/scripts/hooks/host_lowering.yaml'],
+        });
+    } catch (exc) {
+        // An empty or moved corpus is an ANTICIPATED input condition, so it
+        // gets the house treatment — one line, exit 2 — rather than escaping to
+        // the module-entry catch-all as a stack trace. The catch-all is for the
+        // unanticipated; this header argues that twice and then let this one
+        // through, which a completion review caught.
+        if (exc instanceof DeadScopeError) {
+            process.stderr.write(`❌  ${exc.message}\n`);
+            return 2;
+        }
+        throw exc;
+    }
 
     if (!doFetch) {
         const withDigest = rows.filter((r) => r.digest !== null).length;
