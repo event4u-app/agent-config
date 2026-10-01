@@ -51,7 +51,7 @@ with a date on it.
 
 ## Phase 1 — Fill the verified blocks
 
-- [ ] **1.1 Probe and fill the seven `null` rows** (augment, cursor, cline,
+- [x] **1.1 Probe and fill the seven `null` rows** (augment, cursor, cline,
       windsurf, gemini, cowork, copilot) using the existing keys `docs_at`,
       `docs_url`, `probe_at`, `host_version`, `expires`; `expires` follows the
       host's own docs cadence (claude's committed value is 2027-09-06 — no
@@ -60,12 +60,38 @@ with a date on it.
       settings).
       verify: `lint_hook_manifest` green; `grep -c 'verified: null' host_lowering.yaml`
       is 0; `tests/scripts/host_lowering_expiry.test.ts` unchanged.
-- [ ] **1.2 Every slot has a dated answer.** For each host×slot pair with
+
+      **Evidence (2026-10-01).** Already satisfied at `9f2b9fb4a` by commit
+      `d28ce587a`, verified rather than assumed: all **nine** rows (the seven
+      above plus `claude` and a `codex` row that did not exist when this step
+      was written) carry a `verified:` block with `docs_at`, `docs_url`,
+      `expires`. `grep -c 'verified: null' src/scripts/hooks/host_lowering.yaml`
+      → **1**, and `grep -n` shows the single hit is line 13 of the header
+      prose (`\`verified: null\` means nobody established anything`), not a row —
+      so the row count is 0 as the step requires. `lint_hook_manifest` exits 0
+      with 8 warnings, all of them the admissible-but-not-fully-cited
+      `verified.host_version is null` note. `host_lowering_expiry.test.ts` is
+      unchanged and its 6 tests pass. Cowork's block records exactly what the
+      step predicted: `docs_url: null` with the comment stating no public hooks
+      page exists to cite.
+- [x] **1.2 Every slot has a dated answer.** For each host×slot pair with
       `block_exit: null`, add `answered_at:` and `docs_url:` beside it, or set
       `block_exit`. The bar is "every pair dated", not a refusal count.
       verify: `check_enforcement_matrix --write` regenerates
       `docs/enforcement-by-host.md`; no pair without a date.
-- [ ] **1.3 Docs digest beside `docs_at`.** Every `verified:` block gains
+
+      **Evidence (2026-10-01).** Already satisfied at `9f2b9fb4a`, and the bar
+      is enforced rather than merely met: `lint_hook_manifest._check_slot_answers`
+      makes an undated pair an **error**, not a warning, and the gate is green —
+      so "no pair without a date" is now a property the tree refuses to lose,
+      not a state this step left behind. `check_enforcement_matrix` reports
+      `32 host-slot row(s) in docs/enforcement-by-host.md match
+      src/scripts/hooks/host_lowering.yaml`, and every one of the 32 generated
+      rows carries an `Answered` cell of `2026-09-29` — no `undated` sentinel
+      anywhere in the region. Re-running with `--write` produced no diff, which
+      is the stronger reading of "regenerates": the committed table was already
+      the generator's output.
+- [x] **1.3 Docs digest beside `docs_at`.** Every `verified:` block gains
       `docs_digest: <sha256 of the fetched docs_url body>`; a scheduled job
       (the scorecard workflow of lane 9 § 4.2, or a sibling) re-fetches each
       `docs_url` and, on a digest change, sets `expires: <today>` so the
@@ -75,6 +101,61 @@ with a date on it.
       Vendor docs URLs are not harvest subjects and stay plaintext.
       verify: fixture with a changed digest → `lint_hook_manifest` red on the
       bound host; unchanged digest → green; the job's run is committed once.
+
+      **Evidence (2026-10-01).** Landed in four pieces.
+
+      *The watcher.* `src/scripts/check_host_docs_digest.ts` — the consumer the
+      table header already named and which did not exist, so the header was a
+      forward reference to nothing. Four modes: a no-network offline report,
+      `--fetch` (compare, exit 1 on drift), `--fetch --write` (record), and
+      `--self-test`. Unknown flags exit 2 naming the known set.
+
+      *The digests.* `--fetch --write --today 2026-10-01` filled **8** of 9
+      rows; `cowork` stays `null` because its `docs_url` is `null` and there is
+      no body to hash. The write is **8 changed lines, nothing else** —
+      `git diff --stat` reported `8 insertions(+), 8 deletions(-)`. That is a
+      deliberate property: a `parseDocument` round-trip was tried first and
+      **rejected after measurement** — it preserves every comment but
+      renormalises the hand-aligned `slots:` flow mappings (361 bytes across 32
+      rows), so the watcher now edits the two lines whose content changes and
+      nothing else.
+
+      *Reproducibility, checked rather than assumed.* The obvious failure mode
+      for a digest watcher is a page carrying a build id or timestamp, which
+      makes it permanently red and then muted. A second independent `--fetch`
+      returned **8 unchanged, 0 changed**, so none of the eight pages is
+      volatile at this granularity.
+
+      *The chain, and its sensitivity.* `tests/scripts/host_docs_digest.test.ts`
+      (12 tests) runs the **real** `lint_hook_manifest._check_host_lowering`
+      over the **real** writer's output — the verify line's "fixture" is only
+      the fetched body, because that is the single input a unit test may not
+      reach. Drift on `claude` (the one host with blocking bindings) reds the
+      gate naming `claude/any`, the new `expires`, and `pre_tool_use`; drift on
+      `cursor` (binds 5 slots, can refuse on none) only warns; unchanged and
+      unreachable both leave the table byte-identical. **Seen red twice, for
+      two different reasons:** first a genuine defect in the test itself (it
+      asserted a no-op write using a digest that was never the committed one,
+      so it was not testing a no-op at all), then deliberately — neutralising
+      `isDrift` turned 3 of 12 red, which is the sensitivity proof.
+
+      *Correction to this step's own text, recorded not smoothed.* The step
+      says the job "sets `expires: <today>`". That is **off by one** and would
+      not fire: the gate tests `expires < today`, so `expires: <today>` is still
+      valid today. The table header (lines 56-64) already states the correct
+      rule — the day BEFORE detection — and the watcher follows the table. The
+      test `expires to the day BEFORE detection` pins the off-by-one explicitly
+      by showing the same-day value leaves the gate green.
+
+      *The job.* `.github/workflows/host-docs-digest.yml` — weekly (Mon 06:17
+      UTC), `permissions: contents: read`, read-only `--fetch` with no `--write`
+      and no PR-opening step. Weekly rather than daily because the rows carry
+      year-long `expires` values, so a daily run would spend 7× the vendor
+      requests for the same finding. `--strict-fetch` is deliberately **not**
+      passed: a 503 or an egress-less runner establishes nothing about the page,
+      and a watcher that reddened on every flake would be muted within a month.
+      The job never writes the table — adopting upstream text automatically is
+      the one thing this package must not do, so a red means "go read a page".
 
 ## Phase 2 — Codex and copilot: a row only with evidence (D5)
 
@@ -98,10 +179,48 @@ with a date on it.
 
 ## Phase 3 — Smoke covers every bound host
 
-- [ ] **3.1 Assert `smokeProbeEvents()` reaches every host with slots > 0.**
+- [x] **3.1 Assert `smokeProbeEvents()` reaches every host with slots > 0.**
       Extend `tests/install/global_install_hooks_smoke.test.ts` to iterate
       `host_lowering.yaml` rows and fail on a bound host the probe skips.
       verify: test green; a fixture row with slots > 0 and no probe path is red.
+
+      **Evidence (2026-10-01).** Three tests added to
+      `tests/install/global_install_hooks_smoke.test.ts`; all green, and the
+      existing 200s install smoke is untouched.
+
+      *What was actually missing.* `install_snapshot.test.ts` already asserted
+      that every event `smokeProbeEvents()` names IS bound — the **soundness**
+      half, "the probe invents nothing". The **completeness** half was checked
+      by nothing: a host added to `host_lowering.yaml` with five bound slots and
+      never added to `SMOKE_PROBE_SLOTS` passes every pre-existing test, because
+      nothing enumerated the table and asked what the list was missing. The
+      probe would be correct about everything it mentioned and silent about a
+      whole host, which reads as green.
+
+      *Sensitivity, proven on the real file rather than argued.* A `session_start`
+      slot was temporarily added to the `codex` row in the committed table and
+      the test run: it failed with exactly its intended message —
+      `host_lowering.yaml binds slots for codex but the install smoke probe
+      never exercises them`. The table was then restored and the tests re-run
+      green. A third test carries the same case as a permanent in-process
+      negative control, so the assertion cannot be satisfied by today's table
+      alone, and a second asserts the converse (nothing with `slots: {}` is
+      probed) so it cannot be satisfied by probing everything.
+
+      *One hole found, noted rather than fixed — per `active-remediation`'s
+      note tier.* Being in `SMOKE_PROBE_SLOTS` is only **half** of being probed:
+      `_smoke_test_hooks` resolves `SMOKE_BRIDGE_PATHS[platform] ?? ''` and
+      counts a platform with no entry as `skipped`, so a host could be listed as
+      probed and silently never exercised. There is **no live instance** (all
+      six listed platforms have a bridge path today), so this is latent. It was
+      deliberately not closed here: the constant is unexported, and exporting it
+      edits `src/scripts/install.ts`, which reds two committed-build-output
+      freshness gates (`build:cli` + `build:install-bundle`) and requires the
+      bundle to be rebuilt against a real `node_modules` — this run is in a
+      worktree whose `node_modules` is a symlink, which bakes absolute paths
+      into the shipped bundle. Paying that for a latent hole is the wrong trade;
+      it is recorded in the test file's own comment so the next reader meets it
+      instead of rediscovering it.
 
 ## Decisions
 
