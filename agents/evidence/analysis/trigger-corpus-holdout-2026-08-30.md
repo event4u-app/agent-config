@@ -60,7 +60,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  67dd1f3fa3f25645f0414e768b8432e6365124171228c43ac776bd5a7210fda3
+SET-SHA256  c63c1030a3ab184b212548b3081f42f3babd6d6dad3362981c1c66fc36628ab8
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -171,7 +171,19 @@ that corpus's content hash moved and the set hash over all rows moved with it.
 
 | Row | Was | Now |
 |---|---|---|
-| `test-case-discovery` | `ab3208cc…` | `d3de03bc…` |
+| `test-case-discovery` | `ab3208cc…` | `563ff838…` |
+
+**That `Now` value has already been re-pinned once, and the reason belongs
+here rather than in a quieter place.** It read `d3de03bc…` until round 17 of
+this branch's completion review edited the same corpus file's `description`
+field — a one-word removal, which is all it takes, because the row is a hash
+over the file's bytes and not over its meaning. Nobody re-pinned in that
+commit, so the published row and the published set hash were both stale on
+arrival for the fourth time in this file's life, and
+`trigger_corpus_holdout_pin.test.ts` is what caught it rather than a reader.
+The standing repair below says to run that test as the LAST act before
+publishing, after the final edit to any corpus file — round 17 is the case it
+describes, and it is recorded rather than quietly corrected.
 
 The `SET-SHA256` moved with it, and the value is deliberately NOT quoted
 here: it is a hash over every row, so any later re-pin by any branch changes
@@ -201,8 +213,9 @@ check this file's 2026-08-31 correction exists because nobody had.
 `road-to-corpus-refresh-cadence-shape` grew the HOLDOUT side (its
 `## Growth 2026-10-01` section below) while this branch grew the train side,
 and the two met in a merge. Each per-row pin is independent and neither moved
-the other's: `test-case-discovery` is `d3de03bc…` and `accessibility-auditor`
-is `b5fcf7cb…`. Only the set hash depends on both, which is why it was
+the other's — the live values are in the `## Train` and `## Holdout` tables
+below, and are deliberately not re-quoted in this sentence for the reason the
+round-17 note above gives. Only the set hash depends on both, which is why it was
 recomputed over the merged list rather than taken from either side — and why
 this section no longer quotes it at all.
 
@@ -321,7 +334,7 @@ open and which this file does not settle.
 | `spreadsheet-authoring` | `959466aba0e7f34aae0d8eb69ee427d94049627d905410b322045ac6be0a1599` |
 | `storybook-workshop` | `3aff4c3fddd06e0e265ca4afbb02cdbce16b000dd2d3fd6405504d015a1efd27` |
 | `supply-chain-intake` | `e61b2fcb6409cf0817ea8527a1fda3b1cdabb35e28264146a0d449991e9fe87c` |
-| `test-case-discovery` | `d3de03bcc1c284c27a460f9578f152034b977e1d3786c4717b468dd913d1771f` |
+| `test-case-discovery` | `563ff838264c39c9e132e1e18206c7b0d52639bd42203f790109f9ec0df2603d` |
 | `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |
 | `ui-apply-generic` | `e3f02e3ba53fb96def30fca6752f400d15b6b63209072928bff9e239aaac7ec5` |
 | `ui-component-architect` | `a9b864a568aa32d2bccd96f524a69d24042f05cdd29b339d45bf9ff6b95b9da5` |
