@@ -121,6 +121,25 @@ moved, the corrected path is the one below.
       retiring it moves the whole weight of kernel immutability onto a CI gate whose
       independence rests on platform controls that are measurably absent. That gate is built in
       this change and currently reds, so the crossing is not available to this run.
+      **Evidence (2026-10-01) — still open, and the one input that moved does not open it.**
+      The anchor no longer reds: `check_platform_anchor --as-of 2026-10-01` exits 0 with
+      `PASS_WITH_ACCEPTED_RISK`, because the 2026-09-14 `required_review_thread_resolution`
+      regression was repaired on the forge on 2026-09-28 (ruleset version `51122772`). So the
+      sentence above — *"That gate is built in this change and currently reds"* — is no longer
+      current state, which is why this note exists.
+      **The crossing is still not available, for the reason that has held all along.** This
+      step's `Resolved when` is unchanged and both limbs were executed this run: no
+      maintainer-authored kernel commit exists on this branch, and
+      `block_kernel_rule_writes.ts` is still present (11,345 bytes) with its three
+      `pre_tool_use` bindings and its `concern_registry` entry intact. The deny was reproduced
+      against the real tool call, not inspected. A green anchor restores a precondition the
+      2026-09-10 council attached to the retirement; it does not perform the retirement, and
+      this file already records that the anchor in its post-ruling shape proves nothing about
+      independent review. Reading limb-1-green as *"the crossing is now available"* would be
+      the same letter-against-purpose move this step was written to forestall.
+      **The step stays `[ ]` rather than `[~]`** — unlike the Phase 2-6 deferrals, it carries a
+      `blocked-by:` marker, so `scanOpenSteps` already excludes it and the glyph is doing no
+      harm. Changing it would lose the blocker linkage for nothing.
 
 **Exit:** ADR-268 accepted — done — and the kernel crossing decided, which is the one open
 item. Phases 1-6 may run once 0.2 is chosen.
@@ -732,6 +751,20 @@ item. Phases 1-6 may run once 0.2 is chosen.
       **This is K7 unhonoured on purpose.** The kill register forbids keeping the deny AND the
       gate. Two mechanisms is the interim the review forced, and it is the safe direction: the
       gate only ever refuses, so it cannot produce a state weaker than today's.
+      **Evidence (2026-10-01) — the shipped half still ships, the refused half is still
+      refused, and the round-2 defect is untouched.** Re-measured: the deny and all three
+      bindings are present (see `kernel-guard-first-crossing`'s 2026-10-01 entry), so K7 is
+      still unhonoured on purpose and two mechanisms still stand.
+      The round-2 refusal turned on the **enforcement path** being head-controlled — the
+      workflow file deciding whether the gate runs lives in the candidate branch — and closing
+      it needs a platform-anchored required check. That is still not available:
+      `grep -rc check_platform_anchor .github/workflows/*.yml | grep -v ':0'` returns only
+      `rule-backstops.yml:1`, and that hit is the comment recording the `administration: read`
+      scope refusal. The anchor going green again on 2026-09-28 changes the anchor's verdict,
+      not the path the refusal was about — a gate wired only pre-push is a control an
+      administrator may skip, which is the 2026-09-13 council's own sharpening of the point.
+      So the retirement is exactly where round 2 left it, and this run neither attempts nor
+      proposes it.
 - [~] **5.3 Reclassify three owner-reserved rows.** In `decision-revisit-gate.md`, the rows
       *changes the project's purpose*, *governance self-amendment* and *cannot be bounded from
       available evidence* become `ratification` rather than `owner`. The four Class-1 rows stay
@@ -1215,6 +1248,43 @@ item. Phases 1-6 may run once 0.2 is chosen.
   argument against retiring the kernel deny in favour of CI, since the control that noticed this
   is the one that runs pre-push and not the one that runs in a workflow.
 
+- **RE-MEASURED 2026-10-01 against `origin/main` `9f2b9fb4a` and the live forge — LIMB 1 HAS BEEN
+  REPAIRED. The 2026-09-14 regression is gone, and this is the first reading in four to move
+  FORWARD.** Do not carry the *"further from resolution than it was"* verdict above as current
+  state; it described 2026-09-14 and a forge edit two weeks later corrected it.
+  **Measured, pinned so the verdict is reproducible rather than wall-clock dependent:**
+  `./scripts-run src/scripts/check_platform_anchor --as-of 2026-10-01 --files src/rules/commit-policy.md`
+  exits **0** with `platform anchor PASS_WITH_ACCEPTED_RISK for event4u-app/agent-config` over
+  applicable active ruleset `17749383`. The `thread-resolution-missing` finding that made
+  2026-09-14 red is **absent**. (Read the exit code off the unpiped command, per the 2026-09-14
+  note — piping the gate into `tail` reports `tail`'s status.)
+  **The expectation still did not change; the forge changed back.**
+  `src/config/platform-anchor.json` is untouched at `b4beff026` and still carries
+  `required_review_thread_resolution: true` at `:9`. The repair is a single ruleset edit:
+  version **`51122772`, 2026-09-28T10:20:12+02:00**, the only version written since the
+  three-edit sequence of 2026-09-14. Read from the history payloads rather than inferred —
+  `…/rulesets/17749383/history/49599840` carries `required_review_thread_resolution: false`,
+  `…/history/51122772` carries `true`. So option **(1)** of the three-way fork this entry named
+  on 2026-09-14 is what happened: the setting was put back, no governance diff, no new waiver.
+  **What has NOT moved, and neither item is agent-dischargeable:**
+  - **Limb 2 — still half-met, still the PAT.** `grep -c check_platform_anchor
+    taskfiles/ci-fast.yml` returns **2**, so the pre-push half holds.
+    `grep -rc check_platform_anchor .github/workflows/*.yml | grep -v ':0'` returns exactly one
+    line, `rule-backstops.yml:1`, and that hit is the comment at `:697` recording the
+    `administration: read` scope refusal — not a step.
+  - **Item 2 — the unrehearsed recovery path — unchanged.** Measured, not inferred:
+    `bypass_actors: []`, `current_user_can_bypass: "never"`, `enforcement: "active"`. Still the
+    state both 2026-09-10 council seats declined to close, and nothing in this run rehearses a
+    recovery.
+  **The waiver is live and not lapsed:** `arr-2026-09-10-strict-status-checks` expires
+  **2026-12-09**, 69 days from this reading. A run finding this entry after that date must
+  re-measure rather than quote the pass — an expired waiver turns `PASS_WITH_ACCEPTED_RISK`
+  back into a finding.
+  **Net: limb 1 met, limb 2 half-met, item 2 open, so the blocker stays OPEN.** Both remaining
+  items are forge actions — a human-created repository secret and a human-rehearsed recovery
+  procedure — which an agent run can re-measure and cannot advance. That is all this
+  re-measurement did.
+
 ### blocker: kernel-guard-first-crossing
 - **Status:** open
 - **Owner:** maintainer
@@ -1284,6 +1354,41 @@ item. Phases 1-6 may run once 0.2 is chosen.
   contract. Nothing was written. So this blocker is no longer resting on a grep over a manifest —
   the control was exercised and refused, which is what *"Resolved when"* is really asking about.
   The alternative limb is still unmet: no maintainer-authored kernel commit on this branch.
+- **Re-verified 2026-10-01 against `origin/main` `9f2b9fb4a`. Both limbs unmet. The deny was
+  reproduced again, and this reading is not a copy of the last one — the guard's own file has
+  changed since.** Executed, not carried forward:
+  `ls -l src/scripts/hooks/block_kernel_rule_writes.ts` **succeeds** where the clause requires
+  it to fail, at **11,345 bytes** — down from the 13,577 measured on 2026-09-13 and 2026-09-14.
+  Three commits touched it in between (`b8a7037e3`, `70bc596b1`, `c271f27a8`), the latter two
+  ratifying and correcting its docstring, so the shrink is documentation and not reach: the
+  header still enumerates all nine kernel rules and still claims the source tree plus every
+  projection.
+  `grep -c block-kernel-rule-writes src/scripts/hook_manifest.yaml` returns **5** where the
+  clause requires 0 — the concern definition at `:198`, a comment at `:502`, and three
+  `pre_tool_use` binding lists at **`:1427`, `:1459`, `:1506`**, drifted again from the
+  `:1390/:1422/:1469` of 2026-09-14. `concern_registry.ts` still registers it, now at **`:121`**
+  (was `:120`, was `:119`). Fourth consecutive reading in which the manifest moves and the
+  binding does not.
+  **The deny was exercised, not inspected.** Step 1.1's own edit was put to the `Edit` tool
+  against the kernel rule and the `pre_tool_use` dispatcher returned `block-kernel-rule-writes:
+  BLOCKED`, naming the rule, the tighten-only remediation and the contract. Nothing was
+  written — `grep -c 'this turn'` returns 1 and `git status --short` is empty.
+  **One thing this run learned that the previous three did not, and it widens the blocker
+  slightly.** The guard also fires on **Bash** calls whose command text carries a kernel-rule
+  path in a write-ish argument shape: a read-only `grep -c … src/rules/non-destructive-by-default.md`
+  was refused by the same concern. That is the guard's documented conservatism
+  (*"literal shell-argument write shapes"*) rather than a defect, but it means a future session
+  verifying 1.1 must expect its own verify command to be denied — which is worth knowing before
+  it reads the denial as a failed edit.
+  The alternative limb is unmet as before: no maintainer-authored kernel commit on this branch,
+  and an agent cannot author one — the deny's design, not a gap in it.
+  **Relationship to the sibling blocker, restated because it moved this week.**
+  `ratification-platform-anchor`'s limb 1 was repaired on the forge on 2026-09-28 and now reads
+  `PASS_WITH_ACCEPTED_RISK` again. That does **not** advance this blocker, and the Recommendation
+  below still stands: the 2026-09-10 council tied the retirement to an anchor that proves
+  independent review, and the anchor in its post-ruling shape proves no such thing — a point the
+  2026-09-13 reviewing council sharpened from the other side. A green anchor is a precondition
+  that is once more satisfied; it is not the one the seats had in mind.
 
 ## Fixtures
 
