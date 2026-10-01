@@ -1,0 +1,2434 @@
+diff --git a/.github/workflows/host-docs-digest.yml b/.github/workflows/host-docs-digest.yml
+new file mode 100644
+index 0000000000000000000000000000000000000000..dd6e61154d2d2798ea52fe3b1bc3f56f3c1c24d4
+--- /dev/null
++++ b/.github/workflows/host-docs-digest.yml
+@@ -0,0 +1,100 @@
++name: Host Docs Digest Watch
++
++# READ-ONLY watcher for the "a vendor rewrote its hooks contract and nothing
++# noticed" failure mode (road-to-hooks-on-every-host Phase 1.3).
++#
++# `src/scripts/hooks/host_lowering.yaml` records, per host, the page each row's
++# answers were read off and the sha256 of that page's body on the day it was
++# read. Without this job the only thing watching those pages is the row's own
++# `expires`, which is up to a year out — so a host could change its refusal
++# contract and every gate in this tree would stay green for months.
++#
++# WHAT THIS JOB DOES NOT DO, deliberately. It never writes to the table and it
++# never opens a pull request. A changed body is evidence that the page MOVED,
++# not a reading of what it now says, and the one thing this package must not do
++# is adopt upstream text automatically — that would turn a vendor's edit into
++# this package's claim without a human ever reading it. The job goes red; a
++# human reads the page; the row is re-established BY HAND. Note that
++# `./scripts-run src/scripts/check_host_docs_digest --fetch --write` does not
++# finish that job — it marks the row stale (pulls `expires` BACK and keeps the
++# recorded digest) and nothing moves `expires` forward again. Re-establishing
++# means editing `docs_at`, `docs_digest` and `expires` after reading the page,
++# and that edit carries its own ratification artifact (the table is on
++# `check_kernel_edit_ratified`'s plumbing list).
++#
++# So: red here means "go read a page", never "something is broken in this repo".
++#
++# Unreachable is not drift. `--strict-fetch` is deliberately NOT passed: a
++# flaky vendor host or a runner with no egress establishes nothing about the
++# page, and a watcher that cried wolf on every 503 would be muted within a
++# month. Unreachable rows are listed in the log and the job stays green.
++#
++# A 404/410 is the exception and reds WITHOUT `--strict-fetch`, because a
++# removed page is not a flake: it is the server stating that the citation is
++# dead, which is the one thing a watcher must not sit on quietly while the row
++# keeps a stale digest and a year-long `expires`.
++#
++# Recovery writes TWO files, not one. `--fetch --write` rewrites the YAML, and
++# `src/scripts/hooks/host_lowering.json` is fingerprinted over that YAML's
++# text, so the write makes the compiled sibling stale and reds `task preflight`
++# and CI until `./scripts-run src/scripts/compile_hook_manifest --table
++# host-lowering` is run too. The script prints that as a NEXT line; it is
++# repeated here because this comment is where someone reading a red run looks.
++
++on:
++  schedule:
++    # Weekly, not daily. The rows carry year-long `expires` values and the
++    # signal this watches moves on the order of product releases, so a daily
++    # run would spend 7x the vendor requests for the same finding. Monday
++    # early-UTC so a drift is in front of a human at the start of a week.
++    - cron: "17 6 * * 1"
++  workflow_dispatch:
++
++permissions:
++  contents: read
++
++concurrency:
++  group: host-docs-digest
++  cancel-in-progress: true
++
++jobs:
++  digest-watch:
++    runs-on: ubuntu-latest
++    steps:
++      # No `ref: main`. Pinning the ref made the job untestable before it was
++      # relied on: a scheduled run already uses the default branch, while a
++      # `workflow_dispatch` from a branch would have checked out main anyway and
++      # run main's table rather than the branch's. Taking the dispatched ref
++      # means this YAML and this table can be exercised once from a branch
++      # before anyone depends on the weekly signal — which a completion review
++      # pointed out had never happened.
++      - name: Check out the dispatched ref (the default branch on a schedule)
++        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
++        with:
++          persist-credentials: false
++
++      - name: Set up Node
++        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
++        with:
++          node-version: '20'
++          cache: 'npm'
++
++      # `./scripts-run` execs node_modules/.bin/tsx — without this the job dies
++      # at exit 127 and a real drift is indistinguishable from a broken runner.
++      - name: Install Node deps
++        run: |
++          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
++            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
++
++      # Offline first, and this step is load-bearing beyond tidiness. It is the
++      # invocation `check_gate_coverage` spawns on every pull request to read
++      # this gate's `scanned:` floor — `src/config/gate-coverage.yml` pins
++      # `argv: []` to match it. Pinning the `--fetch` form instead would make
++      # every PR in the repository issue eight live vendor requests to learn a
++      # number that `reportScanned` emits before any fetch happens, and would
++      # put up to 8 x 30s of third-party latency inside a required check.
++      - name: Report the watch scope (offline, no egress)
++        run: ./scripts-run src/scripts/check_host_docs_digest
++
++      - name: Re-fetch each host docs page and compare (read-only)
++        run: ./scripts-run src/scripts/check_host_docs_digest --fetch
+diff --git a/agents/evidence/ratifications/drain-hooks-every-host-close.md b/agents/evidence/ratifications/drain-hooks-every-host-close.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..722861752c4dc22f288d32c704564b30af8cce91
+--- /dev/null
++++ b/agents/evidence/ratifications/drain-hooks-every-host-close.md
+@@ -0,0 +1,164 @@
++---
++proposed_by: claude-opus-5/drain-hooks-every-host-2026-10-01
++implemented_by: claude-opus-5/drain-hooks-every-host-2026-10-01
++reviewed_by: council/anthropic+openai-2026-10-01-hooks-every-host-ratification
++providers:
++  - anthropic
++  - openai
++verdict: confirmed-non-expanding
++effective_after: merge
++---
++
++<!-- evidence-type: ratification -->
++
++# Ratification — a docs-drift watcher over `host_lowering.yaml`, and a recorded host probe
++
++`check_kernel_edit_ratified` fires on this branch because the diff edits
++`src/scripts/hooks/host_lowering.yaml`, which sits on its `PLUMBING_SOURCE_RE`
++list. No other gated surface is touched: no kernel rule, no `block_*` governance
++hook, no budget file, and not the ratification mechanism itself.
++
++## What was proposed
++
++Closing `road-to-hooks-on-every-host` (7 steps, 4 acceptance criteria), in five
++parts:
++
++1. **`src/scripts/check_host_docs_digest.ts`** — the docs-drift watcher the
++   table's own header already named as a consumer and which did not exist. It
++   re-fetches each row's `docs_url`, compares the sha256 of the body against
++   `verified.docs_digest`, and on a change rewrites that row's `expires` to the
++   day *before* detection, which hands the question to the pre-existing
++   `lint_hook_manifest._check_host_lowering`.
++2. **8 digests recorded** in `host_lowering.yaml` (the ninth row, `cowork`,
++   cites no page, so there is no body to hash).
++3. **A weekly workflow**, `permissions: contents: read`, running `--fetch` only.
++4. **A live deny probe of `codex`**, recorded with its negative result.
++5. **Tests** and a correction to `docs/enforcement-by-host.md`.
++
++**This list describes the diff AS RATIFIED and the diff has grown since**, which
++a completion reviewer checked rather than assumed. The additions are a sanitize
++import, a read-surface contract row, a compiled-table regen, and the
++post-review hardening below. The verdict's own scope — no `block_exit`, no slot
++added, `contents: read`, no `--write` in CI — was re-checked against the current
++diff and still holds; that, not this list, is what the verdict was about.
++
++## Why this is `confirmed-non-expanding` rather than `ratified`
++
++Both seats returned `confirmed-non-expanding` independently and converged on the
++same discriminator, which is worth stating in their terms rather than mine:
++
++> "The decisive fact is the separation between **detecting invalidated
++> evidence** and **creating enforcement authority**. … Moving `expires`
++> backward withdraws trust in previously recorded evidence; it does not
++> establish a new refusal capability."
++
++Concretely, and checkable against the diff: no `block_exit` is added or changed,
++no slot is added to any row, `codex` and `copilot` keep `slots: {}`, and the
++workflow has `contents: read` with no `--write` and no commit step. The only
++refusal that can result comes from a gate that already existed, and only on a
++row that already carried a blocking binding — which today means `claude` alone.
++
++## The strongest argument against, and what the seats did with it
++
++Argument 1 of the review question: `--fetch` exits nonzero on any body change,
++so an upstream vendor can red a scheduled workflow with no change to this
++repository. **The seats split on its interpretation and neither dismissed it.**
++
++One held it is the mechanism working: "If vendor documentation is your source of
++truth for enforcement contracts, detecting changes to that source is exactly
++what you need." The other refined that and declined to call it simply a feature:
++"Detecting drift is the feature; allowing arbitrary page bytes to fail a
++workflow is one implementation of it, with a meaningful availability and noise
++cost." Both classified it as a CI-reliability concern rather than an authority
++expansion, which is the question this artifact decides.
++
++## Four corrections the reviewers made, three adopted in this diff
++
++Both seats, independently, asked for the same two hardenings. Both are in:
++
++1. **"Add a test proving plain `--fetch` cannot alter `host_lowering.yaml`"** /
++   "State explicitly whether `--fetch` ever mutates the working tree." Three
++   tests added (`a read-only run never touches the tree`) covering the offline
++   path and the `--write`-without-`--fetch` refusal, plus the docstring now
++   states that the single `writeFileSync` sits inside `if (doWrite)`.
++2. **"Report the affected host, URL, prior digest, new digest, and detection
++   time on mismatch."** A drift line now prints all four.
++3. **"Phrase the conclusion as *refusal not established by this probe*"** — the
++   `codex` row already did, and is unchanged; recorded here because one seat
++   explicitly corrected the *other seat's* reading of the probe as having shown
++   the vendor's documented claim "was wrong". It did not, and this diff does not
++   say it did.
++
++**Not adopted, and named rather than dropped:** normalised or
++contract-scoped hashing instead of raw-body hashing. Both seats raised it; one
++called raw-body "defensible for an initial version". It is a real limitation —
++a nav link and a rewritten refusal contract hash identically — bounded only by
++the observation that two independent fetches returned 8 unchanged, which
++demonstrates short-term reproducibility and not semantic precision. Left as
++future work rather than smoothed over.
++
++## On the probe, since it is the part a reader will weigh hardest
++
++It is **n=1, one build, one operator, and partly inconclusive by its own
++account**, and the row says so in those terms. It did not separate "the hook
++fired and was ignored" from "the matcher never matched", because the
++instrumented re-run was refused by the harness the probe ran under; and the
++installed `codex-cli 0.148.0` is 24 stable releases behind the `0.159.3` the read
++page describes. What it does establish is narrow and is the only thing claimed:
++this package has not demonstrated a refusal path on that host, so `block_exit`
++stays `null` — which is precisely what a null means in this file.
++
++The alternative was to arm a binding from a documentation read. That is what the
++row previously implied was possible, and it is the failure mode this table was
++built to prevent.
++
++## What would have changed the verdict
++
++The seats named these, and none is true of this diff: the script able to modify
++`block_exit` or `slots`; the workflow carrying `contents: write` or a commit/PR
++step; the probe claiming enforcement where the measurement found none; or the
++script adopting upstream text without human review.
++
++## Independence
++
++Council, two distinct providers (anthropic, openai), `2/2 present, needed 1 —
++concluded`, meeting `required_providers: 2`. Both seats are subscription-authed;
++spend was $0.0000. The prompt stated no expected outcome and offered all four
++verdicts symmetrically; it put six arguments **against** the change in front of
++the seats, including the two the author considered strongest, before either seat
++spoke. The observable evidence that the framing did not steer is that both seats
++returned refinements the author had not written — one correcting the other's
++reading of the probe, one declining the author's own framing of argument 1 — and
++that three of their recommendations changed the diff after the verdict.
++
++A first run returned `0/2 present … INCONCLUSIVE — DEGRADED` and is recorded
++rather than hidden: the cause was a missing per-worktree availability record
++(`agents/runtime/state/council-probes.json` is gitignored, so a fresh worktree
++has none), not a provider refusal. No verdict was taken from that run.
++
++Per `docs/contracts/ratification-artifact.md` § Honest enforcement: this
++artifact records who decided and on what basis. It is not proof that they
++decided, and the trust anchor is the base revision plus the platform, never
++these strings. The council **question** is reproduced in full in the
++pull-request body — `evaluator-independence` requires the prompt to ship with
++the verdict, and `agents/runtime/council/` is gitignored and auto-pruned, so a
++link there would resolve for nobody. The seats' responses are quoted here where
++they carry the argument; their full text is not reproduced, and this sentence
++says so rather than implying a completeness the artifact does not have.
++
++## Post-ratification: an independent completion review, and what it changed
++
++Two fresh reviewers (no implementation context) ran over the branch afterwards.
++The second found a **high** defect the council did not, and it is the defect
++this whole roadmap family exists to catch: the `copilot` row asserted
++`preToolUse` "fail-closed on exit 2", and the cited page — re-fetched, hashing
++byte-identical to the committed `docs_digest`, so provably the pinned body —
++contains **no exit-code semantics at all**. The claim was inherited rather than
++invented on this branch, and it had survived two readings. Corrected at the row,
++in the roadmap, and in D2, with a new D3 recording the lesson: a digest pins a
++body, it does not read it.
++
++That finding does not change this verdict — an unsupported prose claim is not an
++authority expansion — but it is recorded here because the ratification cited the
++probe's honesty as a strength, and the same diff was carrying an unverified host
++claim two rows away.
+diff --git a/agents/roadmaps/archive/road-to-hooks-on-every-host.md b/agents/roadmaps/archive/road-to-hooks-on-every-host.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..3ecd30fe8f1cd29e4fe75c721f92d88f57c98522
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-hooks-on-every-host.md
+@@ -0,0 +1,453 @@
++---
++complexity: lightweight
++status: ready
++execution:
++  mode: phase-checkpoints
++estate_offset_exempt: "lane 7 of road-to-leading-every-row"
++relates:
++  - slug: road-to-host-catalogue-contract
++    relation: extends
++    note: "parked; the per-row verified block this lane fills is its catalogue shape"
++  - slug: road-to-delivery-for-every-host
++    relation: extends
++    note: "archived 30/30 — rule delivery to every host; this lane is about lifecycle slots, which it left at 0 for codex/copilot"
++---
++# Road to hooks on every host
++
++> **Source:** ten-package code audit (2026-09-28), rows Host portability 5,
++> Gate reachability 4 against S8 at 8 (one hook script serving four hosts)
++> and S9 at 7 (21 capability descriptors with cited evidence). Tree facts at
++> `8de8a4c`: `src/scripts/hooks/host_lowering.yaml` (185 lines) has rows for
++> `claude, augment, cursor, cline, windsurf, gemini, cowork, copilot` — **no
++> `codex` row** (deliberate, `docs/enforcement-by-host.md:176-179`, no
++> `platforms.codex` in `hook_manifest.yaml:1368-1556`); `verified:` is a
++> per-row block `{docs_at, docs_url, probe_at, host_version, expires}`
++> (`:57-62`), filled for claude only (expires 2027-09-06), `null` on seven
++> rows; the expiry/unverified gate is `lint_hook_manifest._check_host_lowering`
++> (`:664-690`); claude configures refusal on 3 of 32 host×slot pairs
++> (`enforcement-by-host.md:38,193`); `install.ts:1579-1605` already runs a
++> per-platform `smokeProbeEvents()` from `host_lowering.yaml`.
++
++> **corrected-from-reproduction (2026-09-29, /analyze:inbox t06).** The supplied
++> file was reproduced against `main` read-only. Every `file:line` in its Source
++> block resolved. ONE correction applied: the Risk Register `Risk type` column
++> used values outside the enum `lint_plan_risk_register` enforces (`product` |
++> `implementation`), which `status: draft` exempts and which reds the file the
++> moment it flips to `ready`. The column is normalised; nothing else changed.
++
++## Goal
++
++Every row in `host_lowering.yaml` carries a dated `verified:` block in the
++existing shape; every slot has a dated answer (`block_exit` set or a
++documented `null` with `docs_url`); a codex row exists if and only if the
++host documents lifecycle hooks; and the install smoke probe covers every host
++with slots > 0 — so a "0" in the enforcement table is a fact about the host
++with a date on it.
++
++## Prerequisites
++
++- Lane 2 Phase 1 landed (edits to `host_lowering.yaml` go through the
++  ratified-edit path).
++
++## Phase 1 — Fill the verified blocks
++
++- [x] **1.1 Probe and fill the seven `null` rows** (augment, cursor, cline,
++      windsurf, gemini, cowork, copilot) using the existing keys `docs_at`,
++      `docs_url`, `probe_at`, `host_version`, `expires`; `expires` follows the
++      host's own docs cadence (claude's committed value is 2027-09-06 — no
++      blanket 90 days). Cowork's block records what its row comment already
++      says (`:165-166`: dispatcher exits 0 unconditionally, host cannot read
++      settings).
++      verify: `lint_hook_manifest` green; `grep -c 'verified: null' host_lowering.yaml`
++      is 0; `tests/scripts/host_lowering_expiry.test.ts` unchanged.
++
++      **Evidence (2026-10-01).** Already satisfied at `9f2b9fb4a` by commit
++      `d28ce587a`, verified rather than assumed: all **nine** rows (the seven
++      above plus `claude` and a `codex` row that did not exist when this step
++      was written) carry a `verified:` block with `docs_at`, `docs_url`,
++      `expires`. `grep -c 'verified: null' src/scripts/hooks/host_lowering.yaml`
++      → **1**, and `grep -n` shows the single hit is line 13 of the header
++      prose (`\`verified: null\` means nobody established anything`), not a row —
++      so the row count is 0 as the step requires. `lint_hook_manifest` exits 0
++      with **7** warnings, all of them the admissible-but-not-fully-cited
++      `verified.host_version is null` note (8 before the codex probe filled
++      that row's `host_version`). `host_lowering_expiry.test.ts` is
++      unchanged and its 6 tests pass. Cowork's block records exactly what the
++      step predicted: `docs_url: null` with the comment stating no public hooks
++      page exists to cite.
++- [x] **1.2 Every slot has a dated answer.** For each host×slot pair with
++      `block_exit: null`, add `answered_at:` and `docs_url:` beside it, or set
++      `block_exit`. The bar is "every pair dated", not a refusal count.
++      verify: `check_enforcement_matrix --write` regenerates
++      `docs/enforcement-by-host.md`; no pair without a date.
++
++      **Evidence (2026-10-01).** Already satisfied at `9f2b9fb4a`, and the bar
++      is enforced rather than merely met: `lint_hook_manifest._check_slot_answers`
++      makes an undated pair an **error**, not a warning, and the gate is green —
++      so "no pair without a date" is now a property the tree refuses to lose,
++      not a state this step left behind. `check_enforcement_matrix` reports
++      `32 host-slot row(s) in docs/enforcement-by-host.md match
++      src/scripts/hooks/host_lowering.yaml`, and every one of the 32 generated
++      rows carries an `Answered` cell of `2026-09-29` — no `undated` sentinel
++      anywhere in the region. Re-running with `--write` produced no diff, which
++      is the stronger reading of "regenerates": the committed table was already
++      the generator's output.
++- [x] **1.3 Docs digest beside `docs_at`.** Every `verified:` block gains
++      `docs_digest: <sha256 of the fetched docs_url body>`; a scheduled job
++      (the scorecard workflow of lane 9 § 4.2, or a sibling) re-fetches each
++      `docs_url` and, on a digest change, sets `expires: <today>` so the
++      existing `lint_hook_manifest._check_host_lowering` (`:685-712`) goes
++      red on any blocking binding of that host. No lifecycle vocabulary, no
++      auto-adoption of upstream text — a red gate opens a local finding.
++      Vendor docs URLs are not harvest subjects and stay plaintext.
++      verify: fixture with a changed digest → `lint_hook_manifest` red on the
++      bound host; unchanged digest → green; the job's run is committed once.
++
++      **Evidence (2026-10-01).** Landed in four pieces.
++
++      *The watcher.* `src/scripts/check_host_docs_digest.ts` — the consumer the
++      table header already named and which did not exist, so the header was a
++      forward reference to nothing. Four modes: a no-network offline report,
++      `--fetch` (compare, exit 1 on drift), `--fetch --write` (record), and
++      `--self-test`. Unknown flags exit 2 naming the known set.
++
++      *The digests.* `--fetch --write --today 2026-10-01` filled **8** of 9
++      rows; `cowork` stays `null` because its `docs_url` is `null` and there is
++      no body to hash. The write is **8 changed lines, nothing else** —
++      `git diff --stat` reported `8 insertions(+), 8 deletions(-)`. That is a
++      deliberate property: a `parseDocument` round-trip was tried first and
++      **rejected after measurement** — it preserves every comment but
++      renormalises the hand-aligned `slots:` flow mappings (361 bytes across 32
++      rows), so the watcher now edits only the lines whose content changes and
++      nothing else. After completion review that is **one** line on a drift,
++      not two: a drifted row keeps its recorded digest, because overwriting it
++      would both assert a reading that never happened (`docs_at` stays put) and
++      erase the drift signal — the next run would compare new-against-new and
++      report `unchanged`, so a human who missed one red week would never learn.
++
++      *Reproducibility, checked rather than assumed.* The obvious failure mode
++      for a digest watcher is a page carrying a build id or timestamp, which
++      makes it permanently red and then muted. A second independent `--fetch`
++      returned **8 unchanged, 0 changed**, so none of the eight pages is
++      volatile at this granularity.
++
++      *The chain, and its sensitivity.* `tests/scripts/host_docs_digest.test.ts`
++      (20 tests) runs the **real** `lint_hook_manifest._check_host_lowering`
++      over the **real** writer's output — the verify line's "fixture" is only
++      the fetched body, because that is the single input a unit test may not
++      reach. Drift on `claude` (the one host with blocking bindings) reds the
++      gate naming `claude/any`, the new `expires`, and `pre_tool_use`; drift on
++      `cursor` (binds 5 slots, can refuse on none) only warns; unchanged and
++      unreachable both leave the table byte-identical. **Seen red twice, for
++      two different reasons:** first a genuine defect in the test itself (it
++      asserted a no-op write using a digest that was never the committed one,
++      so it was not testing a no-op at all), then deliberately — neutralising
++      `isDrift` turns **4 of 20** red, which is the sensitivity proof. (The
++      figure was re-measured against the final suite each time the suite grew,
++      rather than left at the 3-of-12 reading taken mid-branch — a completion
++      reviewer caught the first stale count, and a sensitivity ratio quoting a
++      suite that no longer exists is exactly the kind of number this roadmap
++      spent its length objecting to.)
++
++      *Correction to this step's own text, recorded not smoothed.* The step
++      says the job "sets `expires: <today>`". That is **off by one** and would
++      not fire: the gate tests `expires < today`, so `expires: <today>` is still
++      valid today. The table header (lines 56-64) already states the correct
++      rule — the day BEFORE detection — and the watcher follows the table. The
++      test `expires to the day BEFORE detection` pins the off-by-one explicitly
++      by showing the same-day value leaves the gate green.
++
++      *The job.* `.github/workflows/host-docs-digest.yml` — weekly (Mon 06:17
++      UTC), `permissions: contents: read`, read-only `--fetch` with no `--write`
++      and no PR-opening step. Weekly rather than daily because the rows carry
++      year-long `expires` values, so a daily run would spend 7× the vendor
++      requests for the same finding. `--strict-fetch` is deliberately **not**
++      passed: a 503 or an egress-less runner establishes nothing about the page,
++      and a watcher that reddened on every flake would be muted within a month.
++      The job never writes the table — adopting upstream text automatically is
++      the one thing this package must not do, so a red means "go read a page".
++
++## Phase 2 — Codex and copilot: a row only with evidence (D5)
++
++- [x] **2.1 Host documentation check, recorded.** Read the hosts' own hook
++      documentation for codex and copilot (vendor docs are not harvest
++      subjects; plaintext `docs_url` is fine); record the result as a
++      `## Decisions` row here.
++      verify: D1 below carries `resolved by: evidence` with the `docs_url`.
++
++      **Evidence (2026-10-01).** D1 now names the citation of record instead of
++      the forward reference "`docs_url` recorded in 2.1". Both pages were
++      re-fetched live today (HTTP 200) and both are digested into
++      `host_lowering.yaml`, so the citation is pinned to a body rather than to a
++      URL that can be rewritten under it.
++
++      *Why D1 points at the row rather than pasting the two URLs.* It pasted
++      them first, and `check_no_external_sources` went red: its shape heuristic
++      reads `github.com/<owner>/<repo>` by FORM, so the Copilot docs URL parsed
++      as a repo slug `en/copilot` and counted as an un-allowlisted external
++      source reference — 149 against a ratchet baseline of 148. The gate is
++      right that the shape is indistinguishable; it is wrong only about this
++      instance, and the fix is not to widen an allowlist for a false positive.
++      Keeping the URLs in exactly one place — the `verified:` block that is
++      already the authoritative, digested citation — removes the duplicate that
++      could drift anyway. `check_no_external_sources` is back to 148/148.
++
++      **Both hosts document lifecycle hooks, so D1's "otherwise a dated zero"
++      branch does not fire for either.** Codex documents `SessionStart`,
++      `SessionEnd`, `SubagentStart`, `SubagentStop`, `PreToolUse`,
++      `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`,
++      `UserPromptSubmit`, `Stop` and `Interrupt` at `~/.codex/hooks.json`;
++      Copilot documents `sessionStart`, `sessionEnd`, `userPromptSubmitted`,
++      `preToolUse`, `postToolUse`, `agentStop`, `subagentStop` and
++      `errorOccurred` at `~/.copilot/hooks/*.json`. The claim this tree already
++      carried — that codex's refusal contract "matches Claude Code's" — was
++      checked against the live page rather than inherited: the page does state
++      `permissionDecision: "deny"` plus "You can also use exit code `2` and
++      write the blocking reason to `stderr`". The documentary claim is correct.
++      Whether the host honours it is step 2.2, and the answer there is not the
++      one the documentation implies.
++- [x] **2.2 If codex exposes lifecycle hooks:** add `platforms.codex` to
++      `hook_manifest.yaml`, a `codex` row to `host_lowering.yaml` with a
++      `verified:` block, `src/scripts/hooks/codex-dispatcher.sh` in the shape
++      of the six existing shims (65–117 lines), the trampoline constant in
++      `install.ts` (`*_DISPATCHER_TRAMPOLINE`, `:911-1283`) and the deny
++      shape in `host_semantics.ts`. If not: the enforcement table's codex row
++      gets `answered_at` and the `docs_url` that says so.
++      verify: either `tests/hooks/permission_decision.test.ts` gains a codex
++      deny fixture and the install smoke covers codex, or the dated zero.
++
++      **Evidence (2026-10-01). The dated zero, and it is now backed by a probe
++      rather than by a reading.**
++
++      *Why this branch, when the documentation indicated the other one.* The
++      step branches on "does codex expose lifecycle hooks", and the answer from
++      the documentation is yes — which points at the first branch: arm it, with
++      a deny fixture. That branch was **refuted by measurement before it was
++      written**. `codex` is installed on the machine running this pass
++      (`codex-cli 0.148.0`), so for the first time the documented contract could
++      be run instead of quoted:
++
++      - an isolated `CODEX_HOME` was given a `hooks.json` binding `PreToolUse`
++        with `matcher: "Bash"` to a script writing to stderr and exiting 2 —
++        the documented refusal path, verbatim;
++      - `codex exec --sandbox read-only "Run the shell command: echo …"`
++        **executed the call and returned its output**. It was not refused;
++      - the feature is not off: `codex features list` reports `hooks  stable
++        true` on this build.
++
++      A "codex deny fixture" would therefore have asserted a behaviour this
++      tree has measured as absent. Writing it is not a harder version of the
++      work — it is a false test, and the first branch is unavailable for that
++      reason rather than for difficulty.
++
++      *What the probe does NOT establish, stated because the opposite reading is
++      the failure this roadmap family exists to fix.* It does not show codex
++      cannot refuse. Two explanations survive: the installed build is 0.148.0
++      against a current 0.159.3 and the page read describes the current one; and
++      the probe never separated "the hook fired and was ignored" from "the
++      matcher never matched", because the instrumented re-run — a hook recording
++      its own stdin before refusing — was blocked by the harness this pass ran
++      under. Both are recorded in the row, with the one cheap experiment that
++      would separate them named: a marker-file re-run on >= 0.159.3.
++
++      *What landed.* `probe_at: 2026-10-01` and `host_version: 0.148.0` on the
++      `codex` row, with the finding in the row's own comment; `slots: {}` and
++      `block_exit` unarmed, which is what a null means here; D2 added recording
++      that a documented refusal does not arm a binding, with its revisit-if; and
++      `docs/enforcement-by-host.md`'s **"No row for Codex, and that is the third
++      kind of absence"** paragraph corrected — it had gone false when the codex
++      row landed and was contradicting the generated region's own trailer two
++      paragraphs below it. The slot count stays 0 because
++      `hook_manifest.yaml`'s `platforms:` block still declares eight hosts and
++      not codex — verified, not assumed.
++- [x] **2.3 Same for copilot** (today `platforms.copilot: {ask: text,
++      fallback_only: true}`, `hook_manifest.yaml:1554-1556`).
++      verify: as 2.2.
++
++      **Evidence (2026-10-01). The dated zero, documentation-only, and the
++      reason it is documentation-only is recorded rather than left blank.**
++
++      Copilot documents lifecycle hooks — `sessionStart`, `sessionEnd`,
++      `userPromptSubmitted`, `preToolUse`, `postToolUse`, `agentStop`,
++      `subagentStop`, `errorOccurred` at `~/.copilot/hooks/*.json`. The page
++      was re-fetched today (HTTP 200) and digested. So, as with codex, D1's
++      "otherwise a dated zero" condition does not fire on the host's
++      documentation.
++
++      **Correction, and it is the most important line in this step.** This
++      paragraph first ended "...with `preToolUse` fail-closed on exit 2" — a
++      claim inherited from the row's existing comment rather than invented
++      here. The completion review fetched the cited page, which hashes
++      byte-identical to the committed `docs_digest` (so the body checked is
++      provably the body pinned), and grepped it: it carries **no exit-code
++      semantics whatsoever** — no `exit 2`, no non-zero convention, no stderr
++      contract. What it documents is the *capability*, `preToolUse` "can
++      approve or deny tool executions", plus a config shape. The mechanism is
++      simply not on that page.
++
++      A capability is not a contract, and writing the contract in anyway is
++      exactly the unestablished host claim this roadmap family exists to
++      eliminate. It survived two readings here before anyone fetched the page —
++      which is the sharpest available argument for why `docs_digest` had to
++      exist at all, and why the digest alone is not enough without someone
++      reading what it pins. Corrected at the row, here, and in D2's evidence.
++
++      **`probe_at` stays null, and that is an absence of opportunity, not of
++      effort.** `command -v copilot` → not installed, and `~/.copilot` carries
++      no binary, so there is no host on this machine to run a deny against.
++      This is the one externally-imposed limit in this roadmap: a CLI that does
++      not exist here cannot be probed. The row now says so in its own comment,
++      next to `probe_at: null`, so the null reads as "could not look" rather
++      than as "did not bother".
++
++      **The codex probe is why this row must not be armed from its page alone**
++      — and the argument is weaker than first written, which is the honest
++      version. It first read "two hosts documented the same exit-2 refusal
++      contract"; only codex documents one. On codex a documented exit-2 refusal
++      did not reproduce on the installed build; here there is no documented
++      exit-2 contract to arm at all, so this host is *further* from a binding
++      than codex rather than equally close. Arming copilot from a reading —
++      having just watched a reading fail on its sibling, and having just caught
++      this row asserting a mechanism its own citation never stated — would be
++      the exact defect `host_lowering.yaml` was built to stop. The row stays
++      `slots: {}` with a dated, cited, digested `verified:` block; D2 carries
++      the rule and the revisit-if.
++
++      **What was also removed here.** The copilot row's comment pointed binding
++      work at `road-to-hooks-on-copilot-and-codex` — a roadmap that does not
++      exist anywhere in the tree. A dangling pointer to a plan nobody wrote
++      reads as "tracked elsewhere" and is worse than silence, so it is replaced
++      by the actual gating condition. The work it named is now D2's revisit-if,
++      which is the right instrument: a roadmap whose first step is "wait for a
++      vendor build" is not executable, and a decision with a named reopening
++      condition is.
++
++## Phase 3 — Smoke covers every bound host
++
++- [x] **3.1 Assert `smokeProbeEvents()` reaches every host with slots > 0.**
++      Extend `tests/install/global_install_hooks_smoke.test.ts` to iterate
++      `host_lowering.yaml` rows and fail on a bound host the probe skips.
++      verify: test green; a fixture row with slots > 0 and no probe path is red.
++
++      **Evidence (2026-10-01).** Three tests added to
++      `tests/install/global_install_hooks_smoke.test.ts`; all green, and the
++      existing 200s install smoke is untouched.
++
++      *What was actually missing.* `install_snapshot.test.ts` already asserted
++      that every event `smokeProbeEvents()` names IS bound — the **soundness**
++      half, "the probe invents nothing". The **completeness** half was checked
++      by nothing: a host added to `host_lowering.yaml` with five bound slots and
++      never added to `SMOKE_PROBE_SLOTS` passes every pre-existing test, because
++      nothing enumerated the table and asked what the list was missing. The
++      probe would be correct about everything it mentioned and silent about a
++      whole host, which reads as green.
++
++      *Sensitivity, proven on the real file rather than argued.* A `session_start`
++      slot was temporarily added to the `codex` row in the committed table and
++      the test run: it failed with exactly its intended message —
++      `host_lowering.yaml binds slots for codex but the install smoke probe
++      never exercises them`. The table was then restored and the tests re-run
++      green. A third test carries the same case as a permanent in-process
++      negative control, so the assertion cannot be satisfied by today's table
++      alone, and a second asserts the converse (nothing with `slots: {}` is
++      probed) so it cannot be satisfied by probing everything.
++
++      *One hole found, noted rather than fixed — per `active-remediation`'s
++      note tier.* Being in `SMOKE_PROBE_SLOTS` is only **half** of being probed:
++      `_smoke_test_hooks` resolves `SMOKE_BRIDGE_PATHS[platform] ?? ''` and
++      counts a platform with no entry as `skipped`, so a host could be listed as
++      probed and silently never exercised. There is **no live instance** (all
++      six listed platforms have a bridge path today), so this is latent. It was
++      deliberately not closed here: the constant is unexported, and exporting it
++      edits `src/scripts/install.ts`, which reds two committed-build-output
++      freshness gates (`build:cli` + `build:install-bundle`) and requires the
++      bundle to be rebuilt against a real `node_modules` — this run is in a
++      worktree whose `node_modules` is a symlink, which bakes absolute paths
++      into the shipped bundle. Paying that for a latent hole is the wrong trade;
++      it is recorded in the test file's own comment so the next reader meets it
++      instead of rediscovering it.
++
++## Decisions
++
++| ID | ownership | resolved by | decision | evidence | revisit if |
++|---|---|---|---|---|---|
++| D1 | deterministic | evidence | Codex/copilot rows are added only if the host's own documentation names lifecycle hooks; otherwise a dated zero | Both hosts document them, so both get a row. The `docs_url` of record is the one on each host's `verified:` block in `host_lowering.yaml` — codex's is the OpenAI developers' Codex hooks page, copilot's is GitHub's own Copilot hooks page. Both were re-fetched 200 on 2026-10-01 and are now pinned by `docs_digest`, so the citation is bound to a body rather than to a URL that can be rewritten under it | the host publishes hooks |
++| D2 | deterministic | evidence | A documented refusal contract does **not** arm `block_exit`; only a reproduced one does | The codex live probe of 2026-10-01 (`codex-cli 0.148.0`): the documented `PreToolUse` exit-2 deny did not block the call, with `hooks` reported `stable true`. Corrected after review — only **codex** documents an exit-2 contract; the copilot page documents the capability and no mechanism, so copilot is further from a binding, not equally close | a probe on `codex` >= 0.159.3, or on a Copilot CLI once installed, reproduces a documented deny |
++| D3 | deterministic | evidence | A digest pins a body; it does not read it. A page may be cited, digested and still not say what the row claims | The copilot row asserted `preToolUse` "fail-closed on exit 2" for two readings. The review fetched the pinned body — digest matching byte-for-byte — and found no exit-code semantics at all | someone proposes a host claim whose only support is that the citation is digested |
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-09-28 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | Host docs change after the block expires | implementation | A bound slot stops firing | `lint_hook_manifest._check_host_lowering` already refuses an expired row carrying a blocking binding | Phase 1 — Fill the verified blocks |
++| 2 | Network needed to read vendor docs | implementation | 2.1 cannot run offline | Class-1 blocker if the run is offline; the step records the URL, not the page | Phase 2 — Codex and copilot: a row only with evidence (D5) |
++
++## Acceptance Criteria
++
++- [x] AC-1 — No `verified: null` in `host_lowering.yaml`; `lint_hook_manifest`
++      green.
++
++      **Evidence (2026-10-01).** All 9 rows carry a `verified:` block; the only
++      `verified: null` string in the file is line 13 of the header, which is the
++      sentence defining the term. `lint_hook_manifest --as-of 2026-10-01` exits
++      0 with **7** warnings, all of them the admissible
++      `verified.host_version is null` note — down from 8, because the codex row
++      now carries `0.148.0` from the live probe.
++
++- [x] AC-2 — Every host×slot pair carries `block_exit` or a dated `null` with
++      `docs_url`; the enforcement table regenerated; every `verified:` block
++      carries `docs_digest` and the re-fetch job has run once.
++
++      **Evidence (2026-10-01).** All 32 pairs dated — and enforced, not merely
++      met: `_check_slot_answers` makes an undated pair an error and refuses a
++      dated answer with no reachable citation. `check_enforcement_matrix --write`
++      reports `already current`, i.e. regeneration is a no-op against the
++      committed table. The re-fetch job has run twice: once with `--write` to
++      record 8 digests, and once read-only, which returned 8 unchanged and so
++      also demonstrates the digests are reproducible rather than volatile.
++
++      **One honest subtraction from "every `verified:` block carries
++      `docs_digest`": `cowork` does not, and must not.** Its `docs_url` is
++      `null` because the 2026-09-29 sweep found no public hooks page for that
++      host, so there is no body to hash. A digest there would be invented, which
++      is the one thing this table refuses. The criterion is met as "every block
++      that cites a page carries the digest of that page", 8 of 8, and the ninth
++      is a `no-url` the watcher reports and skips by design. A test pins both
++      halves so the exception cannot quietly become a gap.
++
++- [x] AC-3 — Codex and copilot each have a row with a verified block or a
++      dated zero, per D1.
++
++      **Evidence (2026-10-01).** Both rows exist with dated, cited, digested
++      `verified:` blocks and `slots: {}`. Codex additionally carries
++      `probe_at: 2026-10-01` / `host_version: 0.148.0` from a live deny probe;
++      copilot's `probe_at` stays null with the reason recorded (no CLI on this
++      machine). D1 carries both URLs; D2 records the rule the probe produced —
++      a documented refusal does not arm a binding, only a reproduced one does.
++
++- [x] AC-4 — The install smoke test iterates every bound host.
++
++      **Evidence (2026-10-01).** Three tests in
++      `tests/install/global_install_hooks_smoke.test.ts` iterate
++      `host_lowering.yaml` and assert the probe covers every host with
++      `slots > 0`, covers nothing with `slots: {}`, and would fail on a newly
++      bound host. Sensitivity proven by temporarily binding a `codex` slot in
++      the real table and watching the assertion fail with its intended message.
++
++## Provenance
++
++Source-derived (template rule 19). Pre-council draft.
++
++| Descriptor | Token | Drawn in, per defect |
++|---|---|---|
++| S9 — phase-loop reference | `ENC1:<mint>` | per-host capability descriptors with cited evidence and expiry (defect: seven null rows) |
++| S8 — LSP toolkit reference | `ENC1:<mint>` | one hook script, four hosts by event-name translation (2.2's shim shape) |
++| S6 — spec-scaffolding reference | `ENC1:<mint>` | negative control: 41 hosts as config dicts with untested behaviour |
++| S7 — best-practice curation | `ENC1:<mint>` | upstream doc-drift checklists against official host docs (1.3's digest watcher is the machine-owned form) |
++
++Gap-table: KEEP 1.1–1.2, 2.1–2.3, 3.1; CUT "per-slot verified schema"
++(shape is per-row with seven consumers), "`lint_host_lowering`" (the gate is
++`lint_hook_manifest`), "refusal on ≥ 6 of 9 slots" (pre-commits a probe
++result), "per-host CI matrix" (`tests.yml:66-74` is os×shard; the smoke probe
++is in `install.ts`).
+diff --git a/agents/roadmaps/road-to-hooks-on-every-host.md b/agents/roadmaps/road-to-hooks-on-every-host.md
+deleted file mode 100644
+index 1fb51d932c6c2881eec46a901db7944d421da072..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-hooks-on-every-host.md
++++ /dev/null
+@@ -1,146 +0,0 @@
+----
+-complexity: lightweight
+-status: ready
+-execution:
+-  mode: phase-checkpoints
+-estate_offset_exempt: "lane 7 of road-to-leading-every-row"
+-relates:
+-  - slug: road-to-host-catalogue-contract
+-    relation: extends
+-    note: "parked; the per-row verified block this lane fills is its catalogue shape"
+-  - slug: road-to-delivery-for-every-host
+-    relation: extends
+-    note: "archived 30/30 — rule delivery to every host; this lane is about lifecycle slots, which it left at 0 for codex/copilot"
+----
+-# Road to hooks on every host
+-
+-> **Source:** ten-package code audit (2026-09-28), rows Host portability 5,
+-> Gate reachability 4 against S8 at 8 (one hook script serving four hosts)
+-> and S9 at 7 (21 capability descriptors with cited evidence). Tree facts at
+-> `8de8a4c`: `src/scripts/hooks/host_lowering.yaml` (185 lines) has rows for
+-> `claude, augment, cursor, cline, windsurf, gemini, cowork, copilot` — **no
+-> `codex` row** (deliberate, `docs/enforcement-by-host.md:176-179`, no
+-> `platforms.codex` in `hook_manifest.yaml:1368-1556`); `verified:` is a
+-> per-row block `{docs_at, docs_url, probe_at, host_version, expires}`
+-> (`:57-62`), filled for claude only (expires 2027-09-06), `null` on seven
+-> rows; the expiry/unverified gate is `lint_hook_manifest._check_host_lowering`
+-> (`:664-690`); claude configures refusal on 3 of 32 host×slot pairs
+-> (`enforcement-by-host.md:38,193`); `install.ts:1579-1605` already runs a
+-> per-platform `smokeProbeEvents()` from `host_lowering.yaml`.
+-
+-> **corrected-from-reproduction (2026-09-29, /analyze:inbox t06).** The supplied
+-> file was reproduced against `main` read-only. Every `file:line` in its Source
+-> block resolved. ONE correction applied: the Risk Register `Risk type` column
+-> used values outside the enum `lint_plan_risk_register` enforces (`product` |
+-> `implementation`), which `status: draft` exempts and which reds the file the
+-> moment it flips to `ready`. The column is normalised; nothing else changed.
+-
+-## Goal
+-
+-Every row in `host_lowering.yaml` carries a dated `verified:` block in the
+-existing shape; every slot has a dated answer (`block_exit` set or a
+-documented `null` with `docs_url`); a codex row exists if and only if the
+-host documents lifecycle hooks; and the install smoke probe covers every host
+-with slots > 0 — so a "0" in the enforcement table is a fact about the host
+-with a date on it.
+-
+-## Prerequisites
+-
+-- Lane 2 Phase 1 landed (edits to `host_lowering.yaml` go through the
+-  ratified-edit path).
+-
+-## Phase 1 — Fill the verified blocks
+-
+-- [ ] **1.1 Probe and fill the seven `null` rows** (augment, cursor, cline,
+-      windsurf, gemini, cowork, copilot) using the existing keys `docs_at`,
+-      `docs_url`, `probe_at`, `host_version`, `expires`; `expires` follows the
+-      host's own docs cadence (claude's committed value is 2027-09-06 — no
+-      blanket 90 days). Cowork's block records what its row comment already
+-      says (`:165-166`: dispatcher exits 0 unconditionally, host cannot read
+-      settings).
+-      verify: `lint_hook_manifest` green; `grep -c 'verified: null' host_lowering.yaml`
+-      is 0; `tests/scripts/host_lowering_expiry.test.ts` unchanged.
+-- [ ] **1.2 Every slot has a dated answer.** For each host×slot pair with
+-      `block_exit: null`, add `answered_at:` and `docs_url:` beside it, or set
+-      `block_exit`. The bar is "every pair dated", not a refusal count.
+-      verify: `check_enforcement_matrix --write` regenerates
+-      `docs/enforcement-by-host.md`; no pair without a date.
+-- [ ] **1.3 Docs digest beside `docs_at`.** Every `verified:` block gains
+-      `docs_digest: <sha256 of the fetched docs_url body>`; a scheduled job
+-      (the scorecard workflow of lane 9 § 4.2, or a sibling) re-fetches each
+-      `docs_url` and, on a digest change, sets `expires: <today>` so the
+-      existing `lint_hook_manifest._check_host_lowering` (`:685-712`) goes
+-      red on any blocking binding of that host. No lifecycle vocabulary, no
+-      auto-adoption of upstream text — a red gate opens a local finding.
+-      Vendor docs URLs are not harvest subjects and stay plaintext.
+-      verify: fixture with a changed digest → `lint_hook_manifest` red on the
+-      bound host; unchanged digest → green; the job's run is committed once.
+-
+-## Phase 2 — Codex and copilot: a row only with evidence (D5)
+-
+-- [ ] **2.1 Host documentation check, recorded.** Read the hosts' own hook
+-      documentation for codex and copilot (vendor docs are not harvest
+-      subjects; plaintext `docs_url` is fine); record the result as a
+-      `## Decisions` row here.
+-      verify: D1 below carries `resolved by: evidence` with the `docs_url`.
+-- [ ] **2.2 If codex exposes lifecycle hooks:** add `platforms.codex` to
+-      `hook_manifest.yaml`, a `codex` row to `host_lowering.yaml` with a
+-      `verified:` block, `src/scripts/hooks/codex-dispatcher.sh` in the shape
+-      of the six existing shims (65–117 lines), the trampoline constant in
+-      `install.ts` (`*_DISPATCHER_TRAMPOLINE`, `:911-1283`) and the deny
+-      shape in `host_semantics.ts`. If not: the enforcement table's codex row
+-      gets `answered_at` and the `docs_url` that says so.
+-      verify: either `tests/hooks/permission_decision.test.ts` gains a codex
+-      deny fixture and the install smoke covers codex, or the dated zero.
+-- [ ] **2.3 Same for copilot** (today `platforms.copilot: {ask: text,
+-      fallback_only: true}`, `hook_manifest.yaml:1554-1556`).
+-      verify: as 2.2.
+-
+-## Phase 3 — Smoke covers every bound host
+-
+-- [ ] **3.1 Assert `smokeProbeEvents()` reaches every host with slots > 0.**
+-      Extend `tests/install/global_install_hooks_smoke.test.ts` to iterate
+-      `host_lowering.yaml` rows and fail on a bound host the probe skips.
+-      verify: test green; a fixture row with slots > 0 and no probe path is red.
+-
+-## Decisions
+-
+-| ID | ownership | resolved by | decision | evidence | revisit if |
+-|---|---|---|---|---|---|
+-| D1 | deterministic | evidence | Codex/copilot rows are added only if the host's own documentation names lifecycle hooks; otherwise a dated zero | `docs_url` recorded in 2.1 | the host publishes hooks |
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-09-28 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | Host docs change after the block expires | implementation | A bound slot stops firing | `lint_hook_manifest._check_host_lowering` already refuses an expired row carrying a blocking binding | Phase 1 — Fill the verified blocks |
+-| 2 | Network needed to read vendor docs | implementation | 2.1 cannot run offline | Class-1 blocker if the run is offline; the step records the URL, not the page | Phase 2 — Codex and copilot: a row only with evidence (D5) |
+-
+-## Acceptance Criteria
+-
+-- [ ] AC-1 — No `verified: null` in `host_lowering.yaml`; `lint_hook_manifest`
+-      green.
+-- [ ] AC-2 — Every host×slot pair carries `block_exit` or a dated `null` with
+-      `docs_url`; the enforcement table regenerated; every `verified:` block
+-      carries `docs_digest` and the re-fetch job has run once.
+-- [ ] AC-3 — Codex and copilot each have a row with a verified block or a
+-      dated zero, per D1.
+-- [ ] AC-4 — The install smoke test iterates every bound host.
+-
+-## Provenance
+-
+-Source-derived (template rule 19). Pre-council draft.
+-
+-| Descriptor | Token | Drawn in, per defect |
+-|---|---|---|
+-| S9 — phase-loop reference | `ENC1:<mint>` | per-host capability descriptors with cited evidence and expiry (defect: seven null rows) |
+-| S8 — LSP toolkit reference | `ENC1:<mint>` | one hook script, four hosts by event-name translation (2.2's shim shape) |
+-| S6 — spec-scaffolding reference | `ENC1:<mint>` | negative control: 41 hosts as config dicts with untested behaviour |
+-| S7 — best-practice curation | `ENC1:<mint>` | upstream doc-drift checklists against official host docs (1.3's digest watcher is the machine-owned form) |
+-
+-Gap-table: KEEP 1.1–1.2, 2.1–2.3, 3.1; CUT "per-slot verified schema"
+-(shape is per-row with seven consumers), "`lint_host_lowering`" (the gate is
+-`lint_hook_manifest`), "refusal on ≥ 6 of 9 slots" (pre-commits a probe
+-result), "per-host CI matrix" (`tests.yml:66-74` is os×shard; the smoke probe
+-is in `install.ts`).
+diff --git a/docs/contracts/retrieval-read-surfaces.md b/docs/contracts/retrieval-read-surfaces.md
+index 0a652e4226f160e6eac582242a58b6510570fd3f..677f321b00d12a47f7a5a6923ff34e6fa07aa6e8 100644
+--- a/docs/contracts/retrieval-read-surfaces.md
++++ b/docs/contracts/retrieval-read-surfaces.md
+@@ -67,6 +67,7 @@ reason `unclassified` exists and the reason this paragraph does.
+ | `ai_team/team_dispatch.ts` | `inter-agent-reply` | `stdout-write` | **covered** | imports the sanitize floor |
+ | `check_branch_freshness.ts` | `remote-subprocess` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
+ | `check_finding_dispositions.ts` | `remote-subprocess` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
++| `check_host_docs_digest.ts` | `network-fetch` | `file-write` | **covered** | imports the sanitize floor |
+ | `check_platform_anchor.ts` | `remote-subprocess` | `stdout-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
+ | `check_release_adjacent_health.ts` | `network-fetch` | `stdout-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
+ | `check_release_pr_shape.ts` | `remote-subprocess` | `stdout-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
+@@ -84,7 +85,7 @@ reason `unclassified` exists and the reason this paragraph does.
+ | `tools/jira_adapter.ts` | `remote-subprocess` | `undecided` | **unclassified** | inbound bytes with no recognised emit — the onward path is undecided |
+ | `update_prices.ts` | `node-http-request` | `file-write` | **covered** | imports the sanitize floor |
+ 
+-24 read surface(s): 6 covered, 15 uncovered, 3 unclassified.
++25 read surface(s): 7 covered, 15 uncovered, 3 unclassified.
+ <!-- END read-surface-table -->
+ ## The second layer — structural hiding in fetched markup
+ 
+diff --git a/docs/enforcement-by-host.md b/docs/enforcement-by-host.md
+index bcd3f7d734c2d079f729ab05f615090532d8cb10..3eebe0539b005b184bfd88a1e0c7edbb51edab30 100644
+--- a/docs/enforcement-by-host.md
++++ b/docs/enforcement-by-host.md
+@@ -184,11 +184,29 @@ the stronger argument, and the decisive one: one fact per line, each line
+ naming its own host and slot, so a configuration change moves exactly the lines
+ it changed and a reviewer reads the change rather than reconstructing it.
+ 
+-**No row for Codex, and that is the third kind of absence.** `cowork` and
+-`copilot` are modelled with an empty `slots:` map, which the region names
+-below. Codex has no entry in the lowering file at all, because it has no
+-`platforms:` key in `src/scripts/hook_manifest.yaml` either — the fact is
+-stated above, in the Codex paragraph, and is not the lowering file's to record.
++**Codex now has a row, and the third kind of absence is gone.** This paragraph
++used to read "No row for Codex ... it has no entry in the lowering file at
++all". That stopped being true when the lowering file gained a `codex` row, and
++the sentence then contradicted the region's own trailer two paragraphs down,
++which lists `codex` among the hosts modelled with an empty `slots:` map. All
++three of `cowork`, `copilot` and `codex` are now modelled the same way: a row
++that exists, carrying a dated `verified:` block, with `slots: {}`.
++
++What has NOT changed is the fact the old paragraph was reaching for: Codex
++still has no `platforms:` key in `src/scripts/hook_manifest.yaml`, whose
++`platforms:` block declares eight hosts and not Codex. So the slot count stays
++0 — but it is now a 0 with a date and a citation on it rather than a silence,
++which is the whole point of the row existing.
++
++**And the 0 is now backed by a probe, not only by a reading.** The `codex` row
++records a live deny probe on 2026-10-01 against `codex-cli 0.148.0`: a
++`PreToolUse` hook bound to the documented `exit 2` refusal path did not block
++the tool call, with the `hooks` feature reported `stable true` on that build.
++That does **not** say the host cannot refuse — `host_lowering.yaml`'s header
++forbids reading a row that way, and the probe left two explanations unexcluded
++(an installed build 24 stable releases behind the documented one, and a matcher that
++may never have matched). It says this package has demonstrated no refusal path
++there, which is what a `0` in this table has always meant.
+ 
+ <!-- DO NOT EDIT BY HAND — generated by `./scripts-run src/scripts/check_enforcement_matrix --write`
+      from `src/scripts/hooks/host_lowering.yaml`. Verified on every CI run by
+diff --git a/src/config/ci-local-parity.yml b/src/config/ci-local-parity.yml
+index 5969e915bcce9ac5fb2a932050be78080e268a52..9e8149e7444c6d4272d306b10c723b794810eb27 100644
+--- a/src/config/ci-local-parity.yml
++++ b/src/config/ci-local-parity.yml
+@@ -270,6 +270,24 @@ ci_only:
+   - id: release
+     class: release
+     reason: "tags, bumps, publishes, opens the release PR — the release itself"
++  - id: check_host_docs_digest
++    class: network
++    reason: >
++      road-to-hooks-on-every-host Phase 1.3. The watcher's whole subject is the
++      LIVE body of each host's hooks page, so its CI-side mode (`--fetch`) makes
++      eight outbound requests to vendor documentation sites. Putting that in
++      `task ci` would add eight network calls — and eight new ways to fail — to
++      every local run of an otherwise hermetic gate chain, for a signal that
++      changes on the order of vendor releases rather than of commits. It runs in
++      its own WEEKLY workflow (`host-docs-digest.yml`) and nowhere else.
++      It is also not a pull-request gate, so there is no failure a contributor
++      could discover only after pushing, which is the exact harm this checker
++      exists to prevent: a drift red is a standing finding about an upstream
++      page, never a verdict on anyone's branch.
++      Reachable locally without egress: `./scripts-run src/scripts/check_host_docs_digest`
++      (offline report) and `--self-test` (pure functions, no network); the
++      comparison logic itself is covered hermetically by
++      `tests/scripts/host_docs_digest.test.ts`.
+ 
+ # Gates a local chain runs that no workflow does — each needs a reason it is not
+ # worth remote enforcement, OR it should simply be added to a workflow. Prefer
+diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
+index aa6fe6a44a45badf318c7cc3ec5960a1c948e584..3d92e55278e0cb654cb86fcc3d84c327a9872abc 100644
+--- a/src/config/gate-coverage.yml
++++ b/src/config/gate-coverage.yml
+@@ -3139,3 +3139,28 @@ gates:
+       inside the gate by `assertScanned` — observed red on 2026-09-19 by
+       pointing the folder list at a non-existent directory, which exits 1 with
+       "scanned 0 roadmap file(s)" rather than certifying an empty corpus.
++  - id: check_host_docs_digest
++    argv: []
++    min_scanned: 8
++    corpus: "verified ROWS of src/scripts/hooks/host_lowering.yaml — the (host, surface) pairs carrying a `verified:` block, which are the rows that can cite a page at all. Nine today; the floor is 8 because a host legitimately leaving the table is a one-row move, while a resolver that stopped seeing the table would read zero. Counting rows and not URLs is deliberate: `cowork` carries a verified block with `docs_url: null` and is a real row the watcher must still see and skip, so a URL count would make a correct no-url row look like corpus loss."
++    status: enforced
++    ci_invocation: .github/workflows/host-docs-digest.yml
++    no_canary_reason: >-
++      A planted file cannot express this gate's violation. The corpus is ONE
++      configuration file plus the live bodies of eight vendor pages, so there is
++      no tree a canary could be added to: the only way to make the floor fire is
++      to remove rows from `host_lowering.yaml`, which is the thing the floor
++      exists to notice and not something a canary may do to a plumbing source
++      under `check_kernel_edit_ratified`. Discrimination is proven instead by
++      two things that run. `--self-test` drives the real decision functions over
++      the real table, including both directions of every state — unchanged vs
++      changed, filled vs missed, 404 (`gone`) vs 503 (`unreachable`), and drift
++      write vs no write. And `tests/scripts/host_docs_digest.test.ts` (20 cases)
++      runs the REAL `lint_hook_manifest._check_host_lowering` over the REAL
++      writer's output, so the full drift-to-refusal chain is exercised end to
++      end rather than asserted. Both were seen RED deliberately: neutralising
++      `isDrift` fails 4 of 20, and reverting the `gone` write-skip fails the
++      case that pins it. The `filled`-vs-`missed` direction named above is
++      asserted in BOTH places — it was credited to `--self-test` before it was
++      actually there, which a review caught and which is why the assertion now
++      exists rather than the sentence being softened.
+diff --git a/src/scripts/check_host_docs_digest.ts b/src/scripts/check_host_docs_digest.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..2a4e3fab37cb1e7e6393f6d5ab14e499f2cf896b
+--- /dev/null
++++ b/src/scripts/check_host_docs_digest.ts
+@@ -0,0 +1,786 @@
++#!/usr/bin/env tsx
++/**
++ * check_host_docs_digest — the docs-drift watcher over `verified.docs_digest`.
++ *
++ * `host_lowering.yaml` records, per host, the page a row's answers were read
++ * off (`verified.docs_url`) and the day they were read (`docs_at`). Those two
++ * fields date the reading and nothing watches the page. A vendor can rewrite
++ * its hooks contract the day after a row is filled, and every gate in this tree
++ * stays green until the row's own `expires` lapses — up to a year later.
++ *
++ * `docs_digest` closes that window: the sha256 of the body as fetched by the
++ * last digest run. This script re-fetches each `docs_url` and compares.
++ *
++ * It is deliberately NOT "as fetched on `docs_at`". Those are two events — the
++ * reading a row's answers came from, and the hashing of a body — and the very
++ * first fill separated them (digests taken 2026-10-01 against rows read
++ * 2026-09-29). One sentence covering both asserted a provenance nobody had.
++ *
++ * WHAT A CHANGED DIGEST MEANS, AND WHAT IT DELIBERATELY DOES NOT.
++ * A changed body is evidence that the page moved, never a reading of what it
++ * now says. So the watcher adopts no upstream text, derives no slot, and
++ * changes no `block_exit`. The most it ever does is expire the row, which hands
++ * the question to `lint_hook_manifest._check_host_lowering` — a gate that
++ * already refuses an expired row carrying a blocking binding and only warns on
++ * one that does not. A red there opens a local finding for a human to read the
++ * page; it never encodes the page.
++ *
++ * "The most it EVER does", because in production it does less. The weekly job
++ * runs `--fetch` with no `--write`, so nothing is expired automatically: the
++ * job simply goes red. Expiry happens only when a human runs `--fetch --write`.
++ * An earlier version of this paragraph read as if escalation were automatic.
++ *
++ * WHY `expires` MOVES TO THE DAY BEFORE DETECTION, NOT TO THE DETECTION DATE.
++ * The table's own header states the rule and the reason: the gate tests
++ * `expires < today`, so `expires: <today>` is still valid TODAY and the refusal
++ * would not land until tomorrow. "Valid through yesterday" is how a row stops
++ * being current on the day the drift was seen. (The roadmap that asked for this
++ * watcher wrote `expires: <today>`; the table header is the later and correct
++ * statement, and this script follows the table.)
++ *
++ * WHY THE DIGEST IS NOT PART OF THE EXPIRY TEST ITSELF. A digest is evidence
++ * about the page; `expires` is this package's review-by date. Collapsing them
++ * would make a vendor's CSS rebuild read as a lapsed citation. The digest moves
++ * `expires`; it is never compared against a clock.
++ *
++ * MODES
++ *   (no flags)        Offline audit. Reports which rows can be watched, which
++ *                     carry no digest yet, and which carry no URL to watch.
++ *                     Touches the network never and exits 0 — it is a report,
++ *                     not a gate, so a CI job may run it with no egress.
++ *   --fetch           Re-fetch every `docs_url` and compare. Exit 1 if any
++ *                     digest CHANGED, 0 otherwise. This is the scheduled job's
++ *                     read-only mode: it NEVER touches the working tree. The
++ *                     table is written by exactly one `writeFileSync` call and
++ *                     it sits inside `if (doWrite)`, so `--fetch` alone cannot
++ *                     reach it; `--write` without `--fetch` is refused outright
++ *                     (exit 2) rather than silently doing nothing.
++ *   --fetch --write   The same, and write the result back into the YAML: fill a
++ *                     null digest, and on a CHANGED digest also pull `expires`
++ *                     back to the day before detection.
++ *   --self-test       Fixture round-trip over the pure functions. No network.
++ *
++ * A row whose `docs_url` is null is not a gap and is not an error: `cowork`
++ * has no public hooks page to cite, which the table says in its own comment.
++ * There is no body, so there is no digest, and the watcher reports it as
++ * `no-url` and moves on.
++ *
++ * UNREACHABLE IS NOT CHANGED. A fetch that fails — offline runner, 503, a
++ * timeout — establishes nothing about the page, so it never expires a row. It
++ * is reported, and with `--strict-fetch` it also fails the run, so a scheduled
++ * job can distinguish "nothing moved" from "nobody could look".
++ *
++ * GONE IS NOT UNREACHABLE. A 404/410 is the server answering authoritatively
++ * that the page is not there, which is evidence the citation is dead — the
++ * opposite of "nobody could look". It fails the run WITHOUT `--strict-fetch`,
++ * because the scheduled job omits that flag precisely so transient flakes stay
++ * quiet, and a dead citation keeping a stale digest and a year-long `expires`
++ * in silence is the failure this watcher exists to prevent. It still writes
++ * nothing: a human decides whether the page moved or the host dropped hooks.
++ */
++
++import * as crypto from 'node:crypto';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { asOf } from './_lib/as_of.js';
++import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
++import { sanitize_text } from './_lib/retrieval_sanitize.js';
++import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
++import { HOST_LOWERING_PATH, parseHostLowering, type HostLowering } from './hooks/host_lowering.js';
++
++/** sha256, hex — the digest shape `verified.docs_digest` carries. */
++export function digestOf(body: string): string {
++    return crypto.createHash('sha256').update(body, 'utf-8').digest('hex');
++}
++
++export type DigestState =
++    /** Row has a digest and the fetched body still hashes to it. */
++    | 'unchanged'
++    /** Row had a digest and the body now hashes to something else. */
++    | 'changed'
++    /** Row had no digest; this run establishes the first one. */
++    | 'filled'
++    /** Row cites no page — nothing to hash. Not a defect. */
++    | 'no-url'
++    /** The page could not be read — transient. Establishes nothing either way. */
++    | 'unreachable'
++    /**
++     * The page is GONE — the server answered, authoritatively, that it is not
++     * there (404/410).
++     *
++     * Split from `unreachable` because lumping them made a dead citation
++     * indistinguishable from a flaky one, and the scheduled job deliberately
++     * does not pass `--strict-fetch` so that flakes stay quiet. A removed page
++     * is the opposite of "nobody could look": it is strong evidence the
++     * citation is no longer valid, and a row whose page no longer exists must
++     * not keep a year-long `expires` and a stale digest in silence.
++     */
++    | 'gone';
++
++export interface DigestFinding {
++    readonly host: string;
++    readonly surface: string;
++    readonly url: string | null;
++    readonly state: DigestState;
++    /** Digest recorded in the table before this run. */
++    readonly was: string | null;
++    /** Digest computed this run, or null when nothing was read. */
++    readonly now: string | null;
++    /** Why a fetch failed, for `unreachable`. */
++    readonly detail?: string | undefined;
++}
++
++/** The one state that moves `expires`. */
++export function isDrift(f: DigestFinding): boolean {
++    return f.state === 'changed';
++}
++
++/** The day before `today`, in ISO form — see the header for why. */
++export function dayBefore(today: string): string {
++    const d = new Date(`${today}T00:00:00Z`);
++    d.setUTCDate(d.getUTCDate() - 1);
++    return d.toISOString().slice(0, 10);
++}
++
++/**
++ * Classify one row against a body that was (or was not) read.
++ *
++ * Split from the fetching so the whole decision is testable with no network —
++ * the half that carries the risk is this one, and a test that could only reach
++ * it through a live HTTP call would be watching the wrong thing.
++ */
++export function classify(
++    host: string,
++    surface: string,
++    url: string | null,
++    recorded: string | null,
++    body: string | null,
++    detail?: string,
++): DigestFinding {
++    if (url === null) {
++        return { host, surface, url, state: 'no-url', was: recorded, now: null };
++    }
++    if (body === null) {
++        // `gone` is decided by the CALLER (it saw the status code) and arrives
++        // as the detail prefix, because `classify` is pure and never fetches.
++        const state: DigestState = detail !== undefined && detail.startsWith('GONE ') ? 'gone' : 'unreachable';
++        return { host, surface, url, state, was: recorded, now: null, detail };
++    }
++    const now = digestOf(body);
++    if (recorded === null) {
++        return { host, surface, url, state: 'filled', was: null, now };
++    }
++    return { host, surface, url, state: recorded === now ? 'unchanged' : 'changed', was: recorded, now };
++}
++
++/** Every (host, surface) the table carries, with the URL and digest it records. */
++export function watchable(
++    table: HostLowering,
++): ReadonlyArray<{ host: string; surface: string; url: string | null; digest: string | null }> {
++    const out: Array<{ host: string; surface: string; url: string | null; digest: string | null }> = [];
++    for (const [host, surfaces] of table) {
++        for (const [surface, row] of surfaces) {
++            if (row.verified === null) continue;
++            out.push({
++                host,
++                surface,
++                url: row.verified.docs_url,
++                digest: row.verified.docs_digest,
++            });
++        }
++    }
++    return out;
++}
++
++/**
++ * Write findings back into the YAML TEXT by editing the two lines that change.
++ *
++ * NOT a `parseDocument` round-trip, and the reason is measured rather than
++ * assumed. `parseDocument(...).toString()` on this table keeps every comment
++ * but renormalises the hand-aligned flow mappings in `slots:` — 361 bytes of
++ * deliberate column alignment across 32 rows, none of it this watcher's to
++ * touch. A scheduled job whose first write reformats a third of the file is a
++ * job whose diffs nobody reads. Editing the `docs_digest:` and `expires:` lines
++ * in place keeps the change to exactly the lines whose content changed, which
++ * is also what makes the resulting commit reviewable.
++ *
++ * The two lines are located structurally, not by a bare `grep`: the walk tracks
++ * the host (indent 2) and surface (indent 6) headers and only rewrites fields
++ * inside that row's `verified:` block, so a `docs_digest:` appearing in a
++ * comment or under a different host is never hit.
++ */
++export function applyFindings(
++    yamlText: string,
++    findings: readonly DigestFinding[],
++    today: string,
++): { text: string; expired: string[]; written: string[]; missed: string[] } {
++    const wanted = new Map<string, DigestFinding>();
++    for (const f of findings) {
++        // `gone` belongs in this skip list and was missing from it, which made
++        // the one state that means "the citation is dead" the one state that
++        // ERASED the evidence: it fell through to the digest branch and wrote
++        // `docs_digest: null`. That is self-defeating as well as wrong — with a
++        // null digest and an untouched year-long `expires`, a page that later
++        // returned would classify as `filled` and the drift signal would be
++        // gone permanently. The module header already promised a `gone` row
++        // writes nothing; this is the line that makes the promise true.
++        if (f.state === 'no-url' || f.state === 'unreachable' || f.state === 'gone') continue;
++        wanted.set(`${f.host}/${f.surface}`, f);
++    }
++    if (wanted.size === 0) return { text: yamlText, expired: [], written: [], missed: [] };
++
++    const expired: string[] = [];
++    // Which rows a line was actually rewritten for. Without this the caller
++    // reported `filled` — "newly recorded" — for a row whose `verified:` block
++    // carries no `docs_digest:` key at all: the walk finds nothing to replace,
++    // writes nothing, and the run still claims success. A write claimed and not
++    // performed is worse than a loud failure, so the two sets are compared.
++    const written: string[] = [];
++    const lines = yamlText.split('\n');
++    let host: string | null = null;
++    let surface: string | null = null;
++    let inVerified = false;
++
++    for (let i = 0; i < lines.length; i += 1) {
++        const line = lines[i] as string;
++        const hostM = /^ {2}([A-Za-z0-9_-]+):\s*$/.exec(line);
++        if (hostM) {
++            host = hostM[1] as string;
++            surface = null;
++            inVerified = false;
++            continue;
++        }
++        const surfaceM = /^ {6}([A-Za-z0-9_-]+):\s*$/.exec(line);
++        if (surfaceM) {
++            surface = surfaceM[1] as string;
++            inVerified = false;
++            continue;
++        }
++        if (/^ {8}verified:\s*$/.test(line)) {
++            inVerified = true;
++            continue;
++        }
++        // Any other KEY at the row's own indent closes the block — but a
++        // comment at that indent does not. The table puts long findings in
++        // `#`-comments at every depth, and treating one as the block end would
++        // silently stop rewriting the fields below it: a no-op write that
++        // reports success, which is the worst shape a watcher can have.
++        if (inVerified && /^ {8}\S/.test(line) && !/^\s*#/.test(line)) {
++            inVerified = false;
++            continue;
++        }
++        if (!inVerified || host === null || surface === null) continue;
++
++        const f = wanted.get(`${host}/${surface}`);
++        if (f === undefined) continue;
++
++        // A DRIFTED ROW KEEPS ITS RECORDED DIGEST. Two reasons, and the second
++        // is the one that matters more.
++        //
++        // 1. Provenance. The digest names the body a human ESTABLISHED for
++        //    this row. Silently replacing it with a body nobody read makes the
++        //    field assert an establishment that never happened — a false
++        //    statement in a table whose whole purpose is that its statements
++        //    are true, and a quiet form of exactly the "adopts no upstream
++        //    text" this module promises not to do. (Two earlier versions of
++        //    this comment were themselves wrong about the field's definition;
++        //    see `host_lowering.ts` for the three retired wordings and why
++        //    `docs_at` and `docs_digest` are independent rather than a pair.)
++        // 2. The drift signal would erase itself. Overwriting the digest means
++        //    the NEXT run compares new-against-new and reports `unchanged`, so
++        //    a human who misses the one red week never learns the page moved.
++        //    Keeping the old digest holds the row red until a human re-reads
++        //    the page and re-establishes `docs_at` + `docs_digest` together.
++        //
++        // So drift writes `expires` ONLY. A first fill (`filled`) still writes
++        // the digest, because there is no prior reading to contradict.
++        if (isDrift(f)) {
++            const expiresM = /^(\s+expires:\s*).*$/.exec(line);
++            if (expiresM) {
++                lines[i] = `${expiresM[1] as string}${dayBefore(today)}`;
++                expired.push(`${host}/${surface}`);
++                written.push(`${host}/${surface}`);
++            }
++            continue;
++        }
++        const digestM = /^(\s+docs_digest:\s*).*$/.exec(line);
++        if (digestM) {
++            lines[i] = `${digestM[1] as string}${f.now ?? 'null'}`;
++            written.push(`${host}/${surface}`);
++        }
++    }
++    const missed = [...wanted.keys()].filter((k) => !written.includes(k));
++    return { text: lines.join('\n'), expired, written, missed };
++}
++
++async function fetchBody(url: string, timeoutMs: number): Promise<{ body: string | null; detail?: string }> {
++    const ac = new AbortController();
++    const timer = setTimeout(() => ac.abort(), timeoutMs);
++    try {
++        const res = await fetch(url, { signal: ac.signal, redirect: 'follow' });
++        // 404/410 is the server stating authoritatively that the page is not
++        // there. Everything else non-ok — 5xx, 429, a proxy error — may be
++        // transient and must not condemn a citation.
++        if (res.status === 404 || res.status === 410) {
++            return { body: null, detail: `GONE HTTP ${res.status}` };
++        }
++        if (!res.ok) return { body: null, detail: `HTTP ${res.status}` };
++        return { body: await res.text() };
++    } catch (exc) {
++        // The ONE fetch-derived string this script ever prints, so it is the one
++        // that gets the sanitize floor. The body is hashed and discarded — a
++        // sha256 cannot carry a bidi override — but an exception message can
++        // quote a server-supplied URL or header, and this text lands on stdout
++        // in a CI log a human reads. Stripping hidden-instruction vectors here
++        // is what makes this module's `covered` row in
++        // `docs/contracts/retrieval-read-surfaces.md` a true statement rather
++        // than an import that satisfies a generator.
++        return { body: null, detail: sanitize_text(exc instanceof Error ? exc.message : String(exc)) };
++    } finally {
++        clearTimeout(timer);
++    }
++}
++
++const KNOWN_FLAGS: ReadonlySet<string> = new Set([
++    // `--as-of` is consumed by `asOf()` itself, not by this parser, but it MUST
++    // be listed: `asOf()` prints "Pass --as-of <iso> to pin it" on every
++    // unpinned run, and following that advice used to exit 2 on an unknown
++    // flag. A tool that refuses its own printed advice is worse than one that
++    // gives none.
++    '--as-of',
++    '--fetch',
++    '--write',
++    '--self-test',
++    '--strict-fetch',
++    '--quiet',
++    '--lowering',
++    '--today',
++]);
++
++const STATE_ICON: Record<DigestState, string> = {
++    unchanged: '✅',
++    changed: '❌',
++    filled: '🆕',
++    'no-url': '—',
++    unreachable: '⚠️ ',
++    gone: '💀',
++};
++
++function selfTest(): number {
++    const problems: string[] = [];
++    if (digestOf('abc') !== crypto.createHash('sha256').update('abc').digest('hex')) {
++        problems.push('digestOf disagrees with sha256');
++    }
++    if (dayBefore('2026-10-01') !== '2026-09-30') problems.push('dayBefore month boundary');
++    if (dayBefore('2026-01-01') !== '2025-12-31') problems.push('dayBefore year boundary');
++
++    const same = classify('h', 'any', 'u', digestOf('body'), 'body');
++    if (same.state !== 'unchanged') problems.push('equal body must be unchanged');
++    const moved = classify('h', 'any', 'u', digestOf('body'), 'other');
++    if (moved.state !== 'changed') problems.push('different body must be changed');
++    if (classify('h', 'any', 'u', null, 'body').state !== 'filled') problems.push('null digest must fill');
++    if (classify('h', 'any', null, null, null).state !== 'no-url') problems.push('null url must be no-url');
++    if (classify('h', 'any', 'u', 'd', null).state !== 'unreachable') problems.push('no body must be unreachable');
++
++    // An unreachable row must not expire anything — the property the whole
++    // "unreachable is not changed" paragraph rests on.
++    const src = fs.readFileSync(HOST_LOWERING_PATH, 'utf-8');
++    const untouched = applyFindings(src, [classify('claude', 'any', 'u', 'd', null)], '2026-10-01');
++    if (untouched.expired.length !== 0) problems.push('unreachable must not expire a row');
++    if (untouched.text !== src) problems.push('unreachable must not edit the table');
++
++    const drifted = applyFindings(src, [classify('claude', 'any', 'u', 'old', 'new-body')], '2026-10-01');
++    if (!drifted.text.includes('WHY THIS FILE EXISTS')) problems.push('write must preserve comments');
++    if (drifted.expired.join() !== 'claude/any') problems.push('drift must report the row it expired');
++
++    // The write touches EXACTLY the one line whose content changed — `expires`
++    // — and the hand-aligned `slots:` block is not it. Counting the differing
++    // lines is what keeps the "minimal diff" claim in the block comment above
++    // honest; asserting only that the new value is present would pass just as
++    // well on a full reformat. One line and not two: a drifted row keeps its
++    // recorded digest, see `applyFindings`.
++    const before = src.split('\n');
++    const after = drifted.text.split('\n');
++    const changedLines = before.length === after.length
++        ? before.reduce((n, l, i) => (l === after[i] ? n : n + 1), 0)
++        : -1;
++    if (changedLines !== 1) {
++        problems.push(`drift write must change exactly 1 line, changed ${changedLines}`);
++    }
++
++    // A sibling row must be untouched. Derived from the table rather than
++    // compared against a literal date: a hard-coded `expires` here reds the
++    // self-test whenever an unrelated row is legitimately renewed, which is a
++    // fixture asserting the calendar instead of the code.
++    const siblingBefore = parseHostLowering(src).get('gemini')?.get('any')?.verified;
++    const siblingAfter = parseHostLowering(drifted.text).get('gemini')?.get('any')?.verified;
++    if (siblingBefore?.expires !== siblingAfter?.expires) problems.push('a sibling row must not be expired');
++    if (siblingBefore?.docs_digest !== siblingAfter?.docs_digest) problems.push('a sibling digest must not move');
++
++    // The drifted row's OWN digest is unchanged, anchored at the row rather
++    // than by a bare `includes` that any row could satisfy.
++    const driftedRow = parseHostLowering(drifted.text).get('claude')?.get('any')?.verified;
++    if (driftedRow?.expires !== '2026-09-30') problems.push('drifted row must expire to the day before');
++    if (driftedRow?.docs_digest !== parseHostLowering(src).get('claude')?.get('any')?.verified?.docs_digest) {
++        problems.push('drift must not overwrite the recorded digest');
++    }
++
++    // 404 is not a flake.
++    if (classify('h', 'any', 'u', 'd', null, 'GONE HTTP 404').state !== 'gone') problems.push('404 must be gone');
++    if (classify('h', 'any', 'u', 'd', null, 'HTTP 503').state !== 'unreachable') problems.push('503 must be unreachable');
++
++    // A `gone` row writes nothing — the high finding of round 3, asserted here
++    // as well as in the vitest suite because this is the block the
++    // `no_canary_reason` cites as the negative control.
++    const deadRow = applyFindings(src, [classify('claude', 'any', 'u', 'old', null, 'GONE HTTP 404')], '2026-10-01');
++    if (deadRow.text !== src) problems.push('a gone row must not edit the table');
++    if (deadRow.written.length !== 0) problems.push('a gone row must write nothing');
++
++    // `written` vs `missed`: a row resolved but not writable must be REPORTED,
++    // not counted as recorded. The `no_canary_reason` credits this block with
++    // covering that direction, so it has to actually be here.
++    const noKey = src.replace(/\n\s+docs_digest: [0-9a-f]{64}/, '');
++    const missedRun = applyFindings(noKey, [classify('claude', 'any', 'u', null, 'body')], '2026-10-01');
++    if (missedRun.missed.join() !== 'claude/any') problems.push('a row with no digest key must be reported as missed');
++    if (missedRun.written.length !== 0) problems.push('a missed row must not count as written');
++
++    for (const p of problems) process.stderr.write(`❌  ${p}\n`);
++
++    // The pure-function checks above prove the DECISIONS. These prove the
++    // BINARY — argv parsing and the entry guard included — by shelling out to
++    // the real CLI, which is the layer that has silently no-opped in this
++    // repository before. `gate-self-test:registered-non-adopters` requires it
++    // of any registered gate, and the requirement is right: an enforced
++    // `scanned:` floor only proves the gate READ something.
++    const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
++    const rel = 'src/scripts/check_host_docs_digest.ts';
++    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'chdd-selftest-'));
++    const emptyTable = path.join(tmp, 'empty.yaml');
++    fs.writeFileSync(emptyTable, 'schema_version: 1\nhosts: {}\n');
++    const malformed = path.join(tmp, 'bad.yaml');
++    fs.writeFileSync(malformed, 'schema_version: 1\nnot_hosts: []\n');
++
++    const cliCode = runSelfTest({
++        gate: 'check_host_docs_digest',
++        minCases: 6,
++        minRejectCases: 4,
++        cases: [
++            {
++                name: 'an unknown flag is refused, not ignored',
++                expect: 'reject',
++                run: () => runGateCli(repoRoot, rel, ['--not-a-flag'], repoRoot),
++            },
++            {
++                name: '`--flag=value` resolves instead of being silently dropped',
++                expect: 'reject',
++                run: () => runGateCli(repoRoot, rel, ['--lowering=/nonexistent/table.yaml'], repoRoot),
++            },
++            {
++                name: '`--write` without `--fetch` is refused',
++                expect: 'reject',
++                run: () => runGateCli(repoRoot, rel, ['--write'], repoRoot),
++            },
++            {
++                name: 'an empty table fails the scan-scope floor rather than reporting clean',
++                expect: 'reject',
++                run: () => runGateCli(repoRoot, rel, ['--lowering', emptyTable, '--quiet'], repoRoot),
++            },
++            {
++                name: 'a malformed table exits non-zero instead of throwing past the contract',
++                expect: 'reject',
++                run: () => runGateCli(repoRoot, rel, ['--lowering', malformed, '--quiet'], repoRoot),
++            },
++            {
++                name: 'the committed table passes the offline report',
++                expect: 'accept',
++                run: () => runGateCli(repoRoot, rel, ['--quiet'], repoRoot),
++            },
++        ],
++    });
++    fs.rmSync(tmp, { recursive: true, force: true });
++
++    if (problems.length === 0 && cliCode === 0) {
++        process.stdout.write('✅  check_host_docs_digest: self-test passed.\n');
++    }
++    return problems.length === 0 && cliCode === 0 ? 0 : 1;
++}
++
++export async function main(argv: readonly string[]): Promise<number> {
++    for (const a of argv) {
++        if (a.startsWith('--') && !KNOWN_FLAGS.has(a.split('=')[0] ?? a)) {
++            process.stderr.write(
++                `check_host_docs_digest: unknown flag \`${a}\`. Known: ${[...KNOWN_FLAGS].sort().join(', ')}\n`,
++            );
++            return 2;
++        }
++    }
++    if (argv.includes('--self-test')) return selfTest();
++
++    const quiet = argv.includes('--quiet');
++    const doFetch = argv.includes('--fetch');
++    const doWrite = argv.includes('--write');
++    const strictFetch = argv.includes('--strict-fetch');
++    /**
++     * Resolve `--flag value` AND `--flag=value`, and refuse a flag with no value.
++     *
++     * The first version accepted only the space form while the unknown-flag
++     * guard above split on `=` — so `--lowering=/nonexistent` passed validation
++     * and was then silently ignored, and the run read the REAL table and
++     * reported green. That is the precise fail-open this guard exists to
++     * prevent, and a sibling gate shipped it once already. A missing value is
++     * an error rather than a null, because `--today` as the last argument used
++     * to fall through to the wall clock and `--today --quiet` used to take
++     * `--quiet` as the date.
++     */
++    const bad: string[] = [];
++    const valueOf = (flag: string): string | null => {
++        const inline = argv.find((a) => a.startsWith(`${flag}=`));
++        if (inline !== undefined) {
++            const v = inline.slice(flag.length + 1);
++            if (v === '') bad.push(`${flag}= has an empty value`);
++            return v === '' ? null : v;
++        }
++        const i = argv.indexOf(flag);
++        if (i < 0) return null;
++        const next = argv[i + 1];
++        if (next === undefined || next.startsWith('--')) {
++            bad.push(`${flag} needs a value`);
++            return null;
++        }
++        return next;
++    };
++    const tablePath = valueOf('--lowering') ?? HOST_LOWERING_PATH;
++    const todayRaw = valueOf('--today');
++    if (todayRaw !== null) {
++        // Shape AND validity. Shape alone accepted `2026-13-45`, which then
++        // built an `Invalid Date` in `dayBefore` and threw `RangeError` out of
++        // `toISOString()` — surfacing as a bare stack trace from the catch-all,
++        // which is the outcome this parser exists to prevent. Checked here, at
++        // the boundary, rather than defended against at every use.
++        const shapeOk = /^\d{4}-\d{2}-\d{2}$/.test(todayRaw);
++        const realDate = shapeOk && !Number.isNaN(new Date(`${todayRaw}T00:00:00Z`).getTime())
++            // `new Date('2026-02-31')` does NOT produce Invalid Date in every
++            // engine — it can roll over into March — so the round-trip is what
++            // actually rejects a non-existent day.
++            && new Date(`${todayRaw}T00:00:00Z`).toISOString().slice(0, 10) === todayRaw;
++        if (!realDate) {
++            bad.push(`--today ${todayRaw} is not a real ISO YYYY-MM-DD date`);
++        }
++    }
++    if (bad.length > 0) {
++        for (const b of bad) process.stderr.write(`check_host_docs_digest: ${b}.\n`);
++        return 2;
++    }
++    // `asOf()` rather than the wall clock: a verdict that depends on the hour it
++    // ran is not reproducible from the commit, and this one writes a date INTO
++    // the tree. It resolves --as-of, AC_AS_OF and the commit date under CI.
++    const today = todayRaw ?? asOf().toISOString().slice(0, 10);
++
++    if (strictFetch && !doFetch) {
++        process.stderr.write(
++            'check_host_docs_digest: `--strict-fetch` needs `--fetch` — it qualifies a fetch verdict, ' +
++                'and silently doing nothing is the failure this script argues against.\n',
++        );
++        return 2;
++    }
++    if (doWrite && !doFetch) {
++        process.stderr.write('check_host_docs_digest: `--write` needs `--fetch` — there is nothing to write without a read.\n');
++        return 2;
++    }
++
++    // The PARSE is inside the guard too, not only the read. A malformed table
++    // threw past the `return 2` contract and surfaced as an unhandled rejection
++    // — a stack trace on the scheduled job, which contradicts that job's own
++    // promise that a red there means "go read a page, nothing is broken here".
++    let text: string;
++    let table: HostLowering;
++    try {
++        text = fs.readFileSync(tablePath, 'utf-8');
++        table = parseHostLowering(text);
++    } catch (exc) {
++        process.stderr.write(
++            `check_host_docs_digest: cannot read or parse ${tablePath}: ` +
++                `${exc instanceof Error ? exc.message : String(exc)}\n`,
++        );
++        return 2;
++    }
++    const rows = watchable(table);
++    // Scan-scope hardening, the same contract every other gate here carries: a
++    // gate that silently walks an empty corpus reports "clean" and is
++    // indistinguishable from a gate that works. If the table is ever moved or
++    // its shape changes so `watchable` resolves nothing, this exits non-zero
++    // instead of reporting no drift across zero rows.
++    try {
++        reportScanned({
++            gate: 'check_host_docs_digest',
++            scanned: rows.length,
++            units: 'verified row(s)',
++            roots: ['src/scripts/hooks/host_lowering.yaml'],
++        });
++    } catch (exc) {
++        // An empty or moved corpus is an ANTICIPATED input condition, so it
++        // gets the house treatment — one line, exit 2 — rather than escaping to
++        // the module-entry catch-all as a stack trace. The catch-all is for the
++        // unanticipated; this header argues that twice and then let this one
++        // through, which a completion review caught.
++        if (exc instanceof DeadScopeError) {
++            process.stderr.write(`❌  ${exc.message}\n`);
++            return 2;
++        }
++        throw exc;
++    }
++
++    if (!doFetch) {
++        const withDigest = rows.filter((r) => r.digest !== null).length;
++        const noUrl = rows.filter((r) => r.url === null).length;
++        if (!quiet) {
++            process.stdout.write(
++                `check_host_docs_digest: ${rows.length} verified row(s) — ` +
++                    `${withDigest} watched, ${rows.length - withDigest - noUrl} awaiting a first digest, ` +
++                    `${noUrl} with no page to watch.\n`,
++            );
++            for (const r of rows) {
++                const mark = r.url === null ? '—' : r.digest === null ? '🆕' : '✅';
++                process.stdout.write(`  ${mark} ${r.host}/${r.surface}  ${r.url ?? '(no docs_url)'}\n`);
++            }
++            process.stdout.write('  Offline report — pass `--fetch` to compare against the live pages.\n');
++        }
++        return 0;
++    }
++
++    const findings: DigestFinding[] = [];
++    for (const r of rows) {
++        if (r.url === null) {
++            findings.push(classify(r.host, r.surface, null, r.digest, null));
++            continue;
++        }
++        const { body, detail } = await fetchBody(r.url, 30_000);
++        findings.push(classify(r.host, r.surface, r.url, r.digest, body, detail));
++    }
++
++    if (!quiet) {
++        for (const f of findings) {
++            // `gone` carries its status code in `detail` exactly as
++            // `unreachable` does, and printing it only for the latter meant a
++            // dead citation logged without saying whether it was a 404 or a 410.
++            const extra =
++                f.state === 'unreachable' || f.state === 'gone' ? ` (${f.detail ?? 'unreadable'})` : '';
++            process.stdout.write(`  ${STATE_ICON[f.state]} ${f.host}/${f.surface} — ${f.state}${extra}\n`);
++            // A drift line names everything needed to act on it without a
++            // second run: which page, what it hashed to before, what it hashes
++            // to now, and when that was seen. A bare "changed" sends the reader
++            // back to the terminal to find out what changed about what.
++            if (isDrift(f)) {
++                process.stdout.write(
++                    `       url:  ${f.url ?? '(none)'}\n` +
++                        `       was:  ${f.was ?? 'null'}\n` +
++                        `       now:  ${f.now ?? 'null'}\n` +
++                        `       seen: ${today}\n`,
++                );
++            }
++        }
++    }
++
++    const drifted = findings.filter(isDrift);
++    const unreachable = findings.filter((f) => f.state === 'unreachable');
++
++    if (doWrite) {
++        const { text: next, expired, missed } = applyFindings(text, findings, today);
++        if (next !== text) {
++            fs.writeFileSync(tablePath, next);
++            process.stdout.write(`✍️   ${path.basename(tablePath)} updated.\n`);
++            // The compiled sibling is fingerprinted over the YAML TEXT, so any
++            // write here desyncs it and reds `task preflight` and CI. Both
++            // completion reviewers found this the same way: by watching it
++            // happen on this branch. Naming the command beats rediscovering it.
++            process.stdout.write(
++                '   NEXT: ./scripts-run src/scripts/compile_hook_manifest --table host-lowering\n' +
++                    '   (the compiled sibling is hashed over the YAML text, so this write makes it stale)\n',
++            );
++        }
++        for (const e of expired) {
++            process.stdout.write(
++                `   ${e}: docs body changed — \`expires\` pulled to ${dayBefore(today)}, digest left as recorded.\n` +
++                    '      This marks the row stale; it does NOT re-establish it. To re-establish: read the page, then set\n' +
++                    '      `docs_at` to today, `docs_digest` to the new body\'s hash, and `expires` FORWARD again — nothing\n' +
++                    '      moves `expires` forward automatically, so a row left half-fixed stays red in `lint_hook_manifest`.\n',
++            );
++        }
++        if (missed.length > 0) {
++            // A row the walk could not write — most plausibly a `verified:`
++            // block carrying no `docs_digest:` key at all. Silence here would
++            // have the run report "newly recorded" for a row it never touched.
++            process.stderr.write(
++                `❌  check_host_docs_digest: ${missed.length} row(s) were resolved but NOT written: ` +
++                    `${missed.join(', ')}. The \`verified:\` block is probably missing the key the walk rewrites. ` +
++                    'Nothing was claimed for them.\n',
++            );
++            return 2;
++        }
++    }
++
++    if (drifted.length > 0) {
++        process.stderr.write(
++            `❌  check_host_docs_digest: ${drifted.length} host doc page(s) changed since the row was established: ` +
++                `${drifted.map((f) => f.host).join(', ')}. This is a signal to READ the page, never to adopt it.\n`,
++        );
++        return 1;
++    }
++    const gone = findings.filter((f) => f.state === 'gone');
++    if (gone.length > 0) {
++        process.stderr.write(
++            `❌  check_host_docs_digest: ${gone.length} cited page(s) are GONE (404/410): ` +
++                `${gone.map((f) => `${f.host} ${f.url ?? ''}`).join(', ')}. ` +
++                'A removed page is not a flake — the citation is dead and the row still carries its digest and `expires`. ' +
++                'Find the current page, re-read it, and re-establish the row by hand.\n',
++        );
++        return 1;
++    }
++    if (unreachable.length > 0 && strictFetch) {
++        process.stderr.write(
++            `❌  check_host_docs_digest: ${unreachable.length} page(s) could not be read ` +
++                `(${unreachable.map((f) => f.host).join(', ')}). Unreachable establishes nothing — re-run with egress.\n`,
++        );
++        return 1;
++    }
++    if (!quiet) {
++        const filled = findings.filter((f) => f.state === 'filled').length;
++        // "newly recorded" is only true when something was written. In the
++        // read-only mode the scheduled job runs, a row with a null digest was
++        // computed and discarded, and calling that "recorded" would have the
++        // weekly job claim, every week and forever, to have fixed something it
++        // did not touch.
++        const filledPhrase = doWrite
++            ? `${filled} newly recorded`
++            : `${filled} with no digest yet (not written — this run is read-only)`;
++        process.stdout.write(
++            `✅  check_host_docs_digest: no host documentation drift ` +
++                `(${findings.filter((f) => f.state === 'unchanged').length} unchanged, ` +
++                `${filledPhrase}, ${unreachable.length} unreachable).\n`,
++        );
++    }
++    return 0;
++}
++
++const _invokedDirectly =
++    process.argv[1] !== undefined && /check_host_docs_digest\.ts$/.test(process.argv[1]);
++if (_invokedDirectly) {
++    // `.catch` as well as `.then`: without it any throw this module did not
++    // anticipate leaves an unhandled rejection rather than the documented
++    // exit-2 contract, and on a scheduled job the difference between "exit 2,
++    // something is wrong with the inputs" and a bare stack trace is the whole
++    // signal.
++    void main(process.argv.slice(2))
++        .then((code) => {
++            process.exitCode = code;
++        })
++        .catch((exc: unknown) => {
++            process.stderr.write(
++                `check_host_docs_digest: unexpected failure: ${exc instanceof Error ? exc.stack ?? exc.message : String(exc)}\n`,
++            );
++            process.exitCode = 2;
++        });
++}
+diff --git a/src/scripts/hooks/host_lowering.json b/src/scripts/hooks/host_lowering.json
+index 4f394e783c382b99f5882591cdda1ea6a3e4710d..18523c77d484d5b10fe7698be40a381080b6506c 100644
+--- a/src/scripts/hooks/host_lowering.json
++++ b/src/scripts/hooks/host_lowering.json
+@@ -1 +1 @@
+-{"fingerprint":"f2988564c13c9a41e5d4ce042b23cffd3c575d5ef811d45f50ce7be59b349416:16845","table":{"schema_version":1,"hosts":{"claude":{"surfaces":{"any":{"entry_shape":"claude-settings-hooks","json_shape":"hook-specific-output","fail_policy":"propagate","timeout_unit":"seconds","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://code.claude.com/docs/en/hooks.md","docs_digest":null,"probe_at":"2026-09-06","host_version":"2.1.263","expires":"2027-09-06"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"Stop","block_exit":2,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"UserPromptSubmit","block_exit":2,"answered_at":"2026-09-29"},"pre_tool_use":{"native":"PreToolUse","block_exit":2,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"},"pre_compact":{"native":"PreCompact","block_exit":null,"answered_at":"2026-09-29"},"subagent_start":{"native":"SubagentStart","block_exit":null,"answered_at":"2026-09-29"},"subagent_stop":{"native":"SubagentStop","block_exit":null,"answered_at":"2026-09-29"}}}}},"augment":{"surfaces":{"any":{"entry_shape":"augment-settings-hooks","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.augmentcode.com/cli/hooks.md","docs_digest":null,"probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"Stop","block_exit":null,"answered_at":"2026-09-29"},"pre_tool_use":{"native":"PreToolUse","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"cursor":{"surfaces":{"any":{"entry_shape":"cursor-hooks-json","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://cursor.com/docs/hooks.md","docs_digest":null,"probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"sessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"sessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"stop","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"beforeSubmitPrompt","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"postToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"cline":{"surfaces":{"any":{"entry_shape":"cline-per-event-script","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.cline.bot/customization/hooks.md","docs_digest":null,"probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":["TaskStart","TaskResume"],"block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"TaskComplete","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"TaskCancel","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"UserPromptSubmit","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"windsurf":{"surfaces":{"any":{"entry_shape":"windsurf-hooks-json","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.devin.ai/desktop/cascade/hooks.md","docs_digest":null,"probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"post_setup_worktree","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"pre_user_prompt","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"post_cascade_response","block_exit":null,"answered_at":"2026-09-29"}}}}},"gemini":{"surfaces":{"any":{"entry_shape":"gemini-settings-hooks","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://geminicli.com/docs/hooks/reference.md","docs_digest":null,"probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29","matcher":""},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29","matcher":""},"stop":{"native":"AfterAgent","block_exit":null,"answered_at":"2026-09-29","matcher":""},"user_prompt_submit":{"native":"BeforeAgent","block_exit":null,"answered_at":"2026-09-29","matcher":""},"post_tool_use":{"native":"AfterTool","block_exit":null,"answered_at":"2026-09-29","matcher":".*"}}}}},"cowork":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":null,"docs_digest":null,"probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}},"copilot":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://[REDACTED:src-conf]/en-copilot/concepts/agents/hooks.md","docs_digest":null,"probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}},"codex":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://developers.openai.com/codex/hooks.md","docs_digest":null,"probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}}}}}
+\ No newline at end of file
++{"fingerprint":"08575a71d81fd8a5ef9e4b400f4a38cb66c26e1dd701d98f3cdc0bdc9e4758b4:22235","table":{"schema_version":1,"hosts":{"claude":{"surfaces":{"any":{"entry_shape":"claude-settings-hooks","json_shape":"hook-specific-output","fail_policy":"propagate","timeout_unit":"seconds","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://code.claude.com/docs/en/hooks.md","docs_digest":"9dd68316c1111c118e3ddb82861ac6271a8cd164cee0d371b26165efff35fe88","probe_at":"2026-09-06","host_version":"2.1.263","expires":"2027-09-06"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"Stop","block_exit":2,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"UserPromptSubmit","block_exit":2,"answered_at":"2026-09-29"},"pre_tool_use":{"native":"PreToolUse","block_exit":2,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"},"pre_compact":{"native":"PreCompact","block_exit":null,"answered_at":"2026-09-29"},"subagent_start":{"native":"SubagentStart","block_exit":null,"answered_at":"2026-09-29"},"subagent_stop":{"native":"SubagentStop","block_exit":null,"answered_at":"2026-09-29"}}}}},"augment":{"surfaces":{"any":{"entry_shape":"augment-settings-hooks","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.augmentcode.com/cli/hooks.md","docs_digest":"e500823be8303717020c1823f670e06d100108f6e3ac4b8d12a46d91fd1898fa","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"Stop","block_exit":null,"answered_at":"2026-09-29"},"pre_tool_use":{"native":"PreToolUse","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"cursor":{"surfaces":{"any":{"entry_shape":"cursor-hooks-json","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://cursor.com/docs/hooks.md","docs_digest":"7294a2d63b19d79a5283c948afe174cba8b06a7585563d34a2c41b90f5df0d39","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"sessionStart","block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"sessionEnd","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"stop","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"beforeSubmitPrompt","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"postToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"cline":{"surfaces":{"any":{"entry_shape":"cline-per-event-script","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.cline.bot/customization/hooks.md","docs_digest":"ef87561721f4cb80fe6d682b6866d638a4952dd416d36cd5ab398426ce64084b","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":["TaskStart","TaskResume"],"block_exit":null,"answered_at":"2026-09-29"},"session_end":{"native":"TaskComplete","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"TaskCancel","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"UserPromptSubmit","block_exit":null,"answered_at":"2026-09-29"},"post_tool_use":{"native":"PostToolUse","block_exit":null,"answered_at":"2026-09-29"}}}}},"windsurf":{"surfaces":{"any":{"entry_shape":"windsurf-hooks-json","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://docs.devin.ai/desktop/cascade/hooks.md","docs_digest":"460ffe7aa91998804920f6722c0153b9948eadd5edafa19582298475a19835a2","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"post_setup_worktree","block_exit":null,"answered_at":"2026-09-29"},"user_prompt_submit":{"native":"pre_user_prompt","block_exit":null,"answered_at":"2026-09-29"},"stop":{"native":"post_cascade_response","block_exit":null,"answered_at":"2026-09-29"}}}}},"gemini":{"surfaces":{"any":{"entry_shape":"gemini-settings-hooks","json_shape":"none","fail_policy":"propagate","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://geminicli.com/docs/hooks/reference.md","docs_digest":"06d37f2f66812ee78bb46c37a112203376f0bae4d3b8b44ac79d0bda4b86a118","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{"session_start":{"native":"SessionStart","block_exit":null,"answered_at":"2026-09-29","matcher":""},"session_end":{"native":"SessionEnd","block_exit":null,"answered_at":"2026-09-29","matcher":""},"stop":{"native":"AfterAgent","block_exit":null,"answered_at":"2026-09-29","matcher":""},"user_prompt_submit":{"native":"BeforeAgent","block_exit":null,"answered_at":"2026-09-29","matcher":""},"post_tool_use":{"native":"AfterTool","block_exit":null,"answered_at":"2026-09-29","matcher":".*"}}}}},"cowork":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":null,"docs_digest":null,"probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}},"copilot":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://[REDACTED:src-conf]/en-copilot/concepts/agents/hooks.md","docs_digest":"bfd40aa93ad62133efc17a50f189034f01594dc89a5d31a13a0c541d691acede","probe_at":null,"host_version":null,"expires":"2027-09-29"},"slots":{}}}},"codex":{"surfaces":{"any":{"entry_shape":"none","json_shape":"none","fail_policy":"discard","timeout_unit":"unknown","timeout_default":null,"verified":{"docs_at":"2026-09-29","docs_url":"https://developers.openai.com/codex/hooks.md","docs_digest":"724881d81f1a9fdb35ea42d4851a11b1f6606bbc6e9d2d05c1e8c466fc25c630","probe_at":"2026-10-01","host_version":"0.148.0","expires":"2027-09-29"},"slots":{}}}}}}}
+\ No newline at end of file
+diff --git a/src/scripts/hooks/host_lowering.ts b/src/scripts/hooks/host_lowering.ts
+index 7be3353fdc040a224fb919eeea3fc0d78caf6669..1f6a35051f8cbeee0dc390f605ecd61d771bda7e 100644
+--- a/src/scripts/hooks/host_lowering.ts
++++ b/src/scripts/hooks/host_lowering.ts
+@@ -54,7 +54,28 @@ export interface VerifiedBlock {
+     docs_at: string | null;
+     docs_url: string | null;
+     /**
+-     * sha256 of the `docs_url` body as fetched on `docs_at`.
++     * sha256 of the `docs_url` body as last ESTABLISHED for this row.
++     *
++     * "Established" means recorded by a human-run fill, not merely seen. The
++     * watcher re-hashes the page on every run and writes the new value only
++     * when the field was empty; on a DRIFT it deliberately leaves the recorded
++     * digest alone, so the field keeps pointing at the body someone actually
++     * read while `expires` carries the alarm.
++     *
++     * Three earlier wordings were wrong and all three are named rather than
++     * quietly replaced, because each was corrected by evidence the next one
++     * then contradicted. "As fetched on `docs_at`" was refuted by the very
++     * first fill (digests taken 2026-10-01 against rows whose `docs_at` is
++     * 2026-09-29). "As fetched by the LAST digest run" was refuted by the
++     * writer (after a drift the last run computed a different hash than the
++     * field holds). "`docs_at` + `docs_digest` are ONE pair" was refuted by
++     * the same committed data as the first — stating it was a relapse, caught
++     * in review.
++     *
++     * The two fields are simply INDEPENDENT. `docs_at` dates a human reading
++     * the page for the row's ANSWERS; `docs_digest` names the body the watcher
++     * compares against. Nothing guarantees they were the same fetch, and no
++     * wording that implies they were can survive this table's own rows.
+      *
+      * Null where there is nothing to hash — a row whose `docs_url` is null —
+      * and null is also the pre-fill state `check_host_docs_digest --fetch
+diff --git a/src/scripts/hooks/host_lowering.yaml b/src/scripts/hooks/host_lowering.yaml
+index 856949f357b9ac2696a882c4a3c473ce3c340b77..23126ae0c6d83920364c9f61b54fe110390f0988 100644
+--- a/src/scripts/hooks/host_lowering.yaml
++++ b/src/scripts/hooks/host_lowering.yaml
+@@ -45,9 +45,18 @@
+ #   timeout_default  host default for that timeout. `null` = not established here.
+ #   verified         provenance of the row, or `null`. `expires` is mandatory
+ #                    when the block is present — see lint_hook_manifest.
+-#                    `docs_digest` is the sha256 of the `docs_url` body as
+-#                    fetched on `docs_at`; `check_host_docs_digest --fetch`
+-#                    re-reads it and flags a change.
++#                    `docs_digest` is the sha256 of the `docs_url` body as last
++#                    ESTABLISHED for the row — recorded by a human-run fill,
++#                    never silently updated. On drift the watcher leaves it
++#                    alone and moves `expires` instead, so the field keeps
++#                    naming the body someone actually read. It is NOT paired
++#                    with `docs_at`, and the committed rows prove why: all nine
++#                    carry `docs_at: 2026-09-29` while the eight digests were
++#                    taken 2026-10-01. The two answer different questions —
++#                    `docs_at` when a human read the page for the row's ANSWERS,
++#                    `docs_digest` which body the watcher is comparing against.
++#                    `check_host_docs_digest --fetch` re-reads and flags a
++#                    difference.
+ #   slots            ORDERED. Bridge entries are written in this order, so the
+ #                    order is part of the generated output and must not be
+ #                    sorted. `native` may be a list where one slot has two
+@@ -87,7 +96,7 @@ hosts:
+         verified:
+           docs_at: 2026-09-29
+           docs_url: https://code.claude.com/docs/en/hooks.md
+-          docs_digest: null
++          docs_digest: 9dd68316c1111c118e3ddb82861ac6271a8cd164cee0d371b26165efff35fe88
+           probe_at: 2026-09-06
+           host_version: 2.1.263
+           expires: 2027-09-06
+@@ -117,7 +126,7 @@ hosts:
+         verified:
+           docs_at: 2026-09-29
+           docs_url: https://docs.augmentcode.com/cli/hooks.md
+-          docs_digest: null
++          docs_digest: e500823be8303717020c1823f670e06d100108f6e3ac4b8d12a46d91fd1898fa
+           probe_at: null
+           host_version: null
+           expires: 2027-09-29
+@@ -148,7 +157,7 @@ hosts:
+         verified:
+           docs_at: 2026-09-29
+           docs_url: https://cursor.com/docs/hooks.md
+-          docs_digest: null
++          docs_digest: 7294a2d63b19d79a5283c948afe174cba8b06a7585563d34a2c41b90f5df0d39
+           probe_at: null
+           host_version: null
+           expires: 2027-09-29
+@@ -180,7 +189,7 @@ hosts:
+         verified:
+           docs_at: 2026-09-29
+           docs_url: https://docs.cline.bot/customization/hooks.md
+-          docs_digest: null
++          docs_digest: ef87561721f4cb80fe6d682b6866d638a4952dd416d36cd5ab398426ce64084b
+           probe_at: null
+           host_version: null
+           expires: 2027-09-29
+@@ -205,7 +214,7 @@ hosts:
+         verified:
+           docs_at: 2026-09-29
+           docs_url: https://docs.devin.ai/desktop/cascade/hooks.md
+-          docs_digest: null
++          docs_digest: 460ffe7aa91998804920f6722c0153b9948eadd5edafa19582298475a19835a2
+           probe_at: null
+           host_version: null
+           expires: 2027-09-29
+@@ -231,7 +240,7 @@ hosts:
+         verified:
+           docs_at: 2026-09-29
+           docs_url: https://geminicli.com/docs/hooks/reference.md
+-          docs_digest: null
++          docs_digest: 06d37f2f66812ee78bb46c37a112203376f0bae4d3b8b44ac79d0bda4b86a118
+           probe_at: null
+           host_version: null
+           expires: 2027-09-29
+@@ -281,15 +290,49 @@ hosts:
+         # documentation check found that the host DOES document lifecycle hooks
+         # — `sessionStart`, `sessionEnd`, `userPromptSubmitted`, `preToolUse`,
+         # `postToolUse`, `agentStop`, `subagentStop`, `errorOccurred` — at
+-        # `~/.copilot/hooks/*.json`, with `preToolUse` fail-closed on exit 2.
+-        # So the roadmap's dated zero does NOT apply to this host, and the row
+-        # below is a dated statement about this package, not about the host:
+-        # nothing is bound, so `slots:` stays empty. Binding it is the work
+-        # `road-to-hooks-on-copilot-and-codex` carries.
++        # `~/.copilot/hooks/*.json`. So the roadmap's dated zero does NOT apply
++        # to this host, and the row below is a dated statement about this
++        # package, not about the host: nothing is bound, so `slots:` stays
++        # empty.
++        #
++        # CORRECTED 2026-10-01, and the correction is the point of this file.
++        # This comment previously ended "...with `preToolUse` fail-closed on
++        # exit 2". **The cited page does not say that.** It was re-fetched on
++        # 2026-10-01 — hashing byte-identical to the `docs_digest` below, so the
++        # body read is provably the body pinned — and it contains NO exit-code
++        # semantics at all: no `exit 2`, no non-zero convention, no stderr
++        # contract. What it documents is the CAPABILITY — `preToolUse` "can
++        # approve or deny tool executions" — and a `version`/`type`/`bash`/
++        # `cwd`/`env`/`timeoutSec` config shape. The mechanism is undocumented
++        # on that page.
++        #
++        # A capability is not a contract, and writing the contract in anyway is
++        # precisely the "statement about what a host can do that the tree has
++        # not established" this file's header forbids. The claim was inherited
++        # rather than invented here, and it survived two readings before a
++        # review fetched the page and grepped it; that is the whole argument for
++        # `docs_digest` existing, so it is recorded rather than quietly deleted.
++        #
++        # WHY `probe_at` IS STILL NULL ON 2026-10-01, STATED SO IT IS NOT READ
++        # AS AN OVERSIGHT. The sibling `codex` row was probed on that date
++        # because `codex` is installed on the machine that ran the pass. The
++        # Copilot CLI is not installed and `~/.copilot` carries no binary, so
++        # there was no host to run a deny against. That is an absence of
++        # opportunity, not an absence of effort, and it is the one thing
++        # blocking this row from carrying what the codex row now carries.
++        #
++        # The codex probe is also the reason this row should NOT be armed from
++        # its documentation alone — though the argument is WEAKER than it first
++        # read, and the weaker version is the true one. On the sibling host a
++        # documented exit-2 refusal did not reproduce on the installed build.
++        # Here there is no documented exit-2 contract to arm in the first place
++        # (see the correction above), so this host is further from a binding
++        # than codex, not equally close. Either way the gate is the same: a
++        # probe, never a re-read.
+         verified:
+           docs_at: 2026-09-29
+           docs_url: https://[REDACTED:src-conf]/en-copilot/concepts/agents/hooks.md
+-          docs_digest: null
++          docs_digest: bfd40aa93ad62133efc17a50f189034f01594dc89a5d31a13a0c541d691acede
+           probe_at: null
+           host_version: null
+           expires: 2027-09-29
+@@ -317,11 +360,42 @@ hosts:
+         # honest state of THIS package: no `platforms.codex` block, no
+         # trampoline, nothing installed. A row with slots the installer does
+         # not write would be the claim-without-evidence this file refuses.
++        #
++        # LIVE PROBE, 2026-10-01 — AND IT DID NOT REPRODUCE THE DOCUMENTED
++        # DENY. The paragraph above ends "...a contract that match Claude
++        # Code's", which was read off the vendor page and had never been run.
++        # It has now been run, against the installed `codex-cli 0.148.0`:
++        #
++        #   - An isolated `CODEX_HOME` was given a `hooks.json` binding
++        #     `PreToolUse` with `matcher: "Bash"` to a script that writes to
++        #     stderr and exits 2 — the documented refusal path, verbatim.
++        #   - `codex exec --sandbox read-only "Run the shell command: echo …"`
++        #     executed the shell call and returned its output. The call was
++        #     NOT refused.
++        #   - The feature is not switched off: `codex features list` reports
++        #     `hooks  stable  true` on this build.
++        #
++        # WHAT THAT ESTABLISHES, AND WHAT IT EXPLICITLY DOES NOT. It establishes
++        # that `block_exit` must stay null: this package has no demonstrated
++        # refusal path on this host, which is exactly what a null means here. It
++        # does NOT establish that Codex cannot refuse — this file's header
++        # forbids that reading, and two unexcluded explanations remain. The
++        # installed build is 0.148.0 against a current 0.159.3, and the page
++        # that was read describes the current one; and the probe never
++        # distinguished "the hook fired and was ignored" from "the matcher never
++        # matched", because the instrumented re-run (a hook that records its own
++        # input before refusing) was refused by the harness this probe ran
++        # under. A marker-file re-run on >= 0.159.3 is the one cheap experiment
++        # that would separate them, and it is named here rather than guessed at.
++        #
++        # The practical consequence is that a docs-only reading would have
++        # armed a refusal this tree cannot demonstrate. The row records the
++        # negative instead.
+         verified:
+           docs_at: 2026-09-29
+           docs_url: https://developers.openai.com/codex/hooks.md
+-          docs_digest: null
+-          probe_at: null
+-          host_version: null
++          docs_digest: 724881d81f1a9fdb35ea42d4851a11b1f6606bbc6e9d2d05c1e8c466fc25c630
++          probe_at: 2026-10-01
++          host_version: 0.148.0
+           expires: 2027-09-29
+         slots: {}
+diff --git a/tests/install/global_install_hooks_smoke.test.ts b/tests/install/global_install_hooks_smoke.test.ts
+index 4ee0921bb03c988072e1a7a6d570e4bdbf807af0..cfc6cb6f1d725e074bdde378a6f384d78ea6edd8 100644
+--- a/tests/install/global_install_hooks_smoke.test.ts
++++ b/tests/install/global_install_hooks_smoke.test.ts
+@@ -19,10 +19,16 @@ import {
+     MANAGED_SIGNATURE,
+     build_claude_hook_matrix,
+ } from '../../src/scripts/_lib/claude_settings_hooks.js';
++import {
++    _resetHostLoweringCache,
++    parseHostLowering,
++} from '../../src/scripts/hooks/host_lowering.js';
++import { smokeProbeEvents } from '../../src/scripts/install.js';
+ 
+ const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+ const ORCHESTRATOR = path.join(REPO_ROOT, 'src', 'scripts', 'install');
+ const MANIFEST = path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml');
++const LOWERING = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'host_lowering.yaml');
+ 
+ describe('golden smoke — fresh global install is single-surface complete', () => {
+     let home: string;
+@@ -96,3 +102,89 @@ describe('golden smoke — fresh global install is single-surface complete', ()
+         }
+     }, 200_000);
+ });
++
++// road-to-hooks-on-every-host Phase 3.1 / AC-4 — the smoke probe reaches every
++// host the lowering table actually binds.
++//
++// WHY THIS IS NOT COVERED BY THE EXISTING PROBE TESTS. `install_snapshot.test.ts`
++// already asserts that every event `smokeProbeEvents()` names IS bound — it
++// checks the probe does not invent events. That is the SOUNDNESS half. The
++// COMPLETENESS half is the one that was never checked, and it is the half the
++// defect lives in: a host added to `host_lowering.yaml` with five bound slots
++// and never added to `SMOKE_PROBE_SLOTS` passes every existing test, because
++// nothing enumerates the table and asks what is missing from the list. The
++// probe list would be correct about everything it mentions and silent about a
++// whole host — which reads as green.
++//
++// A note, recorded rather than fixed here: being in the probe list is only half
++// of being probed. `_smoke_test_hooks` resolves a bridge path per platform and
++// counts a platform with no entry as `skipped`, so a platform could be listed
++// and still never exercised. That constant is not exported, and exporting it
++// would red two committed-build-output freshness gates for a latent hole with
++// no live instance (all six listed platforms have a bridge path today). It is
++// named here so the next reader sees it rather than rediscovering it.
++describe('install smoke probe covers every bound host', () => {
++    afterEach(() => {
++        _resetHostLoweringCache();
++    });
++
++    /** Hosts the table binds at least one slot for. */
++    function boundHosts(text: string): string[] {
++        const out: string[] = [];
++        for (const [host, surfaces] of parseHostLowering(text)) {
++            for (const row of surfaces.values()) {
++                if (row.slots.size > 0) {
++                    out.push(host);
++                    break;
++                }
++            }
++        }
++        return out;
++    }
++
++    it('probes every host with slots > 0', () => {
++        const probed = new Set(smokeProbeEvents().map(([platform]) => platform));
++        const missing = boundHosts(fs.readFileSync(LOWERING, 'utf8')).filter((h) => !probed.has(h));
++        expect(
++            missing,
++            `host_lowering.yaml binds slots for ${missing.join(', ')} but the install smoke probe ` +
++                'never exercises them — add them to SMOKE_PROBE_SLOTS in src/scripts/install.ts.',
++        ).toEqual([]);
++    });
++
++    it('does not probe a host the table binds nothing for', () => {
++        // The converse, so the assertion above cannot be satisfied by probing
++        // everything: `cowork`, `copilot` and `codex` carry `slots: {}`, and a
++        // probe of a host with no bridge would report a skip forever.
++        const bound = new Set(boundHosts(fs.readFileSync(LOWERING, 'utf8')));
++        for (const [platform] of smokeProbeEvents()) {
++            expect(bound.has(platform), `${platform} is probed but binds no slot`).toBe(true);
++        }
++    });
++
++    it('fails when a bound host is added to the table and not to the probe', () => {
++        // The negative control. Without it the assertion above is satisfied by
++        // today's table and proves nothing about the next host added.
++        // `codex` is modelled with an empty `slots:` map. Give it one and it
++        // becomes exactly the case the gate exists to catch.
++        const raw = fs.readFileSync(LOWERING, 'utf8');
++
++        // Mutate the TEXT, not a parsed object, so the control runs the same
++        // parse the real assertions run — and feed it through the SAME
++        // `boundHosts` helper those assertions use, rather than re-implementing
++        // the scan inline. An inline copy proves a copy of the logic is
++        // sensitive; a defect introduced in `boundHosts` itself would leave
++        // this control green while silently disarming the completeness
++        // assertion above. The leftover half-sentence this replaces was caught
++        // in review.
++        const probed = new Set(smokeProbeEvents().map(([platform]) => platform));
++        const bound = boundHosts(
++            raw.replace(
++                /(\n  codex:\n(?:.*\n)*?)        slots: \{\}/,
++                '$1        slots:\n          session_start:      { native: SessionStart, block_exit: null, answered_at: 2026-09-29 }',
++            ),
++        );
++        expect(bound).toContain('codex');
++        expect(bound.filter((h) => !probed.has(h))).toEqual(['codex']);
++    });
++});
+diff --git a/tests/scripts/host_docs_digest.test.ts b/tests/scripts/host_docs_digest.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..95a5a52138009832a6397473c3c5e5b35625f2b5
+--- /dev/null
++++ b/tests/scripts/host_docs_digest.test.ts
+@@ -0,0 +1,291 @@
++// Phase 1.3 — the docs-drift watcher, end to end.
++//
++// WHAT THIS TEST IS ACTUALLY FOR. The watcher's value is not that it computes a
++// sha256; it is that a changed vendor page REACHES `lint_hook_manifest` and reds
++// it on a host that carries a blocking binding. That is a three-step chain —
++// digest differs → `expires` moves → the expiry gate refuses — and every step
++// but the last lives in a different file from the gate. A test that stopped at
++// "the digest changed" would be watching the cheap half.
++//
++// So the assertions below run the REAL gate over the text the REAL writer
++// produced, with no fixture of the intermediate state. The only thing injected
++// is the fetched body, because that is the one input a test may not reach.
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import {
++    applyFindings,
++    classify,
++    dayBefore,
++    digestOf,
++    main,
++    watchable,
++} from '../../src/scripts/check_host_docs_digest.js';
++import { parseHostLowering } from '../../src/scripts/hooks/host_lowering.js';
++import { _check_host_lowering } from '../../src/scripts/lint_hook_manifest.js';
++
++const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
++const COMMITTED = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'host_lowering.yaml');
++const TODAY = '2026-10-01';
++
++const SOURCE = fs.readFileSync(COMMITTED, 'utf8');
++
++let tmp: string;
++
++/** Run the real expiry gate over a table given as text. */
++function gate(text: string): { errors: string[]; warnings: string[] } {
++    const file = path.join(tmp, 'table.yaml');
++    fs.writeFileSync(file, text);
++    const errors: string[] = [];
++    const warnings: string[] = [];
++    _check_host_lowering(file, errors, warnings, TODAY);
++    return { errors, warnings };
++}
++
++/** The digest the committed table records for a host. */
++function recorded(host: string): string | null {
++    return parseHostLowering(SOURCE).get(host)?.get('any')?.verified?.docs_digest ?? null;
++}
++
++beforeEach(() => {
++    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'host-digest-'));
++});
++afterEach(() => {
++    fs.rmSync(tmp, { recursive: true, force: true });
++});
++
++describe('docs digest — the committed state', () => {
++    it('records a digest for every row that cites a page', () => {
++        for (const r of watchable(parseHostLowering(SOURCE))) {
++            if (r.url === null) continue;
++            expect(r.digest, `${r.host} cites ${r.url} with no digest`).toMatch(/^[0-9a-f]{64}$/);
++        }
++    });
++
++    it('records no digest for the row that cites no page', () => {
++        // `cowork` has no public hooks page. A digest there would be invented.
++        const cowork = watchable(parseHostLowering(SOURCE)).find((r) => r.host === 'cowork');
++        expect(cowork?.url).toBeNull();
++        expect(cowork?.digest).toBeNull();
++    });
++});
++
++describe('docs digest — drift reaches the gate', () => {
++    it('reds lint_hook_manifest on a host whose page moved AND which can block', () => {
++        // `claude` is the one host carrying blocking bindings, so it is the one
++        // host where drift must be a refusal rather than a note.
++        const drift = classify('claude', 'any', 'u', recorded('claude'), 'the page was rewritten');
++        expect(drift.state).toBe('changed');
++
++        const { text, expired } = applyFindings(SOURCE, [drift], TODAY);
++        expect(expired).toEqual(['claude/any']);
++
++        const { errors } = gate(text);
++        expect(errors).toHaveLength(1);
++        expect(errors[0]).toContain('host_lowering claude/any');
++        expect(errors[0]).toContain(dayBefore(TODAY));
++        expect(errors[0]).toContain('pre_tool_use');
++    });
++
++    it('expires to the day BEFORE detection, because the gate tests `expires < today`', () => {
++        // Pinning the off-by-one explicitly: `expires: TODAY` would still be
++        // valid today and the refusal would not land until tomorrow, which is
++        // the whole failure this one-day offset exists to prevent.
++        const drift = classify('claude', 'any', 'u', recorded('claude'), 'moved');
++        const sameDay = applyFindings(SOURCE, [drift], TODAY).text.replace(
++            `expires: ${dayBefore(TODAY)}`,
++            `expires: ${TODAY}`,
++        );
++        expect(gate(sameDay).errors).toEqual([]);
++        expect(gate(applyFindings(SOURCE, [drift], TODAY).text).errors).toHaveLength(1);
++    });
++
++    it('only warns when the drifting host carries no blocking binding', () => {
++        // The property that keeps a vendor's CSS rebuild from redding an
++        // unrelated pull request: `cursor` binds five slots and can refuse on
++        // none of them, so its drift is a note, not a refusal.
++        const drift = classify('cursor', 'any', 'u', recorded('cursor'), 'moved');
++        const { errors, warnings } = gate(applyFindings(SOURCE, [drift], TODAY).text);
++        expect(errors).toEqual([]);
++        expect(warnings.some((w) => w.includes('host_lowering cursor/any'))).toBe(true);
++    });
++
++    it('classifies an equal body as unchanged', () => {
++        const body = 'the page, unmoved';
++        expect(classify('claude', 'any', 'u', digestOf(body), body).state).toBe('unchanged');
++        expect(classify('claude', 'any', 'u', recorded('claude'), body).state).toBe('changed');
++    });
++
++    it('leaves the table byte-identical when nothing moved', () => {
++        // The finding is written out literally rather than via `classify`,
++        // because producing it through `classify` would need a body that hashes
++        // to the COMMITTED digest — i.e. the live page, which a unit test may
++        // not reach. This is exactly the record `classify` emits when the
++        // fetched body still matches: `now === was === the recorded digest`.
++        const digest = recorded('claude');
++        expect(digest).not.toBeNull();
++        const { text, expired } = applyFindings(
++            SOURCE,
++            [{ host: 'claude', surface: 'any', url: 'u', state: 'unchanged', was: digest, now: digest }],
++            TODAY,
++        );
++        expect(expired).toEqual([]);
++        // A no-op run must produce no commit — the property that keeps a daily
++        // scheduled job from writing a diff every morning.
++        expect(text).toBe(SOURCE);
++        expect(gate(text).errors).toEqual([]);
++    });
++});
++
++describe('docs digest — unreachable establishes nothing', () => {
++    it('does not expire a row when the page could not be read', () => {
++        const dead = classify('claude', 'any', 'u', recorded('claude'), null, 'HTTP 503');
++        expect(dead.state).toBe('unreachable');
++        const { text, expired } = applyFindings(SOURCE, [dead], TODAY);
++        expect(expired).toEqual([]);
++        expect(text).toBe(SOURCE);
++        expect(gate(text).errors).toEqual([]);
++    });
++
++    it('does not erase the recorded digest when the page is GONE', () => {
++        // The state that means "this citation is dead" was the one state that
++        // destroyed the evidence: `gone` fell through to the digest branch and
++        // wrote `docs_digest: null`. Found by completion review, reproduced,
++        // fixed — and pinned here, because the write-neutrality cases that
++        // existed covered `unreachable` and `no-url` only, which is exactly how
++        // a 19/19 green suite missed it.
++        const dead = classify('claude', 'any', 'u', recorded('claude'), null, 'GONE HTTP 404');
++        expect(dead.state).toBe('gone');
++        const { text, expired, written } = applyFindings(SOURCE, [dead], TODAY);
++        expect(written).toEqual([]);
++        expect(expired).toEqual([]);
++        expect(text).toBe(SOURCE);
++        expect(parseHostLowering(text).get('claude')?.get('any')?.verified?.docs_digest).toBe(
++            recorded('claude'),
++        );
++    });
++
++    it('does not expire a row that cites no page at all', () => {
++        const none = classify('cowork', 'any', null, null, null);
++        expect(none.state).toBe('no-url');
++        expect(applyFindings(SOURCE, [none], TODAY).text).toBe(SOURCE);
++    });
++});
++
++// Asked for by both ratification reviewers, independently: the scheduled job
++// runs `--fetch` with no `--write`, and the thing a reader most needs to be
++// sure of is that this cannot touch the repository. The guard has two halves
++// and both are checked here without a network call — the offline path, and the
++// refusal of `--write` without `--fetch`. (The `--fetch`-only path shares the
++// same single `writeFileSync`, which sits inside `if (doWrite)`.)
++describe('docs digest — a read-only run never touches the tree', () => {
++    let copy: string;
++
++    beforeEach(() => {
++        copy = path.join(tmp, 'host_lowering.yaml');
++        fs.writeFileSync(copy, SOURCE);
++    });
++
++    it('leaves the table untouched in the default offline report', async () => {
++        const code = await main(['--lowering', copy, '--quiet']);
++        expect(code).toBe(0);
++        expect(fs.readFileSync(copy, 'utf8')).toBe(SOURCE);
++    });
++
++    it('refuses `--write` without `--fetch` instead of silently writing nothing', async () => {
++        const code = await main(['--write', '--lowering', copy, '--quiet']);
++        expect(code).toBe(2);
++        expect(fs.readFileSync(copy, 'utf8')).toBe(SOURCE);
++    });
++
++    it('refuses an unknown flag rather than ignoring it', async () => {
++        // A silently-ignored flag is how `--lowering /nonexistent` once read the
++        // real configuration and reported green in a sibling gate.
++        expect(await main(['--not-a-flag'])).toBe(2);
++    });
++});
++
++describe('docs digest — the write is surgical', () => {
++    it('changes ONLY `expires` on drift — the recorded digest is evidence, not a cache', () => {
++        // Two properties in one assertion, both found by completion review.
++        //
++        // PROVENANCE: writing the new body's hash while `docs_at` stays put
++        // would make the row assert a reading that never happened.
++        // PERSISTENCE: overwriting the digest would make the NEXT run compare
++        // new-against-new and report `unchanged`, so the drift signal would
++        // erase itself and a human who missed one red week would never learn.
++        const drift = classify('claude', 'any', 'u', recorded('claude'), 'moved');
++        const after = applyFindings(SOURCE, [drift], TODAY).text.split('\n');
++        const before = SOURCE.split('\n');
++        expect(after).toHaveLength(before.length);
++        const changed = before.filter((l, i) => l !== after[i]);
++        expect(changed).toHaveLength(1);
++        expect(changed[0]).toContain('expires');
++        expect(changed.join('\n')).not.toContain('docs_digest');
++    });
++
++    it('keeps reporting drift on a second run, because the digest was not overwritten', () => {
++        const once = applyFindings(
++            SOURCE,
++            [classify('claude', 'any', 'u', recorded('claude'), 'moved')],
++            TODAY,
++        ).text;
++        // The digest in the rewritten table is still the ORIGINAL one, so the
++        // same body classifies as `changed` again rather than as `unchanged`.
++        const stillRecorded = parseHostLowering(once).get('claude')?.get('any')?.verified?.docs_digest;
++        expect(stillRecorded).toBe(recorded('claude'));
++        expect(classify('claude', 'any', 'u', stillRecorded ?? null, 'moved').state).toBe('changed');
++    });
++
++    it('writes the digest on a FIRST fill, where there is no prior reading to contradict', () => {
++        const blank = SOURCE.replace(
++            `docs_digest: ${recorded('claude') ?? ''}`,
++            'docs_digest: null',
++        );
++        const fill = classify('claude', 'any', 'u', null, 'a body');
++        expect(fill.state).toBe('filled');
++        const out = applyFindings(blank, [fill], TODAY);
++        expect(out.missed).toEqual([]);
++        expect(out.expired).toEqual([]);
++        expect(out.text).toContain(`docs_digest: ${digestOf('a body')}`);
++    });
++
++    it('reports a row it could not write rather than claiming it recorded one', () => {
++        // A `verified:` block with no `docs_digest:` key at all: the walk finds
++        // nothing to rewrite. Before this, the run still said "newly recorded".
++        const noKey = SOURCE.replace(`          docs_digest: ${recorded('claude') ?? ''}\n`, '');
++        const out = applyFindings(noKey, [classify('claude', 'any', 'u', null, 'body')], TODAY);
++        expect(out.written).toEqual([]);
++        expect(out.missed).toEqual(['claude/any']);
++    });
++
++    it('does not treat an indent-8 comment as the end of the verified block', () => {
++        // The copilot row carries long `#` comments at the row's own indent.
++        // Treating one as the block end would silently stop the rewrite.
++        const fill = classify('copilot', 'any', 'u', null, 'body');
++        const out = applyFindings(SOURCE, [fill], TODAY);
++        expect(out.missed).toEqual([]);
++        expect(out.written).toEqual(['copilot/any']);
++    });
++
++    it('does not touch a sibling host', () => {
++        const drift = classify('claude', 'any', 'u', recorded('claude'), 'moved');
++        const text = applyFindings(SOURCE, [drift], TODAY).text;
++        const table = parseHostLowering(text);
++        expect(table.get('gemini')?.get('any')?.verified?.expires).toBe('2027-09-29');
++        expect(table.get('gemini')?.get('any')?.verified?.docs_digest).toBe(recorded('gemini'));
++    });
++
++    it('preserves the comments that carry the findings', () => {
++        const drift = classify('claude', 'any', 'u', recorded('claude'), 'moved');
++        const text = applyFindings(SOURCE, [drift], TODAY).text;
++        expect(text).toContain('WHY THIS FILE EXISTS');
++        expect(text).toContain('THE FINDING THIS ROW CARRIES');
++        // The hand-aligned flow mappings are not this watcher's to reformat.
++        expect(text).toContain('stop:               { native: Stop,              block_exit: 2,');
++    });
++});
