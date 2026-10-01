@@ -133,12 +133,11 @@ export function run(state: DeliveryState): StepResult {
             return _halt_coverage(state, provided, report.gaps);
         }
         notes.push(...report.fallbacks);
-        // 3.1 — reported in shadow: the outcome value is unchanged for one
-        // release, so a caller branching on it is found by the line rather
-        // than by the breakage.
-        const handed_back = _handed_back_line(report);
-        if (handed_back !== null) {
-            notes.push(handed_back);
+        // 3.2 — the shadow is now the outcome. 3.1 shipped the line one
+        // release ahead (16.2.0 carries it) so a caller branching on
+        // `SUCCESS` was found by the words before it is found by the value.
+        if (carried_nothing(report)) {
+            return _halt_carried_nothing(state, report, notes);
         }
     }
 
@@ -387,6 +386,49 @@ function _halt_coverage(
         questions: lines,
         message:
             `UI apply rejected: ${gaps.length} coverage gap(s) against the provided artifact.`,
+    });
+}
+
+/**
+ * BLOCKED halt — the port accounted for everything and carried none of it.
+ *
+ * The gap list is empty here by construction: a complete report and a complete
+ * surrender look identical to `coverage_gaps`, which is why this is its own
+ * halt rather than a gap. `questions` is non-empty because the dispatcher
+ * rejects a `BLOCKED` result that surfaces nothing to answer — handing the
+ * work back has to come with a way forward, not just a refusal.
+ */
+function _halt_carried_nothing(
+    state: DeliveryState,
+    report: CoverageReport,
+    fallbacks: ReadonlyArray<string>,
+): StepResult {
+    const directive = _resolve_directive(state);
+    const lines: string[] = [
+        agent_directive(directive),
+        '> Apply rejected: the coverage report accounts for every declared ' +
+            'item and the port carried none of them over.',
+        `> All ${report.declared.length} declared item(s) are in \`flagged\`:`,
+    ];
+    for (const item of report.handed_back) {
+        lines.push(`> - \`${item}\``);
+    }
+    lines.push(
+        '> A complete report and a complete hand-back are the same empty gap ' +
+            'list, so this is checked separately — flagging one handler the ' +
+            'port could not carry is the ledger working; flagging all of them ' +
+            'is the port not having run.',
+        '> 1. Continue — implement the items above and re-write ' +
+            '`ui_apply.coverage` with each one in `honoured` or `translated`, ' +
+            'leaving in `flagged` only what genuinely could not be carried',
+        '> 2. Flag deliberately — say here which of the items above are out of ' +
+            'scope for this port and why, and the operator decides',
+        '> 3. Abort — drop this UI request',
+    );
+    return new StepResult({
+        outcome: Outcome.BLOCKED,
+        questions: lines,
+        message: [...fallbacks, `UI apply rejected: ${_handed_back_line(report)}`].join('\n'),
     });
 }
 
