@@ -43,6 +43,7 @@
  *     ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus routing-matrix
  *     ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus all
  *     ./scripts-run src/scripts/measure_skill_ranker_baseline --ranker keyword-v2
+ *     ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus routing-matrix --slice sealed
  */
 
 import * as fs from 'node:fs';
@@ -50,6 +51,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { wilsonInterval } from './_lib/capture_rate.js';
+import { fnv1a } from './_lib/fnv.js';
 import { rank } from './skill_tools/score_skill_relevance.js';
 import type { RankOptions } from '../shared/skillRanking.js';
 
@@ -205,6 +207,84 @@ export function promptsForCorpus(corpus: CorpusName, repo = REPO): LabelledPromp
 }
 
 /**
+ * Which half of the corpus a row belongs to.
+ *
+ * `road-to-a-ranker-that-routes` 1.2. Tuning and reading on one corpus of 390
+ * overfits it: a signal chosen because it lifted the number on the rows it was
+ * chosen from will lift the number on exactly those rows, and the interval
+ * printed beside it then describes the fitting rather than the ranker. Every
+ * lift claim in Phases 2 and 3 is read on `sealed` only.
+ */
+export type SliceName = 'all' | 'tuning' | 'sealed';
+export const SLICE_NAMES: readonly SliceName[] = ['all', 'tuning', 'sealed'];
+
+/**
+ * One row in five — nominally 20 %, measured 19.2 % (75 of 390) on the live
+ * corpus, because a hash is not a shuffle and the exact count is a property of
+ * the ids.
+ *
+ * Stated as a modulus rather than a fraction because the partition has to be a
+ * pure function of the id: a share applied to a shuffled list would move every
+ * row the moment a prompt is added, and the sealed slice would stop being the
+ * same slice between two runs of the same measurement.
+ */
+export const SEALED_MODULUS = 5;
+
+/**
+ * The slice one case id falls in — deterministic and order-independent.
+ *
+ * STABILITY UNDER CORPUS CHANGE IS PARTIAL, and an earlier version of this block
+ * claimed otherwise. The matrix id is `rule#section[ordinal]` and the ordinal is
+ * POSITIONAL — it counts `- prompt:` entries within a section. So:
+ *
+ *   - APPENDING a prompt to the end of a section is stable: every existing row
+ *     keeps its ordinal, its id, and its side of the seal. This is the workflow
+ *     the matrix README documents, which is why the partition survives the
+ *     release-to-release growth the `history` array is for.
+ *   - INSERTING or DELETING mid-section renumbers every later row in THAT
+ *     section, which re-hashes them and moves roughly one in five across the
+ *     seal.
+ *
+ * A content key (`rule|section|prompt`) would close the second case and is the
+ * right shape for the next corpus version. It is deliberately NOT applied here:
+ * the signals in Phase 2 were chosen by reading the TUNING rows of this
+ * partition, so re-drawing the boundary now would move ~20 % of those rows into
+ * the sealed slice and silently contaminate the very claims the seal exists to
+ * protect. Changing a partition after choosing on it is worse than a partially
+ * stable partition, so the key moves when the corpus does, not before.
+ */
+export function sliceForId(id: string): Exclude<SliceName, 'all'> {
+    return fnv1a(id) % SEALED_MODULUS === 0 ? 'sealed' : 'tuning';
+}
+
+/** The rows of `prompts` that fall in `slice`; `all` is the identity. */
+export function partitionBySlice<T extends { id: string }>(
+    prompts: readonly T[],
+    slice: SliceName,
+): T[] {
+    if (slice === 'all') return [...prompts];
+    return prompts.filter((p) => sliceForId(p.id) === slice);
+}
+
+/** How the corpus divides, printed on every run so a reader never assumes it. */
+export interface SliceSizes {
+    all: number;
+    tuning: number;
+    sealed: number;
+    sealed_modulus: number;
+}
+
+export function sliceSizes(prompts: readonly { id: string }[]): SliceSizes {
+    const sealed = prompts.filter((p) => sliceForId(p.id) === 'sealed').length;
+    return {
+        all: prompts.length,
+        tuning: prompts.length - sealed,
+        sealed,
+        sealed_modulus: SEALED_MODULUS,
+    };
+}
+
+/**
  * The packs a skill declares, read from its own `packs:` frontmatter block.
  *
  * Line-oriented, and deliberately NOT read from `src/packs/*\/pack.yaml`: those
@@ -278,6 +358,10 @@ export interface Interval {
 
 export interface AccuracyArm {
     corpus: CorpusName;
+    /** Which half of the corpus this arm read. `all` is the whole of it. */
+    slice: SliceName;
+    /** The division of the FULL corpus, printed whichever slice was read. */
+    slice_sizes: SliceSizes;
     corpus_prompts: number;
     top1: number;
     top1_ci95: Interval;
@@ -350,8 +434,11 @@ export function measureAccuracy(opts: {
     repo: string;
     skillsDir: string;
     rankOpts: RankOptions;
+    slice?: SliceName;
 }): AccuracyArm {
-    const labelled = promptsForCorpus(opts.corpus, opts.repo);
+    const slice = opts.slice ?? 'all';
+    const whole = promptsForCorpus(opts.corpus, opts.repo);
+    const labelled = partitionBySlice(whole, slice);
     let top1 = 0;
     let top3 = 0;
     const misses: string[] = [];
@@ -365,6 +452,8 @@ export function measureAccuracy(opts: {
     const census = packCensus(labelled, opts.skillsDir);
     return {
         corpus: opts.corpus,
+        slice,
+        slice_sizes: sliceSizes(whole),
         corpus_prompts: n,
         top1: n ? round3(top1 / n) : 0,
         top1_ci95: ci(top1, n),
@@ -381,20 +470,80 @@ export function measureAccuracy(opts: {
     };
 }
 
+/**
+ * The ranker label → the options it means.
+ *
+ * One table rather than a conditional at each call site, because a measurement
+ * harness that resolves `--ranker` differently from the report that quotes it
+ * is a comparison of two things under one name. Every entry past `keyword-v1`
+ * is a candidate configuration under `road-to-a-ranker-that-routes` Phase 2,
+ * each a single flag so it can be measured alone, plus the combinations the
+ * same phase names.
+ *
+ * AN UNKNOWN LABEL THROWS. It used to resolve to `keyword-v1` — the baseline —
+ * which is the exact failure this table exists to prevent: every consumer
+ * echoes the requested label back into its output, so a typo published a
+ * BASELINE number under another configuration's name, in the report's own title
+ * and in the regenerate command it prints beside it. The two sibling parsers in
+ * this file refuse an unknown value and so does the sweep; the lenient branch
+ * was the inconsistent one.
+ */
+export const RANKER_LABELS: Readonly<Record<string, RankOptions>> = {
+    'keyword-v1': {},
+    'keyword-v2': { includeTriggers: true },
+    'when-to-use': { includeWhenToUse: true },
+    headings: { includeHeadings: true },
+    idf: { idfWeighting: true },
+    'idf+when-to-use': { idfWeighting: true, includeWhenToUse: true },
+};
+
+/**
+ * The message carries NO tool name.
+ *
+ * Three scripts resolve `--ranker` through this module now, so a hardcoded
+ * prefix would print one tool's name when another was the failing command. The
+ * caller's own `process.stderr` line is where the command is identified.
+ */
+export class UnknownRankerLabel extends Error {
+    constructor(label: string) {
+        super(
+            `unknown --ranker ${label || '(nothing)'}; ` +
+                `known: ${Object.keys(RANKER_LABELS).join(' | ')}`,
+        );
+        this.name = 'UnknownRankerLabel';
+    }
+}
+
+/** Whether `label` is one of the table's OWN keys — never an inherited one. */
+export function isKnownRanker(label: string): boolean {
+    return Object.hasOwn(RANKER_LABELS, label);
+}
+
+export function rankOptionsFor(ranker: string): RankOptions {
+    // `Object.hasOwn`, not a truthiness check on the lookup: `RANKER_LABELS`
+    // is an object literal, so `constructor`, `toString` and `valueOf` resolve
+    // to inherited FUNCTIONS rather than to undefined. A plain `=== undefined`
+    // guard lets those three through, scores them as the baseline, and echoes
+    // the label into the report title — which is the whole defect this guard
+    // was added to close, surviving in its own fix.
+    if (!isKnownRanker(ranker)) throw new UnknownRankerLabel(ranker);
+    return RANKER_LABELS[ranker] as RankOptions;
+}
+
 export function measure(opts: {
     ranker: string;
     commit: string;
     corpus?: CorpusName;
+    slice?: SliceName;
     skillsDir?: string;
     repo?: string;
 }): RankerBaseline {
     const repo = opts.repo ?? REPO;
     const skillsDir = opts.skillsDir ?? SKILLS_DIR;
-    // `keyword-v2` is Phase 3.1: the same formula with `triggers:` prose folded
-    // into each skill's term source. Any other label measures v1.
-    const rankOpts: RankOptions = opts.ranker === 'keyword-v2' ? { includeTriggers: true } : {};
+    // Resolved through the one table, which throws on a label it does not know.
+    const rankOpts: RankOptions = rankOptionsFor(opts.ranker);
     const corpus = opts.corpus ?? 'labelled';
-    const accuracy = measureAccuracy({ corpus, repo, skillsDir, rankOpts });
+    const accuracy = measureAccuracy({ corpus, repo, skillsDir, rankOpts, slice: opts.slice ?? 'all' });
 
     const cases = readMatrixCases(repo);
     let withResult = 0;
@@ -446,17 +595,76 @@ function parseCorpus(argv: readonly string[]): CorpusName {
     return raw as CorpusName;
 }
 
+/**
+ * The `--ranker` value, or the baseline when the flag is absent.
+ *
+ * A PRESENT flag with no value after it is an error, not an omission — the
+ * sibling `--slice` has always refused that shape, and substituting the
+ * baseline for a malformed flag is the same silent-fallback defect one level
+ * up from the label table.
+ */
+export function parseRanker(argv: readonly string[]): string {
+    const i = argv.indexOf('--ranker');
+    if (i === -1) return 'keyword-v1';
+    const raw = argv[i + 1];
+    if (!raw || raw.startsWith('--')) {
+        throw new Error(
+            `--ranker expects one of ${Object.keys(RANKER_LABELS).join(' | ')}, got ${raw ?? '(nothing)'}`,
+        );
+    }
+    return raw;
+}
+
+/**
+ * A flag's value, or `fallback` when the flag is absent.
+ *
+ * A PRESENT flag followed by nothing — or by the next flag — is an error. Both
+ * `--commit` and `--date` are echoed verbatim into published artifacts (the
+ * baseline's provenance field, the confusion report's own header), so
+ * `--commit --ranker idf` silently publishing `--ranker` as the commit is the
+ * same silent-substitution class `parseRanker` was written to close, two flags
+ * over in the same two functions.
+ */
+export function parseFlagValue(argv: readonly string[], flag: string, fallback: string): string {
+    const i = argv.indexOf(flag);
+    if (i === -1) return fallback;
+    const raw = argv[i + 1];
+    if (!raw || raw.startsWith('--')) {
+        throw new Error(`${flag} expects a value, got ${raw ?? '(nothing)'}`);
+    }
+    return raw;
+}
+
+export function parseSlice(argv: readonly string[]): SliceName {
+    const i = argv.indexOf('--slice');
+    if (i === -1) return 'all';
+    const raw = argv[i + 1];
+    if (!raw || !SLICE_NAMES.includes(raw as SliceName)) {
+        throw new Error(
+            `measure_skill_ranker_baseline: --slice expects one of ${SLICE_NAMES.join(' | ')}, got ${raw ?? '(nothing)'}`,
+        );
+    }
+    return raw as SliceName;
+}
+
 export function main(argv: readonly string[]): number {
-    const ranker = argv.includes('--ranker') ? (argv[argv.indexOf('--ranker') + 1] ?? 'keyword-v1') : 'keyword-v1';
-    const commit = argv.includes('--commit') ? (argv[argv.indexOf('--commit') + 1] ?? 'unknown') : 'unknown';
     let corpus: CorpusName;
+    let slice: SliceName;
+    let ranker: string;
+    let commit: string;
+    let out: RankerBaseline;
     try {
         corpus = parseCorpus(argv);
+        slice = parseSlice(argv);
+        ranker = parseRanker(argv);
+        commit = parseFlagValue(argv, '--commit', 'unknown');
+        // Inside the same guard as the two parsers above: an unknown --ranker is
+        // the same class of mistake and now gets the same exit code.
+        out = measure({ ranker, commit, corpus, slice });
     } catch (err) {
         process.stderr.write(`${(err as Error).message}\n`);
         return 2;
     }
-    const out = measure({ ranker, commit, corpus });
     process.stdout.write(`${JSON.stringify(out, null, 2)}\n`);
     return 0;
 }

@@ -1,0 +1,844 @@
+{
+  "active-remediation#positives[2]": [
+    "code-refactoring",
+    "module-management"
+  ],
+  "architecture#positives[2]": [
+    "api-endpoint",
+    "laravel-api-endpoint",
+    "laravel"
+  ],
+  "artifact-drafting-protocol#near_misses[0]": [
+    "description-assist"
+  ],
+  "artifact-drafting-protocol#near_misses[1]": [
+    "project-docs"
+  ],
+  "artifact-drafting-protocol#positives[0]": [
+    "skill-writing"
+  ],
+  "artifact-drafting-protocol#positives[1]": [
+    "rule-writing",
+    "secrets-management"
+  ],
+  "artifact-drafting-protocol#positives[2]": [
+    "skill-writing",
+    "skill-management"
+  ],
+  "artifact-engagement-recording#near_misses[1]": [
+    "jira-integration",
+    "developer-like-execution"
+  ],
+  "artifact-engagement-recording#positives[0]": [
+    "command-routing"
+  ],
+  "augment-edit-discipline#near_misses[0]": [],
+  "brand-source-of-truth#near_misses[0]": [
+    "design-intelligence",
+    "design-tokens",
+    "brand-identity"
+  ],
+  "brand-source-of-truth#near_misses[1]": [
+    "design-tokens",
+    "fe-design",
+    "brand-to-tokens"
+  ],
+  "brand-source-of-truth#near_misses[2]": [
+    "design-tokens",
+    "brand-audit"
+  ],
+  "brand-source-of-truth#near_misses[3]": [
+    "voice-and-tone-design",
+    "brand-audit"
+  ],
+  "brand-source-of-truth#positives[0]": [
+    "brand-to-tokens",
+    "design-tokens"
+  ],
+  "brand-source-of-truth#positives[1]": [
+    "brand",
+    "brand-identity"
+  ],
+  "brand-source-of-truth#positives[2]": [
+    "brand-to-tokens",
+    "design-tokens"
+  ],
+  "brand-source-of-truth#positives[3]": [
+    "brand-audit",
+    "voice-and-tone-design"
+  ],
+  "brand-source-of-truth#positives[4]": [
+    "brand-audit",
+    "design-tokens"
+  ],
+  "brand-source-of-truth#positives[5]": [
+    "brand-audit",
+    "voice-and-tone-design"
+  ],
+  "broken-access-control#near_misses[1]": [
+    "security",
+    "aws-infrastructure"
+  ],
+  "broken-access-control#positives[0]": [
+    "api-endpoint",
+    "authz-review",
+    "threat-modeling"
+  ],
+  "broken-access-control#positives[2]": [
+    "authz-review"
+  ],
+  "cli-output-handling#near_misses[0]": [
+    "github-ci"
+  ],
+  "cli-output-handling#positives[0]": [
+    "quality-tools",
+    "rtk-output-filtering"
+  ],
+  "cli-output-handling#positives[1]": [
+    "rtk-output-filtering",
+    "token-optimizer",
+    "systematic-debugging"
+  ],
+  "cli-output-handling#positives[2]": [
+    "rtk-output-filtering",
+    "token-optimizer"
+  ],
+  "code-comment-discipline#near_misses[0]": [
+    "readme-writing"
+  ],
+  "command-suggestion-policy#near_misses[1]": [
+    "command-routing"
+  ],
+  "commit-conventions#near_misses[1]": [
+    "git-workflow"
+  ],
+  "commit-conventions#positives[1]": [
+    "conventional-commits-writing",
+    "git-workflow"
+  ],
+  "commit-conventions#positives[2]": [
+    "conventional-commits-writing",
+    "git-workflow"
+  ],
+  "copilot-routing#near_misses[0]": [
+    "copilot-config"
+  ],
+  "copilot-routing#positives[2]": [
+    "copilot-config"
+  ],
+  "council-availability#positives[0]": [
+    "ai-council"
+  ],
+  "council-availability#positives[1]": [
+    "ai-council"
+  ],
+  "decision-revisit-gate#near_misses[0]": [
+    "decision-record"
+  ],
+  "decision-revisit-gate#positives[0]": [
+    "decision-review"
+  ],
+  "decision-revisit-gate#positives[10]": [
+    "decision-review"
+  ],
+  "decision-revisit-gate#positives[1]": [
+    "decision-review"
+  ],
+  "decision-revisit-gate#positives[2]": [
+    "decision-review"
+  ],
+  "decision-revisit-gate#positives[3]": [
+    "decision-review",
+    "ai-council"
+  ],
+  "decision-revisit-gate#positives[5]": [
+    "decision-review",
+    "adr-create"
+  ],
+  "decision-revisit-gate#positives[6]": [
+    "decision-review"
+  ],
+  "decision-revisit-gate#positives[7]": [
+    "decision-review",
+    "ai-council"
+  ],
+  "decision-revisit-gate#positives[8]": [
+    "decision-review",
+    "ai-council"
+  ],
+  "delegation-policy#positives[0]": [
+    "subagent-orchestration"
+  ],
+  "delegation-policy#positives[1]": [
+    "subagent-orchestration",
+    "using-git-worktrees"
+  ],
+  "design-fidelity#near_misses[1]": [
+    "fe-design",
+    "existing-ui-audit",
+    "design-review"
+  ],
+  "design-fidelity#positives[1]": [
+    "fe-design",
+    "existing-ui-audit"
+  ],
+  "design-review-after-ui-write#near_misses[0]": [
+    "api-design"
+  ],
+  "design-review-after-ui-write#near_misses[1]": [
+    "database",
+    "performance"
+  ],
+  "design-review-after-ui-write#near_misses[2]": [
+    "secrets-management"
+  ],
+  "design-review-after-ui-write#positives[1]": [
+    "blade-ui",
+    "fe-design"
+  ],
+  "design-review-after-ui-write#positives[2]": [
+    "ui-component-architect",
+    "existing-ui-audit"
+  ],
+  "devcontainer-routing#positives[0]": [
+    "devcontainer"
+  ],
+  "devcontainer-routing#positives[1]": [
+    "devcontainer"
+  ],
+  "devcontainer-routing#positives[2]": [
+    "devcontainer"
+  ],
+  "doc-screenshot-hygiene#positives[0]": [
+    "screenshot-hygiene",
+    "readme-writing"
+  ],
+  "doc-screenshot-hygiene#positives[2]": [
+    "screenshot-hygiene"
+  ],
+  "doc-screenshot-hygiene#positives[3]": [
+    "screenshot-hygiene"
+  ],
+  "docker-commands#positives[0]": [
+    "docker"
+  ],
+  "docker-commands#positives[1]": [
+    "docker"
+  ],
+  "domain-adoption-policy#positives[3]": [
+    "skill-writing"
+  ],
+  "domain-safety-disclaimer#positives[0]": [
+    "privacy-review",
+    "legal-intake-triage"
+  ],
+  "domain-safety-disclaimer#positives[1]": [
+    "fundraising-narrative"
+  ],
+  "domain-safety-pii#near_misses[0]": [
+    "privacy-review"
+  ],
+  "domain-safety-retention#positives[0]": [
+    "data-handling-judgment",
+    "privacy-review"
+  ],
+  "domain-safety-retention#positives[1]": [
+    "data-handling-judgment",
+    "privacy-review"
+  ],
+  "domain-safety-retention#positives[2]": [
+    "data-handling-judgment",
+    "privacy-review"
+  ],
+  "downstream-changes#near_misses[0]": [
+    "code-refactoring"
+  ],
+  "downstream-changes#positives[0]": [
+    "code-refactoring",
+    "code-intelligence",
+    "blast-radius-analyzer"
+  ],
+  "downstream-changes#positives[1]": [
+    "code-refactoring",
+    "code-intelligence"
+  ],
+  "downstream-changes#positives[2]": [
+    "blast-radius-analyzer",
+    "code-refactoring",
+    "code-intelligence"
+  ],
+  "engineering-safety-floor#positives[0]": [
+    "launch-readiness"
+  ],
+  "engineering-safety-floor#positives[1]": [
+    "schema-review",
+    "migration-architect"
+  ],
+  "evaluator-independence#positives[0]": [
+    "code-review",
+    "ai-council",
+    "adversarial-review"
+  ],
+  "evaluator-independence#positives[2]": [
+    "code-review",
+    "subagent-orchestration",
+    "ai-council"
+  ],
+  "external-code-graph-interop#near_misses[0]": [
+    "code-intelligence"
+  ],
+  "external-code-graph-interop#positives[0]": [
+    "code-intelligence"
+  ],
+  "external-code-graph-interop#positives[1]": [
+    "code-intelligence"
+  ],
+  "fast-path-marker-visibility#near_misses[0]": [
+    "ai-council"
+  ],
+  "finance-safety-floor#positives[2]": [
+    "runway-cognition",
+    "scenario-modeling",
+    "fundraising-narrative"
+  ],
+  "finance-safety-floor#positives[3]": [
+    "dcf-modeling",
+    "scenario-modeling"
+  ],
+  "fix-what-you-see#positives[0]": [
+    "systematic-debugging",
+    "github-ci"
+  ],
+  "framework-neutrality-in-generic-skills#near_misses[1]": [],
+  "framework-neutrality-in-generic-skills#near_misses[2]": [
+    "project-analysis-react"
+  ],
+  "framework-neutrality-in-generic-skills#near_misses[3]": [
+    "project-analysis-react",
+    "context-document"
+  ],
+  "framework-neutrality-in-generic-skills#positives[0]": [
+    "skill-management",
+    "skill-writing"
+  ],
+  "git-history-discipline#near_misses[0]": [
+    "git-workflow",
+    "finishing-a-development-branch"
+  ],
+  "git-history-discipline#positives[0]": [
+    "git-workflow",
+    "merge-conflicts"
+  ],
+  "git-history-discipline#positives[1]": [
+    "git-workflow",
+    "merge-conflicts"
+  ],
+  "git-history-discipline#positives[2]": [
+    "git-workflow"
+  ],
+  "history-discipline#positives[0]": [
+    "history-design"
+  ],
+  "history-discipline#positives[1]": [
+    "history-design"
+  ],
+  "history-discipline#positives[2]": [
+    "history-design"
+  ],
+  "icon-consistency#near_misses[0]": [
+    "design-intelligence",
+    "brand-identity"
+  ],
+  "icon-consistency#positives[0]": [
+    "iconography"
+  ],
+  "icon-consistency#positives[1]": [
+    "iconography"
+  ],
+  "icon-consistency#positives[2]": [
+    "iconography"
+  ],
+  "image-likeness-and-rights#near_misses[1]": [
+    "accessibility-auditor"
+  ],
+  "image-likeness-and-rights#positives[0]": [
+    "image-generation",
+    "image-provider-routing"
+  ],
+  "image-likeness-and-rights#positives[1]": [
+    "logo-generation"
+  ],
+  "image-likeness-and-rights#positives[2]": [
+    "logo-generation",
+    "brand-identity"
+  ],
+  "image-likeness-and-rights#positives[3]": [
+    "code-review"
+  ],
+  "improve-before-implement#near_misses[2]": [
+    "voc-extract"
+  ],
+  "improve-before-implement#near_misses[4]": [
+    "activation-design",
+    "onboarding-design",
+    "funnel-analysis"
+  ],
+  "improve-before-implement#near_misses[5]": [
+    "rice-prioritization",
+    "stakeholder-tradeoff"
+  ],
+  "improve-before-implement#near_misses[6]": [
+    "funnel-analysis",
+    "activation-design"
+  ],
+  "improve-before-implement#positives[1]": [
+    "code-refactoring"
+  ],
+  "improve-before-implement#positives[2]": [
+    "multi-tenancy",
+    "schema-review",
+    "migration-architect"
+  ],
+  "invite-challenge#near_misses[1]": [
+    "dependency-upgrade"
+  ],
+  "invite-challenge#positives[2]": [
+    "decision-record",
+    "performance"
+  ],
+  "laravel-routing#near_misses[0]": [
+    "laravel-validation",
+    "php-coder"
+  ],
+  "laravel-routing#near_misses[2]": [
+    "project-analysis-node-express",
+    "blast-radius-analyzer"
+  ],
+  "laravel-routing#near_misses[5]": [
+    "universal-project-analysis",
+    "project-analysis-node-express"
+  ],
+  "laravel-routing#positives[0]": [
+    "eloquent",
+    "laravel"
+  ],
+  "laravel-translations#near_misses[1]": [
+    "logging-monitoring"
+  ],
+  "laravel-translations#positives[1]": [
+    "laravel",
+    "systematic-debugging"
+  ],
+  "lethal-trifecta-guard#near_misses[1]": [
+    "testing-anti-patterns",
+    "systematic-debugging"
+  ],
+  "lethal-trifecta-guard#positives[0]": [
+    "skill-writing",
+    "agent-security-review",
+    "threat-modeling"
+  ],
+  "lethal-trifecta-guard#positives[3]": [
+    "skill-reviewer",
+    "agent-security-review"
+  ],
+  "linked-projects-onboarding-gate#near_misses[1]": [
+    "git-workflow"
+  ],
+  "linked-projects-onboarding-gate#positives[1]": [
+    "blast-radius-analyzer",
+    "monorepo-workspace"
+  ],
+  "low-impact-corpus-privacy-floor#near_misses[0]": [
+    "adr-create"
+  ],
+  "low-impact-corpus-privacy-floor#positives[3]": [
+    "upstream-contribute"
+  ],
+  "media-governance-routing#positives[0]": [
+    "video-director",
+    "scene-expander",
+    "character-consistency"
+  ],
+  "media-sync-ground-truth#positives[2]": [
+    "song-to-script",
+    "motion-choreographer"
+  ],
+  "missing-skill-recovery#near_misses[0]": [
+    "skill-writing"
+  ],
+  "missing-skill-recovery#positives[0]": [
+    "migration-architect",
+    "laravel-migration"
+  ],
+  "missing-skill-recovery#positives[2]": [
+    "threat-modeling"
+  ],
+  "model-recommendation#near_misses[0]": [
+    "migration-architect",
+    "schema-review"
+  ],
+  "model-recommendation#near_misses[1]": [
+    "laravel-scheduling",
+    "jobs-events"
+  ],
+  "model-recommendation#positives[1]": [
+    "reasoning-orchestrator"
+  ],
+  "model-recommendation#positives[2]": [
+    "command-writing"
+  ],
+  "no-attribution-footers#near_misses[0]": [
+    "review-routing",
+    "requesting-code-review"
+  ],
+  "no-attribution-footers#positives[2]": [],
+  "no-decorative-emojis-in-git-surfaces#near_misses[1]": [
+    "conventional-commits-writing",
+    "git-workflow"
+  ],
+  "no-decorative-emojis-in-git-surfaces#positives[3]": [
+    "conventional-commits-writing"
+  ],
+  "notes-first-reasoning#near_misses[1]": [
+    "logging-monitoring"
+  ],
+  "notes-first-reasoning#positives[0]": [
+    "systematic-debugging",
+    "project-analysis-hypothesis-driven"
+  ],
+  "notes-first-reasoning#positives[1]": [
+    "systematic-debugging",
+    "project-analysis-hypothesis-driven"
+  ],
+  "persona-governance#near_misses[1]": [
+    "voice-and-tone-design"
+  ],
+  "persona-governance#positives[0]": [
+    "persona-writing"
+  ],
+  "persona-governance#positives[1]": [
+    "persona-writing",
+    "description-assist"
+  ],
+  "persona-governance#positives[2]": [
+    "persona-writing"
+  ],
+  "php-coding#near_misses[2]": [
+    "async-python-patterns"
+  ],
+  "php-coding#near_misses[4]": [
+    "async-python-patterns"
+  ],
+  "php-coding#positives[0]": [
+    "quality-tools"
+  ],
+  "php-coding#positives[1]": [
+    "quality-tools"
+  ],
+  "php-coding#positives[2]": [
+    "quality-tools",
+    "php-coder"
+  ],
+  "php-coding#positives[3]": [
+    "php-coder",
+    "code-refactoring"
+  ],
+  "playbook-precedence#near_misses[0]": [],
+  "prefer-enums-over-literals#near_misses[0]": [
+    "code-refactoring"
+  ],
+  "preservation-guard#positives[0]": [
+    "skill-management"
+  ],
+  "provider-lifecycle-discipline#near_misses[1]": [
+    "secrets-management"
+  ],
+  "provider-lifecycle-discipline#positives[0]": [
+    "image-provider-routing",
+    "brand-asset-generation"
+  ],
+  "question-not-instruction#positives[1]": [],
+  "reviewer-awareness#near_misses[1]": [
+    "jira-integration",
+    "review-routing"
+  ],
+  "roadmap-ci-steps-policy#near_misses[1]": [
+    "github-ci",
+    "readme-writing"
+  ],
+  "roadmap-ci-steps-policy#positives[0]": [
+    "roadmap-writing"
+  ],
+  "roadmap-ci-steps-policy#positives[1]": [
+    "roadmap-writing",
+    "roadmap-management"
+  ],
+  "roadmap-progress-sync#near_misses[0]": [
+    "roadmap-management",
+    "roadmap-writing"
+  ],
+  "roadmap-progress-sync#positives[1]": [
+    "roadmap-management"
+  ],
+  "roadmap-progress-sync#positives[2]": [
+    "roadmap-management"
+  ],
+  "runtime-safety#positives[0]": [
+    "skill-writing",
+    "skill-management"
+  ],
+  "runtime-safety#positives[1]": [
+    "skill-writing",
+    "lint-skills"
+  ],
+  "runtime-safety#positives[2]": [
+    "skill-writing",
+    "lint-skills"
+  ],
+  "scale-discipline#near_misses[0]": [
+    "performance",
+    "performance-analysis"
+  ],
+  "scale-discipline#positives[2]": [
+    "schema-review",
+    "database"
+  ],
+  "secret-vcs-guard#near_misses[0]": [
+    "security",
+    "aws-infrastructure"
+  ],
+  "secret-vcs-guard#near_misses[1]": [
+    "secrets-management"
+  ],
+  "security-sensitive-stop#near_misses[3]": [],
+  "security-sensitive-stop#near_misses[4]": [
+    "openapi"
+  ],
+  "security-sensitive-stop#positives[0]": [
+    "threat-modeling",
+    "security"
+  ],
+  "security-sensitive-stop#positives[3]": [
+    "threat-modeling",
+    "api-endpoint"
+  ],
+  "security-sensitive-stop#positives[4]": [
+    "security",
+    "threat-modeling"
+  ],
+  "security-sensitive-stop#positives[5]": [
+    "api-endpoint",
+    "threat-modeling"
+  ],
+  "self-repair-loop#near_misses[1]": [
+    "github-ci"
+  ],
+  "senior-engineering-discipline#positives[0]": [
+    "api-endpoint",
+    "ai-code-blindspots"
+  ],
+  "senior-engineering-discipline#positives[1]": [
+    "laravel",
+    "sql-writing"
+  ],
+  "senior-engineering-discipline#positives[2]": [
+    "laravel-migration",
+    "schema-review"
+  ],
+  "settings-ask-protocol#near_misses[0]": [
+    "readme-writing"
+  ],
+  "skill-improvement-trigger#near_misses[0]": [
+    "memory-consolidation",
+    "learning-to-rule-or-skill"
+  ],
+  "skill-improvement-trigger#near_misses[1]": [
+    "github-ci"
+  ],
+  "skill-improvement-trigger#positives[0]": [
+    "skill-improvement-pipeline",
+    "learning-to-rule-or-skill"
+  ],
+  "skill-improvement-trigger#positives[1]": [],
+  "skill-improvement-trigger#positives[2]": [],
+  "slash-command-routing-policy#near_misses[0]": [
+    "conventional-commits-writing",
+    "git-workflow"
+  ],
+  "slash-command-routing-policy#near_misses[1]": [
+    "requesting-code-review",
+    "review-routing",
+    "git-workflow"
+  ],
+  "slash-command-routing-policy#positives[0]": [
+    "command-routing"
+  ],
+  "slash-command-routing-policy#positives[1]": [
+    "command-routing"
+  ],
+  "slash-command-routing-policy#positives[2]": [
+    "command-routing"
+  ],
+  "source-discovery-gate#near_misses[2]": [
+    "forensics-report"
+  ],
+  "source-discovery-gate#near_misses[3]": [
+    "forensics-report"
+  ],
+  "source-discovery-gate#near_misses[5]": [
+    "forensics-report"
+  ],
+  "source-of-truth#near_misses[0]": [
+    "rule-writing"
+  ],
+  "spreadsheet-source-quality#near_misses[0]": [
+    "spreadsheet-authoring"
+  ],
+  "spreadsheet-source-quality#near_misses[3]": [
+    "prediction-pool-optimizer"
+  ],
+  "spreadsheet-source-quality#near_misses[4]": [
+    "prediction-pool-optimizer"
+  ],
+  "spreadsheet-source-quality#positives[0]": [
+    "spreadsheet-authoring"
+  ],
+  "spreadsheet-source-quality#positives[1]": [
+    "spreadsheet-authoring"
+  ],
+  "strategy-safety-floor#near_misses[2]": [
+    "deal-qualification-meddic"
+  ],
+  "strategy-safety-floor#near_misses[3]": [
+    "expansion-playbook"
+  ],
+  "strategy-safety-floor#near_misses[4]": [
+    "forecast-accuracy",
+    "deal-qualification-meddic"
+  ],
+  "strategy-safety-floor#near_misses[7]": [
+    "comp-banding"
+  ],
+  "strategy-safety-floor#near_misses[8]": [
+    "one-on-one-cadence",
+    "org-design"
+  ],
+  "strategy-safety-floor#near_misses[9]": [
+    "scenario-modeling",
+    "forecasting"
+  ],
+  "strategy-safety-floor#positives[1]": [
+    "market-entry-analysis"
+  ],
+  "strategy-safety-floor#positives[2]": [
+    "positioning-strategy",
+    "competitive-moat-analysis"
+  ],
+  "symfony-routing#near_misses[0]": [
+    "symfony-workflow",
+    "php-coder"
+  ],
+  "symfony-routing#near_misses[3]": [
+    "nextjs-patterns"
+  ],
+  "symfony-routing#near_misses[4]": [
+    "project-analysis-nextjs",
+    "nextjs-patterns"
+  ],
+  "symfony-routing#near_misses[5]": [
+    "systematic-debugging",
+    "project-analysis-nextjs",
+    "project-analysis-react"
+  ],
+  "symfony-routing#positives[2]": [
+    "symfony-workflow"
+  ],
+  "test-first#positives[0]": [
+    "test-driven-development"
+  ],
+  "test-first#positives[1]": [
+    "test-driven-development",
+    "systematic-debugging"
+  ],
+  "test-first#positives[3]": [
+    "test-driven-development",
+    "test-case-discovery"
+  ],
+  "think-before-action#positives[0]": [
+    "developer-like-execution",
+    "feature-planning"
+  ],
+  "think-before-action#positives[1]": [
+    "systematic-debugging"
+  ],
+  "think-before-action#positives[2]": [
+    "data-flow-mapper",
+    "blast-radius-analyzer"
+  ],
+  "token-budget-discipline#positives[0]": [
+    "skill-writing",
+    "skill-management"
+  ],
+  "token-efficiency#near_misses[1]": [
+    "rtk-output-filtering",
+    "token-optimizer"
+  ],
+  "token-efficiency#positives[0]": [
+    "token-optimizer"
+  ],
+  "token-efficiency#positives[1]": [
+    "token-optimizer",
+    "rtk-output-filtering"
+  ],
+  "token-efficiency#positives[2]": [
+    "token-optimizer"
+  ],
+  "token-optimizer-maintenance#positives[1]": [
+    "check-refs",
+    "token-optimizer"
+  ],
+  "token-optimizer-maintenance#positives[2]": [
+    "token-optimizer",
+    "check-refs"
+  ],
+  "tool-safety#near_misses[0]": [
+    "github-ci"
+  ],
+  "tool-safety#positives[0]": [
+    "skill-writing"
+  ],
+  "ui-audit-gate#near_misses[0]": [
+    "api-design"
+  ],
+  "ui-audit-gate#near_misses[1]": [],
+  "ui-audit-gate#positives[0]": [
+    "existing-ui-audit",
+    "fe-design",
+    "ui-component-architect"
+  ],
+  "untrusted-input-defense#near_misses[1]": [
+    "security",
+    "defense-in-depth"
+  ],
+  "upstream-proposal#positives[0]": [
+    "upstream-contribute"
+  ],
+  "upstream-proposal#positives[2]": [
+    "upstream-contribute"
+  ],
+  "user-interaction#positives[0]": [
+    "decision-record",
+    "migration-architect"
+  ],
+  "user-interaction#positives[2]": [
+    "migration-architect",
+    "laravel-migration"
+  ],
+  "user-interrupt-priority#positives[0]": [
+    "incident-commander"
+  ],
+  "user-interrupt-priority#positives[2]": [
+    "roadmap-management"
+  ]
+}
