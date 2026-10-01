@@ -110,6 +110,37 @@ describe("payload opt-in — what the stub replaces", () => {
     expect(isPayloadStub(keptResult["tool_input"])).toBe(true);
   });
 
+  it("treats a failure envelope's `error` as the result body it is", () => {
+    // claude's `PostToolUseFailure` carries no `tool_response`; the command's
+    // own output arrives in `error`, under a line stating the exit code. Until
+    // that event was bound this key reached no concern, so leaving it off the
+    // result list cost nothing — and binding the event without it would have
+    // delivered raw command output in full to every concern on the slot,
+    // including the ones that never declared `result`.
+    const failure: JsonObject = {
+      schema_version: 1,
+      platform: "claude",
+      event: "post_tool_use",
+      native_event: "PostToolUseFailure",
+      session_id: "s1",
+      workspace_root: "/tmp/ws",
+      payload: {
+        tool_name: "Bash",
+        tool_input: { command: "npx tsc --noEmit missing.ts" },
+        error: "Exit code 2\nerror TS6053: File 'missing.ts' not found.",
+        is_interrupt: false,
+      },
+    };
+    expect(presentBodyClasses(failure).has("result")).toBe(true);
+
+    const withheld = shape(failure, KEEP_INPUT)["payload"] as JsonObject;
+    expect(isPayloadStub(withheld["error"])).toBe(true);
+
+    const kept = shape(failure, KEEP_RESULT)["payload"] as JsonObject;
+    expect(isPayloadStub(kept["error"])).toBe(false);
+    expect(String(kept["error"])).toContain("TS6053");
+  });
+
   it("leaves every non-body payload key untouched", () => {
     const shaped = shape(postEnvelope(), KEEP_NONE);
     const payload = shaped["payload"] as JsonObject;

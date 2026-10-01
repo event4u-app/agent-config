@@ -1,0 +1,18 @@
+{
+  "session_id": "fixture-bash-failure-001",
+  "transcript_path": "/workspace/.transcripts/fixture-bash-failure-001.jsonl",
+  "cwd": "/workspace",
+  "prompt_id": "fixture-prompt-001",
+  "permission_mode": "default",
+  "effort": { "level": "medium" },
+  "hook_event_name": "PostToolUseFailure",
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "npx tsc --noEmit /nonexistent-probe-file.ts",
+    "description": "Run TypeScript compiler on a nonexistent file"
+  },
+  "tool_use_id": "toolu_fixture000000000000001",
+  "error": "Exit code 2\nerror TS6053: File '/nonexistent-probe-file.ts' not found.\n  The file is in the program because:\n    Root file specified for compilation",
+  "is_interrupt": false,
+  "duration_ms": 1148
+}

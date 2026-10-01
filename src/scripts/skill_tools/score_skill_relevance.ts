@@ -39,11 +39,14 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // a second copy (road-to-skill-delivery-over-mcp risk 6). Everything below is
 // the disk half — globbing, frontmatter, the CLI — which stays here.
 import {
+    buildTermStats,
     scoreSkill,
     skillTerms as _sharedSkillTerms,
     tokenize as _sharedTokenize,
     triggerTextFromFlatLines,
+    widensTermSource,
     type RankOptions,
+    type TermStats,
 } from '../../shared/skillRanking.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -100,7 +103,17 @@ export interface Frontmatter {
 export function _parse_frontmatter(filePath: string): Frontmatter {
     // text.read_text(errors="replace") — Node `utf-8` decode replaces the same
     // way for the inputs these tools see (well-formed SKILL.md files).
-    const text = fs.readFileSync(filePath, 'utf-8');
+    return _parse_frontmatter_text(fs.readFileSync(filePath, 'utf-8'));
+}
+
+/**
+ * The same reader over text already in hand.
+ *
+ * The loader needs the body as well as the frontmatter, and reading each
+ * SKILL.md twice to get them would double the per-call I/O of a ranker that
+ * runs on a hook path.
+ */
+export function _parse_frontmatter_text(text: string): Frontmatter {
     if (!text.startsWith('---')) {
         return {};
     }
@@ -169,6 +182,99 @@ export interface Skill {
     terms: Set<string>;
     /** `triggers[].keyword` / `.phrase` prose. Indexed only under keyword-v2. */
     triggerText: string[];
+    /** The body's `## When to use` section. Indexed only behind its own flag. */
+    whenToUseText: string;
+    /** The body's `##` / `###` heading lines. Indexed only behind its own flag. */
+    headingText: string[];
+}
+
+/** Everything after the frontmatter block, or the whole text when there is none. */
+export function _body_of(text: string): string {
+    if (!text.startsWith('---')) return text;
+    const end = text.indexOf('\n---', 3);
+    if (end === -1) return text;
+    return text.slice(end + 4);
+}
+
+/**
+ * The `## When to use` section, and every `##` / `###` heading, out of a body.
+ *
+ * Line-oriented, and bounded in two ways that a first version got wrong in the
+ * same direction — it indexed something other than what this block describes,
+ * which makes a measurement of the FLAG a measurement of the PARSER:
+ *
+ *   - the section ends at the next heading of the SAME OR A HIGHER level, so a
+ *     `###` subsection of `## When to use` stays inside it. Ending at any
+ *     heading truncated the capture at the first subsection;
+ *   - a line inside a fenced code block is never a heading. These skills are
+ *     documentation and routinely fence markdown samples, so a `## …` line in a
+ *     fence was both harvested as a topic and used to terminate the section.
+ *
+ * Without the first bound a skill whose whole file is one section could still
+ * not put its procedure into an index whose flag says "when to use", because a
+ * sibling `##` ends it.
+ */
+export function _body_signals(body: string): { whenToUse: string; headings: string[] } {
+    const headings: string[] = [];
+    const when: string[] = [];
+    let whenLevel = 0;
+    let fenceMark: string | null = null;
+    let fenceLen = 0;
+    for (const raw of body.split('\n')) {
+        const line = raw.trimEnd();
+        const f = /^\s*(`{3,}|~{3,})(.*)$/.exec(line);
+        if (f) {
+            const run = f[1] as string;
+            const mark = run[0] as string;
+            if (fenceMark === null) {
+                fenceMark = mark;
+                fenceLen = run.length;
+                // The DELIMITER and its info string are not prose. Pushing them
+                // put the language tag of every fenced sample (`bash`, `yaml`)
+                // into the index, which is the parser leaking into the signal in
+                // the opposite direction from the truncation this block fixed.
+                continue;
+            }
+            // A closing fence has to be at least as long as the opening one and
+            // use the same marker; otherwise a ``` inside a ```` block would
+            // close it early.
+            if (mark === fenceMark && run.length >= fenceLen && (f[2] as string).trim() === '') {
+                fenceMark = null;
+                fenceLen = 0;
+            }
+            continue;
+        }
+        if (fenceMark !== null) {
+            if (whenLevel > 0) when.push(raw);
+            continue;
+        }
+        // `#{1,6}`, not `#{2,6}`: a level-1 heading is strictly HIGHER than the
+        // section and must close it. Matching only `##`+ let a `# New Section`
+        // and everything after it leak into an open capture.
+        const h = /^(#{1,6})\s+(.*)$/.exec(line);
+        if (h) {
+            const level = (h[1] as string).length;
+            const title = (h[2] as string).trim();
+            if (level >= 2 && level <= 3) headings.push(title);
+            if (whenLevel > 0 && level <= whenLevel) {
+                whenLevel = 0;
+            } else if (whenLevel > 0) {
+                // A SUBSECTION TITLE inside `## When to use` is part of that
+                // section's text. Skipping it indexed the prose under a `### Do
+                // NOT use when` while dropping the words that say what it is.
+                when.push(title);
+            }
+            // Only OPEN a section when none is open. Assigning unconditionally
+            // let a `### When to use it on a monorepo` overwrite the outer
+            // level 2 with 3, after which the next sibling `###` satisfied
+            // `level <= whenLevel` and closed the section early — silently
+            // dropping everything from that sibling to the real end.
+            if (whenLevel === 0 && /^when to use\b/i.test(title)) whenLevel = level;
+            continue;
+        }
+        if (whenLevel > 0) when.push(raw);
+    }
+    return { whenToUse: when.join(' ').trim(), headings };
 }
 
 /**
@@ -179,11 +285,11 @@ export interface Skill {
  * owns what that order means. Reading only the first root is the defect this
  * replaced; silently ranking one name twice would be the next one.
  */
-function _load_skills_across(roots: readonly string[]): Skill[] {
+function _load_skills_across(roots: readonly string[], opts: RankOptions = {}): Skill[] {
     const out: Skill[] = [];
     const seen = new Set<string>();
     for (const root of roots) {
-        for (const s of _load_skills(root)) {
+        for (const s of _load_skills(root, opts)) {
             if (seen.has(s.name)) continue;
             seen.add(s.name);
             out.push(s);
@@ -192,10 +298,15 @@ function _load_skills_across(roots: readonly string[]): Skill[] {
     return out;
 }
 
-function _load_skills(skillsDir: string): Skill[] {
+function _load_skills(skillsDir: string, opts: RankOptions = {}): Skill[] {
+    // The body is parsed only when a flag indexes it. Under keyword-v1 the
+    // loader's work is exactly what it always was, which is what keeps the
+    // default path's per-prompt cost comparable to the pre-flag reading.
+    const wantsBody = Boolean(opts.includeWhenToUse || opts.includeHeadings);
     const skills: Skill[] = [];
     for (const skillMd of _globSkillMd(skillsDir)) {
-        const fm = _parse_frontmatter(skillMd);
+        const text = fs.readFileSync(skillMd, 'utf-8');
+        const fm = _parse_frontmatter_text(text);
         const rawName = fm['name'];
         const name = _truthyStr(rawName) ? String(rawName) : path.basename(path.dirname(skillMd));
         const rawDesc = fm['description'];
@@ -209,12 +320,17 @@ function _load_skills(skillsDir: string): Skill[] {
         const triggerText = Array.isArray(rawTriggers)
             ? triggerTextFromFlatLines(rawTriggers as string[])
             : [];
+        const { whenToUse, headings } = wantsBody
+            ? _body_signals(_body_of(text))
+            : { whenToUse: '', headings: [] as string[] };
         skills.push({
             name,
             description: desc,
             personas: personaList,
             terms: _tokenize(name + ' ' + desc),
             triggerText,
+            whenToUseText: whenToUse,
+            headingText: headings,
         });
     }
     return skills;
@@ -234,7 +350,7 @@ function _truthyStr(v: string | string[] | undefined): boolean {
  * Python sorts `Path` objects component-wise. Since every match is
  * `<dir>/SKILL.md`, sorting by the directory component reproduces that order.
  */
-function _globSkillMd(root: string): string[] {
+export function _globSkillMd(root: string): string[] {
     let names: string[];
     try {
         names = fs.readdirSync(root);
@@ -257,19 +373,46 @@ function _globSkillMd(root: string): string[] {
     return dirs.map((name) => path.join(root, name, 'SKILL.md'));
 }
 
-function _score(taskTerms: Set<string>, skill: Skill, opts: RankOptions = {}): number {
-    // Single-sourced in `src/shared/skillRanking.ts`. Under keyword-v1 (the
-    // default) `skill.terms` is already `tokenize(name + ' ' + description)`, so
-    // the precomputed set is reused unchanged; keyword-v2 re-derives the term
-    // set with the skill's trigger prose folded in.
-    const rankable = {
+function _rankable(skill: Skill): {
+    name: string;
+    description: string;
+    personas: string[];
+    triggerText: string[];
+    whenToUseText: string;
+    headingText: string[];
+} {
+    return {
         name: skill.name,
         description: skill.description,
         personas: skill.personas,
         triggerText: skill.triggerText,
+        whenToUseText: skill.whenToUseText,
+        headingText: skill.headingText,
     };
-    const terms = opts.includeTriggers ? _sharedSkillTerms(rankable, opts) : skill.terms;
-    return scoreSkill(taskTerms, rankable, terms);
+}
+
+/**
+ * The indexed term set for one skill.
+ *
+ * With no term-source flag set, `skill.terms` is already
+ * `tokenize(name + ' ' + description)` and the precomputed set is reused
+ * unchanged; a flag that widens the source re-derives it with that source
+ * folded in. Separated from `_score` so the caller can build each set ONCE and
+ * share it between the document-frequency pass and the scoring loop.
+ */
+function _terms(skill: Skill, opts: RankOptions): ReadonlySet<string> {
+    return widensTermSource(opts) ? _sharedSkillTerms(_rankable(skill), opts) : skill.terms;
+}
+
+function _score(
+    taskTerms: Set<string>,
+    skill: Skill,
+    terms: ReadonlySet<string>,
+    opts: RankOptions = {},
+    stats?: TermStats,
+): number {
+    // Single-sourced in `src/shared/skillRanking.ts`.
+    return scoreSkill(taskTerms, _rankable(skill), terms, opts, stats);
 }
 
 export type RankRow = [string, number, string[]];
@@ -283,10 +426,15 @@ export function rank(
     opts: RankOptions = {},
 ): RankRow[] {
     const taskTerms = _tokenize(task);
-    const skills = _load_skills_across(typeof skillsDir === 'string' ? [skillsDir] : skillsDir);
+    const skills = _load_skills_across(typeof skillsDir === 'string' ? [skillsDir] : skillsDir, opts);
+    // ONE term set per skill, shared between the document-frequency pass and the
+    // scoring loop — the two used to tokenize the whole catalogue separately.
+    const termSets = skills.map((s) => _terms(s, opts));
+    const stats = opts.idfWeighting ? buildTermStats(skills.map(_rankable), termSets) : undefined;
     const rows: RankRow[] = [];
-    for (const s of skills) {
-        const score = _score(taskTerms, s, opts);
+    for (let i = 0; i < skills.length; i += 1) {
+        const s = skills[i] as Skill;
+        const score = _score(taskTerms, s, termSets[i] as ReadonlySet<string>, opts, stats);
         if (score > 0) {
             rows.push([s.name, score, [...s.personas]]);
         }

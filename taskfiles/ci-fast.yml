@@ -208,6 +208,15 @@ tasks:
       # only when the healer reports staleness, because staleness is exactly
       # the mtime inference this gate exists to distrust.
       - ./scripts-run src/scripts/check_hook_bundle_content
+      # What is INSIDE the bundle, which neither neighbour above asks: one YAML
+      # reader, and a byte ceiling. The mtime gate compares ordering and the
+      # content gate compares digests, so a second parser arriving for one
+      # concern — 95,846 bytes paid on every dispatch, 2026-10-01 — passed both
+      # and reached a release as an external review finding. Same argv as the
+      # `Consistency` workflow step, which is why this one is NOT declared
+      # local-only: it builds its own bundle rather than reading the untracked
+      # one, so it is not a CI no-op. Cost measured here: 0.35s over three runs.
+      - ./scripts-run src/scripts/check_hook_bundle_composition
       - ./scripts-run src/scripts/lint_regression
       # Same argv the CI `skill-lint` job runs. NOT chosen for speed — both
       # forms are sub-second here (0.44s --changed / 0.52s --all, measured

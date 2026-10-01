@@ -228,3 +228,146 @@ describe('score_skill_relevance — CLI (tsx)', () => {
         );
     });
 });
+
+// The candidate signals (road-to-a-ranker-that-routes 2.2). Each is a flag, each
+// is off by default, and the property that matters most is the one asserted
+// first: with every flag off the ranking is the one the Python-parity suite
+// above pins. A signal that silently changed the default would make every
+// figure in this tree's ranker evidence a figure about something else.
+describe('candidate ranking signals — off by default, measurable alone', () => {
+    /** A SKILL.md with a real body — the shared helper only writes a heading. */
+    function skillWithBody(dir: string, slug: string, desc: string, body: string): void {
+        const f = path.join(dir, slug, 'SKILL.md');
+        fs.mkdirSync(path.dirname(f), { recursive: true });
+        fs.writeFileSync(f, `---\nname: ${slug}\ndescription: "${desc}"\n---\n\n# ${slug}\n\n${body}`, 'utf-8');
+    }
+
+    /**
+     * `containers` is on three skills, `schemas` on one.
+     *
+     * That asymmetry is what makes the idf case decidable: a prompt naming both
+     * matches exactly one term on `alpha` and exactly one on `beta`, so the
+     * unweighted score ties and the alphabetical tiebreak decides it.
+     */
+    function catalogue(dir: string): void {
+        skillWithBody(
+            dir,
+            'alpha',
+            'Containers and images.',
+            '## When to use\n\nWhen a kubernetes pod will not schedule.\n\n## Procedure\n\nunrelated prose\n',
+        );
+        skillWithBody(dir, 'beta', 'Schemas and indexes.', '## Gotchas\n\nnone\n');
+        skillWithBody(dir, 'gamma', 'Containers at runtime.', '');
+        skillWithBody(dir, 'delta', 'Containers in production.', '');
+    }
+
+    it('with no options the score is the name+description one, unchanged', () => {
+        // Against the ARITHMETIC, not against `rank(..., {})` — the third
+        // parameter already defaults to `{}`, so comparing the two called the
+        // same function twice and could not fail. `alpha` matches `containers`
+        // and `images` out of {containers, images}, so overlap is 1 and the
+        // score is round(1 * 70 + 0 * 30) = 70; `gamma` and `delta` match
+        // `containers` only, i.e. round(0.5 * 70) = 35.
+        catalogue(tmp);
+        expect(rank('containers and images', tmp)).toEqual([
+            ['alpha', 70, []],
+            ['delta', 35, []],
+            ['gamma', 35, []],
+        ]);
+    });
+
+    it('includeWhenToUse surfaces a skill its description never mentions', () => {
+        // The failing direction is the point: without the flag the prompt scores
+        // nothing against `alpha`, because `kubernetes` lives only in the body.
+        catalogue(tmp);
+        expect(rank('kubernetes pod will not schedule', tmp).map((r) => r[0])).not.toContain('alpha');
+        expect(
+            rank('kubernetes pod will not schedule', tmp, { includeWhenToUse: true }).map((r) => r[0]),
+        ).toContain('alpha');
+    });
+
+    it('includeHeadings indexes a section title and not the prose under it', () => {
+        catalogue(tmp);
+        expect(rank('gotchas', tmp, { includeHeadings: true }).map((r) => r[0])).toContain('beta');
+        // `unrelated prose` sits under a heading; it is not a heading.
+        expect(rank('unrelated prose', tmp, { includeHeadings: true }).map((r) => r[0])).not.toContain(
+            'alpha',
+        );
+    });
+
+    it('idfWeighting lets a rare matched term outweigh a common one', () => {
+        catalogue(tmp);
+        const plain = rank('containers schemas', tmp);
+        const byNamePlain = Object.fromEntries(plain.map((r) => [r[0], r[1]]));
+        expect(byNamePlain['alpha'], 'unweighted: one matched term each').toBe(byNamePlain['beta']);
+        expect(plain[0]?.[0], 'unweighted the alphabetical tiebreak decides').toBe('alpha');
+
+        const weighted = rank('containers schemas', tmp, { idfWeighting: true });
+        expect(weighted[0]?.[0], 'weighted the rare term wins').toBe('beta');
+    });
+});
+
+// 3.2 — the promoted configuration has to fit the slot it would run in.
+describe('latency — per-prompt ranking cost against the pre_tool_use budget', () => {
+    const BUDGET_FILE = path.join(REPO_ROOT, 'src', 'config', 'hook-latency-budget.json');
+
+    /**
+     * The 95th percentile, nearest-rank — and it needs enough samples to be one.
+     *
+     * At n = 12 `ceil(0.95 * n) - 1` is index 11, i.e. the MAXIMUM, which is the
+     * most outlier-sensitive statistic available and the opposite of what a
+     * flake-averse wall-clock check wants. RUNS below is set so the selected
+     * index is not the last.
+     */
+    function p95(xs: readonly number[]): number {
+        const s = [...xs].sort((a, b) => a - b);
+        return s[Math.min(s.length - 1, Math.ceil(0.95 * s.length) - 1)] as number;
+    }
+
+    /** 40 samples → index 37 of 40: a real percentile, and the artifact's n. */
+    const RUNS = 40;
+
+    function measure(opts: Parameters<typeof rank>[2], runs: number): number {
+        const prompts = [
+            'add an index to the orders table and write the migration',
+            'review this pull request for security problems',
+            'build a component for the user dashboard with reactive state',
+            'run the migration inside the app container',
+            'write a roadmap for the next quarter of frontend work',
+        ];
+        const dir = path.join(REPO_ROOT, 'src', 'skills');
+        for (let i = 0; i < 3; i += 1) rank(prompts[i] as string, dir, opts);
+        const t: number[] = [];
+        for (let i = 0; i < runs; i += 1) {
+            const at = performance.now();
+            rank(prompts[i % prompts.length] as string, dir, opts);
+            t.push(performance.now() - at);
+        }
+        return p95(t);
+    }
+
+    it('the budget is read from the registered file, never from a constant here', () => {
+        // A test carrying its own copy of the number would keep passing after the
+        // budget moved, which is the one thing a budget check must not do.
+        const budget = JSON.parse(fs.readFileSync(BUDGET_FILE, 'utf-8')) as {
+            budgets_ms: { pre_tool_use: { p95_ci: number } };
+        };
+        expect(budget.budgets_ms.pre_tool_use.p95_ci).toBeGreaterThan(0);
+    });
+
+    it('the default ranker and the best candidate both fit inside it', () => {
+        const budget = (
+            JSON.parse(fs.readFileSync(BUDGET_FILE, 'utf-8')) as {
+                budgets_ms: { pre_tool_use: { p95_ci: number } };
+            }
+        ).budgets_ms.pre_tool_use.p95_ci;
+        // Absolute, against the registered cap, and nothing tighter. Measured on
+        // a developer machine the two sit near 12 ms against a 175 ms cap, so the
+        // assertion has an order of magnitude of headroom — which is deliberate:
+        // this tree's own hook-latency gate is the one check that fails on a
+        // loaded runner rather than on a diff, and a tight self-imposed bar here
+        // would reproduce that defect in a unit test.
+        expect(measure({}, RUNS), 'keyword-v1 p95 ms').toBeLessThan(budget);
+        expect(measure({ idfWeighting: true }, RUNS), 'idf p95 ms').toBeLessThan(budget);
+    }, 120_000);
+});

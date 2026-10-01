@@ -104,7 +104,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'memory:hash', disposition: 'delegate', synopsis: 'Hash a memory entry (YAML or JSON stdin).' },
     { name: 'memory:check', disposition: 'delegate', synopsis: 'Validate memory YAML schema + staleness.' },
     { name: 'memory:check-proposal', disposition: 'delegate', synopsis: 'Run the admission gate on a memory proposal.' },
-    { name: 'memory:learn', disposition: 'delegate', synopsis: 'Aggregate memory intake signals into the local learning sidecar (read-only; --write to emit).' },
+    { name: 'memory:learn', disposition: 'delegate', synopsis: 'Aggregate memory intake signals into the local learning sidecar (read-only; --write to emit, --format status for the one-screen view).' },
     { name: 'analytics', disposition: 'delegate', synopsis: 'Local-only workspace analytics: emit|show|prune|migrate (never leaves the machine).' },
     { name: 'knowledge', disposition: 'delegate', synopsis: 'Global knowledge-card store: list|show|trace|forget|promote|validate|lead-check|purge.' },
     { name: 'proposal:check', disposition: 'delegate', synopsis: 'Validate a learning/skill/rule proposal markdown.' },

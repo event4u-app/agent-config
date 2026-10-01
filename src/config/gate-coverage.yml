@@ -52,12 +52,12 @@
 #                of them.
 #   canary       optional mutation recipe (Phase 7) — see CANARY below
 #
-# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-09-29)
+# COVERAGE — THE HONEST DENOMINATOR (re-measured 2026-10-01)
 # ----------------------------------------------------------
-# 345 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
+# 347 `lint_*` / `check_*` / `audit_*` scripts live under `src/scripts/`
 # (the count is computed, not asserted — `check_gate_coverage.count_gate_scripts`,
 # re-run on the tree carrying these rows.)
-# **107 rows are listed below**, so the manifest covers 107/345 = 31.0 % of the
+# **109 rows are listed below**, so the manifest covers 109/347 = 31.4 % of the
 # population, and is complete for every gate that can carry a floor. The row
 # count is `grep -c '^  - id:'`, recomputed here rather than incremented.
 #
@@ -3040,6 +3040,47 @@ gates:
       2026-09-29 by planting a fixture root with no `src/scripts/` at all: it
       exits 1 with "scanned 0 read surface(s)" rather than certifying a table it
       never compared.
+
+  - id: check_hook_bundle_composition
+    argv: []
+    ci_invocation: .github/workflows/consistency.yml
+    min_scanned: 150
+    corpus: >
+      modules esbuild inlines into `dist/hooks/dispatch.js` — 276 at baseline,
+      read from the metafile of a build this gate performs rather than from the
+      untracked bundle on disk. The floor sits at 150 because the dispatcher's
+      concern chain alone accounts for most of that graph and the figure moves by
+      ones as a concern is added or a dependency dropped; a reading below it means
+      the entry point moved or the build produced a stub, not that half the hook
+      layer was deleted. Note the floor is a MODULE count while the gate's own
+      bound is a BYTE count — deliberately two different units, because a bundle
+      can collapse to a stub at constant byte size only by also collapsing its
+      module graph, and neither number alone sees both failures.
+    status: enforced
+    no_canary_reason: >-
+      the canary contract is create-only and this gate's corpus is a BUILD
+      OUTPUT, not a tree. A planted file under `src/` is in scope only if
+      something imports it, and a planted file under `dist/hooks/` is read by
+      nothing here — the gate builds its own bundle to a temporary directory
+      precisely so no on-disk artefact can steer its verdict. Both violations it
+      has are properties of that build: a second YAML package contributing bytes,
+      and a byte count over the committed ceiling. Discrimination is proven by
+      `--self-test` instead (4 cases, 3 rejecting: a second YAML reader, a bundle
+      one byte over the ceiling, and a metafile with no entry-point output — the
+      last being the build-produced-nothing case, which must exit non-zero rather
+      than certify a composition of 0 bytes). Proven additionally against the
+      REAL artefact rather than only against fixtures: run over the metafile of
+      the pre-swap bundle, both findings fire with the measured figures
+      (`js-yaml` 95,846 B beside `yaml` 258,839 B, 1,563,576 bytes against a
+      1,500,000 ceiling), which is the regression this gate was built for seen
+      red on the bytes that actually shipped.
+    note: >
+      road-to-a-hook-bundle-with-one-yaml-reader 1.3 + 2.1. Its two siblings are
+      local-only by construction (`dist/hooks/` is untracked, so CI has no bundle
+      to read); this one is not, because it builds the bundle it measures. What it
+      deliberately does NOT claim is anything about latency — the wall-clock axis
+      is `src/config/hook-latency-budget.json` and no number here is derived from
+      it.
 
   - id: check_enforcement_matrix
     argv: ["--quiet"]

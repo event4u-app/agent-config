@@ -167,7 +167,15 @@ describe('governed non-JSON budgets — explicit list, never a widened glob', ()
         // legitimate — and, as with the previous raise, the number moved
         // because CI named the missing fields first, not because the count was
         // edited to clear a red.
-        expect(budgetFiles(CONFIG_DIR)).toHaveLength(16);
+        //
+        // 16 -> 17 on 2026-10-01 (road-to-a-hook-bundle-with-one-yaml-reader
+        // 2.1): `hook-bundle-budget.json`, the byte ceiling and parser cap on
+        // `dist/hooks/dispatch.js`. It carries `owner` and `review_by`, which is
+        // the only thing that makes raising this legitimate — and, as with both
+        // raises above, CI named the count first: the budget file landed, this
+        // assertion went red at 17-against-16, and the number moved after the
+        // file was confirmed to carry the two fields rather than before.
+        expect(budgetFiles(CONFIG_DIR)).toHaveLength(17);
     });
 
     it('an UNLISTED *budget*.yml is not silently included', () => {

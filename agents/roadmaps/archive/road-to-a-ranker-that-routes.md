@@ -1,9 +1,9 @@
 ---
 complexity: lightweight
-status: ready
+status: done
 execution:
   mode: autonomous
-estate_offset_exempt: "The skill ranker now has a powered measurement (top-1 0.208, n=390) and no roadmap that tries to move it: road-to-a-menu-whose-precision-is-measured built the instrument and closed on adoption, and the archived MCP-delivery roadmap's only ranker change measured null. Six of the round's sixteen reviews name ranker quality their first priority; parking or archiving an active roadmap to buy the slot would trade a measured gap for an unmeasured one."
+estate_offset_exempt: "SPENT 2026-10-01 — this roadmap is archived and the exemption it claimed is discharged, kept for the record rather than as a live claim. It read: the skill ranker now has a powered measurement (top-1 0.208, n=390) and no roadmap that tries to move it, so parking or archiving an active roadmap to buy the slot would trade a measured gap for an unmeasured one."
 relates:
   - slug: road-to-a-menu-whose-precision-is-measured
     relation: extends
@@ -53,36 +53,36 @@ Reproduced on 2026-10-01:
 
 ## Phase 1 — Explain the misses before changing anything
 
-- [ ] **1.1 Retire the stale baseline row.** Write the 390-prompt reading into
+- [x] **1.1 Retire the stale baseline row.** Write the 390-prompt reading into
       `skill-ranker-baseline.json` beside the 26-prompt row, mark the old row
       `underpowered`, and make the file's top-level `top1` the powered one.
       verify: `node -e "const b=require('./agents/evidence/metrics/skill-ranker-baseline.json');process.exit(b.top1===0.208?0:1)"` -> 0
-- [ ] **1.2 Fix a held-out slice.** Partition the 390 labelled rows by a hash
+- [x] **1.2 Fix a held-out slice.** Partition the 390 labelled rows by a hash
       of the case id into a tuning slice (80 %) and a sealed slice (20 %), with
       the partition function in code and the slice sizes printed. Every later
       lift claim is read on the sealed slice only.
       verify: `npx vitest run tests/scripts/measure_skill_ranker_baseline.test.ts -t holdout` -> 0
-- [ ] **1.3 Confusion report.** Over the tuning slice: per-pack top-1, the
+- [x] **1.3 Confusion report.** Over the tuning slice: per-pack top-1, the
       twenty most frequent (expected, ranked-first) pairs, mean reciprocal rank,
       the share of misses whose expected skill is outside the top ten, and — over
       the 198 deliberate empties — how often the ranker's top score clears the
       score of a median correct hit (false activation on no-skill prompts).
       Read-only, written to `agents/evidence/analysis/skill-ranker-confusion-<date>.md`.
       verify: `grep -c 'MRR' agents/evidence/analysis/skill-ranker-confusion-*.md` -> /^[1-9]/
-- [ ] **1.4 Separate label noise from ranker error.** Report top-1 again over
+- [x] **1.4 Separate label noise from ranker error.** Report top-1 again over
       only the rows both labelling seats agree on. If the gap to the full figure
       is larger than the interval width, Phase 2 tunes on agreed rows only.
       verify: `grep -c 'agreed rows' agents/evidence/analysis/skill-ranker-confusion-*.md` -> /^[1-9]/
 
 ## Phase 2 — One signal at a time, each measured alone
 
-- [ ] **2.1 Candidate signals, from 1.3 and nowhere else.** For each confusion
+- [x] **2.1 Candidate signals, from 1.3 and nowhere else.** For each confusion
       class 1.3 names, write down the one deterministic signal that would
       separate the pair — pack or domain narrowing, repository stack from the
       existing stack detection, the file path in the prompt, the open file's
       framework as the code graph reports it, description terms already indexed — before implementing any of them.
       verify: `grep -c '^| ' agents/evidence/analysis/skill-ranker-confusion-*.md` -> /^[1-9]/
-- [ ] **2.2 Measure each signal behind an option.** Add each as a
+- [x] **2.2 Measure each signal behind an option.** Add each as a
       `RankOptions` flag in `src/scripts/skill_tools/score_skill_relevance.ts`, off by default, and record
       top-1, top-3 and MRR with intervals on the sealed slice for each flag
       alone, then for the best two together. A flag that does not move the
@@ -91,17 +91,56 @@ Reproduced on 2026-10-01:
 
 ## Phase 3 — Promote only a lift the interval supports
 
-- [ ] **3.1 Change the default, or publish the null.** If one configuration's
+- [x] **3.1 Change the default, or publish the null.** If one configuration's
       sealed-slice top-1 lower bound exceeds the baseline's upper bound and top-3
       does not fall, make it the default and append a dated row to a `history` array in
       `skill-ranker-baseline.json`, so the figure is read as a trend per release. Otherwise
       record the null with the confusion classes it could not separate.
       verify: `node -e "const b=require('./agents/evidence/metrics/skill-ranker-baseline.json');process.exit(Array.isArray(b.history)?0:1)"` -> 0
-- [ ] **3.2 Keep the per-prompt cost inside the slot budget.** Measure p95
+- [x] **3.2 Keep the per-prompt cost inside the slot budget.** Measure p95
       ranking cost per prompt for the promoted configuration against the
       `pre_tool_use` budget in `hook-latency-budget.json`, and refuse the
       promotion if it does not fit.
       verify: `npx vitest run tests/scripts/score_skill_relevance.test.ts -t latency` -> 0
+
+## Outcome — a recorded null, and two refuted premises
+
+Executed 2026-10-01. Every step closed; the full evidence is
+`agents/evidence/analysis/skill-ranker-confusion-2026-10-01.md`, and the dated
+row is in `history` in `agents/evidence/metrics/skill-ranker-baseline.json`.
+
+**The default ranker did not change.** Five candidate configurations were
+implemented behind off-by-default flags and measured on the sealed slice; the
+best (`idf`, inverse document frequency over the catalogue) lifts every measure
+on both slices — sealed top-1 0.160 → 0.173, top-3 0.320 → 0.400, MRR 0.263 →
+0.304 — and still comes nowhere near the promotion bar, whose lower-bound test
+needs 0.251 against `idf`'s 0.104.
+
+Three findings outlive the null:
+
+1. **Label noise does not explain the miss rate.** 240 rows were relabelled by
+   six blind seats (the data is committed, so 1.4 is reproducible rather than
+   asserted). Restricting top-1 to rows where two independent seats wrote the
+   *identical* label moves it from 0.221 to 0.238 — one sixth of the interval
+   width. The ranker is wrong about rows nobody disputes.
+2. **The misses do not form confusion classes.** The twenty most frequent
+   (expected, ranked-first) pairs cover 29 of 246 misses and the modal pair
+   occurs three times, so the pair-derived signal Phase 2 assumed does not
+   exist. The misses concentrate by *depth* (33 % score the expected skill at
+   zero) and by *pack* (`meta` 0.137 over 95 rows) instead, which is what the
+   candidate signals were derived from.
+3. **The promotion bar is currently unreachable by any realistic ranker, and
+   that is the instrument's fault rather than the ranker's.** The sealed slice
+   holds 75 rows and is `underpowered` by this tree's own floor of 100; its
+   interval is 16.5 points wide, so clearing a 0.251 upper bound needs a point
+   estimate near 0.37. Fix the corpus size before attempting Phase 3 again —
+   D2's `revisit-if` at 1,000 labelled rows is the right trigger.
+
+Also measured, and it closes a listed candidate rather than deferring it: of the
+390 labelled rows, **zero** carry `open_files` or a `command`, and five of 588
+prompts contain a path-shaped token. Repository stack, open-file framework and
+in-prompt file path therefore have no row on which they could change a scored
+answer, so they were not implemented — a count, not a judgement.
 
 ## What this roadmap deliberately does not do
 
@@ -146,10 +185,10 @@ Reproduced on 2026-10-01:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The baseline file's headline figure is the powered 390-prompt
+- [x] AC-1 — The baseline file's headline figure is the powered 390-prompt
       reading, and the 26-prompt row is labelled underpowered.
-- [ ] AC-2 — A confusion report names the most frequent miss pairs and reports
+- [x] AC-2 — A confusion report names the most frequent miss pairs and reports
       MRR and false activation on no-skill prompts.
-- [ ] AC-3 — The default ranker changed only on a sealed-slice interval that
+- [x] AC-3 — The default ranker changed only on a sealed-slice interval that
       clears the baseline's, or a null is recorded with the classes it could not
       separate.
