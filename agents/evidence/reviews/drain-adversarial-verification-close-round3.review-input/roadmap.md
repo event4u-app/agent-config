@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: draft
@@ -135,7 +137,7 @@ capability_gap: >-
 > action is named down to the file, the line and the string. AC-6's measurement half was
 > re-verified green; its decision half went to the council and came back **owner-reserved,
 > 2/2** — on two independent grounds, with the dissent between the blocker's recommendation
-> and anthropic's kept rather than resolved, and with the itemised artefact the council
+> and anthropic's kept rather than resolved, and with the nine-item artefact the council
 > specified so the owner can decide in one reading.
 >
 > **The lesson this round adds to the two below.** The 2026-09-30 round learned that the
@@ -448,8 +450,7 @@ before the record is signed.
       semantics that disagreed with the rest of the binary, the stale sensitivity
       denominators, a `verify:` clause that could not fail, and an untested live adapter. The
       thirteenth — the suite's provenance marker — is answered rather than carried: it now
-      reads `critical=yes`, and the LEVEL went L1 → L4 two rounds later, earned by a council
-      pass over the suites themselves rather than relabelled. AC-5 carries that story.
+      reads `critical=yes` with the level stated honestly as L1.
       **Reversed if** any of: a credential prompt or hang is observed on the read path; the
       read binds evidence to the wrong repository (fork, multiple remotes, URL rewriting,
       GHES); a sustained fallback or latency regression is measured; or an `unread` row is
@@ -956,16 +957,9 @@ before the record is signed.
   watched is the stricter reading, and it costs the owner the hosts they actually use; the
   column makes the weaker guarantee visible instead of silent.
 - **Input now available, and deliberately NOT a resolution:**
-  `docs/contracts/hook-architecture-v1.md` § Kill switches enumerates every
-  `AGENT_CONFIG_*` switch the hook layer reads, with an owner class each
-  (`road-to-a-stop-that-holds` 1.4). **The count is deliberately not written
-  here any more.** It said 28, which was the dated reading of 2026-09-29; two
-  switches arrived by merge and `check_kill_switch_table` reports 30 == 30 as of
-  2026-10-01. The criterion that gate enforces is the EQUALITY, not the number,
-  and a number transcribed into a second file goes stale without anything
-  noticing — which is exactly what happened here and was caught by an
-  independent review rather than by a gate. Run the checker for today's figure.
-  That plan's 1.4 instructed an agent to resolve
+  `docs/contracts/hook-architecture-v1.md` § Kill switches enumerates all 28
+  `AGENT_CONFIG_*` switches the hook layer reads, with an owner class each
+  (`road-to-a-stop-that-holds` 1.4). That plan's 1.4 instructed an agent to resolve
   THIS blocker by pointing the `Resolved when` below at that table. **Refused, and
   the refusal is the finding**: the table inventories environment switches, while
   this blocker asks a maintainer to DECIDE the autonomy fallback for a host with no
@@ -985,7 +979,7 @@ before the record is signed.
   inventory into a permission. The verdict therefore CONFIRMS this blocker rather than
   closing it, and it adds a dissent worth having before the decision: the recommendation
   below is `manual-only`, while anthropic's, if forced to choose, is the opposite — no
-  autonomous mode on a host without an enforceable stop. The full decision brief
+  autonomous mode on a host without an enforceable stop. The full nine-item decision brief
   the council specified is under AC-6. `Resolved when` is unchanged.
 - **If you do nothing:** the daemon ships observation-only and never enforces, which is the
   honest state and also means the eleven typed ops carry no mechanical guard on seven of eight
@@ -1198,7 +1192,7 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       lines, with no error and no hang. `docs/troubleshooting.md` now documents the network
       behaviour and the switch, which was the council's disclosure condition.
       **Every failure direction is pinned, two of them where the wrong implementation is the
-      more obvious one.** In `tests/scripts/forge_reader.test.ts`: a dead repo record
+      more obvious one.** `tests/scripts/forge_reader.test.ts`, 32 cases: a dead repo record
       returns the unread reading AND stops calling (asserted on the call list, since both
       shapes return the same value); a dead ruleset DETAIL blanks the whole list rather than
       returning a partial one; a dead `environments` call leaves the ruleset rows intact —
@@ -1210,60 +1204,18 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       `unread`. The opt-out and the no-repository skip are asserted on the CALL COUNT, because
       a reader that queried and then discarded the answer would satisfy an output-only
       assertion while still paying the latency the opt-out exists to avoid.
-      **Sensitivity proven by deliberate sabotage and restore.** Returning the partial ruleset
-      list reds exactly the partial-list case and nothing else; restoring the trust-the-flag
-      fallback reds exactly the branch-policy case and nothing else. One named case each, zero
-      collateral, so neither is passing for an unrelated reason.
-      **This paragraph got the same thing wrong FOUR times, and the fix is structural rather
-      than another correction.** Review round 1 caught "1 of 17", quoted from probes run before
-      five cases landed. The correction said "1 of 32" and re-ran the probes; five more cases
-      landed in the round-2 response, so round 3 found 32 stale — raised as its single `high`,
-      in the very paragraph condemning stale denominators. The round-3 response said 37 and
-      promised to take every figure from the runner; three more cases landed in that same
-      response, and round 4 found 37 stale against a measured 40.
-      Four recurrences indict the METHOD, and the method was "write a denominator by hand".
-      A denominator tracks a moving suite and goes stale on the next commit, so the sensitivity
-      claim no longer carries one: *exactly this case, nothing else* is the property that
-      matters, it is what the probe actually establishes, and it cannot rot. Totals appear once
-      below, measured, and nowhere else.
-      Green, and this is the ONE place a count appears: **192** across
-      `forge_reader` (44), `doctor_forge_block` (14), `forge_protection` (28),
-      `test_provenance` (11) and the roadmap's own e2e fixture file (95), plus 30 across the
-      doctor-adjacent doctor suites. Measured by the runner in the pass that wrote this line.
-      **A fifth review round found one runtime defect, and it was the budget mechanism
-      itself.** `spawnSync`'s `timeout` must be an integer while `budgetOf` reads
-      `performance.now()`, so once the remainder became the per-call minimum every `gh` call
-      threw `ERR_OUT_OF_RANGE`, was swallowed by the catch, and returned `null` — the read
-      truncating silently with no subprocess started, on exactly the many-ruleset repository
-      the budget exists for. Degradation stayed in the safe direction (`unread`, never a wrong
-      verdict), which is why four rounds and the live run on this repository never showed it:
-      this repository's read finishes inside the first ten seconds. Reproduced independently
-      on node v26.7.0 before the fix. **The first fix then walked into Node's second
-      behaviour, which a sixth round caught:** `timeout: 0` installs no kill timer at all, so
-      flooring alone turned a sub-millisecond remainder into an UNBOUNDED spawn — the ceiling
-      failing OPEN in the one case it exists for, which is the worse direction, and the test
-      written for the first fix had pinned `0` as expected and would have kept it green. The
-      floor is 1 ms, and the case now asserts the property the mechanism needs (a positive
-      integer) rather than the first defect's symptom. Also fixed: a non-string branch-policy name was
-      filtered away, leaving an empty pattern list that rendered as *at least one environment
-      accepts a deployment from any branch* — a positive claim about the forge built from
-      unparseable data; it now makes the row `unread` like every sibling field.
-      **A third review round, and then a council pass over the tests themselves.** Round 3
-      raised one `high` — these very counts, stale again — and five mediums: a docblock still
-      carrying the argument the council had refuted, an "offline prints exactly what it
-      printed before" claim that the new `repository` key makes too strong, the composition
-      root and the one VCS subprocess untested, a `verify:` clause that depended on
-      pretty-printer spacing, and `critical=yes | level=L1` contradicting AC-2, which requires
-      a critical suite at L3 or L4 where two providers are configured. All are addressed; the
-      last one by EARNING the level rather than relabelling it. The first council attempt was
-      handed a description of the suites instead of the suites: one seat refused to assess and
-      the other speculated, which is recorded and claims nothing. The second embedded both
-      files in full and ran 2/2. Its highest-weighted finding was that the effort was
-      inverted — 37 cases on acquisition choreography against almost none asserting the five
-      rows the command emits — and that the scripted test fake DROPPED the `paginate`
-      argument, so every pagination case passed against an implementation that never asked for
-      a second page. Row ids, row isolation, an inactive ruleset, source presence, the
-      paginate-request seam and wrong-TYPE coercion all have cases now.
+      **Sensitivity proven by deliberate sabotage and restore, re-run at the FINAL 32-case
+      state rather than quoted from an earlier one.** Returning the partial ruleset list reds
+      exactly the partial-list case, 1 of 32; restoring the trust-the-flag fallback reds
+      exactly the branch-policy case, 1 of 32. One case each, no collateral, so neither is
+      passing for an unrelated reason. (An earlier draft of this paragraph quoted "1 of 17"
+      and "2 of 17" from probes run before five further cases landed, and an independent
+      review caught the stale denominators. A sensitivity claim whose denominator does not
+      match the suite it cites is exactly the unverified number this roadmap exists to
+      forbid — so the probes were re-run rather than the numbers re-typed.)
+      Green: 32 in `tests/scripts/forge_reader.test.ts`, 60 across `forge_reader` +
+      `forge_protection`, 95 in the roadmap's own e2e fixture file, 30 across the
+      doctor-adjacent suites.
       **Two honest limits.** `resolveForgeRepo` gates on the literal `github` in the remote
       host, so a GitHub Enterprise install on a host that does not carry the vendor name is
       skipped and reports `unread` — the safe degradation, stated in the module rather than
@@ -1277,7 +1229,7 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       here, because editing an acceptance criterion in the same run that closes it is the
       laundering shape even when the edit makes it stricter, and this file has already paid
       once for a `[x]` its own named command contradicted.
-      <!-- verify: ./agent-config doctor --json | python3 -c "import sys,json;r=json.load(sys.stdin)['forge_protection']['rows'];sys.exit(0 if r and all(x['state']=='satisfied' for x in r) else 1)" -->
+      <!-- verify: test 5 -eq "$(./agent-config doctor --json | grep -c '"state": "satisfied"')" -->
       <!-- REOPENED 2026-09-30, the same day it was closed, by an independent review of the
       closing diff. The close below is kept because its forge findings are correct and
       durable; the CHECKBOX was wrong, and the distance between those two things is the

@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: draft
@@ -135,7 +137,7 @@ capability_gap: >-
 > action is named down to the file, the line and the string. AC-6's measurement half was
 > re-verified green; its decision half went to the council and came back **owner-reserved,
 > 2/2** — on two independent grounds, with the dissent between the blocker's recommendation
-> and anthropic's kept rather than resolved, and with the itemised artefact the council
+> and anthropic's kept rather than resolved, and with the nine-item artefact the council
 > specified so the owner can decide in one reading.
 >
 > **The lesson this round adds to the two below.** The 2026-09-30 round learned that the
@@ -956,16 +958,9 @@ before the record is signed.
   watched is the stricter reading, and it costs the owner the hosts they actually use; the
   column makes the weaker guarantee visible instead of silent.
 - **Input now available, and deliberately NOT a resolution:**
-  `docs/contracts/hook-architecture-v1.md` § Kill switches enumerates every
-  `AGENT_CONFIG_*` switch the hook layer reads, with an owner class each
-  (`road-to-a-stop-that-holds` 1.4). **The count is deliberately not written
-  here any more.** It said 28, which was the dated reading of 2026-09-29; two
-  switches arrived by merge and `check_kill_switch_table` reports 30 == 30 as of
-  2026-10-01. The criterion that gate enforces is the EQUALITY, not the number,
-  and a number transcribed into a second file goes stale without anything
-  noticing — which is exactly what happened here and was caught by an
-  independent review rather than by a gate. Run the checker for today's figure.
-  That plan's 1.4 instructed an agent to resolve
+  `docs/contracts/hook-architecture-v1.md` § Kill switches enumerates all 28
+  `AGENT_CONFIG_*` switches the hook layer reads, with an owner class each
+  (`road-to-a-stop-that-holds` 1.4). That plan's 1.4 instructed an agent to resolve
   THIS blocker by pointing the `Resolved when` below at that table. **Refused, and
   the refusal is the finding**: the table inventories environment switches, while
   this blocker asks a maintainer to DECIDE the autonomy fallback for a host with no
@@ -985,7 +980,7 @@ before the record is signed.
   inventory into a permission. The verdict therefore CONFIRMS this blocker rather than
   closing it, and it adds a dissent worth having before the decision: the recommendation
   below is `manual-only`, while anthropic's, if forced to choose, is the opposite — no
-  autonomous mode on a host without an enforceable stop. The full decision brief
+  autonomous mode on a host without an enforceable stop. The full nine-item decision brief
   the council specified is under AC-6. `Resolved when` is unchanged.
 - **If you do nothing:** the daemon ships observation-only and never enforces, which is the
   honest state and also means the eleven typed ops carry no mechanical guard on seven of eight
@@ -1226,28 +1221,10 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       claim no longer carries one: *exactly this case, nothing else* is the property that
       matters, it is what the probe actually establishes, and it cannot rot. Totals appear once
       below, measured, and nowhere else.
-      Green, and this is the ONE place a count appears: **192** across
-      `forge_reader` (44), `doctor_forge_block` (14), `forge_protection` (28),
+      Green, and this is the ONE place a count appears: **188** across
+      `forge_reader` (40), `doctor_forge_block` (14), `forge_protection` (28),
       `test_provenance` (11) and the roadmap's own e2e fixture file (95), plus 30 across the
       doctor-adjacent doctor suites. Measured by the runner in the pass that wrote this line.
-      **A fifth review round found one runtime defect, and it was the budget mechanism
-      itself.** `spawnSync`'s `timeout` must be an integer while `budgetOf` reads
-      `performance.now()`, so once the remainder became the per-call minimum every `gh` call
-      threw `ERR_OUT_OF_RANGE`, was swallowed by the catch, and returned `null` — the read
-      truncating silently with no subprocess started, on exactly the many-ruleset repository
-      the budget exists for. Degradation stayed in the safe direction (`unread`, never a wrong
-      verdict), which is why four rounds and the live run on this repository never showed it:
-      this repository's read finishes inside the first ten seconds. Reproduced independently
-      on node v26.7.0 before the fix. **The first fix then walked into Node's second
-      behaviour, which a sixth round caught:** `timeout: 0` installs no kill timer at all, so
-      flooring alone turned a sub-millisecond remainder into an UNBOUNDED spawn — the ceiling
-      failing OPEN in the one case it exists for, which is the worse direction, and the test
-      written for the first fix had pinned `0` as expected and would have kept it green. The
-      floor is 1 ms, and the case now asserts the property the mechanism needs (a positive
-      integer) rather than the first defect's symptom. Also fixed: a non-string branch-policy name was
-      filtered away, leaving an empty pattern list that rendered as *at least one environment
-      accepts a deployment from any branch* — a positive claim about the forge built from
-      unparseable data; it now makes the row `unread` like every sibling field.
       **A third review round, and then a council pass over the tests themselves.** Round 3
       raised one `high` — these very counts, stale again — and five mediums: a docblock still
       carrying the argument the council had refuted, an "offline prints exactly what it

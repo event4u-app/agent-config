@@ -237,6 +237,53 @@ npm install -g @event4u/agent-config
 agent-config doctor   # verifies PATH + plugin wiring
 ```
 
+### `doctor` is slow, or you need it to make no network calls
+
+`agent-config doctor` reads one thing from the network: the `forge_protection`
+block of `--json`, which asks the forge whether the default branch is protected,
+required checks exist, force-push is off, auto-merge is available, and
+deployments are restricted to the pipeline. It shells out to `gh api`: three
+calls plus one per repository ruleset, plus one per environment that uses
+custom branch policies *and* does not already restrict to protected branches —
+five on a repository like this one, more on a repository with more rulesets or
+environments. Each call is capped at 10 s, and a 15 s budget bounds the read
+as a whole; a call is both admitted and *timed out* against whatever is left of
+it, so the total is a real ceiling rather than an advertised one.
+
+Everything else in `doctor` is offline, and the forge read is **best-effort**:
+with no `gh`, no credentials, no network, a non-GitHub remote, or a spent
+budget, the rows report `unread` — each still naming the API call its value
+would have come from — and nothing else about the report changes. On a
+repository with many rulesets the budget is what stops the read, and the rows it
+did not reach stay `unread` rather than guessing.
+
+When the read succeeds, the block names the repository it read, as
+`repository`, and substitutes that slug into each row's `source`. That field is
+the one to check first: `doctor` resolves the repository from the project's
+`origin` remote, so in a fork, a clone pointed at a mirror, or a consumer
+install, the rows describe whatever `origin` names — which may not be the
+project you think you are standing in.
+
+`repository` is `null` and the sources stay templates whenever nothing was
+read — offline, without credentials, opted out, or after a spent budget. It is
+reported only when at least one row carries a real value, so a named repository
+always means somebody actually answered for it.
+
+To switch the read off entirely, before any subprocess starts:
+
+```bash
+AGENT_CONFIG_DOCTOR_NO_FORGE=1 agent-config doctor --json   # or AGENT_CONFIG_OFFLINE=1
+```
+
+Both are read as the literal `1`, which is the same contract `agent-config
+versions` and `agent-config update` already use for `AGENT_CONFIG_OFFLINE` —
+`=0` means *not* offline everywhere in the binary.
+
+Use it in CI, on an air-gapped machine, or when you want `doctor` to stay purely
+local. The rows then read `unread` rather than `false`: a row nobody looked at
+and a row the forge refuted are different repairs, and the block keeps them
+apart.
+
 ### Project files look stale after a package update
 
 Project-local projections are only rewritten on an explicit refresh:

@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: draft
@@ -135,7 +137,7 @@ capability_gap: >-
 > action is named down to the file, the line and the string. AC-6's measurement half was
 > re-verified green; its decision half went to the council and came back **owner-reserved,
 > 2/2** — on two independent grounds, with the dissent between the blocker's recommendation
-> and anthropic's kept rather than resolved, and with the itemised artefact the council
+> and anthropic's kept rather than resolved, and with the nine-item artefact the council
 > specified so the owner can decide in one reading.
 >
 > **The lesson this round adds to the two below.** The 2026-09-30 round learned that the
@@ -389,67 +391,15 @@ before the record is signed.
       Conditions MET in the same diff: the acquirer is a separate module from the mapper and
       the policy; the opt-out prevents every subprocess including the git remote read, not
       merely the use of the result; a whole-command deadline bounds cumulative latency on top
-      of the per-call ones, and a call is TIMED OUT against what is left of the budget rather
-      than only admitted against it; `gh` is spawned directly with an argument array, never
-      through a shell — an earlier draft of this line claimed "never with a repository-derived
-      fragment", which is false of every path (`repos/<repo>/…`) and was corrected after an
-      independent review, since a council condition logged as MET is not a place for an
-      approximate statement; the API host is gated before any credential is sent; the block
-      NAMES the repository it read and substitutes that slug into each row's `source`; offline
-      and failed-live paths keep the documented schema, exit semantics and `source` templates,
-      and stay distinguishable via `read_from_forge` and a null `repository`; the network
-      behaviour, its call-count formula and its kill switch are documented in
-      `docs/troubleshooting.md`.
+      of the per-call ones; `gh` is spawned directly with an argument array, never through a
+      shell and never with a repository-derived fragment; the API host is gated before any
+      credential is sent; offline and failed-live paths keep the documented schema, exit
+      semantics and `source` strings, and stay distinguishable via `read_from_forge`; the
+      network behaviour and its kill switch are documented in `docs/troubleshooting.md`.
       Conditions NOT met, and named rather than implied: per-row observation time and a
       `live` / `cached` / `error` provenance enum beyond the existing three-state row; a
       measured p95 latency threshold; and the AC-5 wording repair. All three are carried as
       owner residue under AC-5 and in the PR body.
-      **A SECOND independent round found 13 more, three of them `high`, and the sharpest one
-      refuted a sentence this entry had already written.** Round 1's fix made the block name
-      the repository it read — and the slug is resolved from the LOCAL git remote, which
-      answers with no network. So an ordinary offline run (GitHub remote present, no
-      connectivity, no opt-out) emitted a named repository and substituted sources while every
-      row was `unread`, making "offline output is what Phase 3.2 shipped" false on exactly the
-      failed-live path the council condition names. The earlier verification had only ever
-      exercised `AGENT_CONFIG_DOCTOR_NO_FORGE=1` and read it as offline; they are different
-      paths and only one was checked. `repository` is now reported only when at least one row
-      carries a real value, so the invariant is structural rather than a caller's promise, and
-      it is proven twice: a unit case asserting the two documents are byte-identical, and an
-      end-to-end run with a failing `gh` on `PATH` returning `repository: null`, five `unread`
-      rows and templated sources.
-      The other two `high` findings were both overstatement paths. The `environments` and
-      branch-policy reads were UNPAGINATED, so on a repository with more environments than one
-      page `deployRestrictedFrom`'s `every()` ran over the visible subset and an unlisted
-      unrestricted environment read as `satisfied` — while `readRulesets` guarded the identical
-      hazard one function up and said so. And `gh` was spawned with neither `cwd` nor
-      `--hostname` while the slug was resolved with `cwd: root`, so with `--project`/`--root`
-      set, or a GitHub Enterprise remote, the two halves of the read addressed different
-      repositories: `apiFor` is now a factory over the resolved target, which makes the host
-      binding structural. Also fixed: `ls-remote --get-url` in place of `remote get-url`, which
-      is blind to `url.insteadOf` rewriting — another condition this amendment names;
-      a slug character-set check, since the old pattern admitted `..`, `?` and `$&`, the last
-      being a `String.replace` control sequence; a per-environment call issued when
-      `protected_branches` already decided the row; and the ruleset fixture, which used a shape
-      production never produces, leaving the page-flattening branch dead in every case that
-      claimed to cover it.
-      **An independent R2 review of this diff found 13 defects and 12 are fixed here.** It was
-      dispatched through `dispatch_r2_reviewer`, so the reviewer's prompt was assembled
-      deterministically rather than written by the implementing session, and the package is
-      committed with the verdict. The one it ranked `high` is the one this amendment's own
-      reversal clause had already named and shipped no mitigation for: the rows described
-      whatever `origin` resolved to and the output never said which repository that was —
-      load-bearing the moment the read went live, in a fork, a mirror or a consumer install.
-      Two more were real overstatement paths: an unencoded environment name in the API path,
-      whose failed call silently became a TRUSTED flag and could report a wildcard policy as
-      `satisfied`; and a budget that bounded admission but not duration, while the doc and
-      the constant both called it a ceiling on the whole read. The remaining fixes correct a
-      comment describing a compatibility shim that was never written, an inverted "narrower
-      guarantee" reading, a `monotonic` claim over a steppable clock, `AGENT_CONFIG_OFFLINE`
-      semantics that disagreed with the rest of the binary, the stale sensitivity
-      denominators, a `verify:` clause that could not fail, and an untested live adapter. The
-      thirteenth — the suite's provenance marker — is answered rather than carried: it now
-      reads `critical=yes`, and the LEVEL went L1 → L4 two rounds later, earned by a council
-      pass over the suites themselves rather than relabelled. AC-5 carries that story.
       **Reversed if** any of: a credential prompt or hang is observed on the read path; the
       read binds evidence to the wrong repository (fork, multiple remotes, URL rewriting,
       GHES); a sustained fallback or latency regression is measured; or an `unread` row is
@@ -956,16 +906,9 @@ before the record is signed.
   watched is the stricter reading, and it costs the owner the hosts they actually use; the
   column makes the weaker guarantee visible instead of silent.
 - **Input now available, and deliberately NOT a resolution:**
-  `docs/contracts/hook-architecture-v1.md` § Kill switches enumerates every
-  `AGENT_CONFIG_*` switch the hook layer reads, with an owner class each
-  (`road-to-a-stop-that-holds` 1.4). **The count is deliberately not written
-  here any more.** It said 28, which was the dated reading of 2026-09-29; two
-  switches arrived by merge and `check_kill_switch_table` reports 30 == 30 as of
-  2026-10-01. The criterion that gate enforces is the EQUALITY, not the number,
-  and a number transcribed into a second file goes stale without anything
-  noticing — which is exactly what happened here and was caught by an
-  independent review rather than by a gate. Run the checker for today's figure.
-  That plan's 1.4 instructed an agent to resolve
+  `docs/contracts/hook-architecture-v1.md` § Kill switches enumerates all 28
+  `AGENT_CONFIG_*` switches the hook layer reads, with an owner class each
+  (`road-to-a-stop-that-holds` 1.4). That plan's 1.4 instructed an agent to resolve
   THIS blocker by pointing the `Resolved when` below at that table. **Refused, and
   the refusal is the finding**: the table inventories environment switches, while
   this blocker asks a maintainer to DECIDE the autonomy fallback for a host with no
@@ -985,7 +928,7 @@ before the record is signed.
   inventory into a permission. The verdict therefore CONFIRMS this blocker rather than
   closing it, and it adds a dissent worth having before the decision: the recommendation
   below is `manual-only`, while anthropic's, if forced to choose, is the opposite — no
-  autonomous mode on a host without an enforceable stop. The full decision brief
+  autonomous mode on a host without an enforceable stop. The full nine-item decision brief
   the council specified is under AC-6. `Resolved when` is unchanged.
 - **If you do nothing:** the daemon ships observation-only and never enforces, which is the
   honest state and also means the eleven typed ops carry no mechanical guard on seven of eight
@@ -1197,73 +1140,26 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       rows, the identical `source` strings, `read_from_forge: false` and the same five action
       lines, with no error and no hang. `docs/troubleshooting.md` now documents the network
       behaviour and the switch, which was the council's disclosure condition.
-      **Every failure direction is pinned, two of them where the wrong implementation is the
-      more obvious one.** In `tests/scripts/forge_reader.test.ts`: a dead repo record
+      **Six failure directions are pinned, two of them where the wrong implementation is the
+      more obvious one.** `tests/scripts/forge_reader.test.ts`, 17 cases: a dead repo record
       returns the unread reading AND stops calling (asserted on the call list, since both
       shapes return the same value); a dead ruleset DETAIL blanks the whole list rather than
       returning a partial one; a dead `environments` call leaves the ruleset rows intact —
       the opposite error, all-or-nothing across surfaces that do not depend on each other; a
       non-boolean `allow_auto_merge` is `unread`, never coerced to `false`; a failed
-      branch-policy read makes the row `unread` rather than trusting the flag; a spent budget
-      degrades the rows it did not reach; and a throwing API still returns a reading, because
-      a diagnostic that dies because its optional read failed is worse than one reporting
+      branch-policy read falls back to the flag (the documented narrower guarantee) rather
+      than inventing a refutation; and a throwing API still returns a reading, because a
+      diagnostic that dies because its optional read failed is worse than one reporting
       `unread`. The opt-out and the no-repository skip are asserted on the CALL COUNT, because
       a reader that queried and then discarded the answer would satisfy an output-only
       assertion while still paying the latency the opt-out exists to avoid.
-      **Sensitivity proven by deliberate sabotage and restore.** Returning the partial ruleset
-      list reds exactly the partial-list case and nothing else; restoring the trust-the-flag
-      fallback reds exactly the branch-policy case and nothing else. One named case each, zero
-      collateral, so neither is passing for an unrelated reason.
-      **This paragraph got the same thing wrong FOUR times, and the fix is structural rather
-      than another correction.** Review round 1 caught "1 of 17", quoted from probes run before
-      five cases landed. The correction said "1 of 32" and re-ran the probes; five more cases
-      landed in the round-2 response, so round 3 found 32 stale — raised as its single `high`,
-      in the very paragraph condemning stale denominators. The round-3 response said 37 and
-      promised to take every figure from the runner; three more cases landed in that same
-      response, and round 4 found 37 stale against a measured 40.
-      Four recurrences indict the METHOD, and the method was "write a denominator by hand".
-      A denominator tracks a moving suite and goes stale on the next commit, so the sensitivity
-      claim no longer carries one: *exactly this case, nothing else* is the property that
-      matters, it is what the probe actually establishes, and it cannot rot. Totals appear once
-      below, measured, and nowhere else.
-      Green, and this is the ONE place a count appears: **192** across
-      `forge_reader` (44), `doctor_forge_block` (14), `forge_protection` (28),
-      `test_provenance` (11) and the roadmap's own e2e fixture file (95), plus 30 across the
-      doctor-adjacent doctor suites. Measured by the runner in the pass that wrote this line.
-      **A fifth review round found one runtime defect, and it was the budget mechanism
-      itself.** `spawnSync`'s `timeout` must be an integer while `budgetOf` reads
-      `performance.now()`, so once the remainder became the per-call minimum every `gh` call
-      threw `ERR_OUT_OF_RANGE`, was swallowed by the catch, and returned `null` — the read
-      truncating silently with no subprocess started, on exactly the many-ruleset repository
-      the budget exists for. Degradation stayed in the safe direction (`unread`, never a wrong
-      verdict), which is why four rounds and the live run on this repository never showed it:
-      this repository's read finishes inside the first ten seconds. Reproduced independently
-      on node v26.7.0 before the fix. **The first fix then walked into Node's second
-      behaviour, which a sixth round caught:** `timeout: 0` installs no kill timer at all, so
-      flooring alone turned a sub-millisecond remainder into an UNBOUNDED spawn — the ceiling
-      failing OPEN in the one case it exists for, which is the worse direction, and the test
-      written for the first fix had pinned `0` as expected and would have kept it green. The
-      floor is 1 ms, and the case now asserts the property the mechanism needs (a positive
-      integer) rather than the first defect's symptom. Also fixed: a non-string branch-policy name was
-      filtered away, leaving an empty pattern list that rendered as *at least one environment
-      accepts a deployment from any branch* — a positive claim about the forge built from
-      unparseable data; it now makes the row `unread` like every sibling field.
-      **A third review round, and then a council pass over the tests themselves.** Round 3
-      raised one `high` — these very counts, stale again — and five mediums: a docblock still
-      carrying the argument the council had refuted, an "offline prints exactly what it
-      printed before" claim that the new `repository` key makes too strong, the composition
-      root and the one VCS subprocess untested, a `verify:` clause that depended on
-      pretty-printer spacing, and `critical=yes | level=L1` contradicting AC-2, which requires
-      a critical suite at L3 or L4 where two providers are configured. All are addressed; the
-      last one by EARNING the level rather than relabelling it. The first council attempt was
-      handed a description of the suites instead of the suites: one seat refused to assess and
-      the other speculated, which is recorded and claims nothing. The second embedded both
-      files in full and ran 2/2. Its highest-weighted finding was that the effort was
-      inverted — 37 cases on acquisition choreography against almost none asserting the five
-      rows the command emits — and that the scripted test fake DROPPED the `paginate`
-      argument, so every pagination case passed against an implementation that never asked for
-      a second page. Row ids, row isolation, an inactive ruleset, source presence, the
-      paginate-request seam and wrong-TYPE coercion all have cases now.
+      **Sensitivity proven by deliberate sabotage and restore, one pair each.** Returning the
+      partial ruleset list reds exactly the partial-list case, 1 of 17; neutralising the
+      opt-out short-circuit reds exactly the two opt-out cases, 2 of 17. No collateral in
+      either, so neither is passing for an unrelated reason. 22 green in
+      `tests/scripts/forge_reader.test.ts`, 45 green across `forge_reader` + `forge_protection`,
+      95 green in the roadmap's own e2e fixture file, 58 green across the doctor-adjacent
+      suites.
       **Two honest limits.** `resolveForgeRepo` gates on the literal `github` in the remote
       host, so a GitHub Enterprise install on a host that does not carry the vendor name is
       skipped and reports `unread` — the safe degradation, stated in the module rather than
@@ -1277,7 +1173,7 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       here, because editing an acceptance criterion in the same run that closes it is the
       laundering shape even when the edit makes it stricter, and this file has already paid
       once for a `[x]` its own named command contradicted.
-      <!-- verify: ./agent-config doctor --json | python3 -c "import sys,json;r=json.load(sys.stdin)['forge_protection']['rows'];sys.exit(0 if r and all(x['state']=='satisfied' for x in r) else 1)" -->
+      <!-- verify: ./agent-config doctor --json | grep -c '"state": "satisfied"' -->
       <!-- REOPENED 2026-09-30, the same day it was closed, by an independent review of the
       closing diff. The close below is kept because its forge findings are correct and
       durable; the CHECKBOX was wrong, and the distance between those two things is the
