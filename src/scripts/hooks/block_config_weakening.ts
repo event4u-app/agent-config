@@ -52,9 +52,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // among them — already pulled `yaml`. Measured on 2026-10-01 from the esbuild
 // metafile: `js-yaml` contributed 95,846 bytes (6.13 %) of a 1,564,211-byte
 // bundle, paid on every hook event, for one call site. The behavioural delta is
-// normalised in `parseSettingsDoc` below and pinned by the characterization
-// tests written before the swap.
-import { parse as parseYamlDoc } from 'yaml';
+// normalised in `parseSettingsDoc` below — three constraints, each MEASURED
+// against the old reader rather than read off documentation — and pinned both by
+// the characterization tests written before the swap and by a differential test
+// that runs BOTH readers over one corpus and asserts the same refusal set.
+import { parseDocument as parseYamlDocument } from 'yaml';
 
 import {
     buildSettingsClassIndex,
@@ -189,22 +191,49 @@ export function leafPaths(value: unknown, prefix = ''): Map<string, string> {
  * corpus and refuses, because a guard that allows whatever it cannot parse is
  * bypassed by making the file unparseable for one call.
  *
- * NULLISH IS UNPARSEABLE, and that line is the whole of the `js-yaml` → `yaml`
- * port rather than an added rule. `js-yaml` THREW on an empty document and
- * returned `null` for a value-less one (`~`, `null`); both landed on the `catch`
- * or on the nullish return, i.e. on refusal. The `yaml` package returns `null`
- * for all three instead of throwing on the first, so without this collapse an
- * EMPTIED settings file would have arrived at the caller as a parsed document
- * with no keys — the one shape that turns "I cannot read this" into "nothing
- * changed". Every other difference between the two readers was looked for and
- * not found: YAML 1.1 boolean words, octal and legacy-octal scalars, duplicate
- * keys, multi-document input and tab indentation all read identically, which is
- * what the characterization tests pin.
+ * THE YAML READER IS CONSTRAINED, and all three constraints exist to keep the
+ * refusal set the same as `js-yaml`'s rather than to express a preference.
+ * Each was MEASURED against the old reader over a shared corpus, which the
+ * differential test re-runs; the equivalence is not argued from documentation.
+ *
+ *   · `schema: 'core'` + `resolveKnownTags: false` — WITHOUT THIS, THE SWAP
+ *     WOULD HAVE WEAKENED THE GUARD. `js-yaml` v5's default CORE schema does
+ *     not carry the YAML 1.1 tags, so `!!timestamp`, `!!binary`, `!!set`,
+ *     `!!omap`, `!!pairs` and any unknown `!custom` tag THREW — the document
+ *     was unparseable and the guard refused. The `yaml` package resolves them
+ *     by default, so the same document would have parsed and the guard would
+ *     have gone on to allow an edit it previously refused. Found by an
+ *     independent council review (openai/codex-default, 2026-10-01) and
+ *     confirmed by running both readers: six tagged inputs, `js-yaml` throws on
+ *     all six, default `yaml` returns a value for all six.
+ *   · A WARNING IS A REFUSAL. `yaml` reports an unresolvable tag as a warning
+ *     and keeps parsing where `js-yaml` throws, so treating warnings as success
+ *     would re-open the same hole one tag at a time. `parseDocument` is used
+ *     rather than `parse` precisely to see them.
+ *   · NULLISH IS UNPARSEABLE. `js-yaml` threw on an empty document and returned
+ *     `null` for a value-less one (`~`, `null`); both landed on refusal. `yaml`
+ *     returns `null` for all three instead of throwing on the first, so without
+ *     this collapse an EMPTIED settings file would arrive at the caller as a
+ *     parsed document with no keys — the one shape that turns "I cannot read
+ *     this" into "nothing changed".
+ *
+ * A merge key (`<<: *anchor`) was raised as a fourth difference by the other
+ * seat and is NOT one: both readers leave `<<` literal at these versions, which
+ * the same differential corpus pins so the question is not re-litigated from
+ * documentation next time.
  */
 export function parseSettingsDoc(text: string, rel: string): unknown | null {
+    if (rel.endsWith('.json')) {
+        try {
+            return (JSON.parse(text) as unknown) ?? null;
+        } catch {
+            return null;
+        }
+    }
     try {
-        const parsed = rel.endsWith('.json') ? (JSON.parse(text) as unknown) : parseYamlDoc(text);
-        return parsed ?? null;
+        const doc = parseYamlDocument(text, { schema: 'core', resolveKnownTags: false });
+        if (doc.errors.length > 0 || doc.warnings.length > 0) return null;
+        return (doc.toJS() as unknown) ?? null;
     } catch {
         return null;
     }

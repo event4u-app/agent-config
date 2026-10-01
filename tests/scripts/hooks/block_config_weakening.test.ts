@@ -8,6 +8,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { load as jsYamlLoad } from 'js-yaml';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -343,6 +344,45 @@ describe('block_config_weakening — parseSettingsDoc, pinned across the parser 
         expect(parseSettingsDoc('{a: 1}', 'settings.json')).toBeNull();
     });
 
+    // The explicit-tag class, which is the one the swap would have WEAKENED. The
+    // old reader threw on each of these and the guard refused; the `yaml`
+    // package resolves them by default and the guard would have gone on to allow
+    // an edit it used to refuse. Found by an independent council review
+    // (openai/codex-default, 2026-10-01) and closed by `resolveKnownTags: false`
+    // plus treating a warning as a refusal.
+    it('refuses a document carrying an explicit YAML 1.1 tag, as the old reader did', () => {
+        for (const text of [
+            'k: !!timestamp 2026-10-01\n',
+            'k: !!binary aGk=\n',
+            'k: !!set\n  ? a\n  ? b\n',
+            'k: !!omap\n  - a: 1\n',
+            'k: !!pairs\n  - a: 1\n',
+            'k: !custom 1\n',
+        ]) {
+            expect(parseSettingsDoc(text, '.agent-settings.yml'), text).toBeNull();
+        }
+    });
+
+    // …and the near-miss in the other direction: the CORE tags both readers
+    // carry must still parse, or the constraint above would be a refuse-anything
+    // gate wearing an equivalence test's name.
+    it('still reads the core tags both readers carry', () => {
+        expect(parseSettingsDoc('k: !!str 1\n', '.agent-settings.yml')).toEqual({ k: '1' });
+        expect(parseSettingsDoc('k: !!int 3\n', '.agent-settings.yml')).toEqual({ k: 3 });
+        expect(parseSettingsDoc('k: !!bool true\n', '.agent-settings.yml')).toEqual({ k: true });
+        expect(parseSettingsDoc('k: !!seq [1]\n', '.agent-settings.yml')).toEqual({ k: [1] });
+    });
+
+    // A merge key was raised as a difference by the other seat and is not one at
+    // these versions. Pinned so the question is settled by a reading rather than
+    // re-litigated from documentation.
+    it('leaves a merge key literal, which is what the old reader did too', () => {
+        expect(parseSettingsDoc('d: &d\n  p: false\npersonal:\n  <<: *d\n', '.agent-settings.yml')).toEqual({
+            d: { p: false },
+            personal: { '<<': { p: false } },
+        });
+    });
+
     // End-to-end through the guard, on a real class-C key: flipping between two
     // YAML 1.1 boolean words is still a refusal, under either reader.
     it('sees a class C key flip between two 1.1 boolean words', () => {
@@ -363,5 +403,70 @@ describe('block_config_weakening — parseSettingsDoc, pinned across the parser 
         );
         expect(reason).not.toBeNull();
         expect(reason).toContain(cKey as string);
+    });
+});
+
+// The differential suite the council asked for: BOTH readers, ONE corpus, the
+// same refusal set asserted — not a reading of either one alone. It exists
+// because an independent review (2026-10-01, anthropic + openai seats) refused
+// the swap on the grounds that characterizing the OLD reader proves the old
+// behaviour and not that the new one matches it. That objection was correct and
+// found a real hole (explicit YAML 1.1 tags); this is the evidence it asked for.
+//
+// `js-yaml` is still a package dependency — ≈30 modules outside the hook bundle
+// import it — so the old reader is importable here and this is a measurement
+// rather than a transcription of what it used to do. The day that stops being
+// true this suite stops compiling, which is the correct failure: an equivalence
+// claim whose other side is gone is not an equivalence claim.
+describe('block_config_weakening — differential: the two readers refuse the same set', () => {
+    /** What the guard did BEFORE the swap: `js-yaml.load`, nullish collapsed to null. */
+    function oldReader(text: string): unknown | null {
+        try {
+            return (jsYamlLoad(text) as unknown) ?? null;
+        } catch {
+            return null;
+        }
+    }
+
+    const CORPUS: readonly string[] = [
+        // explicit tags — the class that would have weakened the guard
+        'k: !!timestamp 2026-10-01\n', 'k: !!binary aGk=\n', 'k: !!set\n  ? a\n  ? b\n',
+        'k: !!omap\n  - a: 1\n', 'k: !!pairs\n  - a: 1\n', 'k: !custom 1\n',
+        // core tags both readers carry
+        'k: !!str 1\n', 'k: !!int 3\n', 'k: !!float 1.5\n', 'k: !!bool true\n',
+        'k: !!null ~\n', 'k: !!map {a: 1}\n', 'k: !!seq [1]\n',
+        // YAML 1.1 scalar words and number forms
+        'k: on\n', 'k: yes\n', 'k: off\n', 'k: no\n', 'k: On\n', 'k: YES\n',
+        'k: true\n', 'k: false\n', 'k: .inf\n', 'k: .nan\n', 'k: 1_000\n',
+        'k: 0b101\n', 'k: 0o17\n', 'k: 012\n', 'k: 2026-10-01\n', 'k: 12:30\n',
+        // emptiness and absent values — the fail-closed path
+        '', '   \n', '~\n', 'null\n', 'k:\n', 'k: ~\n',
+        // malformed and multi-document
+        'a: 1\na: 2\n', '---\na: 1\n---\nb: 2\n', '\ttab: 1\n', 'a: [unclosed\n',
+        // anchors, aliases, merge keys
+        'a: &x 1\nb: *x\n', 'd: &d\n  p: false\npersonal:\n  <<: *d\n',
+        // scalars and nesting that must keep working
+        'k: "q"\n', "k: 'q'\n", 'k: |\n  block\n', 'k: >\n  folded\n',
+        'a:\n  b:\n    c: 1\n', 'a:\n  - 1\n  - 2\n',
+        // a realistic settings shape
+        'personal:\n  play_by_play: false\nhooks:\n  injection_scan:\n    enabled: false\n',
+    ];
+
+    it('agrees with the old reader on every entry of the corpus', () => {
+        const disagreements: string[] = [];
+        for (const text of CORPUS) {
+            const before = JSON.stringify(oldReader(text));
+            const after = JSON.stringify(parseSettingsDoc(text, '.agent-settings.yml'));
+            if (before !== after) disagreements.push(`${JSON.stringify(text)}: ${before} -> ${after}`);
+        }
+        expect(disagreements).toEqual([]);
+    });
+
+    // The corpus must contain both outcomes, or an all-refused or all-parsed
+    // corpus would pass the comparison while proving nothing.
+    it('the corpus exercises both outcomes, so the agreement is not vacuous', () => {
+        const refused = CORPUS.filter((t) => parseSettingsDoc(t, '.agent-settings.yml') === null);
+        expect(refused.length).toBeGreaterThan(8);
+        expect(CORPUS.length - refused.length).toBeGreaterThan(20);
     });
 });

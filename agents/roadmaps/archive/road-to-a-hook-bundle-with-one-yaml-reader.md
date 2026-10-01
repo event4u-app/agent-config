@@ -90,7 +90,7 @@ Measured, not asserted — the full composition tables are in
 
 | Quantity | Before | After |
 |---|---:|---:|
-| `dist/hooks/dispatch.js` bytes | 1,564,211 | 1,468,237 |
+| `dist/hooks/dispatch.js` bytes | 1,564,211 | 1,469,738 |
 | YAML packages in the bundle | 2 | 1 |
 | Published windsurf standing-payload figure | 34,160 | 398,211 |
 

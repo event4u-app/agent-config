@@ -70,27 +70,64 @@ hook bundle import it; the roadmap's goal is its absence from
 
 ## After — the same build with `block_config_weakening.ts` on `yaml`
 
-Bundle: **1,468,237 bytes**. 276 modules.
+Bundle: **1,469,738 bytes**. 276 modules.
 
 | Package | Bytes in output | Share of bundle |
 |---|---:|---:|
-| `(src)` | 1,192,111 | 81.23 % |
-| `yaml` | 258,833 | 17.64 % |
+| `(src)` | 1,192,316 | 81.16 % |
+| `yaml` | 259,481 | 17.66 % |
 
 `js-yaml` contributes zero bytes — it is absent from the module graph, not
 merely small in it.
 
 | Quantity | Before | After | Delta |
 |---|---:|---:|---:|
-| `dist/hooks/dispatch.js` bytes | 1,564,211 | 1,468,237 | −95,974 (−6.14 %) |
+| `dist/hooks/dispatch.js` bytes | 1,564,211 | 1,469,738 | −94,473 (−6.04 %) |
 | YAML packages in the bundle | 2 | 1 | −1 |
 | Modules | 277 | 276 | −1 |
 
-The 101-byte rise in `(src)` is the replacement import and its comment; the
-6-byte fall in `yaml` is esbuild renaming fewer symbols once one collision
-source is gone. Both are reported rather than rounded away because the headline
-delta is the sum of the three, and a table whose rows do not add up is the thing
-this file exists not to be.
+**Two readings, and the second is the one that counts.** The first port used
+`yaml`'s `parse` and measured 1,468,237 bytes. An independent council review
+then found that default `yaml` resolves explicit YAML 1.1 tags that `js-yaml`
+v5's CORE schema throws on — six of them, confirmed by running both readers —
+which would have turned a refusal into an allow on the guard this file is
+about. Closing that needs `parseDocument` with `schema: 'core'` and
+`resolveKnownTags: false`, which pulls 648 more bytes of `yaml` and 205 more of
+`(src)`: **1,501 bytes, 0.1 % of the bundle, to keep the refusal set
+unchanged.** The figures above are the hardened build; the 1,468,237 reading is
+recorded here rather than deleted, because the 1,501-byte difference IS the
+price of the correctness property and quoting the cheaper number would hide it.
+
+The modest rise in `(src)` is the replacement import plus the three constraints
+and their reasoning. Both rows are reported rather than rounded away because
+the headline delta is their sum, and a table whose rows do not add up is the
+thing this file exists not to be.
+
+## The council finding, recorded because it changed the code
+
+Reviewed 2026-10-01 by `anthropic/claude-sonnet-4-5` + `openai/codex-default`,
+2 rounds, 2/2 quorum, $0.00 (both seats subscription-authed). Both seats
+returned REQUEST_CHANGES on the first pass, and the branch changed as a result:
+
+- **The real finding, `openai/codex-default`.** Default `yaml` resolves
+  `!!timestamp`, `!!binary`, `!!set`, `!!omap`, `!!pairs` and unknown custom
+  tags; `js-yaml` v5's CORE schema throws on all six. Measured on this tree
+  rather than taken on the reviewer's word — six inputs, six throws against six
+  values. On the fail-closed guard that is a weakening: the document used to be
+  unparseable and refused. Fixed by constraining the reader.
+- **A refuted finding, `anthropic/claude-sonnet-4-5`.** YAML merge keys
+  (`<<: *anchor`) were claimed to differ. They do not at these versions — both
+  readers leave `<<` literal, which is `js-yaml` v5 behaviour rather than the
+  v3 behaviour the claim assumed. Measured and pinned as a test so the question
+  is settled by a reading next time instead of re-argued.
+- **The shared objection, both seats.** Characterizing the OLD reader proves
+  the old behaviour, not that the new one matches it. Correct, and it is what
+  found the first item. The differential suite — both readers, one 47-entry
+  corpus, same refusal set asserted, with a non-vacuity assertion on both
+  outcomes — is the evidence they asked for.
+
+Provider diversity was not a formality here: the seat that refuted the other
+seat's finding is the seat that found the real one.
 
 ## What this does NOT establish
 
