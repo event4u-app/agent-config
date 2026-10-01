@@ -5,6 +5,17 @@ review_by: 2026-12-24
 
 # Stub: ADR-134 expires 2026-09-15, and ADR-133's freeze re-arms with it
 
+> **Arrivals:** 3 (at least) - latest `inbox-2026-10-a` (2026-10-01), where two of
+> sixteen release reviews count the lapse — one at 16 days post-fire, one at 19
+> days with the ADR series frozen at 277 — and ask for the two acknowledgements as
+> owner-reserved, dated steps. Counted as distinct prior round directories under
+> the consumed-inbox tree, which is gitignored, so the count is machine-local.
+
+> **Owner question, posed 2026-10-01 — the 2026-09-15 date has passed.** Pick one:
+> (1) post the launch decision ADR-134 defers; (2) write a successor deferral ADR
+> with a signed reason and a new expiry; (3) record the lapse deliberately as
+> ADR-134 prescribes, as an open compliance finding.
+
 > **Stub — not active work.** It exists so that **2026-09-15** is reachable by
 > grep from a non-archived roadmap, which it was not: at 2026-08-23,
 > `grep -rl "2026-09-15" agents/roadmaps/*.md agents/roadmaps/later/*.md`
