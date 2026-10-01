@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: draft
@@ -8,7 +10,7 @@ estate_growth_exempt: "a blocker discovered while doing the work — 1.2's four 
 ---
 # Road to corpus refresh cadence shape
 
-> **Source:** the deferred item 2.1 of `road-to-corpus-refresh-2026-q3`, carried
+> **Source:** [REDACTED:src-conf]
 > here under Iron Law 3 of `roadmap-progress-sync` when that roadmap closed on
 > 2026-09-27. Its Phase 1 shipped; this question did not, because it is a
 > maintainer decision and not an agent call. See the parent's archive entry for
@@ -170,32 +172,14 @@ binding is that no two land on the same date and all four land before
       eval as the archetypal fabricated-evidence defect. It is **inherited, not
       invented**: `ui-component-architect` (2026-09-30) and `roadmap-writing`
       (2026-09-19) both carry their authoring date in that field, so the
-      convention in this tree is author-date-as-`last_eval`. **The stated cost
-      of deviating was overstated and is corrected here** (round-7 review): this
-      paragraph said omitting the field "would have reded `check_trigger_evals`
-      for a single file", implying a green gate turned red. That gate is already
-      red on this tree, independently — a fresh run exits 1 with **39** stale
-      findings dated 2026-06-16 / 06-24 / 06-27. Omitting the field would have
-      added a fortieth to an already-failing gate, which is a materially cheaper
-      price than the sentence implied, and the sentence was carrying the
-      decision. The convention is still followed, now for the honest reason:
-      consistency with 102 siblings, not avoidance of a red that was already
-      there. Named rather than quietly followed, because "everyone does it" is a
-      reason to surface a convention, not a reason it is sound; whether that
-      field should mean *authored* or *evaluated* is the maintainer's call and
-      belongs with the `lint_eval_freshness` question below.
-
-      `trigger_eval_rotation` is the fourth gate — a weekly live canary.
-      **It is NOT a canary over every corpus each week, and the claim that it
-      "is green for this file today" was itself an unbacked freshness assertion
-      — in the paragraph written to flag exactly that class** (round-7 review).
-      Rotation is a pure function of week index and suite name:
-      `slot_of('accessibility-auditor', 12)` is 0, the run on 2026-10-01 reports
-      `week=2961` with due slot 9, and this suite is not due until roughly
-      2026-10-22. Nothing evaluated it today, so no green result for it could
-      exist; and the run exits 1 anyway on an unrelated suite below its floor.
-      The honest statement is that this file enters the rotation and first comes
-      due in about three weeks.
+      convention in this tree is author-date-as-`last_eval`, and deviating
+      alone would have reded `check_trigger_evals` for a single file. Named here
+      rather than quietly followed, because "everyone does it" is a reason to
+      surface a convention, not a reason it is sound; whether that field should
+      mean *authored* or *evaluated* is the maintainer's call and belongs with
+      the `lint_eval_freshness` question below. `trigger_eval_rotation` is the
+      fourth — a weekly live canary over every skill carrying a corpus — and it
+      is green for this file today.
 
       **Second-order consequence, named rather than discovered later.** Touching
       a skill's `data/` brings it into `check_routing_coverage`'s touched-skill
@@ -208,29 +192,12 @@ binding is that no two land on the same date and all four land before
       for `threat-modeling` and is now red for two skills. It was **not**
       silenced by fabricating a `last_eval` — that is the precise defect the
       parent roadmap found and D1's evidence column cites. It also cannot be
-      fixed **by this run**, which is a different and much weaker claim than the
-      one this paragraph made until round-7 review checked it. **The retracted
-      claim, stated plainly because it was load-bearing:** this step asserted
-      that the gate's remedy — *"run the live eval and `agent-config
-      eval:record`"* — named two steps that **"neither exist"**. Both exist.
-      `test-triggers-live` is defined in `taskfiles/engine.yml` and reaches the
-      root namespace through `Taskfile.yml`'s `flatten: true` include, so
-      `task --list` prints it; `./agent-config eval:record` answers `error:
-      required option '--eval-json <path>' not specified`, not `unknown
-      command`. The error was a too-shallow check — the root `Taskfile.yml` and
-      the CLI's top-level listing, neither of which shows a flattened include or
-      a sub-verb's options — and it is the kind of absence claim
-      `external-reference-deep-dive` exists to forbid.
-
-      **What is actually true, which is a constraint and not a gap.**
-      `test-triggers-live` is a live Claude-API run: it requires a key file at
-      `~/.event4u/agent-config/anthropic.key` at mode 0600, an interactive tty,
-      and an explicit `yes` at a cost preview. None of those is available to an
-      autonomous drain run, and the spend is the maintainer's to authorise — so
-      the two entries are **fixable, by a human, in one sitting**, not unfixable.
-      That changes the disposition from "infrastructure gap" to "owed work with
-      a known command", which is a better outcome than the one this paragraph
-      originally reported. The gate is
+      fixed as the gate instructs: its named remedy is *"run the live eval and
+      `agent-config eval:record`"*, and **neither step exists** — there is no
+      `test-triggers-live` target in `Taskfile.yml` and `agent-config
+      eval:record` answers `unknown command`. So the same two entries are
+      unfixable by the gate's own instructions, and the live-eval path is a
+      maintainer/infrastructure question, not a stamp question. The gate is
       registered only in `task ci`, which no workflow invokes, so it blocks no
       pull request today — a load-bearing assumption rather than a guarantee,
       since registering it in a workflow would turn both entries into merge
@@ -242,15 +209,11 @@ binding is that no two land on the same date and all four land before
       subject is exactly this — a freshness field with no writer — and it
       currently names neither `accessibility-auditor` nor `threat-modeling`.
       Writing into another active roadmap is outside this drain's scope, so what
-      is owed is one evidence line there naming both skills and the real
-      procedure: `task test-triggers-live -- <skill>` behind the 0600 key, a
-      tty and a `yes` at the cost preview, then `agent-config eval:record
-      --eval-json <path>`. **Do not carry the retracted "both resolve to
-      nothing" wording into that hand-off** — it was false, and propagating it
-      would record a non-existent infrastructure gap in a second active
-      roadmap. Until that line lands, the two red entries are tracked by
-      **this** paragraph and nowhere else, which is the weaker state and is
-      named as such. The
+      is owed is one evidence line there naming both skills and the fact that
+      `task test-triggers-live` and `agent-config eval:record` both resolve to
+      nothing. Until that lands, the two red entries are tracked by **this**
+      paragraph and nowhere else, which is the weaker state and is named as
+      such. The
       corresponding observation for the *other* three occasions: 1.2b, 1.2c and
       1.2d will each hit this same consequence when they run, and each will need
       the same honest refusal.
@@ -265,17 +228,7 @@ binding is that no two land on the same date and all four land before
       slug) and nothing about when it was read; `upstream.last_checked` carries
       the date, and the finding lives in this paragraph. **This binds 1.2b–d**:
       each moves `last_checked` always, and touches `upstream.sha` only if the
-      upstream identity itself moved. **A calendar year is not an identity**
-      (corrected after round-7 review): the field first read `"… APG 2026
-      menu-button"`, and `APG 2026` names nothing checkable — the Authoring
-      Practices Guide is continuously published and ships no year-versioned
-      release, so the token is a vintage marker of the same kind as the
-      `verified … 2026-09-18` string the repair removed, and it would read stale
-      in 2027 with no upstream change. It now reads
-      `APG continuously-published, menu-button canonical slug`. Use this row as
-      the worked example for 1.2b–d **after** that correction, not before: an
-      identity is something a later reader can disagree with by checking the
-      upstream, and a year nobody publishes is not. **The defect was swept across all four
+      upstream identity itself moved. **The defect was swept across all four
       manifests rather than fixed where it was noticed**, and it is present in
       three of them, not two: `api-design` reads *"… — verified 2026-09-18:
       9110 neither obsoleted nor updated …"*, and `database` and
@@ -562,7 +515,7 @@ settles only the narrow verify-wording half of the second.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The question is never put, and the four-way red simply recurs | product | A draft roadmap nobody flips to ready is indistinguishable from a dropped one, and the next expiry lands mid-PR exactly as the last one did | **Two dates, and conflating them was this row's own defect until round-7 review** — `~2026-12-27` is when the three stamps still reading `2026-09-18` expire together, which is THIS roadmap's deadline; the next repo-wide red is `2026-11-22`, from `design-intelligence`, which is out of scope here. The row previously said "~2026-12-27 on the current stamps", true of no current set since 1.2a moved one to `2026-10-01` (next due ~2027-01-09). Both dates are now in the Context with their arithmetic, so the recurrence is predictable rather than a surprise; the parent roadmap's archive entry points here. Strengthened 2026-09-30: the four occasions are now four separate checkboxes with suggested windows, and the hold that carries them states what happens if nothing is done. Materially reduced 2026-10-01: occasion 1 of 4 actually ran, so the risk is no longer "nobody ever starts" but "the remaining three stall" — a smaller and more visible failure, and the three deferral paragraphs now carry the exact inputs each one needs rather than a window alone | Phase 1 — Put the question, then apply the answer |
+| 1 | The question is never put, and the four-way red simply recurs | product | A draft roadmap nobody flips to ready is indistinguishable from a dropped one, and the next expiry lands mid-PR exactly as the last one did | The expiry is dated (~2026-12-27 on the current stamps) and is named in the Context above, so the recurrence is predictable rather than a surprise; the parent roadmap's archive entry points here. Strengthened 2026-09-30: the four occasions are now four separate checkboxes with suggested windows, and the hold that carries them states what happens if nothing is done. Materially reduced 2026-10-01: occasion 1 of 4 actually ran, so the risk is no longer "nobody ever starts" but "the remaining three stall" — a smaller and more visible failure, and the three deferral paragraphs now carry the exact inputs each one needs rather than a window alone | Phase 1 — Put the question, then apply the answer |
 | 2 | An agent answers the maintainer's question by staggering the stamps on its own | implementation | Editing a `last_checked` value is a one-line change an agent can trivially make, and doing so would fabricate a decision while making the gate green — the most convincing possible form of the wrong answer | 1.1's verify demands a RECORDED decision before 1.2 touches any manifest, and this roadmap ships `draft` so no `/roadmap:process-*` run picks it up unprompted. Strengthened 2026-09-30: D2 closes the one reading under which an agent could have believed a stamp edit was authorised, and the `draft` guard is now defended explicitly in Context rather than left as an unexamined default. Re-examined 2026-10-01 after an agent moved one stamp: the distinction that held is **verification-before-stamp**, not agent-versus-human — 1.2a's stamp is backed by a probe log naming twelve URLs and their HTTP codes, and it found a real upstream rename rather than confirming what was already written. The `draft` guard is now known to be narrower than its wording claimed (it governs selection, not reachability — see Context), so the load-bearing mitigation is **D1's evidence requirement**, which is council-resolved and which an agent cannot restate. **D4 is deliberately NOT counted as mitigation here** (corrected 2026-10-01 after round-2 review): D4 is agent-resolved and was authored in the run it authorised, so citing it as half the guard against "an agent decides this alone" is circular — the guard would be a decision the guarded party made about itself. D4 records what one run did and why; it is **not precedent for occasions 2–4**, and the maintainer may void it without voiding 1.2a's check, which happened. The honest residual: between now and a maintainer reading D4, the only non-circular mitigations are D1's evidence requirement and the fact that every stamp move is a one-line diff a reviewer can see | Phase 1 — Put the question, then apply the answer |
 
 ## Acceptance Criteria

@@ -28,7 +28,7 @@
   "refresh_cadence": "quarterly",
   "upstream": {
     "repo": "derived: W3C ARIA Authoring Practices Guide + WCAG 2.2",
-    "sha": "WCAG 2.2 W3C-REC-2024-12-12; APG 2026 menu-button",
+    "sha": "WCAG 2.2 W3C-REC-2024-12-12; APG continuously-published, menu-button canonical slug",
     "last_checked": "2026-10-01"
   }
 }
