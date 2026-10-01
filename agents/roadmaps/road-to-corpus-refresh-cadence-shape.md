@@ -119,6 +119,28 @@ two land on the same date and all four land before ~2026-12-27.
       exit `0`, *"6 corpus manifest(s), 41 CSV(s) opened: every declared cadence
       is met"*. The stamp now differs from the other three, which remain
       `2026-09-18`.
+
+      **Second-order consequence, named rather than discovered later.** Touching
+      a skill's `data/` brings it into `check_routing_coverage`'s touched-skill
+      scope, which requires `evals/triggers.json`; that corpus was written
+      (10 cases — 5 exemplars, 3 near-misses, 2 counterexamples) and skill
+      routing coverage rose `0.3411` → `0.3445`. But shipping `triggers.json`
+      beside a SHA-pinned manifest **also** puts the skill into
+      `lint_eval_freshness`'s scope, which then wants an
+      `upstream.last_eval` recorded from a live eval. That gate was already red
+      for `threat-modeling` and is now red for two skills. It was **not**
+      silenced by fabricating a `last_eval` — that is the precise defect the
+      parent roadmap found and D1's evidence column cites. It also cannot be
+      fixed as the gate instructs: its named remedy is *"run the live eval and
+      `agent-config eval:record`"*, and **neither step exists** — there is no
+      `test-triggers-live` target in `Taskfile.yml` and `agent-config
+      eval:record` answers `unknown command`. So the same two entries are
+      unfixable by the gate's own instructions, and the live-eval path is a
+      maintainer/infrastructure question, not a stamp question. The gate is
+      registered only in `task ci`, which no workflow invokes, so it blocks no
+      pull request today. The corresponding observation for the *other* three
+      occasions: 1.2b, 1.2c and 1.2d will each hit this same consequence when
+      they run, and each will need the same honest refusal.
 - [~] **1.2b Re-check `api-design` against its upstream and stamp the date the
       check ran.** <!-- blocked-by: four-dated-re-checks-are-calendar-bound | asked: no — the drain grant that reached this roadmap forbids putting a question to the owner; recorded here for the maintainer instead -->
       Upstream is RFC 9110 / 9457 / 7396 / 8288 plus the httpapi WG drafts.
