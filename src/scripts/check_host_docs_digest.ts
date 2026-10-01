@@ -19,11 +19,16 @@
  * WHAT A CHANGED DIGEST MEANS, AND WHAT IT DELIBERATELY DOES NOT.
  * A changed body is evidence that the page moved, never a reading of what it
  * now says. So the watcher adopts no upstream text, derives no slot, and
- * changes no `block_exit`. It does exactly one thing: it expires the row, which
- * hands the question to `lint_hook_manifest._check_host_lowering` — a gate that
+ * changes no `block_exit`. The most it ever does is expire the row, which hands
+ * the question to `lint_hook_manifest._check_host_lowering` — a gate that
  * already refuses an expired row carrying a blocking binding and only warns on
  * one that does not. A red there opens a local finding for a human to read the
  * page; it never encodes the page.
+ *
+ * "The most it EVER does", because in production it does less. The weekly job
+ * runs `--fetch` with no `--write`, so nothing is expired automatically: the
+ * job simply goes red. Expiry happens only when a human runs `--fetch --write`.
+ * An earlier version of this paragraph read as if escalation were automatic.
  *
  * WHY `expires` MOVES TO THE DAY BEFORE DETECTION, NOT TO THE DETECTION DATE.
  * The table's own header states the rule and the reason: the gate tests
@@ -685,8 +690,10 @@ export async function main(argv: readonly string[]): Promise<number> {
         }
         for (const e of expired) {
             process.stdout.write(
-                `   ${e}: docs body changed — \`expires\` pulled to ${dayBefore(today)}, digest left as recorded. ` +
-                    'Read the page and re-establish `docs_at` + `docs_digest` together; `lint_hook_manifest` refuses the row now if it carries a blocking binding.\n',
+                `   ${e}: docs body changed — \`expires\` pulled to ${dayBefore(today)}, digest left as recorded.\n` +
+                    '      This marks the row stale; it does NOT re-establish it. To re-establish: read the page, then set\n' +
+                    '      `docs_at` to today, `docs_digest` to the new body\'s hash, and `expires` FORWARD again — nothing\n' +
+                    '      moves `expires` forward automatically, so a row left half-fixed stays red in `lint_hook_manifest`.\n',
             );
         }
         if (missed.length > 0) {

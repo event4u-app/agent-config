@@ -289,8 +289,6 @@ ci_only:
       comparison logic itself is covered hermetically by
       `tests/scripts/host_docs_digest.test.ts`.
 
-
-
 # Gates a local chain runs that no workflow does — each needs a reason it is not
 # worth remote enforcement, OR it should simply be added to a workflow. Prefer
 # adding it: a local-only gate is the direction that let real defects merge.

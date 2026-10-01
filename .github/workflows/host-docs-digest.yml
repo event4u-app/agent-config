@@ -14,10 +14,13 @@ name: Host Docs Digest Watch
 # not a reading of what it now says, and the one thing this package must not do
 # is adopt upstream text automatically — that would turn a vendor's edit into
 # this package's claim without a human ever reading it. The job goes red; a
-# human reads the page; the row is re-established by hand with
-# `./scripts-run src/scripts/check_host_docs_digest --fetch --write`, which is
-# what moves `expires` and what carries its own ratification artifact (the
-# table is on `check_kernel_edit_ratified`'s plumbing list).
+# human reads the page; the row is re-established BY HAND. Note that
+# `./scripts-run src/scripts/check_host_docs_digest --fetch --write` does not
+# finish that job — it marks the row stale (pulls `expires` BACK and keeps the
+# recorded digest) and nothing moves `expires` forward again. Re-establishing
+# means editing `docs_at`, `docs_digest` and `expires` after reading the page,
+# and that edit carries its own ratification artifact (the table is on
+# `check_kernel_edit_ratified`'s plumbing list).
 #
 # So: red here means "go read a page", never "something is broken in this repo".
 #

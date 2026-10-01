@@ -132,7 +132,7 @@ with a date on it.
       volatile at this granularity.
 
       *The chain, and its sensitivity.* `tests/scripts/host_docs_digest.test.ts`
-      (19 tests) runs the **real** `lint_hook_manifest._check_host_lowering`
+      (20 tests) runs the **real** `lint_hook_manifest._check_host_lowering`
       over the **real** writer's output — the verify line's "fixture" is only
       the fetched body, because that is the single input a unit test may not
       reach. Drift on `claude` (the one host with blocking bindings) reds the
@@ -142,11 +142,12 @@ with a date on it.
       two different reasons:** first a genuine defect in the test itself (it
       asserted a no-op write using a digest that was never the committed one,
       so it was not testing a no-op at all), then deliberately — neutralising
-      `isDrift` turns **4 of 19** red, which is the sensitivity proof. (The
-      figure was re-measured against the final suite rather than left at the
-      3-of-12 reading taken mid-branch — a completion reviewer caught the stale
-      count, and a sensitivity ratio quoting a suite that no longer exists is
-      exactly the kind of number this roadmap spent its length objecting to.)
+      `isDrift` turns **4 of 20** red, which is the sensitivity proof. (The
+      figure was re-measured against the final suite each time the suite grew,
+      rather than left at the 3-of-12 reading taken mid-branch — a completion
+      reviewer caught the first stale count, and a sensitivity ratio quoting a
+      suite that no longer exists is exactly the kind of number this roadmap
+      spent its length objecting to.)
 
       *Correction to this step's own text, recorded not smoothed.* The step
       says the job "sets `expires: <today>`". That is **off by one** and would
