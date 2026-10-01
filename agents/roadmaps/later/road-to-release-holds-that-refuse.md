@@ -1,10 +1,15 @@
 ---
 complexity: structural
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
 owner: maintainer
 relates: []
+review_by: 2027-03-31
+entry_condition:
+  what: "`git tag --contains 3f342103168e56d0168655c12141829f5e1d6ca0 --sort=creatordate | wc -l` reads 30 or more. That ref is the first commit whose tree carries `src/scripts/check_release_holds.ts`, so the count is exactly the denominator Phase 0.4 pre-registered. Checkable without judgement; measured 2026-10-01 and it reads 1."
+  when: "Release-cadence bound, never calendar bound, and no date is claimed because none is derivable from the record. Two tags were cut in September 2026 (`16.0.0` and `16.1.0`); 29 further tags at that cadence is quarters away, and the cadence is not a commitment."
+  who: "none. The condition is elapsed release tags, and nobody has to decide anything for it to arrive - whoever cuts releases moves it by cutting them. The two open blockers below are owner decisions, but neither of them is what this entry condition waits on."
 estate_growth_exempt: >-
   Receiver for the one survivor of inbox round `inbox-2026-09-w` batch 2 that no artefact in the
   tree owns: the repository models four roadmap step states and no fifth state for "valid to
@@ -30,6 +35,30 @@ estate_offset_exempt: >-
 > at HEAD: 24 of 31 claims still true, 2 overtaken by work that shipped since, 3 never true at
 > drafting, 2 unverifiable. The three corrected steps below are tagged
 > `corrected-from-reproduction`.
+
+> **PARKED IN `later/` 2026-10-01, and parked WHOLE rather than closed.** Phases 0 through 5
+> are complete and merged; the mechanism is wired at all four release boundaries. The only work
+> left is Phase 6 — reading a verdict that is defined over **30 release tags cut against a tree
+> carrying the evaluator** — and that denominator stands at **1**. The frontmatter now carries
+> the condition in the machine-readable three-part form `lint_roadmap_later_disposition` reads,
+> so the wake test is one command rather than a re-derivation.
+>
+> **The three open boxes stay `[ ]` deliberately.** A `later/` roadmap is parked whole and keeps
+> its open marks (`later/README.md`, and the rule of record behind PR #583); marking them `[~]`
+> would make `update_roadmap_progress` read the file as `open_ = 0` and therefore `✅ done` the
+> moment it is revived, which is exactly the stale-marker failure this file documents twice at
+> length — once on `rule-13-amendment`, where a status line left unflipped cost four days of
+> declined work, and once on the Phase 6 note that read "the window has not opened" for two days
+> after it had. What an autonomous run needs in order NOT to pick this file up is the folder, not
+> the glyph: `later/` is in `EXCLUDE_DIRS`, so the dashboard and `/roadmap:process-*` skip it.
+>
+> **Why parking rather than leaving it active:** the user directive of 2026-06-16 — *roadmaps
+> with open tasks deferred for later are always moved to `later/`* — and the measured cost of
+> not doing it. Every backlog screen was re-reading 842 lines to conclude that nothing here is
+> workable, and `check_estate_count` names parking explicitly as estate RELOCATION needing no
+> authorisation. The move was additionally cleared by this roadmap's own machinery:
+> `./scripts-run src/scripts/check_release_holds --can-move <file> later` exits 0 with *"no live
+> window — the move to `later/` is permitted"*.
 
 ## Goal
 
@@ -533,15 +562,51 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
 > nothing re-reads a phase note whose steps are all blocked. Working:
 > `agents/evidence/analysis/release-holds-phase-0-2026-09-13.md` § "The measurement window
 > opened at `16.1.0`".
+>
+> **Third reading, 2026-10-01, taken by the parking run and reported because it moved nothing.**
+> The counting snippet in the blocker's `What to do` was re-executed against a freshly fetched
+> tag set: `git tag --contains 3f342103168e56d0168655c12141829f5e1d6ca0 --sort=creatordate` prints
+> exactly `16.1.0`, so the denominator is still **1 of 30** and `git tag --sort=-creatordate | head
+> -1` still reads `16.1.0`. No tag has been cut in the three days since the second reading. This
+> is the reading that justifies parking rather than another correction: the note is now true, the
+> condition that would make it false is in the frontmatter where a gate can read it, and nobody
+> has to re-derive the anchor ref again.
 
 - [ ] <!-- blocked-by: measurement-window-not-open | asked: no — there is no question to put: the block is 30 elapsed release tags, not a decision --> **6.1 Read the refusal log, the re-sequence log and a re-taken Phase 0 prose count**, then
       flip `release-hold-refuses-declared-state` to `backed` or `honest-null`.
       verify: the claim row carries both numbers and the tag range it was measured over.
+      **Evidence (2026-10-01).** NOT CLOSED, and not closable by any session: the step's input is
+      29 further release tags, which is elapsed time on someone else's cadence and not work an
+      agent can perform. Re-measured this run rather than read off the line above —
+      `git tag --contains 3f342103168e56d0168655c12141829f5e1d6ca0 --sort=creatordate` returns the
+      single tag `16.1.0`, so the denominator is **1 of 30**. Shortening it is forbidden by the
+      blocker's own `Recommendation` field and would convert the one falsifiable claim in this
+      roadmap into an unfalsifiable one, so it was not considered as a way to close this box.
+      THE EXACT INPUTS A FUTURE SESSION NEEDS, so that none of this is re-derived:
+      (1) the anchor ref `3f342103168e56d0168655c12141829f5e1d6ca0` — the first commit carrying
+      `src/scripts/check_release_holds.ts`, already pinned in the frontmatter `entry_condition`;
+      (2) arm (a), the refusal count, which is read from the release path's own refusals — zero to
+      date, because a sweep for `### hold:` across `agents/roadmaps/` returns **0** at this commit
+      and there has never been anything to refuse;
+      (3) arm (b), the re-sequence count, which is read from the Phase 1.4 authoring self-check in
+      `/roadmap:create` § 5c — zero logged to date;
+      (4) the row to edit: `release-hold-refuses-declared-state` in `docs/CLAIMS.md`, which must
+      then carry BOTH arms and the tag range, after which `./scripts-run src/scripts/check_claims`
+      and `build_proof` both run in the same change.
 - [ ] <!-- blocked-by: measurement-window-not-open | asked: no — there is no question to put: the block is 30 elapsed release tags, not a decision --> **6.2 On an honest null, keep the primitive and strike only the free parts** — the boundary
       screen line and the runbook bullet — and record the disposition on rule 28 with the tag
       range. Deleting the primitive is not the null disposition: the owner's constraint is that a
       broken state must not ship, and a mechanism whose value stayed latent is not one that failed.
       verify: the disposition sentence is in the template beside rule 28, naming the tag range.
+      **Evidence (2026-10-01).** NOT CLOSED, and it is downstream of 6.1 rather than beside it:
+      the disposition sentence this step writes must name the tag range 6.1 measures, so writing
+      it now would mean inventing the range. The inputs a future session needs are 6.1's output
+      plus one editing fact worth recording here so it is not rediscovered: the sentence lands in
+      `src/agent-src/templates/roadmaps.md` beside rule 28 (currently `:717`), which is the
+      contract layer — so it follows the same route the `rule-13-amendment` blocker took, and
+      `task sync` then `task generate-tools` must run after the write, in that order. What the
+      null disposition is NOT is recorded on the step itself and has not changed: keep the
+      primitive, strike only the boundary-screen line and the runbook bullet.
 
 ## Blockers
 
@@ -699,6 +764,20 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
     `agents/evidence/analysis/release-holds-phase-0-2026-09-13.md` § "The measurement window
     opened at `16.1.0`".
 
+- **Third reading, 2026-10-01 — the condition was EXECUTED, not read, and it is still unmet.**
+  The `Resolved when` above has three conjuncts and the first one fails, so the other two were
+  not reached. Run against a freshly fetched tag set on this branch:
+  `git tag --contains 3f342103168e56d0168655c12141829f5e1d6ca0 --sort=creatordate` prints exactly
+  `16.1.0` — **1 tag, against a denominator of 30**. `git tag --sort=-creatordate | head -1` still
+  reads `16.1.0` (2026-09-28), so nothing has been cut in the three days since the second reading
+  and the arithmetic is unchanged rather than merely unrechecked.
+  **`Status:` stays `open`, and this is the entry that now owns the parking.** The roadmap moved
+  to `agents/roadmaps/later/` in this same change and the anchor ref is pinned in its frontmatter
+  `entry_condition.what`, so the single command above is the whole wake test. That is the one
+  thing this reading adds: the first and second readings each had to re-derive the anchor from
+  `git log --reverse -- src/scripts/check_release_holds.ts`, and a condition that must be
+  reconstructed before it can be checked is a condition nobody checks.
+
 ### blocker: zero-live-subjects
 - **Status:** open
 - **Owner:** maintainer
@@ -792,6 +871,31 @@ mid-flight when 15.0.0 shipped — and nothing can express it, let alone refuse 
   `agents/evidence/analysis/release-holds-phase-0-2026-09-13.md` § "The measurement window
   opened at `16.1.0`".
 
+  **Fifth reading, 2026-10-01, and this one found something the four before it did not.** The
+  grep this entry names returned a hit in the ACTIVE corpus that is not a self-reference:
+  `agents/roadmaps/road-to-a-ui-coverage-ledger-that-can-fail.md:188` — *"The release condition
+  was recorded only in this step's own verify line"*, on a step whose own verify reads *"the flip
+  lands in its own change, after 3.1 has shipped one release"*. That is a genuine
+  release-coupled intermediate state, authored independently of this roadmap, and it is the first
+  one to appear in the active corpus since this blocker was opened.
+  **It is NOT the live subject this blocker is waiting for, and the reason is the distinction
+  step 1.3 wrote into rule 20.** A blocker stops EXECUTION; a hold stops PUBLICATION. That file's
+  state must not *advance* until a release ships — it is perfectly safe to publish, and publishing
+  it is in fact how the condition clears. Its author modelled it correctly on 2026-09-30, as a
+  structured `shadow-release-window` blocker with an inline `blocked-by:` marker, with no hold
+  vocabulary involved. So the count of declared holds anywhere in `agents/roadmaps/` is still
+  **0** (`grep -rn '^### hold:'`), and the count of substantive release-coupling declarations that
+  needed rung three is still **zero**.
+  **What it IS, is the second positive datum about the ladder rather than about the population,
+  and it points the same way as the first.** The third reading found a near-miss resolving at the
+  guard and re-sequence rungs; this one finds a near-miss resolving at the blocker rung. Two
+  independent authors, neither reaching for a hold, both landing on a cheaper mechanism that
+  already existed. That is evidence FOR the honest-null branch and it is recorded here rather
+  than argued into a resolution: this entry's `Resolved when` asks for an *accepted* plan, and
+  acceptance is the owner's act. **Stays open, stays yours** — and note that nothing executable
+  waits on it: Phase 4 shipped on 2026-09-19, so what remains is a retrospective cost judgement
+  about a mechanism that is already in the tree, not a go/no-go on building it.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-19 | reviewer: claude/host -->
 
@@ -840,3 +944,10 @@ residual step 3.2 records, which no implementation in this roadmap can close.
       CLOSED 2026-09-19 — nine targeted neutralisations, every one of the 12 sabotage tests red in at least one, each file byte-restored after (git diff empty) and the suite green at 15/15. The per-defence red table is in step 5.2. Both required non-over-firing cases pass, plus a third over the live repository corpus.
 - [ ] <!-- blocked-by: measurement-window-not-open | asked: no — there is no question to put: the block is 30 elapsed release tags, not a decision --> AC-9 — `release-hold-refuses-declared-state` carries a verdict measured over a named tag
       range, and an honest null is recorded as a disposition rather than as a deletion.
+      **Evidence (2026-10-01).** NOT CLOSED — it is the acceptance form of steps 6.1 and 6.2 and
+      closes with them, on the same input: 30 release tags cut against a tree carrying the
+      evaluator, measured this run at **1**. Nothing about this criterion is agent-closable and
+      nothing about it is owner-decidable either; it waits on elapsed releases. The verdict it
+      asks for is already pre-registered as `unbacked` with its falsifier and denominator in
+      `docs/CLAIMS.md`, which is that row's correct state and not a gap — the row's own text
+      forbids citing an underpowered window in either direction.

@@ -278,6 +278,60 @@ tested on one consumer before anyone argues about routers or byte budgets.
       or a rule that exists only in the delivery channel — or at its 2026-12-08
       expiry, whichever comes first.
 
+      **Evidence (2026-10-01) — the probe was RUN, not the prose re-read, and
+      it returns unmet.** The blocker's `Resolved when` is agent-checkable by
+      construction, so this run executed it rather than trusting the `Status:`
+      line above it:
+
+      ```
+      $ ./scripts-run src/scripts/report_host_injection_effect
+      scanned: 9 host(s)
+        observed-false   1
+        unobserved       8
+
+      $ grep -c '"state": "observed-true"' src/config/host-injection-effect.json
+      0
+      ```
+
+      Zero `observed-true` rows, so the condition is **live-unmet** on this
+      branch exactly as it was on 2026-09-30 — the state is re-measured, not
+      inherited. Neither wake limb has fired either: the upstream blocker is
+      unresolved, and 2026-12-08 is 68 days out.
+
+      **One thing this run adds rather than repeats: first-hand corroboration
+      of the confound, from the session executing the step.** The council's
+      binding term of 2026-09-11 requires injection to be the SOLE source of
+      the tested body, and amendment (d) found 106 of 106 `type: auto` rules
+      already carrying a byte-equivalent body unconditionally. That was an
+      audit of the tree; it is also observable from inside this session, whose
+      own system prompt carries the user-global `~/.claude/rules/*.md` bodies
+      inline before any delivery channel fires. The confound is therefore not a
+      historical claim taken on trust — the measuring instrument reproduces it
+      on itself.
+
+      **Why `[ ]` and not `[~]`, with the mechanism the blocker's own version
+      of this argument does not name.** `lint_deferral_integrity` classes a
+      `deferred-resolution:` annotation whose receiver is deleted, skipped, or
+      archived-with-open-steps as `broken-destination` — a hard failure at
+      zero, no baseline. The only honest receiver here is the parked delivery
+      roadmap whose own blocker is this one, so `[~]` would not merely be
+      circular: it would red that gate the first time this file is archived.
+      `[ ]` plus the live `blocked-by:` marker is kept.
+
+      **Exact inputs a future session needs**, so the next run re-probes
+      instead of re-deriving: (1) a row in `src/config/host-injection-effect.json`
+      at `"state": "observed-true"` carrying host version, transcript pointer
+      and date, whose `reason` scopes itself to the predeclared eligible
+      obligation class of step 1.1 in the delivery roadmap; (2) that row earned
+      in an environment where the tested rule has no second copy in the system
+      prompt, the project layer, or `~/.claude/rules/` — a clean checkout or a
+      rule that exists only in the delivery channel; (3) in the SAME change,
+      `tests/scripts/injection_effect.test.ts` → `it('no shipped host is
+      admissible today')` flipped, because it asserts the admissible set is
+      empty and goes red the moment any `observed-true` lands. With those three
+      in hand, 3.1's emission half is a day's work and its verify line is
+      answerable; without (1) and (2), it is not.
+
 ## Phase 4 — Census per profile
 
 - [x] **4.1 `report_skill_menu_census --profile minimal|balanced|full`**
@@ -297,9 +351,9 @@ tested on one consumer before anyone argues about routers or byte budgets.
       $ ./scripts-run src/scripts/report_skill_menu_census --profile all
       menu bytes per install profile (name + description, the catalogue shape):
         profile    skills   menu_bytes   ~tokens   declared
-        minimal       297        59132     14783      10047
-        balanced      297        59132     14783      10047
-        full          297        59132     14783      10047
+        minimal       297        59076     14769      10047
+        balanced      297        59076     14769      10047
+        full          297        59076     14769      10047
 
       $ ./scripts-run src/scripts/check_preamble_payload_budget
       ✅  ceiling 138325 tok = base 138325 — zero net growth, design 107646.
@@ -307,7 +361,7 @@ tested on one consumer before anyone argues about routers or byte budgets.
       ```
 
       No second ratchet was added. One reconciliation is recorded rather than
-      smoothed over: this report reads **315 B below** a full-population sum
+      smoothed over: this report reads **311 B below** a full-population sum
       over the same tree, because two skills carry `user-invocable: false` or
       `disable-model-invocation: true` and a MENU is what the model may pick
       from, while the gated payload bucket sums every catalogue line the host
@@ -335,8 +389,34 @@ tested on one consumer before anyone argues about routers or byte budgets.
       315). Two tests were also found to assert less than their names promised
       and now run against the shipped presets rather than a fixture.
 
+      **Evidence (2026-10-01) — the amendment above described a correction it
+      did not perform, and that is repaired here.** The code it was written
+      under was fixed on 2026-09-29; the transcript block above it was not, so
+      "the figures above are the corrected ones" pointed at `59132 / 14783` for
+      two days while the tool emitted `59076 / 14769`, and the delta sentence
+      read `315 B` where the same paragraph said `311`. Re-running the reports
+      on this branch returns the amendment's own numbers, so the block is
+      brought into line with the code rather than the reverse — the amendment
+      was right and only its subject was stale.
+
+      Both reports were re-run on this branch; the block above now carries what
+      they print. The payload line is the one figure NOT restored to its
+      2026-09-29 value, and the difference is the gate working rather than
+      drifting:
+
+      ```
+      $ ./scripts-run src/scripts/check_preamble_payload_budget
+      measured total 138321 tok (baseline 102520, +35801; ceiling 138321)
+      ✅  ceiling 138321 tok = base 138321 — zero net growth, design 107646.
+      ```
+
+      The bucket is shrink-only, so when the tree got 4 tokens smaller the
+      ceiling followed it down and cannot go back up. Re-publishing the step's
+      original `138325` would have quoted a ceiling the gate has since refused.
+      The equality the step reports is unchanged and no second ratchet exists.
+
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-30 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -398,6 +478,19 @@ addressed where it can act: the `Resolved when` field leads with the command
 and says in its own words that the state column is the authority, not the
 prose around it.
 
+**Re-review, 2026-10-01, on a figure-correction and re-probe pass.** No row
+changes and no row is added. Risk 1 is **dormant** — no relabel was taken.
+Risk 2 is **unchanged**: the probe was re-run, still 0 `observed-true`, so the
+hazard is neither closer nor further and nothing went default-on. Risk 3 is
+**unchanged** — `check_routing_coverage` is untouched, and its self-test still
+reports 13/13, which is what exposed AC-3's `11/11` as the stale half of that
+pair. The corrections are to published numbers, not to mechanisms, so no new
+exposure is created. The one residual worth naming is that **five** figures in
+this file were wrong when they were written — `59132`, `14783`, `315 B`,
+`11/11`, `four of them` — and no gate noticed; two others (`138325`, `198`) are
+honest drift and are treated differently, the first because a shrink-only
+ratchet moved it, the second because the census declares itself dated.
+
 ## Acceptance Criteria
 
 - [x] AC-1 — The routing matrix carries ≥ 100 labelled prompts with a written
@@ -408,9 +501,20 @@ prose around it.
       `agents/evidence/ac-capability-scorecard.yaml`, `mechanism_evidence`;
       `check_score_contract` green.
 - [x] AC-3 — A PR touching a corpus-less skill fails the coverage ratchet.
-      `check_routing_coverage --self-test` 11/11, four of them on the new scope.
+      `check_routing_coverage --self-test` 13/13, six of them on the new scope.
+      **Corrected 2026-10-01:** this line read `11/11, four` and contradicted
+      step 2.1's own evidence block of the same date, which already printed
+      `13/13 case(s) behaved (9 rejecting, floor 13)`. Re-run on this branch
+      returns 13/13, and the touched-skill scope contributes six cases, not
+      four — `TOUCHING`, `touching … DOES carry`, `did NOT touch`, `a NEW
+      corpus-less skill`, `edited in a COMMIT`, `an UNDIFFABLE base`. The
+      criterion was understating the gate it certifies.
 - [ ] <!-- blocked-by: e3-witness-set-is-empty-here --> AC-4 — One path-scoping effect report exists and the setting default
       matches its conclusion. **Open** — blocked with 3.1; see its blocker.
+      Re-probed 2026-10-01: `report_host_injection_effect` reads 9 hosts, 1
+      `observed-false`, 8 `unobserved`, 0 `observed-true`, so the report this
+      criterion requires still cannot be taken. See 3.1 § Evidence (2026-10-01)
+      for the run and for the three inputs that would unblock it.
 
 ## Blockers
 
@@ -437,7 +541,11 @@ prose around it.
   census with that row admissible. Agent-checkable, per template rule 20: the
   probe is a command, not a person. Measured on this branch — 9 hosts scanned,
   1 `observed-false`, 8 `unobserved`, 0 `observed-true` — so the condition is
-  live-unmet rather than assumed unmet.
+  live-unmet rather than assumed unmet. **Re-measured 2026-10-01** on
+  `drain/menu-precision-close`: same three counts, 0 `observed-true`. The
+  re-probe is recorded as a second independent reading rather than as a new
+  fact — the value of running it is that the state is known to be current, and
+  a run that only re-read this line would not have established that.
 - **Recommendation:** leave it open and re-probe at the wake condition. The
   emission half is buildable today and is deliberately not built: its enabling
   condition provably cannot be evaluated in this environment, so shipping it
