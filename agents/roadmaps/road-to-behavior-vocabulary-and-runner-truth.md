@@ -274,7 +274,16 @@ get there.
       **Evidence (2026-10-01).** `KNOWN_RUNNERS` in
       `src/agent-src/templates/scripts/work_engine/stack/runner.ts` goes from
       9 labels to 12 — `rspec`, `junit`, `dotnet-test` — each with a real
-      detector, not just a label:
+      detector, not just a label.
+
+      One correction to this step's own premise, from round 2 of the
+      completion review: the step calls the set "the single source of truth
+      the state schema and tests validate against", quoting the module's
+      comment. **There is no state schema.** `agents/runtime/state/toolchain.json`
+      has none and no reader outside this module — verified, since the
+      reviewer's allowlist forbade the repo-wide check. The comment is
+      corrected in the same change, and the membership tests added for
+      round 1's finding 3 are what makes the remaining half of the claim true.
 
       - **rspec** (`ruby`) — `rspec` in the Gemfile, `.rspec`, or
         `spec/spec_helper.rb`; `bundle exec rspec`. **Deliberately no MEDIUM
@@ -361,14 +370,27 @@ get there.
 
       Doc-Impact: `src/agent-src/contexts/execution/toolchain-resolver.md`
       gains the three native rows and a `## 2b` section for the axis. Its
-      self-declared size budget moved 6,000 → 7,000 chars (file now 6,971),
-      recorded in the header with its reason rather than absorbed silently:
-      the resolver covered 9 runners on one axis when the old number was
-      written and now covers 12 across two. The alternative was deleting the
+      self-declared size budget moved **6,000 → 7,500 chars**, recorded in the
+      header with its reason rather than absorbed silently: the resolver
+      covered 9 runners on one axis when the old number was written and now
+      covers 12 across two. The alternative was deleting the
       council-provenance note to make room, which buys a stale number at the
       cost of someone else's record. The enforced ceiling is
       `check_depth_budget`'s 16,000 per depth file, and this file is far
       under it.
+
+      **Corrected 2026-10-01, by round 2 of the completion review.** This
+      paragraph first recorded "6,000 → 7,000 chars (file now 6,971)". Both
+      numbers were wrong and in the direction that matters: the artefact says
+      7,500, and at the 7,000 this record claimed to have set, the committed
+      file would have been over it. The sequence the first version flattened:
+      7,000 was set, round 1's findings corrected the three rows this change
+      ADDED (no pre-existing row was touched), the file grew past 7,000, and
+      the budget moved once more to its final 7,500 rather than having prose
+      shaved out of it to fit. A sentence had in fact been deleted to fit the
+      earlier number and was put back — deleting content to satisfy a budget
+      is the failure this repository keeps recording, and doing it to one's
+      own number is worse.
 - [x] **3.3 Record detection only — never adoption.**
       No table row, no output line and no skill may recommend installing a
       behaviour runner. Detection answers what a repository has; choosing one is

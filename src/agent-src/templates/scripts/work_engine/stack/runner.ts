@@ -40,8 +40,13 @@ import * as path from 'node:path';
 /**
  * Every test-runner label the resolver can emit.
  *
- * Single source of truth so the state schema, fixtures, and tests validate
- * against one set without re-deriving it. Mirrors Python's `frozenset`.
+ * Single source of truth: the fixtures and tests validate against this set
+ * without re-deriving it, and a membership test binds it to what the resolver
+ * actually emits — without that binding it would be a set-equality assertion
+ * about itself. This comment used to claim a "state schema" validated against
+ * it too; `agents/runtime/state/toolchain.json` has no schema and no reader
+ * outside this module, so that half was never true. Mirrors Python's
+ * `frozenset`.
  */
 export const KNOWN_RUNNERS: ReadonlySet<string> = new Set([
     'pest',
@@ -136,6 +141,23 @@ const _MANIFESTS = [
  * cache.
  */
 const _DOTNET_PROJECT_EXTS = ['.sln', '.slnx', '.csproj', '.fsproj', '.vbproj'];
+
+/** The packages that make a .NET project a TEST project, for the HIGH tier. */
+const _DOTNET_TEST_STACK = /Microsoft\.NET\.Test\.Sdk|xunit|nunit|mstest/i;
+
+/**
+ * How deep below a scope `_dotnet_project_text` looks for project files.
+ *
+ * The conventional .NET layout keeps the solution at the root and each
+ * project at `src/<Name>/<Name>.csproj`, so a root-only scan finds the `.sln`
+ * — which carries no `PackageReference` — and misses every project. Depth 2
+ * reaches that layout; the flat single-project root still costs one listing,
+ * because the walk only descends when the scope itself holds no project file.
+ */
+const _DOTNET_SCAN_DEPTH = 2;
+
+/** Ceiling on project files read per scope, so a deep tree cannot stall a turn. */
+const _DOTNET_MAX_PROJECTS = 50;
 
 /**
  * Fixed-name files the BEHAVIOUR axis reads that `_MANIFESTS` does not cover.
@@ -420,6 +442,7 @@ export function resolve_toolchain(
     const ecosystems = _dictFromKeys(runners.map((r) => r.ecosystem));
     const selected = _apply_guard(runners, { include_slow, include_e2e, php_only });
     const confidence = _overall_confidence(runners);
+    const scopes = _behavior_scopes(project_root);
 
     return new ToolchainResult({
         ecosystems,
@@ -427,8 +450,12 @@ export function resolve_toolchain(
         selected: [...selected],
         quality: _dictFromKeys(quality),
         confidence,
-        mtime: latest_manifest_mtime(project_root),
-        behavior_runners: resolve_behavior_runners(project_root),
+        // Computed ONCE and threaded into both consumers. Workspace discovery
+        // reads a manifest and does a `readdirSync` per glob parent, and both
+        // the cache probe and the behaviour axis need the same list — deriving
+        // it twice doubled that for no new information.
+        mtime: latest_manifest_mtime(project_root, scopes),
+        behavior_runners: resolve_behavior_runners(project_root, scopes),
     });
 }
 
@@ -462,7 +489,10 @@ export function write_config(project_root: string, result: ToolchainResult): str
  * when no manifest exists (greenfield) — a stable sentinel, not a
  * missing-file error.
  */
-export function latest_manifest_mtime(project_root: string): number {
+export function latest_manifest_mtime(
+    project_root: string,
+    scopes?: readonly string[],
+): number {
     const mtimes: number[] = [];
     const names = [..._MANIFESTS, ..._BEHAVIOR_MARKERS];
     // Every scope, not only the root: `behavior_runners` is part of the cached
@@ -472,7 +502,7 @@ export function latest_manifest_mtime(project_root: string): number {
     // inventory until some unrelated ROOT manifest happened to be touched —
     // stale forever in the common case. Widening a cache key is always safe in
     // the direction that matters: it can only invalidate more often.
-    for (const scope of _behavior_scopes(project_root)) {
+    for (const scope of scopes ?? _behavior_scopes(project_root)) {
         const dir = scope === '.' ? project_root : path.join(project_root, scope);
         for (const name of names) {
             const p = path.join(dir, name);
@@ -612,14 +642,33 @@ function _python_runners(pyproject_text: string): RunnerResult[] {
  * latter made a `gems.rb` project invisible to both the rspec and the
  * cucumber-ruby branch.
  */
-function _ruby_gemfile_text(dir: string): string {
-    return _read_text(path.join(dir, 'Gemfile')) || _read_text(path.join(dir, 'gems.rb'));
+function _ruby_gemfile_text(dir: string): { text: string; file: string } {
+    for (const name of ['Gemfile', 'gems.rb']) {
+        const text = _read_text(path.join(dir, name));
+        if (text !== '') {
+            // The NAME travels with the text. The basis string is serialised
+            // into `toolchain.json` and names the file that matched, so a
+            // `gems.rb` project must not be told its signal came from a
+            // `Gemfile` that does not exist in it.
+            return { text, file: name };
+        }
+    }
+    return { text: '', file: '' };
 }
 
-function _ruby_runners(root: string, gemfile_text: string): RunnerResult[] {
+/** `gem 'rspec'` / `gem "cucumber"` — a DECLARATION, not the word anywhere. */
+function _gem_declared(text: string, gem: string): boolean {
+    // Same discipline as `_PY_BEHAVE`, and for the same reason: a bare
+    // `\brspec\b` over the whole manifest fires on a commented-out
+    // `# gem 'cucumber'`, on a changelog line, and on any gem whose name
+    // merely contains the word.
+    return new RegExp(`^[ \\t]*gem[ \\t]+["']${gem}["']`, 'm').test(text);
+}
+
+function _ruby_runners(root: string, gemfile: { text: string; file: string }): RunnerResult[] {
     const dot_rspec = _is_file(path.join(root, '.rspec'));
     const spec_helper = _is_file(path.join(root, 'spec', 'spec_helper.rb'));
-    const in_gemfile = /\brspec\b/.test(gemfile_text);
+    const in_gemfile = _gem_declared(gemfile.text, 'rspec');
     // No `Gemfile` precondition. An earlier version returned here whenever the
     // Gemfile was absent, which made the two marker bases below unreachable in
     // exactly the projects that have only markers: a Bundler project using
@@ -630,7 +679,7 @@ function _ruby_runners(root: string, gemfile_text: string): RunnerResult[] {
         return [];
     }
     const basis = in_gemfile
-        ? 'rspec in Gemfile'
+        ? `rspec in ${gemfile.file}`
         : dot_rspec
           ? '.rspec present'
           : 'spec/spec_helper.rb present';
@@ -680,10 +729,17 @@ function _jvm_runners(build: JvmBuild): RunnerResult[] {
 /**
  * .NET — the basis string, or `null` when nothing marks a .NET project.
  *
- * A project or solution file is deterministic (HIGH); `global.json` or
- * `Directory.Build.props` alone says "a .NET repository" without naming a
- * test project, so it is MEDIUM — the same gradation the PHP branch uses
- * between a named runner and a bare `composer.json`.
+ * The gradation really does mirror the PHP branch, which awards HIGH only for
+ * a NAMED runner and MEDIUM for a bare `composer.json`. So HIGH here needs a
+ * project that names a TEST stack (`Microsoft.NET.Test.Sdk`, xunit, nunit,
+ * mstest), and a bare project or solution file is MEDIUM — it is the analogue
+ * of the bare manifest, not of the named runner.
+ *
+ * This is not cosmetic. `_overall_confidence` is "some HIGH wins", so a bare
+ * non-test project file used to raise a whole repository to HIGH and push
+ * `dotnet test` into `selected` — a command that fails on a solution carrying
+ * no test project. The Ruby branch in this same module refuses exactly this
+ * class of guess.
  */
 function _dotnet_basis(root: string): { basis: string; confidence: string } | null {
     let names: string[];
@@ -699,7 +755,10 @@ function _dotnet_basis(root: string): { basis: string; confidence: string } | nu
     }
     const project = names.find((n) => _DOTNET_PROJECT_EXTS.includes(path.extname(n).toLowerCase()));
     if (project !== undefined) {
-        return { basis: `${project} present`, confidence: HIGH };
+        const named = _DOTNET_TEST_STACK.test(_dotnet_project_text(root));
+        return named
+            ? { basis: `test stack named in a .NET project file`, confidence: HIGH }
+            : { basis: `${project} present, no test stack named`, confidence: MEDIUM };
     }
     for (const marker of ['global.json', 'Directory.Build.props']) {
         if (_is_file(path.join(root, marker))) {
@@ -739,42 +798,50 @@ function _dotnet_runners(found: { basis: string; confidence: string }): RunnerRe
  * yields fewer rows rather than an error, matching the module's
  * recoverable-error contract.
  */
-export function resolve_behavior_runners(project_root: string): BehaviorRunnerResult[] {
+export function resolve_behavior_runners(
+    project_root: string,
+    scopes?: readonly string[],
+): BehaviorRunnerResult[] {
     const out: BehaviorRunnerResult[] = [];
-    for (const scope of _behavior_scopes(project_root)) {
+    for (const scope of scopes ?? _behavior_scopes(project_root)) {
         const dir = scope === '.' ? project_root : path.join(project_root, scope);
-        const found = _behavior_runners_in_scope(dir, scope);
-        if (found.length <= 1) {
-            out.push(...found);
-            continue;
+        // Grouped by ECOSYSTEM, because a scope carrying two ecosystems'
+        // behaviour runners is a polyglot repository, not a conflict. A PHP
+        // application with a JS frontend — one `composer.json`, one
+        // `package.json`, behat and cucumber-js — is the commonest shape there
+        // is, and reporting it as `unknown` throws away both answers the axis
+        // exists to give. It also contradicted this module's own polyglot
+        // semantics, which select one runner PER ECOSYSTEM. Mutual exclusivity
+        // is what the refusal is for, and only two runners inside ONE ecosystem
+        // are mutually exclusive.
+        const rows = _behavior_runners_in_scope(dir, scope);
+        for (const ecosystem of _dictFromKeys(rows.map((r) => r.ecosystem))) {
+            const found = rows.filter((r) => r.ecosystem === ecosystem);
+            const names = [...new Set(found.map((r) => r.runner))].sort();
+            if (names.length <= 1) {
+                // One answer for this ecosystem, however many signals produced
+                // it. The `> 1 row, 1 name` case is defensive and unreachable
+                // as the detector stands — every branch pushes at most one row
+                // per label — but a future branch able to emit a label twice
+                // would otherwise refuse a runner against itself.
+                out.push(found[0] as BehaviorRunnerResult);
+                continue;
+            }
+            out.push(
+                new BehaviorRunnerResult(
+                    ecosystem,
+                    BEHAVIOR_UNKNOWN,
+                    '',
+                    scope,
+                    LOW,
+                    `two ${ecosystem} behaviour runners in one scope ` +
+                        `(${names.join(', ')}) — refusing to choose between them, exactly ` +
+                        'as the frontend detector refuses between two mutually exclusive ' +
+                        'workspaces',
+                    names,
+                ),
+            );
         }
-        const names = [...new Set(found.map((r) => r.runner))].sort();
-        if (names.length === 1) {
-            // Defensive, and UNREACHABLE as the detector stands: every branch
-            // in `_behavior_runners_in_scope` pushes at most one row per label
-            // (one `if` each; reqnroll/specflow are `if`/`else if`), so two
-            // rows in one scope always carry two names. It is kept because a
-            // future branch that can emit the same label twice would otherwise
-            // produce a refusal naming one runner against itself — a worse
-            // failure than a redundant guard. No test claims to cover it;
-            // "the SAME runner matched by two signals" exercises the
-            // single-row path instead, which is the path that case has.
-            out.push(found[0] as BehaviorRunnerResult);
-            continue;
-        }
-        out.push(
-            new BehaviorRunnerResult(
-                _dictFromKeys(found.map((r) => r.ecosystem)).join('+'),
-                BEHAVIOR_UNKNOWN,
-                '',
-                scope,
-                LOW,
-                `two behaviour runners in one scope (${names.join(', ')}) — refusing to ` +
-                    'choose between them, exactly as the frontend detector refuses between ' +
-                    'two mutually exclusive workspaces',
-                names,
-            ),
-        );
     }
     return out;
 }
@@ -861,7 +928,8 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
     }
 
     const gemfile = _ruby_gemfile_text(dir);
-    if (/\bcucumber\b/.test(gemfile) || _is_file(path.join(dir, 'features', 'support', 'env.rb'))) {
+    const cucumber_gem = _gem_declared(gemfile.text, 'cucumber');
+    if (cucumber_gem || _is_file(path.join(dir, 'features', 'support', 'env.rb'))) {
         out.push(
             new BehaviorRunnerResult(
                 'ruby',
@@ -869,7 +937,9 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
                 'bundle exec cucumber',
                 scope,
                 HIGH,
-                /\bcucumber\b/.test(gemfile) ? 'cucumber in Gemfile' : 'features/support/env.rb present',
+                cucumber_gem
+                    ? `cucumber in ${gemfile.file}`
+                    : 'features/support/env.rb present',
             ),
         );
     }
@@ -902,19 +972,55 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
     return out;
 }
 
-/** Concatenated text of every .NET project file at this directory's root. */
+/**
+ * Concatenated text of the .NET project files belonging to this scope.
+ *
+ * Scans the scope directory and, when it holds no project file of its own,
+ * descends to {@link _DOTNET_SCAN_DEPTH} — the `root/src/<Name>/<Name>.csproj`
+ * layout, where the root carries only a `.sln` and a `.sln` has no
+ * `PackageReference`. Without the descent `reqnroll` and `specflow` were
+ * undetectable outside a flat single-project root, i.e. two of the eight
+ * declared behaviour labels could effectively never be emitted.
+ *
+ * Sorted at every level and capped at {@link _DOTNET_MAX_PROJECTS} files, so
+ * the result is deterministic and a deep tree cannot stall a turn.
+ */
 function _dotnet_project_text(dir: string): string {
-    let names: string[];
-    try {
-        names = fs.readdirSync(dir);
-    } catch {
-        return '';
-    }
-    return names
-        .sort()
-        .filter((n) => _DOTNET_PROJECT_EXTS.includes(path.extname(n).toLowerCase()))
-        .map((n) => _read_text(path.join(dir, n)))
-        .join('\n');
+    const texts: string[] = [];
+    const walk = (at: string, depth: number): void => {
+        if (texts.length >= _DOTNET_MAX_PROJECTS) {
+            return;
+        }
+        let entries: fs.Dirent[];
+        try {
+            entries = fs.readdirSync(at, { withFileTypes: true });
+        } catch {
+            return;
+        }
+        entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+        let hit = false;
+        for (const e of entries) {
+            if (e.isFile() && _DOTNET_PROJECT_EXTS.includes(path.extname(e.name).toLowerCase())) {
+                if (texts.length >= _DOTNET_MAX_PROJECTS) {
+                    return;
+                }
+                texts.push(_read_text(path.join(at, e.name)));
+                // A `.sln` names no packages, so finding one is not a reason to
+                // stop descending; a real project file is.
+                hit = hit || path.extname(e.name).toLowerCase() !== '.sln';
+            }
+        }
+        if (hit || depth >= _DOTNET_SCAN_DEPTH) {
+            return;
+        }
+        for (const e of entries) {
+            if (e.isDirectory() && !e.name.startsWith('.') && e.name !== 'node_modules') {
+                walk(path.join(at, e.name), depth + 1);
+            }
+        }
+    };
+    walk(dir, 0);
+    return texts.join('\n');
 }
 
 /** Hard ceiling on scopes scanned, so a pathological workspace glob cannot stall a turn. */
@@ -955,21 +1061,41 @@ const _PY_BEHAVE = /^[ \t]*["']?behave["']?[ \t]*(?:$|[=<>~!,;[])/m;
 export function _pnpm_packages(text: string): string[] {
     const out: string[] = [];
     let inPackages = false;
+    const push = (raw: string): void => {
+        // A trailing `# frontend` comment is legal YAML and was rejected by an
+        // end-anchored pattern; strip it before unquoting.
+        const v = raw.replace(/\s+#.*$/, '').trim().replace(/^['"]|['"]$/g, '').trim();
+        if (v !== '') {
+            out.push(v);
+        }
+    };
     for (const line of text.split('\n')) {
         if (line.trim() === '' || /^\s*#/.test(line)) {
             continue;
         }
-        const key = /^([A-Za-z0-9_-]+)\s*:/.exec(line);
+        const key = /^([A-Za-z0-9_-]+)\s*:(.*)$/.exec(line);
         if (key) {
             inPackages = key[1] === 'packages';
+            // A FLOW sequence on the key line (`packages: ['apps/*']`) is the
+            // same declaration written inline. The key branch used to consume
+            // the line and discard it, so the whole workspace vanished.
+            const rest = (key[2] ?? '').trim();
+            if (inPackages && rest.startsWith('[')) {
+                for (const part of rest.replace(/^\[|\]$/g, '').split(',')) {
+                    push(part);
+                }
+                inPackages = false;
+            }
             continue;
         }
         if (!inPackages) {
             continue;
         }
-        const item = /^\s+-\s*['"]?([^'"#]+?)['"]?\s*$/.exec(line);
-        if (item && item[1] !== undefined && item[1] !== '') {
-            out.push(item[1]);
+        // `^\s*-`, not `^\s+-`: a ZERO-INDENT block sequence under its key is
+        // valid YAML and the indent-requiring anchor silently dropped it.
+        const item = /^\s*-\s*(.+?)\s*$/.exec(line);
+        if (item && item[1] !== undefined) {
+            push(item[1]);
         }
     }
     return out;
@@ -1003,6 +1129,13 @@ export function _behavior_scopes(project_root: string): string[] {
 
     const scopes = ['.'];
     for (const raw of globs) {
+        // The cap is checked DURING expansion, not sliced off the result. A
+        // `.slice()` at the end bounds the output while the `readdirSync` work
+        // it is documented to bound has already been paid — which is not the
+        // stall protection the constant claims to give.
+        if (scopes.length >= _MAX_BEHAVIOR_SCOPES) {
+            break;
+        }
         const g = raw.replace(/^\.\//, '').replace(/\/+$/, '');
         if (g === '' || g.startsWith('!') || g.startsWith('/') || g.includes('..')) {
             continue;
@@ -1019,6 +1152,9 @@ export function _behavior_scopes(project_root: string): string[] {
             // becomes `behavior_runners` row order, which is serialised.
             children.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
             for (const c of children) {
+                if (scopes.length >= _MAX_BEHAVIOR_SCOPES) {
+                    break;
+                }
                 if (c.isDirectory()) {
                     scopes.push(`${parent}/${c.name}`);
                 }
@@ -1031,7 +1167,7 @@ export function _behavior_scopes(project_root: string): string[] {
         // than reporting one fewer, and the two common declarations above are
         // what real workspace roots use.
     }
-    return _dictFromKeys(scopes).slice(0, _MAX_BEHAVIOR_SCOPES);
+    return _dictFromKeys(scopes);
 }
 
 function _php_quality(root: string, composer: Manifest, _wrappers: Wrappers): string[] {

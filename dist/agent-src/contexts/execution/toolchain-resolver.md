@@ -14,8 +14,9 @@ tools and run the right one — instead of a per-stack command explosion.
 > commands stay PHP-locked."
 
 **Size budget:** ≤ 7,500 chars — raised from 6,000 on 2026-10-01, when the
-resolver went from 9 runners on one axis to 12 across two and the completion
-review corrected three table rows that understated what the code detects.
+resolver went from 9 runners on one axis to 12 across two. The three rows that
+change ADDED were then corrected by its completion review for understating the
+markers and commands the code detects; no pre-existing row changed.
 Shrink-only from here; the enforced ceiling is `check_depth_budget`'s 16,000.
 
 ## 1. The resolver
@@ -116,7 +117,6 @@ tables:
 
 A polyglot repo (e.g. PHP + JS) selects one fast runner per ecosystem;
 e2e and slow stay out until their flag is passed.
-
 
 ## 5. Auto-generated project config
 

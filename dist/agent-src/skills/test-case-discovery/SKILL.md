@@ -39,11 +39,11 @@ CAP PER BEHAVIOR: 5–8 CASES — EACH MUST FAIL FOR A DISTINCT REASON.
 
 ## Does this change owe an executable behavior contract?
 
-This section is what *Gherkin*, *BDD*, *Cucumber*, *Behat*, *given-when-then*,
-*feature file*, *acceptance scenario*, *executable specification* and their
-German phrasings route to — carried deliberately in `evals/triggers.json`, so a
-reader can tell an intentional trigger from a lucky keyword — and what they
-reach is this decision, never a guide to writing a contract well.
+This section is the decision *Gherkin*, *BDD*, *Cucumber*, *Behat*,
+*given-when-then*, *acceptance scenario* and their German phrasings are meant
+to reach — pinned as should-trigger cases in `evals/triggers.json`, which
+states that intent without performing the routing: this skill's `description`
+carries none of those terms. It is a decision, not a guide to writing one.
 
 Cases and contracts are not the same artifact. A **case** is something you assert
 in the project's unit runner. An **executable behavior contract** — a

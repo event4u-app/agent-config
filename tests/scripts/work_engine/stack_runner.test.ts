@@ -564,19 +564,37 @@ describe('stack/runner — rspec, junit, dotnet-test', () => {
         expect(labels(tmp)).not.toContain('junit');
     });
 
-    it('dotnet-test PRESENT: a csproj at the root', () => {
-        write('Api.csproj', '<Project Sdk="Microsoft.NET.Sdk" />');
+    it('dotnet-test PRESENT: a csproj naming a test stack is HIGH', () => {
+        write('Api.Tests.csproj', '<Project><PackageReference Include="Microsoft.NET.Test.Sdk" /></Project>');
         const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'dotnet-test');
         expect(found?.ecosystem).toBe('dotnet');
         expect(found?.command).toBe('dotnet test');
         expect(found?.confidence).toBe(HIGH);
-        expect(found?.basis).toBe('Api.csproj present');
+    });
+
+    it('dotnet-test PRESENT: a bare project file with NO test stack is MEDIUM', () => {
+        // `_overall_confidence` is "some HIGH wins", so HIGH here used to raise
+        // a whole repository and push `dotnet test` into `selected` — a command
+        // that fails on a solution carrying no test project. The PHP branch
+        // awards HIGH only for a NAMED runner; a bare project file is the
+        // analogue of the bare manifest.
+        write('Api.csproj', '<Project Sdk="Microsoft.NET.Sdk" />');
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'dotnet-test');
+        expect(found?.confidence).toBe(MEDIUM);
+        expect(found?.basis).toBe('Api.csproj present, no test stack named');
     });
 
     it('dotnet-test PRESENT: global.json alone is MEDIUM, not HIGH', () => {
         write('global.json', '{"sdk":{"version":"8.0.100"}}');
         const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'dotnet-test');
         expect(found?.confidence).toBe(MEDIUM);
+    });
+
+    it('dotnet-test: the conventional sln + src/<Name>/<Name>.csproj layout is seen', () => {
+        write('App.sln', 'Microsoft Visual Studio Solution File\n');
+        write('src/App.Tests/App.Tests.csproj', '<Project><PackageReference Include="xunit" /></Project>');
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'dotnet-test');
+        expect(found?.confidence).toBe(HIGH);
     });
 
     it('dotnet-test ABSENT: no project file and no .NET marker', () => {
@@ -652,31 +670,56 @@ describe('stack/runner — behaviour-runner axis', () => {
         expect(resolve_behavior_runners(tmp).map((r) => r.scope_root)).toContain('apps/shop');
     });
 
-    it('CONFLICT: two behaviour runners in ONE scope refuse and name both', () => {
+    it('POLYGLOT is not a conflict: behat and cucumber-js in one root are TWO rows', () => {
+        // A PHP application with a JS frontend is the commonest repository
+        // shape there is. Reporting it as `unknown` threw away both answers
+        // the axis exists to give, and contradicted the module's own polyglot
+        // semantics (one runner PER ECOSYSTEM).
         write('composer.json', JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } }));
         write('package.json', JSON.stringify({ devDependencies: { '@cucumber/cucumber': '^10' } }));
+        const rows = resolve_behavior_runners(tmp);
+        expect(rows.map((r) => r.runner).sort()).toEqual(['behat', 'cucumber-js']);
+        for (const r of rows) {
+            expect(r.conflict).toEqual([]);
+            expect(r.confidence).toBe(HIGH);
+            expect(r.scope_root).toBe('.');
+        }
+        // No composite ecosystem token: each row names a declared ecosystem.
+        expect(rows.map((r) => r.ecosystem).sort()).toEqual(['js', 'php']);
+    });
+
+    it('CONFLICT: two runners of the SAME ecosystem refuse and name both', () => {
+        // Mutual exclusivity is what the refusal is for, and only two runners
+        // inside one ecosystem are mutually exclusive.
+        write('requirements.txt', 'behave\npytest-bdd\n');
         const rows = resolve_behavior_runners(tmp);
         expect(rows).toHaveLength(1);
         const row = rows[0];
         expect(row?.runner).toBe(BEHAVIOR_UNKNOWN);
+        expect(row?.ecosystem).toBe('python');
         expect(row?.confidence).toBe(LOW);
         expect(row?.command).toBe('');
         // Both names travel with the refusal — the point of refusing rather
         // than picking is that the owner can see what they have to settle.
-        expect(row?.conflict).toEqual(['behat', 'cucumber-js']);
-        expect(row?.basis).toContain('behat');
-        expect(row?.basis).toContain('cucumber-js');
+        expect(row?.conflict).toEqual(['behave', 'pytest-bdd']);
+        expect(row?.basis).toContain('behave');
+        expect(row?.basis).toContain('pytest-bdd');
     });
 
-    it('CONFLICT is per scope: one conflicted package does not poison a clean sibling', () => {
+    it('CONFLICT is per scope AND per ecosystem', () => {
         write('package.json', JSON.stringify({ workspaces: ['pkg/*'] }));
+        write('pkg/mixed/requirements.txt', 'behave\npytest-bdd\n');
         write('pkg/mixed/composer.json', JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } }));
-        write('pkg/mixed/package.json', JSON.stringify({ devDependencies: { cucumber: '^7' } }));
         write('pkg/clean/Gemfile', "gem 'cucumber'\n");
-        const byScope = new Map(resolve_behavior_runners(tmp).map((r) => [r.scope_root, r]));
-        expect(byScope.get('pkg/mixed')?.runner).toBe(BEHAVIOR_UNKNOWN);
-        expect(byScope.get('pkg/clean')?.runner).toBe('cucumber-ruby');
-        expect(byScope.get('pkg/clean')?.confidence).toBe(HIGH);
+        const rows = resolve_behavior_runners(tmp);
+        const mixed = rows.filter((r) => r.scope_root === 'pkg/mixed');
+        // The conflicted python ecosystem refuses; the php one in the SAME
+        // package still answers.
+        expect(mixed.find((r) => r.ecosystem === 'python')?.runner).toBe(BEHAVIOR_UNKNOWN);
+        expect(mixed.find((r) => r.ecosystem === 'php')?.runner).toBe('behat');
+        const clean = rows.find((r) => r.scope_root === 'pkg/clean');
+        expect(clean?.runner).toBe('cucumber-ruby');
+        expect(clean?.confidence).toBe(HIGH);
     });
 
     it('two behat signals collapse inside the branch, so one scope yields one row', () => {
@@ -828,6 +871,30 @@ describe('stack/runner — behaviour-runner axis', () => {
     it('cucumber-ruby is found through gems.rb, not only Gemfile', () => {
         write('gems.rb', "source 'https://rubygems.org'\ngem 'cucumber'\n");
         expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toEqual(['cucumber-ruby']);
+    });
+
+    it('a gems.rb basis names gems.rb, not a Gemfile that does not exist', () => {
+        write('gems.rb', "gem 'cucumber'\n");
+        expect(resolve_behavior_runners(tmp)[0]?.basis).toBe('cucumber in gems.rb');
+    });
+
+    it('a commented-out gem is not a declaration', () => {
+        write('Gemfile', "source 'x'\n# gem 'cucumber'  # removed last year\n");
+        expect(resolve_behavior_runners(tmp)).toEqual([]);
+    });
+
+    it('reqnroll is found in the conventional sln + src layout', () => {
+        write('App.sln', 'Microsoft Visual Studio Solution File\n');
+        write('src/App.Specs/App.Specs.csproj', '<Project><PackageReference Include="Reqnroll" /></Project>');
+        expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toEqual(['reqnroll']);
+    });
+
+    it('_pnpm_packages reads a zero-indent sequence, a flow sequence and a trailing comment', () => {
+        expect(_pnpm_packages("packages:\n- 'a/*'\n- b\n")).toEqual(['a/*', 'b']);
+        expect(_pnpm_packages("packages: ['a/*', \"b\"]\n")).toEqual(['a/*', 'b']);
+        expect(_pnpm_packages("packages:\n  - 'a/*' # frontend\n")).toEqual(['a/*']);
+        // The parent-key discipline still holds for every shape.
+        expect(_pnpm_packages("packages: ['a/*']\nonlyBuiltDependencies:\n  - esbuild\n")).toEqual(['a/*']);
     });
 
     it('scope order is sorted, so the serialized row order is stable', () => {
