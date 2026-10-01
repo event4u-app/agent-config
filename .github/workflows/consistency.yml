@@ -495,6 +495,33 @@ jobs:
         # gate-coverage manifest exists to prevent.
         run: ./scripts-run src/scripts/check_estate_count
 
+      - name: Added verify clauses state an expectation (diff-scoped)
+        # Diff-scoped on purpose, and that is not a weaker estate gate: 139 of
+        # the clauses already in the tree carry no expectation, so an
+        # estate-scoped version would arrive red on most of its corpus and be
+        # weakened until it found nothing. Replayed over the last 30 merges
+        # touching the roadmaps before it was written: 6 would have gone red,
+        # which is under the one-in-four share it was to be withdrawn at.
+        # No warn-and-allow wrapper: exit 2 here means the diff could not be
+        # read, and a diff-scoped gate with no diff passes every possible tree.
+        run: ./scripts-run src/scripts/check_verify_expectation_delta
+
+      - name: Added-verify-clause gate self-test
+        # The negative control the gate-coverage row points at instead of a
+        # planted canary: a canary cannot express this gate's violation, which
+        # is a property of the DIFF rather than of any file in the tree.
+        run: ./scripts-run src/scripts/check_verify_expectation_delta --self-test
+
+      - name: Held objects cited in live blockers carry an arrival count
+        # Advisory by the check's own default — it exits 0 on every firing
+        # without `--enforce`. It ships with a caller rather than without one:
+        # the measured false-positive rate is 0 of 4 firings, which would permit
+        # blocking, and what forbids it today is that the same reading has four
+        # live objects firing on the day it lands. A gate that arrives red is a
+        # backlog rather than a control, so this prints and does not block; the
+        # promotion to `--enforce` is a one-word edit after a green run on main.
+        run: ./scripts-run src/scripts/check_held_object_arrivals
+
       - name: Continuity-surface ratchet + behavioural inventory
         # Same no-warn-and-allow stance as the estate ratchet above, and for the
         # same reason: exit 2 here means the inventory could not be read against
