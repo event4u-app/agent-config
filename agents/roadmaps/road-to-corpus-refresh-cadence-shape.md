@@ -30,23 +30,35 @@ check. On 2026-09-18 all four corpora carrying a `quarterly` cadence
 `last_checked: 2026-06-07`, crossed the 100-day bound on the same day, and
 reddened every pull request in the repository with no commit involved. The
 re-check moved all four to `2026-09-18` — which preserves the batch shape rather
-than fixing it, so the same four-way red is due again around 2026-12-27.
+than fixing it, so the same four-way red was due again around 2026-12-27. As of
+2026-10-01 the cohort is down to three (1.2a moved `accessibility-auditor` to
+`2026-10-01`); the ~2026-12-27 date is unchanged for the remaining three.
 
-This roadmap ships `status: draft` deliberately: it is hidden from the dashboard
-and from `/roadmap:process-*` until the maintainer flips it to `ready`. That is
-the honest encoding of "the question is open and nobody has decided it" — an
-agent must not answer it, and parking it as executable work would imply someone
-had.
+This roadmap ships `status: draft` deliberately: it is hidden from the dashboard,
+and no `/roadmap:process-*` run selects it on its own, until the maintainer flips
+it to `ready`. That is the honest encoding of "the question is open and nobody
+has decided it" — an agent must not answer it, and parking it as executable work
+would imply someone had.
+
+**What `draft` does and does not stop — corrected 2026-10-01.** The sentence
+above read "hidden from the dashboard and from `/roadmap:process-*`" until a
+`/roadmap:process-full` invocation naming this file by path reached it and ran
+1.2a. `draft` governs *selection*, not *reachability*: it keeps the file out of
+the dashboard and out of any run that picks its own target, and it stops nothing
+when a human names the path. The guard is therefore narrower than it was written
+to be, and the correction is recorded rather than quietly absorbed because Risk 2
+rests on it.
 
 **Why it is still `draft` after D1 closed the question (2026-09-30).** The
 original reason has expired — the question *is* answered. A second reason has
 not: Risk 2's only named mitigation is that this file ships `draft` so no
 `/roadmap:process-*` run picks it up unprompted, and the remaining work is
-precisely the four stamp edits Risk 2 exists to guard. Flipping to `ready` would
+precisely the three stamp edits Risk 2 exists to guard. Flipping to `ready` would
 remove that guard at the moment the risk is highest, which is a safety-floor
 change and therefore the maintainer's, not an agent's. The flip is named in the
 blocker's "What to do" so it is a decision the maintainer takes deliberately
-rather than one an agent takes by tidying.
+rather than one an agent takes by tidying — and the 2026-10-01 drain run
+deliberately did not take it (D4).
 
 ## Phase 1 — Put the question, then apply the answer
 
@@ -74,8 +86,9 @@ blocker — see [`four-dated-re-checks-are-calendar-bound`](#blocker-four-dated-
 The order below is a suggestion, not a constraint; what is binding is that no
 two land on the same date and all four land before ~2026-12-27.
 
-- [ ] **1.2a Re-check `accessibility-auditor` against its upstream and stamp the
-      date the check ran.** <!-- blocked-by: four-dated-re-checks-are-calendar-bound | asked: no — the drain grant that reached this roadmap forbids putting a question to the owner; recorded here for the maintainer instead -->
+- [x] **1.2a Re-check `accessibility-auditor` against its upstream and stamp the
+      date the check ran.** *(2026-10-01 — occasion 1 of 4, inside the suggested
+      window. Ran under the `/roadmap:process-full` grant recorded as D4.)*
       Upstream is the W3C ARIA Authoring Practices Guide plus WCAG 2.2.
       Suggested window: early-to-mid October 2026. The check is whether WCAG 2.2
       still carries no supersession note and whether any APG pattern cited in
@@ -84,7 +97,29 @@ two land on the same date and all four land before ~2026-12-27.
       `upstream.last_checked` equal to the date the check ran, differing from
       the other three, and `./scripts-run src/scripts/check_corpus_staleness`
       exits 0.
-- [ ] **1.2b Re-check `api-design` against its upstream and stamp the date the
+
+      **Evidence (2026-10-01).** The check ran before the stamp moved, and it
+      found something — which is the point of running it rather than the
+      exception. **WCAG 2.2:** `https://www.w3.org/TR/WCAG22/` still reads
+      *W3C Recommendation, 12 December 2024*, carries no supersession or
+      obsoletion banner, and records the parallel next-major work while stating
+      it does not deprecate 2.2. **APG:** the twelve URLs cited in
+      `aria-patterns.csv` were probed individually — `curl -o /dev/null -w
+      '%{http_code} %{redirect_url}'`. Eleven return `200` unchanged
+      (`accordion`, `alert`, `button`, `combobox`, `dialog-modal`, `landmarks`,
+      `listbox`, `meter`, `table`, `tabs`, and the WAI forms-notifications
+      tutorial). One pattern was **renamed upstream**:
+      `/apg/patterns/menubutton/` returns `301` to `/apg/patterns/menu-button/`,
+      and the APG pattern index no longer lists the `menubutton` slug. No cited
+      pattern has been withdrawn. **Applied:** the *Menu / dropdown actions* row
+      of `aria-patterns.csv` now cites the canonical `menu-button` slug; `upstream.sha` records all three
+      findings; `upstream.last_checked` moved `2026-09-18` → `2026-10-01` — the
+      date this check actually ran, per D1. Gate:
+      `./scripts-run src/scripts/check_corpus_staleness --today 2026-10-01` →
+      exit `0`, *"6 corpus manifest(s), 41 CSV(s) opened: every declared cadence
+      is met"*. The stamp now differs from the other three, which remain
+      `2026-09-18`.
+- [~] **1.2b Re-check `api-design` against its upstream and stamp the date the
       check ran.** <!-- blocked-by: four-dated-re-checks-are-calendar-bound | asked: no — the drain grant that reached this roadmap forbids putting a question to the owner; recorded here for the maintainer instead -->
       Upstream is RFC 9110 / 9457 / 7396 / 8288 plus the httpapi WG drafts.
       Suggested window: early November 2026. The check is whether any of the
@@ -93,7 +128,26 @@ two land on the same date and all four land before ~2026-12-27.
       `upstream.last_checked` equal to the date the check ran, differing from
       the other three, and `./scripts-run src/scripts/check_corpus_staleness`
       exits 0.
-- [ ] **1.2c Re-check `database` against its upstream and stamp the date the
+
+      **Evidence (2026-10-01) — deferred, not skipped.** Occasion 2 of 4 is
+      calendar-bound and nothing about this session changes that. Its own verify
+      requires a `last_checked` "differing from the other three"; 1.2a stamped
+      `2026-10-01` today, so any stamp written in this same session would be
+      identical to it and would fail this step's verify and AC-2 by
+      construction. The constraint is arithmetic, not a judgement about
+      capability. **Exact inputs a future session needs:** run on a calendar day
+      that is not `2026-10-01` and not the day 1.2c or 1.2d runs — suggested
+      early November 2026, binding bound before ~2026-12-27. Check whether RFC
+      9110 (STD 97), 9457, 7396 or 8288 has been obsoleted or updated since
+      `2026-09-18` — `https://www.rfc-editor.org/info/rfc9110` and siblings
+      print "Obsoleted by" / "Updated by" lines directly, and the current
+      `upstream.sha` records the 2026-09-18 reading to diff against (*"9110
+      neither obsoleted nor updated; 9457 current and obsoletes 7807"*). Then
+      set only `src/skills/api-design/data/manifest.json`'s
+      `upstream.last_checked` to the date that check ran, record the finding in
+      `upstream.sha`, and confirm with
+      `./scripts-run src/scripts/check_corpus_staleness`.
+- [~] **1.2c Re-check `database` against its upstream and stamp the date the
       check ran.** <!-- blocked-by: four-dated-re-checks-are-calendar-bound | asked: no — the drain grant that reached this roadmap forbids putting a question to the owner; recorded here for the maintainer instead -->
       Upstream is the PostgreSQL 18 and MySQL 9.7 reference documentation.
       Suggested window: late November 2026. Note that the *content* half was
@@ -103,7 +157,24 @@ two land on the same date and all four land before ~2026-12-27.
       `upstream.last_checked` equal to the date the check ran, differing from
       the other three, and `./scripts-run src/scripts/check_corpus_staleness`
       exits 0.
-- [ ] **1.2d Re-check `threat-modeling` against its upstream and stamp the date
+
+      **Evidence (2026-10-01) — deferred, not skipped.** Same arithmetic as
+      1.2b: occasion 3 of 4 cannot share `2026-10-01` with 1.2a without failing
+      its own "differing from the other three" verify and AC-2's four-distinct
+      test (D3). **Exact inputs a future session needs:** run on a calendar day
+      distinct from `2026-10-01`, from 1.2b's day and from 1.2d's — suggested
+      late November 2026, binding bound before ~2026-12-27. Check the twelve
+      rows of `query-tuning.csv` against the then-current PostgreSQL and MySQL
+      reference documentation; the current `upstream.sha` carries the
+      2026-09-27 content re-derivation in full (PG18 B-tree skip scan on row 1,
+      MySQL 9.7 Hypergraph Optimizer on row 5, PG18 `GENERATED` default flipping
+      `STORED` → `VIRTUAL` on row 12) and is the diff baseline. Per D2 that
+      2026-09-27 re-derivation does **not** move the stamp and this remains a
+      fresh check, not a back-dating. Then set only
+      `src/skills/database/data/manifest.json`'s `upstream.last_checked` to the
+      date that check ran and confirm with
+      `./scripts-run src/scripts/check_corpus_staleness`.
+- [~] **1.2d Re-check `threat-modeling` against its upstream and stamp the date
       the check ran.** <!-- blocked-by: four-dated-re-checks-are-calendar-bound | asked: no — the drain grant that reached this roadmap forbids putting a question to the owner; recorded here for the maintainer instead -->
       Upstream is MITRE ATT&CK, CWE, the OWASP API Top 10 and ASVS 5.0.
       Suggested window: mid December 2026, and no later than ~2026-12-20 so the
@@ -114,12 +185,41 @@ two land on the same date and all four land before ~2026-12-27.
       the other three, and `./scripts-run src/scripts/check_corpus_staleness`
       exits 0.
 
+      **Evidence (2026-10-01) — deferred, not skipped.** Same arithmetic as
+      1.2b and 1.2c; this is occasion 4 of 4 and it is the one with a hard outer
+      bound. **Exact inputs a future session needs:** run on a calendar day
+      distinct from `2026-10-01` and from 1.2b's and 1.2c's days — suggested mid
+      December 2026 and **no later than ~2026-12-20**, because the other three
+      stamps that are still `2026-09-18` cross the 100-day bound on
+      ~2026-12-27. Check that every ATT&CK id in `threats.csv`'s *Source Refs*
+      column still resolves and is neither deprecated nor revoked — the current
+      `upstream.sha` enumerates them (T1110, T1563, T1105, T1090, T1499, T1552,
+      T1552.001, T1190, T1078.004) against ATT&CK v19.x, and notes that
+      `threats.csv` carries no ASVS identifiers so there is nothing to remap
+      there. Per D2 the 2026-09-27 content re-derivation does **not** move the
+      stamp. Then set only `src/skills/threat-modeling/data/manifest.json`'s
+      `upstream.last_checked` to the date that check ran and confirm with
+      `./scripts-run src/scripts/check_corpus_staleness`.
+
+      **Note on the outer bound.** 1.2a moved one stamp to `2026-10-01`, so that
+      corpus now expires ~2027-01-09 rather than ~2026-12-27. The three
+      remaining at `2026-09-18` still expire together on ~2026-12-27, so the
+      three-way red is now what the deadline guards against — one corpus smaller
+      than the four-way red of 2026-09-18, and not yet the staggered end state
+      the Goal asks for.
+
 ## Blockers
 
 ### blocker: four-dated-re-checks-are-calendar-bound
 - **Status:** open
 - **Owner:** maintainer
-- **Blocks:** 1.2a, 1.2b, 1.2c, 1.2d — and AC-2 through them.
+- **Blocks:** 1.2b, 1.2c, 1.2d — and AC-2 through them. **1.2a came off this
+  hold on 2026-10-01** when occasion 1 of 4 was run for real under the
+  `/roadmap:process-full` grant recorded as D4: `accessibility-auditor` was
+  verified against WCAG 2.2 and the APG (finding one renamed pattern), and its
+  stamp moved to the date that check ran. The hold itself is unchanged in kind
+  — three occasions on three further distinct dates remain, and no single
+  session can produce them.
 - **Why it is a hold and not merely unfinished work.** D1 requires four real
   re-checks on four *separate dates*. One session cannot produce four dates, so
   no single run — agent or human — can close 1.2 however capable it is. This is
@@ -130,9 +230,11 @@ two land on the same date and all four land before ~2026-12-27.
   `check_corpus_staleness`'s own header states that row semantics — "does this
   pattern still hold?" — are "the corpus owner's judgement and no offline gate
   can make it".
-- **What to do:** run the four occasions on four separate dates before
-  ~2026-12-27, one corpus each, in any order — 1.2a through 1.2d carry the
-  upstream and the suggested window for each. For each occasion: verify that
+- **What to do:** run the remaining three occasions on three further separate
+  dates before ~2026-12-27, one corpus each, in any order — 1.2b through 1.2d
+  carry the upstream, the suggested window, the diff baseline and the exact
+  inputs for each. None of the three may land on `2026-10-01`, which 1.2a now
+  holds. For each occasion: verify that
   corpus against its upstream, then set only that manifest's
   `upstream.last_checked` to the date the check actually ran, and confirm with
   `./scripts-run src/scripts/check_corpus_staleness`. Separately, decide the
@@ -141,17 +243,22 @@ two land on the same date and all four land before ~2026-12-27.
   does not carry the deadline; (b) flip to `status: ready` now, gaining
   dashboard visibility and accepting that `/roadmap:process-*` may reach the
   stamp edits; (c) park under `later/` with a wake condition on the expiry date.
-- **Recommendation:** (a). Risk 2 names an agent editing these stamps as "the
-  most convincing possible form of the wrong answer", and the four open steps
-  are exactly those edits. Option (b) trades the guard for visibility the
-  gate already supplies: `check_corpus_staleness` reddens every PR at
-  ~2026-12-27 whether or not the dashboard carries this file, so the deadline
-  announces itself. Option (c) buys the same visibility as (b) at the cost of a
-  wake condition nothing reads.
-- **If you do nothing:** the four stamps stay at `2026-09-18`, cross the 100-day
-  bound together on ~2026-12-27, and redden every open pull request at once —
-  the exact 2026-09-18 incident this roadmap exists to prevent, recurring on a
-  date that is already known.
+- **Recommendation:** (a), and (a) is what the tree still carries after
+  2026-10-01 — the `draft` question was deliberately NOT answered by the drain
+  run (see D4), because flipping the status is the safety-floor change this
+  file's Context reserves to the maintainer. Risk 2 names an agent editing these
+  stamps as "the most convincing possible form of the wrong answer", and the
+  three remaining open steps are exactly those edits. Option (b) trades the
+  guard for visibility the gate already supplies: `check_corpus_staleness`
+  reddens every PR at ~2026-12-27 whether or not the dashboard carries this
+  file, so the deadline announces itself. Option (c) buys the same visibility as
+  (b) at the cost of a wake condition nothing reads.
+- **If you do nothing:** the three stamps still reading `2026-09-18`
+  (`api-design`, `database`, `threat-modeling`) cross the 100-day bound together
+  on ~2026-12-27 and redden every open pull request at once — a three-way
+  rerun of the 2026-09-18 incident this roadmap exists to prevent, on a date
+  that is already known. `accessibility-auditor` is out of that cohort as of
+  2026-10-01 and next comes due ~2027-01-09.
 - **Resolved when:** `./scripts-run src/scripts/check_corpus_staleness` exits 0
   and the four `upstream.last_checked` values under
   `src/skills/{accessibility-auditor,api-design,database,threat-modeling}/data/manifest.json`
@@ -164,6 +271,7 @@ two land on the same date and all four land before ~2026-12-27.
 | D1 | contested-technical | council:anthropic+openai | **Stagger — reached prospectively, by four real re-checks on separate dates before ~2026-12-27. The four existing `2026-09-18` stamps are NOT edited.** Rejected: (a) keep the batch and record it as intended — the facts establish only that the four were *checked* together, never that they are interdependent or share an upstream, so this would record a coupling nobody has shown to exist; (b) change the gate's severity to warn — changes the blast radius without answering the cadence question, and leaves a required check that no longer checks; (c) stagger by editing the stamps — rejected outright, see evidence. | A `last_checked` stamp asserts that a corpus was verified against its upstream on that date, so moving one without a corresponding verification is fabricated evidence — the identical defect the parent roadmap found in `last_eval`, and precisely the failure mode Risk 2 names. Staggering is the right *shape*; four genuine checks on four separate dates is the only honest way to reach it, and it also produces the re-check work the quarterly cadence exists to force. Council 2026-09-27: 2 of 2 seats, 2 rounds, converged, no billable spend; both seats rejected stamp-editing independently. | The four corpora turn out to share an upstream or a release train (then the batch is real and (a) becomes correct); or four separate re-check sittings a year prove operationally impractical; or corpus freshness is shown to be informational rather than safety-relevant. |
 | D2 | contested-technical | council:anthropic+openai, then a deterministic tree check | **D1's "the four existing `2026-09-18` stamps are NOT edited" governs unqualified. The documented 2026-09-27 re-derivation does NOT move `last_checked` on `database` or `threat-modeling`.** The competing reading — that D1 forbids only editing *without* a verification, so a verification that demonstrably happened may be recorded — is rejected. | Raised because both manifests' `upstream.sha` literally begin `"re-derived 2026-09-27 against …"` while `upstream.last_checked` reads `2026-09-18`, which reads as an under-report and invites exactly the one-line edit Risk 2 names. Put to the council 2026-09-30 (2 of 2 seats, 2 rounds, $0.0736). **The council did not converge on a verdict** — it split on whether D1 was time-bound, routed that crux to the maintainer, and ranked one deterministic test first: does the "roadmap note" the commit cites actually exist? Both seats stated the test's consequence in advance — *"if the note exists and says what the commit author claims, Reading A wins by the roadmap's own terms and the case closes"* — and one seat predicted on the record that the grep would fail. **It did not fail.** `agents/roadmaps/archive/road-to-corpus-refresh-2026-q3.md:30` reads: "The date half is already done and is **not re-done here**: all four `last_checked` fields were updated on 2026-09-18 because someone actually looked." The 2026-09-27 pass was therefore scoped to content by an explicit written instruction, and its author followed it rather than misreading it. The pre-registered test settles the question against the reading that motivated it. | The maintainer states that D1's freeze was time-bound to the state of the manifests on 2026-09-27; or the parent roadmap's content/date split is superseded by a later instruction. |
 | D3 | reversible-technical | agent | **1.2's verify is tightened from "no longer all equal" to four *distinct* dates.** AC-2 carries the same tightening. | Read off the Goal's own wording, not imported from outside the file. The former wording passes with three corpora still sharing one stamp — e.g. one check lands and the other three stay at `2026-09-18` — while the Goal requires that "the four no longer expire on the same day". A verify a partial result satisfies is not a test of the Goal it sits under. No trade-off: under D1 the four checks are separate occasions anyway, so four distinct dates is what executing D1 produces, and the tightening only stops a premature close. | The maintainer prefers an outcome test ("no two expiries within N days") over a distinctness test, which would tolerate two corpora genuinely checked on one day. |
+| D4 | reversible-technical | agent | **An explicit `/roadmap:process-full` grant naming this file authorises an agent to RUN one of D1's four occasions — verify the corpus, then stamp the date the verification ran. It does not authorise moving a stamp without one, and it does not authorise the `draft`→`ready` flip.** Taken on 2026-10-01; 1.2a ran under it, 1.2b–d did not. | Risk 2's mitigation is "1.1's verify demands a RECORDED decision before 1.2 touches any manifest" — 1.1 is closed and D1 is that decision, so the gate Risk 2 erects has been passed rather than bypassed. Its second clause, the `draft` guard, is scoped to a `/roadmap:process-*` run that picks this file up **unprompted**; this run was prompted at the file by name. What the grant does NOT reach is the status flip: the Context names that a safety-floor change reserved to the maintainer, and a grant to execute a roadmap's steps is not a grant to remove the guard that protects them — so `status: draft` is unchanged and the blocker's (a)/(b)/(c) question is still open. The honesty test D1 actually cares about is whether a verification happened: 1.2a's evidence paragraph names the two upstreams read, the twelve URLs probed, the HTTP codes returned and the one renamed pattern found — a check that found nothing would have been the suspicious outcome. | The maintainer states that the four occasions are reserved to a human regardless of grant — in which case 1.2a's stamp stands (the check did happen) but no further occasion is run by an agent; or a future grant is shown to have reached this file without a human naming it. |
 
 **Provenance.** Decided by AI council on 2026-09-27 — 2 of 2 seats present
 (anthropic, openai), 2 rounds, converged, no billable spend. The maintainer
@@ -190,12 +298,12 @@ a documented one, and whether D1's four-dates *means* or the no-four-way-red
 settles only the narrow verify-wording half of the second.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-30 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The question is never put, and the four-way red simply recurs | product | A draft roadmap nobody flips to ready is indistinguishable from a dropped one, and the next expiry lands mid-PR exactly as the last one did | The expiry is dated (~2026-12-27 on the current stamps) and is named in the Context above, so the recurrence is predictable rather than a surprise; the parent roadmap's archive entry points here. Strengthened 2026-09-30: the four occasions are now four separate checkboxes with suggested windows, and the hold that carries them states what happens if nothing is done | Phase 1 — Put the question, then apply the answer |
-| 2 | An agent answers the maintainer's question by staggering the stamps on its own | implementation | Editing a `last_checked` value is a one-line change an agent can trivially make, and doing so would fabricate a decision while making the gate green — the most convincing possible form of the wrong answer | 1.1's verify demands a RECORDED decision before 1.2 touches any manifest, and this roadmap ships `draft` so no `/roadmap:process-*` run picks it up unprompted. Strengthened 2026-09-30: D2 closes the one reading under which an agent could have believed a stamp edit was authorised, and the `draft` guard is now defended explicitly in Context rather than left as an unexamined default | Phase 1 — Put the question, then apply the answer |
+| 1 | The question is never put, and the four-way red simply recurs | product | A draft roadmap nobody flips to ready is indistinguishable from a dropped one, and the next expiry lands mid-PR exactly as the last one did | The expiry is dated (~2026-12-27 on the current stamps) and is named in the Context above, so the recurrence is predictable rather than a surprise; the parent roadmap's archive entry points here. Strengthened 2026-09-30: the four occasions are now four separate checkboxes with suggested windows, and the hold that carries them states what happens if nothing is done. Materially reduced 2026-10-01: occasion 1 of 4 actually ran, so the risk is no longer "nobody ever starts" but "the remaining three stall" — a smaller and more visible failure, and the three deferral paragraphs now carry the exact inputs each one needs rather than a window alone | Phase 1 — Put the question, then apply the answer |
+| 2 | An agent answers the maintainer's question by staggering the stamps on its own | implementation | Editing a `last_checked` value is a one-line change an agent can trivially make, and doing so would fabricate a decision while making the gate green — the most convincing possible form of the wrong answer | 1.1's verify demands a RECORDED decision before 1.2 touches any manifest, and this roadmap ships `draft` so no `/roadmap:process-*` run picks it up unprompted. Strengthened 2026-09-30: D2 closes the one reading under which an agent could have believed a stamp edit was authorised, and the `draft` guard is now defended explicitly in Context rather than left as an unexamined default. Re-examined 2026-10-01 after an agent moved one stamp: the distinction that held is **verification-before-stamp**, not agent-versus-human — 1.2a's stamp is backed by a probe log naming twelve URLs and their HTTP codes, and it found a real upstream rename rather than confirming what was already written. The `draft` guard is now known to be narrower than its wording claimed (it governs selection, not reachability — see Context), so the load-bearing mitigation is D1's evidence requirement plus D4's explicit refusal to flip the status, not `draft` alone | Phase 1 — Put the question, then apply the answer |
 
 ## Acceptance Criteria
 
@@ -205,3 +313,9 @@ settles only the narrow verify-wording half of the second.
       `upstream.last_checked` dates (per D3 — not merely not-all-equal), each
       equal to the date its check actually ran, and
       `./scripts-run src/scripts/check_corpus_staleness` exits 0 against them.
+      *(2026-10-01: one of four. `accessibility-auditor` reads `2026-10-01`,
+      backed by a check that ran; `api-design`, `database` and `threat-modeling`
+      still share `2026-09-18`. The gate exits 0, but two of D3's three
+      conditions are unmet — two values are still equal, and three stamps are
+      not yet each the date of their own check. Deliberately NOT flipped: a
+      green gate is not the test this criterion states.)*
