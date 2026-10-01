@@ -9,18 +9,15 @@
  * Originally the TypeScript twin of `work_engine/stack/runner.py` (ADR-200
  * py2ts). Leaf module — stdlib only, NO intra-`work_engine` imports — and the
  * public API names stay snake_case, because that style IS the contract. The
- * 1:1 parity claim no longer holds: the whole behavior-runner axis is
- * TypeScript-only, as are the rspec / junit / dotnet-test labels, and the
- * parity test was renamed rather than quietly widened. Keep writing
- * snake_case because the file does, not because a twin is tracked. Sibling of
- * {@link "./detect"}, which labels the *frontend* stack.
+ * 1:1 parity claim no longer holds: the behavior-runner axis and the rspec /
+ * junit / dotnet-test labels are TypeScript-only, and the parity test was
+ * renamed rather than quietly widened. Sibling of {@link "./detect"}, which
+ * labels the *frontend* stack.
  *
  * Detection **never crashes**: a malformed manifest, a missing file or an
- * unknown stack degrades to a LOW-confidence empty result rather than
- * raising — a wrong label is recoverable, a crash mid-run is not. EVERY
- * filesystem helper here is guarded, which is what makes that true. It is NOT
- * free; the contract page states the cost. The opt-in flags are documented on
- * {@link resolve_toolchain}, where a caller reads them.
+ * unknown stack degrades to a LOW-confidence empty result rather than raising.
+ * EVERY filesystem helper here is guarded, which is what makes that true. It
+ * is NOT free; the contract page states the cost.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -55,9 +52,9 @@ export const KNOWN_RUNNERS: ReadonlySet<string> = new Set([
  * A **separate** set from {@link KNOWN_RUNNERS}, because the two answer
  * different questions — *what runs this repository's tests* versus *does it
  * already own a tool that reads a specification* — and merging them would put
- * a suite nobody asked to run into `selected`. {@link BEHAVIOR_UNKNOWN} is
- * the refusal label, not a runner, emitted when one scope carries two; a
- * scope that genuinely carries two is a finding its owner settles.
+ * a suite nobody asked to run into `selected`. {@link BEHAVIOR_UNKNOWN} is the
+ * refusal label, emitted when one scope carries two — a finding its owner
+ * settles, not a pick.
  */
 export const BEHAVIOR_UNKNOWN = 'unknown';
 
@@ -322,14 +319,14 @@ export class ToolchainResult {
 /**
  * Inspect `project_root` and resolve its test/quality toolchain.
  *
- * @param project_root Directory carrying the manifests; no upward walk, the
- *   caller picks the scope, matching `detect.detect_stack`.
+ * @param project_root Manifest directory; no upward walk, the caller picks
+ *   the scope, matching `detect.detect_stack`.
  * @param opts.include_slow @param opts.include_e2e Monorepo guard, off by
  *   default: `selected` carries only fast unit suites.
- * @param opts.php_only The `--php` narrowing — PHP only in `selected`; the
- *   full inventory still comes back in `runners`.
- * @returns A {@link ToolchainResult}. Never raises; no manifest / unknown
- *   stack → empty, `confidence == LOW`, so the caller can fall back to asking.
+ * @param opts.php_only The `--php` narrowing — PHP only in `selected`, with
+ *   the full inventory still in `runners`.
+ * @returns A {@link ToolchainResult}. Never raises; no manifest or unknown
+ *   stack → empty at `confidence == LOW`, so the caller can ask.
  */
 export function resolve_toolchain(
     project_root: string,
@@ -580,19 +577,24 @@ function _python_runners(pyproject_text: string): RunnerResult[] {
 /**
  * Ruby — `rspec` ONLY on an explicit signal, never a default: Ruby ships
  * minitest in the stdlib, so a Gemfile with no rspec signal is probably
- * minitest and a MEDIUM `rspec` would be a guess wearing a label.
+ * minitest, and a MEDIUM `rspec` would be a guess wearing a label.
  */
 /**
- * The Ruby dependency declaration, under either name Bundler accepts.
- * Reading only `Gemfile` made a `gems.rb` project invisible to both branches.
+ * The Ruby dependency declaration, under either name Bundler accepts —
+ * reading only `Gemfile` made a `gems.rb` project invisible to both branches.
  */
-function _ruby_gemfile_text(dir: string): { text: string; file: string; present: boolean } {
+interface Gemfile {
+    text: string;
+    file: string;
+    /** The FILE exists — `bundle exec` keys on this, never on the text parsing. */
+    present: boolean;
+}
+
+function _ruby_gemfile_text(dir: string): Gemfile {
     let present = false;
     for (const name of ['Gemfile', 'gems.rb']) {
         const full = path.join(dir, name);
-        // PRESENCE separately from TEXT: `bundle exec` works off the file
-        // existing, not off it parsing, so keying the guard on `text` made a
-        // 0-byte Gemfile drop the prefix. Same split the Gradle branch makes.
+        // Same presence-not-content split the Gradle branch makes.
         present = present || _is_file(full);
         const text = _read_text(full);
         if (text !== '') {
@@ -615,7 +617,7 @@ function _gem_declared(text: string, gem: string): boolean {
     return new RegExp(`^[ \\t]*gem[ \\t]+["']${gem}(-[A-Za-z0-9_-]+)?["']`, 'm').test(text);
 }
 
-function _ruby_runners(root: string, gemfile: { text: string; file: string }): RunnerResult[] {
+function _ruby_runners(root: string, gemfile: Gemfile): RunnerResult[] {
     const dot_rspec = _is_file(path.join(root, '.rspec'));
     const spec_helper = _is_file(path.join(root, 'spec', 'spec_helper.rb'));
     const in_gemfile = _gem_declared(gemfile.text, 'rspec');
@@ -630,10 +632,9 @@ function _ruby_runners(root: string, gemfile: { text: string; file: string }): R
         : dot_rspec
           ? '.rspec present'
           : 'spec/spec_helper.rb present';
-    // `bundle exec` ABORTS without a Gemfile ("Could not locate Gemfile"), and
-    // the marker signals exist precisely for projects that have none — so the
-    // prefix is conditional on the file that makes it work, not on the signal
-    // that found the suite.
+    // `bundle exec` ABORTS without a Gemfile, and the marker signals exist
+    // precisely for projects that have none — so the prefix keys on the file
+    // that makes it work, not on the signal that found the suite.
     const cmd = gemfile.present ? 'bundle exec rspec' : 'rspec';
     return [new RunnerResult('ruby', 'rspec', cmd, SPEED_FAST, HIGH, basis)];
 }
@@ -738,18 +739,16 @@ function _dotnet_runners(found: { basis: string; confidence: string }): RunnerRe
     ];
 }
 
-// --------------------------------------------------------------------------
-// Behavior-runner axis — per scope, list-shaped, detection only
-// --------------------------------------------------------------------------
+// --- Behavior-runner axis — per scope, list-shaped, detection only -------
 
 /**
  * Resolve every behavior runner this repository carries, one row per scope.
  *
- * Scopes are the root plus each declared workspace package: a single row
- * cannot represent the ordinary monorepo, a behavior runner in one package and
- * plain unit tests in another. Two runners of ONE ecosystem in one scope
- * refuse, naming both, never a pick. Never raises — an unreadable manifest
- * yields fewer rows, per the module's recoverable-error contract.
+ * Scopes are the root plus each declared workspace package: one row cannot
+ * represent the ordinary monorepo, a behavior runner in one package and plain
+ * unit tests in another. Two runners of ONE ecosystem in one scope refuse,
+ * naming both, never a pick. Never raises — an unreadable manifest yields
+ * fewer rows.
  */
 export function resolve_behavior_runners(
     project_root: string,
@@ -960,9 +959,9 @@ const _MAX_BEHAVIOR_SCOPES = 200;
  *
  * `behave` is an ordinary English verb, unlike every sibling token here, so a
  * bare `\bbehave\b` fires HIGH on a description or changelog line. Anchored to
- * a line-start declaration and terminated by a version specifier, a separator
- * or a `#` comment. Misses the single-line PEP 621 array and inline-table
- * forms — a missed row, the cheap direction here.
+ * a line-start declaration, terminated by a version specifier, a separator or
+ * a `#` comment. Misses the PEP 621 array and inline-table forms — a missed
+ * row, the cheap direction here.
  */
 const _PY_BEHAVE = /^[ \t]*["']?behave["']?[ \t]*(?:$|[=<>~!,;[#])/m;
 
@@ -1030,7 +1029,7 @@ export function _pnpm_packages(text: string): string[] {
  * leaf by contract. Only the two forms that declare package locations are
  * read; a `turbo.json` / `nx.json` root sits beside one in practice.
  */
-/** A path segment no workspace package lives in — `node_modules`, dot-dirs. */
+/** A segment no workspace package lives in — `node_modules`, dot-dirs. */
 function _excluded_scope(name: string): boolean {
     return name.split('/').some((seg) => seg.startsWith('.') || seg === 'node_modules');
 }
