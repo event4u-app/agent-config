@@ -204,8 +204,10 @@ report-only from `task release-prepare` on every release, names the files that
 became cold since the previous census, and refuses nothing — a census that can
 fail a release is a gate, and no gate is warranted here.
 
-**Why no cold location.** The first census (2026-10-01, at `8fdd9e9ed`) measured
-61 of 1,319 tracked files and 0.68 of 29.61 MiB cold — 2.3 % of the bytes. The
+**Why no cold location.** The census put to the council (2026-10-01, taken at
+`8fdd9e9ed`) measured 61 of 1,319 tracked files and 0.68 of 29.61 MiB cold —
+2.3 % of the bytes. The committed census file reads 62 of 1,320 because the
+census counts itself once it is tracked; nothing else moved between the two. The
 mass is `reviews/` at 23.79 MiB, every file of which five gates read, one of them
 specifically to validate archived round records in place. A cold location would
 therefore move 2.3 % of the tree and leave the size concern that asked for it

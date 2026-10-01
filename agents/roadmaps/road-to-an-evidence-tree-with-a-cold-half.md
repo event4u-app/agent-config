@@ -94,7 +94,7 @@ Measured on 2026-10-01:
 
 ## Phase 4 — The two readings the archive still owes
 
-- [ ] **4.1 Re-run the turnaround probe against its baseline.** Run
+- [x] **4.1 Re-run the turnaround probe against its baseline.** Run
       `./scripts-run src/scripts/probe_turnaround --limit 10 --against-baseline`
       over sessions after 2026-08-30 and record the four figures the probe
       reports — round-trips per request, mean tool-call batch size (the serial
@@ -102,6 +102,14 @@ Measured on 2026-10-01:
       the context floor — beside the 2026-08-30 baseline, in whichever direction
       they moved, with the session window and the excluded count.
       verify: `grep -c 'against-baseline' agents/evidence/analysis/turnaround-reading-*.md` -> /^[1-9]/
+      Reading at `agents/evidence/analysis/turnaround-reading-2026-10-01.md`.
+      Mean batch size 1.01 to 1.11 — the first non-null movement on the serial
+      measure, 242 of 2,822 requests multi-block against 26 of 3,237 before. The
+      other three: calls per request 72.67 to 27.37 (a denominator effect, read
+      as nothing), blocking share 0.6202 to 0.8908 and context floor max 230,705
+      to 244,518, both regressions in their gated direction and both left
+      standing rather than re-based. Window 2026-09-29 to 2026-10-01, ten
+      sessions, one excluded. No attribution drawn, per risk 3.
 
 ## Gap table
 
@@ -166,9 +174,11 @@ already argues against.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A census classifies every tracked evidence file by reference, and
+- [x] AC-1 — A census classifies every tracked evidence file by reference, and
       the cold set is named by that rule.
-- [ ] AC-2 — The evidence row of the layout contract states the cold location
+- [x] AC-2 — The evidence row of the layout contract states the cold location
       and rule the council chose.
-- [ ] AC-3 — The cold set has moved and every reference check is green.
-- [ ] AC-4 — A turnaround reading against the 2026-08-30 baseline exists.
+- [x] AC-3 — The cold set has moved and every reference check is green.
+      Met as a null move: D1 ruled no cold location, so the cold set stays in
+      place by decision and `check_references` is green at 2,227 scanned.
+- [x] AC-4 — A turnaround reading against the 2026-08-30 baseline exists.
