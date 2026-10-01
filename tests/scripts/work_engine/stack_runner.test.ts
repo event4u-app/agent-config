@@ -1122,6 +1122,30 @@ describe('stack/runner — behaviour-runner axis', () => {
         expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toContain('behave');
     });
 
+    it('an EMPTY Gemfile still keeps the `bundle exec` prefix', () => {
+        // R15 finding 4: the guard keyed on manifest CONTENT, so a 0-byte or
+        // unreadable Gemfile dropped the prefix — the inverse of the
+        // presence-not-content fix this same change made for Gradle.
+        // `bundle exec` works off the file existing, not off it parsing.
+        write('Gemfile', '');
+        write('.rspec', '--require spec_helper\n');
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'rspec');
+        expect(found?.command).toBe('bundle exec rspec');
+    });
+
+    it('a LITERAL workspace entry is excluded like a glob child', () => {
+        // R15 finding 3: the exclusion ran on the glob branch only, so a
+        // literal `node_modules/x` entry became a scope the glob form refuses.
+        write(
+            'package.json',
+            JSON.stringify({ workspaces: ['node_modules/x', '.hidden', 'pkg/real'] }),
+        );
+        for (const d of ['node_modules/x', '.hidden', 'pkg/real']) {
+            write(`${d}/.gitkeep`, '');
+        }
+        expect(_behavior_scopes(tmp)).toEqual(['.', 'pkg/real']);
+    });
+
     it('a CRLF pnpm-workspace.yaml is read, not silently dropped', () => {
         // R13 finding 5: `.` never matches `\r`, so splitting on `\n` alone
         // left a trailing `\r` that made the key regex match NOTHING — the

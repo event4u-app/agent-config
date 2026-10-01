@@ -1,5 +1,5 @@
 ---
-complexity: lightweight
+complexity: structural
 status: ready
 execution:
   mode: phase-checkpoints
@@ -714,7 +714,7 @@ neither spends the ratchet early nor loses the trigger.
 
 ### Residue carried out of the review rounds
 
-Fourteen completion-review rounds produced 123 findings; 94 are fixed and 29
+Fifteen completion-review rounds produced 128 findings; 97 are fixed and 31
 are `accepted-risk`, each with a stated `revisit-if`. Nothing is `open`.
 
 **The dominant defect class was never the code.** Four highs across rounds 2–4
@@ -774,6 +774,23 @@ repository loses its true answer entirely. And the cost estimate was wrong.
 Nothing needs the solution's TEXT, only its PRESENCE, which
 `_has_dotnet_solution` already reads separately. The fix is one `continue`.
 
+**This roadmap is `complexity: structural`, retagged at round 15.** It was
+tagged `lightweight` when the plan was ~190 lines and scoped as three small
+corrections; `lint_roadmap_complexity` caps that tier at 600 lines and the
+file is now well past it. The retag is a correction, not a dodge: what the
+plan turned into is a new per-scope detection axis, three native labels, eight
+behavior labels, a refusal doctrine, a changed contract for two shipped
+commands and a widened cache key. Round 15 found this, and found that the
+close-out section below audited three other roadmap gates without naming the
+one it was failing.
+
+**One sibling red is NOT this branch's and is left alone.**
+`road-to-a-kernel-that-guards-its-plumbing.md` is 604 lines against the same
+600-line cap and `lightweight` on `origin/main`, so that gate is already red
+there on a roadmap this work did not author. Retagging it would be a judgement
+about someone else's scope; it is named here so the next reader does not
+mistake it for fallout of this change.
+
 **Round 14 found the sweep round 13 owed and never ran.** Round 13 fixed
 `bundle exec rspec` on the native axis, where no Gemfile means the command
 aborts. The identical construct sat 226 lines away on the behavior axis
@@ -817,7 +834,9 @@ it names the measurement it waits on rather than an estimate.
   scope-set parameter threaded through `_behavior_runners_in_scope` into the
   walk, plus a membership test in the descent loop, call it ten lines. What
   blocks it is not the shape but the per-file line ceiling — `runner.ts` sits
-  at its per-file ceiling — and the move that unblocks it is splitting the behavior
+  at its per-file ceiling, with ZERO headroom — the next added line reds the
+  aggregate ratchet, so for these three items "deferred" now means "blocked
+  until the module is split". The move that unblocks them is splitting the behavior
   axis into its own leaf module. REVISIT-IF: that split happens, or a consumer
   reports the false root row (it is detection-only and unreachable from
   `selected`, so today it misleads a reader rather than running anything).
