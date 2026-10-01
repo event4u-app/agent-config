@@ -243,6 +243,14 @@ function hasUncommittedIndexedEdit(root: string): boolean {
             env: hardenedSpawnEnv(),
             encoding: 'utf-8',
             stdio: ['ignore', 'pipe', 'ignore'],
+            // Both bounds are the review's: Node's 1 MB default would throw
+            // ENOBUFS on a large working tree, the catch below would return
+            // false, and the state would read `fresh` — a second silent
+            // under-report on a probe that runs at PreToolUse and at every stop.
+            // The timeout bounds the other failure: this probe sits in front of
+            // a tool call, so a hung git must not hold one up.
+            maxBuffer: 32 * 1024 * 1024,
+            timeout: 5_000,
         });
     } catch {
         // Not a repository, or the probe failed: nothing is known, and an

@@ -235,6 +235,9 @@ function latchFile(root: string): string {
  */
 export const MAX_CONTEXT_LINES_PER_SESSION = 5;
 
+/** How many sessions the latch file retains before evicting the oldest. */
+export const MAX_SESSIONS_LATCHED = 200;
+
 /**
  * What the latch file records for a target: a truncated digest, never the
  * target itself.
@@ -309,6 +312,17 @@ export function latchTarget(root: string, session: string, target: string): bool
     if (!speaksFor(spoken, target)) return false;
     try {
         state[session] = [...spoken, latchKey(target)];
+        // Nothing prunes a finished session, so without this the file
+        // accumulated up to five digests per session id for the life of the
+        // repository — a review's finding, and the sibling instrument added in
+        // the same change caps itself and says why local-and-gitignored is not
+        // the same as free. Insertion order is the eviction order: the oldest
+        // session is the one least likely to speak again, and re-latching a
+        // dropped session costs one extra line, never a wrong answer.
+        const ids = Object.keys(state);
+        for (const old of ids.slice(0, Math.max(0, ids.length - MAX_SESSIONS_LATCHED))) {
+            if (old !== session) delete state[old];
+        }
         const p = latchFile(root);
         fs.mkdirSync(path.dirname(p), { recursive: true });
         fs.writeFileSync(p, JSON.stringify(state));

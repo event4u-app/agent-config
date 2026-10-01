@@ -55,6 +55,15 @@ Procedure, once n ≥ 50 rows exist:
 1. Draw rows from `agents/state/graph-feeder/*.jsonl` across distinct sessions.
    A row's `paths` and `path_count` are the labeller's input; `f`, `f_mode`,
    `graph`, `graph_untested` and `graph_tested` are withheld.
+   **A row whose `path_count` exceeds its `paths` length is DROPPED, not
+   labelled**, and the count of drops is reported with the rest. `paths` is
+   capped at five in tool-call order, so a longer turn can present a labeller
+   with five paths that do not include the deciding one — and a ground truth
+   decided on a hidden path is not a ground truth. A review raised this as a
+   measurement-validity problem rather than a display one, and it is treated as
+   one. (The paths are production-source only, per the filter above, so the
+   truncation can no longer hide a production edit behind docs and tests; it can
+   still hide the sixth production edit behind five others.)
 2. For each row, the labeller answers one question: **did this turn change
    production code that no test exercises?** Yes / no / cannot tell. A
    `cannot tell` is dropped and replaced, and the count of drops is reported —

@@ -193,6 +193,7 @@ import { detectDroppedDecision } from '../_lib/dropped_decision.js';
 import {
     appendFeederRow,
     buildFeederRow,
+    type FeederLayer,
     graphUntestedVerdict,
 } from '../_lib/graph_feeder_record.js';
 import { type GraphState, graphState } from '../code_graph/detect.js';
@@ -1300,7 +1301,11 @@ function runDetectors(inputs: DetectorInputs): Finding[] {
  * or `edited` — an answer from an index that predates the change is not evidence
  * about the change.
  */
-function recordGraphFeeder(inputs: DetectorInputs, findings: readonly Finding[], layer: string): void {
+function recordGraphFeeder(
+    inputs: DetectorInputs,
+    findings: readonly Finding[],
+    layer: FeederLayer,
+): void {
     if (is_replay_mode()) return;
     try {
         let state: GraphState;

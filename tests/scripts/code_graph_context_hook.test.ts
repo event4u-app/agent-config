@@ -24,6 +24,7 @@ import {
     latchKey,
     latchTarget,
     MAX_CONTEXT_LINES_PER_SESSION,
+    MAX_SESSIONS_LATCHED,
     speaksFor,
     wouldSpeak,
 } from '../../src/scripts/hooks/code_graph_context_hook.js';
@@ -318,6 +319,23 @@ describe('the latch — step 2.2, once per target and five per session', () => {
         expect(latchTarget(root, 'a', 'p')).toBe(true);
         expect(latchTarget(root, 'a', 'p')).toBe(false);
         expect(latchTarget(root, 'b', 'p')).toBe(true);
+    });
+
+    it('evicts the oldest sessions rather than growing the file forever', () => {
+        // A review found the file accumulating up to five digests per session id
+        // for the life of the repository, while the sibling instrument added in
+        // the same change caps itself and says why local-and-gitignored is not
+        // free. Drives past the cap rather than asserting the constant.
+        const root = tmpRoot();
+        for (let i = 0; i < MAX_SESSIONS_LATCHED + 25; i += 1) {
+            latchTarget(root, `s${String(i)}`, 'p');
+        }
+        const state = JSON.parse(
+            fs.readFileSync(path.join(root, 'agents', 'runtime', 'state', 'code-graph-context.json'), 'utf-8'),
+        ) as Record<string, string[]>;
+        expect(Object.keys(state).length).toBeLessThanOrEqual(MAX_SESSIONS_LATCHED);
+        // The session that just spoke is never the one evicted.
+        expect(state[`s${String(MAX_SESSIONS_LATCHED + 24)}`]).toBeDefined();
     });
 
     it('reads a pre-2.2 boolean latch as a spent session, never as a fresh budget', () => {

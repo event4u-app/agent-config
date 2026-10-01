@@ -9,11 +9,17 @@
  * own denominator. Folding a second signal into it would contaminate a reading
  * somebody else is taking, which is a worse failure than a second file.
  *
- * WHY IT CHANGES NO VERDICT. The whole point of a shadow is that it costs the
- * turn nothing: every function here is wrapped, every failure path returns
- * silently, and no caller branches on the result. Step 3.4 — promoting the graph
- * verdict into F — is DEFERRED behind step 3.3's recall measurement and behind
- * an owner amendment to ADR-277, and nothing in this module anticipates it.
+ * WHY IT CHANGES NO VERDICT, AND WHAT THAT CLAIM DOES NOT COVER. Every function
+ * here is wrapped, every failure path returns silently, and no caller branches on
+ * the result, so no in-process path can move an exit code. It is NOT a claim
+ * about latency, and an earlier version of this paragraph said "costs the turn
+ * nothing", which a review correctly read as one: a stop in a repository with a
+ * graph pays a `git status` spawn, a graph open and an `untested` walk. Nothing
+ * measures that, and a host that timed a stop hook out would drop the gate's
+ * refusal — a failure the comparative exit-code test cannot see, because both of
+ * its runs complete. Named rather than implied away. Step 3.4 — promoting the
+ * graph verdict into F — is DEFERRED behind step 3.3's recall measurement and
+ * behind an owner amendment to ADR-277, and nothing here anticipates it.
  *
  * WHAT A ROW MAY CONTAIN. The fields are a closed set of enums, counts and
  * repo-relative source paths. There is no field able to hold a prompt, a file
@@ -49,17 +55,30 @@ export const MAX_ROWS_PER_SESSION = 200;
 export type GraphVerdict = 'untested' | 'tested' | 'no-seeds' | null;
 
 /** One stop, as the feeder records it. */
+/**
+ * The stop layer a row came from.
+ *
+ * A closed union rather than `string`. The header below calls these fields "a
+ * closed set of enums", and a review pointed out the types did not enforce it —
+ * the sets lived only in the call sites, so a later caller could widen either
+ * with no type error and the prose would quietly become false.
+ */
+export type FeederLayer = 'live' | 'stop_hook_active' | 'refused_turn';
+
+/** Detector F's evidence class, from the same closed set the detector uses. */
+export type FeederMode = 'transcript' | 'record';
+
 export interface GraphFeederRow {
     at: string;
     /** The turn's ordinal — how many genuine user prompts preceded it. */
     turn: number;
     /** Which stop layer produced this row: the live verdict, or a retry. */
-    layer: string;
+    layer: FeederLayer;
     graph_state: GraphState;
     /** Did detector F fire on this turn? */
     f: boolean;
     /** F's evidence class when it fired — `transcript` or `record`. */
-    f_mode: string | null;
+    f_mode: FeederMode | null;
     graph: GraphVerdict;
     /** How many changed symbols the graph found no test edge for. */
     graph_untested: number;
@@ -171,10 +190,10 @@ export function readFeederRows(workspaceRoot: string, sessionKey: string): Graph
 /** Build the row. Pure, so the shape can be asserted without a filesystem. */
 export function buildFeederRow(input: {
     turn: number;
-    layer: string;
+    layer: FeederLayer;
     state: GraphState;
     fFired: boolean;
-    fMode: string | null;
+    fMode: FeederMode | null;
     paths: readonly string[];
     graph: { verdict: GraphVerdict; untested: number; tested: number };
     at?: string;
