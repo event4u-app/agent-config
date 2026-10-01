@@ -63,7 +63,7 @@ Measured on 2026-10-01:
       git history as the archive; (c) keep everything and only exclude cold paths
       from scan roots. Record the verdict, both seats and a `revisit-if` in
       `## Decisions`.
-      verify: `grep -c 'council' agents/roadmaps/road-to-an-evidence-tree-with-a-cold-half.md` -> /^[1-9]/
+      verify: `grep -c 'council' agents/roadmaps/archive/road-to-an-evidence-tree-with-a-cold-half.md` -> /^[1-9]/
 - [x] **2.2 Amend the contract.** Change `agents-layout.md`'s `evidence/` row to
       state the cold location and the classification rule the verdict chose.
       verify: `grep -c 'cold' docs/contracts/agents-layout.md` -> /^[1-9]/
