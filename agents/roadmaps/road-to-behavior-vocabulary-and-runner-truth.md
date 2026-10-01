@@ -48,7 +48,9 @@ get there.
 
 1. **Behaviour vocabulary routes nowhere.**
    `grep -rliE 'gherkin|bdd|cucumber|behat' src/skills/*/evals/*.json` returns
-   **0** files across the 101 skills that carry a trigger suite. The tree does
+   **0** files across every skill that carries a trigger suite — the count is
+   `ls src/skills/*/evals/triggers.json | wc -l`, deliberately not quoted,
+   because it moves whenever any session adds a suite. The tree does
    own the decision this vocabulary should reach — `Does this change owe an
    executable behavior contract?` at `src/skills/test-case-discovery/SKILL.md:40`
    with its anti-script rule at `:98–116` — so the gap is routing, not knowledge.
@@ -361,8 +363,11 @@ get there.
       `npx vitest run tests/scripts/work_engine/stack_runner.test.ts`, which
       prints the number at the commit you are standing on.
 
-      **AC-3 still reads `97 tests green`, deliberately, and it is the count
-      at AC-3 sign-off rather than the current one.** Gate R1 compares the
+      **Two figures inside the Acceptance-Criteria body are sign-off-time
+      values, deliberately: AC-3's `97 tests green`, and AC-1's "0 across 102
+      suites", whose denominator was 101 when Fact 1 was measured and is 102
+      today because a parallel session added a suite.** Both are the count at
+      sign-off rather than the current one. Gate R1 compares the
       Acceptance-Criteria body against the blob at the commit that introduced
       the current `risk-review` stamp, and that stamp is `YYYY-MM-DD`: a
       SECOND substantive review on the same day cannot be expressed, so any
@@ -714,8 +719,9 @@ neither spends the ratchet early nor loses the trigger.
 
 ### Residue carried out of the review rounds
 
-Fifteen completion-review rounds produced 128 findings; 97 are fixed and 31
+Sixteen completion-review rounds produced 133 findings; 101 are fixed and 32
 are `accepted-risk`, each with a stated `revisit-if`. Nothing is `open`.
+Round 16 was the first with no critical, no high and no medium.
 
 **The dominant defect class was never the code.** Four highs across rounds 2–4
 and roughly a third of everything else were this branch asserting something

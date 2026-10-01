@@ -45,8 +45,9 @@ for (const r of result.selected) {
 ```
 
 Resolution costs **per scope**, not per repository: a fixed name list stat-ed,
-six-or-so manifests read, and two directory listings for the .NET probe —
-which run in every repository, .NET or not. A wide workspace pays that times
+six-or-so manifests read, and the .NET probe's directory listings — three at
+the root, where the native axis lists once and the behavior axis lists twice,
+and they run in every repository, .NET or not. A wide workspace pays that times
 its package count, so the cost is proportional and not negligible.
 
 The **cache probe is the expensive path**, with the magnitude stated, not

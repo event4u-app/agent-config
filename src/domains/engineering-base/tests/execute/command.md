@@ -35,7 +35,7 @@ returns the runner(s) to invoke per ecosystem:
   `./mvnw test`). **.NET** → `dotnet test`.
 
 **The resolver is the only stack authority, and `skills:` deliberately names
-none.** The frontmatter used to bind `pest-testing` unconditionally, which
+no single-stack skill.** The frontmatter used to bind `pest-testing` unconditionally, which
 contradicted the sentence directly above it: a React-only repository was handed
 PHP testing guidance before it read the instruction not to hard-code a stack.
 A static list cannot express a per-repository answer, so the frontmatter keeps

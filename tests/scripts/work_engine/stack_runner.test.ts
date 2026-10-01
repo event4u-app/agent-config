@@ -1133,6 +1133,17 @@ describe('stack/runner — behaviour-runner axis', () => {
         expect(found?.command).toBe('bundle exec rspec');
     });
 
+    it('an excluded glob PARENT yields no scopes', () => {
+        // R16 finding 1: the exclusion ran on the glob CHILD and not on the
+        // pattern, so `node_modules/*` still admitted what the literal form
+        // refuses — the same half-guard R15 finding 3 fixed, mirrored. The
+        // predicate now runs once, on the whole pattern, before either branch.
+        write('package.json', JSON.stringify({ workspaces: ['node_modules/*', 'pkg/*'] }));
+        write('node_modules/dep/package.json', '{}');
+        write('pkg/real/.gitkeep', '');
+        expect(_behavior_scopes(tmp)).toEqual(['.', 'pkg/real']);
+    });
+
     it('a LITERAL workspace entry is excluded like a glob child', () => {
         // R15 finding 3: the exclusion ran on the glob branch only, so a
         // literal `node_modules/x` entry became a scope the glob form refuses.

@@ -1056,6 +1056,11 @@ export function _behavior_scopes(project_root: string): string[] {
         if (g === '' || g.startsWith('!') || g.startsWith('/') || g.includes('..')) {
             continue;
         }
+        // One predicate over the WHOLE pattern, before the fork: checking only
+        // the glob child let `node_modules/*` admit what the literal refuses.
+        if (_excluded_scope(g)) {
+            continue;
+        }
         if (g.endsWith('/*')) {
             const parent = g.slice(0, -2);
             let children: fs.Dirent[];
@@ -1075,11 +1080,7 @@ export function _behavior_scopes(project_root: string): string[] {
                 }
             }
         } else if (!g.includes('*')) {
-            // Existence-checked, and excluded on the same list as the glob
-            // branch — which had it while this one did not.
-            if (_excluded_scope(g)) {
-                continue;
-            }
+            // Existence-checked; the exclusion already ran above the fork.
             try {
                 if (fs.statSync(path.join(project_root, g)).isDirectory()) {
                     scopes.push(g);
