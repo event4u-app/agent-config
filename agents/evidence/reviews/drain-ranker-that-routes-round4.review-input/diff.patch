@@ -1,0 +1,3853 @@
+diff --git a/agents/evidence/analysis/skill-ranker-confusion-2026-10-01.md b/agents/evidence/analysis/skill-ranker-confusion-2026-10-01.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..35fd4cd5b093f8985daa0b0927891f6860f7ed9b
+--- /dev/null
++++ b/agents/evidence/analysis/skill-ranker-confusion-2026-10-01.md
+@@ -0,0 +1,478 @@
++# Skill-ranker confusion report — keyword-v1, tuning slice
++
++<!-- evidence-type: analysis -->
++
++Produced by `road-to-a-ranker-that-routes` Phases 1 to 3 on 2026-10-01.
++Read-only with respect to the ranker: **the default did not change**, and
++§ The null below is why. Regenerate the measured figures with
++
++```bash
++./scripts-run src/scripts/report_skill_ranker_confusion --ranker keyword-v1 --slice tuning   # §§ 1–6
++./scripts-run src/scripts/report_label_agreement                                             # § 7
++./scripts-run src/scripts/sweep_skill_ranker_signals                                         # § 9
++```
++
++**Every TABLE and every measured figure** up to and including § The 20 most
++frequent pairs is the first command's output verbatim — regenerate and diff the
++tables to check it. This preamble is not: the generator emits a one-command
++header and this file carries a three-command one, because two further tools
++contribute sections below. The sections after the pair table carry the other two
++commands' output plus the reading of them, and say which is which.
++
++## What was read
++
++| | |
++|---|---:|
++| labelled rows in the routing matrix | 390 |
++| …in the tuning slice | 315 |
++| …in the sealed slice | 75 |
++| rows this report read (`tuning`) | 315 |
++| deliberate `expected_skills: []` rows in the same slice | 153 |
++| skills indexed | 299 |
++
++The sealed slice is **not** read here. A confusion class derived from rows a
++later lift is measured on would make that lift circular, which is the one
++failure a held-out partition exists to prevent.
++
++## The headline on this slice
++
++| measure | value | 95 % CI |
++|---|---:|---|
++| top-1 | 0.219 | 0.177 – 0.268 |
++| top-3 | 0.343 | 0.293 – 0.397 |
++| mean reciprocal rank | 0.319 | — |
++
++MRR is the average of 1 / (position of the first expected skill), counting a row
++where no expected skill appears anywhere in the ranking as 0. It is the figure
++that separates "the right answer was second" from "the right answer was never
++returned", and top-1 alone cannot.
++
++## How deep the misses are
++
++| | count | share of misses |
++|---|---:|---:|
++| top-1 misses | 246 | — |
++| …expected skill outside the top 10 | 141 | 57.3 % |
++| …expected skill not ranked at all (score 0) | 82 | 33.3 % |
++
++A miss inside the top ten is a ranking problem — the right skill is in the
++candidate set and something else outscored it. A miss outside it, and above all
++a row where the expected skill scores zero, is a RECALL problem: no re-weighting
++of the existing signal can recover a skill the formula never surfaces. The two
++take different fixes, which is why the split is reported rather than an average.
++
++## False activation on the no-skill prompts
++
++| | |
++|---|---:|
++| deliberate empties in this slice | 153 |
++| correct top-1 hits the median is taken over | 69 |
++| median top score of a correct hit | 28 |
++| empties whose top score reaches that median | 25 |
++| share | 16.3 % |
++
++The threshold is the ranker's own median hit score rather than a cutoff chosen
++here, because the question is whether the ranker's confidence separates the two
++populations at all. A share near one half means it does not: a prompt a seat
++judged to have no skill answer is scored as confidently as a prompt it got right.
++
++## Per-pack top-1, worst first
++
++| pack | labelled rows | top-1 |
++|---|---:|---:|
++| `analysis-workbench` | 9 | 0.000 |
++| `ai-video` | 3 | 0.000 |
++| `gtm-sales` | 3 | 0.000 |
++| `nextjs` | 3 | 0.000 |
++| `product-basic` | 3 | 0.000 |
++| `python` | 3 | 0.000 |
++| `product-discovery` | 2 | 0.000 |
++| `meta` | 95 | 0.137 |
++| `gtm-marketing` | 6 | 0.167 |
++| `ai-image` | 5 | 0.200 |
++| `finance-basic` | 5 | 0.200 |
++| `founder-strategy` | 5 | 0.200 |
++| `brand` | 9 | 0.222 |
++| `engineering-base` | 138 | 0.239 |
++| `forensics` | 4 | 0.250 |
++| `react` | 4 | 0.250 |
++| `typescript` | 4 | 0.250 |
++| `ops-people` | 3 | 0.333 |
++| `symfony` | 3 | 0.333 |
++| `frontend-design` | 8 | 0.375 |
++| `laravel` | 15 | 0.467 |
++| `scale-discipline` | 4 | 0.500 |
++| `fun` | 2 | 0.500 |
++| `php` | 3 | 0.667 |
++| `finance-advanced` | 4 | 0.750 |
++| `history-discipline` | 3 | 1.000 |
++| `legal-review-prep` | 3 | 1.000 |
++
++A row counts once per pack of each skill its label names, so the column sums
++above the row count — the same accounting the per-pack census uses.
++
++## The 20 most frequent (expected, ranked-first) pairs
++
++| expected (label, best fit first) | ranked first instead | rows |
++|---|---|---:|
++| `decision-review` | `adr-create` | 3 |
++| `api-design` | `api-testing` | 2 |
++| `blast-radius-analyzer` | `architecture-review-lens` | 2 |
++| `command-routing` | `estimate-ticket` | 2 |
++| `logging-monitoring` | `dashboard-design` | 2 |
++| `secrets-management` | `agent-security-review` | 2 |
++| `skill-improvement-pipeline` | `persona-improvement` | 2 |
++| `voice-and-tone-design` | `brand` | 2 |
++| `accessibility-auditor` | `livewire-architect` | 1 |
++| `activation-design` | `po-discovery` | 1 |
++| `adr-create` | `brand-asset-generation` | 1 |
++| `agent-security-review` | `judge-bug-hunter` | 1 |
++| `ai-council` | `brand-asset-generation` | 1 |
++| `api-endpoint` | `ai-code-blindspots` | 1 |
++| `api-endpoint` | `api-design` | 1 |
++| `api-endpoint` | `api-testing` | 1 |
++| `async-python-patterns` | `activation-design` | 1 |
++| `async-python-patterns` | `brand-audit` | 1 |
++| `async-python-patterns` | `skill-improvement-pipeline` | 1 |
++| `aws-infrastructure` | `ai-code-blindspots` | 1 |
++
++**The table above is the roadmap's first refuted premise, and it refutes it by
++being boring.** Step 2.1 asks for "the one deterministic signal that would
++separate the pair" *for each confusion class 1.3 names* — which presumes the
++misses concentrate into classes. They do not. The modal pair occurs **3 times
++out of 246 misses**, the twenty most frequent pairs together cover **29 of 246
++(11.8 %)**, and the tail below them is almost entirely singletons. There is no
++dominant confusion to separate, so no pair-specific signal can be derived, and a
++signal invented for a 3-row pair would be fitted to three rows.
++
++What the misses concentrate in instead is **depth** (§ How deep the misses are)
++and **pack** (§ Per-pack top-1). Those two are what § The candidate signals
++derives from, and the derivation is stated there rather than silently
++substituted for the one the roadmap asked for.
++
++## Agreed rows — separating label noise from ranker error
++
++Step 1.4. The question is whether a top-1 near 0.21 is the ranker being wrong or
++two reasonable people disagreeing about which skill a prompt wants. It is
++answerable only with a second seat's labels **per row**, and the published
++figure (exact-set agreement 39 / 55) was an aggregate with no per-row record —
++so this step first had to produce the data it reads.
++
++**What was done.** Six labelling seats, each given the 299-skill catalogue
++(`name` + `description`, grouped by pack) and 40 bare prompts, each instructed
++not to open the ranker's scoring and not to reason about keyword overlap, under
++the protocol in `tests/eval/routing-matrix/README.md` § Who may write a label.
++240 rows in total, all drawn from the **tuning** slice — the sealed slice was
++not shown to any seat, so nothing here touches it. The labels are committed at
++`tests/eval/routing-matrix/second-seat-2026-10-01.json`, which is what makes
++this section reproducible rather than a one-off claim. **The disagreements are
++not reconciled**: overwriting one seat with the other would replace the honest
++width of the ground truth with a narrower number that means less.
++
++| agreement definition | agreed | share |
++|---|---:|---:|
++| exact set | 147 / 240 | 61.3 % |
++| at least one shared skill (or both empty) | 230 / 240 | 95.8 % |
++| polarity only (does a skill answer exist at all) | 231 / 240 | 96.3 % |
++
++The exact-set figure is **lower** than the 70.9 % published on 55 rows, over a
++denominator four times larger. The other two are higher than their published
++counterparts. Both readings are consistent with the earlier sample: a second or
++third slot in a three-skill label is where reasonable seats differ, and that
++difference does not change a hit.
++
++**Top-1 restricted to the rows the seats agree on:**
++
++| rows read | n | top-1 | 95 % CI | top-3 | 95 % CI |
++|---|---:|---:|---|---:|---|
++| all relabelled | 240 | 0.221 | 0.173 – 0.277 | 0.367 | 0.308 – 0.429 |
++| exact-set agreement only | 147 | 0.238 | 0.176 – 0.313 | 0.401 | 0.326 – 0.482 |
++| shared-skill agreement only | 230 | 0.222 | 0.173 – 0.280 | 0.361 | 0.302 – 0.425 |
++| polarity agreement only | 231 | 0.221 | 0.172 – 0.279 | 0.359 | 0.300 – 0.423 |
++
++**The decision rule 1.4 states, applied:** the gap between the strictest agreed
++subset and the full figure is **0.238 − 0.221 = 0.017**; the interval width on
++the full figure is **0.277 − 0.173 = 0.104**. The gap is **one sixth** of the
++interval width, so Phase 2 tunes on **all** rows, not on agreed rows only.
++
++Stated plainly, because it is the load-bearing finding of Phase 1: **label noise
++does not explain the miss rate.** Keeping only the rows where two independent
++seats wrote the identical label moves top-1 from 0.221 to 0.238. A ranker scoring
++0.24 on rows nobody disputes is a ranker that is wrong about those rows.
++
++Ten rows have fully disjoint labels — nine of them are a seat writing a skill
++where the other wrote `[]`, and the tenth is `model-recommendation#positives[1]`
++(`code-refactoring` against `reasoning-orchestrator`). Eight of the nine are
++prompts about the agent's own conduct, settings, or a one-line edit, which is
++exactly the class the empty label exists for and exactly where the boundary is
++genuinely unclear.
++
++## The candidate signals
++
++Step 2.1 — written down before any of them was implemented, and derived from
++§ How deep the misses are and § Per-pack top-1 rather than from the pair table,
++for the reason stated under it.
++
++**Three of the five candidates the roadmap names are not measurable on this
++corpus at all, and that is a measurement, not an excuse.** Risk 2 of the roadmap
++restricts a context signal to what a live request carries: the prompt, the
++repository, the open file. Counted over the matrix:
++
++| context a signal would need | matrix cases carrying it | **labelled** rows carrying it |
++|---|---:|---:|
++| `open_files` | 46 / 588 | **0 / 390** |
++| `command` | 2 / 588 | **0 / 390** |
++| a path-shaped token inside the prompt text | 5 / 588 | — |
++
++Every row that carries context is a deliberate `expected_skills: []`. So
++repository stack, the open file's framework, and the file path in the prompt
++each have **zero rows on which they could change a scored answer**. Implementing
++one and reporting "no lift" would be reporting the corpus, not the signal. They
++are therefore not implemented, and the reason is a count rather than a judgement.
++
++What remains is derivable from the prompt text and the skill catalogue, which is
++what the two real findings point at:
++
++| finding it answers | candidate signal | mechanism | implemented as |
++|---|---|---|---|
++| 33.3 % of misses score the expected skill at **zero** — the term never appears in `name + description` | widen the indexed term source to the skill's own `## When to use` section | a skill that says when it applies in its body, and not in its 200-char description, becomes reachable | `includeWhenToUse` |
++| same, cheaper and more topical | widen it to the body's `##` / `###` headings only | section titles are the skill's own topic vocabulary, without pulling its whole procedure into the index | `includeHeadings` |
++| same, and the one the archived roadmap already tried | widen it to `triggers[].keyword` / `.phrase` prose | re-measured here at n = 390 rather than at n = 26 | `includeTriggers` (pre-existing) |
++| 57.3 % of misses put the expected skill outside the top ten while something else wins — a **ranking** failure, not a recall one | weight a matched term by its inverse document frequency over the catalogue | a prompt term carried by 80 skills stops outvoting a term carried by two, which is what lets a generic skill win a specific prompt | `idfWeighting` |
++| `meta` at 0.137 over 95 rows and seven packs at 0.000 | fold the skill's declared `packs:` into its terms | **implemented, measured, and REMOVED** — see § The sweep | (removed) |
++
++## The sweep — each signal alone, both slices
++
++Step 2.2. Every flag ships **off by default**, so a configuration is a named set
++of flags and two readings of "the ranker" are never two different rankers under
++one name. Regenerate with `sweep_skill_ranker_signals`.
++
++| configuration | slice | n | top-1 | 95 % CI | top-3 | 95 % CI | MRR |
++|---|---|---:|---:|---|---:|---|---:|
++| `keyword-v1` | tuning | 315 | 0.219 | 0.177 – 0.268 | 0.343 | 0.293 – 0.397 | 0.319 |
++| `keyword-v1` | sealed | 75 | 0.160 | 0.094 – 0.259 | 0.320 | 0.225 – 0.432 | 0.263 |
++| `keyword-v2` | tuning | 315 | 0.219 | 0.177 – 0.268 | 0.343 | 0.293 – 0.397 | 0.320 |
++| `keyword-v2` | sealed | 75 | 0.160 | 0.094 – 0.259 | 0.320 | 0.225 – 0.432 | 0.263 |
++| `when-to-use` | tuning | 315 | 0.206 | 0.165 – 0.254 | 0.362 | 0.311 – 0.416 | 0.317 |
++| `when-to-use` | sealed | 75 | 0.173 | 0.104 – 0.274 | 0.280 | 0.191 – 0.390 | 0.268 |
++| `headings` | tuning | 315 | 0.216 | 0.174 – 0.265 | 0.330 | 0.281 – 0.384 | 0.313 |
++| `headings` | sealed | 75 | 0.173 | 0.104 – 0.274 | 0.320 | 0.225 – 0.432 | 0.281 |
++| `idf` | tuning | 315 | 0.235 | 0.191 – 0.285 | 0.368 | 0.317 – 0.423 | 0.347 |
++| `idf` | sealed | 75 | 0.173 | 0.104 – 0.274 | 0.400 | 0.297 – 0.513 | 0.304 |
++| `idf+when-to-use` | tuning | 315 | 0.229 | 0.186 – 0.278 | 0.406 | 0.354 – 0.461 | 0.346 |
++| `idf+when-to-use` | sealed | 75 | 0.187 | 0.115 – 0.289 | 0.307 | 0.214 – 0.418 | 0.296 |
++
++Readings, in the order they matter:
++
++1. **`keyword-v2` matches `keyword-v1` on top-1 and top-3, on both slices, to
++   three decimals.** The one column that differs is tuning MRR — 0.319 against
++   0.320 — i.e. folding trigger prose in promotes the expected skill by one
++   position on a single row out of 315 and changes no hit rate anywhere.
++   Decision D1 holds: trigger prose is null at n = 390 as it was at n = 26, now
++   on a denominator fifteen times larger. (An earlier draft of this line read
++   "byte-identical … on every column", which the table above it falsifies; the
++   conclusion was right and the stated basis was not.)
++2. **`idf` is the only configuration that moves every measure in the same
++   direction on both slices.** Tuning top-1 0.219 → 0.235, top-3 0.343 → 0.368,
++   MRR 0.319 → 0.347; sealed top-1 0.160 → 0.173, top-3 0.320 → 0.400, MRR
++   0.263 → 0.304. It is the candidate, and § The null is why it is not promoted.
++3. **`when-to-use` and `headings` each move sealed top-1 up by exactly one row
++   (12/75 → 13/75) while lowering tuning top-1** — by four rows for
++   `when-to-use`, by one for `headings`. Step 2.2's removal rule is "a flag that
++   does not move the sealed-slice top-1 point estimate is removed", and both move
++   it, so both are kept under the rule as written. Neither is a promotion
++   candidate, and the rule should not be read as saying otherwise: a one-row move
++   on 75 rows against a loss on 315 is noise with a sign.
++4. **`packs` was implemented, measured, and removed in the same change**, which
++   is what the rule is for. Its sealed top-1 was 0.160 — the baseline, unmoved —
++   and its tuning top-3 was slightly worse. The flag, its plumbing through the
++   loader, and its `RankableSkill` field are gone; it survives only as this row.
++
++   **`keyword-v2` has identical sealed evidence and is NOT removed, and the
++   asymmetry needs its reason stated.** The rule reads "removed in the same
++   change", which scopes it to flags this change ADDS. `includeTriggers`
++   predates this roadmap: it is the archived MCP-delivery roadmap's keyword-v2,
++   a shipped option with a published null, and deleting it here would be an
++   unrelated removal of someone else's surface. It is retained as a measured
++   null, not as a candidate.
++5. **The best two together is worse than the better one alone on TUNING top-1,
++   and better on SEALED top-1 — which is why neither number is read alone.**
++   `idf+when-to-use` sits at tuning 0.229 against `idf`'s 0.235, and at sealed
++   0.187 against 0.173 — the highest sealed top-1 of any configuration, and the
++   highest tuning top-3 (0.406). Its sealed top-3 nevertheless falls to 0.307,
++   below the baseline's 0.320, which step 3.1's "top-3 does not fall" clause
++   refuses on its own. The slice has to be named every time a direction is
++   claimed; an earlier draft of this line omitted it and read as a verdict the
++   next clause contradicted.
++
++### An independent reading of the body signal, landed the same day
++
++`agents/evidence/analysis/routing-body-signal-verdict.json` reached `main` on
++2026-10-01 from a different roadmap (`road-to-governed-harness-evolution` 5.1)
++and measures something adjacent enough to be worth naming here: indexing a
++skill's **body** alongside its description, pre-registered, over 406 positives
++and 404 negatives. Its verdict is **`harmful`** — recall +5.91 pp, but false
++activation +8.17 pp against a +2.0 pp guard.
++
++**The two are different instruments and they point the same way.** That one
++measures a routing harness with a false-activation guard; this one measures
++top-1 / top-3 / MRR over the labelled matrix. Neither is the other's
++replication. But `includeWhenToUse` and `includeHeadings` here lower tuning
++top-1 while buying a single sealed row, and the pre-registered reading there
++finds the fuller version of the same idea actively harmful on the metric this
++report cannot see. Both flags therefore stay **off**, and anyone minded to turn
++one on should read that verdict first rather than only this table.
++
++The reading is recorded as corroboration, not as a lock: it did not change any
++decision taken above, which were all reached before it was read.
++
++## The null
++
++Step 3.1, and the answer is the null rather than a promotion.
++
++**The bar, from the roadmap:** a configuration's sealed-slice top-1 **lower
++bound** must exceed the baseline's **upper bound**, and top-3 must not fall.
++
++| | sealed top-1 lower bound | bar to clear | clears? |
++|---|---:|---:|---|
++| `idf` | 0.104 | 0.251 | no |
++| `idf+when-to-use` | 0.115 | 0.251 | no |
++| `when-to-use` | 0.104 | 0.251 | no |
++| `headings` | 0.104 | 0.251 | no |
++| `keyword-v2` | 0.094 | 0.251 | no |
++
++Nothing is close. **The default ranker is unchanged**, every flag ships off, and
++the `history` array in `agents/evidence/metrics/skill-ranker-baseline.json`
++carries the dated null row so the next release reads this as a trend rather than
++as a first measurement.
++
++### The classes the null could not separate
++
++Named, as step 3.1 requires:
++
++- **Zero-recall misses (82 rows, 33.3 % of misses).** The expected skill scores
++  0: no term of the prompt appears in its `name + description`. `idfWeighting`
++  cannot reach these by construction — it reweights matched terms and there is
++  no match to reweight. The two term-source flags are the only candidates that
++  can, and both cost more tuning top-1 than they buy.
++- **Deep misses inside the catalogue (59 further rows).** The expected skill is
++  ranked, but outside the top ten. `idf` moves some of these — it is where its
++  MRR gain of +0.028 comes from — but not enough of them to clear the bar.
++- **The `meta` pack (95 labelled rows, top-1 0.137).** The largest single
++  concentration of failure, and no candidate signal addressed it: these are
++  prompts about the agent's own work — roadmaps, skills, rules, commands — where
++  many catalogue skills are plausibly adjacent and the descriptions overlap
++  heavily. Separating them needs a signal that distinguishes near-synonyms, and
++  none of the five candidates is one.
++- **Seven packs at top-1 0.000** (`analysis-workbench` 9 rows, then `ai-video`,
++  `gtm-sales`, `nextjs`, `product-basic`, `python`, `product-discovery` at 2–3
++  rows each). Only `analysis-workbench` has enough rows to be more than an
++  anecdote, and nothing here explains it.
++
++### What two blind reviews changed in this report
++
++Both R2 completion reviews are committed under `agents/evidence/reviews/`. Three
++of their findings changed a measured figure or a stated claim here, and they are
++named rather than quietly absorbed:
++
++- **The seal is stable under APPEND, not under mid-section INSERT.** The matrix
++  id is `rule#section[ordinal]` and the ordinal is positional, so inserting or
++  deleting a prompt mid-section renumbers every later row in that section and
++  moves about one in five across the boundary. The partition's own doc block
++  claimed unqualified stability; it now states this, and a test pins the real id
++  shape instead of a synthetic one that could not fail. **The key is NOT changed
++  here**, deliberately: the Phase-2 signals were chosen by reading the tuning
++  rows of this partition, so re-drawing the boundary now would push ~20 % of
++  those rows into the sealed slice and contaminate the claims the seal exists to
++  protect. A content key (`rule|section|prompt`) is the right shape for the next
++  corpus version, applied when the corpus changes rather than after choosing on
++  it.
++- **The `headings` row moved.** The body extractor ended the `## When to use`
++  capture at any heading — including that section's own `###` subsections — and
++  treated a `## …` line inside a fenced code block as a real heading. These
++  skills are documentation and fence markdown samples routinely, so the flag was
++  partly indexing fence contents. Fixed to terminate at the same-or-higher level
++  and to ignore fenced regions, and the sweep re-run: `headings` tuning top-1
++  moved 0.206 → **0.216** and MRR 0.308 → 0.313. No other cell in the table
++  changed, and the null is unaffected.
++- **"Byte-identical on every column" was false**, by this report's own MRR
++  column. Reading 1 above now states what the table shows.
++
++A third blind round, over the fixes themselves, found 13 more — including a hole
++in one of the fixes above: the new unknown-label guard tested `RANKER_LABELS[x]
++=== undefined`, and an object literal answers `constructor`, `toString` and
++`valueOf` with inherited FUNCTIONS, so three labels still resolved to the
++baseline and were echoed into this report's own title. It uses `Object.hasOwn`
++now, as does the sweep, which had the same hole in `in`. That round also caught
++two assertions written in the course of fixing a tautology that were themselves
++tautologies, a generator sentence that claimed the sealed slice was not read on
++a run that read it, and this preamble's own over-broad "generated verbatim"
++claim. Its residual parser findings — fence info strings indexed as prose,
++subsection titles dropped from the capture — are fixed, and the sweep is
++unchanged by them.
++
++Two further findings are recorded as accepted rather than fixed. Under
++`idfWeighting` a task term no skill carries takes the LARGEST weight, since
++`df = 0` maximises `ln(1 + N/(1+df))`; it enters every skill's denominator
++equally, so it cannot reorder two skills, but it does depress absolute scores and
++therefore shifts the balance against the fixed `+30` persona term. Changing it
++would require re-measuring `idf`, which is not warranted for a configuration that
++is not being promoted. And the archived roadmap keeps `status: ready`: 409 of the
++753 files already in `agents/roadmaps/archive/` carry exactly that, against four
++reading `archived`, so changing this one would make it the outlier rather than
++the example.
++
++### The instrument's own limit, which is the more useful finding
++
++**The sealed slice holds 75 rows and is `underpowered` by this tree's own
++MIN_POWERED_N of 100.** Its 95 % interval on top-1 is 16.5 points wide. To put
++a lower bound above the baseline's 0.251 upper bound on 75 rows, a configuration
++needs a point estimate of roughly **0.37** — nearly double the incumbent.
++
++So the promotion bar as written is, today, **not reachable by any realistic
++improvement**: the rule is sound and the instrument is too small to let it fire.
++That is a property of a 390-row corpus split 80/20, not of any ranker, and it is
++the thing to fix before Phase 3 is attempted again. Two ways out, both cheaper
++than another signal:
++
++1. **Grow the labelled corpus.** At 1,000 labelled rows the sealed slice is 200
++   and the reachable bar drops substantially. Decision D2's own `revisit-if`
++   already names 1,000 rows.
++2. **Read the bar against the sealed baseline rather than the whole-corpus
++   baseline.** Comparing a 75-row sealed reading's lower bound against a 390-row
++   upper bound compares two different denominators; the sealed baseline's own
++   upper bound is 0.259, which is not materially different, so this is the
++   smaller of the two levers and is recorded for completeness rather than
++   recommended.
++
++### Cost, measured
++
++Step 3.2. Per-prompt ranking cost, p95 over 40 in-process calls against the
++299-skill catalogue, darwin / Apple silicon:
++
++| configuration | p50 | p95 | share of the 175 ms `pre_tool_use` budget |
++|---|---:|---:|---:|
++| `keyword-v1` | 10.5 ms | 12.6 ms | 7.2 % |
++| `idf` | 10.6 ms | 12.0 ms | 6.9 % |
++| `when-to-use` | 16.4 ms | 20.1 ms | 11.5 % |
++| `idf+when-to-use` | 22.0 ms | 24.4 ms | 13.9 % |
++
++The committed check in `tests/scripts/score_skill_relevance.test.ts` measures
++over the same 40 samples, so the figure it asserts is the figure above. At a
++smaller n the "p95" index would select the maximum, which is the most
++outlier-sensitive statistic available and the opposite of what a wall-clock
++assertion wants — a review caught exactly that at n = 12 and it is fixed.
++
++**`idfWeighting` is free.** Its document-frequency pass runs over a catalogue the
++loader has already read, so it adds no I/O and the difference from the default is
++inside the measurement noise. The two body-reading flags cost 8–12 ms, which is
++real but still inside the slot.
++
++The budget is not refused by any candidate, so 3.2 does not block a promotion —
++and no promotion is proposed, so the check is recorded rather than applied.
++`tests/scripts/score_skill_relevance.test.ts` carries it as a live assertion
++reading the cap from `src/config/hook-latency-budget.json` rather than from a
++constant, so the test cannot keep passing after the budget moves. Two caveats
++stated rather than implied: these are **in-process** numbers with no process
++spawn, and the slot budget covers everything the slot does, not the ranker alone.
++
+diff --git a/agents/roadmaps/archive/road-to-a-ranker-that-routes.md b/agents/roadmaps/archive/road-to-a-ranker-that-routes.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b6b2cd3d1a99247ae2fbb4091cb5ccc3db93803c
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-a-ranker-that-routes.md
+@@ -0,0 +1,194 @@
++---
++complexity: lightweight
++status: ready
++execution:
++  mode: autonomous
++estate_offset_exempt: "The skill ranker now has a powered measurement (top-1 0.208, n=390) and no roadmap that tries to move it: road-to-a-menu-whose-precision-is-measured built the instrument and closed on adoption, and the archived MCP-delivery roadmap's only ranker change measured null. Six of the round's sixteen reviews name ranker quality their first priority; parking or archiving an active roadmap to buy the slot would trade a measured gap for an unmeasured one."
++relates:
++  - slug: road-to-a-menu-whose-precision-is-measured
++    relation: extends
++    note: That roadmap built the labelled corpus and the interval; this one uses both and changes the ranker, which it never did.
++  - slug: road-to-skill-delivery-over-mcp
++    relation: extends
++    note: Archived. Its keyword-v2 (triggers folded in) measured null on 26 prompts; re-measured here on 390 it is still null, so this roadmap does not retry it.
++---
++# Road to a ranker that routes
++
++> **Source:** `agents/tmp.old/inbox-2026-10-a/` — a round of sixteen external
++> reviews of the 16.2.0 release, six of which rank skill-routing quality as their
++> first or second priority after the release published the powered measurement.
++> Verified against `main` at `9bc8cd4f2` on 2026-10-01; disposition at
++> `agents/evidence/analysis/inbox-2026-10-a-disposition.md`.
++
++## Goal
++
++The skill ranker beats its own measured baseline on a held-out slice of the
++labelled routing matrix, or the attempt is published as a null with the reason.
++Done means: the misses are explained by named confusion pairs and signal gaps,
++each candidate signal is measured alone on a slice it was not tuned on, and the
++default ranker changes only when its 95 % interval clears the baseline's — with
++no second router built beside the first.
++
++## Context
++
++Reproduced on 2026-10-01:
++
++- `./scripts-run src/scripts/measure_skill_ranker_baseline --corpus routing-matrix`
++  → `keyword-v1`, n=390, top-1 **0.208** (95 % CI 0.170–0.251), top-3 **0.338**
++  (0.293–0.387), verdict `measured`.
++- The same with `--ranker keyword-v2` (triggers folded in,
++  `measure_skill_ranker_baseline.ts:393-395`) → **identical** figures. The
++  archived 26-prompt null holds at n=390: trigger prose is not the lever.
++- Coverage arm: 583 of 588 matrix prompts get some answer — the ranker almost
++  always answers, and is usually wrong.
++- `agents/evidence/metrics/skill-ranker-baseline.json` still carries
++  `top1: 0.615` over the 26-prompt corpus, a figure the precision report at
++  `agents/evidence/analysis/skill-routing-precision-2026-09.md:46-48` says may
++  not be quoted.
++- Label quality is bounded: two seats agree on the exact skill set for 39 of 55
++  rows (70.9 %) and on whether a skill answer exists at all for 50 of 55
++  (`tests/eval/routing-matrix/README.md`, summarized at
++  `skill-routing-precision-2026-09.md:73-76`). The matrix prompts were written
++  for rule fixtures, so a skill label is a secondary judgement.
++
++## Phase 1 — Explain the misses before changing anything
++
++- [x] **1.1 Retire the stale baseline row.** Write the 390-prompt reading into
++      `skill-ranker-baseline.json` beside the 26-prompt row, mark the old row
++      `underpowered`, and make the file's top-level `top1` the powered one.
++      verify: `node -e "const b=require('./agents/evidence/metrics/skill-ranker-baseline.json');process.exit(b.top1===0.208?0:1)"` -> 0
++- [x] **1.2 Fix a held-out slice.** Partition the 390 labelled rows by a hash
++      of the case id into a tuning slice (80 %) and a sealed slice (20 %), with
++      the partition function in code and the slice sizes printed. Every later
++      lift claim is read on the sealed slice only.
++      verify: `npx vitest run tests/scripts/measure_skill_ranker_baseline.test.ts -t holdout` -> 0
++- [x] **1.3 Confusion report.** Over the tuning slice: per-pack top-1, the
++      twenty most frequent (expected, ranked-first) pairs, mean reciprocal rank,
++      the share of misses whose expected skill is outside the top ten, and — over
++      the 198 deliberate empties — how often the ranker's top score clears the
++      score of a median correct hit (false activation on no-skill prompts).
++      Read-only, written to `agents/evidence/analysis/skill-ranker-confusion-<date>.md`.
++      verify: `grep -c 'MRR' agents/evidence/analysis/skill-ranker-confusion-*.md` -> /^[1-9]/
++- [x] **1.4 Separate label noise from ranker error.** Report top-1 again over
++      only the rows both labelling seats agree on. If the gap to the full figure
++      is larger than the interval width, Phase 2 tunes on agreed rows only.
++      verify: `grep -c 'agreed rows' agents/evidence/analysis/skill-ranker-confusion-*.md` -> /^[1-9]/
++
++## Phase 2 — One signal at a time, each measured alone
++
++- [x] **2.1 Candidate signals, from 1.3 and nowhere else.** For each confusion
++      class 1.3 names, write down the one deterministic signal that would
++      separate the pair — pack or domain narrowing, repository stack from the
++      existing stack detection, the file path in the prompt, the open file's
++      framework as the code graph reports it, description terms already indexed — before implementing any of them.
++      verify: `grep -c '^| ' agents/evidence/analysis/skill-ranker-confusion-*.md` -> /^[1-9]/
++- [x] **2.2 Measure each signal behind an option.** Add each as a
++      `RankOptions` flag in `src/scripts/skill_tools/score_skill_relevance.ts`, off by default, and record
++      top-1, top-3 and MRR with intervals on the sealed slice for each flag
++      alone, then for the best two together. A flag that does not move the
++      sealed-slice top-1 point estimate is removed in the same change.
++      verify: `npx vitest run tests/scripts/score_skill_relevance.test.ts` -> 0
++
++## Phase 3 — Promote only a lift the interval supports
++
++- [x] **3.1 Change the default, or publish the null.** If one configuration's
++      sealed-slice top-1 lower bound exceeds the baseline's upper bound and top-3
++      does not fall, make it the default and append a dated row to a `history` array in
++      `skill-ranker-baseline.json`, so the figure is read as a trend per release. Otherwise
++      record the null with the confusion classes it could not separate.
++      verify: `node -e "const b=require('./agents/evidence/metrics/skill-ranker-baseline.json');process.exit(Array.isArray(b.history)?0:1)"` -> 0
++- [x] **3.2 Keep the per-prompt cost inside the slot budget.** Measure p95
++      ranking cost per prompt for the promoted configuration against the
++      `pre_tool_use` budget in `hook-latency-budget.json`, and refuse the
++      promotion if it does not fit.
++      verify: `npx vitest run tests/scripts/score_skill_relevance.test.ts -t latency` -> 0
++
++## Outcome — a recorded null, and two refuted premises
++
++Executed 2026-10-01. Every step closed; the full evidence is
++`agents/evidence/analysis/skill-ranker-confusion-2026-10-01.md`, and the dated
++row is in `history` in `agents/evidence/metrics/skill-ranker-baseline.json`.
++
++**The default ranker did not change.** Five candidate configurations were
++implemented behind off-by-default flags and measured on the sealed slice; the
++best (`idf`, inverse document frequency over the catalogue) lifts every measure
++on both slices — sealed top-1 0.160 → 0.173, top-3 0.320 → 0.400, MRR 0.263 →
++0.304 — and still comes nowhere near the promotion bar, whose lower-bound test
++needs 0.251 against `idf`'s 0.104.
++
++Three findings outlive the null:
++
++1. **Label noise does not explain the miss rate.** 240 rows were relabelled by
++   six blind seats (the data is committed, so 1.4 is reproducible rather than
++   asserted). Restricting top-1 to rows where two independent seats wrote the
++   *identical* label moves it from 0.221 to 0.238 — one sixth of the interval
++   width. The ranker is wrong about rows nobody disputes.
++2. **The misses do not form confusion classes.** The twenty most frequent
++   (expected, ranked-first) pairs cover 29 of 246 misses and the modal pair
++   occurs three times, so the pair-derived signal Phase 2 assumed does not
++   exist. The misses concentrate by *depth* (33 % score the expected skill at
++   zero) and by *pack* (`meta` 0.137 over 95 rows) instead, which is what the
++   candidate signals were derived from.
++3. **The promotion bar is currently unreachable by any realistic ranker, and
++   that is the instrument's fault rather than the ranker's.** The sealed slice
++   holds 75 rows and is `underpowered` by this tree's own floor of 100; its
++   interval is 16.5 points wide, so clearing a 0.251 upper bound needs a point
++   estimate near 0.37. Fix the corpus size before attempting Phase 3 again —
++   D2's `revisit-if` at 1,000 labelled rows is the right trigger.
++
++Also measured, and it closes a listed candidate rather than deferring it: of the
++390 labelled rows, **zero** carry `open_files` or a `command`, and five of 588
++prompts contain a path-shaped token. Repository stack, open-file framework and
++in-prompt file path therefore have no row on which they could change a scored
++answer, so they were not implemented — a count, not a judgement.
++
++## What this roadmap deliberately does not do
++
++- No second router, no embedding or model-based ranker, and no council call per
++  routing decision — the reviews that rank this first say so in the same breath.
++- No fix that widens the result set: returning more skills in the top three is
++  not a lift.
++- No fixed target such as "top-1 ≥ 70 %". With 299 skills and 70.9 % label
++  agreement the reachable ceiling is unknown; the interval decides, not a number
++  chosen in advance.
++
++## Gap table
++
++| Source item | Verdict | Where |
++|---|---|---|
++| Improve the existing ranker against the new corpus | KEEP | Phase 2, Phase 3 |
++| Confusion pairs, per-pack precision, MRR, no-skill discrimination | KEEP | 1.3 |
++| Repo, file and framework context as signals | FOLD — one candidate signal each | 2.1, 2.2 |
++| Two-stage shortlist plus semantic rerank | CUT until a deterministic signal is measured | non-goals |
++| Top-1 ≥ 70 % / top-3 ≥ 90 % target | CUT as a target | non-goals |
++| Trend per release | FOLD — the baseline file gains a history | 3.1 |
++| Corpus must stay representative | KEEP | 1.4 |
++
++## Decisions
++
++| ID | ownership | resolved by | decision | evidence | revisit if |
++|---|---|---|---|---|---|
++| D1 | reversible-technical | evidence | Do not retry folded triggers | Re-measured null at n=390 on 2026-10-01, matching the archived 26-prompt null | A large share of expected skills gains `triggers:` |
++| D2 | reversible-technical | evidence | Claims are read on a sealed 20 % slice | Tuning and reading on one corpus of 390 overfits it; the interval only means something on rows the tuning did not see | The labelled corpus grows past 1,000 rows |
++| D3 | reversible-technical | evidence | No fixed accuracy target | Label agreement is 70.9 %, so a target above it is not attainable even by a perfect ranker | Agreement is re-measured above 90 % |
++| D4 | deterministic | evidence | Closure-scan C1 (step 3.1 read as a typed operation) records a null or a default change inside this repository; nothing is published outside it | `publish the null` means writing the evidence row | — |
++| D5 | reversible-technical | evidence | Closure-scan C2 (gap-table row read as ambiguous acceptance) is made decidable by AC-3's interval rule | AC-3 names the sealed-slice interval comparison | — |
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | The ranker is tuned to the matrix rather than to prompts | product | The matrix prompts were written for rule fixtures. A signal that separates fixture phrasings can lift the number and change nothing for a real request. | 1.4 reads agreed rows separately, every lift is read on the sealed slice, and 2.1 requires each signal to name the confusion class it separates. | Phase 1 — Explain the misses before changing anything |
++| 2 | A context signal leaks the label | implementation | A signal derived from the case file itself — its path, its rule id — would score perfectly and generalize to nothing. | 2.1 restricts signals to what a live request carries: the prompt, the repository and the open file. | Phase 2 — One signal at a time, each measured alone |
++| 3 | The promoted ranker costs more than the slot allows | implementation | Repository context needs stack detection, which can be slow on a cold call. | 3.2 measures p95 against the existing latency budget before promotion. | Phase 3 — Promote only a lift the interval supports |
++
++## Acceptance Criteria
++
++- [x] AC-1 — The baseline file's headline figure is the powered 390-prompt
++      reading, and the 26-prompt row is labelled underpowered.
++- [x] AC-2 — A confusion report names the most frequent miss pairs and reports
++      MRR and false activation on no-skill prompts.
++- [x] AC-3 — The default ranker changed only on a sealed-slice interval that
++      clears the baseline's, or a null is recorded with the classes it could not
++      separate.
+diff --git a/agents/roadmaps/road-to-a-ranker-that-routes.md b/agents/roadmaps/road-to-a-ranker-that-routes.md
+deleted file mode 100644
+index abf8f0c9cc00aae67abcac127d5891dbef621863..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-a-ranker-that-routes.md
++++ /dev/null
+@@ -1,155 +0,0 @@
+----
+-complexity: lightweight
+-status: ready
+-execution:
+-  mode: autonomous
+-estate_offset_exempt: "The skill ranker now has a powered measurement (top-1 0.208, n=390) and no roadmap that tries to move it: road-to-a-menu-whose-precision-is-measured built the instrument and closed on adoption, and the archived MCP-delivery roadmap's only ranker change measured null. Six of the round's sixteen reviews name ranker quality their first priority; parking or archiving an active roadmap to buy the slot would trade a measured gap for an unmeasured one."
+-relates:
+-  - slug: road-to-a-menu-whose-precision-is-measured
+-    relation: extends
+-    note: That roadmap built the labelled corpus and the interval; this one uses both and changes the ranker, which it never did.
+-  - slug: road-to-skill-delivery-over-mcp
+-    relation: extends
+-    note: Archived. Its keyword-v2 (triggers folded in) measured null on 26 prompts; re-measured here on 390 it is still null, so this roadmap does not retry it.
+----
+-# Road to a ranker that routes
+-
+-> **Source:** `agents/tmp.old/inbox-2026-10-a/` — a round of sixteen external
+-> reviews of the 16.2.0 release, six of which rank skill-routing quality as their
+-> first or second priority after the release published the powered measurement.
+-> Verified against `main` at `9bc8cd4f2` on 2026-10-01; disposition at
+-> `agents/evidence/analysis/inbox-2026-10-a-disposition.md`.
+-
+-## Goal
+-
+-The skill ranker beats its own measured baseline on a held-out slice of the
+-labelled routing matrix, or the attempt is published as a null with the reason.
+-Done means: the misses are explained by named confusion pairs and signal gaps,
+-each candidate signal is measured alone on a slice it was not tuned on, and the
+-default ranker changes only when its 95 % interval clears the baseline's — with
+-no second router built beside the first.
+-
+-## Context
+-
+-Reproduced on 2026-10-01:
+-
+-- `./scripts-run src/scripts/measure_skill_ranker_baseline --corpus routing-matrix`
+-  → `keyword-v1`, n=390, top-1 **0.208** (95 % CI 0.170–0.251), top-3 **0.338**
+-  (0.293–0.387), verdict `measured`.
+-- The same with `--ranker keyword-v2` (triggers folded in,
+-  `measure_skill_ranker_baseline.ts:393-395`) → **identical** figures. The
+-  archived 26-prompt null holds at n=390: trigger prose is not the lever.
+-- Coverage arm: 583 of 588 matrix prompts get some answer — the ranker almost
+-  always answers, and is usually wrong.
+-- `agents/evidence/metrics/skill-ranker-baseline.json` still carries
+-  `top1: 0.615` over the 26-prompt corpus, a figure the precision report at
+-  `agents/evidence/analysis/skill-routing-precision-2026-09.md:46-48` says may
+-  not be quoted.
+-- Label quality is bounded: two seats agree on the exact skill set for 39 of 55
+-  rows (70.9 %) and on whether a skill answer exists at all for 50 of 55
+-  (`tests/eval/routing-matrix/README.md`, summarized at
+-  `skill-routing-precision-2026-09.md:73-76`). The matrix prompts were written
+-  for rule fixtures, so a skill label is a secondary judgement.
+-
+-## Phase 1 — Explain the misses before changing anything
+-
+-- [ ] **1.1 Retire the stale baseline row.** Write the 390-prompt reading into
+-      `skill-ranker-baseline.json` beside the 26-prompt row, mark the old row
+-      `underpowered`, and make the file's top-level `top1` the powered one.
+-      verify: `node -e "const b=require('./agents/evidence/metrics/skill-ranker-baseline.json');process.exit(b.top1===0.208?0:1)"` -> 0
+-- [ ] **1.2 Fix a held-out slice.** Partition the 390 labelled rows by a hash
+-      of the case id into a tuning slice (80 %) and a sealed slice (20 %), with
+-      the partition function in code and the slice sizes printed. Every later
+-      lift claim is read on the sealed slice only.
+-      verify: `npx vitest run tests/scripts/measure_skill_ranker_baseline.test.ts -t holdout` -> 0
+-- [ ] **1.3 Confusion report.** Over the tuning slice: per-pack top-1, the
+-      twenty most frequent (expected, ranked-first) pairs, mean reciprocal rank,
+-      the share of misses whose expected skill is outside the top ten, and — over
+-      the 198 deliberate empties — how often the ranker's top score clears the
+-      score of a median correct hit (false activation on no-skill prompts).
+-      Read-only, written to `agents/evidence/analysis/skill-ranker-confusion-<date>.md`.
+-      verify: `grep -c 'MRR' agents/evidence/analysis/skill-ranker-confusion-*.md` -> /^[1-9]/
+-- [ ] **1.4 Separate label noise from ranker error.** Report top-1 again over
+-      only the rows both labelling seats agree on. If the gap to the full figure
+-      is larger than the interval width, Phase 2 tunes on agreed rows only.
+-      verify: `grep -c 'agreed rows' agents/evidence/analysis/skill-ranker-confusion-*.md` -> /^[1-9]/
+-
+-## Phase 2 — One signal at a time, each measured alone
+-
+-- [ ] **2.1 Candidate signals, from 1.3 and nowhere else.** For each confusion
+-      class 1.3 names, write down the one deterministic signal that would
+-      separate the pair — pack or domain narrowing, repository stack from the
+-      existing stack detection, the file path in the prompt, the open file's
+-      framework as the code graph reports it, description terms already indexed — before implementing any of them.
+-      verify: `grep -c '^| ' agents/evidence/analysis/skill-ranker-confusion-*.md` -> /^[1-9]/
+-- [ ] **2.2 Measure each signal behind an option.** Add each as a
+-      `RankOptions` flag in `src/scripts/skill_tools/score_skill_relevance.ts`, off by default, and record
+-      top-1, top-3 and MRR with intervals on the sealed slice for each flag
+-      alone, then for the best two together. A flag that does not move the
+-      sealed-slice top-1 point estimate is removed in the same change.
+-      verify: `npx vitest run tests/scripts/score_skill_relevance.test.ts` -> 0
+-
+-## Phase 3 — Promote only a lift the interval supports
+-
+-- [ ] **3.1 Change the default, or publish the null.** If one configuration's
+-      sealed-slice top-1 lower bound exceeds the baseline's upper bound and top-3
+-      does not fall, make it the default and append a dated row to a `history` array in
+-      `skill-ranker-baseline.json`, so the figure is read as a trend per release. Otherwise
+-      record the null with the confusion classes it could not separate.
+-      verify: `node -e "const b=require('./agents/evidence/metrics/skill-ranker-baseline.json');process.exit(Array.isArray(b.history)?0:1)"` -> 0
+-- [ ] **3.2 Keep the per-prompt cost inside the slot budget.** Measure p95
+-      ranking cost per prompt for the promoted configuration against the
+-      `pre_tool_use` budget in `hook-latency-budget.json`, and refuse the
+-      promotion if it does not fit.
+-      verify: `npx vitest run tests/scripts/score_skill_relevance.test.ts -t latency` -> 0
+-
+-## What this roadmap deliberately does not do
+-
+-- No second router, no embedding or model-based ranker, and no council call per
+-  routing decision — the reviews that rank this first say so in the same breath.
+-- No fix that widens the result set: returning more skills in the top three is
+-  not a lift.
+-- No fixed target such as "top-1 ≥ 70 %". With 299 skills and 70.9 % label
+-  agreement the reachable ceiling is unknown; the interval decides, not a number
+-  chosen in advance.
+-
+-## Gap table
+-
+-| Source item | Verdict | Where |
+-|---|---|---|
+-| Improve the existing ranker against the new corpus | KEEP | Phase 2, Phase 3 |
+-| Confusion pairs, per-pack precision, MRR, no-skill discrimination | KEEP | 1.3 |
+-| Repo, file and framework context as signals | FOLD — one candidate signal each | 2.1, 2.2 |
+-| Two-stage shortlist plus semantic rerank | CUT until a deterministic signal is measured | non-goals |
+-| Top-1 ≥ 70 % / top-3 ≥ 90 % target | CUT as a target | non-goals |
+-| Trend per release | FOLD — the baseline file gains a history | 3.1 |
+-| Corpus must stay representative | KEEP | 1.4 |
+-
+-## Decisions
+-
+-| ID | ownership | resolved by | decision | evidence | revisit if |
+-|---|---|---|---|---|---|
+-| D1 | reversible-technical | evidence | Do not retry folded triggers | Re-measured null at n=390 on 2026-10-01, matching the archived 26-prompt null | A large share of expected skills gains `triggers:` |
+-| D2 | reversible-technical | evidence | Claims are read on a sealed 20 % slice | Tuning and reading on one corpus of 390 overfits it; the interval only means something on rows the tuning did not see | The labelled corpus grows past 1,000 rows |
+-| D3 | reversible-technical | evidence | No fixed accuracy target | Label agreement is 70.9 %, so a target above it is not attainable even by a perfect ranker | Agreement is re-measured above 90 % |
+-| D4 | deterministic | evidence | Closure-scan C1 (step 3.1 read as a typed operation) records a null or a default change inside this repository; nothing is published outside it | `publish the null` means writing the evidence row | — |
+-| D5 | reversible-technical | evidence | Closure-scan C2 (gap-table row read as ambiguous acceptance) is made decidable by AC-3's interval rule | AC-3 names the sealed-slice interval comparison | — |
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | The ranker is tuned to the matrix rather than to prompts | product | The matrix prompts were written for rule fixtures. A signal that separates fixture phrasings can lift the number and change nothing for a real request. | 1.4 reads agreed rows separately, every lift is read on the sealed slice, and 2.1 requires each signal to name the confusion class it separates. | Phase 1 — Explain the misses before changing anything |
+-| 2 | A context signal leaks the label | implementation | A signal derived from the case file itself — its path, its rule id — would score perfectly and generalize to nothing. | 2.1 restricts signals to what a live request carries: the prompt, the repository and the open file. | Phase 2 — One signal at a time, each measured alone |
+-| 3 | The promoted ranker costs more than the slot allows | implementation | Repository context needs stack detection, which can be slow on a cold call. | 3.2 measures p95 against the existing latency budget before promotion. | Phase 3 — Promote only a lift the interval supports |
+-
+-## Acceptance Criteria
+-
+-- [ ] AC-1 — The baseline file's headline figure is the powered 390-prompt
+-      reading, and the 26-prompt row is labelled underpowered.
+-- [ ] AC-2 — A confusion report names the most frequent miss pairs and reports
+-      MRR and false activation on no-skill prompts.
+-- [ ] AC-3 — The default ranker changed only on a sealed-slice interval that
+-      clears the baseline's, or a null is recorded with the classes it could not
+-      separate.
+diff --git a/src/scripts/_lib/fnv.ts b/src/scripts/_lib/fnv.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..da024562563e8fdd45f1f23616f0846e20bd4675
+--- /dev/null
++++ b/src/scripts/_lib/fnv.ts
+@@ -0,0 +1,23 @@
++/**
++ * FNV-1a, 32-bit — the one definition in this tree.
++ *
++ * Extracted from `rule_trigger_eval.ts`, which still re-exports it under its
++ * own name so its suite keeps importing the symbol it always did. The reason
++ * for the extraction is the reason this file carries a doc block at all: a
++ * second consumer arrived (`measure_skill_ranker_baseline`'s held-out
++ * partition), and two copies of a hash that decides which rows a measurement
++ * reads is the shape in which a partition quietly stops being the same
++ * partition. One definition, two callers.
++ *
++ * Pure — no imports, no I/O, no clock.
++ */
++
++/** FNV-1a over UTF-16 code units, returned as an unsigned 32-bit integer. */
++export function fnv1a(s: string): number {
++    let h = 0x811c9dc5;
++    for (let i = 0; i < s.length; i += 1) {
++        h ^= s.charCodeAt(i);
++        h = Math.imul(h, 0x01000193) >>> 0;
++    }
++    return h >>> 0;
++}
+diff --git a/src/scripts/measure_skill_ranker_baseline.ts b/src/scripts/measure_skill_ranker_baseline.ts
+index 9107de79df9e1ebd0efc8d8d3b009beed897c1b9..f57135dc06a2e9feac0a76cc08cf023b93f6d044 100644
+--- a/src/scripts/measure_skill_ranker_baseline.ts
++++ b/src/scripts/measure_skill_ranker_baseline.ts
+@@ -43,6 +43,7 @@
+  *     ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus routing-matrix
+  *     ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus all
+  *     ./scripts-run src/scripts/measure_skill_ranker_baseline --ranker keyword-v2
++ *     ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus routing-matrix --slice sealed
+  */
+ 
+ import * as fs from 'node:fs';
+@@ -50,6 +51,7 @@ import * as path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ 
+ import { wilsonInterval } from './_lib/capture_rate.js';
++import { fnv1a } from './_lib/fnv.js';
+ import { rank } from './skill_tools/score_skill_relevance.js';
+ import type { RankOptions } from '../shared/skillRanking.js';
+ 
+@@ -204,6 +206,84 @@ export function promptsForCorpus(corpus: CorpusName, repo = REPO): LabelledPromp
+     return [...readLabelledPrompts(repo), ...readMatrixLabelledPrompts(repo)];
+ }
+ 
++/**
++ * Which half of the corpus a row belongs to.
++ *
++ * `road-to-a-ranker-that-routes` 1.2. Tuning and reading on one corpus of 390
++ * overfits it: a signal chosen because it lifted the number on the rows it was
++ * chosen from will lift the number on exactly those rows, and the interval
++ * printed beside it then describes the fitting rather than the ranker. Every
++ * lift claim in Phases 2 and 3 is read on `sealed` only.
++ */
++export type SliceName = 'all' | 'tuning' | 'sealed';
++export const SLICE_NAMES: readonly SliceName[] = ['all', 'tuning', 'sealed'];
++
++/**
++ * One row in five — nominally 20 %, measured 19.2 % (75 of 390) on the live
++ * corpus, because a hash is not a shuffle and the exact count is a property of
++ * the ids.
++ *
++ * Stated as a modulus rather than a fraction because the partition has to be a
++ * pure function of the id: a share applied to a shuffled list would move every
++ * row the moment a prompt is added, and the sealed slice would stop being the
++ * same slice between two runs of the same measurement.
++ */
++export const SEALED_MODULUS = 5;
++
++/**
++ * The slice one case id falls in — deterministic and order-independent.
++ *
++ * STABILITY UNDER CORPUS CHANGE IS PARTIAL, and an earlier version of this block
++ * claimed otherwise. The matrix id is `rule#section[ordinal]` and the ordinal is
++ * POSITIONAL — it counts `- prompt:` entries within a section. So:
++ *
++ *   - APPENDING a prompt to the end of a section is stable: every existing row
++ *     keeps its ordinal, its id, and its side of the seal. This is the workflow
++ *     the matrix README documents, which is why the partition survives the
++ *     release-to-release growth the `history` array is for.
++ *   - INSERTING or DELETING mid-section renumbers every later row in THAT
++ *     section, which re-hashes them and moves roughly one in five across the
++ *     seal.
++ *
++ * A content key (`rule|section|prompt`) would close the second case and is the
++ * right shape for the next corpus version. It is deliberately NOT applied here:
++ * the signals in Phase 2 were chosen by reading the TUNING rows of this
++ * partition, so re-drawing the boundary now would move ~20 % of those rows into
++ * the sealed slice and silently contaminate the very claims the seal exists to
++ * protect. Changing a partition after choosing on it is worse than a partially
++ * stable partition, so the key moves when the corpus does, not before.
++ */
++export function sliceForId(id: string): Exclude<SliceName, 'all'> {
++    return fnv1a(id) % SEALED_MODULUS === 0 ? 'sealed' : 'tuning';
++}
++
++/** The rows of `prompts` that fall in `slice`; `all` is the identity. */
++export function partitionBySlice<T extends { id: string }>(
++    prompts: readonly T[],
++    slice: SliceName,
++): T[] {
++    if (slice === 'all') return [...prompts];
++    return prompts.filter((p) => sliceForId(p.id) === slice);
++}
++
++/** How the corpus divides, printed on every run so a reader never assumes it. */
++export interface SliceSizes {
++    all: number;
++    tuning: number;
++    sealed: number;
++    sealed_modulus: number;
++}
++
++export function sliceSizes(prompts: readonly { id: string }[]): SliceSizes {
++    const sealed = prompts.filter((p) => sliceForId(p.id) === 'sealed').length;
++    return {
++        all: prompts.length,
++        tuning: prompts.length - sealed,
++        sealed,
++        sealed_modulus: SEALED_MODULUS,
++    };
++}
++
+ /**
+  * The packs a skill declares, read from its own `packs:` frontmatter block.
+  *
+@@ -278,6 +358,10 @@ export interface Interval {
+ 
+ export interface AccuracyArm {
+     corpus: CorpusName;
++    /** Which half of the corpus this arm read. `all` is the whole of it. */
++    slice: SliceName;
++    /** The division of the FULL corpus, printed whichever slice was read. */
++    slice_sizes: SliceSizes;
+     corpus_prompts: number;
+     top1: number;
+     top1_ci95: Interval;
+@@ -350,8 +434,11 @@ export function measureAccuracy(opts: {
+     repo: string;
+     skillsDir: string;
+     rankOpts: RankOptions;
++    slice?: SliceName;
+ }): AccuracyArm {
+-    const labelled = promptsForCorpus(opts.corpus, opts.repo);
++    const slice = opts.slice ?? 'all';
++    const whole = promptsForCorpus(opts.corpus, opts.repo);
++    const labelled = partitionBySlice(whole, slice);
+     let top1 = 0;
+     let top3 = 0;
+     const misses: string[] = [];
+@@ -365,6 +452,8 @@ export function measureAccuracy(opts: {
+     const census = packCensus(labelled, opts.skillsDir);
+     return {
+         corpus: opts.corpus,
++        slice,
++        slice_sizes: sliceSizes(whole),
+         corpus_prompts: n,
+         top1: n ? round3(top1 / n) : 0,
+         top1_ci95: ci(top1, n),
+@@ -381,20 +470,73 @@ export function measureAccuracy(opts: {
+     };
+ }
+ 
++/**
++ * The ranker label → the options it means.
++ *
++ * One table rather than a conditional at each call site, because a measurement
++ * harness that resolves `--ranker` differently from the report that quotes it
++ * is a comparison of two things under one name. Every entry past `keyword-v1`
++ * is a candidate configuration under `road-to-a-ranker-that-routes` Phase 2,
++ * each a single flag so it can be measured alone, plus the combinations the
++ * same phase names.
++ *
++ * AN UNKNOWN LABEL THROWS. It used to resolve to `keyword-v1` — the baseline —
++ * which is the exact failure this table exists to prevent: every consumer
++ * echoes the requested label back into its output, so a typo published a
++ * BASELINE number under another configuration's name, in the report's own title
++ * and in the regenerate command it prints beside it. The two sibling parsers in
++ * this file refuse an unknown value and so does the sweep; the lenient branch
++ * was the inconsistent one.
++ */
++export const RANKER_LABELS: Readonly<Record<string, RankOptions>> = {
++    'keyword-v1': {},
++    'keyword-v2': { includeTriggers: true },
++    'when-to-use': { includeWhenToUse: true },
++    headings: { includeHeadings: true },
++    idf: { idfWeighting: true },
++    'idf+when-to-use': { idfWeighting: true, includeWhenToUse: true },
++};
++
++export class UnknownRankerLabel extends Error {
++    constructor(label: string) {
++        super(
++            `measure_skill_ranker_baseline: unknown --ranker ${label || '(nothing)'}; ` +
++                `known: ${Object.keys(RANKER_LABELS).join(' | ')}`,
++        );
++        this.name = 'UnknownRankerLabel';
++    }
++}
++
++/** Whether `label` is one of the table's OWN keys — never an inherited one. */
++export function isKnownRanker(label: string): boolean {
++    return Object.hasOwn(RANKER_LABELS, label);
++}
++
++export function rankOptionsFor(ranker: string): RankOptions {
++    // `Object.hasOwn`, not a truthiness check on the lookup: `RANKER_LABELS`
++    // is an object literal, so `constructor`, `toString` and `valueOf` resolve
++    // to inherited FUNCTIONS rather than to undefined. A plain `=== undefined`
++    // guard lets those three through, scores them as the baseline, and echoes
++    // the label into the report title — which is the whole defect this guard
++    // was added to close, surviving in its own fix.
++    if (!isKnownRanker(ranker)) throw new UnknownRankerLabel(ranker);
++    return RANKER_LABELS[ranker] as RankOptions;
++}
++
+ export function measure(opts: {
+     ranker: string;
+     commit: string;
+     corpus?: CorpusName;
++    slice?: SliceName;
+     skillsDir?: string;
+     repo?: string;
+ }): RankerBaseline {
+     const repo = opts.repo ?? REPO;
+     const skillsDir = opts.skillsDir ?? SKILLS_DIR;
+-    // `keyword-v2` is Phase 3.1: the same formula with `triggers:` prose folded
+-    // into each skill's term source. Any other label measures v1.
+-    const rankOpts: RankOptions = opts.ranker === 'keyword-v2' ? { includeTriggers: true } : {};
++    // Resolved through the one table, which throws on a label it does not know.
++    const rankOpts: RankOptions = rankOptionsFor(opts.ranker);
+     const corpus = opts.corpus ?? 'labelled';
+-    const accuracy = measureAccuracy({ corpus, repo, skillsDir, rankOpts });
++    const accuracy = measureAccuracy({ corpus, repo, skillsDir, rankOpts, slice: opts.slice ?? 'all' });
+ 
+     const cases = readMatrixCases(repo);
+     let withResult = 0;
+@@ -446,17 +588,55 @@ function parseCorpus(argv: readonly string[]): CorpusName {
+     return raw as CorpusName;
+ }
+ 
++/**
++ * The `--ranker` value, or the baseline when the flag is absent.
++ *
++ * A PRESENT flag with no value after it is an error, not an omission — the
++ * sibling `--slice` has always refused that shape, and substituting the
++ * baseline for a malformed flag is the same silent-fallback defect one level
++ * up from the label table.
++ */
++export function parseRanker(argv: readonly string[]): string {
++    const i = argv.indexOf('--ranker');
++    if (i === -1) return 'keyword-v1';
++    const raw = argv[i + 1];
++    if (!raw || raw.startsWith('--')) {
++        throw new Error(
++            `measure_skill_ranker_baseline: --ranker expects one of ${Object.keys(RANKER_LABELS).join(' | ')}, got ${raw ?? '(nothing)'}`,
++        );
++    }
++    return raw;
++}
++
++export function parseSlice(argv: readonly string[]): SliceName {
++    const i = argv.indexOf('--slice');
++    if (i === -1) return 'all';
++    const raw = argv[i + 1];
++    if (!raw || !SLICE_NAMES.includes(raw as SliceName)) {
++        throw new Error(
++            `measure_skill_ranker_baseline: --slice expects one of ${SLICE_NAMES.join(' | ')}, got ${raw ?? '(nothing)'}`,
++        );
++    }
++    return raw as SliceName;
++}
++
+ export function main(argv: readonly string[]): number {
+-    const ranker = argv.includes('--ranker') ? (argv[argv.indexOf('--ranker') + 1] ?? 'keyword-v1') : 'keyword-v1';
+     const commit = argv.includes('--commit') ? (argv[argv.indexOf('--commit') + 1] ?? 'unknown') : 'unknown';
+     let corpus: CorpusName;
++    let slice: SliceName;
++    let ranker: string;
++    let out: RankerBaseline;
+     try {
+         corpus = parseCorpus(argv);
++        slice = parseSlice(argv);
++        ranker = parseRanker(argv);
++        // Inside the same guard as the two parsers above: an unknown --ranker is
++        // the same class of mistake and now gets the same exit code.
++        out = measure({ ranker, commit, corpus, slice });
+     } catch (err) {
+         process.stderr.write(`${(err as Error).message}\n`);
+         return 2;
+     }
+-    const out = measure({ ranker, commit, corpus });
+     process.stdout.write(`${JSON.stringify(out, null, 2)}\n`);
+     return 0;
+ }
+diff --git a/src/scripts/report_label_agreement.ts b/src/scripts/report_label_agreement.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..2959043c78a1b0e00bc79864d4c46c1a7445f3b5
+--- /dev/null
++++ b/src/scripts/report_label_agreement.ts
+@@ -0,0 +1,219 @@
++#!/usr/bin/env tsx
++/**
++ * report_label_agreement — ranker error, separated from label noise.
++ *
++ * `road-to-a-ranker-that-routes` 1.4. A top-1 of 0.21 is a statement about two
++ * things at once: how often the ranker is wrong, and how often "wrong" is one
++ * reasonable person disagreeing with another about which skill a prompt wants.
++ * The second is bounded by how far two independent labelling seats agree, and
++ * that bound was published as a single aggregate (39 / 55 exact-set agreement)
++ * with no per-row record — so nobody could ask the only question that matters
++ * here: what does the ranker score on the rows the seats actually AGREE on?
++ *
++ * This script answers it, and it needs a second seat's labels per row to do so.
++ * The store it reads is {@link SECOND_SEAT_FILE}: a flat `{ case id: [skill
++ * ids] }` map written by seats that had not read this ranker's scoring, under
++ * the protocol in `tests/eval/routing-matrix/README.md`. The first seat's labels
++ * are the `expected_skills` lists in the matrix itself.
++ *
++ * THE DISAGREEMENTS ARE NOT RECONCILED, and that is the point. Overwriting one
++ * seat with the other would replace the honest width of the ground truth with a
++ * narrower number that looks better and means less.
++ *
++ * THREE AGREEMENT DEFINITIONS, reported side by side because they answer
++ * different questions and the gap between them IS the finding:
++ *
++ *   - `exact`    — the two label sets are identical. The strictest, and the one
++ *                  the published 70.9 % figure used.
++ *   - `overlap`  — the two sets share at least one skill, or are both empty. A
++ *                  hit is scored when ANY labelled skill appears in the top-k,
++ *                  so this is the definition the MEASUREMENT actually cares
++ *                  about: on an overlap row the two seats would score the same
++ *                  top-1 answer the same way.
++ *   - `polarity` — the two seats agree only on whether a skill answer exists at
++ *                  all. The weakest, and the floor under the other two.
++ *
++ * Usage:
++ *     ./scripts-run src/scripts/report_label_agreement
++ *     ./scripts-run src/scripts/report_label_agreement --ranker idf
++ *
++ * Output is JSON on stdout, always — there is no second format and therefore no
++ * flag to pick one.
++ */
++
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { wilsonInterval } from './_lib/capture_rate.js';
++import {
++    REPO,
++    SKILLS_DIR,
++    type LabelledPrompt,
++    parseRanker,
++    rankOptionsFor,
++    readMatrixLabelledPrompts,
++    sliceForId,
++} from './measure_skill_ranker_baseline.js';
++import { rank } from './skill_tools/score_skill_relevance.js';
++
++/** Where the second seat's per-row labels live, relative to the repo root. */
++export const SECOND_SEAT_FILE = path.join('tests', 'eval', 'routing-matrix', 'second-seat-2026-10-01.json');
++
++export type AgreementKind = 'exact' | 'overlap' | 'polarity';
++export const AGREEMENT_KINDS: readonly AgreementKind[] = ['exact', 'overlap', 'polarity'];
++
++/**
++ * The store, or `{}` when nobody has relabelled.
++ *
++ * A MALFORMED store is a third state and must not look like either of the other
++ * two: an empty object would read as "nobody has relabelled" and a raw
++ * `SyntaxError` out of `main` would bypass the message that distinguishes them.
++ */
++export function readSecondSeat(repo = REPO): Record<string, string[]> {
++    const file = path.join(repo, SECOND_SEAT_FILE);
++    if (!fs.existsSync(file)) return {};
++    const raw = fs.readFileSync(file, 'utf8');
++    try {
++        return JSON.parse(raw) as Record<string, string[]>;
++    } catch (err) {
++        throw new Error(
++            `report_label_agreement: ${SECOND_SEAT_FILE} is not valid JSON (${(err as Error).message}). ` +
++                'That is a corrupt store, NOT an empty one — the two must not be confused.',
++        );
++    }
++}
++
++export function agrees(a: readonly string[], b: readonly string[], kind: AgreementKind): boolean {
++    if (kind === 'polarity') return (a.length > 0) === (b.length > 0);
++    if (kind === 'overlap') {
++        if (a.length === 0 || b.length === 0) return a.length === b.length;
++        return a.some((s) => b.includes(s));
++    }
++    if (a.length !== b.length) return false;
++    const sa = [...a].sort();
++    const sb = [...b].sort();
++    return sa.every((s, i) => s === sb[i]);
++}
++
++export interface AgreementArm {
++    kind: AgreementKind | 'all-relabelled';
++    n: number;
++    top1: number;
++    top1_ci95: { lower: number; upper: number };
++    top3: number;
++    top3_ci95: { lower: number; upper: number };
++}
++
++function round3(n: number): number {
++    return Math.round(n * 1000) / 1000;
++}
++
++function arm(
++    kind: AgreementArm['kind'],
++    rows: readonly { prompt: LabelledPrompt; ranked: string[] }[],
++): AgreementArm {
++    let t1 = 0;
++    let t3 = 0;
++    for (const r of rows) {
++        if (r.prompt.expected.some((e) => r.ranked.slice(0, 1).includes(e))) t1 += 1;
++        if (r.prompt.expected.some((e) => r.ranked.slice(0, 3).includes(e))) t3 += 1;
++    }
++    const n = rows.length;
++    const ci = (s: number): { lower: number; upper: number } => {
++        const raw = wilsonInterval(s, n);
++        return { lower: round3(raw.lower), upper: round3(raw.upper) };
++    };
++    return {
++        kind,
++        n,
++        top1: n ? round3(t1 / n) : 0,
++        top1_ci95: ci(t1),
++        top3: n ? round3(t3 / n) : 0,
++        top3_ci95: ci(t3),
++    };
++}
++
++export interface AgreementReport {
++    ranker: string;
++    second_seat_rows: number;
++    relabelled_and_labelled: number;
++    agreement: Record<AgreementKind, { agreed: number; share: number }>;
++    arms: AgreementArm[];
++    /** Rows where the two seats share no skill at all — the honest width. */
++    disjoint: { id: string; first: string[]; second: string[] }[];
++}
++
++export function measureAgreement(opts: {
++    repo?: string;
++    skillsDir?: string;
++    ranker: string;
++}): AgreementReport {
++    const repo = opts.repo ?? REPO;
++    const skillsDir = opts.skillsDir ?? SKILLS_DIR;
++    const second = readSecondSeat(repo);
++    const first = readMatrixLabelledPrompts(repo);
++    const rankOpts = rankOptionsFor(opts.ranker);
++
++    const paired = first.filter((p) => second[p.id] !== undefined);
++    const ranked = new Map<string, string[]>();
++    for (const p of paired) ranked.set(p.id, rank(p.prompt, skillsDir, rankOpts).map((r) => r[0]));
++
++    const rows = paired.map((prompt) => ({ prompt, ranked: ranked.get(prompt.id) ?? [] }));
++    const agreement = {} as Record<AgreementKind, { agreed: number; share: number }>;
++    const arms: AgreementArm[] = [arm('all-relabelled', rows)];
++    for (const kind of AGREEMENT_KINDS) {
++        const kept = rows.filter((r) => agrees(r.prompt.expected, second[r.prompt.id] ?? [], kind));
++        agreement[kind] = {
++            agreed: kept.length,
++            share: rows.length ? round3(kept.length / rows.length) : 0,
++        };
++        arms.push(arm(kind, kept));
++    }
++    const disjoint = paired
++        .filter((p) => !agrees(p.expected, second[p.id] ?? [], 'overlap'))
++        .map((p) => ({ id: p.id, first: p.expected, second: second[p.id] ?? [] }));
++
++    return {
++        ranker: opts.ranker,
++        second_seat_rows: Object.keys(second).length,
++        relabelled_and_labelled: paired.length,
++        agreement,
++        arms,
++        disjoint,
++    };
++}
++
++/** Every relabelled row is expected to sit in the tuning slice; this says so. */
++export function relabelledSliceCensus(repo = REPO): Record<string, number> {
++    const out: Record<string, number> = { tuning: 0, sealed: 0 };
++    for (const id of Object.keys(readSecondSeat(repo))) out[sliceForId(id)] = (out[sliceForId(id)] ?? 0) + 1;
++    return out;
++}
++
++export function main(argv: readonly string[]): number {
++    let report: AgreementReport;
++    try {
++        // Same check as `--slice` elsewhere: a present flag with no value is an
++        // error, never a silent substitution of the baseline.
++        report = measureAgreement({ ranker: parseRanker(argv) });
++    } catch (err) {
++        process.stderr.write(`${(err as Error).message}\n`);
++        return 2;
++    }
++    if (report.second_seat_rows === 0) {
++        process.stderr.write(
++            `report_label_agreement: no second-seat labels at ${SECOND_SEAT_FILE} — ` +
++                'this is "nobody has relabelled", not "the seats disagree about nothing".\n',
++        );
++        return 2;
++    }
++    process.stdout.write(
++        `${JSON.stringify({ ...report, relabelled_slice_census: relabelledSliceCensus() }, null, 2)}\n`,
++    );
++    return 0;
++}
++
++if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
++    process.exit(main(process.argv.slice(2)));
++}
+diff --git a/src/scripts/report_skill_ranker_confusion.ts b/src/scripts/report_skill_ranker_confusion.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..b54a58b78ad8417a99e6f5010ffbbaf875e7b30d
+--- /dev/null
++++ b/src/scripts/report_skill_ranker_confusion.ts
+@@ -0,0 +1,432 @@
++#!/usr/bin/env tsx
++/**
++ * report_skill_ranker_confusion — why the ranker misses, before anything changes.
++ *
++ * `road-to-a-ranker-that-routes` 1.3. The baseline measurement says the ranker
++ * is wrong on four prompts in five; it does not say in what WAY it is wrong, and
++ * a signal chosen without that is a guess dressed as a fix. This report is the
++ * read that has to come first, and it is deliberately READ-ONLY: it changes no
++ * default, flips no flag, and its only output is markdown on stdout.
++ *
++ * IT READS THE TUNING SLICE, NEVER THE SEALED ONE. The partition lives in
++ * `measure_skill_ranker_baseline.sliceForId`. A confusion class read off the
++ * sealed rows would make every later "lift on held-out data" claim circular —
++ * the rows would have been looked at while choosing what to change. The script
++ * therefore takes `--slice` but defaults to `tuning`, and prints the slice it
++ * read in the artifact's own header so a reader never has to assume.
++ *
++ * WHAT IT MEASURES, and each is one of 1.3's five asks:
++ *
++ *   1. per-pack top-1 — where the misses concentrate;
++ *   2. the most frequent (expected, ranked-first) pairs — WHICH skill the
++ *      ranker reaches for instead, which is the only form of this number a
++ *      candidate signal can be derived from;
++ *   3. mean reciprocal rank — whether a miss is a near miss or a rout;
++ *   4. the share of misses whose expected skill is outside the top ten —
++ *      the same question asked as a cliff rather than as an average;
++ *   5. false activation on the deliberate empties — how often a prompt a seat
++ *      judged to have NO skill answer draws a top score as confident as a
++ *      genuine hit's.
++ *
++ * Usage:
++ *     ./scripts-run src/scripts/report_skill_ranker_confusion > out.md
++ *     ./scripts-run src/scripts/report_skill_ranker_confusion --slice sealed
++ *     ./scripts-run src/scripts/report_skill_ranker_confusion --ranker keyword-v2
++ */
++
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { wilsonInterval } from './_lib/capture_rate.js';
++import {
++    REPO,
++    SKILLS_DIR,
++    type LabelledPrompt,
++    type SliceName,
++    SLICE_NAMES,
++    packsForSkill,
++    parseRanker,
++    partitionBySlice,
++    rankOptionsFor,
++    readMatrixCases,
++    readMatrixLabelledPrompts,
++    sliceForId,
++    sliceSizes,
++} from './measure_skill_ranker_baseline.js';
++import { rank, type RankRow } from './skill_tools/score_skill_relevance.js';
++
++/** How deep "outside the top ten" is. 1.3's own number, not a derived one. */
++export const DEEP_MISS_DEPTH = 10;
++
++/** How many confusion pairs the table carries. 1.3's own number. */
++export const CONFUSION_PAIRS = 20;
++
++function round3(n: number): number {
++    return Math.round(n * 1000) / 1000;
++}
++
++function pct(n: number, d: number): string {
++    return d === 0 ? 'n/a' : `${(100 * (n / d)).toFixed(1)} %`;
++}
++
++/**
++ * The 1-based position of the first expected skill, or 0 when the ranker never
++ * returns one at all.
++ *
++ * Zero rather than Infinity because the reciprocal of "absent" is 0, which is
++ * exactly what MRR wants, and because a sentinel that participates in
++ * arithmetic is how a rank-based metric quietly becomes a different metric.
++ */
++export function firstExpectedRank(rows: readonly RankRow[], expected: readonly string[]): number {
++    for (let i = 0; i < rows.length; i += 1) {
++        if (expected.includes(rows[i]![0])) return i + 1;
++    }
++    return 0;
++}
++
++export interface RowReading {
++    id: string;
++    expected: string[];
++    rankedFirst: string | null;
++    topScore: number;
++    rankOfExpected: number;
++}
++
++export function readRows(
++    prompts: readonly LabelledPrompt[],
++    skillsDir: string,
++    ranker: string,
++): RowReading[] {
++    const opts = rankOptionsFor(ranker);
++    return prompts.map((p) => {
++        const rows = rank(p.prompt, skillsDir, opts);
++        return {
++            id: p.id,
++            expected: p.expected,
++            rankedFirst: rows[0]?.[0] ?? null,
++            topScore: rows[0]?.[1] ?? 0,
++            rankOfExpected: firstExpectedRank(rows, p.expected),
++        };
++    });
++}
++
++export function meanReciprocalRank(readings: readonly RowReading[]): number {
++    if (readings.length === 0) return 0;
++    let sum = 0;
++    for (const r of readings) if (r.rankOfExpected > 0) sum += 1 / r.rankOfExpected;
++    return sum / readings.length;
++}
++
++export interface PackRow {
++    pack: string;
++    n: number;
++    top1: number;
++}
++
++export function perPackTop1(
++    readings: readonly RowReading[],
++    skillsDir: string,
++): PackRow[] {
++    const hit = new Map<string, number>();
++    const total = new Map<string, number>();
++    for (const r of readings) {
++        const packs = new Set<string>();
++        for (const s of r.expected) for (const p of packsForSkill(skillsDir, s)) packs.add(p);
++        const isHit = r.rankOfExpected === 1;
++        for (const p of packs) {
++            total.set(p, (total.get(p) ?? 0) + 1);
++            if (isHit) hit.set(p, (hit.get(p) ?? 0) + 1);
++        }
++    }
++    return [...total.keys()]
++        .map((pack) => ({
++            pack,
++            n: total.get(pack) ?? 0,
++            top1: round3((hit.get(pack) ?? 0) / Math.max(total.get(pack) ?? 1, 1)),
++        }))
++        .sort((a, b) => a.top1 - b.top1 || b.n - a.n || (a.pack < b.pack ? -1 : 1));
++}
++
++export interface ConfusionPair {
++    expected: string;
++    got: string;
++    count: number;
++}
++
++/**
++ * The (expected, ranked-first) pairs, most frequent first.
++ *
++ * Keyed on the label's FIRST skill — the seat wrote it best-fit-first, so it is
++ * the one the pair is a claim about. Counting every skill in a three-slot label
++ * would inflate a single row into three confusions and make the frequency column
++ * a count of label widths rather than of errors.
++ */
++export function confusionPairs(readings: readonly RowReading[], limit = CONFUSION_PAIRS): ConfusionPair[] {
++    const counts = new Map<string, number>();
++    for (const r of readings) {
++        if (r.rankOfExpected === 1) continue;
++        const expected = r.expected[0] ?? '(none)';
++        const got = r.rankedFirst ?? '(nothing ranked)';
++        const key = `${expected}\u0000${got}`;
++        counts.set(key, (counts.get(key) ?? 0) + 1);
++    }
++    return (
++        [...counts.entries()]
++            .map(([key, count]) => {
++                const [expected, got] = key.split('\u0000');
++                return { expected: expected as string, got: got as string, count };
++            })
++            // A TOTAL order, so the table is reproducible. The earlier comparator
++            // tied on count and `expected` and then returned 1 for both argument
++            // orders — never 0 — which leaves equal rows in engine-defined order
++            // and quietly breaks the "regenerate every figure" claim this report
++            // opens with.
++            .sort(
++                (a, b) =>
++                    b.count - a.count ||
++                    (a.expected < b.expected ? -1 : a.expected > b.expected ? 1 : 0) ||
++                    (a.got < b.got ? -1 : a.got > b.got ? 1 : 0),
++            )
++            .slice(0, limit)
++    );
++}
++
++/** The deliberate `expected_skills: []` rows, partitioned by the same seal. */
++export function emptyRowIds(repo: string, slice: SliceName): { id: string; prompt: string }[] {
++    const out: { id: string; prompt: string }[] = [];
++    for (const c of readMatrixCases(repo)) {
++        if (c.expected?.length !== 0) continue;
++        const id = `${c.rule}#${c.section}[${String(c.ordinal)}]`;
++        if (slice !== 'all' && sliceForId(id) !== slice) continue;
++        out.push({ id, prompt: c.prompt });
++    }
++    return out;
++}
++
++export interface FalseActivation {
++    empties: number;
++    median_correct_hit_score: number;
++    at_or_above_median: number;
++    /** `null` when there is no threshold to compare against — see below. */
++    share: number | null;
++    correct_hits: number;
++}
++
++/**
++ * How often a prompt with no skill answer draws a score as confident as a hit.
++ *
++ * The comparison point is the MEDIAN top score among rows the ranker got right,
++ * which is the only threshold available that the ranker itself defines. A fixed
++ * cutoff would be a number chosen here, and the question 1.3 asks is whether the
++ * ranker's own confidence separates the two populations at all.
++ *
++ * WITH ZERO CORRECT HITS there is no such threshold, and the share is `null`
++ * rather than a number. Falling back to a median of 0 would count every empty as
++ * at-or-above it — every score is ≥ 0 — and print a 100 % false-activation rate
++ * indistinguishable from a measured one.
++ */
++export function falseActivation(
++    labelled: readonly RowReading[],
++    emptyTopScores: readonly number[],
++): FalseActivation {
++    const hits = labelled
++        .filter((r) => r.rankOfExpected === 1)
++        .map((r) => r.topScore)
++        .sort((a, b) => a - b);
++    if (hits.length === 0) {
++        return {
++            empties: emptyTopScores.length,
++            median_correct_hit_score: 0,
++            at_or_above_median: 0,
++            share: null,
++            correct_hits: 0,
++        };
++    }
++    const median =
++        hits.length % 2 === 1
++            ? (hits[(hits.length - 1) / 2] as number)
++            : ((hits[hits.length / 2 - 1] as number) + (hits[hits.length / 2] as number)) / 2;
++    const over = emptyTopScores.filter((s) => s >= median).length;
++    return {
++        empties: emptyTopScores.length,
++        median_correct_hit_score: median,
++        at_or_above_median: over,
++        share: emptyTopScores.length ? round3(over / emptyTopScores.length) : null,
++        correct_hits: hits.length,
++    };
++}
++
++function interval(successes: number, trials: number): string {
++    const raw = wilsonInterval(successes, trials);
++    return `${round3(raw.lower).toFixed(3)} – ${round3(raw.upper).toFixed(3)}`;
++}
++
++export function renderReport(opts: {
++    repo: string;
++    skillsDir: string;
++    ranker: string;
++    slice: SliceName;
++    date: string;
++}): string {
++    const whole = readMatrixLabelledPrompts(opts.repo);
++    const sizes = sliceSizes(whole);
++    const prompts = partitionBySlice(whole, opts.slice);
++    const readings = readRows(prompts, opts.skillsDir, opts.ranker);
++
++    const n = readings.length;
++    const top1 = readings.filter((r) => r.rankOfExpected === 1).length;
++    const top3 = readings.filter((r) => r.rankOfExpected >= 1 && r.rankOfExpected <= 3).length;
++    const unranked = readings.filter((r) => r.rankOfExpected === 0).length;
++    const misses = readings.filter((r) => r.rankOfExpected !== 1);
++    const deep = misses.filter((r) => r.rankOfExpected === 0 || r.rankOfExpected > DEEP_MISS_DEPTH).length;
++    const mrr = meanReciprocalRank(readings);
++
++    const empties = emptyRowIds(opts.repo, opts.slice);
++    const rankOpts = rankOptionsFor(opts.ranker);
++    const emptyScores = empties.map((e) => rank(e.prompt, opts.skillsDir, rankOpts)[0]?.[1] ?? 0);
++    const fa = falseActivation(readings, emptyScores);
++
++    const packs = perPackTop1(readings, opts.skillsDir);
++    const pairs = confusionPairs(readings);
++
++    const L: string[] = [];
++    L.push(`# Skill-ranker confusion report — ${opts.ranker}, ${opts.slice} slice`);
++    L.push('');
++    L.push('<!-- evidence-type: analysis -->');
++    L.push('');
++    L.push(`Produced by \`road-to-a-ranker-that-routes\` 1.3 on ${opts.date}. Read-only: this`);
++    L.push('report changes no default and flips no flag. Regenerate every measured figure');
++    L.push('below with');
++    L.push('');
++    L.push('```bash');
++    L.push(`./scripts-run src/scripts/report_skill_ranker_confusion --ranker ${opts.ranker} --slice ${opts.slice}`);
++    L.push('```');
++    L.push('');
++    L.push('## What was read');
++    L.push('');
++    L.push('| | |');
++    L.push('|---|---:|');
++    L.push(`| labelled rows in the routing matrix | ${String(sizes.all)} |`);
++    L.push(`| …in the tuning slice | ${String(sizes.tuning)} |`);
++    L.push(`| …in the sealed slice | ${String(sizes.sealed)} |`);
++    L.push(`| rows this report read (\`${opts.slice}\`) | ${String(n)} |`);
++    L.push(`| deliberate \`expected_skills: []\` rows in the same slice | ${String(empties.length)} |`);
++    L.push(`| skills indexed | ${String(fs.readdirSync(opts.skillsDir).filter((s) => fs.existsSync(path.join(opts.skillsDir, s, 'SKILL.md'))).length)} |`);
++    L.push('');
++    if (opts.slice === 'tuning') {
++        L.push('The sealed slice is **not** read here. A confusion class derived from rows a');
++        L.push('later lift is measured on would make that lift circular, which is the one');
++        L.push('failure a held-out partition exists to prevent.');
++    } else if (opts.slice === 'sealed') {
++        L.push('**This run READ the sealed slice.** That is legitimate for reporting a result');
++        L.push('on held-out rows and is NOT legitimate as an input to choosing what to change:');
++        L.push('a confusion class derived from these rows would make every later lift measured');
++        L.push('on them circular. Derive from the `tuning` run.');
++    } else {
++        L.push('**This run read BOTH slices.** A confusion class derived from it therefore');
++        L.push('includes the sealed rows, so it may not be used to choose what to change —');
++        L.push('that is the `tuning` run, and the seal only means something if the choosing');
++        L.push('never sees the other half.');
++    }
++    L.push('');
++    L.push('## The headline on this slice');
++    L.push('');
++    L.push('| measure | value | 95 % CI |');
++    L.push('|---|---:|---|');
++    L.push(`| top-1 | ${round3(top1 / Math.max(n, 1)).toFixed(3)} | ${interval(top1, n)} |`);
++    L.push(`| top-3 | ${round3(top3 / Math.max(n, 1)).toFixed(3)} | ${interval(top3, n)} |`);
++    L.push(`| mean reciprocal rank | ${round3(mrr).toFixed(3)} | — |`);
++    L.push('');
++    L.push('MRR is the average of 1 / (position of the first expected skill), counting a row');
++    L.push('where no expected skill appears anywhere in the ranking as 0. It is the figure');
++    L.push('that separates "the right answer was second" from "the right answer was never');
++    L.push('returned", and top-1 alone cannot.');
++    L.push('');
++    L.push('## How deep the misses are');
++    L.push('');
++    L.push('| | count | share of misses |');
++    L.push('|---|---:|---:|');
++    L.push(`| top-1 misses | ${String(misses.length)} | — |`);
++    L.push(`| …expected skill outside the top ${String(DEEP_MISS_DEPTH)} | ${String(deep)} | ${pct(deep, misses.length)} |`);
++    L.push(`| …expected skill not ranked at all (score 0) | ${String(unranked)} | ${pct(unranked, misses.length)} |`);
++    L.push('');
++    L.push('A miss inside the top ten is a ranking problem — the right skill is in the');
++    L.push('candidate set and something else outscored it. A miss outside it, and above all');
++    L.push('a row where the expected skill scores zero, is a RECALL problem: no re-weighting');
++    L.push('of the existing signal can recover a skill the formula never surfaces. The two');
++    L.push('take different fixes, which is why the split is reported rather than an average.');
++    L.push('');
++    L.push('## False activation on the no-skill prompts');
++    L.push('');
++    L.push('| | |');
++    L.push('|---|---:|');
++    L.push(`| deliberate empties in this slice | ${String(fa.empties)} |`);
++    L.push(`| correct top-1 hits the median is taken over | ${String(fa.correct_hits)} |`);
++    L.push(`| median top score of a correct hit | ${String(fa.median_correct_hit_score)} |`);
++    L.push(`| empties whose top score reaches that median | ${String(fa.at_or_above_median)} |`);
++    // TWO causes produce a null share and they are not the same answer: no
++    // correct hit means there is no threshold to compare against, no empty row
++    // means there is nothing to compare. Printing one reason for both would
++    // state something the `correct_hits` row beside it contradicts.
++    const shareCell =
++        fa.share !== null
++            ? pct(fa.at_or_above_median, fa.empties)
++            : fa.correct_hits === 0
++              ? 'n/a — no correct top-1 hit, so no threshold'
++              : 'n/a — no deliberate empties in this slice, so no denominator';
++    L.push(`| share | ${shareCell} |`);
++    L.push('');
++    L.push('The threshold is the ranker\'s own median hit score rather than a cutoff chosen');
++    L.push('here, because the question is whether the ranker\'s confidence separates the two');
++    L.push('populations at all. A share near one half means it does not: a prompt a seat');
++    L.push('judged to have no skill answer is scored as confidently as a prompt it got right.');
++    L.push('');
++    L.push(`## Per-pack top-1, worst first`);
++    L.push('');
++    L.push('| pack | labelled rows | top-1 |');
++    L.push('|---|---:|---:|');
++    for (const p of packs) L.push(`| \`${p.pack}\` | ${String(p.n)} | ${p.top1.toFixed(3)} |`);
++    L.push('');
++    L.push('A row counts once per pack of each skill its label names, so the column sums');
++    L.push('above the row count — the same accounting the per-pack census uses.');
++    L.push('');
++    L.push(`## The ${String(CONFUSION_PAIRS)} most frequent (expected, ranked-first) pairs`);
++    L.push('');
++    L.push('| expected (label, best fit first) | ranked first instead | rows |');
++    L.push('|---|---|---:|');
++    for (const p of pairs) L.push(`| \`${p.expected}\` | \`${p.got}\` | ${String(p.count)} |`);
++    L.push('');
++    return `${L.join('\n')}\n`;
++}
++
++export function main(argv: readonly string[]): number {
++    const rawSlice = argv.includes('--slice') ? argv[argv.indexOf('--slice') + 1] : 'tuning';
++    if (!rawSlice || !SLICE_NAMES.includes(rawSlice as SliceName)) {
++        process.stderr.write(
++            `report_skill_ranker_confusion: --slice expects one of ${SLICE_NAMES.join(' | ')}, got ${rawSlice ?? '(nothing)'}\n`,
++        );
++        return 2;
++    }
++    const date = argv.includes('--date')
++        ? (argv[argv.indexOf('--date') + 1] ?? new Date().toISOString().slice(0, 10))
++        : new Date().toISOString().slice(0, 10);
++    let body: string;
++    try {
++        // An unknown or missing label must not reach the renderer: the label is
++        // printed in the report's own title and in the regenerate command beside
++        // it, so a typo would publish one configuration's number under another's
++        // name. `parseRanker` is the same check `--slice` already had.
++        const ranker = parseRanker(argv);
++        body = renderReport({ repo: REPO, skillsDir: SKILLS_DIR, ranker, slice: rawSlice as SliceName, date });
++    } catch (err) {
++        process.stderr.write(`${(err as Error).message}\n`);
++        return 2;
++    }
++    process.stdout.write(body);
++    return 0;
++}
++
++if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
++    process.exit(main(process.argv.slice(2)));
++}
+diff --git a/src/scripts/rule_trigger_eval.ts b/src/scripts/rule_trigger_eval.ts
+index 3e66dff3f01eff19a9e9d867ce47cf7bdab78dee..afd21a49583d352d5a2ef7be0f8ecf2036a041a0 100644
+--- a/src/scripts/rule_trigger_eval.ts
++++ b/src/scripts/rule_trigger_eval.ts
+@@ -51,6 +51,7 @@ import {
+ } from './skill_trigger_eval.js';
+ import { AnthropicFetchRouter, loadKeyFromFile } from './_lib/trigger_routers.js';
+ import { RULES_MODE_FLOOR } from './_lib/trigger_eval_floors.js';
++import { fnv1a } from './_lib/fnv.js';
+ 
+ const _HERE = path.dirname(fileURLToPath(import.meta.url));
+ const REPO_ROOT = path.resolve(_HERE, '..', '..');
+@@ -144,15 +145,14 @@ export interface RuleCase {
+     expected: boolean;
+ }
+ 
+-/** FNV-1a 32-bit — deterministic sampling key (no Math.random). */
+-export function fnv1a(s: string): number {
+-    let h = 0x811c9dc5;
+-    for (let i = 0; i < s.length; i += 1) {
+-        h ^= s.charCodeAt(i);
+-        h = Math.imul(h, 0x01000193) >>> 0;
+-    }
+-    return h >>> 0;
+-}
++/**
++ * FNV-1a 32-bit — deterministic sampling key (no Math.random).
++ *
++ * Moved to `_lib/fnv.ts` when the held-out partition in
++ * `measure_skill_ranker_baseline` became its second caller; re-exported here
++ * because this module's own suite imports the name from this file.
++ */
++export { fnv1a };
+ 
+ /**
+  * Derive the eval suite from the routing-matrix fixtures: positive →
+diff --git a/src/scripts/skill_tools/score_skill_relevance.ts b/src/scripts/skill_tools/score_skill_relevance.ts
+index 7a0f31687ea62e1437a9fab9aff1456a630645a0..bb52aed6c4df176f9ef7e2b21cf9055c55722568 100644
+--- a/src/scripts/skill_tools/score_skill_relevance.ts
++++ b/src/scripts/skill_tools/score_skill_relevance.ts
+@@ -39,11 +39,14 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
+ // a second copy (road-to-skill-delivery-over-mcp risk 6). Everything below is
+ // the disk half — globbing, frontmatter, the CLI — which stays here.
+ import {
++    buildTermStats,
+     scoreSkill,
+     skillTerms as _sharedSkillTerms,
+     tokenize as _sharedTokenize,
+     triggerTextFromFlatLines,
++    widensTermSource,
+     type RankOptions,
++    type TermStats,
+ } from '../../shared/skillRanking.js';
+ 
+ const _HERE = fileURLToPath(import.meta.url);
+@@ -100,7 +103,17 @@ export interface Frontmatter {
+ export function _parse_frontmatter(filePath: string): Frontmatter {
+     // text.read_text(errors="replace") — Node `utf-8` decode replaces the same
+     // way for the inputs these tools see (well-formed SKILL.md files).
+-    const text = fs.readFileSync(filePath, 'utf-8');
++    return _parse_frontmatter_text(fs.readFileSync(filePath, 'utf-8'));
++}
++
++/**
++ * The same reader over text already in hand.
++ *
++ * The loader needs the body as well as the frontmatter, and reading each
++ * SKILL.md twice to get them would double the per-call I/O of a ranker that
++ * runs on a hook path.
++ */
++export function _parse_frontmatter_text(text: string): Frontmatter {
+     if (!text.startsWith('---')) {
+         return {};
+     }
+@@ -169,6 +182,88 @@ export interface Skill {
+     terms: Set<string>;
+     /** `triggers[].keyword` / `.phrase` prose. Indexed only under keyword-v2. */
+     triggerText: string[];
++    /** The body's `## When to use` section. Indexed only behind its own flag. */
++    whenToUseText: string;
++    /** The body's `##` / `###` heading lines. Indexed only behind its own flag. */
++    headingText: string[];
++}
++
++/** Everything after the frontmatter block, or the whole text when there is none. */
++export function _body_of(text: string): string {
++    if (!text.startsWith('---')) return text;
++    const end = text.indexOf('\n---', 3);
++    if (end === -1) return text;
++    return text.slice(end + 4);
++}
++
++/**
++ * The `## When to use` section, and every `##` / `###` heading, out of a body.
++ *
++ * Line-oriented, and bounded in two ways that a first version got wrong in the
++ * same direction — it indexed something other than what this block describes,
++ * which makes a measurement of the FLAG a measurement of the PARSER:
++ *
++ *   - the section ends at the next heading of the SAME OR A HIGHER level, so a
++ *     `###` subsection of `## When to use` stays inside it. Ending at any
++ *     heading truncated the capture at the first subsection;
++ *   - a line inside a fenced code block is never a heading. These skills are
++ *     documentation and routinely fence markdown samples, so a `## …` line in a
++ *     fence was both harvested as a topic and used to terminate the section.
++ *
++ * Without the first bound a skill whose whole file is one section could still
++ * not put its procedure into an index whose flag says "when to use", because a
++ * sibling `##` ends it.
++ */
++export function _body_signals(body: string): { whenToUse: string; headings: string[] } {
++    const headings: string[] = [];
++    const when: string[] = [];
++    let whenLevel = 0;
++    let fenceMark: string | null = null;
++    let fenceLen = 0;
++    for (const raw of body.split('\n')) {
++        const line = raw.trimEnd();
++        const f = /^\s*(`{3,}|~{3,})(.*)$/.exec(line);
++        if (f) {
++            const run = f[1] as string;
++            const mark = run[0] as string;
++            if (fenceMark === null) {
++                fenceMark = mark;
++                fenceLen = run.length;
++                // The DELIMITER and its info string are not prose. Pushing them
++                // put the language tag of every fenced sample (`bash`, `yaml`)
++                // into the index, which is the parser leaking into the signal in
++                // the opposite direction from the truncation this block fixed.
++                continue;
++            }
++            // A closing fence has to be at least as long as the opening one and
++            // use the same marker; otherwise a ``` inside a ```` block would
++            // close it early.
++            if (mark === fenceMark && run.length >= fenceLen && (f[2] as string).trim() === '') {
++                fenceMark = null;
++                fenceLen = 0;
++            }
++            continue;
++        }
++        if (fenceMark !== null) {
++            if (whenLevel > 0) when.push(raw);
++            continue;
++        }
++        const h = /^(#{2,6})\s+(.*)$/.exec(line);
++        if (h) {
++            const level = (h[1] as string).length;
++            const title = (h[2] as string).trim();
++            if (level <= 3) headings.push(title);
++            if (whenLevel > 0 && level <= whenLevel) whenLevel = 0;
++            // A SUBSECTION TITLE inside `## When to use` is part of that
++            // section's text. Skipping it indexed the prose under a `### Do NOT
++            // use when` while dropping the words that say what it is.
++            else if (whenLevel > 0) when.push(title);
++            if (/^when to use\b/i.test(title)) whenLevel = level;
++            continue;
++        }
++        if (whenLevel > 0) when.push(raw);
++    }
++    return { whenToUse: when.join(' ').trim(), headings };
+ }
+ 
+ /**
+@@ -179,11 +274,11 @@ export interface Skill {
+  * owns what that order means. Reading only the first root is the defect this
+  * replaced; silently ranking one name twice would be the next one.
+  */
+-function _load_skills_across(roots: readonly string[]): Skill[] {
++function _load_skills_across(roots: readonly string[], opts: RankOptions = {}): Skill[] {
+     const out: Skill[] = [];
+     const seen = new Set<string>();
+     for (const root of roots) {
+-        for (const s of _load_skills(root)) {
++        for (const s of _load_skills(root, opts)) {
+             if (seen.has(s.name)) continue;
+             seen.add(s.name);
+             out.push(s);
+@@ -192,10 +287,15 @@ function _load_skills_across(roots: readonly string[]): Skill[] {
+     return out;
+ }
+ 
+-function _load_skills(skillsDir: string): Skill[] {
++function _load_skills(skillsDir: string, opts: RankOptions = {}): Skill[] {
++    // The body is parsed only when a flag indexes it. Under keyword-v1 the
++    // loader's work is exactly what it always was, which is what keeps the
++    // default path's per-prompt cost comparable to the pre-flag reading.
++    const wantsBody = Boolean(opts.includeWhenToUse || opts.includeHeadings);
+     const skills: Skill[] = [];
+     for (const skillMd of _globSkillMd(skillsDir)) {
+-        const fm = _parse_frontmatter(skillMd);
++        const text = fs.readFileSync(skillMd, 'utf-8');
++        const fm = _parse_frontmatter_text(text);
+         const rawName = fm['name'];
+         const name = _truthyStr(rawName) ? String(rawName) : path.basename(path.dirname(skillMd));
+         const rawDesc = fm['description'];
+@@ -209,12 +309,17 @@ function _load_skills(skillsDir: string): Skill[] {
+         const triggerText = Array.isArray(rawTriggers)
+             ? triggerTextFromFlatLines(rawTriggers as string[])
+             : [];
++        const { whenToUse, headings } = wantsBody
++            ? _body_signals(_body_of(text))
++            : { whenToUse: '', headings: [] as string[] };
+         skills.push({
+             name,
+             description: desc,
+             personas: personaList,
+             terms: _tokenize(name + ' ' + desc),
+             triggerText,
++            whenToUseText: whenToUse,
++            headingText: headings,
+         });
+     }
+     return skills;
+@@ -257,19 +362,46 @@ function _globSkillMd(root: string): string[] {
+     return dirs.map((name) => path.join(root, name, 'SKILL.md'));
+ }
+ 
+-function _score(taskTerms: Set<string>, skill: Skill, opts: RankOptions = {}): number {
+-    // Single-sourced in `src/shared/skillRanking.ts`. Under keyword-v1 (the
+-    // default) `skill.terms` is already `tokenize(name + ' ' + description)`, so
+-    // the precomputed set is reused unchanged; keyword-v2 re-derives the term
+-    // set with the skill's trigger prose folded in.
+-    const rankable = {
++function _rankable(skill: Skill): {
++    name: string;
++    description: string;
++    personas: string[];
++    triggerText: string[];
++    whenToUseText: string;
++    headingText: string[];
++} {
++    return {
+         name: skill.name,
+         description: skill.description,
+         personas: skill.personas,
+         triggerText: skill.triggerText,
++        whenToUseText: skill.whenToUseText,
++        headingText: skill.headingText,
+     };
+-    const terms = opts.includeTriggers ? _sharedSkillTerms(rankable, opts) : skill.terms;
+-    return scoreSkill(taskTerms, rankable, terms);
++}
++
++/**
++ * The indexed term set for one skill.
++ *
++ * With no term-source flag set, `skill.terms` is already
++ * `tokenize(name + ' ' + description)` and the precomputed set is reused
++ * unchanged; a flag that widens the source re-derives it with that source
++ * folded in. Separated from `_score` so the caller can build each set ONCE and
++ * share it between the document-frequency pass and the scoring loop.
++ */
++function _terms(skill: Skill, opts: RankOptions): ReadonlySet<string> {
++    return widensTermSource(opts) ? _sharedSkillTerms(_rankable(skill), opts) : skill.terms;
++}
++
++function _score(
++    taskTerms: Set<string>,
++    skill: Skill,
++    terms: ReadonlySet<string>,
++    opts: RankOptions = {},
++    stats?: TermStats,
++): number {
++    // Single-sourced in `src/shared/skillRanking.ts`.
++    return scoreSkill(taskTerms, _rankable(skill), terms, opts, stats);
+ }
+ 
+ export type RankRow = [string, number, string[]];
+@@ -283,10 +415,15 @@ export function rank(
+     opts: RankOptions = {},
+ ): RankRow[] {
+     const taskTerms = _tokenize(task);
+-    const skills = _load_skills_across(typeof skillsDir === 'string' ? [skillsDir] : skillsDir);
++    const skills = _load_skills_across(typeof skillsDir === 'string' ? [skillsDir] : skillsDir, opts);
++    // ONE term set per skill, shared between the document-frequency pass and the
++    // scoring loop — the two used to tokenize the whole catalogue separately.
++    const termSets = skills.map((s) => _terms(s, opts));
++    const stats = opts.idfWeighting ? buildTermStats(skills.map(_rankable), termSets) : undefined;
+     const rows: RankRow[] = [];
+-    for (const s of skills) {
+-        const score = _score(taskTerms, s, opts);
++    for (let i = 0; i < skills.length; i += 1) {
++        const s = skills[i] as Skill;
++        const score = _score(taskTerms, s, termSets[i] as ReadonlySet<string>, opts, stats);
+         if (score > 0) {
+             rows.push([s.name, score, [...s.personas]]);
+         }
+diff --git a/src/scripts/sweep_skill_ranker_signals.ts b/src/scripts/sweep_skill_ranker_signals.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..426358ced2f32551dc0420a648b2fed5c8e2c79f
+--- /dev/null
++++ b/src/scripts/sweep_skill_ranker_signals.ts
+@@ -0,0 +1,129 @@
++#!/usr/bin/env tsx
++/**
++ * sweep_skill_ranker_signals — every candidate signal, alone, on both slices.
++ *
++ * `road-to-a-ranker-that-routes` 2.2 asks for top-1, top-3 and MRR with
++ * intervals for each candidate flag measured ALONE, and the flags are a table in
++ * `measure_skill_ranker_baseline.RANKER_LABELS`. This script is the thing that
++ * produces that table, and it exists as a committed script rather than a
++ * one-off because a number nobody can regenerate is a claim rather than a
++ * measurement.
++ *
++ * IT PRINTS BOTH SLICES, and the two are read for different purposes. The
++ * TUNING reading is what a signal may be CHOSEN on. The SEALED reading is the
++ * only one a lift may be CLAIMED on. Printing only the sealed column would
++ * invite choosing on it, which is the one thing the partition exists to stop;
++ * printing only the tuning column would leave the claim unsupported.
++ *
++ * Usage:
++ *     ./scripts-run src/scripts/sweep_skill_ranker_signals
++ *     ./scripts-run src/scripts/sweep_skill_ranker_signals keyword-v1 idf
++ *     ./scripts-run src/scripts/sweep_skill_ranker_signals --json
++ */
++
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { wilsonInterval } from './_lib/capture_rate.js';
++import {
++    RANKER_LABELS,
++    REPO,
++    SKILLS_DIR,
++    type SliceName,
++    isKnownRanker,
++    partitionBySlice,
++    readMatrixLabelledPrompts,
++} from './measure_skill_ranker_baseline.js';
++import { meanReciprocalRank, readRows } from './report_skill_ranker_confusion.js';
++
++export interface SweepRow {
++    label: string;
++    slice: SliceName;
++    n: number;
++    top1: number;
++    top1_ci95: { lower: number; upper: number };
++    top3: number;
++    top3_ci95: { lower: number; upper: number };
++    mrr: number;
++}
++
++function round3(n: number): number {
++    return Math.round(n * 1000) / 1000;
++}
++
++function ci(successes: number, trials: number): { lower: number; upper: number } {
++    const raw = wilsonInterval(successes, trials);
++    return { lower: round3(raw.lower), upper: round3(raw.upper) };
++}
++
++/**
++ * Every configuration on both slices, ONE ranking pass per prompt.
++ *
++ * `rank()` re-globs and re-reads the whole SKILL.md catalogue on every call, so
++ * it is the dominant cost by a wide margin and ranking each prompt twice doubles
++ * the whole sweep. The earlier shape took top-1/top-3 from `measureAccuracy` and
++ * MRR from a second pass in `readRows`, which also derived the row set from two
++ * independent corpus reads — so a future divergence between them would have been
++ * silent rather than loud. All three rates now come off the same readings of the
++ * same rows.
++ */
++export function sweep(labels: readonly string[], repo = REPO, skillsDir = SKILLS_DIR): SweepRow[] {
++    const whole = readMatrixLabelledPrompts(repo);
++    const out: SweepRow[] = [];
++    for (const label of labels) {
++        for (const slice of ['tuning', 'sealed'] as const) {
++            const rows = partitionBySlice(whole, slice);
++            const readings = readRows(rows, skillsDir, label);
++            const n = readings.length;
++            const t1 = readings.filter((r) => r.rankOfExpected === 1).length;
++            const t3 = readings.filter((r) => r.rankOfExpected >= 1 && r.rankOfExpected <= 3).length;
++            out.push({
++                label,
++                slice,
++                n,
++                top1: n ? round3(t1 / n) : 0,
++                top1_ci95: ci(t1, n),
++                top3: n ? round3(t3 / n) : 0,
++                top3_ci95: ci(t3, n),
++                mrr: round3(meanReciprocalRank(readings)),
++            });
++        }
++    }
++    return out;
++}
++
++export function renderTable(rows: readonly SweepRow[]): string {
++    const L = ['| configuration | slice | n | top-1 | 95 % CI | top-3 | 95 % CI | MRR |', '|---|---|---:|---:|---|---:|---|---:|'];
++    for (const r of rows) {
++        L.push(
++            `| \`${r.label}\` | ${r.slice} | ${String(r.n)} | ${r.top1.toFixed(3)} | ` +
++                `${r.top1_ci95.lower.toFixed(3)} – ${r.top1_ci95.upper.toFixed(3)} | ${r.top3.toFixed(3)} | ` +
++                `${r.top3_ci95.lower.toFixed(3)} – ${r.top3_ci95.upper.toFixed(3)} | ${r.mrr.toFixed(3)} |`,
++        );
++    }
++    return `${L.join('\n')}\n`;
++}
++
++export function main(argv: readonly string[]): number {
++    const json = argv.includes('--json');
++    const named = argv.filter((a) => !a.startsWith('--'));
++    const labels = named.length > 0 ? named : Object.keys(RANKER_LABELS);
++    // `isKnownRanker` (Object.hasOwn), not `in`: `in` walks the prototype chain,
++    // so `constructor` and `toString` would pass here while `Object.keys` below
++    // prints a set that does not contain them — two answers to one question.
++    const unknown = labels.filter((l) => !isKnownRanker(l));
++    if (unknown.length > 0) {
++        process.stderr.write(
++            `sweep_skill_ranker_signals: unknown configuration(s) ${unknown.join(', ')}; ` +
++                `known: ${Object.keys(RANKER_LABELS).join(', ')}\n`,
++        );
++        return 2;
++    }
++    const rows = sweep(labels);
++    process.stdout.write(json ? `${JSON.stringify(rows, null, 2)}\n` : renderTable(rows));
++    return 0;
++}
++
++if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
++    process.exit(main(process.argv.slice(2)));
++}
+diff --git a/src/shared/skillRanking.ts b/src/shared/skillRanking.ts
+index c1d72973e013fb37ae51b585bbe0231da2cdd690..8b1c9f6e4dcc494600269ff285832d3fdf3905c5 100644
+--- a/src/shared/skillRanking.ts
++++ b/src/shared/skillRanking.ts
+@@ -24,10 +24,13 @@
+  * `score_skill_relevance` CLI's argparse-parity suite is the check that the move
+  * changed nothing.
+  *
+- * THE ONE ADDITION is `triggerTerms`, off by default. Phase 3.1 of the same
+- * roadmap indexes `triggers.keyword` / `triggers.phrase` text; it is an opt-in
+- * parameter rather than a second function so the two rankers can be measured
+- * against each other on one corpus.
++ * THE ADDITIONS ARE ALL OFF BY DEFAULT and live in one {@link RankOptions}
++ * object: three that widen the indexed TERM SOURCE (trigger prose, the skill's
++ * own `## When to use` section, the body's headings) and one that changes the
++ * WEIGHTING (inverse document frequency over the catalogue). They are opt-in
++ * parameters rather than separate functions so two configurations can be
++ * measured against each other on one corpus without becoming two rankers. With
++ * every flag off the arithmetic is the ported one, unchanged.
+  *
+  * Pure — no imports, no I/O, no clock.
+  */
+@@ -115,36 +118,136 @@ export interface RankableSkill {
+     personas?: readonly string[];
+     /** `triggers[].keyword` / `triggers[].phrase` text. Indexed only on request. */
+     triggerText?: readonly string[];
++    /** The skill's own `## When to use` prose. Indexed only on request. */
++    whenToUseText?: string;
++    /** The skill body's `##` / `###` heading lines. Indexed only on request. */
++    headingText?: readonly string[];
+ }
+ 
++/**
++ * The candidate signals, each off by default and each measurable alone.
++ *
++ * `road-to-a-ranker-that-routes` 2.2 requires exactly this shape: one flag per
++ * signal, default off, so a configuration is a named set of flags and two
++ * readings of "the ranker" are never two different rankers under one name. With
++ * every flag off the score is byte-identical to the Python-parity scorer, which
++ * is what the CLI parity suite pins.
++ */
+ export interface RankOptions {
+-    /** Phase 3.1: fold `triggerText` into the indexed terms. Default false (keyword-v1). */
++    /** Fold `triggerText` into the indexed terms. Default false (keyword-v1). */
+     includeTriggers?: boolean;
++    /** Fold the skill's own `## When to use` prose into the indexed terms. */
++    includeWhenToUse?: boolean;
++    /** Fold the body's section headings into the indexed terms. */
++    includeHeadings?: boolean;
++    /**
++     * Weight each matched term by its inverse document frequency over the
++     * catalogue, instead of counting every term alike.
++     *
++     * Needs {@link TermStats}. Setting it WITHOUT one throws, rather than
++     * quietly taking the unweighted branch: a weighting that falls back to
++     * unweighted on a missing input produces a baseline number under a
++     * configuration's name, which is the one failure the whole flag table
++     * exists to prevent.
++     */
++    idfWeighting?: boolean;
+ }
+ 
+ /** The indexed term set for one skill, under the given options. */
+ export function skillTerms(skill: RankableSkill, opts: RankOptions = {}): Set<string> {
+     const parts = [skill.name, skill.description];
+     if (opts.includeTriggers && skill.triggerText) parts.push(...skill.triggerText);
++    if (opts.includeWhenToUse && skill.whenToUseText) parts.push(skill.whenToUseText);
++    if (opts.includeHeadings && skill.headingText) parts.push(...skill.headingText);
+     return tokenize(parts.join(' '));
+ }
+ 
++/** True when `opts` turns on at least one term source beyond name + description. */
++export function widensTermSource(opts: RankOptions): boolean {
++    return Boolean(opts.includeTriggers || opts.includeWhenToUse || opts.includeHeadings);
++}
++
++/**
++ * How many indexed skills carry each term, and how many skills there are.
++ *
++ * Derived from the catalogue under the SAME options the ranking uses — a
++ * document frequency computed over one term source and applied to another
++ * would weight terms by how rare they are somewhere they were never read.
++ */
++export interface TermStats {
++    df: ReadonlyMap<string, number>;
++    skills: number;
++}
++
++/**
++ * @param termSets the per-skill term sets, in the same order as `skills`.
++ *   Required rather than derived, so the catalogue is tokenized ONCE per call
++ *   instead of once here and again at the scoring loop. Tokenizing ~300 skills
++ *   twice per prompt is invisible next to re-reading them from disk, which is
++ *   exactly why it would have stayed invisible.
++ */
++export function buildTermStats(
++    skills: readonly RankableSkill[],
++    termSets: readonly ReadonlySet<string>[],
++): TermStats {
++    const df = new Map<string, number>();
++    for (const terms of termSets) {
++        for (const t of terms) df.set(t, (df.get(t) ?? 0) + 1);
++    }
++    return { df, skills: skills.length };
++}
++
++/**
++ * The weight one matched term carries.
++ *
++ * `ln(1 + skills / (1 + df))`, the smoothed textbook form: a term on every
++ * skill tends to zero, a term on one skill carries the most. Unknown terms are
++ * treated as df 0 — a task term no skill indexes cannot be matched anyway, so
++ * its weight only affects the denominator, where counting it fully is right:
++ * failing to cover a rare term should cost more than failing to cover a common
++ * one.
++ */
++export function idf(term: string, stats: TermStats): number {
++    return Math.log(1 + stats.skills / (1 + (stats.df.get(term) ?? 0)));
++}
++
+ /**
+  * The score. `taskTerms` is `tokenize(task)`; `terms` is `skillTerms(skill)`.
+  *
+  * Both are passed in rather than derived here so a caller ranking N skills
+  * tokenizes the task once and each skill once, which is what makes this usable
+- * on a per-prompt hook path.
++ * on a per-prompt hook path. `opts` and `stats` are optional and, with them
++ * absent or every flag off, the arithmetic is exactly the Python-parity one.
+  */
+ export function scoreSkill(
+     taskTerms: ReadonlySet<string>,
+     skill: RankableSkill,
+     terms: ReadonlySet<string>,
++    opts: RankOptions = {},
++    stats?: TermStats,
+ ): number {
++    if (opts.idfWeighting && !stats) {
++        throw new Error(
++            'scoreSkill: idfWeighting is set but no TermStats was passed — scoring unweighted here ' +
++                'would publish a baseline number under the idf label. Build stats with buildTermStats.',
++        );
++    }
+     if (taskTerms.size === 0) return 0;
+-    let inter = 0;
+-    for (const t of taskTerms) if (terms.has(t)) inter++;
+-    const overlap = inter / Math.max(taskTerms.size, 1);
++    let overlap: number;
++    if (opts.idfWeighting && stats) {
++        let hit = 0;
++        let total = 0;
++        for (const t of taskTerms) {
++            const w = idf(t, stats);
++            total += w;
++            if (terms.has(t)) hit += w;
++        }
++        overlap = total > 0 ? hit / total : 0;
++    } else {
++        let inter = 0;
++        for (const t of taskTerms) if (terms.has(t)) inter++;
++        overlap = inter / Math.max(taskTerms.size, 1);
++    }
+     let personaHit = 0;
+     const taskLower = [...taskTerms].join(' ');
+     for (const persona of skill.personas ?? []) {
+@@ -173,9 +276,12 @@ export function rankSkills(
+     opts: RankOptions = {},
+ ): RankedSkill[] {
+     const taskTerms = tokenize(task);
++    const termSets = skills.map((s) => skillTerms(s, opts));
++    const stats = opts.idfWeighting ? buildTermStats(skills, termSets) : undefined;
+     const rows: RankedSkill[] = [];
+-    for (const skill of skills) {
+-        const score = scoreSkill(taskTerms, skill, skillTerms(skill, opts));
++    for (let i = 0; i < skills.length; i += 1) {
++        const skill = skills[i] as RankableSkill;
++        const score = scoreSkill(taskTerms, skill, termSets[i] as ReadonlySet<string>, opts, stats);
+         if (score > 0) rows.push({ name: skill.name, score, personas: [...(skill.personas ?? [])] });
+     }
+     rows.sort((a, b) => (b.score - a.score) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+diff --git a/tests/eval/routing-matrix/second-seat-2026-10-01.json b/tests/eval/routing-matrix/second-seat-2026-10-01.json
+new file mode 100644
+index 0000000000000000000000000000000000000000..ff6091e407d1db743867ad4b904c58a9dddb5e7f
+--- /dev/null
++++ b/tests/eval/routing-matrix/second-seat-2026-10-01.json
+@@ -0,0 +1,844 @@
++{
++  "active-remediation#positives[2]": [
++    "code-refactoring",
++    "module-management"
++  ],
++  "architecture#positives[2]": [
++    "api-endpoint",
++    "laravel-api-endpoint",
++    "laravel"
++  ],
++  "artifact-drafting-protocol#near_misses[0]": [
++    "description-assist"
++  ],
++  "artifact-drafting-protocol#near_misses[1]": [
++    "project-docs"
++  ],
++  "artifact-drafting-protocol#positives[0]": [
++    "skill-writing"
++  ],
++  "artifact-drafting-protocol#positives[1]": [
++    "rule-writing",
++    "secrets-management"
++  ],
++  "artifact-drafting-protocol#positives[2]": [
++    "skill-writing",
++    "skill-management"
++  ],
++  "artifact-engagement-recording#near_misses[1]": [
++    "jira-integration",
++    "developer-like-execution"
++  ],
++  "artifact-engagement-recording#positives[0]": [
++    "command-routing"
++  ],
++  "augment-edit-discipline#near_misses[0]": [],
++  "brand-source-of-truth#near_misses[0]": [
++    "design-intelligence",
++    "design-tokens",
++    "brand-identity"
++  ],
++  "brand-source-of-truth#near_misses[1]": [
++    "design-tokens",
++    "fe-design",
++    "brand-to-tokens"
++  ],
++  "brand-source-of-truth#near_misses[2]": [
++    "design-tokens",
++    "brand-audit"
++  ],
++  "brand-source-of-truth#near_misses[3]": [
++    "voice-and-tone-design",
++    "brand-audit"
++  ],
++  "brand-source-of-truth#positives[0]": [
++    "brand-to-tokens",
++    "design-tokens"
++  ],
++  "brand-source-of-truth#positives[1]": [
++    "brand",
++    "brand-identity"
++  ],
++  "brand-source-of-truth#positives[2]": [
++    "brand-to-tokens",
++    "design-tokens"
++  ],
++  "brand-source-of-truth#positives[3]": [
++    "brand-audit",
++    "voice-and-tone-design"
++  ],
++  "brand-source-of-truth#positives[4]": [
++    "brand-audit",
++    "design-tokens"
++  ],
++  "brand-source-of-truth#positives[5]": [
++    "brand-audit",
++    "voice-and-tone-design"
++  ],
++  "broken-access-control#near_misses[1]": [
++    "security",
++    "aws-infrastructure"
++  ],
++  "broken-access-control#positives[0]": [
++    "api-endpoint",
++    "authz-review",
++    "threat-modeling"
++  ],
++  "broken-access-control#positives[2]": [
++    "authz-review"
++  ],
++  "cli-output-handling#near_misses[0]": [
++    "github-ci"
++  ],
++  "cli-output-handling#positives[0]": [
++    "quality-tools",
++    "rtk-output-filtering"
++  ],
++  "cli-output-handling#positives[1]": [
++    "rtk-output-filtering",
++    "token-optimizer",
++    "systematic-debugging"
++  ],
++  "cli-output-handling#positives[2]": [
++    "rtk-output-filtering",
++    "token-optimizer"
++  ],
++  "code-comment-discipline#near_misses[0]": [
++    "readme-writing"
++  ],
++  "command-suggestion-policy#near_misses[1]": [
++    "command-routing"
++  ],
++  "commit-conventions#near_misses[1]": [
++    "git-workflow"
++  ],
++  "commit-conventions#positives[1]": [
++    "conventional-commits-writing",
++    "git-workflow"
++  ],
++  "commit-conventions#positives[2]": [
++    "conventional-commits-writing",
++    "git-workflow"
++  ],
++  "copilot-routing#near_misses[0]": [
++    "copilot-config"
++  ],
++  "copilot-routing#positives[2]": [
++    "copilot-config"
++  ],
++  "council-availability#positives[0]": [
++    "ai-council"
++  ],
++  "council-availability#positives[1]": [
++    "ai-council"
++  ],
++  "decision-revisit-gate#near_misses[0]": [
++    "decision-record"
++  ],
++  "decision-revisit-gate#positives[0]": [
++    "decision-review"
++  ],
++  "decision-revisit-gate#positives[10]": [
++    "decision-review"
++  ],
++  "decision-revisit-gate#positives[1]": [
++    "decision-review"
++  ],
++  "decision-revisit-gate#positives[2]": [
++    "decision-review"
++  ],
++  "decision-revisit-gate#positives[3]": [
++    "decision-review",
++    "ai-council"
++  ],
++  "decision-revisit-gate#positives[5]": [
++    "decision-review",
++    "adr-create"
++  ],
++  "decision-revisit-gate#positives[6]": [
++    "decision-review"
++  ],
++  "decision-revisit-gate#positives[7]": [
++    "decision-review",
++    "ai-council"
++  ],
++  "decision-revisit-gate#positives[8]": [
++    "decision-review",
++    "ai-council"
++  ],
++  "delegation-policy#positives[0]": [
++    "subagent-orchestration"
++  ],
++  "delegation-policy#positives[1]": [
++    "subagent-orchestration",
++    "using-git-worktrees"
++  ],
++  "design-fidelity#near_misses[1]": [
++    "fe-design",
++    "existing-ui-audit",
++    "design-review"
++  ],
++  "design-fidelity#positives[1]": [
++    "fe-design",
++    "existing-ui-audit"
++  ],
++  "design-review-after-ui-write#near_misses[0]": [
++    "api-design"
++  ],
++  "design-review-after-ui-write#near_misses[1]": [
++    "database",
++    "performance"
++  ],
++  "design-review-after-ui-write#near_misses[2]": [
++    "secrets-management"
++  ],
++  "design-review-after-ui-write#positives[1]": [
++    "blade-ui",
++    "fe-design"
++  ],
++  "design-review-after-ui-write#positives[2]": [
++    "ui-component-architect",
++    "existing-ui-audit"
++  ],
++  "devcontainer-routing#positives[0]": [
++    "devcontainer"
++  ],
++  "devcontainer-routing#positives[1]": [
++    "devcontainer"
++  ],
++  "devcontainer-routing#positives[2]": [
++    "devcontainer"
++  ],
++  "doc-screenshot-hygiene#positives[0]": [
++    "screenshot-hygiene",
++    "readme-writing"
++  ],
++  "doc-screenshot-hygiene#positives[2]": [
++    "screenshot-hygiene"
++  ],
++  "doc-screenshot-hygiene#positives[3]": [
++    "screenshot-hygiene"
++  ],
++  "docker-commands#positives[0]": [
++    "docker"
++  ],
++  "docker-commands#positives[1]": [
++    "docker"
++  ],
++  "domain-adoption-policy#positives[3]": [
++    "skill-writing"
++  ],
++  "domain-safety-disclaimer#positives[0]": [
++    "privacy-review",
++    "legal-intake-triage"
++  ],
++  "domain-safety-disclaimer#positives[1]": [
++    "fundraising-narrative"
++  ],
++  "domain-safety-pii#near_misses[0]": [
++    "privacy-review"
++  ],
++  "domain-safety-retention#positives[0]": [
++    "data-handling-judgment",
++    "privacy-review"
++  ],
++  "domain-safety-retention#positives[1]": [
++    "data-handling-judgment",
++    "privacy-review"
++  ],
++  "domain-safety-retention#positives[2]": [
++    "data-handling-judgment",
++    "privacy-review"
++  ],
++  "downstream-changes#near_misses[0]": [
++    "code-refactoring"
++  ],
++  "downstream-changes#positives[0]": [
++    "code-refactoring",
++    "code-intelligence",
++    "blast-radius-analyzer"
++  ],
++  "downstream-changes#positives[1]": [
++    "code-refactoring",
++    "code-intelligence"
++  ],
++  "downstream-changes#positives[2]": [
++    "blast-radius-analyzer",
++    "code-refactoring",
++    "code-intelligence"
++  ],
++  "engineering-safety-floor#positives[0]": [
++    "launch-readiness"
++  ],
++  "engineering-safety-floor#positives[1]": [
++    "schema-review",
++    "migration-architect"
++  ],
++  "evaluator-independence#positives[0]": [
++    "code-review",
++    "ai-council",
++    "adversarial-review"
++  ],
++  "evaluator-independence#positives[2]": [
++    "code-review",
++    "subagent-orchestration",
++    "ai-council"
++  ],
++  "external-code-graph-interop#near_misses[0]": [
++    "code-intelligence"
++  ],
++  "external-code-graph-interop#positives[0]": [
++    "code-intelligence"
++  ],
++  "external-code-graph-interop#positives[1]": [
++    "code-intelligence"
++  ],
++  "fast-path-marker-visibility#near_misses[0]": [
++    "ai-council"
++  ],
++  "finance-safety-floor#positives[2]": [
++    "runway-cognition",
++    "scenario-modeling",
++    "fundraising-narrative"
++  ],
++  "finance-safety-floor#positives[3]": [
++    "dcf-modeling",
++    "scenario-modeling"
++  ],
++  "fix-what-you-see#positives[0]": [
++    "systematic-debugging",
++    "github-ci"
++  ],
++  "framework-neutrality-in-generic-skills#near_misses[1]": [],
++  "framework-neutrality-in-generic-skills#near_misses[2]": [
++    "project-analysis-react"
++  ],
++  "framework-neutrality-in-generic-skills#near_misses[3]": [
++    "project-analysis-react",
++    "context-document"
++  ],
++  "framework-neutrality-in-generic-skills#positives[0]": [
++    "skill-management",
++    "skill-writing"
++  ],
++  "git-history-discipline#near_misses[0]": [
++    "git-workflow",
++    "finishing-a-development-branch"
++  ],
++  "git-history-discipline#positives[0]": [
++    "git-workflow",
++    "merge-conflicts"
++  ],
++  "git-history-discipline#positives[1]": [
++    "git-workflow",
++    "merge-conflicts"
++  ],
++  "git-history-discipline#positives[2]": [
++    "git-workflow"
++  ],
++  "history-discipline#positives[0]": [
++    "history-design"
++  ],
++  "history-discipline#positives[1]": [
++    "history-design"
++  ],
++  "history-discipline#positives[2]": [
++    "history-design"
++  ],
++  "icon-consistency#near_misses[0]": [
++    "design-intelligence",
++    "brand-identity"
++  ],
++  "icon-consistency#positives[0]": [
++    "iconography"
++  ],
++  "icon-consistency#positives[1]": [
++    "iconography"
++  ],
++  "icon-consistency#positives[2]": [
++    "iconography"
++  ],
++  "image-likeness-and-rights#near_misses[1]": [
++    "accessibility-auditor"
++  ],
++  "image-likeness-and-rights#positives[0]": [
++    "image-generation",
++    "image-provider-routing"
++  ],
++  "image-likeness-and-rights#positives[1]": [
++    "logo-generation"
++  ],
++  "image-likeness-and-rights#positives[2]": [
++    "logo-generation",
++    "brand-identity"
++  ],
++  "image-likeness-and-rights#positives[3]": [
++    "code-review"
++  ],
++  "improve-before-implement#near_misses[2]": [
++    "voc-extract"
++  ],
++  "improve-before-implement#near_misses[4]": [
++    "activation-design",
++    "onboarding-design",
++    "funnel-analysis"
++  ],
++  "improve-before-implement#near_misses[5]": [
++    "rice-prioritization",
++    "stakeholder-tradeoff"
++  ],
++  "improve-before-implement#near_misses[6]": [
++    "funnel-analysis",
++    "activation-design"
++  ],
++  "improve-before-implement#positives[1]": [
++    "code-refactoring"
++  ],
++  "improve-before-implement#positives[2]": [
++    "multi-tenancy",
++    "schema-review",
++    "migration-architect"
++  ],
++  "invite-challenge#near_misses[1]": [
++    "dependency-upgrade"
++  ],
++  "invite-challenge#positives[2]": [
++    "decision-record",
++    "performance"
++  ],
++  "laravel-routing#near_misses[0]": [
++    "laravel-validation",
++    "php-coder"
++  ],
++  "laravel-routing#near_misses[2]": [
++    "project-analysis-node-express",
++    "blast-radius-analyzer"
++  ],
++  "laravel-routing#near_misses[5]": [
++    "universal-project-analysis",
++    "project-analysis-node-express"
++  ],
++  "laravel-routing#positives[0]": [
++    "eloquent",
++    "laravel"
++  ],
++  "laravel-translations#near_misses[1]": [
++    "logging-monitoring"
++  ],
++  "laravel-translations#positives[1]": [
++    "laravel",
++    "systematic-debugging"
++  ],
++  "lethal-trifecta-guard#near_misses[1]": [
++    "testing-anti-patterns",
++    "systematic-debugging"
++  ],
++  "lethal-trifecta-guard#positives[0]": [
++    "skill-writing",
++    "agent-security-review",
++    "threat-modeling"
++  ],
++  "lethal-trifecta-guard#positives[3]": [
++    "skill-reviewer",
++    "agent-security-review"
++  ],
++  "linked-projects-onboarding-gate#near_misses[1]": [
++    "git-workflow"
++  ],
++  "linked-projects-onboarding-gate#positives[1]": [
++    "blast-radius-analyzer",
++    "monorepo-workspace"
++  ],
++  "low-impact-corpus-privacy-floor#near_misses[0]": [
++    "adr-create"
++  ],
++  "low-impact-corpus-privacy-floor#positives[3]": [
++    "upstream-contribute"
++  ],
++  "media-governance-routing#positives[0]": [
++    "video-director",
++    "scene-expander",
++    "character-consistency"
++  ],
++  "media-sync-ground-truth#positives[2]": [
++    "song-to-script",
++    "motion-choreographer"
++  ],
++  "missing-skill-recovery#near_misses[0]": [
++    "skill-writing"
++  ],
++  "missing-skill-recovery#positives[0]": [
++    "migration-architect",
++    "laravel-migration"
++  ],
++  "missing-skill-recovery#positives[2]": [
++    "threat-modeling"
++  ],
++  "model-recommendation#near_misses[0]": [
++    "migration-architect",
++    "schema-review"
++  ],
++  "model-recommendation#near_misses[1]": [
++    "laravel-scheduling",
++    "jobs-events"
++  ],
++  "model-recommendation#positives[1]": [
++    "reasoning-orchestrator"
++  ],
++  "model-recommendation#positives[2]": [
++    "command-writing"
++  ],
++  "no-attribution-footers#near_misses[0]": [
++    "review-routing",
++    "requesting-code-review"
++  ],
++  "no-attribution-footers#positives[2]": [],
++  "no-decorative-emojis-in-git-surfaces#near_misses[1]": [
++    "conventional-commits-writing",
++    "git-workflow"
++  ],
++  "no-decorative-emojis-in-git-surfaces#positives[3]": [
++    "conventional-commits-writing"
++  ],
++  "notes-first-reasoning#near_misses[1]": [
++    "logging-monitoring"
++  ],
++  "notes-first-reasoning#positives[0]": [
++    "systematic-debugging",
++    "project-analysis-hypothesis-driven"
++  ],
++  "notes-first-reasoning#positives[1]": [
++    "systematic-debugging",
++    "project-analysis-hypothesis-driven"
++  ],
++  "persona-governance#near_misses[1]": [
++    "voice-and-tone-design"
++  ],
++  "persona-governance#positives[0]": [
++    "persona-writing"
++  ],
++  "persona-governance#positives[1]": [
++    "persona-writing",
++    "description-assist"
++  ],
++  "persona-governance#positives[2]": [
++    "persona-writing"
++  ],
++  "php-coding#near_misses[2]": [
++    "async-python-patterns"
++  ],
++  "php-coding#near_misses[4]": [
++    "async-python-patterns"
++  ],
++  "php-coding#positives[0]": [
++    "quality-tools"
++  ],
++  "php-coding#positives[1]": [
++    "quality-tools"
++  ],
++  "php-coding#positives[2]": [
++    "quality-tools",
++    "php-coder"
++  ],
++  "php-coding#positives[3]": [
++    "php-coder",
++    "code-refactoring"
++  ],
++  "playbook-precedence#near_misses[0]": [],
++  "prefer-enums-over-literals#near_misses[0]": [
++    "code-refactoring"
++  ],
++  "preservation-guard#positives[0]": [
++    "skill-management"
++  ],
++  "provider-lifecycle-discipline#near_misses[1]": [
++    "secrets-management"
++  ],
++  "provider-lifecycle-discipline#positives[0]": [
++    "image-provider-routing",
++    "brand-asset-generation"
++  ],
++  "question-not-instruction#positives[1]": [],
++  "reviewer-awareness#near_misses[1]": [
++    "jira-integration",
++    "review-routing"
++  ],
++  "roadmap-ci-steps-policy#near_misses[1]": [
++    "github-ci",
++    "readme-writing"
++  ],
++  "roadmap-ci-steps-policy#positives[0]": [
++    "roadmap-writing"
++  ],
++  "roadmap-ci-steps-policy#positives[1]": [
++    "roadmap-writing",
++    "roadmap-management"
++  ],
++  "roadmap-progress-sync#near_misses[0]": [
++    "roadmap-management",
++    "roadmap-writing"
++  ],
++  "roadmap-progress-sync#positives[1]": [
++    "roadmap-management"
++  ],
++  "roadmap-progress-sync#positives[2]": [
++    "roadmap-management"
++  ],
++  "runtime-safety#positives[0]": [
++    "skill-writing",
++    "skill-management"
++  ],
++  "runtime-safety#positives[1]": [
++    "skill-writing",
++    "lint-skills"
++  ],
++  "runtime-safety#positives[2]": [
++    "skill-writing",
++    "lint-skills"
++  ],
++  "scale-discipline#near_misses[0]": [
++    "performance",
++    "performance-analysis"
++  ],
++  "scale-discipline#positives[2]": [
++    "schema-review",
++    "database"
++  ],
++  "secret-vcs-guard#near_misses[0]": [
++    "security",
++    "aws-infrastructure"
++  ],
++  "secret-vcs-guard#near_misses[1]": [
++    "secrets-management"
++  ],
++  "security-sensitive-stop#near_misses[3]": [],
++  "security-sensitive-stop#near_misses[4]": [
++    "openapi"
++  ],
++  "security-sensitive-stop#positives[0]": [
++    "threat-modeling",
++    "security"
++  ],
++  "security-sensitive-stop#positives[3]": [
++    "threat-modeling",
++    "api-endpoint"
++  ],
++  "security-sensitive-stop#positives[4]": [
++    "security",
++    "threat-modeling"
++  ],
++  "security-sensitive-stop#positives[5]": [
++    "api-endpoint",
++    "threat-modeling"
++  ],
++  "self-repair-loop#near_misses[1]": [
++    "github-ci"
++  ],
++  "senior-engineering-discipline#positives[0]": [
++    "api-endpoint",
++    "ai-code-blindspots"
++  ],
++  "senior-engineering-discipline#positives[1]": [
++    "laravel",
++    "sql-writing"
++  ],
++  "senior-engineering-discipline#positives[2]": [
++    "laravel-migration",
++    "schema-review"
++  ],
++  "settings-ask-protocol#near_misses[0]": [
++    "readme-writing"
++  ],
++  "skill-improvement-trigger#near_misses[0]": [
++    "memory-consolidation",
++    "learning-to-rule-or-skill"
++  ],
++  "skill-improvement-trigger#near_misses[1]": [
++    "github-ci"
++  ],
++  "skill-improvement-trigger#positives[0]": [
++    "skill-improvement-pipeline",
++    "learning-to-rule-or-skill"
++  ],
++  "skill-improvement-trigger#positives[1]": [],
++  "skill-improvement-trigger#positives[2]": [],
++  "slash-command-routing-policy#near_misses[0]": [
++    "conventional-commits-writing",
++    "git-workflow"
++  ],
++  "slash-command-routing-policy#near_misses[1]": [
++    "requesting-code-review",
++    "review-routing",
++    "git-workflow"
++  ],
++  "slash-command-routing-policy#positives[0]": [
++    "command-routing"
++  ],
++  "slash-command-routing-policy#positives[1]": [
++    "command-routing"
++  ],
++  "slash-command-routing-policy#positives[2]": [
++    "command-routing"
++  ],
++  "source-discovery-gate#near_misses[2]": [
++    "forensics-report"
++  ],
++  "source-discovery-gate#near_misses[3]": [
++    "forensics-report"
++  ],
++  "source-discovery-gate#near_misses[5]": [
++    "forensics-report"
++  ],
++  "source-of-truth#near_misses[0]": [
++    "rule-writing"
++  ],
++  "spreadsheet-source-quality#near_misses[0]": [
++    "spreadsheet-authoring"
++  ],
++  "spreadsheet-source-quality#near_misses[3]": [
++    "prediction-pool-optimizer"
++  ],
++  "spreadsheet-source-quality#near_misses[4]": [
++    "prediction-pool-optimizer"
++  ],
++  "spreadsheet-source-quality#positives[0]": [
++    "spreadsheet-authoring"
++  ],
++  "spreadsheet-source-quality#positives[1]": [
++    "spreadsheet-authoring"
++  ],
++  "strategy-safety-floor#near_misses[2]": [
++    "deal-qualification-meddic"
++  ],
++  "strategy-safety-floor#near_misses[3]": [
++    "expansion-playbook"
++  ],
++  "strategy-safety-floor#near_misses[4]": [
++    "forecast-accuracy",
++    "deal-qualification-meddic"
++  ],
++  "strategy-safety-floor#near_misses[7]": [
++    "comp-banding"
++  ],
++  "strategy-safety-floor#near_misses[8]": [
++    "one-on-one-cadence",
++    "org-design"
++  ],
++  "strategy-safety-floor#near_misses[9]": [
++    "scenario-modeling",
++    "forecasting"
++  ],
++  "strategy-safety-floor#positives[1]": [
++    "market-entry-analysis"
++  ],
++  "strategy-safety-floor#positives[2]": [
++    "positioning-strategy",
++    "competitive-moat-analysis"
++  ],
++  "symfony-routing#near_misses[0]": [
++    "symfony-workflow",
++    "php-coder"
++  ],
++  "symfony-routing#near_misses[3]": [
++    "nextjs-patterns"
++  ],
++  "symfony-routing#near_misses[4]": [
++    "project-analysis-nextjs",
++    "nextjs-patterns"
++  ],
++  "symfony-routing#near_misses[5]": [
++    "systematic-debugging",
++    "project-analysis-nextjs",
++    "project-analysis-react"
++  ],
++  "symfony-routing#positives[2]": [
++    "symfony-workflow"
++  ],
++  "test-first#positives[0]": [
++    "test-driven-development"
++  ],
++  "test-first#positives[1]": [
++    "test-driven-development",
++    "systematic-debugging"
++  ],
++  "test-first#positives[3]": [
++    "test-driven-development",
++    "test-case-discovery"
++  ],
++  "think-before-action#positives[0]": [
++    "developer-like-execution",
++    "feature-planning"
++  ],
++  "think-before-action#positives[1]": [
++    "systematic-debugging"
++  ],
++  "think-before-action#positives[2]": [
++    "data-flow-mapper",
++    "blast-radius-analyzer"
++  ],
++  "token-budget-discipline#positives[0]": [
++    "skill-writing",
++    "skill-management"
++  ],
++  "token-efficiency#near_misses[1]": [
++    "rtk-output-filtering",
++    "token-optimizer"
++  ],
++  "token-efficiency#positives[0]": [
++    "token-optimizer"
++  ],
++  "token-efficiency#positives[1]": [
++    "token-optimizer",
++    "rtk-output-filtering"
++  ],
++  "token-efficiency#positives[2]": [
++    "token-optimizer"
++  ],
++  "token-optimizer-maintenance#positives[1]": [
++    "check-refs",
++    "token-optimizer"
++  ],
++  "token-optimizer-maintenance#positives[2]": [
++    "token-optimizer",
++    "check-refs"
++  ],
++  "tool-safety#near_misses[0]": [
++    "github-ci"
++  ],
++  "tool-safety#positives[0]": [
++    "skill-writing"
++  ],
++  "ui-audit-gate#near_misses[0]": [
++    "api-design"
++  ],
++  "ui-audit-gate#near_misses[1]": [],
++  "ui-audit-gate#positives[0]": [
++    "existing-ui-audit",
++    "fe-design",
++    "ui-component-architect"
++  ],
++  "untrusted-input-defense#near_misses[1]": [
++    "security",
++    "defense-in-depth"
++  ],
++  "upstream-proposal#positives[0]": [
++    "upstream-contribute"
++  ],
++  "upstream-proposal#positives[2]": [
++    "upstream-contribute"
++  ],
++  "user-interaction#positives[0]": [
++    "decision-record",
++    "migration-architect"
++  ],
++  "user-interaction#positives[2]": [
++    "migration-architect",
++    "laravel-migration"
++  ],
++  "user-interrupt-priority#positives[0]": [
++    "incident-commander"
++  ],
++  "user-interrupt-priority#positives[2]": [
++    "roadmap-management"
++  ]
++}
+diff --git a/tests/scripts/measure_skill_ranker_baseline.test.ts b/tests/scripts/measure_skill_ranker_baseline.test.ts
+index 86f106304cf5ee1dbacee5b975fbffa3be15b338..f76d4a8ad0e9989f6fa196c67b7171fc3efe5f26 100644
+--- a/tests/scripts/measure_skill_ranker_baseline.test.ts
++++ b/tests/scripts/measure_skill_ranker_baseline.test.ts
+@@ -28,15 +28,21 @@ import { parse as parseYaml } from 'yaml';
+ import {
+     MIN_POWERED_N,
+     MIN_PROMPTS_PER_PACK,
++    SEALED_MODULUS,
++    type SliceName,
+     allPacks,
+     main,
+     measureAccuracy,
+     packCensus,
+     packsBelow,
+     packsForSkill,
++    partitionBySlice,
++    rankOptionsFor,
+     readMatrixCases,
+     readMatrixLabelledPrompts,
+     readMatrixPrompts,
++    sliceForId,
++    sliceSizes,
+ } from '../../src/scripts/measure_skill_ranker_baseline';
+ 
+ const REPO = path.resolve(__dirname, '..', '..');
+@@ -329,3 +335,161 @@ describe('the live routing matrix carries its labels', () => {
+         expect([...unknown].sort(), 'expected_skills naming no shipped skill').toEqual([]);
+     });
+ });
++
++// The held-out partition (road-to-a-ranker-that-routes 1.2). Every property
++// below is about the SEAL, not about the split ratio: a partition that is not
++// deterministic, not disjoint, or not stable under corpus growth cannot carry a
++// lift claim, because the slice a number was read on would not be the slice a
++// later reader reproduces.
++describe('holdout — the sealed slice is a function of the id and nothing else', () => {
++    const ids = Array.from({ length: 2000 }, (_, i) => `rule-${String(i % 97)}#positives[${String(i)}]`);
++
++    it('is deterministic — the same id lands in the same slice every call', () => {
++        for (const id of ids.slice(0, 200)) expect(sliceForId(id)).toBe(sliceForId(id));
++    });
++
++    it('assigns every id to exactly one of the two slices', () => {
++        // Two halves: the IMAGE is both labels, so neither slice is empty; and
++        // the assignment is in the closed set, so nothing returns a third value
++        // or undefined. An earlier version asserted only the image, which would
++        // pass for a function that returned both — and the version after it
++        // "fixed" that with `expect(x === 'a' ? 'b' : 'a').not.toBe(x)`, which
++        // compares a value to its own negation and cannot fail either.
++        expect(new Set(ids.map(sliceForId))).toEqual(new Set(['tuning', 'sealed']));
++        const labels = new Set(ids.map(sliceForId));
++        expect([...labels].sort()).toEqual(['sealed', 'tuning']);
++        expect(ids.every((id) => (['tuning', 'sealed'] as string[]).includes(sliceForId(id)))).toBe(true);
++    });
++
++    it('is stable when a section is APPENDED to, and moves rows when one is INSERTED into', () => {
++        // The real matrix id is `rule#section[ordinal]` and the ordinal is
++        // POSITIONAL, so this is the limitation the docblock now states instead
++        // of denying. Written against the real id shape rather than synthetic
++        // ids, because an earlier version of this suite asserted that a pure
++        // function of a string is stable — which cannot fail.
++        const section = (count: number): string[] =>
++            Array.from({ length: count }, (_, i) => `alpha#positives[${String(i)}]`);
++
++        // APPEND: ids 0..39 survive verbatim when the section grows to 45, so
++        // the partition of the first 40 is unchanged. Compared as two computed
++        // maps rather than id-against-itself.
++        const before = section(40);
++        const appended = section(45);
++        const sliceOf = (list: string[]): Record<string, string> =>
++            Object.fromEntries(list.map((id) => [id, sliceForId(id)]));
++        const beforeMap = sliceOf(before);
++        const appendedMap = sliceOf(appended);
++        for (const id of before) {
++            expect(appendedMap[id], `${id} changed slice on an append`).toBe(beforeMap[id]);
++        }
++
++        // INSERT at position 0: every row's ordinal shifts by one, so each row's
++        // slice is now read off a DIFFERENT id. Some must move, or the seal
++        // would be stable in a way this corpus cannot deliver.
++        const renumbered = before.map((_, i) => `alpha#positives[${String(i + 1)}]`);
++        const moved = before.filter((id, i) => beforeMap[id] !== sliceForId(renumbered[i] as string));
++        expect(moved.length, 'a mid-section insert must be shown to move rows').toBeGreaterThan(0);
++    });
++
++    it('partitions disjointly and exhaustively, and `all` is the identity', () => {
++        const rows = ids.map((id) => ({ id }));
++        const tuning = partitionBySlice(rows, 'tuning');
++        const sealed = partitionBySlice(rows, 'sealed');
++        expect(tuning.length + sealed.length).toBe(rows.length);
++        expect(partitionBySlice(rows, 'all')).toHaveLength(rows.length);
++        const inSealed = new Set(sealed.map((r) => r.id));
++        expect(
++            tuning.some((r) => inSealed.has(r.id)),
++            'a row in both slices',
++        ).toBe(false);
++    });
++
++    it('is independent of the order the rows arrive in', () => {
++        const rows = ids.map((id) => ({ id }));
++        const forward = partitionBySlice(rows, 'sealed')
++            .map((r) => r.id)
++            .sort();
++        const backward = partitionBySlice([...rows].reverse(), 'sealed')
++            .map((r) => r.id)
++            .sort();
++        expect(backward).toEqual(forward);
++    });
++
++    it('keeps a row on its own side of the seal when the corpus grows', () => {
++        // The defect this refuses: a share applied to a shuffled list would move
++        // rows across the boundary the moment a prompt is added, so a sealed
++        // reading would silently stop being held out from the earlier tuning.
++        const before = new Set(
++            partitionBySlice(
++                ids.slice(0, 1000).map((id) => ({ id })),
++                'sealed',
++            ).map((r) => r.id),
++        );
++        const after = new Set(
++            partitionBySlice(
++                ids.map((id) => ({ id })),
++                'sealed',
++            ).map((r) => r.id),
++        );
++        for (const id of before) expect(after.has(id), `${id} changed slice`).toBe(true);
++    });
++
++    it(`holds roughly one row in ${String(SEALED_MODULUS)} back, measured rather than assumed`, () => {
++        // A floor and a ceiling, not a value: the hash is not a shuffle and the
++        // exact count is a property of the ids, so pinning it would make any new
++        // fixture a red test.
++        const share = ids.filter((id) => sliceForId(id) === 'sealed').length / ids.length;
++        expect(share).toBeGreaterThan(0.1);
++        expect(share).toBeLessThan(0.3);
++    });
++
++    it('reports the sizes of BOTH slices whichever one was read', () => {
++        const sizes = sliceSizes(ids.map((id) => ({ id })));
++        expect(sizes.all).toBe(ids.length);
++        expect(sizes.tuning + sizes.sealed).toBe(sizes.all);
++        expect(sizes.sealed_modulus).toBe(SEALED_MODULUS);
++    });
++
++    it('the CLI refuses an unknown slice rather than silently reading the whole corpus', () => {
++        expect(main(['--slice', 'the-good-half'])).toBe(2);
++        expect(main(['--slice'])).toBe(2);
++    });
++
++    it('an unknown --ranker is refused, never resolved to the baseline', () => {
++        // The failure this refuses: every consumer echoes the requested label
++        // into its output, so resolving a typo to `{}` published a keyword-v1
++        // number under another configuration's name.
++        expect(() => rankOptionsFor('keyword-v3')).toThrow(/unknown --ranker/);
++        expect(main(['--ranker', 'keyword-v3'])).toBe(2);
++        expect(rankOptionsFor('idf')).toEqual({ idfWeighting: true });
++    });
++
++    it('a sliced arm names its slice and both sizes, over a fixture corpus', () => {
++        skill('docker', ['engineering-base'], 'Containers and images.');
++        const lines = ['rule: alpha', 'positives:'];
++        for (let i = 0; i < 200; i += 1) {
++            lines.push(`  - prompt: "containers and images question number ${String(i)}"`);
++            lines.push('    expected_skills: [docker]');
++        }
++        write('tests/eval/routing-matrix/alpha.yaml', `${lines.join('\n')}\n`);
++        const arm = (s: SliceName): ReturnType<typeof measureAccuracy> =>
++            measureAccuracy({
++                corpus: 'routing-matrix',
++                repo: root,
++                skillsDir: path.join(root, 'src', 'skills'),
++                rankOpts: {},
++                slice: s,
++            });
++        const whole = arm('all');
++        const tuning = arm('tuning');
++        const sealed = arm('sealed');
++        expect(whole.slice).toBe('all');
++        expect(tuning.slice).toBe('tuning');
++        expect(sealed.slice).toBe('sealed');
++        expect(tuning.corpus_prompts + sealed.corpus_prompts).toBe(whole.corpus_prompts);
++        // The sizes block describes the FULL corpus in every arm, so a reader of
++        // a sealed-only report can see what it was held out from.
++        expect(sealed.slice_sizes.all).toBe(whole.corpus_prompts);
++        expect(sealed.slice_sizes.sealed).toBe(sealed.corpus_prompts);
++    });
++});
+diff --git a/tests/scripts/score_skill_relevance.test.ts b/tests/scripts/score_skill_relevance.test.ts
+index 697d57a23ddb33abb7fbf35bfafa8f10560a236b..c7f010761abbe1c4efb5813473c413e0c7547a09 100644
+--- a/tests/scripts/score_skill_relevance.test.ts
++++ b/tests/scripts/score_skill_relevance.test.ts
+@@ -228,3 +228,136 @@ describe('score_skill_relevance — CLI (tsx)', () => {
+         );
+     });
+ });
++
++// The candidate signals (road-to-a-ranker-that-routes 2.2). Each is a flag, each
++// is off by default, and the property that matters most is the one asserted
++// first: with every flag off the ranking is the one the Python-parity suite
++// above pins. A signal that silently changed the default would make every
++// figure in this tree's ranker evidence a figure about something else.
++describe('candidate ranking signals — off by default, measurable alone', () => {
++    /** A SKILL.md with a real body — the shared helper only writes a heading. */
++    function skillWithBody(dir: string, slug: string, desc: string, body: string): void {
++        const f = path.join(dir, slug, 'SKILL.md');
++        fs.mkdirSync(path.dirname(f), { recursive: true });
++        fs.writeFileSync(f, `---\nname: ${slug}\ndescription: "${desc}"\n---\n\n# ${slug}\n\n${body}`, 'utf-8');
++    }
++
++    /**
++     * `containers` is on three skills, `schemas` on one.
++     *
++     * That asymmetry is what makes the idf case decidable: a prompt naming both
++     * matches exactly one term on `alpha` and exactly one on `beta`, so the
++     * unweighted score ties and the alphabetical tiebreak decides it.
++     */
++    function catalogue(dir: string): void {
++        skillWithBody(
++            dir,
++            'alpha',
++            'Containers and images.',
++            '## When to use\n\nWhen a kubernetes pod will not schedule.\n\n## Procedure\n\nunrelated prose\n',
++        );
++        skillWithBody(dir, 'beta', 'Schemas and indexes.', '## Gotchas\n\nnone\n');
++        skillWithBody(dir, 'gamma', 'Containers at runtime.', '');
++        skillWithBody(dir, 'delta', 'Containers in production.', '');
++    }
++
++    it('with no options the score is the name+description one, unchanged', () => {
++        catalogue(tmp);
++        expect(rank('containers and images', tmp)).toEqual(rank('containers and images', tmp, {}));
++    });
++
++    it('includeWhenToUse surfaces a skill its description never mentions', () => {
++        // The failing direction is the point: without the flag the prompt scores
++        // nothing against `alpha`, because `kubernetes` lives only in the body.
++        catalogue(tmp);
++        expect(rank('kubernetes pod will not schedule', tmp).map((r) => r[0])).not.toContain('alpha');
++        expect(
++            rank('kubernetes pod will not schedule', tmp, { includeWhenToUse: true }).map((r) => r[0]),
++        ).toContain('alpha');
++    });
++
++    it('includeHeadings indexes a section title and not the prose under it', () => {
++        catalogue(tmp);
++        expect(rank('gotchas', tmp, { includeHeadings: true }).map((r) => r[0])).toContain('beta');
++        // `unrelated prose` sits under a heading; it is not a heading.
++        expect(rank('unrelated prose', tmp, { includeHeadings: true }).map((r) => r[0])).not.toContain(
++            'alpha',
++        );
++    });
++
++    it('idfWeighting lets a rare matched term outweigh a common one', () => {
++        catalogue(tmp);
++        const plain = rank('containers schemas', tmp);
++        const byNamePlain = Object.fromEntries(plain.map((r) => [r[0], r[1]]));
++        expect(byNamePlain['alpha'], 'unweighted: one matched term each').toBe(byNamePlain['beta']);
++        expect(plain[0]?.[0], 'unweighted the alphabetical tiebreak decides').toBe('alpha');
++
++        const weighted = rank('containers schemas', tmp, { idfWeighting: true });
++        expect(weighted[0]?.[0], 'weighted the rare term wins').toBe('beta');
++    });
++});
++
++// 3.2 — the promoted configuration has to fit the slot it would run in.
++describe('latency — per-prompt ranking cost against the pre_tool_use budget', () => {
++    const BUDGET_FILE = path.join(REPO_ROOT, 'src', 'config', 'hook-latency-budget.json');
++
++    /**
++     * The 95th percentile, nearest-rank — and it needs enough samples to be one.
++     *
++     * At n = 12 `ceil(0.95 * n) - 1` is index 11, i.e. the MAXIMUM, which is the
++     * most outlier-sensitive statistic available and the opposite of what a
++     * flake-averse wall-clock check wants. RUNS below is set so the selected
++     * index is not the last.
++     */
++    function p95(xs: readonly number[]): number {
++        const s = [...xs].sort((a, b) => a - b);
++        return s[Math.min(s.length - 1, Math.ceil(0.95 * s.length) - 1)] as number;
++    }
++
++    /** 40 samples → index 37 of 40: a real percentile, and the artifact's n. */
++    const RUNS = 40;
++
++    function measure(opts: Parameters<typeof rank>[2], runs: number): number {
++        const prompts = [
++            'add an index to the orders table and write the migration',
++            'review this pull request for security problems',
++            'build a component for the user dashboard with reactive state',
++            'run the migration inside the app container',
++            'write a roadmap for the next quarter of frontend work',
++        ];
++        const dir = path.join(REPO_ROOT, 'src', 'skills');
++        for (let i = 0; i < 3; i += 1) rank(prompts[i] as string, dir, opts);
++        const t: number[] = [];
++        for (let i = 0; i < runs; i += 1) {
++            const at = performance.now();
++            rank(prompts[i % prompts.length] as string, dir, opts);
++            t.push(performance.now() - at);
++        }
++        return p95(t);
++    }
++
++    it('the budget is read from the registered file, never from a constant here', () => {
++        // A test carrying its own copy of the number would keep passing after the
++        // budget moved, which is the one thing a budget check must not do.
++        const budget = JSON.parse(fs.readFileSync(BUDGET_FILE, 'utf-8')) as {
++            budgets_ms: { pre_tool_use: { p95_ci: number } };
++        };
++        expect(budget.budgets_ms.pre_tool_use.p95_ci).toBeGreaterThan(0);
++    });
++
++    it('the default ranker and the best candidate both fit inside it', () => {
++        const budget = (
++            JSON.parse(fs.readFileSync(BUDGET_FILE, 'utf-8')) as {
++                budgets_ms: { pre_tool_use: { p95_ci: number } };
++            }
++        ).budgets_ms.pre_tool_use.p95_ci;
++        // Absolute, against the registered cap, and nothing tighter. Measured on
++        // a developer machine the two sit near 12 ms against a 175 ms cap, so the
++        // assertion has an order of magnitude of headroom — which is deliberate:
++        // this tree's own hook-latency gate is the one check that fails on a
++        // loaded runner rather than on a diff, and a tight self-imposed bar here
++        // would reproduce that defect in a unit test.
++        expect(measure({}, RUNS), 'keyword-v1 p95 ms').toBeLessThan(budget);
++        expect(measure({ idfWeighting: true }, RUNS), 'idf p95 ms').toBeLessThan(budget);
++    }, 120_000);
++});
+diff --git a/tests/scripts/skill_ranker_reports.test.ts b/tests/scripts/skill_ranker_reports.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..1ba2b3011ba9f1fa7450e11f3cfadf8201c58020
+--- /dev/null
++++ b/tests/scripts/skill_ranker_reports.test.ts
+@@ -0,0 +1,256 @@
++// Tests for the three reporting tools added with the sealed-slice work:
++// report_skill_ranker_confusion, report_label_agreement, sweep_skill_ranker_signals.
++//
++// These produce the numbers a published evidence artifact quotes, so what is
++// worth guarding is not "does it divide" but the places a report can state
++// something its own data does not support:
++//
++//   1. a comparator that is not a total order — tied rows then come out in
++//      engine-defined order and the artifact's "regenerate every figure" claim
++//      is false in a way no reader can see;
++//   2. a sentinel that collapses two causes — `share: null` means "no threshold"
++//      and "no denominator", and attributing it to one states something the
++//      neighbouring cell contradicts;
++//   3. a slice-independent sentence — the generator emitting "the sealed slice
++//      is not read here" on a run that read it;
++//   4. an agreement definition that silently changes which rows it keeps.
++//
++// Fixture-derived throughout: every expectation is computed from constants
++// written here, never from the live corpus, so a corpus change cannot make a
++// stale number pass.
++import { describe, expect, it } from 'vitest';
++
++import {
++    agrees,
++    type AgreementKind,
++} from '../../src/scripts/report_label_agreement';
++import {
++    confusionPairs,
++    falseActivation,
++    firstExpectedRank,
++    meanReciprocalRank,
++    type RowReading,
++} from '../../src/scripts/report_skill_ranker_confusion';
++import { _body_signals } from '../../src/scripts/skill_tools/score_skill_relevance';
++
++function reading(over: Partial<RowReading> = {}): RowReading {
++    return { id: 'r#positives[0]', expected: ['alpha'], rankedFirst: 'beta', topScore: 10, rankOfExpected: 0, ...over };
++}
++
++describe('firstExpectedRank — absent is 0, never a sentinel that does arithmetic', () => {
++    const rows: [string, number, string[]][] = [
++        ['alpha', 30, []],
++        ['beta', 20, []],
++        ['gamma', 10, []],
++    ];
++
++    it('is 1-based, so the top row is 1 and not 0', () => {
++        expect(firstExpectedRank(rows, ['alpha'])).toBe(1);
++        expect(firstExpectedRank(rows, ['gamma'])).toBe(3);
++    });
++
++    it('returns the FIRST expected skill found, not the best-fit one', () => {
++        expect(firstExpectedRank(rows, ['gamma', 'beta'])).toBe(2);
++    });
++
++    it('returns 0 when no expected skill is ranked at all', () => {
++        // 0 rather than Infinity: the reciprocal of "absent" is 0, which is what
++        // MRR wants, and a sentinel that participates in arithmetic is how a
++        // rank metric quietly becomes a different metric.
++        expect(firstExpectedRank(rows, ['delta'])).toBe(0);
++        expect(firstExpectedRank([], ['alpha'])).toBe(0);
++    });
++});
++
++describe('meanReciprocalRank', () => {
++    it('averages 1/rank and scores an unranked row as 0, not as a miss it drops', () => {
++        const mrr = meanReciprocalRank([
++            reading({ rankOfExpected: 1 }),
++            reading({ rankOfExpected: 4 }),
++            reading({ rankOfExpected: 0 }),
++        ]);
++        expect(mrr).toBeCloseTo((1 + 0.25 + 0) / 3, 10);
++    });
++
++    it('an empty set is 0 rather than a division by zero', () => {
++        expect(meanReciprocalRank([])).toBe(0);
++    });
++});
++
++describe('confusionPairs — a TOTAL order, so the table reproduces', () => {
++    it('counts a miss once per (expected-first, ranked-first) pair and skips hits', () => {
++        const pairs = confusionPairs([
++            reading({ expected: ['a'], rankedFirst: 'x', rankOfExpected: 2 }),
++            reading({ expected: ['a'], rankedFirst: 'x', rankOfExpected: 3 }),
++            reading({ expected: ['a'], rankedFirst: 'y', rankOfExpected: 2 }),
++            reading({ expected: ['a'], rankedFirst: 'a', rankOfExpected: 1 }),
++        ]);
++        expect(pairs).toEqual([
++            { expected: 'a', got: 'x', count: 2 },
++            { expected: 'a', got: 'y', count: 1 },
++        ]);
++    });
++
++    it('keys on the label FIRST skill, so a three-slot label is one confusion', () => {
++        // The defect this refuses: counting every skill in a label would turn one
++        // row into three confusions and make the frequency column a count of
++        // label widths rather than of errors.
++        const pairs = confusionPairs([
++            reading({ expected: ['a', 'b', 'c'], rankedFirst: 'x', rankOfExpected: 2 }),
++        ]);
++        expect(pairs).toEqual([{ expected: 'a', got: 'x', count: 1 }]);
++    });
++
++    it('breaks a full tie on `got`, so equal rows have ONE order', () => {
++        // The previous comparator returned 1 for both argument orders on a full
++        // tie — never 0 — leaving equal rows in engine-defined order. Asserted
++        // by feeding the same rows in two different orders and requiring one
++        // answer, which is the property, not a pinned permutation.
++        const rows = [
++            reading({ expected: ['a'], rankedFirst: 'zeta', rankOfExpected: 2 }),
++            reading({ expected: ['a'], rankedFirst: 'alpha', rankOfExpected: 2 }),
++            reading({ expected: ['a'], rankedFirst: 'mid', rankOfExpected: 2 }),
++        ];
++        const forward = confusionPairs(rows).map((p) => p.got);
++        const backward = confusionPairs([...rows].reverse()).map((p) => p.got);
++        expect(forward).toEqual(['alpha', 'mid', 'zeta']);
++        expect(backward).toEqual(forward);
++    });
++
++    it('names an unranked miss rather than dropping it', () => {
++        const pairs = confusionPairs([
++            reading({ expected: ['a'], rankedFirst: null, rankOfExpected: 0 }),
++        ]);
++        expect(pairs).toEqual([{ expected: 'a', got: '(nothing ranked)', count: 1 }]);
++    });
++
++    it('honours the limit', () => {
++        const rows = ['p', 'q', 'r'].map((got) =>
++            reading({ expected: ['a'], rankedFirst: got, rankOfExpected: 2 }),
++        );
++        expect(confusionPairs(rows, 2)).toHaveLength(2);
++    });
++});
++
++describe('falseActivation — null means one of TWO things and says which', () => {
++    const hit = (score: number): RowReading => reading({ rankOfExpected: 1, topScore: score });
++
++    it('compares the empties against the median top score of a correct hit', () => {
++        const fa = falseActivation([hit(10), hit(20), hit(30)], [5, 20, 25]);
++        expect(fa.median_correct_hit_score).toBe(20);
++        expect(fa.at_or_above_median).toBe(2);
++        expect(fa.share).toBe(round3(2 / 3));
++    });
++
++    it('averages the two middle scores on an even number of hits', () => {
++        const fa = falseActivation([hit(10), hit(20), hit(30), hit(40)], []);
++        expect(fa.median_correct_hit_score).toBe(25);
++    });
++
++    it('reports share null — never a measured 100 % — when NO row is a correct hit', () => {
++        // The defect this refuses: a median of 0 makes every empty "at or above"
++        // it, since every score is >= 0, and prints a 100 % false-activation
++        // rate from a degenerate threshold.
++        const fa = falseActivation([reading({ rankOfExpected: 2 })], [1, 2, 3]);
++        expect(fa.correct_hits).toBe(0);
++        expect(fa.share).toBeNull();
++        expect(fa.at_or_above_median).toBe(0);
++    });
++
++    it('reports share null when there are no empties to compare', () => {
++        const fa = falseActivation([hit(10)], []);
++        expect(fa.correct_hits).toBe(1);
++        expect(fa.share).toBeNull();
++    });
++
++    function round3(n: number): number {
++        return Math.round(n * 1000) / 1000;
++    }
++});
++
++describe('agrees — three definitions, and they are not interchangeable', () => {
++    const cases: [string[], string[], Record<AgreementKind, boolean>][] = [
++        [['a'], ['a'], { exact: true, overlap: true, polarity: true }],
++        [['a', 'b'], ['b', 'a'], { exact: true, overlap: true, polarity: true }],
++        [['a', 'b'], ['b', 'c'], { exact: false, overlap: true, polarity: true }],
++        [['a'], ['z'], { exact: false, overlap: false, polarity: true }],
++        [['a'], [], { exact: false, overlap: false, polarity: false }],
++        [[], [], { exact: true, overlap: true, polarity: true }],
++    ];
++
++    for (const [first, second, want] of cases) {
++        it(`[${first.join()}] vs [${second.join()}] — exact ${String(want.exact)}, overlap ${String(want.overlap)}, polarity ${String(want.polarity)}`, () => {
++            expect(agrees(first, second, 'exact')).toBe(want.exact);
++            expect(agrees(first, second, 'overlap')).toBe(want.overlap);
++            expect(agrees(first, second, 'polarity')).toBe(want.polarity);
++        });
++    }
++
++    it('is symmetric in its two seats — neither is privileged', () => {
++        for (const [first, second] of cases) {
++            for (const kind of ['exact', 'overlap', 'polarity'] as const) {
++                expect(agrees(first, second, kind), `${kind} on [${first.join()}]/[${second.join()}]`).toBe(
++                    agrees(second, first, kind),
++                );
++            }
++        }
++    });
++
++    it('exact agreement is a SUBSET of overlap, which is a subset of polarity', () => {
++        // The ordering is the whole reason three definitions are reported: a
++        // definition that kept rows a weaker one dropped would make the three
++        // top-1 figures incomparable.
++        for (const [first, second] of cases) {
++            if (agrees(first, second, 'exact')) expect(agrees(first, second, 'overlap')).toBe(true);
++            if (agrees(first, second, 'overlap')) expect(agrees(first, second, 'polarity')).toBe(true);
++        }
++    });
++});
++
++describe('_body_signals — the bounds, asserted directly rather than through rank()', () => {
++    it('keeps a `###` subsection inside `## When to use`, title and body', () => {
++        const got = _body_signals(
++            '## When to use\n\nalways\n\n### Do NOT use when\n\nnever\n\n## Procedure\n\nsteps\n',
++        );
++        expect(got.whenToUse).toContain('always');
++        expect(got.whenToUse).toContain('Do NOT use when');
++        expect(got.whenToUse).toContain('never');
++        expect(got.whenToUse).not.toContain('steps');
++    });
++
++    it('ends the section at a sibling `##`, so one section is not the whole file', () => {
++        const got = _body_signals('## When to use\n\nalways\n\n## Gotchas\n\ntrap\n');
++        expect(got.whenToUse).toBe('always');
++    });
++
++    it('a `##` line inside a fence is neither a heading nor a section terminator', () => {
++        const got = _body_signals('## When to use\n\nalways\n\n```markdown\n## Not A Heading\n```\n\nstill\n');
++        expect(got.headings).toEqual(['When to use']);
++        expect(got.whenToUse).toContain('still');
++    });
++
++    it('drops the fence delimiter and its info string, which are not prose', () => {
++        // The defect this refuses: pushing the delimiter put the language tag of
++        // every fenced sample into the index, so `bash` became a topic term.
++        const got = _body_signals('## When to use\n\n```bash\nrun it\n```\n');
++        expect(got.whenToUse).not.toContain('bash');
++        expect(got.whenToUse).toContain('run it');
++    });
++
++    it('a shorter inner fence does not close a longer outer one', () => {
++        const got = _body_signals('## When to use\n\n````\n```\n## Still Fenced\n```\n````\n\nafter\n');
++        expect(got.headings).toEqual(['When to use']);
++        expect(got.whenToUse).toContain('after');
++    });
++
++    it('collects `##` and `###` headings and stops at `####`', () => {
++        const got = _body_signals('## Two\n\n### Three\n\n#### Four\n');
++        expect(got.headings).toEqual(['Two', 'Three']);
++    });
++
++    it('a body with no When-to-use section yields an empty capture, not the whole body', () => {
++        const got = _body_signals('## Procedure\n\nsteps\n');
++        expect(got.whenToUse).toBe('');
++        expect(got.headings).toEqual(['Procedure']);
++    });
++});
