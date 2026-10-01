@@ -468,9 +468,7 @@ export function latest_manifest_mtime(
     return mtimes.length > 0 ? Math.max(...mtimes) : 0.0;
 }
 
-// --------------------------------------------------------------------------
 // Ecosystem resolvers
-// --------------------------------------------------------------------------
 
 function _php_runners(root: string, composer: Manifest, wrappers: Wrappers): RunnerResult[] {
     const deps = _all_dependencies(composer, 'require', 'require-dev');
@@ -1147,9 +1145,7 @@ function _python_quality(pyproject_text: string): string[] {
     return out;
 }
 
-// --------------------------------------------------------------------------
 // Task-runner wrappers (Makefile / Taskfile / package scripts)
-// --------------------------------------------------------------------------
 
 /**
  * Map logical roles to a wrapper command when one exists.
@@ -1263,9 +1259,7 @@ function _package_manager(root: string, pkg?: Manifest): string {
     return _resolve_package_manager(root, pkg).manager ?? 'npm';
 }
 
-// --------------------------------------------------------------------------
 // Monorepo guard + confidence
-// --------------------------------------------------------------------------
 
 function _apply_guard(
     runners: RunnerResult[],
@@ -1297,9 +1291,7 @@ function _overall_confidence(runners: RunnerResult[]): string {
     return MEDIUM;
 }
 
-// --------------------------------------------------------------------------
 // Shared readers (mirror detect.py's recoverable-error contract)
-// --------------------------------------------------------------------------
 
 function _read_json(p: string): Manifest {
     if (!_is_file(p)) {
@@ -1357,9 +1349,7 @@ function _script_command(scripts: Manifest, names: string[], manager: string): s
     return '';
 }
 
-// --------------------------------------------------------------------------
 // stdlib parity helpers
-// --------------------------------------------------------------------------
 
 /** Python `Path.is_file()` — true only for a regular file (follows symlinks). */
 function _is_file(p: string): boolean {
@@ -1410,10 +1400,8 @@ function _dictFromKeys(seq: string[]): string[] {
     return [...new Set(seq)];
 }
 
-// --------------------------------------------------------------------------
 // JSON serialisation — byte-parity with `json.dumps(..., indent=2,
 // sort_keys=True)` for `write_config`.
-// --------------------------------------------------------------------------
 
 /**
  * Mirror Python `json.dumps(obj, indent=2, sort_keys=True)` byte-for-byte.
