@@ -46,8 +46,15 @@
 #   verified         provenance of the row, or `null`. `expires` is mandatory
 #                    when the block is present — see lint_hook_manifest.
 #                    `docs_digest` is the sha256 of the `docs_url` body as
-#                    fetched on `docs_at`; `check_host_docs_digest --fetch`
-#                    re-reads it and flags a change.
+#                    fetched by the LAST digest run — NOT as fetched on
+#                    `docs_at`, which is a different event: `docs_at` dates the
+#                    reading the row's ANSWERS came from, the digest pins the
+#                    body at the moment it was hashed. The first fill already
+#                    made the distinction real (digests taken 2026-10-01 against
+#                    rows read 2026-09-29), so the two are stated apart rather
+#                    than written as one sentence that asserts a provenance
+#                    nobody has. `check_host_docs_digest --fetch` re-reads and
+#                    flags a change.
 #   slots            ORDERED. Bridge entries are written in this order, so the
 #                    order is part of the generated output and must not be
 #                    sorted. `native` may be a list where one slot has two
@@ -281,10 +288,28 @@ hosts:
         # documentation check found that the host DOES document lifecycle hooks
         # — `sessionStart`, `sessionEnd`, `userPromptSubmitted`, `preToolUse`,
         # `postToolUse`, `agentStop`, `subagentStop`, `errorOccurred` — at
-        # `~/.copilot/hooks/*.json`, with `preToolUse` fail-closed on exit 2.
-        # So the roadmap's dated zero does NOT apply to this host, and the row
-        # below is a dated statement about this package, not about the host:
-        # nothing is bound, so `slots:` stays empty.
+        # `~/.copilot/hooks/*.json`. So the roadmap's dated zero does NOT apply
+        # to this host, and the row below is a dated statement about this
+        # package, not about the host: nothing is bound, so `slots:` stays
+        # empty.
+        #
+        # CORRECTED 2026-10-01, and the correction is the point of this file.
+        # This comment previously ended "...with `preToolUse` fail-closed on
+        # exit 2". **The cited page does not say that.** It was re-fetched on
+        # 2026-10-01 — hashing byte-identical to the `docs_digest` below, so the
+        # body read is provably the body pinned — and it contains NO exit-code
+        # semantics at all: no `exit 2`, no non-zero convention, no stderr
+        # contract. What it documents is the CAPABILITY — `preToolUse` "can
+        # approve or deny tool executions" — and a `version`/`type`/`bash`/
+        # `cwd`/`env`/`timeoutSec` config shape. The mechanism is undocumented
+        # on that page.
+        #
+        # A capability is not a contract, and writing the contract in anyway is
+        # precisely the "statement about what a host can do that the tree has
+        # not established" this file's header forbids. The claim was inherited
+        # rather than invented here, and it survived two readings before a
+        # review fetched the page and grepped it; that is the whole argument for
+        # `docs_digest` existing, so it is recorded rather than quietly deleted.
         #
         # WHY `probe_at` IS STILL NULL ON 2026-10-01, STATED SO IT IS NOT READ
         # AS AN OVERSIGHT. The sibling `codex` row was probed on that date
@@ -295,10 +320,13 @@ hosts:
         # blocking this row from carrying what the codex row now carries.
         #
         # The codex probe is also the reason this row should NOT be armed from
-        # its documentation alone: on the sibling host the documented exit-2
-        # refusal did not reproduce on the installed build. Two hosts documented
-        # the same contract; the one that could be tested did not honour it.
-        # Binding this host is therefore gated on a probe, not on a re-read.
+        # its documentation alone — though the argument is WEAKER than it first
+        # read, and the weaker version is the true one. On the sibling host a
+        # documented exit-2 refusal did not reproduce on the installed build.
+        # Here there is no documented exit-2 contract to arm in the first place
+        # (see the correction above), so this host is further from a binding
+        # than codex, not equally close. Either way the gate is the same: a
+        # probe, never a re-read.
         verified:
           docs_at: 2026-09-29
           docs_url: https://docs.github.com/en/copilot/concepts/agents/hooks.md

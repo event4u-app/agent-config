@@ -69,8 +69,9 @@ with a date on it.
       → **1**, and `grep -n` shows the single hit is line 13 of the header
       prose (`\`verified: null\` means nobody established anything`), not a row —
       so the row count is 0 as the step requires. `lint_hook_manifest` exits 0
-      with 8 warnings, all of them the admissible-but-not-fully-cited
-      `verified.host_version is null` note. `host_lowering_expiry.test.ts` is
+      with **7** warnings, all of them the admissible-but-not-fully-cited
+      `verified.host_version is null` note (8 before the codex probe filled
+      that row's `host_version`). `host_lowering_expiry.test.ts` is
       unchanged and its 6 tests pass. Cowork's block records exactly what the
       step predicted: `docs_url: null` with the comment stating no public hooks
       page exists to cite.
@@ -117,8 +118,12 @@ with a date on it.
       deliberate property: a `parseDocument` round-trip was tried first and
       **rejected after measurement** — it preserves every comment but
       renormalises the hand-aligned `slots:` flow mappings (361 bytes across 32
-      rows), so the watcher now edits the two lines whose content changes and
-      nothing else.
+      rows), so the watcher now edits only the lines whose content changes and
+      nothing else. After completion review that is **one** line on a drift,
+      not two: a drifted row keeps its recorded digest, because overwriting it
+      would both assert a reading that never happened (`docs_at` stays put) and
+      erase the drift signal — the next run would compare new-against-new and
+      report `unchanged`, so a human who missed one red week would never learn.
 
       *Reproducibility, checked rather than assumed.* The obvious failure mode
       for a digest watcher is a page carrying a build id or timestamp, which
@@ -127,7 +132,7 @@ with a date on it.
       volatile at this granularity.
 
       *The chain, and its sensitivity.* `tests/scripts/host_docs_digest.test.ts`
-      (12 tests) runs the **real** `lint_hook_manifest._check_host_lowering`
+      (19 tests) runs the **real** `lint_hook_manifest._check_host_lowering`
       over the **real** writer's output — the verify line's "fixture" is only
       the fetched body, because that is the single input a unit test may not
       reach. Drift on `claude` (the one host with blocking bindings) reds the
@@ -137,7 +142,11 @@ with a date on it.
       two different reasons:** first a genuine defect in the test itself (it
       asserted a no-op write using a digest that was never the committed one,
       so it was not testing a no-op at all), then deliberately — neutralising
-      `isDrift` turned 3 of 12 red, which is the sensitivity proof.
+      `isDrift` turns **4 of 19** red, which is the sensitivity proof. (The
+      figure was re-measured against the final suite rather than left at the
+      3-of-12 reading taken mid-branch — a completion reviewer caught the stale
+      count, and a sensitivity ratio quoting a suite that no longer exists is
+      exactly the kind of number this roadmap spent its length objecting to.)
 
       *Correction to this step's own text, recorded not smoothed.* The step
       says the job "sets `expires: <today>`". That is **off by one** and would
@@ -259,10 +268,28 @@ with a date on it.
 
       Copilot documents lifecycle hooks — `sessionStart`, `sessionEnd`,
       `userPromptSubmitted`, `preToolUse`, `postToolUse`, `agentStop`,
-      `subagentStop`, `errorOccurred` at `~/.copilot/hooks/*.json`, with
-      `preToolUse` fail-closed on exit 2. The page was re-fetched today (HTTP
-      200) and digested. So, as with codex, D1's "otherwise a dated zero"
-      condition does not fire on the host's documentation.
+      `subagentStop`, `errorOccurred` at `~/.copilot/hooks/*.json`. The page
+      was re-fetched today (HTTP 200) and digested. So, as with codex, D1's
+      "otherwise a dated zero" condition does not fire on the host's
+      documentation.
+
+      **Correction, and it is the most important line in this step.** This
+      paragraph first ended "...with `preToolUse` fail-closed on exit 2" — a
+      claim inherited from the row's existing comment rather than invented
+      here. The completion review fetched the cited page, which hashes
+      byte-identical to the committed `docs_digest` (so the body checked is
+      provably the body pinned), and grepped it: it carries **no exit-code
+      semantics whatsoever** — no `exit 2`, no non-zero convention, no stderr
+      contract. What it documents is the *capability*, `preToolUse` "can
+      approve or deny tool executions", plus a config shape. The mechanism is
+      simply not on that page.
+
+      A capability is not a contract, and writing the contract in anyway is
+      exactly the unestablished host claim this roadmap family exists to
+      eliminate. It survived two readings here before anyone fetched the page —
+      which is the sharpest available argument for why `docs_digest` had to
+      exist at all, and why the digest alone is not enough without someone
+      reading what it pins. Corrected at the row, here, and in D2's evidence.
 
       **`probe_at` stays null, and that is an absence of opportunity, not of
       effort.** `command -v copilot` → not installed, and `~/.copilot` carries
@@ -272,11 +299,16 @@ with a date on it.
       next to `probe_at: null`, so the null reads as "could not look" rather
       than as "did not bother".
 
-      **The codex probe is why this row must not be armed from its page alone.**
-      Two hosts documented the same exit-2 refusal contract. The one that could
-      be tested did not honour it on the installed build. Arming copilot from a
-      reading, having just watched a reading fail on its sibling, would be the
-      exact defect `host_lowering.yaml` was built to stop. The row stays
+      **The codex probe is why this row must not be armed from its page alone**
+      — and the argument is weaker than first written, which is the honest
+      version. It first read "two hosts documented the same exit-2 refusal
+      contract"; only codex documents one. On codex a documented exit-2 refusal
+      did not reproduce on the installed build; here there is no documented
+      exit-2 contract to arm at all, so this host is *further* from a binding
+      than codex rather than equally close. Arming copilot from a reading —
+      having just watched a reading fail on its sibling, and having just caught
+      this row asserting a mechanism its own citation never stated — would be
+      the exact defect `host_lowering.yaml` was built to stop. The row stays
       `slots: {}` with a dated, cited, digested `verified:` block; D2 carries
       the rule and the revisit-if.
 
@@ -339,7 +371,8 @@ with a date on it.
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
 | D1 | deterministic | evidence | Codex/copilot rows are added only if the host's own documentation names lifecycle hooks; otherwise a dated zero | Both hosts document them, so both get a row. The `docs_url` of record is the one on each host's `verified:` block in `host_lowering.yaml` — codex's is the OpenAI developers' Codex hooks page, copilot's is GitHub's own Copilot hooks page. Both were re-fetched 200 on 2026-10-01 and are now pinned by `docs_digest`, so the citation is bound to a body rather than to a URL that can be rewritten under it | the host publishes hooks |
-| D2 | deterministic | evidence | A documented refusal contract does **not** arm `block_exit`; only a reproduced one does | The codex live probe of 2026-10-01 (`codex-cli 0.148.0`): the documented `PreToolUse` exit-2 deny did not block the call, with `hooks` reported `stable true`. Two hosts documented the same contract and the one that could be tested did not honour it | a probe on `codex` >= 0.159.3, or on a Copilot CLI once installed, reproduces the documented deny |
+| D2 | deterministic | evidence | A documented refusal contract does **not** arm `block_exit`; only a reproduced one does | The codex live probe of 2026-10-01 (`codex-cli 0.148.0`): the documented `PreToolUse` exit-2 deny did not block the call, with `hooks` reported `stable true`. Corrected after review — only **codex** documents an exit-2 contract; the copilot page documents the capability and no mechanism, so copilot is further from a binding, not equally close | a probe on `codex` >= 0.159.3, or on a Copilot CLI once installed, reproduces a documented deny |
+| D3 | deterministic | evidence | A digest pins a body; it does not read it. A page may be cited, digested and still not say what the row claims | The copilot row asserted `preToolUse` "fail-closed on exit 2" for two readings. The review fetched the pinned body — digest matching byte-for-byte — and found no exit-code semantics at all | someone proposes a host claim whose only support is that the citation is digested |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-28 | reviewer: claude/host -->

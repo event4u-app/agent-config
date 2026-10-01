@@ -204,7 +204,7 @@ records a live deny probe on 2026-10-01 against `codex-cli 0.148.0`: a
 the tool call, with the `hooks` feature reported `stable true` on that build.
 That does **not** say the host cannot refuse — `host_lowering.yaml`'s header
 forbids reading a row that way, and the probe left two explanations unexcluded
-(an installed build 11 releases behind the documented one, and a matcher that
+(an installed build 24 stable releases behind the documented one, and a matcher that
 may never have matched). It says this package has demonstrated no refusal path
 there, which is what a `0` in this table has always meant.
 

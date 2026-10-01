@@ -165,25 +165,23 @@ describe('install smoke probe covers every bound host', () => {
     it('fails when a bound host is added to the table and not to the probe', () => {
         // The negative control. Without it the assertion above is satisfied by
         // today's table and proves nothing about the next host added.
-        const raw = fs.readFileSync(LOWERING, 'utf8');
-        const table = parseHostLowering(raw);
         // `codex` is modelled with an empty `slots:` map. Give it one and it
         // becomes exactly the case the gate exists to catch.
-        const claudeSlots = table.get('claude')!.get('any')!.slots;
-        const codex = table.get('codex')!.get('any')!;
-        codex.slots.set('session_start', { ...claudeSlots.get('session_start')! });
-        _resetHostLoweringCache(table);
+        const raw = fs.readFileSync(LOWERING, 'utf8');
 
+        // Mutate the TEXT, not a parsed object, so the control runs the same
+        // parse the real assertions run. Serialise through the SAME
+        // two real assertions use, instead of re-implementing the scan inline.
+        // An inline copy proves a copy of the logic is sensitive; a defect
+        // introduced in `boundHosts` itself would leave this control green
+        // while silently disarming the completeness assertion above.
         const probed = new Set(smokeProbeEvents().map(([platform]) => platform));
-        const bound: string[] = [];
-        for (const [host, surfaces] of table) {
-            for (const row of surfaces.values()) {
-                if (row.slots.size > 0) {
-                    bound.push(host);
-                    break;
-                }
-            }
-        }
+        const bound = boundHosts(
+            raw.replace(
+                /(\n  codex:\n(?:.*\n)*?)        slots: \{\}/,
+                '$1        slots:\n          session_start:      { native: SessionStart, block_exit: null, answered_at: 2026-09-29 }',
+            ),
+        );
         expect(bound).toContain('codex');
         expect(bound.filter((h) => !probed.has(h))).toEqual(['codex']);
     });

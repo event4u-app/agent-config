@@ -33,7 +33,14 @@ parts:
    cites no page, so there is no body to hash).
 3. **A weekly workflow**, `permissions: contents: read`, running `--fetch` only.
 4. **A live deny probe of `codex`**, recorded with its negative result.
-5. **Tests** (15 + 3) and a correction to `docs/enforcement-by-host.md`.
+5. **Tests** and a correction to `docs/enforcement-by-host.md`.
+
+**This list describes the diff AS RATIFIED and the diff has grown since**, which
+a completion reviewer checked rather than assumed. The additions are a sanitize
+import, a read-surface contract row, a compiled-table regen, and the
+post-review hardening below. The verdict's own scope — no `block_exit`, no slot
+added, `contents: read`, no `--write` in CI — was re-checked against the current
+diff and still holds; that, not this list, is what the verdict was about.
 
 ## Why this is `confirmed-non-expanding` rather than `ratified`
 
@@ -96,7 +103,7 @@ It is **n=1, one build, one operator, and partly inconclusive by its own
 account**, and the row says so in those terms. It did not separate "the hook
 fired and was ignored" from "the matcher never matched", because the
 instrumented re-run was refused by the harness the probe ran under; and the
-installed `codex-cli 0.148.0` is eleven releases behind the `0.159.3` the read
+installed `codex-cli 0.148.0` is 24 stable releases behind the `0.159.3` the read
 page describes. What it does establish is narrow and is the only thing claimed:
 this package has not demonstrated a refusal path on that host, so `block_exit`
 stays `null` — which is precisely what a null means in this file.
@@ -132,6 +139,26 @@ has none), not a provider refusal. No verdict was taken from that run.
 Per `docs/contracts/ratification-artifact.md` § Honest enforcement: this
 artifact records who decided and on what basis. It is not proof that they
 decided, and the trust anchor is the base revision plus the platform, never
-these strings. The council question and both full responses are reproduced in
-the pull-request body, because `agents/runtime/council/` is gitignored and
-auto-pruned and a link there would resolve for nobody.
+these strings. The council **question** is reproduced in full in the
+pull-request body — `evaluator-independence` requires the prompt to ship with
+the verdict, and `agents/runtime/council/` is gitignored and auto-pruned, so a
+link there would resolve for nobody. The seats' responses are quoted here where
+they carry the argument; their full text is not reproduced, and this sentence
+says so rather than implying a completeness the artifact does not have.
+
+## Post-ratification: an independent completion review, and what it changed
+
+Two fresh reviewers (no implementation context) ran over the branch afterwards.
+The second found a **high** defect the council did not, and it is the defect
+this whole roadmap family exists to catch: the `copilot` row asserted
+`preToolUse` "fail-closed on exit 2", and the cited page — re-fetched, hashing
+byte-identical to the committed `docs_digest`, so provably the pinned body —
+contains **no exit-code semantics at all**. The claim was inherited rather than
+invented on this branch, and it had survived two readings. Corrected at the row,
+in the roadmap, and in D2, with a new D3 recording the lesson: a digest pins a
+body, it does not read it.
+
+That finding does not change this verdict — an unsupported prose claim is not an
+authority expansion — but it is recorded here because the ratification cited the
+probe's honesty as a strength, and the same diff was carrying an unverified host
+claim two rows away.

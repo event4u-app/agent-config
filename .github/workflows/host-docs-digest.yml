@@ -25,6 +25,18 @@ name: Host Docs Digest Watch
 # flaky vendor host or a runner with no egress establishes nothing about the
 # page, and a watcher that cried wolf on every 503 would be muted within a
 # month. Unreachable rows are listed in the log and the job stays green.
+#
+# A 404/410 is the exception and reds WITHOUT `--strict-fetch`, because a
+# removed page is not a flake: it is the server stating that the citation is
+# dead, which is the one thing a watcher must not sit on quietly while the row
+# keeps a stale digest and a year-long `expires`.
+#
+# Recovery writes TWO files, not one. `--fetch --write` rewrites the YAML, and
+# `src/scripts/hooks/host_lowering.json` is fingerprinted over that YAML's
+# text, so the write makes the compiled sibling stale and reds `task preflight`
+# and CI until `./scripts-run src/scripts/compile_hook_manifest --table
+# host-lowering` is run too. The script prints that as a NEXT line; it is
+# repeated here because this comment is where someone reading a red run looks.
 
 on:
   schedule:
@@ -46,11 +58,17 @@ jobs:
   digest-watch:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out main
+      # No `ref: main`. Pinning the ref made the job untestable before it was
+      # relied on: a scheduled run already uses the default branch, while a
+      # `workflow_dispatch` from a branch would have checked out main anyway and
+      # run main's table rather than the branch's. Taking the dispatched ref
+      # means this YAML and this table can be exercised once from a branch
+      # before anyone depends on the weekly signal — which a completion review
+      # pointed out had never happened.
+      - name: Check out the dispatched ref (the default branch on a schedule)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
-          ref: main
 
       - name: Set up Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0

@@ -274,6 +274,25 @@ ci_only:
 # Gates a local chain runs that no workflow does — each needs a reason it is not
 # worth remote enforcement, OR it should simply be added to a workflow. Prefer
 # adding it: a local-only gate is the direction that let real defects merge.
+  - id: check_host_docs_digest
+    class: network
+    reason: >
+      road-to-hooks-on-every-host Phase 1.3. The watcher's whole subject is the
+      LIVE body of each host's hooks page, so its CI-side mode (`--fetch`) makes
+      eight outbound requests to vendor documentation sites. Putting that in
+      `task ci` would add eight network calls — and eight new ways to fail — to
+      every local run of an otherwise hermetic gate chain, for a signal that
+      changes on the order of vendor releases rather than of commits. It runs in
+      its own WEEKLY workflow (`host-docs-digest.yml`) and nowhere else.
+      It is also not a pull-request gate, so there is no failure a contributor
+      could discover only after pushing, which is the exact harm this checker
+      exists to prevent: a drift red is a standing finding about an upstream
+      page, never a verdict on anyone's branch.
+      Reachable locally without egress: `./scripts-run src/scripts/check_host_docs_digest`
+      (offline report) and `--self-test` (pure functions, no network); the
+      comparison logic itself is covered hermetically by
+      `tests/scripts/host_docs_digest.test.ts`.
+
 local_only:
   - id: check_platform_anchor
     class: token-scope-unavailable

@@ -54,7 +54,14 @@ export interface VerifiedBlock {
     docs_at: string | null;
     docs_url: string | null;
     /**
-     * sha256 of the `docs_url` body as fetched on `docs_at`.
+     * sha256 of the `docs_url` body, as fetched by the LAST digest run.
+     *
+     * NOT "as fetched on `docs_at`", which is what this said until 2026-10-01
+     * and which the first fill already contradicted: the eight digests were
+     * taken on 2026-10-01 against rows whose `docs_at` is 2026-09-29. The
+     * digest pins a body at the moment it was hashed; `docs_at` dates the
+     * reading the row's ANSWERS came from. They are two different events and
+     * collapsing them into one sentence asserted a provenance nobody had.
      *
      * Null where there is nothing to hash — a row whose `docs_url` is null —
      * and null is also the pre-fill state `check_host_docs_digest --fetch

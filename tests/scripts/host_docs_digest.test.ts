@@ -192,15 +192,66 @@ describe('docs digest — a read-only run never touches the tree', () => {
 });
 
 describe('docs digest — the write is surgical', () => {
-    it('changes only the lines whose content changed', () => {
+    it('changes ONLY `expires` on drift — the recorded digest is evidence, not a cache', () => {
+        // Two properties in one assertion, both found by completion review.
+        //
+        // PROVENANCE: writing the new body's hash while `docs_at` stays put
+        // would make the row assert a reading that never happened.
+        // PERSISTENCE: overwriting the digest would make the NEXT run compare
+        // new-against-new and report `unchanged`, so the drift signal would
+        // erase itself and a human who missed one red week would never learn.
         const drift = classify('claude', 'any', 'u', recorded('claude'), 'moved');
         const after = applyFindings(SOURCE, [drift], TODAY).text.split('\n');
         const before = SOURCE.split('\n');
         expect(after).toHaveLength(before.length);
         const changed = before.filter((l, i) => l !== after[i]);
-        expect(changed).toHaveLength(2);
-        expect(changed.join('\n')).toContain('docs_digest');
-        expect(changed.join('\n')).toContain('expires');
+        expect(changed).toHaveLength(1);
+        expect(changed[0]).toContain('expires');
+        expect(changed.join('\n')).not.toContain('docs_digest');
+    });
+
+    it('keeps reporting drift on a second run, because the digest was not overwritten', () => {
+        const once = applyFindings(
+            SOURCE,
+            [classify('claude', 'any', 'u', recorded('claude'), 'moved')],
+            TODAY,
+        ).text;
+        // The digest in the rewritten table is still the ORIGINAL one, so the
+        // same body classifies as `changed` again rather than as `unchanged`.
+        const stillRecorded = parseHostLowering(once).get('claude')?.get('any')?.verified?.docs_digest;
+        expect(stillRecorded).toBe(recorded('claude'));
+        expect(classify('claude', 'any', 'u', stillRecorded ?? null, 'moved').state).toBe('changed');
+    });
+
+    it('writes the digest on a FIRST fill, where there is no prior reading to contradict', () => {
+        const blank = SOURCE.replace(
+            `docs_digest: ${recorded('claude') ?? ''}`,
+            'docs_digest: null',
+        );
+        const fill = classify('claude', 'any', 'u', null, 'a body');
+        expect(fill.state).toBe('filled');
+        const out = applyFindings(blank, [fill], TODAY);
+        expect(out.missed).toEqual([]);
+        expect(out.expired).toEqual([]);
+        expect(out.text).toContain(`docs_digest: ${digestOf('a body')}`);
+    });
+
+    it('reports a row it could not write rather than claiming it recorded one', () => {
+        // A `verified:` block with no `docs_digest:` key at all: the walk finds
+        // nothing to rewrite. Before this, the run still said "newly recorded".
+        const noKey = SOURCE.replace(`          docs_digest: ${recorded('claude') ?? ''}\n`, '');
+        const out = applyFindings(noKey, [classify('claude', 'any', 'u', null, 'body')], TODAY);
+        expect(out.written).toEqual([]);
+        expect(out.missed).toEqual(['claude/any']);
+    });
+
+    it('does not treat an indent-8 comment as the end of the verified block', () => {
+        // The copilot row carries long `#` comments at the row's own indent.
+        // Treating one as the block end would silently stop the rewrite.
+        const fill = classify('copilot', 'any', 'u', null, 'body');
+        const out = applyFindings(SOURCE, [fill], TODAY);
+        expect(out.missed).toEqual([]);
+        expect(out.written).toEqual(['copilot/any']);
     });
 
     it('does not touch a sibling host', () => {
