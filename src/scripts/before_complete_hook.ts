@@ -465,9 +465,44 @@ function _numeric_exit_field(obj: StateDict): number | null {
  * record path was inert — found by an independent review of the branch that
  * introduced it, against 1,077 real tool results.
  */
-function _extract_exit_reading(payload: StateDict): ExitReading {
+/**
+ * Did the HOST say this call failed, independently of anything in its text?
+ *
+ * Read from the native event name, which the host writes in two places and the
+ * agent in neither: `hook_event_name` inside the payload, and `native_event` on
+ * the dispatcher envelope. Either is authoritative; both are checked because a
+ * raw-payload invocation carries only the first and a synthesised envelope only
+ * the second.
+ *
+ * Matched on a `Failure` suffix rather than one literal name. The one observed
+ * spelling is `PostToolUseFailure`; a host naming its own failure event
+ * differently is caught by the suffix, and the cost of a false positive is
+ * bounded to refusing to record a zero — never to recording one.
+ */
+function _is_failure_event(payload: StateDict, envelope: StateDict): boolean {
+  for (const v of [payload["hook_event_name"], envelope["native_event"]]) {
+    if (typeof v === "string" && /failure$/i.test(v)) return true;
+  }
+  return false;
+}
+
+function _extract_exit_reading(payload: StateDict, failure_event = false): ExitReading {
+  // On an event the host itself named a FAILURE, a zero is never recorded —
+  // from any of the three readings. The host has already stated the call did not
+  // succeed, so a `0` arrived at by parsing its text would contradict the only
+  // authoritative thing in the envelope, and it would do so in the single most
+  // dangerous direction: manufacturing the strongest possible pass evidence out
+  // of a red run. `null` instead, which the classifier already treats as an
+  // instrument gap and never as a pass.
+  //
+  // Raised by an independent reviewer who asked what happens when a command's
+  // own error text begins `Exit code 0`. Nothing observed produces that, which
+  // is exactly why it is worth closing before something does.
+  const seal = (r: ExitReading): ExitReading =>
+    failure_event && r.code === 0 ? { code: null, source: null, interrupted: r.interrupted } : r;
+
   const direct = _numeric_exit_field(payload);
-  if (direct !== null) return { code: direct, source: "field", interrupted: false };
+  if (direct !== null) return seal({ code: direct, source: "field", interrupted: false });
 
   // The FAILURE envelope, read before the success keys because it carries none
   // of them: no `tool_response`, the status in a top-level `error` string, and
@@ -481,7 +516,7 @@ function _extract_exit_reading(payload: StateDict): ExitReading {
     if (interrupted_top) return { code: null, source: null, interrupted: true };
     const bare = _BARE_EXIT_PREFIX.exec(err) ?? _ERROR_EXIT_PREFIX.exec(err);
     if (bare?.[1] !== undefined) {
-      return { code: Number(bare[1]), source: "error_prefix", interrupted: false };
+      return seal({ code: Number(bare[1]), source: "error_prefix", interrupted: false });
     }
   }
   if (interrupted_top) return { code: null, source: null, interrupted: true };
@@ -491,18 +526,18 @@ function _extract_exit_reading(payload: StateDict): ExitReading {
     if (typeof v === "string") {
       const m = _ERROR_EXIT_PREFIX.exec(v);
       if (m?.[1] !== undefined) {
-        return { code: Number(m[1]), source: "error_prefix", interrupted: false };
+        return seal({ code: Number(m[1]), source: "error_prefix", interrupted: false });
       }
       continue;
     }
     if (v === null || typeof v !== "object" || Array.isArray(v)) continue;
     const obj = v as StateDict;
     const nested = _numeric_exit_field(obj);
-    if (nested !== null) return { code: nested, source: "field", interrupted: false };
+    if (nested !== null) return seal({ code: nested, source: "field", interrupted: false });
     if (obj["interrupted"] === true) return { code: null, source: null, interrupted: true };
     const hasStream = typeof obj["stdout"] === "string" || typeof obj["stderr"] === "string";
     if (obj["interrupted"] === false && hasStream) {
-      return { code: 0, source: "response_shape", interrupted: false };
+      return seal({ code: 0, source: "response_shape", interrupted: false });
     }
   }
   return _NO_EXIT;
@@ -721,7 +756,7 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
     // own count is short.
     if (cmd && mightBeVerification(cmd)) {
       const streams = _extract_run_streams(pl);
-      const exit = _extract_exit_reading(pl);
+      const exit = _extract_exit_reading(pl, _is_failure_event(pl, envelope));
       const runs = Array.isArray(state["verification_runs"])
         ? [...(state["verification_runs"] as unknown[])]
         : [];

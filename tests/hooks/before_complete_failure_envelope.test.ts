@@ -26,6 +26,8 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { beforeEach, afterEach, describe, expect, it } from 'vitest';
 
+import { parse as parseYaml } from 'yaml';
+
 import { run, statePathFor } from '../../src/scripts/before_complete_hook.js';
 import { build_claude_hook_matrix } from '../../src/scripts/_lib/claude_settings_hooks.js';
 
@@ -117,6 +119,31 @@ describe('routing — PostToolUseFailure reaches the recorder', () => {
     });
 });
 
+describe('the new event reaches no refusal', () => {
+    it('every concern on the slot it lowers to is advisory and fail-open', () => {
+        const manifest = parseYaml(
+            fs.readFileSync(path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'), 'utf8'),
+        ) as {
+            concerns: Record<string, { severity?: string; fail_closed?: boolean }>;
+            platforms: Record<string, Record<string, unknown>>;
+        };
+        const list = manifest.platforms['claude']?.['post_tool_use'] as string[];
+        expect(Array.isArray(list)).toBe(true);
+        expect(list.length).toBeGreaterThan(0);
+
+        // The property that makes the alias safe, asserted rather than argued:
+        // routing a new native event onto this slot runs all of these, so a
+        // blocking or fail-closed concern here would mean the diff armed a
+        // refusal on a payload shape nothing has tested. A future edit that adds
+        // one has to come past this line.
+        const armed = list.filter((name) => {
+            const c = manifest.concerns[name] ?? {};
+            return c.severity === 'blocking' || c.fail_closed === true;
+        });
+        expect(armed).toEqual([]);
+    });
+});
+
 describe('parsing — the record carries the exit code', () => {
     it('writes one record with the non-zero exit and its provenance', () => {
         run(envelope('session_start', {}), { consumer_root: tmp });
@@ -172,6 +199,53 @@ describe('parsing — the record carries the exit code', () => {
         const rec = runs(tmp)[0];
         expect(rec['interrupted']).toBe(true);
         expect(rec['exit_code']).toBeNull();
+    });
+
+    it('a failure event never yields a zero exit, whatever its text says', () => {
+        // The reviewer's case: a command whose own error text opens `Exit code
+        // 0`. The host has already said the call failed, so parsing a pass out
+        // of its output would contradict the one authoritative field in the
+        // envelope — and in the direction that manufactures the strongest
+        // possible evidence from a red run.
+        const p = failurePayload();
+        p['error'] = 'Exit code 0\nsomething the command printed';
+        run(envelope('session_start', {}), { consumer_root: tmp });
+        run(envelope('post_tool_use', p), { consumer_root: tmp });
+
+        const rec = runs(tmp)[0];
+        expect(rec['exit_code']).toBeNull();
+        expect(rec['exit_source']).toBeNull();
+    });
+
+    it('seals a zero arriving on a failure event through any reading', () => {
+        // Not only the error-prefix path: a numeric field and the success
+        // response shape are sealed too, so the guarantee is about the EVENT and
+        // not about one branch that happened to be audited.
+        for (const shaped of [
+            { exit_code: 0 },
+            { tool_response: { stdout: 'ok', stderr: '', interrupted: false } },
+        ]) {
+            fs.rmSync(path.join(tmp, statePathFor(SESSION)), { force: true });
+            run(envelope('session_start', {}), { consumer_root: tmp });
+            run(
+                envelope('post_tool_use', {
+                    hook_event_name: 'PostToolUseFailure',
+                    tool_name: 'Bash',
+                    tool_input: { command: 'npx vitest run tests/unit' },
+                    ...shaped,
+                }),
+                { consumer_root: tmp },
+            );
+            expect(runs(tmp)[0]?.['exit_code']).toBeNull();
+        }
+    });
+
+    it('a non-zero on a failure event is recorded unchanged', () => {
+        // The seal removes a zero, never a real code — otherwise it would turn
+        // the defect it fixes into a different one.
+        run(envelope('session_start', {}), { consumer_root: tmp });
+        run(envelope('post_tool_use', failurePayload()), { consumer_root: tmp });
+        expect(runs(tmp)[0]?.['exit_code']).toBe(2);
     });
 
     it('the success shape is untouched by the failure reading', () => {
