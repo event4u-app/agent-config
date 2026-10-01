@@ -1,30 +1,26 @@
 /**
  * Toolchain resolution — pick the right test/quality runner per stack.
  *
+ * **The contract lives in `contexts/execution/toolchain-resolver.md`**: what
+ * each axis answers, detection order, confidence tiers, the refusal doctrine,
+ * the cache key and what resolution costs. This header carries only what a
+ * reader OF THIS FILE needs and what the contract page cannot enforce.
+ *
  * Originally the TypeScript twin of `work_engine/stack/runner.py` (ADR-200
  * py2ts). Leaf module — stdlib only, NO intra-`work_engine` imports — and the
- * public API names stay snake_case, because that style IS the contract.
- *
- * **The 1:1 parity claim no longer holds; the convention is what survives.**
- * The whole behavior-runner axis is TypeScript-only, as are the rspec /
- * junit / dotnet-test labels. There is no Python side to mirror them to, and
- * the parity test was renamed rather than quietly widened. Keep writing
+ * public API names stay snake_case, because that style IS the contract. The
+ * 1:1 parity claim no longer holds: the whole behavior-runner axis is
+ * TypeScript-only, as are the rspec / junit / dotnet-test labels, and the
+ * parity test was renamed rather than quietly widened. Keep writing
  * snake_case because the file does, not because a twin is tracked.
  *
- * Sibling of {@link "./detect"} (which labels the *frontend* stack). This
- * module answers: *given a project root, which test runner and quality tools
- * does this stack use, and what is the exact command?* It is the engine
- * behind 6.1.0 Step 6, letting one set of commands (`/tests execute`,
- * `/tests create`, `/fix quality`, `/review changes`, `/work`) adapt to
- * phpunit / pest / vitest / jest / playwright / pytest / go / cargo instead
- * of exploding into per-stack variants.
+ * Sibling of {@link "./detect"}, which labels the *frontend* stack.
  *
- * Detection is filesystem-cheap and **never crashes**: a malformed manifest,
- * a missing file or an unknown stack degrades to a LOW-confidence empty
- * result rather than raising — a wrong label is recoverable (the agent can
- * ask), a crash mid-run is not. Mirrors {@link "./detect"}'s contract.
- *
- * The three opt-in flags that shape `selected` (the monorepo guard) are
+ * Detection **never crashes**: a malformed manifest, a missing file or an
+ * unknown stack degrades to a LOW-confidence empty result rather than
+ * raising — a wrong label is recoverable, a crash mid-run is not. Every
+ * filesystem helper here is guarded, which is what makes that true. It is
+ * NOT free; the contract page states the cost. The three opt-in flags are
  * documented on {@link resolve_toolchain}, where a caller reads them.
  */
 import * as fs from 'node:fs';
@@ -58,15 +54,12 @@ export const KNOWN_RUNNERS: ReadonlySet<string> = new Set([
 /**
  * Every behavior-runner label the resolver can emit, plus the refusal.
  *
- * A **separate** set from {@link KNOWN_RUNNERS}, not more entries in it,
- * because the two answer different questions: a native runner answers *what
- * runs this repository's tests*, a behavior runner *does this repository
- * already own a tool that reads a specification*. Merging them would make
- * `selected` — what a command actually invokes — include a suite nobody asked
- * to run. {@link BEHAVIOR_UNKNOWN} is the refusal label, not a runner:
- * emitted when one scope carries two, mirroring the frontend detector's
- * refusal between mutually exclusive workspaces (`unknown` plus both names).
- * A scope that genuinely carries two is a finding its owner settles.
+ * A **separate** set from {@link KNOWN_RUNNERS}, because the two answer
+ * different questions — *what runs this repository's tests* versus *does it
+ * already own a tool that reads a specification* — and merging them would put
+ * a suite nobody asked to run into `selected`. {@link BEHAVIOR_UNKNOWN} is
+ * the refusal label, not a runner, emitted when one scope carries two; a
+ * scope that genuinely carries two is a finding its owner settles.
  */
 export const BEHAVIOR_UNKNOWN = 'unknown';
 
@@ -126,12 +119,12 @@ const _MANIFESTS = [
  * root rather than a `_MANIFESTS` entry.
  *
  * **Residual cache gap.** {@link latest_manifest_mtime} stats fixed NAMES, so
- * a signal whose filename it does not list is invisible to the cache key: a
+ * a signal it does not list is invisible to the cache key: a
  * project-file-only .NET scope, `features/support/env.rb`,
  * `spec/spec_helper.rb`, `setup.cfg` and `pytest.ini` (the last two turn on
  * the whole python ecosystem), and the `mvnw` / `gradlew` wrappers, which
  * change the JVM command without changing a manifest. Closing these needs the
- * key to glob or track nested paths — a cost decision. Known set, not closed.
+ * key to glob or track nested paths. Known set, not closed.
  */
 const _DOTNET_PROJECT_EXTS = ['.sln', '.slnx', '.csproj', '.fsproj', '.vbproj'];
 
@@ -166,16 +159,14 @@ function _has_dotnet_solution(dir: string): boolean {
 /**
  * Fixed-name files the BEHAVIOR axis reads that `_MANIFESTS` does not cover.
  *
- * **The split is historical, and no rule separates them.** `_MANIFESTS` was
- * once "what selects an ecosystem" — but selection happens through individual
- * `_is_file` / `_read_text` calls, and `Makefile`, `Taskfile.yml`,
- * `settings.gradle` and `Directory.Build.props` select nothing, while
- * `.rspec` is a native signal sitting in this list. Both are read in exactly
- * one place, {@link latest_manifest_mtime}, which concatenates them.
- *
- * So: **a new fixed name goes in either list; what matters is that it goes
- * in ONE of them.** Saying so beats an invented rule a future author would
- * guess at. What escapes the key: the note on {@link _DOTNET_PROJECT_EXTS}.
+ * **The split is historical and no rule separates them.** `_MANIFESTS` was
+ * once "what selects an ecosystem", but selection happens through individual
+ * `_is_file` / `_read_text` calls, `Makefile` and `Taskfile.yml` name a
+ * wrapper rather than an ecosystem, and `.rspec` is a native signal sitting
+ * in THIS list. Both are read in one place, {@link latest_manifest_mtime},
+ * which concatenates them — so **a new fixed name goes in either list; what
+ * matters is that it goes in ONE.** That beats an invented rule a future
+ * author would guess at. What escapes the key: {@link _DOTNET_PROJECT_EXTS}.
  */
 const _BEHAVIOR_MARKERS = [
     'pnpm-workspace.yaml',
@@ -201,12 +192,11 @@ type Wrappers = { [role: string]: string };
 /**
  * One detected test runner for one ecosystem.
  *
- * `command` is the exact invocation (a task-runner wrapper like `make test`
- * when one exists, otherwise the direct tool). `speed` is {@link SPEED_FAST}
- * / {@link SPEED_SLOW} / {@link SPEED_E2E}, which the monorepo guard filters
- * on. `basis` names the concrete signal that matched — dependency, binary,
- * marker file — so the routing decision is auditable, like the
- * non-interactive contract's `basis` column. Mirrors the Python
+ * `command` is the exact invocation (a wrapper like `make test` when one
+ * exists, else the direct tool). `speed` is {@link SPEED_FAST} /
+ * {@link SPEED_SLOW} / {@link SPEED_E2E}, which the monorepo guard filters
+ * on. `basis` names the signal that matched — dependency, binary, marker
+ * file — so the decision is auditable. Mirrors the Python
  * `@dataclass(frozen=True)`: positional construction, documented defaults.
  */
 export class RunnerResult {
@@ -238,14 +228,11 @@ export class RunnerResult {
  * One behavior runner found in one scope — DETECTION ONLY.
  *
  * {@link RunnerResult}'s fields plus `scope_root`, because the axis is
- * **per-scope, not a repository-wide scalar**: a monorepo can carry a behavior
- * runner in one package and plain unit tests in another, and one answer erases
- * which owns which — a scalar would also have to break the tie the refusal
+ * **per-scope, not a repository-wide scalar**: one answer would erase which
+ * package owns which runner, and would have to break the tie the refusal
  * exists to refuse. `scope_root` is POSIX-relative, `'.'` for the root;
- * `conflict` is non-empty only on a refusal row and names that scope's
- * runners, sorted. **It never carries an instruction to adopt anything** — no
- * install command, no "recommended" field, no ranking. Detection answers what
- * a repository HAS; choosing is owner-gated, not this resolver's to answer.
+ * `conflict` is non-empty only on a refusal row, sorted. **It never carries
+ * an instruction to adopt anything** — choosing is owner-gated.
  */
 export class BehaviorRunnerResult {
     constructor(
@@ -838,12 +825,15 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
         row('php', 'behat', 'vendor/bin/behat', basis);
     }
 
+    // OWN dependencies only, unlike the native axis: a peer or optional
+    // declaration says a CONSUMER must supply cucumber, not that this package
+    // owns a suite — and a cucumber formatter or preset declares it exactly
+    // that way. On an axis whose doctrine is that detection may not guess,
+    // reading one as ownership is the guess.
     const js_deps = _all_dependencies(
         _read_json(at('package.json')),
         'dependencies',
         'devDependencies',
-        'peerDependencies',
-        'optionalDependencies',
     );
     const cucumber_config = ['cucumber.js', 'cucumber.cjs', 'cucumber.mjs', 'cucumber.json'].find(
         (n) => _is_file(at(n)),
@@ -911,15 +901,18 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
  * where the root carries only a `.sln` and a `.sln` has no
  * `PackageReference`. Without it `reqnroll` and `specflow` were undetectable
  * outside a flat root: two of eight declared labels unemittable. Sorted at
- * every level, so deterministic; {@link _DOTNET_SCAN_DEPTH} bounds depth and
- * {@link _DOTNET_MAX_PROJECTS} bounds files READ.
+ * every level, so deterministic. {@link _DOTNET_SCAN_DEPTH} bounds depth and
+ * {@link _DOTNET_MAX_PROJECTS} bounds files READ — neither bounds directories
+ * LISTED, and the max-projects exits fire only once a project was found, so a
+ * no-projects descent lists every eligible directory to the depth cap.
  */
 function _dotnet_project_text(dir: string, force_descent = false): string {
     const texts: string[] = [];
-    // Gated on a solution, or on `force_descent` from the marker branch.
-    // Ungated, a wide monorepo pays a listing per scope for an ecosystem it
-    // does not use. NOT pruned at scope boundaries, so a root solution plus
-    // package scopes can still double-attribute — carried as residue.
+    // Gated on a solution, or on `force_descent` from the marker branch. The
+    // gate suppresses the DESCENT only: this directory is listed here and
+    // again by the walk, in every scope of every repository. NOT pruned at
+    // scope boundaries either, so a root solution plus package scopes can
+    // still double-attribute — both carried as residue.
     const solution = force_descent || _has_dotnet_solution(dir);
     const walk = (at: string, depth: number): void => {
         if (texts.length >= _DOTNET_MAX_PROJECTS) {
@@ -990,13 +983,12 @@ const _PY_BDD = /^[ \t]*["']?pytest-bdd["']?[ \t]*(?:$|[=<>~!,;[])/m;
  * Matching every `- item` line is wrong in a way that reads as working: a
  * real workspace file carries sibling sequences (`onlyBuiltDependencies`,
  * `patchedDependencies`), so `- esbuild` under one became the scope
- * `esbuild` — usually wasted reads, but a repository with a top-level
- * directory of that name gets a `behavior_runners` row whose `scope_root` is
- * no workspace package at all. A line-state reader rather than a YAML parse,
- * because this module is leaf by contract: track whether the current
- * top-level key is `packages` and accept sequence items only while it is. Any
- * column-0 key ends the section, which makes a sibling sequence invisible
- * rather than merely unlikely.
+ * `esbuild`. A line-state reader, not a YAML parse, because this module is
+ * leaf by contract: track whether the current top-level key is `packages`
+ * and accept items only while it is; any column-0 key ends the section.
+ *
+ * KNOWN GAP: a MULTI-LINE flow sequence (`packages: [` then item lines) is
+ * dropped whole — the single-line flow branch consumes the opener. Residue.
  */
 export function _pnpm_packages(text: string): string[] {
     const out: string[] = [];
@@ -1079,9 +1071,8 @@ export function _behavior_scopes(project_root: string): string[] {
                 if (scopes.length >= _MAX_BEHAVIOR_SCOPES) {
                     break;
                 }
-                // Same exclusions as the .NET walk below: a `packages/*`
-                // glob otherwise admits `node_modules`, `.turbo` and `dist`
-                // as scopes, each costing a full behavior probe.
+                // Same exclusions as the .NET walk: a `packages/*` glob
+                // otherwise admits `node_modules` and `.turbo` as scopes.
                 if (c.isDirectory() && !c.name.startsWith('.') && c.name !== 'node_modules') {
                     scopes.push(`${parent}/${c.name}`);
                 }
@@ -1373,8 +1364,17 @@ function _is_file(p: string): boolean {
  * the parity tests treat the serialized `mtime` as non-deterministic.
  */
 function _stat_mtime(p: string): number {
-    const st = fs.statSync(p, { bigint: true });
-    return Number(st.mtimeNs) / 1e9;
+    // GUARDED, like every other filesystem helper here. `latest_manifest_mtime`
+    // stats after a SEPARATE `_is_file`, so a file deleted between the two
+    // threw straight out of `resolve_toolchain` and broke its never-raises
+    // contract — in workspace package directories, where concurrent deletes
+    // actually happen. A missing file contributes no mtime, exactly as one
+    // that was never there.
+    try {
+        return Number(fs.statSync(p, { bigint: true }).mtimeNs) / 1e9;
+    } catch {
+        return 0;
+    }
 }
 
 /** Python `isinstance(x, dict)` — a plain (non-array, non-null) object. */

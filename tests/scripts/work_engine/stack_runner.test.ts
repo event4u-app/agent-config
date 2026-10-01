@@ -1059,6 +1059,31 @@ describe('stack/runner — behaviour-runner axis', () => {
         expect(found?.confidence).toBe(MEDIUM);
     });
 
+    it('a PEER dependency on cucumber is not ownership of a suite', () => {
+        // R12 finding 8. A cucumber formatter, preset or step-definition
+        // helper declares `@cucumber/cucumber` as a PEER — a statement about
+        // its consumer, not about itself. The behavior axis merged peer and
+        // optional ranges like the native axis does, so every such package was
+        // reported at HIGH as owning a cucumber suite. On an axis whose stated
+        // doctrine is that detection may not guess, that is the guess.
+        write(
+            'package.json',
+            JSON.stringify({
+                name: 'cucumber-pretty-formatter',
+                peerDependencies: { '@cucumber/cucumber': '^10' },
+                optionalDependencies: { cucumber: '^7' },
+            }),
+        );
+        expect(resolve_behavior_runners(tmp).map((r) => r.runner)).not.toContain('cucumber-js');
+    });
+
+    it('a DEV dependency on cucumber still is', () => {
+        write('package.json', JSON.stringify({ devDependencies: { '@cucumber/cucumber': '^10' } }));
+        const found = resolve_behavior_runners(tmp).find((r) => r.runner === 'cucumber-js');
+        expect(found?.confidence).toBe(HIGH);
+        expect(found?.basis).toBe('@cucumber/cucumber in package deps');
+    });
+
     it('a glob scope skips node_modules and dot-directories', () => {
         // R10 finding 5. The glob expander admitted every child directory while
         // the sibling .NET walk skipped these, so a `pkg/*` workspace reported

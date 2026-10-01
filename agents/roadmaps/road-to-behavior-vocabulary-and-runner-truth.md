@@ -711,7 +711,7 @@ neither spends the ratchet early nor loses the trigger.
 
 ### Residue carried out of the review rounds
 
-Eleven completion-review rounds produced 100 findings; 74 are fixed and 26
+Twelve completion-review rounds produced 109 findings; 82 are fixed and 27
 are `accepted-risk`, each with a stated `revisit-if`. Nothing is `open`.
 
 **The dominant defect class was never the code.** Four highs across rounds 2–4
@@ -751,6 +751,15 @@ repository loses its true answer entirely. And the cost estimate was wrong.
 Nothing needs the solution's TEXT, only its PRESENCE, which
 `_has_dotnet_solution` already reads separately. The fix is one `continue`.
 
+**Round 12 then found the same class twice more, inside the fix for it.**
+The commit that retracted "filesystem-cheap" on the contract page left the
+claim standing in the module header a reader actually opens; the commit that
+corrected one wrong premise in the `_BEHAVIOR_MARKERS` docblock wrote a
+second one into the replacement; and the commit that stopped emitting a .NET
+row on a bare marker left the contract table advertising the opposite. Three
+rounds running, the thing that caught it was a fresh reader re-deriving a
+claim — never the author re-reading their own.
+
 The durable form: **"this needs a restructure" is a claim about cost, and a
 cost claim is checkable.** An `accepted-risk` resting on one should name what
 would have to be rebuilt, so the next round can falsify it in a minute instead
@@ -772,6 +781,16 @@ it names the measurement it waits on rather than an estimate.
   axis into its own leaf module. REVISIT-IF: that split happens, or a consumer
   reports the false root row (it is detection-only and unreachable from
   `selected`, so today it misleads a reader rather than running anything).
+
+- **One `readdirSync` per scope would replace the stats AND one listing.**
+  Round 12 found the thing neither earlier cost bullet had: `latest_manifest_mtime`
+  stats fixed names in the same directory `_has_dotnet_solution` and the walk
+  each list, so the two separately-accepted costs OVERLAP, and the overlap is
+  what makes a cheap fix available. Not taken here because it changes the
+  cache key's read strategy — the one part of this branch guarded for
+  correctness rather than cost — and that wants its own red-then-green.
+  REVISIT-IF: the module is split, or a profile shows resolution dominating a
+  turn.
 
 - **`_pnpm_packages` drops a MULTI-LINE flow sequence.** `packages: [` with
   items on the following lines loses the whole workspace declaration and the
