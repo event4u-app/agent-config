@@ -28,7 +28,7 @@
   "refresh_cadence": "quarterly",
   "upstream": {
     "repo": "derived: W3C ARIA Authoring Practices Guide + WCAG 2.2",
-    "sha": "APG 2026 / WCAG 2.2 (W3C Recommendation 12 Dec 2024) \u2014 verified not superseded 2026-09-18",
-    "last_checked": "2026-09-18"
+    "sha": "APG 2026 / WCAG 2.2 \u2014 re-checked 2026-10-01. WCAG 2.2 still reads W3C Recommendation 12 December 2024 with no supersession note; it records that parallel next-major work exists but states it does not deprecate 2.2. Of the twelve URLs cited in aria-patterns.csv, eleven resolve 200 unchanged; one pattern was RENAMED upstream \u2014 /apg/patterns/menubutton/ now 301-redirects to /apg/patterns/menu-button/, and the citation was moved to the canonical slug. No cited APG pattern has been withdrawn.",
+    "last_checked": "2026-10-01"
   }
 }
