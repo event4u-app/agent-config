@@ -197,6 +197,20 @@ The guard that caught this is `tests/scripts/trigger_corpus_holdout_pin.test.ts`
 which recomputes the recipe rather than trusting the published number — the
 check this file's 2026-08-31 correction exists because nobody had.
 
+**A second growth landed the same day, on the other half of the table.**
+`road-to-corpus-refresh-cadence-shape` grew the HOLDOUT side (its
+`## Growth 2026-10-01` section below) while this branch grew the train side,
+and the two met in a merge. Each per-row pin is independent and neither moved
+the other's: `test-case-discovery` is `d3de03bc…` and `accessibility-auditor`
+is `b5fcf7cb…`. Only the set hash depends on both, which is why it was
+recomputed over the merged list rather than taken from either side — and why
+this section no longer quotes it at all.
+
+The seal argument survives the reconciliation unchanged, and is restated
+rather than assumed: zero holdout rows moved on THIS branch. The holdout
+count itself moved — the other growth added one — which is the second reason
+no count is written down here.
+
 ## Holdout — sealed
 
 Sealed means: **no proposer, curator, or analyzer authored in Phase 5 may read
@@ -418,6 +432,23 @@ gate's remedy — ten cases, not a coverage push. The corpus is **103 files, 19
 holdout and 84 train**, and `SET-SHA256` is re-pinned to `bb2df6f4…` from
 `034f791e…`.
 
+**`bb2df6f4…` is superseded and the reason is a merge, not an error** (recorded
+2026-10-01, at the merge). This section measured a tree in which the
+`accessibility-auditor` holdout growth was the only growth of the day. It was
+not: `road-to-behavior-vocabulary-and-runner-truth` rewrote
+`src/skills/test-case-discovery/evals/triggers.json` on the **train** side in
+parallel — § Re-pin 2026-10-01 above — and the two landed in one merge. The set
+hash is computed over the undivided list, so it cannot be the value either
+branch measured alone; it is `67dd1f3f…`, published in § The set hash and
+recomputed by `trigger_corpus_holdout_pin.test.ts` over the merged tree. The row
+counts in this section are unaffected (the train growth edited a file already in
+the set, it did not add one), and so is every per-row pin, including
+`accessibility-auditor`'s `b5fcf7cb…`. This is the fourth time a figure in this
+file has been overtaken between measurement and publication, and the first time
+the cause was a concurrent branch rather than a later edit on the same one — the
+standing repair below is the same either way, and the shape it guards is now
+one branch wider than it was.
+
 **Recorded rather than re-pinned quietly**, per § The partition rule: *"A change
 is legal; a silent change is the compromise this step exists to prevent."*
 
@@ -437,7 +468,8 @@ later edits to that same file's `description` field in the same branch. The
 provenance was proved rather than guessed by the round-4 reviewer: dropping the
 new row from the computed list reproduces the OLD pin `034f791e…` exactly, and
 substituting the stale row hash reproduces the first-published `7445c18a…`
-exactly. The live values below are `b5fcf7cb…` and `bb2df6f4…`, and
+exactly. The live row value below is `b5fcf7cb…`; the live set hash is
+`67dd1f3f…` after the merge reconciliation noted above, and
 `tests/scripts/trigger_corpus_holdout_pin.test.ts` passes 5 of 5 against them.
 
 **This is the same defect as § Correction 2026-08-31**, where the commit that
