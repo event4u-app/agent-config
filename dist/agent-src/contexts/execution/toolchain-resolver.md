@@ -13,13 +13,22 @@ tools and run the right one — instead of a per-stack command explosion.
 > pytest / go / cargo, not N per-stack variants. "Only genuine PHP-space
 > commands stay PHP-locked."
 
-**Size budget:** ≤ 8,500 chars — raised from 6,000 on 2026-10-01, when the
-resolver went from 9 runners on one axis to 12 across two. The intermediate
-7,500 was a trap, not a constraint: the file measured 7,496, so any later
-edit of any size broke it, and the same sentence forbade raising it again.
-A ceiling set 0.05 % above its own artifact tells the next author only that
-they may not write. This one leaves real headroom. The enforced ceiling is
-`check_depth_budget`'s 16,000.
+**Size budget: none of its own.** The enforced ceiling is
+`check_depth_budget`'s 16,000 chars, and that is the only one.
+
+This page carried a self-imposed sub-ceiling through three values — 6,000,
+then 7,500, then 8,500 — and each was set just above whatever the file
+measured that day, so the next edit of any size broke it while the same
+sentence forbade raising it. A ceiling fitted to its own artifact is not a
+constraint, it is a tripwire; and the third one was set with a sentence
+claiming "real headroom" over 66 characters, which is the trap diagnosing
+itself and walking in anyway.
+
+What actually bounds this page is **what belongs in it**: the resolver's
+contract — the axes, the detection order, the confidence tiers, the refusal
+doctrine, the cache key. Narration, worked examples and per-round history
+belong in the roadmap and the review artifacts, not here. That rule is
+checkable by a reader; a character count was only ever checkable by `wc`.
 
 ## 1. The resolver
 
@@ -35,14 +44,15 @@ for (const r of result.selected) {
 }
 ```
 
-Resolution costs **per scope**, not per repository: 29 fixed names stat-ed,
+Resolution costs **per scope**, not per repository: a fixed name list stat-ed,
 six-or-so manifests read, and two directory listings for the .NET probe —
 which run in every repository, .NET or not. A wide workspace pays that times
 its package count, so the cost is proportional and not negligible.
 
 The **cache probe is the expensive path**, with the magnitude stated, not
-implied: `latest_manifest_mtime` stats those 29 names per scope, bounded at
-200 scopes — up to ~5,800 `statSync`, each hit paying a second — and without
+implied as a SHAPE, because the arithmetic has already been published wrong
+once: `latest_manifest_mtime` stats both fixed-name lists in every scope,
+bounded at 200 scopes, each hit paying a second stat — and without
 an explicit `scopes` it also expands the globs. The guard can cost more than
 the resolution it guards, so a caller holding the scope list passes it. The
 widening is still right: a root-only key cannot see a behavior runner

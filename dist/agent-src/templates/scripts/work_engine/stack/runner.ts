@@ -5,14 +5,11 @@
  * py2ts). Leaf module — stdlib only, NO intra-`work_engine` imports — and the
  * public API names stay snake_case, because that style IS the contract.
  *
- * **The 1:1 parity claim no longer holds, and the convention is what
- * survives.** The behavior-runner axis is TypeScript-only
- * (`resolve_behavior_runners`, `BehaviorRunnerResult`,
- * `KNOWN_BEHAVIOR_RUNNERS`, `BEHAVIOR_UNKNOWN`, `_behavior_scopes`,
- * `_pnpm_packages`, a `ToolchainResult` field), as are the rspec / junit /
- * dotnet-test labels. There is no Python side to mirror them to; the parity
- * test was renamed rather than quietly widened. Keep writing snake_case here
- * because the file does, not because a twin is being tracked.
+ * **The 1:1 parity claim no longer holds; the convention is what survives.**
+ * The whole behavior-runner axis is TypeScript-only, as are the rspec /
+ * junit / dotnet-test labels. There is no Python side to mirror them to, and
+ * the parity test was renamed rather than quietly widened. Keep writing
+ * snake_case because the file does, not because a twin is tracked.
  *
  * Sibling of {@link "./detect"} (which labels the *frontend* stack). This
  * module answers: *given a project root, which test runner and quality tools
@@ -27,11 +24,8 @@
  * result rather than raising — a wrong label is recoverable (the agent can
  * ask), a crash mid-run is not. Mirrors {@link "./detect"}'s contract.
  *
- * Three opt-in flags shape the *selected* set (the monorepo guard):
- * `include_e2e` (e2e suites are excluded by default so fast unit tests run
- * first), `include_slow` (a `test:slow` / `test:integration` script), and
- * `php_only` (the `--php` narrowing). The full inventory always comes back
- * in `runners`; `selected` is what a command runs after the flags + guard.
+ * The three opt-in flags that shape `selected` (the monorepo guard) are
+ * documented on {@link resolve_toolchain}, where a caller reads them.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -42,10 +36,9 @@ import * as path from 'node:path';
  * Single source of truth: the fixtures and tests validate against this set
  * without re-deriving it, and a membership test binds it to what the resolver
  * actually emits — without that binding it would be a set-equality assertion
- * about itself. This comment used to claim a "state schema" validated against
- * it too; `agents/runtime/state/toolchain.json` has no schema and no reader
- * outside this module, so that half was never true. Mirrors Python's
- * `frozenset`.
+ * about itself. `agents/runtime/state/toolchain.json` has no schema and no
+ * reader outside this module, so nothing else validates against it. Mirrors
+ * Python's `frozenset`.
  */
 export const KNOWN_RUNNERS: ReadonlySet<string> = new Set([
     'pest',
@@ -65,17 +58,15 @@ export const KNOWN_RUNNERS: ReadonlySet<string> = new Set([
 /**
  * Every behavior-runner label the resolver can emit, plus the refusal.
  *
- * A **separate** set from {@link KNOWN_RUNNERS} rather than more entries in
- * it, because the two answer different questions. A native runner answers
- * *what runs this repository's tests*; a behavior runner answers *does this
- * repository already own a tool that reads a specification*. Merging them
- * would make `selected` — which a command actually invokes — include a suite
- * nobody asked to run.
- *
- * {@link BEHAVIOR_UNKNOWN} is the refusal label, not a runner: emitted when
- * one scope carries two behavior runners, mirroring the frontend detector's
- * refusal between two mutually exclusive workspaces (`unknown` plus both
- * names). A scope that genuinely carries two is a finding its owner settles.
+ * A **separate** set from {@link KNOWN_RUNNERS}, not more entries in it,
+ * because the two answer different questions: a native runner answers *what
+ * runs this repository's tests*, a behavior runner *does this repository
+ * already own a tool that reads a specification*. Merging them would make
+ * `selected` — what a command actually invokes — include a suite nobody asked
+ * to run. {@link BEHAVIOR_UNKNOWN} is the refusal label, not a runner:
+ * emitted when one scope carries two, mirroring the frontend detector's
+ * refusal between mutually exclusive workspaces (`unknown` plus both names).
+ * A scope that genuinely carries two is a finding its owner settles.
  */
 export const BEHAVIOR_UNKNOWN = 'unknown';
 
@@ -130,19 +121,17 @@ const _MANIFESTS = [
 /**
  * .NET project / solution extensions, matched by a root listing.
  *
- * .NET is the one ecosystem here whose marker has no fixed FILENAME — the
- * project file is `<whatever>.csproj` — so it is an extension list scanned
- * over the root rather than a `_MANIFESTS` entry.
+ * .NET is the one ecosystem whose marker has no fixed FILENAME — the project
+ * file is `<whatever>.csproj` — so it is an extension list scanned over the
+ * root rather than a `_MANIFESTS` entry.
  *
  * **Residual cache gap.** {@link latest_manifest_mtime} stats fixed NAMES, so
- * a signal whose filename it does not list stays invisible to the cache key:
- * a project-file-only .NET scope, `features/support/env.rb`,
- * `spec/spec_helper.rb`, `setup.cfg` and `pytest.ini` — the last two turn
- * on the whole python ecosystem — and the `mvnw` / `gradlew` wrappers, which
- * change the emitted JVM command without changing a manifest. Closing these
- * needs the key to glob or track nested paths: a cost decision, written down
- * rather than discovered from a stale cache. This list has now been wrong by
- * omission twice; read it as the known set, never as a closed one.
+ * a signal whose filename it does not list is invisible to the cache key: a
+ * project-file-only .NET scope, `features/support/env.rb`,
+ * `spec/spec_helper.rb`, `setup.cfg` and `pytest.ini` (the last two turn on
+ * the whole python ecosystem), and the `mvnw` / `gradlew` wrappers, which
+ * change the JVM command without changing a manifest. Closing these needs the
+ * key to glob or track nested paths — a cost decision. Known set, not closed.
  */
 const _DOTNET_PROJECT_EXTS = ['.sln', '.slnx', '.csproj', '.fsproj', '.vbproj'];
 
@@ -177,14 +166,16 @@ function _has_dotnet_solution(dir: string): boolean {
 /**
  * Fixed-name files the BEHAVIOR axis reads that `_MANIFESTS` does not cover.
  *
- * Two lists because they are SOURCED differently, not consulted differently:
- * `_MANIFESTS` is the set whose presence selects an ecosystem, this is the
- * rest of what the resolver reads — mostly behavior markers, plus `.rspec`,
- * which only the NATIVE ruby branch opens and has nowhere better to go. The
- * one place both are used, {@link latest_manifest_mtime}, concatenates them
- * and stats every name in every scope, so an earlier note claiming they are
- * "consulted at different scopes" described a distinction the code does not
- * make. What still escapes the key: the note on {@link _DOTNET_PROJECT_EXTS}.
+ * **The split is historical, and no rule separates them.** `_MANIFESTS` was
+ * once "what selects an ecosystem" — but selection happens through individual
+ * `_is_file` / `_read_text` calls, and `Makefile`, `Taskfile.yml`,
+ * `settings.gradle` and `Directory.Build.props` select nothing, while
+ * `.rspec` is a native signal sitting in this list. Both are read in exactly
+ * one place, {@link latest_manifest_mtime}, which concatenates them.
+ *
+ * So: **a new fixed name goes in either list; what matters is that it goes
+ * in ONE of them.** Saying so beats an invented rule a future author would
+ * guess at. What escapes the key: the note on {@link _DOTNET_PROJECT_EXTS}.
  */
 const _BEHAVIOR_MARKERS = [
     'pnpm-workspace.yaml',
@@ -249,13 +240,12 @@ export class RunnerResult {
  * {@link RunnerResult}'s fields plus `scope_root`, because the axis is
  * **per-scope, not a repository-wide scalar**: a monorepo can carry a behavior
  * runner in one package and plain unit tests in another, and one answer erases
- * which package owns which. A scalar would also have to break a tie the
- * refusal below exists to refuse. `scope_root` is POSIX-relative, `'.'` for
- * the root; `conflict` is non-empty only on a refusal row (`runner` ===
- * {@link BEHAVIOR_UNKNOWN}) and names that scope's runners, sorted.
- * **It never carries an instruction to adopt anything** — no install command,
- * no "recommended" field, no ranking. Detection answers what a repository
- * HAS; choosing is owner-gated and not this resolver's to answer.
+ * which owns which — a scalar would also have to break the tie the refusal
+ * exists to refuse. `scope_root` is POSIX-relative, `'.'` for the root;
+ * `conflict` is non-empty only on a refusal row and names that scope's
+ * runners, sorted. **It never carries an instruction to adopt anything** — no
+ * install command, no "recommended" field, no ranking. Detection answers what
+ * a repository HAS; choosing is owner-gated, not this resolver's to answer.
  */
 export class BehaviorRunnerResult {
     constructor(
@@ -272,13 +262,12 @@ export class BehaviorRunnerResult {
 /**
  * Outcome of one toolchain-resolution pass over a project root.
  *
- * `runners` is the full inventory (every ecosystem detected, every speed
- * bucket). `selected` is what a command should actually run after the flags
- * + fast-by-default guard. `quality` is the ordered list of quality/lint
- * commands per detected ecosystem. `confidence` is the overall tier (HIGH
- * when ≥1 runner matched deterministically and no cross-ecosystem conflict;
- * LOW when nothing matched). `mtime` is the latest manifest mtime, used for
- * cache invalidation just like {@link "./detect".StackResult}.
+ * `runners` is the full inventory; `selected` what a command should run
+ * after the flags + fast-by-default guard; `quality` the ordered lint
+ * commands per ecosystem; `confidence` the overall tier (HIGH when ≥1 runner
+ * matched deterministically with no cross-ecosystem conflict, LOW when
+ * nothing matched); `mtime` the cache-invalidation key, as in
+ * {@link "./detect".StackResult}.
  */
 export class ToolchainResult {
     readonly ecosystems: readonly string[];
@@ -480,10 +469,11 @@ export function latest_manifest_mtime(
     // Every scope, not only the root: `behavior_runners` is cached and derived
     // per scope, so a root-only key cannot see Behat arriving in a package —
     // stale forever in the common case. Widening only invalidates more often,
-    // the safe direction. Cost, stated rather than conceded: 29 names × up to
-    // _MAX_BEHAVIOR_SCOPES (200) = ~5,800 `statSync`, each hit paying a second,
-    // plus `_behavior_scopes` when `scopes` is omitted. On a wide workspace
-    // this can cost more than the work it guards — pass `scopes` when known.
+    // the safe direction. Cost, stated as a SHAPE because the arithmetic has
+    // been published wrong once already: both fixed-name lists are stat-ed in
+    // every scope, bounded by _MAX_BEHAVIOR_SCOPES, each hit paying a second
+    // stat, plus `_behavior_scopes` when `scopes` is omitted. On a wide
+    // workspace this can cost more than the work it guards — pass `scopes`.
     for (const scope of scopes ?? _behavior_scopes(project_root)) {
         const dir = scope === '.' ? project_root : path.join(project_root, scope);
         for (const name of names) {
@@ -714,9 +704,9 @@ function _jvm_runners(build: JvmBuild): RunnerResult[] {
  * needs a PROJECT file naming a TEST stack (`Microsoft.NET.Test.Sdk`, xunit,
  * nunit, mstest); a bare project or a solution is MEDIUM, the analogue of the
  * bare manifest. That stops a bare non-test project raising the WHOLE
- * repository to HIGH. It does NOT keep the row out of `selected` —
- * `_apply_guard` has never read `confidence`, for any ecosystem — and an
- * earlier version of this comment wrongly claimed it did.
+ * repository to HIGH. It does NOT keep the row out of `selected`:
+ * `_apply_guard` has never read `confidence`, for any ecosystem — which is
+ * why a marker with no project anywhere emits no row at all.
  */
 function _dotnet_basis(root: string): { basis: string; confidence: string } | null {
     let names: string[];
@@ -735,9 +725,22 @@ function _dotnet_basis(root: string): { basis: string; confidence: string } | nu
             : { basis: `${project} present, no test stack named`, confidence: MEDIUM };
     }
     for (const marker of ['global.json', 'Directory.Build.props']) {
-        if (_is_file(path.join(root, marker))) {
-            return { basis: `${marker} present, no project file at the root`, confidence: MEDIUM };
+        if (!_is_file(path.join(root, marker))) {
+            continue;
         }
+        // A marker is an SDK PIN, not a runnable target. Emitting a row on one
+        // alone put `dotnet test` into `selected` — `_apply_guard` never reads
+        // `confidence` — for a root with no project anywhere, where it fails
+        // MSB1003. So look below: the conventional `src/<Name>/<Name>.csproj`
+        // layout carries no root solution, which also made HIGH unreachable
+        // there. No project found, no row: nothing to run is not a runner.
+        const text = _dotnet_project_text(root, true);
+        if (text.trim() === '') {
+            return null;
+        }
+        return _DOTNET_TEST_STACK.test(text)
+            ? { basis: 'test stack named in a .NET project file', confidence: HIGH }
+            : { basis: `${marker} present, no test stack named`, confidence: MEDIUM };
     }
     return null;
 }
@@ -911,15 +914,13 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
  * every level, so deterministic; {@link _DOTNET_SCAN_DEPTH} bounds depth and
  * {@link _DOTNET_MAX_PROJECTS} bounds files READ.
  */
-function _dotnet_project_text(dir: string): string {
+function _dotnet_project_text(dir: string, force_descent = false): string {
     const texts: string[] = [];
-    // Entered ONLY for a scope carrying a solution — the layout that
-    // motivates it — closing two defects: no `.sln`, no walk, so a wide
-    // monorepo stops paying a listing per scope for an ecosystem it does not
-    // use; and a package's `*.csproj` reaches the root only when the root
-    // holds a solution. NOT closed — the walk is not pruned at scope
-    // boundaries, so root-plus-package can still double-attribute (residue).
-    const solution = _has_dotnet_solution(dir);
+    // Gated on a solution, or on `force_descent` from the marker branch.
+    // Ungated, a wide monorepo pays a listing per scope for an ecosystem it
+    // does not use. NOT pruned at scope boundaries, so a root solution plus
+    // package scopes can still double-attribute — carried as residue.
+    const solution = force_descent || _has_dotnet_solution(dir);
     const walk = (at: string, depth: number): void => {
         if (texts.length >= _DOTNET_MAX_PROJECTS) {
             return;
@@ -1408,12 +1409,11 @@ function _dictFromKeys(seq: string[]): string[] {
  * Mirror Python `json.dumps(obj, indent=2, sort_keys=True)` byte-for-byte.
  *
  * Two CPython behaviors `JSON.stringify` does NOT reproduce, done here:
- * `sort_keys=True` (keys in code-point order — we pre-sort recursively), and
- * integer-valued floats rendering as `N.0`, which JSON cannot tag. The only
- * float here is `mtime`; the parity tests normalize its value (not
- * byte-reproducible across CPython/V8) while the tagged-float wrapper keeps
- * the *shape*. Also: 2-space indent, `": "` / `","` separators, `{}` / `[]`
- * for empties, non-ASCII verbatim (`to_config` carries none).
+ * `sort_keys=True` (code-point key order — pre-sorted recursively) and
+ * integer-valued floats rendering `N.0`, which JSON cannot tag. The only
+ * float is `mtime`; the parity tests normalize its value (not reproducible
+ * across CPython/V8) while the tagged wrapper keeps the *shape*. Also:
+ * 2-space indent, `": "` / `","` separators, `{}` / `[]` for empties.
  */
 function jsonDumps(obj: unknown, opts: { indent: number; sort_keys: boolean }): string {
     return _encode(obj, opts, 0);

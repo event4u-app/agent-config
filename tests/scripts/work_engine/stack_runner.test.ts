@@ -610,10 +610,35 @@ describe('stack/runner — rspec, junit, dotnet-test', () => {
         expect(found?.basis).toBe('Api.csproj present, no test stack named');
     });
 
-    it('dotnet-test PRESENT: global.json alone is MEDIUM, not HIGH', () => {
+    it('a marker with NO project anywhere emits NO row — nothing to run', () => {
+        // REPLACES 'global.json alone is MEDIUM, not HIGH', which pinned the
+        // behavior R11 finding 1 showed to be wrong. A MEDIUM row still enters
+        // `selected` (`_apply_guard` never reads `confidence`), so the old
+        // assertion was pinning `dotnet test` into the list `/tests execute`
+        // runs for a repository where it fails MSB1003. A marker is an SDK
+        // pin, not a runnable target.
         write('global.json', '{"sdk":{"version":"8.0.100"}}');
+        expect(labels(tmp)).not.toContain('dotnet-test');
+    });
+
+    it('a marker plus a project below is MEDIUM — the marker names the basis', () => {
+        write('global.json', '{"sdk":{"version":"8.0.100"}}');
+        write('src/App/App.csproj', '<Project Sdk="Microsoft.NET.Sdk" />');
         const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'dotnet-test');
         expect(found?.confidence).toBe(MEDIUM);
+        expect(found?.basis).toBe('global.json present, no test stack named');
+    });
+
+    it('HIGH is reachable with NO solution — the solution-less layout', () => {
+        // R11 finding 9: the descent was gated on a solution file, so the
+        // conventional `Directory.Build.props` + `src/<Name>/<Name>.csproj`
+        // layout could never read a project and was pinned at MEDIUM — while
+        // `dotnet test` supports it and the contract table promises HIGH for a
+        // project naming a test stack, with no solution qualifier.
+        write('Directory.Build.props', '<Project />');
+        write('src/App.Tests/App.Tests.csproj', '<Project><PackageReference Include="xunit" /></Project>');
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'dotnet-test');
+        expect(found?.confidence).toBe(HIGH);
     });
 
     it('dotnet-test: the conventional sln + src/<Name>/<Name>.csproj layout is seen', () => {

@@ -137,7 +137,11 @@ get there.
       lucky keyword. No new section, no new skill — the word count is 1,842 and
       ADR-225's tripwire is 3,000, and this roadmap is not the change that should
       spend that headroom.
-      verify: `wc -w src/skills/test-case-discovery/SKILL.md` ≤ 1,900.
+      verify: `wc -w src/skills/test-case-discovery/SKILL.md` under
+      ADR-225's 3,000-word tripwire. The step originally set its own ≤ 1,900
+      ceiling and the file landed at 1,899 — one word of headroom, the same
+      fitted-tripwire shape the resolver contract removed. A budget that only
+      the enforced number backs is the one worth verifying.
 
       **Evidence (2026-10-01, figures re-measured after round 3).** One
       sentence added directly under the
@@ -150,10 +154,10 @@ get there.
       `evals/triggers.json` as where they are pinned, and closes the promise
       exactly where Risk 1 says it must close: it is a decision, not a guide
       to writing a contract. No new section and no new heading.
-      `wc -w src/skills/test-case-discovery/SKILL.md` stays **inside the
-      ≤ 1,900 budget** this step sets and well under ADR-225's 3,000-word
-      tripwire. The exact count is not recorded — it moved on four of the
-      seven review rounds and was recorded wrong on three of them, so the
+      `wc -w src/skills/test-case-discovery/SKILL.md` stays well under
+      ADR-225's 3,000-word tripwire, which is now the only ceiling this step
+      verifies. The exact count is not recorded — it moved on four of the
+      review rounds and was recorded wrong on three of them, so the
       budget is the claim and `wc -w` is the check.
 
       Three rounds corrected this paragraph. **Round 3** caught it claiming
@@ -347,11 +351,12 @@ get there.
       label has a presence case AND an absence case, plus wrapper cases, a
       polyglot case asserting all three ecosystems in one root, and a case
       proving `--php` still narrows `selected` now that more ecosystems
-      exist. **97 tests green** in that file, and the figure reconciles: 92
-      literal `it()` blocks plus one `it.each` expanding to 5 cases. It has
-      been re-measured at each review round rather than carried forward — an
-      earlier version said 70, and then 93 with a parenthetical whose
-      arithmetic did not add up.
+      exist. The suite is green; **the count is deliberately not recorded here.**
+      It was wrong four times — 70, then 93 with arithmetic that did not add
+      up, then 97 carried forward past nine new fixtures. Step 2.2's rule is
+      the remedy and this is where it applies: run
+      `npx vitest run tests/scripts/work_engine/stack_runner.test.ts`, which
+      prints the number at the commit you are standing on.
 
       **The absence fixtures were seen red.** Neutralising the rspec guard
       (`if (false && …)`, so a Gemfile always emits rspec) fails exactly 1
@@ -597,7 +602,8 @@ All six verified 2026-10-01 at branch `drain/behavior-vocabulary-close`.
       All three present and asserted by name in the constants test. Presence
       and absence fixtures exist for each; the rspec absence fixture was seen
       red under a neutralised guard, failing exactly 1 test with no
-      collateral. 97 tests green in `stack_runner.test.ts`.
+      collateral. `stack_runner.test.ts` green — count per the command in
+      step 3.1, not quoted here.
 - [x] AC-4 — The behaviour-runner axis returns per-scope rows; a monorepo fixture
       returns more than one row and a conflict fixture returns a refusal naming
       both runners.
@@ -678,8 +684,8 @@ neither spends the ratchet early nor loses the trigger.
 
 ### Residue carried out of the review rounds
 
-Seven completion-review rounds produced 71 findings; 61 are fixed and 10 are
-`accepted-risk`, each with a stated `revisit-if`.
+Eleven completion-review rounds produced 100 findings; 74 are fixed and 26
+are `accepted-risk`, each with a stated `revisit-if`. Nothing is `open`.
 
 **The dominant defect class was never the code.** Four highs across rounds 2–4
 and roughly a third of everything else were this branch asserting something
@@ -699,16 +705,57 @@ three rounds running. What remains open:
   `Reqnroll` / `SpecFlow` over .NET project text are still unanchored word
   matches, where the python and ruby signals are anchored to a declaration.
   Lower exposure than the python case — those tokens are not English words —
-  but the same class. Related: `_dotnet_project_text` folds solution text into
-  the buffer it matches against, so a project *named* `Billing.SpecFlow` can
-  raise a HIGH row from a filename. Closing that needs two buffers rather than
-  one, which is a restructure, not a correction.
+  but the same class. They read PROJECT files only — see the reversal below.
 - **The wrapper claim is wider than the wrappers.** `_task_runner_wrappers`
   emits only `php-test` and `js-test` roles, while the contract states
   "task-runner wrappers win" for the resolver as a whole. Pre-existing for
   Python, Go and Rust; this change widens it by three ecosystems. Naming it
   here rather than inventing wrapper semantics for Ruby, JVM and .NET under a
   review round — which is how an unmeasured guess ships.
+
+**One disposition was reversed, and the reversal is the lesson.** Round 6
+accepted the solution-text defect — `_dotnet_project_text` folding a `.sln`
+body into the buffer the package regexes match, so a project *named*
+`Billing.SpecFlow` raises a HIGH row — on the ground that "closing that needs
+two buffers rather than one, which is a restructure, not a correction."
+Round 10 found it again with the half that makes it expensive: two such names
+in one solution make the per-ecosystem grouping REFUSE, so a mid-migration
+repository loses its true answer entirely. And the cost estimate was wrong.
+Nothing needs the solution's TEXT, only its PRESENCE, which
+`_has_dotnet_solution` already reads separately. The fix is one `continue`.
+
+The durable form: **"this needs a restructure" is a claim about cost, and a
+cost claim is checkable.** An `accepted-risk` resting on one should name what
+would have to be rebuilt, so the next round can falsify it in a minute instead
+of inheriting the estimate. The remaining bullets were re-read against that
+test when this was written; only the cost-trade bullet makes a cost claim, and
+it names the measurement it waits on rather than an estimate.
+
+- **A root solution still double-attributes across workspace packages.** The
+  .NET descent is not pruned at declared scope boundaries, so a root holding a
+  `.sln` beside workspace packages reads every package's `*.csproj` into the
+  ROOT buffer; two packages on different behavior runners then add a FALSE
+  `unknown` refusal row for `scope_root: "."` beside the two correct
+  per-package rows. Round 11 raised it and noted this section did not carry
+  it — it does now. The cost, stated the way the lesson above demands: one
+  scope-set parameter threaded through `_behavior_runners_in_scope` into the
+  walk, plus a membership test in the descent loop, call it ten lines. What
+  blocks it is not the shape but the per-file line ceiling — `runner.ts` sits
+  at exactly 1,500 — and the move that unblocks it is splitting the behavior
+  axis into its own leaf module. REVISIT-IF: that split happens, or a consumer
+  reports the false root row (it is detection-only and unreachable from
+  `selected`, so today it misleads a reader rather than running anything).
+
+- **`_pnpm_packages` drops a MULTI-LINE flow sequence.** `packages: [` with
+  items on the following lines loses the whole workspace declaration and the
+  repository collapses to the root scope — the same silent-drop class the
+  single-line flow fix was written for. Round 11, low. Cost: about eight
+  lines (an `inFlow` state plus a continuation branch). Not taken for the
+  same ceiling reason as the bullet above, and recorded rather than quietly
+  left: block sequences are the canonical pnpm form, and the blast radius is
+  a missing informational row on a detection-only axis, never a wrong
+  command. REVISIT-IF: the module is split, or a repository using the flow
+  form reports missing scopes.
 
 - **Cost trades, three of them**, accepted with `revisit-if` conditions in the
   round-3, round-4 and round-5 artefacts: duplicate root-scope reads
@@ -720,9 +767,9 @@ three rounds running. What remains open:
 - **Two cache-key gaps the round-5 note surfaced and did not close**:
   `setup.cfg` and `pytest.ini` are read by the python branch and are in
   neither name list, so a `pytest.ini`-only repository emits a pytest row
-  while its key reports the greenfield sentinel. Pre-existing, and the honest
-  place for it is here rather than inside a note that enumerates the gap it
-  sits in.
+  while its key reports the greenfield sentinel. Pre-existing. Round 10 made
+  the in-code note NAME both; adding them to the key itself is still not
+  taken, because that widens exactly the probe cost the same round measured.
 
 `task roadmap-progress-check` exits 1 on this Iron-Law-3 notice and also names
 `road-to-host-claims-the-tree-contradicts.md` (8/8 done, 2 deferred), which
