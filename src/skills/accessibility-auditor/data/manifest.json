@@ -28,7 +28,7 @@
   "refresh_cadence": "quarterly",
   "upstream": {
     "repo": "derived: W3C ARIA Authoring Practices Guide + WCAG 2.2",
-    "sha": "WCAG 2.2 (W3C Recommendation 12 December 2024, not superseded) + APG 2026 with /apg/patterns/menu-button/ as the canonical menu-button slug. This field is the UPSTREAM IDENTITY, not a log of when it was read: `lint_eval_freshness` compares it for exact equality against `upstream.last_eval.sha_at_eval`, so it may move only when the upstream itself moves. A re-check that confirms no change leaves it untouched and moves `upstream.last_checked` alone; what the check found belongs in the roadmap step that ran it.",
+    "sha": "WCAG 2.2 W3C-REC-2024-12-12; APG 2026 menu-button",
     "last_checked": "2026-10-01"
   }
 }

@@ -64,6 +64,15 @@ each of them moved the hash and nobody moved the prose beside it. A number
 restated next to the thing it describes rots independently of it; the live
 count is in § The frozen set and is re-derived by the reproduce command below.
 
+**The same sweep was run over the rest of the file, and found one more**
+(round-2 review, 2026-10-01). The `## Train` heading still read "83 files"
+against a table of 84 rows — the identical construct, one partition over. Both
+partition headings now carry no count at all, so the live figures exist in
+exactly two places that cannot disagree: § The frozen set, and the reproduce
+recipe. Counts inside the dated `## Growth` sections below are left as written:
+those are historical statements about the set at that date, not claims about
+the current one, and freezing them is the point.
+
 **Reproduce:**
 
 ```bash
@@ -125,7 +134,7 @@ Because the bytes have not moved since a commit that precedes the first proposer
 commit, the re-pin changes which number is written down and changes nothing about
 what the number certifies.
 
-## Holdout — 19 files, sealed
+## Holdout — sealed
 
 Sealed means: **no proposer, curator, or analyzer authored in Phase 5 may read
 these files, and no candidate may be selected against them.** Phase 4's cascade
@@ -154,7 +163,7 @@ open and which this file does not settle.
 | `threat-modeling` | `6bdb1d3b44939ac8f6ba78bb6145ca3bea91adb50991cd44bd700987adf903f2` |
 | `worktree-lifecycle` | `1cdde59eaaadc1cb7dfa1cd86d9852326c352a7dcd884dbcbaa414f36d176326` |
 
-## Train — 83 files
+## Train
 
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|
