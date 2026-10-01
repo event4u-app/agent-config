@@ -795,6 +795,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Bug Fixes
 
+* **release:** count tests by running files, not by static parse (#2145) ([396fbbc](https://github.com/event4u-app/agent-config/commit/396fbbc27f37147a2dad7757a69147b7e0d9a761))
 * **roadmap:** make the menu-precision path-scoping blocker machine-readable (#2119) ([016530f](https://github.com/event4u-app/agent-config/commit/016530fd099d74f48b4fb3346226fb48608597fa))
 * **adversarial-verification:** enable auto-merge, fix the deploy-row checker, and withdraw an AC-5 close that did not hold (#2114) ([52f2da9](https://github.com/event4u-app/agent-config/commit/52f2da946181ab0ab5437055ec55759f6e04fd92))
 * **roadmap:** make the obligation-writer corpus blocker machine-readable (#2117) ([9de3e0c](https://github.com/event4u-app/agent-config/commit/9de3e0cd3cf8a4ae08c9b809038f225e3750adef))
@@ -983,6 +984,8 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 * Mark decision-closure's blocked steps machine-readable, and re-verify its five open boxes (#2120) ([ebd31d9](https://github.com/event4u-app/agent-config/commit/ebd31d9482f7b299dee7ba0281f4eaf5cc1cbd33))
 * The lockout recovery procedure is rehearsed, and bounded-approval-floor-waiver closes (#2118) ([4429b1d](https://github.com/event4u-app/agent-config/commit/4429b1d3df9d7495d14f1ef61e356f5c5d0125d5))
 * **canonical-terms:** write the three new prose lines in house dialect ([c0a8c43](https://github.com/event4u-app/agent-config/commit/c0a8c437912f70cf807b4116e120aeea3fcd54b7))
+
+Tests: 24992 (+1020 since 16.1.0)
 
 # Era: pre-4.0.0 — archived
 
