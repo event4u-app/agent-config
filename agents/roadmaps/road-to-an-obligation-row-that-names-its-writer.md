@@ -259,7 +259,7 @@ tree produced it.
       making an absent directory report as an existing one failed exactly 2
       tests; folding `absent` into `unknown` failed exactly 2; dropping the
       `unreadable` count and the empty-directory wording failed exactly 2.
-- [ ] <!-- blocked-by: shadow-corpus-is-one-machine | asked: no — non-interactive process-full run: it reports once at the end and cannot put a question, and the decision amends a pre-registered public claim the claims register itself records as owner-reserved --> **2.2 Resolve the corpus blocker below.** The reporter makes the question
+- [~] <!-- blocked-by: shadow-corpus-is-one-machine | asked: no — non-interactive process-full run: it reports once at the end and cannot put a question, and the decision amends a pre-registered public claim the claims register itself records as owner-reserved --> **2.2 Resolve the corpus blocker below.** The reporter makes the question
       answerable with a number; the answer is not an agent's to give.
       verify: the blocker's `Status` reads `resolved` with the chosen option named
 
@@ -316,6 +316,96 @@ tree produced it.
         sentence, not a new position.
       - Nothing here recommends an option. The roadmap's own `Recommendation:`
         line stands as written and is the author's, not this execution's.
+
+      **Evidence (2026-10-01).** Marked `[~]` deferred rather than left bare
+      `[ ]`: the glyph now says a session looked and routed it, not that nobody
+      reached it. Nothing about the disposition changed — the step is still not
+      agent-closable, for the reason it already gave, now re-checked rather than
+      inherited.
+
+      THE BLOCKER'S `Resolved when` WAS EXECUTED, not trusted. It reads: "the
+      chosen option is written into the claim in `docs/CLAIMS.md`, and the
+      roadmap step that reads the bar cites it." Neither half holds —
+      `grep -n 'shadow-corpus-is-one-machine' docs/CLAIMS.md` returns exactly
+      one line, clause (8), and that line is the register recording the question
+      as still open: "whether to accept the one-machine corpus … to widen the
+      corpus to a second real tree, or to file the window `resolved-null`, is
+      owner-reserved and open as the `shadow-corpus-is-one-machine` blocker on
+      that roadmap." No option is named anywhere in the claim. `Status: open` is
+      accurate.
+
+      WHY THIS RUN DID NOT PICK ONE, stated as a routing decision and not as
+      timidity. The blocker is `Ownership: business-owned`. Option (b) needs a
+      second real operator's tree running the built dispatcher, which no agent
+      can supply. Options (a) and (c) amend a pre-registered public claim
+      downward, which is the owner-reserved row in `decision-revisit-gate`
+      ("creates / removes / weakens a … public commitment") — and clause (8),
+      already merged to `main`, says so in the committed register itself. An
+      agent instruction is not the owner's word, so picking here would
+      manufacture the decision this step exists to route away from itself.
+
+      THE OTHER THREE ACCEPTANCE CRITERIA WERE RE-VERIFIED LIVE, since a
+      deferral is only honest if what it sits on still holds:
+
+      - The enumerated shape survives: `sed -n '/^export type WriterRole/,/unknown.;/p'`
+        prints the three literals and nothing else, and the only
+        `payload|notes|extra` hit in `src/scripts/_lib/obligations.ts` is the
+        comment at `:78` documenting their absence.
+      - `tests/scripts/obligations.test.ts` (39) and
+        `tests/scripts/obligation_writer_split.test.ts` (18) — **57 passed**.
+      - The window reset is live: `git merge-base --is-ancestor 5c9415258
+        origin/main` exits 0.
+
+      RE-READ 2026-10-01, same published unit as 2.1 and the 2026-09-30 read —
+      one row in one `*.json` ledger under
+      `<root>/agents/runtime/state/obligations/`, `--root` the maintainer
+      checkout, counted per row array:
+
+      ```
+      scanned: <checkout>/agents/runtime/state/obligations
+        ledgers: 10
+
+      rows          package consumer  unknown   absent    total
+      delivered          39        0        0      190      229
+      discharged          0        0        0        0        0
+      shadow              0        0        0        0        0
+      all                39        0        0      190      229
+
+      shadow rows — the only array the pre-registered bar counts: 0
+      EXIT=0
+      ```
+
+      ONE NEW OBSERVATION, and it is a trend rather than a point reading, which
+      is the first thing in this roadmap that is: across three readings spanning
+      three days, `package` went **0 → 13 → 39** while `consumer` stayed **0 → 0
+      → 0** and `absent` froze at **190** after the field reached the built
+      dispatcher. `absent` freezing is the expected terminal behaviour — no new
+      pre-field row can appear — and it is what makes the other two readable as
+      a trend instead of noise. The bearing on the blocker is option (b)'s: the
+      corpus is not widening on its own, so (b) describes work somebody must do
+      and not a state the window might drift into. That is an observation. It is
+      not a verdict on (a), (b) or (c), and this run reaches none.
+
+      THE DECISION IS STILL CHEAP, which is the one thing that argues for taking
+      it soon rather than later, and it is 1.3's argument re-measured. The bar
+      counts **shadow rows = 0** in every reading ever taken, against a
+      pre-registered floor of **100**, with **>= 50 affected sessions** also
+      unmet and **2 of the >= 30 calendar days** elapsed since the 2026-09-29
+      reset. Clause (5) governs: "UNDERPOWERED is neither a pass nor a null."
+      Nothing has accumulated that could become the argument for its own
+      retention, so whichever option the owner picks costs nothing to pick now.
+
+      EXACTLY WHAT A FUTURE SESSION NEEDS, and all four are owner inputs, not
+      lookups:
+
+      1. The owner names exactly one of (a), (b) or (c) from the blocker below.
+      2. It is written into `docs/CLAIMS.md` under `obligation-settle-shadow-bar`
+         as a new clause (10), naming the option and its reason, in the shape
+         clauses (8) and (9) already use.
+      3. The blocker's `Status:` flips to `resolved` with that option named, and
+         this step flips `[~]` → `[x]` citing clause (10).
+      4. Then this roadmap archives, and the arming decision in
+         `road-to-a-ledger-that-closes-the-loop` unblocks.
 
 ## Blockers
 
