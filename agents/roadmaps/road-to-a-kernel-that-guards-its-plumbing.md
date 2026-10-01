@@ -196,14 +196,27 @@ deny message names its own kill switch.
 > `sla_ms × 3`. Recorded here because the measurement step is where it became
 > visible and the flip is where it bites.
 >
-> **Resolved when** `concern_sla_ms` has been registered in
-> `hook-latency-budget.json` from repeated readings of the replay-OFF pass on
-> the reference runner — not one, for the reason 3.2's evidence records — and
-> those values have then been observed across a warn-only window without a
-> blocking concern exceeding `sla_ms × 3`. 3.3 then lands the severity-based
-> fail-closed switch with the window's readings behind it. The registration is
-> carried here rather than under 3.2 because 3.3 is its only consumer and the
-> window that validates it is 3.3's own.
+> **Narrowed again 2026-10-01 — two of the three conditions above are now
+> spent, and the one that remains is the one that was always the impossible
+> one.** The `one-question-per-ask` question is answered in the direction that
+> keeps the option open: the bench takes an extra `pre_tool_use` pass under an
+> ask-shaped payload (`ASK_PROBE`), so all nine blocking concerns carry a
+> number and no blocking concern has to be bounded by a decision taken in the
+> absence of a measurement. And `concern_sla_ms` is registered, from both
+> measured machine classes rather than from this machine alone.
+>
+> What is left is elapsed calendar time, and nothing else. It is filed as
+> `warn-only-window-not-elapsed` under § Blockers below — promoted out of this
+> blockquote for the reason that section states: a blocker living only in
+> prose is read by no gate, no dashboard and no continuation ladder, so this
+> roadmap measured `open: 1, blocked: 0` while its one open step was blocked.
+>
+> **Resolved when** the registered `concern_sla_ms` values have been observed
+> across a warn-only window without a blocking concern exceeding
+> `sla_ms × 3`. 3.3 then lands the severity-based fail-closed switch with the
+> window's readings behind it. The registration is carried with 3.3 rather
+> than under 3.2 because 3.3 is its only consumer and the window that
+> validates it is 3.3's own.
 
 - [x] **3.1 Bundle integrity once per session, cached.** `build:hooks` writes
       `dist/hooks/dispatch.sha256`; `check_hook_bundle_content.ts` (exists,
@@ -323,6 +336,78 @@ deny message names its own kill switch.
       `tests/hooks/concern_severity.test.ts:103,131` comments updated (their
       "crash lets the turn END" note no longer holds for the stop slot — lane
       1's file, this lane's decision, recorded in the programme as D3).
+      **Still open (2026-10-01) — on elapsed calendar time, and on nothing
+      else.** Everything this step was waiting on that could be worked has
+      been worked; what is left is a wait that cannot be simulated by the
+      session that wants to end it.
+
+      **It stays `[ ]` rather than becoming `[~]`, and that is a correction
+      taken from this repository's own mechanics rather than a preference.**
+      `[~]` means deferred, and a roadmap at `count_open == 0` with
+      `count_deferred > 0` fails `roadmap-progress-check` under Iron Law 3 —
+      measured here: flipping 3.3 and AC-3 to `[~]` reds that gate, which is a
+      build failure in exchange for a glyph. The shape the tree already uses
+      for a step waiting on a condition outside it is `[ ]` plus a filed
+      `### blocker:` entry, which is what `road-to-a-stop-that-holds` did when
+      it promoted six blockers out of prose (9 open steps, 0 deferred, 5
+      blockers). A blocker reclassifies its step from OPEN to BLOCKED for every
+      reader that matters — the dashboard, the archival sweep, the continuation
+      ladder — without claiming the step was set aside by choice. See
+      § Blockers → `warn-only-window-not-elapsed`.
+
+      **What moved.** (a) `concern_sla_ms` is registered in
+      `src/config/hook-latency-budget.json` for all nine blocking concerns —
+      the clause the Phase-3 blocker named first, which the roadmap parks with
+      3.3 because 3.3 is its only consumer. Six readings per concern across
+      two machine classes: three passes on the reference runner (GitHub
+      ubuntu-latest, one Static Checks job — the gated `--gate --via-cli` run
+      plus the two ungated runs, n=40 on `pre_tool_use` and n=20 on `stop`)
+      and three local `--runs 20` passes on darwin. Registered value is the
+      maximum observed, with no rounding and no safety factor: the margin is
+      the `x 3` the consumer applies, and a factored value would put a guess
+      inside a number whose purpose is to be measured. Ubuntu measured slower
+      on all nine, so no darwin reading sets a bound.
+      (b) `one-question-per-ask` is measured rather than waived. The blocker
+      offered two exits — "a payload shaped to trigger it or an explicit
+      decision that an unmeasured blocking concern keeps the current 30 s
+      timeout" — and this takes the first: `concernSlaPass` runs one extra
+      `pre_tool_use` pass under `ASK_PROBE`, and the concern reads 0.899 /
+      0.915 / 0.927 ms on the reference runner against `not_measured` before.
+      No blocking concern is now bounded by a decision taken in the absence of
+      a measurement.
+      (c) The warn-only window has an instrument. `slaOverruns` names any
+      blocking concern whose measured p95 crossed `sla_ms x 3`, printed on
+      every bench run, gating nothing. **This is what makes the remaining wait
+      finite**: before it, "observed across a warn-only window" named no
+      observer, so the window could not have ended with a reading behind it —
+      only with the absence of a complaint. Local run after registration:
+      `warn-only window: 9 of 9 bounded, none over` — the first reading of the
+      window, and n=1.
+
+      **The spread that is the reason the wait is real.** The ubuntu/darwin
+      p95 ratio is not one number: `turn-end-gate` 6.04x, `block-speaking-inbox-dir`
+      4.97x, `one-question-per-ask` 4.41x, down to `block-plumbing-writes`
+      1.32x. A single factor taken from any one concern would be wrong for
+      another by up to 4.5x. Both measured classes are also faster than the
+      1 vCPU container `hardware_reference.floor` documents and does not
+      enforce, so `sla_ms x 3` is validated against two fast classes and
+      nothing else. That is precisely Risk 1 — reached one level above the
+      harness flag that register entry already records, at the machine instead.
+
+      **What a future session needs, exactly.** Nothing to re-measure and
+      nothing to re-derive. Read the `warn-only window:` line the bench prints
+      on every CI push; the readings accumulate with no action. A span of
+      clean runs closes blocker `warn-only-window-not-elapsed`; a run naming an
+      overrun ENDS the window rather than extending it, because the registered
+      value was then wrong and 3.3's own "warn-only for the first measured
+      window, then deny" re-derives the bound before the flip. Then land the
+      switch. The one unrelated input 3.3 still owes, surfaced here because it
+      is invisible from the step's text: `_run_concern`'s 30 s `timeout:` is
+      on the SPAWN path, and every manifest concern takes the in-process path
+      by default, where the dispatcher's own header states a kill-timeout
+      "cannot preempt in-process synchronous code". So `sla_ms x 3` is a
+      post-hoc overrun verdict on the default path, not a preemption, and 3.3
+      must say which it is landing.
 
 ## Phase 4 — One exit-code table
 
@@ -352,6 +437,54 @@ deny message names its own kill switch.
       and deliberately NOT a row in it: importing `EXIT_WARN` would assert a
       verdict nobody reached, and a fifth row would put a non-verdict in a table
       whose whole subject is what a concern may say.
+
+## Blockers
+
+Promoted 2026-10-01 from prose. The obstacle below already existed as a
+paragraph inside the Phase-3 blockquote, where no gate reads it: blocker
+detection keys on a `## Blockers` section with `### blocker:` headings, so
+`update_roadmap_progress` measured this roadmap at **one open step and zero
+blockers** while that one open step was the blocked one. Nothing here is newly
+discovered and nothing newly refused — the same obstacle, in a shape the
+dashboard, the archival sweep and the continuation ladder can act on.
+
+### blocker: warn-only-window-not-elapsed
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3 — human-only
+- **Ownership:** destructive-owned
+- **Blocks:** Phase 3 — step 3.3 and AC-3. Every other step and criterion on
+  this roadmap is closed.
+- **What to do:**
+  1. **Do not re-measure first.** `concern_sla_ms` is registered in
+     `src/config/hook-latency-budget.json` for all nine blocking concerns, from
+     two machine classes, and its derivation block states what it is and is
+     not. Re-deriving it is not what is owed.
+  2. Read the warn-only line the bench prints on every run — local or CI,
+     gated or not. `slaOverruns` names any blocking concern whose measured p95
+     crossed `sla_ms × 3`; a clean run prints `warn-only window: 9 of 9
+     bounded, none over`.
+  3. Collect those lines across the window. The CI `Static Checks` job runs
+     the bench on every push, so the readings accumulate without anyone doing
+     anything; the window is a span of runs to READ, not a measurement to take.
+  4. Any run naming an overrun ends the window rather than extending it: the
+     registered value was wrong, and 3.3's own text ("warn-only for the first
+     measured window, then deny") means the bound is re-derived before the
+     flip, not that the flip waits longer.
+  5. Only then land 3.3 — the severity-based fail-closed switch — with the
+     window's readings behind it.
+- **Recommendation:** let it run. The readings cost nothing and accumulate on
+  every push; the alternative is flipping a blocking concern to fail-closed on
+  a bound validated by one machine, which is Risk 1 of this register reached
+  by exactly the route Risk 1 records it being nearly reached once already.
+- **If you do nothing:** the dispatcher keeps today's behaviour — rc ≥ 3 on a
+  blocking concern fails OPEN unless the concern also declares
+  `fail_closed: true` (three of nine do), and the kill timeout stays 30 s on
+  the spawn path. That is the pre-roadmap state for this one step; nothing
+  this roadmap landed regresses, and nothing it landed depends on the flip.
+- **Resolved when:** the registered `concern_sla_ms` values have been observed
+  across a warn-only window without a blocking concern exceeding
+  `sla_ms × 3`.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-30 | reviewer: ai-council-2of2-anthropic-openai -->
