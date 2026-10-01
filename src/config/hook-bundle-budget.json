@@ -4,11 +4,21 @@
     "registered_at": "2026-10-01",
     "owner": "maintainer",
     "review_by": "2027-10-01",
-    "max_bytes": 1500000,
-    "max_bytes_derivation": "Measured 1,469,738 bytes after step 1.2 removed js-yaml from the module graph (agents/evidence/analysis/hook-bundle-composition-2026-10-01.md). The ceiling is that reading plus ~2.1 % of headroom, rounded to 1,500,000. The headroom is deliberate and is NOT a creep allowance: a bundle is rebuilt from source on every run, so an esbuild minor that renames symbols differently moves the figure by hundreds of bytes with no change to this tree, and a ceiling sitting one byte above the reading would red on that. It sits BELOW the 1,564,211 bytes measured before the swap, so the exact regression this roadmap closed cannot reappear under it.",
+    "max_bytes": 1550000,
+    "max_bytes_derivation": "Measured 1,514,715 bytes on origin/main at 213d87055 (the gate's own reading, APFS-cloned node_modules so no worktree path artefacts). The ceiling is that reading plus ~2.3 % of headroom, rounded to 1,550,000, on the same doctrine as the 2026-10-01 registration: a bundle is rebuilt from source on every run, so an esbuild minor that renames symbols moves the figure by hundreds of bytes with no change to this tree, and a ceiling one byte above the reading would red on that. Composition is healthy at this reading and was checked rather than assumed: one YAML package (258,833 bytes) and 1,238,525 bytes of own source, so the growth is own code, not a re-entered dependency. The 1,564,211-byte pre-swap regression this roadmap closed still cannot reappear under it.",
     "shrink_only": true,
     "shrink_only_note": "A RAISE needs a recorded reason in `raise_log` below naming what was added and why it could not be avoided; the gate prints the rule but cannot enforce it, because a raise and a lowering are the same edit to a number. The enforcement is review reading `raise_log`, and an empty log beside a raised ceiling is the finding.",
-    "raise_log": [],
+    "raise_log": [
+        {
+            "date": "2026-10-01",
+            "from": 1500000,
+            "to": 1550000,
+            "by": "agent, during the inbox-2026-10 drain",
+            "what_was_added": "Nothing in this commit. The 1,500,000 ceiling was red on the very commit that registered it: measured 1,511,489 bytes at 22b19e520, which is the merge of the PR that introduced the budget. Its derivation read 1,469,738 bytes on the PR branch, whose base predated three PRs that had merged meanwhile — the failure-event binding of #2160 (sixteen concerns on a new slot), the touched-file quality pass of #2152, and the evidence classification of #2153 — and #2162 landed after it. The gate ran on each PR's pre-merge tree and never on the merge result, so every one of those PRs was green alone and the trunk was red the moment they were together.",
+            "why_it_could_not_be_avoided": "The bytes are deliberately merged capability, not an accident to trim: the composition check above shows one parser and no duplicate dependency, so there is nothing to remove that would not remove a feature. The alternative — reverting a merged lane to fit a ceiling derived against a base that no longer exists — would discard working code to satisfy a number that never described this tree.",
+            "what_would_have_caught_it": "Measuring the ceiling against the merge result rather than the PR branch. A ceiling derived on a branch is a statement about that branch; the trunk is what the gate defends, and the two diverge exactly when several lanes land in one day."
+        }
+    ],
     "max_yaml_packages": 1,
     "max_yaml_packages_note": "The dispatch path reads YAML for the hook manifest, the host-lowering table and the settings contract. One reader covers all three. Two cost 95,846 bytes for a single call site and were invisible until an external rescore counted them — which is why this is a cap rather than prose. The package set the cap counts over is YAML_PACKAGES in the gate.",
     "what_this_does_not_bound": "Latency. A smaller bundle is not a measured speed-up; src/config/hook-latency-budget.json owns the wall-clock axis and is not derived from this file. Nor does it bound dist/install/install.mjs or dist/mcp/server.mjs, which carry their own module graphs."
