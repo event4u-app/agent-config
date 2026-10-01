@@ -259,14 +259,51 @@ get there.
 
 ## Phase 3 — Give the resolver the labels and the second axis it is missing
 
-- [ ] **3.1 Add the three missing native runner labels.**
+- [x] **3.1 Add the three missing native runner labels.**
       `rspec`, `junit`, `dotnet-test` into `KNOWN_RUNNERS`, each with a
       presence fixture and an absence fixture, because the set is the single
       source of truth the state schema and tests validate against
       (`runner.ts:40–45`).
       verify: the resolver's own test file asserts each new label on its
       presence fixture and asserts its absence on a repository without it.
-- [ ] **3.2 Add a behaviour-runner axis, scoped and list-shaped — not a scalar.**
+
+      **Evidence (2026-10-01).** `KNOWN_RUNNERS` in
+      `src/agent-src/templates/scripts/work_engine/stack/runner.ts` goes from
+      9 labels to 12 — `rspec`, `junit`, `dotnet-test` — each with a real
+      detector, not just a label:
+
+      - **rspec** (`ruby`) — `rspec` in the Gemfile, `.rspec`, or
+        `spec/spec_helper.rb`; `bundle exec rspec`. **Deliberately no MEDIUM
+        default**, unlike the PHP and Python branches: minitest ships in
+        Ruby's stdlib, so a Gemfile with no rspec signal is most likely a
+        minitest project and emitting `rspec` would be a guess wearing a
+        confidence label. No signal → no row.
+      - **junit** (`jvm`) — `pom.xml` or `build.gradle[.kts]`; HIGH when the
+        build file names junit, MEDIUM when it does not (the same gradation
+        the PHP branch already uses). Wrapper-first like the existing
+        `make test` rule: `./mvnw test` / `./gradlew test` when the wrapper
+        exists, because the wrapper pins the build-tool version.
+      - **dotnet-test** (`dotnet`) — a `*.sln` / `*.csproj` / `*.fsproj` at
+        the root is HIGH; `global.json` or `Directory.Build.props` alone is
+        MEDIUM. `.NET` is the one ecosystem whose marker has no fixed
+        FILENAME, so it is an extension scan rather than a `_MANIFESTS`
+        entry — and the consequence (a project-file-only root contributes
+        nothing to `latest_manifest_mtime`, so its cache key does not move)
+        is written into the code rather than left to be discovered from a
+        stale cache.
+
+      Fixtures, in `tests/scripts/work_engine/stack_runner.test.ts`: each
+      label has a presence case AND an absence case, plus wrapper cases, a
+      polyglot case asserting all three ecosystems in one root, and a case
+      proving `--php` still narrows `selected` now that more ecosystems
+      exist. 70 tests green in that file.
+
+      **The absence fixtures were seen red.** Neutralising the rspec guard
+      (`if (false && …)`, so a Gemfile always emits rspec) fails exactly 1
+      test — `rspec ABSENT: a Gemfile with no rspec signal emits NO rspec
+      row` — and nothing else. The implementation was restored from a copy
+      taken before the probe, never by checking the file out.
+- [x] **3.2 Add a behaviour-runner axis, scoped and list-shaped — not a scalar.**
       The axis mirrors the existing per-runner record: ecosystem, runner,
       command, scope root, confidence, basis. A scalar is wrong here for the
       reason the existing resolver is already a list: one repository can carry a
@@ -277,12 +314,104 @@ get there.
       verify: a monorepo fixture with a behaviour runner in one package and none
       in another returns two scoped rows, not one; a conflict fixture returns the
       refusal with both names.
-- [ ] **3.3 Record detection only — never adoption.**
+
+      **Evidence (2026-10-01).** `BehaviorRunnerResult` mirrors
+      `RunnerResult`'s fields and adds `scope_root` and `conflict`:
+      ecosystem · runner · command · scope root · confidence · basis.
+      `resolve_behavior_runners(root)` returns one row per scope;
+      `ToolchainResult.behavior_runners` and the `behavior_runners` key in
+      `to_config()` carry it to `agents/runtime/state/toolchain.json`.
+
+      Eight labels across six ecosystems: `behat` (php), `cucumber-js` (js),
+      `cucumber-ruby` (ruby), `cucumber-jvm` (jvm), `behave` and `pytest-bdd`
+      (python), `reqnroll` and `specflow` (dotnet) — in a **separate**
+      `KNOWN_BEHAVIOR_RUNNERS` set, asserted disjoint from `KNOWN_RUNNERS`,
+      because `selected` is what a command actually invokes and a behaviour
+      suite must not become runnable by a label appearing.
+
+      Scopes are the root plus each declared workspace package, read from
+      `package.json#workspaces` and `pnpm-workspace.yaml#packages`. That is a
+      LOCAL re-read rather than an import of the frontend detector: this
+      module's contract is leaf (stdlib only, no intra-`work_engine`
+      imports), and breaking it to share a parser would couple the toolchain
+      resolver to the stack labeller for a list of directory names. A
+      mid-path glob (`a/*/deep`) is skipped rather than half-expanded — a
+      reported scope that does not exist is worse than one fewer — and
+      `_MAX_BEHAVIOR_SCOPES` caps the scan at 200.
+
+      Both verify conditions are fixtures, and both were seen red:
+
+      - **Monorepo** — `packages/web` (cucumber-js), `packages/legacy`
+        (behat), `packages/api` (vitest only) returns a row for web and for
+        legacy and **none** for api. Collapsing `_behavior_scopes` to the
+        root alone — the scalar this step rejects — fails exactly 4 tests,
+        all four scope-dependent, with no collateral.
+      - **Conflict** — behat and cucumber-js in ONE scope returns a single
+        row: `runner: "unknown"`, `confidence: LOW`, `command: ""`,
+        `conflict: ["behat", "cucumber-js"]`, and a basis naming both.
+        Turning the refusal into a pick (`names.length >= 1`) fails exactly
+        2 tests, both conflict cases, with no collateral. A sibling case
+        proves a conflicted package does not poison a clean sibling, and
+        another proves the SAME runner matched by two signals is one answer
+        rather than a conflict.
+
+      Doc-Impact: `src/agent-src/contexts/execution/toolchain-resolver.md`
+      gains the three native rows and a `## 2b` section for the axis. Its
+      self-declared size budget moved 6,000 → 7,000 chars (file now 6,971),
+      recorded in the header with its reason rather than absorbed silently:
+      the resolver covered 9 runners on one axis when the old number was
+      written and now covers 12 across two. The alternative was deleting the
+      council-provenance note to make room, which buys a stale number at the
+      cost of someone else's record. The enforced ceiling is
+      `check_depth_budget`'s 16,000 per depth file, and this file is far
+      under it.
+- [x] **3.3 Record detection only — never adoption.**
       No table row, no output line and no skill may recommend installing a
       behaviour runner. Detection answers what a repository has; choosing one is
       the owner-gated question the related stub holds.
       verify: `grep -rniE 'composer require|npm i |pip install|gem install' `
       over every file this phase touches returns nothing.
+
+      **Evidence (2026-10-01).** Three enforcement layers, and one honest
+      correction to the verify as written.
+
+      1. **Structural.** The axis emits no install field by construction —
+         `BehaviorRunnerResult` has no "recommended" field, no ranking, and
+         `command` is how to RUN a suite the repository already owns.
+      2. **Unreachable from execution.** A test asserts that a root carrying
+         both pest and behat selects `['vendor/bin/pest']` and that `behat`
+         never appears in `runners`. The axis is reported, never scheduled.
+      3. **Asserted.** A test joins every emitted `command`, `basis` and
+         `runner` across a two-package fixture and asserts none contains
+         `composer require`, `npm i `, `npm install`, `pip install`,
+         `gem install`, `recommend` or `should install`.
+
+      **Layer 3 was seen red for a real reason, and it changed the code.**
+      The first behat `basis` read `behat/behat in composer require` —
+      naming the composer manifest SECTION, copied from the sibling pest
+      string — and the assertion caught it. A grep cannot tell a manifest
+      section from an install instruction, and this axis is the one place
+      that ambiguity is expensive, so the string is now `behat/behat in the
+      composer manifest` and the reason sits in the code beside it.
+
+      **The verify as literally written cannot return nothing, and saying so
+      is the honest discharge.** Run over the two files this phase touches it
+      returns 8 lines, every one classified:
+
+      - `runner.ts:457` — `'pestphp/pest in composer require'`, the
+        **pre-existing** native-axis basis string. A manifest-section
+        reference on a line this change did not author; left alone under
+        `minimal-safe-diff` rather than rewritten for a grep's benefit.
+      - `runner.ts:732–734` — my own comment explaining why the behaviour
+        axis avoids the phrase.
+      - `stack_runner.test.ts:188` — a pre-existing test TITLE.
+      - `stack_runner.test.ts:735–739` — the forbidden-substring list inside
+        the assertion that enforces this step.
+
+      Nothing in that list recommends installing anything; three of the four
+      groups exist BECAUSE of the prohibition. The substantive condition —
+      no behaviour-axis output is an adoption instruction — holds, and is
+      machine-checked by layer 3 rather than by the grep.
 
 ### blocker: canonical-behaviour-wording-ratchet
 

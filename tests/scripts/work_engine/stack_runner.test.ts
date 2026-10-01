@@ -23,7 +23,9 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    BEHAVIOR_UNKNOWN,
     HIGH,
+    KNOWN_BEHAVIOR_RUNNERS,
     KNOWN_RUNNERS,
     LOW,
     MEDIUM,
@@ -33,7 +35,9 @@ import {
     SPEED_SLOW,
     PACKAGE_MANAGER_BRANCHES,
     ToolchainResult,
+    _behavior_scopes,
     _resolve_package_manager,
+    resolve_behavior_runners,
     resolve_toolchain,
     write_config,
 } from '../../../src/agent-src/templates/scripts/work_engine/stack/runner.js';
@@ -89,10 +93,50 @@ describe('stack/runner — module constants parity', () => {
         expect(LOW).toBe('LOW');
     });
 
-    it('KNOWN_RUNNERS carries exactly the nine Python labels', () => {
+    it('KNOWN_RUNNERS carries the nine original labels plus the three natives', () => {
+        // The nine were the Python parity set. `rspec` / `junit` / `dotnet-test`
+        // were added because the set is the single source of truth the state
+        // schema and these tests validate against, and a repository with one of
+        // them was indistinguishable from one with no runner at all.
         expect([...KNOWN_RUNNERS].sort()).toEqual(
-            ['pest', 'phpunit', 'vitest', 'jest', 'playwright', 'cypress', 'pytest', 'go-test', 'cargo-test'].sort(),
+            [
+                'pest',
+                'phpunit',
+                'vitest',
+                'jest',
+                'playwright',
+                'cypress',
+                'pytest',
+                'go-test',
+                'cargo-test',
+                'rspec',
+                'junit',
+                'dotnet-test',
+            ].sort(),
         );
+    });
+
+    it('KNOWN_BEHAVIOR_RUNNERS is a SEPARATE set and carries the refusal label', () => {
+        // Separate, not merged: `selected` is what a command actually invokes,
+        // and a behaviour suite the repository happens to own is not something
+        // `/tests execute` may start running because a label appeared.
+        expect([...KNOWN_BEHAVIOR_RUNNERS].sort()).toEqual(
+            [
+                'behat',
+                'cucumber-js',
+                'cucumber-ruby',
+                'cucumber-jvm',
+                'behave',
+                'pytest-bdd',
+                'reqnroll',
+                'specflow',
+                'unknown',
+            ].sort(),
+        );
+        expect(BEHAVIOR_UNKNOWN).toBe('unknown');
+        for (const label of KNOWN_BEHAVIOR_RUNNERS) {
+            expect(KNOWN_RUNNERS.has(label)).toBe(false);
+        }
     });
 
     it('RunnerResult applies the documented defaults', () => {
@@ -113,9 +157,21 @@ describe('stack/runner — module constants parity', () => {
         });
         const cfg = res.to_config();
         expect(Object.keys(cfg).sort()).toEqual(
-            ['confidence', 'ecosystems', 'mtime', 'quality', 'runners', 'selected'].sort(),
+            [
+                'confidence',
+                'ecosystems',
+                'mtime',
+                'quality',
+                'runners',
+                'selected',
+                'behavior_runners',
+            ].sort(),
         );
         expect(cfg.confidence).toBe(LOW);
+        // Additive, and empty by default: a result constructed without the
+        // axis still serialises the key, so a reader never has to branch on
+        // whether the field exists.
+        expect(cfg.behavior_runners).toEqual([]);
     });
 });
 
@@ -423,5 +479,290 @@ describe('package-manager cascade — monorepo-workspace SKILL.md § 1', () => {
         // lockfile said, and the work engine hands these to an agent verbatim.
         expect(commands.some((c) => c.startsWith('pnpm run test:e2e'))).toBe(true);
         expect(commands.some((c) => c.startsWith('npm run '))).toBe(false);
+    });
+});
+
+/**
+ * Each label gets BOTH a presence and an absence fixture, because a presence
+ * assertion alone cannot tell a working detector from one that emits the
+ * label unconditionally. The absence fixture is what makes the presence half
+ * mean something.
+ */
+describe('stack/runner — rspec, junit, dotnet-test', () => {
+    /** Every runner label in the inventory for this root. */
+    function labels(root: string): string[] {
+        return resolve_toolchain(root).runners.map((r) => r.runner);
+    }
+
+    it('rspec PRESENT: rspec in the Gemfile', () => {
+        write('Gemfile', "source 'https://rubygems.org'\ngem 'rspec', '~> 3.13'\n");
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'rspec');
+        expect(found).toBeDefined();
+        expect(found?.ecosystem).toBe('ruby');
+        expect(found?.command).toBe('bundle exec rspec');
+        expect(found?.confidence).toBe(HIGH);
+        expect(found?.basis).toBe('rspec in Gemfile');
+    });
+
+    it('rspec PRESENT: .rspec marker with no Gemfile mention', () => {
+        write('Gemfile', "source 'https://rubygems.org'\ngem 'rails'\n");
+        write('.rspec', '--require spec_helper\n');
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'rspec');
+        expect(found?.basis).toBe('.rspec present');
+    });
+
+    it('rspec ABSENT: a Gemfile with no rspec signal emits NO rspec row', () => {
+        // Ruby ships minitest in the stdlib, so a MEDIUM `rspec` default here
+        // would be a guess wearing a confidence label. The PHP/Python branches
+        // DO default; this one deliberately does not.
+        write('Gemfile', "source 'https://rubygems.org'\ngem 'rails'\ngem 'minitest'\n");
+        expect(labels(tmp)).not.toContain('rspec');
+    });
+
+    it('rspec ABSENT: no Gemfile at all', () => {
+        write('package.json', JSON.stringify({ devDependencies: { vitest: '^1' } }));
+        expect(labels(tmp)).not.toContain('rspec');
+    });
+
+    it('junit PRESENT: junit named in a Maven pom', () => {
+        write(
+            'pom.xml',
+            '<project><dependencies><dependency><artifactId>junit-jupiter</artifactId></dependency></dependencies></project>',
+        );
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'junit');
+        expect(found?.ecosystem).toBe('jvm');
+        expect(found?.command).toBe('mvn test');
+        expect(found?.confidence).toBe(HIGH);
+    });
+
+    it('junit PRESENT: the Maven wrapper wins over the ambient mvn', () => {
+        write('pom.xml', '<project><artifactId>junit</artifactId></project>');
+        write('mvnw', '#!/bin/sh\n');
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'junit');
+        expect(found?.command).toBe('./mvnw test');
+    });
+
+    it('junit PRESENT: a Gradle build with no junit string is the MEDIUM default', () => {
+        write('build.gradle', "plugins { id 'java' }\n");
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'junit');
+        expect(found?.confidence).toBe(MEDIUM);
+        expect(found?.command).toBe('gradle test');
+        expect(found?.basis).toBe('gradle build file present, no explicit runner');
+    });
+
+    it('junit PRESENT: the Gradle wrapper wins when gradlew exists', () => {
+        write('build.gradle.kts', 'plugins { java }\n');
+        write('gradlew', '#!/bin/sh\n');
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'junit');
+        expect(found?.command).toBe('./gradlew test');
+    });
+
+    it('junit ABSENT: no pom and no gradle build', () => {
+        write('composer.json', JSON.stringify({ require: { 'pestphp/pest': '^2' } }));
+        expect(labels(tmp)).not.toContain('junit');
+    });
+
+    it('dotnet-test PRESENT: a csproj at the root', () => {
+        write('Api.csproj', '<Project Sdk="Microsoft.NET.Sdk" />');
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'dotnet-test');
+        expect(found?.ecosystem).toBe('dotnet');
+        expect(found?.command).toBe('dotnet test');
+        expect(found?.confidence).toBe(HIGH);
+        expect(found?.basis).toBe('Api.csproj present');
+    });
+
+    it('dotnet-test PRESENT: global.json alone is MEDIUM, not HIGH', () => {
+        write('global.json', '{"sdk":{"version":"8.0.100"}}');
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'dotnet-test');
+        expect(found?.confidence).toBe(MEDIUM);
+    });
+
+    it('dotnet-test ABSENT: no project file and no .NET marker', () => {
+        write('go.mod', 'module example.com/x\n');
+        expect(labels(tmp)).not.toContain('dotnet-test');
+    });
+
+    it('a polyglot root reports every ecosystem it carries', () => {
+        write('Gemfile', "gem 'rspec'\n");
+        write('pom.xml', '<project><artifactId>junit</artifactId></project>');
+        write('Svc.csproj', '<Project Sdk="Microsoft.NET.Sdk" />');
+        const cfg = resolve_toolchain(tmp).to_config() as Record<string, unknown>;
+        expect(cfg.ecosystems).toEqual(expect.arrayContaining(['ruby', 'jvm', 'dotnet']));
+        expect(cfg.confidence).toBe('HIGH');
+    });
+
+    it('--php still narrows `selected` to PHP once the new ecosystems exist', () => {
+        write('composer.json', JSON.stringify({ require: { 'pestphp/pest': '^2' } }));
+        write('Gemfile', "gem 'rspec'\n");
+        const res = resolve_toolchain(tmp, { php_only: true });
+        expect(res.selected.map((r) => r.runner)).toEqual(['pest']);
+        // The inventory is unchanged by the flag — only selection narrows.
+        expect(res.runners.map((r) => r.runner)).toContain('rspec');
+    });
+});
+
+describe('stack/runner — behaviour-runner axis', () => {
+    it('one behaviour runner at the root is one scoped row', () => {
+        write('composer.json', JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } }));
+        const rows = resolve_behavior_runners(tmp);
+        expect(rows).toHaveLength(1);
+        expect(rows[0]?.runner).toBe('behat');
+        expect(rows[0]?.ecosystem).toBe('php');
+        expect(rows[0]?.command).toBe('vendor/bin/behat');
+        expect(rows[0]?.scope_root).toBe('.');
+        expect(rows[0]?.conflict).toEqual([]);
+    });
+
+    it('a repository with no behaviour runner returns NO rows', () => {
+        write('package.json', JSON.stringify({ devDependencies: { vitest: '^1' } }));
+        expect(resolve_behavior_runners(tmp)).toEqual([]);
+    });
+
+    it('MONOREPO: one package with a behaviour runner and one without returns two scoped rows, not one', () => {
+        // The reason the axis is a list. A repository-wide scalar would have
+        // to answer "does this repo have one?" with a single yes, erasing
+        // which package actually owns it.
+        write('package.json', JSON.stringify({ workspaces: ['packages/*'] }));
+        write(
+            'packages/web/package.json',
+            JSON.stringify({ devDependencies: { '@cucumber/cucumber': '^10' } }),
+        );
+        write('packages/api/package.json', JSON.stringify({ devDependencies: { vitest: '^1' } }));
+        write(
+            'packages/legacy/composer.json',
+            JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } }),
+        );
+        const rows = resolve_behavior_runners(tmp);
+        expect(rows.length).toBeGreaterThan(1);
+        const byScope = new Map(rows.map((r) => [r.scope_root, r.runner]));
+        expect(byScope.get('packages/web')).toBe('cucumber-js');
+        expect(byScope.get('packages/legacy')).toBe('behat');
+        // The package that owns no behaviour runner contributes no row at all.
+        expect(byScope.has('packages/api')).toBe(false);
+    });
+
+    it('MONOREPO via pnpm-workspace.yaml is read the same way', () => {
+        write('pnpm-workspace.yaml', "packages:\n  - 'apps/*'\n");
+        write(
+            'apps/shop/package.json',
+            JSON.stringify({ devDependencies: { '@cucumber/cucumber': '^10' } }),
+        );
+        expect(resolve_behavior_runners(tmp).map((r) => r.scope_root)).toContain('apps/shop');
+    });
+
+    it('CONFLICT: two behaviour runners in ONE scope refuse and name both', () => {
+        write('composer.json', JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } }));
+        write('package.json', JSON.stringify({ devDependencies: { '@cucumber/cucumber': '^10' } }));
+        const rows = resolve_behavior_runners(tmp);
+        expect(rows).toHaveLength(1);
+        const row = rows[0];
+        expect(row?.runner).toBe(BEHAVIOR_UNKNOWN);
+        expect(row?.confidence).toBe(LOW);
+        expect(row?.command).toBe('');
+        // Both names travel with the refusal — the point of refusing rather
+        // than picking is that the owner can see what they have to settle.
+        expect(row?.conflict).toEqual(['behat', 'cucumber-js']);
+        expect(row?.basis).toContain('behat');
+        expect(row?.basis).toContain('cucumber-js');
+    });
+
+    it('CONFLICT is per scope: one conflicted package does not poison a clean sibling', () => {
+        write('package.json', JSON.stringify({ workspaces: ['pkg/*'] }));
+        write('pkg/mixed/composer.json', JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } }));
+        write('pkg/mixed/package.json', JSON.stringify({ devDependencies: { cucumber: '^7' } }));
+        write('pkg/clean/Gemfile', "gem 'cucumber'\n");
+        const byScope = new Map(resolve_behavior_runners(tmp).map((r) => [r.scope_root, r]));
+        expect(byScope.get('pkg/mixed')?.runner).toBe(BEHAVIOR_UNKNOWN);
+        expect(byScope.get('pkg/clean')?.runner).toBe('cucumber-ruby');
+        expect(byScope.get('pkg/clean')?.confidence).toBe(HIGH);
+    });
+
+    it('the SAME runner matched by two signals is one answer, not a conflict', () => {
+        write('composer.json', JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } }));
+        write('behat.yml', 'default:\n  suites: {}\n');
+        const rows = resolve_behavior_runners(tmp);
+        expect(rows).toHaveLength(1);
+        expect(rows[0]?.runner).toBe('behat');
+    });
+
+    it('detects the python behaviour runner too', () => {
+        write('pyproject.toml', '[tool.poetry.dependencies]\nbehave = "^1.2"\n');
+        expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toEqual(['behave']);
+    });
+
+    it('reqnroll wins over specflow when a project file names both', () => {
+        // Reqnroll is SpecFlow's maintained successor; a project mid-migration
+        // carries both strings, and the newer one is the one being run.
+        write(
+            'Tests.csproj',
+            '<Project><PackageReference Include="Reqnroll" /><PackageReference Include="SpecFlow" /></Project>',
+        );
+        expect(resolve_behavior_runners(tmp).map((r) => r.runner)).toEqual(['reqnroll']);
+    });
+
+    it('the axis rides on to_config and never reaches `selected`', () => {
+        write(
+            'composer.json',
+            JSON.stringify({
+                require: { 'pestphp/pest': '^2' },
+                'require-dev': { 'behat/behat': '^3' },
+            }),
+        );
+        const res = resolve_toolchain(tmp);
+        const cfg = res.to_config() as Record<string, unknown>;
+        expect((cfg.behavior_runners as { runner: string }[])[0]?.runner).toBe('behat');
+        // Asserted rather than only stated: a behaviour runner the repository
+        // owns is REPORTED, never scheduled to run.
+        expect(cfg.selected).toEqual(['vendor/bin/pest']);
+        expect(res.runners.map((r) => r.runner)).not.toContain('behat');
+    });
+
+    it('no detection row carries an install or adoption instruction', () => {
+        write('package.json', JSON.stringify({ workspaces: ['packages/*'] }));
+        write(
+            'packages/web/package.json',
+            JSON.stringify({ devDependencies: { '@cucumber/cucumber': '^10' } }),
+        );
+        write(
+            'packages/api/composer.json',
+            JSON.stringify({ 'require-dev': { 'behat/behat': '^3' } }),
+        );
+        const emitted = resolve_behavior_runners(tmp)
+            .flatMap((r) => [r.command, r.basis, r.runner])
+            .join(' ')
+            .toLowerCase();
+        for (const forbidden of [
+            'composer require',
+            'npm i ',
+            'npm install',
+            'pip install',
+            'gem install',
+            'recommend',
+            'should install',
+        ]) {
+            expect(emitted).not.toContain(forbidden);
+        }
+    });
+
+    it('_behavior_scopes always includes the root and skips unexpandable globs', () => {
+        write(
+            'package.json',
+            JSON.stringify({ workspaces: ['packages/*', 'tools/one', 'a/*/deep', '!ignored'] }),
+        );
+        write('packages/x/package.json', '{}');
+        const scopes = _behavior_scopes(tmp);
+        expect(scopes[0]).toBe('.');
+        expect(scopes).toContain('packages/x');
+        expect(scopes).toContain('tools/one');
+        // A mid-path glob is skipped rather than half-expanded: a reported
+        // scope that does not exist is worse than one fewer scope.
+        expect(scopes.some((s) => s.includes('*'))).toBe(false);
+        expect(scopes).not.toContain('!ignored');
+    });
+
+    it('an unreadable scope degrades to fewer rows, never a throw', () => {
+        write('package.json', JSON.stringify({ workspaces: ['nope/*'] }));
+        expect(() => resolve_behavior_runners(tmp)).not.toThrow();
+        expect(resolve_behavior_runners(tmp)).toEqual([]);
     });
 });

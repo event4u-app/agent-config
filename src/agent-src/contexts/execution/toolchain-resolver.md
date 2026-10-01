@@ -13,7 +13,9 @@ tools and run the right one — instead of a per-stack command explosion.
 > pytest / go / cargo, not N per-stack variants. "Only genuine PHP-space
 > commands stay PHP-locked."
 
-**Size budget:** ≤ 6,000 chars.
+**Size budget:** ≤ 7,000 chars — raised from 6,000 on 2026-10-01, when the
+resolver went from 9 runners on one axis to 12 across two. Shrink-only from
+here; the enforced ceiling is `check_depth_budget`'s 16,000.
 
 ## 1. The resolver
 
@@ -47,6 +49,12 @@ mirrors the recoverable-error contract of the frontend `detect_stack`.
 | Python | `pytest` in pyproject / `pytest.ini` | pytest | `pytest` |
 | Go | `go.mod` present | go-test | `go test ./...` |
 | Rust | `Cargo.toml` present | cargo-test | `cargo test` |
+| Ruby | `rspec` in Gemfile / `.rspec` | rspec | `bundle exec rspec` |
+| JVM | `pom.xml` / `build.gradle[.kts]` | junit | `./mvnw test` · `./gradlew test` |
+| .NET | `*.csproj` / `*.sln` / `global.json` | dotnet-test | `dotnet test` |
+
+Ruby has **no MEDIUM default**: minitest ships in the stdlib, so a Gemfile
+with no rspec signal emits no row rather than a guess.
 
 **Task-runner wrappers win.** When the project root has a `Makefile`
 `test:` target, a `Taskfile.yml` `test:` task, or a `package.json`
@@ -56,6 +64,23 @@ container access, env, and parallelism (the architecture rule's
 "Build / Task Runner Detection").
 The package manager is read from the lockfile (`pnpm-lock.yaml` → pnpm,
 `yarn.lock` → yarn, else npm).
+
+## 2b. Behaviour-runner axis — per scope, detection only
+
+`result.behavior_runners` is a **separate list** from `runners`: it reports
+which behaviour runner (behat / cucumber-js / cucumber-ruby / cucumber-jvm /
+behave / pytest-bdd / reqnroll / specflow) each scope already owns.
+
+- **Per scope, never repository-wide.** Each row carries `scope_root` (the
+  root plus every declared workspace package). A monorepo with a behaviour
+  runner in one package returns a row for that package and none for the
+  others; a single answer would erase which package owns it.
+- **Two in one scope is a refusal, not a pick** — `runner: "unknown"` plus
+  `conflict: [both names]`, the same refusal the frontend detector makes
+  between two mutually exclusive workspaces.
+- **Detection, never adoption.** No row recommends installing anything, and
+  the axis is unreachable from `selected`: a behaviour suite the repository
+  owns is reported, never scheduled to run. Choosing one is an owner call.
 
 ## 3. Confidence tiers — declarative, shared with the non-interactive contract
 
