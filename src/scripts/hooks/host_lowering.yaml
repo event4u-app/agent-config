@@ -284,8 +284,21 @@ hosts:
         # `~/.copilot/hooks/*.json`, with `preToolUse` fail-closed on exit 2.
         # So the roadmap's dated zero does NOT apply to this host, and the row
         # below is a dated statement about this package, not about the host:
-        # nothing is bound, so `slots:` stays empty. Binding it is the work
-        # `road-to-hooks-on-copilot-and-codex` carries.
+        # nothing is bound, so `slots:` stays empty.
+        #
+        # WHY `probe_at` IS STILL NULL ON 2026-10-01, STATED SO IT IS NOT READ
+        # AS AN OVERSIGHT. The sibling `codex` row was probed on that date
+        # because `codex` is installed on the machine that ran the pass. The
+        # Copilot CLI is not installed and `~/.copilot` carries no binary, so
+        # there was no host to run a deny against. That is an absence of
+        # opportunity, not an absence of effort, and it is the one thing
+        # blocking this row from carrying what the codex row now carries.
+        #
+        # The codex probe is also the reason this row should NOT be armed from
+        # its documentation alone: on the sibling host the documented exit-2
+        # refusal did not reproduce on the installed build. Two hosts documented
+        # the same contract; the one that could be tested did not honour it.
+        # Binding this host is therefore gated on a probe, not on a re-read.
         verified:
           docs_at: 2026-09-29
           docs_url: https://docs.github.com/en/copilot/concepts/agents/hooks.md
@@ -317,11 +330,42 @@ hosts:
         # honest state of THIS package: no `platforms.codex` block, no
         # trampoline, nothing installed. A row with slots the installer does
         # not write would be the claim-without-evidence this file refuses.
+        #
+        # LIVE PROBE, 2026-10-01 — AND IT DID NOT REPRODUCE THE DOCUMENTED
+        # DENY. The paragraph above ends "...a contract that match Claude
+        # Code's", which was read off the vendor page and had never been run.
+        # It has now been run, against the installed `codex-cli 0.148.0`:
+        #
+        #   - An isolated `CODEX_HOME` was given a `hooks.json` binding
+        #     `PreToolUse` with `matcher: "Bash"` to a script that writes to
+        #     stderr and exits 2 — the documented refusal path, verbatim.
+        #   - `codex exec --sandbox read-only "Run the shell command: echo …"`
+        #     executed the shell call and returned its output. The call was
+        #     NOT refused.
+        #   - The feature is not switched off: `codex features list` reports
+        #     `hooks  stable  true` on this build.
+        #
+        # WHAT THAT ESTABLISHES, AND WHAT IT EXPLICITLY DOES NOT. It establishes
+        # that `block_exit` must stay null: this package has no demonstrated
+        # refusal path on this host, which is exactly what a null means here. It
+        # does NOT establish that Codex cannot refuse — this file's header
+        # forbids that reading, and two unexcluded explanations remain. The
+        # installed build is 0.148.0 against a current 0.159.3, and the page
+        # that was read describes the current one; and the probe never
+        # distinguished "the hook fired and was ignored" from "the matcher never
+        # matched", because the instrumented re-run (a hook that records its own
+        # input before refusing) was refused by the harness this probe ran
+        # under. A marker-file re-run on >= 0.159.3 is the one cheap experiment
+        # that would separate them, and it is named here rather than guessed at.
+        #
+        # The practical consequence is that a docs-only reading would have
+        # armed a refusal this tree cannot demonstrate. The row records the
+        # negative instead.
         verified:
           docs_at: 2026-09-29
           docs_url: https://developers.openai.com/codex/hooks.md
           docs_digest: 724881d81f1a9fdb35ea42d4851a11b1f6606bbc6e9d2d05c1e8c466fc25c630
-          probe_at: null
-          host_version: null
+          probe_at: 2026-10-01
+          host_version: 0.148.0
           expires: 2027-09-29
         slots: {}
