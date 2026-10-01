@@ -25,6 +25,7 @@ import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { preflightPosition } from '../../src/scripts/_lib/release_position.js';
+import { _TEST_LIST_ARGV } from '../../src/scripts/release_publication.js';
 
 import {
     RELEASE_HEAD_CAP_LINES,
@@ -326,6 +327,12 @@ describe('test-count probe buffering', () => {
 
     it('blank lines are not counted as cases', () => {
         expect(_count_from_list_result({ status: 0, stdout: 'a\n\n  \nb\n' })).toBe(2);
+    });
+
+    // 16.2.0 regression: vitest 5's default static parse reported "No test
+    // suite found" for the helper-defined golden shards and exited 1.
+    it('collects by running files, not by static parse', () => {
+        expect(_TEST_LIST_ARGV).toContain('--staticParse=false');
     });
 });
 

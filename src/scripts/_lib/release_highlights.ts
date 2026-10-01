@@ -574,7 +574,8 @@ export function section_publication_blockers(
                 'fails, so a missing line means the collection failed during `task release`. ' +
                 'Fix the collection, then render the number and put it on the section — ' +
                 `the release commit already exists on ${where}, so amend it there. Do not ` +
-                'invent the count: `npx vitest list | wc -l` is the same probe the writer runs.',
+                'invent the count: `npx vitest list --staticParse=false | grep -c .` is the same ' +
+                'probe the writer runs.',
         );
     }
     return out;
