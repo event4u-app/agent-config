@@ -151,6 +151,24 @@ describe('docs digest — unreachable establishes nothing', () => {
         expect(gate(text).errors).toEqual([]);
     });
 
+    it('does not erase the recorded digest when the page is GONE', () => {
+        // The state that means "this citation is dead" was the one state that
+        // destroyed the evidence: `gone` fell through to the digest branch and
+        // wrote `docs_digest: null`. Found by completion review, reproduced,
+        // fixed — and pinned here, because the write-neutrality cases that
+        // existed covered `unreachable` and `no-url` only, which is exactly how
+        // a 19/19 green suite missed it.
+        const dead = classify('claude', 'any', 'u', recorded('claude'), null, 'GONE HTTP 404');
+        expect(dead.state).toBe('gone');
+        const { text, expired, written } = applyFindings(SOURCE, [dead], TODAY);
+        expect(written).toEqual([]);
+        expect(expired).toEqual([]);
+        expect(text).toBe(SOURCE);
+        expect(parseHostLowering(text).get('claude')?.get('any')?.verified?.docs_digest).toBe(
+            recorded('claude'),
+        );
+    });
+
     it('does not expire a row that cites no page at all', () => {
         const none = classify('cowork', 'any', null, null, null);
         expect(none.state).toBe('no-url');

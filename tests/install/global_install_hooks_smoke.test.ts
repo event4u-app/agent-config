@@ -170,11 +170,13 @@ describe('install smoke probe covers every bound host', () => {
         const raw = fs.readFileSync(LOWERING, 'utf8');
 
         // Mutate the TEXT, not a parsed object, so the control runs the same
-        // parse the real assertions run. Serialise through the SAME
-        // two real assertions use, instead of re-implementing the scan inline.
-        // An inline copy proves a copy of the logic is sensitive; a defect
-        // introduced in `boundHosts` itself would leave this control green
-        // while silently disarming the completeness assertion above.
+        // parse the real assertions run — and feed it through the SAME
+        // `boundHosts` helper those assertions use, rather than re-implementing
+        // the scan inline. An inline copy proves a copy of the logic is
+        // sensitive; a defect introduced in `boundHosts` itself would leave
+        // this control green while silently disarming the completeness
+        // assertion above. The leftover half-sentence this replaces was caught
+        // in review.
         const probed = new Set(smokeProbeEvents().map(([platform]) => platform));
         const bound = boundHosts(
             raw.replace(

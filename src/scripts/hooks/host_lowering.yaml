@@ -45,16 +45,14 @@
 #   timeout_default  host default for that timeout. `null` = not established here.
 #   verified         provenance of the row, or `null`. `expires` is mandatory
 #                    when the block is present — see lint_hook_manifest.
-#                    `docs_digest` is the sha256 of the `docs_url` body as
-#                    fetched by the LAST digest run — NOT as fetched on
-#                    `docs_at`, which is a different event: `docs_at` dates the
-#                    reading the row's ANSWERS came from, the digest pins the
-#                    body at the moment it was hashed. The first fill already
-#                    made the distinction real (digests taken 2026-10-01 against
-#                    rows read 2026-09-29), so the two are stated apart rather
-#                    than written as one sentence that asserts a provenance
-#                    nobody has. `check_host_docs_digest --fetch` re-reads and
-#                    flags a change.
+#                    `docs_digest` is the sha256 of the `docs_url` body as last
+#                    ESTABLISHED for the row — recorded by a human-run fill,
+#                    never silently updated. On drift the watcher leaves it
+#                    alone and moves `expires` instead, so the field keeps
+#                    naming the body someone actually read. `docs_at` and
+#                    `docs_digest` are therefore ONE pair: one date, one body,
+#                    one establishment. `check_host_docs_digest --fetch`
+#                    re-reads the page and flags a difference.
 #   slots            ORDERED. Bridge entries are written in this order, so the
 #                    order is part of the generated output and must not be
 #                    sorted. `native` may be a list where one slot has two

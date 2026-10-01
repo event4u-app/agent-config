@@ -76,10 +76,14 @@
 
 import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { asOf } from './_lib/as_of.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
 import { sanitize_text } from './_lib/retrieval_sanitize.js';
+import { reportScanned } from './_lib/scan_scope.js';
 import { HOST_LOWERING_PATH, parseHostLowering, type HostLowering } from './hooks/host_lowering.js';
 
 /** sha256, hex — the digest shape `verified.docs_digest` carries. */
@@ -210,7 +214,15 @@ export function applyFindings(
 ): { text: string; expired: string[]; written: string[]; missed: string[] } {
     const wanted = new Map<string, DigestFinding>();
     for (const f of findings) {
-        if (f.state === 'no-url' || f.state === 'unreachable') continue;
+        // `gone` belongs in this skip list and was missing from it, which made
+        // the one state that means "the citation is dead" the one state that
+        // ERASED the evidence: it fell through to the digest branch and wrote
+        // `docs_digest: null`. That is self-defeating as well as wrong — with a
+        // null digest and an untouched year-long `expires`, a page that later
+        // returned would classify as `filled` and the drift signal would be
+        // gone permanently. The module header already promised a `gone` row
+        // writes nothing; this is the line that makes the promise true.
+        if (f.state === 'no-url' || f.state === 'unreachable' || f.state === 'gone') continue;
         wanted.set(`${f.host}/${f.surface}`, f);
     }
     if (wanted.size === 0) return { text: yamlText, expired: [], written: [], missed: [] };
@@ -263,12 +275,15 @@ export function applyFindings(
         // A DRIFTED ROW KEEPS ITS RECORDED DIGEST. Two reasons, and the second
         // is the one that matters more.
         //
-        // 1. Provenance. `docs_digest` is "the sha256 of the body as fetched on
-        //    `docs_at`". Writing the NEW body's hash while leaving `docs_at`
-        //    untouched makes the row assert a reading that never happened — a
-        //    false statement in a table whose entire purpose is that its
-        //    statements are true, and a quiet form of exactly the "adopts no
-        //    upstream text" this module promises not to do.
+        // 1. Provenance. The digest records a body a human ESTABLISHED, paired
+        //    with the `docs_at` of that establishment. Writing the new body's
+        //    hash while `docs_at` stays put makes the pair assert a reading
+        //    that never happened — a false statement in a table whose whole
+        //    purpose is that its statements are true, and a quiet form of
+        //    exactly the "adopts no upstream text" this module promises not to
+        //    do. (This comment used to quote the field's RETIRED definition,
+        //    "as fetched on `docs_at`", which the same file had already
+        //    corrected three paragraphs up. Caught in review.)
         // 2. The drift signal would erase itself. Overwriting the digest means
         //    the NEXT run compares new-against-new and reports `unchanged`, so
         //    a human who misses the one red week never learns the page moved.
@@ -325,6 +340,12 @@ async function fetchBody(url: string, timeoutMs: number): Promise<{ body: string
 }
 
 const KNOWN_FLAGS: ReadonlySet<string> = new Set([
+    // `--as-of` is consumed by `asOf()` itself, not by this parser, but it MUST
+    // be listed: `asOf()` prints "Pass --as-of <iso> to pin it" on every
+    // unpinned run, and following that advice used to exit 2 on an unknown
+    // flag. A tool that refuses its own printed advice is worse than one that
+    // gives none.
+    '--as-of',
     '--fetch',
     '--write',
     '--self-test',
@@ -407,8 +428,64 @@ function selfTest(): number {
     if (classify('h', 'any', 'u', 'd', null, 'HTTP 503').state !== 'unreachable') problems.push('503 must be unreachable');
 
     for (const p of problems) process.stderr.write(`❌  ${p}\n`);
-    if (problems.length === 0) process.stdout.write('✅  check_host_docs_digest: self-test passed.\n');
-    return problems.length === 0 ? 0 : 1;
+
+    // The pure-function checks above prove the DECISIONS. These prove the
+    // BINARY — argv parsing and the entry guard included — by shelling out to
+    // the real CLI, which is the layer that has silently no-opped in this
+    // repository before. `gate-self-test:registered-non-adopters` requires it
+    // of any registered gate, and the requirement is right: an enforced
+    // `scanned:` floor only proves the gate READ something.
+    const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+    const rel = 'src/scripts/check_host_docs_digest.ts';
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'chdd-selftest-'));
+    const emptyTable = path.join(tmp, 'empty.yaml');
+    fs.writeFileSync(emptyTable, 'schema_version: 1\nhosts: {}\n');
+    const malformed = path.join(tmp, 'bad.yaml');
+    fs.writeFileSync(malformed, 'schema_version: 1\nnot_hosts: []\n');
+
+    const cliCode = runSelfTest({
+        gate: 'check_host_docs_digest',
+        minCases: 6,
+        minRejectCases: 4,
+        cases: [
+            {
+                name: 'an unknown flag is refused, not ignored',
+                expect: 'reject',
+                run: () => runGateCli(repoRoot, rel, ['--not-a-flag'], repoRoot),
+            },
+            {
+                name: '`--flag=value` resolves instead of being silently dropped',
+                expect: 'reject',
+                run: () => runGateCli(repoRoot, rel, ['--lowering=/nonexistent/table.yaml'], repoRoot),
+            },
+            {
+                name: '`--write` without `--fetch` is refused',
+                expect: 'reject',
+                run: () => runGateCli(repoRoot, rel, ['--write'], repoRoot),
+            },
+            {
+                name: 'an empty table fails the scan-scope floor rather than reporting clean',
+                expect: 'reject',
+                run: () => runGateCli(repoRoot, rel, ['--lowering', emptyTable, '--quiet'], repoRoot),
+            },
+            {
+                name: 'a malformed table exits non-zero instead of throwing past the contract',
+                expect: 'reject',
+                run: () => runGateCli(repoRoot, rel, ['--lowering', malformed, '--quiet'], repoRoot),
+            },
+            {
+                name: 'the committed table passes the offline report',
+                expect: 'accept',
+                run: () => runGateCli(repoRoot, rel, ['--quiet'], repoRoot),
+            },
+        ],
+    });
+    fs.rmSync(tmp, { recursive: true, force: true });
+
+    if (problems.length === 0 && cliCode === 0) {
+        process.stdout.write('✅  check_host_docs_digest: self-test passed.\n');
+    }
+    return problems.length === 0 && cliCode === 0 ? 0 : 1;
 }
 
 export async function main(argv: readonly string[]): Promise<number> {
@@ -469,6 +546,13 @@ export async function main(argv: readonly string[]): Promise<number> {
     // the tree. It resolves --as-of, AC_AS_OF and the commit date under CI.
     const today = todayRaw ?? asOf().toISOString().slice(0, 10);
 
+    if (strictFetch && !doFetch) {
+        process.stderr.write(
+            'check_host_docs_digest: `--strict-fetch` needs `--fetch` — it qualifies a fetch verdict, ' +
+                'and silently doing nothing is the failure this script argues against.\n',
+        );
+        return 2;
+    }
     if (doWrite && !doFetch) {
         process.stderr.write('check_host_docs_digest: `--write` needs `--fetch` — there is nothing to write without a read.\n');
         return 2;
@@ -491,6 +575,17 @@ export async function main(argv: readonly string[]): Promise<number> {
         return 2;
     }
     const rows = watchable(table);
+    // Scan-scope hardening, the same contract every other gate here carries: a
+    // gate that silently walks an empty corpus reports "clean" and is
+    // indistinguishable from a gate that works. If the table is ever moved or
+    // its shape changes so `watchable` resolves nothing, this exits non-zero
+    // instead of reporting no drift across zero rows.
+    reportScanned({
+        gate: 'check_host_docs_digest',
+        scanned: rows.length,
+        units: 'verified row(s)',
+        roots: ['src/scripts/hooks/host_lowering.yaml'],
+    });
 
     if (!doFetch) {
         const withDigest = rows.filter((r) => r.digest !== null).length;
@@ -522,7 +617,11 @@ export async function main(argv: readonly string[]): Promise<number> {
 
     if (!quiet) {
         for (const f of findings) {
-            const extra = f.state === 'unreachable' ? ` (${f.detail ?? 'unreadable'})` : '';
+            // `gone` carries its status code in `detail` exactly as
+            // `unreachable` does, and printing it only for the latter meant a
+            // dead citation logged without saying whether it was a 404 or a 410.
+            const extra =
+                f.state === 'unreachable' || f.state === 'gone' ? ` (${f.detail ?? 'unreadable'})` : '';
             process.stdout.write(`  ${STATE_ICON[f.state]} ${f.host}/${f.surface} — ${f.state}${extra}\n`);
             // A drift line names everything needed to act on it without a
             // second run: which page, what it hashed to before, what it hashes
