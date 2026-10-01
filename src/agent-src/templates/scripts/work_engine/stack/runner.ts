@@ -1,10 +1,19 @@
 /**
  * Toolchain resolution — pick the right test/quality runner per stack.
  *
- * TypeScript twin of `work_engine/stack/runner.py` (ADR-200 py2ts). Leaf
- * module — stdlib only, NO intra-`work_engine` imports — so the public API
- * names stay snake_case to mirror the Python module 1:1 (per ADR-200: Python
- * style is part of the contract).
+ * Originally the TypeScript twin of `work_engine/stack/runner.py` (ADR-200
+ * py2ts). Leaf module — stdlib only, NO intra-`work_engine` imports — and the
+ * public API names stay snake_case, because that style IS the contract
+ * (ADR-200).
+ *
+ * **The 1:1 parity claim no longer holds, and the convention is what
+ * survives.** The behaviour-runner axis is TypeScript-only — `resolve_behavior_runners`,
+ * `BehaviorRunnerResult`, `KNOWN_BEHAVIOR_RUNNERS`, `BEHAVIOR_UNKNOWN`,
+ * `_behavior_scopes`, `_pnpm_packages`, a `ToolchainResult` field — as are
+ * the rspec / junit / dotnet-test labels. There is no Python side to mirror
+ * them to; the parity test was renamed accordingly rather than quietly
+ * widened. Keep writing snake_case here because the file does, not because a
+ * twin is being tracked.
  *
  * Sibling of {@link "./detect"} (which labels the *frontend* stack). This
  * module answers a different question: *given a project root, which test

@@ -150,22 +150,22 @@ get there.
       `evals/triggers.json` as where they are pinned, and closes the promise
       exactly where Risk 1 says it must close: it is a decision, not a guide
       to writing a contract. No new section and no new heading.
-      `wc -w src/skills/test-case-discovery/SKILL.md` → **1,896**, inside the
-      ≤ 1,900 budget the step sets and well under ADR-225's 3,000-word
-      tripwire; the file is 209 lines.
+      `wc -w src/skills/test-case-discovery/SKILL.md` stays **inside the
+      ≤ 1,900 budget** this step sets and well under ADR-225's 3,000-word
+      tripwire. The exact count is not recorded — it moved on four of the
+      seven review rounds and was recorded wrong on three of them, so the
+      budget is the claim and `wc -w` is the check.
 
-      Two rounds corrected this paragraph. **Round 3** caught it claiming
+      Three rounds corrected this paragraph. **Round 3** caught it claiming
       eight terms — including *feature file* and *executable specification*,
       which the sentence did not contain — against a draft that round 2 had
-      replaced, and a word count of 1,896 when the file measured 1,895.
-      **Round 5** then measured the terms against the CORPUS rather than the
-      sentence and found *acceptance scenario* pinned in no query at all: it
-      appeared only in the corpus file's own description. The term is dropped,
-      so each of the five named is now demonstrably in at least one
-      should-trigger query, and the file is 1,896 words again. Round 3 had
-      checked the list in one direction only — that every term in the sentence
-      was in the sentence — and not that every term it named was actually
-      pinned.
+      replaced. **Round 5** measured the terms against the CORPUS rather than
+      the sentence and found *acceptance scenario* pinned in no query at all:
+      it appeared only in the corpus file's own description, so the term was
+      dropped. **Round 7** applied that same check to the German sub-claim and
+      found it false for *given-when-then*; the claim now names the two terms
+      a German exemplar actually carries. Each round checked one direction and
+      the next found the direction it had not.
       `./scripts-run src/scripts/skill_linter --path
       src/skills/test-case-discovery/SKILL.md` → `[PASS] … No issues found`.
 - [~] **1.3 Register the canonical spellings.** Deferred by decision, not by
@@ -271,22 +271,26 @@ get there.
         the other four now defer to.
 
       `task sync` + `task generate-tools` run; the only generated change is
-      `src/domains/meta/pack.yaml`'s `token_passport` (`commands_tokens`
-      240,361 → **240,809**, `total_tokens` 310,656 → **311,104**, +448 each)
-      — the recorded paragraphs' cost plus the ecosystem lines both command
-      bodies gained in round 4, committed with them. The committed file is
-      internally consistent: 3,649 + 240,809 + 1,298 + 65,348 = 311,104. A
+      `src/domains/meta/pack.yaml`'s `token_passport`, which grows by the
+      recorded paragraphs plus the ecosystem lines the command bodies gained.
+      **The figures are not quoted here** — read them from the committed
+      `pack.yaml`, whose four components sum to its own `total_tokens`. A
       repeat `task sync` produces no further change, so the regenerated state
       is a fixed point. `check_pack_size` → within budget.
 
-      This paragraph first recorded +282, captured before the round-4 command
-      edits. It is the **fourth** stale figure this roadmap has had to correct
-      — alongside the budget, the test count and the term list — and four is a
-      pattern, not four coincidences: every one was a number written while the
-      branch was still moving. The mechanism, stated so the next roadmap does
-      not relearn it: **a figure in completion evidence is re-measured at the
-      commit it describes, never carried forward from the edit that produced
-      it.**
+      **Why the numbers are gone rather than corrected.** This paragraph
+      carried a stale passport delta three times running, each one re-measured
+      and each one stale again by the next commit — because every later edit
+      to a command body moves the passport, so any number written here is
+      wrong before the branch lands. Rounds 2 through 7 corrected six stale
+      figures across this file: a budget, a test count twice, a term list, a
+      word count twice, this passport three times. Re-measuring harder was the
+      wrong fix; the right one is **not to quote a derived, volatile figure in
+      completion evidence at all — name the artefact that holds it and the
+      command that reads it.** A figure that must be true at HEAD is either
+      re-derived by the reader or it is a liability. Where a number is genuinely
+      load-bearing — a budget ceiling, an acceptance threshold — it stays, and
+      is re-measured at the commit it describes.
 
 ## Phase 3 — Give the resolver the labels and the second axis it is missing
 
@@ -418,27 +422,27 @@ get there.
 
       Doc-Impact: `src/agent-src/contexts/execution/toolchain-resolver.md`
       gains the three native rows and a `## 2b` section for the axis. Its
-      self-declared size budget moved **6,000 → 7,500 chars**, recorded in the
-      header with its reason rather than absorbed silently: the resolver
-      covered 9 runners on one axis when the old number was written and now
-      covers 12 across two. The alternative was deleting the
-      council-provenance note to make room, which buys a stale number at the
-      cost of someone else's record. The enforced ceiling is
-      `check_depth_budget`'s 16,000 per depth file, and this file is far
-      under it.
+      self-declared size budget was **raised from its original 6,000 chars**,
+      recorded in that file's own header with its reason rather than absorbed
+      silently: the resolver covered 9 runners on one axis when the old number
+      was written and now covers 12 across two. **The current ceiling is
+      whatever that header states** — it is not restated here, because this
+      record quoted it wrong twice. The enforced ceiling is
+      `check_depth_budget`'s 16,000 per depth file, and the file is far under
+      it.
 
-      **Corrected 2026-10-01, by round 2 of the completion review.** This
-      paragraph first recorded "6,000 → 7,000 chars (file now 6,971)". Both
-      numbers were wrong and in the direction that matters: the artefact says
-      7,500, and at the 7,000 this record claimed to have set, the committed
-      file would have been over it. The sequence the first version flattened:
-      7,000 was set, round 1's findings corrected the three rows this change
-      ADDED (no pre-existing row was touched), the file grew past 7,000, and
-      the budget moved once more to its final 7,500 rather than having prose
-      shaved out of it to fit. A sentence had in fact been deleted to fit the
-      earlier number and was put back — deleting content to satisfy a budget
-      is the failure this repository keeps recording, and doing it to one's
-      own number is worse.
+      **The sequence, which is the part worth keeping.** The budget moved
+      three times and each move taught something. 7,000 was set first, and a
+      real sentence was deleted from § 4 to fit it — then put back, because
+      deleting content to satisfy a budget is the failure this repository
+      keeps recording and doing it to one's own number is worse. Round 1's
+      findings then corrected the three rows this change ADDED (no
+      pre-existing row was touched) and the file grew past 7,000, so the
+      ceiling moved again. Round 6 caught the result as a **trap rather than a
+      constraint**: the ceiling then sat four characters above the file with a
+      shrink-only clause beside it, which told the next author only that they
+      may not write. The final value leaves real headroom and drops that
+      clause. What this paragraph no longer does is name the number.
 - [x] **3.3 Record detection only — never adoption.**
       No table row, no output line and no skill may recommend installing a
       behaviour runner. Detection answers what a repository has; choosing one is
@@ -590,12 +594,16 @@ All six verified 2026-10-01 at branch `drain/behavior-vocabulary-close`.
       and this branch; `git diff --name-status origin/main...HEAD -- src/skills/`
       shows two `M` lines and no `A`.
 
-      **No recommendation:** the grep over all seven touched source files
-      returns 8 lines, every one classified in step 3.3's evidence — one
-      pre-existing native-axis basis string naming the composer manifest
-      section, one comment explaining why the behaviour axis avoids the
-      phrase, one pre-existing test title, and the forbidden-substring list
-      inside the assertion that enforces the prohibition. Two further strings
+      **No recommendation:** step 3.3 runs the grep over the two files its
+      phase touches — `runner.ts` and `stack_runner.test.ts` — and classifies
+      every line it returns: one pre-existing native-axis basis string naming
+      the composer manifest section, one comment explaining why the behaviour
+      axis avoids the phrase, one pre-existing test title, and the
+      forbidden-substring list inside the assertion that enforces the
+      prohibition. (This criterion previously attributed that result to "all
+      seven touched source files", a scope that excludes the test file where
+      two of the four classified lines live and therefore returns fewer. The
+      classification was right; the scope named for it was not.) Two further strings
       are worth naming rather than leaving for a reader to find: the new
       trigger corpus carries *"install Cucumber and wire a step-definition
       folder into this repository"* and the skill body is unchanged on this
@@ -641,8 +649,21 @@ neither spends the ratchet early nor loses the trigger.
 
 ### Residue carried out of the review rounds
 
-Six completion-review rounds produced 63 findings; 54 are fixed and 9 are
-`accepted-risk`, each with a stated `revisit-if`. What remains:
+Seven completion-review rounds produced 71 findings; 61 are fixed and 10 are
+`accepted-risk`, each with a stated `revisit-if`.
+
+**The dominant defect class was never the code.** Four highs across rounds 2–4
+and roughly a third of everything else were this branch asserting something
+about itself that was not so — a doc comment, a contract bullet, a completion
+figure. The durable lesson is in step 2.2: a derived, volatile figure is not
+quoted in completion evidence at all, because re-measuring it harder failed
+three rounds running. What remains open:
+
+- **Maven gates on content where Gradle gates on presence.** An empty or
+  unreadable `pom.xml` emits no junit row, against a contract row added in the
+  same change. Left as a decision rather than a correction: the realistic
+  trigger is the unreadable path, and emitting a MEDIUM row for a file we
+  could not read is not obviously better than emitting none.
 
 - **Two detector precision gaps**, both named by round 6 and both the same
   shape as ones that were fixed: `io.cucumber` over JVM build text and

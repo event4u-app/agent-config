@@ -35,8 +35,10 @@ for (const r of result.selected) {
 }
 ```
 
-Resolution is stat-bound — a fixed name list per scope, plus one listing per
-workspace glob parent, so a wide monorepo pays proportionally — and
+Resolution costs **per scope**, not per repository: a fixed name list stat-ed,
+six-or-so manifests read, and two directory listings for the .NET probe —
+which run in every repository, .NET or not. A wide workspace pays that times
+its package count, so the cost is proportional and not negligible. It
 **never raises** — a malformed manifest or unknown stack degrades to a
 `LOW`-confidence empty result so the command can ask, never crash. This
 mirrors the recoverable-error contract of the frontend `detect_stack`.
