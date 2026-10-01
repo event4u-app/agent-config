@@ -549,10 +549,16 @@ right places.
   What the register did not anticipate: the corpus asserts should-trigger for
   prompts that cannot trigger today, because the production routing condition
   is the untouched `description`. That is now stated in the corpus itself.
-- **Risk 2 fired and its mitigation held.** Detection stayed detection: the
-  behaviour axis is a separate label set, asserted disjoint from
-  `KNOWN_RUNNERS`, unreachable from `selected`, and machine-checked against
-  install vocabulary. Nothing in eight review rounds found an adoption path.
+- **Risk 2 fired and its mitigation held — on the axis it named.** Detection
+  stayed detection: the behavior axis is a separate label set, asserted
+  disjoint from `KNOWN_RUNNERS`, unreachable from `selected`, and
+  machine-checked against install vocabulary. Eleven rounds found no adoption
+  path out of it. **What the row did not cover is the NATIVE axis**, and round
+  11 found a real escape there: a `.NET` row emitted on an SDK pin alone
+  entered `selected`, so `/tests execute` ran `dotnet test` in a repository
+  with no project to run it on. The register guarded the new axis against
+  recommending adoption and did not ask whether the widened old axis could
+  schedule something unrunnable. Same shape, neighbouring surface.
 - **Risk 3 fired and the mitigation was the weaker half.** 2.1 was resolved by
   fixing the binding, as the register intended — but round 6 found that
   dropping `pest-testing` left the resolved-PHP branch with NO stack-guidance
@@ -561,10 +567,22 @@ right places.
   risk register that names two options can miss the third.
 
 **One risk the register should have carried and did not:** that the
-completion evidence would go stale against its own branch. Six figures across
-seven rounds — a budget, a test count twice, a term list, a word count twice,
-a token passport three times. It is the dominant defect class of this change
-and no row anticipated it.
+completion evidence would go stale against its own branch — a budget, a test
+count, a term list, a word count, a token passport, a name count, each wrong
+at least once and several more than once. No row anticipated it, and it is
+the dominant defect class of this change.
+
+**And the sharper finding, from the last two rounds: writing the rule did not
+stop it.** Step 2.2 states the remedy — do not quote a derived, volatile
+figure in completion evidence — and after it was written the branch published
+a stale test count, a wrong name count in three places, and a third fitted
+size ceiling. A rule stated in the artifact it governs has nothing measuring
+it; the thing that actually caught each instance was a fresh reviewer
+re-deriving the number. The durable form is therefore not a better rule but a
+cheaper check: **state the command, not the output.** Both sites that quoted
+the test count now name `npx vitest run …` instead, and the two self-imposed
+size ceilings were deleted rather than raised a fourth time, which removes
+the figure instead of re-measuring it.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
