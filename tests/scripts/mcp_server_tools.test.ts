@@ -47,7 +47,7 @@ function tmp(): string {
 // ----------------------------------------------------------------------
 
 describe('tools — allowlist + registry', () => {
-    it('allowlist holds the 25 implemented tools', () => {
+    it('allowlist holds the 26 implemented tools', () => {
         expect(new Set(Object.keys(ALLOWLIST))).toEqual(
             new Set([
                 'lint_skills',
@@ -86,9 +86,15 @@ describe('tools — allowlist + registry', () => {
                 'graph_dead',
                 'graph_query',
                 'graph_path',
+                // road-to-a-graph-that-feeds-the-gate 3.1 — the node view. The
+                // five above all answer about a neighbourhood or a set; this one
+                // answers about ONE node, and is the only graph tool that
+                // refuses a seed it cannot resolve exactly rather than scoring
+                // free text.
+                'graph_node',
             ]),
         );
-        expect(Object.keys(ALLOWLIST).length).toBe(25);
+        expect(Object.keys(ALLOWLIST).length).toBe(26);
         for (const tool of Object.values(ALLOWLIST)) {
             expect(tool.description.trim()).toBeTruthy();
             expect(tool.input_schema.type).toBe('object');
