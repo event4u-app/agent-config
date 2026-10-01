@@ -425,3 +425,64 @@ different things.
 `zero-live-subjects` is unchanged and stays the owner's: its `Resolved when` asks for an
 *accepted* plan, and the evidentiary half has been closed since 2026-09-14. Nothing in this
 reading is new information for that decision — which is itself the point of taking it.
+
+
+## Parking reading, 2026-10-01 — the roadmap moved to `later/`, and why that is the honest close
+
+`agents/roadmaps/road-to-release-holds-that-refuse.md` is now
+`agents/roadmaps/later/road-to-release-holds-that-refuse.md`. Phases 0 through 5 are complete
+and merged; Phase 6 and AC-9 are the only open work and they are defined over elapsed release
+tags, which is not work any session can perform. This section records the three measurements
+that run took, so the next one re-derives none of them.
+
+### The denominator, executed rather than read
+
+```
+git tag --contains 3f342103168e56d0168655c12141829f5e1d6ca0 --sort=creatordate
+```
+
+returns exactly `16.1.0`. **1 of 30.** `git tag --sort=-creatordate | head -1` also reads
+`16.1.0` (2026-09-28), so nothing was cut in the three days since the 2026-09-30 reading and the
+figure is unchanged rather than merely unrechecked. The anchor ref
+`3f342103168e56d0168655c12141829f5e1d6ca0` is now pinned in the parked roadmap's frontmatter
+`entry_condition.what`, which is the shape `lint_roadmap_later_disposition` reads — so the wake
+test is one command and not a reconstruction. Both earlier readings had to recover that ref from
+`git log --reverse -- src/scripts/check_release_holds.ts` first, and a condition that must be
+rebuilt before it can be checked is a condition nobody checks.
+
+### Fifth reading of `zero-live-subjects` — a new active hit, and it is not a hold
+
+The declaration grep returned, for the first time, a hit in the active corpus that is not a
+self-reference: `agents/roadmaps/road-to-a-ui-coverage-ledger-that-can-fail.md:188`, on a step
+whose verify reads *"the flip lands in its own change, after 3.1 has shipped one release"*. It is
+a genuine release-coupled intermediate state and it was authored independently of this work.
+
+It is **not** the live subject the blocker waits for, by the distinction step 1.3 wrote into
+template rule 20: a blocker stops execution, a hold stops publication. That state must not
+*advance* until a release ships; publishing it is safe, and publishing it is how the condition
+clears. Its author modelled it on 2026-09-30 as a structured `shadow-release-window` blocker with
+an inline `blocked-by:` marker, reaching for no hold vocabulary at all. `grep -rn '^### hold:'`
+over `agents/roadmaps/` still returns **0**.
+
+What it is, is the second positive datum about the *ladder* rather than about the population, and
+it points the same way as the first. The third reading found a near-miss resolving at the guard
+and re-sequence rungs; this one finds a near-miss resolving at the blocker rung. Two independent
+authors, neither reaching for a hold, both landing on a cheaper mechanism that already existed.
+That is evidence for the honest-null branch — recorded, not argued into a resolution, because the
+`Resolved when` asks for an *accepted* plan and acceptance is the owner's act.
+
+One thing the parking does change about that decision, and it is worth saying plainly: nothing
+executable waits on it any more. Phase 4 shipped on 2026-09-19, so `zero-live-subjects` is no
+longer a go/no-go on building a mechanism — it is a retrospective cost judgement about one that
+is already in the tree and already wired at four boundaries.
+
+### The move was cleared by the mechanism this roadmap built
+
+```
+./scripts-run src/scripts/check_release_holds --can-move \
+  agents/roadmaps/road-to-release-holds-that-refuse.md later
+```
+
+exits 0 with *"no live window — the move to `later/` is permitted"*. The file declares no hold,
+so there is nothing for step 3.1's lifecycle guard to refuse — but asking it rather than assuming
+is the behaviour rule 28's per-folder clause asks for, and it is cheap.

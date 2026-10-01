@@ -25,7 +25,8 @@ import path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { measure } from '../../src/scripts/measure_turn_end_gate.js';
+import { measure, renderQ1 } from '../../src/scripts/measure_turn_end_gate.js';
+import { emptyShadowStats, type ShadowStats } from '../../src/scripts/_lib/turn_end_refusals.js';
 
 let store: string;
 
@@ -315,5 +316,167 @@ describe('the C-silent overlap ADR-277 argues from', () => {
         expect(c.untested_fires).toBe(1);
         expect(c.unverified_fires).toBe(1);
         expect(c.untested_c_silent).toBe(0);
+    });
+});
+
+describe('renderQ1 — step 2.2, the reader the contract was waiting on', () => {
+    function stats(over: Partial<ShadowStats> = {}): ShadowStats {
+        return { ...emptyShadowStats(), ...over };
+    }
+
+    function withLayer(
+        layer: 'stop_hook_active' | 'refused_turn',
+        retries: number,
+        rows: Partial<Record<string, number>>,
+    ): ShadowStats {
+        const s = emptyShadowStats();
+        const bucket = s.byLayer.find((b) => b.layer === layer)!;
+        bucket.retries = retries;
+        for (const [det, n] of Object.entries(rows)) {
+            bucket.byDetector[det as keyof typeof bucket.byDetector] = n!;
+            bucket.rows += n!;
+        }
+        s.files = 1;
+        return s;
+    }
+
+    it('prints an em dash, NEVER 0.0%, where the layer has no denominator', () => {
+        // The one way the null/zero distinction `q1For` maintains can be undone
+        // one line before a human reads it. Zero is a finding about the
+        // detector; the dash is a finding about the sample.
+        const out = renderQ1(withLayer('stop_hook_active', 2, { language: 0 }), '2026-10-01');
+        const refusedBlock = out.slice(out.indexOf('layer refused_turn'));
+        expect(refusedBlock).toContain('—');
+        expect(refusedBlock).not.toContain('0.0%');
+        // …while the layer that DID observe retries prints a real zero.
+        const stopBlock = out.slice(out.indexOf('layer stop_hook_active'), out.indexOf('layer refused_turn'));
+        expect(stopBlock).toContain('0.0%');
+    });
+
+    it('prints each layer separately and never a pooled share', () => {
+        const s = emptyShadowStats();
+        s.files = 1;
+        const stop = s.byLayer.find((b) => b.layer === 'stop_hook_active')!;
+        stop.retries = 4;
+        stop.byDetector.language = 1;
+        stop.rows = 1;
+        const refused = s.byLayer.find((b) => b.layer === 'refused_turn')!;
+        refused.retries = 4;
+        // `verification`, not `promissory`: the latter is dispatch-censored
+        // since the 2026-10-01 review and prints no number at all.
+        refused.byDetector.verification = 2;
+        refused.rows = 2;
+        const out = renderQ1(s, '2026-10-01');
+        // 1/4 and 2/4, never the pooled 3/8 = 37.5%.
+        expect(out).toContain('25.0%');
+        expect(out).toContain('50.0%');
+        expect(out).not.toContain('37.5%');
+    });
+
+    it('censors the three detectors an open dispatch suppresses, and prints no share for them', () => {
+        // M2 of the 2026-10-01 review. `runDetectors` skips promissory,
+        // completion and untested when a dispatch is open; the shadow record
+        // carries no dispatch flag, so a suppressed retry would enter their
+        // denominators as an observation of silence nobody made. The contract's
+        // attribution clause forbids reporting a detector a rollup cannot
+        // separate that way — so they print `censored`, never `0.0%`.
+        const s = withLayer('stop_hook_active', 4, { language: 1 });
+        const out = renderQ1(s, '2026-10-01');
+        for (const id of ['promissory', 'completion', 'untested']) {
+            const row = out.split('\n').find((l) => l.trim().startsWith(id));
+            expect(row, `${id} must have a row`).toBeDefined();
+            expect(row).toContain('censored');
+            expect(row).not.toContain('%');
+        }
+        // …while a detector the gate runs unconditionally still reports.
+        const lang = out.split('\n').find((l) => l.trim().startsWith('language'));
+        expect(lang).toContain('25.0%');
+    });
+
+    it('prints the resolved workspace it read, so a published reading names its directory', () => {
+        // M4. `--workspace` takes any path and a worktree carries no
+        // `agents/runtime/`, so the report for a wrong directory is a confident
+        // "no readable shadow record". 2.3 pastes this output verbatim into an
+        // evidence file; without this line that file records no provenance.
+        const out = renderQ1(emptyShadowStats(), '2026-10-01', '.');
+        expect(out).toContain(`workspace: ${path.resolve('.')}`);
+        // Absent is still allowed — the header simply carries no workspace line
+        // rather than inventing one.
+        expect(renderQ1(emptyShadowStats(), '2026-10-01')).not.toContain('workspace:');
+    });
+
+    it('prints a bare dash where there is no denominator, with no count beside it', () => {
+        // m3. A dash denies a measurement; `(0 / 0)` beside it reads like one.
+        const out = renderQ1(withLayer('stop_hook_active', 2, { language: 0 }), '2026-10-01');
+        const refusedBlock = out.slice(out.indexOf('layer refused_turn'));
+        expect(refusedBlock).toContain('—');
+        expect(refusedBlock).not.toContain('(0 / 0)');
+    });
+
+    it('says an unreadable file is a defect rather than an empty sample', () => {
+        // m2. "No record" and "N files present but unreadable" in the same
+        // report were flatly contradictory.
+        const s = emptyShadowStats();
+        s.unreadable = 3;
+        const out = renderQ1(s, '2026-10-01');
+        expect(out).toContain('No readable shadow record');
+        expect(out).toContain('UNREADABLE');
+        expect(out).toContain('defect to');
+    });
+
+    it('agrees with itself about singular and plural', () => {
+        // m4. "1 shadow records", "1 retries observed".
+        const one = renderQ1(withLayer('stop_hook_active', 1, { language: 1 }), '2026-10-01');
+        expect(one).toContain('1 shadow record ');
+        expect(one).toContain('1 retry observed');
+        expect(one).toContain('1 shadow row');
+        const many = renderQ1(withLayer('stop_hook_active', 2, { language: 2 }), '2026-10-01');
+        expect(many).toContain('2 retries observed');
+        expect(many).toContain('2 shadow rows');
+    });
+
+    it('degrades rather than throwing on a ShadowStats missing a layer', () => {
+        // m5. `byLayer.find(...)!` on an exported function threw for a
+        // hand-built value; a renderer is not a place to assert.
+        const s = emptyShadowStats();
+        s.files = 1;
+        s.byLayer = s.byLayer.filter((b) => b.layer === 'stop_hook_active');
+        expect(() => renderQ1(s, '2026-10-01')).not.toThrow();
+        expect(renderQ1(s, '2026-10-01')).toContain('layer stop_hook_active');
+    });
+
+    it('states in its own header that this is NOT the contract Q1', () => {
+        // M1, the finding that renamed the quantity. The two condition on
+        // different things, disagree in direction, and neither bounds the
+        // other — so a reader must not carry a number here to a bar.
+        const out = renderQ1(withLayer('stop_hook_active', 4, { language: 1 }), '2026-10-01');
+        const header = out.split('\n').slice(0, 3).join('\n');
+        expect(header).toContain('retry-conditioned');
+        expect(header).toContain('NOT the Q1');
+        expect(out).toContain('may be read against a bar');
+    });
+
+    it('refuses to report a zero when there is no record at all', () => {
+        // "No shadow record" and "every retry came back clean" are opposite
+        // readings. A report printing 0.0% across the board for the first is
+        // the inert-Q1 problem with a number painted over it.
+        const out = renderQ1(stats(), '2026-10-01');
+        expect(out).toContain('No readable shadow record');
+        expect(out).not.toContain('0.0%');
+    });
+
+    it('says every numerator is a floor when rows hit the per-session cap', () => {
+        const s = withLayer('stop_hook_active', 5, { language: 1 });
+        s.dropped = 7;
+        expect(renderQ1(s, '2026-10-01')).toContain('FLOOR');
+    });
+
+    it('publishes both instrument bounds beside the number', () => {
+        // The blocker `q1-shadow-reading-window` requires these two travel with
+        // the reading. A number published without them reads as a point
+        // estimate over sessions, and it is neither.
+        const out = renderQ1(withLayer('stop_hook_active', 3, { language: 1 }), '2026-10-01');
+        expect(out).toContain('UPPER bound');
+        expect(out).toContain('session_id');
     });
 });

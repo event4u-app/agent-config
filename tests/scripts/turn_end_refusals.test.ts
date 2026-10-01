@@ -21,9 +21,13 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     DETECTOR_IDS,
+    DISPATCH_CENSORED_DETECTORS,
     REFUSAL_STATE_MAX_AGE_DAYS,
+    SHADOW_LAYERS,
     collectRefusalStats,
+    collectShadowStats,
     countsOf,
+    retryConditionedShare,
     deriveSessionKey,
     emptyCounts,
     foldRefusal,
@@ -417,5 +421,195 @@ describe('step 1.3 — the version split, and what it cannot answer', () => {
         const stats = collectRefusalStats(root);
         expect(stats.unversionedRecords).toBe(1);
         expect(stats.byVersion.map((v) => v.version)).toEqual(['(unrecorded)']);
+    });
+});
+
+describe('Q1 — the shadow rollup (step 2.2)', () => {
+    function writeShadow(sessionId: string, rec: Record<string, unknown>): string {
+        const file = sessionShadowFile(root, deriveSessionKey(sessionId));
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, `${JSON.stringify(rec, null, 2)}\n`);
+        return file;
+    }
+
+    function shadow(over: Record<string, unknown> = {}): Record<string, unknown> {
+        return {
+            would_refuse_again: [],
+            retries_observed: { stop_hook_active: 0, refused_turn: 0 },
+            dropped: 0,
+            first_at: '2026-09-30T22:32:24.942Z',
+            last_at: '2026-09-30T22:32:24.942Z',
+            ...over,
+        };
+    }
+
+    it('divides rows by retries ON THE SAME LAYER, never pooled', () => {
+        // The defect this pins is the one an independent review caught on the
+        // producer: a `stop_hook_active` retry follows ANY stop concern's
+        // block, so a pooled denominator reads another concern's retries
+        // against this gate's refusals. Both layers carry traffic here and the
+        // two shares are deliberately different, so a pooled reader cannot
+        // land on either by accident.
+        writeShadow('s1', {
+            would_refuse_again: [
+                { detector: 'language', turn: 3, at: '2026-09-30T10:00:00.000Z', layer: 'stop_hook_active' },
+                { detector: 'promissory', turn: 9, at: '2026-09-30T11:00:00.000Z', layer: 'refused_turn' },
+                { detector: 'promissory', turn: 11, at: '2026-09-30T12:00:00.000Z', layer: 'refused_turn' },
+            ],
+            retries_observed: { stop_hook_active: 4, refused_turn: 4 },
+        });
+        const stats = collectShadowStats(root);
+        expect(retryConditionedShare(stats, 'stop_hook_active', 'language')).toBeCloseTo(0.25, 10);
+        expect(retryConditionedShare(stats, 'refused_turn', 'promissory')).toBeCloseTo(0.5, 10);
+        // Cross terms are zero, not the pooled 3/8 a layer-blind reader prints.
+        expect(retryConditionedShare(stats, 'refused_turn', 'language')).toBe(0);
+        expect(retryConditionedShare(stats, 'stop_hook_active', 'promissory')).toBe(0);
+    });
+
+    it('returns null on an empty denominator and zero on an empty numerator', () => {
+        // Opposite findings. Zero is about the DETECTOR — retries happened and
+        // it would have refused none. Null is about the SAMPLE — nothing was
+        // observed. A reader that prints 0 % for both publishes the second as
+        // the first, which is the reading `retries_observed` exists to prevent.
+        writeShadow('s1', shadow({ retries_observed: { stop_hook_active: 3, refused_turn: 0 } }));
+        const stats = collectShadowStats(root);
+        expect(retryConditionedShare(stats, 'stop_hook_active', 'language')).toBe(0);
+        expect(retryConditionedShare(stats, 'refused_turn', 'language')).toBeNull();
+    });
+
+    it('sums retries and rows across sessions', () => {
+        writeShadow('s1', {
+            would_refuse_again: [
+                { detector: 'verification', turn: 2, at: '2026-09-28T10:00:00.000Z', layer: 'stop_hook_active' },
+            ],
+            retries_observed: { stop_hook_active: 1, refused_turn: 0 },
+            first_at: '2026-09-28T10:00:00.000Z',
+            last_at: '2026-09-28T10:00:00.000Z',
+        });
+        writeShadow('s2', {
+            would_refuse_again: [
+                { detector: 'verification', turn: 5, at: '2026-09-30T10:00:00.000Z', layer: 'stop_hook_active' },
+            ],
+            retries_observed: { stop_hook_active: 3, refused_turn: 0 },
+            first_at: '2026-09-30T10:00:00.000Z',
+            last_at: '2026-09-30T10:00:00.000Z',
+        });
+        const stats = collectShadowStats(root);
+        expect(stats.files).toBe(2);
+        expect(retryConditionedShare(stats, 'stop_hook_active', 'verification')).toBeCloseTo(0.5, 10);
+        expect(stats.earliest).toBe('2026-09-28T10:00:00.000Z');
+        expect(stats.latest).toBe('2026-09-30T10:00:00.000Z');
+    });
+
+    it('counts one retry refused by two detectors once for EACH, and says so in `rows`', () => {
+        // `turn-end-detector-demotion.md` § Attribution: "A retry firing
+        // several detectors counts once for each." So `rows` exceeds `retries`
+        // here legitimately, and each per-detector share stays within [0, 1].
+        writeShadow('s1', {
+            would_refuse_again: [
+                { detector: 'language', turn: 4, at: '2026-09-30T10:00:00.000Z', layer: 'stop_hook_active' },
+                { detector: 'promissory', turn: 4, at: '2026-09-30T10:00:00.000Z', layer: 'stop_hook_active' },
+            ],
+            retries_observed: { stop_hook_active: 1, refused_turn: 0 },
+        });
+        const stats = collectShadowStats(root);
+        const bucket = stats.byLayer.find((b) => b.layer === 'stop_hook_active')!;
+        expect(bucket.rows).toBe(2);
+        expect(bucket.retries).toBe(1);
+        expect(retryConditionedShare(stats, 'stop_hook_active', 'language')).toBe(1);
+        expect(retryConditionedShare(stats, 'stop_hook_active', 'promissory')).toBe(1);
+    });
+
+    it('reads REFUSAL records as nothing, and shadow records as nothing but shadow', () => {
+        // The two shapes share a directory and an extension. A rollup that
+        // globs `*.json` reads each refusal record as an unparseable shadow
+        // file and inflates `unreadable` — which would make every rate read as
+        // a floor when it is not.
+        writeRecord('s1', {
+            refused_at: '2026-09-30T10:00:00.000Z',
+            refused_turn: 7,
+            detector: 'language',
+        });
+        writeShadow('s2', shadow({ retries_observed: { stop_hook_active: 2, refused_turn: 0 } }));
+        const stats = collectShadowStats(root);
+        expect(stats.files).toBe(1);
+        expect(stats.unreadable).toBe(0);
+    });
+
+    it('counts an unparseable shadow file rather than dropping it silently', () => {
+        const file = sessionShadowFile(root, deriveSessionKey('s1'));
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, '{ this is not json\n');
+        const stats = collectShadowStats(root);
+        expect(stats.files).toBe(0);
+        expect(stats.unreadable).toBe(1);
+    });
+
+    it('carries `dropped` forward so a capped row array is readable as a sample', () => {
+        writeShadow('s1', {
+            would_refuse_again: [
+                { detector: 'language', turn: 4, at: '2026-09-30T10:00:00.000Z', layer: 'stop_hook_active' },
+            ],
+            retries_observed: { stop_hook_active: 5, refused_turn: 0 },
+            dropped: 12,
+        });
+        expect(collectShadowStats(root).dropped).toBe(12);
+    });
+
+    it('is empty, not throwing, when the state directory does not exist', () => {
+        const stats = collectShadowStats(path.join(root, 'nope'));
+        expect(stats.files).toBe(0);
+        expect(stats.byLayer.map((b) => b.layer)).toEqual([...SHADOW_LAYERS]);
+        for (const layer of SHADOW_LAYERS) {
+            for (const id of DETECTOR_IDS) expect(retryConditionedShare(stats, layer, id)).toBeNull();
+        }
+    });
+});
+
+describe('Q1 rollup — the 2026-10-01 review round', () => {
+    function writeShadow2(sessionId: string, rec: Record<string, unknown>): void {
+        const file = sessionShadowFile(root, deriveSessionKey(sessionId));
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, `${JSON.stringify(rec, null, 2)}\n`);
+    }
+
+    it('does not let an ABSENT timestamp win the earliest comparison', () => {
+        // m1. `parseShadowRecord` coerces a missing `first_at` to `''`, and
+        // `'' < '<any ISO stamp>'` is true, so a record lacking the field used
+        // to take the window start and the report printed an empty start beside
+        // a real end. An absent timestamp is not an earlier one.
+        writeShadow2('s1', {
+            would_refuse_again: [],
+            retries_observed: { stop_hook_active: 1, refused_turn: 0 },
+            dropped: 0,
+            last_at: '2026-09-30T10:00:00.000Z',
+        });
+        writeShadow2('s2', {
+            would_refuse_again: [],
+            retries_observed: { stop_hook_active: 1, refused_turn: 0 },
+            dropped: 0,
+            first_at: '2026-09-28T10:00:00.000Z',
+            last_at: '2026-09-29T10:00:00.000Z',
+        });
+        const stats = collectShadowStats(root);
+        expect(stats.files).toBe(2);
+        expect(stats.earliest).toBe('2026-09-28T10:00:00.000Z');
+        expect(stats.latest).toBe('2026-09-30T10:00:00.000Z');
+    });
+
+    it('names exactly the three detectors an open dispatch suppresses', () => {
+        // M2. `runDetectors` skips these three when a dispatch is open and the
+        // shadow record carries no dispatch flag, so their denominators would
+        // absorb silences nobody observed. Pinned as a SET rather than checked
+        // at the render layer, because the gate is where the suppression lives
+        // and a drift between the two is invisible in the output.
+        expect([...DISPATCH_CENSORED_DETECTORS].sort()).toEqual(
+            ['completion', 'promissory', 'untested'],
+        );
+        // …and the three that are NOT censored are the three the gate runs
+        // unconditionally. If a detector moves sides in the gate, this is the
+        // line that should stop being true.
+        const reported = DETECTOR_IDS.filter((d) => !DISPATCH_CENSORED_DETECTORS.has(d));
+        expect([...reported].sort()).toEqual(['language', 'pending-decision', 'verification']);
     });
 });
