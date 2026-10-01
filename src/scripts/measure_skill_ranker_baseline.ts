@@ -493,7 +493,7 @@ export function measure(opts: {
     // into each skill's term source. Any other label measures v1.
     const rankOpts: RankOptions = rankOptionsFor(opts.ranker);
     const corpus = opts.corpus ?? 'labelled';
-    const accuracy = measureAccuracy({ corpus, repo, skillsDir, rankOpts, slice: opts.slice });
+    const accuracy = measureAccuracy({ corpus, repo, skillsDir, rankOpts, slice: opts.slice ?? 'all' });
 
     const cases = readMatrixCases(repo);
     let withResult = 0;
