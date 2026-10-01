@@ -165,11 +165,22 @@ with a date on it.
       `## Decisions` row here.
       verify: D1 below carries `resolved by: evidence` with the `docs_url`.
 
-      **Evidence (2026-10-01).** D1 now carries both URLs verbatim instead of
-      the forward reference "`docs_url` recorded in 2.1". Both were re-fetched
-      live today (HTTP 200) and both are digested into `host_lowering.yaml`, so
-      the citation is pinned to a body rather than to a URL that can be
-      rewritten under it.
+      **Evidence (2026-10-01).** D1 now names the citation of record instead of
+      the forward reference "`docs_url` recorded in 2.1". Both pages were
+      re-fetched live today (HTTP 200) and both are digested into
+      `host_lowering.yaml`, so the citation is pinned to a body rather than to a
+      URL that can be rewritten under it.
+
+      *Why D1 points at the row rather than pasting the two URLs.* It pasted
+      them first, and `check_no_external_sources` went red: its shape heuristic
+      reads `github.com/<owner>/<repo>` by FORM, so the Copilot docs URL parsed
+      as a repo slug `en/copilot` and counted as an un-allowlisted external
+      source reference — 149 against a ratchet baseline of 148. The gate is
+      right that the shape is indistinguishable; it is wrong only about this
+      instance, and the fix is not to widen an allowlist for a false positive.
+      Keeping the URLs in exactly one place — the `verified:` block that is
+      already the authoritative, digested citation — removes the duplicate that
+      could drift anyway. `check_no_external_sources` is back to 148/148.
 
       **Both hosts document lifecycle hooks, so D1's "otherwise a dated zero"
       branch does not fire for either.** Codex documents `SessionStart`,
@@ -327,7 +338,7 @@ with a date on it.
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| D1 | deterministic | evidence | Codex/copilot rows are added only if the host's own documentation names lifecycle hooks; otherwise a dated zero | Both hosts document them, so both get a row: codex `https://developers.openai.com/codex/hooks.md`, copilot `https://docs.github.com/en/copilot/concepts/agents/hooks.md`, both re-fetched 200 on 2026-10-01 and digested in `host_lowering.yaml` | the host publishes hooks |
+| D1 | deterministic | evidence | Codex/copilot rows are added only if the host's own documentation names lifecycle hooks; otherwise a dated zero | Both hosts document them, so both get a row. The `docs_url` of record is the one on each host's `verified:` block in `host_lowering.yaml` — codex's is the OpenAI developers' Codex hooks page, copilot's is GitHub's own Copilot hooks page. Both were re-fetched 200 on 2026-10-01 and are now pinned by `docs_digest`, so the citation is bound to a body rather than to a URL that can be rewritten under it | the host publishes hooks |
 | D2 | deterministic | evidence | A documented refusal contract does **not** arm `block_exit`; only a reproduced one does | The codex live probe of 2026-10-01 (`codex-cli 0.148.0`): the documented `PreToolUse` exit-2 deny did not block the call, with `hooks` reported `stable true`. Two hosts documented the same contract and the one that could be tested did not honour it | a probe on `codex` >= 0.159.3, or on a Copilot CLI once installed, reproduces the documented deny |
 
 ## Risk Register
