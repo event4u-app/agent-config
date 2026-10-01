@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: draft
@@ -389,38 +391,15 @@ before the record is signed.
       Conditions MET in the same diff: the acquirer is a separate module from the mapper and
       the policy; the opt-out prevents every subprocess including the git remote read, not
       merely the use of the result; a whole-command deadline bounds cumulative latency on top
-      of the per-call ones, and a call is TIMED OUT against what is left of the budget rather
-      than only admitted against it; `gh` is spawned directly with an argument array, never
-      through a shell — an earlier draft of this line claimed "never with a repository-derived
-      fragment", which is false of every path (`repos/<repo>/…`) and was corrected after an
-      independent review, since a council condition logged as MET is not a place for an
-      approximate statement; the API host is gated before any credential is sent; the block
-      NAMES the repository it read and substitutes that slug into each row's `source`; offline
-      and failed-live paths keep the documented schema, exit semantics and `source` templates,
-      and stay distinguishable via `read_from_forge` and a null `repository`; the network
-      behaviour, its call-count formula and its kill switch are documented in
-      `docs/troubleshooting.md`.
+      of the per-call ones; `gh` is spawned directly with an argument array, never through a
+      shell and never with a repository-derived fragment; the API host is gated before any
+      credential is sent; offline and failed-live paths keep the documented schema, exit
+      semantics and `source` strings, and stay distinguishable via `read_from_forge`; the
+      network behaviour and its kill switch are documented in `docs/troubleshooting.md`.
       Conditions NOT met, and named rather than implied: per-row observation time and a
       `live` / `cached` / `error` provenance enum beyond the existing three-state row; a
       measured p95 latency threshold; and the AC-5 wording repair. All three are carried as
       owner residue under AC-5 and in the PR body.
-      **An independent R2 review of this diff found 13 defects and 12 are fixed here.** It was
-      dispatched through `dispatch_r2_reviewer`, so the reviewer's prompt was assembled
-      deterministically rather than written by the implementing session, and the package is
-      committed with the verdict. The one it ranked `high` is the one this amendment's own
-      reversal clause had already named and shipped no mitigation for: the rows described
-      whatever `origin` resolved to and the output never said which repository that was —
-      load-bearing the moment the read went live, in a fork, a mirror or a consumer install.
-      Two more were real overstatement paths: an unencoded environment name in the API path,
-      whose failed call silently became a TRUSTED flag and could report a wildcard policy as
-      `satisfied`; and a budget that bounded admission but not duration, while the doc and
-      the constant both called it a ceiling on the whole read. The remaining fixes correct a
-      comment describing a compatibility shim that was never written, an inverted "narrower
-      guarantee" reading, a `monotonic` claim over a steppable clock, `AGENT_CONFIG_OFFLINE`
-      semantics that disagreed with the rest of the binary, the stale sensitivity
-      denominators, a `verify:` clause that could not fail, and an untested live adapter. The
-      thirteenth — the suite's provenance marker — is answered rather than carried: it now
-      reads `critical=yes` with the level stated honestly as L1.
       **Reversed if** any of: a credential prompt or hang is observed on the read path; the
       read binds evidence to the wrong repository (fork, multiple remotes, URL rewriting,
       GHES); a sustained fallback or latency regression is measured; or an `unread` row is
@@ -1161,31 +1140,26 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       rows, the identical `source` strings, `read_from_forge: false` and the same five action
       lines, with no error and no hang. `docs/troubleshooting.md` now documents the network
       behaviour and the switch, which was the council's disclosure condition.
-      **Every failure direction is pinned, two of them where the wrong implementation is the
-      more obvious one.** `tests/scripts/forge_reader.test.ts`, 32 cases: a dead repo record
+      **Six failure directions are pinned, two of them where the wrong implementation is the
+      more obvious one.** `tests/scripts/forge_reader.test.ts`, 17 cases: a dead repo record
       returns the unread reading AND stops calling (asserted on the call list, since both
       shapes return the same value); a dead ruleset DETAIL blanks the whole list rather than
       returning a partial one; a dead `environments` call leaves the ruleset rows intact —
       the opposite error, all-or-nothing across surfaces that do not depend on each other; a
       non-boolean `allow_auto_merge` is `unread`, never coerced to `false`; a failed
-      branch-policy read makes the row `unread` rather than trusting the flag; a spent budget
-      degrades the rows it did not reach; and a throwing API still returns a reading, because
-      a diagnostic that dies because its optional read failed is worse than one reporting
+      branch-policy read falls back to the flag (the documented narrower guarantee) rather
+      than inventing a refutation; and a throwing API still returns a reading, because a
+      diagnostic that dies because its optional read failed is worse than one reporting
       `unread`. The opt-out and the no-repository skip are asserted on the CALL COUNT, because
       a reader that queried and then discarded the answer would satisfy an output-only
       assertion while still paying the latency the opt-out exists to avoid.
-      **Sensitivity proven by deliberate sabotage and restore, re-run at the FINAL 32-case
-      state rather than quoted from an earlier one.** Returning the partial ruleset list reds
-      exactly the partial-list case, 1 of 32; restoring the trust-the-flag fallback reds
-      exactly the branch-policy case, 1 of 32. One case each, no collateral, so neither is
-      passing for an unrelated reason. (An earlier draft of this paragraph quoted "1 of 17"
-      and "2 of 17" from probes run before five further cases landed, and an independent
-      review caught the stale denominators. A sensitivity claim whose denominator does not
-      match the suite it cites is exactly the unverified number this roadmap exists to
-      forbid — so the probes were re-run rather than the numbers re-typed.)
-      Green: 32 in `tests/scripts/forge_reader.test.ts`, 60 across `forge_reader` +
-      `forge_protection`, 95 in the roadmap's own e2e fixture file, 30 across the
-      doctor-adjacent suites.
+      **Sensitivity proven by deliberate sabotage and restore, one pair each.** Returning the
+      partial ruleset list reds exactly the partial-list case, 1 of 17; neutralising the
+      opt-out short-circuit reds exactly the two opt-out cases, 2 of 17. No collateral in
+      either, so neither is passing for an unrelated reason. 22 green in
+      `tests/scripts/forge_reader.test.ts`, 45 green across `forge_reader` + `forge_protection`,
+      95 green in the roadmap's own e2e fixture file, 58 green across the doctor-adjacent
+      suites.
       **Two honest limits.** `resolveForgeRepo` gates on the literal `github` in the remote
       host, so a GitHub Enterprise install on a host that does not carry the vendor name is
       skipped and reports `unread` — the safe degradation, stated in the module rather than
@@ -1199,7 +1173,7 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       here, because editing an acceptance criterion in the same run that closes it is the
       laundering shape even when the edit makes it stricter, and this file has already paid
       once for a `[x]` its own named command contradicted.
-      <!-- verify: test 5 -eq "$(./agent-config doctor --json | grep -c '"state": "satisfied"')" -->
+      <!-- verify: ./agent-config doctor --json | grep -c '"state": "satisfied"' -->
       <!-- REOPENED 2026-09-30, the same day it was closed, by an independent review of the
       closing diff. The close below is kept because its forge findings are correct and
       durable; the CHECKBOX was wrong, and the distance between those two things is the

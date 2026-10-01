@@ -79,8 +79,14 @@ export interface ForgeReading {
  * Lives here, beside {@link ForgeReading}, rather than in the `doctor` caller
  * that first needed it — `_lib/forge_reader.ts` returns it on every failure
  * path, and a second hand-written all-null literal is exactly the drift that
- * makes "offline output is unchanged" an assertion instead of a fact. The old
- * export site re-exports this binding, so no caller changed.
+ * makes "offline output is unchanged" an assertion instead of a fact.
+ *
+ * It MOVED from `_cli/doctor_execution.ts`, which no longer exports it in any
+ * form. Nothing broke, because nothing outside that file imported it — but an
+ * earlier draft of this comment claimed a re-export kept every caller in place,
+ * and no such shim was ever written. Corrected rather than quietly deleted: a
+ * comment describing a compatibility layer that does not exist is the next
+ * reader's false premise.
  */
 export const UNREAD_FORGE: ForgeReading = {
     rulesets: null,

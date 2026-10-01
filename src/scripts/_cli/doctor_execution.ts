@@ -24,6 +24,8 @@ import {
     type ForgeReading,
 } from '../_lib/forge_protection.js';
 import {
+    FORGE_TOTAL_BUDGET_MS,
+    budgetOf,
     forgeReadingFor,
     liveForgeApi,
     originUrl,
@@ -73,16 +75,23 @@ export function executionJson(overrides: () => OverrideStream): Dict {
  * `actions` carries the human ACTION lines — the step's own words are that a
  * missing row is a blocker entry and NOT a halt, so this reports and returns.
  */
-export function forgeProtectionJson(reading: ForgeReading): Dict {
+export function forgeProtectionJson(reading: ForgeReading, repo: string | null = null): Dict {
     const rows = forgeProtectionRows(reading);
+    // `{owner}/{repo}` is a TEMPLATE until a repository is known. Substituting
+    // it is what turns "a value came from this call" into "a value came from
+    // this call against this repository" — and which repository is exactly what
+    // stopped being obvious when the read went live. `origin` can be a fork, a
+    // mirror, or somebody else's project in a consumer install.
+    const named = (s: string): string => (repo === null ? s : s.replace(/\{owner\}\/\{repo\}/g, repo));
     return {
+        repository: repo,
         rows: rows.map((r) => ({
             id: r.id,
             state: r.state,
-            source: r.source,
+            source: named(r.source),
             detail: r.detail,
         })),
-        actions: protectionActions(rows),
+        actions: protectionActions(rows).map(named),
         read_from_forge: rows.some((r) => r.state !== 'unread'),
     };
 }
@@ -108,12 +117,15 @@ export function forgeProtectionJson(reading: ForgeReading): Dict {
  * test without spawning anything.
  */
 export function forgeProtectionJsonFor(root: string): Dict {
-    return forgeProtectionJson(
-        forgeReadingFor({
-            env: process.env,
-            // A thunk, so the opt-out short-circuits before `git remote` spawns.
-            resolveRepo: () => resolveForgeRepo(originUrl(root)),
-            api: liveForgeApi(),
-        }),
-    );
+    const remaining = budgetOf(FORGE_TOTAL_BUDGET_MS);
+    const read = forgeReadingFor({
+        env: process.env,
+        // A thunk, so the opt-out short-circuits before `git remote` spawns.
+        resolveRepo: () => resolveForgeRepo(originUrl(root)),
+        // The per-call ceiling is whatever is left of the whole-read budget, so
+        // a call admitted near the deadline cannot run past it.
+        api: liveForgeApi(remaining),
+        remaining,
+    });
+    return forgeProtectionJson(read.reading, read.repo);
 }

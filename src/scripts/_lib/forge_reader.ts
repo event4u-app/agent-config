@@ -66,18 +66,39 @@ export interface ForgeApi {
  */
 export const FORGE_CALL_TIMEOUT_MS = 10_000;
 
+/** Ceiling on the one `git` spawn, which sits inside the whole-read budget. */
+export const GIT_REMOTE_TIMEOUT_MS = 2_000;
+
 /**
  * Ceiling on the WHOLE read, not on one call.
  *
- * The read makes up to five calls, so a per-call ceiling alone advertises ten
- * seconds and can deliver fifty. Fifteen is generous for five local-network
- * round trips and keeps the worst case inside the patience budget of a command
- * people run to get unstuck. A stated default, not a measured optimum.
+ * The call count is `3 + one per ruleset + one per environment carrying custom
+ * branch policies` — it is NOT a fixed five, and sizing the budget against a
+ * fixed five was the defect an independent review named. On a repository with
+ * many rulesets the budget is what stops the read, and the rows it did not
+ * reach report `unread`, which is the honest answer rather than a wrong one.
+ *
+ * Fifteen seconds is a stated default, not a measured optimum. It is enforced
+ * as a real ceiling: {@link remainingBudget} shortens each call's own timeout
+ * to whatever is left, so a call admitted near the deadline cannot run past it.
  */
 export const FORGE_TOTAL_BUDGET_MS = 15_000;
 
-/** Environment switches that skip the read entirely, before any process spawns. */
+/**
+ * Environment switches that skip the read entirely, before any process spawns.
+ *
+ * Both are read as the literal `1`, which is the contract `cmd_versions.ts` and
+ * `cmd_update.ts` already use for `AGENT_CONFIG_OFFLINE`. Accepting any
+ * non-empty value here would give one variable two opposite meanings inside one
+ * binary — `AGENT_CONFIG_OFFLINE=0` would mean online to `update` and offline
+ * to `doctor` — and the surprising direction is the one a user reads as "off".
+ */
 export const NO_FORGE_ENV = ['AGENT_CONFIG_DOCTOR_NO_FORGE', 'AGENT_CONFIG_OFFLINE'] as const;
+
+/** `true` when a switch in {@link NO_FORGE_ENV} is set to the literal `1`. */
+export function forgeReadDisabled(env: Readonly<Record<string, string | undefined>>): boolean {
+    return NO_FORGE_ENV.some((k) => env[k] === '1');
+}
 
 function asObject(v: unknown): Record<string, unknown> | null {
     return v !== null && typeof v === 'object' && !Array.isArray(v)
@@ -85,20 +106,47 @@ function asObject(v: unknown): Record<string, unknown> | null {
         : null;
 }
 
-/** The live `gh api` caller. */
-export function liveForgeApi(timeoutMs: number = FORGE_CALL_TIMEOUT_MS): ForgeApi {
+/** What a spawn returns, narrowed to the two fields this module reads. */
+export interface SpawnResult {
+    readonly status: number | null;
+    readonly stdout?: string | undefined;
+}
+
+/** A subprocess runner. Injected so every failure branch is testable offline. */
+export type Runner = (cmd: string, args: readonly string[], timeoutMs: number) => SpawnResult;
+
+const defaultRunner: Runner = (cmd, args, timeoutMs) =>
+    spawnSync(cmd, [...args], {
+        encoding: 'utf8',
+        timeout: timeoutMs,
+        maxBuffer: 32 * 1024 * 1024,
+    });
+
+/**
+ * The live `gh api` caller.
+ *
+ * `timeoutFor` returns the ceiling for THIS call, so the whole-read budget can
+ * shorten it. A fixed per-call timeout is what let a call admitted just inside
+ * the budget run well past it — the budget checked admission and nothing
+ * checked duration.
+ *
+ * `--paginate --slurp` needs `gh` 2.43 or newer. On an older client the call
+ * fails and the rulesets read blanks, which lands on `unread` rather than on a
+ * wrong answer — the degradation this module guarantees, reached by a cause it
+ * cannot name. Stated here because nothing else in the diff documents it.
+ */
+export function liveForgeApi(
+    timeoutFor: () => number = () => FORGE_CALL_TIMEOUT_MS,
+    run: Runner = defaultRunner,
+): ForgeApi {
     return {
         get(apiPath: string, paginate = false): unknown | null {
-            const args = paginate
-                ? ['api', '--paginate', '--slurp', apiPath]
-                : ['api', apiPath];
-            let r;
+            const budget = timeoutFor();
+            if (budget <= 0) return null;
+            const args = paginate ? ['api', '--paginate', '--slurp', apiPath] : ['api', apiPath];
+            let r: SpawnResult;
             try {
-                r = spawnSync('gh', args, {
-                    encoding: 'utf8',
-                    timeout: timeoutMs,
-                    maxBuffer: 32 * 1024 * 1024,
-                });
+                r = run('gh', args, Math.min(FORGE_CALL_TIMEOUT_MS, budget));
             } catch {
                 return null;
             }
@@ -138,11 +186,21 @@ export function resolveForgeRepo(originUrl: string | null): string | null {
     return slug;
 }
 
-/** The repository's `origin` URL, or `null`. */
-export function originUrl(root: string): string | null {
+/**
+ * The repository's `origin` URL, or `null`.
+ *
+ * Timed out like every other spawn here. It was the one subprocess in the
+ * module with no ceiling and it ran before the budget was even constructed, so
+ * a wedged `git` sat entirely outside a read that advertised a total ceiling.
+ */
+export function originUrl(root: string, timeoutMs = GIT_REMOTE_TIMEOUT_MS): string | null {
     let r;
     try {
-        r = spawnSync('git', ['remote', 'get-url', 'origin'], { cwd: root, encoding: 'utf8' });
+        r = spawnSync('git', ['remote', 'get-url', 'origin'], {
+            cwd: root,
+            encoding: 'utf8',
+            timeout: timeoutMs,
+        });
     } catch {
         return null;
     }
@@ -185,11 +243,19 @@ function readRulesets(repo: string, api: ForgeApi): RulesetDetail[] | null {
  *
  * The custom-policy NAMES live behind a second call per environment, and a
  * policy pattern of `*` restricts nothing whatever the flag says. A failed
- * names read OMITS that environment from `patternsByEnv` rather than refuting
- * its row: omission falls back to the flag, which `deployRestrictedFrom`
- * documents as the narrower guarantee. Reporting `false` instead would invent a
- * refutation out of a read that never happened — the quiet false-negative twin
- * of the false-positive the three-state row exists to prevent.
+ * names read therefore makes the whole row `unread`, and that is a CORRECTION:
+ * the first draft fell back to trusting the flag, which `deployRestrictedFrom`
+ * calls the guarantee that WAS NOT CHECKED — the weaker reading, not the
+ * narrower one. An independent review followed the consequence through: an
+ * environment whose real policy is `*` would then report `satisfied`, which is
+ * the overstatement direction this module says it never takes, and it would be
+ * indistinguishable in the output from a genuine restriction. A read that
+ * failed is a read nobody made, so it lands where every other unmade read
+ * lands.
+ *
+ * The environment name is URL-ENCODED into the path. GitHub admits spaces and
+ * other path-unsafe characters in an environment name, and an unencoded name
+ * is exactly how the failed-read branch above gets reached by accident.
  */
 function readDeployRestricted(repo: string, api: ForgeApi): boolean | null {
     const payload = api.get(`repos/${repo}/environments`);
@@ -222,9 +288,13 @@ function readDeployRestricted(repo: string, api: ForgeApi): boolean | null {
                       },
         });
         if (policy?.['custom_branch_policies'] !== true) continue;
-        const names = api.get(`repos/${repo}/environments/${name}/deployment-branch-policies`);
+        const names = api.get(
+            `repos/${repo}/environments/${encodeURIComponent(name)}/deployment-branch-policies`,
+        );
         const listed = asObject(names)?.['branch_policies'];
-        if (!Array.isArray(listed)) continue; // flag-only: the narrower guarantee.
+        // A read that failed is a read nobody made — `unread`, never a trusted
+        // flag. Trusting it here is how a wildcard policy reports `satisfied`.
+        if (!Array.isArray(listed)) return null;
         patternsByEnv[name] = listed
             .map((p) => asObject(p)?.['name'])
             .filter((n): n is string => typeof n === 'string');
@@ -269,18 +339,28 @@ export function readForge(repo: string, api: ForgeApi): ForgeReading {
  * as *nobody looked*, never as *the forge said no*; that direction is the one
  * that matters and it is pinned by a test.
  */
-export function withDeadline(api: ForgeApi, expired: () => boolean): ForgeApi {
+export function withDeadline(api: ForgeApi, remaining: () => number): ForgeApi {
     return {
         get(apiPath: string, paginate?: boolean): unknown | null {
-            return expired() ? null : api.get(apiPath, paginate);
+            return remaining() <= 0 ? null : api.get(apiPath, paginate);
         },
     };
 }
 
-/** A monotonic budget of `ms` from now. */
-export function budgetOf(ms: number, now: () => number = Date.now): () => boolean {
+/**
+ * Milliseconds left of a budget of `ms`, never below zero.
+ *
+ * The clock is `performance.now`, which is monotonic. `Date.now` is wall-clock
+ * and steppable: an NTP correction backwards silently extends the budget past
+ * its stated ceiling and one forwards expires it early. The word was in the
+ * first draft's comment while the implementation used the steppable clock.
+ */
+export function budgetOf(
+    ms: number,
+    now: () => number = () => performance.now(),
+): () => number {
     const until = now() + ms;
-    return () => now() > until;
+    return () => Math.max(0, until - now());
 }
 
 /** What {@link forgeReadingFor} needs. Every field injectable, so no test spawns. */
@@ -296,8 +376,24 @@ export interface ForgeReadRequest {
      */
     readonly resolveRepo: () => string | null;
     readonly api: ForgeApi;
-    /** Whole-command budget. Defaults to {@link FORGE_TOTAL_BUDGET_MS}. */
-    readonly expired?: () => boolean;
+    /** Milliseconds left. Defaults to a {@link FORGE_TOTAL_BUDGET_MS} budget. */
+    readonly remaining?: () => number;
+}
+
+/**
+ * A reading plus the repository it came from.
+ *
+ * **The slug travels with the rows, and leaving it out was the review's one
+ * high finding.** The moment the read went live, *which repository* stopped
+ * being obvious: `origin` may point at a fork, a mirror, or — in a consumer
+ * install — somebody else's project entirely, and five rows reading `satisfied`
+ * say nothing about whose branch is protected. For a block whose own header
+ * calls an unstated provenance the guess it exists to refuse, that was the one
+ * fact the provenance omitted. `null` when nothing was read.
+ */
+export interface ForgeRead {
+    readonly repo: string | null;
+    readonly reading: ForgeReading;
 }
 
 /**
@@ -313,13 +409,16 @@ export interface ForgeReadRequest {
  * something is already wrong; a diagnostic that dies because its own optional
  * read threw is strictly worse than one reporting `unread`.
  */
-export function forgeReadingFor(req: ForgeReadRequest): ForgeReading {
-    if (NO_FORGE_ENV.some((k) => (req.env[k] ?? '') !== '')) return UNREAD_FORGE;
+export function forgeReadingFor(req: ForgeReadRequest): ForgeRead {
+    if (forgeReadDisabled(req.env)) return { repo: null, reading: UNREAD_FORGE };
+    // The budget is built BEFORE the repository is resolved, because resolving
+    // spawns `git` and a budget that starts after it does not bound it.
+    const remaining = req.remaining ?? budgetOf(FORGE_TOTAL_BUDGET_MS);
     try {
         const repo = req.resolveRepo();
-        if (repo === null) return UNREAD_FORGE;
-        return readForge(repo, withDeadline(req.api, req.expired ?? budgetOf(FORGE_TOTAL_BUDGET_MS)));
+        if (repo === null) return { repo: null, reading: UNREAD_FORGE };
+        return { repo, reading: readForge(repo, withDeadline(req.api, remaining)) };
     } catch {
-        return UNREAD_FORGE;
+        return { repo: null, reading: UNREAD_FORGE };
     }
 }

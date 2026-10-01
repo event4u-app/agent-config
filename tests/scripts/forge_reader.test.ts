@@ -15,16 +15,34 @@
  * ruleset list, a non-boolean flag coerced to `false`.
  */
 
-// provenance: level=L0 | critical=no | evidence=none
+// provenance: level=L1 | critical=yes | evidence=drain-adversarial-verification-close
+//
+// `critical=yes` is a CORRECTION. The first marker read `critical=no`, which an
+// independent review called at least arguable and recorded without an argument:
+// this suite underwrites whether branch protection, required checks and
+// force-push are reported satisfied — the mechanical check ADR-268 § 3 trades
+// for the owner's confirmation — and `evaluator-independence` names merge
+// control among the critical behaviours.
+//
+// `level=L1` is the honest ceiling and NOT L3/L4. Authorship was L0, this
+// session; what is independent is the VALIDATION — a fresh subagent reviewed
+// the diff blind and its 13 findings were folded in, which is another session
+// on the same model. Marking L4 because a two-provider council ran on the
+// DESIGN question would over-claim: the council never saw these tests.
 
 import { describe, expect, it } from 'vitest';
 
 import {
+    FORGE_CALL_TIMEOUT_MS,
+    budgetOf,
     forgeReadingFor,
+    liveForgeApi,
     readForge,
     resolveForgeRepo,
     withDeadline,
     type ForgeApi,
+    type Runner,
+    type SpawnResult,
 } from '../../src/scripts/_lib/forge_reader.js';
 import { UNREAD_FORGE } from '../../src/scripts/_lib/forge_protection.js';
 
@@ -136,10 +154,14 @@ describe('readForge — every failure degrades to unread, never to false', () =>
         expect(reading.allowAutoMerge).toBeNull();
     });
 
-    it('a failed branch-policy read falls back to the flag rather than refuting the row', () => {
-        // Omitting the env from `patternsByEnv` is the documented NARROWER
-        // guarantee — the names were not checked. Reporting `false` instead
-        // would invent a refutation out of a read that never happened.
+    it('a failed branch-policy read makes the row unread, never a trusted flag', () => {
+        // CORRECTED after an independent review. The first version asserted
+        // `true` here on the reasoning that falling back to the flag is the
+        // "narrower guarantee" — it is the opposite. `deployRestrictedFrom`
+        // calls the flag-only path the guarantee that WAS NOT CHECKED, so an
+        // environment whose real policy is `*` would report `satisfied`: the
+        // overstatement direction this module claims it never takes, and
+        // indistinguishable in the output from a real restriction.
         const reading = readForge(
             'o/r',
             api({
@@ -147,7 +169,29 @@ describe('readForge — every failure degrades to unread, never to false', () =>
                 'repos/o/r/environments/github-pages/deployment-branch-policies': null,
             }),
         );
-        expect(reading.deployRestricted).toBe(true);
+        expect(reading.deployRestricted).toBeNull();
+    });
+
+    it('url-encodes the environment name into the policy path', () => {
+        // An unencoded name with a space fails the call, which — before the
+        // correction above — silently became a trusted flag. Encoding is what
+        // stops that branch being reached by accident.
+        const a = api({
+            ...FULL,
+            'repos/o/r/environments': {
+                environments: [
+                    {
+                        name: 'prod eu',
+                        deployment_branch_policy: { custom_branch_policies: true },
+                    },
+                ],
+            },
+            'repos/o/r/environments/prod%20eu/deployment-branch-policies': {
+                branch_policies: [{ name: 'main' }],
+            },
+        });
+        expect(readForge('o/r', a).deployRestricted).toBe(true);
+        expect(a.calls).toContain('repos/o/r/environments/prod%20eu/deployment-branch-policies');
     });
 
     it('a wildcard branch policy refutes the row', () => {
@@ -203,10 +247,42 @@ describe('forgeReadingFor — the opt-out', () => {
         return Object.assign(f, { ran: () => n });
     }
 
-    it('reads the forge when nothing opts out', () => {
+    it('reads the forge when nothing opts out, and names the repository it read', () => {
+        // The slug travels WITH the rows. Five rows reading `satisfied` say
+        // nothing about whose branch is protected when `origin` may be a fork,
+        // a mirror, or somebody else's project in a consumer install.
         const a = api(FULL);
-        const reading = forgeReadingFor({ env: {}, resolveRepo: resolver('o/r'), api: a });
-        expect(reading.defaultBranch).toBe('main');
+        const read = forgeReadingFor({ env: {}, resolveRepo: resolver('o/r'), api: a });
+        expect(read.reading.defaultBranch).toBe('main');
+        expect(read.repo).toBe('o/r');
+        expect(a.calls.length).toBeGreaterThan(0);
+    });
+
+    it('reports no repository on every path that read nothing', () => {
+        const a = api(FULL);
+        expect(forgeReadingFor({ env: {}, resolveRepo: resolver(null), api: a }).repo).toBeNull();
+        expect(
+            forgeReadingFor({
+                env: { AGENT_CONFIG_OFFLINE: '1' },
+                resolveRepo: resolver('o/r'),
+                api: a,
+            }).repo,
+        ).toBeNull();
+    });
+
+    it('reads a switch as the literal 1, matching the rest of the CLI', () => {
+        // `cmd_versions` and `cmd_update` both test `=== '1'` for
+        // AGENT_CONFIG_OFFLINE. Accepting any non-empty value here gave one
+        // variable two opposite meanings in one binary: `=0` meant online
+        // there and offline here, and the surprising direction is the one a
+        // user reads as "off".
+        const a = api(FULL);
+        const read = forgeReadingFor({
+            env: { AGENT_CONFIG_OFFLINE: '0' },
+            resolveRepo: resolver('o/r'),
+            api: a,
+        });
+        expect(read.repo).toBe('o/r');
         expect(a.calls.length).toBeGreaterThan(0);
     });
 
@@ -221,7 +297,7 @@ describe('forgeReadingFor — the opt-out', () => {
             resolveRepo: resolver('o/r'),
             api: a,
         });
-        expect(reading).toEqual(UNREAD_FORGE);
+        expect(reading.reading).toEqual(UNREAD_FORGE);
         expect(a.calls).toEqual([]);
     });
 
@@ -244,14 +320,14 @@ describe('forgeReadingFor — the opt-out', () => {
                 env: { AGENT_CONFIG_OFFLINE: '1' },
                 resolveRepo: resolver('o/r'),
                 api: a,
-            }),
+            }).reading,
         ).toEqual(UNREAD_FORGE);
         expect(a.calls).toEqual([]);
     });
 
     it('makes NO call when no repository resolves', () => {
         const a = api(FULL);
-        expect(forgeReadingFor({ env: {}, resolveRepo: resolver(null), api: a })).toEqual(
+        expect(forgeReadingFor({ env: {}, resolveRepo: resolver(null), api: a }).reading).toEqual(
             UNREAD_FORGE,
         );
         expect(a.calls).toEqual([]);
@@ -266,7 +342,7 @@ describe('forgeReadingFor — the opt-out', () => {
             },
         };
         expect(
-            forgeReadingFor({ env: {}, resolveRepo: resolver('o/r'), api: thrower }),
+            forgeReadingFor({ env: {}, resolveRepo: resolver('o/r'), api: thrower }).reading,
         ).toEqual(UNREAD_FORGE);
     });
 
@@ -274,43 +350,111 @@ describe('forgeReadingFor — the opt-out', () => {
         const boom = (): string | null => {
             throw new Error('git exploded');
         };
-        expect(forgeReadingFor({ env: {}, resolveRepo: boom, api: api(FULL) })).toEqual(
+        expect(forgeReadingFor({ env: {}, resolveRepo: boom, api: api(FULL) }).reading).toEqual(
             UNREAD_FORGE,
         );
     });
 });
 
-describe('withDeadline — the whole-command budget', () => {
-    // The council's 1b condition: five per-call timeouts bound each call and
-    // nothing bounds their SUM, so the advertised ceiling can be exceeded by a
-    // factor of five without any single call misbehaving.
+describe('withDeadline — the whole-read budget', () => {
+    // The council's 1b condition: per-call timeouts bound each call and nothing
+    // bounds their SUM, so the advertised ceiling can be exceeded several times
+    // over without any single call misbehaving.
     it('passes calls through while the budget holds', () => {
         const a = api(FULL);
-        const reading = readForge('o/r', withDeadline(a, () => false));
-        expect(reading.defaultBranch).toBe('main');
+        expect(readForge('o/r', withDeadline(a, () => 5_000)).defaultBranch).toBe('main');
     });
 
     it('a budget exhausted before the first call yields the unread reading', () => {
         const a = api(FULL);
-        const reading = readForge('o/r', withDeadline(a, () => true));
-        expect(reading).toEqual(UNREAD_FORGE);
+        expect(readForge('o/r', withDeadline(a, () => 0))).toEqual(UNREAD_FORGE);
         expect(a.calls).toEqual([]);
     });
 
     it('a budget exhausted mid-read degrades the unreached rows to unread, never to false', () => {
         // The direction that matters: a partially spent budget must not be able
         // to turn "we ran out of time" into "the forge says no".
-        let calls = 0;
+        let n = 0;
         const a = api(FULL);
         const reading = readForge(
             'o/r',
             withDeadline(a, () => {
-                calls += 1;
-                return calls > 1; // the repo record goes through; nothing after it does.
+                n += 1;
+                return n > 1 ? 0 : 5_000; // the repo record goes through; nothing after it.
             }),
         );
         expect(reading.defaultBranch).toBe('main');
         expect(reading.rulesets).toBeNull();
         expect(reading.deployRestricted).toBeNull();
+    });
+
+    it('budgetOf counts down and floors at zero', () => {
+        let t = 1_000;
+        const left = budgetOf(100, () => t);
+        expect(left()).toBe(100);
+        t = 1_050;
+        expect(left()).toBe(50);
+        t = 9_999;
+        expect(left()).toBe(0); // never negative, so `<= 0` is the only check needed.
+    });
+});
+
+describe('liveForgeApi — the adapter the degradation claim rests on', () => {
+    // Previously the only non-injectable code in the module and untested, while
+    // every branch in it feeds the "every failure degrades to unread" promise.
+    const ok = (stdout: string) => (): SpawnResult => ({ status: 0, stdout });
+
+    it('parses a successful call', () => {
+        expect(liveForgeApi(() => 5_000, ok('{"a":1}')).get('repos/o/r')).toEqual({ a: 1 });
+    });
+
+    it('returns null on a non-zero exit, empty stdout, or unparseable JSON', () => {
+        expect(liveForgeApi(() => 5_000, () => ({ status: 1, stdout: '{}' })).get('x')).toBeNull();
+        expect(liveForgeApi(() => 5_000, ok('   ')).get('x')).toBeNull();
+        expect(liveForgeApi(() => 5_000, ok('not json')).get('x')).toBeNull();
+    });
+
+    it('returns null when the spawn itself throws', () => {
+        const boom: Runner = () => {
+            throw new Error('ENOENT: gh not installed');
+        };
+        expect(liveForgeApi(() => 5_000, boom).get('x')).toBeNull();
+    });
+
+    it('makes no call at all once the budget is gone', () => {
+        let ran = 0;
+        const counting: Runner = () => {
+            ran += 1;
+            return { status: 0, stdout: '{}' };
+        };
+        expect(liveForgeApi(() => 0, counting).get('x')).toBeNull();
+        expect(ran).toBe(0);
+    });
+
+    it('shortens the per-call timeout to whatever the budget has left', () => {
+        // The defect this closes: a call admitted at t=14.9s still ran its own
+        // full 10s ceiling, so the "whole read" budget bounded admission and
+        // not duration.
+        const seen: number[] = [];
+        const recording: Runner = (_c, _a, timeoutMs) => {
+            seen.push(timeoutMs);
+            return { status: 0, stdout: '{}' };
+        };
+        liveForgeApi(() => 250, recording).get('x');
+        liveForgeApi(() => 99_000, recording).get('x');
+        expect(seen).toEqual([250, FORGE_CALL_TIMEOUT_MS]);
+    });
+
+    it('asks for the paginated form only when told to', () => {
+        const seen: string[][] = [];
+        const recording: Runner = (_c, args) => {
+            seen.push([...args]);
+            return { status: 0, stdout: '[]' };
+        };
+        const a = liveForgeApi(() => 5_000, recording);
+        a.get('repos/o/r/rulesets', true);
+        a.get('repos/o/r');
+        expect(seen[0]).toEqual(['api', '--paginate', '--slurp', 'repos/o/r/rulesets']);
+        expect(seen[1]).toEqual(['api', 'repos/o/r']);
     });
 });
