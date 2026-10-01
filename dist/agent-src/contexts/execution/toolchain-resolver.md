@@ -13,7 +13,22 @@ tools and run the right one — instead of a per-stack command explosion.
 > pytest / go / cargo, not N per-stack variants. "Only genuine PHP-space
 > commands stay PHP-locked."
 
-**Size budget:** ≤ 6,000 chars.
+**Size budget: none of its own.** The enforced ceiling is
+`check_depth_budget`'s 16,000 chars, and that is the only one.
+
+This page carried a self-imposed sub-ceiling through three values — 6,000,
+then 7,500, then 8,500 — and each was set just above whatever the file
+measured that day, so the next edit of any size broke it while the same
+sentence forbade raising it. A ceiling fitted to its own artifact is not a
+constraint, it is a tripwire; and the third one was set with a sentence
+claiming "real headroom" over 66 characters, which is the trap diagnosing
+itself and walking in anyway.
+
+What actually bounds this page is **what belongs in it**: the resolver's
+contract — the axes, the detection order, the confidence tiers, the refusal
+doctrine, the cache key. Narration, worked examples and per-round history
+belong in the roadmap and the review artifacts, not here. That rule is
+checkable by a reader; a character count was only ever checkable by `wc`.
 
 ## 1. The resolver
 
@@ -29,9 +44,25 @@ for (const r of result.selected) {
 }
 ```
 
-Resolution is filesystem-cheap (a handful of small manifest reads) and
-**never raises** — a malformed manifest or unknown stack degrades to a
-`LOW`-confidence empty result so the command can ask, never crash. This
+Resolution costs **per scope**, not per repository: a fixed name list stat-ed,
+six-or-so manifests read, and the .NET probe's directory listings — three at
+the root with no .NET target present, where the native axis lists once and the
+behavior axis twice. They run in every repository, .NET or not; WITH a root
+target the descent runs too and the count rises with the project tree. A wide workspace pays that times
+its package count, so the cost is proportional and not negligible.
+
+The **cache probe is the expensive path**, with the magnitude stated, not
+implied as a SHAPE, because the arithmetic has already been published wrong
+once: `latest_manifest_mtime` stats both fixed-name lists in every scope,
+bounded at 200 scopes, each hit paying a second stat — and without
+an explicit `scopes` it also expands the globs. The guard can cost more than
+the resolution it guards, so a caller holding the scope list passes it. The
+widening is still right: a root-only key cannot see a behavior runner
+arriving in a package, and a key invalidating too often is recoverable where
+one that never invalidates is not.
+
+Resolution **never raises** — a malformed manifest or unknown stack degrades
+to a `LOW`-confidence empty result so the command can ask, never crash. This
 mirrors the recoverable-error contract of the frontend `detect_stack`.
 
 ## 2. Detection order — per ecosystem, first match wins
@@ -47,6 +78,30 @@ mirrors the recoverable-error contract of the frontend `detect_stack`.
 | Python | `pytest` in pyproject / `pytest.ini` | pytest | `pytest` |
 | Go | `go.mod` present | go-test | `go test ./...` |
 | Rust | `Cargo.toml` present | cargo-test | `cargo test` |
+| Ruby | `rspec` gem in `Gemfile`/`gems.rb`, `.rspec`, `spec/spec_helper.rb` | rspec | `bundle exec rspec`, or bare `rspec` with no Gemfile |
+| JVM | `build.gradle[.kts]` / `settings.gradle[.kts]` by PRESENCE; `pom.xml` by CONTENT | junit | `./mvnw`/`./gradlew test`, else `mvn`/`gradle test` |
+| .NET | `*.sln[x]` or `*.csproj`/`*.fsproj`/`*.vbproj` **in the scope root** | dotnet-test | `dotnet test` |
+
+Each Ruby signal stands alone, and Ruby has **no MEDIUM default** (minitest is
+in the stdlib): no signal, no row. JVM defaults to `junit` at MEDIUM when the
+build file names no runner. A wrapper wins where one exists, since it pins the
+build-tool version.
+
+**.NET needs a target in the scope ROOT, because `dotnet test` is not
+recursive.** With no project or solution in the working directory it fails
+MSB1003, whatever sits below — so the row is gated on the root listing, and
+`global.json` / `Directory.Build.props` never produce one on their own. They
+are SDK pins, not targets, and confidence does not gate `selected`
+(`_apply_guard` has never read it), so a row emitted on one would be a
+command the repository cannot run.
+
+Given a root target: HIGH when a PROJECT file names a test stack
+(`Microsoft.NET.Test.Sdk`, xunit, nunit, mstest), MEDIUM otherwise. A root
+`.sln` IS a valid target even though its own body names no package, so the
+projects it references are read to decide the tier — which is the one case
+the scan descends for. A `src/<Name>/<Name>.csproj` layout with NO root
+solution therefore emits nothing: correct, because `dotnet test` from that
+root does not run either.
 
 **Task-runner wrappers win.** When the project root has a `Makefile`
 `test:` target, a `Taskfile.yml` `test:` task, or a `package.json`
@@ -56,6 +111,33 @@ container access, env, and parallelism (the architecture rule's
 "Build / Task Runner Detection").
 The package manager is read from the lockfile (`pnpm-lock.yaml` → pnpm,
 `yarn.lock` → yarn, else npm).
+
+## 2b. Behavior-runner axis — per scope, detection only
+
+`result.behavior_runners` is a **separate list** from `runners`: it reports
+which behavior runner each scope already owns, across the same ecosystems.
+
+- **`command` is relative to `scope_root`, not to the project root.** It is
+  built from files inside the scope (`vendor/bin/behat`, `./gradlew test`), so
+  a consumer runs it WITH `scope_root` as the working directory. Every NATIVE
+  `runners` command is root-relative; this axis is the exception.
+- **Per scope, never repository-wide.** Each row carries `scope_root` (the
+  root plus every declared workspace package). A monorepo
+  returns a row per owning package and none for the others; one answer would
+  erase which package owns it.
+- **Two of the SAME ecosystem in one scope is a refusal, not a pick** —
+  `runner: "unknown"` plus `conflict: [both names]`, the same refusal the
+  frontend detector makes between two mutually exclusive workspaces. Two
+  DIFFERENT ecosystems are a polyglot repository, not a conflict: a PHP app
+  with a JS frontend returns two rows.
+- **Detection, never adoption.** No row recommends installing anything and the
+  axis is unreachable from `selected`, so nothing runs *because* this axis
+  reported it. That is reachability, not execution: for four of the eight
+  labels the behavior command equals a native command already in `selected`
+  (`pytest-bdd`/`pytest`, `cucumber-jvm`/`jvm.command`, `reqnroll` and
+  `specflow`/`dotnet test`), and those rows are `SPEED_FAST`, so the suite
+  runs anyway as part of the native run. The axis adds nothing to what
+  executes and removes nothing from it.
 
 ## 3. Confidence tiers — declarative, shared with the non-interactive contract
 
@@ -70,6 +152,17 @@ tables:
 - **LOW** — no manifest at all → empty result; the command falls back to
   asking (interactive) or `ambiguous_routing` (CI, per the
   non-interactive contract).
+
+**`confidence` is about the RUNNER, never about `quality`.** The three
+ecosystems this change added — ruby, jvm, dotnet — contribute a runner and NO
+quality commands, because picking `rubocop`, a Spotless task or
+`dotnet format` is an adoption decision this resolver has no standing to make.
+The consequence is worth stating because it is silent: a Ruby-, JVM- or
+.NET-only repository used to resolve `LOW` with an empty `quality`, which is
+the tier that makes a command ASK; it now resolves `HIGH` with an empty
+`quality`, which a quality pass can read as nothing to do. An empty `quality`
+means **no quality tool was resolved**, never **no quality step is needed** —
+a command that finds one should ask rather than report success.
 
 ## 4. Monorepo guard — fast by default, opt-in for the rest
 
@@ -91,9 +184,10 @@ e2e and slow stay out until their flag is passed.
 
 `write_config(root, result)` persists the resolved per-stack commands to
 `agents/runtime/state/toolchain.json` (best-effort; never raises). The
-config is keyed on the manifest `mtime`, so it is re-read cheaply and
-re-resolved only when a manifest changes — the same cache-invalidation
-hook the frontend detector uses.
+config is keyed on the latest `mtime` across every scope's manifests and
+markers — not the root's alone, or a behavior runner arriving in a workspace
+package would never invalidate it. Same hook the frontend detector uses,
+widened to the scopes the behavior axis reads.
 
 ## 6. What stays stack-locked
 
