@@ -3,7 +3,7 @@
  *
  * Four things need a guard, and only one of them is the number.
  *
- * 1. THE SEAL. The 18 holdout corpora frozen in
+ * 1. THE SEAL. The holdout corpora frozen in
  *    `agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md` must not
  *    be read by an analyzer authored in Phase 5. The loader skips them from the
  *    directory NAME, before any read, and the first block asserts that no case
@@ -55,8 +55,12 @@ const VERDICT = path.join(REPO, 'agents/evidence/analysis/routing-body-signal-ve
 /** The skills the freeze artefact lists under its `## Holdout` heading. */
 function sealedSkills(): string[] {
     const md = fs.readFileSync(FREEZE, 'utf8');
-    const start = md.indexOf('## Holdout');
-    const end = md.indexOf('## Train', start);
+    // Anchored at line start, not bare indexOf: the artefact's prose now quotes
+    // `## Train` inside backticks, and a future correction quoting `## Holdout`
+    // the same way would move `start` above it and yield an empty slice — a
+    // failure that would read as a corpus defect rather than a parser one.
+    const start = md.indexOf('\n## Holdout');
+    const end = md.indexOf('\n## Train', start);
     expect(start).toBeGreaterThan(0);
     expect(end).toBeGreaterThan(start);
     return [...md.slice(start, end).matchAll(/^\| `([a-z0-9-]+)` \|/gm)].map((m) => m[1] as string);
@@ -66,7 +70,12 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
     const sealed = sealedSkills();
 
     it('the freeze artefact still lists a non-empty holdout (a check over nothing passes)', () => {
-        expect(sealed.length).toBe(18);
+        // 18 -> 19 on 2026-10-01: `accessibility-auditor` gained an eval set
+        // and hashed into the SEALED partition — the first growth on this
+        // side. The freeze artefact records it and scopes AC-6's ordering
+        // claim to the 18 rows sealed on 2026-08-30; the 19th row predates
+        // nothing and carries no such claim.
+        expect(sealed.length).toBe(19);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -97,9 +106,23 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // the ceiling of 51, so it lands in `train` and the holdout is STILL
         // the same 18 skills. The second line is what checks that rather than
         // assuming it, and it is why a growth is safe to record here at all.
+        //
+        // 102 -> 103 on 2026-10-01: `accessibility-auditor`'s eval set,
+        // authored under road-to-corpus-refresh-cadence-shape 1.2a for the
+        // same touched-skill reason. THIS ONE IS DIFFERENT, and the second
+        // line below is what caught it rather than a reviewer:
+        // `sha256('accessibility-auditor')[0:2]` is 0x2f = 47, BELOW the
+        // ceiling, so it lands in `holdout` and the sealed set moves 18 -> 19
+        // for the first time. The comment above predicted exactly this
+        // ("A new skill that hashed into `holdout` would fail the line below
+        // rather than silently joining a sealed partition") and the
+        // prediction held. The freeze artefact's 2026-10-01 growth section
+        // scopes AC-6's ordering claim to the original 18 rather than letting
+        // a 19-row holdout inherit a claim only 18 rows support. The train
+        // count is unchanged at 84.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(102);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(18);
+        expect(all.length).toBe(103);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(19);
     });
 });
 

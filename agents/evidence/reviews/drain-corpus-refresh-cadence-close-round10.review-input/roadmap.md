@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: draft
@@ -8,7 +10,7 @@ estate_growth_exempt: "a blocker discovered while doing the work — 1.2's four 
 ---
 # Road to corpus refresh cadence shape
 
-> **Source:** the deferred item 2.1 of `road-to-corpus-refresh-2026-q3`, carried
+> **Source:** [REDACTED:src-conf]
 > here under Iron Law 3 of `roadmap-progress-sync` when that roadmap closed on
 > 2026-09-27. Its Phase 1 shipped; this question did not, because it is a
 > maintainer decision and not an agent call. See the parent's archive entry for

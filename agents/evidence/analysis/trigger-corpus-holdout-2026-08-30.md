@@ -14,9 +14,21 @@ a claim made here.
 
 ## The frozen set
 
-Every `src/skills/*/evals/triggers.json` present on this tree at the moment of
-freezing: **102 files**, 18 holdout and 84 train (100 at the freeze; see
-§ Growth 2026-09-19 and § Growth 2026-09-30).
+The set is every `src/skills/*/evals/triggers.json` on the tree. It has two
+sizes and this sentence used to blur them into one, which made it the third
+instance of the count-drift its own sweep was chasing — it read "present at the
+moment of freezing: **103 files** … (100 at the freeze)", a freeze-time
+qualifier over a post-growth number with the freeze-time number in brackets
+beside it.
+
+- **At the freeze (2026-08-30): 100 files.** That is what AC-6's ordering claim
+  and § Correction 2026-08-31 are about.
+- **Now: 103 files, 19 holdout and 84 train.** Three growths since — see
+  § Growth 2026-09-19, § Growth 2026-09-30 and § Growth 2026-10-01, the last of
+  which is the first on the **holdout** side and is scoped accordingly.
+
+Both are re-derivable from the reproduce recipe below; the second is the one the
+tables and the set hash describe.
 
 ## The partition rule — deterministic, name-derived, no discretion
 
@@ -25,7 +37,11 @@ holdout  iff  sha256(<skill-directory-name>).digest()[0] < 51
 train    otherwise
 ```
 
-51/256 targets 19.9 %; the realised split is 18/100 = 18.0 %.
+51/256 targets 19.9 %. The realised split is not restated here (corrected
+2026-10-01): it read "18/100 = 18.0 %" in the present tense while the set was
+103 files and 19 holdout, which is the same count-drift the set-hash paragraph
+below corrects, surviving in the section that defines the rule. The live figure
+is in § The frozen set and in the most recent `## Growth` section.
 
 **Why a name hash and not a sample.** Risk 3 in the roadmap's register is *"the
 corpus becomes the overfitting vehicle — if the pipeline that optimises against
@@ -44,17 +60,42 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  1f9e7de4cd4bb6275e801fabe3780c629f7dfd8cb3033f73c986facf18efd9b0
+SET-SHA256  67dd1f3fa3f25645f0414e768b8432e6365124171228c43ac776bd5a7210fda3
 ```
 
-Computed over the lines `<skill> <sha256-of-file> <partition>\n` for all
-101 files, byte-sorted as one list (`LC_ALL=C`) — NOT per partition. The two
-tables below split that same list in two for reading; the hash is over the
+Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
+file in the set, byte-sorted as one list (`LC_ALL=C`) — NOT per partition. The
+two tables below split that same list in two for reading; the hash is over the
 undivided, byte-sorted whole, and the reproduce command below is the
 authority on the order. It pins the partition **and** the corpus content: editing any one
-of the 100 files changes it. A later run recomputing a different value
+file in the set changes it. A later run recomputing a different value
 has either grown the corpus or edited a frozen file, and either is a finding
 before it is a bug.
+
+**The count is deliberately not repeated here** (corrected 2026-10-01). This
+paragraph read "101 files" and "the 100 files" while the set was already 102 —
+two counts that drifted across the 2026-09-19 and 2026-09-30 growths because
+each of them moved the hash and nobody moved the prose beside it. A number
+restated next to the thing it describes rots independently of it; the live
+count is in § The frozen set and is re-derived by the reproduce command below.
+
+**The same sweep was run over the rest of the file, and it took two passes to
+finish** (round-2 and round-4 review, 2026-10-01). The first pass found the
+`## Train` heading still reading "83 files" against a table of 84 rows, fixed
+it, and claimed the live figures now existed in "exactly two places that cannot
+disagree". That claim was itself false: § The partition rule still carried
+"the realised split is 18/100 = 18.0 %" in the present tense, three files and
+one partition member stale, and it is not inside a dated `## Growth` section so
+the carve-out below never covered it. Recorded as two passes rather than
+rewritten as one, because a sweep that declares itself complete and is not is
+the more interesting failure: the first pass swept the paragraph it was standing
+in and the heading beside it, and stopped at the section boundary.
+
+**The carve-out, unchanged:** counts inside the dated `## Growth` sections below
+are left as written. Those are historical statements about the set at that date,
+not claims about the current one, and freezing them is the point. The live
+figures are in § The frozen set and in the most recent `## Growth` section, and
+both are re-derivable from the reproduce recipe.
 
 **Reproduce:**
 
@@ -130,15 +171,22 @@ that corpus's content hash moved and the set hash over all rows moved with it.
 
 | Row | Was | Now |
 |---|---|---|
-| `SET-SHA256` | `034f791e…` | `1f9e7de4…` |
 | `test-case-discovery` | `ab3208cc…` | `d3de03bc…` |
+
+The `SET-SHA256` moved with it, and the value is deliberately NOT quoted
+here: it is a hash over every row, so any later re-pin by any branch changes
+it, and a number copied into a prose table goes stale the moment someone
+else's corpus moves. It did — this section was merged with a concurrent
+re-pin and the figure it originally carried was already a third value out of
+date. The live number is the `SET-SHA256` block above, and
+`tests/scripts/trigger_corpus_holdout_pin.test.ts` is what keeps it true.
 
 **Why this does not touch the seal.** The partition is keyed on
 `sha256(<skill name>)`, never on the file's contents, so editing a corpus
 cannot move it across the boundary. `test-case-discovery` hashes to bucket
 **92**, against a `HOLDOUT_CEILING` of 51 — it is a **train** corpus and was
 one before this edit. Recomputing the recipe over the whole tree reports
-exactly one stale row, and **zero** of the 18 holdout rows are among them.
+exactly one stale row, and **zero** holdout rows are among them.
 
 **The ordering claim is untouched** rather than re-argued: it asserts that the
 holdout partition's content hash predates the first proposer commit, and no
@@ -149,7 +197,7 @@ The guard that caught this is `tests/scripts/trigger_corpus_holdout_pin.test.ts`
 which recomputes the recipe rather than trusting the published number — the
 check this file's 2026-08-31 correction exists because nobody had.
 
-## Holdout — 18 files, sealed
+## Holdout — sealed
 
 Sealed means: **no proposer, curator, or analyzer authored in Phase 5 may read
 these files, and no candidate may be selected against them.** Phase 4's cascade
@@ -158,6 +206,7 @@ open and which this file does not settle.
 
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|
+| `accessibility-auditor` | `b5fcf7cb0cd31df3e8ff02596fa989d3b0998e2e2630648b6c2f97694142c9f1` |
 | `analysis-autonomous-mode` | `b2498906765699c666097683f819e0bff816ff3e94b5bb684564e5b19e5e75c7` |
 | `authz-review` | `2dffacd346e8d656affa0af1ea56c7661e7b0c99e3a8ac2c92be50981b2c970c` |
 | `brand` | `43abaf7937a73ea8b041e18d977ce6a080b2226f6c0f49bb55cf59bc4545df36` |
@@ -177,7 +226,7 @@ open and which this file does not settle.
 | `threat-modeling` | `6bdb1d3b44939ac8f6ba78bb6145ca3bea91adb50991cd44bd700987adf903f2` |
 | `worktree-lifecycle` | `1cdde59eaaadc1cb7dfa1cd86d9852326c352a7dcd884dbcbaa414f36d176326` |
 
-## Train — 83 files
+## Train
 
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|
@@ -350,6 +399,84 @@ corpus grows on either side and cannot on its own distinguish "grew on train"
 from "edited a frozen file". The per-row diff above is what distinguishes them,
 which is why this section carries it rather than only the new number. That
 section said a future growth owes the same check; this is that check.
+
+## Growth 2026-10-01 — the corpus gained one HOLDOUT file, and the seal's claim is now scoped
+
+```
+THE HOLDOUT GREW FOR THE FIRST TIME: 18 -> 19.
+ALL 18 ORIGINALLY SEALED ROWS ARE BYTE-IDENTICAL. THE RULE IS UNCHANGED.
+NO PRE-EXISTING HOLDOUT RESULT IS VOIDED, BECAUSE NO PRE-EXISTING HOLDOUT FILE WAS TOUCHED.
+THE 19TH ROW CARRIES NO PRE-DATING CLAIM. IT WAS SEALED TODAY, NOT BEFORE PHASE 5.
+```
+
+**What changed.** `road-to-corpus-refresh-cadence-shape` step 1.2a re-checked
+the `accessibility-auditor` grounding corpus against WCAG 2.2 and the APG. That
+edited `src/skills/accessibility-auditor/data/`, which put the skill into
+`check_routing_coverage`'s touched-skill scope, so
+`src/skills/accessibility-auditor/evals/triggers.json` was authored as that
+gate's remedy — ten cases, not a coverage push. The corpus is **103 files, 19
+holdout and 84 train**, and `SET-SHA256` is re-pinned to `bb2df6f4…` from
+`034f791e…`.
+
+**Recorded rather than re-pinned quietly**, per § The partition rule: *"A change
+is legal; a silent change is the compromise this step exists to prevent."*
+
+**Why this growth is not like the previous two.** 2026-09-19 and 2026-09-30 both
+landed on the `train` side, so each could say the holdout membership was
+unchanged. This one cannot: `sha256('accessibility-auditor')[0:2]` is `0x2f` =
+**47**, below the ceiling of 51, so the file lands in **holdout**. The partition
+rule chose it — nobody did — which is exactly the property the name-hash rule
+exists to provide, and it is worth noting that the rule placed a file in the
+sealed set at the moment it would have been most convenient to place it in train.
+
+**This section shipped a STALE PIN first, for the third time in this file's
+life, and the correction is recorded here rather than silently applied.** The
+first published values — row `174b5e85…`, `SET-SHA256 7445c18a…` — were computed
+from a snapshot of `accessibility-auditor/evals/triggers.json` taken before two
+later edits to that same file's `description` field in the same branch. The
+provenance was proved rather than guessed by the round-4 reviewer: dropping the
+new row from the computed list reproduces the OLD pin `034f791e…` exactly, and
+substituting the stale row hash reproduces the first-published `7445c18a…`
+exactly. The live values below are `b5fcf7cb…` and `bb2df6f4…`, and
+`tests/scripts/trigger_corpus_holdout_pin.test.ts` passes 5 of 5 against them.
+
+**This is the same defect as § Correction 2026-08-31**, where the commit that
+recorded the freeze also edited three of the files it was freezing. The shape
+recurs because the pin is computed by hand at one moment and the file keeps
+moving afterwards. **The standing repair, for whoever writes the next growth
+section:** `trigger_corpus_holdout_pin.test.ts` recomputes the whole recipe from
+the tree and asserts every row and the set hash. Run it as the LAST act before
+publishing a growth section, after the final edit to any corpus file in the
+change — not when the numbers are first computed. It caught this; it would have
+caught 2026-08-31; it is cheap and it is the only thing in this tree that can
+tell a stale pin from a compromised seal.
+
+**What provably did NOT change, checked rather than asserted — re-run against
+the committed bytes after the re-pin.** Re-running this file's own reproduce
+recipe and diffing every row against the published tables leaves **no**
+mismatched and **no** absent row. All 18 originally sealed holdout rows and all
+84 train rows reproduce byte-for-byte, and so does the 19th:
+
+- the partition **rule** is untouched — ceiling 51, name-derived, no discretion;
+- no pre-existing holdout file's bytes moved, so no holdout result taken against
+  the original 18 is voided;
+- the realised split is now 19/103 = 18.4 % against the rule's 19.9 % target.
+
+**The ordering claim is SCOPED, not preserved — and this is the honest half.**
+AC-6 claims the holdout partition's content hash predates the first commit of
+any proposer capability. That claim holds, unchanged, for **the 18 rows sealed
+on 2026-08-30**: their bytes and their git history are untouched. It does **not**
+extend to the 19th row, which was authored on 2026-10-01 and therefore predates
+nothing. A future proposer evaluated against this holdout must either exclude
+`accessibility-auditor` or state that it is using a row whose seal is younger
+than the evaluation. Saying so is cheaper than letting a reader infer that a
+19-row holdout carries a claim only 18 rows can support.
+
+**The residual the 2026-09-19 and 2026-09-30 sections named is unchanged and was
+paid again.** `SET-SHA256` is computed over the undivided list, so it moves
+whenever the corpus grows on either side and cannot on its own distinguish
+"grew" from "edited a frozen file". The per-row diff above is what distinguishes
+them, which is why this section carries it rather than only the new number.
 
 ## What this freeze does NOT establish
 
