@@ -77,7 +77,7 @@ get there.
 
 ## Phase 1 — Make behaviour vocabulary reach the decision that already exists
 
-- [ ] **1.1 Add behaviour-driven trigger rows to `test-case-discovery`'s suite.**
+- [x] **1.1 Add behaviour-driven trigger rows to `test-case-discovery`'s suite.**
       `src/skills/test-case-discovery/evals/triggers.json` is 52 lines and 10
       queries, none of which use the vocabulary a person asking for this actually
       types. Add at least 8 should-trigger rows spanning EN and DE phrasings, and
@@ -88,16 +88,86 @@ get there.
       what they protect.
       verify: `./scripts-run src/scripts/description_route_check` green; the
       grep in Fact 1 returns ≥ 1 file where it returned 0.
-- [ ] **1.2 State in the skill which vocabulary it answers to.**
+
+      **Evidence (2026-10-01).** The suite went from 10 queries (5 positives,
+      5 near-misses) to 26 — **15 exemplars** (10 new: EN *does this change owe
+      a Gherkin feature file*, *BDD scenarios for the refund rule*,
+      *given-when-then from acceptance criteria*, *executable specification*,
+      *specification by example*, *living documentation*; DE
+      *Cucumber-Feature oder Unit-Tests*, *Akzeptanzkriterien als ausführbare
+      Szenarien*, *Behat-Szenario*, *Szenarien in der Feature-Datei*) — and
+      **11 negatives**: 9 near-misses and 2 counterexamples. The four the step
+      names are all present and all carry the discriminator's own reason:
+      the refactor with no observable change (`SKILL.md` no-case 1), the
+      scenario-per-unit-case translation job, the selector-and-click step
+      script (the anti-script rule), and installing a runner the repository
+      does not have. A fifth negative covers no-case 2, the internal invariant
+      with no external vocabulary. `grep -rliE 'gherkin|bdd|cucumber|behat'
+      src/skills/*/evals/*.json` now returns
+      `src/skills/test-case-discovery/evals/triggers.json` — 1 file where
+      Fact 1 measured 0. `./scripts-run src/scripts/description_route_check`
+      exits 0 on the advisory path (no description surface changed), and the
+      scoped-dry tier CI runs for a `SKILL.md` diff forces exit 0 by
+      construction (`--dry`; the backend is substring-on-unit-name and says of
+      itself that its findings are plumbing output, not a routing result).
+      `check_trigger_evals` reports no finding for this suite.
+
+      Two things deliberately NOT done, both recorded rather than silently
+      skipped. **`last_eval` was not bumped**: `skill_trigger_eval` needs an
+      on-disk key plus a controlling-terminal confirmation, so no live pass
+      ran; bumping the date would assert a measurement that did not happen.
+      The file carries `_eval_note` saying so. **The frontmatter description
+      was not touched**: it is the production routing condition, and rewriting
+      it is a separate decision with its own blast radius — this step was
+      scoped to the corpus and the body.
+
+      One trap met and cleared: `lint_skill_trigger_corpus` applies a
+      CASE-CLASS discipline (`class: exemplar | near-miss | counterexample`,
+      polarity-checked, all three required) to **diff-touched** files only, so
+      it is invisible until the file is committed. Proven both directions
+      against a fixture root — a class-stripped copy reports `[class-missing]
+      26 case(s)` and `[class-coverage]`; the shipped file reports no finding.
+- [x] **1.2 State in the skill which vocabulary it answers to.**
       One sentence in `test-case-discovery/SKILL.md` naming the terms the new
       rows route on, so a later reader can tell an intentional trigger from a
       lucky keyword. No new section, no new skill — the word count is 1,842 and
       ADR-225's tripwire is 3,000, and this roadmap is not the change that should
       spend that headroom.
       verify: `wc -w src/skills/test-case-discovery/SKILL.md` ≤ 1,900.
-- [~] **1.3 Register the canonical spellings.** Deferred behind the blocker
-      below: `lint_canonical_terms` ratchets, so adding terms is a maintainer
-      decision and not an execution step.
+
+      **Evidence (2026-10-01).** One sentence added directly under the
+      `## Does this change owe an executable behavior contract?` heading — the
+      decision the vocabulary routes to — naming *Gherkin*, *BDD*, *Cucumber*,
+      *Behat*, *given-when-then*, *feature file*, *acceptance scenario*,
+      *executable specification* and their German phrasings, pointing at
+      `evals/triggers.json` as where they are carried deliberately, and closing
+      the promise exactly where Risk 1 says it must close: what they reach is
+      this decision, never a guide to writing a contract well. No new section
+      and no new heading. `wc -w src/skills/test-case-discovery/SKILL.md` →
+      **1,896**, inside the ≤ 1,900 budget the step sets and well under
+      ADR-225's 3,000-word tripwire; the file is 209 lines.
+      `./scripts-run src/scripts/skill_linter --path
+      src/skills/test-case-discovery/SKILL.md` → `[PASS] … No issues found`.
+- [~] **1.3 Register the canonical spellings.** Deferred by decision, not by
+      omission: the blocker below is **resolved with option (b)** on
+      2026-10-01 — the terms stay unregistered for this roadmap and Phase 1
+      routes on the vocabulary without pinning its spelling.
+
+      **Evidence (2026-10-01).** `grep -n 'behavior contract'
+      src/config/canonical-terms.yml` returns nothing, which is the recorded
+      state option (b) asks for rather than a gap. The reasoning is the
+      blocker's own and was re-checked rather than inherited: registering a
+      term in `canonical-terms.yml` arms `lint_canonical_terms`, which
+      ratchets, so every later variant spelling anywhere in the tree becomes a
+      build failure — a cost worth paying once a term has several consumers and
+      not before. After this roadmap the terms have exactly one consumer
+      (`test-case-discovery`), so the ratchet would buy consistency across a
+      set of size one. **What a future session needs to close this instead:** a
+      second surface that genuinely uses the terms — the stack-and-rig half
+      held by `road-to-executable-specification-adapter` is the expected one —
+      at which point registering both spellings becomes cheap and the drift
+      this defers becomes real. Revisit-if: a second artefact in `src/` states
+      *behavior contract* or *acceptance scenario* in its own prose.
 
 ## Phase 2 — Make the two commands' frontmatter match their own instructions
 
@@ -147,7 +217,8 @@ get there.
 
 ### blocker: canonical-behaviour-wording-ratchet
 
-- **Status:** open
+- **Status:** resolved 2026-10-01 — option (b) taken, the terms stay
+  unregistered for this roadmap.
 - **Owner:** maintainer
 - **Blocks:** step 1.3
 - **What to do:** pick exactly one — (a) register `behavior contract` and
@@ -163,6 +234,17 @@ get there.
 - **If you do nothing:** step 1.3 stays deferred and Phases 1–3 close without it;
   the risk is a second surface later spelling the terms differently, which is
   cheap to fix while there is one consumer and expensive once there are several.
+- **Resolution note (2026-10-01):** option **(b)**, the stated recommendation,
+  taken on execution. The condition was executed rather than read off the
+  status line: `grep -n 'behavior contract' src/config/canonical-terms.yml`
+  returns nothing, and this note is the dated record the `Resolved when`
+  clause names as the alternative. The argument held on re-check — after
+  Phase 1 the terms have exactly one consumer, so arming a ratchet would
+  enforce consistency across a set of size one while making every future
+  variant spelling in the whole tree a build failure. Revisit-if: a second
+  artefact in `src/` states *behavior contract* or *acceptance scenario* in
+  its own prose; the expected candidate is the stack-and-rig half held by
+  `road-to-executable-specification-adapter`.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-29 | reviewer: agent -->
