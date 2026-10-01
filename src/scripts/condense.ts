@@ -42,6 +42,7 @@ import {
     strip_source_prefix,
 } from './_lib/agent_src.js';
 import { rewriteProjectedBodyLinks } from './_lib/guidelines_lane.js';
+import { render_windsurfrules, strip_frontmatter } from './_lib/windsurf_render.js';
 // Import-safety note: `project_thin_rules` guards its CLI entry
 // (`_isCliEntry()` before `process.exit(main())`), so importing it here is
 // side-effect-free. condense.ts is bundled into the installer, where a bare
@@ -778,15 +779,9 @@ function _filter_tool_dirs(mapping: Record<string, string>): Record<string, stri
     return out;
 }
 
-export function strip_frontmatter(content: string): string {
-    if (content.startsWith('---')) {
-        const end = content.indexOf('---', 3);
-        if (end !== -1) {
-            content = _lstripNewlines(content.slice(end + 3));
-        }
-    }
-    return content;
-}
+// Moved to `_lib/windsurf_render.ts` beside its one remaining caller here and
+// the census that renders through it; re-exported so every importer's path holds.
+export { strip_frontmatter };
 
 // ── Path rewriter (P1 of road-to-path-fixes.md) ───────────────────────────
 // Kept byte-identical to check_condensation.ts::_rewritePaths (the two MUST
@@ -1222,32 +1217,6 @@ export function generate_rule_symlinks(): number {
         `  ✅  Created ${total} rule symlinks across ${Object.keys(tool_dirs).length} tool directories (${source_count} rules each)`,
     );
     return total;
-}
-
-/**
- * The exact bytes `generate_windsurfrules` writes, for a given rule set.
- *
- * SPLIT OUT OF THE WRITER, not reimplemented beside it, and the distinction is
- * the whole reason this function exists.
- * `road-to-a-hook-bundle-with-one-yaml-reader` 3.1: the standing-payload census
- * reported windsurf's figure by reading `.windsurfrules` off disk — an untracked
- * generated file, so the number it published was a property of when that
- * checkout last ran `task generate-tools`, not of the tree. The census now calls
- * this function instead. A second renderer living in the census would have
- * measured a file nobody receives, which is Risk 3 of that roadmap; there is one
- * renderer and both callers use it.
- *
- * `rulesSource` is a parameter rather than `MODULE_STATE.RULES_SOURCE` so a
- * caller can render a tree it names — the census renders the projection source
- * directly, with no module state to set up.
- */
-export function render_windsurfrules(rulesSource: string, rules: readonly string[]): string {
-    const parts = ['# Auto-generated from dist/agent-src/rules/ — do not edit directly\n'];
-    for (const rule of rules) {
-        const content = strip_frontmatter(_readText(path.join(rulesSource, rule)));
-        parts.push(`---\n\n${_strip(content)}\n`);
-    }
-    return parts.join('\n') + '\n';
 }
 
 export function generate_windsurfrules(): number {
