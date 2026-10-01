@@ -124,6 +124,7 @@ const FULL: Readonly<Record<string, unknown | null>> = {
     'repos/o/r/environments/github-pages/deployment-branch-policies': BRANCH_POLICIES,
 };
 
+// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
 describe('readForge — the happy path', () => {
     it('reads all four fields from the live payload shapes', () => {
         const reading = readForge('o/r', api(FULL));
@@ -134,6 +135,7 @@ describe('readForge — the happy path', () => {
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
 describe('readForge — every failure degrades to unread, never to false', () => {
     it('a failed repository record yields the all-unread reading', () => {
         const reading = readForge('o/r', api({}));
@@ -254,6 +256,7 @@ describe('readForge — every failure degrades to unread, never to false', () =>
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
 describe('pagination — the overstatement the unpaginated read allowed', () => {
     it('ASKS for the paginated form on every list endpoint', () => {
         // The consumption of pages was tested; the request for them was not,
@@ -330,6 +333,7 @@ describe('pagination — the overstatement the unpaginated read allowed', () => 
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
 describe('resolveForgeRepo', () => {
     it('refuses a slug carrying path or replacement-pattern characters', () => {
         // The slug is interpolated into an API path AND used as a `replace`
@@ -371,6 +375,7 @@ describe('resolveForgeRepo', () => {
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
 describe('forgeReadingFor — the opt-out', () => {
     /** A target resolver that records whether it ran at all. */
     function resolver(
@@ -496,6 +501,7 @@ describe('forgeReadingFor — the opt-out', () => {
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
 describe('withDeadline — the whole-read budget', () => {
     // The council's 1b condition: per-call timeouts bound each call and nothing
     // bounds their SUM, so the advertised ceiling can be exceeded several times
@@ -539,6 +545,7 @@ describe('withDeadline — the whole-read budget', () => {
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
 describe('liveForgeApi — the adapter the degradation claim rests on', () => {
     // Previously the only non-injectable code in the module and untested, while
     // every branch in it feeds the "every failure degrades to unread" promise.

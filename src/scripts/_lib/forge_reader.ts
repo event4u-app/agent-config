@@ -9,16 +9,20 @@
  * That is the exact substitution this roadmap's Phase 3 exists to forbid: a
  * mechanical check replaced by a person's reading of the same evidence.
  *
- * **Why this is not a reversal of Phase 3.2's recorded decision.** That note
- * refused a diagnostic that *depends* on the network — "a diagnostic nobody can
- * run offline is one nobody runs". This module is a best-effort read whose every
- * failure path returns {@link UNREAD_FORGE}, which is byte-for-byte the output
- * Phase 3.2 ships today. Offline `doctor` is unchanged: same rows, same
- * `unread`, same sources, no error, no hang. So the property that note protects
- * — doctor runs offline — is preserved, and the property the criterion asks for
- * — the named command reports the real state — is added. The mechanism the note
- * rejected and the mechanism here are different, which is the mechanism-match
- * test `decision-revisit-gate` puts first.
+ * **This IS a reversal of Phase 3.2's recorded decision, and the roadmap carries
+ * the supersession.** An earlier draft of this header argued the opposite — that
+ * `decision-revisit-gate`'s mechanism-match test fails, so no lock applies — and
+ * a 2/2 convergent council pass refuted it: that note recorded TWO boundaries,
+ * `doctor` does not reach the network AND the reading is injected, and moving
+ * `gh api` in here reverses both. The refuted reasoning is corrected rather than
+ * left standing, for the reason the sibling docblock gives: a module header is
+ * what the next reader meets first, so it is where a dead argument gets reused.
+ *
+ * What survives is the narrower AVAILABILITY property the supersession rests on:
+ * every failure path returns {@link UNREAD_FORGE}, so offline the rows, their
+ * `source` templates and the action lines are what Phase 3.2 printed — no error,
+ * no hang. Not the whole document: the block gained a top-level `repository`
+ * key, `null` on every such path.
  *
  * **The degradation is the load-bearing claim, so it is tested rather than
  * asserted.** Six distinct failures — no repository, a dead repo record, a dead
@@ -79,8 +83,11 @@ export const GIT_REMOTE_TIMEOUT_MS = 2_000;
  * reach report `unread`, which is the honest answer rather than a wrong one.
  *
  * Fifteen seconds is a stated default, not a measured optimum. It is enforced
- * as a real ceiling: {@link remainingBudget} shortens each call's own timeout
- * to whatever is left, so a call admitted near the deadline cannot run past it.
+ * as a real ceiling rather than only at admission: {@link budgetOf} returns the
+ * milliseconds left, {@link liveForgeApi} takes that as its `timeoutFor` and
+ * caps each spawn at `min(FORGE_CALL_TIMEOUT_MS, remaining)`, and
+ * {@link withDeadline} refuses to dispatch once it reaches zero. So a call
+ * admitted near the deadline cannot run past it.
  */
 export const FORGE_TOTAL_BUDGET_MS = 15_000;
 
@@ -278,25 +285,6 @@ function readRulesets(repo: string, api: ForgeApi): RulesetDetail[] | null {
 }
 
 /**
- * Whether every environment restricts its deployment branches, or `null`.
- *
- * The custom-policy NAMES live behind a second call per environment, and a
- * policy pattern of `*` restricts nothing whatever the flag says. A failed
- * names read therefore makes the whole row `unread`, and that is a CORRECTION:
- * the first draft fell back to trusting the flag, which `deployRestrictedFrom`
- * calls the guarantee that WAS NOT CHECKED — the weaker reading, not the
- * narrower one. An independent review followed the consequence through: an
- * environment whose real policy is `*` would then report `satisfied`, which is
- * the overstatement direction this module says it never takes, and it would be
- * indistinguishable in the output from a genuine restriction. A read that
- * failed is a read nobody made, so it lands where every other unmade read
- * lands.
- *
- * The environment name is URL-ENCODED into the path. GitHub admits spaces and
- * other path-unsafe characters in an environment name, and an unencoded name
- * is exactly how the failed-read branch above gets reached by accident.
- */
-/**
  * Flatten a `--paginate --slurp` payload down to one list.
  *
  * `--slurp` yields an array of PAGES. Each page is either a bare array (a list
@@ -325,6 +313,25 @@ function slurped(payload: unknown, key: string): unknown[] | null {
     return Array.isArray(listed) ? [...listed] : null;
 }
 
+/**
+ * Whether every environment restricts its deployment branches, or `null`.
+ *
+ * The custom-policy NAMES live behind a second call per environment, and a
+ * policy pattern of `*` restricts nothing whatever the flag says. A failed
+ * names read therefore makes the whole row `unread`, and that is a CORRECTION:
+ * the first draft fell back to trusting the flag, which `deployRestrictedFrom`
+ * calls the guarantee that WAS NOT CHECKED — the weaker reading, not the
+ * narrower one. An independent review followed the consequence through: an
+ * environment whose real policy is `*` would then report `satisfied`, which is
+ * the overstatement direction this module says it never takes, and it would be
+ * indistinguishable in the output from a genuine restriction. A read that
+ * failed is a read nobody made, so it lands where every other unmade read
+ * lands.
+ *
+ * The environment name is URL-ENCODED into the path. GitHub admits spaces and
+ * other path-unsafe characters in an environment name, and an unencoded name
+ * is exactly how the failed-read branch above gets reached by accident.
+ */
 function readDeployRestricted(repo: string, api: ForgeApi): boolean | null {
     // PAGINATED. Unpaginated, a repository with more environments than one page
     // returns a subset, `deployRestrictedFrom`'s `every()` runs over what it can

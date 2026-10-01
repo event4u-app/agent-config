@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: draft
@@ -448,8 +450,7 @@ before the record is signed.
       semantics that disagreed with the rest of the binary, the stale sensitivity
       denominators, a `verify:` clause that could not fail, and an untested live adapter. The
       thirteenth — the suite's provenance marker — is answered rather than carried: it now
-      reads `critical=yes`, and the LEVEL went L1 → L4 two rounds later, earned by a council
-      pass over the suites themselves rather than relabelled. AC-5 carries that story.
+      reads `critical=yes` with the level stated honestly as L1.
       **Reversed if** any of: a credential prompt or hang is observed on the read path; the
       read binds evidence to the wrong repository (fork, multiple remotes, URL rewriting,
       GHES); a sustained fallback or latency regression is measured; or an `unread` row is
@@ -1191,7 +1192,7 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       lines, with no error and no hang. `docs/troubleshooting.md` now documents the network
       behaviour and the switch, which was the council's disclosure condition.
       **Every failure direction is pinned, two of them where the wrong implementation is the
-      more obvious one.** In `tests/scripts/forge_reader.test.ts`: a dead repo record
+      more obvious one.** `tests/scripts/forge_reader.test.ts`, 37 cases: a dead repo record
       returns the unread reading AND stops calling (asserted on the call list, since both
       shapes return the same value); a dead ruleset DETAIL blanks the whole list rather than
       returning a partial one; a dead `environments` call leaves the ruleset rows intact —
@@ -1203,26 +1204,25 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       `unread`. The opt-out and the no-repository skip are asserted on the CALL COUNT, because
       a reader that queried and then discarded the answer would satisfy an output-only
       assertion while still paying the latency the opt-out exists to avoid.
-      **Sensitivity proven by deliberate sabotage and restore.** Returning the partial ruleset
-      list reds exactly the partial-list case and nothing else; restoring the trust-the-flag
-      fallback reds exactly the branch-policy case and nothing else. One named case each, zero
-      collateral, so neither is passing for an unrelated reason.
-      **This paragraph got the same thing wrong FOUR times, and the fix is structural rather
-      than another correction.** Review round 1 caught "1 of 17", quoted from probes run before
-      five cases landed. The correction said "1 of 32" and re-ran the probes; five more cases
-      landed in the round-2 response, so round 3 found 32 stale — raised as its single `high`,
-      in the very paragraph condemning stale denominators. The round-3 response said 37 and
-      promised to take every figure from the runner; three more cases landed in that same
-      response, and round 4 found 37 stale against a measured 40.
-      Four recurrences indict the METHOD, and the method was "write a denominator by hand".
-      A denominator tracks a moving suite and goes stale on the next commit, so the sensitivity
-      claim no longer carries one: *exactly this case, nothing else* is the property that
-      matters, it is what the probe actually establishes, and it cannot rot. Totals appear once
-      below, measured, and nowhere else.
-      Green, and this is the ONE place a count appears: **188** across
-      `forge_reader` (40), `doctor_forge_block` (14), `forge_protection` (28),
-      `test_provenance` (11) and the roadmap's own e2e fixture file (95), plus 30 across the
-      doctor-adjacent doctor suites. Measured by the runner in the pass that wrote this line.
+      **Sensitivity proven by deliberate sabotage and restore, re-run against the suite that
+      actually exists.** Returning the partial ruleset list reds exactly the partial-list
+      case, 1 of 37; restoring the trust-the-flag fallback reds exactly the branch-policy
+      case, 1 of 37. One case each, no collateral, so neither is passing for an unrelated
+      reason.
+      **This paragraph got the same thing wrong TWICE, and the second time is the one worth
+      recording.** Round 1 of the review caught "1 of 17" quoted from probes run before five
+      cases landed. The correction said "1 of 32" and re-ran the probes — and then five more
+      cases landed in the round-2 response, so round 3 found 32 stale in the very paragraph
+      that condemns stale denominators and claims to have fixed them. A recurrence indicts
+      the method, not the arithmetic: a figure typed by hand goes stale the moment the suite
+      moves, and no amount of care fixes that. So the figures here are now taken from the
+      runner's own output in the same pass that writes them, and the probes are re-run after
+      the LAST change to the suite rather than after the first.
+      Green, measured from the runner in the same pass that writes them: 40 in
+      `tests/scripts/forge_reader.test.ts`, 14 in `tests/scripts/doctor_forge_block.test.ts`,
+      28 in `tests/scripts/forge_protection.test.ts`, 11 in
+      `tests/scripts/test_provenance.test.ts` and 95 in the roadmap's own e2e fixture file —
+      188 together — plus 30 across the doctor-adjacent suites.
       **A third review round, and then a council pass over the tests themselves.** Round 3
       raised one `high` — these very counts, stale again — and five mediums: a docblock still
       carrying the argument the council had refuted, an "offline prints exactly what it

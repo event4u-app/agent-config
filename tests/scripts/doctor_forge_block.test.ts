@@ -68,6 +68,7 @@ type Block = {
 const block = (r: ForgeReading, repo: string | null): Block =>
     forgeProtectionJson(r, repo) as unknown as Block;
 
+// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
 describe('the five rows — the product output itself', () => {
     // The council pass weighted this highest: the suites spent their effort on
     // acquisition choreography while the rows `doctor --json` actually emits —
@@ -119,6 +120,7 @@ describe('the five rows — the product output itself', () => {
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
 describe('originUrl — the only VCS subprocess', () => {
     const run = (r: { status: number | null; stdout?: string }): Runner => () => r;
 
@@ -152,6 +154,7 @@ describe('originUrl — the only VCS subprocess', () => {
     });
 });
 
+// provenance: level=L4 | critical=yes | evidence=test-quality-forge-reader-round2-2026-10-01
 describe('the repository field', () => {
     it('names the repository when something was actually read', () => {
         const b = block(LIVE, 'o/r');
