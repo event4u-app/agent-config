@@ -138,7 +138,50 @@ let PAYLOAD_BYTES = 0;
  */
 const TOOL_EVENTS: ReadonlySet<string> = new Set(['pre_tool_use', 'post_tool_use']);
 
-function syntheticPayload(event: string, workspace: string): string {
+/**
+ * An alternate tool shape for the synthetic payload.
+ *
+ * The default payload names `Read`, which is the right default for every gated
+ * number: it is the common non-matching case consumers pay on every tool call.
+ * But a concern filtered by the manifest's per-concern `tools:` key is SKIPPED
+ * in-process on a payload naming a tool it does not claim, so it never produces
+ * a sample and the per-concern report prints `not_measured` for it — correctly,
+ * and uselessly for a step that needs a bound.
+ *
+ * `one-question-per-ask` is the live instance: `severity: blocking`, filtered to
+ * `AskUserQuestion` and five aliases. It is the only blocking concern the
+ * default payload cannot reach, and the owning roadmap's Phase-3 blocker names
+ * the choice explicitly — "either a payload shaped to trigger it or an explicit
+ * decision that an unmeasured blocking concern keeps the current 30 s timeout".
+ * This is the first branch: measure it, so the decision is not forced by the
+ * harness.
+ *
+ * Measurement-only, like `--bundle` and `--payload-bytes`. It is reachable only
+ * from `concernSlaPass`, which gates nothing and writes no budget row — a probe
+ * payload must never produce a gated slot number, because the slot caps were
+ * derived against the `Read` shape and a different shape runs a different
+ * concern chain.
+ */
+export interface ToolShape {
+    readonly tool_name: string;
+    readonly tool_input: Record<string, unknown>;
+}
+
+/**
+ * The probe that reaches `one-question-per-ask`.
+ *
+ * ONE question, not two: a single question is the ALLOW path, and the allow
+ * path is what an ordinary call costs. Two questions would measure the deny
+ * path — the rarer branch, and the one that builds a message — so a bound taken
+ * from it would describe the exception rather than the rule. Both run
+ * `countStructuredAskQuestions`, which is the concern's actual work.
+ */
+export const ASK_PROBE: ToolShape = {
+    tool_name: 'AskUserQuestion',
+    tool_input: { questions: [{ question: 'bench probe' }] },
+};
+
+function syntheticPayload(event: string, workspace: string, tool?: ToolShape): string {
     // Claude-shaped payload; concerns read tool_name/tool_input for
     // pre/post_tool_use. A plain Read is the common non-matching case —
     // the fast path consumers pay on every tool call.
@@ -146,8 +189,8 @@ function syntheticPayload(event: string, workspace: string): string {
         session_id: 'bench-hook-latency',
         cwd: workspace,
         hook_event_name: event,
-        tool_name: 'Read',
-        tool_input: { file_path: path.join(workspace, 'README.md') },
+        tool_name: tool?.tool_name ?? 'Read',
+        tool_input: tool?.tool_input ?? { file_path: path.join(workspace, 'README.md') },
     };
     if (PAYLOAD_BYTES > 0 && TOOL_EVENTS.has(event)) {
         // Filler with no JSON metacharacters, so the cost measured is
@@ -192,9 +235,10 @@ export function benchEvent(
     via: InvocationPath = 'bundle',
     timingsSink?: string,
     replay = true,
+    tool?: ToolShape,
 ): EventResult {
     const durations: number[] = [];
-    const payload = syntheticPayload(event, workspace);
+    const payload = syntheticPayload(event, workspace, tool);
     const command: [string, string[]] =
         via === 'cli'
             ? ['bash', ['-c', hooksJsonCommand(event)]]
@@ -765,6 +809,57 @@ export function concernSlaPass(
     for (const event of events) {
         benchEvent(event, runs, workspace, 'bundle', sinkPath, false);
     }
+    // One extra `pre_tool_use` pass under the ask-shaped probe, so the ninth
+    // blocking concern is measured rather than waived. See `ASK_PROBE`: every
+    // other blocking concern is reached by the default `Read` payload, and
+    // `one-question-per-ask`'s `tools:` filter means no number of `Read` runs
+    // will ever produce a sample for it.
+    //
+    // It rides on `pre_tool_use` because that is the slot the concern is bound
+    // to; it is a separate pass rather than a replacement because the default
+    // shape is what every OTHER concern's number must come from.
+    benchEvent('pre_tool_use', runs, workspace, 'bundle', sinkPath, false, ASK_PROBE);
+}
+
+/**
+ * The warn-only window, made legible — observe-only, gating nothing.
+ *
+ * Step 3.3 derives a per-concern timeout of `sla_ms x 3` and its own text says
+ * "warn-only for the first measured window, then deny". A window nothing
+ * observes is not a window: with `sla_ms` registered and no reader, the flip
+ * would be taken on the absence of a complaint rather than on a reading.
+ *
+ * So this is the instrument. Every bench run — local or CI, gated or not —
+ * prints each blocking concern's measured p95 beside its registered bound and
+ * names any concern that crossed it. The window is then a span of runs a human
+ * can read, and the flip has an evidence base that exists before it is taken.
+ *
+ * It lives in the measurement harness and NOT in the dispatcher deliberately.
+ * A runtime warn would be a dispatcher change shipped as part of a step that is
+ * blocked on the very readings it would produce, and Risk 1 of the owning
+ * roadmap is precisely about acting on a bound before it is validated.
+ *
+ * A concern with no registered SLA, or no measurement, is NOT an overrun — it
+ * is an unknown, and the two must not collapse. Returning it as "fine" would
+ * let an unregistered concern read as a clean window.
+ */
+export interface SlaOverrun {
+    concern: string;
+    p95_us: number;
+    /** `sla_ms x 3`, in microseconds — the bound step 3.3 would apply. */
+    bound_us: number;
+}
+
+export function slaOverruns(rows: readonly ConcernLatencyRow[]): SlaOverrun[] {
+    const out: SlaOverrun[] = [];
+    for (const row of rows) {
+        if (row.sla_ms === null || row.sla_malformed || row.p95_us === null) continue;
+        const bound_us = row.sla_ms * 3 * 1000;
+        if (row.p95_us > bound_us) {
+            out.push({ concern: row.concern, p95_us: row.p95_us, bound_us });
+        }
+    }
+    return out;
 }
 
 /** Render one row. `null` prints `not_measured` — never `0`. */
@@ -1144,6 +1239,30 @@ export function main(argv: string[] = process.argv.slice(2)): number {
                     'a concern bound to a slot this bench does not exercise, or skipped by its ' +
                     "`tools:` filter, has no sample. Reported as an absence, never as 0.\n",
             );
+        }
+        // The warn-only window step 3.3 names, read out loud. Observe-only: it
+        // reports and never changes the exit code, because the bound it checks
+        // is not armed anywhere and a measurement that can red a build before
+        // its bar is validated is Risk 1 of the owning roadmap.
+        const overruns = slaOverruns(concernRows);
+        const registered = concernRows.filter((r) => r.sla_ms !== null && !r.sla_malformed).length;
+        if (registered === 0) {
+            process.stdout.write(
+                '  ℹ️  no `concern_sla_ms` registered — the warn-only window has not started.\n',
+            );
+        } else if (overruns.length === 0) {
+            process.stdout.write(
+                `  ✅  warn-only window: ${registered} of ${concernRows.length} bounded, ` +
+                    'none over `sla_ms × 3` on this run.\n',
+            );
+        } else {
+            for (const o of overruns) {
+                process.stdout.write(
+                    `  ⚠️  warn-only window: ${o.concern} p95 ${(o.p95_us / 1000).toFixed(3)} ms ` +
+                        `is over its \`sla_ms × 3\` bound of ${(o.bound_us / 1000).toFixed(3)} ms — ` +
+                        'observe-only; step 3.3 must not flip to deny while this stands.\n',
+                );
+            }
         }
 
         // Breach re-measure (--gate only). A single p95 over the cap is not yet

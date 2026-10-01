@@ -27,11 +27,13 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    ASK_PROBE,
     blockingConcerns,
     NOT_MEASURED,
     perConcernRows,
     readConcernTimings,
     renderConcernRow,
+    slaOverruns,
 } from '../../src/scripts/bench_hook_latency.js';
 import { writeConcernTimings } from '../../src/scripts/hooks/concern_timings.js';
 
@@ -273,5 +275,79 @@ describe('writeConcernTimings — the dispatcher sink', () => {
                 path.join(tmp, 'no', 'such', 'dir', 'x.jsonl'),
             ),
         ).not.toThrow();
+    });
+});
+
+// The ask-shaped probe (step 3.3's measurement prerequisite).
+//
+// `one-question-per-ask` is `severity: blocking` and filtered by the manifest's
+// per-concern `tools:` key to `AskUserQuestion` and five aliases, so the default
+// `Read` payload can never produce a sample for it — it printed `not_measured`
+// on every run, honestly and uselessly. The owning roadmap's Phase-3 blocker
+// offered two ways out: shape a payload, or decide the concern keeps the 30 s
+// timeout. These pin the first.
+describe('ASK_PROBE — the payload that reaches the ninth blocking concern', () => {
+    it('names a tool the manifest filter for one-question-per-ask admits', () => {
+        const raw = fs.readFileSync('src/scripts/hook_manifest.yaml', 'utf-8');
+        // The `tools:` line of the concern, read from the live manifest rather
+        // than restated here: a probe pinned against a copy of the filter would
+        // keep passing after the filter moved.
+        const block = raw.slice(raw.indexOf('  one-question-per-ask:'));
+        const tools = /^\s*tools:\s*\[([^\]]*)\]/m.exec(block.slice(0, 600));
+        expect(tools).not.toBeNull();
+        const names = (tools?.[1] ?? '').split(',').map((s) => s.trim());
+        expect(names).toContain(ASK_PROBE.tool_name);
+    });
+
+    it('carries ONE question — the allow path, which is what an ordinary call costs', () => {
+        const qs = ASK_PROBE.tool_input['questions'];
+        expect(Array.isArray(qs)).toBe(true);
+        expect((qs as unknown[]).length).toBe(1);
+    });
+});
+
+// The warn-only window, as an instrument.
+//
+// Step 3.3 derives a timeout of `sla_ms x 3` and flips to deny only after a
+// warn-only window. A window nothing reads is not a window, so the bench names
+// any blocking concern whose measured p95 crossed its registered bound. The two
+// directions that matter are the overrun (the flip must not happen) and the
+// three states that are NOT overruns and must not be reported as clean either.
+describe('slaOverruns — observe-only window reporting', () => {
+    const row = (over: Partial<Parameters<typeof renderConcernRow>[0]>) => ({
+        concern: 'c',
+        fail_closed: false,
+        n: 10,
+        p95_us: 1000,
+        p95_event: 'pre_tool_use',
+        sla_ms: 1,
+        sla_malformed: false,
+        ...over,
+    });
+
+    it('names a concern whose p95 exceeds sla_ms x 3', () => {
+        // sla 1 ms -> bound 3000 us; p95 3001 us is over by one microsecond.
+        const got = slaOverruns([row({ p95_us: 3001 })]);
+        expect(got).toEqual([{ concern: 'c', p95_us: 3001, bound_us: 3000 }]);
+    });
+
+    it('does NOT fire exactly at the bound — the timeout is an excess, not a tie', () => {
+        expect(slaOverruns([row({ p95_us: 3000 })])).toEqual([]);
+    });
+
+    it('an unregistered SLA is an unknown, never a clean reading', () => {
+        // The failure this excludes: treating "no bound" as "within bound"
+        // would let a wholly unregistered tree report an empty overrun list and
+        // read as a window that passed.
+        expect(slaOverruns([row({ sla_ms: null })])).toEqual([]);
+        expect(slaOverruns([row({ sla_ms: null })]).length).toBe(0);
+    });
+
+    it('an unmeasured concern is skipped rather than compared against null', () => {
+        expect(slaOverruns([row({ p95_us: null })])).toEqual([]);
+    });
+
+    it('a malformed budget value is skipped, not coerced into a bound', () => {
+        expect(slaOverruns([row({ sla_malformed: true, sla_ms: null })])).toEqual([]);
     });
 });
