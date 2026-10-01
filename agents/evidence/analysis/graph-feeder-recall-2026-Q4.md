@@ -24,6 +24,14 @@ without the test that would have caught the failure?* — from different evidenc
 | **F** | the transcript: production edits, no test file touched, a completion claim | `detectUntestedChange`, `src/scripts/hooks/turn_end_gate_hook.ts` |
 | **graph** | the code graph: changed symbols with no accepted `tests` edge reaching them or their file | `untested`, `src/scripts/code_graph/verbs.ts` |
 
+**Both arms read the same path set.** The feeder filters the turn's edit paths
+through detector F's own `_isProductionSource` predicate before handing them to
+the graph, so a difference between the two verdicts is a difference in EVIDENCE
+and never in input. A completion review found the first implementation passing
+every edit path to the graph while F filtered — which would have had the graph
+arm firing on exactly the turns F is silent for, and a recall table comparing
+two detectors answering different questions is worse than no table.
+
 The feeder writes both verdicts for the same stop, so recall, the union, and
 each arm's unique catches are all readable from one record:
 `agents/state/graph-feeder/<session>.jsonl`, one row per stop, written only

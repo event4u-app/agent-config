@@ -188,7 +188,9 @@ describe('bashSearchToken — step 2.1, the search inside a shell command', () =
         expect(bashSearchToken('grep -rn "classifyTool" src/')).toBe('classifyTool');
         expect(bashSearchToken('rg classifyTool')).toBe('classifyTool');
         expect(bashSearchToken('ag --nocolor needle')).toBe('needle');
-        expect(bashSearchToken('find . -name "*.ts"')).toBe('.');
+        // `.` until a completion review pointed out that every `find .` shares
+        // it; the subject of a find is its `-name`, asserted in its own case below.
+        expect(bashSearchToken('find . -name "*.ts"')).toBe('*.ts');
         expect(bashSearchToken('git grep latchTarget')).toBe('latchTarget');
         expect(bashSearchToken('/usr/bin/grep foo')).toBe('foo');
     });
@@ -197,6 +199,47 @@ describe('bashSearchToken — step 2.1, the search inside a shell command', () =
         // Risk-Register rank 2: "every shell call is a candidate line" is what
         // makes a consumer turn the hook off.
         for (const cmd of ['ls -la', 'npm test', 'git log --oneline', 'node x.js', '']) {
+            expect(bashSearchToken(cmd)).toBeNull();
+        }
+    });
+
+    it('reads a search in ANY pipeline segment, not only the first word of the line', () => {
+        // A completion review measured `cat x | grep needle` returning null.
+        // Piping into a search is the common shape, so reading only the head
+        // missed most of what this step exists to reach.
+        expect(bashSearchToken('cat x.ts | grep needle')).toBe('needle');
+        expect(bashSearchToken('git log --oneline | rg symbol')).toBe('symbol');
+        expect(bashSearchToken('ls -la | sort')).toBeNull();
+    });
+
+    it('never keys the latch on an option VALUE', () => {
+        // Measured defects: `-A 5` keyed on "5", and two different `rg -g` searches
+        // both keyed on the glob — which silenced the second one entirely.
+        expect(bashSearchToken('grep -A 5 classifyTool')).toBe('classifyTool');
+        expect(bashSearchToken('grep -C 3 -m 2 needle')).toBe('needle');
+        expect(bashSearchToken('rg -g *.ts alpha')).toBe('alpha');
+        expect(bashSearchToken('rg -g *.ts beta')).toBe('beta');
+        expect(bashSearchToken('rg -g *.ts alpha')).not.toBe(bashSearchToken('rg -g *.ts beta'));
+    });
+
+    it('reads git grep past git own options — the form this tree mandates', () => {
+        // `git -C <path> grep` is what token-efficiency asks agents to write, and
+        // a `words[1] === "grep"` test missed every one of them.
+        expect(bashSearchToken('git -C /repo grep latchTarget')).toBe('latchTarget');
+        expect(bashSearchToken('git --no-pager grep needle')).toBe('needle');
+        expect(bashSearchToken('git -C /repo log --oneline')).toBeNull();
+    });
+
+    it('keys find on its -name subject, not on the search root', () => {
+        // Every `find . -name X` shares the root `.`, so keying on the root
+        // collapses distinct searches onto one latch slot.
+        expect(bashSearchToken('find . -name "*.ts"')).toBe('*.ts');
+        expect(bashSearchToken('find src -name detect.ts')).toBe('detect.ts');
+        expect(bashSearchToken('find . -name "*.ts"')).not.toBe(bashSearchToken('find . -name "*.php"'));
+    });
+
+    it('treats a usage request as not a search, so it spends no session slot', () => {
+        for (const cmd of ['grep --help', 'rg -h', 'find --version']) {
             expect(bashSearchToken(cmd)).toBeNull();
         }
     });
@@ -312,6 +355,26 @@ describe('graphState — step 2.3, the fourth state sees the uncommitted edit', 
         const root = gitRepoWithGraph();
         fs.writeFileSync(path.join(root, 'new.ts'), 'export const x = 1;\n');
         expect(graphState(root)).toBe('edited');
+    });
+
+    it('counts a source file inside an untracked DIRECTORY, which plain porcelain collapses', () => {
+        // The measured under-report: `git status --porcelain` reports a whole
+        // untracked directory as one entry, `?? feature/`, which carries no
+        // extension — so an entire new source tree read as `fresh`. The repo-root
+        // case above does not catch it, because git does not collapse there.
+        const root = gitRepoWithGraph();
+        fs.mkdirSync(path.join(root, 'feature', 'deep'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'feature', 'deep', 'new.ts'), 'export const x = 1;\n');
+        expect(graphState(root)).toBe('edited');
+    });
+
+    it('still ignores an untracked directory carrying nothing indexable', () => {
+        // The other direction of the same fix: enumerating untracked files must
+        // not turn every scratch directory into `edited`.
+        const root = gitRepoWithGraph();
+        fs.mkdirSync(path.join(root, 'notes'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'notes', 'scratch.md'), 'text\n');
+        expect(graphState(root)).toBe('fresh');
     });
 });
 

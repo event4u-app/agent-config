@@ -1312,9 +1312,16 @@ function recordGraphFeeder(inputs: DetectorInputs, findings: readonly Finding[],
         // No graph at all is the silent case, exactly as it is for the context
         // hook: a consumer who never builds one never grows this file.
         if (state === 'absent') return;
+        // The SAME path set detector F reads, filtered by the SAME predicate.
+        // A completion review found the two arms running over different inputs:
+        // the feeder passed every edit path while F filters to production
+        // source, so the graph arm would have fired on precisely the turns F is
+        // silent for — a recall comparison between two detectors answering
+        // different questions, which is worse than no comparison.
         const paths = inputs.toolCalls
             .filter((c) => _EDIT_TOOLS.has(c.name) && c.path !== undefined)
-            .map((c) => c.path as string);
+            .map((c) => c.path as string)
+            .filter(_isProductionSource);
         const f = findings.find((x) => x.detector === 'untested');
         appendFeederRow(
             inputs.workspaceRoot,

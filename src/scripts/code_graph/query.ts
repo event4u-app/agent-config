@@ -223,12 +223,26 @@ function resolveSeedsTiered(g: LoadedGraph, seed: string, limit = 5): SeedResolu
 export function resolveExactNode(
     g: LoadedGraph,
     seed: string,
-): { id: string | null; ambiguous: string[] } {
-    const r = resolveSeedsTiered(g, seed);
-    if (r.weak || r.ids.length === 0) return { id: null, ambiguous: [] };
-    if (r.ids.length > 1) return { id: null, ambiguous: r.ids };
-    return { id: r.ids[0] as string, ambiguous: [] };
+): { id: string | null; ambiguous: string[]; more: boolean } {
+    // The ladder's default limit is 5, and inheriting it made the refusal LIE:
+    // a label on twelve nodes refused with "is a label on 5 nodes" and listed
+    // five of them with nothing saying the list was cut. A completion review
+    // reproduced it. Ask for one more than we will show, so truncation is
+    // detectable rather than invisible.
+    const r = resolveSeedsTiered(g, seed, AMBIGUITY_SHOWN + 1);
+    if (r.weak || r.ids.length === 0) return { id: null, ambiguous: [], more: false };
+    if (r.ids.length > 1) {
+        return {
+            id: null,
+            ambiguous: r.ids.slice(0, AMBIGUITY_SHOWN),
+            more: r.ids.length > AMBIGUITY_SHOWN,
+        };
+    }
+    return { id: r.ids[0] as string, ambiguous: [], more: false };
 }
+
+/** How many candidate ids an ambiguity refusal lists before it says "and more". */
+const AMBIGUITY_SHOWN = 25;
 
 /** Resolve a free-text seed to node ids: exact id → exact label → BM25. */
 export function resolveSeeds(g: LoadedGraph, seed: string, limit = 5): string[] {
@@ -565,14 +579,16 @@ export function node(g: LoadedGraph, seed: string, opts: NodeOptions = {}): Node
         out: [] as NodeEdgeLine[],
         truncated: false,
     };
-    const { id, ambiguous } = resolveExactNode(g, seed);
+    const { id, ambiguous, more } = resolveExactNode(g, seed);
     if (id === null) {
         return {
             ...empty,
             refusal:
                 ambiguous.length > 0
-                    ? `'${sanitizeLabel(seed)}' is a label on ${String(ambiguous.length)} nodes — ` +
-                      `re-ask with one id: ${ambiguous.map((a) => sanitizeLabel(a)).join(', ')}`
+                    ? `'${sanitizeLabel(seed)}' is a label on ${more ? 'more than ' : ''}` +
+                      `${String(ambiguous.length)} nodes — re-ask with one id: ` +
+                      `${ambiguous.map((a) => sanitizeLabel(a)).join(', ')}` +
+                      (more ? ' (list truncated)' : '')
                     : `'${sanitizeLabel(seed)}' matches no node id and no node label. This tool ` +
                       'resolves exactly (id, then label) and does not score free text — use ' +
                       '`query` if a best-guess match is what you want.',

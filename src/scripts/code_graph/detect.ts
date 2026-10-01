@@ -227,11 +227,19 @@ export type GraphState = 'absent' | 'fresh' | 'edited' | `behind:${number}`;
  *
  * Untracked files count. A source file that exists only in the working tree is
  * precisely something the index cannot know about.
+ *
+ * `--untracked-files=all` IS LOAD-BEARING, and the default was wrong. Plain
+ * porcelain COLLAPSES an untracked directory to one entry — `?? src/` — which
+ * carries no extension, so the filter below skipped it and an entire new source
+ * tree read as `fresh`. A completion review reproduced exactly that, and it is
+ * the one direction the paragraph above promises cannot happen. The cost is
+ * enumerating untracked files rather than untracked directories; `.gitignore`
+ * still applies, so a vendored tree stays out of it.
  */
 function hasUncommittedIndexedEdit(root: string): boolean {
     let out: string;
     try {
-        out = execFileSync('git', ['-C', root, 'status', '--porcelain'], {
+        out = execFileSync('git', ['-C', root, 'status', '--porcelain', '--untracked-files=all'], {
             env: hardenedSpawnEnv(),
             encoding: 'utf-8',
             stdio: ['ignore', 'pipe', 'ignore'],

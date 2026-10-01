@@ -27,6 +27,7 @@ import {
     node as graphNode,
     path as graphPath,
     query,
+    resolveExactNode,
     resolveSeeds,
 } from '../../src/scripts/code_graph/query.js';
 import { sanitizeLabel } from '../../src/scripts/code_graph/sanitize.js';
@@ -427,6 +428,33 @@ describe('3.1 — graph_node answers about one node, or refuses', () => {
         expect(r.refusal).toContain('app/Base.php#Base::shared');
         expect(r.refusal).toContain('app/base.ts#Base::shared');
         expect(r.id).toBe('');
+        // Exactly two, so the count is stated plainly and nothing is truncated.
+        expect(r.refusal).toContain('is a label on 2 nodes');
+        expect(r.refusal).not.toContain('truncated');
+    });
+
+    it('never states a candidate count it did not measure', async () => {
+        // The measured defect: `resolveExactNode` inherited the seed ladder's
+        // default limit of 5, so a label on twelve nodes refused with "is a
+        // label on 5 nodes" and listed five with nothing marking the cut.
+        const ids = Array.from({ length: 40 }, (_, i) => `app/m${String(i)}.ts#Dup`);
+        const stub = {
+            source: 'native:stub',
+            byId: { get: () => undefined, has: () => false },
+            idsByLabel: (_label: string, limit: number) => ids.slice(0, limit),
+            lex: () => {
+                throw new Error('BM25 must not be reached — the label resolved exactly');
+            },
+        } as unknown as Parameters<typeof resolveExactNode>[0];
+
+        const r = resolveExactNode(stub, 'Dup');
+        expect(r.id).toBeNull();
+        expect(r.more).toBe(true);
+        // Whatever it SHOWS, it must never claim that is the whole set.
+        expect(r.ambiguous.length).toBeLessThanOrEqual(ids.length);
+        const node = graphNode(stub, 'Dup');
+        expect(node.refusal).toContain('more than');
+        expect(node.refusal).toContain('(list truncated)');
     });
 
     it('REFUSES free text rather than scoring it — D4', async () => {

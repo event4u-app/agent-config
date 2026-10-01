@@ -82,38 +82,95 @@ interface ToolIntent {
 const SEARCH_HEADS = new Set(['grep', 'rg', 'ag', 'find', 'ack', 'fd']);
 
 /**
- * The thing a shell search is searching FOR, or `null` when the command is not
- * a structure search at all.
+ * Short options that consume the NEXT word as their value.
  *
- * `git grep` is the one two-word head, so it is handled before the single-word
- * set rather than by putting `git` in it — `git log` is not a search.
- *
- * The token is the first argument that is not an option and not an option's
- * value we can recognise; failing that, the command's head, which collapses a
- * flag-only search onto one latch slot rather than leaking the whole command
- * line into a state file. Shell metacharacters end the read: everything after a
- * pipe belongs to another command.
+ * Without this the value is read as the search term: a completion review of
+ * step 2.1 measured `grep -A 5 foo` keying the latch on `"5"` and
+ * `rg -g *.ts alpha` keying on `"*.ts"` — which also silenced a second,
+ * genuinely different search behind the same glob. A latch keyed on an option's
+ * argument is worse than no latch: it collapses distinct questions onto one slot.
  */
-export function bashSearchToken(command: string): string | null {
-    const words = command.trim().split(/\s+/).filter((w) => w !== '');
+const VALUE_TAKING = new Set([
+    '-A', '-B', '-C', '-m', '-e', '-f', '-g', '-t', '-T', '-d', '--include',
+    '--exclude', '--glob', '--max-count', '--after-context', '--before-context',
+    '--context', '--regexp', '--file', '--type', '--maxdepth', '--depth',
+]);
+
+/** Asking a tool for its own usage is not a search, and must not spend a slot. */
+const NOT_A_SEARCH = new Set(['--help', '-h', '--version', '-V', '--usage']);
+
+/** `find` carries its subject in `-name`, not in the first positional. */
+const FIND_SUBJECT = new Set(['-name', '-iname', '-path', '-ipath', '-regex']);
+
+/**
+ * The search term inside ONE pipeline segment, or `null`.
+ *
+ * Split out from {@link bashSearchToken} so a pipeline can be scanned segment
+ * by segment: `cat x | grep needle` is a search, and reading only the head of
+ * the whole command missed every one of them. The same review measured that.
+ */
+function segmentSearchToken(words: readonly string[]): string | null {
     if (words.length === 0) return null;
     let i = 0;
     let head = (words[0] as string).split('/').pop() as string;
-    if (head === 'git' && words[1] === 'grep') {
+    if (head === 'git') {
+        // `git -C <path> grep <term>` is the form this tree's own token-efficiency
+        // rule mandates, and a `words[1] === 'grep'` test missed all of it. Scan
+        // past git's own options to the subcommand.
+        let j = 1;
+        while (j < words.length && (words[j] as string).startsWith('-')) {
+            j += VALUE_TAKING.has(words[j] as string) || words[j] === '-C' ? 2 : 1;
+        }
+        if (words[j] !== 'grep') return null;
         head = 'git grep';
-        i = 2;
+        i = j + 1;
     } else if (SEARCH_HEADS.has(head)) {
         i = 1;
     } else {
         return null;
     }
-    for (; i < words.length; i += 1) {
-        const w = words[i] as string;
-        if (w === '|' || w === '||' || w === '&&' || w === ';') break;
-        if (w.startsWith('-')) continue;
-        return w.replace(/^["']|["']$/g, '');
+    const rest = words.slice(i);
+    if (rest.some((w) => NOT_A_SEARCH.has(w))) return null;
+    if (head === 'find') {
+        const at = rest.findIndex((w) => FIND_SUBJECT.has(w));
+        if (at !== -1 && at + 1 < rest.length) return strip(rest[at + 1] as string);
+    }
+    for (let k = 0; k < rest.length; k += 1) {
+        const w = rest[k] as string;
+        if (w.startsWith('-')) {
+            if (VALUE_TAKING.has(w)) k += 1; // its value is not the subject
+            continue;
+        }
+        return strip(w);
     }
     return head;
+}
+
+function strip(w: string): string {
+    return w.replace(/^["']|["']$/g, '');
+}
+
+/**
+ * The thing a shell search is searching FOR, or `null` when the command is not
+ * a structure search at all.
+ *
+ * Reads EVERY pipeline segment, not just the first: `cat x | grep needle` and
+ * `… | rg symbol` are searches, and they are the common shape. The first
+ * segment that is a search wins, so one line yields one latch key.
+ *
+ * `git grep` is the one two-word head and is resolved past git's own options.
+ * Failing a positional subject the key is the command's head, which collapses a
+ * flag-only search onto one slot rather than leaking a command line into a
+ * state file — and the key is stored as a digest in any case
+ * ({@link latchKey}).
+ */
+export function bashSearchToken(command: string): string | null {
+    for (const segment of command.split(/\||&&|;/)) {
+        const words = segment.trim().split(/\s+/).filter((w) => w !== '');
+        const hit = segmentSearchToken(words);
+        if (hit !== null) return hit;
+    }
+    return null;
 }
 
 /**

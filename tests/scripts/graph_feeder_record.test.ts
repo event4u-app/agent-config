@@ -21,6 +21,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
 import {
+    appendFeederRow,
     buildFeederRow,
     graphUntestedVerdict,
     MAX_ROWS_PER_SESSION,
@@ -207,8 +208,26 @@ describe('buildFeederRow — the row shape', () => {
         );
     });
 
-    it('declares a per-session row cap, so the instrument cannot grow without bound', () => {
-        expect(MAX_ROWS_PER_SESSION).toBeGreaterThan(0);
-        expect(Number.isInteger(MAX_ROWS_PER_SESSION)).toBe(true);
+    it('stops appending at the per-session cap, so the instrument cannot grow without bound', () => {
+        // Was an assertion that the constant is a positive integer, which a
+        // completion review correctly called tautological: deleting the guard
+        // in `appendFeederRow` left it green. This drives the writer past the
+        // cap instead, so the guard is what the test is about.
+        const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'graph-feeder-cap-')));
+        tmp_dirs.push(root);
+        const row = buildFeederRow({
+            turn: 1,
+            layer: 'live',
+            state: 'fresh',
+            fFired: false,
+            fMode: null,
+            paths: [],
+            graph: { verdict: null, untested: 0, tested: 0 },
+            at: '2026-10-01T00:00:00.000Z',
+        });
+        for (let i = 0; i < MAX_ROWS_PER_SESSION + 10; i += 1) {
+            appendFeederRow(root, 'capped', row);
+        }
+        expect(readFeederRows(root, 'capped')).toHaveLength(MAX_ROWS_PER_SESSION);
     });
 });
