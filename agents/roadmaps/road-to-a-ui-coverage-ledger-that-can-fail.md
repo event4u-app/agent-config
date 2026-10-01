@@ -23,7 +23,7 @@ estate_offset_exempt: >-
   already archived and there is nothing left to retire;
   `agents/roadmaps/stubs/road-to-executable-specification-adapter.md` is held by a measured
   refusal this roadmap does not lift, and retiring it would dispose of a recorded decision;
-  and merging into `agents/roadmaps/road-to-a-ledger-that-closes-the-loop.md` would put a
+  and merging into `agents/roadmaps/archive/road-to-a-ledger-that-closes-the-loop.md` would put a
   three-line defect fix in `apply.ts` inside a structural roadmap about turn-end obligation
   reading, whose own scope note says it reads whether evidence arrived rather than producing it.
 relates:
