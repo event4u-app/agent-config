@@ -10,10 +10,12 @@ import {
     parseSettingsClassRows,
 } from '../../src/shared/settingsClasses.js';
 import {
+    DOGFOOD_LEDGER_POSIX,
     enabled,
     LEARN_KEY,
     LEARN_KEY_CLASS,
     learnConsent,
+    readDogfoodLines,
     readLearnValue,
     runLearn,
 } from '../../src/scripts/memory_learn_hook.js';
@@ -160,6 +162,73 @@ describe('runLearn() — budget-capped, fail-open aggregation', () => {
         runLearn(tmp, '2026-07-27T00:00:00Z');
         const files = fs.readdirSync(path.join(tmp, 'agents', 'memory'));
         expect(files.filter((f) => f.endsWith('.yml'))).toEqual([]);
+    });
+});
+
+// road-to-learning-you-can-see step 1.3 — the dogfood ledger. The flip
+// condition at `src/config/agent-settings.template.yml:1376-1378` names two
+// numbers (non-trivial signal AND session-end p95 < 2 s) and NOTHING recorded
+// either, because `runLearn` returned before any measurement point whenever
+// the intake was empty — which is every session in this checkout today. A
+// silence and a zero read identically to anyone opening the window, so the
+// measurement is taken and appended BEFORE the early returns.
+describe('the dogfood ledger — a zero-signal session is a line, not a silence', () => {
+    it('appends exactly one line with signals_in: 0 when the intake is empty', () => {
+        fs.mkdirSync(path.join(tmp, 'agents', 'memory', 'intake'), { recursive: true });
+        expect(runLearn(tmp, '2026-07-27T00:00:00Z')).toBeNull();
+        const lines = readDogfoodLines(tmp);
+        expect(lines).toHaveLength(1);
+        expect(lines[0]?.signals_in).toBe(0);
+        expect(lines[0]?.lessons_out).toBe(0);
+        expect(lines[0]?.preferred).toBe(0);
+        expect(lines[0]?.at).toBe('2026-07-27T00:00:00Z');
+        expect(typeof lines[0]?.wall_ms).toBe('number');
+    });
+
+    it('records a line even when the intake directory does not exist at all', () => {
+        // The absent-directory branch is the oldest early return in the
+        // function and the one a zero-signal checkout actually takes.
+        expect(runLearn(tmp, '2026-07-27T00:00:00Z')).toBeNull();
+        expect(readDogfoodLines(tmp)).toHaveLength(1);
+        expect(readDogfoodLines(tmp)[0]?.signals_in).toBe(0);
+    });
+
+    it('records the real counts when signals are present', () => {
+        seedIntake(tmp);
+        runLearn(tmp, '2026-07-27T00:00:00Z');
+        const lines = readDogfoodLines(tmp);
+        expect(lines).toHaveLength(1);
+        expect(lines[0]?.signals_in).toBe(4);
+        expect(lines[0]?.lessons_out).toBe(1);
+        expect(lines[0]?.preferred).toBe(1);
+    });
+
+    it('appends rather than overwrites — one line per run', () => {
+        runLearn(tmp, '2026-07-27T00:00:00Z');
+        seedIntake(tmp);
+        runLearn(tmp, '2026-07-28T00:00:00Z');
+        const lines = readDogfoodLines(tmp);
+        expect(lines).toHaveLength(2);
+        expect(lines.map((l) => l.signals_in)).toEqual([0, 4]);
+    });
+
+    it('lands under the gitignored runtime state root', () => {
+        runLearn(tmp, '2026-07-27T00:00:00Z');
+        expect(DOGFOOD_LEDGER_POSIX).toBe('agents/runtime/state/learning-dogfood.jsonl');
+        expect(fs.existsSync(path.join(tmp, ...DOGFOOD_LEDGER_POSIX.split('/')))).toBe(true);
+    });
+
+    it('stays fail-open when the ledger path cannot be written', () => {
+        // A directory where the file belongs is the cheapest reproducible I/O
+        // failure. The aggregation must still run: the ledger is a measurement,
+        // never a precondition.
+        fs.mkdirSync(path.join(tmp, 'agents', 'runtime', 'state', 'learning-dogfood.jsonl'), {
+            recursive: true,
+        });
+        seedIntake(tmp);
+        expect(() => runLearn(tmp, '2026-07-27T00:00:00Z')).not.toThrow();
+        expect(fs.existsSync(path.join(tmp, 'agents', 'memory', 'LESSONS.md'))).toBe(true);
+        expect(readDogfoodLines(tmp)).toEqual([]);
     });
 });
 
