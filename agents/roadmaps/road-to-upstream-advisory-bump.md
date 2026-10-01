@@ -1,6 +1,7 @@
 ---
 complexity: lightweight
 status: draft
+estate_offset_exempt: "Nothing in this change can pay for it. This branch closes road-to-behavior-vocabulary-and-runner-truth, which Iron Law 3 refuses to archive while step 1.3 stays deferred — so the one roadmap this work could have disposed is the one it is forbidden to. Every other active roadmap belongs to a parallel session. The addition is also not a plan anyone chose to start: it is the second disposition fix-what-you-see allows for a red check this branch saw and cannot fix, since npm audit reads a lockfile this branch does not touch. Shipped draft, so it adds nothing a reader has to triage, and the alternative to the line is losing the finding."
 execution:
   mode: phase-checkpoints
 ---
