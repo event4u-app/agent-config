@@ -31,7 +31,11 @@
  * "per-host `enforced_by` resolved from the table, not from a host name" means
  * in practice.
  *
- * Once per session (a latch keyed by session id), so it cannot nag.
+ * Once per distinct SEARCH TARGET, capped at five lines per session (step 2.2),
+ * so it cannot nag. It was once-per-session until step 2.1 added `Bash`: with
+ * shell searches in scope a single line covered the first `grep` of a session
+ * and nothing after it, which is the opposite of the problem — the state that
+ * matters is the state at the question being asked.
  * fail_closed: false — every error path returns allow; a context line must
  * never break a tool call.
  */
@@ -55,13 +59,70 @@ function isObject(v: unknown): v is JsonObject {
 interface ToolIntent {
     isSearch: boolean;
     isCodeRead: boolean;
+    /**
+     * What this call is ABOUT — a Grep/Glob pattern, a read path, or the search
+     * term of a shell search. The per-target latch key (step 2.2): the same
+     * question asked twice is one question, and a hook that answered it once
+     * has nothing to add the second time.
+     *
+     * Empty when the call is neither a search nor a code read, and never the
+     * raw command line of an arbitrary Bash call — see {@link bashSearchToken}.
+     */
+    target: string;
+}
+
+/**
+ * The shell search heads this hook recognises.
+ *
+ * A closed list on purpose. "Any Bash command might be a search" is the reading
+ * that makes the hook chatty — Risk-Register rank 2 — so a command whose head
+ * is not here is silent AND does not latch, exactly as a non-code `Read` is.
+ */
+const SEARCH_HEADS = new Set(['grep', 'rg', 'ag', 'find', 'ack', 'fd']);
+
+/**
+ * The thing a shell search is searching FOR, or `null` when the command is not
+ * a structure search at all.
+ *
+ * `git grep` is the one two-word head, so it is handled before the single-word
+ * set rather than by putting `git` in it — `git log` is not a search.
+ *
+ * The token is the first argument that is not an option and not an option's
+ * value we can recognise; failing that, the command's head, which collapses a
+ * flag-only search onto one latch slot rather than leaking the whole command
+ * line into a state file. Shell metacharacters end the read: everything after a
+ * pipe belongs to another command.
+ */
+export function bashSearchToken(command: string): string | null {
+    const words = command.trim().split(/\s+/).filter((w) => w !== '');
+    if (words.length === 0) return null;
+    let i = 0;
+    let head = (words[0] as string).split('/').pop() as string;
+    if (head === 'git' && words[1] === 'grep') {
+        head = 'git grep';
+        i = 2;
+    } else if (SEARCH_HEADS.has(head)) {
+        i = 1;
+    } else {
+        return null;
+    }
+    for (; i < words.length; i += 1) {
+        const w = words[i] as string;
+        if (w === '|' || w === '||' || w === '&&' || w === ';') break;
+        if (w.startsWith('-')) continue;
+        return w.replace(/^["']|["']$/g, '');
+    }
+    return head;
 }
 
 /**
  * Best-effort read of the intercepted tool + its target from the envelope.
  *
- * Carried over from the nudge unchanged, and the manifest's `tools:` filter is
- * pinned against exactly this branch surface — Grep, Glob, Read.
+ * The manifest's `tools:` filter is pinned against exactly this branch surface
+ * — Grep, Glob, Read, Bash. `Bash` joined it in step 2.1 for the reason the
+ * step gives: the searches an agent actually runs in this tree are shell
+ * searches, so a matcher that saw only the structured search tools was watching
+ * the door nobody uses.
  */
 export function classifyTool(envelope: JsonObject): ToolIntent {
     const payload = isObject(envelope['payload']) ? envelope['payload'] : envelope;
@@ -71,13 +132,29 @@ export function classifyTool(envelope: JsonObject): ToolIntent {
     const ti = (isObject(payload['tool_input']) ? payload['tool_input'] : envelope['tool_input']) as
         | JsonObject
         | undefined;
-    const isSearch = name === 'Grep' || name === 'Glob';
-    let isCodeRead = false;
+    const silent: ToolIntent = { isSearch: false, isCodeRead: false, target: '' };
+
+    if (name === 'Grep' || name === 'Glob') {
+        const pat = isObject(ti) ? (ti['pattern'] ?? ti['query']) : undefined;
+        return { isSearch: true, isCodeRead: false, target: typeof pat === 'string' ? pat : name };
+    }
     if (name === 'Read' && isObject(ti)) {
         const fp = ti['file_path'] ?? ti['path'];
-        if (typeof fp === 'string') isCodeRead = CODE_EXT.test(fp);
+        if (typeof fp === 'string' && CODE_EXT.test(fp)) {
+            return { isSearch: false, isCodeRead: true, target: fp };
+        }
+        return silent;
     }
-    return { isSearch, isCodeRead };
+    if (name === 'Bash' && isObject(ti)) {
+        const cmd = ti['command'];
+        if (typeof cmd !== 'string') return silent;
+        const token = bashSearchToken(cmd);
+        // Any other Bash command is silent AND does not latch: it consumed no
+        // slot, so the next real search still gets its line.
+        if (token === null) return silent;
+        return { isSearch: true, isCodeRead: false, target: token };
+    }
+    return silent;
 }
 
 function sessionId(envelope: JsonObject): string {
@@ -88,33 +165,81 @@ function sessionId(envelope: JsonObject): string {
 function latchFile(root: string): string {
     return path.join(root, 'agents', 'runtime', 'state', 'code-graph-context.json');
 }
-function alreadySpoke(root: string, session: string): boolean {
+
+/**
+ * At most this many context lines in one session (step 2.2).
+ *
+ * The cap is the chattiness bound, and it is the half that does not depend on
+ * the agent's behaviour: per-target alone is unbounded, because a session that
+ * greps thirty distinct symbols would hear thirty lines and the consumer would
+ * turn the hook off. Five is a stated default, not a measurement — a session
+ * that has been told the graph's state five times has been told.
+ */
+export const MAX_CONTEXT_LINES_PER_SESSION = 5;
+
+/**
+ * Should this target get a line, given what this session already heard?
+ *
+ * Pure, so the two rules it encodes can be tested without a filesystem: a
+ * repeat is silent at any count, and a NEW target is silent once the cap is
+ * reached.
+ */
+export function speaksFor(spoken: readonly string[], target: string): boolean {
+    if (spoken.includes(target)) return false;
+    return spoken.length < MAX_CONTEXT_LINES_PER_SESSION;
+}
+
+function readLatch(root: string): Record<string, string[]> {
     try {
-        const state = JSON.parse(fs.readFileSync(latchFile(root), 'utf-8')) as Record<string, boolean>;
-        return state[session] === true;
+        const raw = JSON.parse(fs.readFileSync(latchFile(root), 'utf-8')) as Record<string, unknown>;
+        const out: Record<string, string[]> = {};
+        for (const [k, v] of Object.entries(raw)) {
+            // A pre-2.2 file stored `true` per session. Read it as "this session
+            // is done", which is what it meant — never as an empty list, which
+            // would hand an upgraded session a fresh budget it already spent.
+            if (Array.isArray(v)) out[k] = v.filter((x): x is string => typeof x === 'string');
+            else if (v === true) out[k] = Array.from({ length: MAX_CONTEXT_LINES_PER_SESSION }, (_, i) => `legacy:${String(i)}`);
+        }
+        return out;
     } catch {
-        return false;
+        return {};
     }
 }
-function latch(root: string, session: string): void {
+
+/**
+ * The cheap read-only half, so the `git status` probe behind `graphState` runs
+ * only for a call that could still produce a line (Risk-Register rank 3).
+ *
+ * Advisory only — {@link latchTarget} re-reads and remains the authority. A
+ * disagreement between the two can only come from a concurrent write, and it
+ * resolves toward silence, which is the safe direction for a context line.
+ */
+export function wouldSpeak(root: string, session: string, target: string): boolean {
+    return speaksFor(readLatch(root)[session] ?? [], target);
+}
+
+/**
+ * Decide and record in one step, because the two must not drift apart: a reader
+ * that says yes and a writer that records something else is how a cap leaks.
+ * Returns whether the caller may speak.
+ */
+export function latchTarget(root: string, session: string, target: string): boolean {
+    const state = readLatch(root);
+    const spoken = state[session] ?? [];
+    if (!speaksFor(spoken, target)) return false;
     try {
+        state[session] = [...spoken, target];
         const p = latchFile(root);
-        let state: Record<string, boolean> = {};
-        try {
-            state = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, boolean>;
-        } catch {
-            /* fresh */
-        }
-        state[session] = true;
         fs.mkdirSync(path.dirname(p), { recursive: true });
         fs.writeFileSync(p, JSON.stringify(state));
     } catch {
         /* fail-open: a persistence failure must not break the tool call */
     }
+    return true;
 }
 
 /**
- * The three-state staleness token this hook reports.
+ * The four-state staleness token this hook reports.
  *
  * Re-exported, not defined here: Phase 3's verbs must print the same token, and
  * an engine module importing this hook to learn it would invert the dependency
@@ -139,6 +264,13 @@ export function contextLine(state: GraphState): string {
             'grep is the other path — say which one answered.'
         );
     }
+    if (state === 'edited') {
+        return (
+            'code-graph: level with HEAD, but indexed files are edited in the working tree. ' +
+            'Relationship answers miss anything written since the last build — ' +
+            '`agent-config code-graph refresh` picks the edits up, or use grep and say so.'
+        );
+    }
     const n = state.slice('behind:'.length);
     return (
         `code-graph: ${n} commit(s) behind. Relationship answers may miss anything newer — ` +
@@ -160,11 +292,14 @@ export function main(): number {
     const pr = envelope['workspace_root'] ?? envelope['project_root'];
     const root = typeof cwd === 'string' && cwd ? cwd : typeof pr === 'string' && pr ? pr : '.';
 
-    const { isSearch, isCodeRead } = classifyTool(envelope);
+    const { isSearch, isCodeRead, target } = classifyTool(envelope);
     if (!isSearch && !isCodeRead) return EXIT_ALLOW;
 
     const session = sessionId(envelope);
-    if (alreadySpoke(root, session)) return EXIT_ALLOW; // once per session
+    // Once per distinct target, at most five per session (2.2). Checked BEFORE
+    // `graphState`, because that call now runs a `git status` probe and a line
+    // this session will not emit must not pay for one.
+    if (!wouldSpeak(root, session, target)) return EXIT_ALLOW;
 
     let state: GraphState;
     try {
@@ -176,7 +311,7 @@ export function main(): number {
     // so a session that builds a graph mid-flight still gets the line once.
     if (state === 'absent') return EXIT_ALLOW;
 
-    latch(root, session);
+    if (!latchTarget(root, session, target)) return EXIT_ALLOW;
     process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: contextLine(state) })}\n`);
     return EXIT_WARN;
 }

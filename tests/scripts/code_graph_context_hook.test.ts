@@ -9,17 +9,31 @@
  * reaches a verified host as structured `additionalContext` rather than as a
  * bare exit-2 echo.
  */
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { classifyTool, contextLine, graphState } from '../../src/scripts/hooks/code_graph_context_hook.js';
+import {
+    bashSearchToken,
+    classifyTool,
+    contextLine,
+    graphState,
+    latchTarget,
+    MAX_CONTEXT_LINES_PER_SESSION,
+    speaksFor,
+    wouldSpeak,
+} from '../../src/scripts/hooks/code_graph_context_hook.js';
 import { emitFor } from '../../src/scripts/hooks/host_semantics.js';
 
 function tmpRoot(): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'cg-context-'));
+}
+
+function runGit(root: string, args: readonly string[]): void {
+    execFileSync('git', ['-C', root, ...args], { stdio: ['ignore', 'ignore', 'ignore'] });
 }
 
 const MINIMAL_GRAPH = JSON.stringify({
@@ -37,6 +51,27 @@ function writeNativeCache(root: string): void {
     const p = path.join(root, 'agents', 'runtime', 'state', 'code-graph-v1.json');
     fs.mkdirSync(path.dirname(p), { recursive: true });
     fs.writeFileSync(p, MINIMAL_GRAPH);
+}
+
+/**
+ * A real repository with one committed indexed file and a native cache.
+ *
+ * A real one, not a tmpdir: step 2.3's state is read out of `git status`, so a
+ * fixture without git metadata could only assert the fallback. The cache is
+ * written AFTER the commit so its mtime is newer and the source reads
+ * un-stale — `edited` is then the whole difference the probe contributes.
+ */
+function gitRepoWithGraph(): string {
+    const root = tmpRoot();
+    runGit(root, ['init', '-q', '-b', 'main']);
+    runGit(root, ['config', 'user.email', 'fixture@example.com']);
+    runGit(root, ['config', 'user.name', 'fixture']);
+    fs.writeFileSync(path.join(root, 'a.php'), '<?php function a() {}\n');
+    fs.writeFileSync(path.join(root, 'README.md'), 'readme\n');
+    runGit(root, ['add', '-A']);
+    runGit(root, ['commit', '-q', '-m', 'fixture']);
+    writeNativeCache(root);
+    return root;
 }
 
 describe('classifyTool — eligibility', () => {
@@ -60,7 +95,7 @@ describe('classifyTool — eligibility', () => {
     });
 });
 
-describe('graphState — the three states', () => {
+describe('graphState — absent and fresh', () => {
     it('is absent with no graph anywhere', () => {
         expect(graphState(tmpRoot())).toBe('absent');
     });
@@ -140,5 +175,135 @@ describe('the envelope a verified host receives', () => {
         const emission = emitFor('windsurf', 'pre_tool_use', 'warn', [contextLine('fresh')], 2);
         expect(emission.stdout).toBe('');
         expect(emission.exit).toBe(2);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// road-to-a-graph-that-feeds-the-gate — Phase 2
+// ---------------------------------------------------------------------------
+
+describe('bashSearchToken — step 2.1, the search inside a shell command', () => {
+    it('reads the term out of each recognised head', () => {
+        expect(bashSearchToken('grep -rn "classifyTool" src/')).toBe('classifyTool');
+        expect(bashSearchToken('rg classifyTool')).toBe('classifyTool');
+        expect(bashSearchToken('ag --nocolor needle')).toBe('needle');
+        expect(bashSearchToken('find . -name "*.ts"')).toBe('.');
+        expect(bashSearchToken('git grep latchTarget')).toBe('latchTarget');
+        expect(bashSearchToken('/usr/bin/grep foo')).toBe('foo');
+    });
+
+    it('is null for every other command, so the hook stays silent and latches nothing', () => {
+        // Risk-Register rank 2: "every shell call is a candidate line" is what
+        // makes a consumer turn the hook off.
+        for (const cmd of ['ls -la', 'npm test', 'git log --oneline', 'node x.js', '']) {
+            expect(bashSearchToken(cmd)).toBeNull();
+        }
+    });
+
+    it('stops at a shell metacharacter rather than reading the next command', () => {
+        expect(bashSearchToken('grep -l | xargs sed')).toBe('grep');
+    });
+});
+
+describe('classifyTool — step 2.1 routes the shell tool, and every call names its target', () => {
+    it('treats a shell search as a search and keys it on the term', () => {
+        const t = classifyTool({ tool_name: 'Bash', tool_input: { command: 'rg contextLine src' } });
+        expect(t.isSearch).toBe(true);
+        expect(t.target).toBe('contextLine');
+    });
+
+    it('leaves a non-search shell call silent', () => {
+        const t = classifyTool({ tool_name: 'Bash', tool_input: { command: 'npm run build' } });
+        expect(t.isSearch).toBe(false);
+        expect(t.isCodeRead).toBe(false);
+        expect(t.target).toBe('');
+    });
+
+    it('keys Grep/Glob on the pattern and Read on the path', () => {
+        expect(classifyTool({ tool_name: 'Grep', tool_input: { pattern: 'abc' } }).target).toBe('abc');
+        expect(classifyTool({ tool_name: 'Glob', tool_input: { pattern: '**/*.ts' } }).target).toBe('**/*.ts');
+        expect(classifyTool({ tool_name: 'Read', tool_input: { file_path: 'src/a.ts' } }).target).toBe('src/a.ts');
+    });
+});
+
+describe('the latch — step 2.2, once per target and five per session', () => {
+    it('speaksFor: a repeat is silent at any count, a new target is silent at the cap', () => {
+        expect(speaksFor([], 'a')).toBe(true);
+        expect(speaksFor(['a'], 'a')).toBe(false);
+        expect(speaksFor(['a', 'b'], 'c')).toBe(true);
+        const full = ['a', 'b', 'c', 'd', 'e'];
+        expect(full.length).toBe(MAX_CONTEXT_LINES_PER_SESSION);
+        expect(full.every((t) => !speaksFor(full, t))).toBe(true);
+        expect(speaksFor(full, 'f')).toBe(false);
+    });
+
+    it('three distinct patterns yield three lines, the same pattern twice yields one, a sixth yields none', () => {
+        const root = tmpRoot();
+        const s = 'session-1';
+        expect(['p1', 'p2', 'p3'].map((p) => latchTarget(root, s, p))).toEqual([true, true, true]);
+        // The same pattern again is not a second line.
+        expect(latchTarget(root, s, 'p1')).toBe(false);
+        // Two more distinct patterns reach the cap; the sixth does not speak.
+        expect(latchTarget(root, s, 'p4')).toBe(true);
+        expect(latchTarget(root, s, 'p5')).toBe(true);
+        expect(latchTarget(root, s, 'p6')).toBe(false);
+    });
+
+    it('keeps sessions apart', () => {
+        const root = tmpRoot();
+        expect(latchTarget(root, 'a', 'p')).toBe(true);
+        expect(latchTarget(root, 'a', 'p')).toBe(false);
+        expect(latchTarget(root, 'b', 'p')).toBe(true);
+    });
+
+    it('reads a pre-2.2 boolean latch as a spent session, never as a fresh budget', () => {
+        const root = tmpRoot();
+        const p = path.join(root, 'agents', 'runtime', 'state', 'code-graph-context.json');
+        fs.mkdirSync(path.dirname(p), { recursive: true });
+        fs.writeFileSync(p, JSON.stringify({ old: true }));
+        expect(latchTarget(root, 'old', 'anything')).toBe(false);
+        expect(wouldSpeak(root, 'old', 'anything')).toBe(false);
+    });
+});
+
+describe('graphState — step 2.3, the fourth state sees the uncommitted edit', () => {
+    it('reads edited for a modified indexed file and fresh once it is restored', () => {
+        const root = gitRepoWithGraph();
+        const file = path.join(root, 'a.php');
+        expect(graphState(root)).toBe('fresh');
+
+        fs.writeFileSync(file, '<?php function b() {}\n');
+        expect(graphState(root)).toBe('edited');
+
+        // The REVERT is the half an mtime probe cannot do: restoring the file
+        // rewrites its mtime, so a staleness read off mtime would never return.
+        runGit(root, ['checkout', '--', 'a.php']);
+        expect(graphState(root)).toBe('fresh');
+    });
+
+    it('ignores a change to a file no extractor indexes', () => {
+        const root = gitRepoWithGraph();
+        fs.writeFileSync(path.join(root, 'README.md'), 'changed\n');
+        expect(graphState(root)).toBe('fresh');
+    });
+
+    it('counts an untracked source file, which is exactly what the index cannot know', () => {
+        const root = gitRepoWithGraph();
+        fs.writeFileSync(path.join(root, 'new.ts'), 'export const x = 1;\n');
+        expect(graphState(root)).toBe('edited');
+    });
+});
+
+describe('contextLine — the edited branch', () => {
+    it('names the state and the repair without claiming an ordering', () => {
+        const line = contextLine('edited');
+        expect(line).toContain('code-graph:');
+        expect(line).toContain('code-graph refresh');
+        const lower = line.toLowerCase();
+        expect(lower).not.toContain('graph-first');
+        expect(lower).not.toContain('instead of grep');
+        expect(lower).not.toContain('before grep');
+        expect(line).not.toContain('\n');
+        expect(line.length).toBeLessThanOrEqual(260);
     });
 });
