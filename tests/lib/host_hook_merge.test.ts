@@ -34,7 +34,7 @@ function ourCursorEntry(): Record<string, unknown> {
 }
 
 const CURSOR_LABEL = '.cursor/hooks.json';
-const CURSOR_SIG = HOOK_SIGNATURES[CURSOR_LABEL];
+const CURSOR_SIG = HOOK_SIGNATURES[CURSOR_LABEL] ?? '';
 
 describe('entryCommands — every shape this package reads', () => {
     it('reads the flat {command} shape (cursor, windsurf)', () => {
@@ -141,7 +141,8 @@ describe('install -> upgrade -> uninstall leaves the neighbour byte-identical', 
         // upgrade — the same writer runs again
         file = mergeHostConfig(file, patch(), CURSOR_SIG, deepMerge);
 
-        const afterInstall = (file['hooks'] as Record<string, unknown[]>)['beforeShellExecution'];
+        const afterInstall =
+            (file['hooks'] as Record<string, unknown[]>)['beforeShellExecution'] ?? [];
         expect(afterInstall).toHaveLength(2);
         expect(afterInstall.filter((e) => isManagedEntry(e, CURSOR_SIG))).toHaveLength(1);
         expect(JSON.stringify(afterInstall[0])).toBe(foreignBefore);

@@ -67,7 +67,7 @@ export function runCensus(
         gatedEvents: gatedEvents(packageRoot),
         templatesRoot: path.join(packageRoot, 'src', 'agent-src', 'templates'),
         ourSkillNames: ourSkillNames(packageRoot),
-        homeRoot,
+        ...(homeRoot === undefined ? {} : { homeRoot }),
     });
 }
 

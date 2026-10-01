@@ -146,13 +146,13 @@ describe('census over a planted consumer (2.1)', () => {
 
     it('reads a neighbour effect as unknown — no host exposes it', () => {
         const c = census(plantedConsumer(), { homeRoot: plantedHome() });
-        expect(c.hook_groups[0].effect).toBe('unknown');
+        expect(c.hook_groups[0]?.effect).toBe('unknown');
     });
 
     it('keeps the matcher and timeout, which are shape and not content', () => {
         const c = census(plantedConsumer(), { homeRoot: plantedHome() });
-        expect(c.hook_groups[0].timeout).toBe(30);
-        expect(c.hook_groups[0].event).toBe('beforeShellExecution');
+        expect(c.hook_groups[0]?.timeout).toBe(30);
+        expect(c.hook_groups[0]?.event).toBe('beforeShellExecution');
     });
 
     it('NEVER prints a planted argument anywhere in the census', () => {
@@ -206,13 +206,13 @@ describe('double-gate and shadowed (2.3)', () => {
     it('fires on an event this package gates', () => {
         const w = doubleGateWarnings([entry('PreToolUse', 'x')], new Set(['PreToolUse']));
         expect(w).toHaveLength(1);
-        expect(w[0].kind).toBe('double-gate');
+        expect(w[0]?.kind).toBe('double-gate');
     });
 
     it('says the host runs both, and never states an order the host has no concept of', () => {
         const w = doubleGateWarnings([entry('PreToolUse', 'x')], new Set(['PreToolUse']));
-        expect(w[0].detail).toContain('The host runs both; either deny applies.');
-        expect(w[0].detail).not.toMatch(/\bfirst\b|\blast\b|\bbefore\b|\bafter\b/);
+        expect(w[0]?.detail).toContain('The host runs both; either deny applies.');
+        expect(w[0]?.detail).not.toMatch(/\bfirst\b|\blast\b|\bbefore\b|\bafter\b/);
     });
 
     it('stays silent on an event where nothing of ours can refuse', () => {
@@ -312,7 +312,7 @@ describe('liveness (2.4)', () => {
         );
         const c = census(root, { homeRoot: plantedHome() });
         expect(c.warnings.filter((w) => w.kind === 'removed-after-install')).toHaveLength(1);
-        expect(c.hosts[0].label).toBe('uncontrolled');
+        expect(c.hosts[0]?.label).toBe('uncontrolled');
     });
 
     it('reports nothing of the kind while our group is still registered', () => {
@@ -326,7 +326,7 @@ describe('liveness (2.4)', () => {
         const c = census(root, { homeRoot: plantedHome() });
         const w = c.warnings.filter((x) => x.kind === 'settings-takeover');
         expect(w).toHaveLength(1);
-        expect(w[0].detail).toContain('`model`');
+        expect(w[0]?.detail).toContain('`model`');
     });
 
     it('reports a host environment key, which changes the harness our hooks run in', () => {
@@ -339,8 +339,8 @@ describe('liveness (2.4)', () => {
         const c = census(root, { homeRoot: plantedHome() });
         const w = c.warnings.filter((x) => x.kind === 'settings-takeover');
         expect(w).toHaveLength(1);
-        expect(w[0].detail).toContain('CLAUDE_CODE_SOMETHING');
-        expect(w[0].detail).not.toContain('UNRELATED');
+        expect(w[0]?.detail).toContain('CLAUDE_CODE_SOMETHING');
+        expect(w[0]?.detail).not.toContain('UNRELATED');
     });
 
     it('reports nothing for a settings file that sets neither', () => {

@@ -319,12 +319,12 @@ describe("effect: — the census's field (Phase 2.2)", () => {
     };
     const names = Object.keys(manifest.concerns);
     expect(names.length).toBe(62);
-    const missing = names.filter((n) => !CONCERN_EFFECTS.has(String(manifest.concerns[n].effect)));
+    const missing = names.filter((n) => !CONCERN_EFFECTS.has(String(manifest.concerns[n]?.effect)));
     expect(missing).toStrictEqual([]);
     const mismatched = names.filter(
       (n) =>
-        (manifest.concerns[n].severity === "blocking") !==
-        (manifest.concerns[n].effect === "permission"),
+        (manifest.concerns[n]?.severity === "blocking") !==
+        (manifest.concerns[n]?.effect === "permission"),
     );
     expect(mismatched).toStrictEqual([]);
   });

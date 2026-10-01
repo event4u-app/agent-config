@@ -472,8 +472,8 @@ describe("signature-scoped array ownership (Phase 1.2)", () => {
 
   it("still records a whole-list hash for a writer with no signature", () => {
     const entries = build_merge_entries("some-other-file.json", { k: [1, 2] });
-    expect(entries[0].entry_signature).toBeUndefined();
-    expect(entries[0].value_hash).not.toBeNull();
+    expect(entries[0]?.entry_signature).toBeUndefined();
+    expect(entries[0]?.value_hash).not.toBeNull();
   });
 
   it("leaves a non-hook array in the SAME overlay owned outright", () => {
@@ -492,10 +492,10 @@ describe("signature-scoped array ownership (Phase 1.2)", () => {
     const overlay = { hooks: { PostToolUse: [OURS] } };
     const owned = build_merge_entries("not-a-hook-writer.json", overlay);
     const shared = build_merge_entries(LABEL, overlay);
-    expect(owned[0].value_hash).not.toBeNull();
-    expect(owned[0].entry_signature).toBeUndefined();
-    expect(shared[0].value_hash).toBeNull();
-    expect(shared[0].entry_signature).toBe("dispatch:hook --platform cursor");
+    expect(owned[0]?.value_hash).not.toBeNull();
+    expect(owned[0]?.entry_signature).toBeUndefined();
+    expect(shared[0]?.value_hash).toBeNull();
+    expect(shared[0]?.entry_signature).toBe("dispatch:hook --platform cursor");
   });
 
   it("foreign array entry survives uninstall", () => {

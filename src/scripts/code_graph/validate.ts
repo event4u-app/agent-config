@@ -19,8 +19,10 @@ const RESOLVED_VIA = new Set([
     'test-import',
     'name-lookup',
     'dynamic',
+    // Adapted from a consumer's own graph file; see `foreign.ts`.
+    'foreign',
 ]);
-const PROVIDERS = new Set(['native']);
+const PROVIDERS = new Set(['native', 'foreign']);
 const KINDS = new Set([
     'file',
     'class',

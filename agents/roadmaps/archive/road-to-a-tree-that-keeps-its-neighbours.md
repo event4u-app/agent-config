@@ -122,7 +122,7 @@ neighbour's effect visible; it cannot make it run after ours.
 
 ## Phase 3 — A foreign graph that detects also loads, and never gates
 
-- [ ] **3.1 A load adapter for the `links` shape in `query.ts` `loadGraph`.** Map
+- [x] **3.1 A load adapter for the `links` shape in `query.ts` `loadGraph`.** Map
       `links[]`/`edges[]` with `source`/`target`/`relation` to edges with
       `resolved_via: 'foreign'`; add `'foreign'` to `ResolvedVia` and to `GUESS_RESOLVED_VIA`
       (`code_graph/types.ts:61,99-102`) so the accepted-edge filter treats it as a guess; an
@@ -130,11 +130,11 @@ neighbour's effect visible; it cannot make it run after ours.
       are synthesised. `corrected-from-reproduction` — the filter is a denylist, so a new
       value would otherwise be accepted.
       verify: fixture — a 20-node `links` graph loads and `query` answers with a `resolved_via` histogram
-- [ ] **3.2 Consumer-declared index paths, no vendor constants.** A Class A project setting
+- [x] **3.2 Consumer-declared index paths, no vendor constants.** A Class A project setting
       `code_graph.consumer_index_paths: []` extends `CONSUMER_CANDIDATES` (`detect.ts:34`);
       the default list stays generic.
       verify: `./scripts-run src/scripts/check_no_external_sources` -> 0 with no finding under `src/scripts/code_graph/`
-- [ ] **3.3 Gate verbs refuse an all-foreign graph and say so.** `dead` already has a
+- [x] **3.3 Gate verbs refuse an all-foreign graph and say so.** `dead` already has a
       refusal shape (`verbs.ts:405,456`); `impact --diff` and `untested` gain the same shape
       with `reason: foreign-edges-not-accepted`.
       verify: fixture — `untested --diff` on the foreign graph -> /foreign-edges-not-accepted/

@@ -17,6 +17,7 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+import { load_agent_settings } from '../_lib/agent_settings.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
 import { validateGraph } from './validate.js';
 
@@ -32,6 +33,44 @@ export interface SourceVerdict {
 }
 
 const CONSUMER_CANDIDATES = ['graph.json', 'code-graph.json', '.code-graph/graph.json'];
+
+/**
+ * Extra graph paths the CONSUMER declares, from `code_graph.consumer_index_paths`.
+ *
+ * The default list above stays generic on purpose — three filenames, none of
+ * them any particular tool's. A tool that writes its index somewhere else is
+ * reachable by the consumer naming the path, never by this package shipping a
+ * table of vendor locations: such a table is wrong the day a tool moves its
+ * file and wrong forever about one nobody thought of, and
+ * `check_no_external_sources` would fail the build for carrying it.
+ *
+ * Absolute paths and anything escaping the project root are dropped. A setting
+ * that could point the walk at `/etc` would be a path-traversal surface in a
+ * read a consumer did not ask for.
+ */
+export function consumerCandidates(root: string): string[] {
+    let declared: unknown;
+    try {
+        const settings = load_agent_settings({ cwd: root }) ?? {};
+        const section = (settings as Record<string, unknown>)['code_graph'];
+        declared =
+            section !== null && typeof section === 'object' && !Array.isArray(section)
+                ? (section as Record<string, unknown>)['consumer_index_paths']
+                : undefined;
+    } catch {
+        declared = undefined;
+    }
+    const extra = Array.isArray(declared)
+        ? declared.filter(
+              (p): p is string =>
+                  typeof p === 'string' &&
+                  p !== '' &&
+                  !path.isAbsolute(p) &&
+                  !path.normalize(p).startsWith('..'),
+          )
+        : [];
+    return [...CONSUMER_CANDIDATES, ...extra.filter((p) => !CONSUMER_CANDIDATES.includes(p))];
+}
 
 function gitLastCommitEpoch(root: string): number | null {
     try {
@@ -100,7 +139,7 @@ export function detectSources(root: string, nativeCache: string): SourceVerdict[
     const abs = path.resolve(root);
     const out: SourceVerdict[] = [];
 
-    for (const rel of CONSUMER_CANDIDATES) {
+    for (const rel of consumerCandidates(abs)) {
         const p = path.join(abs, rel);
         if (fs.existsSync(p)) {
             const { ok, sha } = looksLikeGraph(p);

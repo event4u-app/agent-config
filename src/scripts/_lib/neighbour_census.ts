@@ -291,12 +291,13 @@ export function foreignSections(file: string, templateFile: string, origin: stri
     }
     const out: NeighbourEntry[] = [];
     const lines = body.split('\n');
+    const isHeading = (n: number): boolean => /^#{1,2} /.test(lines[n] ?? '');
     for (let i = 0; i < lines.length; i += 1) {
-        if (!/^#{1,2} /.test(lines[i])) continue;
-        const heading = lines[i].replace(/^#{1,2} /, '').trim();
+        if (!isHeading(i)) continue;
+        const heading = (lines[i] ?? '').replace(/^#{1,2} /, '').trim();
         if (ours.has(heading)) continue;
         let j = i + 1;
-        while (j < lines.length && !/^#{1,2} /.test(lines[j])) j += 1;
+        while (j < lines.length && !isHeading(j)) j += 1;
         out.push({
             id: `${origin}:${heading}`,
             shape: 'instruction_section',
