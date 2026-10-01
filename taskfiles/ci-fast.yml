@@ -1458,6 +1458,55 @@ tasks:
       bootstrap.
     cmd: ./scripts-run src/scripts/check_estate_count
 
+  check-verify-expectation-delta:
+    silent: true
+    desc: |
+      A `verify:` clause this change ADDS names what its command must produce.
+      The `-> 0` / `-> /regex/` grammar already shipped and nothing asked anyone
+      to use it: over the active estate, 99 clauses name a command and 34 name
+      an expectation, all 34 authored in one round.
+
+      Diff-scoped, which is not a weaker estate gate. Gating the estate would
+      red every clause nobody wrote today, and a gate arriving red on most of
+      its corpus is a backlog with an exit code. Prose clauses stay legal by
+      design, and a single-token backticked FILE PATH is a pointer rather than
+      a command — measured at 8 of 49 bare clauses, not assumed.
+
+      Reproduce the false-positive cost rather than trusting a number here:
+          ./scripts-run src/scripts/check_verify_expectation_delta --replay 30
+
+      Exit-code contract: 0 pass, 1 a bare clause was added, **2 blocks as
+      well** — same divergence, same reason, as check-estate-count beside it.
+      Exit 2 means the diff could not be read, and a diff-scoped gate with no
+      diff passes every possible tree.
+    cmd: ./scripts-run src/scripts/check_verify_expectation_delta
+
+  check-verify-expectation-delta-self-test:
+    silent: true
+    desc: |
+      The new gate's own negative control, which is what its gate-coverage row
+      points at INSTEAD of a planted canary: this gate's violation is a property
+      of the DIFF, so a file planted in the tree is either a true positive or,
+      once committed, invisible. 9 cases, 3 rejecting.
+    cmd: ./scripts-run src/scripts/check_verify_expectation_delta --self-test
+
+  check-held-object-arrivals:
+    silent: true
+    desc: |
+      A held object (a stub or a parked roadmap) cited inside a LIVE roadmap's
+      blocker carries an arrival count. The citation is the estate saying "this
+      held thing is in the way of work we are doing now", which is the subject
+      arriving a second time; without the number the next round meets a fresh
+      argument instead of a count and re-derives the same conclusion.
+
+      ADVISORY by the check's own default — it exits 0 on every firing and only
+      `--enforce` turns a firing into a failure. It had NO caller anywhere before
+      this entry, so an advisory check was reporting to nobody. Promotion to
+      `--enforce` is a one-word edit after a green run on main; it is held back
+      because the reading has live objects firing on the day it lands, and a gate
+      that arrives red is a backlog rather than a control.
+    cmd: ./scripts-run src/scripts/check_held_object_arrivals
+
   lint-plan-risk-register:
     silent: true
     desc: |
