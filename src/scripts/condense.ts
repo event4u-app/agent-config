@@ -1224,19 +1224,39 @@ export function generate_rule_symlinks(): number {
     return total;
 }
 
+/**
+ * The exact bytes `generate_windsurfrules` writes, for a given rule set.
+ *
+ * SPLIT OUT OF THE WRITER, not reimplemented beside it, and the distinction is
+ * the whole reason this function exists.
+ * `road-to-a-hook-bundle-with-one-yaml-reader` 3.1: the standing-payload census
+ * reported windsurf's figure by reading `.windsurfrules` off disk — an untracked
+ * generated file, so the number it published was a property of when that
+ * checkout last ran `task generate-tools`, not of the tree. The census now calls
+ * this function instead. A second renderer living in the census would have
+ * measured a file nobody receives, which is Risk 3 of that roadmap; there is one
+ * renderer and both callers use it.
+ *
+ * `rulesSource` is a parameter rather than `MODULE_STATE.RULES_SOURCE` so a
+ * caller can render a tree it names — the census renders the projection source
+ * directly, with no module state to set up.
+ */
+export function render_windsurfrules(rulesSource: string, rules: readonly string[]): string {
+    const parts = ['# Auto-generated from dist/agent-src/rules/ — do not edit directly\n'];
+    for (const rule of rules) {
+        const content = strip_frontmatter(_readText(path.join(rulesSource, rule)));
+        parts.push(`---\n\n${_strip(content)}\n`);
+    }
+    return parts.join('\n') + '\n';
+}
+
 export function generate_windsurfrules(): number {
     // Windsurf's LEGACY single-file surface — same host, so the same evidence, keyed
     // on `.windsurf/rules`. Without this line removing the per-run filter regressed
     // it 13 → 113: the per-run filter had been covering it by accident.
     const rules = partition_rules_for_dir('.windsurf/rules', _scoped_rule_basenames());
-    const parts = ['# Auto-generated from dist/agent-src/rules/ — do not edit directly\n'];
-    for (const rule of rules) {
-        const p = path.join(MODULE_STATE.RULES_SOURCE, rule);
-        const content = strip_frontmatter(_readText(p));
-        parts.push(`---\n\n${_strip(content)}\n`);
-    }
     const output = path.join(MODULE_STATE.PROJECT_ROOT, '.windsurfrules');
-    _writeText(output, parts.join('\n') + '\n');
+    _writeText(output, render_windsurfrules(MODULE_STATE.RULES_SOURCE, rules));
     info(`  ✅  Generated .windsurfrules (${rules.length} rules)`);
     return rules.length;
 }
