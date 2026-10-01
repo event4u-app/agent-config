@@ -1,4 +1,4 @@
-<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-01 -->
+<!-- evidence-type: analysis -->
 
 # Test-quality validation — the forge-read suites
 
