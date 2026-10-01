@@ -43,6 +43,7 @@
  *     ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus routing-matrix
  *     ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus all
  *     ./scripts-run src/scripts/measure_skill_ranker_baseline --ranker keyword-v2
+ *     ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus routing-matrix --slice sealed
  */
 
 import * as fs from 'node:fs';
@@ -50,6 +51,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { wilsonInterval } from './_lib/capture_rate.js';
+import { fnv1a } from './_lib/fnv.js';
 import { rank } from './skill_tools/score_skill_relevance.js';
 import type { RankOptions } from '../shared/skillRanking.js';
 
@@ -205,6 +207,67 @@ export function promptsForCorpus(corpus: CorpusName, repo = REPO): LabelledPromp
 }
 
 /**
+ * Which half of the corpus a row belongs to.
+ *
+ * `road-to-a-ranker-that-routes` 1.2. Tuning and reading on one corpus of 390
+ * overfits it: a signal chosen because it lifted the number on the rows it was
+ * chosen from will lift the number on exactly those rows, and the interval
+ * printed beside it then describes the fitting rather than the ranker. Every
+ * lift claim in Phases 2 and 3 is read on `sealed` only.
+ */
+export type SliceName = 'all' | 'tuning' | 'sealed';
+export const SLICE_NAMES: readonly SliceName[] = ['all', 'tuning', 'sealed'];
+
+/**
+ * One row in twenty-five-and-a-bit — i.e. 20 % — goes to the sealed slice.
+ *
+ * Stated as a modulus rather than a fraction because the partition has to be a
+ * pure function of the id: a share applied to a shuffled list would move every
+ * row the moment a prompt is added, and the sealed slice would stop being the
+ * same slice between two runs of the same measurement.
+ */
+export const SEALED_MODULUS = 5;
+
+/**
+ * The slice one case id falls in — deterministic, order-independent, stable
+ * under corpus growth.
+ *
+ * Keyed on the id and nothing else. Keying on the prompt text would move a row
+ * across the boundary when a typo is fixed; keying on position would move every
+ * row behind an insertion. The id is the one coordinate that survives both.
+ */
+export function sliceForId(id: string): Exclude<SliceName, 'all'> {
+    return fnv1a(id) % SEALED_MODULUS === 0 ? 'sealed' : 'tuning';
+}
+
+/** The rows of `prompts` that fall in `slice`; `all` is the identity. */
+export function partitionBySlice<T extends { id: string }>(
+    prompts: readonly T[],
+    slice: SliceName,
+): T[] {
+    if (slice === 'all') return [...prompts];
+    return prompts.filter((p) => sliceForId(p.id) === slice);
+}
+
+/** How the corpus divides, printed on every run so a reader never assumes it. */
+export interface SliceSizes {
+    all: number;
+    tuning: number;
+    sealed: number;
+    sealed_modulus: number;
+}
+
+export function sliceSizes(prompts: readonly { id: string }[]): SliceSizes {
+    const sealed = prompts.filter((p) => sliceForId(p.id) === 'sealed').length;
+    return {
+        all: prompts.length,
+        tuning: prompts.length - sealed,
+        sealed,
+        sealed_modulus: SEALED_MODULUS,
+    };
+}
+
+/**
  * The packs a skill declares, read from its own `packs:` frontmatter block.
  *
  * Line-oriented, and deliberately NOT read from `src/packs/*\/pack.yaml`: those
@@ -278,6 +341,10 @@ export interface Interval {
 
 export interface AccuracyArm {
     corpus: CorpusName;
+    /** Which half of the corpus this arm read. `all` is the whole of it. */
+    slice: SliceName;
+    /** The division of the FULL corpus, printed whichever slice was read. */
+    slice_sizes: SliceSizes;
     corpus_prompts: number;
     top1: number;
     top1_ci95: Interval;
@@ -350,8 +417,11 @@ export function measureAccuracy(opts: {
     repo: string;
     skillsDir: string;
     rankOpts: RankOptions;
+    slice?: SliceName;
 }): AccuracyArm {
-    const labelled = promptsForCorpus(opts.corpus, opts.repo);
+    const slice = opts.slice ?? 'all';
+    const whole = promptsForCorpus(opts.corpus, opts.repo);
+    const labelled = partitionBySlice(whole, slice);
     let top1 = 0;
     let top3 = 0;
     const misses: string[] = [];
@@ -365,6 +435,8 @@ export function measureAccuracy(opts: {
     const census = packCensus(labelled, opts.skillsDir);
     return {
         corpus: opts.corpus,
+        slice,
+        slice_sizes: sliceSizes(whole),
         corpus_prompts: n,
         top1: n ? round3(top1 / n) : 0,
         top1_ci95: ci(top1, n),
@@ -381,10 +453,37 @@ export function measureAccuracy(opts: {
     };
 }
 
+/**
+ * The ranker label → the options it means.
+ *
+ * One table rather than a conditional at each call site, because a measurement
+ * harness that resolves `--ranker` differently from the report that quotes it
+ * is a comparison of two things under one name. Every entry past `keyword-v1`
+ * is a candidate configuration under `road-to-a-ranker-that-routes` Phase 2,
+ * each a single flag so it can be measured alone, plus the combinations the
+ * same phase names. A label this table does not know measures `keyword-v1` —
+ * the baseline — rather than throwing, because the two callers that resolve a
+ * label are a report and a bench and neither should die on a typo while the
+ * other reports a figure.
+ */
+export const RANKER_LABELS: Readonly<Record<string, RankOptions>> = {
+    'keyword-v1': {},
+    'keyword-v2': { includeTriggers: true },
+    'when-to-use': { includeWhenToUse: true },
+    headings: { includeHeadings: true },
+    idf: { idfWeighting: true },
+    'idf+when-to-use': { idfWeighting: true, includeWhenToUse: true },
+};
+
+export function rankOptionsFor(ranker: string): RankOptions {
+    return RANKER_LABELS[ranker] ?? {};
+}
+
 export function measure(opts: {
     ranker: string;
     commit: string;
     corpus?: CorpusName;
+    slice?: SliceName;
     skillsDir?: string;
     repo?: string;
 }): RankerBaseline {
@@ -392,9 +491,9 @@ export function measure(opts: {
     const skillsDir = opts.skillsDir ?? SKILLS_DIR;
     // `keyword-v2` is Phase 3.1: the same formula with `triggers:` prose folded
     // into each skill's term source. Any other label measures v1.
-    const rankOpts: RankOptions = opts.ranker === 'keyword-v2' ? { includeTriggers: true } : {};
+    const rankOpts: RankOptions = rankOptionsFor(opts.ranker);
     const corpus = opts.corpus ?? 'labelled';
-    const accuracy = measureAccuracy({ corpus, repo, skillsDir, rankOpts });
+    const accuracy = measureAccuracy({ corpus, repo, skillsDir, rankOpts, slice: opts.slice });
 
     const cases = readMatrixCases(repo);
     let withResult = 0;
@@ -446,17 +545,31 @@ function parseCorpus(argv: readonly string[]): CorpusName {
     return raw as CorpusName;
 }
 
+export function parseSlice(argv: readonly string[]): SliceName {
+    const i = argv.indexOf('--slice');
+    if (i === -1) return 'all';
+    const raw = argv[i + 1];
+    if (!raw || !SLICE_NAMES.includes(raw as SliceName)) {
+        throw new Error(
+            `measure_skill_ranker_baseline: --slice expects one of ${SLICE_NAMES.join(' | ')}, got ${raw ?? '(nothing)'}`,
+        );
+    }
+    return raw as SliceName;
+}
+
 export function main(argv: readonly string[]): number {
     const ranker = argv.includes('--ranker') ? (argv[argv.indexOf('--ranker') + 1] ?? 'keyword-v1') : 'keyword-v1';
     const commit = argv.includes('--commit') ? (argv[argv.indexOf('--commit') + 1] ?? 'unknown') : 'unknown';
     let corpus: CorpusName;
+    let slice: SliceName;
     try {
         corpus = parseCorpus(argv);
+        slice = parseSlice(argv);
     } catch (err) {
         process.stderr.write(`${(err as Error).message}\n`);
         return 2;
     }
-    const out = measure({ ranker, commit, corpus });
+    const out = measure({ ranker, commit, corpus, slice });
     process.stdout.write(`${JSON.stringify(out, null, 2)}\n`);
     return 0;
 }

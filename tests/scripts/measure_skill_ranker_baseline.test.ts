@@ -28,15 +28,20 @@ import { parse as parseYaml } from 'yaml';
 import {
     MIN_POWERED_N,
     MIN_PROMPTS_PER_PACK,
+    SEALED_MODULUS,
+    type SliceName,
     allPacks,
     main,
     measureAccuracy,
     packCensus,
     packsBelow,
     packsForSkill,
+    partitionBySlice,
     readMatrixCases,
     readMatrixLabelledPrompts,
     readMatrixPrompts,
+    sliceForId,
+    sliceSizes,
 } from '../../src/scripts/measure_skill_ranker_baseline';
 
 const REPO = path.resolve(__dirname, '..', '..');
@@ -327,5 +332,115 @@ describe('the live routing matrix carries its labels', () => {
             for (const s of p.expected) if (!known.has(s)) unknown.add(s);
         }
         expect([...unknown].sort(), 'expected_skills naming no shipped skill').toEqual([]);
+    });
+});
+
+// The held-out partition (road-to-a-ranker-that-routes 1.2). Every property
+// below is about the SEAL, not about the split ratio: a partition that is not
+// deterministic, not disjoint, or not stable under corpus growth cannot carry a
+// lift claim, because the slice a number was read on would not be the slice a
+// later reader reproduces.
+describe('holdout — the sealed slice is a function of the id and nothing else', () => {
+    const ids = Array.from({ length: 2000 }, (_, i) => `rule-${String(i % 97)}#positives[${String(i)}]`);
+
+    it('is deterministic — the same id lands in the same slice every call', () => {
+        for (const id of ids.slice(0, 200)) expect(sliceForId(id)).toBe(sliceForId(id));
+    });
+
+    it('assigns every id to exactly one of the two slices', () => {
+        expect(new Set(ids.map(sliceForId))).toEqual(new Set(['tuning', 'sealed']));
+    });
+
+    it('partitions disjointly and exhaustively, and `all` is the identity', () => {
+        const rows = ids.map((id) => ({ id }));
+        const tuning = partitionBySlice(rows, 'tuning');
+        const sealed = partitionBySlice(rows, 'sealed');
+        expect(tuning.length + sealed.length).toBe(rows.length);
+        expect(partitionBySlice(rows, 'all')).toHaveLength(rows.length);
+        const inSealed = new Set(sealed.map((r) => r.id));
+        expect(
+            tuning.some((r) => inSealed.has(r.id)),
+            'a row in both slices',
+        ).toBe(false);
+    });
+
+    it('is independent of the order the rows arrive in', () => {
+        const rows = ids.map((id) => ({ id }));
+        const forward = partitionBySlice(rows, 'sealed')
+            .map((r) => r.id)
+            .sort();
+        const backward = partitionBySlice([...rows].reverse(), 'sealed')
+            .map((r) => r.id)
+            .sort();
+        expect(backward).toEqual(forward);
+    });
+
+    it('keeps a row on its own side of the seal when the corpus grows', () => {
+        // The defect this refuses: a share applied to a shuffled list would move
+        // rows across the boundary the moment a prompt is added, so a sealed
+        // reading would silently stop being held out from the earlier tuning.
+        const before = new Set(
+            partitionBySlice(
+                ids.slice(0, 1000).map((id) => ({ id })),
+                'sealed',
+            ).map((r) => r.id),
+        );
+        const after = new Set(
+            partitionBySlice(
+                ids.map((id) => ({ id })),
+                'sealed',
+            ).map((r) => r.id),
+        );
+        for (const id of before) expect(after.has(id), `${id} changed slice`).toBe(true);
+    });
+
+    it(`holds roughly one row in ${String(SEALED_MODULUS)} back, measured rather than assumed`, () => {
+        // A floor and a ceiling, not a value: the hash is not a shuffle and the
+        // exact count is a property of the ids, so pinning it would make any new
+        // fixture a red test.
+        const share = ids.filter((id) => sliceForId(id) === 'sealed').length / ids.length;
+        expect(share).toBeGreaterThan(0.1);
+        expect(share).toBeLessThan(0.3);
+    });
+
+    it('reports the sizes of BOTH slices whichever one was read', () => {
+        const sizes = sliceSizes(ids.map((id) => ({ id })));
+        expect(sizes.all).toBe(ids.length);
+        expect(sizes.tuning + sizes.sealed).toBe(sizes.all);
+        expect(sizes.sealed_modulus).toBe(SEALED_MODULUS);
+    });
+
+    it('the CLI refuses an unknown slice rather than silently reading the whole corpus', () => {
+        expect(main(['--slice', 'the-good-half'])).toBe(2);
+        expect(main(['--slice'])).toBe(2);
+    });
+
+    it('a sliced arm names its slice and both sizes, over a fixture corpus', () => {
+        skill('docker', ['engineering-base'], 'Containers and images.');
+        const lines = ['rule: alpha', 'positives:'];
+        for (let i = 0; i < 200; i += 1) {
+            lines.push(`  - prompt: "containers and images question number ${String(i)}"`);
+            lines.push('    expected_skills: [docker]');
+        }
+        write('tests/eval/routing-matrix/alpha.yaml', `${lines.join('\n')}\n`);
+        const arm = (s: SliceName): ReturnType<typeof measureAccuracy> =>
+            measureAccuracy({
+                corpus: 'routing-matrix',
+                repo: root,
+                skillsDir: path.join(root, 'src', 'skills'),
+                rankOpts: {},
+                slice: s,
+            });
+        const whole = arm('all');
+        const tuning = arm('tuning');
+        const sealed = arm('sealed');
+        expect(whole.slice).toBe('all');
+        expect(tuning.slice).toBe('tuning');
+        expect(sealed.slice).toBe('sealed');
+        expect(tuning.corpus_prompts + sealed.corpus_prompts).toBe(whole.corpus_prompts);
+        // The sizes block describes the FULL corpus in every arm, so a reader of
+        // a sealed-only report can see what it was held out from.
+        expect(sealed.slice_sizes.all).toBe(whole.corpus_prompts);
+        expect(sealed.slice_sizes.sealed).toBe(sealed.corpus_prompts);
     });
 });
