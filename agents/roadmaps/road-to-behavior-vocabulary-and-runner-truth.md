@@ -711,7 +711,7 @@ neither spends the ratchet early nor loses the trigger.
 
 ### Residue carried out of the review rounds
 
-Twelve completion-review rounds produced 109 findings; 82 are fixed and 27
+Thirteen completion-review rounds produced 117 findings; 89 are fixed and 28
 are `accepted-risk`, each with a stated `revisit-if`. Nothing is `open`.
 
 **The dominant defect class was never the code.** Four highs across rounds 2–4
@@ -740,7 +740,27 @@ three rounds running. What remains open:
   here rather than inventing wrapper semantics for Ruby, JVM and .NET under a
   review round — which is how an unmeasured guess ships.
 
-**One disposition was reversed, and the reversal is the lesson.** Round 6
+**A FIX was reversed too, and that is the sharper version of the same
+lesson.** Round 11 found a .NET row emitted on a bare SDK pin, where
+`dotnet test` fails MSB1003; the fix looked below the root for a project and
+emitted a row when it found one, and round 11's neighbouring finding asked
+for HIGH on exactly that solution-less layout. Round 13 pointed out what
+neither had checked: **`dotnet test` is not recursive.** From a root with no
+project or solution in it, the command fails whatever sits below — so the
+"fix" still shipped an unrunnable command, and two new fixtures pinned the
+wrong answer by asserting only `confidence` and never runnability.
+
+The gate is now the root listing alone, and round 11's finding 9 is reversed
+rather than quietly kept: its premise was false and the contract table that
+promised it is corrected instead. The generalisation is uncomfortable and
+worth writing down: **a fix verified against the reviewer's framing inherits
+the reviewer's blind spot.** Both rounds reasoned about whether a project
+could be FOUND; neither asked whether the emitted command would RUN. The
+fixtures encoded the same question, so they went green on a command that
+could not work — a test asserting the property the author was already
+thinking about is the cheapest kind of false assurance.
+
+**A disposition was reversed earlier, in the same shape.** Round 6
 accepted the solution-text defect — `_dotnet_project_text` folding a `.sln`
 body into the buffer the package regexes match, so a project *named*
 `Billing.SpecFlow` raises a HIGH row — on the ground that "closing that needs
@@ -781,6 +801,19 @@ it names the measurement it waits on rather than an estimate.
   axis into its own leaf module. REVISIT-IF: that split happens, or a consumer
   reports the false root row (it is detection-only and unreachable from
   `selected`, so today it misleads a reader rather than running anything).
+
+- **The two published metric files moved on deliberately-failing corpus
+  rows, and neither records why.** Growing the trigger corpus by 16 queries
+  moved `recall_at_k` 64.141 -> 62.808 in the delivery-set record and the
+  matching figures in the routing-signal verdict — because only 1 of 10 new
+  positives is hit, which is exactly what the corpus's own `_eval_note`
+  predicts: those rows assert a routing condition this change deliberately
+  does not build. No verdict flipped. But a future reader diffing the numbers
+  without this diff reads a routing regression that is corpus seeding. Both
+  files are GENERATED and neither generator has a note field, so the link is
+  recorded here and in the regenerating commit rather than in the artifacts.
+  REVISIT-IF: either generator gains a provenance field, or a third consumer
+  starts reading these numbers without the surrounding change.
 
 - **One `readdirSync` per scope would replace the stats AND one listing.**
   Round 12 found the thing neither earlier cost bullet had: `latest_manifest_mtime`

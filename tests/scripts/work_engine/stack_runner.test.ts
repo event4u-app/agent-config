@@ -621,24 +621,23 @@ describe('stack/runner — rspec, junit, dotnet-test', () => {
         expect(labels(tmp)).not.toContain('dotnet-test');
     });
 
-    it('a marker plus a project below is MEDIUM — the marker names the basis', () => {
+    it('a marker plus a project only BELOW the root emits no row', () => {
+        // REPLACES two fixtures that pinned this layout into `selected`.
+        // R13 finding 1: `dotnet test` is NOT recursive — with no project or
+        // solution in the working directory it fails MSB1003 whatever sits
+        // below — so a row here is a command the repository cannot run. R11
+        // finding 9 asked for HIGH on exactly this layout; its premise was
+        // wrong, and the contract table that promised it is corrected rather
+        // than the code bent to match.
         write('global.json', '{"sdk":{"version":"8.0.100"}}');
         write('src/App/App.csproj', '<Project Sdk="Microsoft.NET.Sdk" />');
-        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'dotnet-test');
-        expect(found?.confidence).toBe(MEDIUM);
-        expect(found?.basis).toBe('global.json present, no test stack named');
+        expect(labels(tmp)).not.toContain('dotnet-test');
     });
 
-    it('HIGH is reachable with NO solution — the solution-less layout', () => {
-        // R11 finding 9: the descent was gated on a solution file, so the
-        // conventional `Directory.Build.props` + `src/<Name>/<Name>.csproj`
-        // layout could never read a project and was pinned at MEDIUM — while
-        // `dotnet test` supports it and the contract table promises HIGH for a
-        // project naming a test stack, with no solution qualifier.
+    it('a test stack only BELOW the root is still no row, not HIGH', () => {
         write('Directory.Build.props', '<Project />');
         write('src/App.Tests/App.Tests.csproj', '<Project><PackageReference Include="xunit" /></Project>');
-        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'dotnet-test');
-        expect(found?.confidence).toBe(HIGH);
+        expect(labels(tmp)).not.toContain('dotnet-test');
     });
 
     it('dotnet-test: the conventional sln + src/<Name>/<Name>.csproj layout is seen', () => {
@@ -646,6 +645,22 @@ describe('stack/runner — rspec, junit, dotnet-test', () => {
         write('src/App.Tests/App.Tests.csproj', '<Project><PackageReference Include="xunit" /></Project>');
         const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'dotnet-test');
         expect(found?.confidence).toBe(HIGH);
+    });
+
+    it('rspec without a Gemfile drops the `bundle exec` prefix', () => {
+        // R13 finding 2. `bundle exec` aborts with "Could not locate Gemfile",
+        // and the marker signals exist precisely for projects that have none,
+        // so the emitted command could not run for the case the signal is for.
+        write('.rspec', '--require spec_helper\n');
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'rspec');
+        expect(found?.command).toBe('rspec');
+        expect(found?.basis).toBe('.rspec present');
+    });
+
+    it('rspec WITH a Gemfile keeps it', () => {
+        write('Gemfile', "gem 'rspec'\n");
+        const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'rspec');
+        expect(found?.command).toBe('bundle exec rspec');
     });
 
     it('dotnet-test ABSENT: no project file and no .NET marker', () => {
@@ -1057,6 +1072,13 @@ describe('stack/runner — behaviour-runner axis', () => {
         write('src/T/T.csproj', '<Project Sdk="Microsoft.NET.Sdk" />');
         const found = resolve_toolchain(tmp).runners.find((r) => r.runner === 'dotnet-test');
         expect(found?.confidence).toBe(MEDIUM);
+    });
+
+    it('a CRLF pnpm-workspace.yaml is read, not silently dropped', () => {
+        // R13 finding 5: `.` never matches `\r`, so splitting on `\n` alone
+        // left a trailing `\r` that made the key regex match NOTHING — the
+        // whole workspace collapsed to the root scope with no error.
+        expect(_pnpm_packages("packages:\r\n  - 'pkg/*'\r\n")).toEqual(['pkg/*']);
     });
 
     it('a PEER dependency on cucumber is not ownership of a suite', () => {

@@ -31,16 +31,14 @@ tests in the framework the project actually uses, never a hard-coded one:
   **.NET** → `dotnet test`.
 
 **The resolver is the only stack authority, and `skills:` deliberately names
-none.** The frontmatter used to bind `pest-testing` unconditionally, so a
-React-only repository loaded PHP testing guidance before reading the sentence
-above telling it not to. No per-stack UNIT-test skill exists to bind instead
-— `ls src/skills | grep -iE 'jest|vitest|pytest|rspec|junit'` is empty — and a
-static list cannot express a per-repository answer, so the binding drops to the
-stack-neutral pair and the load becomes **resolver-conditional**: once step 1
-has named the runner, load the skill for THAT runner if one exists — today
-`pest-testing` for pest, `laravel` for `php artisan test`,
-`playwright-testing` for playwright. Unconditional became conditional; it did
-not become nothing.
+no single-stack skill.** Binding `pest-testing` unconditionally made a
+React-only repository load PHP testing guidance before it reached the sentence
+above telling it not to, and a static list cannot express a per-repository
+answer. So the frontmatter keeps only stack-neutral skills and the load is
+**resolver-conditional**: once step 1 has named the runner, load the skill for
+THAT runner if one exists — `pest-testing` for pest, `laravel` for
+`php artisan test`, `playwright-testing` for playwright. Unconditional became
+conditional; it did not become nothing.
 
 Then read the existing tests under the project's test directory to match
 the style and conventions already in use (assertion shape, naming, fixtures).

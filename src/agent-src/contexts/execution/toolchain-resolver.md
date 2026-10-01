@@ -76,25 +76,30 @@ mirrors the recoverable-error contract of the frontend `detect_stack`.
 | Python | `pytest` in pyproject / `pytest.ini` | pytest | `pytest` |
 | Go | `go.mod` present | go-test | `go test ./...` |
 | Rust | `Cargo.toml` present | cargo-test | `cargo test` |
-| Ruby | `rspec` gem in `Gemfile`/`gems.rb`, `.rspec`, `spec/spec_helper.rb` | rspec | `bundle exec rspec` |
+| Ruby | `rspec` gem in `Gemfile`/`gems.rb`, `.rspec`, `spec/spec_helper.rb` | rspec | `bundle exec rspec`, or bare `rspec` with no Gemfile |
 | JVM | `pom.xml`, `build.gradle[.kts]`, `settings.gradle[.kts]` | junit | `./mvnw`/`./gradlew test`, else `mvn`/`gradle test` |
-| .NET | `*.sln[x]`, `*.csproj`/`*.fsproj`/`*.vbproj`; `global.json` / `Directory.Build.props` only alongside a reachable project | dotnet-test | `dotnet test` |
+| .NET | `*.sln[x]` or `*.csproj`/`*.fsproj`/`*.vbproj` **in the scope root** | dotnet-test | `dotnet test` |
 
 Each Ruby signal stands alone, and Ruby has **no MEDIUM default** (minitest is
 in the stdlib): no signal, no row. JVM defaults to `junit` at MEDIUM when the
 build file names no runner. A wrapper wins where one exists, since it pins the
 build-tool version.
 
-**.NET, where the marker row is narrower than it looks.** HIGH needs a PROJECT
-file naming a test stack (`Microsoft.NET.Test.Sdk`, xunit, nunit, mstest);
-anything else reachable is MEDIUM. A marker alone — `global.json` or
-`Directory.Build.props` with no project file at the root and none within the
-scan depth below it — yields **no row at all**, not a MEDIUM one: an SDK pin
-is not a runnable target, and `dotnet test` fails MSB1003 where there is no
-project. Confidence does not gate `selected`, so a row emitted here would be
-a command a repository cannot run. The scan reaches the conventional
-`src/<Name>/<Name>.csproj` layout, so a solution file is not required for
-either tier.
+**.NET needs a target in the scope ROOT, because `dotnet test` is not
+recursive.** With no project or solution in the working directory it fails
+MSB1003, whatever sits below — so the row is gated on the root listing, and
+`global.json` / `Directory.Build.props` never produce one on their own. They
+are SDK pins, not targets, and confidence does not gate `selected`
+(`_apply_guard` has never read it), so a row emitted on one would be a
+command the repository cannot run.
+
+Given a root target: HIGH when a PROJECT file names a test stack
+(`Microsoft.NET.Test.Sdk`, xunit, nunit, mstest), MEDIUM otherwise. A root
+`.sln` IS a valid target even though its own body names no package, so the
+projects it references are read to decide the tier — which is the one case
+the scan descends for. A `src/<Name>/<Name>.csproj` layout with NO root
+solution therefore emits nothing: correct, because `dotnet test` from that
+root does not run either.
 
 **Task-runner wrappers win.** When the project root has a `Makefile`
 `test:` target, a `Taskfile.yml` `test:` task, or a `package.json`

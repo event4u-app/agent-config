@@ -631,7 +631,12 @@ function _ruby_runners(root: string, gemfile: { text: string; file: string }): R
         : dot_rspec
           ? '.rspec present'
           : 'spec/spec_helper.rb present';
-    return [new RunnerResult('ruby', 'rspec', 'bundle exec rspec', SPEED_FAST, HIGH, basis)];
+    // `bundle exec` ABORTS without a Gemfile ("Could not locate Gemfile"), and
+    // the marker signals exist precisely for projects that have none — so the
+    // prefix is conditional on the file that makes it work, not on the signal
+    // that found the suite.
+    const cmd = gemfile.text === '' ? 'rspec' : 'bundle exec rspec';
+    return [new RunnerResult('ruby', 'rspec', cmd, SPEED_FAST, HIGH, basis)];
 }
 
 /** Which JVM build system answered, its text, and the command prefix to use. */
@@ -704,32 +709,23 @@ function _dotnet_basis(root: string): { basis: string; confidence: string } | nu
     } catch {
         names = [];
     }
-    const project = names.find((n) => _DOTNET_PROJECT_EXTS.includes(path.extname(n).toLowerCase()));
-    if (project !== undefined) {
-        const named = _DOTNET_TEST_STACK.test(_dotnet_project_text(root));
-        return named
-            ? { basis: `test stack named in a .NET project file`, confidence: HIGH }
-            : { basis: `${project} present, no test stack named`, confidence: MEDIUM };
+    // A ROOT TARGET, not a target anywhere. `dotnet test` is NOT recursive:
+    // with no project or solution in the working directory it fails MSB1003,
+    // whatever sits below. So the emitted row is gated on this listing, and
+    // a scope whose only .NET evidence is `global.json` or
+    // `Directory.Build.props` — an SDK pin, never a target — gets NO row.
+    // Confidence does not gate `selected` (`_apply_guard` has never read it),
+    // so a row here would be a command the repository cannot run.
+    const target = names.find((n) => _DOTNET_PROJECT_EXTS.includes(path.extname(n).toLowerCase()));
+    if (target === undefined) {
+        return null;
     }
-    for (const marker of ['global.json', 'Directory.Build.props']) {
-        if (!_is_file(path.join(root, marker))) {
-            continue;
-        }
-        // A marker is an SDK PIN, not a runnable target. Emitting a row on one
-        // alone put `dotnet test` into `selected` — `_apply_guard` never reads
-        // `confidence` — for a root with no project anywhere, where it fails
-        // MSB1003. So look below: the conventional `src/<Name>/<Name>.csproj`
-        // layout carries no root solution, which also made HIGH unreachable
-        // there. No project found, no row: nothing to run is not a runner.
-        const text = _dotnet_project_text(root, true);
-        if (text.trim() === '') {
-            return null;
-        }
-        return _DOTNET_TEST_STACK.test(text)
-            ? { basis: 'test stack named in a .NET project file', confidence: HIGH }
-            : { basis: `${marker} present, no test stack named`, confidence: MEDIUM };
-    }
-    return null;
+    // The DESCENT still matters for the tier: a root `.sln` is a valid target
+    // whose own body names no package, so the projects it references decide
+    // HIGH vs MEDIUM.
+    return _DOTNET_TEST_STACK.test(_dotnet_project_text(root))
+        ? { basis: 'test stack named in a .NET project file', confidence: HIGH }
+        : { basis: `${target} present, no test stack named`, confidence: MEDIUM };
 }
 
 function _dotnet_runners(found: { basis: string; confidence: string }): RunnerResult[] {
@@ -821,7 +817,7 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
         const basis =
             'behat/behat' in php_deps
                 ? 'behat/behat in the composer manifest'
-                : `${behat_config ?? ''} present`;
+                : `${behat_config} present`;
         row('php', 'behat', 'vendor/bin/behat', basis);
     }
 
@@ -840,7 +836,7 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
     );
     if ('@cucumber/cucumber' in js_deps || 'cucumber' in js_deps || cucumber_config !== undefined) {
         const dep = '@cucumber/cucumber' in js_deps ? '@cucumber/cucumber' : 'cucumber';
-        const basis = dep in js_deps ? `${dep} in package deps` : `${cucumber_config ?? ''} present`;
+        const basis = dep in js_deps ? `${dep} in package deps` : `${cucumber_config} present`;
         row('js', 'cucumber-js', 'npx cucumber-js', basis);
     }
 
@@ -906,14 +902,13 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
  * LISTED, and the max-projects exits fire only once a project was found, so a
  * no-projects descent lists every eligible directory to the depth cap.
  */
-function _dotnet_project_text(dir: string, force_descent = false): string {
+function _dotnet_project_text(dir: string): string {
     const texts: string[] = [];
-    // Gated on a solution, or on `force_descent` from the marker branch. The
-    // gate suppresses the DESCENT only: this directory is listed here and
-    // again by the walk, in every scope of every repository. NOT pruned at
-    // scope boundaries either, so a root solution plus package scopes can
-    // still double-attribute — both carried as residue.
-    const solution = force_descent || _has_dotnet_solution(dir);
+    // Gated on a solution. The gate suppresses the DESCENT only: this
+    // directory is listed here and again by the walk, in every scope of every
+    // repository. NOT pruned at scope boundaries either, so a root solution
+    // plus package scopes can still double-attribute — both residue.
+    const solution = _has_dotnet_solution(dir);
     const walk = (at: string, depth: number): void => {
         if (texts.length >= _DOTNET_MAX_PROJECTS) {
             return;
@@ -998,7 +993,10 @@ export function _pnpm_packages(text: string): string[] {
         const v = raw.replace(/\s+#.*$/, '').trim().replace(/^['"]|['"]$/g, '').trim();
         if (v !== '') out.push(v);
     };
-    for (const line of text.split('\n')) {
+    // `\r?\n`, not `\n`: `.` never matches `\r`, so on a CRLF file the key
+    // regex below matched NOTHING and the whole workspace silently collapsed
+    // to the root scope — the same silent-drop class as the flow gap above.
+    for (const line of text.split(/\r?\n/)) {
         if (line.trim() === '' || /^\s*#/.test(line)) {
             continue;
         }

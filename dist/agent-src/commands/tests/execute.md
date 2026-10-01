@@ -38,14 +38,12 @@ returns the runner(s) to invoke per ecosystem:
 none.** The frontmatter used to bind `pest-testing` unconditionally, which
 contradicted the sentence directly above it: a React-only repository was handed
 PHP testing guidance before it read the instruction not to hard-code a stack.
-No per-stack UNIT-test skill exists to bind instead — `ls src/skills | grep
--iE 'jest|vitest|pytest|rspec|junit'` is empty — and a static list cannot
-express a per-repository answer, so the binding keeps only the stack-neutral
-`quality-tools` and the load becomes **resolver-conditional**: once step 1 has
-named the runner, load the skill for THAT runner if one exists — today
-`pest-testing` for pest, `laravel` for `php artisan test`,
-`playwright-testing` for playwright (it is selected under `--include-e2e`).
-Unconditional became conditional; it did not become nothing.
+A static list cannot express a per-repository answer, so the frontmatter keeps
+only the stack-neutral `quality-tools` and the load is
+**resolver-conditional**: once step 1 has named the runner, load the skill for
+THAT runner if one exists — `pest-testing` for pest, `laravel` for
+`php artisan test`, `playwright-testing` for playwright (selected under
+`--include-e2e`). Unconditional became conditional; it did not become nothing.
 
 **Wrappers win.** When a `Makefile`/`Taskfile.yml` `test:` target or a
 `package.json` `test` script exists, the resolver returns the wrapper
