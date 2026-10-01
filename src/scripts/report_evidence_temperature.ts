@@ -391,7 +391,7 @@ export function latestReportBefore(names: readonly string[], exclude: string): s
     const candidates = names
         .filter((n) => n.startsWith(REPORT_PREFIX) && n.endsWith('.md') && n !== exclude)
         .sort();
-    return candidates.length === 0 ? null : candidates[candidates.length - 1];
+    return candidates.at(-1) ?? null;
 }
 
 /** The cold paths a previous report listed, read back out of its own fenced block. */
