@@ -78,13 +78,13 @@ refuses.
 
 ## Phase 3 — One node tool, and the gate feeder in shadow
 
-- [ ] **3.1 `graph_node`: location, in-edges, out-edges, degree.** One MCP tool beside the
+- [x] **3.1 `graph_node`: location, in-edges, out-edges, degree.** One MCP tool beside the
       five, over the loaded graph `affected` already walks (`code_graph/query.ts:339`).
       Parameters `id`, `direction` (`in|out|both`), `depth` 1–3, `relation` over the closed
       vocabulary; the seed ladder (`query.ts:196-207`) stays the only resolver; no
       free-text scoring.
       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'graph_node'` -> 0
-- [ ] **3.2 `untested --diff` in shadow beside detector F, on its own record.** When F is
+- [x] **3.2 `untested --diff` in shadow beside detector F, on its own record.** When F is
       evaluated and the graph state is `fresh` or `edited`, also call `untested` over the
       turn's edit paths (`ToolCall.path`, `src/scripts/_lib/turn_end_transcript.ts:34-40`)
       and append both verdicts to a new per-stop file under `agents/state/` — not to
@@ -98,6 +98,15 @@ refuses.
       run; report F recall, graph recall and their union with `capture_rate.wilsonInterval`
       (`_lib/capture_rate.ts:90`). Below n = 50 the report prints `underpowered`.
       verify: `grep -c 'underpowered\|n = 50' agents/evidence/analysis/graph-feeder-recall-2026-Q4.md` -> /[1-9]/
+      STATE 2026-10-01: the page exists and the verify passes, and the step stays OPEN
+      deliberately. It carries the PRE-REGISTRATION — the two arms, the labelling
+      protocol, the Wilson reporting shape — written before any data existed, which is
+      the only moment a threshold cannot be chosen by the counts. Its reading is
+      `underpowered`, n = 0: step 3.2 shipped the recorder in the same change, so no
+      stop record predates it. Flipping this box on an n = 0 page is exactly the
+      condition D5 names as its own revisit trigger, so it is not flipped. What closes
+      it: n >= 50 rows across distinct sessions in `agents/state/graph-feeder/`, then
+      the protocol on that page, labelled by a person or a council seat and attributed.
 - [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3; the ADR-277 reopen is
       an owner amendment, not a step here.
 
