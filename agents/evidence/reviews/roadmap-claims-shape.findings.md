@@ -1,5 +1,5 @@
 # Findings: roadmap-claims-shape
-<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 3338359f7582d8e2f10ca35155ebe23dcbe43143ec8a651074fe3d7bf0bbb36b | diff: 23944d6a350c30ec4c14760f006820859e9f5337 | reviewer: ai-council-2-of-2-anthropic-openai | prompt_hash: e651ae3cce9703524828bec69a7c854211710896f0e53341941c07961ba4ddac -->
+<!-- completion-review: v1 | reviewed: 2026-10-01 | scope: 8a5e6dc7d96aa7ff9e514c96782121f070af1835fc7f291478a809a5530d7ba2 | diff: e884c0901b541ac90c62853cc590237984a86b7e | reviewer: ai-council-2-of-2-anthropic-openai | prompt_hash: e651ae3cce9703524828bec69a7c854211710896f0e53341941c07961ba4ddac -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-01 -->
 
 > **Reviewer:** ai-council, 2 of 2 seats present (anthropic, openai), one round,
