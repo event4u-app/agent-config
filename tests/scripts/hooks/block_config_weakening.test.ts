@@ -373,14 +373,30 @@ describe('block_config_weakening — parseSettingsDoc, pinned across the parser 
         expect(parseSettingsDoc('k: !!seq [1]\n', '.agent-settings.yml')).toEqual({ k: [1] });
     });
 
-    // A merge key was raised as a difference by the other seat and is not one at
-    // these versions. Pinned so the question is settled by a reading rather than
+    // A merge key was raised as a difference by one seat and is not one at these
+    // versions. Pinned so the question is settled by a reading rather than
     // re-litigated from documentation.
     it('leaves a merge key literal, which is what the old reader did too', () => {
         expect(parseSettingsDoc('d: &d\n  p: false\npersonal:\n  <<: *d\n', '.agent-settings.yml')).toEqual({
             d: { p: false },
             personal: { '<<': { p: false } },
         });
+    });
+
+    // The second review round's follow-up: `yaml` documents `merge` as
+    // defaulting to the document's YAML VERSION, so a `%YAML 1.1` directive was
+    // proposed as a route past the schema pin. It is not one here — measured —
+    // and `merge: false` is set explicitly so a future default cannot make it
+    // one silently. This asserts the measurement, not the option.
+    it('leaves a merge key literal even under a %YAML 1.1 directive', () => {
+        expect(
+            parseSettingsDoc('%YAML 1.1\n---\nd: &d\n  p: false\npersonal:\n  <<: *d\n', '.agent-settings.yml'),
+        ).toEqual({ d: { p: false }, personal: { '<<': { p: false } } });
+    });
+
+    it('a version directive does not reopen the 1.1 scalar or tag resolutions', () => {
+        expect(parseSettingsDoc('%YAML 1.1\n---\nk: on\n', '.agent-settings.yml')).toEqual({ k: 'on' });
+        expect(parseSettingsDoc('%YAML 1.1\n---\nk: !!timestamp 2026-10-01\n', '.agent-settings.yml')).toBeNull();
     });
 
     // End-to-end through the guard, on a real class-C key: flipping between two
@@ -443,8 +459,14 @@ describe('block_config_weakening — differential: the two readers refuse the sa
         '', '   \n', '~\n', 'null\n', 'k:\n', 'k: ~\n',
         // malformed and multi-document
         'a: 1\na: 2\n', '---\na: 1\n---\nb: 2\n', '\ttab: 1\n', 'a: [unclosed\n',
-        // anchors, aliases, merge keys
+        // anchors, aliases, merge keys — including under an explicit version
+        // directive, which `yaml` documents as the thing `merge` defaults off
+        // and the second review round named as the way past the schema pin
         'a: &x 1\nb: *x\n', 'd: &d\n  p: false\npersonal:\n  <<: *d\n',
+        '%YAML 1.1\n---\nd: &d\n  p: false\npersonal:\n  <<: *d\n',
+        '%YAML 1.1\n---\nk: on\nj: 012\n',
+        '%YAML 1.2\n---\nk: on\n',
+        '%YAML 1.1\n---\nk: !!timestamp 2026-10-01\n',
         // scalars and nesting that must keep working
         'k: "q"\n', "k: 'q'\n", 'k: |\n  block\n', 'k: >\n  folded\n',
         'a:\n  b:\n    c: 1\n', 'a:\n  - 1\n  - 2\n',

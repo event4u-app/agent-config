@@ -148,7 +148,7 @@ describe('3.1 — a single-file figure comes from the emitter or from a tracked 
     it('a row with no declared source throws rather than falling back to reading the surface', () => {
         const windsurf = SINGLE.find((h) => h.host === 'windsurf');
         expect(windsurf).toBeDefined();
-        const stripped = { ...(windsurf as (typeof SINGLE)[number]), bytes: undefined };
+        const { bytes: _dropped, ...stripped } = windsurf as (typeof SINGLE)[number];
         expect(() => singleFileBytes(process.cwd(), stripped)).toThrow(/bytes.*source/iu);
     });
 

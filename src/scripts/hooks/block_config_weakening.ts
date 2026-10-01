@@ -217,9 +217,23 @@ export function leafPaths(value: unknown, prefix = ''): Map<string, string> {
  *     parsed document with no keys — the one shape that turns "I cannot read
  *     this" into "nothing changed".
  *
- * A merge key (`<<: *anchor`) was raised as a fourth difference by the other
- * seat and is NOT one: both readers leave `<<` literal at these versions, which
- * the same differential corpus pins so the question is not re-litigated from
+ *   · `merge: false` — PINNED, NOT FIXING AN OBSERVED DIFFERENCE. The `yaml`
+ *     package documents `merge` as defaulting to the document's YAML VERSION:
+ *     true for 1.1, false for 1.2. A second review round (openai/codex-default)
+ *     flagged that a `%YAML 1.1` directive could therefore re-enable merge
+ *     resolution past the schema pin, which would expose keys the old reader
+ *     left nested under a literal `<<`. Measured, and it does NOT reproduce
+ *     here — under `schema: 'core'` a `%YAML 1.1` document reads
+ *     `{"personal":{"<<":{…}}}` identically with and without this option, same
+ *     as `js-yaml`. It is set anyway because the cost is a word and the finding
+ *     named a real documented coupling between two options: a future default
+ *     cannot flip it silently. An option set without an observed failure behind
+ *     it is said so rather than implied.
+ *
+ * A merge key (`<<: *anchor`) was raised as a difference by the other seat and
+ * is NOT one: both readers leave `<<` literal at these versions, with and
+ * without a version directive. The same differential corpus pins both forms, so
+ * the question is settled by a reading rather than re-litigated from
  * documentation next time.
  */
 export function parseSettingsDoc(text: string, rel: string): unknown | null {
@@ -231,7 +245,7 @@ export function parseSettingsDoc(text: string, rel: string): unknown | null {
         }
     }
     try {
-        const doc = parseYamlDocument(text, { schema: 'core', resolveKnownTags: false });
+        const doc = parseYamlDocument(text, { schema: 'core', resolveKnownTags: false, merge: false });
         if (doc.errors.length > 0 || doc.warnings.length > 0) return null;
         return (doc.toJS() as unknown) ?? null;
     } catch {
