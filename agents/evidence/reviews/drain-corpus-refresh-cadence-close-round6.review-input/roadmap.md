@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: draft
@@ -8,7 +10,7 @@ estate_growth_exempt: "a blocker discovered while doing the work — 1.2's four 
 ---
 # Road to corpus refresh cadence shape
 
-> **Source:** the deferred item 2.1 of `road-to-corpus-refresh-2026-q3`, carried
+> **Source:** [REDACTED:src-conf]
 > here under Iron Law 3 of `roadmap-progress-sync` when that roadmap closed on
 > 2026-09-27. Its Phase 1 shipped; this question did not, because it is a
 > maintainer decision and not an agent call. See the parent's archive entry for
@@ -100,12 +102,10 @@ deliberately did not take it (D4).
 **1.2 was one checkbox describing four occasions spread over three months, and
 split on 2026-09-30 into the four it actually is.** D1's own words are "four
 separate occasions, not one edit"; a single box could never record two-of-four
-done, so the structure now matches the decision. All four were held by the same
-blocker — see [`four-dated-re-checks-are-calendar-bound`](#blocker-four-dated-re-checks-are-calendar-bound);
-**1.2a came off that hold on 2026-10-01** when it ran, so the blocker now holds
-1.2b, 1.2c and 1.2d. The order below is a suggestion, not a constraint; what is
-binding is that no two land on the same date and all four land before
-~2026-12-27.
+done, so the structure now matches the decision. All four are held by the same
+blocker — see [`four-dated-re-checks-are-calendar-bound`](#blocker-four-dated-re-checks-are-calendar-bound).
+The order below is a suggestion, not a constraint; what is binding is that no
+two land on the same date and all four land before ~2026-12-27.
 
 - [x] **1.2a Re-check `accessibility-auditor` against its upstream and stamp the
       date the check ran.** *(2026-10-01 — occasion 1 of 4, inside the suggested
@@ -117,12 +117,7 @@ binding is that no two land on the same date and all four land before
       verify: `src/skills/accessibility-auditor/data/manifest.json` carries an
       `upstream.last_checked` equal to the date the check ran, differing from
       the other three, and `./scripts-run src/scripts/check_corpus_staleness`
-      reports no staleness **for the four manifests this roadmap covers**. The
-      gate is whole-tree and has no per-corpus flag, so from 2026-11-22 it exits
-      1 on `design-intelligence`, which is out of scope here (see Context) — a
-      bare "exits 0" would make this verify unsatisfiable without absorbing
-      somebody else's work. Read the gate's findings list, not only its exit
-      code.
+      exits 0.
 
       **Evidence (2026-10-01).** The check ran before the stamp moved, and it
       found something — which is the point of running it rather than the
@@ -268,12 +263,7 @@ binding is that no two land on the same date and all four land before
       verify: `src/skills/api-design/data/manifest.json` carries an
       `upstream.last_checked` equal to the date the check ran, differing from
       the other three, and `./scripts-run src/scripts/check_corpus_staleness`
-      reports no staleness **for the four manifests this roadmap covers**. The
-      gate is whole-tree and has no per-corpus flag, so from 2026-11-22 it exits
-      1 on `design-intelligence`, which is out of scope here (see Context) — a
-      bare "exits 0" would make this verify unsatisfiable without absorbing
-      somebody else's work. Read the gate's findings list, not only its exit
-      code.
+      exits 0.
 
       **Evidence (2026-10-01) — deferred, not skipped.** Occasion 2 of 4 is
       calendar-bound and nothing about this session changes that. Its own verify
@@ -308,12 +298,7 @@ binding is that no two land on the same date and all four land before
       verify: `src/skills/database/data/manifest.json` carries an
       `upstream.last_checked` equal to the date the check ran, differing from
       the other three, and `./scripts-run src/scripts/check_corpus_staleness`
-      reports no staleness **for the four manifests this roadmap covers**. The
-      gate is whole-tree and has no per-corpus flag, so from 2026-11-22 it exits
-      1 on `design-intelligence`, which is out of scope here (see Context) — a
-      bare "exits 0" would make this verify unsatisfiable without absorbing
-      somebody else's work. Read the gate's findings list, not only its exit
-      code.
+      exits 0.
 
       **Evidence (2026-10-01) — deferred, not skipped.** Same arithmetic as
       1.2b: occasion 3 of 4 cannot share `2026-10-01` with 1.2a without failing
@@ -345,12 +330,7 @@ binding is that no two land on the same date and all four land before
       verify: `src/skills/threat-modeling/data/manifest.json` carries an
       `upstream.last_checked` equal to the date the check ran, differing from
       the other three, and `./scripts-run src/scripts/check_corpus_staleness`
-      reports no staleness **for the four manifests this roadmap covers**. The
-      gate is whole-tree and has no per-corpus flag, so from 2026-11-22 it exits
-      1 on `design-intelligence`, which is out of scope here (see Context) — a
-      bare "exits 0" would make this verify unsatisfiable without absorbing
-      somebody else's work. Read the gate's findings list, not only its exit
-      code.
+      exits 0.
 
       **Evidence (2026-10-01) — deferred, not skipped.** Same arithmetic as
       1.2b and 1.2c; this is occasion 4 of 4 and it is the one with a hard outer
@@ -463,17 +443,10 @@ binding is that no two land on the same date and all four land before
   earlier than that, from outside this roadmap:** `design-intelligence`, the
   sixth `quarterly` corpus, reds every PR on **2026-11-22**. Doing nothing here
   does not buy quiet until December.
-- **Resolved when:** the four `upstream.last_checked` values under
+- **Resolved when:** `./scripts-run src/scripts/check_corpus_staleness` exits 0
+  and the four `upstream.last_checked` values under
   `src/skills/{accessibility-auditor,api-design,database,threat-modeling}/data/manifest.json`
-  are four *distinct* dates — not merely not-all-equal, per D3 — and
-  `./scripts-run src/scripts/check_corpus_staleness` reports **no staleness
-  finding naming any of those four**. Deliberately NOT a bare "exits 0"
-  (corrected 2026-10-01 after round-6 review): the gate is whole-tree and has no
-  per-corpus flag, and `design-intelligence` — out of scope here, see Context —
-  reds it from 2026-11-22, which falls inside 1.2c's and 1.2d's own suggested
-  windows. An exit-code condition would have made this blocker unresolvable
-  without absorbing another corpus's work, or resolvable only by recording a
-  false reading. Read the findings list.
+  are four *distinct* dates — not merely not-all-equal, per D3.
 
 ## Decisions
 
@@ -526,9 +499,7 @@ settles only the narrow verify-wording half of the second.
       `refresh_cadence: quarterly` and not all of them — carry four **distinct**
       `upstream.last_checked` dates (per D3 — not merely not-all-equal), each
       equal to the date its check actually ran, and
-      `./scripts-run src/scripts/check_corpus_staleness` reports no staleness
-      finding naming any of those four — not a bare exit 0, for the reason the
-      blocker's Resolved-when gives.
+      `./scripts-run src/scripts/check_corpus_staleness` exits 0 against them.
       *(2026-10-01: one of four. `accessibility-auditor` reads `2026-10-01`,
       backed by a check that ran; `api-design`, `database` and `threat-modeling`
       still share `2026-09-18`. The gate exits 0, but the distinctness test

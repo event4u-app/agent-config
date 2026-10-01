@@ -55,8 +55,12 @@ const VERDICT = path.join(REPO, 'agents/evidence/analysis/routing-body-signal-ve
 /** The skills the freeze artefact lists under its `## Holdout` heading. */
 function sealedSkills(): string[] {
     const md = fs.readFileSync(FREEZE, 'utf8');
-    const start = md.indexOf('## Holdout');
-    const end = md.indexOf('## Train', start);
+    // Anchored at line start, not bare indexOf: the artefact's prose now quotes
+    // `## Train` inside backticks, and a future correction quoting `## Holdout`
+    // the same way would move `start` above it and yield an empty slice — a
+    // failure that would read as a corpus defect rather than a parser one.
+    const start = md.indexOf('\n## Holdout');
+    const end = md.indexOf('\n## Train', start);
     expect(start).toBeGreaterThan(0);
     expect(end).toBeGreaterThan(start);
     return [...md.slice(start, end).matchAll(/^\| `([a-z0-9-]+)` \|/gm)].map((m) => m[1] as string);

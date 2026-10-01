@@ -15,7 +15,7 @@
     "seed_provenance": {
         "rules": "102 covered of 106 routed rules on 2026-09-13; was 101 of 105 on 2026-09-08 and 94 of 105 (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
         "skills": "103 of 299 skills carry evals/triggers.json on 2026-10-01; was 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
-        "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is 25%, covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4)."
+        "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is far lower and is covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4). The figure is deliberately not restated here (corrected 2026-10-01): it read `25%` against a seed that had since moved to 0.3445, which is the same count-drift this file's own history entries keep repairing one field away. The live value is `seed.skills`, two keys above."
     },
     "history": [
         {
