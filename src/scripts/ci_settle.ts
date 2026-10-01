@@ -358,19 +358,47 @@ export function parseArgs(argv: readonly string[]): ParsedArgs {
         i++;
     }
 
-    const pr = positional[0];
-    if (pr === undefined) return refuse('no PR number given');
+    const raw = positional[0];
+    if (raw === undefined) return refuse('no PR number given');
     if (positional.length > 1) {
         return refuse(
-            `unexpected argument ${String(positional[1])} — a flag value must follow its flag, e.g. --timeout-min ${String(positional[1])}`,
+            `unexpected argument ${JSON.stringify(positional[1])} — this tool takes exactly one positional, the PR number; ` +
+                'a flag value must follow its own flag',
+        );
+    }
+
+    // Finding 1 of the 2026-10-01 R2 review: the first version of this guard
+    // validated every OPTIONAL argument and waved the mandatory one through, so
+    // the failure it exists to remove stayed reachable through the front door.
+    // `ci_settle PR-2130` parsed as ok; `gh pr view PR-2130` then exits non-zero
+    // on every poll, each one classifies as unreadable, no streak caps the loop,
+    // and the run spends its entire budget to arrive at `DID NOT SETTLE` — which
+    // is read as a slow CI rather than as the typo it is. A guard that refuses
+    // the arguments a caller may omit and accepts the one they cannot is not a
+    // guard. `#123` and a PR URL are admitted because both are what a caller
+    // copies out of the forge; a branch name is NOT, because this tool's whole
+    // verdict is bound to one head and a branch makes that binding ambiguous.
+    const pr = /^#?[0-9]+$/.test(raw)
+        ? raw.replace(/^#/, '')
+        : (/^https?:\/\/[^\s]*\/pull\/([0-9]+)(?:[/?#].*)?$/.exec(raw)?.[1] ?? null);
+    if (pr === null || pr === '0' || /^0+$/.test(pr)) {
+        return refuse(
+            `${JSON.stringify(raw)} is not a PR number — give the number itself (2130), #2130, or the pull-request URL`,
         );
     }
 
     const num = (flag: string, dflt: number): number | string => {
         const v = given.get(flag);
         if (v === undefined) return dflt;
-        if (!/^[0-9]+$/.test(v)) return `${flag} wants a whole number of ${flag === '--timeout-min' ? 'minutes' : 'seconds'}, got ${JSON.stringify(v)}`;
+        const unit = flag === '--timeout-min' ? 'minutes' : 'seconds';
+        if (!/^[0-9]+$/.test(v)) return `${flag} wants a whole number of ${unit}, got ${JSON.stringify(v)}`;
         const n = parseInt(v, 10);
+        // Finding 2: the parser this replaced guarded with `Number.isFinite`, and
+        // the digits-only test that replaced it does not. A long enough run of
+        // digits parses to Infinity, clears `n > 0`, and makes `deadline`
+        // unreachable — an unbounded wait in a tool whose contract is that it
+        // always returns a stated verdict or a stated non-verdict.
+        if (!Number.isFinite(n)) return `${flag} is too large to be a number of ${unit}`;
         if (n <= 0) return `${flag} wants a positive number, got ${v}`;
         return n;
     };

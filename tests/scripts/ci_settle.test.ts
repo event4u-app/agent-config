@@ -294,3 +294,90 @@ describe('parseArgs', () => {
         expect(r.timeoutMin).toBe(30);
     });
 });
+
+// R2 completion review, 2026-10-01 (drain-ci-settle-arg-guard, findings 1-4).
+// The first guard validated every flag and left the one MANDATORY argument
+// unchecked, so the shape it was written to remove stayed reachable through
+// the front door: `ci_settle PR-2130` parsed as ok, every poll came back
+// unreadable because `gh pr view PR-2130` exits non-zero, and the run spent
+// its whole budget to end at `DID NOT SETTLE` — verbatim the outcome a caller
+// reads as slow CI rather than as their own typo. A guard that refuses the
+// optional arguments and waves the required one through is not a guard.
+describe('parseArgs — the PR argument itself', () => {
+    it('accepts a plain number', () => {
+        const r = parseArgs(['2130']);
+        expect(r.kind).toBe('ok');
+        if (r.kind !== 'ok') return;
+        expect(r.pr).toBe('2130');
+    });
+
+    it('accepts a #-prefixed number and hands on the bare digits', () => {
+        const r = parseArgs(['#2130']);
+        expect(r.kind).toBe('ok');
+        if (r.kind !== 'ok') return;
+        expect(r.pr).toBe('2130');
+    });
+
+    it('accepts a PR URL and hands on the number', () => {
+        const r = parseArgs(['https://github.com/event4u-app/agent-config/pull/2130']);
+        expect(r.kind).toBe('ok');
+        if (r.kind !== 'ok') return;
+        expect(r.pr).toBe('2130');
+    });
+
+    it('REFUSES a PR argument that is not a number — the reachable failure shape', () => {
+        for (const bad of ['PR-2130', 'pr2130', '2130x', 'drain/archive-host-claims', '', '-1', '0', '2130.0']) {
+            const r = parseArgs([bad]);
+            expect(r.kind, bad).toBe('usage');
+        }
+    });
+
+    it('names the PR argument in its refusal, not a flag', () => {
+        const r = parseArgs(['PR-2130']);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('PR-2130');
+        expect(r.message.toLowerCase()).toContain('pr number');
+    });
+});
+
+describe('parseArgs — the branches the first round left untested', () => {
+    it('refuses a repeated flag', () => {
+        const r = parseArgs(['2130', '--timeout-min', '10', '--timeout-min', '20']);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('twice');
+    });
+
+    it('refuses a flag whose value is the NEXT flag, not just a missing tail', () => {
+        const r = parseArgs(['2130', '--timeout-min', '--interval-sec', '5']);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('--timeout-min');
+    });
+
+    it('refuses a bad --interval-sec value and says SECONDS, not minutes', () => {
+        const r = parseArgs(['2130', '--interval-sec', 'abc']);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('seconds');
+    });
+
+    it('refuses a digits-only value that parses to Infinity — the finiteness guard the rewrite dropped', () => {
+        const huge = '9'.repeat(400);
+        const r = parseArgs(['2130', '--timeout-min', huge]);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message.toLowerCase()).toContain('too large');
+    });
+
+    it('names the real constraint on an extra positional, never a guessed flag', () => {
+        const r = parseArgs(['2130', 'notes.txt']);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('notes.txt');
+        // The old message interpolated the stray value into `--timeout-min <it>`,
+        // which for a non-numeric stray is advice parseArgs would itself refuse.
+        expect(r.message).not.toContain('--timeout-min notes.txt');
+    });
+});
