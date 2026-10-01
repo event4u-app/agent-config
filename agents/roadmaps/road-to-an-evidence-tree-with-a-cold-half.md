@@ -43,14 +43,14 @@ Measured on 2026-10-01:
 
 ## Phase 1 — Name the cold set by rule
 
-- [ ] **1.1 Census.** For every tracked file under `agents/evidence/`: bytes,
+- [x] **1.1 Census.** For every tracked file under `agents/evidence/`: bytes,
       first-added date, and the set of tracked files outside `agents/evidence/`
       that reference its path. Classify as hot (referenced by an active,
       later or stub roadmap, a contract, a gate or a test), warm (referenced only
       by archived roadmaps) or cold (referenced by nothing). Report-only, written
       to `agents/evidence/analysis/evidence-temperature-<date>.md`.
       verify: `grep -c 'cold' agents/evidence/analysis/evidence-temperature-*.md` -> /^[1-9]/
-- [ ] **1.2 Name the gates that scan the tree.** List each script that reads
+- [x] **1.2 Name the gates that scan the tree.** List each script that reads
       under `agents/evidence/`, and what it would lose or gain if cold files left
       its scan root. A gate that relies on a cold file reclassifies it hot.
       verify: `grep -c 'scan root' agents/evidence/analysis/evidence-temperature-*.md` -> /^[1-9]/
