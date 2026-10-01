@@ -115,7 +115,7 @@ record at all.
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
 | D1 | reversible-technical | evidence | Observe the event before binding anything | The cause is filed as undetermined at `verification-classifier-before-after-2026-09-30.md:80`; binding on a guess would repeat the step 1.2 review finding that a payload shape no host sends was verified | 1.1 cannot be run because no claude session with hooks is available |
-| D2 | reversible-technical | council | Alias onto the existing slot rather than add a canonical event | One slot, one concern list, no contract change to the canonical event set | The failure envelope carries fields the recorder cannot read through the same parser |
+| D2 | reversible-technical | agent | Alias onto the existing slot rather than add a canonical event | One slot, one concern list, no contract change to the canonical event set | The failure envelope carries fields the recorder cannot read through the same parser |
 | D3 | deterministic | evidence | Closure-scan C1 (contradictory) is the related roadmap's slug, not a contradiction in this plan | The match is the word in `road-to-host-claims-the-tree-contradicts` | — |
 | D4 | deterministic | evidence | Closure-scan C2 (step 3.2 read as a typed operation) is a tracked evidence file written inside this repository, not an external publish; no owner-reserved operation is involved | The step writes `agents/evidence/analysis/…` only | The step is changed to post outside the repository |
 

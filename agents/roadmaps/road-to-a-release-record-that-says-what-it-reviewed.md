@@ -152,9 +152,9 @@ Reproduced on 2026-10-01, not read:
 |---|---|---|---|---|---|
 | D1 | reversible-technical | evidence | Coverage is printed as a label, never enforced as a floor | A floor that refuses forces the spend decision of 2.2 by the back door; the label costs nothing and is what the source asks for first | A cut ships with partial coverage and no reader sees the label |
 | D2 | reversible-technical | evidence | The index check extends `lint_major_migration_sections` instead of adding a second gate | Same floor, same changelog parser, same pending-entry path; a second gate would be a second copy of `findMajorSections` | The two obligations need different floors |
-| D3 | owner | blocker | Post-cut delta review and container test promotion stay with the owner | Both are spend or infra the records name as owner follow-ups (ADR-087, the review ceiling) | — |
+| D3 | spend-exhaustion | owner | Post-cut delta review and container test promotion stay with the owner | Both are spend or infra the records name as owner follow-ups (ADR-087, the review ceiling) | — |
 | D4 | deterministic | evidence | Closure-scan C1 and C2 (steps 2.2 and 4.2 read as unfalsifiable) are resolved: each step's `verify:` sits on its continuation line and carries an expectation (`-> /post-cut/`, `-> /installer-e2e/`) | `roadmap_verify_share` counts nine of nine clauses in this file as naming an expectation | The scanner is taught to read continuation lines |
-| D5 | owner | blocker | Closure-scan C3 (AC-5 offers two outcomes) is the owner choice recorded in `review-ceiling-is-spend`, not an unpicked alternative | The blocker names both options and a recommendation | — |
+| D5 | spend-exhaustion | owner | Closure-scan C3 (AC-5 offers two outcomes) is the owner choice recorded in `review-ceiling-is-spend`, not an unpicked alternative | The blocker names both options and a recommendation | — |
 
 ## Blockers
 

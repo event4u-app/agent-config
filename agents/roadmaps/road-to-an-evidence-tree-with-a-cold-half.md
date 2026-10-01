@@ -104,7 +104,7 @@ Measured on 2026-10-01:
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| D1 | contested-technical | council | Location and rule for cold evidence | Pending 2.1 | Council verdict lands |
+| D1 | contested-technical | council:step-2.1 | Location and rule for cold evidence | Pending 2.1 | Council verdict lands |
 | D2 | reversible-technical | evidence | Classify by reference, not by age | An old file a contract cites is load-bearing; a new file nothing cites is not | 1.1 shows referenced files that are demonstrably dead |
 
 ## Risk Register

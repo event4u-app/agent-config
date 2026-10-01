@@ -114,10 +114,10 @@ Reproduced on 2026-10-01:
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| D1 | contested-technical | council | Representation of a blocking severity on a host with no refusal slot | Pending 1.1; recommendation (a), because it changes no runtime behaviour and makes the table truthful | Council verdict lands |
+| D1 | contested-technical | council:step-1.1 | Representation of a blocking severity on a host with no refusal slot | Pending 1.1; recommendation (a), because it changes no runtime behaviour and makes the table truthful | Council verdict lands |
 | D2 | reversible-technical | evidence | Fall through to source on a body mismatch rather than refuse the dispatch | `resolveTable` is documented as slow-never-wrong (`host_lowering.ts:216-221`); refusing on a mismatch would turn a tamper into an outage on every host | A tamper is observed that the YAML path also serves |
 | D3 | deterministic | evidence | Closure-scan C1 and C3 (contradictory) are a related roadmap's slug and the stale-comment defect step 3.1 removes; neither is a contradiction in this plan | Lines 11 and the gap table | — |
-| D4 | contested-technical | council | Closure-scan C2 (the goal offers bound-or-advisory) is decision D1, routed to the council by step 1.1 | Step 1.1 names the three options and a recommendation | Council verdict lands |
+| D4 | contested-technical | council:step-1.1 | Closure-scan C2 (the goal offers bound-or-advisory) is decision D1, routed to the council by step 1.1 | Step 1.1 names the three options and a recommendation | Council verdict lands |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
