@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: draft
@@ -404,34 +406,6 @@ before the record is signed.
       `live` / `cached` / `error` provenance enum beyond the existing three-state row; a
       measured p95 latency threshold; and the AC-5 wording repair. All three are carried as
       owner residue under AC-5 and in the PR body.
-      **A SECOND independent round found 13 more, three of them `high`, and the sharpest one
-      refuted a sentence this entry had already written.** Round 1's fix made the block name
-      the repository it read — and the slug is resolved from the LOCAL git remote, which
-      answers with no network. So an ordinary offline run (GitHub remote present, no
-      connectivity, no opt-out) emitted a named repository and substituted sources while every
-      row was `unread`, making "offline output is what Phase 3.2 shipped" false on exactly the
-      failed-live path the council condition names. The earlier verification had only ever
-      exercised `AGENT_CONFIG_DOCTOR_NO_FORGE=1` and read it as offline; they are different
-      paths and only one was checked. `repository` is now reported only when at least one row
-      carries a real value, so the invariant is structural rather than a caller's promise, and
-      it is proven twice: a unit case asserting the two documents are byte-identical, and an
-      end-to-end run with a failing `gh` on `PATH` returning `repository: null`, five `unread`
-      rows and templated sources.
-      The other two `high` findings were both overstatement paths. The `environments` and
-      branch-policy reads were UNPAGINATED, so on a repository with more environments than one
-      page `deployRestrictedFrom`'s `every()` ran over the visible subset and an unlisted
-      unrestricted environment read as `satisfied` — while `readRulesets` guarded the identical
-      hazard one function up and said so. And `gh` was spawned with neither `cwd` nor
-      `--hostname` while the slug was resolved with `cwd: root`, so with `--project`/`--root`
-      set, or a GitHub Enterprise remote, the two halves of the read addressed different
-      repositories: `apiFor` is now a factory over the resolved target, which makes the host
-      binding structural. Also fixed: `ls-remote --get-url` in place of `remote get-url`, which
-      is blind to `url.insteadOf` rewriting — another condition this amendment names;
-      a slug character-set check, since the old pattern admitted `..`, `?` and `$&`, the last
-      being a `String.replace` control sequence; a per-environment call issued when
-      `protected_branches` already decided the row; and the ruleset fixture, which used a shape
-      production never produces, leaving the page-flattening branch dead in every case that
-      claimed to cover it.
       **An independent R2 review of this diff found 13 defects and 12 are fixed here.** It was
       dispatched through `dispatch_r2_reviewer`, so the reviewer's prompt was assembled
       deterministically rather than written by the implementing session, and the package is

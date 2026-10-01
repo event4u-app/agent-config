@@ -41,6 +41,7 @@ import {
     resolveForgeRepo,
     withDeadline,
     type ForgeApi,
+    type ForgeTarget,
     type Runner,
     type SpawnResult,
 } from '../../src/scripts/_lib/forge_reader.js';
@@ -48,7 +49,11 @@ import { UNREAD_FORGE } from '../../src/scripts/_lib/forge_protection.js';
 
 /** The live shape of this repository's own payloads, read 2026-09-30. */
 const REPO_RECORD = { default_branch: 'main', allow_auto_merge: true };
-const RULESET_SUMMARY = [{ id: 17749383 }];
+// `--paginate --slurp` yields an array of PAGES. The first fixture was the flat
+// `[{id}]`, which production never produces, so the flatten branch was dead in
+// every case that claimed to cover the ruleset read. Both shapes are now
+// exercised: this one, and the flat form in its own case below.
+const RULESET_SUMMARY = [[{ id: 17749383 }]];
 const RULESET_DETAIL = {
     id: 17749383,
     target: 'branch',
@@ -208,14 +213,85 @@ describe('readForge — every failure degrades to unread, never to false', () =>
     });
 });
 
+describe('pagination — the overstatement the unpaginated read allowed', () => {
+    it('reads every page of environments, not just the first', () => {
+        // Unpaginated, `deployRestrictedFrom`'s `every()` ran over the visible
+        // subset, so an unlisted unrestricted environment read as `satisfied`.
+        const reading = readForge(
+            'o/r',
+            api({
+                ...FULL,
+                'repos/o/r/environments': [
+                    { environments: [ENVIRONMENTS.environments[0]] },
+                    { environments: [{ name: 'wide', deployment_branch_policy: null }] },
+                ],
+            }),
+        );
+        expect(reading.deployRestricted).toBe(false);
+    });
+
+    it('reads every page of branch policies', () => {
+        const reading = readForge(
+            'o/r',
+            api({
+                ...FULL,
+                'repos/o/r/environments/github-pages/deployment-branch-policies': [
+                    { branch_policies: [{ name: 'main' }] },
+                    { branch_policies: [{ name: '*' }] },
+                ],
+            }),
+        );
+        expect(reading.deployRestricted).toBe(false);
+    });
+
+    it('accepts the unpaginated page shape too', () => {
+        const reading = readForge(
+            'o/r',
+            api({ ...FULL, 'repos/o/r/rulesets': [{ id: 17749383 }] }),
+        );
+        expect(reading.rulesets).toHaveLength(1);
+    });
+
+    it('skips the policy call when protected_branches already decides the row', () => {
+        const a = api({
+            ...FULL,
+            'repos/o/r/environments': {
+                environments: [
+                    {
+                        name: 'github-pages',
+                        deployment_branch_policy: {
+                            protected_branches: true,
+                            custom_branch_policies: true,
+                        },
+                    },
+                ],
+            },
+        });
+        expect(readForge('o/r', a).deployRestricted).toBe(true);
+        expect(
+            a.calls.some((c) => c.includes('deployment-branch-policies')),
+        ).toBe(false);
+    });
+});
+
 describe('resolveForgeRepo', () => {
+    it('refuses a slug carrying path or replacement-pattern characters', () => {
+        // The slug is interpolated into an API path AND used as a `replace`
+        // replacement, where `$&` and `$1` are control sequences.
+        expect(resolveForgeRepo('https://github.com/o/..')).toBeNull();
+        expect(resolveForgeRepo('https://github.com/o/r$&x')).toBeNull();
+        expect(resolveForgeRepo('https://github.com/o/r?x')).toBeNull();
+    });
+
     it('reads owner/repo from the ssh and https forms', () => {
-        expect(resolveForgeRepo('git@github.com:event4u-app/agent-config.git')).toBe(
-            'event4u-app/agent-config',
-        );
-        expect(resolveForgeRepo('https://github.com/event4u-app/agent-config')).toBe(
-            'event4u-app/agent-config',
-        );
+        expect(resolveForgeRepo('git@github.com:event4u-app/agent-config.git')).toEqual({
+            host: 'github.com',
+            slug: 'event4u-app/agent-config',
+        });
+        expect(resolveForgeRepo('https://github.com/event4u-app/agent-config')).toEqual({
+            host: 'github.com',
+            slug: 'event4u-app/agent-config',
+        });
     });
 
     it('refuses a remote on a host that is not GitHub-shaped', () => {
@@ -226,7 +302,10 @@ describe('resolveForgeRepo', () => {
     });
 
     it('accepts a GitHub Enterprise host carrying the vendor name', () => {
-        expect(resolveForgeRepo('https://github.acme.com/o/r.git')).toBe('o/r');
+        expect(resolveForgeRepo('https://github.acme.com/o/r.git')).toEqual({
+            host: 'github.acme.com',
+            slug: 'o/r',
+        });
     });
 
     it('is null for an absent or unparseable remote', () => {
@@ -237,22 +316,27 @@ describe('resolveForgeRepo', () => {
 });
 
 describe('forgeReadingFor — the opt-out', () => {
-    /** A repo resolver that records whether it ran at all. */
-    function resolver(value: string | null): (() => string | null) & { ran: () => number } {
+    /** A target resolver that records whether it ran at all. */
+    function resolver(
+        slug: string | null,
+    ): (() => ForgeTarget | null) & { ran: () => number } {
         let n = 0;
-        const f = (): string | null => {
+        const f = (): ForgeTarget | null => {
             n += 1;
-            return value;
+            return slug === null ? null : { host: 'github.com', slug };
         };
         return Object.assign(f, { ran: () => n });
     }
+
+    /** Hand every request the same scripted api, whatever target resolved. */
+    const give = (a: ForgeApi) => () => a;
 
     it('reads the forge when nothing opts out, and names the repository it read', () => {
         // The slug travels WITH the rows. Five rows reading `satisfied` say
         // nothing about whose branch is protected when `origin` may be a fork,
         // a mirror, or somebody else's project in a consumer install.
         const a = api(FULL);
-        const read = forgeReadingFor({ env: {}, resolveRepo: resolver('o/r'), api: a });
+        const read = forgeReadingFor({ env: {}, resolveRepo: resolver('o/r'), apiFor: give(a) });
         expect(read.reading.defaultBranch).toBe('main');
         expect(read.repo).toBe('o/r');
         expect(a.calls.length).toBeGreaterThan(0);
@@ -260,12 +344,12 @@ describe('forgeReadingFor — the opt-out', () => {
 
     it('reports no repository on every path that read nothing', () => {
         const a = api(FULL);
-        expect(forgeReadingFor({ env: {}, resolveRepo: resolver(null), api: a }).repo).toBeNull();
+        expect(forgeReadingFor({ env: {}, resolveRepo: resolver(null), apiFor: give(a) }).repo).toBeNull();
         expect(
             forgeReadingFor({
                 env: { AGENT_CONFIG_OFFLINE: '1' },
                 resolveRepo: resolver('o/r'),
-                api: a,
+                apiFor: give(a),
             }).repo,
         ).toBeNull();
     });
@@ -280,7 +364,7 @@ describe('forgeReadingFor — the opt-out', () => {
         const read = forgeReadingFor({
             env: { AGENT_CONFIG_OFFLINE: '0' },
             resolveRepo: resolver('o/r'),
-            api: a,
+            apiFor: give(a),
         });
         expect(read.repo).toBe('o/r');
         expect(a.calls.length).toBeGreaterThan(0);
@@ -295,7 +379,7 @@ describe('forgeReadingFor — the opt-out', () => {
         const reading = forgeReadingFor({
             env: { AGENT_CONFIG_DOCTOR_NO_FORGE: '1' },
             resolveRepo: resolver('o/r'),
-            api: a,
+            apiFor: give(a),
         });
         expect(reading.reading).toEqual(UNREAD_FORGE);
         expect(a.calls).toEqual([]);
@@ -308,7 +392,7 @@ describe('forgeReadingFor — the opt-out', () => {
         // all, or the switch does not say what it claims.
         const r = resolver('o/r');
         const a = api(FULL);
-        forgeReadingFor({ env: { AGENT_CONFIG_DOCTOR_NO_FORGE: '1' }, resolveRepo: r, api: a });
+        forgeReadingFor({ env: { AGENT_CONFIG_DOCTOR_NO_FORGE: '1' }, resolveRepo: r, apiFor: give(a) });
         expect(r.ran()).toBe(0);
         expect(a.calls).toEqual([]);
     });
@@ -319,7 +403,7 @@ describe('forgeReadingFor — the opt-out', () => {
             forgeReadingFor({
                 env: { AGENT_CONFIG_OFFLINE: '1' },
                 resolveRepo: resolver('o/r'),
-                api: a,
+                apiFor: give(a),
             }).reading,
         ).toEqual(UNREAD_FORGE);
         expect(a.calls).toEqual([]);
@@ -327,7 +411,7 @@ describe('forgeReadingFor — the opt-out', () => {
 
     it('makes NO call when no repository resolves', () => {
         const a = api(FULL);
-        expect(forgeReadingFor({ env: {}, resolveRepo: resolver(null), api: a }).reading).toEqual(
+        expect(forgeReadingFor({ env: {}, resolveRepo: resolver(null), apiFor: give(a) }).reading).toEqual(
             UNREAD_FORGE,
         );
         expect(a.calls).toEqual([]);
@@ -342,15 +426,15 @@ describe('forgeReadingFor — the opt-out', () => {
             },
         };
         expect(
-            forgeReadingFor({ env: {}, resolveRepo: resolver('o/r'), api: thrower }).reading,
+            forgeReadingFor({ env: {}, resolveRepo: resolver('o/r'), apiFor: give(thrower) }).reading,
         ).toEqual(UNREAD_FORGE);
     });
 
     it('never throws when resolving the repository throws', () => {
-        const boom = (): string | null => {
+        const boom = (): ForgeTarget | null => {
             throw new Error('git exploded');
         };
-        expect(forgeReadingFor({ env: {}, resolveRepo: boom, api: api(FULL) }).reading).toEqual(
+        expect(forgeReadingFor({ env: {}, resolveRepo: boom, apiFor: give(api(FULL)) }).reading).toEqual(
             UNREAD_FORGE,
         );
     });

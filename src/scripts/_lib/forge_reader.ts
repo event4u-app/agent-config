@@ -113,14 +113,26 @@ export interface SpawnResult {
 }
 
 /** A subprocess runner. Injected so every failure branch is testable offline. */
-export type Runner = (cmd: string, args: readonly string[], timeoutMs: number) => SpawnResult;
+export type Runner = (
+    cmd: string,
+    args: readonly string[],
+    timeoutMs: number,
+    cwd?: string,
+) => SpawnResult;
 
-const defaultRunner: Runner = (cmd, args, timeoutMs) =>
+const defaultRunner: Runner = (cmd, args, timeoutMs, cwd) =>
     spawnSync(cmd, [...args], {
         encoding: 'utf8',
         timeout: timeoutMs,
         maxBuffer: 32 * 1024 * 1024,
+        ...(cwd === undefined ? {} : { cwd }),
     });
+
+/** The repository to read, and the host it lives on. */
+export interface ForgeTarget {
+    readonly host: string;
+    readonly slug: string;
+}
 
 /**
  * The live `gh api` caller.
@@ -138,15 +150,29 @@ const defaultRunner: Runner = (cmd, args, timeoutMs) =>
 export function liveForgeApi(
     timeoutFor: () => number = () => FORGE_CALL_TIMEOUT_MS,
     run: Runner = defaultRunner,
+    where: { readonly host?: string; readonly cwd?: string } = {},
 ): ForgeApi {
+    // **`gh` is addressed at the host and directory the SLUG came from.** The
+    // slug is resolved with `cwd: root`, and a `gh` spawned with neither
+    // inherits the process cwd and gh's default host — so with `--project`,
+    // `--root` or `AGENT_CONFIG_PROJECT_ROOT` pointing elsewhere, or with a
+    // GitHub Enterprise remote, the two halves of the read addressed two
+    // different repositories and a same-named repo elsewhere produced a
+    // confident verdict about somebody else's project.
+    const hostArgs =
+        where.host === undefined || where.host.toLowerCase() === 'github.com'
+            ? []
+            : ['--hostname', where.host];
     return {
         get(apiPath: string, paginate = false): unknown | null {
             const budget = timeoutFor();
             if (budget <= 0) return null;
-            const args = paginate ? ['api', '--paginate', '--slurp', apiPath] : ['api', apiPath];
+            const args = paginate
+                ? ['api', '--paginate', '--slurp', ...hostArgs, apiPath]
+                : ['api', ...hostArgs, apiPath];
             let r: SpawnResult;
             try {
-                r = run('gh', args, Math.min(FORGE_CALL_TIMEOUT_MS, budget));
+                r = run('gh', args, Math.min(FORGE_CALL_TIMEOUT_MS, budget), where.cwd);
             } catch {
                 return null;
             }
@@ -173,7 +199,7 @@ export function liveForgeApi(
  * name is skipped and reports `unread` — the safe degradation, and stated here
  * rather than left for a reader to discover from a blank row.
  */
-export function resolveForgeRepo(originUrl: string | null): string | null {
+export function resolveForgeRepo(originUrl: string | null): ForgeTarget | null {
     if (originUrl === null || originUrl.trim() === '') return null;
     const url = originUrl.trim();
     const m = /^(?:[A-Za-z][A-Za-z0-9+.-]*:\/\/)?(?:[^@/]+@)?([^/:]+)[:/]([^/:]+\/[^/]+?)(?:\.git)?$/.exec(
@@ -183,7 +209,13 @@ export function resolveForgeRepo(originUrl: string | null): string | null {
     const slug = m?.[2];
     if (host === undefined || slug === undefined) return null;
     if (!host.toLowerCase().includes('github')) return null;
-    return slug;
+    // The slug is interpolated into an API path and used as a replacement
+    // string, so its character set is checked rather than assumed. The previous
+    // pattern admitted `$`, `?`, `#` and `..` — one of those is a path
+    // traversal and another is a `String.replace` control sequence.
+    if (!/^[A-Za-z0-9._-]+\/[A-Za-z0-9._-]+$/.test(slug)) return null;
+    if (slug.split('/').some((seg) => seg === '.' || seg === '..')) return null;
+    return { host, slug };
 }
 
 /**
@@ -193,20 +225,27 @@ export function resolveForgeRepo(originUrl: string | null): string | null {
  * module with no ceiling and it ran before the budget was even constructed, so
  * a wedged `git` sat entirely outside a read that advertised a total ceiling.
  */
-export function originUrl(root: string, timeoutMs = GIT_REMOTE_TIMEOUT_MS): string | null {
-    let r;
+export function originUrl(
+    root: string,
+    run: Runner = defaultRunner,
+    timeoutMs = GIT_REMOTE_TIMEOUT_MS,
+): string | null {
+    let r: SpawnResult;
     try {
-        r = spawnSync('git', ['remote', 'get-url', 'origin'], {
-            cwd: root,
-            encoding: 'utf8',
-            timeout: timeoutMs,
-        });
+        // `ls-remote --get-url` APPLIES `url.<base>.insteadOf` rewrites and still
+        // makes no network call; `remote get-url` returns the configured URL
+        // verbatim. The difference matters in the unsafe direction: a
+        // github.com-shaped URL rewritten onto another host would otherwise be
+        // accepted and the read attributed to the wrong repository — which is a
+        // condition the Phase 3.2 amendment names as reversing it.
+        r = run('git', ['ls-remote', '--get-url', 'origin'], timeoutMs, root);
     } catch {
         return null;
     }
     if (r.status !== 0 || typeof r.stdout !== 'string') return null;
     const out = r.stdout.trim();
-    return out === '' ? null : out;
+    // With no such remote, `ls-remote --get-url` echoes the name back.
+    return out === '' || out === 'origin' ? null : out;
 }
 
 /**
@@ -257,10 +296,37 @@ function readRulesets(repo: string, api: ForgeApi): RulesetDetail[] | null {
  * other path-unsafe characters in an environment name, and an unencoded name
  * is exactly how the failed-read branch above gets reached by accident.
  */
+/**
+ * Flatten a `--paginate --slurp` payload down to one list.
+ *
+ * `--slurp` yields an array of PAGES. Each page is either a bare array (a list
+ * endpoint) or an object carrying the list under `key` (`environments`,
+ * `branch_policies`). `null` when the shape is not one of those — never a
+ * partial list, for the reason {@link readRulesets} states.
+ */
+function slurped(payload: unknown, key: string): unknown[] | null {
+    const pages = Array.isArray(payload) ? payload : [payload];
+    const out: unknown[] = [];
+    for (const page of pages) {
+        if (Array.isArray(page)) {
+            out.push(...page);
+            continue;
+        }
+        const listed = asObject(page)?.[key];
+        if (!Array.isArray(listed)) return null;
+        out.push(...listed);
+    }
+    return out;
+}
+
 function readDeployRestricted(repo: string, api: ForgeApi): boolean | null {
-    const payload = api.get(`repos/${repo}/environments`);
-    const envsRaw = asObject(payload)?.['environments'];
-    if (!Array.isArray(envsRaw)) return null;
+    // PAGINATED. Unpaginated, a repository with more environments than one page
+    // returns a subset, `deployRestrictedFrom`'s `every()` runs over what it can
+    // see, and an unlisted unrestricted environment reads as `satisfied` — the
+    // overstatement direction this module says it never takes. `readRulesets`
+    // guards the identical hazard one function up.
+    const envsRaw = slurped(api.get(`repos/${repo}/environments`, true), 'environments');
+    if (envsRaw === null) return null;
     const envs: EnvironmentPolicy[] = [];
     const patternsByEnv: Record<string, readonly string[]> = {};
     for (const raw of envsRaw) {
@@ -288,13 +354,20 @@ function readDeployRestricted(repo: string, api: ForgeApi): boolean | null {
                       },
         });
         if (policy?.['custom_branch_policies'] !== true) continue;
+        // `protected_branches` already decides the row for this environment —
+        // `deployRestrictedFrom` short-circuits on it before consulting the
+        // pattern map — so the extra call would spend budget on an answer that
+        // cannot change the verdict, and degrade the row to `unread` if it
+        // failed.
+        if (policy['protected_branches'] === true) continue;
         const names = api.get(
             `repos/${repo}/environments/${encodeURIComponent(name)}/deployment-branch-policies`,
+            true,
         );
-        const listed = asObject(names)?.['branch_policies'];
+        const listed = slurped(names, 'branch_policies');
         // A read that failed is a read nobody made — `unread`, never a trusted
         // flag. Trusting it here is how a wildcard policy reports `satisfied`.
-        if (!Array.isArray(listed)) return null;
+        if (listed === null) return null;
         patternsByEnv[name] = listed
             .map((p) => asObject(p)?.['name'])
             .filter((n): n is string => typeof n === 'string');
@@ -374,8 +447,15 @@ export interface ForgeReadRequest {
      * network calls" would be true of the HTTP traffic and false of the claim
      * a reader takes from it.
      */
-    readonly resolveRepo: () => string | null;
-    readonly api: ForgeApi;
+    readonly resolveRepo: () => ForgeTarget | null;
+    /**
+     * Build the API for the resolved target.
+     *
+     * A FACTORY rather than a ready API, so the host and working directory the
+     * slug came from necessarily reach `gh`. Handing in a pre-built client was
+     * how the two halves of the read came to address different repositories.
+     */
+    readonly apiFor: (target: ForgeTarget) => ForgeApi;
     /** Milliseconds left. Defaults to a {@link FORGE_TOTAL_BUDGET_MS} budget. */
     readonly remaining?: () => number;
 }
@@ -415,9 +495,10 @@ export function forgeReadingFor(req: ForgeReadRequest): ForgeRead {
     // spawns `git` and a budget that starts after it does not bound it.
     const remaining = req.remaining ?? budgetOf(FORGE_TOTAL_BUDGET_MS);
     try {
-        const repo = req.resolveRepo();
-        if (repo === null) return { repo: null, reading: UNREAD_FORGE };
-        return { repo, reading: readForge(repo, withDeadline(req.api, remaining)) };
+        const target = req.resolveRepo();
+        if (target === null) return { repo: null, reading: UNREAD_FORGE };
+        const reading = readForge(target.slug, withDeadline(req.apiFor(target), remaining));
+        return { repo: target.slug, reading };
     } catch {
         return { repo: null, reading: UNREAD_FORGE };
     }

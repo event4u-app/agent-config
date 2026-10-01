@@ -256,12 +256,17 @@ would have come from — and nothing else about the report changes. On a
 repository with many rulesets the budget is what stops the read, and the rows it
 did not reach stay `unread` rather than guessing.
 
-The block names the repository it read, as `repository`, and substitutes that
-slug into each row's `source`. That field is the one to check first: `doctor`
-resolves the repository from `git remote get-url origin`, so in a fork, a clone
-pointed at a mirror, or a consumer install, the rows describe whatever `origin`
-names — which may not be the project you are standing in. Offline, `repository`
-is `null` and the sources stay templates.
+When the read succeeds, the block names the repository it read, as
+`repository`, and substitutes that slug into each row's `source`. That field is
+the one to check first: `doctor` resolves the repository from the project's
+`origin` remote, so in a fork, a clone pointed at a mirror, or a consumer
+install, the rows describe whatever `origin` names — which may not be the
+project you think you are standing in.
+
+`repository` is `null` and the sources stay templates whenever nothing was
+read — offline, without credentials, opted out, or after a spent budget. It is
+reported only when at least one row carries a real value, so a named repository
+always means somebody actually answered for it.
 
 To switch the read off entirely, before any subprocess starts:
 

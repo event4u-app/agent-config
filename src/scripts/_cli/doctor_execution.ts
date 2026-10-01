@@ -77,22 +77,30 @@ export function executionJson(overrides: () => OverrideStream): Dict {
  */
 export function forgeProtectionJson(reading: ForgeReading, repo: string | null = null): Dict {
     const rows = forgeProtectionRows(reading);
-    // `{owner}/{repo}` is a TEMPLATE until a repository is known. Substituting
-    // it is what turns "a value came from this call" into "a value came from
-    // this call against this repository" — and which repository is exactly what
-    // stopped being obvious when the read went live. `origin` can be a fork, a
-    // mirror, or somebody else's project in a consumer install.
-    const named = (s: string): string => (repo === null ? s : s.replace(/\{owner\}\/\{repo\}/g, repo));
+    const readFromForge = rows.some((r) => r.state !== 'unread');
+    // **The slug is reported only when something was actually read, and that
+    // invariant is structural rather than a caller's promise.** The first
+    // version reported whatever the git remote resolved to, which is a LOCAL
+    // read that succeeds with no network — so an ordinary offline run (GitHub
+    // remote present, no connectivity, no opt-out) emitted a named repository
+    // and substituted sources while every row was `unread`. That made the
+    // claim this change rests on — offline output is what Phase 3.2 shipped —
+    // false on exactly the failed-live path the council condition names. The
+    // earlier verification only ever exercised the opt-out switch and read it
+    // as offline; the two are not the same path.
+    const named = repo === null || !readFromForge;
+    const name = (s: string): string =>
+        named ? s : s.replace(/\{owner\}\/\{repo\}/g, () => repo);
     return {
-        repository: repo,
+        repository: readFromForge ? repo : null,
         rows: rows.map((r) => ({
             id: r.id,
             state: r.state,
-            source: named(r.source),
+            source: name(r.source),
             detail: r.detail,
         })),
-        actions: protectionActions(rows).map(named),
-        read_from_forge: rows.some((r) => r.state !== 'unread'),
+        actions: protectionActions(rows).map(name),
+        read_from_forge: readFromForge,
     };
 }
 
@@ -120,11 +128,13 @@ export function forgeProtectionJsonFor(root: string): Dict {
     const remaining = budgetOf(FORGE_TOTAL_BUDGET_MS);
     const read = forgeReadingFor({
         env: process.env,
-        // A thunk, so the opt-out short-circuits before `git remote` spawns.
+        // A thunk, so the opt-out short-circuits before `git` spawns.
         resolveRepo: () => resolveForgeRepo(originUrl(root)),
-        // The per-call ceiling is whatever is left of the whole-read budget, so
-        // a call admitted near the deadline cannot run past it.
-        api: liveForgeApi(remaining),
+        // Built from the RESOLVED target, so `gh` is addressed at the host and
+        // directory the slug came from. The per-call ceiling is whatever is
+        // left of the whole-read budget, so a call admitted near the deadline
+        // cannot run past it.
+        apiFor: (t) => liveForgeApi(remaining, undefined, { host: t.host, cwd: root }),
         remaining,
     });
     return forgeProtectionJson(read.reading, read.repo);
