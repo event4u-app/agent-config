@@ -1,5 +1,7 @@
 # Inbox round `inbox-2026-10-b` — disposition
 
+<!-- evidence-type: analysis -->
+
 > **Source:** `agents/tmp.old/inbox-2026-10-b/` (one topic, `s01`). Analysed
 > 2026-10-01 by `/analyze:inbox` against `9bc8cd4`; the supplied plans were drafted at
 > `eb2cc9ea`, 218 commits earlier. External packages are named by class only: a
