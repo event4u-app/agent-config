@@ -5,7 +5,7 @@ review_by: 2026-12-08
 
 # Stub: road to a path-activation route under `delivery`
 
-> **Arrivals:** 1 — latest `inbox-2026-09-ab` (2026-09-29).
+> **Arrivals:** 2 — latest `inbox-2026-10-c` (2026-10-01), which found that `roadmap-progress-sync` is emitted WITH an exclusive `paths:` (its `command` triggers are not counted by `_has_non_path_trigger`), so the list below holds 17 rules that get no `paths:` plus one that loses its command triggers — corrected by `road-to-rule-triggers-and-links-that-hold` step 1.1; earlier: `inbox-2026-09-ab` (2026-09-29).
 
 > **Stub — not active work.** Created 2026-09-08 by the owner-delegated drain run
 > holding `road-to-delivery-for-every-host`, as the receiver for R2 finding 1 on

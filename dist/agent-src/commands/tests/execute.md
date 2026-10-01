@@ -5,7 +5,7 @@ pack: engineering-base
 visibility: internal
 cluster: tests
 sub: execute
-skills: [pest-testing, quality-tools]
+skills: [quality-tools]
 description: Run the project's test suite — stack-adaptive (pest / phpunit / vitest / jest / pytest / …)
 argument-hint: "[file | filter] [--include-e2e] [--include-slow] [--php]"
 suggestion:
@@ -31,6 +31,19 @@ returns the runner(s) to invoke per ecosystem:
   phpunit (`vendor/bin/phpunit`).
 - **JS/TS** → vitest (`npx vitest run`) or jest (`npx jest`).
 - **Python** → pytest. **Go** → `go test ./...`. **Rust** → `cargo test`.
+- **Ruby** → rspec (`bundle exec rspec`). **JVM** → junit (`./gradlew test`,
+  `./mvnw test`). **.NET** → `dotnet test`.
+
+**The resolver is the only stack authority, and `skills:` deliberately names
+no single-stack skill.** The frontmatter used to bind `pest-testing` unconditionally, which
+contradicted the sentence directly above it: a React-only repository was handed
+PHP testing guidance before it read the instruction not to hard-code a stack.
+A static list cannot express a per-repository answer, so the frontmatter keeps
+only the stack-neutral `quality-tools` and the load is
+**resolver-conditional**: once step 1 has named the runner, load the skill for
+THAT runner if one exists — `pest-testing` for pest, `laravel` for
+`php artisan test`, `playwright-testing` for playwright (selected under
+`--include-e2e`). Unconditional became conditional; it did not become nothing.
 
 **Wrappers win.** When a `Makefile`/`Taskfile.yml` `test:` target or a
 `package.json` `test` script exists, the resolver returns the wrapper
@@ -52,11 +65,15 @@ ask interactively, or emit `ambiguous_routing` in CI.
   `vendor/bin/phpunit`) → run **inside the PHP Docker container**
   (`docker compose exec -T <service> ...`); detect the service from
   `docker-compose.yml` / `compose.yaml` (see `rules/docker-commands.md`).
-- **Direct JS/Python/Go/Rust tool** → run on the host (or the relevant
-  container when the project containerises it).
+- **Every other direct tool** — JS, Python, Go, Rust, Ruby
+  (`bundle exec rspec`, or bare `rspec` with no Gemfile), JVM
+  (`./gradlew test` / `./mvnw test`), .NET (`dotnet test`) → run on the host,
+  or in the relevant container when the project containerises it. PHP is the
+  only ecosystem with a standing container rule.
 - If the user named a specific file or filter, pass it through the
-  resolved runner's native flag (`--filter=…` / a path for pest/phpunit,
-  a path/`-t` for vitest/jest, a node-id for pytest).
+  resolved runner's native flag: `--filter=…` or a path for pest/phpunit, a
+  path or `-t` for vitest/jest, a node-id for pytest, `-e`/a path for rspec,
+  `--tests`/`-Dtest=` for gradle/maven, `--filter` for `dotnet test`.
 - No specific test requested → run the resolved fast suite.
 
 ### 3. Analyze results
