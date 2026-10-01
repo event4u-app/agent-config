@@ -163,7 +163,18 @@ describe('runLearn() — budget-capped, fail-open aggregation', () => {
     });
 });
 
-describe('hook entry — default-off no-op, fail-open', () => {
+// 30 s rather than the 10 s global default, at describe level because every
+// case in this block spawns. `vitest.config.ts` names this exact escape — "If
+// CI still times out at 50%, the next move is a per-test timeout on the
+// spawn-bound files — named here so it is not re-derived as a global raise" —
+// and CI did still time out at 50%: `exits 0 and prints nothing when the
+// setting is off` timed out at 10000 ms on macOS shard 1/4 (2026-10-01, head
+// c65fb337f), while the same case passes locally in well under a second. Each
+// case here runs a full `npx tsx` subprocess, which is seconds of cold start on
+// a contended macOS runner before any assertion is reached.
+// A per-CASE timeout was rejected: in a block where every case pays the same
+// spawn cost, pinning one of them only moves the lottery to the next.
+describe('hook entry — default-off no-op, fail-open', { timeout: 30_000 }, () => {
     it('exits 0 and prints nothing when the setting is off', () => {
         seedIntake(tmp);
         const out = execFileSync(

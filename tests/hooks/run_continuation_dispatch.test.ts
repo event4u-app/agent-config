@@ -351,7 +351,18 @@ describe('run-continuation — chain order in the shipped manifest', () => {
     });
 });
 
-describe('run-continuation — driven through the live dispatcher', () => {
+// 30 s rather than the 10 s global default, at describe level because every
+// case in this block spawns. `vitest.config.ts` names this exact escape — "If
+// CI still times out at 50%, the next move is a per-test timeout on the
+// spawn-bound files — named here so it is not re-derived as a global raise" —
+// and CI did still time out at 50%: `does not read a stall off the PREVIOUS
+// source document` timed out at 10000 ms on macOS shard 1/4 (2026-10-01, head
+// c65fb337f), and the same case took the `check_static_parity` run down on the
+// same head. It passes locally in isolation. Every case in this block drives
+// the live dispatcher as a subprocess.
+// A per-CASE timeout was rejected: in a block where every case pays the same
+// spawn cost, pinning one of them only moves the lottery to the next.
+describe('run-continuation — driven through the live dispatcher', { timeout: 30_000 }, () => {
     it('engages on an autonomous claimed roadmap with an open step', () => {
         const root = writeWorkspace();
         const transcript = writeTranscript(3);
