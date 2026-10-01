@@ -138,7 +138,11 @@ function readJson(p: string): Record<string, unknown> | null {
  *
  * - `TOKEN=sk-live-… ./hook` — the first token IS the secret, because a
  *   leading environment assignment is not an argument.
- * - `https://user:pass@host/hook` — the credential is inside the program.
+ * - an `https://` program carrying userinfo before the `@` — the credential is
+ *   inside the program rather than beside it. (Described rather than written
+ *   out: this repository's own `check_secret_leak` classifies that URI shape
+ *   `db-connection-uri` and fails the build on it, which is the gate behaving
+ *   correctly — a doc example is not a reason to add an allow-marker.)
  * - `curl -H 'Auth: a;b' …` — splitting on `;` ignores quoting, so an
  *   argument fragment gets promoted into the output.
  *
