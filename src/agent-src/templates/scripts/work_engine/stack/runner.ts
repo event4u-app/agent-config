@@ -968,7 +968,13 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
             new BehaviorRunnerResult('python', 'behave', 'behave', scope, HIGH, 'behave declared as a python dependency'),
         );
     }
-    if (/\bpytest-bdd\b/.test(py_text)) {
+    // Anchored like `_PY_BEHAVE` beside it, and for a sharper reason than
+    // symmetry: an unanchored match on a commented-out `# pytest-bdd (dropped)`
+    // beside a real `behave` declaration produced TWO python rows, which the
+    // per-ecosystem grouping then turned into a FALSE refusal — destroying the
+    // one correct answer the axis had. A false positive on this axis does not
+    // merely add noise; it can delete a true row.
+    if (_PY_BDD.test(py_text)) {
         out.push(
             new BehaviorRunnerResult(
                 'python',
@@ -1118,6 +1124,9 @@ const _MAX_BEHAVIOR_SCOPES = 200;
  * start of its own line.
  */
 const _PY_BEHAVE = /^[ \t]*["']?behave["']?[ \t]*(?:$|[=<>~!,;[])/m;
+
+/** `pytest-bdd` declared as a dependency — same anchoring, same reason. */
+const _PY_BDD = /^[ \t]*["']?pytest-bdd["']?[ \t]*(?:$|[=<>~!,;[])/m;
 
 /**
  * The `packages:` sequence of a `pnpm-workspace.yaml`, and ONLY that key.

@@ -898,6 +898,19 @@ describe('stack/runner — behaviour-runner axis', () => {
         expect(_pnpm_packages(text)).toEqual(['a/*', 'b', 'c']);
     });
 
+    it('a commented-out pytest-bdd does not fabricate a FALSE refusal', () => {
+        // The sharpest consequence of an unanchored match on this axis: a real
+        // `behave` declaration plus a dead mention of its neighbour produced
+        // two python rows, which the per-ecosystem grouping then collapsed
+        // into `unknown`. A false positive here does not add noise — it
+        // DELETES the one correct answer the axis had.
+        write('requirements.txt', 'behave\n# pytest-bdd (dropped 2024)\n');
+        const rows = resolve_behavior_runners(tmp);
+        expect(rows).toHaveLength(1);
+        expect(rows[0]?.runner).toBe('behave');
+        expect(rows[0]?.conflict).toEqual([]);
+    });
+
     it('behave needs a DECLARATION, not the English verb in prose', () => {
         write('pyproject.toml', '[project]\ndescription = "documents how widgets behave under load"\n');
         expect(resolve_behavior_runners(tmp)).toEqual([]);

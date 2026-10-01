@@ -36,8 +36,10 @@ React-only repository loaded PHP testing guidance before reading the sentence
 above telling it not to. There is no per-stack skill to bind instead — `ls
 src/skills | grep -iE 'jest|vitest|pytest|rspec|junit'` is empty — and a static
 list cannot express a per-repository answer, so the binding drops to the
-stack-neutral pair. Nothing replaces it: step 1 above is the only stack
-authority this command has, and no later step loads a skill by runner label.
+stack-neutral pair and the load becomes **resolver-conditional**: once step 1
+has named the runner, load the skill for THAT runner if one exists — today
+`pest-testing` for pest, `laravel` for `php artisan test` — and none
+otherwise. Unconditional became conditional; it did not become nothing.
 
 Then read the existing tests under the project's test directory to match
 the style and conventions already in use (assertion shape, naming, fixtures).

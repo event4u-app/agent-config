@@ -343,7 +343,7 @@ get there.
       label has a presence case AND an absence case, plus wrapper cases, a
       polyglot case asserting all three ecosystems in one root, and a case
       proving `--php` still narrows `selected` now that more ecosystems
-      exist. **96 tests green** in that file, and the figure reconciles: 91
+      exist. **97 tests green** in that file, and the figure reconciles: 92
       literal `it()` blocks plus one `it.each` expanding to 5 cases. It has
       been re-measured at each review round rather than carried forward — an
       earlier version said 70, and then 93 with a parenthetical whose
@@ -564,7 +564,7 @@ All six verified 2026-10-01 at branch `drain/behavior-vocabulary-close`.
       All three present and asserted by name in the constants test. Presence
       and absence fixtures exist for each; the rspec absence fixture was seen
       red under a neutralised guard, failing exactly 1 test with no
-      collateral. 96 tests green in `stack_runner.test.ts`.
+      collateral. 97 tests green in `stack_runner.test.ts`.
 - [x] AC-4 — The behaviour-runner axis returns per-scope rows; a monorepo fixture
       returns more than one row and a conflict fixture returns a refusal naming
       both runners.
@@ -641,8 +641,24 @@ neither spends the ratchet early nor loses the trigger.
 
 ### Residue carried out of the review rounds
 
-Five completion-review rounds produced 55 findings; 50 are fixed and 5 are
+Six completion-review rounds produced 63 findings; 54 are fixed and 9 are
 `accepted-risk`, each with a stated `revisit-if`. What remains:
+
+- **Two detector precision gaps**, both named by round 6 and both the same
+  shape as ones that were fixed: `io.cucumber` over JVM build text and
+  `Reqnroll` / `SpecFlow` over .NET project text are still unanchored word
+  matches, where the python and ruby signals are anchored to a declaration.
+  Lower exposure than the python case — those tokens are not English words —
+  but the same class. Related: `_dotnet_project_text` folds solution text into
+  the buffer it matches against, so a project *named* `Billing.SpecFlow` can
+  raise a HIGH row from a filename. Closing that needs two buffers rather than
+  one, which is a restructure, not a correction.
+- **The wrapper claim is wider than the wrappers.** `_task_runner_wrappers`
+  emits only `php-test` and `js-test` roles, while the contract states
+  "task-runner wrappers win" for the resolver as a whole. Pre-existing for
+  Python, Go and Rust; this change widens it by three ecosystems. Naming it
+  here rather than inventing wrapper semantics for Ruby, JVM and .NET under a
+  review round — which is how an unmeasured guess ships.
 
 - **Cost trades, three of them**, accepted with `revisit-if` conditions in the
   round-3, round-4 and round-5 artefacts: duplicate root-scope reads

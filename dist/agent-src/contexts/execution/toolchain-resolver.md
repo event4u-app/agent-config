@@ -13,9 +13,13 @@ tools and run the right one — instead of a per-stack command explosion.
 > pytest / go / cargo, not N per-stack variants. "Only genuine PHP-space
 > commands stay PHP-locked."
 
-**Size budget:** ≤ 7,500 chars — raised from 6,000 on 2026-10-01, when the
-resolver went from 9 runners on one axis to 12 across two. Shrink-only from
-here; the enforced ceiling is `check_depth_budget`'s 16,000.
+**Size budget:** ≤ 8,500 chars — raised from 6,000 on 2026-10-01, when the
+resolver went from 9 runners on one axis to 12 across two. The intermediate
+7,500 was a trap, not a constraint: the file measured 7,496, so any later
+edit of any size broke it, and the same sentence forbade raising it again.
+A ceiling set 0.05 % above its own artefact tells the next author only that
+they may not write. This one leaves real headroom. The enforced ceiling is
+`check_depth_budget`'s 16,000.
 
 ## 1. The resolver
 

@@ -41,7 +41,10 @@ PHP testing guidance before it read the instruction not to hard-code a stack.
 There is no per-stack skill to bind instead — `ls src/skills | grep -iE
 'jest|vitest|pytest|rspec|junit'` is empty — and a static list cannot express a
 per-repository answer, so the binding keeps only the stack-neutral
-`quality-tools`.
+`quality-tools` and the load becomes **resolver-conditional**: once step 1 has
+named the runner, load the skill for THAT runner if one exists — today
+`pest-testing` for pest, `laravel` for `php artisan test` — and none
+otherwise. Unconditional became conditional; it did not become nothing.
 
 **Wrappers win.** When a `Makefile`/`Taskfile.yml` `test:` target or a
 `package.json` `test` script exists, the resolver returns the wrapper
