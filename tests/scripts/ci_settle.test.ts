@@ -10,6 +10,7 @@ import { describe, expect, it } from 'vitest';
 import {
     classifyPoll,
     classifyTarget,
+    parseArgs,
     FOREGROUND_CEILING_MIN,
     type RemoteTip,
 } from '../../src/scripts/ci_settle.js';
@@ -206,5 +207,90 @@ describe('classifyTarget', () => {
 
     it('is case-insensitive on state, so a lowercase `open` is not refused', () => {
         expect(classifyTarget(pr('open', sha), '', 0, found(sha)).kind).toBe('open');
+    });
+});
+
+// The failure this block exists to prevent, measured 2026-10-01 on PR #2130:
+// the call was written `ci_settle 2130 --timeout 1700`. Every other waiting
+// tool spells that flag `--timeout`, this one spells it `--timeout-min`, and
+// the old parser did two silent things with the mistake rather than one. It
+// ignored the unknown flag, so the wait fell back to the 9-minute default; and
+// because `1700` carries no leading dashes it survived the positional filter,
+// so the stray value became `positional[1]` and vanished. The caller believed
+// they had asked for 28 minutes, got 9, and read the resulting
+// `DID NOT SETTLE` as a slow CI rather than as their own typo. A waiter whose
+// whole product is a trustworthy verdict must not accept an argument it does
+// not honour.
+describe('parseArgs', () => {
+    it('accepts the documented form', () => {
+        const r = parseArgs(['2130', '--timeout-min', '20', '--interval-sec', '30']);
+        expect(r.kind).toBe('ok');
+        if (r.kind !== 'ok') return;
+        expect(r.pr).toBe('2130');
+        expect(r.timeoutMin).toBe(20);
+        expect(r.intervalSec).toBe(30);
+    });
+
+    it('defaults both knobs when neither is given', () => {
+        const r = parseArgs(['2130']);
+        expect(r.kind).toBe('ok');
+        if (r.kind !== 'ok') return;
+        expect(r.timeoutMin).toBe(FOREGROUND_CEILING_MIN);
+        expect(r.intervalSec).toBe(60);
+    });
+
+    it('REFUSES an unknown flag instead of ignoring it — the measured case', () => {
+        const r = parseArgs(['2130', '--timeout', '1700']);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('--timeout');
+        expect(r.message).toContain('--timeout-min');
+    });
+
+    it('refuses any other unknown flag, not just the one that was measured', () => {
+        for (const flag of ['--wait', '--max-min', '--poll', '--timeoutmin']) {
+            const r = parseArgs(['2130', flag, '5']);
+            expect(r.kind, flag).toBe('usage');
+        }
+    });
+
+    it('refuses a second positional rather than swallowing it', () => {
+        const r = parseArgs(['2130', '1700']);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('1700');
+    });
+
+    it('refuses a flag value it cannot parse, rather than falling back to the default', () => {
+        for (const bad of ['abc', '', '-5', '0', '1.5min']) {
+            const r = parseArgs(['2130', '--timeout-min', bad]);
+            expect(r.kind, bad).toBe('usage');
+        }
+    });
+
+    it('refuses a flag given with no value at all', () => {
+        expect(parseArgs(['2130', '--timeout-min']).kind).toBe('usage');
+        expect(parseArgs(['2130', '--interval-sec']).kind).toBe('usage');
+    });
+
+    it('still refuses a missing PR, and says so', () => {
+        const r = parseArgs([]);
+        expect(r.kind).toBe('usage');
+        if (r.kind !== 'usage') return;
+        expect(r.message).toContain('usage: ci_settle');
+    });
+
+    it('accepts `--flag=value` as well, since that is the other spelling a caller reaches for', () => {
+        const r = parseArgs(['2130', '--timeout-min=20']);
+        expect(r.kind).toBe('ok');
+        if (r.kind !== 'ok') return;
+        expect(r.timeoutMin).toBe(20);
+    });
+
+    it('keeps a timeout above the foreground ceiling — it warns, it does not refuse', () => {
+        const r = parseArgs(['2130', '--timeout-min', '30']);
+        expect(r.kind).toBe('ok');
+        if (r.kind !== 'ok') return;
+        expect(r.timeoutMin).toBe(30);
     });
 });

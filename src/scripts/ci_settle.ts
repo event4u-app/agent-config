@@ -293,25 +293,103 @@ function sleepSync(seconds: number): void {
     });
 }
 
-export function main(argv: readonly string[]): number {
-    const positional = argv.filter((a) => !a.startsWith('--'));
+/** The only flags this waiter honours. Anything else is a caller mistake. */
+const KNOWN_FLAGS = ['--timeout-min', '--interval-sec'] as const;
+
+const USAGE =
+    'usage: ci_settle <pr> [--timeout-min N] [--interval-sec N]\n' +
+    `  default --timeout-min is ${String(FOREGROUND_CEILING_MIN)}, which fits inside one foreground Bash call (600 s cap).\n` +
+    '  a longer wait is a BACKGROUND job, not a bigger number — a foreground call past the cap is killed and reports nothing.\n';
+
+export type ParsedArgs =
+    | { kind: 'ok'; pr: string; timeoutMin: number; intervalSec: number }
+    | { kind: 'usage'; message: string };
+
+/**
+ * Parse argv, REFUSING anything this waiter would not honour.
+ *
+ * Refusal rather than a default is the whole point. The previous parser read
+ * its two knobs with `argv.indexOf(flag)` and filtered positionals on a leading
+ * `--`, so a caller who wrote the near-universal `--timeout 1700` got two
+ * silent substitutions at once: the unknown flag was ignored, and its value —
+ * carrying no dashes — survived as a second positional and was dropped. The
+ * wait then ran for the 9-minute default while the caller believed they had
+ * asked for 28, and the resulting `DID NOT SETTLE` read as a slow CI rather
+ * than as their own typo.
+ *
+ * That is the one failure a waiter must not have. Its entire product is a
+ * verdict somebody will act on, and a verdict produced under arguments the
+ * caller did not actually give is worse than no verdict, because it looks like
+ * one. So every unrecognised flag, every unusable value and every extra
+ * positional is a usage refusal, exit 2 — the code this tool already reserves
+ * for "no verdict is claimed".
+ *
+ * `--flag=value` is accepted beside `--flag value` because it is the other
+ * spelling a caller reaches for, and refusing it would trade one silent
+ * surprise for a noisy one with no safety gained.
+ */
+export function parseArgs(argv: readonly string[]): ParsedArgs {
+    const refuse = (why: string): ParsedArgs => ({ kind: 'usage', message: `ci_settle: ${why}\n${USAGE}` });
+
+    const positional: string[] = [];
+    const given = new Map<string, string>();
+
+    for (let i = 0; i < argv.length; i++) {
+        const a = argv[i] as string;
+        if (!a.startsWith('--')) {
+            positional.push(a);
+            continue;
+        }
+        const eq = a.indexOf('=');
+        const name = eq === -1 ? a : a.slice(0, eq);
+        if (!(KNOWN_FLAGS as readonly string[]).includes(name)) {
+            return refuse(
+                `unknown flag ${name}. This waiter spells its deadline --timeout-min (in MINUTES), not --timeout`,
+            );
+        }
+        if (given.has(name)) return refuse(`${name} given twice`);
+        if (eq !== -1) {
+            given.set(name, a.slice(eq + 1));
+            continue;
+        }
+        const v = argv[i + 1];
+        if (v === undefined || v.startsWith('--')) return refuse(`${name} needs a value`);
+        given.set(name, v);
+        i++;
+    }
+
     const pr = positional[0];
-    if (pr === undefined) {
-        process.stderr.write(
-            'usage: ci_settle <pr> [--timeout-min N] [--interval-sec N]\n' +
-                `  default --timeout-min is ${String(FOREGROUND_CEILING_MIN)}, which fits inside one foreground Bash call (600 s cap).\n` +
-                '  a longer wait is a BACKGROUND job, not a bigger number — a foreground call past the cap is killed and reports nothing.\n',
+    if (pr === undefined) return refuse('no PR number given');
+    if (positional.length > 1) {
+        return refuse(
+            `unexpected argument ${String(positional[1])} — a flag value must follow its flag, e.g. --timeout-min ${String(positional[1])}`,
         );
+    }
+
+    const num = (flag: string, dflt: number): number | string => {
+        const v = given.get(flag);
+        if (v === undefined) return dflt;
+        if (!/^[0-9]+$/.test(v)) return `${flag} wants a whole number of ${flag === '--timeout-min' ? 'minutes' : 'seconds'}, got ${JSON.stringify(v)}`;
+        const n = parseInt(v, 10);
+        if (n <= 0) return `${flag} wants a positive number, got ${v}`;
+        return n;
+    };
+
+    const timeoutMin = num('--timeout-min', FOREGROUND_CEILING_MIN);
+    if (typeof timeoutMin === 'string') return refuse(timeoutMin);
+    const intervalSec = num('--interval-sec', 60);
+    if (typeof intervalSec === 'string') return refuse(intervalSec);
+
+    return { kind: 'ok', pr, timeoutMin, intervalSec };
+}
+
+export function main(argv: readonly string[]): number {
+    const parsed = parseArgs(argv);
+    if (parsed.kind === 'usage') {
+        process.stderr.write(parsed.message);
         return 2;
     }
-    const num = (flag: string, dflt: number): number => {
-        const i = argv.indexOf(flag);
-        if (i === -1) return dflt;
-        const v = argv[i + 1];
-        const n = v === undefined ? NaN : parseInt(v, 10);
-        return Number.isFinite(n) && n > 0 ? n : dflt;
-    };
-    const timeoutMin = num('--timeout-min', FOREGROUND_CEILING_MIN);
+    const { pr, timeoutMin, intervalSec } = parsed;
     if (timeoutMin > FOREGROUND_CEILING_MIN) {
         // Said once, up front, rather than discovered when the call is killed:
         // a truncated wait produces no line at all, so the warning has to come
@@ -322,7 +400,6 @@ export function main(argv: readonly string[]): number {
                 'the deadline and will report nothing — run it as a background job for a wait this long.\n',
         );
     }
-    const intervalSec = num('--interval-sec', 60);
 
     // Up front, because waiting nine minutes to learn the PR was merged before
     // the wait began is the expensive way to find out.
