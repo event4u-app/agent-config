@@ -48,14 +48,21 @@ prevent.
 SET-SHA256  7445c18aa73c966cbb3fd91318747af0f3454351cea4ff5137852d09148965ba
 ```
 
-Computed over the lines `<skill> <sha256-of-file> <partition>\n` for all
-101 files, byte-sorted as one list (`LC_ALL=C`) — NOT per partition. The two
-tables below split that same list in two for reading; the hash is over the
+Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
+file in the set, byte-sorted as one list (`LC_ALL=C`) — NOT per partition. The
+two tables below split that same list in two for reading; the hash is over the
 undivided, byte-sorted whole, and the reproduce command below is the
 authority on the order. It pins the partition **and** the corpus content: editing any one
-of the 100 files changes it. A later run recomputing a different value
+file in the set changes it. A later run recomputing a different value
 has either grown the corpus or edited a frozen file, and either is a finding
 before it is a bug.
+
+**The count is deliberately not repeated here** (corrected 2026-10-01). This
+paragraph read "101 files" and "the 100 files" while the set was already 102 —
+two counts that drifted across the 2026-09-19 and 2026-09-30 growths because
+each of them moved the hash and nobody moved the prose beside it. A number
+restated next to the thing it describes rots independently of it; the live
+count is in § The frozen set and is re-derived by the reproduce command below.
 
 **Reproduce:**
 
