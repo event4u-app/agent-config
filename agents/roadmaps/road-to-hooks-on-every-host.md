@@ -159,12 +159,33 @@ with a date on it.
 
 ## Phase 2 — Codex and copilot: a row only with evidence (D5)
 
-- [ ] **2.1 Host documentation check, recorded.** Read the hosts' own hook
+- [x] **2.1 Host documentation check, recorded.** Read the hosts' own hook
       documentation for codex and copilot (vendor docs are not harvest
       subjects; plaintext `docs_url` is fine); record the result as a
       `## Decisions` row here.
       verify: D1 below carries `resolved by: evidence` with the `docs_url`.
-- [ ] **2.2 If codex exposes lifecycle hooks:** add `platforms.codex` to
+
+      **Evidence (2026-10-01).** D1 now carries both URLs verbatim instead of
+      the forward reference "`docs_url` recorded in 2.1". Both were re-fetched
+      live today (HTTP 200) and both are digested into `host_lowering.yaml`, so
+      the citation is pinned to a body rather than to a URL that can be
+      rewritten under it.
+
+      **Both hosts document lifecycle hooks, so D1's "otherwise a dated zero"
+      branch does not fire for either.** Codex documents `SessionStart`,
+      `SessionEnd`, `SubagentStart`, `SubagentStop`, `PreToolUse`,
+      `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`,
+      `UserPromptSubmit`, `Stop` and `Interrupt` at `~/.codex/hooks.json`;
+      Copilot documents `sessionStart`, `sessionEnd`, `userPromptSubmitted`,
+      `preToolUse`, `postToolUse`, `agentStop`, `subagentStop` and
+      `errorOccurred` at `~/.copilot/hooks/*.json`. The claim this tree already
+      carried — that codex's refusal contract "matches Claude Code's" — was
+      checked against the live page rather than inherited: the page does state
+      `permissionDecision: "deny"` plus "You can also use exit code `2` and
+      write the blocking reason to `stderr`". The documentary claim is correct.
+      Whether the host honours it is step 2.2, and the answer there is not the
+      one the documentation implies.
+- [x] **2.2 If codex exposes lifecycle hooks:** add `platforms.codex` to
       `hook_manifest.yaml`, a `codex` row to `host_lowering.yaml` with a
       `verified:` block, `src/scripts/hooks/codex-dispatcher.sh` in the shape
       of the six existing shims (65–117 lines), the trampoline constant in
@@ -173,9 +194,89 @@ with a date on it.
       gets `answered_at` and the `docs_url` that says so.
       verify: either `tests/hooks/permission_decision.test.ts` gains a codex
       deny fixture and the install smoke covers codex, or the dated zero.
-- [ ] **2.3 Same for copilot** (today `platforms.copilot: {ask: text,
+
+      **Evidence (2026-10-01). The dated zero, and it is now backed by a probe
+      rather than by a reading.**
+
+      *Why this branch, when the documentation indicated the other one.* The
+      step branches on "does codex expose lifecycle hooks", and the answer from
+      the documentation is yes — which points at the first branch: arm it, with
+      a deny fixture. That branch was **refuted by measurement before it was
+      written**. `codex` is installed on the machine running this pass
+      (`codex-cli 0.148.0`), so for the first time the documented contract could
+      be run instead of quoted:
+
+      - an isolated `CODEX_HOME` was given a `hooks.json` binding `PreToolUse`
+        with `matcher: "Bash"` to a script writing to stderr and exiting 2 —
+        the documented refusal path, verbatim;
+      - `codex exec --sandbox read-only "Run the shell command: echo …"`
+        **executed the call and returned its output**. It was not refused;
+      - the feature is not off: `codex features list` reports `hooks  stable
+        true` on this build.
+
+      A "codex deny fixture" would therefore have asserted a behaviour this
+      tree has measured as absent. Writing it is not a harder version of the
+      work — it is a false test, and the first branch is unavailable for that
+      reason rather than for difficulty.
+
+      *What the probe does NOT establish, stated because the opposite reading is
+      the failure this roadmap family exists to fix.* It does not show codex
+      cannot refuse. Two explanations survive: the installed build is 0.148.0
+      against a current 0.159.3 and the page read describes the current one; and
+      the probe never separated "the hook fired and was ignored" from "the
+      matcher never matched", because the instrumented re-run — a hook recording
+      its own stdin before refusing — was blocked by the harness this pass ran
+      under. Both are recorded in the row, with the one cheap experiment that
+      would separate them named: a marker-file re-run on >= 0.159.3.
+
+      *What landed.* `probe_at: 2026-10-01` and `host_version: 0.148.0` on the
+      `codex` row, with the finding in the row's own comment; `slots: {}` and
+      `block_exit` unarmed, which is what a null means here; D2 added recording
+      that a documented refusal does not arm a binding, with its revisit-if; and
+      `docs/enforcement-by-host.md`'s **"No row for Codex, and that is the third
+      kind of absence"** paragraph corrected — it had gone false when the codex
+      row landed and was contradicting the generated region's own trailer two
+      paragraphs below it. The slot count stays 0 because
+      `hook_manifest.yaml`'s `platforms:` block still declares eight hosts and
+      not codex — verified, not assumed.
+- [x] **2.3 Same for copilot** (today `platforms.copilot: {ask: text,
       fallback_only: true}`, `hook_manifest.yaml:1554-1556`).
       verify: as 2.2.
+
+      **Evidence (2026-10-01). The dated zero, documentation-only, and the
+      reason it is documentation-only is recorded rather than left blank.**
+
+      Copilot documents lifecycle hooks — `sessionStart`, `sessionEnd`,
+      `userPromptSubmitted`, `preToolUse`, `postToolUse`, `agentStop`,
+      `subagentStop`, `errorOccurred` at `~/.copilot/hooks/*.json`, with
+      `preToolUse` fail-closed on exit 2. The page was re-fetched today (HTTP
+      200) and digested. So, as with codex, D1's "otherwise a dated zero"
+      condition does not fire on the host's documentation.
+
+      **`probe_at` stays null, and that is an absence of opportunity, not of
+      effort.** `command -v copilot` → not installed, and `~/.copilot` carries
+      no binary, so there is no host on this machine to run a deny against.
+      This is the one externally-imposed limit in this roadmap: a CLI that does
+      not exist here cannot be probed. The row now says so in its own comment,
+      next to `probe_at: null`, so the null reads as "could not look" rather
+      than as "did not bother".
+
+      **The codex probe is why this row must not be armed from its page alone.**
+      Two hosts documented the same exit-2 refusal contract. The one that could
+      be tested did not honour it on the installed build. Arming copilot from a
+      reading, having just watched a reading fail on its sibling, would be the
+      exact defect `host_lowering.yaml` was built to stop. The row stays
+      `slots: {}` with a dated, cited, digested `verified:` block; D2 carries
+      the rule and the revisit-if.
+
+      **What was also removed here.** The copilot row's comment pointed binding
+      work at `road-to-hooks-on-copilot-and-codex` — a roadmap that does not
+      exist anywhere in the tree. A dangling pointer to a plan nobody wrote
+      reads as "tracked elsewhere" and is worse than silence, so it is replaced
+      by the actual gating condition. The work it named is now D2's revisit-if,
+      which is the right instrument: a roadmap whose first step is "wait for a
+      vendor build" is not executable, and a decision with a named reopening
+      condition is.
 
 ## Phase 3 — Smoke covers every bound host
 
@@ -226,7 +327,8 @@ with a date on it.
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
-| D1 | deterministic | evidence | Codex/copilot rows are added only if the host's own documentation names lifecycle hooks; otherwise a dated zero | `docs_url` recorded in 2.1 | the host publishes hooks |
+| D1 | deterministic | evidence | Codex/copilot rows are added only if the host's own documentation names lifecycle hooks; otherwise a dated zero | Both hosts document them, so both get a row: codex `https://developers.openai.com/codex/hooks.md`, copilot `https://docs.github.com/en/copilot/concepts/agents/hooks.md`, both re-fetched 200 on 2026-10-01 and digested in `host_lowering.yaml` | the host publishes hooks |
+| D2 | deterministic | evidence | A documented refusal contract does **not** arm `block_exit`; only a reproduced one does | The codex live probe of 2026-10-01 (`codex-cli 0.148.0`): the documented `PreToolUse` exit-2 deny did not block the call, with `hooks` reported `stable true`. Two hosts documented the same contract and the one that could be tested did not honour it | a probe on `codex` >= 0.159.3, or on a Copilot CLI once installed, reproduces the documented deny |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-28 | reviewer: claude/host -->
@@ -238,14 +340,55 @@ with a date on it.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No `verified: null` in `host_lowering.yaml`; `lint_hook_manifest`
+- [x] AC-1 — No `verified: null` in `host_lowering.yaml`; `lint_hook_manifest`
       green.
-- [ ] AC-2 — Every host×slot pair carries `block_exit` or a dated `null` with
+
+      **Evidence (2026-10-01).** All 9 rows carry a `verified:` block; the only
+      `verified: null` string in the file is line 13 of the header, which is the
+      sentence defining the term. `lint_hook_manifest --as-of 2026-10-01` exits
+      0 with **7** warnings, all of them the admissible
+      `verified.host_version is null` note — down from 8, because the codex row
+      now carries `0.148.0` from the live probe.
+
+- [x] AC-2 — Every host×slot pair carries `block_exit` or a dated `null` with
       `docs_url`; the enforcement table regenerated; every `verified:` block
       carries `docs_digest` and the re-fetch job has run once.
-- [ ] AC-3 — Codex and copilot each have a row with a verified block or a
+
+      **Evidence (2026-10-01).** All 32 pairs dated — and enforced, not merely
+      met: `_check_slot_answers` makes an undated pair an error and refuses a
+      dated answer with no reachable citation. `check_enforcement_matrix --write`
+      reports `already current`, i.e. regeneration is a no-op against the
+      committed table. The re-fetch job has run twice: once with `--write` to
+      record 8 digests, and once read-only, which returned 8 unchanged and so
+      also demonstrates the digests are reproducible rather than volatile.
+
+      **One honest subtraction from "every `verified:` block carries
+      `docs_digest`": `cowork` does not, and must not.** Its `docs_url` is
+      `null` because the 2026-09-29 sweep found no public hooks page for that
+      host, so there is no body to hash. A digest there would be invented, which
+      is the one thing this table refuses. The criterion is met as "every block
+      that cites a page carries the digest of that page", 8 of 8, and the ninth
+      is a `no-url` the watcher reports and skips by design. A test pins both
+      halves so the exception cannot quietly become a gap.
+
+- [x] AC-3 — Codex and copilot each have a row with a verified block or a
       dated zero, per D1.
-- [ ] AC-4 — The install smoke test iterates every bound host.
+
+      **Evidence (2026-10-01).** Both rows exist with dated, cited, digested
+      `verified:` blocks and `slots: {}`. Codex additionally carries
+      `probe_at: 2026-10-01` / `host_version: 0.148.0` from a live deny probe;
+      copilot's `probe_at` stays null with the reason recorded (no CLI on this
+      machine). D1 carries both URLs; D2 records the rule the probe produced —
+      a documented refusal does not arm a binding, only a reproduced one does.
+
+- [x] AC-4 — The install smoke test iterates every bound host.
+
+      **Evidence (2026-10-01).** Three tests in
+      `tests/install/global_install_hooks_smoke.test.ts` iterate
+      `host_lowering.yaml` and assert the probe covers every host with
+      `slots > 0`, covers nothing with `slots: {}`, and would fail on a newly
+      bound host. Sensitivity proven by temporarily binding a `codex` slot in
+      the real table and watching the assertion fail with its intended message.
 
 ## Provenance
 
