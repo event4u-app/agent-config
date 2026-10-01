@@ -173,13 +173,15 @@ that corpus's content hash moved and the set hash over all rows moved with it.
 |---|---|---|
 | `test-case-discovery` | `ab3208cc…` | `d3de03bc…` |
 
-The `SET-SHA256` moved with it, and the value is deliberately NOT quoted
-here: it is a hash over every row, so any later re-pin by any branch changes
-it, and a number copied into a prose table goes stale the moment someone
-else's corpus moves. It did — this section was merged with a concurrent
-re-pin and the figure it originally carried was already a third value out of
-date. The live number is the `SET-SHA256` block above, and
-`tests/scripts/trigger_corpus_holdout_pin.test.ts` is what keeps it true.
+The `SET-SHA256` moved with it, and this table deliberately stops carrying
+it: it is a hash over every row, so any later re-pin by any branch changes it,
+and a number in a WAS/NOW table goes stale the moment someone else's corpus
+moves. It did — this section was merged with a concurrent re-pin and the
+figure it originally carried was already a third value out of date. The live
+number is the `SET-SHA256` block above; where later sections quote it to
+narrate that reconciliation they are describing a moment, not pinning a value,
+and `tests/scripts/trigger_corpus_holdout_pin.test.ts` is what keeps the block
+itself true.
 
 **Why this does not touch the seal.** The partition is keyed on
 `sha256(<skill name>)`, never on the file's contents, so editing a corpus

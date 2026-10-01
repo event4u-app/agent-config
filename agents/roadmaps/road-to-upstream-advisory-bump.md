@@ -17,10 +17,15 @@ execution:
 ## Goal
 
 `npm audit --omit=dev --audit-level=high` exits 0 on `main`, and the Static
-Checks job's audit step is green again — either because both advisories are
-resolved by a dependency bump that the suite still passes, or because a
-documented, time-bounded exception exists and the step is configured to
-respect it. Someone else can tell this happened by running that one command.
+Checks job's audit step is green again, because the advisories are resolved
+by a dependency bump that the suite still passes. Someone else can tell this
+happened by running that one command.
+
+An exception path — suppressing the finding rather than fixing it — is
+deliberately NOT offered: no step implements one, and AC-1 forbids it by
+construction, since it asks for the command to exit 0 rather than for the job
+to be green. Deciding to suppress instead is a change to this plan, which is
+the point of not leaving the door ajar in the goal.
 
 ## Phase 1 — Establish the blast radius before touching the lockfile
 

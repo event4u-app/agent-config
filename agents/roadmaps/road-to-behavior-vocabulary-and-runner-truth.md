@@ -342,10 +342,13 @@ get there.
         the PHP branch already uses). Wrapper-first like the existing
         `make test` rule: `./mvnw test` / `./gradlew test` when the wrapper
         exists, because the wrapper pins the build-tool version.
-      - **dotnet-test** (`dotnet`) — HIGH only when a project file NAMES a
-        test stack (`Microsoft.NET.Test.Sdk`, xunit, nunit, mstest); a bare
-        project or solution file, `global.json` or `Directory.Build.props` is
-        MEDIUM. `.NET` is the one ecosystem whose marker has no fixed
+      - **dotnet-test** (`dotnet`) — needs a project or solution IN THE SCOPE
+        ROOT, because `dotnet test` is not recursive. Given one: HIGH when a
+        project file NAMES a test stack (`Microsoft.NET.Test.Sdk`, xunit,
+        nunit, mstest), MEDIUM otherwise. `global.json` and
+        `Directory.Build.props` are SDK pins, not targets, and yield **no row
+        at all** — this evidence certified a MEDIUM row for them until round
+        18 caught it, which is the behavior rounds 11 and 13 reversed. `.NET` is the one ecosystem whose marker has no fixed
         FILENAME, so it is an extension scan rather than a `_MANIFESTS`
         entry — and the consequence (a project-file-only root contributes
         nothing to `latest_manifest_mtime`, so its cache key does not move)
@@ -357,8 +360,8 @@ get there.
       polyglot case asserting all three ecosystems in one root, and a case
       proving `--php` still narrows `selected` now that more ecosystems
       exist. The suite is green; **the count is deliberately not recorded here.**
-      It was wrong four times — 70, then 93 with arithmetic that did not add
-      up, then 97 carried forward past nine new fixtures. Step 2.2's rule is
+      It was wrong four times — 70; 93 with arithmetic that did not add up;
+      97; and 97 again, carried forward past nine new fixtures. Step 2.2's rule is
       the remedy and this is where it applies: run
       `npx vitest run tests/scripts/work_engine/stack_runner.test.ts`, which
       prints the number at the commit you are standing on.
@@ -719,9 +722,9 @@ neither spends the ratchet early nor loses the trigger.
 
 ### Residue carried out of the review rounds
 
-Seventeen completion-review rounds produced 141 findings; 107 are fixed and 34
+Eighteen completion-review rounds produced 148 findings; 112 are fixed and 36
 are `accepted-risk`, each with a stated `revisit-if`. Nothing is `open`.
-Rounds 16 and 17 carried no critical and no high; 16 carried no medium either.
+Rounds 16, 17 and 18 carried no critical and no high.
 
 **The dominant defect class was never the code.** Four highs across rounds 2–4
 and roughly a third of everything else were this branch asserting something
@@ -859,6 +862,17 @@ it names the measurement it waits on rather than an estimate.
   recorded here and in the regenerating commit rather than in the artifacts.
   REVISIT-IF: either generator gains a provenance field, or a third consumer
   starts reading these numbers without the surrounding change.
+
+- **The native JS axis still reads peer and optional dependencies as
+  ownership.** Round 12 stopped the BEHAVIOR axis doing it; `_js_runners` and
+  `_js_quality` predate this change and still merge all four ranges — and
+  there it is strictly worse, because that row reaches `selected` and
+  `/tests execute` runs it, rather than sitting in an informational field.
+  Raised by round 18 and left alone deliberately: changing the native axis's
+  dependency semantics alters which command every JS repository runs, which
+  deserves its own branch rather than riding a toolchain-resolver close-out.
+  REVISIT-IF: a repository reports `/tests execute` running a suite it does
+  not own.
 
 - **One `readdirSync` per scope would replace the stats AND one listing.**
   Round 12 found the thing neither earlier cost bullet had: `latest_manifest_mtime`
