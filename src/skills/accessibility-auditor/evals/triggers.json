@@ -1,0 +1,63 @@
+{
+    "skill": "accessibility-auditor",
+    "last_eval": "2026-10-01",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-01 under road-to-corpus-refresh-cadence-shape 1.2a, which touched this skill's grounding corpus and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the audit request in its explicit and implicit forms, including the German phrasing the skill's own description names. Near-misses are the three neighbours this skill's SKILL.md points at by name — token-level contrast fixes, structural landmark/heading fixes, and component inventory — each of which shares vocabulary with an a11y audit and is still somebody else's job. Counterexamples guard the 'accessible' homonym (permissions, not WCAG) and routine design-system work that mentions UI without asking anything of it.",
+    "queries": [
+        {
+            "q": "review this screen for accessibility before we ship it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "is this modal usable with the keyboard only, and does focus return where it should?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "a user on a screen reader says our combobox announces nothing — audit it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "does this form meet WCAG 2.2 AA?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "mach das Formular barrierefrei — Tastaturbedienung und Screenreader bitte prüfen",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "our contrast tokens are too light — fix the palette values in the Tailwind config",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "shares the contrast vocabulary, but this is a token-level fix in the design system rather than an audit verdict → tailwind-engineer, which this skill's SKILL.md names for exactly this"
+        },
+        {
+            "q": "the landmarks and heading order in this layout are wrong — restructure the component tree",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "the sharpest edge: landmarks and heading order are a11y findings, but the ask is the structural fix, not the finding → ui-component-architect, also named in this skill's SKILL.md"
+        },
+        {
+            "q": "which button and input variants do we already have before I add another one?",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a UI inventory over the same components, with no standard to audit against → existing-ui-audit"
+        },
+        {
+            "q": "make the staging dashboard accessible to the QA team",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'accessible' homonym — permissions and reachability, not WCAG. Guards against triggering on the word rather than the subject"
+        },
+        {
+            "q": "write the release notes for v4 of the design system",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "routine UI-adjacent work that names components and asks nothing about how they behave for anyone"
+        }
+    ]
+}
