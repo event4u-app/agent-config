@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Four release-record defects verified against the merged 16.2.0 head that no active roadmap owns — a disposition gate whose success line counts 20 of 20 while 18 rows carry no status, a review field dropped at ingest, a coverage figure no reader states, and a breaking-changes index seven majors behind. The two later/ neighbours (release-finding ordering, release holds) own a different question each, and parking live work to buy the slot would trade a verified defect for an unverified one."
-estate_growth_exempt: "Adds two owner blockers (a spend decision on the review ceiling and the ADR-087 follow-up decision on the container install test) and one exemption-carrying roadmap set from inbox round inbox-2026-10-a; both blockers are owner-reserved by the records they cite, so no agent step can retire them first."
+estate_growth_exempt: "Measured by check_estate_count on the committed round: open_blockers 47 to 50. Two of the three are here (a spend decision on the review ceiling, and the ADR-087 follow-up on the container install test); the third is the legal user-type product call in road-to-a-trunk-whose-own-gates-are-green. All three are owner-reserved by the records they cite, so no agent step can retire them first."
 relates:
   - slug: road-to-release-finding-ordering
     relation: disjoint
