@@ -45,7 +45,16 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import * as yaml from 'js-yaml';
+// `yaml`, not `js-yaml`, and the choice is about the BUNDLE rather than about
+// this file. Every concern is inlined into one `dist/hooks/dispatch.js` that
+// every dispatch loads, and this import was the only `js-yaml` one left on that
+// path while six other modules — `dispatch_hook.ts` and `host_lowering.ts`
+// among them — already pulled `yaml`. Measured on 2026-10-01 from the esbuild
+// metafile: `js-yaml` contributed 95,846 bytes (6.13 %) of a 1,564,211-byte
+// bundle, paid on every hook event, for one call site. The behavioural delta is
+// normalised in `parseSettingsDoc` below and pinned by the characterization
+// tests written before the swap.
+import { parse as parseYamlDoc } from 'yaml';
 
 import {
     buildSettingsClassIndex,
@@ -179,10 +188,23 @@ export function leafPaths(value: unknown, prefix = ''): Map<string, string> {
  * `null` is NOT "no keys changed" — the caller treats it as an unreadable
  * corpus and refuses, because a guard that allows whatever it cannot parse is
  * bypassed by making the file unparseable for one call.
+ *
+ * NULLISH IS UNPARSEABLE, and that line is the whole of the `js-yaml` → `yaml`
+ * port rather than an added rule. `js-yaml` THREW on an empty document and
+ * returned `null` for a value-less one (`~`, `null`); both landed on the `catch`
+ * or on the nullish return, i.e. on refusal. The `yaml` package returns `null`
+ * for all three instead of throwing on the first, so without this collapse an
+ * EMPTIED settings file would have arrived at the caller as a parsed document
+ * with no keys — the one shape that turns "I cannot read this" into "nothing
+ * changed". Every other difference between the two readers was looked for and
+ * not found: YAML 1.1 boolean words, octal and legacy-octal scalars, duplicate
+ * keys, multi-document input and tab indentation all read identically, which is
+ * what the characterization tests pin.
  */
 export function parseSettingsDoc(text: string, rel: string): unknown | null {
     try {
-        return rel.endsWith('.json') ? (JSON.parse(text) as unknown) : yaml.load(text);
+        const parsed = rel.endsWith('.json') ? (JSON.parse(text) as unknown) : parseYamlDoc(text);
+        return parsed ?? null;
     } catch {
         return null;
     }

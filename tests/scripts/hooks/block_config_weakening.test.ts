@@ -21,6 +21,7 @@ import {
     findPackageRoot,
     count_entries,
     decide,
+    parseSettingsDoc,
 } from '../../../src/scripts/hooks/block_config_weakening.js';
 import {
     buildSettingsClassIndex,
@@ -294,5 +295,73 @@ describe('block_config_weakening — class-c, the reviewed defects', () => {
         const pkgPath = path.resolve(__dirname, '..', '..', '..', 'package.json');
         const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8')) as { files: string[] };
         expect(pkg.files).toContain('docs/contracts/settings-classes.md');
+    });
+});
+
+// Characterization of the settings parser, written BEFORE the dispatch path was
+// moved off `js-yaml` onto the `yaml` package the bundle already carried
+// (`road-to-a-hook-bundle-with-one-yaml-reader` 1.2). Every assertion below is a
+// READING of the behaviour the guard had under `js-yaml`, taken while it still
+// ran under `js-yaml` — so a swap that changes any of them is a behaviour change
+// wearing a dependency change's clothes, which is Risk 1 of that roadmap made
+// mechanical rather than argued.
+describe('block_config_weakening — parseSettingsDoc, pinned across the parser swap', () => {
+    // YAML 1.1 resolved `on` / `yes` / `off` / `no` to booleans; YAML 1.2 core
+    // leaves them strings. Both readers implement 1.2 here, so a class-C key
+    // written `on` is the STRING "on" under either. Pinned because the opposite
+    // would silently change what `changedKeys` reports as changed.
+    it('reads YAML 1.1 boolean words as 1.2 strings', () => {
+        for (const word of ['on', 'yes', 'off', 'no', 'On', 'YES']) {
+            expect(parseSettingsDoc(`k: ${word}\n`, '.agent-settings.yml')).toEqual({ k: word });
+        }
+    });
+
+    it('still reads real booleans as booleans', () => {
+        expect(parseSettingsDoc('k: true\n', '.agent-settings.yml')).toEqual({ k: true });
+        expect(parseSettingsDoc('k: false\n', '.agent-settings.yml')).toEqual({ k: false });
+    });
+
+    // The fail-closed half. `null` from this function is NOT "no keys" — the
+    // caller treats it as an unreadable corpus and refuses. An emptied settings
+    // file must land there, never on "parsed fine, nothing changed". `js-yaml`
+    // threw on an empty document and the `yaml` package returns `null` for one,
+    // so this is the single place the two readers genuinely differ and the one
+    // the port has to normalise.
+    it('treats an empty or value-less document as unparseable, not as an empty settings doc', () => {
+        for (const text of ['', '   \n', '~\n', 'null\n']) {
+            expect(parseSettingsDoc(text, '.agent-settings.yml')).toBeNull();
+        }
+    });
+
+    it('returns null for a document that does not parse at all', () => {
+        expect(parseSettingsDoc('a: [unclosed\n', '.agent-settings.yml')).toBeNull();
+        expect(parseSettingsDoc('a: 1\na: 2\n', '.agent-settings.yml')).toBeNull();
+    });
+
+    it('still reads JSON settings through JSON.parse, not the YAML reader', () => {
+        expect(parseSettingsDoc('{"a": {"b": 1}}', 'settings.json')).toEqual({ a: { b: 1 } });
+        expect(parseSettingsDoc('{a: 1}', 'settings.json')).toBeNull();
+    });
+
+    // End-to-end through the guard, on a real class-C key: flipping between two
+    // YAML 1.1 boolean words is still a refusal, under either reader.
+    it('sees a class C key flip between two 1.1 boolean words', () => {
+        const REAL = path.resolve(__dirname, '..', '..', '..', 'docs', 'contracts', 'settings-classes.md');
+        const idx = buildSettingsClassIndex(parseSettingsClassRows(fs.readFileSync(REAL, 'utf-8')));
+        const cKey = [...idx.entries()].find(([, cls]) => cls === 'C')?.[0];
+        expect(cKey).toBeDefined();
+        const segments = (cKey as string).split('.');
+        const before =
+            segments
+                .map((seg, i) => (i === segments.length - 1 ? `${'  '.repeat(i)}${seg}: off` : `${'  '.repeat(i)}${seg}:`))
+                .join('\n') + '\n';
+        const reason = classCVerdict(
+            { old_string: ': off', new_string: ': on' },
+            before,
+            '.agent-settings.yml',
+            idx,
+        );
+        expect(reason).not.toBeNull();
+        expect(reason).toContain(cKey as string);
     });
 });
