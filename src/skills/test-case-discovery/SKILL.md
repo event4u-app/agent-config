@@ -39,6 +39,13 @@ CAP PER BEHAVIOR: 5–8 CASES — EACH MUST FAIL FOR A DISTINCT REASON.
 
 ## Does this change owe an executable behavior contract?
 
+This section is the decision *Gherkin*, *BDD*, *Cucumber*, *Behat* and
+*given-when-then* are meant to reach — each pinned as a should-trigger case in
+`evals/triggers.json`, with German exemplars for *Cucumber* and *Behat*. That
+corpus specifies
+the intent; it does not route, and this skill's `description` carries none of
+the terms. A decision, not a guide to writing one.
+
 Cases and contracts are not the same artifact. A **case** is something you assert
 in the project's unit runner. An **executable behavior contract** — a
 specification written in the language of whoever asked for the change, and run
