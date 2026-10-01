@@ -23,6 +23,12 @@ import {
     protectionActions,
     type ForgeReading,
 } from '../_lib/forge_protection.js';
+import {
+    forgeReadingFor,
+    liveForgeApi,
+    originUrl,
+    resolveForgeRepo,
+} from '../_lib/forge_reader.js';
 
 type Dict = Record<string, unknown>;
 
@@ -81,10 +87,33 @@ export function forgeProtectionJson(reading: ForgeReading): Dict {
     };
 }
 
-/** The all-null reading: nothing was queried. */
-export const UNREAD_FORGE: ForgeReading = {
-    rulesets: null,
-    defaultBranch: null,
-    allowAutoMerge: null,
-    deployRestricted: null,
-};
+/**
+ * The block as `doctor` itself builds it — AC-5.
+ *
+ * Phase 3.2 left `forgeProtectionJson` with no production caller, so the
+ * command the criterion names reported five `unread` rows while the forge
+ * satisfied all five, and the rows were only ever established by a human
+ * running `gh api` and reading the mapper in a test. This is the wiring that
+ * makes the named command answer for itself.
+ *
+ * **The offline behaviour Phase 3.2 argued for is unchanged**, which is why
+ * this is an addition rather than a reversal of that note: every failure path
+ * in `forgeReadingFor` — opt-out switch, no GitHub remote, no `gh`, no
+ * credentials, timeout, unparseable payload, a throw — returns the same
+ * `UNREAD_FORGE` reading, so `doctor` offline prints exactly what it printed
+ * before, including the source each unread row would have come from.
+ *
+ * `process.env` and the git remote are read HERE rather than inside the reader,
+ * so the reader stays injectable and every branch above is reachable from a
+ * test without spawning anything.
+ */
+export function forgeProtectionJsonFor(root: string): Dict {
+    return forgeProtectionJson(
+        forgeReadingFor({
+            env: process.env,
+            // A thunk, so the opt-out short-circuits before `git remote` spawns.
+            resolveRepo: () => resolveForgeRepo(originUrl(root)),
+            api: liveForgeApi(),
+        }),
+    );
+}

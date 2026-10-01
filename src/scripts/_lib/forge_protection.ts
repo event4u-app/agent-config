@@ -74,6 +74,22 @@ export interface ForgeReading {
 }
 
 /**
+ * The all-null reading: nothing was queried.
+ *
+ * Lives here, beside {@link ForgeReading}, rather than in the `doctor` caller
+ * that first needed it — `_lib/forge_reader.ts` returns it on every failure
+ * path, and a second hand-written all-null literal is exactly the drift that
+ * makes "offline output is unchanged" an assertion instead of a fact. The old
+ * export site re-exports this binding, so no caller changed.
+ */
+export const UNREAD_FORGE: ForgeReading = {
+    rulesets: null,
+    defaultBranch: null,
+    allowAutoMerge: null,
+    deployRestricted: null,
+};
+
+/**
  * The two fields of an environment this row reads, as
  * `GET repos/{owner}/{repo}/environments` returns them.
  *
