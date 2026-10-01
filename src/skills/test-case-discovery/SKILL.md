@@ -39,9 +39,9 @@ CAP PER BEHAVIOR: 5–8 CASES — EACH MUST FAIL FOR A DISTINCT REASON.
 
 ## Does this change owe an executable behavior contract?
 
-This section is the decision *Gherkin*, *BDD*, *Cucumber*, *Behat*,
-*given-when-then*, *acceptance scenario* and their German phrasings are meant
-to reach — pinned as should-trigger cases in `evals/triggers.json`, which
+This section is the decision *Gherkin*, *BDD*, *Cucumber*, *Behat* and
+*given-when-then*, with their German phrasings, are meant to reach — each
+pinned in a should-trigger case in `evals/triggers.json`, which
 states that intent without performing the routing: this skill's `description`
 carries none of those terms. It is a decision, not a guide to writing one.
 

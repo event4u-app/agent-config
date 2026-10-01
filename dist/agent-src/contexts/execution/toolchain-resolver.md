@@ -14,10 +14,8 @@ tools and run the right one — instead of a per-stack command explosion.
 > commands stay PHP-locked."
 
 **Size budget:** ≤ 7,500 chars — raised from 6,000 on 2026-10-01, when the
-resolver went from 9 runners on one axis to 12 across two. The three rows that
-change ADDED were then corrected by its completion review for understating the
-markers and commands the code detects; no pre-existing row changed.
-Shrink-only from here; the enforced ceiling is `check_depth_budget`'s 16,000.
+resolver went from 9 runners on one axis to 12 across two. Shrink-only from
+here; the enforced ceiling is `check_depth_budget`'s 16,000.
 
 ## 1. The resolver
 
@@ -33,7 +31,8 @@ for (const r of result.selected) {
 }
 ```
 
-Resolution is filesystem-cheap (a handful of small manifest reads) and
+Resolution is stat-bound — a fixed name list per scope, plus one listing per
+workspace glob parent, so a wide monorepo pays proportionally — and
 **never raises** — a malformed manifest or unknown stack degrades to a
 `LOW`-confidence empty result so the command can ask, never crash. This
 mirrors the recoverable-error contract of the frontend `detect_stack`.
@@ -122,9 +121,10 @@ e2e and slow stay out until their flag is passed.
 
 `write_config(root, result)` persists the resolved per-stack commands to
 `agents/runtime/state/toolchain.json` (best-effort; never raises). The
-config is keyed on the manifest `mtime`, so it is re-read cheaply and
-re-resolved only when a manifest changes — the same cache-invalidation
-hook the frontend detector uses.
+config is keyed on the latest `mtime` across every scope's manifests and
+markers — not the root's alone, or a behaviour runner arriving in a workspace
+package would never invalidate it. Same hook the frontend detector uses,
+widened to the scopes the behaviour axis reads.
 
 ## 6. What stays stack-locked
 

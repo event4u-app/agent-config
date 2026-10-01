@@ -142,21 +142,30 @@ get there.
       **Evidence (2026-10-01, figures re-measured after round 3).** One
       sentence added directly under the
       `## Does this change owe an executable behavior contract?` heading — the
-      decision the vocabulary is meant to reach — naming **six** terms:
-      *Gherkin*, *BDD*, *Cucumber*, *Behat*, *given-when-then*, *acceptance
-      scenario*, plus "their German phrasings". It points at
+      decision the vocabulary is meant to reach — naming **five** terms:
+      *Gherkin*, *BDD*, *Cucumber*, *Behat* and *given-when-then*, plus
+      "their German phrasings". Each occurs in at least one should-trigger
+      query, checked against the corpus rather than against the sentence. It
+      points at
       `evals/triggers.json` as where they are pinned, and closes the promise
       exactly where Risk 1 says it must close: it is a decision, not a guide
       to writing a contract. No new section and no new heading.
-      `wc -w src/skills/test-case-discovery/SKILL.md` → **1,895**, inside the
+      `wc -w src/skills/test-case-discovery/SKILL.md` → **1,896**, inside the
       ≤ 1,900 budget the step sets and well under ADR-225's 3,000-word
       tripwire; the file is 209 lines.
 
-      Round 3 caught both figures here: this paragraph first claimed eight
-      terms — including *feature file* and *executable specification*, which
-      the committed sentence does not contain — and recorded 1,896 words. Both
-      were written against a draft of the sentence that round 2's finding 4
-      then replaced, and neither was re-measured against the final text.
+      Two rounds corrected this paragraph. **Round 3** caught it claiming
+      eight terms — including *feature file* and *executable specification*,
+      which the sentence did not contain — against a draft that round 2 had
+      replaced, and a word count of 1,896 when the file measured 1,895.
+      **Round 5** then measured the terms against the CORPUS rather than the
+      sentence and found *acceptance scenario* pinned in no query at all: it
+      appeared only in the corpus file's own description. The term is dropped,
+      so each of the five named is now demonstrably in at least one
+      should-trigger query, and the file is 1,896 words again. Round 3 had
+      checked the list in one direction only — that every term in the sentence
+      was in the sentence — and not that every term it named was actually
+      pinned.
       `./scripts-run src/scripts/skill_linter --path
       src/skills/test-case-discovery/SKILL.md` → `[PASS] … No issues found`.
 - [~] **1.3 Register the canonical spellings.** Deferred by decision, not by
@@ -263,10 +272,21 @@ get there.
 
       `task sync` + `task generate-tools` run; the only generated change is
       `src/domains/meta/pack.yaml`'s `token_passport` (`commands_tokens`
-      240,361 → 240,643, `total_tokens` 310,656 → 310,938) — the two recorded
-      paragraphs' cost, committed with them. A second `task sync` produced no
-      further change, so the regenerated state is a fixed point.
-      `check_pack_size` → within budget, 11.149 MB packed.
+      240,361 → **240,809**, `total_tokens` 310,656 → **311,104**, +448 each)
+      — the recorded paragraphs' cost plus the ecosystem lines both command
+      bodies gained in round 4, committed with them. The committed file is
+      internally consistent: 3,649 + 240,809 + 1,298 + 65,348 = 311,104. A
+      repeat `task sync` produces no further change, so the regenerated state
+      is a fixed point. `check_pack_size` → within budget.
+
+      This paragraph first recorded +282, captured before the round-4 command
+      edits. It is the **fourth** stale figure this roadmap has had to correct
+      — alongside the budget, the test count and the term list — and four is a
+      pattern, not four coincidences: every one was a number written while the
+      branch was still moving. The mechanism, stated so the next roadmap does
+      not relearn it: **a figure in completion evidence is re-measured at the
+      commit it describes, never carried forward from the edit that produced
+      it.**
 
 ## Phase 3 — Give the resolver the labels and the second axis it is missing
 
@@ -621,23 +641,22 @@ neither spends the ratchet early nor loses the trigger.
 
 ### Residue carried out of the review rounds
 
-Four completion-review rounds produced 49 findings; 44 are fixed and 5 are
-`accepted-risk` with a stated `revisit-if`. Two of those five are the same
-cost trade recorded twice, and one leaves a documentation sentence stale:
+Five completion-review rounds produced 55 findings; 50 are fixed and 5 are
+`accepted-risk`, each with a stated `revisit-if`. What remains:
 
-- **`toolchain-resolver.md` § 5** still describes the cache key as a
-  root-manifest read that "is re-read cheaply". Since round 1 it stats the
-  manifests and behaviour markers across every scope, because a root-only key
-  could not see a behaviour runner arriving in a workspace package. The
-  sentence is accurate about the mechanism's purpose and stale about its
-  shape. Left for a follow-up rather than patched in round 4, because a fifth
-  content change moves the review scope again for a documentation nuance —
-  the regress is the reason, and naming it is better than absorbing it.
-- **Duplicate root-scope reads** (`_jvm_build`, `_ruby_gemfile_text`,
-  `_dotnet_project_text` each run once per axis) and the **standalone
-  `latest_manifest_mtime` cost** are accepted with `revisit-if` conditions in
-  the round-3 and round-4 artefacts: a profile showing either dominating a
-  resolve pass, or a caller invoking the probe per turn.
+- **Cost trades, three of them**, accepted with `revisit-if` conditions in the
+  round-3, round-4 and round-5 artefacts: duplicate root-scope reads
+  (`_jvm_build`, `_ruby_gemfile_text`, `_dotnet_project_text` each run once
+  per axis), the standalone `latest_manifest_mtime` cost, and the double
+  listing in `_dotnet_project_text` (`_has_dotnet_solution` lists a directory
+  the walk then lists again). Each triggers on a profile showing it dominating
+  a resolve pass.
+- **Two cache-key gaps the round-5 note surfaced and did not close**:
+  `setup.cfg` and `pytest.ini` are read by the python branch and are in
+  neither name list, so a `pytest.ini`-only repository emits a pytest row
+  while its key reports the greenfield sentinel. Pre-existing, and the honest
+  place for it is here rather than inside a note that enumerates the gap it
+  sits in.
 
 `task roadmap-progress-check` exits 1 on this Iron-Law-3 notice and also names
 `road-to-host-claims-the-tree-contradicts.md` (8/8 done, 2 deferred), which

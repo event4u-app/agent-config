@@ -1044,8 +1044,12 @@ function _behavior_runners_in_scope(dir: string, scope: string): BehaviorRunnerR
  * undetectable outside a flat single-project root, i.e. two of the eight
  * declared behaviour labels could effectively never be emitted.
  *
- * Sorted at every level and capped at {@link _DOTNET_MAX_PROJECTS} files, so
- * the result is deterministic and a deep tree cannot stall a turn.
+ * Sorted at every level, so the result is deterministic. Two bounds, and they
+ * bound different things: {@link _DOTNET_SCAN_DEPTH} limits how deep the walk
+ * goes, and {@link _DOTNET_MAX_PROJECTS} limits how many project files are
+ * READ. The directory listings under a solution root are bounded by the depth
+ * alone — an earlier version of this note credited the file cap with the
+ * depth's job.
  */
 function _dotnet_project_text(dir: string): string {
     const texts: string[] = [];

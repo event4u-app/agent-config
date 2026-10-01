@@ -38,9 +38,6 @@ src/skills | grep -iE 'jest|vitest|pytest|rspec|junit'` is empty — and a stati
 list cannot express a per-repository answer, so the binding drops to the
 stack-neutral pair. Nothing replaces it: step 1 above is the only stack
 authority this command has, and no later step loads a skill by runner label.
-An earlier version of this paragraph claimed such a load existed; it does not,
-and the sibling `/tests execute` makes no equivalent claim for the same
-removal.
 
 Then read the existing tests under the project's test directory to match
 the style and conventions already in use (assertion shape, naming, fixtures).
@@ -111,8 +108,7 @@ funnel per changed behavior — enumerate first, write second:
 - Run the tests locally with the command step 1 resolved — the same runner the
   tests were written for. Reach for a container only when the resolved stack
   calls for one, exactly as `/tests execute` branches on the resolved tool
-  before reaching for Docker. This step used to say "in the PHP container"
-  unconditionally, which contradicted step 1 in the same file.
+  before reaching for Docker.
 - If a test fails, fix it — don't just delete it.
 
 ### Rules
