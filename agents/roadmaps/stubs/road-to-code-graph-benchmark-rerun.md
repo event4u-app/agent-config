@@ -5,7 +5,10 @@ review_by: 2026-09-25
 
 # Stub: road to a code-graph benchmark re-run on the repaired extractor
 
-> **Arrivals:** the code-graph subject appears in **72** consumed inbox rounds
+> **Arrivals:** 73 — latest `inbox-2026-10-b` (2026-10-01), counted by hand; its
+> programme carries the benchmark-subject question as blocker b4 of
+> `road-to-leading-every-row`. The measurement below is the 2026-09-06 reading:
+> the code-graph subject appears in **72** consumed inbox rounds
 > under `agents/tmp.old/` (measured 2026-09-06, `grep -rl "code.graph\|code_graph"`,
 > distinct round directories) — the most-recurring subject in that store by a wide
 > margin. Latest `inbox-2026-09-r`, which proposed it again as a centrepiece. The
