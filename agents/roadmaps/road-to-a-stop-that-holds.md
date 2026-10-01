@@ -1140,16 +1140,53 @@ dashboard and the archival sweep can act on.
   entry and AC-3 had already written down.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-30 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Parser misses a consumer's runner and refuses honest work | implementation | A passing run classifies `INVALID_RUN` | Only absence of any record or `FAIL_EVIDENCE` refuses; every `INVALID_RUN` reason is logged as a finding, never refused on | Phase 1 — Verification is a record, not a regex |
 | 2 | Shadow read on retries breaks the stop-slot budget | implementation | Extra transcript read per retry | Retries only; `bench_hook_latency --gate` in the PR | Phase 2 — Q1 becomes a number (the contract's instrument, no second refusal) |
 | 3 | The join fix changes the delivered-row semantics the bar was registered on | product | Window must restart | Clause (2) of the claim mandates exactly that; 3.2 does it | Phase 3 — The obligation ledger can refuse (carried) |
+| 4 | A reader publishes a number a bar is read against, and it is a different quantity | product | `measure_turn_end_gate --q1` prints a retry-conditioned share while § The bars registers Q1; the two disagree in direction | Renamed `retryConditionedShare`; the report header, the function docstring and the contract all state it is not bar-comparable, and three dispatch-censored detectors print no number at all | Phase 2 — Q1 becomes a number (the contract's instrument, no second refusal) |
 
-**Re-reviewed 2026-09-30** — all three rows re-read against the 2.1 pass, not
-only the one it touched. Row 1's disposition is carried forward unchanged and
+**Re-reviewed 2026-10-01, and this time a fourth row WAS added.** All four rows
+re-read against the 2.2 pass and its independent review, not only the ones it
+touched.
+
+- **Row 1 — carried forward unchanged, and that is a finding rather than an
+  omission.** 2.2 added no parser and no new `INVALID_RUN` reason, so nothing
+  about its refusing or reporting direction moved. Its open half is still open:
+  a passing run whose runner no parser has met classifies `PASS_EVIDENCE_OK` on
+  its exit code alone.
+- **Row 2 — cost direction MEASURED AND FLAT for this pass.** The row watches
+  whether the shadow mechanism spends the stop-slot budget. 2.2 adds a reader
+  that no hook imports: `npm run build:hooks` at the merge base and at HEAD
+  produce byte-identical bundles (1,565,516 B, digest `bc62ee1a…`), and the
+  rollup is tree-shaken out entirely. So this pass is not a contributor to the
+  live `pre_tool_use` cap red § Cost this branch added records. The row stays
+  open on the earlier passes, whose +19,110 B and +4,732 B are unaffected by
+  this reading.
+- **Row 3 — still DISCHARGED**, and untouched by 2.2.
+- **Row 4 — NEW, and it is the risk the independent review of 2026-10-01
+  found realised rather than hypothetical.** The branch shipped a reader, called
+  its output Q1, and edited the contract to say Q1 was readable — while the
+  number divided by every retry on the layer rather than by the detector's own
+  refusals. Ten retries, nine after `verification` refusals and one after a
+  `language` refusal, one `language` row: Q1 for B is 100 % and that reader
+  printed 10 %. Opposite verdicts against the same bar.
+
+  **Why it is a row rather than a closed defect, which is the opposite call from
+  the one 2.1 made for its pruner bug.** That candidate was found and fixed
+  inside its change with a test that fails when the fix is removed — a mechanism
+  closed it. This one is mitigated by NAMING: the function, the report header
+  and the contract all say the number is not bar-comparable, and nothing
+  prevents a future reader carrying it to the bars table anyway. A mitigation
+  that depends on someone reading a sentence is a live risk, and the file's own
+  rule is that a register entry for a closed defect reads as live risk — the
+  converse applies here. It closes when the producer records the originating
+  detector and the reader computes the registered quantity.
+
+**Disposition after the 2026-09-30 pass**, kept for the record: Row 1's disposition is carried forward unchanged and
 that is a finding rather than an omission: 2.1 added no parser and no new
 `INVALID_RUN` reason, so nothing about its refusing or reporting direction
 moved. Row 3 stays discharged. Row 2 is rewritten below, from NOT YET INCURRED
