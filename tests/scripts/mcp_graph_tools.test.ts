@@ -25,7 +25,7 @@ import { ALLOWLIST, ToolCache } from '../../src/scripts/mcp_server/tools.js';
 import { TELEMETRY_FILENAME, TELEMETRY_REL_DIR } from '../../src/scripts/mcp_server/telemetry.js';
 import catalog from '../../src/scripts/mcp_server/consumer_tool_catalog.json' with { type: 'json' };
 
-const NAMES = ['graph_impact', 'graph_tests_for', 'graph_dead', 'graph_query', 'graph_path'] as const;
+const NAMES = ['graph_impact', 'graph_tests_for', 'graph_dead', 'graph_query', 'graph_path', 'graph_node'] as const;
 
 const dirs: string[] = [];
 afterEach(() => {
@@ -61,8 +61,8 @@ function telemetryRows(root: string): Record<string, unknown>[] {
         .map((l) => JSON.parse(l) as Record<string, unknown>);
 }
 
-describe('4.1 — the five graph tools are registered', () => {
-    it('all five are in ALLOWLIST, so they are implemented rather than stubs', () => {
+describe('4.1 — the graph tools are registered', () => {
+    it('all of them are in ALLOWLIST, so they are implemented rather than stubs', () => {
         for (const n of NAMES) {
             expect(ALLOWLIST[n], `${n} missing from ALLOWLIST`).toBeDefined();
             expect(ALLOWLIST[n]?.name).toBe(n);
@@ -70,9 +70,12 @@ describe('4.1 — the five graph tools are registered', () => {
         expect(Object.keys(GRAPH_TOOLS).sort()).toStrictEqual([...NAMES].sort());
     });
 
-    it('the catalogue carries 36 tools, and all five are among them', () => {
+    it('the catalogue carries 37 tools, and all the graph tools are among them', () => {
+        // 36 → 37 with `graph_node` (road-to-a-graph-that-feeds-the-gate 3.1).
+        // The catalogue is generated from ALLOWLIST by `build_mcp_catalog`, so
+        // this count moves only when a real tool is registered.
         const tools = (catalog as { tools: { name: string; implemented_on: string[] }[] }).tools;
-        expect(tools).toHaveLength(36);
+        expect(tools).toHaveLength(37);
         const byName = new Map(tools.map((t) => [t.name, t]));
         for (const n of NAMES) {
             expect(byName.get(n), `${n} missing from the catalogue`).toBeDefined();
@@ -88,20 +91,33 @@ describe('4.1 — the five graph tools are registered', () => {
         // has no "read-only subprocess" value, and understating the mechanism is
         // the failure a capability enum exists to prevent.
         expect(ALLOWLIST['graph_impact']?.side_effect).toBe('shell');
-        for (const n of ['graph_tests_for', 'graph_dead', 'graph_query', 'graph_path']) {
+        for (const n of ['graph_tests_for', 'graph_dead', 'graph_query', 'graph_path', 'graph_node']) {
             expect(ALLOWLIST[n]?.side_effect, `${n} should be read-only`).toBe('ro');
         }
     });
 });
 
 describe('4.1 — a fixture session, dispatched through the real ToolCache', () => {
-    it('answers from the graph and writes a telemetry row for every one of the five', async () => {
+    it('answers from the graph and writes a telemetry row for every one of them', async () => {
         const root = await consumerRig();
         const cache = new ToolCache();
 
         const q = await cache.dispatch('graph_query', { symbol: 'src/service.ts#handle' }, root);
         expect(q['status']).toBe('ok');
         expect(q['staleness']).toBe('fresh');
+
+        const n = await cache.dispatch('graph_node', { id: 'src/service.ts#handle' }, root);
+        expect(n['status']).toBe('ok');
+        expect(n['id']).toBe('src/service.ts#handle');
+        expect((n['location'] as { path: string }).path).toBe('src/service.ts');
+        // `run` imports it and the test file imports it — the in-edge list IS
+        // the "who reaches this" answer.
+        expect((n['in'] as { id: string }[]).length).toBeGreaterThan(0);
+
+        // The refusal reaches the wire as a status a caller can branch on,
+        // exactly like graph_dead's.
+        const nRefused = await cache.dispatch('graph_node', { id: 'handle something' }, root);
+        expect(nRefused['status']).toBe('refused');
 
         const t = await cache.dispatch('graph_tests_for', { symbol: 'src/service.ts#handle' }, root);
         expect(t['status']).toBe('ok');

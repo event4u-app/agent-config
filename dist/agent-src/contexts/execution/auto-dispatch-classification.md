@@ -224,7 +224,7 @@ NEVER A SILENTLY DEGRADED ANSWER. NO LLM CLASSIFIER FALLBACK (CUT C3).
 
 | Task pattern | Lookup class | Primitive |
 |---|---|---|
-| "where is X defined" / "confirm X's definition location" | `definition` | capped `rg` (definition-shaped patterns, `--max-count`); `code_graph query` only as an opportunistic accelerant when an index is present + fresh + `hooks.code_graph.enabled: true` |
+| "where is X defined" / "confirm X's definition location" | `definition` | capped `rg` (definition-shaped patterns, `--max-count`); `code_graph query` only as an opportunistic accelerant when an index is present + fresh (`hooks.code_graph.enabled` gates nothing — it is inert) |
 | "who calls / imports X" / "confirm call sites" | `references` | capped `rg` (reference-shaped patterns); same optional `code_graph affected` accelerant clause |
 | "does string Y exist" / "probe candidate strings" | `string-existence` | FTS one-shot (`memory_lookup` for the knowledge corpus) or capped `rg -n --max-count` for the codebase |
 | "run report Z" / "run check_*" | `report-run` | direct script run, wrapped per the **measured** rtk allowlist (`internal/bench/rtk-savings/RESULTS.md` — wrap only the ~55%-savings class) |
@@ -232,11 +232,11 @@ NEVER A SILENTLY DEGRADED ANSWER. NO LLM CLASSIFIER FALLBACK (CUT C3).
 **Why rg-first** (council 2026-07-28, 2 rounds): the pre-registered benchmark
 behind the `code-graph-retrieval-null` claim (`docs/CLAIMS.md`) measured
 native-graph recall 0.365 vs grep 0.797 on graph-shaped questions — an
-indexing gap that kept `code_graph.enabled` false BY DEFAULT until that flag
-was retired (2026-09-07) — not permanently: the 2026-08-15 withdrawal retracted
-that, and the figures predate the 2026-08-22 extractor repair. The accelerant
-clause above is that bound's escape hatch, reached only when a caller passes a
-usable graph, which no production caller yet does.
+indexing gap that kept `code_graph.enabled` false BY DEFAULT until the hook it
+gated was replaced (2026-09-07), leaving the key inert and still registered —
+not permanently: the figures predate the 2026-08-22 extractor repair. The
+accelerant clause above is that bound's escape hatch, reached only when a
+caller passes a usable graph, which no production caller yet does.
 
 **Escalation, not degradation:** a primitive that returns nothing (index miss,
 pattern too ambiguous, report script absent) — **or an unusable result**

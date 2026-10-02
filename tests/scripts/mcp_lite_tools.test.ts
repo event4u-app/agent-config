@@ -234,8 +234,17 @@ describe('kernel server standing cost — the Phase 0.2 figures', () => {
     const descriptionChars = names.reduce((n, k) => n + ALLOWLIST[k]!.description.length, 0);
     const payloadChars = JSON.stringify({ tools: names.map((n) => to_mcp_tool_meta(ALLOWLIST[n]!)) }).length;
 
-    it('has 25 allowlisted tools', () => {
-        expect(names.length).toBe(25);
+    // RE-MEASURED 2026-10-01: 25 -> 26 tools, because
+    // `road-to-a-graph-that-feeds-the-gate` 3.1 added `graph_node`. The one tool
+    // costs 62 description / 227 payload tokens — descriptions 2,035 -> 2,097
+    // and payload 4,603 -> 4,830, BOTH still inside the bands set after the
+    // trim pass, so only the count assertion moves. Recorded rather than
+    // absorbed, on the same reasoning as every entry above: the row exists so
+    // "registering it is free" can never be asserted again. The payload reading
+    // is 70 tokens under its ceiling, which is the next tool's real headroom and
+    // is worth knowing before anyone plans one.
+    it('has 26 allowlisted tools', () => {
+        expect(names.length).toBe(26);
     });
 
     it('costs about 2,035 tokens in descriptions alone', () => {

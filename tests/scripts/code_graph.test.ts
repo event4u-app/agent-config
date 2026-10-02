@@ -6,6 +6,7 @@
  * (golden-checksum), schema validation, and the structural no-network
  * guarantee. Integration tests load the real vendored WASM grammars.
  */
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -14,11 +15,21 @@ import { describe, expect, it } from 'vitest';
 
 import * as os from 'node:os';
 
+import { GRAPH_TOOLS } from '../../src/scripts/mcp_server/graph_tools.js';
+import type { BuiltinTool } from '../../src/scripts/mcp_server/tools.js';
 import { buildFromRepo, buildGraph, serializeGraph, type SourceFile } from '../../src/scripts/code_graph/build.js';
 import { pickSource, type SourceVerdict } from '../../src/scripts/code_graph/detect.js';
 import { extractFile } from '../../src/scripts/code_graph/extract.js';
 import { loadLanguage } from '../../src/scripts/code_graph/loader.js';
-import { affected, loadGraph, path as graphPath, query, resolveSeeds } from '../../src/scripts/code_graph/query.js';
+import {
+    affected,
+    loadGraph,
+    node as graphNode,
+    path as graphPath,
+    query,
+    resolveExactNode,
+    resolveSeeds,
+} from '../../src/scripts/code_graph/query.js';
 import { sanitizeLabel } from '../../src/scripts/code_graph/sanitize.js';
 import { EXPECTED_GRAMMAR_ABI, type Lang } from '../../src/scripts/code_graph/types.js';
 import { validateGraph } from '../../src/scripts/code_graph/validate.js';
@@ -318,5 +329,178 @@ describe('no-network guarantee (structural)', () => {
             const body = fs.readFileSync(path.join(CODE_GRAPH_DIR, f), 'utf-8');
             expect(forbidden.test(body), `${f} must not touch the network`).toBe(false);
         }
+    });
+});
+
+// ---------------------------------------------------------------------------
+// road-to-a-graph-that-feeds-the-gate — step 2.4
+// ---------------------------------------------------------------------------
+
+/**
+ * A consumer root that is a real repository, with its graph built AFTER the
+ * commit so the index starts level with HEAD.
+ *
+ * Real git metadata is the point: step 2.3 reads `edited` out of the porcelain
+ * status, so a tmpdir without a repository could only ever assert the fallback.
+ */
+async function committedConsumerRig(): Promise<string> {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-edited-'));
+    const run = (args: readonly string[]): void => {
+        execFileSync('git', ['-C', dir, ...args], { stdio: ['ignore', 'ignore', 'ignore'] });
+    };
+    run(['init', '-q', '-b', 'main']);
+    run(['config', 'user.email', 'fixture@example.com']);
+    run(['config', 'user.name', 'fixture']);
+    fs.mkdirSync(path.join(dir, 'src'));
+    fs.writeFileSync(path.join(dir, 'src', 'service.ts'), 'export function handle(x: string): string {\n    return x.trim();\n}\n');
+    run(['add', '-A']);
+    run(['commit', '-q', '-m', 'fixture']);
+    await buildFromRepo(dir, path.join(dir, 'agents/runtime/state/code-graph-v1.json'));
+    return dir;
+}
+
+describe('2.4 — the MCP answers carry the new state', () => {
+    it('reports staleness edited once an indexed file is changed in the working tree', async () => {
+        // The CLI `query` verb has no `--json`, so the MCP envelope is where the
+        // token is machine-readable at all. `graph_query` already prints
+        // `staleness`; what 2.3 added is a fourth value it can carry, and this
+        // is the fixture that the value actually reaches the wire.
+        const root = await committedConsumerRig();
+        const q = GRAPH_TOOLS['graph_query'];
+        expect(q).toBeDefined();
+
+        const before = await (q as BuiltinTool).handler({ symbol: 'src/service.ts#handle' }, root);
+        expect(before['status']).toBe('ok');
+        expect(before['staleness']).toBe('fresh');
+
+        fs.writeFileSync(
+            path.join(root, 'src', 'service.ts'),
+            'export function handle(x: string): string {\n    return x.trimStart();\n}\n',
+        );
+        const after = await (q as BuiltinTool).handler({ symbol: 'src/service.ts#handle' }, root);
+        expect(after['status']).toBe('ok');
+        expect(after['staleness']).toBe('edited');
+
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+});
+
+// ---------------------------------------------------------------------------
+// road-to-a-graph-that-feeds-the-gate — step 3.1, the graph_node view
+// ---------------------------------------------------------------------------
+
+describe('3.1 — graph_node answers about one node, or refuses', () => {
+    async function nodeFixture() {
+        const { graph } = await buildFixture();
+        const tmp = path.join(os.tmpdir(), `cg-node-${process.pid}-${graph.edges.length}.json`);
+        fs.writeFileSync(tmp, serializeGraph(graph));
+        return loadGraph(tmp, 'native:fixture');
+    }
+
+    it('reports location, in-edges, out-edges and degree for an exact id', async () => {
+        const g = await nodeFixture();
+        const r = graphNode(g, 'app/Base.php#Base::shared');
+        expect(r.refusal).toBeUndefined();
+        expect(r.id).toBe('app/Base.php#Base::shared');
+        expect(r.location?.path).toBe('app/Base.php');
+        // Foo::handle reaches it through $this-> up the hierarchy, so the
+        // in-edge list is the "who calls this" answer that needed two calls
+        // before.
+        expect(r.in.some((e) => e.id === 'app/Foo.php#Foo::handle' && e.relation === 'calls')).toBe(true);
+        expect(r.in_degree).toBe(r.in.filter((e) => e.hops === 1).length);
+        expect(r.out_degree).toBe(r.out.filter((e) => e.hops === 1).length);
+    });
+
+    it('resolves an exact LABEL as well as an id', async () => {
+        const g = await nodeFixture();
+        const r = graphNode(g, 'render');
+        expect(r.refusal).toBeUndefined();
+        expect(r.id).toBe('app/widget.ts#Widget::render');
+        expect(r.out.length).toBeGreaterThan(0);
+    });
+
+    it('refuses an AMBIGUOUS label and names the candidates instead of picking one', async () => {
+        const g = await nodeFixture();
+        // `shared` is a method on both the PHP and the TypeScript Base. Picking
+        // the first would be the silent guess the refusal exists to avoid.
+        const r = graphNode(g, 'shared');
+        expect(r.refusal).toContain('re-ask with one id');
+        expect(r.refusal).toContain('app/Base.php#Base::shared');
+        expect(r.refusal).toContain('app/base.ts#Base::shared');
+        expect(r.id).toBe('');
+        // Exactly two, so the count is stated plainly and nothing is truncated.
+        expect(r.refusal).toContain('is a label on 2 nodes');
+        expect(r.refusal).not.toContain('truncated');
+    });
+
+    it('never states a candidate count it did not measure', async () => {
+        // The measured defect: `resolveExactNode` inherited the seed ladder's
+        // default limit of 5, so a label on twelve nodes refused with "is a
+        // label on 5 nodes" and listed five with nothing marking the cut.
+        const ids = Array.from({ length: 40 }, (_, i) => `app/m${String(i)}.ts#Dup`);
+        const stub = {
+            source: 'native:stub',
+            byId: { get: () => undefined, has: () => false },
+            idsByLabel: (_label: string, limit: number) => ids.slice(0, limit),
+            lex: () => {
+                throw new Error('BM25 must not be reached — the label resolved exactly');
+            },
+        } as unknown as Parameters<typeof resolveExactNode>[0];
+
+        const r = resolveExactNode(stub, 'Dup');
+        expect(r.id).toBeNull();
+        expect(r.more).toBe(true);
+        // Whatever it SHOWS, it must never claim that is the whole set.
+        expect(r.ambiguous.length).toBeLessThanOrEqual(ids.length);
+        const node = graphNode(stub, 'Dup');
+        expect(node.refusal).toContain('more than');
+        expect(node.refusal).toContain('(list truncated)');
+    });
+
+    it('REFUSES free text rather than scoring it — D4', async () => {
+        const g = await nodeFixture();
+        // `query` happily BM25-matches this; a node view must not, because every
+        // field it returns is a statement about one specific node.
+        expect(query(g, 'handle foo').seeds.length).toBeGreaterThan(0);
+        const r = graphNode(g, 'handle foo');
+        expect(r.refusal).toBeDefined();
+        expect(r.refusal).toContain('does not score free text');
+        expect(r.id).toBe('');
+        expect(r.in).toStrictEqual([]);
+        expect(r.out).toStrictEqual([]);
+    });
+
+    it('honours direction, depth and the relation filter', async () => {
+        const g = await nodeFixture();
+        const outOnly = graphNode(g, 'app/Foo.php#Foo::handle', { direction: 'out' });
+        expect(outOnly.in).toStrictEqual([]);
+        expect(outOnly.out.length).toBeGreaterThan(0);
+
+        const inOnly = graphNode(g, 'app/Base.php#Base::shared', { direction: 'in' });
+        expect(inOnly.out).toStrictEqual([]);
+        expect(inOnly.in.length).toBeGreaterThan(0);
+
+        const callsOnly = graphNode(g, 'app/Foo.php#Foo::handle', { direction: 'out', relation: 'calls' });
+        expect(callsOnly.out.every((e) => e.relation === 'calls')).toBe(true);
+        expect(callsOnly.out.length).toBeGreaterThan(0);
+
+        // Depth is clamped to 1-3 rather than refused, and a deeper walk can
+        // only ever add lines.
+        const deep = graphNode(g, 'app/Foo.php#Foo::handle', { direction: 'out', depth: 99 });
+        expect(deep.out.length).toBeGreaterThanOrEqual(outOnly.out.length);
+        expect(deep.out.every((e) => e.hops >= 1 && e.hops <= 3)).toBe(true);
+    });
+
+    it('is registered as a read-only MCP tool whose relation enum IS the closed vocabulary', () => {
+        const t = GRAPH_TOOLS['graph_node'];
+        expect(t).toBeDefined();
+        expect(t?.side_effect).toBe('ro');
+        const props = (t as BuiltinTool).input_schema['properties'] as Record<string, { enum?: string[] }>;
+        // Pinned against the union in types.ts, which erases at compile time —
+        // an enum that silently lost a value would reject a legal filter.
+        const declared = fs.readFileSync(path.join(CODE_GRAPH_DIR, 'types.ts'), 'utf-8');
+        const union = /export type Relation = ([^;]+);/.exec(declared)?.[1] ?? '';
+        const vocab = [...union.matchAll(/'([a-z-]+)'/g)].map((m) => m[1] as string).sort();
+        expect([...(props['relation']?.enum ?? [])].sort()).toStrictEqual(vocab);
     });
 });
