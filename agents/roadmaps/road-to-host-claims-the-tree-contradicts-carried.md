@@ -36,6 +36,27 @@ left to read as finished.
       that turns 3.1's "not observed" into a measurement. It is also the input the
       parked decision below is waiting on.
 
+      **Disposition re-checked 2026-10-02, against the tree rather than against
+      this line.** Both carried steps ask for the same class of input: a row whose
+      cells are *host, host version, transcript reference, date* taken from a real
+      session that crossed a condition this repository cannot create. 2.4 needs a
+      session in which the `user_prompt_submit` timeout is actually reached; 3.3
+      needs a session on a host that delivered a question picker. Neither is a tree
+      edit, and no command in `src/scripts/` produces either — which is why
+      `src/agent-src/contexts/execution/host-capability-manifest.md:115-121` already
+      records that such rows come from a real session and never from a script (kill
+      register K22 of `road-to-leading-every-row` is the same finding reached
+      independently).
+
+      **They stay `[ ]`, not `[~]`.** The Risk Register below wants carried work
+      counted as open in the dashboard; a deferral glyph would read as finished and
+      is exactly the laundering this file was created to prevent.
+
+      **Wake condition, for both:** a session that meets the condition is observed
+      and its four cells are written into the row the parent names. Until one is, no
+      cell in the new table may be cited as evidence this package collected — the
+      parent's own constraint, restated here so it travels with the steps.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-02 | reviewer: archive-sweep/auto-carry -->
 
@@ -45,4 +66,4 @@ left to read as finished.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No step carried from `road-to-host-claims-the-tree-contradicts` is still `[ ]` without a recorded disposition.
+- [x] AC-1 — No step carried from `road-to-host-claims-the-tree-contradicts` is still `[ ]` without a recorded disposition.
