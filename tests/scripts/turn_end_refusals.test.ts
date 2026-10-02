@@ -37,6 +37,9 @@ import {
     refusalStateDir,
     sessionRefusalFile,
     sessionShadowFile,
+    shadowSetBy,
+    foldShadow,
+    parseShadowRecord,
     type RefusalRecord,
 } from '../../src/scripts/_lib/turn_end_refusals.js';
 
@@ -611,5 +614,101 @@ describe('Q1 rollup — the 2026-10-01 review round', () => {
         // line that should stop being true.
         const reported = DETECTOR_IDS.filter((d) => !DISPATCH_CENSORED_DETECTORS.has(d));
         expect([...reported].sort()).toEqual(['language', 'pending-decision', 'verification']);
+    });
+});
+
+describe('who set stop_hook_active — road-to-neighbours-that-pull-their-weight 3.1', () => {
+    // The lane's premise, in one sentence: `stop_hook_active` is the HOST's
+    // answer and the host sets it on ANY stop hook's block, so before this field
+    // a retry caused by a neighbour's concern and one caused by this gate were
+    // the same row.
+
+    it('no prior refusal of ours reads foreign', () => {
+        // Nothing written. The refusal record is absent, so this gate provably
+        // never refused in this session — and the host set the flag anyway.
+        expect(shadowSetBy(root, deriveSessionKey('s-none'))).toBe('foreign');
+    });
+
+    it('a prior refusal of ours reads ours', () => {
+        writeRecord('s-ours', {
+            refused_at: '2026-10-01T00:00:00.000Z',
+            refused_turn: 3,
+            detector: 'verification',
+            counts: { ...emptyCounts(), verification: 1 },
+        });
+        expect(shadowSetBy(root, deriveSessionKey('s-ours'))).toBe('ours');
+    });
+
+    it('a present but unreadable record reads unknown, never foreign', () => {
+        // The distinction this field exists for. "We did not refuse" and "we
+        // cannot tell whether we refused" are different findings, and reporting
+        // the second as the first would make a corrupt state file read as
+        // evidence that a neighbour acted.
+        const file = sessionRefusalFile(root, deriveSessionKey('s-broken'));
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, '{ not json');
+        expect(shadowSetBy(root, deriveSessionKey('s-broken'))).toBe('unknown');
+    });
+
+    it('a well-formed JSON record that is not a refusal record reads unknown', () => {
+        const file = sessionRefusalFile(root, deriveSessionKey('s-shape'));
+        fs.mkdirSync(path.dirname(file), { recursive: true });
+        fs.writeFileSync(file, JSON.stringify({ something: 'else' }));
+        expect(shadowSetBy(root, deriveSessionKey('s-shape'))).toBe('unknown');
+    });
+
+    it('foldShadow stamps every row it adds', () => {
+        const rec = foldShadow(null, {
+            detectors: ['verification', 'language'],
+            turnOrdinal: 7,
+            at: '2026-10-02T00:00:00.000Z',
+            layer: 'stop_hook_active',
+            setBy: 'foreign',
+        });
+        expect(rec.would_refuse_again.map((r) => r.set_by)).toEqual(['foreign', 'foreign']);
+    });
+
+    it('foldShadow defaults to unknown when the caller cannot establish it', () => {
+        // Never `foreign`: a missing answer is not evidence of a neighbour.
+        const rec = foldShadow(null, {
+            detectors: ['verification'],
+            turnOrdinal: 1,
+            at: '2026-10-02T00:00:00.000Z',
+            layer: 'stop_hook_active',
+        });
+        expect(rec.would_refuse_again[0]?.set_by).toBe('unknown');
+    });
+
+    it('a row written before the field existed parses as unknown, not dropped', () => {
+        // An old row is still a real observation of a retry. Dropping it would
+        // silently lower Q1's numerator against an unchanged denominator.
+        const parsed = parseShadowRecord(
+            JSON.stringify({
+                would_refuse_again: [
+                    { detector: 'verification', turn: 2, at: '2026-09-01T00:00:00.000Z', layer: 'refused_turn' },
+                ],
+                retries_observed: { stop_hook_active: 0, refused_turn: 1 },
+                dropped: 0,
+                first_at: '2026-09-01T00:00:00.000Z',
+                last_at: '2026-09-01T00:00:00.000Z',
+            }),
+        );
+        expect(parsed?.would_refuse_again).toHaveLength(1);
+        expect(parsed?.would_refuse_again[0]?.set_by).toBe('unknown');
+    });
+
+    it('a row with a garbage set_by parses as unknown rather than being dropped', () => {
+        const parsed = parseShadowRecord(
+            JSON.stringify({
+                would_refuse_again: [
+                    { detector: 'language', turn: 4, at: '2026-10-02T00:00:00.000Z', layer: 'stop_hook_active', set_by: 'maybe' },
+                ],
+                retries_observed: { stop_hook_active: 1, refused_turn: 0 },
+                dropped: 0,
+                first_at: '2026-10-02T00:00:00.000Z',
+                last_at: '2026-10-02T00:00:00.000Z',
+            }),
+        );
+        expect(parsed?.would_refuse_again[0]?.set_by).toBe('unknown');
     });
 });
