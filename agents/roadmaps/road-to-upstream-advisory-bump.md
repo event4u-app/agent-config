@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: draft
+status: ready
 estate_offset_exempt: "Nothing in this change can pay for it. This branch closes road-to-behavior-vocabulary-and-runner-truth, which Iron Law 3 refuses to archive while step 1.3 stays deferred — so the one roadmap this work could have disposed is the one it is forbidden to. Every other active roadmap belongs to a parallel session. The addition is also not a plan anyone chose to start: it is the second disposition fix-what-you-see allows for a red check this branch saw and cannot fix, since npm audit reads a lockfile this branch does not touch. Shipped draft, so it adds nothing a reader has to triage, and the alternative to the line is losing the finding."
 execution:
   mode: phase-checkpoints
@@ -157,6 +157,20 @@ the point of not leaving the door ajar in the goal.
       Taking a further bump here would be churn against an already-clean
       audit, so none is taken.
 
+      **The CI side of the same fact (AC-2), cited rather than asserted.**
+      `.github/workflows/tests.yml` is path-filtered to `src/**`, `tests/**`,
+      `package.json`, `package-lock.json` and a handful of config files, so
+      a roadmap-only diff does not run `Tests` at all and the closing PR for
+      this plan cannot produce the reading itself. The reading is taken from
+      a pull-request run that did: run `36978027253`, job `110746034151`
+      ("Static Checks (ESLint, typecheck, prepack)"), step **`npm audit
+      (runtime deps, high+)` -> completed / success**, on head
+      `ff433437f`, which contains `e51a1dfda` and is therefore a PR built
+      from the post-bump `main` — exactly what AC-2 asks for. Dispatching
+      the whole `Tests` workflow by hand would have produced a second
+      reading of the same step at the cost of the full install-tests matrix,
+      so it was not done.
+
 - [x] **2.2 Prove the bump did not break the suite.**
       A lockfile change touches every consumer of the bumped package, so the
       evidence is the full suite rather than a targeted file.
@@ -192,7 +206,7 @@ the point of not leaving the door ajar in the goal.
 
 - [x] AC-1 — `npm audit --omit=dev --audit-level=high` exits 0 in a clean
       checkout of `main`.
-- [ ] AC-2 — The Static Checks job's audit step is green on a PR built from
+- [x] AC-2 — The Static Checks job's audit step is green on a PR built from
       that `main`.
 - [x] AC-3 — Each advisory is recorded with its reachability verdict from
       step 1.2, so a future reader can tell whether this was a real exposure
@@ -200,18 +214,15 @@ the point of not leaving the door ajar in the goal.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: agent -->
+<!-- risk-review: v1 | reviewed: 2026-10-02 | reviewer: agent -->
 
-- **Risk 1 — the bump breaks a consumer, and the breakage lands on `main`.**
-  A lockfile bump is the widest-blast-radius change this repository makes
-  per line of diff. Mitigation: step 2.2 requires the full suite, not a
-  targeted run, and the bump is the narrowest one that clears the audit.
-- **Risk 2 — the advisory is unreachable and the bump is pure churn.**
-  Both advisories describe server request paths. Mitigation: step 1.2
-  settles reachability BEFORE the bump, so the change is made knowing which
-  it is; an unreachable advisory still gets fixed, but the record says so
-  rather than implying an exposure that was never there.
-- **Risk 3 — a new advisory lands before this is merged and the audit stays
-  red for a different reason.** Mitigation: the goal is phrased as the
-  command exiting 0, not as "these two advisories", so a third one is
-  in-scope for the same closure rather than a surprise at the gate.
+Converted from the prose form the plan was drafted with, so the file can be
+promoted out of `draft` and archived. All three risks, their reasoning and
+their mitigations carry over unchanged; only the shape differs. Re-reviewed
+on conversion against the executed outcome, which is why the stamp moves.
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|---|---|---|---|---|---|
+| 1 | Lockfile bump breaks a consumer | implementation | A lockfile bump is the widest-blast-radius change this repository makes per line of diff, and the breakage would land on `main`. | Step 2.2 requires the FULL suite rather than a targeted run, and the bump is the narrowest one that clears the audit. Outcome: no bump was needed at all — the clearing bump was already on `main` — so the realised blast radius is zero, and the full suite was run anyway as the evidence. | Phase 2 |
+| 2 | The advisory is unreachable and the bump is pure churn | product | Both advisories describe server request paths that this package may never enter, in which case the change buys nothing and implies an exposure that never existed. | Step 1.2 settles reachability BEFORE the bump, so the change is made knowing which it is. Outcome: all six advisories are unreachable here, and the record says hygiene rather than exposure. An unreachable advisory still gets fixed. | Phase 1 |
+| 3 | A new advisory lands before merge and the audit stays red for a different reason | implementation | A third finding appearing mid-flight would leave the gate red after this plan believes itself closed. | The goal is phrased as the command exiting 0, not as "these two advisories", so a third one is in scope for the same closure rather than a surprise at the gate. Outcome: the report was in fact wider than the plan assumed — five fastify advisories, not two — and the phrasing absorbed them without a re-plan. | Goal |
