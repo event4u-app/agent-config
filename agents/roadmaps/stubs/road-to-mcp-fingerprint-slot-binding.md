@@ -115,6 +115,20 @@ resolution is that record. Two further facts, both measured at
    not pre-use interception, so a later reader of the manifest alone cannot
    mistake it for one.
 
+
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | reversible-technical | agent | The wiring this stub holds is **not performable at `post_tool_use`**. The store is not bound; the slot's concern becomes the foreign-tool-NAME recorder of `road-to-neighbours-that-pull-their-weight` step 3.3, and the fingerprint store waits for a definition source. | Attempted 2026-10-02 under `road-to-neighbours-that-pull-their-weight` 3.2. `src/scripts/mcp_tool_fingerprint.ts:66-71` digests `name`, `description` and `inputSchema`; a `post_tool_use` envelope carries `tool_name`, `tool_input` and `tool_response` only — the dispatcher's own body classes are exactly `input` and `result` (`src/scripts/hooks/payload_stub.ts:20-70`), and no concern under `src/scripts/hooks/` reads a description or schema key. No module in the tree reads a third party's tool definitions at all. | A reader of third-party MCP tool descriptors exists in `src/scripts/`. The candidate slot is then **session start**, not `post_tool_use`, and the 2026-09-06 council's pre-use-vs-post-use choice is reopened on its own terms rather than inherited. |
+
+**What this does NOT change.** The protection level stays at **zero**, exactly as
+the table above records it — this decision does not lower it, and it does not
+raise it either. What changed is the reason: the row used to read "zero before,
+zero after, observe-only was chosen"; it now reads "zero, and the chosen slot
+cannot even observe". A later reader must not cite the binding as pending
+authorization. It is pending an input.
+
 ## Trigger — and why it is not "the first non-test import"
 
 The obvious trigger was proposed and **rejected in review as circular**: the

@@ -226,6 +226,7 @@ import {
     readInstallBoundary,
     sessionRefusalFile,
     sessionShadowFile,
+    shadowSetBy,
     type RefusalRecord,
     type ShadowLayer,
     type ShadowRecord,
@@ -1359,6 +1360,13 @@ function recordShadow(inputs: DetectorInputs, layer: ShadowLayer): void {
     if (is_replay_mode()) return;
     try {
         const findings = runDetectors(inputs);
+        // On `refused_turn` the answer is `ours` by construction — that marker
+        // is this gate's own and nothing else writes it. On `stop_hook_active`
+        // the host sets the flag for ANY stop hook's block, so it has to be
+        // read from our own refusal record rather than assumed.
+        const setBy = layer === 'refused_turn'
+            ? 'ours'
+            : shadowSetBy(inputs.workspaceRoot, inputs.sessionKey);
         recordGraphFeeder(inputs, findings, layer);
         const file = sessionShadowFile(inputs.workspaceRoot, inputs.sessionKey);
         let prev: ShadowRecord | null = null;
@@ -1374,6 +1382,7 @@ function recordShadow(inputs: DetectorInputs, layer: ShadowLayer): void {
                 turnOrdinal: inputs.turnOrdinal,
                 at: new Date().toISOString(),
                 layer,
+                setBy,
             }) as unknown as Record<string, unknown>,
         );
     } catch {
