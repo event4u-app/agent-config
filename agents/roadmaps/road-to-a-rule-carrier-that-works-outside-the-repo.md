@@ -175,11 +175,60 @@ Reproduced on 2026-10-01:
 
 ## Phase 1 — A carrier that works where consumers are
 
-- [ ] **1.1 Resolve from the package.** Router and bodies resolve from
+- [x] **1.1 Resolve from the package.** Router and bodies resolve from
       `AGENT_CONFIG_PACKAGE_ROOT`, with `agents/overrides/` keeping precedence;
       no root found → fail closed with one diagnostic line, never a silent
       empty delivery.
       verify: `npx vitest run tests/scripts/rule_inject_hook.test.ts -t foreign-project` -> 0
+
+      **Done 2026-10-02.** `ruleSources(repoRoot)` in `_lib/rule_injection.ts`
+      resolves the body directories, the router path and the gap wording in one
+      filesystem pass, in the order `agents/overrides/` → `<workspace>/dist/
+      agent-src/rules/` → `<packageRoot>/dist/agent-src/rules/`. `loadRouter`
+      and `loadRuleBody` keep their single-root signatures and consult the chain
+      internally, so the nine call sites across the model, the shortlist, the
+      arm experiment and the two hooks are untouched. Five fixtures cover it: a
+      foreign project with no corpus of its own, the override winning over the
+      package copy, the unset-variable diagnostic, a package root deleted after
+      install, and the maintainer checkout still answering from its own tree.
+
+      **Two things were measured rather than assumed, and both changed the
+      shape of the change.**
+
+      The first is a correction to this file's own Context. It cites
+      `rule_injection.ts:75-76` and `:167-168` as resolving under one root,
+      which is right, and it implies a bare env read would finish the job. It
+      would not: `selectForInjection` sizes every candidate body with the same
+      reader, so in a consumer project every body measured ZERO and the byte cap
+      admitted all of them. A cap that cannot bind is worse than no cap, because
+      the budget still reports a number. Fixing the reader fixes the cap with
+      it, which is why the resolution went into the shared functions rather than
+      into the carrier.
+
+      The second is the reason there is no `_lib/rule_sources.ts`. The first
+      implementation was exactly that — a `RuleSources` object threaded through
+      `buildInjection`, `recordDelivered` and `selectForInjection`. It worked and
+      it cost 2,822 B in the composed hook bundle, against 303 B of headroom
+      (`src/config/hook-bundle-budget.json`, ceiling 1,550,000, main measured
+      1,549,697). Folding the same resolution into the functions that already
+      existed costs 1,628 B and threads nothing. The explicit object was the
+      better code and the bundle could not afford it; that is stated here rather
+      than silently resolved, because the next lane to touch this concern meets
+      the same ceiling.
+
+      **One pre-existing behaviour surfaced and is noted, not changed.**
+      `tests/hooks/injection_budget_dispatch.test.ts` asserted that two
+      identical prompts spend identical bytes. They no longer do — the carrier
+      delivers three rule bodies on the opening turn and none on the next,
+      because delivery is once per session per rule. The assertion was sound
+      only while the concern was silent in a temp workspace, so it now seeds the
+      counter above the ceiling and asserts the turn-start slot discards the
+      seed, which is what that test is actually for and does not depend on any
+      concern being stateless. Worth recording separately: in that path the
+      concern is spawned as its own tsx process, so `_isCliEntry()` is true and
+      `gateOpen`'s probe branch opens the gate whatever the settings say. That
+      is unchanged from before this step and does not reach a real install,
+      where the bundle defines `__AGENT_CONFIG_BUNDLE__` and the branch is dead.
 - [ ] **1.2 One answer to "which mode".** Installer, projector and hook call one
       resolver over the same layers in the same order — template base,
       canonical `agents/settings/`, project root, user-global. With no settings

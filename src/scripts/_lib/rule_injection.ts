@@ -72,8 +72,117 @@ export interface TierRuleMatch {
 /** Kinds of trigger a prompt alone can never fire. */
 export const PATH_TRIGGER_KINDS = ['path_prefix', 'file_pattern'] as const;
 
+/**
+ * Set by `dispatch_hook` to its own resolved package root. Read here rather
+ * than threaded through every caller — see `ruleSourceDirs`.
+ */
+export const PACKAGE_ROOT_ENV = 'AGENT_CONFIG_PACKAGE_ROOT';
+
+function statKind(p: string): 'dir' | 'file' | null {
+    try {
+        const s = fs.statSync(p);
+        return s.isDirectory() ? 'dir' : s.isFile() ? 'file' : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Every tree a rule body may come from, highest precedence first.
+ *
+ * THE DEFECT THIS CLOSES, reproduced at `main` @ `9bc8cd4f2` and again on
+ * 2026-10-01. This module resolved bodies and the router under ONE root, and
+ * the carrier passed the envelope's workspace or `process.cwd()`. In this
+ * checkout those are the same directory and everything works. In a consumer
+ * project they are not: there is no `dist/` under the consumer's tree at all,
+ * so `loadRouter` threw, the carrier caught it and returned allow, and the
+ * concern delivered NOTHING while reporting no error. Every consumer runs it
+ * in someone else's project, so the shipped carrier was silent for every
+ * consumer and loud only for its author. `dispatch_hook.ts:722` has passed
+ * `AGENT_CONFIG_PACKAGE_ROOT` to every concern since the ADR-020 global-only
+ * install landed — the fix was one environment read away and nothing read it.
+ *
+ * THE ORDER IS THE CONTRACT:
+ *
+ *   1. `<root>/agents/overrides/<id>.md` — the developer's own layer.
+ *      `agents_overlay.ts` already makes `overrides/` the one cascade kind
+ *      that is both project- and user-global-eligible, and a consumer who has
+ *      overridden a rule means it. It wins, which is what step 1.1's "with
+ *      `agents/overrides/` keeping precedence" asks for.
+ *   2. `<root>/dist/agent-src/rules/<id>.md` — the maintainer checkout. Kept
+ *      AHEAD of the package root and not behind it, so this repository's own
+ *      behaviour is byte-identical to what it was before. A change that
+ *      repairs consumers by moving the maintainer tree is one nobody can
+ *      review against a known-good reading.
+ *   3. `<packageRoot>/dist/agent-src/rules/<id>.md` — the install. The only
+ *      one of the three that exists in a foreign project.
+ *
+ * WHY THE ENVIRONMENT IS READ HERE rather than passed in. Nine call sites
+ * across the model, the shortlist, the arm experiment and two hooks pass a
+ * single `repoRoot`, and none of them has a second tree to offer. Threading a
+ * resolved source object through all of them would be a wide diff whose only
+ * real consumer is the carrier, and it costs runtime bytes in the composed
+ * hook bundle — which every hook event on every slot loads, under a hard
+ * ceiling (`src/config/hook-bundle-budget.json`). `roadmap_progress_hook`
+ * already reads this same variable this same way; this follows it rather than
+ * inventing a second convention. No `~` expansion: the one writer is
+ * `dispatch_hook`, which sets it from a `path.resolve` result.
+ */
+export interface RuleSources {
+    /** Body directories, highest precedence first. */
+    readonly dirs: readonly string[];
+    /** The `dist/router.json` to route against, or `null`. */
+    readonly router: string | null;
+    /**
+     * One line naming why nothing resolved, or `null` when something did.
+     *
+     * A caller that found nothing must be able to SAY so. An empty delivery is
+     * indistinguishable from "no rule matched", which is exactly the silence
+     * this chain exists to end; reproducing it one layer up would be the whole
+     * defect again. The three wordings are distinguishable because the
+     * operator's next action differs: the variable was never set (a host or
+     * wrapper problem), it points somewhere that is gone (a move after
+     * install), or both resolved and the package carries no built corpus.
+     */
+    readonly gap: string | null;
+}
+
+/** Resolve the body dirs, the router and the gap wording in ONE filesystem pass. */
+export function ruleSources(repoRoot: string): RuleSources {
+    const pkgRaw = (process.env[PACKAGE_ROOT_ENV] ?? '').trim();
+    const pkg = pkgRaw === '' ? null : path.resolve(pkgRaw);
+    const dirs: string[] = [];
+    const add = (d: string): void => {
+        if (statKind(d) === 'dir' && !dirs.includes(d)) dirs.push(d);
+    };
+    add(path.join(repoRoot, 'agents', 'overrides'));
+    add(path.join(repoRoot, 'dist', 'agent-src', 'rules'));
+    if (pkg !== null) add(path.join(pkg, 'dist', 'agent-src', 'rules'));
+
+    const local = path.join(repoRoot, 'dist', 'router.json');
+    let router: string | null = statKind(local) === 'file' ? local : null;
+    if (router === null && pkg !== null) {
+        const shipped = path.join(pkg, 'dist', 'router.json');
+        if (statKind(shipped) === 'file') router = shipped;
+    }
+
+    const why =
+        router !== null && dirs.length > 0
+            ? null
+            : pkg === null
+              ? `${PACKAGE_ROOT_ENV} unset`
+              : router === null
+                ? `no dist/router.json under ${repoRoot} or ${pkg}`
+                : `no dist/agent-src/rules under ${repoRoot} or ${pkg}`;
+    return {
+        dirs,
+        router,
+        gap: why === null ? null : `rule-inject: no rule source resolved — ${why}`,
+    };
+}
+
 export function loadRouter(repoRoot: string): Router {
-    const p = path.join(repoRoot, 'dist', 'router.json');
+    const p = ruleSources(repoRoot).router ?? path.join(repoRoot, 'dist', 'router.json');
     return JSON.parse(fs.readFileSync(p, 'utf8')) as Router;
 }
 
@@ -163,16 +272,24 @@ export function matchTierRules(
     return out;
 }
 
-/** Where the projected body of a rule lives. */
-export function ruleBodyPath(repoRoot: string, id: string): string {
-    return path.join(repoRoot, 'dist', 'agent-src', 'rules', `${id}.md`);
+/** The highest-precedence EXISTING body file for `id` across `ruleSourceDirs`, or `null`. */
+export function ruleBodyPath(repoRoot: string, id: string): string | null {
+    for (const dir of ruleSources(repoRoot).dirs) {
+        const p = path.join(dir, `${id}.md`);
+        if (statKind(p) === 'file') return p;
+    }
+    return null;
 }
 
-/** The projected body, or `null` when the rule has no projected file. */
+/** The projected body, or `null` when no tree in the chain carries the rule. */
 export function loadRuleBody(repoRoot: string, id: string): string | null {
     const p = ruleBodyPath(repoRoot, id);
-    if (!fs.existsSync(p)) return null;
-    return fs.readFileSync(p, 'utf8');
+    if (p === null) return null;
+    try {
+        return fs.readFileSync(p, 'utf8');
+    } catch {
+        return null;
+    }
 }
 
 /**

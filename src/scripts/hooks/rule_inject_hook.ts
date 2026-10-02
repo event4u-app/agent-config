@@ -112,6 +112,7 @@ import {
     loadRuleBody,
     loadRouter,
     matchTierRules,
+    ruleSources,
     selectForInjection,
 } from '../_lib/rule_injection.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -397,6 +398,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return EXIT_ALLOW; // re-arm is silent; the next turn re-injects
     }
     if (slot !== 'user_prompt_submit' && slot !== 'pre_tool_use') return EXIT_ALLOW;
+
     if (!gateOpen(root, _isCliEntry())) return EXIT_ALLOW;
 
     let prompt = '';
@@ -413,6 +415,17 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         const fp = extractFilePath(payload);
         if (fp === null) return EXIT_ALLOW;
         openFiles = [fp];
+    }
+
+    // Fail CLOSED and SAY SO. An empty delivery is indistinguishable from "no
+    // rule matched", which is the exact silence this concern shipped with; one
+    // line on stderr — which the dispatcher captures — is what makes a broken
+    // install diagnosable from outside this file. Still allow: a carrier that
+    // cannot find its corpus must not fail a turn.
+    const { gap } = ruleSources(root);
+    if (gap !== null) {
+        process.stderr.write(`${gap}\n`);
+        return EXIT_ALLOW;
     }
 
     const seen = readSeen(root, session);

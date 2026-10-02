@@ -462,3 +462,135 @@ describe('recordDelivered writes the ledger row for each delivered rule', () => 
         fs.rmSync(wall, { recursive: true, force: true });
     });
 });
+
+/**
+ * A tree shaped like a CONSUMER project: no `dist/`, no router, no bodies.
+ * This is what every installed copy of the package actually runs in, and the
+ * shape under which the shipped carrier delivered nothing at all.
+ */
+function makeForeignProject(opts: { settings?: string } = {}): string {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-foreign-'));
+    fs.mkdirSync(path.join(root, 'src'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'src', 'app.ts'), 'export const x = 1;\n', 'utf-8');
+    if (opts.settings !== undefined) {
+        fs.writeFileSync(path.join(root, '.agent-settings.yml'), opts.settings, 'utf-8');
+    }
+    return root;
+}
+
+/** A tree shaped like an INSTALLED package: router + projected bodies, no settings. */
+function makePackageRoot(): string {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-pkg-'));
+    fs.mkdirSync(path.join(root, 'dist', 'agent-src', 'rules'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'dist', 'router.json'), JSON.stringify(ROUTER), 'utf-8');
+    for (const [id, text] of Object.entries(BODIES)) {
+        fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', `${id}.md`), text, 'utf-8');
+    }
+    return root;
+}
+
+/** Run `main` with `AGENT_CONFIG_PACKAGE_ROOT` pinned for the call, capturing stderr. */
+function runWithPackage(
+    pkgRoot: string | null,
+    envelope: Record<string, unknown>,
+    argv: string[] = [],
+): { rc: number; out: string; err: string } {
+    const prev = process.env['AGENT_CONFIG_PACKAGE_ROOT'];
+    if (pkgRoot === null) delete process.env['AGENT_CONFIG_PACKAGE_ROOT'];
+    else process.env['AGENT_CONFIG_PACKAGE_ROOT'] = pkgRoot;
+    let err = '';
+    const errSpy = vi.spyOn(process.stderr, 'write').mockImplementation(((chunk: unknown) => {
+        err += typeof chunk === 'string' ? chunk : String(chunk);
+        return true;
+    }) as typeof process.stderr.write);
+    try {
+        const { rc, out } = run(envelope, argv);
+        return { rc, out, err };
+    } finally {
+        errSpy.mockRestore();
+        if (prev === undefined) delete process.env['AGENT_CONFIG_PACKAGE_ROOT'];
+        else process.env['AGENT_CONFIG_PACKAGE_ROOT'] = prev;
+    }
+}
+
+const DELIVERY_SETTINGS = 'lean_projection:\n  mode: delivery\n  hosts: [claude-code]\n';
+
+describe('rule-inject — foreign-project resolution (1.1)', () => {
+    it('delivers a matched body in a project that carries no corpus of its own', () => {
+        const project = makeForeignProject({ settings: DELIVERY_SETTINGS });
+        const pkg = makePackageRoot();
+        const { rc, out } = runWithPackage(pkg, {
+            event: 'user_prompt_submit',
+            workspace: project,
+            session_id: 'foreign-1',
+            payload: { prompt: 'plan the migration' },
+        });
+        expect(rc).toBe(2);
+        expect(rules(out)).toEqual(['prompt-rule']);
+        expect(out).toContain('PROMPT RULE BODY');
+    });
+
+    it('agents/overrides/ wins over the package copy', () => {
+        const project = makeForeignProject({ settings: DELIVERY_SETTINGS });
+        const pkg = makePackageRoot();
+        fs.mkdirSync(path.join(project, 'agents', 'overrides'), { recursive: true });
+        fs.writeFileSync(
+            path.join(project, 'agents', 'overrides', 'prompt-rule.md'),
+            'OVERRIDDEN BODY\n',
+            'utf-8',
+        );
+        const { out } = runWithPackage(pkg, {
+            event: 'user_prompt_submit',
+            workspace: project,
+            session_id: 'foreign-override',
+            payload: { prompt: 'plan the migration' },
+        });
+        expect(out).toContain('OVERRIDDEN BODY');
+        expect(out).not.toContain('PROMPT RULE BODY');
+    });
+
+    it('no package root resolves — one diagnostic line, never a silent empty delivery', () => {
+        const project = makeForeignProject({ settings: DELIVERY_SETTINGS });
+        const { rc, out, err } = runWithPackage(null, {
+            event: 'user_prompt_submit',
+            workspace: project,
+            session_id: 'foreign-2',
+            payload: { prompt: 'plan the migration' },
+        });
+        expect(rc).toBe(0);
+        expect(out).toBe('');
+        expect(err).toContain('AGENT_CONFIG_PACKAGE_ROOT');
+        expect(err.trim().split('\n')).toHaveLength(1);
+    });
+
+    it('a package root moved after install names both trees it looked in', () => {
+        const project = makeForeignProject({ settings: DELIVERY_SETTINGS });
+        const pkg = makePackageRoot();
+        fs.rmSync(pkg, { recursive: true, force: true });
+        const { rc, out, err } = runWithPackage(pkg, {
+            event: 'user_prompt_submit',
+            workspace: project,
+            session_id: 'foreign-3',
+            payload: { prompt: 'plan the migration' },
+        });
+        expect(rc).toBe(0);
+        expect(out).toBe('');
+        // A set-but-gone root is a DIFFERENT operator action from an unset one,
+        // so it must not produce the unset wording. It names both trees.
+        expect(err).toContain(project);
+        expect(err).toContain(pkg);
+        expect(err).not.toContain('unset');
+    });
+
+    it('the maintainer checkout still answers from its own tree', () => {
+        const root = makeRoot({ delivery: true });
+        const pkg = makePackageRoot();
+        const { out } = runWithPackage(pkg, {
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'maintainer-1',
+            payload: { prompt: 'plan the migration' },
+        });
+        expect(rules(out)).toEqual(['prompt-rule']);
+    });
+});

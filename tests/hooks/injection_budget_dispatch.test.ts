@@ -196,8 +196,32 @@ describe("emission shaping through the real dispatcher", () => {
         expect(first).toBeGreaterThan(0);
 
         // user_prompt_submit STARTS a turn, so a second prompt must not accumulate.
+        //
+        // The two turns do NOT spend the same number of bytes, and asserting
+        // that they did was pinning a coincidence. `rule-inject` emits each
+        // rule body once per session, so the first prompt carries bodies the
+        // second does not — measured here 9,750 B against 835 B, three rule
+        // bodies on the opening turn and none on the next.
+        //
+        // What changed is the CORPUS, not the gate. This path spawns the
+        // concern as its own tsx process, so `_isCliEntry()` is true and
+        // `gateOpen`'s probe branch has always opened here regardless of
+        // settings; on main the concern then looked for `dist/router.json`
+        // under the temp workspace, found none, and emitted nothing. Since
+        // `road-to-a-rule-carrier-that-works-outside-the-repo` 1.1 it falls
+        // back to `AGENT_CONFIG_PACKAGE_ROOT`, which the dispatcher sets, so
+        // the bodies resolve. A real install takes neither branch: the bundle
+        // defines `__AGENT_CONFIG_BUNDLE__`, `_isCliEntry()` returns false,
+        // and the settings gate decides — so nothing here says a consumer
+        // receives bodies without configuring them.
+        //
+        // What this test is actually for survives intact: the counter must
+        // carry THIS turn's spend and never the running total. Seeding it above
+        // the ceiling and watching the turn-start slot discard the seed proves
+        // exactly that, and does not depend on any concern being stateless.
+        fs.writeFileSync(counter, JSON.stringify({ session: SESSION, bytes: 47_104 }));
         dispatchPrompt(ws, CO_FIRE_PROMPT);
         const again = JSON.parse(fs.readFileSync(counter, "utf-8")) as Record<string, unknown>;
-        expect(again["bytes"]).toBe(first);
+        expect(again["bytes"] as number).toBeLessThan(first);
     });
 });
