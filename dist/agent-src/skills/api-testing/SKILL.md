@@ -238,7 +238,7 @@ If the endpoint contract is ambiguous (unclear status code, optional fields, err
 ## The HTTP-assertion idiom, per ecosystem
 
 The examples above are Laravel's. The *shape* they teach — assert the status,
-then the body contract, then the side effect, and keep one behaviour per test —
+then the body contract, then the side effect, and keep one behavior per test —
 transfers unchanged; the API does not. Resolve the runner with
 `resolve_toolchain` and read its `ecosystems`:
 

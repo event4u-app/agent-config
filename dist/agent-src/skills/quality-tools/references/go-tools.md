@@ -69,7 +69,7 @@ widening it.
 - **Build tags hide packages.** `go vet ./...` and `go test ./...` skip files
   excluded by build constraints, so a green run says nothing about a
   `//go:build integration` file. Name the tag (`-tags integration`) to reach it.
-- **No `go` pack exists in this suite yet.** Go artefacts route through
+- **No `go` pack exists in this suite yet.** Go artifacts route through
   `engineering-base` and this reference; `src/packs/go/pack.yaml` is created by
   `road-to-stacks-beyond-php` step 2.3, which is blocked on the programme's
   skill-growth question. Until then this file is the whole of the Go quality
