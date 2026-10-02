@@ -89,13 +89,75 @@ describe('resolveTable — the fast path and every fallback', () => {
         // Without this the suite would pass with the fast path deleted, since
         // every other case asserts the fallback's answer. A row that exists
         // ONLY in the compiled blob proves which branch ran.
+        //
+        // road-to-blocking-severities 2.3 changed what this fixture must do.
+        // The body check added there rejects an edited body, which is exactly
+        // what this test edits — so the fixture now recomputes the body label
+        // after doctoring, the way the compiler would. The property under test
+        // is UNCHANGED (a row present only in the compiled blob proves the fast
+        // path ran); what changed is that producing a servable compiled file
+        // now takes both labels, which is the point of 2.3.
         const yaml = 'hosts:\n  probe:\n    surfaces:\n      any: {}\n';
         const doctored = JSON.parse(compile(yaml, 'host-lowering')) as Record<string, unknown>;
         (doctored['table'] as { hosts: Record<string, unknown> }).hosts['injected'] = {
             surfaces: { any: {} },
         };
+        doctored['body_fingerprint'] = tableFingerprint(JSON.stringify(doctored['table']));
         const t = resolveTable(yaml, JSON.stringify(doctored));
         expect(t.has('injected')).toBe(true);
+    });
+
+    /**
+     * road-to-blocking-severities 2.3 — the body, not only its label.
+     *
+     * The defect: `fingerprint` binds the compiled file to the YAML SOURCE, so
+     * a compiled file whose `table` body was edited while that field was left
+     * alone still matched and was still served. Every host would then be told
+     * something the reviewed YAML beside it does not say, and nothing in the
+     * tree would disagree.
+     *
+     * What this buys, stated precisely so nobody reads it as more: it closes
+     * the PARTIAL edit — a hand edit, a bad merge, a truncated write — and it
+     * does not resist someone who recomputes both labels, exactly as the
+     * existing `fingerprint` does not. Paired with the tool-call deny added in
+     * 2.2 and the ratification record added in 2.1, that is the same
+     * deny-plus-record-plus-integrity shape the YAML sources already had.
+     */
+    it('falls back when the body was edited and the fingerprint label was not', () => {
+        const compiled = JSON.parse(compile(YAML_TEXT, 'host-lowering')) as Record<string, unknown>;
+        const hosts = (compiled['table'] as { hosts: Record<string, unknown> }).hosts;
+        // One cell, the one that decides whether a refusal can land anywhere.
+        const claude = hosts['claude'] as {
+            surfaces: { any: { slots: Record<string, Record<string, unknown>> } };
+        };
+        const slot = claude.surfaces.any.slots['pre_tool_use'] as Record<string, unknown>;
+        expect(slot['block_exit']).toBe(2);
+        slot['block_exit'] = null;
+        // The source label is deliberately left untouched — that is the defect.
+        expect(compiled['fingerprint']).toBe(tableFingerprint(YAML_TEXT));
+
+        const t = resolveTable(YAML_TEXT, JSON.stringify(compiled));
+        // The YAML path, so the edited cell never reaches a caller.
+        expect(tableShape(t)).toBe(tableShape(parseHostLowering(YAML_TEXT)));
+        expect(t.get('claude')?.get('any')?.slots.get('pre_tool_use')?.block_exit).toBe(2);
+    });
+
+    it('falls back when the body label is absent altogether', () => {
+        // A compiled file from before 2.3, or one written by something that
+        // does not know about the field. Falling through is slow and correct;
+        // serving it would reopen the hole the previous test closes.
+        const compiled = JSON.parse(compile(YAML_TEXT, 'host-lowering')) as Record<string, unknown>;
+        delete compiled['body_fingerprint'];
+        const t = resolveTable(YAML_TEXT, JSON.stringify(compiled));
+        expect(tableShape(t)).toBe(tableShape(parseHostLowering(YAML_TEXT)));
+    });
+
+    it('the compiler emits a body label the reader accepts — the round trip', () => {
+        const compiled = JSON.parse(compile(YAML_TEXT, 'host-lowering')) as Record<string, unknown>;
+        expect(typeof compiled['body_fingerprint']).toBe('string');
+        expect(compiled['body_fingerprint']).toBe(
+            tableFingerprint(JSON.stringify(compiled['table'])),
+        );
     });
 });
 

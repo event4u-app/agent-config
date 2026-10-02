@@ -32,7 +32,11 @@
       "kind": "claim",
       "title": "AC-2 independence claim overstates council participation",
       "detail": "AC-2 states 'critical tests are at L3 or L4 wherever two providers are configured' and records three peer-reviewed runs '2/2 present AFTER each'. The honest limit section clarifies 'L4 means a multi-provider council participated as an evaluator... It does not mean the group was independently authored' yet the criterion checkbox is [x] on the strength of evaluator participation alone. The criterion text conflates test authorship independence (which requires different authors) with evaluation independence (which requires different reviewers). This matches the exact ambiguity the evidence block itself warns against.",
-      "file": "agents/evidence/reviews/drain-adversarial-verification-close-round2.review-input/acceptance-criteria.md"
+      "file": "agents/evidence/reviews/drain-adversarial-verification-close-round2.review-input/acceptance-criteria.md",
+      "status": "accepted_risk",
+      "rationale": "Re-read against 9bc8cd4f2. The criterion text is unchanged and still [x]: it reads 'critical tests are at L3 or L4', which is an EVALUATION property, while 'independent test provenance' invites an AUTHORSHIP reading. The roadmap does not remove the ambiguity; it records it, in the same block, as an explicit honest limit — \"L4 means a multi-provider council participated as an evaluator on that group. It does not mean the group was independently authored end to end, and reading the marker that way would over-claim.\" Accepted on that basis rather than fixed: the finding is right that one sentence can be read two ways, and the artefact answers it by naming which reading is false next to the criterion a reader meets it in. Reopen if the limit paragraph is ever dropped while the criterion stays closed, which is the state the finding actually warns about.",
+      "verified_by": "sed -n '1039,1077p' agents/roadmaps/road-to-adversarial-verification-and-long-runs.md",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "6214334dca05",
@@ -40,7 +44,12 @@
       "kind": "correctness",
       "title": "AC-4 resolution logic inverts the criterion's subject",
       "detail": "AC-4's resolution argues the obligation is 'already fully met' because fix_loop_max defaults to 10 and no escalation maps count to ask, so the remaining N=3 occurrence is 'cosmetic'. But the criterion literally asks for that grep to return 0 — the occurrence IS the criterion's subject, not a side effect. The evidence then records it as agent-impossible due to block-kernel-rule-writes refusing the edit, making it a capability gap, yet concludes with 'Exact inputs a future session needs' as if it were merely deferred work. A criterion simultaneously described as met-in-substance, agent-impossible, and queued-for-handover is three incompatible states.",
-      "file": "agents/evidence/reviews/drain-adversarial-verification-close-round2.review-input/acceptance-criteria.md"
+      "file": "agents/evidence/reviews/drain-adversarial-verification-close-round2.review-input/acceptance-criteria.md",
+      "status": "fixed",
+      "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
+      "rationale": "The three incompatible states are gone. AC-4 is now [~] with one consistent reading: DEFERRED, with the single remaining occurrence named exactly (verify-before-complete.md line 45, inside a link label), the edit recorded as ATTEMPTED and denied at tool-call time with the guard message quoted verbatim, and the second remedy (disabling the kernel-write guard) refused on its merits rather than described as unavailable. \"Met in substance\" is not claimed anywhere in the current text.",
+      "verified_by": "sed -n '1094,1112p' agents/roadmaps/road-to-adversarial-verification-and-long-runs.md",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "8605e9fc59cd",
@@ -48,7 +57,11 @@
       "kind": "security",
       "title": "AC-5 network reach not gated on network classification",
       "detail": "AC-5's implementation adds live forge reads to 'doctor --json' (a command previously offline by design per Phase 3.2's lock) with degradation to 'unread' on failure. The opt-out is AGENT_CONFIG_DOCTOR_NO_FORGE but the default is now network-reaching. Per the council review quoted: Phase 3.2 established 'doctor does not reach the network' and 'the reading is injected'; this reverses both. The amendment records conditions under which this is acceptable but does not register the change as a capability expansion in the packaging diff or consumer-facing MIGRATION.md section. Consumers who scripted 'doctor' as a non-blocking diagnostic now invoke a 15s-budget network operation by default.",
-      "file": "agents/evidence/reviews/drain-adversarial-verification-close-round2.review-input/acceptance-criteria.md"
+      "file": "agents/evidence/reviews/drain-adversarial-verification-close-round2.review-input/acceptance-criteria.md",
+      "status": "still_open",
+      "rationale": "Half landed, half did not, and the half that did not is the half the finding is about. The behaviour change IS now recorded: the Phase 3.2 supersession is written into the roadmap and into both docblocks that previously argued the opposite, and docs/troubleshooting.md documents the network read, its call count, its budget and the opt-out. What is still absent is the consumer-facing registration the finding asks for: docs/MIGRATION.md carries no entry naming doctor at all, and `doctor --json` still reaches the network BY DEFAULT with an environment variable as the only escape. A consumer who scripted `doctor` as an offline diagnostic still inherits a network operation without having read anything. Recorded open rather than accepted because the closing action is known and cheap (a MIGRATION.md note, or a CLI opt-out flag) and nobody has decided against it. Same root as c6367568cb1a and 77e3912664b9.",
+      "verified_by": "grep -c doctor docs/MIGRATION.md; grep -n 'forgeProtectionJsonFor' src/scripts/_cli/cmd_doctor.ts",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "ddd4eacd8b0f",
@@ -56,7 +69,12 @@
       "kind": "claim",
       "title": "AC-6 carries unresolved dissent as if it were consensus",
       "detail": "AC-6's council evidence records 2/2 convergent classification as owner-reserved, then quotes anthropic's recommendation ('no autonomous mode without an enforceable stop') and states 'The dissent is recorded rather than resolved.' But the blocker's own recommendation is manual-only — the opposite position. Framing one seat's recommendation as 'the dissent' when it agrees with neither the blocker nor the other seat misrepresents the decision structure. The criterion is correctly marked [~] but the evidence presents an unresolved three-way split as if two parties agreed.",
-      "file": "agents/evidence/reviews/drain-adversarial-verification-close-round2.review-input/acceptance-criteria.md"
+      "file": "agents/evidence/reviews/drain-adversarial-verification-close-round2.review-input/acceptance-criteria.md",
+      "status": "fixed",
+      "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
+      "rationale": "The convergence is now scoped to what actually converged. The current AC-6 text says the council \"declined it as owner-reserved — 2/2 convergent\" (the CLASSIFICATION), quotes both seats reaching that by independent routes, and then records the RECOMMENDATION split separately in item (6): \"The blocker's own recommendation is `manual-only`; anthropic's, if forced, is the opposite — no autonomous mode without an enforceable stop. The dissent is recorded rather than resolved.\" The two positions are named side by side, so an unresolved split is no longer presented as agreement.",
+      "verified_by": "sed -n '1369,1415p' agents/roadmaps/road-to-adversarial-verification-and-long-runs.md",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "f45c0aabaf6b",
@@ -64,7 +82,12 @@
       "kind": "correctness",
       "title": "AC-5 sensitivity claim quotes stale suite sizes",
       "detail": "agents/roadmaps/road-to-adversarial-verification-and-long-runs.md:1193-1214 — AC-5's closing evidence states `tests/scripts/forge_reader.test.ts`, 32 cases, cites both sensitivity probes as \"1 of 32\" (lines 1207-1208) and reports \"Green: 32 in tests/scripts/forge_reader.test.ts, 60 across forge_reader + forge_protection\" (line 1214). Measured on this tree the two suites hold 37 and 28 cases, i.e. 65 together, so every figure matches a 32-case snapshot taken before five cases landed. The same paragraph condemns stale denominators, claims the probes were re-run \"at the FINAL 32-case state\", and calls a mismatched denominator \"exactly the unverified number this roadmap exists to forbid\" — the defect it says it fixed is live inside the fix. Beyond the arithmetic: the \"one case each, no collateral\" sensitivity claim was established against a suite that no longer exists, so no-collateral is unproven for the five cases added afterwards, and a closed criterion rests on it.",
-      "file": "agents/roadmaps/road-to-adversarial-verification-and-long-runs.md:1193"
+      "file": "agents/roadmaps/road-to-adversarial-verification-and-long-runs.md:1193",
+      "status": "fixed",
+      "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
+      "rationale": "Fixed structurally rather than by another correction, which is what the finding asked for. The sensitivity claim no longer carries a denominator at all — the paragraph now records that the same figure was wrong four consecutive times, names the method (\"write a denominator by hand\") as the defect, and states the property that cannot rot (\"exactly this case, nothing else\"). One measured total appears once. Re-measured on this tree: forge_reader 44 and forge_protection 28, which is what the surviving line says, so no stale figure remains.",
+      "verified_by": "npx vitest run tests/scripts/forge_reader.test.ts tests/scripts/forge_protection.test.ts",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "7a100d40435b",
@@ -72,7 +95,12 @@
       "kind": "correctness",
       "title": "Docblock contradicts the governance record on the same reversal claim",
       "detail": "src/scripts/_cli/doctor_execution.ts:117 — The `forgeProtectionJsonFor` docblock asserts \"this is an addition rather than a reversal of that note\" — the exact argument the Phase 3.2 amendment in this same diff records as refuted by a 2 of 2 convergent council pass and replaced by a supersession (\"This IS a reversal of Phase 3.2's architectural boundary\"). The code comment and the governance record now contradict each other on the load-bearing claim, and the comment is what a future reader of this module finds first, so the refuted reasoning survives in the place most likely to be reused.",
-      "file": "src/scripts/_cli/doctor_execution.ts:117"
+      "file": "src/scripts/_cli/doctor_execution.ts:117",
+      "status": "fixed",
+      "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
+      "rationale": "The refuted argument is gone from the place it would have been reused. `forgeProtectionJsonFor`'s docblock now opens \"This IS a reversal of Phase 3.2's module boundary, and the roadmap records the supersession\", names the earlier \"an addition rather than a reversal\" wording as the draft a 2/2 convergent council pass refuted, and states why it was corrected rather than deleted. The module header forty lines up was corrected in the same pass and now says Phase 3.2 is SUPERSEDED.",
+      "verified_by": "sed -n '60,145p' src/scripts/_cli/doctor_execution.ts",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "048821ba5195",
@@ -80,7 +108,12 @@
       "kind": "correctness",
       "title": "Offline-output claim is false on the failed-live path",
       "detail": "src/scripts/_cli/doctor_execution.ts:120 — \"`doctor` offline prints exactly what it printed before\" is false. `forgeProtectionJson` gained a top-level `repository` key (line 95), so the offline `forge_protection` object has a shape the pre-change command never emitted. A consumer validating the block against a closed schema, or diffing a stored snapshot, sees a change on exactly the path this change's safety argument says is untouched. The only test of the property (tests/scripts/doctor_forge_block.test.ts:74) compares two post-change outputs with each other, so nothing in the diff checks the claim the comment makes.",
-      "file": "src/scripts/_cli/doctor_execution.ts:120"
+      "file": "src/scripts/_cli/doctor_execution.ts:120",
+      "status": "fixed",
+      "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
+      "rationale": "The false claim is withdrawn in the comment that made it. The docblock now says: \"Not the whole document: the block gained a top-level `repository` key, which is `null` on every such path. A consumer validating `forge_protection` against a closed schema sees that one added key; 'prints exactly what it printed before' was too strong and is not claimed.\" What survives is the narrower AVAILABILITY property the supersession actually rests on — rows, source templates and action lines unchanged on every failure path.",
+      "verified_by": "sed -n '112,145p' src/scripts/_cli/doctor_execution.ts",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "8deecc5724c6",
@@ -88,7 +121,12 @@
       "kind": "correctness",
       "title": "originUrl and forgeProtectionJsonFor have no tests",
       "detail": "src/scripts/_lib/forge_reader.ts:228 — `originUrl` is the module's only VCS subprocess and takes an injectable `Runner` precisely so its branches are testable, yet tests/scripts/forge_reader.test.ts never imports it: the non-zero-exit, throw, non-string-stdout and `out === 'origin'` sentinel branches are all uncovered. `forgeProtectionJsonFor` (src/scripts/_cli/doctor_execution.ts:127), the composition root that wires budget, thunk, host and cwd together, has no test either — opt-out-before-spawn and host binding are asserted one layer down against injected fakes, so a regression in the real wiring is invisible. This is the single gap in a module whose whole safety argument is that every failure path is tested.",
-      "file": "src/scripts/_lib/forge_reader.ts:228"
+      "file": "src/scripts/_lib/forge_reader.ts:228",
+      "status": "fixed",
+      "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
+      "rationale": "Both gaps are closed with tests that reach the branches the finding named. tests/scripts/doctor_forge_block.test.ts now imports `originUrl` and covers the non-zero-exit, throw, non-string-stdout and `origin` sentinel branches (lines 124-153), and `forgeProtectionJsonFor` gained a `deps` seam ({env, run}) with cases driving it at lines 208 and 229 — which is what makes opt-out-before-spawn and host binding testable in the real composition root rather than one layer down against fakes.",
+      "verified_by": "grep -n 'originUrl\\|forgeProtectionJsonFor' tests/scripts/doctor_forge_block.test.ts",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "87a5d236cf23",
@@ -96,7 +134,12 @@
       "kind": "claim",
       "title": "Provenance markers claim L1 while AC-2 requires L3/L4 for critical tests",
       "detail": "tests/scripts/forge_reader.test.ts:18 — Both new suites mark themselves critical at level L1 (also tests/scripts/doctor_forge_block.test.ts:20). AC-2, which this roadmap carries as closed, requires critical tests to be at L3 or L4 wherever two providers are configured, and AC-5's own evidence in this diff states `council:status` reports two providers. The diff therefore falsifies a closed criterion without reopening it. The file comment argues L1 is the honest ceiling, which is right about the level and leaves the criterion wrong — the honest resolution is to reopen AC-2 or raise the level, not to record both and leave them contradicting.",
-      "file": "tests/scripts/forge_reader.test.ts:18"
+      "file": "tests/scripts/forge_reader.test.ts:18",
+      "status": "fixed",
+      "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
+      "rationale": "The contradiction is resolved in the direction the finding called the honest one: the level was raised rather than the criterion quietly left wrong. Every provenance marker in both suites now reads `level=L4 | critical=yes` with an `evidence` slug — twelve markers across tests/scripts/forge_reader.test.ts and tests/scripts/doctor_forge_block.test.ts, zero at L1. AC-2 therefore no longer has a closed criterion falsified by the diff that carried it.",
+      "verified_by": "grep -c 'level=L1' tests/scripts/forge_reader.test.ts tests/scripts/doctor_forge_block.test.ts",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "c6367568cb1a",
@@ -104,7 +147,11 @@
       "kind": "security",
       "title": "doctor --json unconditionally spawns subprocesses before any output",
       "detail": "src/scripts/_cli/cmd_doctor.ts:3065 — `_emit_json` now calls `forgeProtectionJsonFor` unconditionally, so every `doctor --json` invocation — including the early-return call site at line 3006 — starts subprocesses and can add roughly 15 s before any output. The only escape is an environment variable: no `--no-forge` flag was added and nothing defaults the read off for non-interactive or programmatic callers. A diagnostic people run when something is already wrong is also the one tooling is most likely to shell out to, and those callers silently inherit network dependence, credential dependence and the latency.",
-      "file": "src/scripts/_cli/cmd_doctor.ts:3065"
+      "file": "src/scripts/_cli/cmd_doctor.ts:3065",
+      "status": "still_open",
+      "rationale": "Re-read against the tree, not the review text, and it still holds exactly as written. `_emit_json` calls `forgeProtectionJsonFor(String(project_root))` unconditionally at cmd_doctor.ts:3065, which is also the early-return single-check path; no `--no-forge` or equivalent CLI flag exists anywhere in cmd_doctor.ts or forge_reader.ts; and the only escape remains the two environment switches in NO_FORGE_ENV (AGENT_CONFIG_DOCTOR_NO_FORGE, AGENT_CONFIG_OFFLINE), neither of which a programmatic caller sets by accident. Recorded open rather than accepted: adding a flag and gating the read on the requested check set is ordinary work nobody has decided against, and this ledger is not the place to decide it.",
+      "verified_by": "grep -n 'forgeProtectionJsonFor' src/scripts/_cli/cmd_doctor.ts; grep -rn 'no-forge' src/scripts/_cli/cmd_doctor.ts",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "b9d00a01c9b9",
@@ -112,7 +159,12 @@
       "kind": "style",
       "title": "Inverted flag named is true when the repository is NOT named",
       "detail": "src/scripts/_cli/doctor_execution.ts:91 — The `named` flag is inverted. It is set when the repo is null OR nothing was read from the forge, so `named` is true exactly when the repository is NOT named and the owner-repo templates are kept. Both use sites consequently read as their own negation, in the one function two review rounds have already found defects in.",
-      "file": "src/scripts/_cli/doctor_execution.ts:91"
+      "file": "src/scripts/_cli/doctor_execution.ts:91",
+      "status": "fixed",
+      "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
+      "rationale": "The flag was renamed to match what it means. doctor_execution.ts now reads `const anonymous = repo === null || !readFromForge;` and both use sites read straight: `anonymous ? s : s.replace(...)`. No identifier named `named` survives in the function.",
+      "verified_by": "grep -n 'anonymous' src/scripts/_cli/doctor_execution.ts",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "32c036833ba2",
@@ -120,7 +172,12 @@
       "kind": "correctness",
       "title": "Hand-rolled page flattening duplicates slurped helper with stricter semantics",
       "detail": "src/scripts/_lib/forge_reader.ts:263 — `readRulesets` hand-rolls page flattening while `slurped` at line 307 exists for the same `--paginate --slurp` contract with stricter semantics: `slurped` returns null on an unrecognised page shape, `readRulesets` treats it as a flat list and relies on the downstream `id` type check to degrade. Two flatteners for one payload contract is the drift the module elsewhere argues against, and only one of them is the documented behaviour.",
-      "file": "src/scripts/_lib/forge_reader.ts:263"
+      "file": "src/scripts/_lib/forge_reader.ts:263",
+      "status": "fixed",
+      "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
+      "rationale": "One flattener for one payload contract. `readRulesets` now calls the shared `slurped` helper — `slurped(api.get(`repos/${repo}/rulesets`, true), 'rulesets')` — and the hand-rolled version is gone, so the stricter null-on-unrecognised-page-shape semantics apply to both reads. The comment above the call records why, which is the drift the finding named.",
+      "verified_by": "sed -n '288,300p' src/scripts/_lib/forge_reader.ts",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "3b0b29e67762",
@@ -128,7 +185,12 @@
       "kind": "correctness",
       "title": "AC-5 verify annotation greps the whole payload and depends on spacing",
       "detail": "agents/roadmaps/road-to-adversarial-verification-and-long-runs.md:1230 — AC-5's new `verify:` annotation counts satisfied states with `grep -c` over the whole `doctor --json` payload rather than inside `forge_protection`, so any future block carrying a `state` field silently breaks it; it also depends on the pretty-printer emitting a space after the colon, and it requires live network plus forge credentials — run offline it counts zero and reports a hard failure where the implementation's own documented contract is `unread`.",
-      "file": "agents/roadmaps/road-to-adversarial-verification-and-long-runs.md:1230"
+      "file": "agents/roadmaps/road-to-adversarial-verification-and-long-runs.md:1230",
+      "status": "fixed",
+      "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
+      "rationale": "Both defects the title names are gone. AC-5's verify annotation at line 1291 is now a `python3 -c` reader scoped to `json.load(sys.stdin)['forge_protection']['rows']`, so it neither greps the whole payload nor depends on the pretty-printer emitting a space after a colon, and a future block carrying a `state` field cannot break it. The secondary clause remains true and is named rather than implied away: run offline the annotation still fails, because every row is `unread` and the reader requires all `satisfied`. That is the annotation stating its own precondition — a live-forge check — not the drift the finding is about.",
+      "verified_by": "sed -n '1291p' agents/roadmaps/road-to-adversarial-verification-and-long-runs.md",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "39bb50d4c9cb",
@@ -136,7 +198,12 @@
       "kind": "correctness",
       "title": "Call-count formula overstates on repositories setting both flags",
       "detail": "docs/troubleshooting.md:246 — The call-count formula reads \"one per environment with custom branch policies\", but src/scripts/_lib/forge_reader.ts:362 skips that call whenever `protected_branches` is true, since that flag already decides the row. The documented ceiling overstates the real call count on exactly the repositories that set both flags, which is the case the paragraph exists to size.",
-      "file": "docs/troubleshooting.md:246"
+      "file": "docs/troubleshooting.md:246",
+      "status": "fixed",
+      "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
+      "rationale": "The formula now carries the condition the code applies. docs/troubleshooting.md reads \"plus one per environment that uses custom branch policies *and* does not already restrict to protected branches\", which matches forge_reader.ts:406 — `if (policy['protected_branches'] === true) continue;` — so the documented ceiling no longer overstates on a repository setting both flags.",
+      "verified_by": "sed -n '240,252p' docs/troubleshooting.md",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "9cf754edc878",
@@ -144,7 +211,12 @@
       "kind": "correctness",
       "title": "Fractional timeout causes immediate failure after ~5s",
       "detail": "src/scripts/_lib/forge_reader.ts:182 — `Math.min(FORGE_CALL_TIMEOUT_MS, budget)` is handed straight to `spawnSync`'s `timeout`, but `budget` comes from `budgetOf`, whose default clock is `performance.now()` and therefore fractional. While more than 10 s remains the minimum is the integer 10000 and nothing shows; once roughly 5 s of the 15 s budget has elapsed the minimum becomes the fractional remainder and `spawnSync` throws `ERR_OUT_OF_RANGE — timeout must be an integer` (reproduced on node v26.7.0 with this module's exact option set). The `try` at line 180 swallows it and the call returns `null`, so every forge call issued after the first ~5 s fails instantly with no subprocess at all and its rows degrade to `unread`. The shorten-the-ceiling mechanism this change was added to provide therefore never runs in production — a call admitted with under 10 s left is rejected by Node, not timed out — and the read truncates at 5 s rather than 15 s on exactly the many-ruleset repository the budget was sized for. That falsifies a claim the change makes about itself in four places: forge_reader.ts:88 \"caps each spawn at min(FORGE_CALL_TIMEOUT_MS, remaining)\", the `forgeProtectionJsonFor` comment \"the per-call ceiling is whatever is left of the whole-read budget\", docs/troubleshooting.md \"a call is both admitted and timed out against whatever is left of it, so the total is a real ceiling rather than an advertised one\", and the Phase 3.2 amendment's council-condition list \"a call is TIMED OUT against what is left of the budget rather than only admitted against it\", recorded as MET. Neither suite can see it: every `Runner` in both files is a fake and `defaultRunner` has zero coverage, so \"shortens the per-call timeout to whatever the budget has left\" asserts the arithmetic and never reaches the spawn that rejects it.",
-      "file": "src/scripts/_lib/forge_reader.ts"
+      "file": "src/scripts/_lib/forge_reader.ts",
+      "status": "fixed",
+      "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
+      "rationale": "Re-read at the location the roadmap names, and the floor is there: `callTimeout` is `Math.max(1, Math.floor(Math.min(FORGE_CALL_TIMEOUT_MS, remainingMs)))`. The floor removes the ERR_OUT_OF_RANGE the finding reproduced, and the 1 ms minimum is the second half the fix needed and the finding did not reach: `timeout: 0` installs no kill timer at all, so flooring alone would have turned a sub-millisecond remainder into an UNBOUNDED spawn — the ceiling failing open in the exact budget-exhaustion case it exists for. The docblock records both behaviours.",
+      "verified_by": "sed -n '138,157p' src/scripts/_lib/forge_reader.ts",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "37908bc8b42d",
@@ -152,7 +224,12 @@
       "kind": "correctness",
       "title": "Non-string branch policy name silently dropped, becomes positive claim",
       "detail": "src/scripts/_lib/forge_reader.ts:384 — In `readDeployRestricted`, a branch-policy entry whose `name` is not a string is silently dropped by the `filter`, so a malformed payload yields an empty pattern list for that environment, which `deployRestrictedFrom` maps to `false` and the row renders `unsatisfied` with the detail \"at least one environment accepts a deployment from any branch\" — a positive claim about the forge derived from data nobody could parse. Every sibling field in the same module takes the opposite route: a non-string environment `name` three lines up returns `null`, a non-numeric ruleset `id` returns `null`, a non-boolean `allow_auto_merge` returns `null`. forge_protection.ts chose `false` for a CONFIRMED-empty pattern list, which is a different input from an unparseable one. The direction is the safe one, so this under-reports rather than over-reports, but it contradicts the module's own stated invariant that every failure lands on `unread`.",
-      "file": "src/scripts/_lib/forge_reader.ts"
+      "file": "src/scripts/_lib/forge_reader.ts",
+      "status": "fixed",
+      "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
+      "rationale": "The silent drop is gone and the module invariant holds. `readDeployRestricted` now ends the pattern read with `if (patterns.some((n) => typeof n !== 'string')) return null;`, so an unparseable branch-policy name lands on `unread` like every sibling field instead of collapsing to an empty list and rendering a positive claim about the forge. The comment above it keeps the distinction the fix turns on: a CONFIRMED-empty list is a different input and keeps its own `false`.",
+      "verified_by": "sed -n '410,426p' src/scripts/_lib/forge_reader.ts",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "6a8dd0cf9ed5",
@@ -160,7 +237,12 @@
       "kind": "correctness",
       "title": "Hand-written item count is drift-prone",
       "detail": "agents/roadmaps/road-to-adversarial-verification-and-long-runs.md:138 — The roadmap preamble here and the `daemon-host-kill-switch` blocker entry at line 981 both call the AC-6 owner artefact a \"nine-item\" brief, while the artefact under AC-6 carries eight numbered items, (1) through (8), plus an unnumbered \"Where the answer goes\" paragraph at line 1379. A reader counting items against the stated figure finds eight. This is the same class of hand-written, drift-prone count that the AC-5 entry in the same diff documents itself getting wrong four consecutive times before removing denominators by construction.",
-      "file": "agents/roadmaps/road-to-adversarial-verification-and-long-runs.md"
+      "file": "agents/roadmaps/road-to-adversarial-verification-and-long-runs.md",
+      "status": "fixed",
+      "commit": "4e803d6204906ce5357808ad2ec146e285249a0b",
+      "rationale": "The drift-prone count was removed rather than corrected to eight. No \"nine-item\" or \"eight-item\" string survives anywhere in the roadmap; the two remaining occurrences of \"nine\" are the nine-rule kernel, which is a different subject. The AC-6 owner artefact is now introduced without a count, so there is no figure left to go stale — the same structural fix the AC-5 paragraph in the same file applied to its denominators.",
+      "verified_by": "grep -c 'nine-item' agents/roadmaps/road-to-adversarial-verification-and-long-runs.md",
+      "date": "2026-10-01"
     },
     {
       "finding_id": "77e3912664b9",
@@ -168,7 +250,11 @@
       "kind": "claim",
       "title": "Single-check JSON path now spawns unconditionally",
       "detail": "src/scripts/_cli/cmd_doctor.ts:3065 — `forgeProtectionJsonFor` is called unconditionally from `_emit_json`, which is also the single-check JSON path reached from line 3006 (`doctor --json --check <id>`). A previously pure-local command now spawns one `git` plus three or more `gh` processes and can block for the full 15 s budget on every `--json` invocation, including one that asked for a single unrelated check, and including any scripted or GUI consumer of the payload. The only scope control is an environment variable — there is no CLI flag, and the read is not gated on the requested check set.",
-      "file": "src/scripts/_cli/cmd_doctor.ts"
+      "file": "src/scripts/_cli/cmd_doctor.ts",
+      "status": "still_open",
+      "rationale": "The sibling of c6367568cb1a, re-read on the same evidence and open for the same reason. `doctor --json --check <id>` still reaches `_emit_json`, which still calls `forgeProtectionJsonFor` unconditionally, so a request for one unrelated check still spawns `git` plus the `gh` calls and can block for the whole 15 s budget. The read is not gated on the requested check set and there is no CLI scope control. Closing this closes c6367568cb1a with it.",
+      "verified_by": "sed -n '3000,3010p;3060,3068p' src/scripts/_cli/cmd_doctor.ts",
+      "date": "2026-10-01"
     }
   ],
   "review_independence": "single-member",

@@ -66,6 +66,39 @@ describe('block_plumbing_writes — targets_plumbing_output', () => {
         }
     });
 
+    /**
+     * road-to-blocking-severities 2.2 — the two COMPILED tables.
+     *
+     * They sit beside their YAML sources and are the opposite case: the YAML is
+     * hand-written and carries a record, while the JSON is written only by
+     * `compile_hook_manifest` and has no legitimate hand edit at all. Until this
+     * step a hand edit of `host_lowering.json` was refused by nothing, and the
+     * reader serves it in preference to the YAML, so the edited body is what
+     * every host would have been told.
+     */
+    it('matches the compiled plumbing tables, repo-relative and absolute', () => {
+        for (const p of ['src/scripts/hook_manifest.json', 'src/scripts/hooks/host_lowering.json']) {
+            expect(targets_plumbing_output(p), p).toBe(p);
+            expect(targets_plumbing_output(`/Users/x/project/${p}`), p).toBe(p);
+        }
+    });
+
+    /**
+     * The boundary the compiled-table entries could plausibly over-reach into:
+     * the schema beside the manifest, a fixture copy under `tests/`, and the
+     * same basenames one directory off.
+     */
+    it('does NOT match a neighbour of the compiled tables', () => {
+        for (const p of [
+            'src/scripts/hook_manifest.schema.json',
+            'src/scripts/host_lowering.json',
+            'src/scripts/hooks/hook_manifest.json',
+            'docs/contracts/hook_manifest.json',
+        ]) {
+            expect(targets_plumbing_output(p), p).toBeNull();
+        }
+    });
+
     it('returns null for an empty path', () => {
         expect(targets_plumbing_output('')).toBeNull();
     });
@@ -102,6 +135,45 @@ describe('block_plumbing_writes — check_envelope refuses', () => {
             'mv /tmp/x hooks/hooks.json',
         ]) {
             expect(check_envelope(bash(cmd) as never)[0], cmd).toBe(true);
+        }
+    });
+
+    /**
+     * road-to-blocking-severities 2.2, the DENY path for the compiled tables —
+     * the half that matters, since a matcher that returns a name buys nothing
+     * unless the envelope check turns it into a refusal that names the command
+     * to run instead.
+     */
+    it('DENIES an Edit and a shell write to either compiled table, naming the compiler', () => {
+        for (const [p, table] of [
+            ['src/scripts/hook_manifest.json', 'manifest'],
+            ['src/scripts/hooks/host_lowering.json', 'host-lowering'],
+        ] as const) {
+            const [blocked, reason] = check_envelope({
+                payload: { tool_name: 'Edit', tool_input: { file_path: p } },
+            } as never);
+            expect(blocked, p).toBe(true);
+            expect(reason, p).toContain(p);
+            expect(reason, p).toContain(`compile_hook_manifest --table ${table}`);
+
+            expect(check_envelope(bash(`sed -i s/a/b/ ${p}`) as never)[0], p).toBe(true);
+            expect(check_envelope(bash(`cat > ${p}`) as never)[0], p).toBe(true);
+        }
+    });
+
+    /**
+     * The regeneration itself must survive — a guard that refused its own
+     * repair path would make the governed file unmaintainable, which is the
+     * failure mode the `ALLOWS the legitimate builds` test below pins for the
+     * other two outputs.
+     */
+    it('ALLOWS the compiler that writes the compiled tables', () => {
+        for (const cmd of [
+            './scripts-run src/scripts/compile_hook_manifest --table manifest',
+            './scripts-run src/scripts/compile_hook_manifest --table host-lowering',
+            'task sync',
+        ]) {
+            expect(check_envelope(bash(cmd) as never)[0], cmd).toBe(false);
         }
     });
 });

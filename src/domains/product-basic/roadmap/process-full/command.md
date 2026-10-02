@@ -145,7 +145,7 @@ the loop continues to the next one.
 ### Delivery — every run, flag or not
 
 On outcome `complete`, open the PR as today, then run
-[`/pr:merge <N> --no-merge`](../../../git/pr/merge/command.md) on it: sync the
+`/pr:merge <N> --no-merge` on it: sync the
 base in, resolve conflicts by that command's four enumerated classes, drive the
 required checks green on the pushed head. **This is unconditional** — a bare
 `/roadmap:process-full` delivers a mergeable PR, not merely an open one, and
@@ -269,7 +269,7 @@ stops the run):
 5. **Test / quality red** that cannot be cleared within the N=3 budget.
 6. **RETIRED 2026-09-13** by `road-to-adversarial-verification-and-long-runs`
    5.2. This read *a merge conflict outside the four enumerated classes of
-   [`/pr:merge` § 3](../../../git/pr/merge/command.md)*. That section now ROUTES
+   `/pr:merge` § 3*. That section now ROUTES
    an unenumerated conflict — understand both intents, inspect recency and
    authorship, preserve both where compatible, independent review, council or
    team, and the owner **only** for a product-semantic incompatibility — so
@@ -298,7 +298,7 @@ roadmap:
 
 **And the conditions that end the loop without ending a roadmap:**
 estate-queue exhaustion (always), a
-[`/pr:merge` § 8](../../../git/pr/merge/command.md) kill switch (always — that
+`/pr:merge` § 8 kill switch (always — that
 section arms its checks during **preparation**, not only before a merge, which
 is what keeps them reachable while the merge step is gated), and
 authorization-window expiry — which is **unreachable in this command**,
@@ -322,7 +322,7 @@ FORBIDDEN NON-HALT REASONS — NEVER STOP THE RUN FOR ANY OF THESE:
   · "a PR must be opened" / "a GitHub setting must change"
   · "CI must be re-run" / "the merge base needs updating" / "there are
     conflicts" — resolving these IS the work, and since 2026-09-13 that holds
-    for an UNENUMERATED conflict too: [`/pr:merge` § 3](../../../git/pr/merge/command.md)
+    for an UNENUMERATED conflict too: `/pr:merge` § 3
     routes it (understand both intents → recency and authorship → preserve both
     where compatible → independent review → council or team → the owner only for
     a product-semantic incompatibility) instead of stopping. The prohibition that

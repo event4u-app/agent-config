@@ -35,12 +35,14 @@
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import YAML from 'yaml';
 
-import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
+import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 import { py_json_dumps_indent2 } from './_lib/security_lint.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -48,8 +50,16 @@ const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 // Mutable bindings so tests can sandbox the scan target (mirrors the pytest
 // monkeypatch.setattr seam used by sibling lint twins).
-let WORKFLOWS_DIR = path.join(REPO_ROOT, '.github', 'workflows');
-let ALLOWLIST_PATH = path.join(path.dirname(_HERE), 'lint_workflow_security_allowlist.json');
+//
+// `--self-test` needs the same sandbox from a CHILD process, which cannot reach
+// the in-process seam, so the two paths are also readable from the environment.
+// Deliberately env and not argv: the CLI surface is pinned (argparse flags,
+// byte-identical usage lines, unknown arg → exit 2), and a scan root is not
+// something a caller should be able to redirect by typing a flag.
+let WORKFLOWS_DIR = process.env['LINT_WORKFLOW_SECURITY_DIR'] ?? path.join(REPO_ROOT, '.github', 'workflows');
+let ALLOWLIST_PATH =
+    process.env['LINT_WORKFLOW_SECURITY_ALLOWLIST'] ??
+    path.join(path.dirname(_HERE), 'lint_workflow_security_allowlist.json');
 const ALLOWLIST_CAP = 20;
 
 function _setWorkflowsDirForTest(p: string): void {
@@ -577,8 +587,147 @@ function _usageError(arg: string): string {
     );
 }
 
+/**
+ * Prove, on demand, that the gate's rejections still fire.
+ *
+ * The CI invocation is warn-only, so the exit code `runSelfTest` reads cannot be
+ * moved by a finding there. The cases below therefore drive the two exits the
+ * gate really has — 2 for a dead scan scope or an over-cap allowlist, 1 for a
+ * HIGH under `--strict` — and pin the warn-only tier itself from the other side:
+ * a MEDIUM under `--strict` must still PASS, which is the direction a future
+ * re-tiering would silently break.
+ */
+function selfTest(): number {
+    const plant = (name: string, files: Record<string, string>): string => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), `lws-selftest-${name}-`));
+        for (const [rel, body] of Object.entries(files)) {
+            fs.writeFileSync(path.join(dir, rel), body, 'utf-8');
+        }
+        return dir;
+    };
+    const allowlistFile = (entries: unknown[]): string => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'lws-selftest-al-'));
+        const p = path.join(dir, 'allowlist.json');
+        fs.writeFileSync(p, JSON.stringify({ findings: entries }), 'utf-8');
+        return p;
+    };
+    const run = (wfDir: string, args: readonly string[], allowlist?: string): number => {
+        const prevDir = process.env['LINT_WORKFLOW_SECURITY_DIR'];
+        const prevAl = process.env['LINT_WORKFLOW_SECURITY_ALLOWLIST'];
+        process.env['LINT_WORKFLOW_SECURITY_DIR'] = wfDir;
+        if (allowlist !== undefined) {
+            process.env['LINT_WORKFLOW_SECURITY_ALLOWLIST'] = allowlist;
+        }
+        try {
+            return runGateCli(
+                REPO_ROOT,
+                path.join('src', 'scripts', 'lint_workflow_security.ts'),
+                args,
+                REPO_ROOT,
+            );
+        } finally {
+            if (prevDir === undefined) {
+                delete process.env['LINT_WORKFLOW_SECURITY_DIR'];
+            } else {
+                process.env['LINT_WORKFLOW_SECURITY_DIR'] = prevDir;
+            }
+            if (prevAl === undefined) {
+                delete process.env['LINT_WORKFLOW_SECURITY_ALLOWLIST'];
+            } else {
+                process.env['LINT_WORKFLOW_SECURITY_ALLOWLIST'] = prevAl;
+            }
+        }
+    };
+
+    const HIGH_WF = [
+        'on:',
+        '  pull_request_target:',
+        'jobs:',
+        '  build:',
+        '    steps:',
+        '      - uses: actions/checkout@0000000000000000000000000000000000000000',
+        '        with:',
+        '          persist-credentials: false',
+        '          ref: ${{ github.event.pull_request.head.sha }}',
+        '',
+    ].join('\n');
+    // Unpinned third-party action — MEDIUM, and MEDIUM alone.
+    const MEDIUM_WF = [
+        'on:',
+        '  push:',
+        'jobs:',
+        '  build:',
+        '    steps:',
+        '      - uses: somevendor/action@v1',
+        '',
+    ].join('\n');
+    const CLEAN_WF = [
+        'on:',
+        '  push:',
+        'jobs:',
+        '  build:',
+        '    steps:',
+        '      - uses: actions/checkout@0000000000000000000000000000000000000000',
+        '        with:',
+        '          persist-credentials: false',
+        '      - run: npm ci --ignore-scripts',
+        '',
+    ].join('\n');
+
+    return runSelfTest({
+        gate: 'lint_workflow_security',
+        minCases: 5,
+        minRejectCases: 3,
+        cases: [
+            {
+                name: 'an empty workflows directory is refused, not certified "0 HIGH, 0 MEDIUM"',
+                expect: 'reject',
+                run: () => run(plant('empty', {}), []),
+            },
+            {
+                name: 'a pull_request_target checkout of the untrusted ref fails under --strict',
+                expect: 'reject',
+                run: () => run(plant('high', { 'bad.yml': HIGH_WF }), ['--strict']),
+            },
+            {
+                name: 'an over-cap allowlist fails rather than suppressing silently',
+                expect: 'reject',
+                run: () =>
+                    run(
+                        plant('cap', { 'ok.yml': CLEAN_WF }),
+                        [],
+                        allowlistFile(
+                            Array.from({ length: ALLOWLIST_CAP + 1 }, (_, n) => ({
+                                workflow: `w${String(n)}.yml`,
+                                rule: 'unpinned-action',
+                            })),
+                        ),
+                    ),
+            },
+            {
+                name: 'a MEDIUM under --strict still PASSES — the tier split is real, not decorative',
+                expect: 'accept',
+                run: () => run(plant('medium', { 'med.yml': MEDIUM_WF }), ['--strict']),
+            },
+            {
+                name: 'a clean workflow passes under --strict',
+                expect: 'accept',
+                run: () => run(plant('clean', { 'ok.yml': CLEAN_WF }), ['--strict']),
+            },
+        ],
+    });
+}
+
 export function main(argv?: string[]): number {
-    const parsed = _parseArgs(argv ?? process.argv.slice(2));
+    const rawArgv = argv ?? process.argv.slice(2);
+    if (rawArgv.includes('--self-test')) {
+        if (process.env['GATE_SELF_TEST_CHILD'] === '1') {
+            process.stderr.write('lint_workflow_security: --self-test does not recurse\n');
+            return 2;
+        }
+        return selfTest();
+    }
+    const parsed = _parseArgs(rawArgv);
     if (parsed.exitCode !== undefined) {
         return parsed.exitCode;
     }
@@ -600,7 +749,14 @@ export function main(argv?: string[]): number {
     const yml = _sortedGlob('.yml');
     const yaml = _sortedGlob('.yaml');
     try {
-        assertScanned({
+        // `reportScanned`, not `assertScanned`: the gate now carries a floor in
+        // src/config/gate-coverage.yml, and the guard there reads the
+        // machine-readable `scanned:` line. Asserting without publishing leaves
+        // the gate invisible to the coverage guard — the half-adoption
+        // `_lib/scan_scope.reportScanned` was written to close. The line goes to
+        // stdout unconditionally, `--quiet` included, because CI passes
+        // `--quiet` and a count only visible without it is not a count.
+        reportScanned({
             gate: 'lint_workflow_security',
             scanned: yml.length + yaml.length,
             units: 'workflow file(s)',

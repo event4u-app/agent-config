@@ -244,6 +244,14 @@ describe('merge_ingest — the integrity fields the old ingest dropped', () => {
         assurance: 'single-pass',
         reviewers: ['anthropic'],
         coverage: { chunks: 6, filesReviewed: 181, filesTotal: 258 },
+        // The seventh field, carried since 2026-10-01. `self_review_gate` has
+        // written it under `--findings-out` for longer than that, and
+        // `merge_ingest` dropped it — so the falsifier for the supplied-facts
+        // change never reached the record it is a falsifier for. The fixture
+        // tracks the producer's real shape (`factClaimCounts`), because both
+        // assertions below are stated over the WHOLE field set and a fixture
+        // one field short would quietly narrow them.
+        fact_claims: { asserting_removal: 1, disproved_by_tree: 0 },
         findings: [
             { finding_id: 'a1', severity: 'high', kind: 'security', title: 'x' },
             { finding_id: 'b2', severity: 'low', kind: 'style', title: 'y' },

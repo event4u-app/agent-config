@@ -198,32 +198,25 @@ export function _parse_concern_stdout(stdout_text: string): JsonObject {
  * path (`yaml.safe_load(text) or {}`); version 1.1 matches PyYAML.safe_load.
  */
 /**
- * Cheap content fingerprint of a manifest source — FNV-1a 32-bit plus the byte
- * length, hex.
+ * Content fingerprint of a manifest source — delegated to `tableFingerprint`,
+ * which owns the algorithm and the measurement.
  *
- * Deliberately NOT a crypto hash: `require('node:crypto')` costs 8 ms of
- * process start, which is most of what the precompiled manifest exists to
- * save. This runs in about 0.2 ms over 61 kB and only has to detect an edited
- * source, not resist an adversary — a wrong answer costs the slow path, never
- * correctness.
+ * road-to-blocking-severities 3.1: this comment used to argue against a crypto
+ * hash for a function that already used one. The retired argument and the
+ * numbers that retired it live there now.
  */
 export function _manifest_fingerprint(text: string): string {
   return tableFingerprint(text);
 }
 
 export function _load_yaml(p: string): JsonObject {
-  // Precompiled fast path. The manifest is ~61 kB of YAML and is parsed on
-  // EVERY dispatch, which measured 12 ms of a ~103 ms dispatch (plus 8 ms to
-  // load the `yaml` module itself). The sibling `.json` is the same data with
-  // comments stripped — 14.7 kB — and JSON.parse of it is sub-millisecond.
+  // Precompiled fast path. The manifest is ~61 kB of YAML parsed on EVERY
+  // dispatch — 12 ms of a ~103 ms dispatch, plus 8 ms to load the `yaml` module
+  // itself. The sibling `.json` is the same data with comments stripped,
+  // 14.7 kB, and JSON.parse of it is sub-millisecond.
   //
-  // Freshness is decided by the SOURCE CONTENT, not by mtime. The first version
-  // of this compared mtimes and that was a measured defect, not a theoretical
-  // one: on a fresh `actions/checkout` both files get the checkout timestamp in
-  // whatever order git wrote them, so whether the optimisation applied at all
-  // was a coin flip. It won on the PR (p95 129 ms) and lost on the trunk
-  // (p95 186 ms) for the same commit. A fingerprint is deterministic wherever
-  // the tree came from.
+  // Freshness is SOURCE CONTENT, never mtime — the measured defect behind that
+  // is in `table_fingerprint.ts`, told once rather than in all three readers.
   //
   // Reading the YAML unconditionally costs ~0 ms (it is the PARSE that is
   // expensive), so the fast path still skips ~20 ms.
@@ -235,7 +228,14 @@ export function _load_yaml(p: string): JsonObject {
       if (
         _isObject(raw) &&
         raw["fingerprint"] === _manifest_fingerprint(text) &&
-        _isObject(raw["manifest"])
+        _isObject(raw["manifest"]) &&
+        // road-to-blocking-severities 2.3, the manifest twin of the check in
+        // `host_lowering.resolveTable`, which carries the full reasoning. In
+        // one line: the label above binds this file to the YAML SOURCE and says
+        // nothing about the body underneath, so an edited `manifest` body with
+        // an untouched label was served — on the table that decides which
+        // concern runs on which slot at all. Absent field → fall through.
+        raw["body_fingerprint"] === _manifest_fingerprint(JSON.stringify(raw["manifest"]))
       ) {
         return raw["manifest"];
       }

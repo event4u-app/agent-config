@@ -16,7 +16,7 @@ agent reads to learn what the component accepts, and the harness that catches a 
 focus defect while the component is still in isolation. Stack-agnostic — the tool is
 Storybook, the discipline is not.
 
-Lifted out of [`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) § Component workshop, which
+Lifted out of `react-shadcn-ui` § Component workshop, which
 keeps a pointer here rather than a copy.
 
 ## The Iron Law
@@ -135,7 +135,7 @@ Run the project's story test command (the Vitest addon's `storybook test`, or wh
 `package.json` declares — read it, do not assume a name), then read the a11y result.
 
 Write findings into `state.ui_review.a11y` in the shape
-[`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) § Review pass already defines:
+`react-shadcn-ui` § Review pass already defines:
 
 ```
 {violations: [{rule, selector, severity}, …], severity_floor?, accepted_violations?}
@@ -235,7 +235,7 @@ copied verbatim:
 
 ## See also
 
-- [`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) — the React stack lane, and the `(rule, selector, severity)` shape § Validate writes into.
+- `react-shadcn-ui` — the React stack lane, and the `(rule, selector, severity)` shape § Validate writes into.
 - [`existing-ui-audit`](../existing-ui-audit/SKILL.md) — the inventory the MCP path accelerates.
 - [`js-library-packaging`](../js-library-packaging/SKILL.md) — the package around the workshop.
 - [`accessibility-auditor`](../accessibility-auditor/SKILL.md) — the WCAG depth behind the a11y half.

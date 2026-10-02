@@ -30,6 +30,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
     FLOOR_MAJOR,
     findMajorSections,
+    indexVersions,
     migrationVersions,
     pendingMajorFinding,
 } from '../../src/scripts/lint_major_migration_sections.js';
@@ -74,11 +75,41 @@ afterEach(() => {
     fs.rmSync(root, { recursive: true, force: true });
 });
 
+function indexTable(versions: readonly string[]): string {
+    return [
+        '# Breaking Changes',
+        '',
+        '## Breaking changes by major',
+        '',
+        '| Version | Date | What broke | Migration |',
+        '|---|---|---|---|',
+        ...versions.map((v) => `| **${v}** | 2026-01-01 | something | do a thing |`),
+        '',
+    ].join('\n');
+}
+
+/**
+ * A tree whose breaking-changes index already names every major the changelog
+ * carries, so these cases exercise the MIGRATION obligation in isolation. The
+ * index half has its own suite below, with its own fixture.
+ */
 function fixture(changelogText: string | null, migrationHeadings: readonly string[]): string {
+    const majors = [...(changelogText ?? '').matchAll(/(?<![\d.])(\d+)\.0\.0(?![\d.])/g)].map(
+        (m) => `${m[1] as string}.0.0`,
+    );
+    return fixtureWithIndex(changelogText, migrationHeadings, [...new Set(majors)]);
+}
+
+function fixtureWithIndex(
+    changelogText: string | null,
+    migrationHeadings: readonly string[],
+    indexVersionList: readonly string[],
+): string {
     fs.mkdirSync(path.join(root, 'docs'), { recursive: true });
     if (changelogText !== null) {
         fs.writeFileSync(path.join(root, 'CHANGELOG.md'), changelogText, 'utf8');
     }
+    fs.writeFileSync(path.join(root, 'BREAKING_CHANGES.md'), indexTable(indexVersionList), 'utf8');
     fs.writeFileSync(
         path.join(root, 'docs', 'MIGRATION.md'),
         ['# Migration Guide', '', ...migrationHeadings.flatMap((h) => [h, '', 'body', ''])].join('\n'),
@@ -189,20 +220,30 @@ describe('findMajorSections / migrationVersions', () => {
 
 describe('pendingMajorFinding — the cut-time seam release.ts uses', () => {
     it('refuses a pending major entry with BREAKING and no section, naming the version', () => {
-        const finding = pendingMajorFinding('17.0.0', changelog('17.0.0', ['**x:** drop']), '# M\n');
+        const finding = pendingMajorFinding(
+            '17.0.0',
+            changelog('17.0.0', ['**x:** drop']),
+            '# M\n',
+            '| **17.0.0** | d | b | m |\n',
+        );
         expect(finding).not.toBeNull();
         expect(finding as string).toContain('17.0.0');
     });
 
     it('clears once the section exists', () => {
         expect(
-            pendingMajorFinding('17.0.0', changelog('17.0.0', ['**x:** drop']), '## 17.0.0 — x\n'),
+            pendingMajorFinding(
+                '17.0.0',
+                changelog('17.0.0', ['**x:** drop']),
+                '## 17.0.0 — x\n',
+                '| **17.0.0** | d | b | m |\n',
+            ),
         ).toBeNull();
     });
 
     it('is silent for a minor target, whatever the entry says', () => {
         expect(
-            pendingMajorFinding('17.1.0', changelog('17.1.0', ['**x:** drop']), '# M\n'),
+            pendingMajorFinding('17.1.0', changelog('17.1.0', ['**x:** drop']), '# M\n', ''),
         ).toBeNull();
     });
 });
@@ -228,5 +269,176 @@ describe('the real tree', () => {
         ];
         const inScope = sections.filter((s) => s.major >= FLOOR_MAJOR && s.breaking > 0);
         expect(inScope.length).toBeGreaterThan(0);
+    });
+});
+
+/**
+ * The second obligation: a major that broke something owes the INDEX a row.
+ *
+ * `BREAKING_CHANGES.md` § Breaking changes by major is the table a consumer
+ * planning an upgrade reads first, and it stopped at 9.0.0 while the archived
+ * changelogs carried 10.0.0 through 16.0.0 — seven majors with no row, which
+ * nothing in the tree could see.
+ *
+ * Extended onto this gate rather than given its own: same floor, same changelog
+ * parser, same pending-entry path. A second gate would be a second copy of
+ * `findMajorSections` free to drift from this one.
+ *
+ * Both directions are pinned per obligation, because a gate that only ever reds
+ * cannot be told apart from one that always reds — and the cross pair
+ * (migration present, index absent, and the reverse) is what proves the two
+ * requirements are independent rather than one check wearing two names.
+ */
+describe('lint_major_migration_sections — the breaking-changes index row', () => {
+    const BREAKING = ['**x:** drop y'];
+
+    it('refuses a breaking major the index has no row for, and names the file', () => {
+        const dir = fixtureWithIndex(changelog('17.0.0', BREAKING), ['## 17.0.0 — what to do'], []);
+        const r = run(['--root', dir]);
+        expect(r.status).toBe(1);
+        const out = `${r.stdout}${r.stderr}`;
+        expect(out).toContain('17.0.0');
+        expect(out).toContain('BREAKING_CHANGES.md');
+    });
+
+    it('passes once the row exists', () => {
+        const dir = fixtureWithIndex(
+            changelog('17.0.0', BREAKING),
+            ['## 17.0.0 — what to do'],
+            ['17.0.0'],
+        );
+        expect(run(['--root', dir]).status).toBe(0);
+    });
+
+    it('refuses again when the row is taken away — sensitivity, not a one-way check', () => {
+        const dir = fixtureWithIndex(
+            changelog('17.0.0', BREAKING),
+            ['## 17.0.0 — what to do'],
+            ['17.0.0'],
+        );
+        expect(run(['--root', dir]).status).toBe(0);
+        fs.writeFileSync(path.join(dir, 'BREAKING_CHANGES.md'), indexTable([]), 'utf8');
+        expect(run(['--root', dir]).status).toBe(1);
+    });
+
+    it('a row for a DIFFERENT major does not satisfy it', () => {
+        const dir = fixtureWithIndex(
+            changelog('17.0.0', BREAKING),
+            ['## 17.0.0 — what to do'],
+            ['16.0.0'],
+        );
+        expect(run(['--root', dir]).status).toBe(1);
+    });
+
+    it('the two obligations are independent — a row does not stand in for the section', () => {
+        const dir = fixtureWithIndex(changelog('17.0.0', BREAKING), [], ['17.0.0']);
+        const r = run(['--root', dir]);
+        expect(r.status).toBe(1);
+        expect(`${r.stdout}${r.stderr}`).toContain('MIGRATION.md');
+    });
+
+    it('the floor and the no-breaking carve-out apply to the index too', () => {
+        expect(
+            run([
+                '--root',
+                fixtureWithIndex(changelog(`${String(FLOOR_MAJOR - 1)}.0.0`, BREAKING), [], []),
+            ]).status,
+        ).toBe(0);
+        expect(run(['--root', fixtureWithIndex(changelog('17.0.0', []), [], [])]).status).toBe(0);
+    });
+
+    it('reds when the index file itself is missing, rather than skipping the check', () => {
+        const dir = fixture(changelog('17.0.0', BREAKING), ['## 17.0.0 — what to do']);
+        expect(run(['--root', dir]).status).toBe(0);
+        fs.rmSync(path.join(dir, 'BREAKING_CHANGES.md'));
+        const r = run(['--root', dir]);
+        expect(r.status).toBe(1);
+        expect(`${r.stdout}${r.stderr}`).toContain('BREAKING_CHANGES.md');
+    });
+});
+
+describe('indexVersions — the first cell is the row, the rest is prose', () => {
+    it('reads the version out of the first cell', () => {
+        expect([...indexVersions('| **9.0.0** | 2026-07-13 | broke | fix it |')]).toEqual(['9.0.0']);
+    });
+
+    it('ignores a version mentioned only in a later cell', () => {
+        // The live table's Migration cells say things like "See [CHANGELOG
+        // 8.0.0]". Counting those would hand the index rows it does not have.
+        expect([
+            ...indexVersions('| **9.0.0** | d | broke | See [CHANGELOG 8.0.0](CHANGELOG.md) |'),
+        ]).toEqual(['9.0.0']);
+    });
+
+    it('reads only whole X.0.0 tokens, and not the header or separator rows', () => {
+        const v = indexVersions(
+            [
+                '| Version | Date | What broke | Migration |',
+                '|---|---|---|---|',
+                '| **16.0.0** | d | b | m |',
+                '| **14.22.0** | d | b | m |',
+                '| 16.0.01 | d | b | m |',
+            ].join('\n'),
+        );
+        expect([...v].sort()).toEqual(['16.0.0']);
+    });
+
+    it('does not require the bold spelling the live table happens to use', () => {
+        expect([...indexVersions('| 17.0.0 | d | b | m |')]).toEqual(['17.0.0']);
+    });
+});
+
+describe('pendingMajorFinding — the index half of the cut-time seam', () => {
+    it('refuses a pending major whose index row is missing, even with the section present', () => {
+        const finding = pendingMajorFinding(
+            '17.0.0',
+            changelog('17.0.0', ['**x:** drop']),
+            '## 17.0.0 — x\n',
+            indexTable([]),
+        );
+        expect(finding).not.toBeNull();
+        expect(finding as string).toContain('BREAKING_CHANGES.md');
+    });
+
+    it('clears once both the section and the row exist', () => {
+        expect(
+            pendingMajorFinding(
+                '17.0.0',
+                changelog('17.0.0', ['**x:** drop']),
+                '## 17.0.0 — x\n',
+                indexTable(['17.0.0']),
+            ),
+        ).toBeNull();
+    });
+
+    it('still refuses a missing section when the row is there', () => {
+        const finding = pendingMajorFinding(
+            '17.0.0',
+            changelog('17.0.0', ['**x:** drop']),
+            '# M\n',
+            indexTable(['17.0.0']),
+        );
+        expect(finding as string).toContain('MIGRATION.md');
+    });
+});
+
+describe('the real tree — the index half', () => {
+    it('carries a row for every major the changelogs break in', () => {
+        const index = indexVersions(
+            fs.readFileSync(path.join(REPO_ROOT, 'BREAKING_CHANGES.md'), 'utf8'),
+        );
+        const archiveDir = path.join(REPO_ROOT, 'docs', 'archive');
+        const sections = [
+            ...findMajorSections(fs.readFileSync(path.join(REPO_ROOT, 'CHANGELOG.md'), 'utf8'), 'c'),
+            ...fs
+                .readdirSync(archiveDir)
+                .filter((n) => n.startsWith('CHANGELOG-') && n.endsWith('.md'))
+                .flatMap((n) =>
+                    findMajorSections(fs.readFileSync(path.join(archiveDir, n), 'utf8'), n),
+                ),
+        ];
+        const breaking = sections.filter((s) => s.breaking > 0).map((s) => s.version);
+        expect(breaking.length).toBeGreaterThan(0);
+        expect([...new Set(breaking)].filter((v) => !index.has(v)).sort()).toEqual([]);
     });
 });

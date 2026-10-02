@@ -24,7 +24,7 @@ PAYLOAD='{"schema_version":"wizard-v2","tools":["claude-code"],"packs":[],"setti
 # ---------------------------------------------------------------------------
 # Scenario A — direct `--apply-payload`, clean env, NO PYTHONPATH.
 # ---------------------------------------------------------------------------
-echo "== Scenario A: install.py --apply-payload (no PYTHONPATH, legacy .claude) =="
+echo "== Scenario A: install.ts --apply-payload (no PYTHONPATH, legacy .claude) =="
 A_CONSUMER=/work/a/consumer
 A_GLOBAL=/work/a/global
 mkdir -p "$A_CONSUMER/.claude" "$A_GLOBAL"
@@ -66,7 +66,7 @@ printf '<!doctype html><html><body>ok</body></html>' > "$B_UI/index.html"
 PORT=8753
 TOKEN=$(head -c 32 /dev/zero | tr '\0' 's')   # 32-char fixed token
 
-# The server-spawned install.py inherits this process env, so EVENT4U_CONFIG_HOME
+# The server-spawned install.ts inherits this process env, so EVENT4U_CONFIG_HOME
 # routes the global write into a dir we can assert on.
 EVENT4U_CONFIG_HOME="$B_GLOBAL" AGENT_CONFIG_NO_UPDATE_CHECK=1 \
     node "$PKG/tests/fixtures/installer-e2e/boot-wizard.mjs" \

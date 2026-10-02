@@ -87,7 +87,7 @@ Structure, controls, grid and breakpoints are never this skill's to adjust;
 those stay 1:1 with the artifact and belong to the rule, not to a
 utility-class decision. **Icons are out of scope here as well, and this skill
 asserts no obligation about them** — the icon system belongs to
-[`icon-consistency`](../../rules/icon-consistency.md). An earlier revision of
+`icon-consistency`. An earlier revision of
 this paragraph claimed icons "stay 1:1 with the artifact" with no citation of
 any kind, while putting them outside its own scope in the same sentence; the
 claim is withdrawn rather than defended, because a clause that reached the tree
