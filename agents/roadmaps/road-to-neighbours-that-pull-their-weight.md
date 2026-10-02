@@ -98,23 +98,61 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 
 ## Phase 3 — The gate and the fingerprint know a neighbour acted
 
-- [ ] **3.1 Record who set `stop_hook_active`.** Extend the existing shadow row
+- [x] **3.1 Record who set `stop_hook_active`.** Extend the existing shadow row
       (`turn_end_gate_hook.ts:1332`, `layer: stop_hook_active`) with
       `set_by: ours | foreign | unknown` — `ours` iff our previous stop of the session
       refused, `unknown` when that record is missing. No new record kind; serialised with
       the stop-gate lane's Q1 window. `corrected-from-reproduction`.
       verify: fixture — a stop with `stop_hook_active` and no prior refusal of ours writes `set_by: foreign`
-- [ ] **3.2 Execute the fingerprint-slot stub.** Bind `mcp_tool_fingerprint` to
+- [~] **3.2 Execute the fingerprint-slot stub.** Bind `mcp_tool_fingerprint` to
       `post_tool_use`, observe-only, per `agents/roadmaps/stubs/road-to-mcp-fingerprint-slot-binding.md`:
       its admissions-ledger row, `severity: advisory`, `fail_closed: false`, its three
       tests (first sighting silent, mutation reported, malformed input exit 0), the
       concern comment, then delete the stub. This raises the concern count, which the
       programme's growth claim covers.
       verify: fixture — the same foreign tool with a mutated description on the second call yields one context line and one ledger row
+
+      **Attempted 2026-10-02, and the attempt refutes the step's premise.** The
+      store digests `name`, `description` and `inputSchema`
+      (`src/scripts/mcp_tool_fingerprint.ts:66-71`) and `recordFingerprint` takes an
+      `McpToolDefinition`, not a tool call. A `post_tool_use` envelope carries
+      `tool_name`, `tool_input` and `tool_response` — the CALL, never the
+      DEFINITION. Verified from the dispatcher's own payload contract, whose two
+      body classes are exactly `input` and `result`
+      (`src/scripts/hooks/payload_stub.ts:20-70`), and by grepping every concern
+      under `src/scripts/hooks/` for a description or schema key: there is none.
+      Nothing else in the tree reads a third party's tool definitions either —
+      `audit_mcp_tools.ts` and `build_mcp_catalog.ts` read THIS package's catalog,
+      and `lint_mcp_config_security.ts` reads shipped config.
+
+      The council of 2026-09-06 decided the pre-use-vs-post-use axis, which is a
+      real trade-off and is correctly recorded in the stub. The axis it did not
+      consider is whether the chosen slot can supply the module's input. Binding
+      the concern anyway would produce a recorder that fires on every MCP call and
+      records nothing — coverage on the manifest and in the admissions ledger with
+      the observation floor still at zero, which is the stub's own
+      "observe-only must never be cited as satisfying a preventive guarantee"
+      failure one layer further down.
+
+      **Deferred by decision D2 below, not parked.** This is a technical question
+      and ADR-268 § 10 says a technical decision does not become owner-owned
+      because it is hard, so it is decided here: the fingerprint store waits for a
+      definition source, and the observation this slot CAN make is 3.3's name
+      recorder. Revisit-if: a reader of third-party MCP tool descriptors exists in
+      `src/scripts/`.
 - [ ] **3.3 Foreign MCP servers counted by use.** `telemetry_usage_hook.ts` returns early
       for every non-`Skill` tool (`:250`), so a small recorder of foreign `mcp__*` tool
       names is new; the census gains distinct tools used per server in 30 days.
       Advertised counts stay `unknown` — nothing launches a server to ask.
+
+      **Not independent of Phase 1, which the phase split implied it was.** The
+      verify line reads a `doctor neighbours` surface, and no such surface exists
+      (`grep -rln neighbours src/ --include='*.ts'` names only unrelated modules).
+      The census it prints is built by 1.2. The recorder half —
+      `telemetry_usage_hook.ts` returning early for every non-`Skill` tool at `:250`
+      — is still the real work and is still independent; what cannot be done before
+      Phase 1 is *publishing* the number. Recorded here rather than left for the
+      next run to rediscover.
       verify: `agent-config doctor neighbours --json` -> /"tools_used_30d":\s*[0-9]+/
 - [~] **3.4 Suggest `permissions.deny` for never-used foreign tools.** Deferred: writing a
       consumer's permission block is Class C and a product decision (K15).
@@ -132,6 +170,7 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
 | D1 | product-owned | owner | PENDING programme blocker b6 — proposed: the source order of 2.1, neighbours visible | ADR-124 doctrine; programme blocker b6 | the owner answers b6 differently |
+| D2 | reversible-technical | agent | the fingerprint store is not bindable at `post_tool_use`; the slot's concern is 3.3's foreign-tool-NAME recorder, and the store waits for a definition source | `mcp_tool_fingerprint.ts:66-71` digests `name`/`description`/`inputSchema`; the envelope carries `tool_input` and `tool_response` only (`payload_stub.ts:20-70`), and no concern under `src/scripts/hooks/` reads a description or schema key | a reader of third-party MCP tool descriptors exists in `src/scripts/`, at which point the session-start slot is the candidate, not this one |
 | D2 | deterministic | evidence | no static contradiction detector | `rule-interactions.md:18-29` — 67 % false positives | a detector is measured below 20 % |
 | D3 | reversible-technical | agent | scan with the existing `security_lint` shapes | `_lib/security_lint.ts` is the corpus scanner | a planted fixture slips through |
 | D4 | reversible-technical | evidence | fingerprint observe-only on `post_tool_use` | the stub's council record, 2026-09-06 | the stub's owner record chooses refusal |
@@ -139,7 +178,7 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-02 | reviewer: claude/drain-neighbours-pull-weight -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -148,3 +187,4 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 | 3 | The overlap pass slows the route hook | implementation | Pairwise over the corpus on every prompt is not a hook-budget shape. | 1.2 runs once per census and caches by digest; the route reads the cache. | Phase 1 — A route line that says where the skill came from |
 | 4 | The shape scan cripples a legitimate neighbour skill | product | Shell snippets can be an installer skill's whole point. | The skill still ranks by name with the finding visible. | Phase 1 — A route line that says where the skill came from |
 | 5 | `set_by` misattributes our own refusal | implementation | A crashed hook that recorded nothing makes the next stop look foreign. | A missing previous record writes `unknown`, counted separately. | Phase 3 — The gate and the fingerprint know a neighbour acted |
+| 6 | A hook is bound to a slot that cannot supply its input | implementation | Observed, not hypothesised: 3.2's council chose `post_tool_use` without checking that the envelope carries a tool definition, and it does not. A recorder bound there would publish coverage and record nothing. | Decision D2 records the finding and what the slot can carry instead; the step is deferred with its revisit-if rather than bound to a slot that cannot feed it. | Phase 3 — The gate and the fingerprint know a neighbour acted |
