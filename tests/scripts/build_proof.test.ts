@@ -53,13 +53,23 @@ describe('build_proof — render()', () => {
     // the ~54 s a call this file's header recorded on 2026-08-11, so the two
     // calls this determinism check needs cost ~124 s locally end to end.
     //
-    // 300 s is that measurement plus room for a macOS runner, which reads about
-    // 1.45x ubuntu on this shard. Deliberately not tightened further: the point
-    // of a timeout here is to catch a hang, not to re-litigate a wall-clock the
-    // ci-cost-budget contract governs. Lower it again if `render()` gets faster.
+    // 300 s was that measurement plus room for a macOS runner read at about
+    // 1.45x ubuntu on this shard. RAISED to 600 s on 2026-10-02, because the
+    // macOS factor is not 1.45x: this test timed out at 300,000 ms on macos
+    // shard 3/4 while measuring 129,786 ms locally the same day — in line with
+    // the ~124 s the paragraph above records, so `render()` has NOT regressed
+    // and the runner is simply slower than the factor assumed. The observed
+    // factor is therefore >=2.3x rather than 1.45x.
+    //
+    // The purpose is unchanged and is why raising is the right move rather than
+    // a loosening: this timeout exists to catch a HANG, which is unbounded, not
+    // to assert a wall-clock the ci-cost-budget contract governs. 600 s is ~4.6x
+    // the local reading and still fails a hang on any runner. Lower it again if
+    // `render()` gets faster — the number tracks the measurement, not the other
+    // way round.
     it('is deterministic (no timestamp / stable ordering)', () => {
         expect(render()).toBe(proof());
-    }, 300_000);
+    }, 600_000);
 
     it('emits the required proof structure', () => {
         const out = proof();
