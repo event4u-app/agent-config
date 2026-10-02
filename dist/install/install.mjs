@@ -16596,6 +16596,11 @@ var settingsSchema = external_exports.object({
     fidelity_mode: "strict",
     approximation: { enabled: false, tolerance: { color: null, length: null } }
   }),
+  code_graph: external_exports.object({
+    consumer_index_paths: external_exports.array(external_exports.string()).default([]).describe(
+      "Extra project-relative paths where THIS project keeps a code-graph index another tool wrote. The built-in list is deliberately vendor-neutral (graph.json, code-graph.json, .code-graph/graph.json) and names no tool, so a tool that writes its index elsewhere is named here rather than waited for. A graph found this way LOADS and answers query and explain with every edge tagged read-from-elsewhere; the gate verbs (impact, untested, dead) refuse a graph made only of such edges and say so, because an empty answer from a gate must not read as 'nothing found' when it means 'nothing trusted'. Absolute paths and paths escaping the project root are ignored."
+    )
+  }).default({}),
   consistency: external_exports.object({
     cross_source: crossSourceMode.default("on").describe(
       "Consumed by the cross-source-consistency rule. When the agent works from multiple sources (ticket text, an attached image/mockup, the spec, the codebase) it checks them against each other and asks before proceeding on a discrepancy \u2014 instead of silently guessing. on (default) = surface every real cross-source contradiction / silent-scope-expansion as one question; auto = surface only high-confidence contradictions, state low-confidence as an assumption; off = no cross-source checking."

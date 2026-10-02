@@ -155,12 +155,33 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
 }
 
 /**
- * Same entry guard the sibling CLIs use. Without it this file imports cleanly
- * and runs nothing — the silent exit-0-with-no-output shape `cmd_doctor`'s own
- * guard comment calls out by name.
+ * Same entry guard the sibling CLIs use — including the delegate branch, which
+ * an earlier version of this file left out and which the delegate smoke test
+ * caught: `no bundle is a silent no-op` reported `cmd_doctor_neighbours.js (no
+ * output, exit 0)`, the exact shape the paragraph below describes.
+ *
+ * Inside the cli-delegate bundle `--splitting` moves this module's body into a
+ * shared chunk, so the URL comparison weighs the CHUNK against `argv[1]` and
+ * never matches. `agent-config doctor` shipped that way once already — a
+ * diagnostic reporting success while saying nothing. The invoked file name is
+ * the reliable signal there; a miss falls THROUGH to the realpath comparison
+ * rather than returning false, so a symlinked or renamed invocation still
+ * resolves. Inlined into the installer / hook / MCP bundle instead, it must
+ * never auto-run, which is why one "am I bundled" flag cannot answer "may I
+ * run" and both flags are read.
  */
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
+declare const __AGENT_CONFIG_CLI_DELEGATE__: boolean | undefined;
+
 function _isCliEntry(): boolean {
+    const bundled = typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__;
+    const cliDelegate =
+        typeof __AGENT_CONFIG_CLI_DELEGATE__ !== 'undefined' && __AGENT_CONFIG_CLI_DELEGATE__;
+    if (bundled && !cliDelegate) return false;
     if (process.argv[1] === undefined) return false;
+    if (cliDelegate && path.basename(process.argv[1], '.js') === 'cmd_doctor_neighbours') {
+        return true;
+    }
     const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
     if (import.meta.url === argvUrl) return true;
     try {
