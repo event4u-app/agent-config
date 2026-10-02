@@ -81,6 +81,46 @@ describe("auditLink — the verdict names what to do about it", () => {
   });
 });
 
+describe("auditLink — rules installed at the install ROOT", () => {
+  // `cline` maps rules to `''`. A sibling link then has no directory segment
+  // at all, so a first-segment lookup reads the FILE NAME as a directory and
+  // calls a file the install writes right beside the rule undeployed.
+  const rootPlan: DeployPlan = deployPlanFrom([["dist/agent-src/rules", ""]]);
+
+  it("resolves a sibling link to the rule beside it", () => {
+    const a = auditLink("r", "scope-control.md", "", rootPlan, REPO_ROOT);
+    expect(a.verdict).toBe("resolved");
+    expect(a.resolved_to).toBe("scope-control.md");
+  });
+
+  it("resolves an explicit ./ sibling the same way", () => {
+    const a = auditLink("r", "./scope-control.md", "", rootPlan, REPO_ROOT);
+    expect(a.verdict).toBe("resolved");
+  });
+
+  it("still names a sibling that is not there", () => {
+    const a = auditLink("r", "no-such-rule.md", "", rootPlan, REPO_ROOT);
+    expect(a.verdict).toBe("file-missing");
+  });
+
+  it("still names a link that climbs out of the root", () => {
+    const a = auditLink("r", "../guidelines/x.md", "", rootPlan, REPO_ROOT);
+    expect(a.verdict).toBe("outside-install-root");
+  });
+
+  it("prefers a named directory over the root when the plan has both", () => {
+    // A plan that deploys rules at the root AND skills under `skills/` must
+    // still read `skills/docker/SKILL.md` as the skills directory, not as a
+    // path inside the rules source.
+    const both: DeployPlan = deployPlanFrom([
+      ["dist/agent-src/rules", ""],
+      ["dist/agent-src/skills", "skills"],
+    ]);
+    const a = auditLink("r", "skills/docker/SKILL.md", "", both, REPO_ROOT);
+    expect(a.verdict).toBe("resolved");
+  });
+});
+
 describe("rewriteOptionCost — the measurement behind the 1.2 decision", () => {
   it("charges the absolute prefix minus the climb it replaces", () => {
     const report = {
@@ -99,12 +139,21 @@ describe("rewriteOptionCost — the measurement behind the 1.2 decision", () => 
 });
 
 /**
- * Unresolved links a host still ships, as a shrink-only ratchet.
+ * Unresolved links a host ships today, as a shrink-only ratchet.
  *
- * Measured 2026-10-02 after step 1.2 added `contexts/` and `guidelines/` to the
- * plans below; `claude-code` went 160 -> 47. What is left is NOT more of the
- * same defect, and the distinction is why this is a ratchet rather than a zero:
+ * Measured 2026-10-02 by `report_installed_rule_links`. These are the numbers
+ * BEFORE the repair, and they stay that way on purpose: the repair that would
+ * take `claude-code` from 160 to 47 is adding `contexts/` and `guidelines/` to
+ * the deploy plan, and that plan is part of the frozen install ABI
+ * (`docs/contracts/install-layout.md`), so changing it owes an
+ * `install_layout_version` bump and a deprecation window. That is an owner
+ * decision, held as the `rule-link-targets-change-the-frozen-install-abi`
+ * blocker on `road-to-rule-triggers-and-links-that-hold`.
  *
+ * What the 160 is made of, because the parts have different answers:
+ *
+ *   · **113 into `contexts/` and `guidelines/`** — the deployable ones, the
+ *     blocker's subject.
  *   · **22 into `docs/`** — `dist/agent-src/` carries no `docs/` at all, by a
  *     decision several rules state in their own text ("`docs/contracts/` is
  *     unprojected ... maintainer-reachable only"). Deploying cannot fix a
@@ -113,37 +162,33 @@ describe("rewriteOptionCost — the measurement behind the 1.2 decision", () => 
  *     `agents/settings/policies/`. These name the repository, not the package;
  *     no install has ever held them.
  *   · **2 one-off targets** — `scripts/hooks/evidence_independence.ts`, which
- *     is not in the projection either, and one file under `templates/`, whose
- *     directory is 1.7 MB for a single link.
+ *     is not in the projection either, and one file under `templates/`.
  *
- * Closing those is an authoring change in rule prose (make them code spans),
- * not an install change, and this roadmap's step 1.2 is explicitly the install
- * half. The numbers stand here so the next person sees the remainder rather
- * than inheriting a green test over it.
- *
- * `cline` is the outlier at 550: it installs rules at the install ROOT, so
- * every `../x` link climbs out by construction. That is a layout decision, not
- * a missing directory.
+ * `cline` is the outlier at 273 because it installs rules at the install ROOT,
+ * so a `../x` link climbs out of the tree by construction — a layout decision,
+ * not a missing directory. Its other 277 links are siblings and resolve; an
+ * earlier version of this file read them as undeployed and pinned cline at 550,
+ * which is the maximum possible value and could never have caught a regression.
  */
 const UNRESOLVED_BASELINE: Record<string, number> = {
-  "claude-code": 47,
-  augment: 46,
-  cursor: 147,
-  windsurf: 160,
-  cline: 550,
-  "gemini-cli": 47,
-  codex: 47,
-  continue: 47,
-  roocode: 47,
-  kilocode: 47,
-  qoder: 47,
-  opencode: 47,
-  trae: 47,
-  antigravity: 47,
-  codebuddy: 47,
-  droid: 47,
-  warp: 47,
-  kiro: 160,
+  "claude-code": 160,
+  augment: 97,
+  cursor: 260,
+  windsurf: 273,
+  cline: 273,
+  "gemini-cli": 160,
+  codex: 160,
+  continue: 160,
+  roocode: 160,
+  kilocode: 160,
+  qoder: 160,
+  opencode: 160,
+  trae: 160,
+  antigravity: 160,
+  codebuddy: 160,
+  droid: 160,
+  warp: 160,
+  kiro: 273,
 };
 
 describe("the real install plan", () => {
@@ -170,20 +215,36 @@ describe("the real install plan", () => {
     });
   }
 
-  it("no host that installs a rules directory links into an undeployed contexts/ or guidelines/", () => {
-    // This is the repair step 1.2 actually shipped, pinned so it cannot be
-    // undone by an edit to the deploy plan. `cline` is excluded on its own
-    // terms: its rules live at the install root, so its links climb OUT of the
-    // tree (`outside-install-root`) rather than into an undeployed directory,
-    // and no entry in its plan could change that.
-    for (const [host, pairs] of RULE_HOSTS) {
-      const report = auditInstalledRuleLinks(deployPlanFrom(pairs), REPO_ROOT);
-      const offenders = report.by_directory.filter(
-        (d) =>
-          d.verdict === "directory-not-deployed" &&
-          (d.directory === "contexts" || d.directory === "guidelines"),
-      );
-      expect(offenders, `${host} still links into an undeployed directory`).toEqual([]);
-    }
+  it("the deployable share of claude-code's unresolved links is exactly the blocker's subject", () => {
+    // 113 of the 160 would resolve by adding two directories to the deploy
+    // plan; the other 47 would not, and that split is what the blocker's
+    // recommendation rests on. Pinned so a future reader can tell the two
+    // populations apart without re-deriving them — and so the blocker cannot
+    // quietly stop describing the tree.
+    const pairs = GLOBAL_DEPLOY_SOURCES["claude-code"];
+    expect(pairs).toBeDefined();
+    const report = auditInstalledRuleLinks(deployPlanFrom(pairs!), REPO_ROOT);
+    const deployable = report.by_directory.filter(
+      (d) => d.directory === "contexts" || d.directory === "guidelines",
+    );
+    expect(deployable.map((d) => [d.directory, d.count, d.verdict])).toEqual([
+      ["contexts", 62, "directory-not-deployed"],
+      ["guidelines", 51, "directory-not-deployed"],
+    ]);
+  });
+
+  it("cline's sibling links resolve — its unresolved share is the climb, not the siblings", () => {
+    // The whole reason `auditLink` reads the plan's `''` key: cline installs
+    // rules at the install root, so a sibling link has no directory segment.
+    // Counting those as undeployed pinned cline at its maximum, where no
+    // regression could ever move it.
+    const pairs = GLOBAL_DEPLOY_SOURCES["cline"];
+    expect(pairs).toBeDefined();
+    const report = auditInstalledRuleLinks(deployPlanFrom(pairs!), REPO_ROOT);
+    expect(report.counts.resolved).toBeGreaterThan(250);
+    expect(report.counts["directory-not-deployed"]).toBe(0);
+    expect(report.counts["outside-install-root"]).toBe(
+      report.audits.length - report.counts.resolved,
+    );
   });
 });

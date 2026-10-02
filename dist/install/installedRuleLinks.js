@@ -67,8 +67,19 @@ export function auditLink(rule, target, rulesDest, plan, packageRoot) {
     if (resolved.startsWith('..')) {
         return { rule, target, resolved_to: null, verdict: 'outside-install-root' };
     }
-    const [first, ...rest] = resolved.split('/');
-    const source = plan.get(first);
+    const segments = resolved.split('/');
+    // Which deployed directory does this land in? Normally the first segment
+    // names it. When rules install at the install ROOT (`cline` maps them to
+    // `''`), there is no such segment: a sibling link like `](scope-control.md)`
+    // resolves to `scope-control.md`, whose first segment is a FILE NAME. Read
+    // literally that is `directory-not-deployed` for a file the install writes
+    // right beside the rule — 277 of cline's 550 links, every one of them fine.
+    // The `''` key exists in the plan precisely for this and could never be
+    // reached by a first-segment lookup.
+    const rootSource = plan.get('');
+    const useRoot = rootSource !== undefined && !plan.has(segments[0]);
+    const source = useRoot ? rootSource : plan.get(segments[0]);
+    const rest = useRoot ? segments : segments.slice(1);
     if (source === undefined) {
         return { rule, target, resolved_to: resolved, verdict: 'directory-not-deployed' };
     }

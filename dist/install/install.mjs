@@ -12051,7 +12051,11 @@ function _has_non_path_trigger(meta) {
     const obj = t;
     for (const [key, value] of Object.entries(obj)) {
       if (PATH_SHAPED_TRIGGER_KEYS.has(key) || NON_MATCHING_TRIGGER_KEYS.has(key)) continue;
-      if (typeof value === "string" && value.trim() !== "") return true;
+      if (typeof value === "string") {
+        if (value.trim() !== "") return true;
+      } else if (value !== void 0 && value !== null) {
+        return true;
+      }
     }
   }
   return false;
@@ -12212,10 +12216,6 @@ function rewriteClaudeRules(rulesDir, preserved = /* @__PURE__ */ new Set()) {
 }
 
 // src/install/wizard-plan.ts
-var RULE_LINK_TARGETS = [
-  ["dist/agent-src/contexts", "contexts"],
-  ["dist/agent-src/guidelines", "guidelines"]
-];
 var CLAUDE_SKILL_BUNDLE = [
   ["dist/agent-src/rules", "rules"],
   ["dist/agent-src/skills", "skills"],
@@ -12227,8 +12227,7 @@ var CLAUDE_SKILL_BUNDLE = [
   // agents/runtime/council/responses/claude-code-distribution.json
   // and scripts/install.py:_CLAUDE_SKILL_BUNDLE for the Python mirror.
   ["dist/agent-src/commands", "commands"],
-  ["dist/agent-src/personas", "personas"],
-  ...RULE_LINK_TARGETS
+  ["dist/agent-src/personas", "personas"]
 ];
 var RULE_SOURCE_REL = "dist/agent-src/rules";
 var GLOBAL_DEPLOY_SOURCES = {
@@ -12239,18 +12238,15 @@ var GLOBAL_DEPLOY_SOURCES = {
     ["dist/agent-src/commands", "commands"],
     ["dist/agent-src/contexts", "contexts"],
     ["dist/agent-src/personas", "personas"],
-    ["dist/agent-src/templates", "templates"],
-    ["dist/agent-src/guidelines", "guidelines"]
+    ["dist/agent-src/templates", "templates"]
   ],
   cursor: [
     ["dist/agent-src/rules", "rules"],
     ["dist/agent-src/commands", "commands"],
-    ["dist/agent-src/personas", "personas"],
-    ...RULE_LINK_TARGETS
+    ["dist/agent-src/personas", "personas"]
   ],
   windsurf: [
-    ["dist/agent-src/rules", "rules"],
-    ...RULE_LINK_TARGETS
+    ["dist/agent-src/rules", "rules"]
   ],
   cline: [
     ["dist/agent-src/rules", ""]
@@ -12270,8 +12266,7 @@ var GLOBAL_DEPLOY_SOURCES = {
   kiro: [
     ["dist/agent-src/rules", "rules"],
     ["dist/agent-src/skills", "steering"],
-    ["dist/agent-src/personas", "personas"],
-    ...RULE_LINK_TARGETS
+    ["dist/agent-src/personas", "personas"]
   ]
 };
 

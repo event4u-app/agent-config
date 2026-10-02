@@ -391,6 +391,21 @@ describe("_has_non_path_trigger — a negation, not a list of kinds", () => {
     expect(_has_non_path_trigger({ triggers: [{ utterance: "ship it" }] })).toBe(true);
   });
 
+  it("counts an unknown key whose value is not a string either", () => {
+    // The schema types all five match keys as strings today, so this is about
+    // the key that arrives later. Reading a non-string value as "not a
+    // trigger" would silently narrow the rule to a path it does not have —
+    // the exact failure the negation exists to prevent.
+    expect(_has_non_path_trigger({ triggers: [{ keyword: ["a", "b"] }] })).toBe(true);
+    expect(_has_non_path_trigger({ triggers: [{ matcher: { any: ["x"] } }] })).toBe(true);
+    expect(_has_non_path_trigger({ triggers: [{ threshold: 3 }] })).toBe(true);
+  });
+
+  it("reads an absent value as absent, not as a trigger", () => {
+    expect(_has_non_path_trigger({ triggers: [{ keyword: undefined }] })).toBe(false);
+    expect(_has_non_path_trigger({ triggers: [{ keyword: null }] })).toBe(false);
+  });
+
   it("still reads a path-only rule as path-only, `reason` notwithstanding", () => {
     // `reason:` documents a trigger, it does not match anything. Counting it
     // would make every annotated path trigger mixed and scope nothing at all.

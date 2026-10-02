@@ -235,7 +235,18 @@ export function _has_non_path_trigger(meta: Record<string, unknown>): boolean {
         const obj = t as Record<string, unknown>;
         for (const [key, value] of Object.entries(obj)) {
             if (PATH_SHAPED_TRIGGER_KEYS.has(key) || NON_MATCHING_TRIGGER_KEYS.has(key)) continue;
-            if (typeof value === 'string' && value.trim() !== '') return true;
+            // A string that is not blank, or ANY non-string value. The schema
+            // types all five match keys as strings today, so the second half is
+            // for the key that arrives later: a `keyword: ["a","b"]` read as
+            // "not a string, so not a trigger" would silently narrow the rule
+            // to a path it does not have, which is the exact failure the
+            // negation above exists to prevent. Undefined and null are the one
+            // shape that means "absent".
+            if (typeof value === 'string') {
+                if (value.trim() !== '') return true;
+            } else if (value !== undefined && value !== null) {
+                return true;
+            }
         }
     }
     return false;
