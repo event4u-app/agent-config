@@ -103,7 +103,7 @@ The note, the ask and the user's decision are all prose, and the issue set is
 whatever the agent happened to see, so no gate can tell a discharged issue from a
 mentioned one. This rule ships `instruction-only` — the honesty boundary
 [`security-sensitive-stop`](security-sensitive-stop.md) and
-[`ui-audit-gate`](ui-audit-gate.md) state for their own obligations. The ladder
+`ui-audit-gate` state for their own obligations. The ladder
 is the control; skipping it is caught by nothing.
 
 Body migrated to [`guideline:agent-infra/active-remediation-mechanics`](../docs/guidelines/agent-infra/active-remediation-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — per-tier fix-now/note+ask/follow-up-PR criteria, version-gated modernization, anti-nagging guardrails.

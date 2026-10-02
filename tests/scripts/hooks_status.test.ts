@@ -15,6 +15,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { _load_yaml, type JsonObject } from '../../src/scripts/hooks/dispatch_hook.js';
 import {
     PLATFORM_BRIDGES,
+    _render_table,
     collect,
     main,
     type PlatformRow,
@@ -214,5 +215,50 @@ describe('hooks_status — no python dependency', () => {
     it('collect is pure (fs + manifest read only) — never invokes python3', () => {
         const matrix = collect(tmp, manifest());
         expect(matrix.platforms.length).toBe(Object.keys(PLATFORM_BRIDGES).length);
+    });
+});
+
+// --- road-to-blocking-severities 1.2: the third surface ---------------------
+//
+// `hooks:status` is where a reader asks "is this guard live on the host I am
+// on", so it is where a `blocking` concern on a slot that cannot refuse is most
+// likely to be misread. The three live readings must be distinguishable here,
+// and the one that must never appear is a slot with no blocking concern
+// carrying a capability reading anyway.
+describe('hooks_status — blocking enforcement per slot', () => {
+    it('reports the three live readings against the real manifest and lowering table', () => {
+        const rows = byPlatform(collect(tmp, manifest()));
+        // `claude` refuses on pre_tool_use; `augment` has the null block_exit
+        // there; `cowork` has no lowering row at all.
+        expect(rows['claude']?.blocking_enforcement['pre_tool_use']).toBe('refusal');
+        expect(rows['augment']?.blocking_enforcement['pre_tool_use']).toBe('warning-only');
+        expect(rows['cowork']?.blocking_enforcement['pre_tool_use']).toBe('unverified');
+    });
+
+    it('omits a slot that binds no blocking concern rather than labelling it', () => {
+        const rows = byPlatform(collect(tmp, manifest()));
+        const augment = rows['augment'];
+        expect(augment).toBeDefined();
+        // `session_start` binds plenty of concerns and none declares `blocking`.
+        expect(Object.keys(augment?.bindings ?? {})).toContain('session_start');
+        expect(augment?.blocking_enforcement['session_start']).toBeUndefined();
+        // Every labelled slot really does bind a blocking concern.
+        for (const slot of Object.keys(augment?.blocking_enforcement ?? {})) {
+            expect(augment?.bindings[slot] ?? [], slot).not.toHaveLength(0);
+        }
+    });
+
+    it('prints the reading beside the slot, with `unverified` never saying "cannot"', () => {
+        const matrix = collect(tmp, manifest());
+        const table = _render_table(matrix);
+        expect(table).toContain('blocking concerns here: refusal');
+        expect(table).toContain('blocking concerns here: warning-only');
+        expect(table).toContain('blocking concerns here: unverified');
+        const unverifiedLine = table
+            .split('\n')
+            .find((l) => l.includes('blocking concerns here: unverified'));
+        expect(unverifiedLine).toBeDefined();
+        expect(unverifiedLine).not.toMatch(/cannot/i);
+        expect(unverifiedLine).toContain('nothing established');
     });
 });

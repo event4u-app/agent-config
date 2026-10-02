@@ -30,12 +30,14 @@
  *
  * Gated: a diff touching a kernel rule under `src/rules/` (the nine of
  * `_lib/kernel_rules.ts`), a governance hook (`src/scripts/hooks/block_*.ts`),
- * a hook-plumbing SOURCE (`hook_manifest.yaml`, `host_lowering.yaml`, a
- * `*-dispatcher.sh`, either hook budget file — see `PLUMBING_SOURCE_RE`),
- * or this gate itself — so it cannot be weakened without its own record. Such
- * a diff must carry a ratification artifact under
- * the ratifications directory with `verdict: ratified`, valid per the
- * ratification-artifact contract.
+ * hook plumbing — the YAML sources `hook_manifest.yaml` and
+ * `host_lowering.yaml`, their compiled siblings `hook_manifest.json` and
+ * `host_lowering.json`, the dispatcher `hooks/dispatch_hook.ts`, the
+ * kernel-rule list `_lib/kernel_rules.ts`, a `*-dispatcher.sh`, either hook
+ * budget file (see `PLUMBING_SOURCE_RE`) — or this gate itself, so it cannot
+ * be weakened without its own record. Such a diff must carry a ratification
+ * artifact under the ratifications directory with `verdict: ratified`, valid
+ * per the ratification-artifact contract.
  *
  * Every kernel diff is gated, not only the authority-EXPANDING ones.
  * ADR-268 § 4 makes the artifact required for authority-expanding edits. Which
@@ -141,13 +143,49 @@ const GOVERNANCE_HOOK_RE = /^src\/scripts\/hooks\/block_[a-z0-9_]+\.ts$/;
  * and every property the gate already had — base-revision code, in-repo quorum
  * policy, the whole diff as its unit — carries over unchanged.
  *
- * Sources only. `dist/hooks/dispatch.js` and `hooks/hooks.json` are BUILD
- * OUTPUTS with no legitimate hand edit at all, so they are refused at tool-call
- * time by `block_plumbing_writes.ts` rather than ratified here — a record for a
- * file whose every hand edit is illegitimate would be a record of a mistake.
+ * `dist/hooks/dispatch.js` and `hooks/hooks.json` are BUILD OUTPUTS that no
+ * reader in this repository opens — they exist only inside an installed
+ * consumer tree — and they have no legitimate hand edit at all, so they are
+ * refused at tool-call time by `block_plumbing_writes.ts` rather than ratified
+ * here: a record for a file whose every hand edit is illegitimate would be a
+ * record of a mistake.
+ *
+ * road-to-blocking-severities 2.1 WIDENS this from "sources only" to
+ * "everything the dispatcher serves at runtime", and the distinction above is
+ * why the two compiled tables land here while the two build outputs do not.
+ * `src/scripts/hook_manifest.json` and `src/scripts/hooks/host_lowering.json`
+ * are committed in THIS tree and are READ IN PREFERENCE to the YAML they were
+ * compiled from — `dispatch_hook._load_yaml` and `host_lowering.resolveTable`
+ * both serve the compiled body whenever its fingerprint matches. A diff that
+ * edits only the JSON therefore changes what every host is told about which
+ * concern runs and which slot can refuse, while the gated YAML beside it is
+ * untouched. That is the same authority change as editing the source, reached
+ * one file later, and before this step it carried no record.
+ *
+ * Two further files join for the same reason rather than by analogy:
+ *
+ *   - `src/scripts/hooks/dispatch_hook.ts` is the dispatcher itself. Every
+ *     concern's verdict passes through it, so an edit here can suppress a
+ *     refusal without touching the manifest that declares it.
+ *   - `src/scripts/_lib/kernel_rules.ts` is the list of the nine kernel rules.
+ *     THIS GATE resolves `is_kernel_rule` through it, so a diff removing a name
+ *     from that list removes a rule from this gate's own reach — the one edit
+ *     that could quietly narrow the gate while every other path kept working.
+ *
+ * Both are also denied at tool-call time, `dispatch_hook.ts` through the
+ * plumbing guard's source set and `kernel_rules.ts` through the kernel-rule
+ * write guard, so the pairing of deny-plus-record matches what the YAML sources
+ * already had.
+ *
+ * The compiled tables are REGENERATED, not hand-edited, by
+ * `./scripts-run src/scripts/compile_hook_manifest --table manifest|host-lowering`,
+ * which runs as a script rather than as an edit tool call and so is not what
+ * either mechanism refuses. A regeneration lands in the same diff as the YAML
+ * change that caused it, which already requires a record; the case this closes
+ * is the diff where only the JSON moves.
  */
 const PLUMBING_SOURCE_RE =
-    /^(?:src\/scripts\/hook_manifest\.yaml|src\/scripts\/hooks\/host_lowering\.yaml|src\/scripts\/hooks\/[a-z0-9-]+-dispatcher\.sh|src\/config\/hook-(?:token|latency)-budget\.json)$/;
+    /^(?:src\/scripts\/hook_manifest\.(?:yaml|json)|src\/scripts\/hooks\/host_lowering\.(?:yaml|json)|src\/scripts\/hooks\/dispatch_hook\.ts|src\/scripts\/_lib\/kernel_rules\.ts|src\/scripts\/hooks\/[a-z0-9-]+-dispatcher\.sh|src\/config\/hook-(?:token|latency)-budget\.json)$/;
 
 /**
  * A kernel rule, in the source tree or in any projection.

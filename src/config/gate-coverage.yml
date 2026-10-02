@@ -1496,6 +1496,30 @@ gates:
       cannot survive a collapse: at that point the gate's own `reportScanned`
       fires first. (Set to 50 in the first version, corrected on an R2 finding.)
 
+  - id: check_verify_expectation_delta
+    argv: []
+    min_scanned: 0
+    corpus: "the `verify:` clauses a change ADDS under agents/roadmaps/ — a set difference against the base ref, not a file set, which is why the floor is 0: a change touching no roadmap legitimately adds none, and a floor above 0 would fail every unrelated pull request. The denominator the gate reports is added clauses, so a change that adds ten to one file scanned ten things."
+    status: enforced
+    no_canary_reason: >
+      A canary cannot express this gate's violation. The violation is a property
+      of the DIFF — a clause that was ADDED without an expectation — so a file
+      planted in the tree is, from the gate's point of view, a clause somebody
+      added, which is either a true positive (and the canary is indistinguishable
+      from the thing it is meant to detect) or, once committed on main, invisible
+      forever. The negative control is the gate's own `--self-test`, run as its
+      own CI step: 10 cases, 4 rejecting — an added bare clause, a bare clause
+      among expectation-carrying siblings, a `cat` command asked for an oracle
+      despite a weak exit status, and an `./path/script.ts` invocation that the
+      pointer carve-out must NOT exempt — plus six ACCEPT cases pinning what must
+      not fire (an expectation in either form, the prose MANUAL form, a backticked
+      file pointer with and without a `:line` suffix, and a bare clause already at
+      base). One limit is stated rather than implied: the already-at-base case
+      does not exercise context-line handling, because under `--unified=0` the
+      unchanged clause does not appear in the patch at all; the unit test
+      `reads ADDED lines only` is what pins that. Same class as
+      check_estate_count's diff-scoped half.
+
   - id: check_static_parity
     argv: ["--quiet"]
     min_scanned: 20
@@ -3205,3 +3229,31 @@ gates:
       asserted in BOTH places — it was credited to `--self-test` before it was
       actually there, which a review caught and which is why the assertion now
       exists rather than the sentence being softened.
+  - id: lint_workflow_security
+    argv: []
+    min_scanned: 25
+    corpus: "workflow files under .github/workflows/ — `*.yml` then `*.yaml`, the two globs the gate scans in that order (34 today). The floor is 25 because workflows are consolidated and split routinely, so a handful leaving is normal, while a glob that stopped matching or a directory that moved reads far below it. Counting FILES and not findings is the point: this gate legitimately reports zero findings, so a floor over findings would be the false-count shape this file rejects."
+    status: enforced
+    ci_invocation: .github/workflows/consistency.yml
+    no_canary_reason: >-
+      A create-only canary cannot change this gate's verdict. It is warn-only by
+      design — the council-locked severity model (2026-06-13) makes MEDIUM
+      advisory and only `--strict` turns a HIGH into exit 1 — and the CI
+      invocation this row pins carries no `--strict`, so a planted workflow with
+      a `pull_request_target` untrusted checkout would be REPORTED and the gate
+      would still exit 0. A canary run under a different argv would prove
+      something about an invocation CI does not make, which is the drift
+      `ci_invocation` exists to stop. Discrimination is proven by `--self-test`
+      instead (5 cases, 3 rejecting), which drives the two exits the gate really
+      has rather than the one the CI invocation cannot reach: an empty workflows
+      directory exits 2 instead of printing "0 HIGH, 0 MEDIUM" over nothing, a
+      `pull_request_target` checkout of the untrusted ref exits 1 under
+      `--strict`, and an over-cap allowlist exits 2 instead of suppressing
+      silently. The two accepting cases pin the warn-only tier from the other
+      side — a MEDIUM under `--strict` must still PASS, which is the direction a
+      future re-tiering would silently break, and a clean workflow must pass at
+      all. Seen red deliberately on 2026-10-01 by emptying `DANGEROUS_TRIGGERS`:
+      the HIGH case alone fails, 4/5, and restoring it returns 5/5. Promoting the
+      tier so a canary becomes expressible is a separate decision, recorded
+      unresolved in
+      agents/evidence/analysis/workflow-security-net-degraded-decision.md.

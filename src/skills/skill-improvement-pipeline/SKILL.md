@@ -213,7 +213,7 @@ is the wrong question asked well.
 **The escalation threshold applies here too.** A third recurrence of the same
 violation class converts an observation into a deterministic gate — and a review
 finding never silently becomes a hard gate. Both halves, specified in
-[`decision-review` § Removal is a disposition](../decision-review/SKILL.md).
+`decision-review` § Removal is a disposition.
 
 ## Output format
 

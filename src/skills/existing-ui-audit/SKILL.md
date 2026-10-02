@@ -228,7 +228,7 @@ this component satisfy the artifact"* — which is a different question with a
 different answer, because a candidate can be an excellent name-and-props match
 and still use the wrong type scale, the wrong control, or a colour the artifact
 never states. Until this step existed nothing anywhere asked the second
-question, while [`ui-audit-gate`](../../rules/ui-audit-gate.md) carried *"reuse
+question, while `ui-audit-gate` carried *"reuse
 beats duplication"* as unqualified prose. Reused on an artifact port, an
 unconforming candidate is a fidelity deviation dressed as good hygiene.
 
@@ -364,7 +364,7 @@ Load on demand once the audit needs the pitfall catalog:
 **Design-system export (current-repo source):** when the goal is to seed
 `DESIGN.md` from *this* repo, emit the inventory as a `design-system.json`
 artifact (the import contract in
-[`design-system-capture`](../design-system-capture/references/design-system-json.md))
+`design-system-capture`)
 and hand it to `design-system-capture` — the same shape an external extraction
 tool produces, so the import path is uniform.
 

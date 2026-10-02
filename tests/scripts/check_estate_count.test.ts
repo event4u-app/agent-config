@@ -36,12 +36,9 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterAll, describe, expect, it } from 'vitest';
 
-import {
-    classifyDiff,
-    countEstate,
-    exemptionReason,
-    growthClaims,
-} from '../../src/scripts/check_estate_count.js';
+import { countEstate } from '../../src/scripts/check_estate_count.js';
+import { classifyDiff, exemptionReason, growthClaims } from '../../src/scripts/_lib/estate_offsets.js';
+import { exemptionFindings } from '../../src/scripts/_lib/exemption_shape.js';
 
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_estate_count.ts');
@@ -109,6 +106,16 @@ function budget(
 }
 
 const CLAIM = 'fixture — a real sentence, so the claim counts';
+
+/**
+ * A SHAPED exemption reason — it names an alternative it rejected.
+ *
+ * The old fixture read "incident follow-up, nothing to trade", which named
+ * none and is exactly what the shape check now refuses. Updating it is the
+ * change under test arriving in its own fixtures, not a workaround: a fixture
+ * that keeps the pre-change shape would pin the defect.
+ */
+const EXEMPT = 'fixture — archiving road-to-0 was rejected, it is mid-flight';
 
 /** A repo with `n` active roadmaps committed on `main`, checked out on a branch. */
 function initRepo(n = 3, opts: { later?: number; blockers?: number; above?: number | null } = {}): string {
@@ -478,7 +485,7 @@ describe('check_estate_count — one-in-one-out', () => {
 
     it('accepts an addition carrying an estate_offset_exempt reason in its frontmatter', () => {
         const repo = initRepo(3);
-        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New', { exempt: 'incident follow-up, nothing to trade' }));
+        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New', { exempt: EXEMPT }));
         commitAll(repo, 'add an exempt roadmap');
         const res = run(repo, ['--base', 'main']);
         expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
@@ -486,6 +493,87 @@ describe('check_estate_count — one-in-one-out', () => {
         // The exemption must raise the COUNT allowance too, or the sanctioned
         // un-offsettable addition would fail the other half with no green path.
         expect(res.stdout).toMatch(/active_roadmaps\s+4\s+\(floor 3 at main, \+1\)/);
+    });
+
+    it('shape — is RED on an added exemption that names no rejected alternative', () => {
+        const repo = initRepo(3);
+        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New', { exempt: 'lane 5 of road-to-parent' }));
+        commitAll(repo, 'add an exempt roadmap whose reason names nothing');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status, `${res.stdout}${res.stderr}`).toBe(1);
+        expect(res.stderr).toContain('names no rejected alternative');
+        expect(res.stderr).toContain('road-to-new.md');
+        // The offset half must stay GREEN: the exemption is present and the
+        // addition is covered. Otherwise this fixture would pass for the wrong
+        // reason — a reader could not tell the shape refusal from an unpaid one.
+        expect(res.stderr).not.toContain('with no offset in the same change');
+    });
+
+    it('shape — is RED on two added files whose exemptions say the same thing', () => {
+        const repo = initRepo(3);
+        write(repo, 'agents/roadmaps/road-to-n1.md', roadmap('N1', { exempt: EXEMPT }));
+        write(repo, 'agents/roadmaps/road-to-n2.md', roadmap('N2', { exempt: EXEMPT }));
+        commitAll(repo, 'add two roadmaps sharing one pasted reason');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status, `${res.stdout}${res.stderr}`).toBe(1);
+        expect(res.stderr).toContain('repeats agents/roadmaps/road-to-n1.md verbatim');
+        // The FIRST file is the claim and must not be convicted of repeating itself.
+        expect(res.stderr).not.toContain('road-to-n1.md: estate_offset_exempt repeats');
+    });
+
+    it('shape — reads the YAML block form end to end, not just the flat one', () => {
+        // The house form: 38 of the 221 exemptions in the tree are written this
+        // way. SENSITIVITY, stated honestly: this case passes on the pre-change
+        // gate too, because that gate had no shape rule to fail — it is a
+        // non-regression pin, and the discriminating evidence for the block
+        // reader is the `exemptionReason shape` unit case above, which IS red
+        // against the old reader. What this adds is that the two halves compose:
+        // a folded reason reaches the shape rule as prose rather than as `>-`.
+        const repo = initRepo(3);
+        const folded =
+            '---\nestate_offset_exempt: >-\n  fixture — archiving road-to-0 was rejected, it is\n  mid-flight and nothing else can be traded\n---\n\n';
+        write(repo, 'agents/roadmaps/road-to-new.md', folded + roadmap('New'));
+        commitAll(repo, 'add a roadmap with a folded exemption');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
+        expect(res.stdout).toContain('1 exempt');
+    });
+
+    it('shape — leaves exemptions ALREADY in the tree alone', () => {
+        // Grandfathering, proven rather than asserted: 43 of the 221 reasons on
+        // main name no disposition, so a check that re-read them would land red
+        // on a fifth of the corpus. The base commit carries the shapeless reason;
+        // the change touches something else entirely.
+        const repo = initRepo(3);
+        git(repo, 'checkout', '-q', 'main');
+        write(repo, 'agents/roadmaps/road-to-0.md', roadmap('R0', { exempt: 'lane 5 of road-to-parent' }));
+        commitAll(repo, 'a shapeless exemption, already on main');
+        git(repo, 'checkout', '-q', 'feat/change');
+        git(repo, 'merge', '-q', 'main');
+        write(repo, 'agents/roadmaps/road-to-1.md', `${roadmap('R1')}\n<!-- an unrelated edit -->\n`);
+        commitAll(repo, 'an unrelated change');
+        const res = run(repo, ['--base', 'main']);
+        expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
+        expect(res.stderr).not.toContain('names no rejected alternative');
+    });
+
+    it('reports draft_roadmaps beside the count, and never gates on it', () => {
+        const repo = initRepo(3);
+        write(repo, 'agents/roadmaps/road-to-draft.md', `---\nstatus: draft\n---\n\n${roadmap('D')}`);
+        // The FILE-based one-in-one-out half charges every added roadmap file
+        // whatever its status, so the draft is offset here. That isolates the
+        // reporting half: without the offset this fixture would be red for a
+        // reason that has nothing to do with the number under test.
+        fs.mkdirSync(path.join(repo, 'agents/roadmaps/archive'), { recursive: true });
+        git(repo, 'mv', 'agents/roadmaps/road-to-2.md', 'agents/roadmaps/archive/road-to-2.md');
+        commitAll(repo, 'add a draft, archive one');
+        const res = run(repo, ['--base', 'main']);
+        // Green: a draft is invisible to `collect()`, so it raises no gated
+        // count. The number is REPORTED so a reader can tell an estate of 2 from
+        // an estate of 2 with a draft behind it.
+        expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
+        expect(res.stdout).toMatch(/draft_roadmaps\s+1\s+\(reported, not gated/);
+        expect(res.stdout).toMatch(/active_roadmaps\s+2\s/);
     });
 
     it('is inert below a registered active ceiling, and live above it', () => {
@@ -545,6 +633,93 @@ describe('check_estate_count — unit surface', () => {
         expect(exemptionReason('---\nestate_offset_exempt:\n---\n# R\n')).toBeNull();
         expect(exemptionReason('---\ncomplexity: lightweight\n---\n# R\n')).toBeNull();
         expect(exemptionReason('# R\n')).toBeNull();
+    });
+
+    it('exemptionReason shape — reads the YAML block scalar 38 of 221 reasons are written in', () => {
+        // The read defect this change fixes. The shared frontmatter parser splits
+        // on the first colon, so the whole indented body was invisible and the
+        // gate was handed the string `>-` — non-empty, therefore accepted.
+        const folded = '---\nestate_offset_exempt: >-\n  the round archived nothing, so there is no\n  counterpart to trade\nstatus: ready\n---\n# R\n';
+        expect(exemptionReason(folded)).toBe('the round archived nothing, so there is no counterpart to trade');
+        expect(exemptionReason('---\nestate_offset_exempt: |\n  merging into road-to-x was rejected\n---\n# R\n')).toBe(
+            'merging into road-to-x was rejected',
+        );
+        // A block header with no body is the blank-reason case, and it must NOT
+        // fall back to the flat parser — that path would return `>-` and accept it.
+        expect(exemptionReason('---\nestate_offset_exempt: >-\nstatus: ready\n---\n# R\n')).toBeNull();
+        // The flat forms keep working; the block reader must not swallow them.
+        expect(exemptionReason('---\nestate_offset_exempt: archiving was unavailable\n---\n# R\n')).toBe(
+            'archiving was unavailable',
+        );
+    });
+
+    it('exemptionReason shape — a trailing YAML comment on the header is not a bypass', () => {
+        // The review finding. `>- # offset` failed the indicator test, fell
+        // through to the flat parser, and came back as the string
+        // `">- # offset"` — which the SHAPE rule then searched for a disposition
+        // word and found one, in the comment, over a body it never read. An
+        // exemption could pass by writing a disposition word in a YAML comment.
+        const commented = '---\nestate_offset_exempt: >- # a note for the reviewer\n  no disposition word here\n---\n# R\n';
+        expect(exemptionReason(commented)).toBe('no disposition word here');
+        expect(exemptionFindings([{ file: 'a.md', reason: exemptionReason(commented) as string }])).toHaveLength(1);
+        // Both legal indicator orders. `>2-` and `>-2` mean the same thing.
+        expect(exemptionReason('---\nestate_offset_exempt: >2-\n  archiving was rejected\n---\n# R\n')).toBe(
+            'archiving was rejected',
+        );
+        expect(exemptionReason('---\nestate_offset_exempt: |+\n  parking was rejected\n---\n# R\n')).toBe(
+            'parking was rejected',
+        );
+        // `>0` is not a legal indentation indicator and is not a block header.
+        expect(exemptionReason('---\nestate_offset_exempt: >0\n  body\n---\n# R\n')).toBe('>0');
+    });
+
+    it('exemptionFindings shape — refuses a reason naming no rejected alternative', () => {
+        expect(exemptionFindings([{ file: 'a.md', reason: 'lane 5 of road-to-leading-every-row' }])).toEqual([
+            { file: 'a.md', kind: 'shapeless', twin: null, reason: 'lane 5 of road-to-leading-every-row' },
+        ]);
+        // Each of the ten measured lemmas is sufficient on its own. A vocabulary
+        // test that only ever exercises `archive` would not notice the other nine
+        // silently dropping out of the alternation.
+        for (const reason of [
+            'archiving road-to-x was considered and rejected',
+            'nothing could be parked in its place',
+            'merging into road-to-y would split the set',
+            'no later/ slot was available',
+            'the round offsets nothing',
+            'deferring it loses the window',
+            'folding it into the sibling was rejected',
+            'consolidating with road-to-z was rejected',
+            'no active roadmap can absorb it',
+            'no completed roadmap to retire against this addition',
+        ]) {
+            expect(exemptionFindings([{ file: 'a.md', reason }]), reason).toEqual([]);
+        }
+        // `close` is deliberately NOT in the vocabulary: it is the commonest verb
+        // in these reasons (52 of 221) and almost always means closing work, not
+        // disposing of a file. Accepting it would pass a sentence naming nothing.
+        expect(exemptionFindings([{ file: 'a.md', reason: 'we will close this out soon' }])).toHaveLength(1);
+        // `later` is only a disposition when it is the DIRECTORY. The bare word is
+        // an adverb, and matching it would accept every reason containing "later".
+        expect(exemptionFindings([{ file: 'a.md', reason: 'we will deal with this later' }])).toHaveLength(1);
+        // `parkour` is not `park`. A review finding: the stem `park\w*` matched
+        // it at a word boundary, so a reason saying nothing about dispositions
+        // passed on a word that is not one. `park` is enumerated, not stemmed.
+        expect(exemptionFindings([{ file: 'a.md', reason: 'this is a parkour of a roadmap' }])).toHaveLength(1);
+        for (const inflection of ['parked', 'parking', 'parks', 'unparked', 'unparking']) {
+            expect(exemptionFindings([{ file: 'a.md', reason: `it cannot be ${inflection} anywhere` }]), inflection).toEqual([]);
+        }
+    });
+
+    it('exemptionFindings shape — refuses a reason repeated verbatim across added files', () => {
+        const reason = 'the round archived nothing, so there is no counterpart to trade';
+        const out = exemptionFindings([
+            { file: 'a.md', reason },
+            { file: 'b.md', reason: `  THE round   ARCHIVED nothing, so there is no counterpart to trade ` },
+            { file: 'c.md', reason: `${reason}, and c is a different case besides` },
+        ]);
+        // The first occurrence is the claim; the second is the paste. Case and
+        // whitespace fold, a differing clause does not.
+        expect(out).toEqual([{ file: 'b.md', kind: 'duplicate', twin: 'a.md', reason: out[0]?.reason ?? '' }]);
     });
 
     it('growthClaims reads ADDED lines only, and attributes each to its file', () => {

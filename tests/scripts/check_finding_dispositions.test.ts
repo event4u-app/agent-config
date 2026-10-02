@@ -15,17 +15,23 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import {
+    INTEGRITY_FIELDS,
+    disposition_summary,
+    disposition_tally,
     empty_ledger_problem,
     isBlocking,
     localTagHit,
+    merge_ingest,
     releaseStatus,
     tags_complete,
     missing_dispositions,
     parse_comment_findings,
     parse_ledger,
     unrecorded_findings,
+    type Ledger,
     type LedgerFinding,
 } from '../../src/scripts/check_finding_dispositions.js';
+import { coverageLabel } from '../../src/scripts/_lib/review_coverage.js';
 import { classifyBlocking, findingId, renderReview, type Finding } from '../../src/scripts/self_review_gate.js';
 
 function finding(overrides: Partial<LedgerFinding>): LedgerFinding {
@@ -371,5 +377,196 @@ describe('exit codes — a present-but-empty ledger is not the same state as an 
             findings: [finding({ ...COMPLETE })],
         });
         expect(runGate(dir, '1.0.0').code).toBe(0);
+    });
+});
+
+/**
+ * The success line reports what it CHECKED, never "all" over a set it did not
+ * require.
+ *
+ * The recorded failure: `--release 16.2.0` printed "all 20 recorded finding(s)
+ * for 16.2.0 dispositioned (blocking ones completely)" while the ledger carried
+ * a `status` on 2 of 20 rows. The parenthetical was true and nobody reads a
+ * parenthetical as a retraction of the word in front of it — eighteen rows had
+ * never been adjudicated and the gate's own output said they had.
+ *
+ * Exit semantics are deliberately unchanged: only a blocking row can fail the
+ * gate. What changes is that the line stops claiming the other eighteen.
+ */
+describe('disposition_tally — blocking and non-blocking counted apart', () => {
+    const DISPOSITIONED_BLOCKING = finding({ finding_id: 'aaaaaaaaaaaa', ...COMPLETE });
+    const STATUSLESS_NON_BLOCKING = finding({
+        finding_id: 'bbbbbbbbbbbb',
+        severity: 'medium',
+        kind: 'correctness',
+        title: 'an advisory finding nobody adjudicated',
+    });
+
+    it('counts the two populations separately', () => {
+        const t = disposition_tally([DISPOSITIONED_BLOCKING, STATUSLESS_NON_BLOCKING]);
+        expect(t).toEqual({
+            blockingTotal: 1,
+            blockingDispositioned: 1,
+            nonBlockingTotal: 1,
+            nonBlockingTerminal: 0,
+        });
+    });
+
+    it('a non-blocking row carrying a terminal status is counted as one', () => {
+        const t = disposition_tally([
+            finding({ severity: 'low', kind: 'style', status: 'still_open' }),
+        ]);
+        expect(t.nonBlockingTerminal).toBe(1);
+    });
+
+    it('`open` is the initial state, not a terminal one — it does not count', () => {
+        // The schema documents `open` as the state a finding starts in. Counting
+        // it would make "every row has a status" reachable without anyone having
+        // re-read a single finding, which is the claim this split exists to stop.
+        const t = disposition_tally([finding({ severity: 'low', kind: 'style', status: 'open' })]);
+        expect(t.nonBlockingTerminal).toBe(0);
+    });
+
+    it('an unrecognised status does not count as terminal either', () => {
+        const t = disposition_tally([finding({ severity: 'low', kind: 'style', status: 'wontfix' })]);
+        expect(t.nonBlockingTerminal).toBe(0);
+    });
+
+    it('a blocking row short of a complete disposition is not counted as dispositioned', () => {
+        const t = disposition_tally([finding({ ...COMPLETE, rationale: '' })]);
+        expect(t.blockingTotal).toBe(1);
+        expect(t.blockingDispositioned).toBe(0);
+    });
+
+    it('renders both counts and never the word "all"', () => {
+        const line = disposition_summary(
+            disposition_tally([DISPOSITIONED_BLOCKING, STATUSLESS_NON_BLOCKING]),
+        );
+        expect(line).toBe('blocking 1/1 dispositioned · non-blocking 0/1 carry a terminal status');
+        expect(line).not.toContain('all');
+    });
+});
+
+describe('the --release success line reports the split', () => {
+    it('green, and says 0/1 non-blocking rather than "all"', () => {
+        const dir = ledgerDir({
+            schema_version: 1,
+            release: '1.0.0',
+            findings: [
+                finding({ finding_id: 'aaaaaaaaaaaa', ...COMPLETE }),
+                finding({
+                    finding_id: 'bbbbbbbbbbbb',
+                    severity: 'medium',
+                    kind: 'correctness',
+                    title: 'an advisory finding nobody adjudicated',
+                }),
+            ],
+        });
+        const r = runGate(dir, '1.0.0');
+        expect(r.code).toBe(0);
+        expect(r.out).toContain('blocking 1/1 dispositioned');
+        expect(r.out).toContain('non-blocking 0/1 carry a terminal status');
+        // The sensitivity half: the old line is gone, not merely joined.
+        expect(r.out).not.toContain('all 2 recorded');
+    });
+});
+
+/**
+ * `fact_claims` survives ingest.
+ *
+ * `self_review_gate` writes it into the `--findings-out` artifact — the per-run
+ * count of findings that quote a supplied fact — and `merge_ingest` carried only
+ * the six fields named before it existed, so every ingested ledger dropped it on
+ * the floor. The falsifier for the supplied-facts change is a count over the
+ * next cut; a count that never reaches the record cannot be read.
+ */
+describe('fact_claims survives ingest', () => {
+    it('an ingested artifact carrying fact_claims lands it in the ledger', () => {
+        const ledger: Ledger = { schema_version: 1, release: '1.0.0', findings: [] };
+        const { ledger: merged } = merge_ingest(ledger, {
+            findings: [],
+            coverage: { chunks: 1, filesReviewed: 3, filesTotal: 3, unreviewed: [] },
+            fact_claims: { supplied: 2, total: 5 },
+        });
+        expect((merged as unknown as Record<string, unknown>)['fact_claims']).toEqual({
+            supplied: 2,
+            total: 5,
+        });
+    });
+
+    it('is listed among the fields ingest is required to carry', () => {
+        expect(INTEGRITY_FIELDS as readonly string[]).toContain('fact_claims');
+    });
+
+    it('a second ingest does not overwrite the first run\'s count', () => {
+        const ledger = { schema_version: 1, release: '1.0.0', findings: [] } as Ledger;
+        merge_ingest(ledger, { findings: [], fact_claims: { supplied: 2 } });
+        merge_ingest(ledger, { findings: [], fact_claims: { supplied: 99 } });
+        expect((ledger as unknown as Record<string, unknown>)['fact_claims']).toEqual({
+            supplied: 2,
+        });
+    });
+});
+
+/**
+ * Partial coverage is a stated property of the record.
+ *
+ * The 16.2.0 ledger's own `coverage` block reads `filesReviewed: 65,
+ * filesTotal: 678` — the self-review read under a tenth of the change — and
+ * only the WRITER ever read that number back. Every consumer of the record saw
+ * a success line that said nothing about how much of the release it covered.
+ *
+ * A label, never a floor. Raising what the review reads is a spend decision and
+ * it stays one; refusing a cut on coverage would force that decision through
+ * the back door, which is what decision D1 of the roadmap records.
+ */
+describe('coverage label — partial coverage is printed, never enforced', () => {
+    it('partial: names both numbers and the word partial', () => {
+        expect(coverageLabel({ chunks: 6, filesReviewed: 65, filesTotal: 678, unreviewed: [] })).toBe(
+            'self-review read 65 of 678 changed files (partial)',
+        );
+    });
+
+    it('full coverage produces no label — there is nothing to warn about', () => {
+        expect(coverageLabel({ filesReviewed: 678, filesTotal: 678 })).toBeNull();
+    });
+
+    it('an absent or malformed coverage block produces no label rather than a guess', () => {
+        expect(coverageLabel(undefined)).toBeNull();
+        expect(coverageLabel({})).toBeNull();
+        expect(coverageLabel({ filesReviewed: '65', filesTotal: 678 })).toBeNull();
+        expect(coverageLabel({ filesReviewed: 65, filesTotal: 0 })).toBeNull();
+    });
+
+    it('the --release success line carries the partial label', () => {
+        const dir = ledgerDir({
+            schema_version: 1,
+            release: '1.0.0',
+            findings: [finding({ ...COMPLETE })],
+            coverage: { chunks: 6, filesReviewed: 65, filesTotal: 678, unreviewed: [] },
+        });
+        const r = runGate(dir, '1.0.0');
+        expect(r.code).toBe(0);
+        expect(r.out).toContain('self-review read 65 of 678 changed files (partial)');
+    });
+
+    it('is a label and not a floor — partial coverage still exits 0', () => {
+        const dir = ledgerDir({
+            schema_version: 1,
+            release: '1.0.0',
+            findings: [finding({ ...COMPLETE })],
+            coverage: { chunks: 6, filesReviewed: 1, filesTotal: 678, unreviewed: [] },
+        });
+        expect(runGate(dir, '1.0.0').code).toBe(0);
+    });
+
+    it('is sensitive — a fully covered ledger prints no partial label', () => {
+        const dir = ledgerDir({
+            schema_version: 1,
+            release: '1.0.0',
+            findings: [finding({ ...COMPLETE })],
+            coverage: { chunks: 1, filesReviewed: 678, filesTotal: 678, unreviewed: [] },
+        });
+        expect(runGate(dir, '1.0.0').out).not.toContain('(partial)');
     });
 });
