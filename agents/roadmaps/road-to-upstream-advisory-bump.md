@@ -29,7 +29,7 @@ the point of not leaving the door ajar in the goal.
 
 ## Phase 1 — Establish the blast radius before touching the lockfile
 
-- [ ] **1.1 Record the two advisories and who actually pulls them in.**
+- [x] **1.1 Record the two advisories and who actually pulls them in.**
       `fastify` (high: request-validation bypass via skipped boolean-false
       schemas, GHSA-hwr6-493r-vm6h; header-validation bypass via incomplete
       schema case normalization, GHSA-9q9j-q6p8-xq58) and `hono` (moderate:
@@ -42,7 +42,30 @@ the point of not leaving the door ajar in the goal.
       — the answer decides whether a bump is ours to make or an upstream wait.
       verify: `npm ls fastify hono` names the dependency path for each.
 
-- [ ] **1.2 Decide whether either advisory can reach this package's code.**
+      **Finding.** `npm ls fastify hono` on this branch:
+
+      - **`fastify` — DIRECT.** Declared by this package in `package.json`
+        `dependencies` as `"fastify": "^5.11.0"` and resolved to `5.12.5`.
+        The bump is ours to make, not an upstream wait.
+      - **`hono` — TRANSITIVE.** Pulled only by
+        `@modelcontextprotocol/sdk@1.30.0`, both directly (`hono@4.13.12`)
+        and through `@hono/node-server@2.0.12` (deduped). This package
+        declares no `hono` dependency of its own, so the only lever here is
+        the SDK's own range.
+
+      **The report is wider than this step assumed.** Re-running the audit
+      against the pre-bump lockfile (`1f442155a`, fastify 5.12.1 / hono
+      4.13.5) names **five** fastify advisories on `<=5.12.4`, not two:
+      GHSA-4mh8-r7rc-xpvc (HTTP/2 trailer DoS), GHSA-667r-xxjv-c9mm (request
+      body replacement via async validation result collision),
+      GHSA-p68q-wchp-6fh7 (authentication bypass via malformed URLs reaching
+      encapsulated not-found handlers), plus the two this step named —
+      GHSA-hwr6-493r-vm6h and GHSA-9q9j-q6p8-xq58. The hono side is the one
+      moderate, GHSA-hxh3-vqpv-xpqv, on `<4.13.7`. Recorded rather than
+      quietly folded in, because a reader checking this plan against the
+      report would otherwise find three findings it never mentions.
+
+- [x] **1.2 Decide whether either advisory can reach this package's code.**
       The `hono/jsx` finding is an XSS in a JSX renderer; the `fastify`
       findings are request-validation bypasses. Both describe server
       surfaces. State, with the import sites as evidence, whether this
@@ -50,6 +73,44 @@ the point of not leaving the door ajar in the goal.
       that cannot be reached is a different decision from one that can.
       verify: the import sites, cited by `file:line`, or an explicit "no
       import site exists" with the search that establishes it.
+
+      **Verdict — neither advisory is reachable from this package's code.**
+
+      **fastify — NOT REACHABLE.** One runtime import site exists:
+      `src/server/app.ts:22` (`import Fastify, { type FastifyInstance } from
+      'fastify'`). Every other `fastify` import under `src/server/` is
+      `import type` and compiles away —
+      `src/server/routes/{settings,settingsChanges,workspace,ping,userMd,schema,wizard,install,discovery}.ts`.
+      Both named advisories live in fastify's own JSON-schema validation
+      path, which is entered only by a route registered with a `schema`
+      option. **No route in this package registers one.** Request bodies are
+      validated with zod inside the handler instead — the shape is
+      `src/server/routes/install.ts:441-444`
+      (`const schema = z.object({...}); schema.safeParse(req.body ?? {})`).
+      The two `schema:` keys that do appear, `src/server/routes/settings.ts:373`
+      and `:382`, are fields of a RESPONSE body, not route options. The
+      header-validation finding needs a `schema.headers` declaration, of
+      which there are none. The server additionally binds 127.0.0.1 only and
+      rejects any `Host` outside `127.0.0.1:<port>` / `localhost:<port>` with
+      HTTP 421 (`src/server/app.ts:6-9,164`), so there is no remote request
+      path to bypass validation on in the first place.
+
+      **hono — NOT REACHABLE, and never loaded.** No import site exists:
+      `grep -rnI "hono" src/ scripts/` returns only the English word
+      "honour"/"honor" in prose. The advisory is specific to `hono/jsx`
+      boundary components, and the only file in the installed SDK that
+      imports hono at all is
+      `node_modules/@modelcontextprotocol/sdk/dist/esm/examples/server/honoWebStandardStreamableHttp.js`
+      — an example, reached from no SDK entry point. It imports `hono` and
+      `hono/cors`; `hono/jsx` appears nowhere in the SDK. This package
+      imports only `@modelcontextprotocol/sdk/server/index.js`,
+      `/server/stdio.js` and `/types.js`
+      (`src/scripts/mcp_server/server.ts:252-254`), i.e. the stdio transport.
+      hono is installed and never loaded.
+
+      **So this is transitive-dependency hygiene, not a closed exposure.**
+      Both are fixed anyway — an unreachable advisory still gets the bump —
+      but the record says which it was.
 
 ## Phase 2 — Close it
 
