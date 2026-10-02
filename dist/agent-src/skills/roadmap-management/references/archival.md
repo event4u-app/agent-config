@@ -96,12 +96,6 @@ After the last step of a roadmap is done, check completion status:
    the active tree.
 
 4b. **Deferred items present (`count_deferred ≥ 1`, `count_open == 0`)** — Iron Law 3 flow.
-   **Run the sweep first:** `archive_completed_roadmaps --all` carries bare `[~]`
-   steps and the blockers they name into a `<slug>-carried` follow-up and archives
-   in one run. If a carried step waits on an owner blocker it prints an
-   `OWNER-DECISION` line instead: archive (`--owner-decision later`) or work the
-   steps one at a time, first step shown — procedure: `roadmap-process-loop` § 6a.
-   The menu below is for what it refuses.
    Archive **blocked** until resolved. WHO resolves is the preservation test in
    [`roadmap-progress-sync § Who resolves it`](../../rules/roadmap-progress-sync.md),
    never the mode — same menu either way, only the resolver differs:
