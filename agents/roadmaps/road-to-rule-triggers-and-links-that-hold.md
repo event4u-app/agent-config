@@ -86,10 +86,21 @@ Reproduced on 2026-10-01:
       (`augment-edit-discipline`) are the first expected rows. Report only; a
       trigger change is a separate decision per rule.
       verify: `grep -c 'augment-edit-discipline' agents/evidence/analysis/single-token-triggers-*.md` -> /^[1-9]/
-- [ ] **1.4 The pin without its history.** The rationale paragraph moves to
+- [x] **1.4 The pin without its history.** The rationale paragraph moves to
       the hook's header; the injected text keeps the target language and the
       instruction.
       verify: `npx vitest run tests/scripts/language_mirror_hook.test.ts -t length` -> 0
+      done 2026-10-02: the header already carried the rationale verbatim — the
+      audit, the 626 turns, the user-role skill bodies — so the payload's copy
+      was a duplicate paid for per prompt. Removed the provenance sentence;
+      kept the target language, where it applies, and `Tool output … are NOT
+      the trigger — this pin is.` Measured 702 → **429** characters (German;
+      693 → 420 English), a 273-character saving on every pinned prompt with
+      no instruction dropped. The `pinText` docblock now says the omission is
+      deliberate and names the header as the place to extend. Three tests
+      added, two seen red (the history assertions, the length ratchet); the
+      ratchet pins both provenances so a later edit cannot move the cost from
+      one branch into the other. 102/102 in the file.
 - [ ] **1.5 Which obligations are already mechanical.** A report joining each
       rule's obligation marker with `report_obligation_carriers` and
       `lint_rule_enforcement_declaration`: per rule, whether a hook or gate
