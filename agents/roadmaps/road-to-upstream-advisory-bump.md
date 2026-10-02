@@ -108,6 +108,18 @@ the point of not leaving the door ajar in the goal.
       (`src/scripts/mcp_server/server.ts:252-254`), i.e. the stdio transport.
       hono is installed and never loaded.
 
+      **Per-advisory verdict — the same for all six**, which is what AC-3
+      asks a future reader to be able to look up:
+
+      | advisory | package | severity | reachable here? | why |
+      |---|---|---|---|---|
+      | GHSA-4mh8-r7rc-xpvc | fastify | high | no | HTTP/2 trailer responses; this server is HTTP/1.1 on 127.0.0.1 |
+      | GHSA-667r-xxjv-c9mm | fastify | high | no | needs a route `schema` with async validation; no route declares one |
+      | GHSA-p68q-wchp-6fh7 | fastify | high | no | needs an encapsulated not-found handler; none is registered |
+      | GHSA-hwr6-493r-vm6h | fastify | high | no | skipped boolean-`false` sub-schemas in fastify's JSON-schema path, which is never entered — validation is zod, in-handler |
+      | GHSA-9q9j-q6p8-xq58 | fastify | high | no | needs `schema.headers`; none is declared |
+      | GHSA-hxh3-vqpv-xpqv | hono | moderate | no | `hono/jsx` boundary components; `hono` has no import site here and the SDK never loads it |
+
       **So this is transitive-dependency hygiene, not a closed exposure.**
       Both are fixed anyway — an unreachable advisory still gets the bump —
       but the record says which it was.
@@ -179,29 +191,12 @@ the point of not leaving the door ajar in the goal.
 ## Acceptance Criteria
 
 - [x] AC-1 — `npm audit --omit=dev --audit-level=high` exits 0 in a clean
-      checkout of `main`. **Met.** Run in a fresh worktree of `origin/main`
-      with no `node_modules` present: `found 0 vulnerabilities`, exit 0. The
-      same command on the pre-bump lockfile exits 1, so the command is
-      discriminating rather than vacuously quiet.
+      checkout of `main`.
 - [ ] AC-2 — The Static Checks job's audit step is green on a PR built from
       that `main`.
 - [x] AC-3 — Each advisory is recorded with its reachability verdict from
       step 1.2, so a future reader can tell whether this was a real exposure
-      or a transitive-dependency hygiene fix. **Met**, and the verdict is
-      the same for all six:
-
-      | advisory | package | severity | reachable here? | why |
-      |---|---|---|---|---|
-      | GHSA-4mh8-r7rc-xpvc | fastify | high | no | HTTP/2 trailer responses; this server is HTTP/1.1 on 127.0.0.1 |
-      | GHSA-667r-xxjv-c9mm | fastify | high | no | needs a route `schema` with async validation; no route declares one |
-      | GHSA-p68q-wchp-6fh7 | fastify | high | no | needs an encapsulated not-found handler; none is registered |
-      | GHSA-hwr6-493r-vm6h | fastify | high | no | skipped boolean-`false` sub-schemas in fastify's JSON-schema path, which is never entered — validation is zod, in-handler |
-      | GHSA-9q9j-q6p8-xq58 | fastify | high | no | needs `schema.headers`; none is declared |
-      | GHSA-hxh3-vqpv-xpqv | hono | moderate | no | `hono/jsx` boundary components; `hono` has no import site here and the SDK never loads it |
-
-      **So this was transitive-dependency hygiene, not a closed exposure** —
-      recorded that way rather than implying an exposure that was never
-      there.
+      or a transitive-dependency hygiene fix.
 
 ## Risk Register
 
