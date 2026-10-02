@@ -577,7 +577,7 @@ Reproduced on 2026-10-01:
       a matching rule and only rules the install carries.
 - [ ] AC-2 — No composed string over the D2 budget across the frozen corpus, and
       no match absent from a delivery.
-- [ ] AC-3 — Installer, projector and carrier return the same mode in every
+- [x] AC-3 — Installer, projector and carrier return the same mode in every
       fixture of 1.2.
 - [ ] AC-4 — The installed-layer report and the arrival record exist and every
       truth surface in 0.5 names the scope it was measured on.
