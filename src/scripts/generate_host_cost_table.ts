@@ -63,7 +63,7 @@ import {
 const _HERE = fileURLToPath(import.meta.url);
 export const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
-/** The contract the README points at for projection modes (README.md:288). */
+/** The contract the README points at for projection modes. */
 export const CONTRACT_REL = path.join('docs', 'contracts', 'rule-router.md');
 
 export const BEGIN = '<!-- BEGIN generated: host-standing-cost -->';

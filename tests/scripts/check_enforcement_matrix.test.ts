@@ -32,14 +32,22 @@ import {
     DOC_REL,
     END_MARKER,
     LOWERING_REL,
+    SEVERITY_BEGIN_MARKER,
+    VERIFIED_ENFORCEMENTS,
     backedOutcomes,
     backingFor,
     buildRows,
     committedCells,
+    concernSlotAudit,
+    enforcementFor,
     extractRegion,
+    extractSeverityRegion,
     outcomeFor,
     renderRegion,
+    renderSeverityRegion,
+    severityFindings,
     spliceDoc,
+    spliceSeverityDoc,
     summaryLine,
     unbackedOutcomes,
 } from '../../src/scripts/check_enforcement_matrix.js';
@@ -420,5 +428,190 @@ describe('the committed document', () => {
         // disagreed with itself. No binary value would have been faithful, so
         // the column was removed rather than corrected.
         expect(realDoc()).not.toContain('| Deny honoured |');
+    });
+});
+
+// ---------------------------------------------------------------------------
+// road-to-blocking-severities 1.2 — the blocking-severity region.
+//
+// Five properties, and the order below is the order they would fail in.
+//
+// First, the DERIVATION: a reason maps to exactly one enforcement value, and
+// `unlowerable` maps to `unverified` rather than to `warning-only`. That single
+// mapping is the council's correction in code — absence of a lowering row is
+// never-looked, and publishing it as "cannot refuse" would turn a gap in this
+// package's measurement into a claim about somebody else's product.
+//
+// Second, the GATE, in both directions. A published `refusal` over a null
+// `block_exit` overstates; a published `warning-only` over an absent row
+// understates. The fixtures are hand-built rather than generated, for the same
+// reason the `halt-by-state` fixture above is: output the generator cannot
+// produce is exactly the output a generator bug would produce.
+//
+// Third, the IDENTITY: the generator's own output passes its own gate. A gate
+// that only rejects hand-written rows would be satisfied by a generator that
+// writes the thing it rejects.
+//
+// Fourth, the REAL TREE: every host with a blocking binding appears, and no row
+// claims a refusal the configuration cannot back — AC-1.
+//
+// Fifth, the SPLICE preserves the authored prose around it, as the first
+// region's does.
+describe('blocking-severity region — derivation', () => {
+    it('maps each no-deny reason to exactly one enforcement, absence to `unverified`', () => {
+        expect(enforcementFor(null)).toBe('refusal');
+        expect(enforcementFor('null-block')).toBe('warning-only');
+        expect(enforcementFor('stale-proof')).toBe('proof-expired');
+        // The load-bearing one. `unlowerable` is "no row", which is NOT a host
+        // fact — collapsing it into `warning-only` is the defect both council
+        // seats named.
+        expect(enforcementFor('unlowerable')).toBe('unverified');
+    });
+
+    it('every enforcement value it can emit is in the published vocabulary', () => {
+        for (const reason of [null, 'unlowerable', 'null-block', 'stale-proof'] as const) {
+            expect(VERIFIED_ENFORCEMENTS as readonly string[]).toContain(enforcementFor(reason));
+        }
+    });
+});
+
+describe('blocking-severity region — the gate', () => {
+    /**
+     * A two-host lowering fixture: one slot with `block_exit: null` (the row the
+     * roadmap's step 1.2 names), and one host with an empty `slots:` map so the
+     * absent-row branch has something to read.
+     */
+    const FIXTURE_LOWERING = [
+        'schema_version: 1',
+        'hosts:',
+        '  fixturehost:',
+        '    surfaces:',
+        '      any:',
+        '        entry_shape: none',
+        '        json_shape: none',
+        '        fail_policy: propagate',
+        '        timeout_unit: unknown',
+        '        timeout_default: null',
+        '        verified:',
+        '          docs_at: 2026-09-29',
+        '          docs_url: https://example.invalid/hooks',
+        '          expires: 2099-01-01',
+        '        slots:',
+        '          pre_tool_use: { native: Pre, block_exit: null, answered_at: 2026-09-29 }',
+        '          stop:         { native: Stop, block_exit: 2,   answered_at: 2026-09-29 }',
+        '  slotlesshost:',
+        '    surfaces:',
+        '      any:',
+        '        entry_shape: none',
+        '        json_shape: none',
+        '        fail_policy: propagate',
+        '        timeout_unit: unknown',
+        '        timeout_default: null',
+        '        verified:',
+        '          docs_at: 2026-09-29',
+        '          docs_url: https://example.invalid/hooks',
+        '          expires: 2099-01-01',
+        '        slots: {}',
+        '',
+    ].join('\n');
+
+    const header =
+        '| Host | Slot | Concern | Declared severity | Verified enforcement | What that means |\n' +
+        '|---|---|---|---|---|---|\n';
+    const row = (host: string, slot: string, enforcement: string): string =>
+        `${header}| \`${host}\` | \`${slot}\` | \`a-concern\` | \`blocking\` | \`${enforcement}\` | x |`;
+
+    const fixture = (): ReturnType<typeof parseHostLowering> =>
+        parseHostLowering(FIXTURE_LOWERING);
+
+    it('FAILS a published `refusal` on a slot whose block_exit is null', () => {
+        const findings = severityFindings(row('fixturehost', 'pre_tool_use', 'refusal'), fixture());
+        expect(findings).toHaveLength(1);
+        expect(findings[0]).toContain('block_exit: null');
+        expect(findings[0]).toContain('overstates');
+    });
+
+    it('FAILS a published `refusal` on a host with no row for the slot at all', () => {
+        const findings = severityFindings(row('slotlesshost', 'pre_tool_use', 'refusal'), fixture());
+        expect(findings).toHaveLength(1);
+        expect(findings[0]).toContain('no row for this slot');
+    });
+
+    it('FAILS a published `warning-only` where no lowering row exists — unverified is not incapable', () => {
+        const findings = severityFindings(
+            row('slotlesshost', 'pre_tool_use', 'warning-only'),
+            fixture(),
+        );
+        expect(findings).toHaveLength(1);
+        expect(findings[0]).toContain('CANNOT refuse');
+        expect(findings[0]).toContain('`unverified`');
+    });
+
+    it('FAILS a value outside the closed enforcement vocabulary', () => {
+        const findings = severityFindings(row('fixturehost', 'stop', 'advisory-ish'), fixture());
+        expect(findings).toHaveLength(1);
+        expect(findings[0]).toContain('closed enforcement vocabulary');
+    });
+
+    it('PASSES the three honest readings — the property the failures rest on', () => {
+        expect(severityFindings(row('fixturehost', 'stop', 'refusal'), fixture())).toEqual([]);
+        expect(
+            severityFindings(row('fixturehost', 'pre_tool_use', 'warning-only'), fixture()),
+        ).toEqual([]);
+        expect(
+            severityFindings(row('slotlesshost', 'pre_tool_use', 'unverified'), fixture()),
+        ).toEqual([]);
+    });
+});
+
+describe('blocking-severity region — against the real tree', () => {
+    const audit = (): ReturnType<typeof concernSlotAudit> =>
+        concernSlotAudit(REPO_ROOT, realLowering());
+
+    it('the generator passes its own gate — AC-1 on generated output', () => {
+        expect(severityFindings(renderSeverityRegion(audit()), realLowering())).toEqual([]);
+    });
+
+    it('the committed region passes the gate and matches the generator', () => {
+        const committed = extractSeverityRegion(realDoc());
+        expect(committed).not.toBeNull();
+        expect(severityFindings(committed ?? '', realLowering())).toEqual([]);
+        expect(committed).toBe(renderSeverityRegion(audit()));
+    });
+
+    it('publishes the two columns under their own names, never one merged severity', () => {
+        const committed = extractSeverityRegion(realDoc()) ?? '';
+        expect(committed).toContain('| Declared severity | Verified enforcement |');
+        // The council's refused term. Severity did not change; enforcement did.
+        expect(committed).not.toMatch(/effective severity/i);
+    });
+
+    it('carries the three live enforcement readings the tree actually has', () => {
+        const all = audit().flatMap((h) => h.blocking);
+        expect(all.length).toBeGreaterThan(0);
+        const seen = new Set(all.map((b) => b.enforcement));
+        // `claude` refuses on pre_tool_use; `augment` has the null block_exit;
+        // `cowork` has no lowering row. All three must be distinguishable.
+        expect(seen).toContain('refusal');
+        expect(seen).toContain('warning-only');
+        expect(seen).toContain('unverified');
+        for (const b of all) expect(b.declared).toBe('blocking');
+    });
+
+    it('a slot that can refuse appears too — the roster is not only the gaps', () => {
+        const claude = audit().find((h) => h.host === 'claude');
+        expect(claude).toBeDefined();
+        expect(claude?.blocking.some((b) => b.enforcement === 'refusal')).toBe(true);
+        // `noDeny` by construction holds none of these, which is why `blocking`
+        // is a separate collection rather than a filter over it.
+        expect(claude?.noDeny.some((b) => b.severity === 'blocking')).toBe(false);
+    });
+
+    it('splicing the severity region leaves the authored prose byte-for-byte', () => {
+        const doc = realDoc();
+        const next = spliceSeverityDoc(doc, renderSeverityRegion(audit()));
+        expect(next).toBe(doc);
+        const head = doc.slice(0, doc.indexOf(SEVERITY_BEGIN_MARKER));
+        expect(head).toContain('never folds them into one number');
     });
 });

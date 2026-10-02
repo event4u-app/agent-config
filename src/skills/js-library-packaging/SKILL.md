@@ -17,7 +17,7 @@ packs:
 > A React or TypeScript consumer receives this skill through `engineering-base`, which both
 > of those packs require.
 
-The JavaScript twin of [`composer-packages`](../composer-packages/SKILL.md). A component is
+The JavaScript twin of `composer-packages`. A component is
 a file; a **library** is a package with a public surface, and that surface is declared in
 `package.json` rather than inferred. Most of the failures below are silent at author time
 and loud at the consumer's — which is why the surface is read, not assumed.
@@ -167,7 +167,7 @@ declared cost — never here.
 
 ## See also
 
-- [`composer-packages`](../composer-packages/SKILL.md) — the PHP twin; same surface discipline, different manifest.
+- `composer-packages` — the PHP twin; same surface discipline, different manifest.
 - [`standards-from-config`](../standards-from-config/SKILL.md) — the Class-A rule the § Release branch follows.
 - [`conventional-commits-writing`](../conventional-commits-writing/SKILL.md) — the `!` marker a release tool reads.
 - [`ui-component-architect`](../ui-component-architect/SKILL.md) — the component inside the library; this skill is the package around it.

@@ -157,6 +157,52 @@ describe('classifyPaths', () => {
         expect(gated.governanceHooks).toHaveLength(1);
         expect(gated.plumbing).toEqual([]);
     });
+
+    /**
+     * road-to-blocking-severities 2.1 — what the dispatcher SERVES, not only
+     * what it was compiled from.
+     *
+     * The 1.1 set above gated the YAML sources and left four files out that the
+     * runtime reads directly: the dispatcher module itself, the kernel-rule
+     * list every kernel check resolves through, and the two compiled JSON
+     * tables the fast path serves in preference to the YAML. A diff editing
+     * only `host_lowering.json` changes what every host is told about refusals
+     * while the gated `host_lowering.yaml` is untouched — the same authority
+     * change as editing the source, reached one file later.
+     */
+    it('matches the files the dispatcher serves at runtime', () => {
+        for (const p of [
+            'src/scripts/hooks/dispatch_hook.ts',
+            'src/scripts/_lib/kernel_rules.ts',
+            'src/scripts/hook_manifest.json',
+            'src/scripts/hooks/host_lowering.json',
+        ]) {
+            expect(classifyPaths([p]).plumbing, p).toEqual([p]);
+            expect(requiresRatification(classifyPaths([p])), p).toBe(true);
+        }
+    });
+
+    /**
+     * The rejecting half, written against the shapes the new patterns could
+     * plausibly over-reach into: another `_lib` module, another `hooks/*.ts`
+     * module, another compiled JSON under `src/scripts/`, and the same four
+     * basenames outside the directories that make them plumbing.
+     */
+    it('does NOT match a neighbour of the served set', () => {
+        for (const p of [
+            'src/scripts/_lib/gate_ledger.ts',
+            'src/scripts/_lib/host_capability.ts',
+            'src/scripts/hooks/hook_stdin.ts',
+            'src/scripts/hooks/table_fingerprint.ts',
+            'src/scripts/hook_manifest.schema.json',
+            'src/config/kernel_rules.ts',
+            'docs/contracts/host_lowering.json',
+            'tests/fixtures/host_lowering/host_lowering.json',
+        ]) {
+            expect(classifyPaths([p]).plumbing, p).toEqual([]);
+            expect(requiresRatification(classifyPaths([p])), p).toBe(false);
+        }
+    });
 });
 
 describe('ratificationArtifactsIn', () => {

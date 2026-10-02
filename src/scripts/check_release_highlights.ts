@@ -79,6 +79,7 @@ import {
     CURATED_HEAD_INSTRUCTION,
     extract_changelog_section,
 } from './_lib/release_material.js';
+import { coverageLimitationNote, ledgerCoverageLabel } from './_lib/review_coverage.js';
 import { assertScanned, assertWatchlistResolves, DeadScopeError } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -339,6 +340,15 @@ export function main(argv: readonly string[]): number {
     const contradictions = highlight_contradictions(curated, derived);
     if (contradictions.length === 0) {
         process.stdout.write(`✅  curated head plausible for ${version} (span ${from}..${to})\n`);
+        // How much of the change the self-review read, printed where the head's
+        // Known-limitations field is decided. Partial coverage IS a known
+        // limitation of the record, and the ledger was the only place it was
+        // written down. A label, not a floor — the exit code above is already
+        // fixed at 0 by the time this runs, deliberately.
+        const covNote = coverageLimitationNote(ledgerCoverageLabel(REPO_ROOT, version));
+        if (covNote !== null) {
+            process.stdout.write(`${covNote}\n`);
+        }
         // Risk 2 of the roadmap that made `Known limitations` derivable, paid
         // where it lands rather than in a comment: a self-declared residual is
         // only detectable when somebody WROTE IT DOWN, so a derived `_none_`

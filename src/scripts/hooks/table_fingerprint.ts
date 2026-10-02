@@ -9,6 +9,27 @@ import { createHash } from 'node:crypto';
  * dispatcher: `dispatch_hook` → `host_semantics` → `host_lowering` is a live
  * import chain, so the reverse edge would be a cycle.
  *
+ * THE RETIRED ARGUMENT, kept because both callers point here for it rather
+ * than restating it. `dispatch_hook._manifest_fingerprint` argued AGAINST a
+ * cryptographic hash on two grounds, and by the time road-to-blocking-
+ * severities 3.1 read that header the body had already been delegating here for
+ * a release — so a reader checking whether the dispatcher resists a CRAFTED
+ * sibling met a disclaimer the code had stopped making. Both grounds were
+ * re-measured when this module was extracted, and both were stale:
+ *
+ *   - "`require('node:crypto')` costs 8 ms of process start, which is most of
+ *     what the precompiled manifest exists to save." The module is already
+ *     loaded: `dist/hooks/dispatch.js` carries 23 top-level
+ *     `import … from "node:crypto"` statements from other parts of the graph,
+ *     so the cost is paid whether this function uses it or not.
+ *   - "An FNV-1a loop runs in about 0.2 ms and is the right trade." SHA-256
+ *     measured FASTER — 0.106 ms against 0.113 ms over the 99,792-byte
+ *     manifest — because Node's digest is native and the loop was that many
+ *     interpreted `charCodeAt` calls.
+ *
+ * Both readers now point here instead of restating it, so the argument and the
+ * numbers that retired it cannot part company again.
+ *
  * DELIBERATELY CONTENT-DERIVED, NOT MTIME. The first version of the manifest
  * fast path compared mtimes and that was a measured defect, not a theoretical
  * one: on a fresh `actions/checkout` both files carry the checkout timestamp in

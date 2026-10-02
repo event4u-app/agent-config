@@ -1,0 +1,1362 @@
+diff --git a/src/scripts/_lib/exemption_shape.ts b/src/scripts/_lib/exemption_shape.ts
+new file mode 100644
+index 000000000..34a3c4253
+--- /dev/null
++++ b/src/scripts/_lib/exemption_shape.ts
+@@ -0,0 +1,125 @@
++/**
++ * What an `estate_offset_exempt` reason has to SAY — one vocabulary, two readers.
++ *
++ * THE DEFECT THIS EXISTS TO NAME. The one-in-one-out rule charges every added
++ * active roadmap against a disposed one, and `estate_offset_exempt: <reason>`
++ * is the escape hatch that costs "one reviewable line instead of a silent
++ * exception". `exemptionReason` accepted any non-empty string, so the line was
++ * reviewable in the sense that it existed. Measured 2026-10-01 over the active,
++ * `later/` and `archive/` trees: 221 files carry the key, and 43 of them name
++ * no alternative disposition at all under the three-lemma set the roadmap named
++ * from memory, and 6 under the measured one below — including three that say only
++ * `lane N of <parent>`. The escape hatch was free.
++ *
++ * WHAT A SHAPED REASON SAYS. It names at least one disposition the author
++ * considered instead of adding a file: archiving something, parking it in
++ * `later/`, merging into an existing roadmap, or any of the words this tree
++ * actually uses for those three. The requirement is deliberately NOT "explain
++ * yourself well" — that is unjudgeable — but "name what you rejected", which is
++ * a word that is either present or absent.
++ *
++ * WHY THE VOCABULARY IS MEASURED AND NOT CHOSEN. The commissioning roadmap
++ * named three lemmas, archive / park / merge, from memory. Over the real
++ * population those three cover 178 of 221; the measured ten below cover 215.
++ * The 37-file gap is not boilerplate — "Offsetting it individually is not
++ * possible without splitting the set" and "no completed roadmap to retire
++ * against this addition" both name a rejected alternative in words the
++ * three-lemma set does not carry. A refusal vocabulary that reds one added
++ * roadmap in five on the house style gets weakened until it finds nothing, so
++ * the set here is the one the tree writes. Every number above carries its
++ * producing command: `./scripts-run src/scripts/estate_exemption_shape`.
++ *
++ * `close` is excluded on purpose, and it is the most common verb in these
++ * reasons: it almost always refers to closing WORK, not to disposing of a file,
++ * so accepting it would make the check pass on a sentence that named nothing.
++ *
++ * WHY ONE MODULE. Two readers consume this — the estate gate, which refuses,
++ * and the measurement script, which reports. A second copy of the lemma list is
++ * how a gate and its own evidence drift apart, and a drifted vocabulary fails
++ * silently: the report says the tree conforms while the gate refuses it.
++ */
++
++/**
++ * The dispositions a reason may name, as source strings.
++ *
++ * Exported individually rather than as one baked regex so the measurement
++ * script can report per-lemma counts against the same list the gate refuses on.
++ */
++export const DISPOSITION_LEMMAS: readonly { readonly name: string; readonly source: string }[] = [
++    { name: 'archive', source: String.raw`archiv\w*` },
++    { name: 'park', source: String.raw`unpark\w*|park\w*` },
++    { name: 'merge', source: String.raw`merg\w*` },
++    { name: 'later', source: String.raw`later\/` },
++    { name: 'offset', source: String.raw`offset\w*` },
++    { name: 'defer', source: String.raw`defer\w*` },
++    { name: 'fold', source: String.raw`fold\w*` },
++    { name: 'consolidate', source: String.raw`consolidat\w*` },
++    { name: 'absorb', source: String.raw`absorb\w*` },
++    { name: 'retire', source: String.raw`retir\w*` },
++];
++
++/** The whole vocabulary as one alternation — the gate's own test. */
++export const DISPOSITION_SOURCE = `\\b(?:${DISPOSITION_LEMMAS.map((l) => l.source).join('|')})`;
++
++const DISPOSITION_RE = new RegExp(DISPOSITION_SOURCE, 'i');
++
++/** Does this reason name at least one rejected alternative? */
++export function namesDisposition(reason: string): boolean {
++    return DISPOSITION_RE.test(reason);
++}
++
++/** Which lemmas a reason names, for the reader's per-file column. */
++export function lemmasNamed(reason: string): string[] {
++    return DISPOSITION_LEMMAS.filter((l) => new RegExp(`\\b(?:${l.source})`, 'i').test(reason)).map((l) => l.name);
++}
++
++/**
++ * The comparison key for "two added files say the same thing".
++ *
++ * Case and whitespace are folded because a reason pasted into a second file and
++ * re-wrapped by an editor is the same reason. Nothing else is folded: a reason
++ * that differs by one clause is a different reason, and a normaliser clever
++ * enough to call those equal would start refusing reasons that genuinely differ.
++ */
++export function reasonKey(reason: string): string {
++    return reason.toLowerCase().replace(/\s+/g, ' ').trim();
++}
++
++/** One added file whose exemption reason does not hold up. */
++export interface ExemptionFinding {
++    readonly file: string;
++    readonly kind: 'shapeless' | 'duplicate';
++    /** For `duplicate`, the other added file carrying the same reason. */
++    readonly twin: string | null;
++    readonly reason: string;
++}
++
++/**
++ * Judge the exemptions a single change ADDS — never the ones already in the tree.
++ *
++ * Grandfathering is load-bearing rather than polite. 43 of the 221 existing
++ * reasons name no disposition; re-reading them would land this check red on a
++ * fifth of the corpus, which is a backlog wearing a control's clothes. The
++ * input is `classifyDiff`'s exempt ledger, which by construction lists only the
++ * files this change added.
++ */
++export function exemptionFindings(
++    exempt: readonly { readonly file: string; readonly reason: string }[],
++): ExemptionFinding[] {
++    const out: ExemptionFinding[] = [];
++    const seen = new Map<string, string>();
++    for (const e of exempt) {
++        if (!namesDisposition(e.reason)) {
++            out.push({ file: e.file, kind: 'shapeless', twin: null, reason: e.reason });
++            continue;
++        }
++        const key = reasonKey(e.reason);
++        const twin = seen.get(key);
++        if (twin === undefined) {
++            seen.set(key, e.file);
++            continue;
++        }
++        out.push({ file: e.file, kind: 'duplicate', twin, reason: e.reason });
++    }
++    return out;
++}
+diff --git a/src/scripts/check_estate_count.ts b/src/scripts/check_estate_count.ts
+index 54c3798d0..973257d8f 100644
+--- a/src/scripts/check_estate_count.ts
++++ b/src/scripts/check_estate_count.ts
+@@ -154,6 +154,7 @@ import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
+ import { materialiseSubtree } from './_lib/base_tree.js';
+ import { SKILLS_POSIX, measureSkillEstate } from './_lib/skill_estate.js';
+ import { CONCERN_MANIFEST_POSIX, countConcerns } from './_lib/concern_estate.js';
++import { exemptionFindings, type ExemptionFinding } from './_lib/exemption_shape.js';
+ import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
+ 
+ const GATE = 'check_estate_count';
+@@ -362,6 +363,23 @@ export interface EstateVerdict {
+     offsets: OffsetLedger | null;
+     offsetSkipReason: string | null;
+     unpaid: number;
++    /**
++     * Added exemptions whose reason names no rejected alternative, or repeats
++     * another added file's. Empty on every change that adds no exemption.
++     */
++    exemptionFindings: ExemptionFinding[];
++    /**
++     * Roadmaps carrying an unscheduled status — REPORTED, never gated.
++     *
++     * `collect()` excludes them by design, so a draft is invisible to every
++     * count above and adding one costs no slot. That is the right policy: a
++     * draft is not active work, and charging for one would make every parked
++     * idea cost a slot. What was wrong was that the number was invisible too, so
++     * a reader of `active_roadmaps 26` could not tell an estate of 26 from an
++     * estate of 26 with 14 drafts behind it. It contributes nothing to
++     * `withinBudget` — there is no floor for it and no claim path to it.
++     */
++    draftRoadmaps: number;
+     /**
+      * The provisional-promotion path's state, reported and never acted on.
+      *
+@@ -513,6 +531,45 @@ export function countEstate(repoRoot: string): EstateCounts {
+     };
+ }
+ 
++/**
++ * Top-level roadmaps `collect()` drops for an unscheduled status.
++ *
++ * Reported beside the count, never added to it. The exclusion in `collect()` is
++ * deliberate and stays: a draft is not active work, and counting one would make
++ * every parked idea cost a slot under one-in-one-out. What the exclusion also
++ * did, silently, was make the drafts unreadable — the estate report showed
++ * `active_roadmaps 26` whether 0 or 14 drafts sat beside them. This closes the
++ * reporting half and nothing else, so it has no floor, no allowance and no
++ * claim path: it cannot fail.
++ *
++ * `isUnscheduled` is the same predicate `collect()` filters on, so this count
++ * and that exclusion cannot disagree — a second status list here is how a
++ * reported number starts describing a different set from the one it explains.
++ */
++export function countDrafts(repoRoot: string): number {
++    const dir = path.join(repoRoot, ROADMAPS_REL);
++    let names: string[];
++    try {
++        names = fs.readdirSync(dir);
++    } catch {
++        return 0;
++    }
++    let n = 0;
++    for (const name of names) {
++        if (!name.endsWith('.md') || !isRoadmapCandidate(name)) continue;
++        const abs = path.join(dir, name);
++        let text: string;
++        try {
++            if (!fs.statSync(abs).isFile()) continue;
++            text = fs.readFileSync(abs, 'utf-8');
++        } catch {
++            continue;
++        }
++        if (isUnscheduled(parseFrontmatter(text))) n += 1;
++    }
++    return n;
++}
++
+ /** Did the tokeniser resolve under `root`? A ratchet must not mix the two modes. */
+ export function skillTokensExact(root: string): boolean {
+     return measureSkillEstate(root).skill_description_tokens !== null;
+@@ -554,8 +611,22 @@ function isParked(rel: string): boolean {
+  * commit trailer, for the reason `RATCHET_RESET_KEY` gives for living inside the
+  * baseline JSON: the claim then shows up in the diff of the change that makes
+  * it, and a reviewer sees it without being told to look.
++ *
++ * THE BLOCK SCALAR IS READ HERE AND NOT BY `parseFrontmatter`, which is a flat
++ * line parser with no YAML block support: it returns the value as everything
++ * after the first colon. Measured 2026-10-01 across the three roadmap trees,
++ * **38 of 221 exemptions are written `estate_offset_exempt: >-` with the reason
++ * indented beneath**, and for every one of them this function used to return
++ * the literal two-character string `>-`. That is non-empty, so the gate
++ * accepted it — a key whose whole purpose is that a reviewer sees the claim was
++ * being checked against a YAML punctuation mark on one file in six. The fix
++ * belongs here rather than in the shared parser because every other caller of
++ * that parser reads single-token values (`status`, `complexity`) where block
++ * support buys nothing and a rewrite risks the dashboard.
+  */
+ export function exemptionReason(text: string): string | null {
++    const block = blockScalar(text, 'estate_offset_exempt');
++    if (block !== null) return block === '' ? null : block;
+     const fm = parseFrontmatter(text);
+     const raw = (fm as Record<string, unknown>)['estate_offset_exempt'];
+     if (typeof raw !== 'string') {
+@@ -565,6 +636,38 @@ export function exemptionReason(text: string): string | null {
+     return reason === '' ? null : reason;
+ }
+ 
++/**
++ * The folded body of `<key>: >-` / `<key>: |`, or `null` when not that form.
++ *
++ * Returns `''` — not `null` — for a block header with no body, so the caller can
++ * tell "declared and empty" from "not a block scalar". An empty block is the
++ * blank-reason case the key already refuses, and collapsing it into `null` here
++ * would send it back to the flat parser, which would hand back `>-` and accept it.
++ */
++function blockScalar(text: string, key: string): string | null {
++    const m = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
++    if (m === null) return null;
++    const lines = (m[1] as string).split(/\r?\n/);
++    const head = new RegExp(`^${key}:[ \\t]*(.*)$`);
++    for (let i = 0; i < lines.length; i += 1) {
++        const hm = head.exec(lines[i] as string);
++        if (hm === null) continue;
++        // Only the block indicators. A quoted or bare value is the flat form and
++        // stays with the flat parser, which already handles it.
++        if (!/^[>|][-+]?\d*$/.test((hm[1] as string).trim())) return null;
++        const body: string[] = [];
++        for (let j = i + 1; j < lines.length; j += 1) {
++            const line = lines[j] as string;
++            if (line.trim() === '') continue;
++            // The first unindented line ends the block — the next key.
++            if (!/^[ \t]/.test(line)) break;
++            body.push(line.trim());
++        }
++        return body.join(' ').replace(/\s+/g, ' ').trim();
++    }
++    return null;
++}
++
+ /**
+  * Classify the change's effect on the active roadmap tree.
+  *
+@@ -816,6 +919,13 @@ export function evaluate(
+         unpaid = Math.max(0, chargeable.length - offsets.offsets.length);
+     }
+ 
++    // The SHAPE half, and it is deliberately not gated on `lintApplies`. The
++    // threshold decides whether an unoffset addition is charged; it says nothing
++    // about whether a claim an author chose to write has to mean something. An
++    // exemption below the threshold buys nothing anyway, so a shapeless one
++    // below it is a line that will be read as a reason later and is not one.
++    const findings = offsets === null ? [] : exemptionFindings(offsets.exempt);
++
+     // The allowances, one metric at a time and never a blanket rule. An exempt
+     // addition and a parked roadmap are the two increases the existing policy
+     // already sanctions, and under an exact floor each needs its own headroom or
+@@ -883,13 +993,15 @@ export function evaluate(
+         offsets,
+         offsetSkipReason,
+         unpaid,
++        exemptionFindings: findings,
++        draftRoadmaps: countDrafts(repoRoot),
+         provisionalPromotion,
+         // No floor is a FAILURE, not a skip, and it is the one place this gate
+         // convicts on a missing input. The other halves can report "unproven" and
+         // still leave a meaningful verdict behind; the count half IS the verdict,
+         // so with no floor a green here would assert something nothing measured.
+         // A shrink-only gate whose floor is absent passes every possible tree.
+-        withinBudget: floorSkipReason === null && growth.length === 0 && unpaid === 0,
++        withinBudget: floorSkipReason === null && growth.length === 0 && unpaid === 0 && findings.length === 0,
+     };
+ }
+ 
+@@ -1104,10 +1216,44 @@ function selfTest(): number {
+                         write(
+                             dir,
+                             'agents/roadmaps/road-to-new.md',
+-                            '---\nestate_offset_exempt: fixture — the addition that cannot be offset\n---\n\n' + roadmap('N'),
++                            '---\nestate_offset_exempt: fixture — archiving road-to-0 was rejected, it is mid-flight\n---\n\n' +
++                                roadmap('N'),
++                        ),
++                }),
++        },
++        {
++            // The shape half. The old reason here was "the addition that cannot
++            // be offset", which names no alternative and is exactly what this
++            // case now refuses — so the pair above and below are the same
++            // addition differing only in what its reason says.
++            name: 'exemption naming no rejected alternative → reject',
++            expect: 'reject',
++            run: () =>
++                fixture({
++                    roadmaps: 3,
++                    base: 'main',
++                    after: (dir) =>
++                        write(
++                            dir,
++                            'agents/roadmaps/road-to-new.md',
++                            '---\nestate_offset_exempt: fixture — lane 5 of road-to-parent\n---\n\n' + roadmap('N'),
+                         ),
+                 }),
+         },
++        {
++            name: 'one exemption reason pasted into two added files → reject',
++            expect: 'reject',
++            run: () =>
++                fixture({
++                    roadmaps: 3,
++                    base: 'main',
++                    after: (dir) => {
++                        const fm = '---\nestate_offset_exempt: fixture — archiving road-to-0 was rejected, it is mid-flight\n---\n\n';
++                        write(dir, 'agents/roadmaps/road-to-n1.md', fm + roadmap('N1'));
++                        write(dir, 'agents/roadmaps/road-to-n2.md', fm + roadmap('N2'));
++                    },
++                }),
++        },
+         {
+             name: 'addition paid for by an archive move → accept',
+             expect: 'accept',
+@@ -1319,7 +1465,7 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     }
+ 
+     const ledger = new GateLedger(GATE);
+-    ledger.plan([...METRICS, 'floor', 'one_in_one_out']);
++    ledger.plan([...METRICS, 'floor', 'one_in_one_out', 'exemption_shape']);
+     for (const metric of METRICS) {
+         // Round 2 finding 3, kept: a metric is recorded ONCE here, for whichever
+         // way it actually failed, so the ledger cannot show a green completeness
+@@ -1335,6 +1481,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+     if (verdict.offsets === null) ledger.skip('one_in_one_out', 'precondition_unmet');
+     else if (verdict.unpaid > 0) ledger.fail('one_in_one_out', `${String(verdict.unpaid)} unpaid addition(s)`);
+     else ledger.complete('one_in_one_out');
++    if (verdict.offsets === null) ledger.skip('exemption_shape', 'precondition_unmet');
++    else if (verdict.exemptionFindings.length > 0)
++        ledger.fail('exemption_shape', `${String(verdict.exemptionFindings.length)} unshaped exemption(s)`);
++    else ledger.complete('exemption_shape');
+ 
+     if (json) {
+         // The ledger goes to stderr here so stdout stays parseable after the
+@@ -1358,6 +1508,12 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+             `  ${metric.padEnd(18)} ${String(live).padStart(5)}  (floor ${String(base)} at ${verdict.floorRef ?? '?'}, ${sign}${String(delta)})\n`,
+         );
+     }
++    // Beside the gated counts, never among them: no floor line, no delta, and
++    // the label says what it is. A reader comparing two runs can see the drafts
++    // move without reading this as a ratchet that moved.
++    process.stdout.write(
++        `  ${'draft_roadmaps'.padEnd(18)} ${String(verdict.draftRoadmaps).padStart(5)}  (reported, not gated — excluded from active_roadmaps)\n`,
++    );
+     if (verdict.offsets !== null) {
+         const o = verdict.offsets;
+         process.stdout.write(
+@@ -1435,6 +1591,28 @@ export function main(argv: string[] = process.argv.slice(2)): number {
+                 '    that costs one reviewable line instead of a silent exception.\n',
+         );
+     }
++
++    for (const f of verdict.exemptionFindings) {
++        if (f.kind === 'shapeless') {
++            process.stderr.write(
++                `❌  ${f.file}: estate_offset_exempt names no rejected alternative.\n` +
++                    `    reason: ${f.reason.slice(0, 160)}\n` +
++                    '    The exemption is the escape hatch from one-in-one-out, so its reason has to\n' +
++                    '    say what you considered INSTEAD of adding a file — archiving something,\n' +
++                    '    parking it in `later/`, merging into an existing roadmap — and why that was\n' +
++                    '    not available. Name the disposition you rejected. Measured over the existing\n' +
++                    '    221 exemptions, 43 name none; this check applies to ADDED files only, so\n' +
++                    '    nothing already in the tree is re-read.\n',
++            );
++        } else {
++            process.stderr.write(
++                `❌  ${f.file}: estate_offset_exempt repeats ${f.twin ?? '(another added file)'} verbatim.\n` +
++                    `    reason: ${f.reason.slice(0, 160)}\n` +
++                    '    One sentence pasted into every file a round adds is one claim, not N. Write\n' +
++                    '    the reason this FILE could not be offset, or offset the ones that could.\n',
++            );
++        }
++    }
+     ledger.report();
+     if (verdict.withinBudget) {
+         process.stdout.write(`✅  ${GATE}: estate within its ratchet.\n`);
+diff --git a/src/scripts/check_verify_expectation_delta.ts b/src/scripts/check_verify_expectation_delta.ts
+new file mode 100644
+index 000000000..0a52f24e0
+--- /dev/null
++++ b/src/scripts/check_verify_expectation_delta.ts
+@@ -0,0 +1,406 @@
++#!/usr/bin/env tsx
++/**
++ * A `verify:` clause this change ADDS names what its command must produce.
++ *
++ * THE DEFECT. `verify: `cat notes.md`` is a legal, green, fully-conforming step
++ * field whose oracle cannot say no: the step gets flipped on a command that was
++ * never able to fail. The grammar that fixes it shipped in
++ * `_lib/verify_clause.ts` — the optional `-> 0` / `-> /regex/` tail — and
++ * `closure_scan` reports the unfalsifiable share as a number. Reporting is
++ * where it stopped. Measured over the active estate on 2026-10-01: 173 clauses,
++ * 99 naming a command, 34 naming an expectation, and all 34 authored in one
++ * round. The grammar exists and nothing asks anyone to use it.
++ *
++ * WHY DIFF-SCOPED, AND WHY THAT IS NOT A WEAKER VERSION OF ESTATE-SCOPED.
++ * Gating the estate would red 139 clauses across every roadmap active before
++ * this round, on a day nobody authored any of them. A gate that arrives red on
++ * most of its corpus is a backlog with an exit code, and the predictable end is
++ * that it gets weakened until it finds nothing. This reads only clauses the
++ * change under review ADDED or CHANGED, so the corpus is whatever the author is
++ * already writing, and the old clauses stay legal exactly as prose does.
++ *
++ * REPLAYED BEFORE IT WAS WRITTEN, not after. Over the last thirty merges on
++ * the trunk that touched a roadmap: 145 added command-bearing
++ * clauses, 96 already carrying an expectation, 49 bare — and **6 of the 30
++ * merges would have gone red**, 39 of the 49 sitting in a single bulk-authoring
++ * round. 20% is under the one-in-four share at which this ratchet was to be
++ * withdrawn as too costly. `--replay <n>` reproduces that table on demand,
++ * which is the whole measurement rather than a memory of it.
++ *
++ * THE POINTER CARVE-OUT, and it is measured rather than assumed. 8 of those 49
++ * bare clauses are not commands at all: a backticked FILE PATH or test id
++ * written after the label, which the shared parser reads as a command because
++ * that is what a backticked token looks like to it. Demanding `-> 0` from
++ * `docs/CLAIMS.md` teaches authors to paste a meaningless arrow, which is the
++ * failure this gate exists to prevent arriving through its own front door. So a
++ * single whitespace-free token ending in a source or document extension, with
++ * an optional `:line` suffix, is a POINTER and is not asked for an oracle.
++ * Anything containing a space is a command: `cat file.md` still has to answer.
++ *
++ * The carve-out lives HERE and not in the parser. Widening `verify_clause.ts`
++ * would change what `closure_scan` and the run-continuation hook see, and both
++ * were measured on the current grammar.
++ *
++ * THE ARROW IS NOT RE-PARSED. {@link VERIFY_ARROW_SOURCE} is imported, never
++ * copied: a second arrow regex is how a grammar and its gate drift, and a
++ * drifted pair fails silently — an expectation simply stops being read and a
++ * conforming clause is refused.
++ *
++ * CLI:
++ *   ./scripts-run src/scripts/check_verify_expectation_delta
++ *   ./scripts-run src/scripts/check_verify_expectation_delta --base origin/main
++ *   ./scripts-run src/scripts/check_verify_expectation_delta --replay 30
++ *   ./scripts-run src/scripts/check_verify_expectation_delta --self-test
++ *
++ * Exit codes: 0 clean · 1 a bare clause was added · 2 usage error or no base ref.
++ */
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import process from 'node:process';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import { VERIFY_ARROW_SOURCE, parseVerifyClause } from './_lib/verify_clause.js';
++import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
++import { reportScanned, DeadScopeError } from './_lib/scan_scope.js';
++import { runGateCli, runSelfTest, type SelfTestCase } from './_lib/gate_self_test.js';
++
++const _HERE = path.resolve(fileURLToPath(import.meta.url));
++const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
++const GATE = 'check_verify_expectation_delta';
++const ROADMAPS_REL = 'agents/roadmaps';
++const SCRIPT_REL = 'src/scripts/check_verify_expectation_delta.ts';
++
++/** Declared here so a truncated case list is a visible diff, not a quiet pass. */
++const SELF_TEST_MIN_CASES = 6;
++const SELF_TEST_MIN_REJECT = 3;
++
++/**
++ * A backticked value that points AT something rather than running.
++ *
++ * One token, no whitespace, a source or document extension, optionally a
++ * `:line` suffix. Measured at 8 of 49 bare clauses over thirty merges — a sixth
++ * of what an uncarved gate would have fired on.
++ */
++const POINTER_RE = /^[^\s`]+\.(?:ts|tsx|js|mjs|cjs|md|json|ya?ml|html|txt|lock)(?::\d+)?$/i;
++
++/** Does this clause body name something to RUN, as opposed to something to open? */
++export function isPointer(command: string): boolean {
++    return POINTER_RE.test(command.trim());
++}
++
++export interface BareClause {
++    /** Repo-relative path of the roadmap the clause was added to. */
++    readonly file: string;
++    /** The command half, as written. */
++    readonly command: string;
++}
++
++function git(args: readonly string[], cwd: string): { ok: boolean; stdout: string } {
++    const res = spawnSync('git', [...args], { cwd, encoding: 'utf-8', maxBuffer: 64 * 1024 * 1024 });
++    return { ok: res.status === 0, stdout: res.stdout ?? '' };
++}
++
++/**
++ * The bare clauses a unified patch ADDS.
++ *
++ * Reads `+` lines only. A context line carrying a bare clause is a clause this
++ * change did not write, and convicting on it would make flipping a checkbox two
++ * lines above an unrelated verify line fail the author's change — the exact
++ * collateral that turns a diff-scoped gate back into an estate-scoped one.
++ */
++export function bareClausesIn(patch: string): BareClause[] {
++    const out: BareClause[] = [];
++    let file = '';
++    for (const raw of patch.split('\n')) {
++        const fm = /^\+\+\+ b\/(.+)$/.exec(raw);
++        if (fm !== null) {
++            file = fm[1] as string;
++            continue;
++        }
++        if (!raw.startsWith('+') || raw.startsWith('+++')) continue;
++        const body = raw.slice(1);
++        if (!body.includes('verify:')) continue;
++        const clause = parseVerifyClause(body);
++        // No clause, or the prose (MANUAL) form — prose stays legal by design.
++        if (clause === null || clause.command === null) continue;
++        if (clause.expect !== null) continue;
++        if (isPointer(clause.command)) continue;
++        out.push({ file, command: clause.command });
++    }
++    return out;
++}
++
++export interface ReplayRow {
++    readonly merge: string;
++    readonly bare: number;
++}
++
++export interface Replay {
++    readonly merges: number;
++    readonly added: number;
++    readonly withExpectation: number;
++    readonly bare: readonly BareClause[];
++    readonly redMerges: readonly ReplayRow[];
++}
++
++/** Replay the proposed rule over the last `n` merges that touched the roadmaps. */
++export function replay(repoRoot: string, n: number, ref = 'origin/main'): Replay {
++    const list = git(
++        ['log', '--merges', '--first-parent', ref, `--max-count=${String(n)}`, '--format=%h', '--', `${ROADMAPS_REL}/*.md`],
++        repoRoot,
++    );
++    const merges = list.stdout.split('\n').filter((s) => s.trim() !== '');
++    const bare: BareClause[] = [];
++    const redMerges: ReplayRow[] = [];
++    let added = 0;
++    let withExpectation = 0;
++    for (const m of merges) {
++        const patch = git(['diff', '--unified=0', `${m}^1`, m, '--', ROADMAPS_REL], repoRoot);
++        // Counted separately from `bareClausesIn` so the denominator is the real
++        // one: a report of "6 merges red" with no total is a number nobody can
++        // place.
++        for (const raw of patch.stdout.split('\n')) {
++            if (!raw.startsWith('+') || raw.startsWith('+++')) continue;
++            const clause = parseVerifyClause(raw.slice(1));
++            if (clause === null || clause.command === null) continue;
++            added += 1;
++            if (clause.expect !== null) withExpectation += 1;
++        }
++        const hits = bareClausesIn(patch.stdout);
++        bare.push(...hits);
++        if (hits.length > 0) redMerges.push({ merge: m, bare: hits.length });
++    }
++    return { merges: merges.length, added, withExpectation, bare, redMerges };
++}
++
++function repoRootFrom(start: string): string {
++    let dir = path.resolve(start);
++    for (;;) {
++        if (fs.existsSync(path.join(dir, ROADMAPS_REL))) return dir;
++        const up = path.dirname(dir);
++        if (up === dir) return path.resolve(start);
++        dir = up;
++    }
++}
++
++function renderReplay(rep: Replay): string {
++    const out: string[] = [];
++    out.push(`${GATE} --replay: ${String(rep.merges)} merge(s) replayed`);
++    out.push(`  added command-bearing clauses  ${String(rep.added)}`);
++    out.push(`    with an expectation          ${String(rep.withExpectation)}`);
++    out.push(`    bare (this gate would fire)  ${String(rep.bare.length)}`);
++    const share = rep.merges === 0 ? 0 : Math.round((rep.redMerges.length / rep.merges) * 100);
++    out.push(`  merges that would go RED       ${String(rep.redMerges.length)} of ${String(rep.merges)} (${String(share)}%)`);
++    for (const r of [...rep.redMerges].sort((a, b) => b.bare - a.bare)) {
++        out.push(`    ${r.merge} ${String(r.bare).padStart(3)} bare clause(s)`);
++    }
++    return out.join('\n') + '\n';
++}
++
++/** Fixtures for `--self-test`: a throwaway repo with a base commit and a change. */
++function fixture(opts: { base: string; added: readonly string[] }): number {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'verify-delta-'));
++    try {
++        const run = (...args: string[]): void => {
++            const r = spawnSync('git', args, { cwd: dir, encoding: 'utf-8' });
++            if (r.status !== 0) throw new Error(`git ${args.join(' ')}: ${r.stderr}`);
++        };
++        const write = (rel: string, body: string): void => {
++            const abs = path.join(dir, rel);
++            fs.mkdirSync(path.dirname(abs), { recursive: true });
++            fs.writeFileSync(abs, body, 'utf-8');
++        };
++        run('init', '-q', '-b', 'main');
++        run('config', 'user.email', 'verify@test.local');
++        run('config', 'user.name', 'verify');
++        run('config', 'commit.gpgsign', 'false');
++        write(`${ROADMAPS_REL}/road-to-base.md`, `# Roadmap: base\n\n## Phase 1\n\n- [ ] **1.1** s\n      verify: ${opts.base}\n`);
++        run('add', '-A');
++        run('commit', '-qm', 'base');
++        run('checkout', '-qb', 'feat/change');
++        opts.added.forEach((line, i) => {
++            write(
++                `${ROADMAPS_REL}/road-to-new-${String(i)}.md`,
++                `# Roadmap: new ${String(i)}\n\n## Phase 1\n\n- [ ] **1.1** s\n      verify: ${line}\n`,
++            );
++        });
++        // An edit that touches a roadmap and adds no clause. Without it the
++        // "nothing added" case has nothing to commit and dies in git rather than
++        // in the gate — and that case is the one proving the base clause is not
++        // re-read, so it has to reach the gate to mean anything.
++        write(`${ROADMAPS_REL}/road-to-base.md`, `# Roadmap: base\n\n## Phase 1\n\n- [x] **1.1** s\n      verify: ${opts.base}\n`);
++        run('add', '-A');
++        run('commit', '-qm', 'change');
++        return runGateCli(REPO_ROOT, SCRIPT_REL, ['--base', 'main'], dir);
++    } finally {
++        fs.rmSync(dir, { recursive: true, force: true });
++    }
++}
++
++function selfTest(): number {
++    const cases: SelfTestCase[] = [
++        {
++            name: 'added clause naming a command and no expectation → reject',
++            expect: 'reject',
++            run: () => fixture({ base: '`true` -> 0', added: ['`./scripts-run src/scripts/check_claims`'] }),
++        },
++        {
++            name: 'added clause naming a command AND an exit expectation → accept',
++            expect: 'accept',
++            run: () => fixture({ base: '`true` -> 0', added: ['`./scripts-run src/scripts/check_claims` -> 0'] }),
++        },
++        {
++            name: 'added clause naming a command AND a regex expectation → accept',
++            expect: 'accept',
++            run: () => fixture({ base: '`true` -> 0', added: ['`grep -c x f.md` -> /^[1-9]/'] }),
++        },
++        {
++            // Prose stays legal. Forbidding it would invalidate the large
++            // majority of clauses in the tree, which is the decision
++            // `verify_clause.ts` records and this gate does not reopen.
++            name: 'added PROSE clause → accept (the MANUAL form is legal by design)',
++            expect: 'accept',
++            run: () => fixture({ base: '`true` -> 0', added: ['a human reads the rendered page and confirms it'] }),
++        },
++        {
++            // The measured carve-out: 8 of 49 bare clauses over thirty merges.
++            name: 'added clause naming a FILE PATH → accept (a pointer is not a command)',
++            expect: 'accept',
++            run: () => fixture({ base: '`true` -> 0', added: ['`tests/scripts/dispatch_integrity.test.ts`'] }),
++        },
++        {
++            name: 'a pointer with a :line suffix → accept',
++            expect: 'accept',
++            run: () => fixture({ base: '`true` -> 0', added: ['`turn_end_gate_hook.test.ts:1427`'] }),
++        },
++        {
++            // `cat file.md` is a command whose exit decides nothing — and it is
++            // still asked for an oracle, because the carve-out is about SHAPE,
++            // not about whether the author chose a weak command.
++            name: 'a command that merely cats a file → reject (the carve-out is one token only)',
++            expect: 'reject',
++            run: () => fixture({ base: '`true` -> 0', added: ['`cat docs/CLAIMS.md`'] }),
++        },
++        {
++            name: 'two added clauses, one bare → reject',
++            expect: 'reject',
++            run: () =>
++                fixture({ base: '`true` -> 0', added: ['`./scripts-run src/scripts/check_claims` -> 0', '`npx vitest run x`'] }),
++        },
++        {
++            // The grandfathering half: an untouched bare clause at base must not
++            // convict a change that added nothing.
++            name: 'a bare clause ALREADY at base, nothing added → accept',
++            expect: 'accept',
++            run: () => fixture({ base: '`cat notes.md`', added: [] }),
++        },
++    ];
++    return runSelfTest({ gate: GATE, cases, minCases: SELF_TEST_MIN_CASES, minRejectCases: SELF_TEST_MIN_REJECT });
++}
++
++export function main(argv: string[] = process.argv.slice(2)): number {
++    if (argv.includes('--self-test')) return selfTest();
++    const repoRoot = repoRootFrom(process.cwd());
++
++    const replayIdx = argv.indexOf('--replay');
++    if (replayIdx !== -1) {
++        const raw = argv[replayIdx + 1];
++        const n = raw === undefined ? NaN : Number(raw);
++        if (!Number.isInteger(n) || n <= 0) {
++            process.stderr.write(`usage: ${GATE} [--base <ref>] [--replay <n>] [--self-test]\n`);
++            return 2;
++        }
++        process.stdout.write(renderReplay(replay(repoRoot, n)));
++        return 0;
++    }
++
++    const baseIdx = argv.indexOf('--base');
++    let baseRef: string | undefined;
++    if (baseIdx !== -1) {
++        const next = argv[baseIdx + 1];
++        if (next === undefined || next.startsWith('-')) {
++            process.stderr.write(`usage: ${GATE} [--base <ref>] [--replay <n>] [--self-test]\n`);
++            return 2;
++        }
++        baseRef = next;
++    }
++    const ref = baseRef ?? resolveBaseRef(repoRoot);
++    if (ref === null) {
++        process.stderr.write(
++            `❌  ${GATE}: no base ref resolved (no origin/main, no merge-commit parent).\n` +
++                '    This gate reads the clauses a CHANGE adds, so with no base there is no change\n' +
++                '    to read — and a diff-scoped gate with no diff passes every possible tree.\n' +
++                '    Fetch the base (`git fetch origin main`) or name it: --base origin/main\n',
++        );
++        return 2;
++    }
++
++    const patch = git(['diff', '--unified=0', '--find-renames', `${ref}...HEAD`, '--', ROADMAPS_REL], repoRoot);
++    if (!patch.ok) {
++        process.stderr.write(`❌  ${GATE}: git diff against ${ref} failed — the change could not be read.\n`);
++        return 2;
++    }
++
++    const bare = bareClausesIn(patch.stdout);
++    // The unit is the added CLAUSE, not the file: a change adding ten clauses to
++    // one roadmap scanned ten things, and reporting "1 file" would understate
++    // what was read. An empty diff is a real answer here (nothing was added),
++    // never a dead scope, so the count is allowed to be zero.
++    const added = patch.stdout
++        .split('\n')
++        .filter((l) => l.startsWith('+') && !l.startsWith('+++') && l.includes('verify:')).length;
++    try {
++        reportScanned({
++            gate: GATE,
++            scanned: added,
++            units: 'added verify clause(s)',
++            roots: [ROADMAPS_REL],
++            allowEmpty: 'a change that adds no verify clause has nothing to check',
++        });
++    } catch (err) {
++        if (err instanceof DeadScopeError) {
++            process.stderr.write(`❌  ${GATE}: ${err.message}\n`);
++            return 2;
++        }
++        throw err;
++    }
++
++    if (bare.length === 0) {
++        process.stdout.write(`✅  ${GATE}: every added verify clause states what its command must produce.\n`);
++        return 0;
++    }
++
++    for (const b of bare) {
++        process.stderr.write(`❌  ${b.file}: verify clause names a command and no expectation.\n    ${b.command.slice(0, 160)}\n`);
++    }
++    process.stderr.write(
++        `\n    ${String(bare.length)} added verify clause(s) cannot fail. A clause that names a command and\n` +
++            '    no expectation is an oracle that cannot say no: the step gets flipped on a\n' +
++            '    command that was never able to fail. State what the command must produce:\n' +
++            '\n' +
++            '        verify: `<cmd>` -> 0          the command must exit 0\n' +
++            '        verify: `<cmd>` -> /regex/    its output must match\n' +
++            '\n' +
++            '    Pick the regex form when the exit status decides nothing — `grep -c`, `wc`,\n' +
++            '    `head` and `cat` all exit 0 on content nobody looked at, so `-> 0` there is an\n' +
++            '    expectation that still cannot fail. Prose clauses stay legal and are not read\n' +
++            '    here; so is a backticked file path, which points rather than runs. This gate\n' +
++            '    reads only the clauses THIS change adds — nothing already in the tree.\n',
++    );
++    return 1;
++}
++
++/** Keep the arrow grammar single-sourced; a copy here would drift silently. */
++export { VERIFY_ARROW_SOURCE };
++
++function isCliEntry(): boolean {
++    const entry = process.argv[1];
++    if (entry === undefined) return false;
++    return pathToFileURL(path.resolve(entry)).href === pathToFileURL(fileURLToPath(import.meta.url)).href;
++}
++
++if (isCliEntry()) {
++    process.exit(main());
++}
+diff --git a/src/scripts/estate_exemption_shape.ts b/src/scripts/estate_exemption_shape.ts
+new file mode 100644
+index 000000000..9fbbdf6dc
+--- /dev/null
++++ b/src/scripts/estate_exemption_shape.ts
+@@ -0,0 +1,202 @@
++#!/usr/bin/env tsx
++/**
++ * What the `estate_offset_exempt` population actually says — the producing command.
++ *
++ * THIS IS A READER, NOT A GATE. It exits 0 on every corpus, including one where
++ * no reason names anything. The refusal lives in `check_estate_count`, applies
++ * to ADDED files only, and is grandfathered precisely because of what this
++ * script measures: 43 of the 221 reasons in the tree on 2026-10-01 name no
++ * alternative disposition, so a check that re-read them would land red on a
++ * fifth of its corpus.
++ *
++ * WHAT IT BUYS. Two numbers nobody could produce before: how many exemptions
++ * name a rejected alternative, and how many repeat another file's reason
++ * verbatim. Both are the inputs to whether the refusal vocabulary is the right
++ * one, and both move as the estate moves — so the NEXT reading is a delta
++ * rather than a re-derivation, which is the same bargain `roadmap_verify_share`
++ * makes for the verify grammar.
++ *
++ * THE VOCABULARY IS NOT THIS SCRIPT'S. It imports the lemma list the gate
++ * refuses on, so the report and the refusal cannot drift. A drifted pair fails
++ * silently and in the worst direction: the report says the tree conforms while
++ * the gate rejects it.
++ *
++ * CLI:
++ *   ./scripts-run src/scripts/estate_exemption_shape
++ *   ./scripts-run src/scripts/estate_exemption_shape --json
++ *   ./scripts-run src/scripts/estate_exemption_shape --root <dir>
++ *
++ * Exit codes: 0 always, except 2 for bad argv or a scan root that holds nothing.
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import process from 'node:process';
++import { fileURLToPath } from 'node:url';
++
++import { exemptionReason } from './check_estate_count.js';
++import { DISPOSITION_LEMMAS, lemmasNamed, namesDisposition, reasonKey } from './_lib/exemption_shape.js';
++import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
++
++const _HERE = fileURLToPath(import.meta.url);
++const _PROG = 'estate_exemption_shape';
++const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
++
++/** The three trees an exemption can sit in. `stubs/` and `skipped/` carry none. */
++const TREES: readonly { readonly label: string; readonly dir: string }[] = [
++    { label: 'active', dir: 'agents/roadmaps' },
++    { label: 'later', dir: 'agents/roadmaps/later' },
++    { label: 'archive', dir: 'agents/roadmaps/archive' },
++];
++
++export interface ExemptionRow {
++    readonly tree: string;
++    readonly file: string;
++    readonly reason: string;
++    /** The disposition lemmas this reason names; empty means it names none. */
++    readonly lemmas: readonly string[];
++}
++
++export interface ShapeReport {
++    readonly rows: readonly ExemptionRow[];
++    readonly shaped: number;
++    readonly shapeless: number;
++    /** Per-lemma hit counts, in the gate's own lemma order. */
++    readonly byLemma: Readonly<Record<string, number>>;
++    /** Groups of two or more files sharing one reason, largest first. */
++    readonly duplicates: readonly (readonly string[])[];
++}
++
++/** Read every exemption under `root`, in a stable order. */
++export function collectExemptions(root: string): ExemptionRow[] {
++    const rows: ExemptionRow[] = [];
++    for (const tree of TREES) {
++        const abs = path.join(root, tree.dir);
++        let names: string[];
++        try {
++            names = fs.readdirSync(abs);
++        } catch {
++            continue;
++        }
++        for (const name of [...names].sort()) {
++            if (!name.endsWith('.md')) continue;
++            const file = path.join(abs, name);
++            let text: string;
++            try {
++                if (!fs.statSync(file).isFile()) continue;
++                text = fs.readFileSync(file, 'utf-8');
++            } catch {
++                continue;
++            }
++            const reason = exemptionReason(text);
++            if (reason === null) continue;
++            rows.push({ tree: tree.label, file: `${tree.dir}/${name}`, reason, lemmas: lemmasNamed(reason) });
++        }
++    }
++    return rows;
++}
++
++/** Summarise the population against the gate's vocabulary. */
++export function report(rows: readonly ExemptionRow[]): ShapeReport {
++    const byLemma: Record<string, number> = {};
++    for (const l of DISPOSITION_LEMMAS) {
++        byLemma[l.name] = rows.filter((r) => r.lemmas.includes(l.name)).length;
++    }
++    const groups = new Map<string, string[]>();
++    for (const r of rows) {
++        const key = reasonKey(r.reason);
++        const list = groups.get(key) ?? [];
++        list.push(r.file);
++        groups.set(key, list);
++    }
++    const duplicates = [...groups.values()].filter((g) => g.length > 1).sort((a, b) => b.length - a.length);
++    return {
++        rows,
++        shaped: rows.filter((r) => namesDisposition(r.reason)).length,
++        shapeless: rows.filter((r) => !namesDisposition(r.reason)).length,
++        byLemma,
++        duplicates,
++    };
++}
++
++function render(rep: ShapeReport): string {
++    const out: string[] = [];
++    const total = rep.rows.length;
++    out.push(`${_PROG}: ${String(total)} exemption(s)`);
++    for (const tree of TREES) {
++        out.push(`  ${tree.label.padEnd(10)} ${String(rep.rows.filter((r) => r.tree === tree.label).length).padStart(4)}`);
++    }
++    out.push(`  names a rejected alternative  ${String(rep.shaped).padStart(4)}`);
++    out.push(`  names none                    ${String(rep.shapeless).padStart(4)}`);
++    out.push('  per lemma:');
++    for (const l of DISPOSITION_LEMMAS) {
++        out.push(`    ${l.name.padEnd(12)} ${String(rep.byLemma[l.name] ?? 0).padStart(4)}`);
++    }
++    const dupFiles = rep.duplicates.reduce((n, g) => n + g.length, 0);
++    out.push(`  verbatim duplicate groups     ${String(rep.duplicates.length).padStart(4)} covering ${String(dupFiles)} file(s)`);
++    for (const g of rep.duplicates) {
++        out.push(`    (${String(g.length)}x) ${g.join(', ')}`);
++    }
++    if (rep.shapeless > 0) {
++        out.push('  naming no rejected alternative:');
++        for (const r of rep.rows.filter((x) => !namesDisposition(x.reason))) {
++            out.push(`    ${r.file}: ${r.reason.slice(0, 120)}`);
++        }
++    }
++    return out.join('\n') + '\n';
++}
++
++export function main(argv: string[] = process.argv.slice(2)): number {
++    const json = argv.includes('--json');
++    const rootIdx = argv.indexOf('--root');
++    let root = REPO_ROOT;
++    if (rootIdx !== -1) {
++        const next = argv[rootIdx + 1];
++        if (next === undefined || next.startsWith('-')) {
++            process.stderr.write(`usage: ${_PROG} [--root <dir>] [--json]\n`);
++            return 2;
++        }
++        root = path.resolve(next);
++    }
++    const unknown = argv.filter((a) => a.startsWith('-') && a !== '--json' && a !== '--root');
++    if (unknown.length > 0) {
++        process.stderr.write(`${_PROG}: unknown argument(s) ${unknown.join(', ')}\n`);
++        return 2;
++    }
++
++    const rows = collectExemptions(root);
++    try {
++        // A root holding no roadmap at all is a dead scope, never an estate with
++        // nothing to report: this reader would otherwise print a confident zero
++        // over a path that does not exist.
++        assertScanned({
++            gate: _PROG,
++            scanned: TREES.reduce((n, t) => {
++                try {
++                    return n + fs.readdirSync(path.join(root, t.dir)).filter((f) => f.endsWith('.md')).length;
++                } catch {
++                    return n;
++                }
++            }, 0),
++            units: 'roadmap file(s)',
++            roots: TREES.map((t) => t.dir),
++        });
++    } catch (err) {
++        if (err instanceof DeadScopeError) {
++            process.stderr.write(`❌  ${_PROG}: ${err.message}\n`);
++            return 2;
++        }
++        throw err;
++    }
++
++    const rep = report(rows);
++    if (json) {
++        process.stdout.write(JSON.stringify(rep, null, 2) + '\n');
++        return 0;
++    }
++    process.stdout.write(render(rep));
++    return 0;
++}
++
++if (path.resolve(process.argv[1] ?? '') === _HERE) {
++    process.exit(main());
++}
+diff --git a/tests/scripts/check_estate_count.test.ts b/tests/scripts/check_estate_count.test.ts
+index baffc4f39..44fb7d4c6 100644
+--- a/tests/scripts/check_estate_count.test.ts
++++ b/tests/scripts/check_estate_count.test.ts
+@@ -42,6 +42,7 @@ import {
+     exemptionReason,
+     growthClaims,
+ } from '../../src/scripts/check_estate_count.js';
++import { exemptionFindings } from '../../src/scripts/_lib/exemption_shape.js';
+ 
+ const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+ const SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'check_estate_count.ts');
+@@ -110,6 +111,16 @@ function budget(
+ 
+ const CLAIM = 'fixture — a real sentence, so the claim counts';
+ 
++/**
++ * A SHAPED exemption reason — it names an alternative it rejected.
++ *
++ * The old fixture read "incident follow-up, nothing to trade", which named
++ * none and is exactly what the shape check now refuses. Updating it is the
++ * change under test arriving in its own fixtures, not a workaround: a fixture
++ * that keeps the pre-change shape would pin the defect.
++ */
++const EXEMPT = 'fixture — archiving road-to-0 was rejected, it is mid-flight';
++
+ /** A repo with `n` active roadmaps committed on `main`, checked out on a branch. */
+ function initRepo(n = 3, opts: { later?: number; blockers?: number; above?: number | null } = {}): string {
+     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'estate-count-'));
+@@ -478,7 +489,7 @@ describe('check_estate_count — one-in-one-out', () => {
+ 
+     it('accepts an addition carrying an estate_offset_exempt reason in its frontmatter', () => {
+         const repo = initRepo(3);
+-        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New', { exempt: 'incident follow-up, nothing to trade' }));
++        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New', { exempt: EXEMPT }));
+         commitAll(repo, 'add an exempt roadmap');
+         const res = run(repo, ['--base', 'main']);
+         expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
+@@ -488,6 +499,87 @@ describe('check_estate_count — one-in-one-out', () => {
+         expect(res.stdout).toMatch(/active_roadmaps\s+4\s+\(floor 3 at main, \+1\)/);
+     });
+ 
++    it('shape — is RED on an added exemption that names no rejected alternative', () => {
++        const repo = initRepo(3);
++        write(repo, 'agents/roadmaps/road-to-new.md', roadmap('New', { exempt: 'lane 5 of road-to-parent' }));
++        commitAll(repo, 'add an exempt roadmap whose reason names nothing');
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status, `${res.stdout}${res.stderr}`).toBe(1);
++        expect(res.stderr).toContain('names no rejected alternative');
++        expect(res.stderr).toContain('road-to-new.md');
++        // The offset half must stay GREEN: the exemption is present and the
++        // addition is covered. Otherwise this fixture would pass for the wrong
++        // reason — a reader could not tell the shape refusal from an unpaid one.
++        expect(res.stderr).not.toContain('with no offset in the same change');
++    });
++
++    it('shape — is RED on two added files whose exemptions say the same thing', () => {
++        const repo = initRepo(3);
++        write(repo, 'agents/roadmaps/road-to-n1.md', roadmap('N1', { exempt: EXEMPT }));
++        write(repo, 'agents/roadmaps/road-to-n2.md', roadmap('N2', { exempt: EXEMPT }));
++        commitAll(repo, 'add two roadmaps sharing one pasted reason');
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status, `${res.stdout}${res.stderr}`).toBe(1);
++        expect(res.stderr).toContain('repeats agents/roadmaps/road-to-n1.md verbatim');
++        // The FIRST file is the claim and must not be convicted of repeating itself.
++        expect(res.stderr).not.toContain('road-to-n1.md: estate_offset_exempt repeats');
++    });
++
++    it('shape — reads the YAML block form end to end, not just the flat one', () => {
++        // The house form: 38 of the 221 exemptions in the tree are written this
++        // way. SENSITIVITY, stated honestly: this case passes on the pre-change
++        // gate too, because that gate had no shape rule to fail — it is a
++        // non-regression pin, and the discriminating evidence for the block
++        // reader is the `exemptionReason shape` unit case above, which IS red
++        // against the old reader. What this adds is that the two halves compose:
++        // a folded reason reaches the shape rule as prose rather than as `>-`.
++        const repo = initRepo(3);
++        const folded =
++            '---\nestate_offset_exempt: >-\n  fixture — archiving road-to-0 was rejected, it is\n  mid-flight and nothing else can be traded\n---\n\n';
++        write(repo, 'agents/roadmaps/road-to-new.md', folded + roadmap('New'));
++        commitAll(repo, 'add a roadmap with a folded exemption');
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
++        expect(res.stdout).toContain('1 exempt');
++    });
++
++    it('shape — leaves exemptions ALREADY in the tree alone', () => {
++        // Grandfathering, proven rather than asserted: 43 of the 221 reasons on
++        // main name no disposition, so a check that re-read them would land red
++        // on a fifth of the corpus. The base commit carries the shapeless reason;
++        // the change touches something else entirely.
++        const repo = initRepo(3);
++        git(repo, 'checkout', '-q', 'main');
++        write(repo, 'agents/roadmaps/road-to-0.md', roadmap('R0', { exempt: 'lane 5 of road-to-parent' }));
++        commitAll(repo, 'a shapeless exemption, already on main');
++        git(repo, 'checkout', '-q', 'feat/change');
++        git(repo, 'merge', '-q', 'main');
++        write(repo, 'agents/roadmaps/road-to-1.md', `${roadmap('R1')}\n<!-- an unrelated edit -->\n`);
++        commitAll(repo, 'an unrelated change');
++        const res = run(repo, ['--base', 'main']);
++        expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
++        expect(res.stderr).not.toContain('names no rejected alternative');
++    });
++
++    it('reports draft_roadmaps beside the count, and never gates on it', () => {
++        const repo = initRepo(3);
++        write(repo, 'agents/roadmaps/road-to-draft.md', `---\nstatus: draft\n---\n\n${roadmap('D')}`);
++        // The FILE-based one-in-one-out half charges every added roadmap file
++        // whatever its status, so the draft is offset here. That isolates the
++        // reporting half: without the offset this fixture would be red for a
++        // reason that has nothing to do with the number under test.
++        fs.mkdirSync(path.join(repo, 'agents/roadmaps/archive'), { recursive: true });
++        git(repo, 'mv', 'agents/roadmaps/road-to-2.md', 'agents/roadmaps/archive/road-to-2.md');
++        commitAll(repo, 'add a draft, archive one');
++        const res = run(repo, ['--base', 'main']);
++        // Green: a draft is invisible to `collect()`, so it raises no gated
++        // count. The number is REPORTED so a reader can tell an estate of 2 from
++        // an estate of 2 with a draft behind it.
++        expect(res.status, `${res.stdout}${res.stderr}`).toBe(0);
++        expect(res.stdout).toMatch(/draft_roadmaps\s+1\s+\(reported, not gated/);
++        expect(res.stdout).toMatch(/active_roadmaps\s+2\s/);
++    });
++
+     it('is inert below a registered active ceiling, and live above it', () => {
+         // T3 applies "while the active count sits above target". With a ceiling
+         // registered ABOVE the live count the lint must not fire; the same change
+@@ -547,6 +639,66 @@ describe('check_estate_count — unit surface', () => {
+         expect(exemptionReason('# R\n')).toBeNull();
+     });
+ 
++    it('exemptionReason shape — reads the YAML block scalar 38 of 221 reasons are written in', () => {
++        // The read defect this change fixes. The shared frontmatter parser splits
++        // on the first colon, so the whole indented body was invisible and the
++        // gate was handed the string `>-` — non-empty, therefore accepted.
++        const folded = '---\nestate_offset_exempt: >-\n  the round archived nothing, so there is no\n  counterpart to trade\nstatus: ready\n---\n# R\n';
++        expect(exemptionReason(folded)).toBe('the round archived nothing, so there is no counterpart to trade');
++        expect(exemptionReason('---\nestate_offset_exempt: |\n  merging into road-to-x was rejected\n---\n# R\n')).toBe(
++            'merging into road-to-x was rejected',
++        );
++        // A block header with no body is the blank-reason case, and it must NOT
++        // fall back to the flat parser — that path would return `>-` and accept it.
++        expect(exemptionReason('---\nestate_offset_exempt: >-\nstatus: ready\n---\n# R\n')).toBeNull();
++        // The flat forms keep working; the block reader must not swallow them.
++        expect(exemptionReason('---\nestate_offset_exempt: archiving was unavailable\n---\n# R\n')).toBe(
++            'archiving was unavailable',
++        );
++    });
++
++    it('exemptionFindings shape — refuses a reason naming no rejected alternative', () => {
++        expect(exemptionFindings([{ file: 'a.md', reason: 'lane 5 of road-to-leading-every-row' }])).toEqual([
++            { file: 'a.md', kind: 'shapeless', twin: null, reason: 'lane 5 of road-to-leading-every-row' },
++        ]);
++        // Each of the ten measured lemmas is sufficient on its own. A vocabulary
++        // test that only ever exercises `archive` would not notice the other nine
++        // silently dropping out of the alternation.
++        for (const reason of [
++            'archiving road-to-x was considered and rejected',
++            'nothing could be parked in its place',
++            'merging into road-to-y would split the set',
++            'no later/ slot was available',
++            'the round offsets nothing',
++            'deferring it loses the window',
++            'folding it into the sibling was rejected',
++            'consolidating with road-to-z was rejected',
++            'no active roadmap can absorb it',
++            'no completed roadmap to retire against this addition',
++        ]) {
++            expect(exemptionFindings([{ file: 'a.md', reason }]), reason).toEqual([]);
++        }
++        // `close` is deliberately NOT in the vocabulary: it is the commonest verb
++        // in these reasons (52 of 221) and almost always means closing work, not
++        // disposing of a file. Accepting it would pass a sentence naming nothing.
++        expect(exemptionFindings([{ file: 'a.md', reason: 'we will close this out soon' }])).toHaveLength(1);
++        // `later` is only a disposition when it is the DIRECTORY. The bare word is
++        // an adverb, and matching it would accept every reason containing "later".
++        expect(exemptionFindings([{ file: 'a.md', reason: 'we will deal with this later' }])).toHaveLength(1);
++    });
++
++    it('exemptionFindings shape — refuses a reason repeated verbatim across added files', () => {
++        const reason = 'the round archived nothing, so there is no counterpart to trade';
++        const out = exemptionFindings([
++            { file: 'a.md', reason },
++            { file: 'b.md', reason: `  THE round   ARCHIVED nothing, so there is no counterpart to trade ` },
++            { file: 'c.md', reason: `${reason}, and c is a different case besides` },
++        ]);
++        // The first occurrence is the claim; the second is the paste. Case and
++        // whitespace fold, a differing clause does not.
++        expect(out).toEqual([{ file: 'b.md', kind: 'duplicate', twin: 'a.md', reason: out[0]?.reason ?? '' }]);
++    });
++
+     it('growthClaims reads ADDED lines only, and attributes each to its file', () => {
+         const patch = [
+             'diff --git a/agents/roadmaps/road-to-a.md b/agents/roadmaps/road-to-a.md',
+diff --git a/tests/scripts/check_verify_expectation_delta.test.ts b/tests/scripts/check_verify_expectation_delta.test.ts
+new file mode 100644
+index 000000000..85507b244
+--- /dev/null
++++ b/tests/scripts/check_verify_expectation_delta.test.ts
+@@ -0,0 +1,129 @@
++/**
++ * `check_verify_expectation_delta` — the added-clause ratchet, both directions.
++ *
++ * The gate's own `--self-test` already drives its CLI against throwaway
++ * repositories, and these cases do not duplicate it. What they add is the two
++ * things a self-test cannot show a reviewer:
++ *
++ * 1. the UNIT behaviour of `bareClausesIn` over a hand-written patch, so a
++ *    change to the `+`-line reading is a visible test diff rather than a shift
++ *    in six end-to-end exit codes;
++ * 2. that the arrow grammar is single-sourced — this gate must not carry its
++ *    own copy of the expectation regex, which is the drift the parser module's
++ *    "WHY ONE PARSER" note exists to prevent and which nothing else here pins.
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++import { describe, expect, it } from 'vitest';
++
++import { bareClausesIn, isPointer, VERIFY_ARROW_SOURCE } from '../../src/scripts/check_verify_expectation_delta.js';
++import { VERIFY_ARROW_SOURCE as GRAMMAR_SOURCE } from '../../src/scripts/_lib/verify_clause.js';
++
++const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
++
++/** A unified patch adding one `verify:` line to one roadmap. */
++function patch(file: string, ...lines: readonly string[]): string {
++    return [
++        `diff --git a/${file} b/${file}`,
++        `--- a/${file}`,
++        `+++ b/${file}`,
++        '@@ -4,0 +5 @@',
++        ...lines.map((l) => `+${l}`),
++    ].join('\n');
++}
++
++describe('check_verify_expectation_delta — which added clauses fire', () => {
++    it('fires on an added clause naming a command and no expectation', () => {
++        const out = bareClausesIn(patch('agents/roadmaps/road-to-x.md', '      verify: `npx vitest run tests/x.test.ts`'));
++        expect(out).toEqual([{ file: 'agents/roadmaps/road-to-x.md', command: 'npx vitest run tests/x.test.ts' }]);
++    });
++
++    it('is silent on an added clause carrying either expectation form', () => {
++        expect(bareClausesIn(patch('agents/roadmaps/r.md', '      verify: `npx vitest run x` -> 0'))).toEqual([]);
++        expect(bareClausesIn(patch('agents/roadmaps/r.md', '      verify: `grep -c x f.md` -> /^[1-9]/'))).toEqual([]);
++    });
++
++    it('is silent on the prose MANUAL form — prose stays legal by design', () => {
++        // Forbidding prose would invalidate the large majority of clauses in the
++        // tree at once, which is the decision `verify_clause.ts` records. This
++        // gate does not reopen it, and a regression that started reading prose
++        // as a command would red every roadmap in the next bulk round.
++        expect(bareClausesIn(patch('agents/roadmaps/r.md', '      verify: a human opens the page and confirms the banner'))).toEqual(
++            [],
++        );
++    });
++
++    it('reads ADDED lines only — a context line is a clause this change did not write', () => {
++        const withContext = [
++            'diff --git a/agents/roadmaps/r.md b/agents/roadmaps/r.md',
++            '--- a/agents/roadmaps/r.md',
++            '+++ b/agents/roadmaps/r.md',
++            '@@ -4,2 +4,2 @@',
++            '-- [ ] **1.1** a step',
++            '+- [x] **1.1** a step',
++            '       verify: `cat notes.md`',
++        ].join('\n');
++        // The canonical shape: flipping a checkbox two lines above an untouched
++        // bare clause must not convict the author of writing it. Without this,
++        // the gate is estate-scoped in everything but name.
++        expect(bareClausesIn(withContext)).toEqual([]);
++    });
++
++    it('attributes each hit to its own file across a multi-file patch', () => {
++        const two = [
++            patch('agents/roadmaps/road-to-a.md', '      verify: `npx vitest run a`'),
++            patch('agents/roadmaps/road-to-b.md', '      verify: `npx vitest run b` -> 0'),
++            patch('agents/roadmaps/road-to-c.md', '      verify: `npx vitest run c`'),
++        ].join('\n');
++        expect(bareClausesIn(two).map((h) => h.file)).toEqual(['agents/roadmaps/road-to-a.md', 'agents/roadmaps/road-to-c.md']);
++    });
++});
++
++describe('check_verify_expectation_delta — the pointer carve-out', () => {
++    it('treats a single-token file path as a pointer, not a command', () => {
++        // Measured: 8 of the 49 bare clauses over thirty merges are these. The
++        // eight literal values are kept so a narrowing of the extension list is
++        // a failing test rather than a silent re-widening of the gate.
++        for (const p of [
++            'tests/scripts/block_plumbing_writes.test.ts',
++            'tests/scripts/dispatch_integrity.test.ts',
++            'tests/scripts/hooks/dispatch_hook.test.ts',
++            'tests/eval/routing-matrix/README.md',
++            'tests/scripts/verification_evidence.test.ts',
++            'turn_end_gate_hook.test.ts:1427',
++            'docs/CLAIMS.md',
++            'ONBOARDING.md',
++        ]) {
++            expect(isPointer(p), p).toBe(true);
++        }
++    });
++
++    it('treats anything with a space as a command, however weak its exit status', () => {
++        // The carve-out is about SHAPE, not about whether the author picked a
++        // command that can fail. `cat docs/CLAIMS.md` is asked for an oracle
++        // precisely because `-> 0` on it would be the vacuous expectation the
++        // refusal message warns about — the author has to choose a regex.
++        expect(isPointer('cat docs/CLAIMS.md')).toBe(false);
++        expect(isPointer('npx vitest run tests/scripts/dispatch_integrity.test.ts')).toBe(false);
++        expect(isPointer('./scripts-run src/scripts/check_claims')).toBe(false);
++        // A bare script name with no extension is not a pointer either: it runs.
++        expect(isPointer('check_claims')).toBe(false);
++    });
++});
++
++describe('check_verify_expectation_delta — the grammar is single-sourced', () => {
++    it('re-exports the parser module constant rather than carrying a copy', () => {
++        expect(VERIFY_ARROW_SOURCE).toBe(GRAMMAR_SOURCE);
++    });
++
++    it('contains no second arrow regex in its own source', () => {
++        // The drift this pins: a gate that re-derived `->` would keep passing
++        // its own tests while silently disagreeing with the parser about what an
++        // expectation is, so a conforming clause would be refused and nobody
++        // would learn why. Same guard the parser module asks for by name.
++        const src = fs.readFileSync(path.join(REPO_ROOT, 'src/scripts/check_verify_expectation_delta.ts'), 'utf-8');
++        const body = src.replace(/^[\s\S]*?\n \*\/\n/, '');
++        expect(body).not.toMatch(/\(\?:->\|→\)/);
++    });
++});

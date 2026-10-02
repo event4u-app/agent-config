@@ -24,6 +24,7 @@ import * as path from 'node:path';
 import { REPO_ROOT } from '../release_env.js';
 import { die, run, type RunResult } from '../release_publication.js';
 import {
+    BREAKING_INDEX_PATH,
     MIGRATION_PATH as MAJOR_MIGRATION_PATH,
     pendingMajorFinding,
 } from '../lint_major_migration_sections.js';
@@ -148,8 +149,15 @@ export function assert_scheduled_deprecations_clear(
  * real run will refuse and returns, because `--dry-run exits 0` is a contract
  * this file's own tests assert.
  *
+ * A major owes TWO records and this seam reads both: the migration section and
+ * the by-major row in `BREAKING_CHANGES.md`. Checking only the first at cut
+ * time while the lint checks both would let a cut create the exact state the
+ * lint then reds `main` over — the gate arriving one merge too late, which is
+ * the shape `pendingMajorFinding` exists to avoid in the first place.
+ *
  * @param migrationReader Seam for the file read, so a test can drive the
  * refusal without mutating a tracked file.
+ * @param indexReader The same seam for the breaking-changes index.
  */
 export function assert_major_migration_section(
     target: string,
@@ -157,18 +165,23 @@ export function assert_major_migration_section(
     opts: { previewOnly?: boolean } = {},
     migrationReader: () => string = () =>
         fs.readFileSync(path.join(REPO_ROOT, MAJOR_MIGRATION_PATH), 'utf-8'),
+    indexReader: () => string = () =>
+        fs.readFileSync(path.join(REPO_ROOT, BREAKING_INDEX_PATH), 'utf-8'),
 ): void {
     let migration: string;
+    let index: string;
     try {
         migration = migrationReader();
+        index = indexReader();
     } catch (exc) {
         die(
-            `refusing the ${target} cut: cannot read ${MAJOR_MIGRATION_PATH} ` +
+            `refusing the ${target} cut: cannot read ${MAJOR_MIGRATION_PATH} or ` +
+                `${BREAKING_INDEX_PATH} ` +
                 `(${exc instanceof Error ? exc.message : String(exc)}). That is an environment ` +
                 'failure, not a finding — fix the checkout, then re-run.',
         );
     }
-    const finding = pendingMajorFinding(target, changelog_entry, migration);
+    const finding = pendingMajorFinding(target, changelog_entry, migration, index);
     if (finding === null) {
         return;
     }
@@ -180,5 +193,8 @@ export function assert_major_migration_section(
         );
         return;
     }
-    die(`refusing the ${target} cut: ${MAJOR_MIGRATION_PATH} has no section for ${target}.`);
+    die(
+        `refusing the ${target} cut: ${MAJOR_MIGRATION_PATH} or ${BREAKING_INDEX_PATH} ` +
+            `does not name ${target}.`,
+    );
 }

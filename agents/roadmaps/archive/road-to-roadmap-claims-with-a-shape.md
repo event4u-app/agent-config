@@ -45,30 +45,30 @@ Reproduced on 2026-10-01:
 
 ## Phase 1 — An exemption names what it rejected
 
-- [ ] **1.1 Measure the exemption population first.** Over every
+- [x] **1.1 Measure the exemption population first.** Over every
       `estate_offset_exempt` in the active, later and archived trees, count how
       many name at least one rejected alternative (archive, park, merge into an
       existing roadmap) and how many repeat another file's reason verbatim.
       Written to `agents/evidence/analysis/estate-exemption-shape-<date>.md`.
       verify: `grep -c 'rejected alternative' agents/evidence/analysis/estate-exemption-shape-*.md` -> /^[1-9]/
-- [ ] **1.2 Require the shape on added files only.** `exemptionReason` refuses a
+- [x] **1.2 Require the shape on added files only.** `exemptionReason` refuses a
       reason that names none of archive, park or merge, and a reason identical
       to another added file's in the same diff. Grandfathered: existing files are
       never re-read. Fixture first, seen red on the current accept-anything path.
       verify: `npx vitest run tests/scripts/check_estate_count.test.ts -t shape` -> 0
-- [ ] **1.3 Report drafts beside the count.** The estate output prints a
+- [x] **1.3 Report drafts beside the count.** The estate output prints a
       `draft_roadmaps` line. Reported, not gated: a draft is not active work, but a
       reader of the count should see how many exist.
       verify: `./scripts-run src/scripts/check_estate_count` -> /draft_roadmaps/
 
 ## Phase 2 — A changed verify line can fail
 
-- [ ] **2.1 Measure the false-positive cost on real diffs.** Replay the last
+- [x] **2.1 Measure the false-positive cost on real diffs.** Replay the last
       thirty merged diffs that touched `agents/roadmaps/*.md` and count the added
       or changed `verify:` lines that name a command without an expectation, and
       how many of those could have carried `-> 0` without loss.
       verify: `grep -c 'replayed' agents/evidence/analysis/verify-expectation-replay-*.md` -> /^[1-9]/
-- [ ] **2.2 Ratchet changed lines, never the estate.** A diff-scoped check fails
+- [x] **2.2 Ratchet changed lines, never the estate.** A diff-scoped check fails
       an added or changed `verify:` line that names a command and no expectation,
       reusing `VERIFY_ARROW_SOURCE` rather than a second regex. Prose clauses stay
       legal. Seen red on a fixture diff, with a gate-coverage row and a self-test.
@@ -76,7 +76,7 @@ Reproduced on 2026-10-01:
 
 ## Phase 3 — The arrival count is read where it matters
 
-- [ ] **3.1 Give the arrival check a caller.** Run
+- [x] **3.1 Give the arrival check a caller.** Run
       `check_held_object_arrivals` in the consistency workflow, advisory first,
       printing the objects it names; `--enforce` only after one green run on
       `main`.
@@ -111,9 +111,9 @@ Reproduced on 2026-10-01:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — An added roadmap whose exemption names no rejected alternative, or
+- [x] AC-1 — An added roadmap whose exemption names no rejected alternative, or
       repeats another added file's, fails the estate gate.
-- [ ] AC-2 — The estate report prints the number of draft roadmaps.
-- [ ] AC-3 — A diff adding a command-bearing `verify:` line without an
+- [x] AC-2 — The estate report prints the number of draft roadmaps.
+- [x] AC-3 — A diff adding a command-bearing `verify:` line without an
       expectation fails a check, and prose clauses still pass.
-- [ ] AC-4 — `check_held_object_arrivals` runs in a pull-request workflow.
+- [x] AC-4 — `check_held_object_arrivals` runs in a pull-request workflow.

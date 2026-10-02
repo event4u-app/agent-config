@@ -75,7 +75,14 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // side. The freeze artefact records it and scopes AC-6's ordering
         // claim to the 18 rows sealed on 2026-08-30; the 19th row predates
         // nothing and carries no such claim.
-        expect(sealed.length).toBe(19);
+        //
+        // 19 -> 22 on 2026-10-01 (second growth of the day): three of the four
+        // corpora road-to-a-trunk-whose-own-gates-are-green authored hash below
+        // the ceiling — `review-routing` and `skill-improvement-pipeline` at
+        // 0x29 = 41, `tailwind-engineer` at 0x2e = 46. The ordering claim stays
+        // scoped to the original 18 for the reason the 19th row already
+        // established: a row authored today predates nothing.
+        expect(sealed.length).toBe(22);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -120,9 +127,19 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // scopes AC-6's ordering claim to the original 18 rather than letting
         // a 19-row holdout inherit a claim only 18 rows support. The train
         // count is unchanged at 84.
+        //
+        // 103 -> 107 on 2026-10-01 (second growth of the day): four corpora
+        // authored under road-to-a-trunk-whose-own-gates-are-green, again for
+        // the touched-skill reason. The partition split them without anyone
+        // choosing — `review-routing` 41, `skill-improvement-pipeline` 41 and
+        // `tailwind-engineer` 46 fall below the ceiling and seal;
+        // `design-system-capture` at 0x90 = 144 does not. So the holdout moves
+        // 19 -> 22 and the train count moves 84 -> 85, and BOTH train-side
+        // published measurements are re-taken in the same change, which a
+        // holdout-only growth does not owe.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(103);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(19);
+        expect(all.length).toBe(107);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(22);
     });
 });
 
@@ -132,8 +149,12 @@ describe('5.1 — the measurement is non-vacuous', () => {
         const cases = loadTrainCases(REPO);
         expect(cases.length).toBeGreaterThan(500);
         // 82 -> 83 -> 84: `roadmap-writing`, then `ui-component-architect`,
-        // both on the train partition (see above).
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(84);
+        // both on the train partition (see above). 84 -> 85 on 2026-10-01:
+        // `design-system-capture`, the one of that day's four corpora whose
+        // name hashes above the ceiling. The other three sealed and are
+        // deliberately NOT counted here — that they are absent from this number
+        // is the seal working.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(85);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

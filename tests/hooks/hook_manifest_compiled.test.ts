@@ -82,15 +82,67 @@ describe("precompiled hook manifest", () => {
     // so on a fresh checkout the optimisation was a coin flip: same commit,
     // p95 129 ms on the PR and 186 ms on the trunk.
     const yamlText = "schema_version: 1\nvalue: from_yaml\n";
+    const body = { value: "from_json" };
     const { dir, y } = pair(
       yamlText,
-      { fingerprint: _manifest_fingerprint(yamlText), manifest: { value: "from_json" } },
+      {
+        fingerprint: _manifest_fingerprint(yamlText),
+        // road-to-blocking-severities 2.3 made the body label mandatory for a
+        // servable compiled file. This fixture is about mtime-versus-content
+        // freshness, not about label count, so it now carries both — the
+        // property under test is unchanged.
+        body_fingerprint: _manifest_fingerprint(JSON.stringify(body)),
+        manifest: body,
+      },
       { yamlLast: true },
     );
     try {
       // The compiled sibling is two minutes OLDER and must still be used,
       // because its fingerprint matches the source it was compiled from.
       expect(_load_yaml(y)["value"]).toBe("from_json");
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  /**
+   * road-to-blocking-severities 2.3 — the body, not only its label.
+   *
+   * This is the manifest half, and it is the half with the larger blast
+   * radius: `hook_manifest.json` decides which concern runs on which slot on
+   * which host, and the dispatcher prefers it to the YAML on every single
+   * dispatch. An edited `manifest` body with an untouched `fingerprint` still
+   * matched the source label and was served, so a concern could be unbound for
+   * every host while the reviewed YAML beside it still listed it.
+   */
+  it("ignores a compiled sibling whose BODY was edited and whose source label was not", () => {
+    const yamlText = "schema_version: 1\nvalue: from_yaml\n";
+    const honest = { value: "from_json" };
+    const { dir, y } = pair(yamlText, {
+      fingerprint: _manifest_fingerprint(yamlText),
+      // The label of the body that WAS compiled …
+      body_fingerprint: _manifest_fingerprint(JSON.stringify(honest)),
+      // … and a different body underneath it.
+      manifest: { value: "tampered" },
+    });
+    try {
+      expect(_load_yaml(y)["value"]).toBe("from_yaml");
+    } finally {
+      fs.rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("ignores a compiled sibling carrying no body label — absent is not optional", () => {
+    // A file written before 2.3. Falling through is slow and correct; accepting
+    // it would make the body check skippable by omission, which is the one way
+    // an integrity check fails without anyone noticing.
+    const yamlText = "schema_version: 1\nvalue: from_yaml\n";
+    const { dir, y } = pair(yamlText, {
+      fingerprint: _manifest_fingerprint(yamlText),
+      manifest: { value: "from_json" },
+    });
+    try {
+      expect(_load_yaml(y)["value"]).toBe("from_yaml");
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });
     }

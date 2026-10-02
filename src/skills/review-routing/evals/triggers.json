@@ -1,0 +1,38 @@
+{
+    "skill": "review-routing",
+    "last_eval": "2026-10-01",
+    "description": "3 positives (1 de) + 2 near-misses + 1 counterexample. Positives are the three things this skill resolves: who should review, what the PR description should say about risk, and which historical bug patterns the touched paths match. The near-misses are the two surfaces one step either side — performing the review itself, and opening the PR — both of which name reviewers and PRs without asking who should be routed where. The counterexample guards the bare word 'review' outside code.",
+    "queries": [
+        {
+            "q": "who should review this PR? it touches the billing and tenant paths",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "write the risk section of the PR description for these changed files",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "wer sollte sich diesen Branch ansehen, und wie riskant ist er?",
+            "trigger": true,
+            "language": "de",
+            "class": "exemplar"
+        },
+        {
+            "q": "review this diff and tell me what is wrong with it",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "open the pull request against main",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "review our vendor contract before we sign it",
+            "trigger": false,
+            "class": "counterexample"
+        }
+    ]
+}

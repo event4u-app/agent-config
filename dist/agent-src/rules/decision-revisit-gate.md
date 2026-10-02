@@ -84,11 +84,11 @@ measurably unreachable: `decision-review` ships `install.default: false` in the
 non-default `analysis-workbench` pack, so a pack-legal install received the
 obligation and not the procedure. `routes_to` now names two always-on skills;
 the backward-audit depth in
-[`decision-review`](../skills/decision-review/SKILL.md) stays optional.
+`decision-review` stays optional.
 
 Full catalog (honest nulls, don't-relitigate notes, budget-canon lines, ADRs,
 hard structural caps), the per-step detail, when-NOT-to-fire and the failure
-modes remain in [`skill:decision-review` § Decision-revisit gate — mechanics](../skills/decision-review/SKILL.md).
+modes remain in `skill:decision-review` § Decision-revisit gate — mechanics.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## Reading a lock — the two descriptive axes
@@ -164,7 +164,7 @@ precedent-creates-no-authority clause: [`adr-layout § Reopen authority`](../doc
 - [`recurring-criticism`](recurring-criticism.md) — the **other entrance**: this
   rule fires when a lock blocks a change, that one when the same criticism arrives
   again. It reuses the five steps and the owner-reserved table above.
-- [`decision-review`](../skills/decision-review/SKILL.md) — the backward-audit
+- `decision-review` — the backward-audit
   procedure + the migrated gate mechanics.
 - [`ai-council`](../skills/ai-council/SKILL.md) — the re-evaluation mechanism;
   owns the convergence-summary scope + `revisit-if` contract.
