@@ -10982,7 +10982,24 @@ function resolveTable(yamlText, compiledText) {
     try {
       const raw = JSON.parse(compiledText);
       const table = raw["table"];
-      if (raw["fingerprint"] === tableFingerprint(yamlText) && typeof table === "object" && table !== null) {
+      if (raw["fingerprint"] === tableFingerprint(yamlText) && typeof table === "object" && table !== null && // road-to-blocking-severities 2.3 — the BODY, not only its
+      // label. `fingerprint` above says the file was compiled from
+      // the YAML as it stands; it says nothing about whether the
+      // body underneath was edited afterwards, and an edited body
+      // with an untouched label was served. `body_fingerprint` is
+      // the fingerprint of the exact bytes the compiler emitted, so
+      // re-stringifying what we just parsed recovers them.
+      //
+      // A compiled file WITHOUT the field — one written before 2.3 —
+      // falls through here, which is slow and correct: accepting it
+      // would make the check optional and therefore absent.
+      //
+      // What it covers is a partial edit, never an author: anyone
+      // who edits the body can recompute this as easily as the
+      // compiler. The deny in `block_plumbing_writes` and the
+      // ratification record are the mechanisms aimed at an author;
+      // this one is aimed at a mistake.
+      raw["body_fingerprint"] === tableFingerprint(JSON.stringify(table))) {
         return _structure(table);
       }
     } catch {

@@ -79,12 +79,44 @@ const TABLES = {
 
 export type TableName = keyof typeof TABLES;
 
+/**
+ * The TWO labels a compiled table carries, and why one was not enough.
+ *
+ * `fingerprint` binds the file to its YAML SOURCE — it answers "is this
+ * compiled from the YAML as it stands". `body_fingerprint` binds the file to
+ * ITSELF: it is the fingerprint of the exact body bytes this writer emitted,
+ * and it answers "is the body a reader is about to serve the body that was
+ * compiled".
+ *
+ * road-to-blocking-severities 2.3. The source label alone left a real hole,
+ * and it is the one the roadmap measured: edit a cell of the compiled `table`
+ * and leave `fingerprint` alone, and it still equals the YAML's fingerprint,
+ * so the reader serves the edited body — and since both readers prefer the
+ * compiled form, the edited cell is what every host is told while the reviewed
+ * YAML beside it says something else.
+ *
+ * WHAT THIS DOES NOT CLAIM. Someone who edits the body can recompute this
+ * label as easily as the writer does; it is an integrity check against a
+ * PARTIAL edit — a hand edit, a bad merge, a truncated write — not a signature.
+ * That is the same honesty the source label already owed: neither resists an
+ * author, and resisting an author is what the tool-call deny (2.2) and the
+ * ratification record (2.1) are for. Three cheap mechanisms over one expensive
+ * one, each named for what it actually covers.
+ *
+ * The body text is `JSON.stringify` of the parsed document, which is exactly
+ * what lands in the file, so a reader recovers it by re-stringifying what it
+ * parsed. A test pins that round trip rather than assuming it.
+ */
 export function compile(yamlText: string, table: TableName = 'manifest'): string {
     const spec = TABLES[table];
     const doc = (spec.yamlVersion === undefined
         ? parseYaml(yamlText)
         : parseYaml(yamlText, { version: spec.yamlVersion })) as unknown;
-    return JSON.stringify({ fingerprint: tableFingerprint(yamlText), [spec.key]: doc });
+    return JSON.stringify({
+        fingerprint: tableFingerprint(yamlText),
+        body_fingerprint: tableFingerprint(JSON.stringify(doc)),
+        [spec.key]: doc,
+    });
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
