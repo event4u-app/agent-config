@@ -1056,8 +1056,18 @@ execution either way.
 
 ### 6a. Deferred-resolution gate — Iron Law 3
 
-Before any `git mv` to `archive/`, count `[~]` items in the closing
-roadmap. If `count_deferred > 0`, archival is **blocked** per
+**Default: the sweep resolves it.** `archive_completed_roadmaps --all` carries
+every bare `[~]` step, plus every open blocker such a step names, into a
+`<slug>-carried` follow-up created in the same change (`deferral_carry.ts`),
+annotates the parent `carried-to=<slug>`, and archives — the "carry item +
+blocker" council row below, executed deterministically, so a finished
+`/roadmap:process-full` run ends archived instead of parked at 100 %. The
+manual flow below applies only to what the sweep refuses: an open blocker no
+deferred step names, a hand-written annotation that fails validation, or a run
+with `--no-carry`.
+
+Before any `git mv` to `archive/` the sweep refused, count `[~]` items in the
+closing roadmap. If `count_deferred > 0`, archival is **blocked** per
 [`roadmap-progress-sync § Iron Law 3`](../../rules/roadmap-progress-sync.md).
 The loop MUST:
 
