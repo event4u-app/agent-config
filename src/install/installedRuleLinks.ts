@@ -121,7 +121,12 @@ export function auditLink(
     // The `''` key exists in the plan precisely for this and could never be
     // reached by a first-segment lookup.
     const rootSource = plan.get('');
-    const useRoot = rootSource !== undefined && !plan.has(segments[0] as string);
+    // The root entry answers for a BARE filename only. A link with a directory
+    // segment the plan does not carry is `directory-not-deployed`, the same as
+    // anywhere else — resolving it against the rules source would probe a path
+    // the install never writes and report `file-missing`, whose documented
+    // meaning ("the directory IS deployed") would then be false.
+    const useRoot = rootSource !== undefined && segments.length === 1;
     const source = useRoot ? rootSource : plan.get(segments[0] as string);
     const rest = useRoot ? segments : segments.slice(1);
     if (source === undefined) {

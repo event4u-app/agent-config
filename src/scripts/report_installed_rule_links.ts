@@ -124,7 +124,16 @@ export function main(): number {
             `  ${r.host}: ${String(r.links)} link(s), ${String(r.resolved)} resolved, ${String(r.unresolved)} unresolved\n`,
         );
         if (r.unresolved > 0) {
-            process.stdout.write(`      rewrite option: +${String(r.rewrite_cost_chars)} standing characters\n`);
+            // Priced over EVERY unresolved link, including the ones a rewrite
+            // to an absolute package path cannot reach either (a target the
+            // projection does not ship). Comparing it against a deploy option
+            // that repairs only a subset overstates the rewrite; the caveat is
+            // printed rather than left for the reader to rediscover.
+            process.stdout.write(
+                `      rewrite option: +${String(r.rewrite_cost_chars)} standing characters ` +
+                    `(all ${String(r.unresolved)} unresolved; a like-for-like figure prices only ` +
+                    `the subset the option being compared against repairs)\n`,
+            );
             for (const d of r.by_directory) {
                 process.stdout.write(`      ${String(d.count).padStart(4)}  ${d.directory}  (${d.verdict})\n`);
             }

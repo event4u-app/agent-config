@@ -263,8 +263,10 @@ export function _claude_paths_plan(meta) {
     }
     const globs = [];
     const dropped = [];
-    // A rule that ALSO declares keyword / phrase triggers gets no `paths:` at
-    // all, and therefore keeps loading unconditionally on Claude Code.
+    // A rule that ALSO declares a non-path trigger — keyword, phrase, command,
+    // or a match key added to the schema later — gets no `paths:` at all, and
+    // therefore keeps loading unconditionally on Claude Code. The predicate is
+    // a negation of the two path-shaped keys, deliberately: see its docblock.
     //
     // Emitting `paths:` here would narrow the rule to a path match and discard
     // every keyword the author wrote, because this host reads the list as the

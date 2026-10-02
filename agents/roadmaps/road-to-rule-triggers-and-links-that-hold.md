@@ -299,9 +299,12 @@ Reproduced on 2026-10-01:
      package; no install has ever held them, and none ever will. Code spans
      are the only repair.
   3. **2 one-off targets.** `scripts/hooks/evidence_independence.ts` is not in
-     the projection either; the single `templates/` link would cost 1.7 MB of
-     deployed files to resolve, which fails the same standing-cost test D4
-     applied to the other directories.
+     the projection either, so nothing can resolve it. The single `templates/`
+     link could be resolved by deploying that directory — 1.7 MB for ONE link,
+     against 1.6 MB for the 113 the ABI blocker covers. Note what the test is
+     here, because D4's is not it: D4 decided on standing CHARACTERS, where
+     deploying scores 0 whatever the directory. This one turns on MB per link
+     resolved, which is a different criterion and is stated as one.
   All three are authoring changes in rule prose, which this roadmap's "What
   this roadmap deliberately does not do" keeps out of scope and which
   `src/rules/` size budgets make a per-rule review rather than a sweep. Run
@@ -323,10 +326,15 @@ Reproduced on 2026-10-01:
   is standing rather than compounding, and nothing else on this roadmap waits
   on it.
 - **Resolved when:** `./scripts-run src/scripts/report_installed_rule_links`
-  reports no `docs`-directory row and no `outside-install-root` row for
-  `claude-code` — i.e. the 47 are gone independently of whether the ABI
-  blocker has closed the other 113 — and the ratchet baseline in
-  `tests/scripts/install_rule_links.test.ts` has been lowered to match.
+  reports, for `claude-code`, no `docs` row, no `outside-install-root` row,
+  **and** no `scripts` or `templates` row — i.e. all 47 are gone,
+  independently of whether the ABI blocker has closed the other 113 — and the
+  ratchet baseline in `tests/scripts/install_rule_links.test.ts` has been
+  lowered to match. The last two rows are named explicitly because the first
+  two conditions cover only 45: group 3's one-offs are
+  `directory-not-deployed` rows, so a condition phrased on `docs` and the
+  climb-outs alone would let this blocker close with 2 links still dead, and
+  AC-2 would stay false with every blocker on the roadmap shut.
 
 ## Decisions
 
