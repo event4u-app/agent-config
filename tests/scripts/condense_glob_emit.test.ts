@@ -371,15 +371,18 @@ describe("_has_non_path_trigger — a negation, not a list of kinds", () => {
   });
 
   it("leaves a mixed path + command rule unconditional, and says which pattern it dropped", () => {
+    // `roadmap-progress-sync`'s own trigger set, verbatim — the rule this
+    // predicate was getting wrong.
+    const prefix = "agents/roadmaps/"; // code-comment-allow provenance-comment -- fixture data, not where the code came from
     const plan = _claude_paths_plan({
       triggers: [
-        { path_prefix: "agents/roadmaps/" },
+        { path_prefix: prefix },
         { command: "/roadmap:process-step" },
         { command: "/roadmap:process-phase" },
       ],
     });
     expect(plan.globs).toEqual([]);
-    expect(plan.dropped).toEqual([{ pattern: "agents/roadmaps/**", reason: "mixed-triggers" }]);
+    expect(plan.dropped).toEqual([{ pattern: `${prefix}**`, reason: "mixed-triggers" }]);
   });
 
   it("counts a match key the predicate has never heard of", () => {
