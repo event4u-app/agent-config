@@ -234,3 +234,20 @@ When a test fails, do not retry blindly with tweaked assertions until something 
 ## Clarification guard — ambiguous contract → ask
 
 If the endpoint contract is ambiguous (unclear status code, optional fields, error envelope shape), do not assume. Ask the user or check the OpenAPI spec / route definition before writing assertions — never guess the response shape from the route name.
+
+## The HTTP-assertion idiom, per ecosystem
+
+The examples above are Laravel's. The *shape* they teach — assert the status,
+then the body contract, then the side effect, and keep one behaviour per test —
+transfers unchanged; the API does not. Resolve the runner with
+`resolve_toolchain` and read its `ecosystems`:
+
+| `ecosystems` | Request + assertion surface |
+|---|---|
+| `php` | `$this->getJson(...)` / `assertStatus` / `assertJsonPath` |
+| `js` | `supertest` or the framework's own test client, with `expect(res.status)` |
+| `python` | `httpx.AsyncClient` / framework `TestClient`; `assert res.status_code` |
+| `go` | `httptest.NewServer` + `net/http`, or the router's own `ServeHTTP` |
+
+Whatever the surface, the negative tests are not optional: unauthenticated,
+not-owner and cross-tenant each get their own case, per `broken-access-control`.

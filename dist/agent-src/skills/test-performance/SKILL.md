@@ -175,3 +175,21 @@ Replace dynamic `getPdo()` probing with explicit config:
 - Do NOT run full test suite on every code change — use `--filter`.
 - Do NOT add test-only indexes — fix test design instead.
 - Do NOT disable parallel testing to "fix" flaky tests — fix the root cause.
+
+## Where the time goes, per ecosystem
+
+The diagnosis above is PHPUnit-shaped. The method — measure before optimising,
+find the slowest tests first, separate setup cost from assertion cost —
+transfers; the instrument does not. Resolve the runner with
+`resolve_toolchain` and read its `ecosystems`:
+
+| `ecosystems` | Slowest-test instrument | The usual first cause |
+|---|---|---|
+| `php` | `--profile` / Pest's duration column | database refresh per test |
+| `js` | `vitest --reporter=verbose`, `jest --detectOpenHandles` | module transform and a leaked handle |
+| `python` | `pytest --durations=20` | session-scoped fixtures rebuilt per test |
+| `go` | `go test -v`, `-cpuprofile`, `-race` for the slow-and-flaky pair | a `TestMain` that starts real I/O |
+
+`go test` caches a package's result until its inputs change, so a suite that
+looks fast on the second run may not have run at all — `-count=1` defeats the
+cache when you are measuring.
