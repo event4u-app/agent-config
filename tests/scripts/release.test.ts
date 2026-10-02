@@ -1191,15 +1191,36 @@ describe('assert_major_migration_section', () => {
         expect(written.join('')).toContain('17.0.0');
     });
 
-    it('lets the same cut through once the section exists', () => {
+    /** A breaking-changes index naming exactly these majors. */
+    const index = (versions: readonly string[]): string =>
+        ['| Version |', '|---|', ...versions.map((v) => `| **${v}** | d | b | m |`)].join('\n');
+
+    it('lets the same cut through once the section AND the index row exist', () => {
         expect(() =>
             assert_major_migration_section(
                 '17.0.0',
                 breaking('17.0.0'),
                 {},
                 () => '# Migration\n\n## 17.0.0 — what to do\n',
+                () => index(['17.0.0']),
             ),
         ).not.toThrow();
+    });
+
+    it('refuses a major cut whose index row is missing, section or no section', () => {
+        // The index half of the same seam. A cut that satisfies MIGRATION.md
+        // and leaves the by-major table short would create exactly the state
+        // `lint_major_migration_sections` then reds `main` over — the gate
+        // arriving one merge too late.
+        expect(() =>
+            assert_major_migration_section(
+                '17.0.0',
+                breaking('17.0.0'),
+                {},
+                () => '# Migration\n\n## 17.0.0 — what to do\n',
+                () => index([]),
+            ),
+        ).toThrow(SystemExitError);
     });
 
     it('does not fire on a minor or patch target', () => {
@@ -1224,7 +1245,10 @@ describe('assert_major_migration_section', () => {
         ).not.toThrow();
     });
 
-    it('the real tree clears its own current major', () => {
+    it('the real tree clears its own current major on BOTH records', () => {
+        // Both readers default to the tracked files, so this case fails if
+        // either `docs/MIGRATION.md` or `BREAKING_CHANGES.md` stops naming
+        // 16.0.0 — which is the pair the gate actually guards.
         const migration = fs.readFileSync(path.join(REPO_ROOT, 'docs', 'MIGRATION.md'), 'utf8');
         expect(() =>
             assert_major_migration_section('16.0.0', breaking('16.0.0'), {}, () => migration),
