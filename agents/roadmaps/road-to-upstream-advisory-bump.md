@@ -114,28 +114,94 @@ the point of not leaving the door ajar in the goal.
 
 ## Phase 2 — Close it
 
-- [ ] **2.1 Apply the smallest bump that clears the audit.**
+- [x] **2.1 Apply the smallest bump that clears the audit.**
       `npm audit fix` reports a fix is available for both. Prefer the
       narrowest change that clears `--audit-level=high`; a major bump of
       either package is a separate decision and is not taken under this
       step.
       verify: `npm audit --omit=dev --audit-level=high` exits 0.
 
-- [ ] **2.2 Prove the bump did not break the suite.**
+      **This branch applies no lockfile change, because the smallest bump
+      that clears the audit was already in the tree when the step ran.**
+      `e51a1dfda` ("A reader for the shadow corpus...", PR #2142, merged to
+      `main` 2026-10-01 — the same day this plan was written) carried
+      fastify `5.12.1 -> 5.12.5` and hono `4.13.5 -> 4.13.12`. Both are
+      inside the declared `^5.11.0` range, neither is a major, and
+      `package.json` is untouched — exactly the shape this step asked for.
+      Confirmed an ancestor of `origin/main` with `merge-base
+      --is-ancestor`.
+
+      Fixed-version floors from the report: fastify `>=5.12.5`, hono
+      `>=4.13.7`. `main` sits at or above both.
+
+      **RED to GREEN, measured rather than asserted.** Same command, same
+      flags, two lockfiles:
+
+      | lockfile | fastify / hono | exit |
+      |---|---|---|
+      | `1f442155a` (pre-bump) | 5.12.1 / 4.13.5 | **1** — 2 vulnerabilities (1 high, 1 moderate) |
+      | `origin/main` (this branch) | 5.12.5 / 4.13.12 | **0** — found 0 vulnerabilities |
+
+      Taking a further bump here would be churn against an already-clean
+      audit, so none is taken.
+
+- [x] **2.2 Prove the bump did not break the suite.**
       A lockfile change touches every consumer of the bumped package, so the
       evidence is the full suite rather than a targeted file.
       verify: the project's test suite green on the bumped lockfile, and
       `npx tsc --noEmit` clean.
 
+      **Evidence.** `npm run typecheck` (both projects — `tsconfig.json
+      --noEmit` and `tsconfig.scripts.json`) exits 0, and `npx tsc --noEmit`
+      alone exits 0. `npm run test:ts` (full `vitest run`, no filter):
+      **1617 of 1621 files passed, 25542 of 25573 tests passed**, 2 files
+      failed, 2 skipped.
+
+      Both failures are environment artifacts of running in a deep worktree,
+      not consequences of the lockfile, and neither sits anywhere near
+      fastify or hono:
+
+      - `tests/scripts/reach_doctor.test.ts:769` — the failure is the test's
+        own PREMISE line, `expect(confineCredentialPath(path.resolve(REPO,
+        TRAVERSAL))).toBe(false)`. `path.resolve` clamps at `/`, so a
+        checkout nested eight or more directories deep lands the fixture
+        back INSIDE a permitted root and the assertion stops testing
+        confinement at all. Known, and reproduced in both directions on
+        `origin/main` worktrees; CI checks out shallow and is green.
+      - `tests/scripts/tool_probe.test.ts` — "deadline exceeded ... exactly
+        one retry" saw 1 attempt instead of 2 under full-suite parallel
+        load. Re-run alone: **11 of 11 passed, exit 0.** A timing flake on a
+        deadline assertion, not a regression.
+
+      Neither file imports fastify or hono, and this branch changes no
+      dependency, so no lockfile edit could have produced either.
+
 ## Acceptance Criteria
 
-- [ ] AC-1 — `npm audit --omit=dev --audit-level=high` exits 0 in a clean
-      checkout of `main`.
+- [x] AC-1 — `npm audit --omit=dev --audit-level=high` exits 0 in a clean
+      checkout of `main`. **Met.** Run in a fresh worktree of `origin/main`
+      with no `node_modules` present: `found 0 vulnerabilities`, exit 0. The
+      same command on the pre-bump lockfile exits 1, so the command is
+      discriminating rather than vacuously quiet.
 - [ ] AC-2 — The Static Checks job's audit step is green on a PR built from
       that `main`.
-- [ ] AC-3 — Each advisory is recorded with its reachability verdict from
+- [x] AC-3 — Each advisory is recorded with its reachability verdict from
       step 1.2, so a future reader can tell whether this was a real exposure
-      or a transitive-dependency hygiene fix.
+      or a transitive-dependency hygiene fix. **Met**, and the verdict is
+      the same for all six:
+
+      | advisory | package | severity | reachable here? | why |
+      |---|---|---|---|---|
+      | GHSA-4mh8-r7rc-xpvc | fastify | high | no | HTTP/2 trailer responses; this server is HTTP/1.1 on 127.0.0.1 |
+      | GHSA-667r-xxjv-c9mm | fastify | high | no | needs a route `schema` with async validation; no route declares one |
+      | GHSA-p68q-wchp-6fh7 | fastify | high | no | needs an encapsulated not-found handler; none is registered |
+      | GHSA-hwr6-493r-vm6h | fastify | high | no | skipped boolean-`false` sub-schemas in fastify's JSON-schema path, which is never entered — validation is zod, in-handler |
+      | GHSA-9q9j-q6p8-xq58 | fastify | high | no | needs `schema.headers`; none is declared |
+      | GHSA-hxh3-vqpv-xpqv | hono | moderate | no | `hono/jsx` boundary components; `hono` has no import site here and the SDK never loads it |
+
+      **So this was transitive-dependency hygiene, not a closed exposure** —
+      recorded that way rather than implying an exposure that was never
+      there.
 
 ## Risk Register
 
