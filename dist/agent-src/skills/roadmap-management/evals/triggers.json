@@ -1,0 +1,63 @@
+{
+    "skill": "roadmap-management",
+    "last_eval": "2026-10-02",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-02 under fix/auto-carry-deferred-on-archive, which edited this skill's references/archival.md (the sweep now carries bare deferrals and asks the owner on owner blockers) and so brought it into check_routing_coverage's touched-skill scope. Exemplars cover the three verbs the description names — create, show, execute — plus archival and the German phrasing. Near-misses are the neighbours that share the word 'roadmap' and are someone else's job: authoring the content of a new roadmap (roadmap-writing), challenging one with the council (roadmap:ai-council), and turning a roadmap into tickets (emit-tickets). Counterexamples guard 'roadmap' as a product-strategy word and git branch management.",
+    "queries": [
+        {
+            "q": "show me the current roadmap and which phase we are in",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "execute the next phase of road-to-learning-you-can-see",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "this roadmap is at 100 percent — archive it",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "create a roadmap file for the settings migration with phases",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "zeig mir die offene Roadmap und archivier sie, wenn alles erledigt ist",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "write the phases, risk register and acceptance criteria for a new roadmap",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "authoring the content of a roadmap, not managing the file's lifecycle → roadmap-writing"
+        },
+        {
+            "q": "challenge this roadmap with the AI council before we start",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "a council review of the plan, not phase tracking → roadmap:ai-council"
+        },
+        {
+            "q": "turn the roadmap phases into Jira tickets",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "ticket emission from a plan → emit-tickets"
+        },
+        {
+            "q": "what should our product roadmap look like for next year?",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "'roadmap' as product strategy, no roadmap file involved"
+        },
+        {
+            "q": "delete the merged feature branches",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "git housekeeping that shares the 'archive / clean up' vocabulary"
+        }
+    ]
+}
