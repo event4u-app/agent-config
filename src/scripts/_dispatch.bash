@@ -241,7 +241,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              --all for every complete one; --dry-run to preview;
                              bare [~] steps are carried to a follow-up first,
                              --no-carry to leave them blocking; owner-blocked
-                             steps ask first, --owner-decision later parks them)
+                             steps ask first; --owner-decision later --only <x>
+                             parks that one roadmap)
   stubs:due                  Read-only: roadmap stubs past their `review_by:`
                              date, plus the decisions routed to the owner.
                              Writes nothing. Flags: --json, --counts,

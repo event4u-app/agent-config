@@ -183,6 +183,20 @@ describe('owner-dependent blockers — the owner decides, step by step', () => {
     });
 });
 
+describe('`--only` — the owner answers for one roadmap at a time', () => {
+    it('parks only the named roadmap; another owner-blocked roadmap keeps its question', () => {
+        const other = 'road-to-other';
+        const owned = parent('- [~] **1.2 later** <!-- blocked-by: owner-call -->\n', BLOCKER('owner-call', 'maintainer'));
+        const root = _repo({ [active('', SRC)]: owned, [active('', other)]: owned });
+        main(['--all', '--owner-decision', 'later', '--only', SRC, '--repo-root', root]);
+
+        expect(existsSync(join(root, archived(SRC)))).toBe(true);
+        expect(existsSync(join(root, `agents/roadmaps/later/${CHILD}.md`))).toBe(true);
+        expect(read(root, active('', other))).toBe(owned);
+        expect(existsSync(join(root, `agents/roadmaps/later/${other}-carried.md`))).toBe(false);
+    });
+});
+
 describe('planCarry', () => {
     it('puts a deferred acceptance criterion under the child`s acceptance criteria', () => {
         const text =

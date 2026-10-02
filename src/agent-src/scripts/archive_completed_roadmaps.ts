@@ -582,7 +582,7 @@ export function deferralProblems(
 /** Archive every complete active roadmap: no open steps, and every `[~]` resolved. */
 function archive_completed(
     root: string,
-    opts: { changed_only: boolean; base: string; dry_run: boolean; carry?: boolean; owner_decision?: OwnerDecision },
+    opts: { changed_only: boolean; base: string; dry_run: boolean; carry?: boolean; owner_decision?: OwnerDecision; only?: string | null },
 ): ArchiveRecord[] {
     const { changed_only, base, dry_run } = opts;
     const carry = opts.carry ?? true;
@@ -610,7 +610,12 @@ function archive_completed(
     );
 
     const archived: ArchiveRecord[] = [];
+    // `--only`: the owner's archive answer is about ONE roadmap. Without the
+    // filter, `--owner-decision later` would also park every other roadmap
+    // still waiting on its own, unasked owner question.
+    const only = opts.only ? opts.only.replace(/^.*\//, '').replace(/\.md$/, '') + '.md' : null;
     for (const stats of collect(roadmap_root)) {
+        if (only !== null && stats.rel !== only) continue;
         // `guarded-baseline` is INCOMPLETE by construction (council 2026-08-31,
         // 2/2 convergent) — checked BEFORE the open-step test on purpose. A
         // well-formed record keeps its box `[ ]` and would be skipped silently as
@@ -769,7 +774,7 @@ function _ownerDecisionBlock(rel: string, plan: CarryPlan): string {
         owner_blockers: plan.ownerBlockers,
         deferred_steps: plan.carried,
         park_to: park,
-        archive_command: './agent-config roadmap:archive --all --owner-decision later',
+        archive_command: `./agent-config roadmap:archive --all --owner-decision later --only ${rel}`,
         first_step: plan.firstStep,
     };
     return (
@@ -888,7 +893,7 @@ function _runTwin(root: string, script: string): void {
 const _PROG = 'archive_completed_roadmaps.py';
 
 function _usage(): string {
-    return `usage: ${_PROG} [-h] [--all] [--base BASE] [--dry-run] [--no-carry] [--owner-decision later] [--repo-root REPO_ROOT]\n`;
+    return `usage: ${_PROG} [-h] [--all] [--base BASE] [--dry-run] [--no-carry] [--owner-decision later] [--only ROADMAP] [--repo-root REPO_ROOT]\n`;
 }
 
 interface Args {
@@ -897,6 +902,7 @@ interface Args {
     dry_run: boolean;
     carry: boolean;
     owner_decision: OwnerDecision;
+    only: string | null;
     repo_root: string | null;
 }
 
@@ -906,6 +912,7 @@ function _parseArgs(argv: readonly string[]): Args {
     let dry_run = false;
     let carry = true;
     let owner_decision: OwnerDecision = 'ask';
+    let only: string | null = null;
     let repo_root: string | null = null;
     const emitError = (msg: string): never => {
         process.stderr.write(_usage());
@@ -927,6 +934,13 @@ function _parseArgs(argv: readonly string[]): Args {
         } else if (tok === '--no-carry') {
             carry = false;
             i += 1;
+        } else if (tok === '--only' || tok.startsWith('--only=')) {
+            const val = tok.includes('=') ? tok.slice(tok.indexOf('=') + 1) : argv[i + 1];
+            if (val === undefined || val === '') {
+                emitError('argument --only: expected one argument');
+            }
+            only = val as string;
+            i += tok.includes('=') ? 1 : 2;
         } else if (tok === '--owner-decision' || tok.startsWith('--owner-decision=')) {
             const val = tok.includes('=') ? tok.slice(tok.indexOf('=') + 1) : argv[i + 1];
             if (val !== 'later' && val !== 'ask') {
@@ -958,7 +972,7 @@ function _parseArgs(argv: readonly string[]): Args {
             emitError(`unrecognized arguments: ${tok}`);
         }
     }
-    return { all, base, dry_run, carry, owner_decision, repo_root };
+    return { all, base, dry_run, carry, owner_decision, only, repo_root };
 }
 
 function main(argv?: readonly string[]): number {
@@ -974,6 +988,7 @@ function main(argv?: readonly string[]): number {
         dry_run: ns.dry_run,
         carry: ns.carry,
         owner_decision: ns.owner_decision,
+        only: ns.only,
     });
     if (archived.length === 0) {
         process.stdout.write('  ℹ️  No completed roadmaps to archive.\n');

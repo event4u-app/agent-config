@@ -1072,14 +1072,14 @@ not `implementer` / `council` / `agent` / `ai`), the sweep writes nothing and
 prints a `❓` block plus one `OWNER-DECISION {json}` line. Put that decision to
 the owner as ONE numbered-options question, never resolve it yourself:
 
-1. **Archive it** — run `./agent-config roadmap:archive --all --owner-decision later`:
+1. **Archive it** — run the printed `archive_command` (`… --owner-decision later --only <roadmap>`):
    the parent archives, the steps and their blockers park in
    `later/<slug>-carried.md`.
 2. **Step by step** — show the FIRST step (`first_step`, verbatim) with its
    blocker's question, in the same message, so the owner can answer it or push
    it to later in one reply. An answer → do the step, flip it, show the next
    one. "Later" → leave that step `[~]` and show the next one. When no step is
-   left to show, re-run the sweep with `--owner-decision later`: what is still
+   left to show, run that `archive_command`: what is still
    deferred parks, the parent archives.
 
 A **subagent** never answers this and never passes `--owner-decision` itself: it
