@@ -65,8 +65,16 @@ import {
   owns_session_state,
 } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
+import { hookSectionValue } from "./_lib/hook_settings.js";
 import { isVerificationCommand, mightBeVerification } from "./_lib/verification_command.js";
+import {
+  advisoryLine,
+  runTouchedFileQuality,
+  touchedFilesAtStop,
+  type QualityRun,
+} from "./_lib/touched_file_quality.js";
 import { runnerOf } from "./_lib/verification_evidence.js";
+import { resolve_toolchain } from "../agent-src/templates/scripts/work_engine/stack/runner.js";
 
 // NOTE: the Python docstring says `agents/runtime/state/`, but the code
 // constant is `agents/state/`. Replicated verbatim — latent docstring/code
@@ -179,8 +187,85 @@ function _empty_state(): StateDict {
     // a reader must never have to distinguish "no runs yet" from "key absent".
     verification_runs: [],
     edits_this_turn: 0,
+    // NOTE — `quality_runs` and `quality_files_source` are deliberately ABSENT
+    // here, against the convention `verification_runs` above follows.
+    //
+    // That convention ("present in the empty state so a reader never has to tell
+    // 'no runs yet' from 'key absent'") is the right default and it loses to a
+    // stronger one: the roadmap's first acceptance criterion is that with
+    // `touched_file_quality: off` the record is BYTE-IDENTICAL to the base ref.
+    // Seeding two keys would break that for every install that never opted in,
+    // and "the default-off feature changed my state file" is exactly the kind of
+    // silent shape drift a consumer cannot audit. The convention's cost here is
+    // zero, because the only reader of these keys is 2.1's analysis, which counts
+    // stops — and a stop with no key is a stop where the pass did not run, which
+    // is a distinction it needs rather than one it must not make.
     checked_at: _now(),
   };
+}
+
+/** The three values `hooks.verify_before_complete.touched_file_quality` may take. */
+export type TouchedFileQualityMode = "off" | "shadow" | "warn";
+
+/**
+ * The configured mode, defaulting to `off`.
+ *
+ * FAIL-CLOSED ON THE FLAG, FAIL-OPEN ON THE READ, exactly as
+ * `hookSectionEnabled` does: an unreadable settings file, a missing key, or a
+ * value outside the enum all resolve to `off`. A typo must never turn a pass
+ * ON — `warn` emits a line the operator did not ask for, and `shadow` spawns
+ * processes, so an unrecognised string is the one case where guessing is
+ * strictly worse than doing nothing.
+ */
+export function readTouchedFileQualityMode(consumer_root: string): TouchedFileQualityMode {
+  const raw = hookSectionValue(consumer_root, "verify_before_complete", "touched_file_quality");
+  return raw === "shadow" || raw === "warn" ? raw : "off";
+}
+
+/**
+ * Run the shadow quality pass for this stop, or return nothing.
+ *
+ * Kept OUTSIDE the state lock on purpose. `update_json_under_lock` holds a lock
+ * around its mutator, and a mutator that spawns `tsc` would hold it for the
+ * whole typecheck — every concurrent concern writing this session's state would
+ * block behind a linter. The pass runs first, the result is handed to `_update`
+ * as data, and the lock stays as short as it was.
+ */
+export function collectTouchedFileQuality(
+  consumer_root: string,
+  session_id: string,
+): { runs: QualityRun[]; source: string } | null {
+  let touched: { files: readonly string[]; source: string };
+  try {
+    touched = touchedFilesAtStop(consumer_root, session_id);
+  } catch {
+    return null;
+  }
+  if (touched.files.length === 0) {
+    // Nothing to measure. Recorded as an empty run list with its source, not as
+    // silence: 2.1 counts "stops with edits" against "stops with at least one
+    // entry", and a stop that produced no entry has to be distinguishable from
+    // a stop where the pass never ran.
+    return { runs: [], source: touched.source };
+  }
+  let commands: readonly string[] = [];
+  try {
+    commands = resolve_toolchain(consumer_root).quality;
+  } catch {
+    commands = [];
+  }
+  try {
+    return {
+      runs: runTouchedFileQuality({
+        root: consumer_root,
+        commands,
+        files: touched.files,
+      }),
+      source: touched.source,
+    };
+  } catch {
+    return null;
+  }
 }
 
 
@@ -402,6 +487,21 @@ function _cap_runs(runs: unknown[]): unknown[] {
  */
 const _ERROR_EXIT_PREFIX = /^Error:\s*Exit code\s*(\d+)/i;
 
+/**
+ * The same statement without the `Error:` word, which is how the host words it
+ * on its FAILURE event.
+ *
+ * Measured 2026-10-01 on Claude Code 2.1.286: a failing `Bash` call fires
+ * `PostToolUseFailure`, whose envelope carries NO `tool_response` at all. The
+ * exit status is a top-level `error` string whose first line reads
+ * `Exit code N`, with the command's own diagnostics on the lines after it. The
+ * prefix above never matches that, so for as long as only the success event was
+ * bound this recorder could not have written a non-zero exit even once — which
+ * is exactly what 24 consecutive all-zero records on this host turned out to
+ * mean.
+ */
+const _BARE_EXIT_PREFIX = /^\s*Exit code\s*(\d+)/i;
+
 /** The status a post-tool payload actually reports, and HOW it reported it. */
 interface ExitReading {
   readonly code: number | null;
@@ -450,27 +550,91 @@ function _numeric_exit_field(obj: StateDict): number | null {
  * record path was inert — found by an independent review of the branch that
  * introduced it, against 1,077 real tool results.
  */
-function _extract_exit_reading(payload: StateDict): ExitReading {
+/**
+ * Did the HOST say this call failed, independently of anything in its text?
+ *
+ * Read from the native event name, which the host writes in two places and the
+ * agent in neither: `hook_event_name` inside the payload, and `native_event` on
+ * the dispatcher envelope. Either is authoritative; both are checked because a
+ * raw-payload invocation carries only the first and a synthesised envelope only
+ * the second.
+ *
+ * An explicit set of OBSERVED names, with a suffix match behind it as a declared
+ * fallback rather than as the primary rule. A reviewer called the suffix-only
+ * form a maintenance trap and was right about the direction: the set is what a
+ * reader checks against the manifest, and `PostToolUseFailure` is the one
+ * spelling this package has actually seen a host send.
+ *
+ * The fallback is kept, and keeping it is the deliberate half. A host whose
+ * failure event this tree has never observed is exactly the case where guessing
+ * wrong is cheapest in one direction and expensive in the other: a false
+ * positive costs a refusal to record a zero, a false negative costs a
+ * manufactured pass on a red run. So the set is the rule and the suffix is the
+ * safe default for a name nobody here has met yet.
+ */
+export const FAILURE_EVENT_NAMES: ReadonlySet<string> = new Set(["PostToolUseFailure"]);
+
+function _is_failure_event(payload: StateDict, envelope: StateDict): boolean {
+  for (const v of [payload["hook_event_name"], envelope["native_event"]]) {
+    if (typeof v !== "string" || v === "") continue;
+    if (FAILURE_EVENT_NAMES.has(v)) return true;
+    if (/failure$/i.test(v)) return true;
+  }
+  return false;
+}
+
+function _extract_exit_reading(payload: StateDict, failure_event = false): ExitReading {
+  // On an event the host itself named a FAILURE, a zero is never recorded —
+  // from any of the three readings. The host has already stated the call did not
+  // succeed, so a `0` arrived at by parsing its text would contradict the only
+  // authoritative thing in the envelope, and it would do so in the single most
+  // dangerous direction: manufacturing the strongest possible pass evidence out
+  // of a red run. `null` instead, which the classifier already treats as an
+  // instrument gap and never as a pass.
+  //
+  // Raised by an independent reviewer who asked what happens when a command's
+  // own error text begins `Exit code 0`. Nothing observed produces that, which
+  // is exactly why it is worth closing before something does.
+  const seal = (r: ExitReading): ExitReading =>
+    failure_event && r.code === 0 ? { code: null, source: null, interrupted: r.interrupted } : r;
+
   const direct = _numeric_exit_field(payload);
-  if (direct !== null) return { code: direct, source: "field", interrupted: false };
+  if (direct !== null) return seal({ code: direct, source: "field", interrupted: false });
+
+  // The FAILURE envelope, read before the success keys because it carries none
+  // of them: no `tool_response`, the status in a top-level `error` string, and
+  // the interrupt flag spelled `is_interrupt` rather than the nested
+  // `interrupted` below. Interruption is checked FIRST — a killed call is a
+  // statement about the kill and not a verdict on the work, so a host that
+  // sends both must not have its kill read as a failing exit.
+  const interrupted_top = payload["is_interrupt"] === true;
+  const err = payload["error"];
+  if (typeof err === "string") {
+    if (interrupted_top) return { code: null, source: null, interrupted: true };
+    const bare = _BARE_EXIT_PREFIX.exec(err) ?? _ERROR_EXIT_PREFIX.exec(err);
+    if (bare?.[1] !== undefined) {
+      return seal({ code: Number(bare[1]), source: "error_prefix", interrupted: false });
+    }
+  }
+  if (interrupted_top) return { code: null, source: null, interrupted: true };
 
   for (const key of ["tool_response", "toolResponse", "result", "output"]) {
     const v = payload[key];
     if (typeof v === "string") {
       const m = _ERROR_EXIT_PREFIX.exec(v);
       if (m?.[1] !== undefined) {
-        return { code: Number(m[1]), source: "error_prefix", interrupted: false };
+        return seal({ code: Number(m[1]), source: "error_prefix", interrupted: false });
       }
       continue;
     }
     if (v === null || typeof v !== "object" || Array.isArray(v)) continue;
     const obj = v as StateDict;
     const nested = _numeric_exit_field(obj);
-    if (nested !== null) return { code: nested, source: "field", interrupted: false };
+    if (nested !== null) return seal({ code: nested, source: "field", interrupted: false });
     if (obj["interrupted"] === true) return { code: null, source: null, interrupted: true };
     const hasStream = typeof obj["stdout"] === "string" || typeof obj["stderr"] === "string";
     if (obj["interrupted"] === false && hasStream) {
-      return { code: 0, source: "response_shape", interrupted: false };
+      return seal({ code: 0, source: "response_shape", interrupted: false });
     }
   }
   return _NO_EXIT;
@@ -504,10 +668,21 @@ function _extract_run_streams(payload: StateDict): { stdout: string; stderr: str
   }
   const topOut = payload["stdout"] ?? payload["output"];
   const topErr = payload["stderr"];
-  return {
-    stdout: typeof topOut === "string" ? topOut : "",
-    stderr: typeof topErr === "string" ? topErr : "",
-  };
+  if (typeof topOut === "string" || typeof topErr === "string") {
+    return {
+      stdout: typeof topOut === "string" ? topOut : "",
+      stderr: typeof topErr === "string" ? topErr : "",
+    };
+  }
+  // The failure envelope's one text field. Recorded as `stdout` because the
+  // host collapses both streams into it and says nothing about which was
+  // which — a recorder that split them would be inventing a fact — and because
+  // every parser in `verification_evidence` is line-anchored over stdout. The
+  // alternative, dropping it, would leave a red run recorded with its exit code
+  // and no reason, which is the half the reader actually needs.
+  const errText = payload["error"];
+  if (typeof errText === "string") return { stdout: errText, stderr: "" };
+  return { stdout: "", stderr: "" };
 }
 
 function _reset_turn(state: StateDict, session_id: string): StateDict {
@@ -521,6 +696,12 @@ function _reset_turn(state: StateDict, session_id: string): StateDict {
   // turn's edits, which is the freshness argument `verify-before-complete` makes.
   state["verification_runs"] = [];
   state["edits_this_turn"] = 0;
+  // TURN-scoped for the same reason as its neighbour: a quality verdict from
+  // the previous turn describes files this turn may already have changed, and a
+  // stale PASS is the direction that misleads. DELETED rather than emptied, so
+  // that a turn boundary restores the base-ref shape — see `_empty_state`.
+  delete state["quality_runs"];
+  delete state["quality_files_source"];
   // FC-3b turn-scoped counters: a CI settle must be witnessed within the same
   // turn that claims it, so the in-flight observation does not survive a turn.
   state["ci_saw_pending"] = false;
@@ -539,7 +720,19 @@ function _asInt(v: unknown): number {
   return Number.isFinite(n) ? Math.trunc(n) : 0;
 }
 
-function _update(state: StateDict, event: string, envelope: StateDict): StateDict {
+/**
+ * Apply one event to the state.
+ *
+ * `quality` is the shadow pass's already-computed result, handed in rather than
+ * fetched: this function runs INSIDE the state lock, and a spawn in here would
+ * hold that lock for the duration of a typecheck.
+ */
+function _update(
+  state: StateDict,
+  event: string,
+  envelope: StateDict,
+  quality: { runs: QualityRun[]; source: string } | null = null,
+): StateDict {
   const session_id = (envelope["session_id"] || state["session_id"] || "") as string;
   if (session_id && session_id !== state["session_id"]) {
     // Session boundary — reset session-scoped counters.
@@ -557,6 +750,16 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
     state["ci_last"] = null;
     state = _reset_turn(state, session_id);
   }
+
+  // The host that wrote this file. Recorded because the instrument-gap reading
+  // is a PER-HOST question and the witness carried no answer to it: every
+  // coverage number had to be attributed by hand, and a file from an unknown
+  // host is indistinguishable from a host with nothing to report. Written on
+  // every update rather than once, so a file predating this field acquires it
+  // the first time the host touches it; until then a reader sees it absent,
+  // which is the honest reading and not a default.
+  const platform = envelope["platform"];
+  if (typeof platform === "string" && platform) state["platform"] = platform;
 
   let payload = envelope["payload"];
   if (!(typeof payload === "object" && payload !== null && !Array.isArray(payload))) {
@@ -668,7 +871,7 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
     // own count is short.
     if (cmd && mightBeVerification(cmd)) {
       const streams = _extract_run_streams(pl);
-      const exit = _extract_exit_reading(pl);
+      const exit = _extract_exit_reading(pl, _is_failure_event(pl, envelope));
       const runs = Array.isArray(state["verification_runs"])
         ? [...(state["verification_runs"] as unknown[])]
         : [];
@@ -699,6 +902,10 @@ function _update(state: StateDict, event: string, envelope: StateDict): StateDic
     }
   } else if (event === "stop") {
     state["last_stop_at"] = _now();
+    if (quality !== null) {
+      state["quality_runs"] = quality.runs;
+      state["quality_files_source"] = quality.source;
+    }
   }
 
   state["checked_at"] = _now();
@@ -760,6 +967,15 @@ export function run(
 
   const target = path.join(consumer_root, statePathFor(session_id));
 
+  // The shadow quality pass, computed BEFORE the lock (see `_update`'s header)
+  // and only at `stop`. `off` is the template default and the resolved value of
+  // every unreadable or unrecognised setting, so an install that never opted in
+  // spawns nothing, reads no manifest and writes no new field — the acceptance
+  // criterion is that its record is byte-identical to the base ref.
+  const quality_mode = event === "stop" ? readTouchedFileQualityMode(consumer_root) : "off";
+  const quality =
+    quality_mode === "off" ? null : collectTouchedFileQuality(consumer_root, session_id);
+
   // LOAD → UPDATE → PUBLISH under ONE lock, not three separate steps.
   //
   // This was `_load_state` / `_update` / `atomic_write_json`, which makes the
@@ -790,7 +1006,7 @@ export function run(
     // treats a missing counter as 0 and the `=== true` guards treat a missing
     // flag as false, so every assertion would still pass while `schema_version`
     // and an explicit `ci_last: null` vanished from a freshly created file.
-    state = _update({ ..._empty_state(), ...loaded } as StateDict, event, envelope);
+    state = _update({ ..._empty_state(), ...loaded } as StateDict, event, envelope, quality);
     return state;
   });
   if (outcome === "failed") {
@@ -809,6 +1025,21 @@ export function run(
       Date.now(),
       STATE_RETENTION_DAYS,
     );
+  }
+
+  // `warn` — ONE advisory line, and the exit code does not move.
+  //
+  // In this tree a warn is conventionally an exit of 2, and on the one host that
+  // honours a deny that reads as a BLOCK. D3 of the roadmap settles it the other
+  // way for this field: shadow → warn only, never a block, on the strength of
+  // this hook's own contract ("the hook itself never blocks — it is
+  // observability infra, not control flow"). So the line goes to stderr and the
+  // function returns 0 on this path exactly as on every other.
+  if (quality_mode === "warn" && quality !== null) {
+    const line = advisoryLine(quality.runs);
+    if (line !== null) {
+      process.stderr.write(`${line}\n`);
+    }
   }
 
   if (verbose) {
