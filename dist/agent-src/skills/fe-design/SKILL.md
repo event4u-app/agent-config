@@ -29,7 +29,7 @@ machinery that already exists: `search_stack` in
 [`corpus-grounding`](../corpus-grounding/SKILL.md)
 (`scripts/decision_engine.ts`), whose stack corpus carries `threejs.csv` among
 its stacks, read beside the register in
-[`design-intelligence`](../design-intelligence/references/context-and-registers.md)
+`design-intelligence`
 § Register. No second frontend executor is declared, and none is needed: a
 renderer changes what you ground against, never who writes the UI.
 

@@ -111,9 +111,10 @@
               "open",
               "fixed",
               "accepted_risk",
-              "false_positive"
+              "false_positive",
+              "still_open"
             ],
-            "description": "Disposition. `fixed` / `false_positive` / `accepted_risk` are the three terminal states check_finding_dispositions accepts; `open` is the initial state. NOTE the underscore spelling — the Markdown track writes `accepted-risk` with a hyphen in its Status cell, and the two vocabularies are deliberately not unified here: renaming either would break committed artefacts on that track."
+            "description": "Disposition. `fixed` / `false_positive` / `accepted_risk` are the three terminal states check_finding_dispositions accepts ON A BLOCKING ROW; `open` is the initial state, meaning nobody has looked yet. `still_open` is a fourth TERMINAL state: a row somebody re-read against a named head, confirmed as a real unfixed issue, and recorded as such. It is deliberately distinct from `open`, which the two look identical to a reader checking only for a non-empty field while being opposites — nobody looked, versus somebody looked and this is the answer. `check_finding_dispositions.TERMINAL_STATUSES` carries all four and `DISPOSITION_STATUSES` only the first three, so a BLOCKING row marked `still_open` reports as an unknown status and keeps the gate red, which is the behaviour a blocking finding that is still open should have. NOTE the underscore spelling — the Markdown track writes `accepted-risk` with a hyphen in its Status cell, and the two vocabularies are deliberately not unified here: renaming either would break committed artefacts on that track."
           },
           "rationale": {
             "type": "string",

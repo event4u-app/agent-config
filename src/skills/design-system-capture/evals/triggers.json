@@ -1,0 +1,38 @@
+{
+    "skill": "design-system-capture",
+    "last_eval": "2026-10-01",
+    "description": "3 positives (1 de) + 2 near-misses + 1 counterexample. Positives all ask for the decisions to be WRITTEN DOWN so a later session does not re-derive them — which is what DESIGN.md and PRODUCT.md are. The near-misses are the two neighbours that read or apply a design system rather than capture one: auditing an existing UI, and emitting token files. The counterexample guards the word 'document' outside design.",
+    "queries": [
+        {
+            "q": "write down our visual decisions so the next session does not re-invent them",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "capture the interaction patterns we settled on into DESIGN.md and PRODUCT.md",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "halte unsere Design-Entscheidungen fest, damit sie ueber Sessions hinweg konsistent bleiben",
+            "trigger": true,
+            "language": "de",
+            "class": "exemplar"
+        },
+        {
+            "q": "audit the existing UI and tell me which components we already have",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "emit the CSS variables and the Tailwind config from our token source",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "document the REST endpoints in an OpenAPI spec",
+            "trigger": false,
+            "class": "counterexample"
+        }
+    ]
+}

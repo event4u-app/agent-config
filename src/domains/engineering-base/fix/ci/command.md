@@ -102,7 +102,7 @@ branch** — that is what makes the deliverable remote. Then:
    push against a moved base is rejected — both cost a round trip that this one
    call prevents.
 3. Push. The instruction named it; do not raise a separate ask
-   ([`/create-pr` § 4d item 5](../../../git/pr/create/command.md)).
+   (`/create-pr` § 4d item 5).
 4. Re-verify remotely: `./scripts-run src/scripts/check_pr_ci_current`, then
    settle the check set on the new head. Report the *remote* verdict, never the
    local one.

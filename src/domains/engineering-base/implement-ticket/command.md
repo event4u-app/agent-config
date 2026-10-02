@@ -213,7 +213,7 @@ Declared by `produces_roadmap: true` in the frontmatter and enforced by
 `lint_roadmap_producers`: a producer that does not end here reds CI.
 
 Read `planning.closure_pass` (missing = `true`). When active, run
-[`/challenge-me closure`](../../meta/challenge-me/closure/command.md) on the
+`/challenge-me closure` on the
 roadmap this command just produced, before handing back:
 
 ```bash

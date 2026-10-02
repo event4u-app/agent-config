@@ -75,6 +75,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
+import { coverageLabel } from './_lib/review_coverage.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
 const _HERE = fileURLToPath(import.meta.url);
@@ -83,6 +84,27 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 export const LEDGER_DIR = 'agents/evidence/release-findings';
 export const DISPOSITION_STATUSES = ['fixed', 'false_positive', 'accepted_risk'] as const;
 export type DispositionStatus = (typeof DISPOSITION_STATUSES)[number];
+
+/**
+ * Every status that means a human re-read the finding and decided.
+ *
+ * `still_open` is the fourth, and it exists so that "give every row a terminal
+ * status" does not read as "close every finding". A row re-checked against the
+ * merged head and found to be a real, unfixed issue is adjudicated; writing
+ * `accepted_risk` over it to make a count reach zero would be the cheapest way
+ * to satisfy the requirement and the one that destroys it.
+ *
+ * It is deliberately NOT in {@link DISPOSITION_STATUSES}: a BLOCKING row may
+ * never pass on it. `missing_dispositions` reads only the three, so a blocking
+ * finding marked `still_open` reports as an unknown status and the gate stays
+ * red — which is the behaviour a blocking finding that is still open should
+ * have.
+ *
+ * `open` from the schema is absent on purpose. The schema documents it as the
+ * INITIAL state, so counting it would make the tally reachable without anyone
+ * re-reading a finding.
+ */
+export const TERMINAL_STATUSES = [...DISPOSITION_STATUSES, 'still_open'] as const;
 
 export interface LedgerFinding {
     finding_id: string;
@@ -120,6 +142,12 @@ export interface Ledger {
     assurance?: string;
     reviewers?: string[];
     coverage?: unknown;
+    /**
+     * Per-run count of findings quoting a supplied fact, written by
+     * `self_review_gate` under `--findings-out`. Declared here because ingest
+     * now carries it; see {@link INTEGRITY_FIELDS}.
+     */
+    fact_claims?: unknown;
 }
 
 /**
@@ -139,7 +167,7 @@ export interface Ledger {
  * consumer inferring it from the findings would be inventing the integrity
  * claim the fields exist to record.
  */
-export const INTEGRITY_FIELDS = [
+const SCHEMA_INTEGRITY_FIELDS = [
     'review_independence',
     'context_relation',
     'acceptance_status',
@@ -147,6 +175,24 @@ export const INTEGRITY_FIELDS = [
     'reviewers',
     'coverage',
 ] as const;
+
+/**
+ * The carried set: the six above plus `fact_claims`.
+ *
+ * `fact_claims` is written by `self_review_gate.ts` at `--findings-out` time and
+ * was dropped by every ingest, because this list predates it. The field is the
+ * falsifier for the supplied-facts change — a count over the next cut — and a
+ * falsifier that never reaches the record is not one. It is carried rather than
+ * recomputed for the same reason the other six are: only the producing run knows
+ * what it quoted.
+ *
+ * It is NOT in {@link SCHEMA_INTEGRITY_FIELDS}, which is the set the ingest
+ * warning names. That warning tells a writer that `check_review_schema` derives
+ * `acceptance_status` and `assurance` from `review_independence` and will red on
+ * a ledger declaring neither — a sentence that is simply untrue of `fact_claims`,
+ * and naming it there would make the warning wrong to buy one shorter list.
+ */
+export const INTEGRITY_FIELDS = [...SCHEMA_INTEGRITY_FIELDS, 'fact_claims'] as const;
 
 /**
  * Merge a self-review artifact into a ledger: new findings by id, the integrity
@@ -280,6 +326,66 @@ export function missing_dispositions(findings: readonly LedgerFinding[]): string
         }
     }
     return problems;
+}
+
+/** What the success line reports, counted over the two populations apart. */
+export interface DispositionTally {
+    /** Rows `isBlocking` admits. */
+    readonly blockingTotal: number;
+    /** Of those, the ones `missing_dispositions` finds nothing wrong with. */
+    readonly blockingDispositioned: number;
+    /** Every other row. The gate cannot fail on these; it can still count them. */
+    readonly nonBlockingTotal: number;
+    /** Of those, the ones carrying a {@link TERMINAL_STATUSES} value. */
+    readonly nonBlockingTerminal: number;
+}
+
+/**
+ * Count what the gate checked, split by what it can actually require.
+ *
+ * The recorded failure this exists for: `--release 16.2.0` printed "all 20
+ * recorded finding(s) for 16.2.0 dispositioned (blocking ones completely)" over
+ * a ledger carrying a `status` on 2 of 20 rows. Both halves of that sentence are
+ * individually defensible — the gate did require the blocking ones, and it did
+ * complete — and together they say the opposite of the truth, because nobody
+ * reads a parenthetical as a retraction of the word in front of it. Eighteen
+ * findings had never been adjudicated and the record said they had.
+ *
+ * The fix is a count, not a new refusal. Exit semantics are untouched: a
+ * non-blocking row still cannot fail the gate. What changes is that the line
+ * stops claiming the rows it never looked at.
+ *
+ * An unrecognised status counts as NOT terminal, which is the conservative
+ * direction: a typo surfaces as a row the line says is unadjudicated, rather
+ * than disappearing into a count that reads as finished.
+ */
+export function disposition_tally(findings: readonly LedgerFinding[]): DispositionTally {
+    let blockingTotal = 0;
+    let blockingDispositioned = 0;
+    let nonBlockingTotal = 0;
+    let nonBlockingTerminal = 0;
+    for (const f of findings) {
+        if (isBlocking(f)) {
+            blockingTotal++;
+            if (missing_dispositions([f]).length === 0) {
+                blockingDispositioned++;
+            }
+            continue;
+        }
+        nonBlockingTotal++;
+        if ((TERMINAL_STATUSES as readonly string[]).includes((f.status ?? '').trim())) {
+            nonBlockingTerminal++;
+        }
+    }
+    return { blockingTotal, blockingDispositioned, nonBlockingTotal, nonBlockingTerminal };
+}
+
+/** The tally as the success line renders it. Never the word "all". */
+export function disposition_summary(t: DispositionTally): string {
+    return (
+        `blocking ${String(t.blockingDispositioned)}/${String(t.blockingTotal)} dispositioned · ` +
+        `non-blocking ${String(t.nonBlockingTerminal)}/${String(t.nonBlockingTotal)} carry a terminal status`
+    );
 }
 
 /**
@@ -577,7 +683,7 @@ function main(argv: readonly string[]): number {
                     'ledger is a result rather than an absence\n',
             );
         }
-        const absent = INTEGRITY_FIELDS.filter((k) => ledger[k] === undefined);
+        const absent = SCHEMA_INTEGRITY_FIELDS.filter((k) => ledger[k] === undefined);
         if (absent.length > 0) {
             process.stdout.write(
                 `⚠️   artifact carried no ${absent.join(', ')} — ` +
@@ -675,10 +781,16 @@ function main(argv: readonly string[]): number {
 
     if (problems.length === 0) {
         const n = ledger.findings.length;
+        // The label is appended to BOTH lines, including the zero-findings one:
+        // a review that read 65 of 678 files and reported nothing is the case
+        // where "no findings" is least informative on its own.
+        const partial = coverageLabel(ledger.coverage);
+        const suffix = partial === null ? '' : ` — ${partial}`;
         process.stdout.write(
             n === 0
-                ? `✅  no recorded findings for ${release} (ledger ${fs.existsSync(ledgerPath) ? 'empty' : 'absent'})\n`
-                : `✅  all ${n} recorded finding(s) for ${release} dispositioned (blocking ones completely)\n`,
+                ? `✅  no recorded findings for ${release} (ledger ${fs.existsSync(ledgerPath) ? 'empty' : 'absent'})${suffix}\n`
+                : `✅  ${String(n)} recorded finding(s) for ${release} — ` +
+                      `${disposition_summary(disposition_tally(ledger.findings))}${suffix}\n`,
         );
         return 0;
     }

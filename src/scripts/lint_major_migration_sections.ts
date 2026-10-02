@@ -53,6 +53,23 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 
 export const GATE = 'lint_major_migration_sections';
 export const MIGRATION_PATH = path.join('docs', 'MIGRATION.md');
+
+/**
+ * The consumer-facing index of what every major broke.
+ *
+ * The SECOND obligation this gate carries, and it is the same obligation
+ * pointed at a different reader. `docs/MIGRATION.md` answers "what do I have to
+ * do"; this table answers "what happened, and when" — it is the first thing
+ * somebody planning an upgrade across several majors opens, because it is the
+ * only place the breaks are side by side.
+ *
+ * It stopped at 9.0.0 while the archived changelogs carried 10.0.0 through
+ * 16.0.0. Seven majors with no row, and nothing in the tree could see it: the
+ * forward half (`lint_scheduled_deprecations`) looks at commitments, the
+ * backward half looked only at `MIGRATION.md`, and the index was guarded by
+ * nobody. The source that reported it counted the report as its twentieth.
+ */
+export const BREAKING_INDEX_PATH = 'BREAKING_CHANGES.md';
 const CHANGELOG_PATH = 'CHANGELOG.md';
 const ARCHIVE_DIR = path.join('docs', 'archive');
 
@@ -145,8 +162,37 @@ export function migrationVersions(text: string): Set<string> {
     return out;
 }
 
+/**
+ * Versions the breaking-changes index carries a ROW for.
+ *
+ * Reads the FIRST cell only, and that is the load-bearing choice rather than a
+ * parsing convenience. The live table's Migration cells end in pointers like
+ * "See [CHANGELOG 8.0.0](CHANGELOG.md)", so a whole-line scan would hand the
+ * index rows it does not have — and would do it in the direction that makes the
+ * gate green, which is the direction a reader cannot detect.
+ *
+ * The bold spelling the table happens to use is not required: a row is a row.
+ */
+export function indexVersions(text: string): Set<string> {
+    const out = new Set<string>();
+    for (const line of text.split('\n')) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('|')) continue;
+        const first = trimmed.slice(1).split('|')[0];
+        if (first === undefined) continue;
+        for (const m of first.matchAll(/(?<![\d.])(\d+)\.0\.0(?![\d.])/g)) {
+            out.add(`${m[1] as string}.0.0`);
+        }
+    }
+    return out;
+}
+
+/** Which of the two obligations a major failed. Never empty on a finding. */
+export type MissingKind = 'migration' | 'index';
+
 export interface Finding {
     readonly section: MajorSection;
+    readonly missing: readonly MissingKind[];
 }
 
 /** Read every changelog file under `root`, newest-era file first. */
@@ -171,15 +217,23 @@ export interface EvaluateResult {
 }
 
 /**
- * Compare the majors found against the sections MIGRATION.md carries.
+ * Compare the majors found against BOTH records a breaking major owes.
  *
  * Every section reaches exactly one ledger outcome: out of scope below the
- * floor, out of scope with no BREAKING entries, completed when a heading
- * exists, failed when it does not.
+ * floor, out of scope with no BREAKING entries, completed when both records
+ * name it, failed when either does not.
+ *
+ * The two are checked together and reported apart. Together, because they are
+ * one obligation — "a major that broke something is written down where a
+ * consumer looks" — and splitting it across two gates would mean two copies of
+ * `findMajorSections` free to disagree about what a major even is. Apart,
+ * because a finding that says only "17.0.0 is undocumented" leaves the reader
+ * to discover which of two files to open.
  */
 export function evaluate(
     sections: readonly MajorSection[],
     migration: ReadonlySet<string>,
+    index: ReadonlySet<string>,
     ledger: GateLedger,
 ): EvaluateResult {
     const findings: Finding[] = [];
@@ -196,12 +250,24 @@ export function evaluate(
             continue;
         }
         inScope += 1;
-        if (migration.has(s.version)) {
+        const missing: MissingKind[] = [];
+        if (!migration.has(s.version)) missing.push('migration');
+        if (!index.has(s.version)) missing.push('index');
+        if (missing.length === 0) {
             ledger.complete(target);
             continue;
         }
-        ledger.fail(target, `no docs/MIGRATION.md section for ${s.version}`);
-        findings.push({ section: s });
+        ledger.fail(
+            target,
+            missing
+                .map((k) =>
+                    k === 'migration'
+                        ? `no ${MIGRATION_PATH} section for ${s.version}`
+                        : `no ${BREAKING_INDEX_PATH} row for ${s.version}`,
+                )
+                .join('; '),
+        );
+        findings.push({ section: s, missing });
     }
     return { findings, sections: [...sections], inScope };
 }
@@ -220,6 +286,7 @@ export function pendingMajorFinding(
     target: string,
     changelogEntry: string,
     migrationText: string,
+    indexText: string,
 ): string | null {
     const m = /^(\d+)\.0\.0$/.exec(target.trim());
     if (m === null) return null;
@@ -227,12 +294,19 @@ export function pendingMajorFinding(
     const breaking = sections.reduce((n, s) => n + s.breaking, 0);
     if (breaking === 0) return null;
     if (Number(m[1]) < FLOOR_MAJOR) return null;
-    if (migrationVersions(migrationText).has(target)) return null;
+    const owed: string[] = [];
+    if (!migrationVersions(migrationText).has(target)) {
+        owed.push(`${MIGRATION_PATH} has no "## " heading naming ${target}`);
+    }
+    if (!indexVersions(indexText).has(target)) {
+        owed.push(`${BREAKING_INDEX_PATH} has no row naming ${target}`);
+    }
+    if (owed.length === 0) return null;
     return (
         `the ${target} entry carries ${String(breaking)} BREAKING CHANGES entr(y/ies) and ` +
-        `docs/MIGRATION.md has no "## " heading naming ${target}. Add one before the cut — ` +
-        'a section stating that the change asks nothing of a consumer satisfies this, and is ' +
-        'the right answer when it is true. What is not acceptable is silence.'
+        `${owed.join(', and ')}. Add them before the cut — a section stating that the change ` +
+        'asks nothing of a consumer satisfies the first, and is the right answer when it is ' +
+        'true. What is not acceptable is silence.'
     );
 }
 
@@ -264,14 +338,28 @@ function selfTest(): number {
             '',
         ].join('\n');
 
+    const indexTable = (versions: readonly string[]): string =>
+        [
+            '# Breaking Changes',
+            '',
+            '## Breaking changes by major',
+            '',
+            '| Version | Date | What broke | Migration |',
+            '|---|---|---|---|',
+            ...versions.map((v) => `| **${v}** | 2026-01-01 | something | do a thing |`),
+            '',
+        ].join('\n');
+
     const fixture = (
         name: string,
         changelogText: string,
         migrationHeadings: readonly string[],
+        indexRows: readonly string[] = [],
     ): number => {
         const dir = path.join(root, name);
         fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
         fs.writeFileSync(path.join(dir, 'CHANGELOG.md'), changelogText, 'utf8');
+        fs.writeFileSync(path.join(dir, BREAKING_INDEX_PATH), indexTable(indexRows), 'utf8');
         fs.writeFileSync(
             path.join(dir, 'docs', 'MIGRATION.md'),
             ['# Migration Guide', '', ...migrationHeadings.flatMap((h) => [h, '', 'body', ''])].join(
@@ -293,28 +381,48 @@ function selfTest(): number {
             // one half proves the refusal fires, the other that the heading is
             // what clears it, so neither can be satisfied by a gate that always
             // reds or always passes.
-            name: 'the same major passes once the heading exists',
+            name: 'the same major passes once the heading and the index row exist',
             expect: 'accept',
             run: () =>
-                fixture('present', changelog('17.0.0', ['**x:** drop y']), [
-                    '## 17.0.0 — what to do',
-                ]),
+                fixture(
+                    'present',
+                    changelog('17.0.0', ['**x:** drop y']),
+                    ['## 17.0.0 — what to do'],
+                    ['17.0.0'],
+                ),
         },
         {
             name: 'a heading naming a DIFFERENT major does not satisfy the requirement',
             expect: 'reject',
             run: () =>
-                fixture('wrong-version', changelog('17.0.0', ['**x:** drop y']), [
-                    '## 16.0.0 — what to do',
+                fixture(
+                    'wrong-version',
+                    changelog('17.0.0', ['**x:** drop y']),
+                    ['## 16.0.0 — what to do'],
+                    ['17.0.0'],
+                ),
+        },
+        {
+            // The index half of the same pair. Section present, row absent —
+            // so this case can only pass by checking the index, and the
+            // 'present' case above can only pass by accepting a correct one.
+            name: 'a major with a migration section but no index row is refused',
+            expect: 'reject',
+            run: () =>
+                fixture('no-index-row', changelog('17.0.0', ['**x:** drop y']), [
+                    '## 17.0.0 — what to do',
                 ]),
         },
         {
             name: 'an arrow-form heading naming the version satisfies it',
             expect: 'accept',
             run: () =>
-                fixture('arrow', changelog('17.0.0', ['**x:** drop y']), [
-                    '## 16.x → 17.0.0 — what to do',
-                ]),
+                fixture(
+                    'arrow',
+                    changelog('17.0.0', ['**x:** drop y']),
+                    ['## 16.x → 17.0.0 — what to do'],
+                    ['17.0.0'],
+                ),
         },
         {
             name: 'a major BELOW the floor is forgiven',
@@ -336,6 +444,10 @@ function selfTest(): number {
                 const dir = path.join(root, 'no-changelog');
                 fs.mkdirSync(path.join(dir, 'docs'), { recursive: true });
                 fs.writeFileSync(path.join(dir, 'docs', 'MIGRATION.md'), '# Migration Guide\n', 'utf8');
+                // The index IS present, so the refusal below can only be the
+                // dead-scan-root one. Without it this case would reject on a
+                // missing file and stop testing what it is named for.
+                fs.writeFileSync(path.join(dir, BREAKING_INDEX_PATH), indexTable([]), 'utf8');
                 return runGateCli(repo, script, ['--root', dir, '--quiet'], repo);
             },
         },
@@ -381,6 +493,15 @@ export function main(argv: readonly string[]): number {
         return 1;
     }
     const migration = migrationVersions(fs.readFileSync(migrationFile, 'utf-8'));
+    // An absent index reds rather than skipping the index half. A missing
+    // comparand that silently narrows the comparison is how a gate reports
+    // "nothing wrong" about a question it stopped asking.
+    const indexFile = path.join(root, BREAKING_INDEX_PATH);
+    if (!fs.existsSync(indexFile)) {
+        process.stderr.write(`❌  ${GATE}: ${BREAKING_INDEX_PATH} not found under ${root}\n`);
+        return 1;
+    }
+    const index = indexVersions(fs.readFileSync(indexFile, 'utf-8'));
 
     const sources = changelogSources(root);
     const sections: MajorSection[] = [];
@@ -389,7 +510,7 @@ export function main(argv: readonly string[]): number {
     }
 
     const ledger = new GateLedger(GATE);
-    const result = evaluate(sections, migration, ledger);
+    const result = evaluate(sections, migration, index, ledger);
     const tally = ledger.finalize();
 
     try {
@@ -400,7 +521,7 @@ export function main(argv: readonly string[]): number {
             gate: GATE,
             scanned: tally.planned,
             units: 'major changelog section(s)',
-            roots: [CHANGELOG_PATH, ARCHIVE_DIR],
+            roots: [CHANGELOG_PATH, ARCHIVE_DIR, MIGRATION_PATH, BREAKING_INDEX_PATH],
         });
     } catch (exc) {
         if (exc instanceof DeadScopeError) {
@@ -412,13 +533,22 @@ export function main(argv: readonly string[]): number {
 
     if (result.findings.length > 0) {
         for (const f of result.findings) {
+            const owed = f.missing
+                .map((k) =>
+                    k === 'migration'
+                        ? `${MIGRATION_PATH} carries no "## " heading naming it`
+                        : `${BREAKING_INDEX_PATH} carries no row naming it`,
+                )
+                .join(', and ');
             process.stderr.write(
                 `❌  ${GATE}: ${f.section.version} ships ${String(f.section.breaking)} BREAKING ` +
                     `CHANGES entr(y/ies) (${f.section.source}:${String(f.section.line)}) and ` +
-                    `${MIGRATION_PATH} carries no "## " heading naming it.\n` +
-                    `    Add a section for ${f.section.version}. A section stating that the change\n` +
-                    '    asks nothing of a consumer satisfies this and is the right answer when it\n' +
-                    '    is true — the requirement is a stated answer, never a procedure.\n',
+                    `${owed}.\n` +
+                    `    Add what is missing for ${f.section.version}. A migration section stating\n` +
+                    '    that the change asks nothing of a consumer satisfies that half and is the\n' +
+                    '    right answer when it is true — the requirement is a stated answer, never a\n' +
+                    `    procedure. The ${BREAKING_INDEX_PATH} row is one line in the by-major table,\n` +
+                    '    linking the changelog section it came from.\n',
             );
         }
         return 1;
@@ -429,7 +559,7 @@ export function main(argv: readonly string[]): number {
         process.stdout.write(
             `✅  ${GATE}: ${String(tally.planned)} major section(s) read, ` +
                 `${String(result.inScope)} in scope (major >= ${String(FLOOR_MAJOR)} with BREAKING ` +
-                'CHANGES), each with a migration section' +
+                'CHANGES), each with a migration section and an index row' +
                 (result.inScope === 0
                     ? ' — NONE in scope this run, so no comparison ran. Green here means\n' +
                       '    "nothing to compare", not "the comparison passed".\n'
