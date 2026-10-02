@@ -20,10 +20,14 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
+import { parse } from 'yaml';
 
 import { renderText } from '../../src/scripts/_cli/cmd_doctor_neighbours.js';
+import { _concern_matches_tool } from '../../src/scripts/hooks/dispatch_hook.js';
 import { census } from '../../src/scripts/_lib/neighbour_census.js';
 import { serverOf, serverSegment } from '../../src/scripts/_lib/neighbour_tool_use.js';
+
+const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
 
 const dirs: string[] = [];
 
@@ -104,6 +108,42 @@ describe('mcp servers carry observed use', () => {
         expect(renderText(c).join('\n')).toContain('project:acme  tools used (30d): 1  advertised: unknown');
         // The step's own verify line, asserted against the JSON the CLI prints.
         expect(JSON.stringify(c)).toMatch(/"tools_used_30d":\s*[0-9]+/);
+    });
+});
+
+/**
+ * The recorder has to be REACHED before it can record, and nothing above this
+ * block can tell whether it is: every case here calls the hook directly, which
+ * is exactly how a concern the dispatcher skips keeps a green test suite.
+ *
+ * `_concern_matches_tool` matches a `tools:` entry EXACTLY — `names.includes`,
+ * no globbing — so `tools: [Skill]`, which was provable from this hook's source
+ * while `Skill` was its only branch surface, now silences it for every MCP call.
+ * There is no value of the key that admits `mcp__<server>__<tool>`, because the
+ * names are not enumerable. The entry therefore carries no `tools:` key, and
+ * this asserts that against the SHIPPED manifest rather than against a literal.
+ */
+describe('the recorder is reachable through the dispatcher', () => {
+    it('the shipped telemetry-usage entry admits an mcp__ tool name', () => {
+        const manifest = parse(
+            fs.readFileSync(path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'), 'utf-8'),
+        ) as { concerns: Record<string, Record<string, unknown>> };
+        const entry = manifest.concerns['telemetry-usage'];
+
+        expect(entry).toBeDefined();
+        expect(_concern_matches_tool(entry as never, 'mcp__acme__alpha')).toBe(true);
+        expect(_concern_matches_tool(entry as never, 'Skill')).toBe(true);
+    });
+
+    it('NEGATIVE CONTROL — the filter this entry must not carry would silence it', () => {
+        // Without this the assertion above passes for a filter that admits
+        // everything, which is indistinguishable from a filter that was never
+        // consulted. `tools: [Skill]` is the exact shape that was there.
+        expect(_concern_matches_tool({ tools: ['Skill'] } as never, 'mcp__acme__alpha')).toBe(false);
+        // And a glob is not an escape: matching is exact, so this is also false.
+        expect(_concern_matches_tool({ tools: ['Skill', 'mcp__*'] } as never, 'mcp__acme__alpha')).toBe(
+            false,
+        );
     });
 });
 

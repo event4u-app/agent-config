@@ -215,6 +215,19 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       handshake with a neighbour's process, and `0` therefore reads as "none
       observed", never as "none exist".
 
+      **A fourth piece the step did not anticipate, and the unit tests could
+      not have caught.** `telemetry-usage` carried `tools: [Skill]` in
+      `hook_manifest.yaml` — a per-concern dispatcher filter that was provable
+      from the hook's source while `Skill` was its only branch surface.
+      `_concern_matches_tool` matches EXACTLY, so no value of that key admits
+      `mcp__<server>__<tool>`: the names are not enumerable. Left in place the
+      dispatcher skips the concern for every MCP call and the recorder is
+      unreachable while every test above — all of which call `run()` directly —
+      stays green. That is coverage on the manifest with the observation floor
+      at zero, which is the failure 3.2's own deferral names one layer up. The
+      key is removed, and a test pins the shipped entry against an `mcp__` name
+      with a negative control that re-adds `[Skill]` and watches it go red.
+
       **Measured against the bundle ceiling rather than asserted.**
       `check_hook_bundle_composition` read **1,549,697 B** of 1,550,000 before and
       **1,549,830 B** after — net +133 B, and `max_bytes` is untouched. The
