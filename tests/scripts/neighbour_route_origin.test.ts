@@ -22,6 +22,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { runCensus } from '../../src/scripts/_cli/cmd_doctor_neighbours.js';
 import { scanNeighbourBody } from '../../src/scripts/_lib/neighbour_scan.js';
+import { crossPairsForFiles, crossRootOverlapMap } from '../../src/scripts/audit_skill_overlap.js';
 import {
     makeSkillOriginResolver,
     packageClaimedPaths,
@@ -134,6 +135,86 @@ describe('1.1 — origin comes from the lockfile, and both same-named skills ran
         const originOf = makeSkillOriginResolver(project);
         expect(originOf(path.join(home, '.claude/skills/foreign/SKILL.md'))).toBe('home');
         expect(qualifiedSkillName('foreign', 'home')).toBe('home:foreign');
+    });
+});
+
+describe('1.2 — overlap from the two-root mode of the existing audit', () => {
+    it('a near-duplicate foreign skill yields also: and compat: overlapping; a disjoint one unclassified', () => {
+        const project = tmp('nb-ov-project-');
+        const home = tmp('nb-ov-home-');
+        const pkg = tmp('nb-ov-pkg-');
+
+        const sharedBody = [
+            'Terraform modules are planned, applied and destroyed through workspaces.',
+            'A workspace pins its own state backend, its own variables and its own',
+            'provider versions, and a plan is reviewed before any apply reaches an',
+            'environment. Drift between the recorded state and the live infrastructure',
+            'is detected by a scheduled plan whose exit code is the signal.',
+        ].join(' ');
+
+        write(pkg, 'src/skills/terraform/SKILL.md', skill('terraform', 'terraform workflow', sharedBody));
+        write(
+            project,
+            '.claude/skills/tf-helper/SKILL.md',
+            skill('tf-helper', 'vendor terraform helper', sharedBody),
+        );
+        write(
+            project,
+            '.claude/skills/haiku-writer/SKILL.md',
+            skill('haiku-writer', 'writes haiku', 'Seventeen syllables arranged across three lines about frogs and ponds.'),
+        );
+        write(project, 'agents/installed-tools.lock', manifest([path.join(project, 'nothing.md')]));
+
+        const c = runCensus(project, pkg, home);
+        const byName = new Map(c.skills.map((s) => [s.qualified, s]));
+
+        const near = byName.get('project:tf-helper');
+        expect(near).toBeDefined();
+        expect(near?.compat).toBe('overlapping');
+        expect(near?.also).toEqual(['terraform']);
+        expect(near?.similarity).not.toBeNull();
+
+        const disjoint = byName.get('project:haiku-writer');
+        expect(disjoint).toBeDefined();
+        expect(disjoint?.compat).toBe('unclassified');
+        expect(disjoint?.also).toEqual([]);
+    });
+
+    it('the pair mode is a cross product, never our corpus against itself', () => {
+        const pkg = tmp('nb-cross-pkg-');
+        const nb = tmp('nb-cross-nb-');
+        const body = 'alpha beta gamma delta epsilon zeta eta theta iota kappa lambda';
+        write(pkg, 'src/skills/one/SKILL.md', skill('one', 'd', body));
+        write(pkg, 'src/skills/two/SKILL.md', skill('two', 'd', body));
+        write(nb, 'their/SKILL.md', skill('their', 'd', body));
+
+        const pairs = crossPairsForFiles(
+            [path.join(nb, 'their', 'SKILL.md')],
+            path.join(pkg, 'src', 'skills'),
+        );
+        // Two pairs — their × {one, two} — and NOT the `one ↔ two` pair a merged
+        // list would have produced.
+        expect(pairs).toHaveLength(2);
+        expect(pairs.every((p) => p.neighbour === 'their')).toBe(true);
+        const folded = crossRootOverlapMap(pairs);
+        expect(folded.get(path.join(nb, 'their', 'SKILL.md'))?.names).toEqual(['one', 'two']);
+    });
+
+    it('a name collision is shadowed, which outranks overlapping', () => {
+        const project = tmp('nb-shadow-project-');
+        const home = tmp('nb-shadow-home-');
+        const pkg = tmp('nb-shadow-pkg-');
+        write(pkg, 'src/skills/design-system/SKILL.md', skill('design-system', 'ours', 'tokens'));
+        write(
+            project,
+            '.claude/skills/design-system/SKILL.md',
+            skill('design-system', 'theirs', 'tokens'),
+        );
+        write(project, 'agents/installed-tools.lock', manifest([path.join(project, 'nothing.md')]));
+        const c = runCensus(project, pkg, home);
+        const entry = c.skills.find((s) => s.qualified === 'project:design-system');
+        expect(entry?.compat).toBe('shadowed');
+        expect(entry?.also).toEqual(['design-system']);
     });
 });
 

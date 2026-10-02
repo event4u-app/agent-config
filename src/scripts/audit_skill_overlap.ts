@@ -30,6 +30,7 @@
  * quietly until the gate means nothing. Cross-pack pairs never block — a
  * cross-pack merge changes install shape and is a different decision.
  */
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -47,6 +48,7 @@ export const OUT_MD_NAME = 'skill-overlap.md';
 export const OUT_JSON = path.join(REPORT_DIR, OUT_JSON_NAME);
 export const OUT_MD = path.join(REPORT_DIR, OUT_MD_NAME);
 export const ALLOWLIST = path.join(ROOT, 'src', 'scripts', 'audit_skill_overlap_allowlist.json');
+export const CROSS_CACHE_NAME = 'neighbour-overlap.json';
 export const ALLOWLIST_CAP = 20;
 // re.compile(r"^---\n(.*?)\n---", re.DOTALL) — used with .search (anywhere).
 const FM_RE = /^---\n([\s\S]*?)\n---/m;
@@ -68,6 +70,8 @@ type Json = any;
 interface Skill {
     name: string;
     relpath: string;
+    /** Absolute `SKILL.md` path — the key a cross-root result is returned under. */
+    abspath: string;
     packs: Set<string>;
     vector: Map<string, number>;
 }
@@ -178,6 +182,7 @@ export function _parse(md: string, field: Field = 'body'): Skill {
     return {
         name: name ? String(name) : path.basename(path.dirname(md)),
         relpath: _relPosix(md, ROOT),
+        abspath: path.resolve(md),
         packs: Array.isArray(packsVal) ? new Set(packsVal.map((x) => String(x))) : new Set(),
         vector: _keyword_vector(source),
     };
@@ -320,6 +325,193 @@ export function find_pairs(skills: Skill[], threshold: number): Pair[] {
     }
     // pairs.sort(key=lambda p: (not p["same_domain"], -p["similarity"])) — stable.
     return stableSort(pairs, (p) => [p.same_domain ? 0 : 1, -p.similarity]);
+}
+
+/**
+ * One neighbour skill against one of ours, at or above the threshold.
+ *
+ * `neighbour_path` is absolute, because the two sides live under different roots
+ * and a repo-relative path would be a `../..` string that no caller can key on.
+ */
+export interface CrossPair {
+    neighbour: string;
+    neighbour_path: string;
+    ours: string;
+    similarity: number;
+}
+
+/**
+ * Cross-root pairs: every NEIGHBOUR skill against every one of OURS.
+ *
+ * NOT `find_pairs` over a merged list, and the difference is the whole point of
+ * the mode. `find_pairs` is `combinations(skills, 2)` over one corpus, so a
+ * merged list would also compare our skills against each other — re-deriving the
+ * same-corpus report under a different name, at the cost of the pairs the caller
+ * actually asked for being buried in it. This emits exactly the cross product,
+ * which is also the cheaper half: |neighbours| × |ours| rather than C(n+m, 2).
+ *
+ * The THRESHOLD is the caller's and defaults to {@link OVERLAP_THRESHOLD} — the
+ * same 0.70 every historical same-corpus report is calibrated against. Reusing it
+ * is deliberate: a second, softer bar invented for neighbours would make
+ * `compat: overlapping` mean something no existing number can be compared to.
+ */
+export function crossRootPairs(
+    neighbourRoot: string,
+    ourRoot: string,
+    threshold: number = OVERLAP_THRESHOLD,
+    field: Field = 'body',
+): CrossPair[] {
+    return crossPairsForFiles(skillMdsUnder(neighbourRoot), ourRoot, threshold, field);
+}
+
+/** Non-archived `SKILL.md` paths under a root, in the collector's own order. */
+export function skillMdsUnder(root: string): string[] {
+    return _rglobSkillMd(root).filter((md) => !md.split(path.sep).includes('_archive'));
+}
+
+/**
+ * The same cross product, over an EXPLICIT neighbour file list.
+ *
+ * This is the shape the census actually needs, and the root-taking wrapper above
+ * is the convenience layer rather than the other way round. A census's neighbour
+ * skills are the UNCLAIMED entries of two roots that also hold claimed ones —
+ * `agent-config install` writes our own skills into `~/.claude/skills` — so
+ * pairing a whole root would compare this package's installed copies against its
+ * own source tree and report the install as an overlap.
+ */
+export function crossPairsForFiles(
+    neighbourFiles: readonly string[],
+    ourRoot: string,
+    threshold: number = OVERLAP_THRESHOLD,
+    field: Field = 'body',
+): CrossPair[] {
+    const theirs: Skill[] = [];
+    for (const md of neighbourFiles) {
+        try {
+            theirs.push(_parse(md, field));
+        } catch {
+            // Unreadable neighbour file: not a pair, and not a crash.
+        }
+    }
+    const ours = collect(ourRoot, field);
+    const out: CrossPair[] = [];
+    for (const n of theirs) {
+        for (const o of ours) {
+            const sim = _cosine(n.vector, o.vector);
+            if (sim < threshold) continue;
+            out.push({
+                neighbour: n.name,
+                neighbour_path: n.abspath,
+                ours: o.name,
+                similarity: pyRound(sim, 3),
+            });
+        }
+    }
+    return stableSort(out, (p) => [-p.similarity]);
+}
+
+/**
+ * Cross-root pairs folded the way the census reads them: highest-scoring hit per
+ * neighbour `SKILL.md`, with every our-skill name that crossed the bar.
+ */
+export function crossRootOverlapMap(
+    pairs: readonly CrossPair[],
+): Map<string, { names: string[]; similarity: number }> {
+    const out = new Map<string, { names: string[]; similarity: number }>();
+    for (const p of pairs) {
+        const hit = out.get(p.neighbour_path);
+        if (hit === undefined) {
+            out.set(p.neighbour_path, { names: [p.ours], similarity: p.similarity });
+            continue;
+        }
+        if (!hit.names.includes(p.ours)) hit.names.push(p.ours);
+        if (p.similarity > hit.similarity) hit.similarity = p.similarity;
+    }
+    for (const hit of out.values()) hit.names.sort();
+    return out;
+}
+
+/**
+ * The census digest the cross-root cache is keyed by.
+ *
+ * Over the INPUTS and nothing else: every skill's absolute path and the sha256
+ * of its bytes, on both sides, plus the threshold and the field. Risk-register
+ * row 3 is why a cache exists at all — a pairwise pass per prompt is not a
+ * hook-budget shape — and keying it on the bytes is what makes "a changed digest
+ * rescans first" true rather than aspirational. A key over NAMES alone would
+ * hand a stale score to a body that was rewritten underneath it.
+ */
+export function censusDigest(
+    neighbourFiles: readonly string[],
+    ourRoot: string,
+    threshold: number,
+    field: Field = 'body',
+): string {
+    const h = createHash('sha256');
+    h.update(`${String(threshold)}\n${field}\n`);
+    const sides: ReadonlyArray<readonly string[]> = [
+        [...neighbourFiles].sort(),
+        skillMdsUnder(ourRoot),
+    ];
+    for (const side of sides) {
+        h.update('side\n');
+        for (const md of side) {
+            let bytes: Buffer;
+            try {
+                bytes = fs.readFileSync(md);
+            } catch {
+                continue;
+            }
+            h.update(path.resolve(md));
+            h.update('\0');
+            h.update(createHash('sha256').update(bytes).digest('hex'));
+            h.update('\n');
+        }
+    }
+    return h.digest('hex');
+}
+
+export interface CrossCache {
+    schema_version: 1;
+    digest: string;
+    threshold: number;
+    pairs: CrossPair[];
+}
+
+/**
+ * Cross-root pairs, recomputed only when the census digest moved.
+ *
+ * A cache miss is never silent: the result says `cached: false`, so a caller
+ * reporting "this came from the cache" cannot be reporting it about a pass that
+ * actually ran. A write failure is not fatal — the pairs are correct either way,
+ * and refusing to answer because a report directory is read-only would turn a
+ * cache into a dependency.
+ */
+export function cachedCrossRootPairs(
+    neighbourFiles: readonly string[],
+    ourRoot: string,
+    cacheFile: string,
+    threshold: number = OVERLAP_THRESHOLD,
+    field: Field = 'body',
+): { pairs: CrossPair[]; digest: string; cached: boolean } {
+    const digest = censusDigest(neighbourFiles, ourRoot, threshold, field);
+    try {
+        const parsed = JSON.parse(fs.readFileSync(cacheFile, 'utf-8')) as Partial<CrossCache>;
+        if (parsed.digest === digest && Array.isArray(parsed.pairs)) {
+            return { pairs: parsed.pairs as CrossPair[], digest, cached: true };
+        }
+    } catch {
+        // No cache, or an unreadable one: compute.
+    }
+    const pairs = crossPairsForFiles(neighbourFiles, ourRoot, threshold, field);
+    const payload: CrossCache = { schema_version: 1, digest, threshold, pairs };
+    try {
+        fs.mkdirSync(path.dirname(cacheFile), { recursive: true });
+        fs.writeFileSync(cacheFile, `${JSON.stringify(payload, null, 2)}\n`, 'utf-8');
+    } catch {
+        // A cache that cannot be written is still a correct answer.
+    }
+    return { pairs, digest, cached: false };
 }
 
 /** Stable sort by a tuple-of-numbers key (Python tuple compare). */
@@ -484,6 +676,9 @@ class FloatTag {
 export function main(argv: string[] | null = null): number {
     const args = parse_args(argv ?? process.argv.slice(2));
     const root = args.root ?? _default_skill_root();
+    if (args.neighbourRoot !== undefined) {
+        return _mainCrossRoot(args, root);
+    }
     const skills = collect(root, args.field);
     try {
         assertScanned({
@@ -568,6 +763,55 @@ export function main(argv: string[] | null = null): number {
             `to ${_relPosix(args.allowlist ?? ALLOWLIST, ROOT)} (cap ${ALLOWLIST_CAP}).\n`,
     );
     return 1;
+}
+
+/**
+ * `--neighbour-root` — the cross-root pair mode.
+ *
+ * A SECOND QUESTION, not a second answer to the first. The same-corpus report
+ * asks "are two of our skills so alike that one should absorb the other", and a
+ * merge is the action it leads to. This asks "is a skill another package
+ * installed close enough to one of ours that a reader of the route line needs to
+ * know", and NOTHING is merged, removed or suppressed on the answer — the
+ * neighbour is not ours to merge. So it writes its own artifact and leaves
+ * `skill-overlap.json` alone.
+ *
+ * Exit 0 always. A finding here is a report; `--strict` belongs to the
+ * same-corpus mode, where the pair is between two files this package owns.
+ */
+function _mainCrossRoot(args: Args, ourRoot: string): number {
+    const neighbourRoot = args.neighbourRoot as string;
+    const outDir = args.outDir ?? REPORT_DIR;
+    const cacheFile = args.crossCache ?? path.join(outDir, CROSS_CACHE_NAME);
+    const { pairs, digest, cached } = cachedCrossRootPairs(
+        skillMdsUnder(neighbourRoot),
+        ourRoot,
+        cacheFile,
+        args.threshold,
+        args.field,
+    );
+    const theirs = collect(neighbourRoot, args.field);
+    // The counts line the gate-coverage contract asks for, on stderr like its
+    // sibling, so the report body on stdout stays machine-readable.
+    process.stderr.write(`scanned: ${String(theirs.length)}\n`);
+    if (!args.quiet) {
+        process.stdout.write(
+            `\u2705  Neighbour overlap: ${theirs.length} neighbour skill(s) \u00d7 ` +
+                `${collect(ourRoot, args.field).length} of ours, ${pairs.length} pair(s) ` +
+                `\u2265 ${_pct(args.threshold)} (${cached ? 'from cache' : 'recomputed'}).\n`,
+        );
+        process.stdout.write(`   census digest: ${digest.slice(0, 12)}\n`);
+        process.stdout.write(`   cache: ${_relPosix(cacheFile, ROOT)}\n`);
+    }
+    const byPath = crossRootOverlapMap(pairs);
+    for (const skill of theirs) {
+        const hit = byPath.get(skill.abspath);
+        if (hit === undefined) continue;
+        process.stdout.write(
+            `   ${hit.similarity.toFixed(3)}  ${skill.name}  also: ${hit.names.join(', ')}\n`,
+        );
+    }
+    return 0;
 }
 
 /** Order-independent key for an unordered pair. */
@@ -662,6 +906,10 @@ interface Args {
     strict: boolean;
     /** Allowlist path override (tests); `undefined` = the shipped file. */
     allowlist?: string;
+    /** Cross-root mode: the NEIGHBOUR tree to pair against `--root`. */
+    neighbourRoot?: string;
+    /** Cross-root cache path; `undefined` = `<out-dir>/neighbour-overlap.json`. */
+    crossCache?: string;
     /** Which text the vector is built from. `description` is NON-canonical. */
     field: Field;
 }
@@ -698,6 +946,19 @@ export function parse_args(argv: string[]): Args {
         } else if (a === '--threshold' || a.startsWith('--threshold=')) {
             const inline = a.startsWith('--threshold=') ? a.slice('--threshold='.length) : undefined;
             args.threshold = Number(takeValue('--threshold', inline, () => argv[++i]));
+        } else if (a === '--neighbour-root' || a.startsWith('--neighbour-root=')) {
+            const inline = a.startsWith('--neighbour-root=')
+                ? a.slice('--neighbour-root='.length)
+                : undefined;
+            args.neighbourRoot = path.resolve(
+                ROOT,
+                takeValue('--neighbour-root', inline, () => argv[++i]),
+            );
+        } else if (a === '--cross-cache' || a.startsWith('--cross-cache=')) {
+            const inline = a.startsWith('--cross-cache=')
+                ? a.slice('--cross-cache='.length)
+                : undefined;
+            args.crossCache = path.resolve(ROOT, takeValue('--cross-cache', inline, () => argv[++i]));
         } else if (a === '--root' || a.startsWith('--root=')) {
             const inline = a.startsWith('--root=') ? a.slice('--root='.length) : undefined;
             args.root = path.resolve(ROOT, takeValue('--root', inline, () => argv[++i]));

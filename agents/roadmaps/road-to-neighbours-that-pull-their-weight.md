@@ -65,12 +65,27 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       owners ranks twice and only the same package skill reached through two roots still
       collapses. Origin is read from `agents/installed-tools.lock`, never from the root —
       decision D6 records why, and why a tree with no manifest qualifies nothing.
-- [ ] **1.2 Overlap from a two-root mode of the existing audit.** `audit_skill_overlap`
+- [x] **1.2 Overlap from a two-root mode of the existing audit.** `audit_skill_overlap`
       takes one `--root` (`:97,701-703`); add a cross-root pair mode (neighbour × ours),
       cached by the census digest, and print `also: <our-skill>` when a pair crosses its
       existing threshold. Each census entry gets one `compat` label computed without a
       model: `shadowed`, `overlapping`, `unscanned` or `unclassified`. Nothing is suppressed.
       verify: fixture — a near-duplicate foreign skill yields `also:` and `compat: overlapping`; a disjoint one `unclassified`
+
+      **A cross product, not `find_pairs` over a merged list.** Merging the two
+      sides would also pair our skills against each other, re-deriving the
+      same-corpus report under another name and burying the pairs the caller
+      asked for; the cross product is also the cheaper half. The threshold is the
+      existing 0.70, so `compat: overlapping` is comparable to every historical
+      number — a second, softer bar invented for neighbours would be comparable
+      to nothing.
+
+      The pairs run over the neighbour skills the census FOUND, never over whole
+      roots: `~/.claude/skills` holds this package's own installed skills beside a
+      neighbour's, so pairing the root would publish our own install as an
+      overlap. Cached in `agents/reports/neighbour-overlap.json`, keyed by a
+      digest over both sides' file bytes — risk-register row 3, closed as that row
+      proposes.
 - [x] **1.3 Scan before inject.** A neighbour skill body passes `security_lint`'s shape
       checks before its body may be injected; a failing body ranks by name with
       `unscanned: <finding-kind>`; a changed digest rescans first.
@@ -177,6 +192,15 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       — is still the real work and is still independent; what cannot be done before
       Phase 1 is *publishing* the number. Recorded here rather than left for the
       next run to rediscover.
+
+      **Half of that note was already wrong when it was written, and Phase 1
+      settled the rest.** `doctor neighbours` and `_lib/neighbour_census.ts` both
+      existed at the time — the grep that reported otherwise searched for a
+      filename pattern the surface does not use. Phase 1 added `origin`, `compat`
+      and `also` to its skill entries, so the surface this step publishes into is
+      now there and carries per-entry labels. What is still missing is only the
+      recorder: `telemetry_usage_hook.ts` still returns early for every
+      non-`Skill` tool, so no foreign `mcp__*` name is counted anywhere.
       verify: `agent-config doctor neighbours --json` -> /"tools_used_30d":\s*[0-9]+/
 - [~] **3.4 Suggest `permissions.deny` for never-used foreign tools.** Deferred: writing a
       consumer's permission block is Class C and a product decision (K15).

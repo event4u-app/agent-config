@@ -10,10 +10,12 @@
  * Refuses nothing. No label here removes, blocks, or rewrites a neighbour's
  * artifact — a label is a report, never a gate.
  *
- * It is no longer read-ONLY, and the write is named rather than implied:
- * `agents/reports/neighbour-scan.json`, the shape-scan verdicts the ranker reads
- * on the hook path. Nothing outside that directory is touched, and a failed
- * write is not a failed census.
+ * It is no longer read-ONLY, and the two writes are named rather than implied.
+ * Both land under `agents/reports/` and both are caches of this run's own
+ * findings: `neighbour-scan.json`, the shape-scan verdicts the ranker reads on
+ * the hook path, and `neighbour-overlap.json`, the cross-root pairs keyed by the
+ * census digest. Nothing outside that directory is touched, and a failed write
+ * is not a failed census.
  */
 
 import * as fs from 'node:fs';
@@ -31,6 +33,12 @@ import {
 } from '../_lib/neighbour_census.js';
 import { scanNeighbourBody, writeScanCache } from '../_lib/neighbour_scan.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
+import {
+    OVERLAP_THRESHOLD,
+    CROSS_CACHE_NAME,
+    cachedCrossRootPairs,
+    crossRootOverlapMap,
+} from '../audit_skill_overlap.js';
 
 interface ManifestShape {
     concerns?: Record<string, { effect?: string }>;
@@ -67,13 +75,20 @@ function ourSkillNames(packageRoot: string): Set<string> {
 }
 
 /**
- * The census, with the shape scan wired in and its verdicts recorded.
+ * The census, in two passes, and the second one is not an accident.
  *
- * This verb is the ONLY producer of `agents/reports/neighbour-scan.json`, which
- * is why the ranker treats that file's absence as `no-scan-record` — a refusal —
- * rather than as a pass. The scan is memoized per path because the census reads
- * a body once but a later step will want the same verdict without paying the
- * four linters twice.
+ * The cross-root overlap can only be computed over the neighbour skills the
+ * census FOUND — the unclaimed entries of two roots that also hold claimed ones,
+ * since `agent-config install` writes this package's own skills into
+ * `~/.claude/skills`. Pairing whole roots instead would compare our installed
+ * copies against our own source tree and publish the install as an overlap. So
+ * pass one finds them, the overlap runs over exactly those files, and pass two
+ * labels them.
+ *
+ * The shape scan is memoized across both passes, so the four linters run once
+ * per neighbour body rather than twice. The scan verdicts are then WRITTEN to
+ * the cache the ranker reads on the hook path — this verb is the only producer,
+ * which is why its absence reads there as `no-scan-record` rather than as a pass.
  */
 export function runCensus(
     projectRoot: string,
@@ -96,7 +111,25 @@ export function runCensus(
         scan,
         ...(homeRoot === undefined ? {} : { homeRoot }),
     };
-    const full = census(projectRoot, base);
+    const first = census(projectRoot, base);
+    const ourRoot = path.join(packageRoot, 'src', 'skills');
+    let overlaps = new Map<string, { names: string[]; similarity: number }>();
+    if (first.skills.length > 0 && fs.existsSync(ourRoot)) {
+        try {
+            const { pairs } = cachedCrossRootPairs(
+                first.skills.map((s) => s.source),
+                ourRoot,
+                path.join(projectRoot, 'agents', 'reports', CROSS_CACHE_NAME),
+                OVERLAP_THRESHOLD,
+            );
+            overlaps = crossRootOverlapMap(pairs);
+        } catch {
+            // An overlap pass that cannot run leaves every entry unlabelled by
+            // it, which reads as `unclassified` — the absence of a signal — and
+            // never as a claim that the pair is disjoint.
+        }
+    }
+    const full = census(projectRoot, { ...base, overlaps });
     writeScanCache(
         scanCachePath(projectRoot),
         // `fileDigest`, not the census's own `digest`: the ranker re-digests the
@@ -148,8 +181,9 @@ export function renderText(c: NeighbourCensus): string[] {
         out.push('');
         out.push(`  skills (${c.skills.length})`);
         for (const s of c.skills) {
+            const also = s.also.length === 0 ? '' : ` also: ${s.also.join(', ')}`;
             const why = s.unscanned === null ? '' : ` unscanned: ${s.unscanned}`;
-            out.push(`      ${s.qualified}  compat: ${s.compat}${why}`);
+            out.push(`      ${s.qualified}  compat: ${s.compat}${also}${why}`);
         }
     }
     section('commands', c.commands);
