@@ -179,29 +179,53 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       definition source, and the observation this slot CAN make is 3.3's name
       recorder. Revisit-if: a reader of third-party MCP tool descriptors exists in
       `src/scripts/`.
-- [ ] **3.3 Foreign MCP servers counted by use.** `telemetry_usage_hook.ts` returns early
+- [x] **3.3 Foreign MCP servers counted by use.** `telemetry_usage_hook.ts` returns early
       for every non-`Skill` tool (`:250`), so a small recorder of foreign `mcp__*` tool
       names is new; the census gains distinct tools used per server in 30 days.
       Advertised counts stay `unknown` — nothing launches a server to ask.
-
-      **Not independent of Phase 1, which the phase split implied it was.** The
-      verify line reads a `doctor neighbours` surface, and no such surface exists
-      (`grep -rln neighbours src/ --include='*.ts'` names only unrelated modules).
-      The census it prints is built by 1.2. The recorder half —
-      `telemetry_usage_hook.ts` returning early for every non-`Skill` tool at `:250`
-      — is still the real work and is still independent; what cannot be done before
-      Phase 1 is *publishing* the number. Recorded here rather than left for the
-      next run to rediscover.
-
-      **Half of that note was already wrong when it was written, and Phase 1
-      settled the rest.** `doctor neighbours` and `_lib/neighbour_census.ts` both
-      existed at the time — the grep that reported otherwise searched for a
-      filename pattern the surface does not use. Phase 1 added `origin`, `compat`
-      and `also` to its skill entries, so the surface this step publishes into is
-      now there and carries per-entry labels. What is still missing is only the
-      recorder: `telemetry_usage_hook.ts` still returns early for every
-      non-`Skill` tool, so no foreign `mcp__*` name is counted anywhere.
       verify: `agent-config doctor neighbours --json` -> /"tools_used_30d":\s*[0-9]+/
+
+      ~~**Not independent of Phase 1, which the phase split implied it was.** The
+      verify line reads a `doctor neighbours` surface, and no such surface exists
+      (`grep -rln neighbours src/ --include='*.ts'` names only unrelated modules).~~
+      **Struck, not deleted: the claim was false when written and is kept so the
+      correction below has something to point at.** The rest of that note stood —
+      the census the step publishes into is built by 1.2, and the recorder half is
+      independent of it.
+
+      **What the grep got wrong.** `doctor neighbours` and
+      `_lib/neighbour_census.ts` both existed at the time; the grep searched for a
+      filename pattern the surface does not use. Phase 1 then added `origin`,
+      `compat` and `also` to its skill entries, so the publishing half was there
+      before this step started and only the recorder was missing.
+
+      **Landed 2026-10-02 in three pieces.** `_lib/neighbour_tool_use.ts` holds the
+      store contract — path, window, the tool-name parser and the reader — in one
+      module both sides name. `telemetry_usage_hook.ts` writes it: the non-`Skill`
+      early return now records an `mcp__*` name and its day first, rooted at the
+      settings directory rather than the session cwd. `neighbour_census.ts` reads it
+      and every `mcp_server` entry carries `tools_used_30d`, `tools_advertised:
+      unknown` and the window it was counted over.
+
+      **The slot's two halves, now both settled.** D2 above found that
+      `post_tool_use` cannot supply a tool DEFINITION; this step is the observation
+      that slot CAN make, and the pairing is deliberate — a name is not a
+      fingerprint and the census never prints it as one. `tools_advertised` stays
+      the literal `unknown` for the same reason: a denominator would need a
+      handshake with a neighbour's process, and `0` therefore reads as "none
+      observed", never as "none exist".
+
+      **Measured against the bundle ceiling rather than asserted.**
+      `check_hook_bundle_composition` read **1,549,697 B** of 1,550,000 before and
+      **1,549,830 B** after — net +133 B, and `max_bytes` is untouched. The
+      recorder as first written cost 669 B and went 366 over; three measured cuts
+      in the same file brought it back: 475 B from moving the bundle guard to the
+      call site (D11), 61 B from writing the store path as a literal instead of a
+      top-level `path.join` whose `node:path` import outlived every tree-shaken
+      function that used it, and ~190 B from moving one comment out of an argument
+      list — esbuild strips a comment at module or statement level and PRESERVES
+      one between call arguments, which is a per-byte fact this gate's own header
+      does not state and the next author will otherwise rediscover.
 - [~] **3.4 Suggest `permissions.deny` for never-used foreign tools.** Deferred: writing a
       consumer's permission block is Class C and a product decision (K15).
 
@@ -226,6 +250,9 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 | D6 | reversible-technical | agent | a tree with NO installed-tools manifest qualifies nothing — every skill resolves `package` and the route line is byte-identical to before 1.1 | nothing on disk records a claim there, so a `home:` prefix would be a guess printed in the shape of a fact; the authored `src/skills` is the one exception and is a construction, not a guess | a second artifact records what this package wrote, at which point absence of the manifest stops meaning absence of evidence |
 | D7 | reversible-technical | agent | the ranker reads a WRITTEN scan verdict rather than running the shape checks itself | the four linters plus `node:child_process` would be inlined into the shared hook bundle, which `check_hook_bundle_composition` caps; measured, the split keeps every one of them out and the census CLI is the only producer | the scan becomes cheap enough to run per prompt, or the bundle stops being shared |
 | D8 | reversible-technical | agent | `skill_origin.ts` parses the installed-tools manifest itself instead of reusing `readRecordedHashes` | measured 1,706 bytes of the shared hook bundle for a hash map whose keys are the whole requirement; two of the three existing readers already parse it directly because the shared one drops the nested `files[]` rows | the shared reader gains a paths-only accessor, or the bundle stops being size-capped |
+| D9 | reversible-technical | agent | 3.3's store is local-only under gitignored `agents/runtime/`, and is NOT gated on the telemetry opt-in | it feeds `doctor neighbours`, a report the consumer runs on their own tree — no transport reads it and the Class-A spool never sees it. Gating it on an org switch would print `0` on every install that never enabled one, which is the same instrumentation artifact the usage hook's own header records from the collector it replaced. What is recorded is a tool NAME the consumer's `.mcp.json` already lists — no arguments, no responses, no session id | a transport is ever pointed at this file, at which point it becomes a telemetry surface and inherits that gate |
+| D10 | reversible-technical | agent | a server is matched on its SANITISED segment, both sides, not on the raw `.mcp.json` key | hosts rewrite the key before embedding it — `claude.ai Claude Docs` arrives as `mcp__claude_ai_Claude_Docs__…`. An exact-key match reports `0` for every server whose name carries a dot or a space, and a reader cannot tell that zero from "never used" | a host is observed embedding a key under a different transformation than `[^A-Za-z0-9_-] -> _` |
+| D11 | reversible-technical | agent | `telemetry_usage_hook.ts`'s bundle guard moves from the top of `_isCliEntry` to its call site | measured: inside the function esbuild folds the define to `if (true) return false` and still emits the nine unreachable lines after it — 475 B of dead code in a bundle `check_hook_bundle_composition` caps at 1,550,000. At the call site the statement folds to `if (false)`, which is dropped, and the unreferenced function with it. Behavior outside the bundle is identical: `__AGENT_CONFIG_BUNDLE__` is undeclared there, the first operand short-circuits, and `!__AGENT_CONFIG_BUNDLE__` is never evaluated | esbuild starts eliminating the dead tail on its own, at which point the guard can move back and ~45 other hook files become the same saving |
 
 ## Risk Register
 

@@ -233,9 +233,10 @@ Reproduced on 2026-10-01:
 - **Class:** 3
 - **Ownership:** product-owned
 - **Blocks:** the execution half of 1.2, and AC-2 through it. The measurement,
-  the instrument and the decision are delivered; 113 of the 160 unresolved
+  the instrument and the decision are delivered; 112 of the 158 unresolved
   links are one two-line edit away from resolving, and that edit is the thing
-  held here.
+  held here. (113 of 160 when this was written; re-measured 2026-10-02 — the
+  tree shed two links, one from each population.)
 - **What to do:** `GLOBAL_DEPLOY_SOURCES` in `src/install/wizard-plan.ts` is
   part of the frozen install ABI (`docs/contracts/install-layout.md`), and
   `tests/install/install_layout_contract.test.ts` fails on any change to it
@@ -265,8 +266,8 @@ Reproduced on 2026-10-01:
   but a static one, and D4's own `revisit-if` would reopen the comparison
   anyway if the host ever starts counting non-`rules/` files.
 - **If you do nothing:** a consumer following a link in an installed rule
-  lands on nothing 160 times per Claude install (97 on augment, 260 on cursor,
-  273 on windsurf and kiro), silently — a dead link reads as a missing file
+  lands on nothing 158 times per Claude install (95 on augment, 257 on cursor,
+  270 on windsurf and kiro), silently — a dead link reads as a missing file
   rather than as a shipping decision. The number does not grow: the per-host
   ratchet in `tests/scripts/install_rule_links.test.ts` holds it, so the cost
   is standing rather than compounding, and every other step on this roadmap is
@@ -275,17 +276,22 @@ Reproduced on 2026-10-01:
   `npx vitest run tests/install/install_layout_contract.test.ts` is green
   against a golden for the bumped version, and the per-host baseline in
   `tests/scripts/install_rule_links.test.ts` has been lowered to the
-  post-deploy reading (claude-code 47, augment 46, cursor 147, windsurf 160,
-  kiro 160).
+  post-deploy reading — **claude-code 46, augment 45, cursor 145, windsurf 158,
+  kiro 158**, each the live unresolved count minus the directories that host's
+  row gains (augment gains `guidelines/` only). Re-derived 2026-10-02 from
+  `report_installed_rule_links` by the same subtraction that produced the
+  earlier 47 / 46 / 147 / 160 / 160; re-derive again before executing, because
+  these move whenever a rule body gains or loses a link.
 
 ### blocker: forty-seven-links-name-files-the-package-does-not-ship
 
 - **Status:** open
 - **Owner:** maintainer
 - **Class:** 2
-- **Blocks:** AC-2, together with the ABI blocker above. That one holds 113 of
-  claude-code's 160 unresolved links; these are the other 47. Both must close
-  before AC-2 does. Every step on this roadmap is closed.
+- **Blocks:** AC-2, together with the ABI blocker above. That one holds 112 of
+  claude-code's 158 unresolved links; these are the other 46. Both must close
+  before AC-2 does. Every step on this roadmap is closed. (113 / 160 / 47 when
+  this was written; re-measured 2026-10-02.)
 - **What to do:** these 47 are not a smaller version of what the ABI blocker
   holds, and a deploy entry cannot reach any of them — read D5 before
   reaching for one. Three groups, each with a different answer:
@@ -293,7 +299,7 @@ Reproduced on 2026-10-01:
      several rules say so in their own text. Either the projection starts
      shipping `docs/contracts/` — a scope decision this roadmap does not own —
      or the 22 links become code spans in `src/rules/`.
-  2. **23 climbing out of the install root** into `../../tests/`,
+  2. **22 climbing out of the install root** into `../../tests/`,
      `../../src/scripts/`, `../../scripts/` and
      `agents/settings/policies/media/`. These name the repository, not the
      package; no install has ever held them, and none ever will. Code spans
@@ -319,7 +325,7 @@ Reproduced on 2026-10-01:
   reward. Leave group 1 alone until someone decides whether `docs/contracts/`
   is projected at all, because entering it from the link side would prejudge
   that. Group 3 is two lines and can ride with group 2.
-- **If you do nothing:** 47 of a Claude install's 160 dead rule links stay
+- **If you do nothing:** 46 of a Claude install's 158 dead rule links stay
   dead even after the ABI blocker above is taken — a dead link reads as a
   missing file rather than as a shipping decision, and the reader cannot tell
   which. The number does not grow: the per-host ratchet holds it, so the cost
@@ -327,8 +333,8 @@ Reproduced on 2026-10-01:
   on it.
 - **Resolved when:** `./scripts-run src/scripts/report_installed_rule_links`
   reports, for `claude-code`, no `docs` row, no `outside-install-root` row,
-  **and** no `scripts` or `templates` row — i.e. all 47 are gone,
-  independently of whether the ABI blocker has closed the other 113 — and the
+  **and** no `scripts` or `templates` row — i.e. all 46 are gone,
+  independently of whether the ABI blocker has closed the other 112 — and the
   ratchet baseline in `tests/scripts/install_rule_links.test.ts` has been
   lowered to match. The last two rows are named explicitly because the first
   two conditions cover only 45: group 3's one-offs are
@@ -347,7 +353,15 @@ Reproduced on 2026-10-01:
 | D5 | reversible-technical | agent | The 47 links left unresolved on Claude are a named remainder, not a smaller version of the same defect | 22 point into `docs/`, which the projection does not produce at all; 23 climb out of the install root into the repository (`../../tests/`, `../../src/`, `agents/settings/policies/`); 2 are one-off targets, one of them also unprojected. None is reachable by a deploy entry — closing them is an authoring change in rule prose, which this roadmap's "deliberately does not do" section keeps out of scope | A future projection ships `docs/`, or the rule bodies are re-authored to carry code spans where the target is not shipped |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-02 | reviewer: claude/drain-neighbour-usage-and-link-ac -->
+
+Re-read 2026-10-02 against the tree, not stamped: both rows still describe it.
+Row 1 has HAPPENED and is recorded where it happened — step 1.1's note carries
+the measured +2,934 tokens and the re-anchored ratchet, which is the mitigation
+discharging rather than the risk going away. Row 2 is still live and still
+unexecuted; it is what the ABI blocker holds, and the re-measurement under AC-2
+moved only its size (113 links to 112), never its shape. No row added, none
+retired.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -360,5 +374,26 @@ Reproduced on 2026-10-01:
       `paths:` on Claude.
 - [ ] AC-2 — A link check over an installed rule directory reports zero
       unresolved links.
+
+      **Re-measured 2026-10-02, and it stays false — on evidence, not on the
+      absence of an attempt.** `./scripts-run src/scripts/report_installed_rule_links`
+      reads **158** unresolved for `claude-code` against 545 links: **112** into
+      `contexts/` and `guidelines/`, which the ABI blocker holds, and **46** the
+      remainder blocker holds. Zero is reachable only when both close, which the
+      remainder blocker already states ("Both must close before AC-2 does"), and
+      neither is an agent call: the first owes an `install_layout_version` bump
+      and a deprecation window, which is a release commitment; the second is
+      rule-prose authoring this roadmap's own § What this roadmap deliberately
+      does not do keeps out of scope.
+
+      **The tree moved under the criterion, so the figures in both blockers were
+      refreshed rather than left to read as current.** 160 → 158, the deployable
+      share 113 → 112, the remainder 47 → 46, and the per-host post-deploy targets
+      with them. `UNRESOLVED_BASELINE` in
+      `tests/scripts/install_rule_links.test.ts` is deliberately NOT lowered to
+      158: it is a shrink-only ratchet enforced by CI, a worktree reading is not
+      the enforcing environment's, and 158 ≤ 160 already passes — headroom costs
+      nothing and a wrongly tightened baseline costs a push cycle. The exact-split
+      pin beside it already reads 62 / 50, so it needed no change.
 - [x] AC-3 — The single-token, obligation-mechanism and per-spawn readings are
       committed as reports.
