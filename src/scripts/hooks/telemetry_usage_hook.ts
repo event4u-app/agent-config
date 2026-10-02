@@ -55,7 +55,12 @@ import {
     FLUSH_SESSION_END,
     spool_path_for,
 } from '../../agent-src/templates/scripts/telemetry/transport.js';
-import { is_replay_mode } from './state_io.js';
+import {
+    FOREIGN_TOOL_USE_REL,
+    MCP_TOOL_PREFIX,
+    usageDay,
+} from '../_lib/neighbour_tool_use.js';
+import { is_replay_mode, update_json_under_lock } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW } from './exit_codes.js';
 
@@ -247,7 +252,30 @@ function processEnvelope(envelope: JsonValue, consumer_root: string): number {
         if (!isObject(envelope)) return EXIT_ALLOW;
 
         const payload = unwrapPayload(envelope);
-        if (extractToolName(payload) !== SKILL_TOOL_NAME) return EXIT_ALLOW;
+        const tool = extractToolName(payload);
+        if (tool !== SKILL_TOOL_NAME) {
+            // The other half of this slot's observation, and the only half a
+            // `post_tool_use` envelope can supply: the tool's NAME. The MCP
+            // fingerprint store wants a tool DEFINITION, which this envelope
+            // never carries (roadmap decision D2), so what is recorded here is
+            // what was actually seen. Rooted at the settings directory, not at
+            // the session cwd, for the same reason the Class-A log below is.
+            if (tool !== null && tool.startsWith(MCP_TOOL_PREFIX)) {
+                // The mutator's cast is safe at the only place that matters:
+                // the reader in `neighbour_tool_use` drops any value that is
+                // not a string, so a hand-edited store cannot widen this.
+                // Kept OUT of the argument list below — esbuild preserves a
+                // comment in that position and it would cost the shared
+                // bundle ~190 bytes of prose nothing executes.
+                const day = usageDay(new Date());
+                update_json_under_lock<Record<string, string>>(
+                    path.join(readSettingsFor(consumer_root).root, FOREIGN_TOOL_USE_REL),
+                    (seen) => (seen[tool] === day ? null : ({ ...seen, [tool]: day } as Record<string, string>)),
+                    { blocking: false },
+                );
+            }
+            return EXIT_ALLOW;
+        }
 
         const { settings, text, root } = readSettingsFor(consumer_root);
         if (!settings.active) return EXIT_ALLOW;
@@ -339,11 +367,18 @@ export function main(): number {
 
 // Bundle-safety: never auto-run when inlined into an esbuild bundle, where
 // every module shares the bundle's `import.meta.url` (see cmd_migrate.ts).
+//
+// The bundle test is at the CALL SITE rather than at the top of
+// `_isCliEntry`, and that placement is the whole point. Inside the function
+// esbuild folds the condition to `if (true) return false` and then emits the
+// nine unreachable lines below it anyway — measured at 475 bytes of dead code
+// in a bundle `check_hook_bundle_composition` caps. Guarding the call instead
+// makes the whole statement `if (false)`, which esbuild drops, taking the now
+// unreferenced function with it. Behavior outside the bundle is unchanged:
+// `__AGENT_CONFIG_BUNDLE__` is undeclared there, the first operand is true,
+// and `!__AGENT_CONFIG_BUNDLE__` is never evaluated — so no ReferenceError.
 declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 function _isCliEntry(): boolean {
-    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) {
-        return false;
-    }
     if (process.argv[1] === undefined) return false;
     const argvUrl = pathToFileURL(path.resolve(process.argv[1])).href;
     if (import.meta.url === argvUrl) return true;
@@ -353,4 +388,6 @@ function _isCliEntry(): boolean {
         return false;
     }
 }
-if (_isCliEntry()) process.exit(main());
+if (typeof __AGENT_CONFIG_BUNDLE__ === 'undefined' || !__AGENT_CONFIG_BUNDLE__) {
+    if (_isCliEntry()) process.exit(main());
+}

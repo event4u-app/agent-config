@@ -188,7 +188,20 @@ export function renderText(c: NeighbourCensus): string[] {
     }
     section('commands', c.commands);
     section('agents', c.agents);
-    section('mcp servers', c.mcp_servers);
+    if (c.mcp_servers.length > 0) {
+        out.push('');
+        out.push(`  mcp servers (${c.mcp_servers.length})`);
+        for (const m of c.mcp_servers) {
+            // `used` and `advertised` are printed side by side so the reader
+            // never takes the first for a coverage ratio: the denominator is
+            // not missing by accident, it is not obtainable without launching
+            // the neighbour's process, which this census does not do.
+            out.push(
+                `      ${m.id}  tools used (${m.tools_window_days}d): ${m.tools_used_30d}` +
+                    `  advertised: ${m.tools_advertised}`,
+            );
+        }
+    }
     section('rule files', c.rule_files);
     section('instruction sections', c.instruction_sections);
     if (c.warnings.length > 0) {

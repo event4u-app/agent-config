@@ -31,6 +31,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { HOOK_SIGNATURES, entryCommands, isManagedEntry } from './host_hook_merge.js';
+import { TOOL_USE_WINDOW_DAYS, serverSegment, toolsUsedByServer } from './neighbour_tool_use.js';
 import { scanText } from './secret_detector.js';
 import { readRecordedHashes } from '../../install/recordedOwnership.js';
 import { manifest_path } from './installed_tools.js';
@@ -95,6 +96,26 @@ export interface NeighbourEntry {
     source: string;
 }
 
+/**
+ * A foreign MCP server, with what this package has OBSERVED of it.
+ *
+ * Two numbers, and the asymmetry between them is the point. `tools_used_30d`
+ * is counted from names that actually passed through the post-tool hook, so it
+ * is a floor on use and never an estimate. `tools_advertised` is the literal
+ * `'unknown'`: finding out what a server offers means launching it and running
+ * a handshake, and nothing in this read-only census starts a neighbour's
+ * process. A `0` here therefore means "none observed", never "none exist" —
+ * a store that was never written and a server that was never called are the
+ * same reading, and the field name says `used`, not `available`, for that reason.
+ */
+export interface NeighbourMcpEntry extends NeighbourEntry {
+    shape: 'mcp_server';
+    tools_used_30d: number;
+    tools_advertised: 'unknown';
+    /** The window `tools_used_30d` was counted over, in days. */
+    tools_window_days: number;
+}
+
 export interface ForeignHookEntry extends NeighbourEntry {
     shape: 'hook_group';
     event: string;
@@ -154,7 +175,7 @@ export interface NeighbourCensus {
     skills: NeighbourSkillEntry[];
     commands: NeighbourEntry[];
     agents: NeighbourEntry[];
-    mcp_servers: NeighbourEntry[];
+    mcp_servers: NeighbourMcpEntry[];
     rule_files: NeighbourEntry[];
     instruction_sections: NeighbourEntry[];
     warnings: CensusWarning[];
@@ -410,14 +431,15 @@ export function foreignSections(file: string, templateFile: string, origin: stri
     return out;
 }
 
-/** MCP servers in `.mcp.json` other than ours. */
-function foreignMcpServers(projectRoot: string): NeighbourEntry[] {
+/** MCP servers in `.mcp.json` other than ours, each with its observed use. */
+function foreignMcpServers(projectRoot: string, now: Date): NeighbourMcpEntry[] {
     const file = path.join(projectRoot, '.mcp.json');
     const doc = readJson(file);
     const servers = doc?.['mcpServers'];
     if (servers === null || servers === undefined || typeof servers !== 'object' || Array.isArray(servers)) {
         return [];
     }
+    const used = toolsUsedByServer(projectRoot, now);
     return Object.entries(servers as Record<string, unknown>)
         .filter(([name]) => name !== OUR_MCP_KEY)
         .map(([name, spec]) => ({
@@ -425,6 +447,9 @@ function foreignMcpServers(projectRoot: string): NeighbourEntry[] {
             shape: 'mcp_server' as const,
             digest: sha256(JSON.stringify(spec)),
             source: file,
+            tools_used_30d: used.get(serverSegment(name)) ?? 0,
+            tools_advertised: 'unknown' as const,
+            tools_window_days: TOOL_USE_WINDOW_DAYS,
         }))
         .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
@@ -500,6 +525,8 @@ export interface CensusOptions {
     scan?: (skillMdPath: string) => string | null;
     /** Recorded shape-scan verdicts, for the no-scanner path. */
     scanCache?: ScanCache | null;
+    /** Clock, for the MCP use window. Injected so a fixture can pin the day. */
+    now?: Date;
 }
 
 /** Run the whole census for one consumer root. */
@@ -627,7 +654,7 @@ export function census(projectRoot: string, opts: CensusOptions = {}): Neighbour
         skills,
         commands,
         agents,
-        mcp_servers: foreignMcpServers(projectRoot),
+        mcp_servers: foreignMcpServers(projectRoot, opts.now ?? new Date()),
         rule_files: ruleFiles,
         instruction_sections: instructionSections,
         warnings,
