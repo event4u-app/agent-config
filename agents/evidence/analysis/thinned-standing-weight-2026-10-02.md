@@ -53,7 +53,7 @@ magnitude.
 | default | 29,063 (9 rules) | 35,282 (6) | 20,172 (19) | 22,293 (67) |
 | maintainer | 29,063 (9) | 45,835 (10) | 14,071 (12) | 15,120 (47) |
 
-19 of the class's 24 stub-law members are in the default scope, and they cost
+19 of the class's 23 stub-law members are in the default scope, and they cost
 20,172 characters against 22,293 for the 67 plain stubs — a law-carrying stub is
 roughly 3.2× a plain one. That ratio is the whole economics of the form, and it
 is the number to narrow the criterion against if it is judged too expensive.
@@ -84,7 +84,8 @@ above.
 
 Three dispositions, and the measurement does not pick between them:
 
-1. **Narrow the criterion.** 24 members is 23 % of the routed corpus. The
+1. **Narrow the criterion.** 28 members is 26 % of the routed corpus, 23 of them
+   carrying a law in a stub. The
    `authority-bypass` clause is the widest of the three — ten members — and the
    four safety-floor rules under it (`legal`, `finance`, `strategy`,
    `domain-safety-disclaimer`) state the same shape of obligation four times.
