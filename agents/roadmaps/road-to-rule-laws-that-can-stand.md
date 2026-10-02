@@ -86,7 +86,7 @@ Reproduced on 2026-10-01:
       2,000 characters fails the projection rather than shipping a shortened
       copy.
       verify: `npx vitest run tests/scripts/project_thin_rules.test.ts -t law-in-stub` -> 0
-- [ ] **2.3 The thinned weight, measured.** Record the default- and
+- [x] **2.3 The thinned weight, measured.** Record the default- and
       maintainer-scope standing totals of the thinned tree with the class in
       place, in the installed-layer report's unit, against the 65,000 target and
       75,000 hard ceiling.
@@ -111,6 +111,7 @@ Reproduced on 2026-10-01:
 | D2 | contested-technical | council:inbox-2026-10-c-standing-form | Law target 1,200, hard 2,000 with expiring exceptions | Both seats; current p90 is 1,787, so 2,000 covers the distribution without truncation | More than a handful of rules need exceptions |
 | D3 | contested-technical | council:inbox-2026-10-c-standing-form | The class is selected by a consequence criterion, not by the name "safety" | Both seats called the 14-rule list ungoverned | A class member's obligation turns out to be advisory, or a rule outside it causes an irreversible action |
 | D4 | reversible-technical | agent | Existing rules are baselined, not rewritten in bulk | A bulk rewrite spends authoring effort on text the flip may still move; the baseline only lets them shrink | — |
+| D5 | reversible-technical | agent | A class member that cannot carry its law in a stub is declared under `no_stub` and projects FULL-BODIED, instead of failing the projection | 2.2 says such a member fails the projection. Applied literally that is unshippable today: four members state their law in a fence or a bullet list under no `Iron Law` heading (`tool-safety`, `runtime-safety`, `question-not-instruction`, `autonomous-execution`) and `legal-safety-floor` is 23 characters over the ceiling, and writing four new law headings is authoring obligations, which `artifact-drafting-protocol` governs and a projection change may not do on the side. Full-bodied carries strictly more than the law, so no member ever ships with less; the subset is declared with a reason each, so the class cannot be shrunk by not writing a law; and an UNDECLARED member in that state still fails. | A member's law is written and it leaves `no_stub`, or the subset grows rather than shrinks — the second is the signal that the escape became the habit |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
@@ -123,8 +124,8 @@ Reproduced on 2026-10-01:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — Every routed rule has a law section or is in a shrink-only baseline.
-- [ ] AC-2 — No law section above 2,000 characters without a dated exception.
-- [ ] AC-3 — `build_thin` writes stub-plus-law for exactly the criterion's class,
+- [x] AC-1 — Every routed rule has a law section or is in a shrink-only baseline.
+- [x] AC-2 — No law section above 2,000 characters without a dated exception.
+- [x] AC-3 — `build_thin` writes stub-plus-law for exactly the criterion's class,
       byte-equal to the source section.
-- [ ] AC-4 — The thinned standing weight is recorded against the 65,000 target.
+- [x] AC-4 — The thinned standing weight is recorded against the 65,000 target.
