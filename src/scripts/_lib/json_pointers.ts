@@ -9,10 +9,15 @@
  *
  * 1. **No array indices.** Pointers MUST target named object keys only.
  *    `/hooks/PostToolUse` is valid; `/hooks/PostToolUse/0` is not.
- * 2. **Arrays carry a `value_hash` discriminator.** A pointer that
- *    targets a parent whose value is a list records the SHA-256 of the
- *    JSON-serialised list contents the install wrote, so uninstall can
- *    identify the owned elements by content rather than position.
+ * 2. **Arrays carry a discriminator, and which one depends on who owns
+ *    the list.** A list this package owns outright records the SHA-256 of
+ *    the contents the install wrote, so uninstall identifies the owned
+ *    elements by content rather than position. A list it merely APPENDS to —
+ *    a host's `hooks.<event>`, shared with every other agent package the
+ *    consumer installed — records an `entry_signature` instead: uninstall
+ *    then filters that list rather than claiming it. Recording a hash there
+ *    was the defect; it made uninstall either delete a neighbour's entries
+ *    or, once a neighbour had appended, refuse and leave ours behind.
  *
  * `value_hash` reproduces Python's canonical
  * `json.dumps(value, sort_keys=True, separators=(",", ":"))` output
@@ -21,6 +26,8 @@
  */
 
 import { createHash } from "node:crypto";
+
+import { HOOK_SIGNATURES, isManagedEntry } from "./host_hook_merge.js";
 
 type JsonValue =
   | null
@@ -172,6 +179,23 @@ export function value_hash(value: unknown): string {
 export interface PointerEntry {
   json_pointer: string;
   value_hash: string | null;
+  /**
+   * Set when the pointer targets a SHARED array this package appends to
+   * rather than owns — a host's `hooks.<event>` list.
+   *
+   * Recording `value_hash` for such an array claims the whole list, and both
+   * outcomes of that claim are wrong at uninstall: an untouched list is
+   * deleted wholesale, taking a neighbour's entries with it, and a list a
+   * neighbour appended to reports `drift` and leaves OUR entries behind. With
+   * a signature, subtraction filters the array instead: entries carrying the
+   * signature go, everything else stays, and the key is removed only once the
+   * list is empty.
+   *
+   * `value_hash` is null whenever this is set — the two are alternatives, and
+   * a hash of a list other packages may legitimately have changed is not a
+   * drift signal, it is a false one.
+   */
+  entry_signature?: string;
 }
 
 export interface MergeEntry extends PointerEntry {
@@ -187,6 +211,12 @@ function _is_plain_object(value: unknown): value is Record<string, unknown> {
 export interface CollectPointersOptions {
   prefix?: string;
   include_arrays?: boolean;
+  /**
+   * Content signature identifying this package's entries inside a shared
+   * array. When set, an array pointer records the signature instead of a
+   * whole-list hash (see `PointerEntry.entry_signature`).
+   */
+  entry_signature?: string;
 }
 
 /**
@@ -208,6 +238,7 @@ export function collect_pointers(
 ): PointerEntry[] {
   const prefix = options.prefix ?? "";
   const include_arrays = options.include_arrays ?? true;
+  const entry_signature = options.entry_signature ?? "";
   const entries: PointerEntry[] = [];
   for (const [key, value] of Object.entries(overlay)) {
     const pointer = `${prefix}/${_escape_segment(String(key))}`;
@@ -219,14 +250,29 @@ export function collect_pointers(
         entries.push({ json_pointer: pointer, value_hash: null });
       } else {
         entries.push(
-          ...collect_pointers(value, { prefix: pointer, include_arrays }),
+          ...collect_pointers(value, {
+            prefix: pointer,
+            include_arrays,
+            entry_signature,
+          }),
         );
       }
     } else if (Array.isArray(value)) {
-      entries.push({
-        json_pointer: pointer,
-        value_hash: include_arrays ? value_hash(value) : null,
-      });
+      // Only the host's shared hook lists are appended to; every other array
+      // in the same overlay — `mcpServers.*.args`, for one — this package
+      // still owns outright and keeps hashing.
+      if (entry_signature !== "" && pointer.startsWith("/hooks/")) {
+        entries.push({
+          json_pointer: pointer,
+          value_hash: null,
+          entry_signature,
+        });
+      } else {
+        entries.push({
+          json_pointer: pointer,
+          value_hash: include_arrays ? value_hash(value) : null,
+        });
+      }
     } else {
       entries.push({ json_pointer: pointer, value_hash: null });
     }
@@ -252,11 +298,16 @@ export function build_merge_entries(
   file_label: string,
   overlay: Record<string, unknown>,
 ): MergeEntry[] {
-  const pointers = collect_pointers(overlay);
+  const pointers = collect_pointers(overlay, {
+    entry_signature: HOOK_SIGNATURES[file_label] ?? "",
+  });
   return pointers.map((entry) => ({
     file: file_label,
     json_pointer: entry.json_pointer,
     value_hash: entry.value_hash,
+    ...(entry.entry_signature === undefined
+      ? {}
+      : { entry_signature: entry.entry_signature }),
   }));
 }
 
@@ -304,6 +355,8 @@ export interface SubtractWarning {
 export interface SubtractEntry {
   json_pointer: string;
   value_hash?: string | null;
+  /** See `PointerEntry.entry_signature` — filters a shared array in place. */
+  entry_signature?: string;
 }
 
 /**
@@ -354,7 +407,36 @@ export function subtract_pointers(
       continue;
     }
     const [parent, leaf] = nav;
-    if (expected !== null) {
+    const signature = entry.entry_signature ?? "";
+    if (signature !== "") {
+      const current = parent[leaf];
+      if (!Array.isArray(current)) {
+        warnings.push({
+          pointer,
+          reason: "missing",
+          expected_hash: null,
+          actual_hash: null,
+        });
+        continue;
+      }
+      // A shared list: drop only the entries carrying our signature, keep a
+      // neighbour's in order and byte-identical, and remove the key only once
+      // nothing of ours is left in it.
+      const kept = current.filter((item) => !isManagedEntry(item, signature));
+      if (kept.length === current.length) {
+        warnings.push({
+          pointer,
+          reason: "missing",
+          expected_hash: null,
+          actual_hash: null,
+        });
+        continue;
+      }
+      if (kept.length > 0) {
+        parent[leaf] = kept;
+        continue;
+      }
+    } else if (expected !== null) {
       const actual = value_hash(parent[leaf]);
       if (actual !== expected) {
         warnings.push({

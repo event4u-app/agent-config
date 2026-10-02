@@ -132,11 +132,14 @@ describe("build_merge_entries", () => {
   });
 
   it("test_array_entry_carries_value_hash", () => {
+    // An array this package OWNS. A `/hooks/<event>` array under a hook-writer
+    // label is shared, and carries a signature instead — Phase 1.2, pinned in
+    // "signature-scoped array ownership" below.
     const entries = build_merge_entries(".cursor/hooks.json", {
-      hooks: { PostToolUse: [{ command: "x" }] },
+      mcpServers: { "agent-config": { args: ["a"] } },
     });
     expect(entries).toHaveLength(1);
-    expect(entries[0]?.json_pointer).toBe("/hooks/PostToolUse");
+    expect(entries[0]?.json_pointer).toBe("/mcpServers/agent-config/args");
     expect(entries[0]?.value_hash).not.toBeNull();
   });
 
@@ -372,9 +375,36 @@ describe("differential vs Python reference", () => {
     overlays.forEach((overlay, i) => {
       expect(collect_pointers(overlay), `collect #${i}`).toEqual(py[i]);
     });
+    // Phase 1.2 changed ONE field on ONE class of pointer: a `/hooks/<event>`
+    // array under a hook-writer label now records `entry_signature` where it
+    // used to record `value_hash`, because that list is shared with whatever
+    // else the consumer installed. The Python reference is the retired
+    // pre-fix implementation and its snapshot cannot be re-captured, so the
+    // divergence is undone here rather than asserted away: every other field
+    // — the pointer set, its order, the RFC-6901 escaping, the scalar and
+    // owned-array rules — must still be byte-identical to the original, and
+    // the recovered hash must equal the one the original recorded. A change
+    // anywhere else still fails this test.
+    const undoSignature = (
+      entries: ReturnType<typeof build_merge_entries>,
+      overlay: Record<string, unknown>,
+    ): unknown[] =>
+      entries.map((e) => {
+        if (e.entry_signature === undefined) return e;
+        const segments = e.json_pointer.slice(1).split("/");
+        let cursor: unknown = overlay;
+        for (const seg of segments) {
+          cursor = (cursor as Record<string, unknown>)[seg];
+        }
+        return {
+          file: e.file,
+          json_pointer: e.json_pointer,
+          value_hash: value_hash(cursor),
+        };
+      });
     overlays.forEach((overlay, i) => {
       expect(
-        build_merge_entries(".cursor/hooks.json", overlay),
+        undoSignature(build_merge_entries(".cursor/hooks.json", overlay), overlay),
         `build #${i}`,
       ).toEqual(py[overlays.length + i]);
     });
@@ -422,5 +452,83 @@ describe("differential vs Python reference", () => {
       );
       expect({ doc: new_doc, warnings }, `subtract #${i}`).toEqual(py[i]);
     });
+  });
+});
+
+describe("signature-scoped array ownership (Phase 1.2)", () => {
+  const LABEL = ".cursor/hooks.json";
+  const FOREIGN = { command: "npx other-agent-pack hook" };
+  const OURS = {
+    command:
+      "[ -x ./agent-config ] || exit 0; ./agent-config dispatch:hook --platform cursor --event pre_tool_use",
+  };
+
+  it("records a signature instead of a whole-list hash for a hook array", () => {
+    const entries = build_merge_entries(LABEL, { hooks: { e: [OURS] } });
+    const hookEntry = entries.find((x) => x.json_pointer === "/hooks/e");
+    expect(hookEntry?.entry_signature).toBe("dispatch:hook --platform cursor");
+    expect(hookEntry?.value_hash).toBeNull();
+  });
+
+  it("still records a whole-list hash for a writer with no signature", () => {
+    const entries = build_merge_entries("some-other-file.json", { k: [1, 2] });
+    expect(entries[0]?.entry_signature).toBeUndefined();
+    expect(entries[0]?.value_hash).not.toBeNull();
+  });
+
+  it("leaves a non-hook array in the SAME overlay owned outright", () => {
+    // The scoping that the Python differential caught: a hook writer's patch
+    // can also carry `mcpServers.*.args`, which this package does own.
+    const entries = build_merge_entries(LABEL, {
+      mcpServers: { "agent-config": { args: ["a", "b"] } },
+      hooks: { e: [OURS] },
+    });
+    const args = entries.find((x) => x.json_pointer === "/mcpServers/agent-config/args");
+    expect(args?.entry_signature).toBeUndefined();
+    expect(args?.value_hash).not.toBeNull();
+  });
+
+  it("the label alone decides whether a hooks array is shared or owned", () => {
+    const overlay = { hooks: { PostToolUse: [OURS] } };
+    const owned = build_merge_entries("not-a-hook-writer.json", overlay);
+    const shared = build_merge_entries(LABEL, overlay);
+    expect(owned[0]?.value_hash).not.toBeNull();
+    expect(owned[0]?.entry_signature).toBeUndefined();
+    expect(shared[0]?.value_hash).toBeNull();
+    expect(shared[0]?.entry_signature).toBe("dispatch:hook --platform cursor");
+  });
+
+  it("foreign array entry survives uninstall", () => {
+    const doc = { hooks: { e: [FOREIGN, OURS] } };
+    const entries = build_merge_entries(LABEL, { hooks: { e: [OURS] } });
+    const [after, warnings] = subtract_pointers(doc, entries);
+    expect((after.hooks as Record<string, unknown[]>).e).toStrictEqual([FOREIGN]);
+    expect(warnings).toStrictEqual([]);
+  });
+
+  it("foreign array entry survives uninstall after a neighbour appended later", () => {
+    // The pre-1.2 behaviour reported `drift` here and removed nothing, so our
+    // own entry leaked. The signature path does not read the list's hash.
+    const late = { command: "npx third-pack hook" };
+    const doc = { hooks: { e: [FOREIGN, OURS, late] } };
+    const entries = build_merge_entries(LABEL, { hooks: { e: [OURS] } });
+    const [after, warnings] = subtract_pointers(doc, entries);
+    expect((after.hooks as Record<string, unknown[]>).e).toStrictEqual([FOREIGN, late]);
+    expect(warnings.filter((w) => w.reason === "drift")).toStrictEqual([]);
+  });
+
+  it("removes the whole key once nothing of ours is left and nothing foreign shares it", () => {
+    const doc = { hooks: { e: [OURS] } };
+    const entries = build_merge_entries(LABEL, { hooks: { e: [OURS] } });
+    const [after] = subtract_pointers(doc, entries);
+    expect(after.hooks).toBeUndefined();
+  });
+
+  it("warns rather than deleting when our entry is already gone", () => {
+    const doc = { hooks: { e: [FOREIGN] } };
+    const entries = build_merge_entries(LABEL, { hooks: { e: [OURS] } });
+    const [after, warnings] = subtract_pointers(doc, entries);
+    expect((after.hooks as Record<string, unknown[]>).e).toStrictEqual([FOREIGN]);
+    expect(warnings.map((w) => w.reason)).toStrictEqual(["missing"]);
   });
 });

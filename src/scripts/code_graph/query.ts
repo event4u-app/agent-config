@@ -18,6 +18,7 @@ import {
 } from './sqlite_store.js';
 import type { CodeEdge, CodeGraph, CodeNode, Relation } from './types.js';
 import { validateGraph } from './validate.js';
+import { adaptForeignGraph, looksForeign } from './foreign.js';
 
 const APPROX_CHARS_PER_TOKEN = 4;
 
@@ -145,10 +146,27 @@ export function loadGraph(graphPath: string, source = graphPath): LoadedGraph {
     const fromTwin = loadSerializedFromTwin(graphPath);
     const raw = fromTwin ?? fs.readFileSync(graphPath, 'utf-8');
     const parsed = JSON.parse(raw) as unknown;
-    const v = validateGraph(parsed);
+    // A consumer's own graph file, written by another tool, is DETECTED by
+    // `detect.ts` and used to throw here — detected-but-unloadable, the worst
+    // of both answers. Adapt it instead: its edges carry `resolved_via:
+    // 'foreign'`, which is in the guess set, so the gate verbs refuse it by
+    // name rather than answering from it.
+    let foreignAdapted = false;
+    let candidate = parsed;
+    if (looksForeign(parsed)) {
+        const adapted = adaptForeignGraph(parsed);
+        if (adapted !== null) {
+            candidate = adapted.graph;
+            foreignAdapted = true;
+        }
+    }
+    const v = validateGraph(candidate);
     if (!v.ok) throw new Error(`invalid graph at ${graphPath}: ${v.errors.slice(0, 3).join('; ')}`);
-    const graph = parsed as CodeGraph;
-    if (fromTwin === null) {
+    const graph = candidate as CodeGraph;
+    // The twin is a cache of a file's bytes keyed on its own checksum. An
+    // adapted graph's bytes are not the file's, so emitting one would cache a
+    // derivation under the source's identity.
+    if (fromTwin === null && !foreignAdapted) {
         emitSqliteTwin(graph, raw, graphPath);
     }
     const byId = new Map(graph.nodes.map((n) => [n.id, n]));

@@ -76,6 +76,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import type * as YamlModule from 'yaml';
 
 import { build_merge_entries } from './_lib/json_pointers.js';
+import { deepMerge as deep_merge, isPlainObject as _isPlainObject, jsonEqual } from './_lib/json_merge.js';
+import { mergeHostConfig, HOOK_SIGNATURES } from './_lib/host_hook_merge.js';
+import { sweepReservedNames } from './_lib/reserved_name_sweep.js';
 import { withHostEnv } from './_lib/host_env_write.js';
 import { jsonDumpsCompact, jsonDumpsIndent } from './_lib/json_python_parity.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
@@ -481,63 +484,6 @@ function write_json_file(p: string, data: unknown): void {
     write_file(p, content);
 }
 
-function _isPlainObject(v: unknown): v is Record<string, unknown> {
-    return typeof v === 'object' && v !== null && !Array.isArray(v);
-}
-
-/** `copy.deepcopy` for JSON-shaped values. */
-function deepcopy<T>(v: T): T {
-    if (v === null || typeof v !== 'object') return v;
-    if (Array.isArray(v)) return v.map((x) => deepcopy(x)) as unknown as T;
-    const out: Record<string, unknown> = {};
-    for (const k of Object.keys(v as Record<string, unknown>)) {
-        out[k] = deepcopy((v as Record<string, unknown>)[k]);
-    }
-    return out as unknown as T;
-}
-
-function deep_merge(
-    base: Record<string, unknown>,
-    overlay: Record<string, unknown>,
-): Record<string, unknown> {
-    const result = deepcopy(base);
-    for (const key of Object.keys(overlay)) {
-        const value = overlay[key];
-        if (
-            Object.prototype.hasOwnProperty.call(result, key) &&
-            _isPlainObject(result[key]) &&
-            _isPlainObject(value)
-        ) {
-            result[key] = deep_merge(
-                result[key] as Record<string, unknown>,
-                value as Record<string, unknown>,
-            );
-        } else {
-            result[key] = deepcopy(value);
-        }
-    }
-    return result;
-}
-
-/** Deep structural equality for JSON-shaped values (Python dict `==`). */
-function jsonEqual(a: unknown, b: unknown): boolean {
-    if (a === b) return true;
-    if (typeof a !== typeof b) return false;
-    if (Array.isArray(a) || Array.isArray(b)) {
-        if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
-        return a.every((v, i) => jsonEqual(v, b[i]));
-    }
-    if (_isPlainObject(a) && _isPlainObject(b)) {
-        const ka = Object.keys(a);
-        const kb = Object.keys(b);
-        if (ka.length !== kb.length) return false;
-        return ka.every(
-            (k) => Object.prototype.hasOwnProperty.call(b, k) && jsonEqual(a[k], (b as Record<string, unknown>)[k]),
-        );
-    }
-    return false;
-}
-
 function merge_json_file(
     p: string,
     new_data: Record<string, unknown>,
@@ -557,7 +503,9 @@ function merge_json_file(
     }
 
     const existing = read_json_file(p);
-    const merged = deep_merge(existing, new_data);
+    // Hook arrays are shared with whatever else the consumer installed, so the
+    // `hooks` key merges per event by signature instead of being replaced.
+    const merged = mergeHostConfig(existing, new_data, HOOK_SIGNATURES[label] ?? '', deep_merge);
 
     if (jsonEqual(merged, existing)) {
         skip(`${label} already configured`);
@@ -2957,26 +2905,12 @@ export function _apply_claude_flat_command_wrappers(
     anchor: string,
     package_root: string,
     current_files: Set<string>,
-): { wrapped: string[]; collisions: string[]; reserved: string[] } {
+    recorded_files: ReadonlySet<string> = new Set<string>(),
+): { wrapped: string[]; collisions: string[]; reserved: string[]; foreign: string[] } {
     const wrapped: string[] = [];
     const collisions: string[] = [];
-    const reserved: string[] = [];
-    // Reserved-name sweep over ALL flat command files (any tier): a name
-    // shadowing a Claude Code built-in never ships on the claude-code anchor.
     const commands_dir = path.join(anchor, 'commands');
-    let flat_entries: string[] = [];
-    try {
-        flat_entries = fs.readdirSync(commands_dir).filter((f) => f.endsWith('.md'));
-    } catch {
-        // No commands dir → nothing to sweep.
-    }
-    for (const fname of flat_entries.sort()) {
-        const slug = fname.slice(0, -'.md'.length);
-        if (!is_claude_builtin_name(slug)) continue;
-        fs.rmSync(path.join(commands_dir, fname), { force: true });
-        current_files.delete(`commands/${fname}`);
-        reserved.push(slug);
-    }
+    const { reserved, foreign } = sweepReservedNames(commands_dir, current_files, is_claude_builtin_name, recorded_files);
     // Visible command slugs from the locked discovery manifest. `visibility`
     // is the source of truth (ADR-090/092); the integer `tier` stays only as
     // the fallback for a manifest published before `visibility` was emitted,
@@ -3023,7 +2957,7 @@ export function _apply_claude_flat_command_wrappers(
         current_files.add(`skills/${slug}/SKILL.md`);
         wrapped.push(slug);
     }
-    return { wrapped, collisions, reserved };
+    return { wrapped, collisions, reserved, foreign };
 }
 
 function _deploy_global_content(
@@ -3096,7 +3030,7 @@ function _deploy_global_content(
         if (tool_id === 'claude-code') {
             // Rules land verbatim from the copy above; see the module. It also
             // renders the flat-command wrapper report, unchanged.
-            const res = _apply_claude_flat_command_wrappers(anchor, package_root, current_files);
+            const res = _apply_claude_flat_command_wrappers(anchor, package_root, current_files, global_deploy_inventory.recorded_rel_files(tool_id, anchor));
             claude_rule_rewrite.rewriteAndReport(
                 path.join(anchor, 'rules'),
                 state.QUIET,

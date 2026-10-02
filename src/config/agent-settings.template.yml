@@ -953,6 +953,22 @@ consistency:
 # flags + pre-redacts — never a clearance; the gate for a data-bearing screenshot
 # is human confirmation (routing into `non-destructive-by-default`, since a
 # shipped screenshot is an irreversible published egress).
+code_graph:
+  # Extra paths, relative to the project root, where THIS project keeps a
+  # code-graph index another tool wrote. The built-in list is deliberately
+  # generic (`graph.json`, `code-graph.json`, `.code-graph/graph.json`) and
+  # names no vendor; if your tool writes its index elsewhere, name the path
+  # here rather than waiting for this package to learn about that tool.
+  #
+  # A graph found this way LOADS and answers `query` and `explain`, with every
+  # edge tagged as read-from-elsewhere. The gate verbs (`impact`, `untested`,
+  # `dead`) refuse a graph made only of such edges and say why — an empty
+  # answer from a gate reads as "nothing found" rather than "nothing trusted".
+  #
+  # Absolute paths and paths escaping the project root are ignored.
+  # Default: [] (the built-in list only).
+  consumer_index_paths: []
+
 screenshots:
   # Public identity tokens that are SAFE to show unredacted — the maintainer's
   # OWN public handles (e.g. a username shown in an admin panel) plus well-known

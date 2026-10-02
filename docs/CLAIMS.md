@@ -285,11 +285,12 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-08-25
 
 ### claim: surgical-uninstall
-- claim: Removes only its own keys from a shared host config (matched by JSON-pointer + SHA-256), never a neighbour tool's entries.
+- claim: Removes only its own keys from a shared host config, and leaves a neighbour tool's entries byte-identical — including inside a shared `hooks.<event>` array, where a key this package merely appends to is identified by its own command signature rather than claimed wholesale.
 - kind: qual
-- evidence: exec:vitest run tests/lib/json_pointers.test.ts -> 0
+- evidence: exec:vitest run tests/lib/json_pointers.test.ts tests/lib/host_hook_merge.test.ts -> 0
+- note: The shared-array half is the load-bearing one and was NOT covered before 2026-10-01. Ownership of a `hooks.<event>` list was recorded as a SHA-256 of the whole list, so uninstall either deleted a neighbour's entries along with ours or, once a neighbour had appended, reported drift and left ours behind — and install replaced the array outright through `deep_merge`, destroying a neighbour's entry before uninstall was ever reached. The named tests pin both directions: "foreign array entry survives uninstall" and its neighbour-appended sibling in `json_pointers`, and "round-trips a .cursor/hooks.json carrying one foreign entry" in `host_hook_merge`, which asserts the foreign entry byte-identical across install, upgrade and uninstall.
 - status: backed
-- last_verified: 2026-08-11
+- last_verified: 2026-10-01
 
 ### claim: discipline-lift-weak-host
 - claim: On a weak host (claude-haiku-4-5) the package produces a significant, placebo-controlled discipline lift on scope/downstream traps; on a strong host the same measurement is a published null — the package transplants discipline a weak model lacks, not model intelligence.

@@ -247,8 +247,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 125 |
-| **Total** | **154** |
+| C — guarded | 126 |
+| **Total** | **155** |
 
 It rose again on 2026-09-13 when `road-to-adversarial-verification-and-long-runs`
 Phase 0 added three C keys: `quality.local_auto_run_in_mission` (`consent` — it
@@ -381,10 +381,10 @@ the template, which is the drift this contract exists to prevent.
 | Disposition | Keys |
 |---|---|
 | derivable | 83 |
-| un-inferrable | 9 |
+| un-inferrable | 10 |
 | consent | 48 |
 | policy | 14 |
-| **Total** | **154** |
+| **Total** | **155** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -562,6 +562,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `design.approximation.tolerance.color` | C | `null` | decides which colour deviations may be taken silently | policy |
 | `design.approximation.tolerance.length` | C | `null` | decides which length deviations may be taken silently | policy |
 | `consistency.cross_source` | C | `"on"` | disables the cross-source discrepancy gate | derivable — the rule's own trigger condition; a discrepancy exists only when two present sources contradict |
+| `code_graph.consumer_index_paths` | C | `[]` | names where this project's OTHER tool writes a code-graph index, so it widens what the graph reader will load and trust | un-inferrable — the path belongs to a tool this package does not ship and cannot probe for; the built-in list is deliberately vendor-neutral, so only the operator knows where their index lands |
 | `screenshots.identity_allowlist` | C | `[]` | allowlist of identities that ship unredacted | consent |
 | `screenshots.forbid_terminal_capture` | C | `true` | kill-switch over the highest-leak capture path | consent |
 | `screenshots.data_bearing_gate` | C | `"on"` | the human-confirmation gate over a published egress | consent |

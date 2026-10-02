@@ -50,7 +50,7 @@ neighbour's effect visible; it cannot make it run after ours.
 
 ## Phase 1 — Stop destroying what a neighbour wrote
 
-- [ ] **1.1 Per-event append with a per-platform signature on the seven hook writers.**
+- [x] **1.1 Per-event append with a per-platform signature on the seven hook writers.**
       One helper replacing the array branch for `hooks.<event>` at the seven sites only:
       keep every entry without this suite's signature, replace ours, append if absent.
       The signature is per platform (`dispatch:hook --platform <host>`), and the helper is
@@ -59,29 +59,29 @@ neighbour's effect visible; it cannot make it run after ours.
       `corrected-from-reproduction` — the supplied draft named thirteen sites and the
       Claude-only signature.
       verify: fixture — a `.cursor/hooks.json` with one foreign entry gains ours and keeps the foreign one byte-identical across install → upgrade → uninstall
-- [ ] **1.2 Ownership pointers stop owning the parent array.** `json_pointers.ts:202-203`
+- [x] **1.2 Ownership pointers stop owning the parent array.** `json_pointers.ts:202-203`
       records array values wholesale; record the managed entry's signature instead, so
       uninstall removes only it.
       verify: `npx vitest run tests/lib/json_pointers.test.ts -t 'foreign array entry survives'` -> 0
-- [ ] **1.3 `_cleanDir` deletes only files this package wrote.** Ownership comes from the
+- [x] **1.3 `_cleanDir` deletes only files this package wrote.** Ownership comes from the
       installed-tools lockfile's written paths, not from a frontmatter tag — the `.mdc`
       emitter (`src/scripts/condense.ts:1286-1304`) writes no package tag, so gating on one
       would never remove our own stale files. Foreign files are kept and listed once as
       `kept: <n> neighbour file(s)`; `.windsurfrules` is written only when absent or ours.
       `corrected-from-reproduction`.
       verify: fixture — a foreign `.cursor/rules/other.mdc` survives `emitCursor`; a stale file of ours is still removed
-- [ ] **1.4 The reserved-name sweep skips files it does not own.** `install.ts:2973-2978`
+- [x] **1.4 The reserved-name sweep skips files it does not own.** `install.ts:2973-2978`
       removes a builtin-named command only when the lockfile claims it; a foreign one is
       reported, not deleted.
       verify: fixture — a foreign `~/.claude/commands/review.md` survives install and appears in the doctor line
-- [ ] **1.5 The public claim matches the tree.** `docs/CLAIMS.md` `surgical-uninstall` gains
+- [x] **1.5 The public claim matches the tree.** `docs/CLAIMS.md` `surgical-uninstall` gains
       an evidence line pointing at 1.1's array fixture; until 1.1 lands its status reads
       `partial` with the install-side gap named.
       verify: `grep -A4 'claim: surgical-uninstall' docs/CLAIMS.md | grep -c 'hooks'` -> /[1-9]/
 
 ## Phase 2 — Count the neighbours and their effects
 
-- [ ] **2.1 `doctor neighbours`: one census, seven shape classes.** Read-only: (a) hook
+- [x] **2.1 `doctor neighbours`: one census, seven shape classes.** Read-only: (a) hook
       entries per event in every host hook file without our signature — event, matcher,
       command head only, timeout; (b) skills under `.claude/skills` and `~/.claude/skills`
       the lockfile does not claim — ours live in `~/.claude/skills` on a consumer, so root
@@ -91,38 +91,38 @@ neighbour's effect visible; it cannot make it run after ours.
       Each entry carries a qualified id `<origin>:<name>`, a sha256 digest and a shape class.
       No name is a constant in `src/`.
       verify: `agent-config doctor neighbours --json` on the fixture consumer -> /"hook_groups":\s*\[\{/ and /"instruction_sections"/
-- [ ] **2.2 Our concerns declare their effect; foreign effects read `unknown`.**
+- [x] **2.2 Our concerns declare their effect; foreign effects read `unknown`.**
       `hook_manifest.yaml` has no `effect:` field (grep count 0); add one to each of the 62
       concerns from `permission | context | verification | telemetry | memory |
       notification | formatting`, generated into `hooks/hooks.json` unchanged, and give
       `lint_hook_manifest` an enum check (it has no unknown-key guard today). A foreign
       entry's effect is `unknown` unless its output shape is observed.
       verify: `grep -c '^\s*effect:' src/scripts/hook_manifest.yaml` -> /62/
-- [ ] **2.3 Two deny-shaped warnings, worded as the host behaves.** `double-gate` fires
+- [x] **2.3 Two deny-shaped warnings, worded as the host behaves.** `double-gate` fires
       only when two entries on one event with overlapping matchers both carry `permission`
       (ours by field, the neighbour's by observation or `unknown`), and says "the host runs
       both; either deny applies" — never an order the host does not have. `shadowed` fires
       for a foreign skill whose name equals one of ours.
       verify: fixture — a foreign PreToolUse `Edit|Write` entry beside `block-no-verify` prints `double-gate`; beside a `context` concern prints nothing
-- [ ] **2.4 Liveness, not trust.** The census adds two lines: our hook group is bound
+- [x] **2.4 Liveness, not trust.** The census adds two lines: our hook group is bound
       **and** fired in the last session (read from `src/scripts/_lib/hook_effect_probe.ts`,
       the probe `hook_effect_doctor` already runs), and settings
       takeover — a foreign `model` or `env.CLAUDE_CODE_*` key, or our `hooks` key missing
       after our own install. A neighbour that removed this suite is then visible.
       verify: fixture — deleting our hook group from `settings.json` yields a `removed-after-install` line
-- [ ] **2.5 One environment label per host.** The census prints `controlled` (no foreign
+- [x] **2.5 One environment label per host.** The census prints `controlled` (no foreign
       effectful entry), `coordinated` (foreign effectful entries, all observed),
       `degraded` (a foreign `permission` or `unknown` effect on a slot we gate, or a foreign
       Stop entry), or `uncontrolled` (2.4 reports our group removed or unfired). The label
       is a report, never a refusal.
       verify: fixture — each of the four states is produced by one planted consumer
-- [ ] **2.6 The census links the existing `foreign` file listing.** `cmd_doctor.ts:624-657`
+- [x] **2.6 The census links the existing `foreign` file listing.** `cmd_doctor.ts:624-657`
       links to the census line rather than repeating paths; nothing is removed.
       verify: `agent-config doctor` output carries one `neighbours:` line with counts
 
 ## Phase 3 — A foreign graph that detects also loads, and never gates
 
-- [ ] **3.1 A load adapter for the `links` shape in `query.ts` `loadGraph`.** Map
+- [x] **3.1 A load adapter for the `links` shape in `query.ts` `loadGraph`.** Map
       `links[]`/`edges[]` with `source`/`target`/`relation` to edges with
       `resolved_via: 'foreign'`; add `'foreign'` to `ResolvedVia` and to `GUESS_RESOLVED_VIA`
       (`code_graph/types.ts:61,99-102`) so the accepted-edge filter treats it as a guess; an
@@ -130,11 +130,11 @@ neighbour's effect visible; it cannot make it run after ours.
       are synthesised. `corrected-from-reproduction` — the filter is a denylist, so a new
       value would otherwise be accepted.
       verify: fixture — a 20-node `links` graph loads and `query` answers with a `resolved_via` histogram
-- [ ] **3.2 Consumer-declared index paths, no vendor constants.** A Class A project setting
+- [x] **3.2 Consumer-declared index paths, no vendor constants.** A Class A project setting
       `code_graph.consumer_index_paths: []` extends `CONSUMER_CANDIDATES` (`detect.ts:34`);
       the default list stays generic.
       verify: `./scripts-run src/scripts/check_no_external_sources` -> 0 with no finding under `src/scripts/code_graph/`
-- [ ] **3.3 Gate verbs refuse an all-foreign graph and say so.** `dead` already has a
+- [x] **3.3 Gate verbs refuse an all-foreign graph and say so.** `dead` already has a
       refusal shape (`verbs.ts:405,456`); `impact --diff` and `untested` gain the same shape
       with `reason: foreign-edges-not-accepted`.
       verify: fixture — `untested --diff` on the foreign graph -> /foreign-edges-not-accepted/

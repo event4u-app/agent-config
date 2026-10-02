@@ -202,12 +202,18 @@ describe('the derived `tests` relation (3.2)', () => {
 });
 
 describe('the accepted-edge filter', () => {
-    it('rejects exactly name-lookup and dynamic', () => {
-        expect([...NON_ACCEPTED_VIA].sort()).toStrictEqual(['dynamic', 'name-lookup']);
+    it('rejects exactly name-lookup, dynamic and foreign', () => {
+        // `foreign` joined the set when the loader learned to adapt a
+        // consumer's own graph file. The filter is a DENYLIST, so a new
+        // `resolved_via` is ACCEPTED by default — which for an edge this
+        // package did not resolve is exactly backwards, and is why this
+        // assertion pins the membership rather than only the two behaviours.
+        expect([...NON_ACCEPTED_VIA].sort()).toStrictEqual(['dynamic', 'foreign', 'name-lookup']);
         expect(isAcceptedEdge({ resolved_via: 'import-specifier' } as never)).toBe(true);
         expect(isAcceptedEdge({ resolved_via: 'test-import' } as never)).toBe(true);
         expect(isAcceptedEdge({ resolved_via: 'name-lookup' } as never)).toBe(false);
         expect(isAcceptedEdge({ resolved_via: 'dynamic' } as never)).toBe(false);
+        expect(isAcceptedEdge({ resolved_via: 'foreign' } as never)).toBe(false);
     });
 
     it('histograms descending by count, ties alphabetical, and says (none) when empty', () => {

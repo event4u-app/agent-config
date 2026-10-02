@@ -52,6 +52,38 @@ export function isAcceptedEdge(e: CodeEdge): boolean {
     return isStatedResolution(e.resolved_via);
 }
 
+/** Why a gate verb refused. A closed set so a caller can branch on it. */
+export type RefusalReason = 'foreign-edges-not-accepted' | 'entry-points-unavailable';
+
+/**
+ * A graph whose every edge came from a file this package did not build.
+ *
+ * Those edges are tagged `foreign` and sit in the guess set, so a gate verb
+ * walking one would accept nothing and report an empty answer — and an empty
+ * answer from a gate reads as "nothing to worry about", which is the wrong
+ * reading and the dangerous one. The verbs refuse instead, by name, so the
+ * consumer learns that their graph is readable but not gate-grade rather than
+ * being told their diff impacts nothing.
+ *
+ * A MIXED graph is not refused: it carries edges this package did resolve, and
+ * the guess filter already excludes the foreign ones from the walk.
+ */
+export function foreignRefusal(g: LoadedGraph): string | null {
+    // `graph` is null on the index-backed read path, which answers per-node
+    // from the twin and never materialises the edge list. Nothing to classify
+    // there, and an index-backed graph is one this package built.
+    const edges: readonly CodeEdge[] = g.graph?.edges ?? [];
+    if (edges.length === 0) return null;
+    if (!edges.every((e) => e.resolved_via === 'foreign')) return null;
+    return (
+        'every edge in this graph was read from a file this package did not build, so all of them ' +
+        'are guesses and none is gate-grade. A gate verb would accept no edge and report an empty ' +
+        'answer, which reads as "nothing found" rather than "nothing trusted". Build a native graph ' +
+        '(`agent-config graph build`) to use this verb, or use `query` and `explain`, which answer ' +
+        'from foreign edges and say so.'
+    );
+}
+
 /**
  * Relations that constitute a REFERENCE to the target, as opposed to
  * containment of it.
@@ -132,6 +164,10 @@ export interface ReachedNode {
 }
 
 export interface ImpactResult extends VerbReport {
+    /** Non-null when the verb REFUSED to answer. Every list is then empty. */
+    refusal: string | null;
+    /** Machine-readable reason, when `refusal` is set. */
+    refusal_reason: RefusalReason | null;
     /** Node ids the diff touched that the graph knows. */
     seeds: string[];
     /**
@@ -219,6 +255,26 @@ export function impact(
     depth = 2,
     isTest: (relPath: string) => boolean = () => false,
 ): ImpactResult {
+    const foreign = foreignRefusal(g);
+    if (foreign !== null) {
+        return {
+            source: g.source,
+            state,
+            accepted_via: '(none)',
+            rejected_via: '(none)',
+            refusal: foreign,
+            refusal_reason: 'foreign-edges-not-accepted',
+            seeds: [],
+            unresolved_files: [],
+            not_indexed_files: [],
+            dependents: [],
+            reached: [],
+            test_files: [],
+            producing_edges: [],
+            lines: [],
+            recommended_reads: [],
+        };
+    }
     const { seeds, unresolved, not_indexed } = seedsForFiles(g, files);
     const accepted: CodeEdge[] = [];
     const rejected: CodeEdge[] = [];
@@ -258,6 +314,8 @@ export function impact(
         state,
         accepted_via: viaHistogram(accepted),
         rejected_via: viaHistogram(rejected),
+        refusal: null,
+        refusal_reason: null,
         seeds,
         unresolved_files: unresolved,
         not_indexed_files: not_indexed,
@@ -334,6 +392,10 @@ export function testsFor(g: LoadedGraph, symbol: string, state: GraphState): Tes
 }
 
 export interface UntestedResult extends VerbReport {
+    /** Non-null when the verb REFUSED to answer. Every list is then empty. */
+    refusal: string | null;
+    /** Machine-readable reason, when `refusal` is set. */
+    refusal_reason: RefusalReason | null;
     seeds: string[];
     unresolved_files: string[];
     not_indexed_files: string[];
@@ -351,6 +413,24 @@ export interface UntestedResult extends VerbReport {
  * count and make the ratio meaningless.
  */
 export function untested(g: LoadedGraph, files: readonly string[], state: GraphState): UntestedResult {
+    const foreign = foreignRefusal(g);
+    if (foreign !== null) {
+        return {
+            source: g.source,
+            state,
+            accepted_via: '(none)',
+            rejected_via: '(none)',
+            refusal: foreign,
+            refusal_reason: 'foreign-edges-not-accepted',
+            seeds: [],
+            unresolved_files: [],
+            not_indexed_files: [],
+            untested: [],
+            tested: [],
+            lines: [],
+            recommended_reads: [],
+        };
+    }
     const { seeds, unresolved, not_indexed } = seedsForFiles(g, files);
     const accepted: CodeEdge[] = [];
     const rejected: CodeEdge[] = [];
@@ -375,6 +455,8 @@ export function untested(g: LoadedGraph, files: readonly string[], state: GraphS
         state,
         accepted_via: viaHistogram(accepted),
         rejected_via: viaHistogram(rejected),
+        refusal: null,
+        refusal_reason: null,
         seeds,
         unresolved_files: unresolved,
         not_indexed_files: not_indexed,
@@ -403,6 +485,8 @@ export interface DeadResult extends VerbReport {
     sources: EntryPointSource[];
     /** Non-null when the verb REFUSED to answer. The list is then empty. */
     refusal: string | null;
+    /** Machine-readable reason, when `refusal` is set. */
+    refusal_reason: RefusalReason | null;
     dead: string[];
     /** Entry points excluded from `dead` — the audit trail for the exclusion. */
     excluded: string[];
@@ -448,6 +532,23 @@ export function dead(
         state,
         sources: [...sources],
     };
+    // Checked BEFORE the entry-point sources: on an all-foreign graph every
+    // in-edge is a guess, so every symbol would report dead — the confident
+    // false "dead" this verb's own header calls worse than no verb at all.
+    const foreign = foreignRefusal(g);
+    if (foreign !== null) {
+        return {
+            ...base,
+            accepted_via: '(none)',
+            rejected_via: '(none)',
+            refusal: foreign,
+            refusal_reason: 'foreign-edges-not-accepted',
+            dead: [],
+            excluded: [],
+            lines: [],
+            recommended_reads: [],
+        };
+    }
     if (unavailable.length > 0 && opts.acceptMissingExports !== true) {
         return {
             ...base,
@@ -460,6 +561,7 @@ export function dead(
                 'A symbol they would have declared an entry point is indistinguishable from a dead one, ' +
                 'so no list is produced. Supply the missing source with --entry-points <file>, or state ' +
                 'that you accept the gap with --accept-missing-exports.',
+            refusal_reason: 'entry-points-unavailable',
             dead: [],
             excluded: [],
             lines: [],
@@ -496,6 +598,7 @@ export function dead(
         accepted_via: viaHistogram(accepted),
         rejected_via: viaHistogram(rejected),
         refusal: null,
+        refusal_reason: null,
         dead: list,
         excluded: excluded.sort(),
         lines: list,

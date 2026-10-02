@@ -134,6 +134,8 @@ import {
 } from './detection_report.js';
 import { review_gate_doctor_signal } from '../ai_team/review_gate.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
+import { rglob as _rglob_raw, scanForeign } from '../_lib/foreign_scan.js';
+import { runCensus, summaryLine } from './cmd_doctor_neighbours.js';
 import {
     LEGACY_ALL,
     excludedRuleBasenames,
@@ -617,77 +619,17 @@ function _collect_manifest_entries(
     return [records, known];
 }
 
-/**
- * Walk every declared deploy root and surface unclaimed files. Only regular
- * files under `deploy_roots` count; bookkeeping is on the resolved final path.
- */
-function _scan_foreign(
-    project_root: string,
-    manifest: Dict,
-    known: Set<string>,
-): string[] {
-    const roots =
-        (manifest['deploy_roots'] as unknown[] | undefined) ||
-        Array.from(installed_tools.DEFAULT_DEPLOY_ROOTS);
-    const foreign: string[] = [];
-    const seen = new Set<string>();
-    for (const root_rel of roots) {
-        const root = _resolve_path(project_root, String(root_rel));
-        if (!pathExists(root) || !isDir(root)) {
-            continue;
-        }
-        for (const child of rglob(root)) {
-            if (!isFile(child)) {
-                continue;
-            }
-            let resolved: string;
-            try {
-                resolved = resolvePath(child);
-            } catch {
-                resolved = child;
-            }
-            if (known.has(resolved) || seen.has(resolved)) {
-                continue;
-            }
-            seen.add(resolved);
-            foreign.push(child);
-        }
-    }
-    foreign.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
-    return foreign;
-}
-
-/**
- * `Path.rglob("*")` — every descendant path (dirs + files), recursively.
- * Order is not relied upon by callers (they sort the matched set), but the
- * walk is deterministic (sorted per directory) to keep behaviour stable.
- */
-function rglob(root: string): string[] {
-    const out: string[] = [];
-    const walk = (dir: string): void => {
-        let entries: fs.Dirent[];
-        try {
-            entries = fs.readdirSync(dir, { withFileTypes: true });
-        } catch {
-            return;
-        }
-        entries.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
-        for (const ent of entries) {
-            const full = path.join(dir, ent.name);
-            out.push(full);
-            let dirLike = ent.isDirectory();
-            if (ent.isSymbolicLink()) {
-                // pathlib rglob follows into symlinked dirs.
-                dirLike = isDir(full);
-            }
-            if (dirLike) {
-                walk(full);
-            }
-        }
-    };
-    walk(root);
-    return out;
-}
+const rglob = (root: string): string[] => _rglob_raw(root, isDir, path.join);
+const _scan_foreign = (project_root: string, manifest: Dict, known: Set<string>): string[] =>
+    scanForeign(project_root, manifest, known, {
+        pathExists,
+        isDir,
+        isFile,
+        resolvePath,
+        join: path.join,
+        resolveRoot: _resolve_path,
+        defaultRoots: installed_tools.DEFAULT_DEPLOY_ROOTS,
+    });
 
 /**
  * Split manifest records into missing / modified / tag-drift lists.
@@ -3028,6 +2970,11 @@ function _run_no_manifest(
         _emit_checks_text(checks);
         _emit_detection_text(project_root, checks);
     }
+    // Also on the no-manifest branch: a consumer with no project lockfile
+    // still has neighbours, and a census that appeared only once a lockfile
+    // existed would be missing on exactly the install shape most likely to
+    // have other packages in it.
+    if (opts.check === null && !opts.json) print(summaryLine(runCensus(project_root, _package_root())));
 
     if (opts.check !== null) {
         if (skipped_requested) {
@@ -3452,6 +3399,11 @@ function main(argv: string[] | null = null): number {
         _emit_detection_text(project_root, checks);
         if (opts.check === null) {
             _emit_text(project_root, missing, modified, foreign, tag_drift);
+            // One line, counts only — the `foreign` listing above stays as it
+            // is and nothing is removed from it. That listing walks THIS
+            // package's deploy roots; the census walks where the hosts keep
+            // things, which is a strictly larger question with its own verb.
+            print(summaryLine(runCensus(project_root, _package_root())));
         }
     }
 

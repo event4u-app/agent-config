@@ -1462,7 +1462,15 @@ cmd_prune() {
 # `agent-config doctor` — read-only drift report against the manifest.
 # Surfaces missing / modified / foreign files. Exit 0 clean, 1 drift,
 # 2 manifest-absent. See scripts/_cli/cmd_doctor.ts.
+# `doctor neighbours` routes to its own entry point rather than a branch inside
+# cmd_doctor.ts, which is 2,000 lines over the source-size ceiling and cannot
+# grow. Routed here because the dispatcher is where verbs are already resolved.
 cmd_doctor() {
+  if [[ "${1:-}" == "neighbours" ]]; then
+    shift
+    exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_doctor_neighbours.ts" "$@"
+    return
+  fi
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_doctor.ts" "$@"
 }
 

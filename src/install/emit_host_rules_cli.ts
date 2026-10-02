@@ -44,6 +44,14 @@ import {
     _emit_windsurf_rule,
     strip_frontmatter,
 } from '../scripts/condense.js';
+import {
+    WINDSURFRULES_HEADER,
+    cleanOwnedOnly,
+    keptLine,
+    mayWriteRuleFile,
+    mayWriteWindsurfRules,
+    ownedPaths,
+} from './host_rule_ownership.js';
 
 function _ruleFiles(rulesDir: string): string[] {
     return fs
@@ -60,63 +68,64 @@ function _ruleFiles(rulesDir: string): string[] {
         });
 }
 
-/** Remove entries not in `valid` (mirror of condense's `_clean_modern_dir`). */
-function _cleanDir(dir: string, valid: ReadonlySet<string>): void {
-    let entries: string[];
-    try {
-        entries = fs.readdirSync(dir);
-    } catch {
-        return;
-    }
-    for (const name of entries) {
-        if (name === 'README.md' || valid.has(name)) {
-            continue;
-        }
-        const full = path.join(dir, name);
-        try {
-            if (fs.lstatSync(full).isDirectory()) {
-                fs.rmSync(full, { recursive: true, force: true });
-            } else {
-                fs.unlinkSync(full);
-            }
-        } catch {
-            /* best-effort clean */
-        }
-    }
-}
-
 export function emitCursor(rulesDir: string, projectRoot: string): number {
     const targetDir = path.join(projectRoot, '.cursor', 'rules');
     const files = _ruleFiles(rulesDir);
+    const owned = ownedPaths(projectRoot);
     const valid = new Set<string>();
+    let blocked = 0;
     for (const src of files) {
         const name = `${path.basename(src, '.md')}.mdc`;
-        _emit_cursor_mdc(src, path.join(targetDir, name));
+        const target = path.join(targetDir, name);
+        // Ownership BEFORE the write: a neighbour's file under one of our
+        // names would otherwise be destroyed and then skipped by the cleanup
+        // pass, which only looks at names this run did not emit.
+        if (!mayWriteRuleFile(target, owned)) {
+            blocked += 1;
+            continue;
+        }
+        _emit_cursor_mdc(src, target);
         valid.add(name);
     }
-    _cleanDir(targetDir, valid);
+    const { kept } = cleanOwnedOnly(targetDir, valid, owned);
+    const line = keptLine(kept + blocked);
+    if (line !== null) process.stdout.write(`cursor: ${line}\n`);
     return files.length;
 }
 
 export function emitWindsurf(rulesDir: string, projectRoot: string): number {
     const perRuleDir = path.join(projectRoot, '.windsurf', 'rules');
     const files = _ruleFiles(rulesDir);
+    const owned = ownedPaths(projectRoot);
     const valid = new Set<string>();
+    let blocked = 0;
     for (const src of files) {
         const name = path.basename(src);
-        _emit_windsurf_rule(src, path.join(perRuleDir, name));
+        const target = path.join(perRuleDir, name);
+        if (!mayWriteRuleFile(target, owned)) {
+            blocked += 1;
+            continue;
+        }
+        _emit_windsurf_rule(src, target);
         valid.add(name);
     }
-    _cleanDir(perRuleDir, valid);
+    const { kept } = cleanOwnedOnly(perRuleDir, valid, owned);
+    const line = keptLine(kept + blocked);
+    if (line !== null) process.stdout.write(`windsurf: ${line}\n`);
 
     // Concatenated legacy surface — same format as the projection-path
     // generator (condense.generate_windsurfrules), consumer-sourced header.
-    const parts = ['# Auto-generated from .augment/rules/ — do not edit directly\n'];
-    for (const src of files) {
-        const content = strip_frontmatter(fs.readFileSync(src, 'utf-8'));
-        parts.push(`---\n\n${content.trim()}\n`);
+    const target = path.join(projectRoot, '.windsurfrules');
+    if (mayWriteWindsurfRules(target, owned)) {
+        const parts = [`${WINDSURFRULES_HEADER}\n`];
+        for (const src of files) {
+            const content = strip_frontmatter(fs.readFileSync(src, 'utf-8'));
+            parts.push(`---\n\n${content.trim()}\n`);
+        }
+        fs.writeFileSync(target, parts.join('\n') + '\n', 'utf-8');
+    } else {
+        process.stdout.write('windsurf: kept: 1 neighbour file(s) (.windsurfrules)\n');
     }
-    fs.writeFileSync(path.join(projectRoot, '.windsurfrules'), parts.join('\n') + '\n', 'utf-8');
     return files.length;
 }
 

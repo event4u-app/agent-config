@@ -658,6 +658,38 @@ function difference(prev: unknown[], current: Set<string>): unknown[] {
   return out;
 }
 
+/**
+ * The anchor-relative paths a previous deploy of `tool_id` recorded.
+ *
+ * Empty whenever the inventory has no entry, the recorded anchor differs from
+ * `anchor`, or the entry is malformed — the same "not provably ours anymore"
+ * discipline `reap_stale` applies before it deletes anything. Callers use it
+ * to answer "did this package write that file" for a file the CURRENT run did
+ * not write.
+ */
+export function recorded_rel_files(
+  tool_id: string,
+  anchor: string,
+  inventory?: Inventory | null,
+): ReadonlySet<string> {
+  const inv = inventory ?? load_inventory();
+  const tools = (inv["tools"] as Record<string, unknown> | undefined) ?? {};
+  const entry = tools[tool_id];
+  if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+    return new Set<string>();
+  }
+  const e = entry as Record<string, unknown>;
+  const recorded_anchor = e["anchor"];
+  const files = e["files"];
+  if (typeof recorded_anchor !== "string" || !Array.isArray(files)) {
+    return new Set<string>();
+  }
+  if (resolve_path(expanduser(recorded_anchor)) !== resolve_path(expanduser(anchor))) {
+    return new Set<string>();
+  }
+  return new Set(files.filter((f): f is string => typeof f === "string"));
+}
+
 /** Sort string members ascending by codepoint (non-strings filtered out). */
 function sorted_strings(items: unknown[]): string[] {
   return items

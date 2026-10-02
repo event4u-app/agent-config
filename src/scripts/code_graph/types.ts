@@ -66,7 +66,16 @@ export type ResolvedVia =
     | 'route-table'
     | 'test-import'
     | 'name-lookup'
-    | 'dynamic';
+    | 'dynamic'
+    /**
+     * Read from a consumer's own graph file, written by another tool.
+     *
+     * Not a mechanism THIS package used — a statement that it used none. The
+     * relation came from someone else's vocabulary and was mapped, which is
+     * an interpretation, so the value belongs in the guess set below and the
+     * gate verbs refuse a graph made only of these.
+     */
+    | 'foreign';
 
 /**
  * WHICH engine produced the edge.
@@ -77,7 +86,17 @@ export type ResolvedVia =
  * apart. Kill register K2 forbids an external provider entering `src/`, so this
  * stays a single-member union until a decision changes that.
  */
-export type EdgeProvider = 'native';
+export type EdgeProvider =
+    | 'native'
+    /**
+     * The edge was read from a graph file this package did not build.
+     *
+     * This is a DATA tag on an edge, not an engine in `src/`: no foreign
+     * extractor is vendored, imported or executed anywhere, and K2 is about
+     * the latter. The field exists precisely so a mixed graph can be told
+     * apart, and a consumer-shipped graph is the first case where it is.
+     */
+    | 'foreign';
 
 /**
  * The two mechanisms that are GUESSES rather than statements.
@@ -99,6 +118,11 @@ export type EdgeProvider = 'native';
 export const GUESS_RESOLVED_VIA: ReadonlySet<ResolvedVia> = new Set<ResolvedVia>([
     'name-lookup',
     'dynamic',
+    // The accepted-edge filter is a DENYLIST, so a new value is accepted by
+    // default — which is exactly backwards for this one. `foreign` must be
+    // listed here or a consumer's graph would silently answer the gate verbs
+    // as if this package had resolved its edges.
+    'foreign',
 ]);
 
 /** Does this edge's target rest on a stated fact rather than a guess? */

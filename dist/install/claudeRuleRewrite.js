@@ -128,6 +128,13 @@ export function rewriteAndReport(rulesDir, quiet, info, warn, wrappers, preserve
                 `Claude Code built-in (${wrappers.reserved.join(', ')}); nested /cluster:sub ` +
                 'commands remain available');
         }
+        if (wrappers.foreign !== undefined && wrappers.foreign.length > 0) {
+            // Reported, never removed. The name shadows a host built-in, but
+            // this package did not write the file, so deleting it would be
+            // taking a neighbour's command away without saying so.
+            info(`  claude-code: kept ${wrappers.foreign.length} neighbour command file(s) whose ` +
+                `name is a Claude Code built-in (${wrappers.foreign.join(', ')}); not ours to remove`);
+        }
     }
     if (result.rewritten > 0 && !quiet) {
         info(`  claude-code: ${result.rewritten} rule(s) rewritten to host form; ` +
