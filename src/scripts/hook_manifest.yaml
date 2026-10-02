@@ -870,7 +870,10 @@ concerns:
   # `telemetry.remote.enabled` is true AND the org pack supplied an endpoint,
   # an org id, and a salt. A clone of this repository carries the key names
   # and no values, so it cannot reach the write path. Inactive ⇒ zero
-  # telemetry file operations and zero network calls.
+  # telemetry file operations and zero network calls. "Telemetry" is load-
+  # bearing: the concern's non-`Skill` path writes a LOCAL census store
+  # (`agents/runtime/neighbour-tool-use.json`) on every install, which is a
+  # file operation and is not telemetry — see the concern's own header.
   #
   # It appends to a LOCAL JSONL file and stops — no outbound call exists in
   # this concern. Transport is Phase 2 (blocked on `sink-choice`); org-wide

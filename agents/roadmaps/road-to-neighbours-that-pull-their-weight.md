@@ -228,6 +228,30 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       key is removed, and a test pins the shipped entry against an `mcp__` name
       with a negative control that re-adds `[Skill]` and watches it go red.
 
+      **An independent reviewer over the whole delta found five more, and the
+      two that mattered were in the matching itself.** Dispatched per
+      `evaluator-independence` with a neutral prompt and no implementation
+      context. (1) `serverSegment` maps every non-`[A-Za-z0-9_-]` character to
+      `_`, so `Acme Inc. Tools` sanitises to `Acme_Inc__Tools` — a segment
+      containing the separator — and a parser that split the tool name at its
+      first `__` read the server as `Acme_Inc` and reported `0` for a server in
+      daily use. That is the never-matched zero D10 exists to prevent,
+      reintroduced one layer down. The parser is gone: matching is now driven by
+      the KNOWN `.mcp.json` keys (`toolBelongsTo`), a finite candidate set that
+      cannot be ambiguous. (2) The window compare is lexicographic, so
+      `'TODO'`, `'unknown'` and `'hand edited'` all sorted ABOVE the cutoff and
+      counted as in-window — a bad write reported MORE tools than were ever
+      called. Values are now shape-checked, and a future date is rejected too.
+      (3) The span was 31 days inclusive under a field named `tools_used_30d`.
+      (4) Writer and reader rooted the store differently, so a monorepo whose
+      `.mcp.json` sits under `packages/web` read `0`; both now resolve through
+      one walk, pinned equal by a fixture rather than asserted. (5) The
+      repeat-write test was a tautology — mtime never decreases and a third
+      genuinely-writing call followed it, so it could not have failed if the
+      skip were deleted; it now compares inode and mtime across the repeat
+      alone. The hook's own "no directory creation" guarantee, which this step
+      falsified, is narrowed in the same pass rather than left standing.
+
       **Measured against the bundle ceiling rather than asserted.**
       `check_hook_bundle_composition` read **1,549,697 B** of 1,550,000 before and
       **1,549,830 B** after — net +133 B, and `max_bytes` is untouched. The

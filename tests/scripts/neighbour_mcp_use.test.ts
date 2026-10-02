@@ -25,7 +25,13 @@ import { parse } from 'yaml';
 import { renderText } from '../../src/scripts/_cli/cmd_doctor_neighbours.js';
 import { _concern_matches_tool } from '../../src/scripts/hooks/dispatch_hook.js';
 import { census } from '../../src/scripts/_lib/neighbour_census.js';
-import { serverOf, serverSegment } from '../../src/scripts/_lib/neighbour_tool_use.js';
+import {
+    resolveStoreRoot,
+    serverSegment,
+    toolBelongsTo,
+    toolsUsedByServer,
+} from '../../src/scripts/_lib/neighbour_tool_use.js';
+import { run } from '../../src/scripts/hooks/telemetry_usage_hook.js';
 
 const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
 
@@ -147,16 +153,84 @@ describe('the recorder is reachable through the dispatcher', () => {
     });
 });
 
-describe('the tool-name parser', () => {
-    it('splits a server segment off, and refuses a name that is not an MCP tool', () => {
-        expect(serverOf('mcp__linear-server__create_issue')).toBe('linear-server');
-        expect(serverOf('mcp__acme')).toBe('acme');
-        expect(serverOf('Bash')).toBeNull();
-        expect(serverOf('mcp__')).toBeNull();
-    });
-
+describe('the tool-to-server matcher', () => {
     it('sanitises a key the way a host embeds it', () => {
         expect(serverSegment('claude.ai Claude Docs')).toBe('claude_ai_Claude_Docs');
         expect(serverSegment('linear-server')).toBe('linear-server');
+    });
+
+    it('matches against the known key, and refuses a name that is not an MCP tool', () => {
+        expect(toolBelongsTo('mcp__linear-server__create_issue', 'linear-server')).toBe(true);
+        expect(toolBelongsTo('mcp__acme', 'acme')).toBe(true);
+        expect(toolBelongsTo('Bash', 'acme')).toBe(false);
+        expect(toolBelongsTo('mcp__acmex__alpha', 'acme')).toBe(false);
+    });
+
+    it('matches a segment that itself contains the separator', () => {
+        // The reason matching is driven by the KNOWN key rather than by
+        // parsing the tool name. `Acme Inc. Tools` sanitises to
+        // `Acme_Inc__Tools` — a segment carrying `__` — so a parser that split
+        // at the first separator would read the server as `Acme_Inc` and the
+        // census would report 0 for a server in daily use.
+        const segment = serverSegment('Acme Inc. Tools');
+        expect(segment).toBe('Acme_Inc__Tools');
+        expect(toolBelongsTo(`mcp__${segment}__list`, segment)).toBe(true);
+    });
+});
+
+describe('what the window and the value filter actually admit', () => {
+    function counts(store: Record<string, string>, segments: string[], now = NOW): Map<string, number> {
+        const root = plant(store, { acme: { command: 'acme-mcp' } });
+        return toolsUsedByServer(root, now, segments);
+    }
+
+    it('counts a malformed value as nothing, not as in-window', () => {
+        // The comparison is lexicographic, which is right for `YYYY-MM-DD` and
+        // quietly wrong for everything else: `TODO`, `unknown` and
+        // `hand edited` all sort ABOVE a real cutoff, so an unvalidated reader
+        // reports MORE tools than were ever called.
+        expect(
+            counts(
+                { mcp__acme__a: 'hand edited', mcp__acme__b: 'TODO', mcp__acme__c: '2026-10-01' },
+                ['acme'],
+            ).get('acme'),
+        ).toBe(1);
+    });
+
+    it('counts a future-dated value as nothing', () => {
+        expect(counts({ mcp__acme__a: '9999-01-01' }, ['acme']).get('acme')).toBe(0);
+    });
+
+    it('spans exactly 30 days, both ends inclusive', () => {
+        // 2026-10-02 back 29 days is 2026-09-03; the day before it is out.
+        expect(counts({ mcp__acme__a: '2026-09-03' }, ['acme']).get('acme')).toBe(1);
+        expect(counts({ mcp__acme__a: '2026-09-02' }, ['acme']).get('acme')).toBe(0);
+        expect(counts({ mcp__acme__a: '2026-10-02' }, ['acme']).get('acme')).toBe(1);
+    });
+
+    it('names every known server, including one never seen', () => {
+        const got = counts({ mcp__acme__a: '2026-10-02' }, ['acme', 'never-called']);
+        expect(got.get('acme')).toBe(1);
+        expect(got.get('never-called')).toBe(0);
+    });
+});
+
+describe('the writer and the reader resolve the same root', () => {
+    it('a monorepo subdirectory reads the store the hook wrote at the settings root', () => {
+        // The hook roots the store at the directory holding
+        // `.agent-settings.yml`; `doctor neighbours` may be pointed at a
+        // package inside it. Resolved differently, a server in daily use reads
+        // 0 — so the two walks are pinned equal here rather than assumed.
+        const root = fs.mkdtempSync(path.join(fs.realpathSync(os.tmpdir()), 'mcp-mono-'));
+        dirs.push(root);
+        write(root, '.agent-settings.yml', 'quality:\n  local_auto_run: false\n');
+        write(root, path.join('packages', 'web', '.mcp.json'), JSON.stringify({ mcpServers: { acme: {} } }));
+
+        const nested = path.join(root, 'packages', 'web');
+        expect(run(JSON.stringify({ payload: { tool_name: 'mcp__acme__alpha' } }), { consumer_root: nested })).toBe(0);
+
+        expect(fs.existsSync(path.join(root, 'agents', 'runtime', 'neighbour-tool-use.json'))).toBe(true);
+        expect(resolveStoreRoot(nested)).toBe(fs.realpathSync(root));
+        expect(census(nested, { now: new Date() }).mcp_servers[0]?.tools_used_30d).toBe(1);
     });
 });
