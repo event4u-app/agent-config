@@ -23,10 +23,18 @@ is where the honest part of this report is.
 
 | Reading | Value | Unit | Reproducible where |
 |---|---:|---|---|
-| projected rule corpus — the upper bound a host is handed | 485,282 | characters | any checkout |
-| the same, in chars/4 tokens | 121,321 | tokens | any checkout |
-| installed rule layer, this machine, all files | 375,874 | characters | this machine only |
-| installed rule layer, this machine, **files with no `paths:`** | **351,894** | characters | this machine only |
+| projected rule corpus — the upper bound a host is handed | 485,282 | **bytes** | any checkout |
+| the same, in bytes/4 tokens | 121,321 | tokens | any checkout |
+| installed rule layer, this machine, all files | 375,874 | **bytes** (372,220 chars) | this machine only |
+| installed rule layer, this machine, **files with no `paths:`** | **351,894** | **bytes** (348,446 chars) | this machine only |
+
+**Bytes, not characters, and the distinction is small but real.** `wc -c` and
+`report_standing_payload_by_host` both count bytes; the rule corpus is UTF-8
+with enough em-dashes and typographic quotes to put characters about 1 % below
+bytes. Every arithmetic below uses the byte figure consistently. The token
+column inherits the same base, so it is a bytes/4 estimate rather than a
+character/4 one — neither is the exact BPE count, which is a different
+instrument (`check_rule_activation_census` has it).
 
 The fourth row is the per-prompt and per-spawn number that matters. A rule
 carrying a `paths:` block loads on a file match; a rule without one loads

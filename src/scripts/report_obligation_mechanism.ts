@@ -99,7 +99,17 @@ export function rows(root: string): MechanismRow[] {
     run(root, 'src/scripts/report_obligation_carriers', ['--top', '1']);
     const carriersPath = path.join(root, 'agents', 'runtime', 'reports', 'obligation-carriers.json');
     const restatements = new Map<string, number>();
-    if (fs.existsSync(carriersPath)) {
+    if (!fs.existsSync(carriersPath)) {
+        // Not a degradation to absorb: `agents/runtime/` is gitignored, so a
+        // fresh checkout reaches this, and a silent fallback would publish a
+        // uniformly-zero Restatements column with nothing saying it is empty.
+        // Every other input failure in this script exits 1; so does this one.
+        throw new Error(
+            `report_obligation_carriers wrote no census at ${carriersPath} — the ` +
+                'Restatements column would read 0 for every rule without saying so',
+        );
+    }
+    {
         const census = JSON.parse(fs.readFileSync(carriersPath, 'utf8')) as {
             rows: { carriers: { path: string; cls: string }[] }[];
         };
@@ -164,6 +174,12 @@ export function main(): number {
     if (argv.includes('--help') || argv.includes('-h')) {
         process.stdout.write(USAGE);
         return 0;
+    }
+    for (const a of argv) {
+        if (a.startsWith('-') && !['--root', '--json', '--table'].includes(a)) {
+            process.stderr.write(`unknown argument: ${a}\n${USAGE}`);
+            return 2;
+        }
     }
     const i = argv.indexOf('--root');
     const root = i >= 0 && i + 1 < argv.length ? (argv[i + 1] as string) : process.cwd();

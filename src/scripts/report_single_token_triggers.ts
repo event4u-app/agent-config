@@ -192,6 +192,15 @@ export function main(): number {
         process.stdout.write(USAGE);
         return 0;
     }
+    const KNOWN = ['--root', '--threshold', '--json', '--table', '--all'];
+    // A silently-ignored `--treshold` would report against a threshold the
+    // operator did not ask for, while still printing the default in the header.
+    for (const a of argv) {
+        if (a.startsWith('-') && !KNOWN.includes(a)) {
+            process.stderr.write(`unknown argument: ${a}\n${USAGE}`);
+            return 2;
+        }
+    }
     const flagValue = (f: string): string | null => {
         const i = argv.indexOf(f);
         return i >= 0 && i + 1 < argv.length ? (argv[i + 1] as string) : null;

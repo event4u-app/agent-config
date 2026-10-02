@@ -49,12 +49,17 @@ there turns the expected row up immediately:
 
 `rename` is the single highest near-miss row in the corpus — the step's
 prediction was right about the word and wrong about where it would show up.
-Every occurrence of "Rename" in the matrix sits in a `near_misses` block: a
-rename of a class, of a variable, of a test. That is the finding, and it is a
-sharper one than a share would have been.
+Every **foreign** occurrence of "Rename" sits in a `near_misses` block: a rename
+of a class, of a variable, of a test. (The one positive occurrence is in
+`augment-edit-discipline.yaml` itself, which is the rule that owns the word and
+is excluded from its own denominator.) That is the finding, and it is a sharper
+one than a share would have been.
 
-**79 of 341 one-token keywords hit at least one foreign near-miss.** The other
-262 hit nothing on either axis — 249 of them hit nothing at all.
+**79 of 341 one-token keywords hit at least one foreign near-miss.** Of the
+other 262, **37 do hit a foreign positive** — below the threshold, not at zero —
+and **225 hit nothing at all**. (A separate count, easy to confuse with that
+one: 249 keywords have zero foreign-POSITIVE hits, and 24 of those are inside
+the reportable 79, so the two populations overlap rather than nest.)
 
 ## What is NOT wrong
 
