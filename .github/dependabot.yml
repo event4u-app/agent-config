@@ -149,6 +149,27 @@ updates:
     commit-message:
       prefix: chore
       include: scope
+    ignore:
+      # mermaid majors are held by a PEER RANGE, not by taste. `astro-mermaid`
+      # declares `peer mermaid@"^10.0.0 || ^11.0.0"`, and 2.1.0 — the LATEST
+      # published version, checked 2026-10-02 — still does. So mermaid 12 is
+      # not a bump this site can take at any astro-mermaid version that exists:
+      # PR #2164 grouped it with four unrelated updates and `npm ci` refused
+      # the whole group with ERESOLVE, making five mergeable bumps unmergeable
+      # because of one.
+      #
+      # Scoped to `version-update:semver-major` on purpose: 11.x patches and
+      # minors still arrive, so this holds back exactly the incompatible axis
+      # and nothing else. SECURITY updates are unaffected — dependabot does not
+      # apply version ignores to them, which is the behaviour we want here.
+      #
+      # Revisit-if: astro-mermaid publishes a version whose peer range admits
+      # mermaid ^12 (`npm view astro-mermaid@latest peerDependencies`), or the
+      # site stops using astro-mermaid. Delete this entry then rather than
+      # widening it.
+      - dependency-name: mermaid
+        update-types:
+          - version-update:semver-major
     groups:
       site:
         applies-to: version-updates
