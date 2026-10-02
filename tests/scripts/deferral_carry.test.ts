@@ -177,6 +177,7 @@ describe('owner-dependent blockers — the owner decides, step by step', () => {
         const parked = read(root, `agents/roadmaps/later/${CHILD}.md`);
         expect(parked).toMatch(/^status: later$/m);
         expect(parked).toMatch(/^entry_condition:\n {2}what: .+\n {2}when: .+\n {2}who: owner$/m);
+        expect(parked).toMatch(/^review_by: \d{4}-\d{2}-\d{2}$/m);
         expect(parked).toContain('### blocker: owner-call');
         expect(parked).toContain('(../archive/road-to-parent.md)');
         expect(deferralProblems(root, `${SRC}.md`, read(root, archived(SRC)))).toEqual([]);
