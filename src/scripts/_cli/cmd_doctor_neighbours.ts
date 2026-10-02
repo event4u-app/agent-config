@@ -7,8 +7,15 @@
  * `_lib/neighbour_census.ts`; everything here is presentation and the one
  * summary line the full `doctor` run links to.
  *
- * Read-only by construction. Nothing in this path writes, removes, or refuses
- * anything — a label is a report, never a gate.
+ * Refuses nothing. No label here removes, blocks, or rewrites a neighbour's
+ * artifact — a label is a report, never a gate.
+ *
+ * It is no longer read-ONLY, and the two writes are named rather than implied.
+ * Both land under `agents/reports/` and both are caches of this run's own
+ * findings: `neighbour-scan.json`, the shape-scan verdicts the ranker reads on
+ * the hook path, and `neighbour-overlap.json`, the cross-root pairs keyed by the
+ * census digest. Nothing outside that directory is touched, and a failed write
+ * is not a failed census.
  */
 
 import * as fs from 'node:fs';
@@ -19,10 +26,19 @@ import * as YAML from 'yaml';
 
 import {
     census,
+    fileDigest,
     gatedEventsFrom,
+    scanCachePath,
     type NeighbourCensus,
 } from '../_lib/neighbour_census.js';
+import { scanNeighbourBody, writeScanCache } from '../_lib/neighbour_scan.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
+import {
+    OVERLAP_THRESHOLD,
+    CROSS_CACHE_NAME,
+    cachedCrossRootPairs,
+    crossRootOverlapMap,
+} from '../audit_skill_overlap.js';
 
 interface ManifestShape {
     concerns?: Record<string, { effect?: string }>;
@@ -58,17 +74,74 @@ function ourSkillNames(packageRoot: string): Set<string> {
     }
 }
 
+/**
+ * The census, in two passes, and the second one is not an accident.
+ *
+ * The cross-root overlap can only be computed over the neighbour skills the
+ * census FOUND — the unclaimed entries of two roots that also hold claimed ones,
+ * since `agent-config install` writes this package's own skills into
+ * `~/.claude/skills`. Pairing whole roots instead would compare our installed
+ * copies against our own source tree and publish the install as an overlap. So
+ * pass one finds them, the overlap runs over exactly those files, and pass two
+ * labels them.
+ *
+ * The shape scan is memoized across both passes, so the four linters run once
+ * per neighbour body rather than twice. The scan verdicts are then WRITTEN to
+ * the cache the ranker reads on the hook path — this verb is the only producer,
+ * which is why its absence reads there as `no-scan-record` rather than as a pass.
+ */
 export function runCensus(
     projectRoot: string,
     packageRoot: string,
     homeRoot?: string,
 ): NeighbourCensus {
-    return census(projectRoot, {
+    const scanned = new Map<string, string | null>();
+    const scan = (p: string): string | null => {
+        const hit = scanned.get(p);
+        if (hit !== undefined) return hit;
+        const kind = scanNeighbourBody(p).kind;
+        scanned.set(p, kind);
+        return kind;
+    };
+    const base = {
         gatedEvents: gatedEvents(packageRoot),
         templatesRoot: path.join(packageRoot, 'src', 'agent-src', 'templates'),
         ourSkillNames: ourSkillNames(packageRoot),
+        packageRoot,
+        scan,
         ...(homeRoot === undefined ? {} : { homeRoot }),
-    });
+    };
+    const first = census(projectRoot, base);
+    const ourRoot = path.join(packageRoot, 'src', 'skills');
+    let overlaps = new Map<string, { names: string[]; similarity: number }>();
+    if (first.skills.length > 0 && fs.existsSync(ourRoot)) {
+        try {
+            const { pairs } = cachedCrossRootPairs(
+                first.skills.map((s) => s.source),
+                ourRoot,
+                path.join(projectRoot, 'agents', 'reports', CROSS_CACHE_NAME),
+                OVERLAP_THRESHOLD,
+            );
+            overlaps = crossRootOverlapMap(pairs);
+        } catch {
+            // An overlap pass that cannot run leaves every entry unlabelled by
+            // it, which reads as `unclassified` — the absence of a signal — and
+            // never as a claim that the pair is disjoint.
+        }
+    }
+    const full = census(projectRoot, { ...base, overlaps });
+    writeScanCache(
+        scanCachePath(projectRoot),
+        // `fileDigest`, not the census's own `digest`: the ranker re-digests the
+        // file bytes it is about to index, and a cache written under a different
+        // digest function would read as `digest-changed` on every prompt.
+        full.skills.map((s) => ({
+            qualified: s.qualified,
+            digest: fileDigest(s.source) ?? '',
+            unscanned: s.unscanned,
+        })),
+    );
+    return full;
 }
 
 /** The one line the full `doctor` run prints, linking to this verb. */
@@ -104,7 +177,15 @@ export function renderText(c: NeighbourCensus): string[] {
         out.push(`  ${title} (${rows.length})`);
         for (const r of rows) out.push(`      ${r.id}`);
     };
-    section('skills', c.skills);
+    if (c.skills.length > 0) {
+        out.push('');
+        out.push(`  skills (${c.skills.length})`);
+        for (const s of c.skills) {
+            const also = s.also.length === 0 ? '' : ` also: ${s.also.join(', ')}`;
+            const why = s.unscanned === null ? '' : ` unscanned: ${s.unscanned}`;
+            out.push(`      ${s.qualified}  compat: ${s.compat}${also}${why}`);
+        }
+    }
     section('commands', c.commands);
     section('agents', c.agents);
     section('mcp servers', c.mcp_servers);

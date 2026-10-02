@@ -34,6 +34,36 @@ import { HOOK_SIGNATURES, entryCommands, isManagedEntry } from './host_hook_merg
 import { scanText } from './secret_detector.js';
 import { readRecordedHashes } from '../../install/recordedOwnership.js';
 import { manifest_path } from './installed_tools.js';
+import {
+    classifyCompat,
+    fileDigest,
+    makeSkillOriginResolver,
+    qualifiedSkillName,
+    scanVerdict,
+    type Compat,
+    type ScanCache,
+} from './skill_origin.js';
+
+// The authorship + scan primitives live in `skill_origin.ts` so the ranker can
+// reach them without this file's module graph; re-exported here because every
+// existing caller of the census expects one import site.
+export {
+    AUTHORED_SKILL_ROOT,
+    SCAN_CACHE_RELATIVE,
+    classifyCompat,
+    fileDigest,
+    makeSkillOriginResolver,
+    packageClaimedPaths,
+    qualifiedSkillName,
+    readScanCache,
+    scanCachePath,
+    scanVerdict,
+    splitQualifiedName,
+    type Compat,
+    type ScanCache,
+    type ScanRecord,
+    type SkillOrigin,
+} from './skill_origin.js';
 
 /** The seven shape classes a neighbour artefact can take. */
 export type ShapeClass =
@@ -75,6 +105,29 @@ export interface ForeignHookEntry extends NeighbourEntry {
     effect: Effect;
 }
 
+/**
+ * A neighbour skill, with the three things a reader needs beyond its id.
+ *
+ * `compat` is computed WITHOUT a model: a name collision is a string compare, an
+ * overlap is the cosine `audit_skill_overlap` already uses at the threshold it
+ * already calibrates, and `unscanned` is a linter verdict. Nothing here is a
+ * judgement about whether the neighbour is good, and nothing is suppressed on
+ * any label — `unclassified` in particular is the ABSENCE of a signal, never a
+ * clearance.
+ */
+export interface NeighbourSkillEntry extends NeighbourEntry {
+    shape: 'skill';
+    /** What a route line prints for it: `home:design-system`, `project:…`. */
+    qualified: string;
+    compat: Compat;
+    /** Our skills it shadows by name or overlaps by content, sorted. */
+    also: string[];
+    /** Finding kind when the shape scan refused the body, else `null`. */
+    unscanned: string | null;
+    /** Highest cross-root similarity against one of ours, or `null`. */
+    similarity: number | null;
+}
+
 export type EnvironmentLabel = 'controlled' | 'coordinated' | 'degraded' | 'uncontrolled';
 
 export interface HostCensus {
@@ -98,7 +151,7 @@ export interface NeighbourCensus {
     project_root: string;
     hosts: HostCensus[];
     hook_groups: ForeignHookEntry[];
-    skills: NeighbourEntry[];
+    skills: NeighbourSkillEntry[];
     commands: NeighbourEntry[];
     agents: NeighbourEntry[];
     mcp_servers: NeighbourEntry[];
@@ -422,6 +475,31 @@ export interface CensusOptions {
     ourSkillNames?: ReadonlySet<string>;
     /** The user-scope root; real `$HOME` in production, planted in a fixture. */
     homeRoot?: string;
+    /** Maintainer checkout root, for the authored-tree exception in the resolver. */
+    packageRoot?: string;
+    /**
+     * Cross-root overlap, keyed by the neighbour `SKILL.md`'s absolute path.
+     *
+     * Passed IN rather than computed here: the pair finder lives in
+     * `audit_skill_overlap` and the shape scan in `neighbour_scan`, and both of
+     * those pull module graphs this file must stay out of — it is reachable from
+     * the ranker, which runs on the `user_prompt_submit` hook path. Absent means
+     * the overlap pass did not run, which reads as no overlap and is visible as
+     * `unclassified` rather than claimed as disjoint.
+     */
+    overlaps?: ReadonlyMap<string, { names: readonly string[]; similarity: number }>;
+    /**
+     * The shape scan, injected — returns the finding kind, or `null` on a pass.
+     *
+     * Injected rather than imported for the reason the `overlaps` field gives:
+     * `neighbour_scan` pulls four linters and, through one of them,
+     * `node:child_process`, and this file is reachable from the ranker on the
+     * hook path. Absent, verdicts fall back to the recorded cache, and a missing
+     * record there is a REFUSAL rather than a pass — see `scanVerdict`.
+     */
+    scan?: (skillMdPath: string) => string | null;
+    /** Recorded shape-scan verdicts, for the no-scanner path. */
+    scanCache?: ScanCache | null;
 }
 
 /** Run the whole census for one consumer root. */
@@ -448,14 +526,45 @@ export function census(projectRoot: string, opts: CensusOptions = {}): Neighbour
         hookGroups.push(...entries);
     }
 
-    const skills = [
+    const ourSkillsForCompat = opts.ourSkillNames ?? new Set<string>();
+    const originOf = makeSkillOriginResolver(projectRoot, {
+        ...(opts.packageRoot === undefined ? {} : { packageRoot: opts.packageRoot }),
+    });
+    const scanCache = opts.scanCache !== undefined ? opts.scanCache : null;
+    const overlaps = opts.overlaps ?? new Map();
+    const skills: NeighbourSkillEntry[] = [
         ...unclaimedUnder(path.join(projectRoot, '.claude', 'skills'), 'project', 'skill', owned, {
             nested: true,
         }),
         ...unclaimedUnder(path.join(home, '.claude', 'skills'), 'user', 'skill', owned, {
             nested: true,
         }),
-    ];
+    ].map((entry) => {
+        const name = entry.id.split(':').slice(1).join(':');
+        const origin = originOf(entry.source);
+        const qualified = qualifiedSkillName(name, origin);
+        const unscanned =
+            opts.scan !== undefined
+                ? opts.scan(entry.source)
+                : (() => {
+                      const v = scanVerdict(scanCache, qualified, fileDigest(entry.source));
+                      return v.ok ? null : v.kind;
+                  })();
+        const shadows = ourSkillsForCompat.has(name) ? [name] : [];
+        const hit = overlaps.get(path.resolve(entry.source));
+        // An unscanned body's overlap is derived from text this census refused
+        // to read, so it is not reported at all — see `classifyCompat`.
+        const overlapNames = unscanned === null && hit !== undefined ? [...hit.names] : [];
+        return {
+            ...entry,
+            shape: 'skill' as const,
+            qualified,
+            compat: classifyCompat({ unscanned, shadows, overlaps: overlapNames }),
+            also: [...new Set([...shadows, ...overlapNames])].sort(),
+            unscanned,
+            similarity: overlapNames.length > 0 && hit !== undefined ? hit.similarity : null,
+        };
+    });
     const commands = unclaimedUnder(
         path.join(projectRoot, '.claude', 'commands'),
         'project',
