@@ -366,12 +366,44 @@ export function readInstallBoundary(): InstallBoundary {
  * would let another concern's retries inflate Q1's numerator against a
  * denominator that only counts this gate's refusals.
  */
+/**
+ * Who set the `stop_hook_active` flag this row was recorded under.
+ *
+ * `layer` already says WHICH allow path produced the row, and the doc above
+ * says the host sets `stop_hook_active` on ANY stop hook's block — including a
+ * neighbour's. What it could not say is which: a `stop_hook_active` row and a
+ * `refused_turn` row were the only two things the record distinguished, so a
+ * retry caused by a foreign concern and a retry caused by this gate were
+ * indistinguishable once the layer was `stop_hook_active`.
+ *
+ *  - `ours`    — this session's refusal record exists and parses, so this gate
+ *                refused at some point before this stop.
+ *  - `foreign` — the record is ABSENT. This gate never refused in this session,
+ *                and the host set the flag anyway, so something else did.
+ *  - `unknown` — the record exists and could not be read. The distinction from
+ *                `foreign` is the whole point: "we did not refuse" and "we
+ *                cannot tell whether we refused" are different findings, and
+ *                collapsing them would let an unreadable state directory read
+ *                as evidence of a neighbour.
+ *
+ * On the `refused_turn` layer the answer is `ours` by construction — that
+ * marker is this gate's own and no other writer sets it.
+ */
+export type ShadowSetBy = 'ours' | 'foreign' | 'unknown';
+
 export interface WouldRefuseAgainRow {
     detector: RefusalDetectorId;
     /** The turn ordinal the shadow ran on — joins to `refused_turn`. */
     turn: number;
     at: string;
     layer: ShadowLayer;
+    /**
+     * Absent on rows written before this field existed, which parse as
+     * `unknown` rather than being dropped — an old row is still a real
+     * observation of a retry, and discarding it would silently lower Q1's
+     * numerator.
+     */
+    set_by: ShadowSetBy;
 }
 
 /**
@@ -514,7 +546,12 @@ export function parseShadowRecord(raw: string): ShadowRecord | null {
         if (typeof turn !== 'number' || !Number.isFinite(turn)) continue;
         if (typeof at !== 'string') continue;
         if (layer !== 'stop_hook_active' && layer !== 'refused_turn') continue;
-        rows.push({ detector: det, turn, at, layer });
+        const setByRaw = ro['set_by'];
+        const set_by: ShadowSetBy =
+            setByRaw === 'ours' || setByRaw === 'foreign' || setByRaw === 'unknown'
+                ? setByRaw
+                : 'unknown';
+        rows.push({ detector: det, turn, at, layer, set_by });
     }
     const num = (v: unknown): number =>
         typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0;
@@ -548,11 +585,24 @@ export function foldShadow(
         turnOrdinal: number;
         at: string;
         layer: ShadowLayer;
+        /**
+         * Omitted by a caller that cannot establish it, which is `unknown` —
+         * never `foreign`, because a missing answer is not evidence of a
+         * neighbour.
+         */
+        setBy?: ShadowSetBy;
     },
 ): ShadowRecord {
     const rows = [...(prev?.would_refuse_again ?? [])];
+    const set_by: ShadowSetBy = input.setBy ?? 'unknown';
     for (const d of input.detectors) {
-        rows.push({ detector: d, turn: input.turnOrdinal, at: input.at, layer: input.layer });
+        rows.push({
+            detector: d,
+            turn: input.turnOrdinal,
+            at: input.at,
+            layer: input.layer,
+            set_by,
+        });
     }
     let dropped = prev?.dropped ?? 0;
     if (rows.length > SHADOW_MAX_ROWS) {
@@ -569,6 +619,31 @@ export function foldShadow(
         first_at: prev?.first_at !== undefined && prev.first_at !== '' ? prev.first_at : input.at,
         last_at: input.at,
     };
+}
+
+/**
+ * Who set `stop_hook_active`, decided from this gate's OWN refusal record.
+ *
+ * Three states, and the third is not a hedge. `ENOENT` means this gate never
+ * refused in this session, so a flag the host set anyway came from somewhere
+ * else — `foreign`. Any OTHER read failure means the answer is unavailable, and
+ * reporting that as `foreign` would turn a broken state directory into evidence
+ * that a neighbour acted. The lane's own framing is the reason: what this suite
+ * can say about a neighbour is only what it observes, and an unreadable file is
+ * not an observation.
+ *
+ * `parseRecord` returning `null` on a present file is also `unknown`: the file
+ * exists, so something wrote it, and we cannot say what.
+ */
+export function shadowSetBy(workspaceRoot: string, sessionKey: string): ShadowSetBy {
+    let raw: string;
+    try {
+        raw = fs.readFileSync(sessionRefusalFile(workspaceRoot, sessionKey), 'utf-8');
+    } catch (err) {
+        const code = (err as NodeJS.ErrnoException | undefined)?.code;
+        return code === 'ENOENT' ? 'foreign' : 'unknown';
+    }
+    return parseRecord(raw) === null ? 'unknown' : 'ours';
 }
 
 /** This session's shadow record, or `null` when it has never retried. */
