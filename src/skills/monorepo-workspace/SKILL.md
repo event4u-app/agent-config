@@ -104,7 +104,7 @@ for `workspace:`-linked packages.
 
 State plainly that the listing came from manifests rather than the runner — an
 inferred target list can miss runner-inferred targets. This is the posture
-[`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) already takes for the shadcn
+`react-shadcn-ui` already takes for the shadcn
 CLI; the stop condition is `missing-tool-handling` (never install it silently,
 never fake the output).
 

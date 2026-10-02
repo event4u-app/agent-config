@@ -66,6 +66,11 @@ describe('lint_pack_boundaries — behavioural spec', () => {
         expect(lpb._is_allowed('alpha', 'beta', ['beta'])).toBe(true);
         expect(lpb._is_allowed('alpha', 'beta', [])).toBe(false);
     });
+    it('_is_allowed: an always-installed target needs no requires edge', () => {
+        expect(lpb._is_allowed('alpha', 'omega', [], new Set(['core', 'omega']))).toBe(true);
+        // The default set is still `core` alone — the 4th argument is opt-in.
+        expect(lpb._is_allowed('alpha', 'omega', [])).toBe(false);
+    });
 
     // --- _load_pack_meta reads pack.yaml or returns {}. ---
     it('_load_pack_meta returns {} when pack.yaml is absent', () => {
@@ -141,13 +146,16 @@ describe('lint_pack_boundaries — fixture tree', () => {
         fs.writeFileSync(p, content, 'utf-8');
     }
 
-    function vocab(entries: Array<{ id: string; requires?: string[] }>): void {
+    function vocab(
+        entries: Array<{ id: string; requires?: string[]; always_on?: boolean }>,
+    ): void {
         write(
             'packs.yml',
             entries
                 .map(
                     (e) =>
-                        `- id: ${e.id}\n  requires: [${(e.requires ?? []).join(', ')}]\n`,
+                        `- id: ${e.id}\n  requires: [${(e.requires ?? []).join(', ')}]\n` +
+                        (e.always_on === true ? '  always_on: true\n' : ''),
                 )
                 .join(''),
         );
@@ -192,6 +200,28 @@ describe('lint_pack_boundaries — fixture tree', () => {
             '✗ alpha -> beta : skills/a-one/SKILL.md → skills/b-one/SKILL.md',
         );
         expect(r.stdout).toContain('1 cross-pack violation(s)');
+    });
+
+    it('a link INTO an always_on pack is allowed — the resolver seeds it everywhere', () => {
+        vocab([{ id: 'alpha' }, { id: 'omega', always_on: true }]);
+        skill('a-one', ['alpha'], 'reaches [o](../o-one/SKILL.md)');
+        skill('o-one', ['omega'], 'leaf');
+
+        const r = runInProc(lpb.main, []);
+        expect(r.status, r.stdout + r.stderr).toBe(0);
+        expect(r.stdout).toContain('OK — no cross-pack drift');
+    });
+
+    it('a link OUT of an always_on pack is still boundary-checked', () => {
+        vocab([{ id: 'alpha' }, { id: 'omega', always_on: true }]);
+        skill('o-one', ['omega'], 'reaches [a](../a-one/SKILL.md)');
+        skill('a-one', ['alpha'], 'leaf');
+
+        const r = runInProc(lpb.main, []);
+        expect(r.status).toBe(1);
+        expect(r.stdout).toContain(
+            '✗ omega -> alpha : skills/o-one/SKILL.md → skills/a-one/SKILL.md',
+        );
     });
 
     it('requires is expanded transitively (alpha → beta → gamma)', () => {

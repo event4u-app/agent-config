@@ -1,0 +1,38 @@
+{
+    "skill": "skill-improvement-pipeline",
+    "last_eval": "2026-10-01",
+    "description": "3 positives (1 de) + 2 near-misses + 1 counterexample. This skill is explicit-request-only, so the positives all name the pipeline or its product: turning a learning from the session just finished into a durable artefact. The near-misses are the two surfaces that also write artefacts but do not run the capture-classify-create-validate-apply loop — authoring one named skill from scratch, and writing a memory entry. The counterexample guards the word 'improve' used about code.",
+    "queries": [
+        {
+            "q": "run the skill-improvement pipeline on what we just learned",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "that was a real lesson — take it through capture, classify and validate so it lands as an artefact",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "lass die Skill-Improvement-Pipeline ueber die Erkenntnis von eben laufen",
+            "trigger": true,
+            "language": "de",
+            "class": "exemplar"
+        },
+        {
+            "q": "write a new skill for reviewing Terraform plans",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "remember that I always want chunked commits",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "improve the performance of this N+1 query",
+            "trigger": false,
+            "class": "counterexample"
+        }
+    ]
+}

@@ -253,6 +253,27 @@ jobs:
           ./scripts-run src/scripts/lint_deny_text
           ./scripts-run src/scripts/lint_exit_codes
 
+      # The workflow-security audit ran in `task ci` and nowhere else, so the one
+      # gate that reads .github/workflows/** could not fail a pull request that
+      # changed .github/workflows/**. Same reason as the steps above: no workflow
+      # invokes `task ci`.
+      #
+      # Warn-only by design and left that way — it is advisory on MEDIUM and only
+      # `--strict` turns a HIGH into exit 1. Wired WITHOUT `--strict` because the
+      # severity model is council-locked (2026-06-13) and promoting the tier is a
+      # separate decision, recorded unresolved in
+      # agents/evidence/analysis/workflow-security-net-degraded-decision.md.
+      # What the step buys today is that the audit RUNS on every pull request and
+      # its findings are in the log, plus the `scanned:` floor the row in
+      # src/config/gate-coverage.yml pins — a workflows directory that empties out
+      # now fails here instead of printing "0 HIGH, 0 MEDIUM" over nothing.
+      #
+      # Called as a script rather than through `task`, so the argv CI runs is the
+      # argv the manifest declares; its verdict on this tree at wiring time was
+      # 0 HIGH, 0 MEDIUM, 0 allowlisted over 34 workflow files.
+      - name: Audit workflow security (warn-only)
+        run: ./scripts-run src/scripts/lint_workflow_security
+
       - name: Block readable external inspiration/harvest source names
         run: task check-no-external-sources
 

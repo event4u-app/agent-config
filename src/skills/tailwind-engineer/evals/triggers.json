@@ -1,0 +1,38 @@
+{
+    "skill": "tailwind-engineer",
+    "last_eval": "2026-10-01",
+    "description": "3 positives (1 de) + 2 near-misses + 1 counterexample. The near-misses are the two neighbours whose vocabulary overlaps most: a component-architecture question that mentions Tailwind but is about composition, and a design decision that is about which colour to pick rather than how to express it in utilities. The counterexample is unrelated backend work, guarding the over-trigger on the bare word 'style'.",
+    "queries": [
+        {
+            "q": "style this card with Tailwind — rounded, subtle shadow, dark mode variant",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "these components keep drifting into inline styles, pull them back onto the utility classes",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "mach das Formular hübsch, responsive und mit Dark Mode",
+            "trigger": true,
+            "language": "de",
+            "class": "exemplar"
+        },
+        {
+            "q": "should this button be one component with variants or three separate components?",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "which accent colour should our brand use for primary actions?",
+            "trigger": false,
+            "class": "near-miss"
+        },
+        {
+            "q": "add a composite index on orders(tenant_id, created_at)",
+            "trigger": false,
+            "class": "counterexample"
+        }
+    ]
+}

@@ -61,7 +61,7 @@ than under-splitting. Meet BOTH conditions before you extract.
 **Read `DESIGN.md` § Owned components first** — it is the project's own inventory of what
 it already owns (component, status, story file, registry item), filled from the story files
 rather than from memory by
-[`design-system-capture`](../design-system-capture/SKILL.md). It is the cheapest possible
+`design-system-capture`. It is the cheapest possible
 prior-art check: one table, and a `deprecated` row tells you not to reach for something that
 still exists in the tree. Absent or empty → fall through to
 [`existing-ui-audit`](../existing-ui-audit/SKILL.md), which reads the codebase itself.
@@ -104,7 +104,7 @@ checkable before it reaches a page. That skill is stack-agnostic and ships in
 `engineering-base`, so a plain-`react` project receives it exactly as a
 `react-shadcn` one does. The state-coverage matrix the story set is derived
 from is React-specific and lives in
-[`react-shadcn-ui`](../react-shadcn-ui/SKILL.md) § Step 3, deliberately not
+`react-shadcn-ui` § Step 3, deliberately not
 duplicated here; a Blade, Vue or Livewire lane derives its story set from that
 lane's own state list instead.
 
