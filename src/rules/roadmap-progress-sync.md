@@ -58,7 +58,7 @@ A SILENT ARCHIVE THAT BURIES PLANNED-FOR-LATER WORK
 IS A RULE VIOLATION, NOT A CONVENIENCE.
 ```
 
-Closure check fires (`count_open == 0` and `count_deferred > 0`) → the archival sweep carries every bare `[~]` step, with the blockers it names, into a `<slug>-carried` follow-up in the same change (the council row below), then archives. What it cannot carry stays, resolved via the menu (per [`user-interaction`](user-interaction.md)). Full option menu + migration mechanics: guideline + [`roadmap-management`](../skills/roadmap-management/SKILL.md).
+Closure check fires (`count_open == 0`, `count_deferred > 0`) → the sweep carries each bare `[~]` and its blockers to a `<slug>-carried` follow-up (council row below), then archives; the rest goes to the menu (per [`user-interaction`](user-interaction.md)). Full option menu + migration mechanics: guideline + [`roadmap-management`](../skills/roadmap-management/SKILL.md).
 
 ### Who resolves it — the preservation test
 
