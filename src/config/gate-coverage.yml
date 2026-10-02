@@ -1496,6 +1496,30 @@ gates:
       cannot survive a collapse: at that point the gate's own `reportScanned`
       fires first. (Set to 50 in the first version, corrected on an R2 finding.)
 
+  - id: check_verify_expectation_delta
+    argv: []
+    min_scanned: 0
+    corpus: "the `verify:` clauses a change ADDS under agents/roadmaps/ — a set difference against the base ref, not a file set, which is why the floor is 0: a change touching no roadmap legitimately adds none, and a floor above 0 would fail every unrelated pull request. The denominator the gate reports is added clauses, so a change that adds ten to one file scanned ten things."
+    status: enforced
+    no_canary_reason: >
+      A canary cannot express this gate's violation. The violation is a property
+      of the DIFF — a clause that was ADDED without an expectation — so a file
+      planted in the tree is, from the gate's point of view, a clause somebody
+      added, which is either a true positive (and the canary is indistinguishable
+      from the thing it is meant to detect) or, once committed on main, invisible
+      forever. The negative control is the gate's own `--self-test`, run as its
+      own CI step: 10 cases, 4 rejecting — an added bare clause, a bare clause
+      among expectation-carrying siblings, a `cat` command asked for an oracle
+      despite a weak exit status, and an `./path/script.ts` invocation that the
+      pointer carve-out must NOT exempt — plus six ACCEPT cases pinning what must
+      not fire (an expectation in either form, the prose MANUAL form, a backticked
+      file pointer with and without a `:line` suffix, and a bare clause already at
+      base). One limit is stated rather than implied: the already-at-base case
+      does not exercise context-line handling, because under `--unified=0` the
+      unchanged clause does not appear in the patch at all; the unit test
+      `reads ADDED lines only` is what pins that. Same class as
+      check_estate_count's diff-scoped half.
+
   - id: check_static_parity
     argv: ["--quiet"]
     min_scanned: 20

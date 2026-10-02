@@ -228,6 +228,15 @@ tasks:
       # walk down only, and a new active roadmap pays for itself in the same
       # change (road-to-estate-drawdown T2 + T3).
       - task: check-estate-count
+      # The verify-clause half of the same family: an added `verify:` clause
+      # names what its command must produce, so a step cannot be flipped on a
+      # command that was never able to fail. Diff-scoped, with its own self-test
+      # as the negative control a planted canary cannot express.
+      - task: check-verify-expectation-delta
+      - task: check-verify-expectation-delta-self-test
+      # Advisory by its own default: a held object cited in a live blocker
+      # carries an arrival count. It had no caller at all before this entry.
+      - task: check-held-object-arrivals
       # The CONTINUITY estate, which check-estate-count does not read: the
       # five end-state numbers of road-to-one-continuity-record, derived from a
       # behaviourally-discovered inventory rather than from the word
