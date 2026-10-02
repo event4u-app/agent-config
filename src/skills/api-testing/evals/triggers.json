@@ -1,0 +1,23 @@
+{
+    "skill": "api-testing",
+    "description": "10 exemplars + 5 near-misses + 2 counterexamples. Exemplars cover endpoint-test authoring in DE and EN — status, body contract, side effect, mocked third party — and, added 2026-10-02 with the per-ecosystem request-surface table, the same ask on a non-PHP stack. Near-misses cover the neighbours: test-driven-development (the red-first discipline rather than the HTTP shape), authz-review (who may call it, not how to assert it), openapi (the contract document), playwright-testing (a browser, not an endpoint) and test-performance (the suite is slow). Counterexamples guard calling a third-party API as a task, and load testing, both of which share the vocabulary and neither of which this skill covers.",
+    "queries": [
+        { "q": "write integration tests for this new endpoint", "trigger": true, "class": "exemplar" },
+        { "q": "assert the JSON response shape and status for POST /orders", "trigger": true, "class": "exemplar" },
+        { "q": "how do I mock the payment provider in these endpoint tests?", "trigger": true, "class": "exemplar" },
+        { "q": "test this route — it should 422 on a bad payload", "trigger": true, "class": "exemplar" },
+        { "q": "I need the unauthenticated and cross-tenant cases for this API test", "trigger": true, "class": "exemplar" },
+        { "q": "what does an endpoint test look like in this python service?", "trigger": true, "class": "exemplar" },
+        { "q": "httptest or the router's ServeHTTP for testing this go handler?", "trigger": true, "class": "exemplar" },
+        { "q": "schreib bitte Integrationstests für diesen Endpunkt", "trigger": true, "class": "exemplar", "language": "de" },
+        { "q": "wie teste ich die Antwort-Struktur dieser Route inklusive Fehlerfällen?", "trigger": true, "class": "exemplar", "language": "de" },
+        { "q": "the contract says the field is nullable — pin that in a test", "trigger": true, "class": "exemplar" },
+        { "q": "write the failing test first and then build the endpoint", "trigger": false, "class": "near-miss" },
+        { "q": "can a user from another tenant reach this route at all?", "trigger": false, "class": "near-miss" },
+        { "q": "generate the OpenAPI document for these routes", "trigger": false, "class": "near-miss" },
+        { "q": "click through the checkout flow in a browser and assert the result", "trigger": false, "class": "near-miss" },
+        { "q": "our endpoint tests each boot the whole app — speed them up", "trigger": false, "class": "near-miss" },
+        { "q": "call the Stripe API and tell me what the customer balance is", "trigger": false, "class": "counterexample" },
+        { "q": "run a load test against this endpoint at 2000 rps", "trigger": false, "class": "counterexample" }
+    ]
+}

@@ -5,14 +5,13 @@ pack: engineering-base
 visibility: internal
 sub: fix
 cluster: bug
-skills: [bug-analyzer, pest-testing]
+skills: [bug-analyzer, test-case-discovery]
 description: Plan and implement a bug fix — based on investigation, with quality checks and test verification
 argument-hint: "[bug-description]"
 council_depth: deep
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
-framework: laravel
 workspaces:
   - agent-config-maintainer
 packs:
@@ -103,6 +102,22 @@ vendor/bin/phpstan analyse           # 4. Re-check after Rector/ECS
 Show results and fix any issues.
 
 ### 5. Tests
+
+Resolve the test framework via the
+[`toolchain-resolver`](../../contexts/execution/toolchain-resolver.md) before
+writing anything — write the regression test in the framework the project
+actually uses, never a hard-coded one.
+
+**The resolver is the only stack authority, and `skills:` deliberately names
+no single-stack skill.** This command's 195 lines of body mention no framework
+at all, so the `pest-testing` binding and the `framework: laravel` marker it
+used to carry made a Python or Go repository load PHP testing guidance for a
+command that never asks for it. The load is **resolver-conditional**: once the
+runner is named, load the skill for THAT runner if one exists —
+`pest-testing` for pest, `laravel` for `php artisan test`,
+`playwright-testing` for playwright. Unconditional became conditional; it did
+not become nothing. Same contract as `/tests create` and `/tests execute`,
+which were de-bound first.
 
 Check for existing tests that cover the affected code:
 

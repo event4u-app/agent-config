@@ -1,0 +1,12 @@
+{
+  "name": "resolver-fixture/laravel",
+  "description": "Resolver fixture — never installed, never built.",
+  "require": {
+    "php": "^8.3",
+    "laravel/framework": "^11.0"
+  },
+  "require-dev": {
+    "pestphp/pest": "^3.0",
+    "phpstan/phpstan": "^2.0"
+  }
+}
