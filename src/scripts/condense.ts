@@ -50,7 +50,7 @@ import { render_windsurfrules, strip_frontmatter } from './_lib/windsurf_render.
 // bundled-CLI-entry-guard landmine. Verified before wiring, not assumed.
 import { build_thin } from './project_thin_rules.js';
 import { build_claude_hook_matrix } from './_lib/claude_settings_hooks.js';
-import { describeDroppedHosts, normalizeLeanProjectionMode, resolveLeanProjectionHosts, thinsHost,
+import { describeDroppedHosts, resolveLeanProjection, thinsHost,
     writesThinFiles, type LeanProjectionHosts, type LeanProjectionMode } from './_lib/lean_projection_mode.js';
 import { is_claude_builtin_name } from './_lib/claude_builtin_names.js';
 import { project_settings_path, load_agent_settings } from './_lib/agent_settings.js';
@@ -462,16 +462,14 @@ function _read_projection_scope_dedup(): boolean {
 
 
 function _lean_projection_settings(): { mode: LeanProjectionMode; hosts: LeanProjectionHosts } {
-    const data = load_agent_settings({ project_path: MODULE_STATE.SETTINGS_FILE });
-    const lean = data['lean_projection'];
-    const obj =
-        typeof lean === 'object' && lean !== null && !Array.isArray(lean)
-            ? (lean as Record<string, unknown>)
-            : {};
-    return {
-        mode: normalizeLeanProjectionMode(obj['mode'] ?? ''),
-        hosts: resolveLeanProjectionHosts(obj['hosts']),
-    };
+    // Step 1.2 of `road-to-a-rule-carrier-that-works-outside-the-repo`: this is
+    // now the shared resolver rather than one of three private readers. The
+    // INPUT is unchanged — `MODULE_STATE.SETTINGS_FILE` is still the file, so
+    // the projector's answer is the answer it always gave — and only the code
+    // that interprets it is shared. That is risk 2 of the roadmap's register
+    // ("making the hook agree with the projector could also move the
+    // projector") discharged by construction instead of by a test alone.
+    return resolveLeanProjection({ settingsPath: MODULE_STATE.SETTINGS_FILE });
 }
 
 // --- hashing -----------------------------------------------------------------

@@ -95,12 +95,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { hookSectionEnabled, leanProjectionHostsRaw, leanProjectionModeRaw } from '../_lib/hook_settings.js';
-import {
-    deliversBodies,
-    normalizeLeanProjectionMode,
-    resolveLeanProjectionHosts,
-} from '../_lib/lean_projection_mode.js';
+import { hookSectionEnabled } from '../_lib/hook_settings.js';
+import { deliversBodies, resolveLeanProjection } from '../_lib/lean_projection_mode.js';
 import { enforcement_class_from_frontmatter } from '../_lib/obligation_frequency.js';
 import {
     appendDelivered,
@@ -114,6 +110,7 @@ import {
     matchTierRules,
     ruleSources,
     selectForInjection,
+    PACKAGE_ROOT_ENV,
 } from '../_lib/rule_injection.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
@@ -362,10 +359,16 @@ export const DELIVERY_HOST = 'claude-code';
  * to open. `AGENT_CONFIG_REPLAY` re-imposes it, which is what keeps
  * `bench_hook_injection` measuring the configured tree rather than the probe.
  */
-export function gateOpen(root: string, cliEntry: boolean): boolean {
-    const mode = normalizeLeanProjectionMode(leanProjectionModeRaw(root));
-    const hosts = resolveLeanProjectionHosts(leanProjectionHostsRaw(root)).hosts;
-    if (deliversBodies(mode) && hosts.includes(DELIVERY_HOST)) return true;
+export function gateOpen(root: string, cliEntry: boolean, packageRoot?: string | null): boolean {
+    // ONE resolver since step 1.2 — the full cascade (template base, canonical
+    // `agents/settings/`, project root, user-global), not the legacy root file
+    // this concern used to read alone. `packageRoot` is where the template is
+    // found; inside the bundle nothing else can locate it.
+    const { mode, hosts } = resolveLeanProjection({
+        projectRoot: root,
+        packageRoot: packageRoot ?? null,
+    });
+    if (deliversBodies(mode) && hosts.hosts.includes(DELIVERY_HOST)) return true;
     if (hookSectionEnabled(root, 'rule_inject')) return true;
     return cliEntry && process.env['AGENT_CONFIG_REPLAY'] !== '1';
 }
@@ -399,7 +402,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
     if (slot !== 'user_prompt_submit' && slot !== 'pre_tool_use') return EXIT_ALLOW;
 
-    if (!gateOpen(root, _isCliEntry())) return EXIT_ALLOW;
+    const pkg = (process.env[PACKAGE_ROOT_ENV] ?? '').trim();
+    if (!gateOpen(root, _isCliEntry(), pkg === '' ? null : pkg)) return EXIT_ALLOW;
 
     let prompt = '';
     let openFiles: string[] | null = null;

@@ -229,12 +229,76 @@ Reproduced on 2026-10-01:
       `gateOpen`'s probe branch opens the gate whatever the settings say. That
       is unchanged from before this step and does not reach a real install,
       where the bundle defines `__AGENT_CONFIG_BUNDLE__` and the branch is dead.
-- [ ] **1.2 One answer to "which mode".** Installer, projector and hook call one
+- [x] **1.2 One answer to "which mode".** Installer, projector and hook call one
       resolver over the same layers in the same order — template base,
       canonical `agents/settings/`, project root, user-global. With no settings
       file anywhere the resolver returns the template's value, and the
       template's value is stated in the test.
       verify: `npx vitest run tests/scripts/lean_projection_mode_parity.test.ts` -> 0
+
+      **Done 2026-10-02.** `resolveLeanProjection` in `_lib/lean_projection_mode.ts`
+      is the one resolver, per D3. The projector calls it with the file it
+      already pinned, the carrier calls it with the project root and the package
+      root. Ten fixtures state the expected answer per layer state before any
+      code is consulted.
+
+      **The disagreement was about WHICH FILE, not about normalisation, and that
+      is sharper than the Context had it.** This file's Context describes two
+      mode readers differing in parser. Measured, the carrier read
+      `<root>/.agent-settings.yml` — the LEGACY location — while `install.ts`
+      writes `<root>/agents/settings/.agent-settings.yml`, which is
+      `agent_settings.ts`'s canonical write target. On a normal install the
+      carrier opened a file that does not exist, got `''`, normalised that to
+      `eager-all` and closed its own gate, while the projector had already
+      written thin stubs. That is the pointer arm reached by configuration, and
+      it is a SECOND independent cause of the silence 1.1 repaired: a consumer
+      with only 1.1 would still have received nothing. The user-global layer was
+      invisible for the same reason, which matters more than it sounds — ADR-020
+      installs are global-only, so for those consumers the only layer carrying a
+      mode was one the carrier never opened. The defect is now pinned, not
+      merely described: the canonical-file fixture also asserts
+      `leanProjectionModeRaw(root) === ''` on the tree the installer produces.
+
+      **The installer turned out not to be a third mode reader.** The Context
+      cites `install.ts:311-314` as "its own read"; those lines are
+      `_resolve_settings_read`, a settings-FILE-location read. A grep for
+      `lean_projection` across `install.ts` returns nothing — the installer
+      never resolves the mode at all. So the parity this step asks for is
+      between two readers, not three, and the third was a misreading rather than
+      a defect. Recorded rather than quietly dropped.
+
+      **`project_settings_path` is deliberately not used.** `load_agent_settings`
+      expands whatever path it is given into `[the file, <its dir>/agents/
+      settings/.agent-settings.yml, <its dir>/agents/settings/.agent-settings.local.yml]`
+      and merges deepest-wins, so handing it the legacy root path reads BOTH
+      locations — strictly more than `project_settings_path`'s either-or pick,
+      which is the right answer for a tree carrying both. A fixture pins
+      canonical-beats-legacy.
+
+      **The template is located from the package root, because inside the bundle
+      nothing else can.** `agent_settings.default_template_path()` derives the
+      package from `import.meta.url` three directories up, which is correct for
+      a module at `<pkg>/src/scripts/_lib/` and resolves to the PARENT of the
+      package once esbuild has inlined it into `<pkg>/dist/hooks/dispatch.js`.
+      Verified in the built bundle rather than inferred. Unfixed, the base layer
+      would be `{}` and an unconfigured consumer would resolve `eager-all` — the
+      silence again, one layer lower. The carrier therefore passes the root the
+      dispatcher already gives it, and a fixture covers the no-package-root case.
+
+      **Risk 2 of the register — "one mode resolver changes the projector's
+      answer" — is discharged by measurement, not by argument.** The projector's
+      INPUT is unchanged (it still passes `MODULE_STATE.SETTINGS_FILE`); only
+      the interpreting code is now shared. `task sync` followed by
+      `task generate-tools` produced zero changes to the tracked projection
+      under `dist/agent-src/`, and `check_rule_projection_integrity` reports 39
+      entries complete and fresh across three host trees.
+
+      **Byte cost, because it bounds what follows.** Replacing the two
+      hand-rolled readers let esbuild tree-shake `leanProjectionModeRaw` and
+      `leanProjectionHostsRaw` out of the composed hook bundle, recovering
+      2,122 B — more than the 719 B the cascade resolver adds. The cheaper
+      option and the correct one were the same one here, which is worth
+      recording because the opposite was assumed when D3 was taken.
 - [ ] **1.3 Deliver only what the install carries.** A rule with no file in the
       host's installed rule directory is not delivered. One source of truth for
       scope.
