@@ -473,6 +473,16 @@ export function build_thin(
 export interface ThinMeasure {
     rules_total: number;
     kernel_full: number;
+    /**
+     * Everything non-kernel that the no-trigger residue does not claim — which
+     * is NOT the same as everything actually thinned, and the gap grew with the
+     * `no_stub` subset. The path-only residue and the declared `no_stub`
+     * members project full-bodied and are counted here anyway, because the
+     * field's identity (`rules_total = kernel_full + non_kernel_thinned +
+     * no_trigger_full`) is pinned by a test and is what the CLI's own line
+     * arithmetic rests on. Named rather than silently widened: for the real
+     * thinned count, ask `build_thin` and filter on {@link is_thin_entry}.
+     */
     non_kernel_thinned: number;
     /** Non-kernel rules kept full-bodied because the router gives them no trigger. */
     no_trigger_full: number;
