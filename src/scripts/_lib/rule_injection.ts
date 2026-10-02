@@ -131,6 +131,8 @@ function statKind(p: string): 'dir' | 'file' | null {
 export interface RuleSources {
     /** Body directories, highest precedence first. */
     readonly dirs: readonly string[];
+    /** The resolved package root, or `null` when the variable named nothing. */
+    readonly pkg: string | null;
     /** The `dist/router.json` to route against, or `null`. */
     readonly router: string | null;
     /**
@@ -149,8 +151,8 @@ export interface RuleSources {
 
 /** Resolve the body dirs, the router and the gap wording in ONE filesystem pass. */
 export function ruleSources(repoRoot: string): RuleSources {
-    const pkgRaw = (process.env[PACKAGE_ROOT_ENV] ?? '').trim();
-    const pkg = pkgRaw === '' ? null : path.resolve(pkgRaw);
+    const env = (process.env[PACKAGE_ROOT_ENV] ?? '').trim();
+    const pkg = env ? path.resolve(env) : null;
     const dirs: string[] = [];
     const add = (d: string): void => {
         if (statKind(d) === 'dir' && !dirs.includes(d)) dirs.push(d);
@@ -174,7 +176,7 @@ export function ruleSources(repoRoot: string): RuleSources {
                 : `no ${router === null ? 'dist/router.json' : 'dist/agent-src/rules'} under ${repoRoot} or ${pkg}`;
         gap = `rule-inject: no rule source — ${miss}`;
     }
-    return { dirs, router, gap };
+    return { dirs, pkg, router, gap };
 }
 
 export function loadRouter(repoRoot: string): Router {
@@ -268,24 +270,29 @@ export function matchTierRules(
     return out;
 }
 
-/** The highest-precedence EXISTING body file for `id` across `ruleSourceDirs`, or `null`. */
-export function ruleBodyPath(repoRoot: string, id: string): string | null {
+/**
+ * The projected body from the highest-precedence tree carrying it, or `null`.
+ *
+ * `ruleBodyPath` used to sit in front of this and is gone: it returned the
+ * single-root path unconditionally, this diff changed its contract to "the
+ * first tree that has the file", and nothing outside this module ever called
+ * it. An exported helper whose last caller disappeared in the same diff is an
+ * own-orphan, and the composed hook bundle charges for it on every dispatch
+ * (`src/config/hook-bundle-budget.json`), so it is removed rather than left as
+ * a wrapper nobody uses.
+ */
+export function loadRuleBody(repoRoot: string, id: string): string | null {
     for (const dir of ruleSources(repoRoot).dirs) {
         const p = path.join(dir, `${id}.md`);
-        if (statKind(p) === 'file') return p;
+        if (statKind(p) === 'file') {
+            try {
+                return fs.readFileSync(p, 'utf8');
+            } catch {
+                return null;
+            }
+        }
     }
     return null;
-}
-
-/** The projected body, or `null` when no tree in the chain carries the rule. */
-export function loadRuleBody(repoRoot: string, id: string): string | null {
-    const p = ruleBodyPath(repoRoot, id);
-    if (p === null) return null;
-    try {
-        return fs.readFileSync(p, 'utf8');
-    } catch {
-        return null;
-    }
 }
 
 /**

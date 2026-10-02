@@ -110,7 +110,6 @@ import {
     matchTierRules,
     ruleSources,
     selectForInjection,
-    PACKAGE_ROOT_ENV,
 } from '../_lib/rule_injection.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
@@ -402,8 +401,12 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
     if (slot !== 'user_prompt_submit' && slot !== 'pre_tool_use') return EXIT_ALLOW;
 
-    const pkg = (process.env[PACKAGE_ROOT_ENV] ?? '').trim();
-    if (!gateOpen(root, _isCliEntry(), pkg === '' ? null : pkg)) return EXIT_ALLOW;
+    // Resolved ONCE, before the gate. The gate needs the package root to find
+    // the settings template and the delivery needs it to find the corpus;
+    // reading the environment and probing the filesystem twice for the same
+    // answer is a cost every hook dispatch on every slot would pay.
+    const src = ruleSources(root);
+    if (!gateOpen(root, _isCliEntry(), src.pkg)) return EXIT_ALLOW;
 
     let prompt = '';
     let openFiles: string[] | null = null;
@@ -426,8 +429,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     // line on stderr — which the dispatcher captures — is what makes a broken
     // install diagnosable from outside this file. Still allow: a carrier that
     // cannot find its corpus must not fail a turn.
-    const { gap } = ruleSources(root);
-    if (gap !== null) {
+    if (src.gap !== null) {
         // Fail CLOSED and SAY SO, through the channel the dispatcher actually
         // surfaces. Writing to stderr looks right and is not: `_run_concern_inproc`
         // captures a concern's stderr and `dispatch_hook` re-emits it only at
@@ -451,7 +453,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         // currently afford (`src/config/hook-bundle-budget.json` left 30 bytes
         // of headroom at this commit), and is recorded in the roadmap rather
         // than silently skipped.
-        process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: gap })}\n`);
+        process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: src.gap })}\n`);
         return EXIT_WARN;
     }
 

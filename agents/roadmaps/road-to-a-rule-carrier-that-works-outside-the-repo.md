@@ -314,7 +314,7 @@ Reproduced on 2026-10-01:
       two halves cannot be the same read.
 
       The step needs a directory read plus a filter in the carrier, and the
-      bundle has 30 bytes of headroom. Pinned so the work has a red to turn
+      bundle has 75 bytes of headroom. Pinned so the work has a red to turn
       green: `rule_inject_foreign_matrix.test.ts`'s last case asserts that a
       consumer `.claude/rules` directory is NOT yet the scope.
 
@@ -434,7 +434,7 @@ Reproduced on 2026-10-01:
       Two consequences are stated rather than left implicit. The cost is one
       short line per turn for as long as the install stays broken; bounding it
       to once per session needs a state write the bundle ceiling cannot afford
-      at this commit (30 bytes of headroom), so it is deferred here rather than
+      at this commit (75 bytes of headroom), so it is deferred here rather than
       silently skipped. And `rule_inject_hook.test.ts`'s "a tree with no router
       returns allow" changed meaning: a tree configured for delivery that cannot
       find a corpus now reports instead of being silent. The host exit is still
@@ -474,11 +474,27 @@ Reproduced on 2026-10-01:
   and merged; everything still open on this phase is open for this one reason
   and not for a design one.
 - **What to do:** `src/config/hook-bundle-budget.json` caps the composed hook
-  bundle at `max_bytes: 1550000`. `main` measured **1,549,697 B** on
-  2026-10-02 — **303 bytes**, 0.02 % of the ceiling. After 1.1 and 1.2 the
-  tree measures **1,549,970 B**, leaving **30 bytes**. Every concern is inlined
-  into `dist/hooks/dispatch.js`, so this is not a rule-inject budget; it is the
+  bundle at `max_bytes: 1550000`. Every concern is inlined into
+  `dist/hooks/dispatch.js`, so this is not a rule-inject budget; it is the
   budget for any runtime code added anywhere in the hook estate.
+
+  Three readings, all taken with the gate's own command on 2026-10-02:
+  `main` at `9e2fe189e` measured **1,549,697 B** — 303 bytes, 0.02 % of the
+  ceiling. `main` after #2179 merged, measured by restoring this branch's three
+  bundled files to their `origin/main` versions, is **1,549,830 B** — 170 bytes.
+  This branch, with 1.1, 1.2 and 1.8 landed, is **1,549,925 B** — **75 bytes**.
+
+  **The exhaustion is not hypothetical and it was watched happening.** This lane
+  reached green at 1,549,970 B with 30 bytes to spare, then merged `origin/main`
+  for the pre-push check and went **103 bytes RED** — #2179 had landed
+  `_lib/neighbour_tool_use.ts` in the meantime, +133 B, and it was green on its
+  own branch. Two lanes, each under the ceiling alone, over it together, within
+  one day. That is precisely the failure mode the existing `raise_log` entry
+  names in its own `what_would_have_caught_it`: a ceiling derived on a branch is
+  a statement about that branch, and the trunk is what the gate defends. The
+  branch was brought back under by removing a further 148 B of its own cost
+  (folding the orphaned `ruleBodyPath` into `loadRuleBody`, and resolving the
+  package root once instead of twice), which is real but is the last of it.
 
   The number is measured, not estimated. Step 1.4 — the cheapest of the five,
   two lines reusing `_lib/rule_law_section.ts::ruleBody`, the parser the thin
