@@ -50,15 +50,15 @@ Reproduced on 2026-10-01:
 
 ## Phase 1 — Law first, in the source
 
-- [ ] **1.1 Every routed rule has a law section.** A lint with a shrink-only
+- [x] **1.1 Every routed rule has a law section.** A lint with a shrink-only
       baseline: the rules without one are recorded by id and may only leave the
       baseline. A new routed rule without one fails.
       verify: `npx vitest run tests/scripts/lint_rule_law_section.test.ts` -> 0
-- [ ] **1.2 Ceilings on the law section.** Target 1,200 characters, reported;
+- [x] **1.2 Ceilings on the law section.** Target 1,200 characters, reported;
       hard 2,000, failing. A rule above 2,000 today is baselined by name with an
       owner and a review date; a baselined rule may only shrink.
       verify: `npx vitest run tests/scripts/lint_rule_law_section.test.ts -t ceiling` -> 0
-- [ ] **1.3 A ceiling on the whole body.** 8,000 characters after frontmatter
+- [x] **1.3 A ceiling on the whole body.** 8,000 characters after frontmatter
       and comment strip, shrink-only, with today's larger rules baselined by
       name. A body is what a full runtime delivery carries, so it is priced in
       the same unit.
