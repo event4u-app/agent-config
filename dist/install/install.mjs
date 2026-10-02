@@ -20575,7 +20575,9 @@ var _CLAUDE_SKILL_BUNDLE = [
   ["dist/agent-src/rules", "rules"],
   ["dist/agent-src/skills", "skills"],
   ["dist/agent-src/commands", "commands"],
-  ["dist/agent-src/personas", "personas"]
+  ["dist/agent-src/personas", "personas"],
+  ["dist/agent-src/contexts", "contexts"],
+  ["dist/agent-src/guidelines", "guidelines"]
 ];
 var GLOBAL_DEPLOY_SOURCES = {
   "claude-code": _CLAUDE_SKILL_BUNDLE,
@@ -20585,14 +20587,21 @@ var GLOBAL_DEPLOY_SOURCES = {
     ["dist/agent-src/commands", "commands"],
     ["dist/agent-src/contexts", "contexts"],
     ["dist/agent-src/personas", "personas"],
-    ["dist/agent-src/templates", "templates"]
+    ["dist/agent-src/templates", "templates"],
+    ["dist/agent-src/guidelines", "guidelines"]
   ],
   cursor: [
     ["dist/agent-src/rules", "rules"],
     ["dist/agent-src/commands", "commands"],
-    ["dist/agent-src/personas", "personas"]
+    ["dist/agent-src/personas", "personas"],
+    ["dist/agent-src/contexts", "contexts"],
+    ["dist/agent-src/guidelines", "guidelines"]
   ],
-  windsurf: [["dist/agent-src/rules", "rules"]],
+  windsurf: [
+    ["dist/agent-src/rules", "rules"],
+    ["dist/agent-src/contexts", "contexts"],
+    ["dist/agent-src/guidelines", "guidelines"]
+  ],
   cline: [["dist/agent-src/rules", ""]],
   "gemini-cli": _CLAUDE_SKILL_BUNDLE,
   codex: _CLAUDE_SKILL_BUNDLE,
@@ -20609,7 +20618,9 @@ var GLOBAL_DEPLOY_SOURCES = {
   kiro: [
     ["dist/agent-src/rules", "rules"],
     ["dist/agent-src/skills", "steering"],
-    ["dist/agent-src/personas", "personas"]
+    ["dist/agent-src/personas", "personas"],
+    ["dist/agent-src/contexts", "contexts"],
+    ["dist/agent-src/guidelines", "guidelines"]
   ]
 };
 function claudeDesktopMarkerBody(lockfile, anchor, bundles_dir, bundle_count) {

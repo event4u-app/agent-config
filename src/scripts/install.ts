@@ -1751,11 +1751,30 @@ export const PROJECT_BRIDGE_MARKERS: Record<string, string> = {
     kiro: '.kiro/steering/agent-config.md',
 };
 
+/**
+ * `contexts/` and `guidelines/` are here because the RULES link into them.
+ *
+ * A rule body is authored against the package tree and projected verbatim, so
+ * `](../guidelines/x.md)` resolves in `dist/agent-src/rules/` and then does or
+ * does not resolve in the install, depending on this list — which no rule
+ * author ever sees. Measured by `report_installed_rule_links` before the two
+ * entries were added: 160 of 550 links in an installed Claude rule directory
+ * pointed nowhere, 113 of them into exactly these two directories.
+ *
+ * The alternative (step 1.2's option A) was to rewrite those links to absolute
+ * package paths. Same repair, priced differently: +7,285 characters of
+ * standing text INSIDE rule bodies, which is the text the host loads as
+ * instructions, against 0 for deploying — files under `contexts/` and
+ * `guidelines/` are not instruction files, they are link targets a reader
+ * follows. The cheaper option on the budget that is actually scarce wins.
+ */
 const _CLAUDE_SKILL_BUNDLE: ReadonlyArray<readonly [string, string]> = [
     ['dist/agent-src/rules', 'rules'],
     ['dist/agent-src/skills', 'skills'],
     ['dist/agent-src/commands', 'commands'],
     ['dist/agent-src/personas', 'personas'],
+    ['dist/agent-src/contexts', 'contexts'],
+    ['dist/agent-src/guidelines', 'guidelines'],
 ];
 
 export const GLOBAL_DEPLOY_SOURCES: Record<string, ReadonlyArray<readonly [string, string]>> = {
@@ -1767,13 +1786,20 @@ export const GLOBAL_DEPLOY_SOURCES: Record<string, ReadonlyArray<readonly [strin
         ['dist/agent-src/contexts', 'contexts'],
         ['dist/agent-src/personas', 'personas'],
         ['dist/agent-src/templates', 'templates'],
+        ['dist/agent-src/guidelines', 'guidelines'],
     ],
     cursor: [
         ['dist/agent-src/rules', 'rules'],
         ['dist/agent-src/commands', 'commands'],
         ['dist/agent-src/personas', 'personas'],
+        ['dist/agent-src/contexts', 'contexts'],
+        ['dist/agent-src/guidelines', 'guidelines'],
     ],
-    windsurf: [['dist/agent-src/rules', 'rules']],
+    windsurf: [
+        ['dist/agent-src/rules', 'rules'],
+        ['dist/agent-src/contexts', 'contexts'],
+        ['dist/agent-src/guidelines', 'guidelines'],
+    ],
     cline: [['dist/agent-src/rules', '']],
     'gemini-cli': _CLAUDE_SKILL_BUNDLE,
     codex: _CLAUDE_SKILL_BUNDLE,
@@ -1791,6 +1817,8 @@ export const GLOBAL_DEPLOY_SOURCES: Record<string, ReadonlyArray<readonly [strin
         ['dist/agent-src/rules', 'rules'],
         ['dist/agent-src/skills', 'steering'],
         ['dist/agent-src/personas', 'personas'],
+        ['dist/agent-src/contexts', 'contexts'],
+        ['dist/agent-src/guidelines', 'guidelines'],
     ],
 };
 

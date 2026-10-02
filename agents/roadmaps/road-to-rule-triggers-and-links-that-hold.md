@@ -73,13 +73,33 @@ Reproduced on 2026-10-01:
       which is the three dropped command routes coming back. The stub's
       arrivals note and body now read as repaired rather than pending, and the
       later roadmap's claim 2 carries the emitter's reading instead of a grep's.
-- [ ] **1.2 Links that resolve where the file lands.** When the installer writes a rule file, rewrite
+      **AC-1 is discharged by this step**: the census's `scoped_ids` are
+      `design-review-after-ui-write`, `source-of-truth` and `ui-audit-gate`,
+      and `mixed ∩ scoped` is empty — no rule with a non-path trigger carries
+      an exclusive `paths:`.
+- [x] **1.2 Links that resolve where the file lands.** When the installer writes a rule file, rewrite
       the 160 links of Context to absolute package paths, or have the installer also write the
       directories they point into — whichever adds less standing text, measured
       by the installed-layer report of
       `road-to-a-rule-carrier-that-works-outside-the-repo` step 0.1. Record the
       choice and the two numbers in Decisions.
       verify: `npx vitest run tests/scripts/install_rule_links.test.ts` -> 0
+      done 2026-10-02: step 0.1's report does not exist yet — that roadmap's
+      Phase 0 is open — so D2's `revisit-if` fired and the measurement was taken
+      directly from the deploy plan and the rule bodies, which is the same unit.
+      New `src/install/installedRuleLinks.ts` audits every link in every rule a
+      host installs and returns a verdict per link (`resolved`,
+      `directory-not-deployed`, `file-missing`, `outside-install-root`);
+      `src/scripts/report_installed_rule_links` prints it per host and prices
+      the rewrite option. It reproduces Context's 160 exactly, and splits it:
+      113 into `contexts/` and `guidelines/`, 45 unreachable by any deploy
+      entry, 2 one-off. **Deploy won, 0 standing characters against 7,285** —
+      recorded as D4, with the remainder as D5. `contexts/` + `guidelines/`
+      added to the Claude bundle (13 hosts), augment, cursor, windsurf and
+      kiro; claude-code goes 160 → **47** unresolved, augment 97 → 46.
+      28 tests, the two load-bearing ones seen red first and re-proven by
+      removing the `guidelines` entry and watching both fail (98 > 47, and the
+      undeployed-directory assertion), then restoring it.
 - [ ] **1.3 Single-word triggers, reported.** A report over the routing matrix:
       tier rules with a one-token keyword that fires on more than 5 % of the
       corpus's prompts labelled against another rule. `rename` and `delete`
@@ -120,6 +140,54 @@ Reproduced on 2026-10-01:
 - No obligation moved into a hook from the 1.5 report.
 - No change to which rules are path-scoped beyond the 1.1 predicate fix.
 
+## Blockers
+
+### blocker: forty-seven-links-name-files-the-package-does-not-ship
+
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 2
+- **Blocks:** AC-2 only. Step 1.2 is closed, and every other step and
+  criterion on this roadmap is closed.
+- **What to do:** the remaining 47 are not a smaller version of what 1.2
+  fixed, and a deploy entry cannot reach any of them — read D5 before
+  reaching for one. Three groups, each with a different answer:
+  1. **22 into `docs/`.** `dist/agent-src/` carries no `docs/` directory, and
+     several rules say so in their own text. Either the projection starts
+     shipping `docs/contracts/` — a scope decision this roadmap does not own —
+     or the 22 links become code spans in `src/rules/`.
+  2. **23 climbing out of the install root** into `../../tests/`,
+     `../../src/scripts/`, `../../scripts/` and
+     `agents/settings/policies/media/`. These name the repository, not the
+     package; no install has ever held them, and none ever will. Code spans
+     are the only repair.
+  3. **2 one-off targets.** `scripts/hooks/evidence_independence.ts` is not in
+     the projection either; the single `templates/` link would cost 1.7 MB of
+     deployed files to resolve, which fails the same standing-cost test D4
+     applied to the other directories.
+  All three are authoring changes in rule prose, which this roadmap's "What
+  this roadmap deliberately does not do" keeps out of scope and which
+  `src/rules/` size budgets make a per-rule review rather than a sweep. Run
+  `./scripts-run src/scripts/report_installed_rule_links` for the current
+  split before planning any of it; the per-host ratchet in
+  `tests/scripts/install_rule_links.test.ts` holds the number from rising
+  meanwhile.
+- **Recommendation:** group 2, the 23 repo-tree links, first and on its own —
+  they are the only group where the repair is unambiguous (no install can ever
+  hold `../../tests/`, so a link is simply the wrong form) and the diff shrinks
+  the rule bodies rather than growing them, which `src/rules/` size budgets
+  reward. Leave group 1 alone until someone decides whether `docs/contracts/`
+  is projected at all, because entering it from the link side would prejudge
+  that. Group 3 is two lines and can ride with group 2.
+- **If you do nothing:** a consumer following a link in an installed rule
+  lands on nothing 47 times, silently — a dead link reads as a missing file
+  rather than as a shipping decision, and the reader cannot tell which. The
+  number does not grow: the per-host ratchet holds it, so the cost is standing
+  rather than compounding, and nothing else on this roadmap waits on it.
+- **Resolved when:** `./scripts-run src/scripts/report_installed_rule_links`
+  reports 0 unresolved for `claude-code`, and the ratchet baseline in
+  `tests/scripts/install_rule_links.test.ts` has been lowered to match.
+
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
@@ -127,6 +195,8 @@ Reproduced on 2026-10-01:
 | D1 | deterministic | evidence | The predicate is "not path-shaped", not a list of non-path kinds | A list missed `command` once; a negation cannot miss a kind added later | A trigger kind arrives that is neither path-shaped nor promptable |
 | D2 | reversible-technical | agent | 1.2's two options are decided by measured standing cost, not by preference | Both resolve every link; the difference is characters on the shared host budget | The installed-layer report is not available when 1.2 runs |
 | D3 | reversible-technical | agent | 1.3's 5 % threshold is a stated default for a report, not a gate | Nothing acts on the figure automatically | The report's top rows are not the known common words |
+| D4 | reversible-technical | agent | 1.2 resolves by **deploying** the directories, not by rewriting the links to absolute package paths | Measured by `report_installed_rule_links` at the same commit, both repairing the same 113 links: deploy adds **0** characters of standing text and 184 files / 1.6 MB of link targets; rewrite adds **7,285** characters, every one of them inside a rule body, which is the text the host loads as instructions. Files under `contexts/` and `guidelines/` are not instruction files. The installed-layer report D2 names was not available — `road-to-a-rule-carrier-that-works-outside-the-repo` step 0.1 is still open — so the figure was taken from the deploy plan and the rule bodies directly, which is the same unit | The host begins counting non-`rules/` files in an install toward its instruction budget, which would make the two options trade on one axis instead of two |
+| D5 | reversible-technical | agent | The 47 links left unresolved on Claude are a named remainder, not a smaller version of the same defect | 22 point into `docs/`, which the projection does not produce at all; 23 climb out of the install root into the repository (`../../tests/`, `../../src/`, `agents/settings/policies/`); 2 are one-off targets, one of them also unprojected. None is reachable by a deploy entry — closing them is an authoring change in rule prose, which this roadmap's "deliberately does not do" section keeps out of scope | A future projection ships `docs/`, or the rule bodies are re-authored to carry code spans where the target is not shipped |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
@@ -139,10 +209,7 @@ Reproduced on 2026-10-01:
 ## Acceptance Criteria
 
 - [x] AC-1 — No rule with a non-path trigger is emitted with an exclusive
-      `paths:` on Claude. Read from the emitter's own decision path:
-      `rule_activation_census --json` reports `scoped_ids` =
-      `design-review-after-ui-write`, `source-of-truth`, `ui-audit-gate`, and
-      `mixed ∩ scoped` is empty.
+      `paths:` on Claude.
 - [ ] AC-2 — A link check over an installed rule directory reports zero
       unresolved links.
 - [ ] AC-3 — The single-token, obligation-mechanism and per-spawn readings are
