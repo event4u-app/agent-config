@@ -185,7 +185,7 @@ tree produced it.
 
       ```
       $ git diff --name-only ; git ls-files --others --exclude-standard
-      agents/roadmaps/archive/road-to-an-obligation-row-that-names-its-writer.md
+      agents/roadmaps/road-to-an-obligation-row-that-names-its-writer.md
       docs/CLAIMS.md
       src/scripts/_lib/obligations.ts
       src/scripts/hooks/rule_inject_hook.ts
@@ -259,7 +259,7 @@ tree produced it.
       making an absent directory report as an existing one failed exactly 2
       tests; folding `absent` into `unknown` failed exactly 2; dropping the
       `unreadable` count and the empty-directory wording failed exactly 2.
-- [~] <!-- blocked-by: shadow-corpus-is-one-machine | asked: no — non-interactive process-full run: it reports once at the end and cannot put a question, and the decision amends a pre-registered public claim the claims register itself records as owner-reserved --> **2.2 Resolve the corpus blocker below.** The reporter makes the question <!-- deferred-resolution: carried-to=road-to-an-obligation-row-that-names-its-writer-carried -->
+- [~] <!-- blocked-by: shadow-corpus-is-one-machine | asked: no — non-interactive process-full run: it reports once at the end and cannot put a question, and the decision amends a pre-registered public claim the claims register itself records as owner-reserved --> **2.2 Resolve the corpus blocker below.** The reporter makes the question
       answerable with a number; the answer is not an agent's to give.
       verify: the blocker's `Status` reads `resolved` with the chosen option named
 
@@ -410,7 +410,7 @@ tree produced it.
 ## Blockers
 
 ### blocker: shadow-corpus-is-one-machine
-- **Status:** resolved — carried, still open, to `road-to-an-obligation-row-that-names-its-writer-carried` with the steps it blocks (was: open)
+- **Status:** open
 - **Owner:** maintainer
 - **Ownership:** business-owned — the decision amends `obligation-settle-shadow-bar`,
   a pre-registered claim in `docs/CLAIMS.md`, and clause (8) of that claim already
