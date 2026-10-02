@@ -34,6 +34,40 @@ console.log(detect_stack('tests/fixtures/stack/mono-pnpm-turbo').frontend)"
 | `shadcn-current` | verbatim `npx shadcn@latest init -d --template vite` output (CLI 4.19.0, 2026-08-24) + its `components.json` | n/a — version-pin fixture, not a detector input | n/a; it is the only source any skill may quote shadcn / Tailwind majors from |
 | `storybook-current` | verbatim `npx storybook@latest init --yes` output (Storybook 10.5.10, 2026-08-24) | n/a — version-pin fixture | n/a; the only source for Storybook majors and the default addon set |
 
+## Resolver fixtures — a different reader
+
+The rows above are read by `detect_stack()`. The four below are read by
+`resolve_toolchain()` (`work_engine/stack/runner.ts`) and were added by
+`road-to-stacks-beyond-php` steps 1.3, 3.1 and 3.2. They are kept in the same
+directory because they are the same kind of thing — a committed repository
+shape — but the instrument is different, and a reader who runs `detect_stack()`
+over them will get `plain` and learn nothing.
+
+Measured on 2026-10-02 with the live resolver, not predicted:
+
+| Fixture | Shape | `ecosystems` | Bound test command | Resolved quality | Pack |
+|---|---|---|---|---|---|
+| `python` | `pyproject.toml` with `[tool.pytest.ini_options]`, `[tool.ruff]`, `[tool.mypy]` | `['python']` | `pytest` | `ruff check`, `mypy .` | `src/packs/python` |
+| `typescript` | `package.json` with `typescript` + `vitest` devDeps, `tsconfig.json` | `['js']` | `npx vitest run` | `npx tsc --noEmit` | `src/packs/typescript` |
+| `go` | `go.mod` only | `['go']` | `go test ./...` | `go vet ./...` | none yet — created by step 2.3, blocked on `b5` |
+| `laravel` | `composer.json` with `laravel/framework` + `pestphp/pest`, `artisan` marker | `['php']` | `vendor/bin/pest` | `vendor/bin/phpstan analyse` | `src/domains/laravel` |
+
+**The `typescript` row is the one worth reading twice.** A TypeScript
+repository resolves the ecosystem `js`, never `typescript`: the pack name and
+the resolver's ecosystem label are different vocabularies, and a condition
+written against the pack name never fires.
+
+The `laravel` row is the **control**. Step 3.2 asks that the Laravel answer be
+unchanged by everything the other three added, so it is asserted alongside them
+in `tests/scripts/work_engine/stack_binding_sites.test.ts` rather than assumed.
+
+Measure any of them yourself:
+
+```bash
+npx tsx -e "import {resolve_toolchain} from './src/agent-src/templates/scripts/work_engine/stack/runner.ts';
+console.log(JSON.stringify(resolve_toolchain('tests/fixtures/stack/python').to_config()))"
+```
+
 Two of the rows above are **version-pin fixtures rather than detector
 fixtures**: `shadcn-current` and `storybook-current` are the unedited output
 of a real scaffold, committed so that a skill's stated versions are traceable

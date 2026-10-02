@@ -41,22 +41,37 @@ adapt by the resolver's ecosystem, quality lands as `quality-tools` references, 
 
 ## Phase 1 — Composition before creation
 
-- [ ] **1.1 Run the composition gate on three stacks.** For python, typescript and go,
+- [x] **1.1 Run the composition gate on three stacks.** For python, typescript and go,
       list the engineering-base skills a Laravel repository gets for testing, quality and
       conventions, and mark each `compose`, `adapt` or `create`. The table is the
       deliverable.
       verify: `grep -cE '\| (compose|adapt|create) \|' agents/evidence/analysis/stack-composition-2026-Q4.md` -> /^(2[7-9]|[3-9][0-9])$/
-- [ ] **1.2 Adapt, don't duplicate.** Every `adapt` row is one paragraph in the existing
+- [x] **1.2 Adapt, don't duplicate.** Every `adapt` row is one paragraph in the existing
       skill keyed on the resolver's `ecosystems`, under the skill's word budget. No skill
       is created here. `corrected-from-reproduction` — keyed on `detect_stack` the
       paragraph could never fire.
       verify: `test "$(ls src/skills | wc -l)" -eq "$(git ls-tree -d --name-only origin/main src/skills/ | wc -l)"` -> 0
-- [ ] **1.3 Prove a pyproject repository never binds `pest-testing`.** The de-binding is
+- [x] **1.3 Prove a pyproject repository never binds `pest-testing`.** The de-binding is
       owned by the runner-truth lane's Phase 2; this step adds a fixture over
       `resolve_toolchain` on a python fixture under `tests/fixtures/stack/` covering all
       three binding sites.
+
+      **The third site was still bound, and that is what this step found.**
+      `tests/create` and `tests/execute` were de-bound by the runner-truth lane as
+      planned, but `bug/fix/command.md:8` still read
+      `skills: [bug-analyzer, pest-testing]` and carried `framework: laravel`. Its
+      195-line body mentions no framework at all — the only two PHP tokens in the
+      file were those two frontmatter lines — so the marker claimed a coupling the
+      body does not have. Both are removed here and the resolver-conditional
+      paragraph the sibling commands carry is added to its § 5 Tests, which is the
+      adapt-don't-duplicate rule applied to the site that was missed.
+
+      Sensitivity proven rather than assumed: re-adding `pest-testing` to that
+      frontmatter turns the suite red on exactly one case
+      (`bug/fix/command.md does not bind pest-testing`), and removing it again
+      returns 13/13.
       verify: `npx vitest run tests/scripts -t 'pyproject never binds pest-testing'` -> 0
-- [ ] **1.4 Quality as references, not skills.** Add `python-tools.md` and `go-tools.md`
+- [x] **1.4 Quality as references, not skills.** Add `python-tools.md` and `go-tools.md`
       under `src/skills/quality-tools/references/`, per the stub
       `road-to-target-project-bootstrap-enforce`; TypeScript is already covered by
       `js-ts-tools.md`.
@@ -79,22 +94,35 @@ adapt by the resolver's ecosystem, quality lands as `quality-tools` references, 
 
 ## Phase 3 — Prove it on one fixture per stack
 
-- [ ] **3.1 One resolver fixture per stack.** A vitest over `resolve_toolchain` on
+- [x] **3.1 One resolver fixture per stack.** A vitest over `resolve_toolchain` on
       `tests/fixtures/stack/{python,typescript,go}` asserts the ecosystem, the bound test
       command and the selected pack. `agent-config doctor` does no stack detection, so it
       is not the instrument. `corrected-from-reproduction`.
       verify: `npx vitest run tests/scripts -t 'resolver fixture per stack'` -> 0
-- [ ] **3.2 The Laravel standing payload does not grow.** Define the Laravel fixture the
+- [x] **3.2 The Laravel standing payload does not grow.** Define the Laravel fixture the
       supplied draft assumed, then compare `check_preamble_payload_budget --json` totals at
       the base ref and after.
+
+      **Fixture:** `tests/fixtures/stack/laravel` — `composer.json` with
+      `laravel/framework` and `pestphp/pest`, plus the `artisan` marker. It resolves
+      `ecosystems: ['php']`, `vendor/bin/pest`, `vendor/bin/phpstan analyse`, and is
+      asserted as the control case alongside the three new stacks.
+
+      **Reading, pinned with `--as-of 2026-10-02` so it is reproducible:** base ref
+      `21da7191` measures `138277`; this branch measures `138277`. Every bucket is
+      equal too — project-scope rules `122686` over 120 files, preloaded skills
+      catalog `14845` over 299 files, CLAUDE.md hierarchy `746`. The three `adapt`
+      paragraphs land in skill BODIES, and the catalog bucket carries descriptions,
+      so the payload is untouched by construction — the measurement confirms the
+      construction rather than discovering it.
       verify: `./scripts-run src/scripts/check_preamble_payload_budget --json` total equal to the base-ref reading on the Laravel fixture
 
 ## Acceptance criteria
 
 - The composition table exists before any skill is created, and every new skill maps to one `create` row.
 - A python fixture binds no `pest-testing` at any of the three sites; a Laravel fixture is unchanged.
-- No pack gains more than the owner's cap; quality content for python and go lives under `quality-tools/references/`.
-- The Laravel standing payload is byte-identical before and after.
+- No pack gains more than the owner's cap; quality content for python and go lives under `quality-tools/references/`. No pack gained anything: Phase 2 is blocked on `b5`.
+- The Laravel standing payload is byte-identical before and after. `138277` on both sides, every bucket equal.
 
 ## Decisions
 
@@ -104,10 +132,12 @@ adapt by the resolver's ecosystem, quality lands as `quality-tools` references, 
 | D2 | deterministic | evidence | no `paths:`-scoped rules per stack | ADR-227 `:50-55` | ADR-227 is superseded |
 | D3 | product-owned | owner | PENDING programme blocker b5 — proposed: up to two skills per stack after 1.1 | `src/scripts/check_estate_count.ts:832` skill allowance 0 | the owner answers b5 differently |
 | D4 | reversible-technical | agent | no `composes:` frontmatter field; lineage lives in the 1.1 table | `skill.schema.json` has no such field; adding one is a schema change this lane does not need | `audit_skill_overlap` needs machine-readable lineage |
+| D5 | reversible-technical | agent | `/bug fix` loses `pest-testing` and `framework: laravel` | its 195-line body carries zero framework tokens; the marker declares a 100 %-one-stack coupling (`command.schema.json`) the file does not have | the body acquires Laravel-specific instructions |
+| D6 | reversible-technical | agent | the ecosystem label, not the pack name, is what an adapt paragraph keys on | measured: the typescript fixture resolves `ecosystems: ['js']`, never `typescript` | the resolver renames its labels |
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-02 | reviewer: claude/drain-stacks-beyond-php -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -115,3 +145,4 @@ adapt by the resolver's ecosystem, quality lands as `quality-tools` references, 
 | 2 | A monorepo yields several ecosystems and the payload grows | implementation | `ecosystems` can hold more than one entry. | 3.2 pins the Laravel payload byte-identical; a union larger than one pack is a finding. | Phase 3 — Prove it on one fixture per stack |
 | 3 | Phase 2 lands before b5 and the estate gate reds | implementation | An execution loop ignoring markers writes skills the ratchet refuses. | Each 2.x step carries the blocker marker; Phases 1 and 3 run without the answer. | Phase 2 — At most two skills per stack, behind the owner's cap |
 | 4 | The runner-truth lane drops the binding instead of making it resolver-driven | implementation | Its step 2.1 reads "resolver-driven or drop it". | 1.3's fixture asserts only absence of `pest-testing` on python, which holds under either outcome. | Phase 1 — Composition before creation |
+| 5 | A binding site is de-bound in prose but left bound in frontmatter | implementation | Observed, not hypothesised: `bug/fix` kept `skills: [bug-analyzer, pest-testing]` and `framework: laravel` after its two siblings were de-bound. | 1.3's test reads the frontmatter of all three sites, and a fourth case refuses a `framework:` marker on any of them; the sensitivity was proven red. | Phase 1 — Composition before creation |
