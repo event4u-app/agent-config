@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
+consequence_class: "irreversible-external"
 description: "AI image rights gate — real-person likeness, trademarked marks, named artists' styles need explicit rights/consent"
 triggers:
   - keyword: "/image:"

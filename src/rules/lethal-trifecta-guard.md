@@ -2,6 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
+consequence_class: "security-boundary"
 description: "Skill/command/tool mixing private-data access + untrusted content + external comms — break one leg before shipping"
 triggers:
   - path_prefix: "src/skills/"

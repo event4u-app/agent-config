@@ -1,0 +1,99 @@
+{
+    "_comment": "Per-rule law-section and body ceilings (road-to-rule-laws-that-can-stand Phase 1). SHRINK-ONLY on every axis: an id may LEAVE `missing`, never join it; a recorded exception is a ceiling the rule may fall below and never rise above. Raising one to clear a red is the config-weakening move this repo blocks by construction — `--write-baseline` refuses to raise, it only re-records the smaller of old and current. A rule at its exception is not thereby correct, only not worse. Regenerate with `lint_rule_law_section --write-baseline`; never hand-edit the counts, but DO hand-edit `owner`, `review` and `reason` — those are the review contract and the generator only seeds them.",
+    "measured_at_commit": "30f7d21f6",
+    "missing": [
+        "architecture",
+        "artifact-drafting-protocol",
+        "artifact-engagement-recording",
+        "augment-edit-discipline",
+        "autonomous-execution",
+        "cli-output-handling",
+        "commit-conventions",
+        "context-hygiene",
+        "copilot-routing",
+        "devcontainer-routing",
+        "docker-commands",
+        "external-code-graph-interop",
+        "improve-before-implement",
+        "laravel-routing",
+        "laravel-translations",
+        "linked-projects-onboarding-gate",
+        "markdown-safe-codeblocks",
+        "minimal-safe-diff",
+        "missing-tool-handling",
+        "model-recommendation",
+        "onboarding-gate",
+        "php-coding",
+        "question-not-instruction",
+        "reviewer-awareness",
+        "role-mode-adherence",
+        "rule-type-governance",
+        "runtime-safety",
+        "skill-improvement-trigger",
+        "skill-quality",
+        "slash-command-routing-policy",
+        "source-of-truth",
+        "symfony-routing",
+        "test-first",
+        "tool-safety",
+        "upstream-proposal"
+    ],
+    "law_exceptions": {
+        "legal-safety-floor": {
+            "chars": 2023,
+            "owner": "agent-config-maintainer",
+            "review": "2026-12-01",
+            "reason": "Three laws a regulator reads literally (no final legal call, consent gate, council gate) plus the RDG STOP block whose wording is quoted verbatim to the user. At 2023 characters it is 23 over the ceiling, so the review is about whether the STOP block belongs in the law or beside it."
+        },
+        "preservation-guard": {
+            "chars": 2418,
+            "owner": "agent-config-maintainer",
+            "review": "2026-12-01",
+            "reason": "The law IS a checklist: each bullet names a passage class that must survive a transform, and check_condensation reads the same list. Shortening the prose would shorten the contract the gate enforces. Review target: move the reject criteria out and leave the preservation checklist."
+        },
+        "roadmap-progress-sync": {
+            "chars": 5387,
+            "owner": "agent-config-maintainer",
+            "review": "2026-12-01",
+            "reason": "Three separate Iron Laws (dashboard sync, checkbox cadence, no silent archive) plus the preservation test that resolves a deferred item. Splitting them would create three rules with one trigger set; collapsing them would drop an obligation. Review target: move the resolution procedure under Iron Law 3 behind load_context and keep the three laws."
+        }
+    },
+    "body_exceptions": {
+        "code-provenance": {
+            "chars": 8106,
+            "owner": "agent-config-maintainer",
+            "review": "2026-12-01",
+            "reason": "Two layers (code borrows and the knowledge/harvest layer) each with its own law, plus the no-CI-detector honesty section recording a measured gate decision."
+        },
+        "context-hygiene": {
+            "chars": 8320,
+            "owner": "agent-config-maintainer",
+            "review": "2026-12-01",
+            "reason": "Carries the freshness ladder, the 3-failure rule, loop detection and the 15/25 read-loop rule, each with its own self-check. Already migrated once into context-hygiene-mechanics and re-grew."
+        },
+        "decision-revisit-gate": {
+            "chars": 8566,
+            "owner": "agent-config-maintainer",
+            "review": "2026-12-01",
+            "reason": "The largest rule in the tree. Carries the five-step gate, the two descriptive axes, the owner-reserved table and an honest-enforcement section. Phase 1.4 of road-to-rule-laws-that-can-stand names it as a first mover for the load_context split."
+        },
+        "design-fidelity": {
+            "chars": 8777,
+            "owner": "agent-config-maintainer",
+            "review": "2026-12-01",
+            "reason": "Carries the artefact-maturity axis, the fidelity-mode table and the routing matrix. Phase 1.4 names it as a first mover."
+        },
+        "roadmap-progress-sync": {
+            "chars": 9308,
+            "owner": "agent-config-maintainer",
+            "review": "2026-12-01",
+            "reason": "Three laws plus the deferred-item resolution procedure and the later/PR-gate dispositions. The dispositions are mechanism, not obligation, and are the load_context candidate."
+        },
+        "settings-ask-protocol": {
+            "chars": 8099,
+            "owner": "agent-config-maintainer",
+            "review": "2026-12-01",
+            "reason": "Carries the four slots, the seven keys, the non-interactive rule and the consent-verdict contract. The key inventory is reference material and is the load_context candidate."
+        }
+    }
+}

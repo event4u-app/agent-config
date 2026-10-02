@@ -6,6 +6,7 @@ norm:
   tokens: 1500
   remainder:
     - "../docs/guidelines/agent-infra/evaluator-independence-mechanics.md"
+consequence_class: "authority-bypass"
 description: "Commissioning a review/judge/blind-pass on your own work — never author the verdict, never narrow the scope, record the prompt with the result"
 triggers:
   - keyword: "blind review"

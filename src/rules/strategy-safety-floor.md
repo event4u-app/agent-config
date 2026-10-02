@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
+consequence_class: "authority-bypass"
 description: "Founder-strategy output (vision, positioning, moats, OKRs) — never a final call; human owns the decision"
 triggers:
   - keyword: "vision"

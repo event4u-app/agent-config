@@ -30,11 +30,18 @@
  *     project_thin_rules --measure          # measure delta, no write
  *     project_thin_rules --out <dir>        # write thin rules to <dir>
  */
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { lawText, ruleBody } from './_lib/rule_law_section.js';
+import {
+    readConsequenceClass,
+    stubLawIds,
+    type ConsequenceClassConfig,
+} from './_lib/rule_consequence_class.js';
 import {
     pathOnlyRuleIds,
     triggerlessRuleIds,
@@ -322,6 +329,80 @@ export function thin_entry(rule_id: string, text: string): string {
     );
 }
 
+/**
+ * The marker that opens a stub's copied law block, and the one that closes it
+ * with the digest of what was copied.
+ *
+ * Exported for the same reason {@link THIN_ENTRY_MARKER} is: a detector that
+ * re-spelled either string would drift from the writer silently, and the
+ * failure would read as "this stub carries no law" — the one direction that
+ * matters.
+ */
+export const STUB_LAW_OPEN = '<!-- law: byte-copied from the rule, sha256 ';
+export const STUB_LAW_CLOSE = '<!-- /law -->';
+
+/** Short digest of a law text — the same function the stub writer and any reader use. */
+export function lawDigest(law: string): string {
+    return createHash('sha256').update(law, 'utf-8').digest('hex').slice(0, 16);
+}
+
+/**
+ * Raised when a class member cannot carry its law and has not said so.
+ *
+ * The roadmap's own words: a class member whose law section is missing or over
+ * the ceiling FAILS the projection rather than shipping a shortened copy. The
+ * declared `no_stub` subset is the escape, and it costs a reason in the diff —
+ * which is the whole difference between an exception and a silent shrink.
+ */
+export class StubLawError extends Error {
+    readonly ruleId: string;
+
+    constructor(ruleId: string, message: string) {
+        super(message);
+        this.name = 'StubLawError';
+        this.ruleId = ruleId;
+    }
+}
+
+/** Characters of law a stub may carry — the hard ceiling `lint_rule_law_section` holds. */
+export const STUB_LAW_MAX_CHARS = 2_000;
+
+/**
+ * A stub that carries the rule's own law, byte for byte.
+ *
+ * The council rejected a compiled or summarised contract: a second
+ * authoritative representation of a rule is a new trust boundary whose
+ * omissions read as permission. So nothing here rewrites, truncates or
+ * reformats — the law text is `slice`d out of the source body and emitted
+ * verbatim, and the digest beside it is what makes "verbatim" checkable rather
+ * than asserted.
+ */
+export function thin_entry_with_law(rule_id: string, text: string): string {
+    const law = lawText(ruleBody(text));
+    if (law === null) {
+        throw new StubLawError(
+            rule_id,
+            `${rule_id} is a high-consequence class member with no law section — write one, or ` +
+                `record it under \`no_stub\` in src/config/rule-consequence-class.json with the reason`,
+        );
+    }
+    if (law.length > STUB_LAW_MAX_CHARS) {
+        throw new StubLawError(
+            rule_id,
+            `${rule_id} is a high-consequence class member whose law section is ${law.length} chars, ` +
+                `over the ${STUB_LAW_MAX_CHARS} ceiling — a stub never ships a shortened copy, so either ` +
+                'the law moves under the ceiling or the rule is recorded under `no_stub` in ' +
+                'src/config/rule-consequence-class.json with the reason',
+        );
+    }
+    return (
+        thin_entry(rule_id, text) +
+        `\n${STUB_LAW_OPEN}${lawDigest(law)} -->\n` +
+        `${law}\n` +
+        `${STUB_LAW_CLOSE}\n`
+    );
+}
+
 /** Map {filename: thin_or_full_text} for every rule. Kernel stays full. */
 export function build_thin(
     rules_dir: string = RULES_SOURCE,
@@ -337,10 +418,17 @@ export function build_thin(
      * silently eager rule and no signal. The line makes the exemption audible.
      */
     announce: ((message: string) => void) | null = null,
+    /**
+     * The high-consequence class. Defaults to the committed config; a caller
+     * may inject one so a fixture can drive the stub-law form without a tree.
+     */
+    consequenceClass: ConsequenceClassConfig | null = null,
 ): Map<string, string> {
     const kernel = kernel_ids();
     const noTrigger = no_trigger_ids();
     const pathOnly = path_only_ids();
+    const cls = consequenceClass ?? readConsequenceClass(REPO_ROOT);
+    const lawInStub = stubLawIds(cls);
     const wsMap = scope !== null ? rule_workspaces_map() : new Map<string, string[]>();
     const out = new Map<string, string>();
     for (const p of _globSortedMd(rules_dir)) {
@@ -349,7 +437,12 @@ export function build_thin(
         if (!id_in_scope(stem, scope, kernel, wsMap, fm_workspaces(text))) {
             continue; // out of workspace scope — no body, no pointer line
         }
-        const full = kernel.has(stem) || noTrigger.has(stem) || pathOnly.has(stem);
+        // A declared `no_stub` member keeps its whole body. Its law cannot be
+        // copied into a stub, and a stub with no law is exactly the shape the
+        // class exists to prevent for these rules — so the safe residue is the
+        // full text, not a pointer.
+        const noStub = cls.no_stub[stem] !== undefined;
+        const full = kernel.has(stem) || noTrigger.has(stem) || pathOnly.has(stem) || noStub;
         if (announce !== null && noTrigger.has(stem) && !kernel.has(stem)) {
             announce(`D3: trigger-less auto rule ${path.basename(p)} — kept full-bodied, never thinned`);
         }
@@ -359,7 +452,20 @@ export function build_thin(
                     `are path-shaped and the delivery concern is not bound on pre_tool_use`,
             );
         }
-        out.set(path.basename(p), full ? text : thin_entry(stem, text));
+        if (full) {
+            out.set(path.basename(p), text);
+            continue;
+        }
+        if (lawInStub.has(stem)) {
+            if (announce !== null) {
+                announce(
+                    `LAW: high-consequence rule ${path.basename(p)} — stub carries its own law section, byte-copied`,
+                );
+            }
+            out.set(path.basename(p), thin_entry_with_law(stem, text));
+            continue;
+        }
+        out.set(path.basename(p), thin_entry(stem, text));
     }
     return out;
 }
@@ -367,6 +473,16 @@ export function build_thin(
 export interface ThinMeasure {
     rules_total: number;
     kernel_full: number;
+    /**
+     * Everything non-kernel that the no-trigger residue does not claim — which
+     * is NOT the same as everything actually thinned, and the gap grew with the
+     * `no_stub` subset. The path-only residue and the declared `no_stub`
+     * members project full-bodied and are counted here anyway, because the
+     * field's identity (`rules_total = kernel_full + non_kernel_thinned +
+     * no_trigger_full`) is pinned by a test and is what the CLI's own line
+     * arithmetic rests on. Named rather than silently widened: for the real
+     * thinned count, ask `build_thin` and filter on {@link is_thin_entry}.
+     */
     non_kernel_thinned: number;
     /** Non-kernel rules kept full-bodied because the router gives them no trigger. */
     no_trigger_full: number;

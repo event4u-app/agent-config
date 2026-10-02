@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
+consequence_class: "authority-bypass"
 description: "New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming"
 alwaysApply: false
 triggers:

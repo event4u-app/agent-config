@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "mechanical-already"
+consequence_class: "authority-bypass"
 description: "Prompt matches an eligible slash command — surface as numbered options with as-is escape; never auto-execute"
 triggers:
   - phrase: "free-form prompt"

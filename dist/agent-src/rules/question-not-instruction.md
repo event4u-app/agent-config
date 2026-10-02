@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "1"
+consequence_class: "authority-bypass"
 description: "A question requests an ANSWER, never authorization to act — answer first; 'why…?' / 'can you…?' is no green light to build, change, or execute"
 triggers:
   - phrase: "warum"

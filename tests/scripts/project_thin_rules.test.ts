@@ -12,6 +12,8 @@ import * as fs from 'node:fs';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import * as ptr from '../../src/scripts/project_thin_rules.js';
+import { readConsequenceClass, stubLawIds } from '../../src/scripts/_lib/rule_consequence_class.js';
+import { lawText, ruleBody } from '../../src/scripts/_lib/rule_law_section.js';
 
 
 
@@ -76,15 +78,20 @@ describe('project_thin_rules — pure surface', () => {
         let thinned = 0;
         const noTrigger = ptr.no_trigger_ids();
         const pathOnly = ptr.path_only_ids();
+        const noStub = new Set(Object.keys(readConsequenceClass(ptr.REPO_ROOT).no_stub));
         for (const [name, text] of map) {
             const stem = name.replace(/\.md$/, '');
-            if (kernel.has(stem) || noTrigger.has(stem) || pathOnly.has(stem)) {
-                // Three eager classes, not two. Kernel; the no-trigger residue,
+            if (kernel.has(stem) || noTrigger.has(stem) || pathOnly.has(stem) || noStub.has(stem)) {
+                // Four eager classes, not two. Kernel; the no-trigger residue,
                 // because a rule the router cannot fire is a rule no hook can
-                // put back; and since 2026-09-07 the PATH-ONLY residue, whose
+                // put back; since 2026-09-07 the PATH-ONLY residue, whose
                 // only triggers are path-shaped while the delivery concern is
                 // unbound on `pre_tool_use` — same failure one step out, a rule
-                // with nothing to match ON rather than nothing to match on.
+                // with nothing to match ON rather than nothing to match on; and
+                // since 2026-10-02 the declared `no_stub` subset of the
+                // high-consequence class, whose law cannot be copied into a
+                // stub, so the safe residue is the whole body rather than a
+                // pointer with no law behind it.
                 kernelFull += 1;
             } else {
                 // thinned entries are the one-line pointer
@@ -116,5 +123,90 @@ describe('project_thin_rules — pure surface', () => {
         expect(m.saved_gpt).toBe(m.eager_gpt - m.thin_gpt);
         expect(typeof m.saved_pct).toBe('number');
         expect(typeof m.token_method).toBe('string');
+    });
+});
+
+// `law-in-stub` — road-to-rule-laws-that-can-stand 2.2.
+//
+// A stub for a high-consequence rule carries that rule's own law section, byte
+// for byte, with a digest beside it. The council rejected a compiled or
+// summarised contract, so the only thing asserted here is identity: what the
+// stub carries is a `slice` of what the rule says, not a rendering of it.
+//
+// Both directions are pinned. The accepting case proves the law reaches the
+// stub; the two rejecting cases prove the projection REFUSES a class member
+// whose law is missing or over the ceiling, rather than shipping a shortened
+// copy — which is the failure the whole class exists to prevent.
+describe('law-in-stub', () => {
+    const CLASS = {
+        criterion_ref: 'x',
+        members: { 'fixture-rule': { clause: 'security-boundary' as const, why: 'w' } },
+        no_stub: {},
+        excluded: {},
+    };
+
+    function fixtureDir(body: string): string {
+        const dir = fs.mkdtempSync('/tmp/thin-law-');
+        _tmpDirs.push(dir);
+        fs.writeFileSync(
+            `${dir}/fixture-rule.md`,
+            `---\ntype: "auto"\ndescription: "a fixture"\ntriggers:\n  - keyword: "fixture"\n---\n\n# Fixture Rule\n\n${body}`,
+        );
+        return dir;
+    }
+
+    it('copies the law into the stub byte for byte, with a digest of what was copied', () => {
+        const law = '## The Iron Law\n\n```\nNEVER SHIP THE THING.\n```\n\nAnd one sentence of why.';
+        const out = ptr.build_thin(fixtureDir(`${law}\n\n## Elsewhere\n\nNot the law.\n`), null, null, CLASS);
+        const stub = out.get('fixture-rule.md') as string;
+
+        expect(stub).toContain(ptr.THIN_ENTRY_MARKER);
+        expect(stub).toContain(law);
+        expect(stub).not.toContain('Not the law.');
+        expect(stub).toContain(ptr.STUB_LAW_OPEN + ptr.lawDigest(law));
+        expect(stub.trimEnd().endsWith(ptr.STUB_LAW_CLOSE)).toBe(true);
+    });
+
+    it('refuses a class member with no law section rather than shipping a bare stub', () => {
+        expect(() => ptr.build_thin(fixtureDir('Prose with no law.\n'), null, null, CLASS)).toThrow(
+            ptr.StubLawError,
+        );
+    });
+
+    it('refuses a class member whose law is over the ceiling rather than shortening it', () => {
+        const fat = `## The Iron Law\n\n${'LAW. '.repeat(ptr.STUB_LAW_MAX_CHARS / 4)}\n`;
+        expect(() => ptr.build_thin(fixtureDir(fat), null, null, CLASS)).toThrow(/over the 2000 ceiling/);
+    });
+
+    it('a declared no_stub member projects FULL-BODIED — never a stub without its law', () => {
+        const declared = {
+            ...CLASS,
+            no_stub: {
+                'fixture-rule': {
+                    clause: 'security-boundary' as const,
+                    why: 'w',
+                    reason: 'no law section yet',
+                },
+            },
+        };
+        const out = ptr.build_thin(fixtureDir('Prose with no law.\n'), null, null, declared);
+        const projected = out.get('fixture-rule.md') as string;
+        expect(projected).not.toContain(ptr.THIN_ENTRY_MARKER);
+        expect(projected).toContain('Prose with no law.');
+    });
+
+    it('over the real tree: every class member outside no_stub carries its law in its stub', () => {
+        const cls = readConsequenceClass(ptr.REPO_ROOT);
+        const out = ptr.build_thin();
+        for (const id of stubLawIds(cls)) {
+            const stub = out.get(`${id}.md`);
+            if (stub === undefined) continue; // not projected in this scope
+            if (!ptr.is_thin_entry(stub)) continue; // kept full-bodied for another reason
+            const law = lawText(ruleBody(fs.readFileSync(`${ptr.RULES_SOURCE}/${id}.md`, 'utf-8'))) as string;
+            expect(stub, `${id} stub must carry its law verbatim`).toContain(law);
+            expect(stub, `${id} stub must carry the digest of what it copied`).toContain(
+                ptr.STUB_LAW_OPEN + ptr.lawDigest(law),
+            );
+        }
     });
 });

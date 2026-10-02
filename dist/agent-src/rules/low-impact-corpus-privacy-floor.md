@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "1"
+consequence_class: "security-boundary"
 description: "Writing/upstreaming low-impact-decisions corpus entries — non-bypassable privacy floor"
 triggers:
   - path_prefix: "agents/decisions/low-impact-decisions"

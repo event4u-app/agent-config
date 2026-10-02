@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
+consequence_class: "authority-bypass"
 description: "Advisory content (legal, medical, financial, consulting) — matching 'not X advice' disclaimer; refuse diagnosis/dosage"
 triggers:
   - keyword: "legal brief"

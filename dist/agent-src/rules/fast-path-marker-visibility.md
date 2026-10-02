@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "1"
+consequence_class: "authority-bypass"
 description: "Low-impact council fast-path — surface the transparency marker verbatim as the reply opener"
 triggers:
   - keyword: "low-impact council"

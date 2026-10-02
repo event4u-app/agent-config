@@ -2,6 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
+consequence_class: "security-boundary"
 description: "Endpoint/query on user/tenant data — authenticated ≠ authorized: server-derived ownership/tenant/role + negative tests (401/non-owner/cross-tenant)"
 triggers:
   - keyword: "endpoint"

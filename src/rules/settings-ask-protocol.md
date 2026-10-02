@@ -2,6 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
+consequence_class: "authority-bypass"
 description: "Asking the user about a setting — one question per command execution, a fixed four-slot shape, and the key's class decides where the answer goes"
 triggers:
   - keyword: "settings:set"

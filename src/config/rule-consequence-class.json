@@ -1,0 +1,161 @@
+{
+    "_comment": "The high-consequence rule class (road-to-rule-laws-that-can-stand Phase 2). The CRITERION lives in the `consequence_class` property of src/scripts/schemas/rule.schema.json and is the only thing that selects a member — this file is the list the criterion produced, not a list chosen first, which is why `excluded` carries a reason per row and is walked by id against the router. A rule earns a row by what its own law section obligates, never by its name or its pack. `members` is the whole class. `no_stub` is the subset whose law cannot stand in a stub today — missing, or over the 2,000-char ceiling — each with the reason; those project FULL-BODIED, which is strictly safer than a shortened copy, and the subset is what stops the class being quietly shrunk by not writing a law. A member in that state and NOT in `no_stub` fails the projection. Checked by tests/scripts/rule_consequence_class.test.ts.",
+    "criterion_ref": "src/scripts/schemas/rule.schema.json#/properties/consequence_class",
+    "members": {
+        "autonomous-execution": {
+            "clause": "authority-bypass",
+            "why": "The Hard Floor and the commit default are authority boundaries."
+        },
+        "broken-access-control": {
+            "clause": "security-boundary",
+            "why": "The law is the per-object ownership and tenant check before data is returned. Violating it hands one user another user's data."
+        },
+        "command-suggestion-policy": {
+            "clause": "authority-bypass",
+            "why": "The law is SUGGEST, NEVER INVOKE. Violating it starts a command flow the user never picked."
+        },
+        "decision-revisit-gate": {
+            "clause": "authority-bypass",
+            "why": "The law routes a reopened decision to the council by default and to the owner for the reserved set. Violating it executes an owner-reserved transition on the agent's own authority."
+        },
+        "doc-screenshot-hygiene": {
+            "clause": "irreversible-external",
+            "why": "The law calls a shipped screenshot with unredacted data an irreversible published egress, in those words."
+        },
+        "domain-safety-disclaimer": {
+            "clause": "authority-bypass",
+            "why": "The law refuses diagnosis and dosage outright and makes every advisory draft carry its disclaimer. Violating it issues a professional judgement the agent is not licensed to make."
+        },
+        "domain-safety-pii": {
+            "clause": "security-boundary",
+            "why": "The law keeps raw direct identifiers out of drafts, logs and exports. Violating it is the data exposure."
+        },
+        "domain-safety-retention": {
+            "clause": "irreversible-external",
+            "why": "The law forbids recommending deletion under audit, litigation or regulatory hold. Violating it destroys records that cannot be recovered."
+        },
+        "engineering-safety-floor": {
+            "clause": "irreversible-external",
+            "why": "The law restates the Hard Floor for deploys, production-trunk merges and production data. Every trigger it names is an action this agent cannot undo."
+        },
+        "evaluator-independence": {
+            "clause": "authority-bypass",
+            "why": "The law forbids authoring the verdict into an evaluator's prompt. Violating it manufactures the independent review a gate then relies on."
+        },
+        "fast-path-marker-visibility": {
+            "clause": "authority-bypass",
+            "why": "The marker is the only signal that a fast path resolved a decision instead of the user. Swallowing it hides the substitution."
+        },
+        "finance-safety-floor": {
+            "clause": "authority-bypass",
+            "why": "The law refuses a final invest or raise call. Violating it takes a decision the law assigns to the human."
+        },
+        "git-history-discipline": {
+            "clause": "irreversible-external",
+            "why": "The law forbids rewriting published history and dropping commits the session did not author. A force-push over someone else's work is not recoverable from here."
+        },
+        "image-likeness-and-rights": {
+            "clause": "irreversible-external",
+            "why": "The law gates a real person's likeness, a trademarked mark and a living artist's style behind explicit rights. The harm lands outside the repository and outlives the render."
+        },
+        "legal-safety-floor": {
+            "clause": "authority-bypass",
+            "why": "The law refuses a binding legal conclusion and stops outright at individual-case examination. Violating it performs regulated activity."
+        },
+        "lethal-trifecta-guard": {
+            "clause": "security-boundary",
+            "why": "The law forbids shipping private-data access, untrusted ingestion and external comms on one autonomous path. That combination is the exfiltration shape itself."
+        },
+        "low-impact-corpus-privacy-floor": {
+            "clause": "security-boundary",
+            "why": "The law is a non-bypassable redaction gate on entries that leave the project repo. It is the last check before an upstream push."
+        },
+        "question-not-instruction": {
+            "clause": "authority-bypass",
+            "why": "A question is not authorization to act — the purest authority-bypass clause in the tree."
+        },
+        "runtime-safety": {
+            "clause": "security-boundary",
+            "why": "The rule bounds what an `automated` skill may execute and which handlers are allowlisted."
+        },
+        "secret-vcs-guard": {
+            "clause": "security-boundary",
+            "why": "The law stops before a credential reaches version control. Once committed it is leaked in every clone, and only rotation undoes it."
+        },
+        "security-sensitive-stop": {
+            "clause": "security-boundary",
+            "why": "The law requires a threat pass before the first edit to auth, tenancy, billing, secrets, uploads and public endpoints. It is the gate the other security rules assume ran."
+        },
+        "session-canary": {
+            "clause": "authority-bypass",
+            "why": "The honesty clause forbids papering over a dropped canary. Faking continuity removes the user's only signal that the session is degrading, which is their decision to make."
+        },
+        "settings-ask-protocol": {
+            "clause": "authority-bypass",
+            "why": "The law calls a silent permissive default a decision taken in the user's name, and forbids it."
+        },
+        "source-confidentiality": {
+            "clause": "security-boundary",
+            "why": "The law keeps derivation attribution out of the tracked tree. A disclosure that lands in git history is not withdrawable."
+        },
+        "strategy-safety-floor": {
+            "clause": "authority-bypass",
+            "why": "The law refuses a final enter / build / buy / reorg call and names the human decision owner."
+        },
+        "tool-safety": {
+            "clause": "security-boundary",
+            "why": "The rule is the deny-by-default tool allowlist and the no-hidden-credentials floor."
+        },
+        "untrusted-input-defense": {
+            "clause": "security-boundary",
+            "why": "The law makes fetched, tool, file, RAG and MCP content data and never instructions. Violating it is how an attacker's text becomes the agent's plan."
+        },
+        "user-interrupt-priority": {
+            "clause": "authority-bypass",
+            "why": "The law stops the current task on a new instruction and asks before resuming. Silent resume continues work the user withdrew."
+        }
+    },
+    "no_stub": {
+        "autonomous-execution": {
+            "clause": "authority-bypass",
+            "why": "The Hard Floor and the commit default are authority boundaries.",
+            "reason": "No heading matching `Iron Law`: the rule states its floors under `## Hard Floor` and its bound in a fence under `## Validation-loop budget`. Promoting one of those to a law heading is authoring a law, which is a change to what the rule obligates and is out of scope for a projection change. Projects full-bodied until a law section is written deliberately."
+        },
+        "legal-safety-floor": {
+            "clause": "authority-bypass",
+            "why": "The law refuses a binding legal conclusion and stops outright at individual-case examination.",
+            "reason": "Law section is 2,023 characters, 23 over the hard ceiling, and carries a dated exception in rule-law-ceilings.json. It cannot stand in a stub until the RDG STOP block is reviewed out of the law and into the body beside it."
+        },
+        "question-not-instruction": {
+            "clause": "authority-bypass",
+            "why": "A question is not authorization to act — the purest authority-bypass clause in the tree.",
+            "reason": "No heading matching `Iron Law`: the rule opens with a bare fence under its title. The fence is the law and promoting it needs a heading, which is a rule edit rather than a projection one."
+        },
+        "runtime-safety": {
+            "clause": "security-boundary",
+            "why": "The rule bounds what an `automated` skill may execute and which handlers are allowlisted.",
+            "reason": "No heading matching `Iron Law`: the constraints are a bullet list under `## Constraints`. Named by the roadmap's own Context as one of the two sharpest cases in the 35."
+        },
+        "tool-safety": {
+            "clause": "security-boundary",
+            "why": "The rule is the deny-by-default tool allowlist and the no-hidden-credentials floor.",
+            "reason": "No heading matching `Iron Law`: the floor is stated under `## Constraints` and `## Scoped grants`. Named by the roadmap's own Context as one of the two sharpest cases in the 35."
+        }
+    },
+    "excluded": {
+        "active-remediation": "A spotted issue left unfixed costs quality and rework. Its one genuinely high-consequence branch — a live cross-user exposure — is already `broken-access-control`'s law, which is in the class.",
+        "delegation-policy": "Dispatch shape, not authority: it delegates nothing a Hard Floor would stop, and says so.",
+        "downstream-changes": "A missed caller is a broken build, which is loud and recoverable.",
+        "history-discipline": "Audit coverage is an auditability property. Its privacy interlock points at `domain-safety-pii`, which is in the class.",
+        "media-governance-routing": "A routing rule: it surfaces the project-local media policies. The rights obligation itself is `image-likeness-and-rights`, which is in the class.",
+        "media-sync-ground-truth": "The spend gate is real but the obligation its law states is a sourcing one — timing and singer come from the transcribed audio. The paid-render confirmation it builds on is `non-destructive-by-default`, a kernel rule that is never thinned.",
+        "no-attribution-footers": "An attribution footer is external but editable, so the action is not irreversible.",
+        "no-decorative-emojis-in-git-surfaces": "An emoji in a PR title or a commit subject is external but editable, and the fix is an edit rather than a rotation or a retraction. Same reason as no-attribution-footers, one surface over.",
+        "no-pr-progress-comments": "A noisy PR thread is a cost, not a boundary, and a comment can be deleted.",
+        "playbook-precedence": "Its propose-never-silently-run clause defers to the same floor `non-destructive-by-default` holds; on its own it decides which procedure to follow.",
+        "provider-lifecycle-discipline": "Tier declaration and a refuse-and-surface ask. The spend floor it defers to is a kernel rule.",
+        "scale-discipline": "An exhausted connection pool is an availability failure, not a security boundary.",
+        "senior-engineering-discipline": "The anchor that ROUTES to the invisible controls. The controls themselves are in the class; the anchor is not, or the criterion would admit every rule that mentions security.",
+        "think-before-action": "Analysis discipline. Violating it wastes work."
+    }
+}

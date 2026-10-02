@@ -2,6 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
+consequence_class: "security-boundary"
 description: "Writing a credential into a tracked file or committing one in any VCS (git/svn/hg) — STOP, show the match, ask, offer alternatives; never silently"
 triggers:
   - keyword: "secret"

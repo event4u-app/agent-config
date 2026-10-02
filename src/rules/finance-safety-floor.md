@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
+consequence_class: "authority-bypass"
 description: "Finance-pack output (runway, valuation, DCF, scenarios, unit economics) — never a final invest/raise call; disclosure footer"
 triggers:
   - keyword: "runway"

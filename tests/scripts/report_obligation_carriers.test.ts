@@ -346,3 +346,86 @@ describe('main — read-only by contract', () => {
         expect(main(['--tpo', '5'])).toBe(1);
     });
 });
+
+// `moved-history` — the before-and-after witness for
+// road-to-rule-laws-that-can-stand 1.4.
+//
+// That step moved enforcement history and mechanism discussion out of three
+// rules and behind `load_context`, under one condition: nothing is deleted and
+// no obligation moves. This block is how that condition is checked rather than
+// asserted. The counts and fence digests below were taken from the live tree
+// BEFORE the move (`census(REPO_ROOT)`, 2026-10-02) and are re-taken here after
+// it.
+//
+// This is the one place in this file that pins a live reading, against the
+// header's own rule, and the exception is deliberate: a fixture cannot witness
+// a move that happened in the real tree. The pin is narrow and falsifiable — a
+// `fence:` digest is the SHA of the law text under an Iron-Law heading, so it
+// changes if and only if one of those three laws is edited. An unrelated rule
+// edit cannot move it; editing one of these three laws is exactly the event
+// this block exists to make visible, and the fix is then to re-take the digest
+// in the same change that edits the law.
+describe('moved-history', () => {
+    const REPO_ROOT = path.resolve(__dirname, '..', '..');
+
+    /** Rule → [fence key, carrier count] as measured before the 1.4 move. */
+    const BEFORE: Record<string, Array<[string, number]>> = {
+        'session-canary': [
+            ['fence:1dc463329917', 3],
+            ['fence:797adb2be331', 3],
+            ['fence:672f8ca8cdb2', 2],
+            ['fence:f72b55aa063d', 1],
+        ],
+        'decision-revisit-gate': [['fence:2fa61243c68e', 1]],
+        'design-fidelity': [['fence:85a2048061f5', 2]],
+    };
+
+    const live = census(REPO_ROOT);
+
+    for (const [rule, expected] of Object.entries(BEFORE)) {
+        it(`${rule} carries the same obligations, with the same carrier counts, after the move`, () => {
+            const rel = `src/rules/${rule}.md`;
+            const rows = live.rows
+                .filter((r) => r.carriers.some((c) => c.path === rel))
+                .map((r) => [r.key, r.count] as [string, number]);
+            expect(rows).toEqual(expected);
+        });
+    }
+
+    it('each moved history now lives in a context file the rule names in load_context', () => {
+        const moves: Array<[string, string]> = [
+            ['session-canary', 'contexts/execution/session-canary-enforcement-history.md'],
+            ['decision-revisit-gate', 'contexts/authority/decision-revisit-gate-enforcement.md'],
+            ['design-fidelity', 'contexts/communication/rules-auto/design-fidelity-enforcement.md'],
+        ];
+        for (const [rule, ctx] of moves) {
+            const text = fs.readFileSync(path.join(REPO_ROOT, 'src', 'rules', `${rule}.md`), 'utf-8');
+            expect(text, `${rule} must declare ${ctx} in load_context`).toContain(`  - ${ctx}`);
+            expect(
+                fs.existsSync(path.join(REPO_ROOT, 'src', 'agent-src', ctx)),
+                `${ctx} must exist`,
+            ).toBe(true);
+        }
+    });
+
+    it('nothing was deleted — a sentence from each moved block is still in the tree', () => {
+        const kept: Array<[string, string]> = [
+            [
+                'contexts/execution/session-canary-enforcement-history.md',
+                'Conformance round 5, 2026-08-07, reading the five highest-turn',
+            ],
+            [
+                'contexts/authority/decision-revisit-gate-enforcement.md',
+                'measured across 26 days of',
+            ],
+            [
+                'contexts/communication/rules-auto/design-fidelity-enforcement.md',
+                'Every class carries its own near-miss row in `ROUTING_MATRIX`',
+            ],
+        ];
+        for (const [ctx, sentence] of kept) {
+            const text = fs.readFileSync(path.join(REPO_ROOT, 'src', 'agent-src', ctx), 'utf-8');
+            expect(text, `${ctx} lost "${sentence}"`).toContain(sentence);
+        }
+    });
+});

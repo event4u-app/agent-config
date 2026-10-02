@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
+consequence_class: "irreversible-external"
 description: "Data retention — jurisdiction gap, longest floor, honor DSR/audit holds; never delete under inquiry"
 triggers:
   - keyword: "retention policy"

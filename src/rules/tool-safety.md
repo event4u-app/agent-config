@@ -1,6 +1,7 @@
 ---
 type: auto
 tier: "2b"
+consequence_class: "security-boundary"
 description: "Skill uses external tools — enforce allowlist, deny-by-default, no hidden credential patterns"
 triggers:
   - keyword: "allowed_tools"

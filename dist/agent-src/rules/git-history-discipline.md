@@ -2,6 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
+consequence_class: "irreversible-external"
 description: "Git history — no unasked rebase/squash/amend; never drop foreign commits; pushed rewrite → re-push same turn"
 triggers:
   - keyword: "git rebase"

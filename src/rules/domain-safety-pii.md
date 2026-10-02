@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
+consequence_class: "security-boundary"
 description: "Drafts/logs/exports with real customer/candidate data — redact direct IDs, placeholders, flag quasi-ID re-identification"
 triggers:
   - keyword: "support macro"

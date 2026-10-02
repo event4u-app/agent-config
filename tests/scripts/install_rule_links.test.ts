@@ -216,11 +216,19 @@ describe("the real install plan", () => {
   }
 
   it("the deployable share of claude-code's unresolved links is exactly the blocker's subject", () => {
-    // 113 of the 160 would resolve by adding two directories to the deploy
-    // plan; the other 47 would not, and that split is what the blocker's
+    // 112 of the 158 would resolve by adding two directories to the deploy
+    // plan; the other 46 would not, and that split is what the blocker's
     // recommendation rests on. Pinned so a future reader can tell the two
     // populations apart without re-deriving them — and so the blocker cannot
     // quietly stop describing the tree.
+    //
+    // Was 113 of 160 when this was first measured on 2026-10-02. The one that
+    // left is a `docs/guidelines/design-fidelity-routing.md` link in
+    // `design-fidelity.md`: road-to-rule-laws-that-can-stand step 1.4 moved
+    // that rule's enforcement history out of the body and into a context, and
+    // the link went with the prose. The pin moves DOWN with the tree — a
+    // smaller deployable share is the blocker's subject shrinking, never the
+    // ratchet loosening, and `UNRESOLVED_BASELINE` is untouched at 160.
     const pairs = GLOBAL_DEPLOY_SOURCES["claude-code"];
     expect(pairs).toBeDefined();
     const report = auditInstalledRuleLinks(deployPlanFrom(pairs!), REPO_ROOT);
@@ -229,7 +237,7 @@ describe("the real install plan", () => {
     );
     expect(deployable.map((d) => [d.directory, d.count, d.verdict])).toEqual([
       ["contexts", 62, "directory-not-deployed"],
-      ["guidelines", 51, "directory-not-deployed"],
+      ["guidelines", 50, "directory-not-deployed"],
     ]);
   });
 

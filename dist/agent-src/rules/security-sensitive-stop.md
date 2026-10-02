@@ -2,6 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
+consequence_class: "security-boundary"
 description: "Security-sensitive paths (auth, billing, tenants, secrets, uploads, webhooks) — threat-model BEFORE editing"
 # Disjoint from secret-vcs-guard by design (2026-08-04): bare `secret` /
 # `password` are that rule's VCS-write surface, not this rule's.
