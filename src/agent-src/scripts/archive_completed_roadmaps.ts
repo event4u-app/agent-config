@@ -12,7 +12,9 @@
  * `urp.collect()` completion criterion, and exit code 0. snake_case kept.
  *
  * A roadmap that has reached `count_open == 0` and `count_deferred == 0` is
- * **complete**. This sweep moves it to `agents/roadmaps/archive/`, rewrites code-comment-allow provenance-comment -- the sweep's own operand
+ * **complete** — and so is one whose only `[~]` steps are bare, because the
+ * sweep first carries them to a follow-up (`deferral_carry.ts`; `--no-carry`
+ * turns that off). This sweep moves it to `agents/roadmaps/archive/`, rewrites code-comment-allow provenance-comment -- the sweep's own operand
  * inbound references (`agents/roadmaps/<x>.md` → `agents/roadmaps/archive/<x>.md`) code-comment-allow provenance-comment -- the rewrite this sweep performs
  * across tracked files so links never break, and regenerates the dashboard.
  *
@@ -63,6 +65,7 @@ import {
     collect,
     parse_blockers,
 } from './update_roadmap_progress.js';
+import { BLOCK_END_RE, DEFERRED_RESOLUTION_RE, DEFERRED_STEP_RE, planCarry } from './deferral_carry.js';
 import { guardedBaselineProblems, parseGuardedBaselines } from './guarded_baseline.js';
 
 import { isCliEntry } from './_cli_entry.js';
@@ -403,17 +406,6 @@ export interface DeferredItem {
     destination: string | null;
 }
 
-/**
- * `<!-- deferred-resolution: carried-to=<slug> -->` — the resolved-deferral
- * annotation. `merged-into=<slug>` is the second accepted form.
- */
-const DEFERRED_RESOLUTION_RE = /<!--\s*deferred-resolution:\s*(carried-to|merged-into)\s*=\s*([A-Za-z0-9._-]+)\s*-->/;
-
-/** `- [~] …` — a deferred step, at any indent, with `-` or `*`. */
-const DEFERRED_STEP_RE = /^[ \t]*[-*][ \t]+\[~\][ \t]*(.*)$/;
-/** Any other checkbox, or a heading — where a step's block ends. */
-const BLOCK_END_RE = /^[ \t]*[-*][ \t]+\[[ xX~-]\]|^#{1,6}[ \t]/;
-
 /** Escape a string for literal use inside a `RegExp`. */
 function _escapeRe(v: string): string {
     return v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -590,9 +582,10 @@ export function deferralProblems(
 /** Archive every complete active roadmap: no open steps, and every `[~]` resolved. */
 function archive_completed(
     root: string,
-    opts: { changed_only: boolean; base: string; dry_run: boolean },
+    opts: { changed_only: boolean; base: string; dry_run: boolean; carry?: boolean },
 ): ArchiveRecord[] {
     const { changed_only, base, dry_run } = opts;
+    const carry = opts.carry ?? true;
     const roadmap_root = path.join(root, 'agents', 'roadmaps');
     if (!_isDir(roadmap_root)) {
         return [];
@@ -625,7 +618,7 @@ function archive_completed(
         // and invisible in a sweep that only reports what it moved; a MALFORMED
         // one on `[x]` would otherwise archive with an annotation claiming the
         // opposite. Both are named here instead.
-        const roadmapText = fs.readFileSync(path.join(roadmap_root, stats.rel), 'utf-8');
+        let roadmapText = fs.readFileSync(path.join(roadmap_root, stats.rel), 'utf-8');
         const guarded = parseGuardedBaselines(roadmapText);
         if (guarded.length > 0) {
             process.stderr.write(
@@ -644,13 +637,47 @@ function archive_completed(
         // A `[~]` no longer blocks unconditionally: it blocks unless it carries a
         // validated resolution annotation. See `deferralProblems` for why, and
         // for every way that check fails closed.
+        const old_rel = `agents/roadmaps/${stats.rel}`;
+        let open_blockers = stats.open_blockers.map((b) => b.id);
         if (stats.deferred !== 0) {
             const abs = path.join(roadmap_root, stats.rel);
             // The source's own slug is removed: it is trivially in `sweepSet`,
             // and self-reference is reported by its own, clearer message.
             const others = new Set(sweepSet);
             others.delete(stats.rel.replace(/\.md$/, ''));
-            const problems = deferralProblems(root, stats.rel, fs.readFileSync(abs, 'utf-8'), others);
+            // Bare `[~]` steps are carried to a follow-up first, then validated
+            // like any hand-written carry — see `deferral_carry.ts`. Only for a
+            // roadmap this sweep would actually archive, so a `--changed-only`
+            // run never writes a follow-up for someone else's roadmap.
+            const inScope = !changed_only || (touched as Set<string>).has(old_rel);
+            const bare = parseDeferredItems(roadmapText).some((d) => d.kind === null);
+            if (carry && inScope && bare) {
+                const outcome = planCarry(root, stats.rel, roadmapText, open_blockers, _today());
+                if ('refused' in outcome) {
+                    process.stderr.write(`  ⚠️  ${stats.rel}: deferrals not carried — ${outcome.refused}.\n`);
+                } else {
+                    const { plan } = outcome;
+                    process.stdout.write(
+                        `  ↪  ${stats.rel}: carried ${plan.carried} deferred step(s)` +
+                            (plan.movedBlockers.length > 0 ? ` and blocker(s) ${plan.movedBlockers.join(', ')}` : '') +
+                            ` → ${plan.destRel}\n`,
+                    );
+                    if (dry_run) {
+                        // Nothing was written, so the validation below would
+                        // read the old file; report the move it would make.
+                        archived.push({ roadmap: old_rel, archived_to: `agents/roadmaps/archive/${stats.rel}`, refs_migrated: [] });
+                        continue;
+                    }
+                    fs.writeFileSync(path.join(root, plan.destRel), plan.destText, 'utf-8');
+                    fs.writeFileSync(abs, plan.sourceText, 'utf-8');
+                    // Staged so the blocker-divergence check below compares the
+                    // carry against itself, not against the pre-carry index.
+                    _run(['git', 'add', '--', plan.destRel, old_rel], root);
+                    roadmapText = plan.sourceText;
+                    open_blockers = open_blockers.filter((id) => !plan.movedBlockers.includes(id));
+                }
+            }
+            const problems = deferralProblems(root, stats.rel, roadmapText, others);
             if (problems.length > 0) {
                 process.stderr.write(
                     `  ⚠️  ${stats.rel}: ${problems.length} unresolved deferral(s) — not archived.\n`,
@@ -666,9 +693,8 @@ function archive_completed(
         // predicted shipped in the 9.36.0 changelog head. Same discipline
         // `roadmap-progress-sync` Iron Law 3 applies to `[~]` steps: a roadmap
         // carrying an open decision stays visible until the decision is made.
-        const open_blockers = stats.open_blockers;
         if (open_blockers.length > 0) {
-            const ids = open_blockers.map((b) => b.id).join(', ');
+            const ids = open_blockers.join(', ');
             process.stderr.write(
                 `  ⚠️  ${stats.rel}: all steps closed but ${open_blockers.length} ` +
                     `blocker(s) still open (${ids}) — not archived. Resolve them, ` +
@@ -676,7 +702,6 @@ function archive_completed(
             );
             continue;
         }
-        const old_rel = `agents/roadmaps/${stats.rel}`;
         if (changed_only && !(touched as Set<string>).has(old_rel)) {
             continue; // complete, but not this branch's work
         }
@@ -720,6 +745,10 @@ function archive_completed(
         archived.push({ roadmap: old_rel, archived_to: new_rel, refs_migrated: refs });
     }
     return archived;
+}
+
+function _today(): string {
+    return new Date().toISOString().slice(0, 10);
 }
 
 function _isDir(p: string): boolean {
@@ -824,13 +853,14 @@ function _runTwin(root: string, script: string): void {
 const _PROG = 'archive_completed_roadmaps.py';
 
 function _usage(): string {
-    return `usage: ${_PROG} [-h] [--all] [--base BASE] [--dry-run] [--repo-root REPO_ROOT]\n`;
+    return `usage: ${_PROG} [-h] [--all] [--base BASE] [--dry-run] [--no-carry] [--repo-root REPO_ROOT]\n`;
 }
 
 interface Args {
     all: boolean;
     base: string;
     dry_run: boolean;
+    carry: boolean;
     repo_root: string | null;
 }
 
@@ -838,6 +868,7 @@ function _parseArgs(argv: readonly string[]): Args {
     let all = false;
     let base = 'origin/main';
     let dry_run = false;
+    let carry = true;
     let repo_root: string | null = null;
     const emitError = (msg: string): never => {
         process.stderr.write(_usage());
@@ -855,6 +886,9 @@ function _parseArgs(argv: readonly string[]): Args {
             i += 1;
         } else if (tok === '--dry-run') {
             dry_run = true;
+            i += 1;
+        } else if (tok === '--no-carry') {
+            carry = false;
             i += 1;
         } else if (tok === '--base') {
             const val = argv[i + 1];
@@ -880,7 +914,7 @@ function _parseArgs(argv: readonly string[]): Args {
             emitError(`unrecognized arguments: ${tok}`);
         }
     }
-    return { all, base, dry_run, repo_root };
+    return { all, base, dry_run, carry, repo_root };
 }
 
 function main(argv?: readonly string[]): number {
@@ -894,6 +928,7 @@ function main(argv?: readonly string[]): number {
         changed_only: !ns.all,
         base: ns.base,
         dry_run: ns.dry_run,
+        carry: ns.carry,
     });
     if (archived.length === 0) {
         process.stdout.write('  ℹ️  No completed roadmaps to archive.\n');

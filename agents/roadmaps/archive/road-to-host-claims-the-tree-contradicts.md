@@ -186,7 +186,7 @@ is caught by a check rather than by an external reader.
       invitation than the 600 s default the step was drafted against, so the
       refusal is stated more explicitly rather than less.
 
-- [~] **2.4 Observe a reached timeout on the slot.** Deferred, and named rather
+- [~] **2.4 Observe a reached timeout on the slot.** Deferred, and named rather <!-- deferred-resolution: carried-to=road-to-host-claims-the-tree-contradicts-carried -->
       than dropped: the fourth return condition the 2026-09-29 refusal set — a
       session in which the `user_prompt_submit` timeout is actually reached and
       its effect on the 13 concerns recorded. It is the only thing that turns
@@ -237,7 +237,7 @@ is caught by a check rather than by an external reader.
       deny path, `fail_closed: false` and the manifest `tools:` list are
       untouched.
 
-- [~] **3.3 Write the observed row.** Deferred, and named rather than dropped:
+- [~] **3.3 Write the observed row.** Deferred, and named rather than dropped: <!-- deferred-resolution: carried-to=road-to-host-claims-the-tree-contradicts-carried -->
       the row `_lib/structured_ask.ts` asks for needs a real session on a host
       delivering a question picker, with host, host version, transcript reference
       and date. That is an observation, not a tree edit, and it is the only thing

@@ -325,11 +325,13 @@ describe('archive_completed — the validation is actually wired in', () => {
         // Identical repo, one line removed. If the `deferralProblems()` call were
         // deleted from `archive_completed()`, this roadmap would archive and the
         // assertion below would fail. That is what the unit specs could not show.
+        // `--no-carry`, because the default now carries a bare `[~]` first —
+        // the validation is still what stands between it and the archive.
         const root = _repo({
             [`agents/roadmaps/${SRC}.md`]: `---\ncomplexity: lightweight\n---\n\n# p\n\n## Phase 1 — Work\n\n${DONE}- [~] **1.2 later**\n`,
             [`agents/roadmaps/${DEST}.md`]: liveDest,
         });
-        expect(main(['--all', '--repo-root', root])).toBe(0);
+        expect(main(['--all', '--no-carry', '--repo-root', root])).toBe(0);
         expect(existsSync(join(root, 'agents', 'roadmaps', 'archive', `${SRC}.md`))).toBe(false);
         expect(existsSync(join(root, 'agents', 'roadmaps', `${SRC}.md`))).toBe(true);
     });
