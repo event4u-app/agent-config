@@ -337,7 +337,7 @@ Reproduced on 2026-10-01:
   independently of whether the ABI blocker has closed the other 112 — and the
   ratchet baseline in `tests/scripts/install_rule_links.test.ts` has been
   lowered to match. The last two rows are named explicitly because the first
-  two conditions cover only 45: group 3's one-offs are
+  two conditions cover only 44 (22 `docs` + 22 climb-outs): group 3's one-offs are
   `directory-not-deployed` rows, so a condition phrased on `docs` and the
   climb-outs alone would let this blocker close with 2 links still dead, and
   AC-2 would stay false with every blocker on the roadmap shut.
