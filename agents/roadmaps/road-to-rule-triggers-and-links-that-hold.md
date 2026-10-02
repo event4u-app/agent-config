@@ -100,12 +100,28 @@ Reproduced on 2026-10-01:
       28 tests, the two load-bearing ones seen red first and re-proven by
       removing the `guidelines` entry and watching both fail (98 > 47, and the
       undeployed-directory assertion), then restoring it.
-- [ ] **1.3 Single-word triggers, reported.** A report over the routing matrix:
+- [x] **1.3 Single-word triggers, reported.** A report over the routing matrix:
       tier rules with a one-token keyword that fires on more than 5 % of the
       corpus's prompts labelled against another rule. `rename` and `delete`
       (`augment-edit-discipline`) are the first expected rows. Report only; a
       trigger change is a separate decision per rule.
       verify: `grep -c 'augment-edit-discipline' agents/evidence/analysis/single-token-triggers-*.md` -> /^[1-9]/
+      done 2026-10-02: `src/scripts/report_single_token_triggers` + the report
+      at `agents/evidence/analysis/single-token-triggers-2026-10.md`.
+      **D3's `revisit-if` fired and is reported rather than worked around.**
+      Nothing clears 5 %: the maximum share of foreign positives is 3.9 %
+      (`commit`, `secret-vcs-guard`), and `rename` / `delete` score 0.0 %. The
+      instrument is the reason — all 335 positives are written for the rule
+      whose file holds them, so a curated per-rule corpus has almost no supply
+      of accidental cross-firing. The matrix's 253 **near-misses** are the
+      population that does: ordinary developer sentences belonging to no rule.
+      Measured there, the step's prediction lands — `rename` is the single
+      highest row in the corpus at 7 foreign near-misses, every "Rename" in the
+      matrix sitting in a `near_misses` block. 79 of 341 one-token keywords hit
+      at least one; 249 hit nothing at all. And a clean negative worth the same
+      space: **zero** keywords fire on a near-miss their own rule's fixture
+      declares. The threshold stays 5 % and stays a stated default; the report
+      filters on either axis so the rows that exist are not hidden by it.
 - [x] **1.4 The pin without its history.** The rationale paragraph moves to
       the hook's header; the injected text keeps the target language and the
       instruction.
@@ -121,17 +137,51 @@ Reproduced on 2026-10-01:
       added, two seen red (the history assertions, the length ratchet); the
       ratchet pins both provenances so a later edit cannot move the cost from
       one branch into the other. 102/102 in the file.
-- [ ] **1.5 Which obligations are already mechanical.** A report joining each
+- [x] **1.5 Which obligations are already mechanical.** A report joining each
       rule's obligation marker with `report_obligation_carriers` and
       `lint_rule_enforcement_declaration`: per rule, whether a hook or gate
       already enforces the obligation, and whether the obligation is
       deterministic enough that one could. Report only — moving an obligation
       out of prose is a per-rule change with its own review.
       verify: `grep -c '^| ' agents/evidence/analysis/obligation-mechanism-audit-*.md` -> /^[1-9]/
-- [ ] **1.6 Per-spawn cost.** The host loads the instruction hierarchy into
+      done 2026-10-02: `src/scripts/report_obligation_mechanism` + the report at
+      `agents/evidence/analysis/obligation-mechanism-audit-2026-10.md`, 121 rows.
+      The join reads `check_enforcement_coverage --json` for the declaration
+      side — it is the one place `enforced_by` and `obligation_frequency` are
+      already resolved per rule, so `lint_rule_enforcement_declaration`'s own
+      baseline is reached through it rather than re-parsed — plus
+      `report_obligation_carriers` for restatement counts, plus the
+      `# obligation: line N` marker, whose first reader this is. Reading:
+      **16** rules carried by a gate that can refuse, **10** by an observer,
+      **15** declared gaps where the rule's body says `instruction-only` with a
+      reason, **80** with no declaration at all. The second column is labelled
+      `slot_exists` and is explicitly necessary-never-sufficient: 91 ungated
+      rules sit at a frequency a host event fires at, which bounds what binding
+      a carrier could reach and does not claim any of them is decidable from
+      what that event sees. Two things the report says out loud: a declared gap
+      is the discipline working, not a backlog item, and the marker itself has
+      no producer and no other reader, so a line number in it is a claim rather
+      than a measurement.
+- [x] **1.6 Per-spawn cost.** The host loads the instruction hierarchy into
       every non-built-in subagent. Record the per-spawn standing characters next
       to the session reading, before and after the installed-layer flip.
       verify: `grep -c 'per-spawn' agents/evidence/analysis/per-spawn-standing-*.md` -> /^[1-9]/
+      done 2026-10-02: `agents/evidence/analysis/per-spawn-standing-2026-10.md`.
+      The per-spawn figure is not a second measurement — it is the SAME standing
+      payload charged again, because there is no smaller bundle for a subagent.
+      What had to be measured is the multiplier. Four figures, two of them
+      machine-local and marked as such: the projected corpus upper bound
+      485,282 characters / 121,321 chars-4 tokens; the installed layer on this
+      machine 375,874 across 105 files; and the number that actually recurs,
+      **351,894 characters over the 102 installed rules carrying no `paths:`**,
+      i.e. loading unconditionally. Multiplier, from the transcript store: 647
+      distinct subagent spawns across 741 transcript files in 12 project
+      directories — so spawning roughly **doubles** the standing-instruction
+      bill (≈228 M characters against ≈261 M), invisibly, since no spawn is
+      shown the bundle it was charged for. The **after-flip row is empty and
+      stays empty**: the installed-layer flip has not happened, its roadmap may
+      not start before the carrier roadmap's Phase 1 merges, and that phase is
+      open. The report carries the commands to fill it at the flip commit.
 
 ## What this roadmap deliberately does not do
 
@@ -212,5 +262,5 @@ Reproduced on 2026-10-01:
       `paths:` on Claude.
 - [ ] AC-2 — A link check over an installed rule directory reports zero
       unresolved links.
-- [ ] AC-3 — The single-token, obligation-mechanism and per-spawn readings are
+- [x] AC-3 — The single-token, obligation-mechanism and per-spawn readings are
       committed as reports.
