@@ -40,7 +40,10 @@ the point of not leaving the door ajar in the goal.
       because it is in the same report, not because it reds the gate. Establish
       whether this package imports them directly or inherits them transitively
       — the answer decides whether a bump is ours to make or an upstream wait.
-      verify: `npm ls fastify hono` names the dependency path for each.
+      verify: `npm ls fastify hono` -> /fastify@5\.12\.5/
+      The clause wanted the dependency path for each. Exit status cannot
+      carry that — `npm ls` exits 0 on a tree nobody read — so the oracle
+      is the resolved fastify line it must print.
 
       **Finding.** `npm ls fastify hono` on this branch:
 
@@ -131,7 +134,7 @@ the point of not leaving the door ajar in the goal.
       narrowest change that clears `--audit-level=high`; a major bump of
       either package is a separate decision and is not taken under this
       step.
-      verify: `npm audit --omit=dev --audit-level=high` exits 0.
+      verify: `npm audit --omit=dev --audit-level=high` -> 0
 
       **This branch applies no lockfile change, because the smallest bump
       that clears the audit was already in the tree when the step ran.**
