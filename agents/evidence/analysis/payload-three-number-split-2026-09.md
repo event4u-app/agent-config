@@ -10,6 +10,19 @@ Measured 2026-09-12 on branch `drain/delivery-flip`. Every figure below was take
 this tree by the command named beside it; none is inherited from an earlier record,
 and one figure the roadmap offered for reuse is refuted below.
 
+> **Scope, added 2026-10-02 (step 0.5 of
+> `road-to-a-rule-carrier-that-works-outside-the-repo`): every number below was
+> measured on a PROJECT-SCOPE tree.** Row 1 reads the source corpus in this
+> repository and row 2 the projector's output for a `claude-code` consumer as
+> the projector writes it HERE. A consumer install writes the global layer only
+> (ADR-020), and the installer does not read `lean_projection` at all
+> (`grep -c lean_projection src/scripts/install.ts` -> 0), so row 2 is what the
+> PROJECTOR would produce and not what an install produces. The round that
+> reproduced the host's notice measured 102 unconditional files and 338,225
+> characters in a real install into an empty `HOME` — about fourteen times row
+> 2. Neither number is wrong; they measure different trees, and this file
+> previously said which tree only by implication.
+
 ## The three numbers
 
 | # | Label | Unit | Denominator | Value at this HEAD | Gated? |

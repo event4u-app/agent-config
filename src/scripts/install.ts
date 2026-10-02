@@ -114,7 +114,7 @@ import {
 } from '../install/rule_scope.js';
 import { isExclusivelyPackageOnly, stampHostLayerFingerprint } from '../install/partitionEligibility.js'; // ADR-236
 import * as claude_rule_rewrite from '../install/claudeRuleRewrite.js';
-import { RULE_SOURCE_REL } from '../install/wizard-plan.js';
+import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
 import { settingsSchema } from '../server/schemas/settings.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
@@ -1751,48 +1751,20 @@ export const PROJECT_BRIDGE_MARKERS: Record<string, string> = {
     kiro: '.kiro/steering/agent-config.md',
 };
 
-const _CLAUDE_SKILL_BUNDLE: ReadonlyArray<readonly [string, string]> = [
-    ['dist/agent-src/rules', 'rules'],
-    ['dist/agent-src/skills', 'skills'],
-    ['dist/agent-src/commands', 'commands'],
-    ['dist/agent-src/personas', 'personas'],
-];
-
-export const GLOBAL_DEPLOY_SOURCES: Record<string, ReadonlyArray<readonly [string, string]>> = {
-    'claude-code': _CLAUDE_SKILL_BUNDLE,
-    augment: [
-        ['dist/agent-src/rules', 'rules'],
-        ['dist/agent-src/skills', 'skills'],
-        ['dist/agent-src/commands', 'commands'],
-        ['dist/agent-src/contexts', 'contexts'],
-        ['dist/agent-src/personas', 'personas'],
-        ['dist/agent-src/templates', 'templates'],
-    ],
-    cursor: [
-        ['dist/agent-src/rules', 'rules'],
-        ['dist/agent-src/commands', 'commands'],
-        ['dist/agent-src/personas', 'personas'],
-    ],
-    windsurf: [['dist/agent-src/rules', 'rules']],
-    cline: [['dist/agent-src/rules', '']],
-    'gemini-cli': _CLAUDE_SKILL_BUNDLE,
-    codex: _CLAUDE_SKILL_BUNDLE,
-    continue: _CLAUDE_SKILL_BUNDLE,
-    roocode: _CLAUDE_SKILL_BUNDLE,
-    kilocode: _CLAUDE_SKILL_BUNDLE,
-    qoder: _CLAUDE_SKILL_BUNDLE,
-    opencode: _CLAUDE_SKILL_BUNDLE,
-    trae: _CLAUDE_SKILL_BUNDLE,
-    antigravity: _CLAUDE_SKILL_BUNDLE,
-    codebuddy: _CLAUDE_SKILL_BUNDLE,
-    droid: _CLAUDE_SKILL_BUNDLE,
-    warp: _CLAUDE_SKILL_BUNDLE,
-    kiro: [
-        ['dist/agent-src/rules', 'rules'],
-        ['dist/agent-src/skills', 'steering'],
-        ['dist/agent-src/personas', 'personas'],
-    ],
-};
+/**
+ * Re-exported from `wizard-plan.ts`, which is now the ONLY definition.
+ *
+ * It was defined here too, and the two copies were byte-identical in every
+ * one of their 18 host rows — a duplicate of the same truth, and the kind
+ * that stays correct right up until somebody edits one of them. Step 1.2 of
+ * `road-to-rule-triggers-and-links-that-hold` did exactly that: it added two
+ * directories here and the wizard kept installing without them.
+ *
+ * Re-exported rather than moved-and-left-broken so every caller of
+ * `install.ts::GLOBAL_DEPLOY_SOURCES` keeps working unchanged. Imported as
+ * well as re-exported because this file's own call sites read the binding.
+ */
+export { GLOBAL_DEPLOY_SOURCES };
 
 const _CLAUDE_DESKTOP_MARKER_TEMPLATE_HEAD = `# agent-config — Claude Desktop marker
 
