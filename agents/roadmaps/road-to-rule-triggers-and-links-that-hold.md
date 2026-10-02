@@ -95,34 +95,43 @@ Reproduced on 2026-10-01:
       `road-to-a-rule-carrier-that-works-outside-the-repo` step 0.1. Record the
       choice and the two numbers in Decisions.
       verify: `npx vitest run tests/scripts/install_rule_links.test.ts` -> 0
-      done 2026-10-02: step 0.1's report does not exist yet — that roadmap's
-      Phase 0 is open — so D2's `revisit-if` fired and the measurement was taken
-      directly from the deploy plan and the rule bodies, which is the same unit.
+      done 2026-10-02 — **measured and decided; the execution is held for the
+      owner, and that split is the honest outcome rather than a shortfall.**
+      Step 0.1's report does not exist yet (that roadmap's Phase 0 is open), so
+      D2's `revisit-if` fired and the measurement was taken directly from the
+      deploy plan and the rule bodies, which is the same unit.
       New `src/install/installedRuleLinks.ts` audits every link in every rule a
       host installs and returns a verdict per link (`resolved`,
       `directory-not-deployed`, `file-missing`, `outside-install-root`);
       `src/scripts/report_installed_rule_links` prints it per host and prices
-      the rewrite option. It reproduces Context's 160 exactly, and splits it:
+      the rewrite option. It reproduces Context's 160 exactly and splits it:
       113 into `contexts/` and `guidelines/`, 45 unreachable by any deploy
-      entry, 2 one-off. **Deploy won, 0 standing characters against 7,285** —
-      recorded as D4, with the remainder as D5. `contexts/` + `guidelines/`
-      added to the Claude bundle (13 hosts), augment, cursor, windsurf and
-      kiro; claude-code goes 160 → **47** unresolved, augment 97 → 46.
-      28 tests, the two load-bearing ones seen red first and re-proven by
-      removing the `guidelines` entry and watching both fail (98 > 47, and the
-      undeployed-directory assertion), then restoring it.
-      **A second defect, found while fixing the first and fixed with it.**
-      `GLOBAL_DEPLOY_SOURCES` was defined TWICE — once in `src/scripts/install.ts`
-      for the CLI, once in `src/install/wizard-plan.ts` for the wizard — and the
-      two were byte-identical across all 18 host rows, verified by diffing the
-      live objects. The first version of this step edited only the install.ts
-      copy, so the wizard would have kept installing without the two
-      directories: same install, two answers, depending which path a user took.
-      `wizard-plan.ts` is now the only definition and carries them once behind a
-      named `RULE_LINK_TARGETS` constant; `install.ts` imports and re-exports
-      it, so no caller changed. That is the shared path repaired rather than the
-      reported call site patched, and it takes `install.ts` 5,231 → 5,175 lines,
-      which let `check_source_size_budget`'s baseline go 17,620 → 17,592.
+      entry, 2 one-off. **Deploy is the cheaper repair — 0 standing characters
+      against 5,198** for rewriting those same 113 links at a 48-character
+      install prefix. Recorded as D4, the remainder as D5.
+      **It is not executed here.** The deploy table is part of the frozen
+      install ABI, and `tests/install/install_layout_contract.test.ts` caught
+      the first attempt: any change owes an `install_layout_version` bump plus
+      a deprecation window — old and new shape side by side for a minor cycle,
+      with in-place migration. That is a release commitment, so it is held as
+      the `rule-link-targets-change-the-frozen-install-abi` blocker and the
+      plan is back at its original 18 rows. 34 tests; the per-host ratchet
+      carries the pre-repair numbers so the blocker's subject stays visible.
+      **Two defects in this step's own first attempt, both found by review and
+      fixed here.** (a) `auditLink` looked the first path segment up as a
+      directory, so for a host that installs rules at the install ROOT
+      (`cline`, dest `''`) a sibling link resolved to a bare filename and read
+      as `directory-not-deployed` — 277 of cline's 550, every one of them fine.
+      cline's reading goes 550 → **273** unresolved, and the old 550 was the
+      maximum possible value, where no ratchet could ever have fired. (b)
+      `GLOBAL_DEPLOY_SOURCES` was defined TWICE — `src/scripts/install.ts` for
+      the CLI, `src/install/wizard-plan.ts` for the wizard — byte-identical
+      across all 18 host rows, and the first attempt edited only one of them,
+      so a wizard install would have diverged from a CLI install. `wizard-plan.ts`
+      is now the only definition; `install.ts` imports and re-exports it, so no
+      caller changed. That dedup is kept: it takes `install.ts` 5,231 → 5,175
+      lines and let `check_source_size_budget` go 17,620 → 17,592, and it is
+      what makes the held ABI change a one-place edit when the owner takes it.
 - [x] **1.3 Single-word triggers, reported.** A report over the routing matrix:
       tier rules with a one-token keyword that fires on more than 5 % of the
       corpus's prompts labelled against another rule. `rename` and `delete`
@@ -141,7 +150,8 @@ Reproduced on 2026-10-01:
       Measured there, the step's prediction lands — `rename` is the single
       highest row in the corpus at 7 foreign near-misses, every "Rename" in the
       matrix sitting in a `near_misses` block. 79 of 341 one-token keywords hit
-      at least one; 249 hit nothing at all. And a clean negative worth the same
+      at least one; of the other 262, 37 do hit a foreign positive below the
+      threshold and 225 hit nothing at all. And a clean negative worth the same
       space: **zero** keywords fire on a near-miss their own rule's fixture
       declares. The threshold stays 5 % and stays a stated default; the report
       filters on either axis so the rows that exist are not hidden by it.
@@ -215,15 +225,68 @@ Reproduced on 2026-10-01:
 
 ## Blockers
 
+### blocker: rule-link-targets-change-the-frozen-install-abi
+
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3
+- **Ownership:** product-owned
+- **Blocks:** the execution half of 1.2, and AC-2 through it. The measurement,
+  the instrument and the decision are delivered; 113 of the 160 unresolved
+  links are one two-line edit away from resolving, and that edit is the thing
+  held here.
+- **What to do:** `GLOBAL_DEPLOY_SOURCES` in `src/install/wizard-plan.ts` is
+  part of the frozen install ABI (`docs/contracts/install-layout.md`), and
+  `tests/install/install_layout_contract.test.ts` fails on any change to it
+  that is not paired with a version bump. The repair is adding
+  `['dist/agent-src/contexts', 'contexts']` and
+  `['dist/agent-src/guidelines', 'guidelines']` to `CLAUDE_SKILL_BUNDLE` and to
+  the `augment` (guidelines only), `cursor`, `windsurf` and `kiro` rows —
+  **not** `cline`, whose rules install at the root. Since the dedup landed,
+  that is one table in one file.
+  What it owes, per `BREAKING_CHANGES.md` § Install-ABI deprecation window:
+  1. bump `INSTALL_LAYOUT_VERSION` in `src/scripts/_lib/install_layout.ts`;
+  2. add `tests/fixtures/install_layout_v<N>.json` from the new descriptor;
+  3. ship old + new shape side by side for one minor cycle, with the
+     installer migrating an older tree in place;
+  4. drop the old shape only after that cycle, with a `### Breaking` entry.
+  Steps 3 and 4 are the release commitment — they decide what a consumer's
+  next two minor upgrades do — which is why this is not an agent call.
+  Before deciding, run `./scripts-run src/scripts/report_installed_rule_links`
+  for the current per-host split; `--prefix-chars N` re-prices the rewrite
+  alternative at a different install root.
+- **Recommendation:** take it, in the next minor that already carries an
+  install-layout change, so the deprecation window is paid once rather than
+  twice. The change is purely additive — no consumer loses a directory, and an
+  install that predates it simply gains two on the next run — so the migration
+  step is a copy rather than a rewrite. If no such minor is near, the honest
+  alternative is to leave it: 160 dead links in installed rules is a real cost
+  but a static one, and D4's own `revisit-if` would reopen the comparison
+  anyway if the host ever starts counting non-`rules/` files.
+- **If you do nothing:** a consumer following a link in an installed rule
+  lands on nothing 160 times per Claude install (97 on augment, 260 on cursor,
+  273 on windsurf and kiro), silently — a dead link reads as a missing file
+  rather than as a shipping decision. The number does not grow: the per-host
+  ratchet in `tests/scripts/install_rule_links.test.ts` holds it, so the cost
+  is standing rather than compounding, and every other step on this roadmap is
+  closed without it.
+- **Resolved when:** `GLOBAL_DEPLOY_SOURCES` carries the two directories,
+  `npx vitest run tests/install/install_layout_contract.test.ts` is green
+  against a golden for the bumped version, and the per-host baseline in
+  `tests/scripts/install_rule_links.test.ts` has been lowered to the
+  post-deploy reading (claude-code 47, augment 46, cursor 147, windsurf 160,
+  kiro 160).
+
 ### blocker: forty-seven-links-name-files-the-package-does-not-ship
 
 - **Status:** open
 - **Owner:** maintainer
 - **Class:** 2
-- **Blocks:** AC-2 only. Step 1.2 is closed, and every other step and
-  criterion on this roadmap is closed.
-- **What to do:** the remaining 47 are not a smaller version of what 1.2
-  fixed, and a deploy entry cannot reach any of them — read D5 before
+- **Blocks:** AC-2, together with the ABI blocker above. That one holds 113 of
+  claude-code's 160 unresolved links; these are the other 47. Both must close
+  before AC-2 does. Every step on this roadmap is closed.
+- **What to do:** these 47 are not a smaller version of what the ABI blocker
+  holds, and a deploy entry cannot reach any of them — read D5 before
   reaching for one. Three groups, each with a different answer:
   1. **22 into `docs/`.** `dist/agent-src/` carries no `docs/` directory, and
      several rules say so in their own text. Either the projection starts
@@ -252,13 +315,16 @@ Reproduced on 2026-10-01:
   reward. Leave group 1 alone until someone decides whether `docs/contracts/`
   is projected at all, because entering it from the link side would prejudge
   that. Group 3 is two lines and can ride with group 2.
-- **If you do nothing:** a consumer following a link in an installed rule
-  lands on nothing 47 times, silently — a dead link reads as a missing file
-  rather than as a shipping decision, and the reader cannot tell which. The
-  number does not grow: the per-host ratchet holds it, so the cost is standing
-  rather than compounding, and nothing else on this roadmap waits on it.
+- **If you do nothing:** 47 of a Claude install's 160 dead rule links stay
+  dead even after the ABI blocker above is taken — a dead link reads as a
+  missing file rather than as a shipping decision, and the reader cannot tell
+  which. The number does not grow: the per-host ratchet holds it, so the cost
+  is standing rather than compounding, and nothing else on this roadmap waits
+  on it.
 - **Resolved when:** `./scripts-run src/scripts/report_installed_rule_links`
-  reports 0 unresolved for `claude-code`, and the ratchet baseline in
+  reports no `docs`-directory row and no `outside-install-root` row for
+  `claude-code` — i.e. the 47 are gone independently of whether the ABI
+  blocker has closed the other 113 — and the ratchet baseline in
   `tests/scripts/install_rule_links.test.ts` has been lowered to match.
 
 ## Decisions
@@ -268,7 +334,7 @@ Reproduced on 2026-10-01:
 | D1 | deterministic | evidence | The predicate is "not path-shaped", not a list of non-path kinds | A list missed `command` once; a negation cannot miss a kind added later | A trigger kind arrives that is neither path-shaped nor promptable |
 | D2 | reversible-technical | agent | 1.2's two options are decided by measured standing cost, not by preference | Both resolve every link; the difference is characters on the shared host budget | The installed-layer report is not available when 1.2 runs |
 | D3 | reversible-technical | agent | 1.3's 5 % threshold is a stated default for a report, not a gate | Nothing acts on the figure automatically | The report's top rows are not the known common words |
-| D4 | reversible-technical | agent | 1.2 resolves by **deploying** the directories, not by rewriting the links to absolute package paths | Measured by `report_installed_rule_links` at the same commit, both repairing the same 113 links: deploy adds **0** characters of standing text and 184 files / 1.6 MB of link targets; rewrite adds **7,285** characters, every one of them inside a rule body, which is the text the host loads as instructions. Files under `contexts/` and `guidelines/` are not instruction files. The installed-layer report D2 names was not available — `road-to-a-rule-carrier-that-works-outside-the-repo` step 0.1 is still open — so the figure was taken from the deploy plan and the rule bodies directly, which is the same unit | The host begins counting non-`rules/` files in an install toward its instruction budget, which would make the two options trade on one axis instead of two |
+| D4 | reversible-technical | agent | 1.2's two options are decided: **deploy**, not rewrite. The decision is agent-owned; **executing it is not**, because the deploy table is frozen install ABI | Measured by `report_installed_rule_links` at the same commit, both repairing the same 113 links: deploy adds **0** characters of standing text and 184 files / 1.6 MB of link targets; rewrite adds **5,198** characters at a 48-character install prefix, every one of them inside a rule body, which is the text the host loads as instructions. (The 7,285 first recorded here was the cost over all 160 unresolved links, including 45 a rewrite cannot reach either — not like-for-like, and it overstated the losing option by ~40 %. Direction unchanged: 0 < 5,198.) Files under `contexts/` and `guidelines/` are not instruction files. The installed-layer report D2 names was not available — `road-to-a-rule-carrier-that-works-outside-the-repo` step 0.1 is still open — so the figure was taken from the deploy plan and the rule bodies directly, which is the same unit | The host begins counting non-`rules/` files in an install toward its instruction budget, which would make the two options trade on one axis instead of two |
 | D5 | reversible-technical | agent | The 47 links left unresolved on Claude are a named remainder, not a smaller version of the same defect | 22 point into `docs/`, which the projection does not produce at all; 23 climb out of the install root into the repository (`../../tests/`, `../../src/`, `agents/settings/policies/`); 2 are one-off targets, one of them also unprojected. None is reachable by a deploy entry — closing them is an authoring change in rule prose, which this roadmap's "deliberately does not do" section keeps out of scope | A future projection ships `docs/`, or the rule bodies are re-authored to carry code spans where the target is not shipped |
 
 ## Risk Register

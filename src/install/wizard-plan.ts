@@ -64,33 +64,27 @@ export const USER_SCOPE_PATHS: Readonly<Record<string, string>> = {
 /**
  * Universal Anthropic-shaped skill bundle deployed to markdown-skills
  * tools. Mirrors `_CLAUDE_SKILL_BUNDLE` in the retired Python installer (ADR-200).
- */
-/**
- * Directories the RULE BODIES link into, deployed for that reason alone.
+ *
+ * NOT deploying `contexts/` and `guidelines/` here is a held decision, not an
+ * oversight — see the `rule-link-targets-change-the-frozen-install-abi` blocker
+ * on `road-to-rule-triggers-and-links-that-hold`.
  *
  * A rule is authored against the package tree and projected verbatim, so
- * `](../guidelines/x.md)` resolves in `dist/agent-src/rules/` and then does or
- * does not resolve in the install, depending on this file — which no rule
- * author ever sees. Measured by `report_installed_rule_links` before these two
- * entries existed: 160 of 550 links in an installed Claude rule directory
- * pointed nowhere, 113 of them into exactly these two directories.
+ * `](../guidelines/x.md)` resolves in `dist/agent-src/rules/` and then does
+ * not resolve in the install, because this table does not carry those two
+ * directories. Measured by `report_installed_rule_links`: 160 of 550 links in
+ * an installed Claude rule directory point nowhere, 113 of them into exactly
+ * those two. Adding them is the cheaper of the two repairs on the budget that
+ * is scarce — 0 standing characters against **5,198** for rewriting those same
+ * 113 links to absolute package paths, at a 48-character install prefix (the
+ * report prints the prefix it used; the figure scales with it).
  *
- * The alternative was to rewrite those links to absolute package paths. Same
- * repair, priced differently: +7,285 characters of standing text INSIDE rule
- * bodies, which is what the host loads as instructions, against 0 for
- * deploying — files under `contexts/` and `guidelines/` are not instruction
- * files, they are link targets a reader follows. The cheaper option on the
- * budget that is actually scarce wins.
- *
- * `cline` deliberately does not get them: it installs rules at the install
- * ROOT, so every `../x` link climbs out of the tree by construction and no
- * entry here could change that.
+ * It is held because this table is part of the FROZEN install ABI
+ * (`docs/contracts/install-layout.md`), and any change to it owes an
+ * `install_layout_version` bump plus a deprecation window: old and new shape
+ * side by side for a minor cycle, with in-place migration. That is a release
+ * commitment, not an implementation detail, so it is the owner's to make.
  */
-const RULE_LINK_TARGETS: ReadonlyArray<readonly [string, string]> = [
-    ['dist/agent-src/contexts',   'contexts'],
-    ['dist/agent-src/guidelines', 'guidelines'],
-];
-
 const CLAUDE_SKILL_BUNDLE: ReadonlyArray<readonly [string, string]> = [
     ['dist/agent-src/rules',    'rules'],
     ['dist/agent-src/skills',   'skills'],
@@ -103,7 +97,6 @@ const CLAUDE_SKILL_BUNDLE: ReadonlyArray<readonly [string, string]> = [
     // and scripts/install.py:_CLAUDE_SKILL_BUNDLE for the Python mirror.
     ['dist/agent-src/commands', 'commands'],
     ['dist/agent-src/personas', 'personas'],
-    ...RULE_LINK_TARGETS,
 ];
 
 /**
@@ -131,23 +124,20 @@ export const RULE_SOURCE_REL = 'dist/agent-src/rules';
 export const GLOBAL_DEPLOY_SOURCES: Readonly<Record<string, ReadonlyArray<readonly [string, string]>>> = {
     'claude-code': CLAUDE_SKILL_BUNDLE,
     augment: [
-        ['dist/agent-src/rules',      'rules'],
-        ['dist/agent-src/skills',     'skills'],
-        ['dist/agent-src/commands',   'commands'],
-        ['dist/agent-src/contexts',   'contexts'],
-        ['dist/agent-src/personas',   'personas'],
-        ['dist/agent-src/templates',  'templates'],
-        ['dist/agent-src/guidelines', 'guidelines'],
+        ['dist/agent-src/rules',     'rules'],
+        ['dist/agent-src/skills',    'skills'],
+        ['dist/agent-src/commands',  'commands'],
+        ['dist/agent-src/contexts',  'contexts'],
+        ['dist/agent-src/personas',  'personas'],
+        ['dist/agent-src/templates', 'templates'],
     ],
     cursor: [
         ['dist/agent-src/rules',    'rules'],
         ['dist/agent-src/commands', 'commands'],
         ['dist/agent-src/personas', 'personas'],
-        ...RULE_LINK_TARGETS,
     ],
     windsurf: [
         ['dist/agent-src/rules', 'rules'],
-        ...RULE_LINK_TARGETS,
     ],
     cline: [
         ['dist/agent-src/rules', ''],
@@ -168,7 +158,6 @@ export const GLOBAL_DEPLOY_SOURCES: Readonly<Record<string, ReadonlyArray<readon
         ['dist/agent-src/rules',    'rules'],
         ['dist/agent-src/skills',   'steering'],
         ['dist/agent-src/personas', 'personas'],
-        ...RULE_LINK_TARGETS,
     ],
 };
 
