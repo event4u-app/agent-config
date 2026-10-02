@@ -7,9 +7,14 @@
 // reads as "this package has no standing cost", the most misleading output this
 // code could produce. So every refusal path is pinned here, and the pass path is
 // the smallest part of the file.
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
+    CONTRACT_REL,
+    REPO_ROOT,
     censusPin,
     disagreements,
     parseCensus,
@@ -175,5 +180,17 @@ describe('the live generator against the real tree', () => {
         // here rather than left to a human noticing.
         const mod = await import('../../src/scripts/generate_host_cost_table.js');
         expect(mod.main(['--check'])).toBe(0);
+    });
+});
+
+describe('the README pointer this generator describes', () => {
+    // CONTRACT_REL's docstring says the README points at this contract. That
+    // sentence used to carry a line number, which a 2026-10-01 README edit moved
+    // from 288 to 294 — a pin that rots on any edit above it and that nothing
+    // checked. The claim worth keeping is the LINK, not the line, so the line
+    // number is gone from the comment and the link is asserted here instead.
+    it('is a link the README actually carries', () => {
+        const readme = fs.readFileSync(path.join(REPO_ROOT, 'README.md'), 'utf-8');
+        expect(readme).toContain(`(${CONTRACT_REL.split(path.sep).join('/')})`);
     });
 });

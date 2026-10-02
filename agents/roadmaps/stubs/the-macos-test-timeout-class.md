@@ -13,8 +13,9 @@ probe: none
 
 ## The observation
 
-Four different test files crossed vitest's global `testTimeout: 10_000` on
-macOS CI across three consecutive runs of one branch, in two different shards.
+Seven recorded instances, over five distinct test files, have crossed vitest's
+global `testTimeout: 10_000` on macOS CI — across three consecutive runs of one
+branch and two later lanes, in two different shards.
 Each failed with `Error: Test timed out in 10000ms`; each passes locally in
 2.5-3.5 s.
 
@@ -27,6 +28,13 @@ Each failed with `Error: Test timed out in 10000ms`; each passes locally in
 
 A fifth instance hit an unrelated lane the same day (`lint_agent_security` at
 10205 ms, PR #2135) and was resolved by re-running the job.
+
+A sixth and a seventh landed on PR #2148 (2026-10-01), on a diff that touches
+neither gate: `lint_agent_security.test.ts` at 10005 ms on shard 4/4, and then,
+on the re-run of that same job, `release.test.ts:889` at 12781 ms on the same
+shard. These two are why the class is recorded as a *population* rather than a
+file list: the re-run did not reproduce the first file, it produced a different
+one. A per-file timeout would have moved the failure, not removed it.
 
 Every affected test either spawns a subprocess or runs a tree-scanning gate in
 process. The population is **not enumerable in advance** — it is "every test

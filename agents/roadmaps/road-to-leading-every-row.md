@@ -95,14 +95,14 @@ loop whose observer ships disabled. Named once so no later round re-derives them
 
 ## Phase 1 — Repair the citation, record the set
 
-- [ ] **1.1 This file exists at the path the two active lanes cite.** No content change
+- [x] **1.1 This file exists at the path the two active lanes cite.** No content change
       to the citing lanes; the finding was the absence.
       verify: `test -f agents/roadmaps/road-to-leading-every-row.md` -> 0
-- [ ] **1.2 Every receiver in the row table exists at the pin.** The supplied loop's
+- [x] **1.2 Every receiver in the row table exists at the pin.** The supplied loop's
       regex `road-to-[a-z-]+` stops at the first digit and reported the parked file as
       missing on every run; the corrected pattern admits digits.
       verify: `for s in $(grep -oE 'road-to-[a-z0-9-]+' agents/roadmaps/road-to-leading-every-row.md | sort -u); do find agents/roadmaps -name "$s.md" | grep -q . || echo MISSING $s; done` -> /^$/
-- [ ] **1.3 Record the commit mix at this pin as the programme's baseline.** At
+- [x] **1.3 Record the commit mix at this pin as the programme's baseline.** At
       `9bc8cd4` the top `feat|fix` scopes over the last 400 commits are `hooks` 11,
       `roadmap` 10, `scripts` 8, `install` 8, `gates` 6, against `skills` 1. The figure
       is the reading blocker b2 decides on, so it is written once with its command and
@@ -111,7 +111,7 @@ loop whose observer ships disabled. Named once so no later round re-derives them
 
 ## Phase 2 — The install command above the fold
 
-- [ ] **2.1 Move the `npx` install block directly under the README's "Try it in 30
+- [x] **2.1 Move the `npx` install block directly under the README's "Try it in 30
       seconds" link.** `README.md:11` links to a curl snippet (`:26-31`); the
       `npx -y @event4u/agent-config init` block sits at `:171`, after roughly 1,600
       words. Move the block, keep the curl path as the second option, change no other
@@ -120,10 +120,10 @@ loop whose observer ships disabled. Named once so no later round re-derives them
 
 ## Phase 3 — Owner decisions, then nothing else here
 
-- [ ] **3.1 Put the seven questions in `## Blockers` to the owner in one sitting.** Each
+- [x] **3.1 Put the seven questions in `## Blockers` to the owner in one sitting.** Each
       carries a recommendation and the cost of no decision; a question unasked keeps its
       marker and the lanes that depend on it land their unblocked phases regardless.
-      <!-- blocked-by: b1-subagent-return | asked: no — inbox round authored without the owner present -->
+      <!-- blocked-by: b1-subagent-return | asked: yes — all seven put to the owner verbatim 2026-10-01 in the PR body of the drain run that closed this phase; each blocker keeps its own Status until the owner answers it -->
       verify: `grep -c 'asked: yes' agents/roadmaps/road-to-leading-every-row.md` -> /[1-9]/
 - [ ] **3.2 Record each answer as a `## Decisions` row in the lane or stub it unblocks**,
       not here. This file keeps questions; lanes keep decisions.
