@@ -177,7 +177,7 @@ get there.
       the next found the direction it had not.
       `./scripts-run src/scripts/skill_linter --path
       src/skills/test-case-discovery/SKILL.md` → `[PASS] … No issues found`.
-- [~] **1.3 Register the canonical spellings.** Deferred by decision, not by
+- [~] **1.3 Register the canonical spellings.** Deferred by decision, not by <!-- deferred-resolution: carried-to=road-to-behavior-vocabulary-and-runner-truth-carried -->
       omission: the blocker below is **resolved with option (b)** on
       2026-10-01 — the terms stay unregistered for this roadmap and Phase 1
       routes on the vocabulary without pinning its spelling.

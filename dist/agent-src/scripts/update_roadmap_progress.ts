@@ -1351,7 +1351,10 @@ function main(argv?: readonly string[]): number {
     // leaves behind rather than the one it found. `--check` never archives: a
     // gate that mutates the tree it is checking cannot be trusted by CI.
     let sweep_out = '';
-    if (!args.check && args.archive && unarchived_complete(collect(roadmap_root)).length > 0) {
+    // `pending_iron_law_3` too: a 100 % roadmap with bare `[~]` steps is what the
+    // sweep's carry exists for, and gating on `deferred === 0` never spawned it.
+    const before = collect(roadmap_root);
+    if (!args.check && args.archive && unarchived_complete(before).length + pending_iron_law_3(before).length > 0) {
         const swept = run_archival_sweep(repo_root);
         sweep_out = swept.stdout;
         if (swept.stderr) {

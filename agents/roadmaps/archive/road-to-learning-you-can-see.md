@@ -74,7 +74,7 @@ answers what was learned in one screen — promotion and routing untouched.
       and `learning-to-rule-or-skill` paths, because this tree writes no skill on its own
       (ADR-109 `:35-41`).
       verify: `agent-config memory:learn --format status | tail -1` -> /learning-to-rule-or-skill/
-- [~] **2.3 Propose the default flip.** Deferred until the window has 30 days and both
+- [~] **2.3 Propose the default flip.** Deferred until the window has 30 days and both <!-- deferred-resolution: carried-to=road-to-learning-you-can-see-carried -->
       thresholds hold; the proposal is an owner amendment to the council decision at `:1376`.
 
 ## Acceptance criteria
