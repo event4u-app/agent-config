@@ -1,0 +1,3 @@
+#!/usr/bin/env php
+<?php
+// Resolver fixture marker — a real Laravel repository has this file at its root.

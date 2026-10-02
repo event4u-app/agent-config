@@ -1,0 +1,15 @@
+# Resolver fixture — never installed, never built.
+# Shape: a plain pyproject repository that declares pytest, ruff and mypy.
+
+[project]
+name = "resolver-fixture-python"
+version = "0.0.0"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+
+[tool.mypy]
+strict = true
