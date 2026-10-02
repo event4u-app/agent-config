@@ -77,6 +77,17 @@ Reproduced on 2026-10-01:
       `design-review-after-ui-write`, `source-of-truth` and `ui-audit-gate`,
       and `mixed ∩ scoped` is empty — no rule with a non-path trigger carries
       an exclusive `paths:`.
+      **The cost is paid and recorded, not hidden.** `check_rule_activation_census`
+      is a ratchet over exactly this split and went red, which is the gate
+      working: scoped 4 → 3, mixed 17 → 18, and the unconditional corpus
+      113,699 → **116,633** exact-BPE tokens, +2,934 — `roadmap-progress-sync`
+      now loading unconditionally instead of on a path match. That is risk
+      register row 1 happening as written, and the trade this roadmap chose:
+      2,934 tokens against a rule that fired on a file touch and never on the
+      command that is its actual subject. Re-anchored in the same change with
+      the reason in `baseline_history`, and a `revisit-if` naming the thinning
+      work as the point where the total should fall below this anchor rather
+      than be raised again.
 - [x] **1.2 Links that resolve where the file lands.** When the installer writes a rule file, rewrite
       the 160 links of Context to absolute package paths, or have the installer also write the
       directories they point into — whichever adds less standing text, measured
