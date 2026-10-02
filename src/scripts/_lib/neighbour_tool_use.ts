@@ -24,6 +24,14 @@
  * install that never enabled one — a number that looks like a measurement and is
  * an instrumentation artifact, which is the exact failure the usage hook's own
  * header records from the collector it replaced.
+ *
+ * GROWTH, DECLARED (scale-discipline R-A7). The store is a map keyed by tool
+ * NAME, not an append log: one entry per distinct `mcp__…` name the consumer
+ * has ever called, each rewritten in place at most once per day. The bound is
+ * therefore the size of the neighbour's tool surface — tens of entries, not a
+ * series — so it needs no TTL job. The reader applies the window; entries older
+ * than it stay on disk and stop counting, which is why a stale entry is inert
+ * rather than wrong.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -46,24 +54,28 @@ export const FOREIGN_TOOL_USE_REL = 'agents/runtime/neighbour-tool-use.json';
 /** The census window. 30 days, matching the step that asked for the number. */
 export const TOOL_USE_WINDOW_DAYS = 30;
 
+/** The filename the writer's root is the directory of. */
+const SETTINGS_FILENAME = '.agent-settings.yml';
+
 /** `YYYY-MM-DD` in UTC — the granularity the store keys on. */
 export function usageDay(now: Date): string {
     return now.toISOString().slice(0, 10);
 }
 
+const DAY_RE = /^\d{4}-\d{2}-\d{2}$/u;
+
 /**
- * The server segment of an MCP tool name, or `null` when the name is not one.
+ * Is this store value a day the window comparison can be trusted on?
  *
- * `mcp__<server>__<tool>`; a name with no second `__` yields the whole
- * remainder, because a host that stops appending a tool segment should still be
- * attributed to its server rather than dropped.
+ * The comparison is lexicographic, which is exactly right for `YYYY-MM-DD` and
+ * quietly wrong for anything else: `'TODO'`, `'unknown'` and `'hand edited'`
+ * all sort ABOVE a real cutoff, so without this check a hand-edited or
+ * half-written store inflates the count instead of being ignored. The reader's
+ * promise is that a malformed store yields nothing, and a malformed VALUE is
+ * the likelier half of that.
  */
-export function serverOf(tool: string): string | null {
-    if (!tool.startsWith(MCP_TOOL_PREFIX)) return null;
-    const rest = tool.slice(MCP_TOOL_PREFIX.length);
-    if (!rest) return null;
-    const sep = rest.indexOf('__');
-    return sep < 0 ? rest : rest.slice(0, sep);
+export function isUsageDay(value: unknown): value is string {
+    return typeof value === 'string' && DAY_RE.test(value);
 }
 
 /**
@@ -80,28 +92,98 @@ export function serverSegment(key: string): string {
 }
 
 /**
+ * Does `tool` belong to the server whose sanitised key is `segment`?
+ *
+ * Driven by the KNOWN segment rather than by parsing the tool name, and that
+ * direction is the whole correctness argument. Parsing — split at the first
+ * `__` after the prefix — is ambiguous exactly where {@link serverSegment} is
+ * lossy: `Acme Inc. Tools` sanitises to `Acme_Inc__Tools`, whose own name
+ * contains the separator, so a parser reads the server as `Acme_Inc` and the
+ * census reports `0` for a server in daily use. That is the same never-matched
+ * zero `serverSegment` exists to prevent, reintroduced one layer down. Matching
+ * against the keys `.mcp.json` actually lists cannot be ambiguous, because the
+ * candidate set is finite and known.
+ */
+export function toolBelongsTo(tool: string, segment: string): boolean {
+    if (!tool.startsWith(MCP_TOOL_PREFIX)) return false;
+    const rest = tool.slice(MCP_TOOL_PREFIX.length);
+    return rest === segment || rest.startsWith(`${segment}__`);
+}
+
+/**
+ * The directory the store lives under, from any directory inside the project.
+ *
+ * The WRITER roots the store at the directory holding `.agent-settings.yml`
+ * (`telemetry_usage_hook.readSettingsFor`), because a session started in a
+ * subdirectory would otherwise scatter one store per directory it happened to
+ * start in. The reader has to resolve the same way or it looks in the wrong
+ * place: a monorepo with settings at the repo root and `.mcp.json` under
+ * `packages/web` would report `0` for a server in daily use. The two walks are
+ * pinned equal by a fixture rather than by assertion.
+ *
+ * No settings file on any ancestor → `start`, matching the writer's own
+ * fallback.
+ */
+export function resolveStoreRoot(start: string): string {
+    let dir = path.resolve(start);
+    for (;;) {
+        try {
+            if (fs.statSync(path.join(dir, SETTINGS_FILENAME)).isFile()) return dir;
+        } catch {
+            // Not here — keep walking.
+        }
+        const parent = path.dirname(dir);
+        if (parent === dir) return path.resolve(start);
+        dir = parent;
+    }
+}
+
+/**
  * Distinct tools seen per server inside the window, keyed by server segment.
  *
- * A missing, unreadable or malformed store yields an empty map — the census
- * then prints `0`, which is true of what was observed. It does not mean the
- * server was unused, and the census says so next to the number.
+ * `segments` is the closed candidate set — the sanitised `.mcp.json` keys. Every
+ * one of them appears in the result, so a server with no sightings reads `0`
+ * rather than being absent. Longest segment wins where one is a prefix of
+ * another, so a tool is counted once.
+ *
+ * A missing, unreadable or malformed store yields all-zero — true of what was
+ * observed. It does not mean the server was unused, and the census says so next
+ * to the number.
  */
-export function toolsUsedByServer(projectRoot: string, now: Date): Map<string, number> {
-    const counts = new Map<string, number>();
+export function toolsUsedByServer(
+    projectRoot: string,
+    now: Date,
+    segments: Iterable<string>,
+): Map<string, number> {
+    const known = [...new Set(segments)].sort((a, b) => b.length - a.length);
+    const counts = new Map<string, number>(known.map((s) => [s, 0]));
+    if (known.length === 0) return counts;
+
     let decoded: unknown;
     try {
-        decoded = JSON.parse(fs.readFileSync(path.join(projectRoot, FOREIGN_TOOL_USE_REL), 'utf-8'));
+        const root = resolveStoreRoot(projectRoot);
+        decoded = JSON.parse(fs.readFileSync(path.join(root, FOREIGN_TOOL_USE_REL), 'utf-8'));
     } catch {
         return counts;
     }
     if (typeof decoded !== 'object' || decoded === null || Array.isArray(decoded)) return counts;
-    const cutoff = new Date(now.getTime() - TOOL_USE_WINDOW_DAYS * 86_400_000);
-    const floor = usageDay(cutoff);
+
+    const today = usageDay(now);
+    // Inclusive of both ends, so the span is WINDOW days and not WINDOW+1: a
+    // floor computed at `now - 30d` would count 31 distinct days under a field
+    // named `tools_used_30d`.
+    const floor = usageDay(new Date(now.getTime() - (TOOL_USE_WINDOW_DAYS - 1) * 86_400_000));
+
     for (const [tool, seen] of Object.entries(decoded as Record<string, unknown>)) {
-        if (typeof seen !== 'string' || seen < floor) continue;
-        const server = serverOf(tool);
-        if (server === null) continue;
-        counts.set(server, (counts.get(server) ?? 0) + 1);
+        // A future date is as much a sign of a bad write as a malformed one,
+        // and without the upper bound a single `9999-01-01` counts forever.
+        if (!isUsageDay(seen) || seen < floor || seen > today) continue;
+        for (const segment of known) {
+            if (toolBelongsTo(tool, segment)) {
+                counts.set(segment, (counts.get(segment) ?? 0) + 1);
+                break;
+            }
+        }
     }
     return counts;
 }

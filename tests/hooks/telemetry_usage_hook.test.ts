@@ -425,18 +425,33 @@ describe('telemetry-usage foreign MCP tool recorder', () => {
         expect(store['mcp__linear-server__create_issue']).toBe(new Date().toISOString().slice(0, 10));
     });
 
-    it('records one entry per distinct tool and rewrites nothing on a repeat the same day', () => {
+    it('records one entry per distinct tool', () => {
         const root = makeRoot(INACTIVE);
 
         run(toolEnvelope('mcp__acme__alpha'), { consumer_root: root });
-        const firstWrite = fs.statSync(storePath(root)).mtimeMs;
         run(toolEnvelope('mcp__acme__alpha'), { consumer_root: root });
         run(toolEnvelope('mcp__acme__beta'), { consumer_root: root });
 
         expect(Object.keys(readStore(root)).sort()).toEqual(['mcp__acme__alpha', 'mcp__acme__beta']);
-        // The repeat is a `skipped`, not a rewrite: the mutator returns null
-        // when the day already matches, so the file is not republished.
-        expect(firstWrite).toBeLessThanOrEqual(fs.statSync(storePath(root)).mtimeMs);
+    });
+
+    it('does not republish the file on a repeat of the same tool on the same day', () => {
+        // Asserted on the file's BYTES across the repeat alone, not on an mtime
+        // ordering. `expect(first).toBeLessThanOrEqual(later)` was the first
+        // shape here and it is a tautology twice over: mtime never decreases,
+        // and the original test did a third, genuinely-writing call before
+        // reading it back. It could not have failed if the skip were deleted.
+        const root = makeRoot(INACTIVE);
+        run(toolEnvelope('mcp__acme__alpha'), { consumer_root: root });
+
+        const before = fs.statSync(storePath(root));
+        run(toolEnvelope('mcp__acme__alpha'), { consumer_root: root });
+        const after = fs.statSync(storePath(root));
+
+        // `update_json_under_lock` republishes via a rename, so a rewrite
+        // changes the inode even when the bytes are identical.
+        expect(after.ino).toBe(before.ino);
+        expect(after.mtimeMs).toBe(before.mtimeMs);
     });
 
     it('NEGATIVE — a Skill call and a plain host tool leave no store behind', () => {

@@ -439,9 +439,14 @@ function foreignMcpServers(projectRoot: string, now: Date): NeighbourMcpEntry[] 
     if (servers === null || servers === undefined || typeof servers !== 'object' || Array.isArray(servers)) {
         return [];
     }
-    const used = toolsUsedByServer(projectRoot, now);
-    return Object.entries(servers as Record<string, unknown>)
-        .filter(([name]) => name !== OUR_MCP_KEY)
+    const foreign = Object.entries(servers as Record<string, unknown>).filter(
+        ([name]) => name !== OUR_MCP_KEY,
+    );
+    // The candidate set is the keys `.mcp.json` lists, passed IN rather than
+    // parsed out of the tool names — see `toolBelongsTo` for why parsing is
+    // ambiguous exactly where the sanitiser is lossy.
+    const used = toolsUsedByServer(projectRoot, now, foreign.map(([name]) => serverSegment(name)));
+    return foreign
         .map(([name, spec]) => ({
             id: `project:${name}`,
             shape: 'mcp_server' as const,

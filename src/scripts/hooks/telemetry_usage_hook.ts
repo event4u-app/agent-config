@@ -22,11 +22,30 @@
  * activates only when `enabled` is true AND the org pack supplied an
  * endpoint, an org id, and a salt. An external clone of this repository
  * carries the key names and no values, so copying the tree cannot reach the
- * write path. When inactive this concern performs zero telemetry file
- * operations — no log write, no directory creation — and zero network calls.
+ * write path. When inactive this concern performs zero TELEMETRY file
+ * operations — no log write, no spool, no directory under the configured
+ * output path — and zero network calls.
  * (It does read `.agent-settings.yml`, once per process and memoised: the
  * settings file is how it learns it is off, the same as the artefact-
  * engagement surface it mirrors.)
+ *
+ * THAT SENTENCE USED TO READ "no directory creation", UNQUALIFIED, AND IS
+ * NARROWED RATHER THAN QUIETLY LEFT STANDING. The foreign-MCP recorder below
+ * writes `agents/runtime/neighbour-tool-use.json` on an install that never
+ * enabled telemetry, and creates that directory and a lock sentinel beside it.
+ * That is deliberate — the store is a local census input, not telemetry, and
+ * gating it on the org switch would print `0` everywhere (roadmap decision D9)
+ * — but it IS a file operation, so the guarantee now says which operations it
+ * covers. An unqualified claim this file's own code contradicts is worse than
+ * the narrower one it is replaced by.
+ *
+ * NOT REACHED YET, AND SAYING SO HERE BECAUSE THIS IS WHERE A READER LOOKS.
+ * The manifest entry for this concern carries `tools: [Skill]`, which the
+ * dispatcher matches exactly, so it is not invoked for an MCP call at all and
+ * the branch below is dead in production. Held as the
+ * `mcp-recorder-unreachable-behind-the-tools-filter` blocker on
+ * road-to-neighbours-that-pull-their-weight: the manifest is a gated
+ * governance surface and the council split on the edit rather than converging.
  *
  * NO OUTBOUND CALL EXISTS HERE, DELIBERATELY. Transport is Phase 2 and is
  * blocked on `sink-choice`; org-wide enablement is Phase 3 and is blocked on
