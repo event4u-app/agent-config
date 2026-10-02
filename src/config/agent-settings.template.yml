@@ -1613,34 +1613,37 @@ hooks:
   ui_route_nudge:
     enabled: false
 
-  # PreToolUse code-graph nudge (ADR-124 Phase 4). Default-OFF. When enabled
-  # AND a native code-graph engine has built a cache (or the repo ships a
-  # graph.json / SCIP index), WARNS once per session (exit 2, never blocks) as
-  # the agent is about to Grep/Glob or Read a source file: query the graph
-  # first for "who calls / where used / impact" questions (or rebuild if the
-  # index is stale, or build one if absent). Source G's strict block-first-read
-  # mode is deliberately un-ported. Build the cache with
-  # `agent-config code-graph build`.
+  # INERT, AND REGISTERED ON PURPOSE (ADR-124 Phase 4 -> ADR-259).
+  #
+  # Nothing reads this key. The PreToolUse nudge it used to gate was replaced
+  # on 2026-09-07 by the `code-graph-context` concern
+  # (src/scripts/hooks/code_graph_context_hook.ts), which reads no flag: it is
+  # silent whenever no graph source exists, so a consumer who never runs
+  # `agent-config code-graph build` never hears from it, and the flag's premise
+  # — "do not advertise a capability the consumer cannot have" — is gone.
+  # Setting this to `true` therefore enables nothing, and setting it to `false`
+  # disables nothing.
+  #
+  # The key STAYS because docs/MIGRATION.md (the code_graph row) commits to
+  # exactly that — "the surfaces stay registered and disabled". Deleting a key a
+  # consumer may already have set is the breaking change the commitment exists
+  # to avoid; docs/contracts/settings-classes.md classifies it accordingly
+  # (classified, not deleted).
   #
   # DEPRECATED (honest null, 2026-07-28): the pre-registered 2-arm retrieval
   # benchmark measured the native graph at recall 0.365 vs grep 0.797 on
   # graph-shaped questions across 3 real repos (internal/bench/reports/
-  # code-graph-vs-grep.md; claim code-graph-retrieval-null). `enabled: false`
-  # is the DEFAULT and is not permanent — the removal commitment this comment
-  # used to carry was withdrawn on 2026-08-15 (docs/MIGRATION.md, the code_graph
-  # row), and "permanent" was retracted with it. What holds is the default and
-  # its reopen condition, which is the same one that was always written here:
-  # external evidence — a consumer case the graph answers and disciplined grep
-  # cannot — or a re-measurement on a build that postdates the extractor repair
+  # code-graph-vs-grep.md; claim code-graph-retrieval-null). That null is about
+  # the ENGINE, not about this key, and it still stands — the reopen condition
+  # is external evidence (a consumer case the graph answers and disciplined grep
+  # cannot) or a re-measurement on a build that postdates the extractor repair
   # of 2026-08-22, which the 2026-07-28 figures predate.
   #
-  # The engine's parser pair is NO LONGER a runtime dependency (~51 MB that
-  # every consumer installed for a path none of them can reach); it is a
-  # devDependency, which npm does not install for consumers. Flipping this to
-  # `true` is therefore not sufficient — install the ABI-locked pair too:
-  #   npm i web-tree-sitter@0.24.7 tree-sitter-wasms@0.1.13
-  # Both versions are exact because the pair is ABI-coupled (grammar ABI 14).
-  # The loader raises this same hint if the pair is missing.
+  # The engine ships to consumers. `web-tree-sitter` is a runtime dependency
+  # (package.json) and the three loadable grammars are vendored at
+  # src/vendor/grammars/, so there is no separate parser install to perform and
+  # no ABI pair to line up by hand. Build the cache with
+  # `agent-config code-graph build`.
   code_graph:
     enabled: false
 

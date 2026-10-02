@@ -589,15 +589,35 @@ describe('update_roadmap_progress — intent', () => {
         expect(fs.existsSync(path.join(roadmaps, 'archive', 'road-to-active.md'))).toBe(false);
     });
 
-    it('--archive: a deferred `[~]` item blocks the archive (Iron Law 3)', () => {
+    // Owner decision 2026-10-02: a 100 % roadmap whose `[~]` steps wait on no
+    // owner blocker is carried to a follow-up and archived by the same run. It
+    // used to stay put, and the gate on `deferred === 0` never even spawned the
+    // sweep, so the dashboard showed 100 % for weeks.
+    it('--archive: a bare `[~]` with no owner blocker is carried and the roadmap archives', () => {
         mkRoadmap(
             'road-to-deferred.md',
             ['# Deferred', '', '## Phase 1 — Wait', '- [x] done', '- [~] later', ''].join('\n'),
         );
         const result = runTs(['--repo-root', root, '--archive'], tmp);
         expect(result.status, 'exit').toBe(0);
+        expect(fs.existsSync(path.join(roadmaps, 'archive', 'road-to-deferred.md')), 'archived').toBe(true);
+        expect(fs.existsSync(path.join(roadmaps, 'road-to-deferred-carried.md')), 'carried').toBe(true);
+    });
+
+    it('--archive: a `[~]` waiting on an OWNER blocker stays put and asks (Iron Law 3)', () => {
+        mkRoadmap(
+            'road-to-deferred.md',
+            [
+                '# Deferred', '', '## Phase 1 — Wait', '- [x] done',
+                '- [~] later <!-- blocked-by: owner-call -->', '',
+                '## Blockers', '', '### blocker: owner-call', '- **Status:** open', '- **Owner:** maintainer',
+                '- **Blocks:** Phase 1', '- **What to do:**', '    1. Decide.', '- **Resolved when:** decided', '',
+            ].join('\n'),
+        );
+        const result = runTs(['--repo-root', root, '--archive'], tmp);
+        expect(result.status, 'exit').toBe(0);
         expect(fs.existsSync(path.join(roadmaps, 'road-to-deferred.md')), 'stays put').toBe(true);
-        expect(result.stderr).toContain('Iron Law 3');
+        expect(result.stdout).toContain('OWNER-DECISION');
     });
 
     it('--archive: a complete roadmap with an OPEN blocker stays put and is still reported', () => {

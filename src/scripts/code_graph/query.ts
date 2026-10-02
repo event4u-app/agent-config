@@ -16,7 +16,7 @@ import {
     loadSerializedFromTwin,
     openGraphIndex,
 } from './sqlite_store.js';
-import type { CodeEdge, CodeGraph, CodeNode } from './types.js';
+import type { CodeEdge, CodeGraph, CodeNode, Relation } from './types.js';
 import { validateGraph } from './validate.js';
 import { adaptForeignGraph, looksForeign } from './foreign.js';
 
@@ -220,6 +220,47 @@ function resolveSeedsTiered(g: LoadedGraph, seed: string, limit = 5): SeedResolu
     const ranked = g.lex().rank(tokenize(seed)).filter((r) => r.score > 0);
     return { ids: ranked.slice(0, limit).map((r) => r.id), weak: true };
 }
+
+/**
+ * The EXACT half of the ladder above — id, then label — with no BM25 tier.
+ *
+ * `graph_node` is a node tool: every field it returns (location, degree, the
+ * edge lists) is a statement about ONE node, so answering about a best-guess
+ * node is worse than refusing. D4 of `road-to-a-graph-that-feeds-the-gate` makes
+ * that explicit for this tool — free-text retrieval is the row the graph lost,
+ * so a node answer never rests on a score.
+ *
+ * Still the same ladder and not a second resolver: this calls
+ * {@link resolveSeedsTiered} and reads its `weak` flag, so a change to the
+ * exact tiers reaches both callers.
+ *
+ * `ambiguous` carries the candidates when a LABEL resolves to several nodes.
+ * Picking the first would be the silent guess this function exists to avoid; the
+ * caller re-asks with one of the ids.
+ */
+export function resolveExactNode(
+    g: LoadedGraph,
+    seed: string,
+): { id: string | null; ambiguous: string[]; more: boolean } {
+    // The ladder's default limit is 5, and inheriting it made the refusal LIE:
+    // a label on twelve nodes refused with "is a label on 5 nodes" and listed
+    // five of them with nothing saying the list was cut. A completion review
+    // reproduced it. Ask for one more than we will show, so truncation is
+    // detectable rather than invisible.
+    const r = resolveSeedsTiered(g, seed, AMBIGUITY_SHOWN + 1);
+    if (r.weak || r.ids.length === 0) return { id: null, ambiguous: [], more: false };
+    if (r.ids.length > 1) {
+        return {
+            id: null,
+            ambiguous: r.ids.slice(0, AMBIGUITY_SHOWN),
+            more: r.ids.length > AMBIGUITY_SHOWN,
+        };
+    }
+    return { id: r.ids[0] as string, ambiguous: [], more: false };
+}
+
+/** How many candidate ids an ambiguity refusal lists before it says "and more". */
+const AMBIGUITY_SHOWN = 25;
 
 /** Resolve a free-text seed to node ids: exact id → exact label → BM25. */
 export function resolveSeeds(g: LoadedGraph, seed: string, limit = 5): string[] {
@@ -438,4 +479,158 @@ export function mergeRecommendedReads(results: readonly QueryResult[]): Recommen
     const merged = new Map<string, RecommendedRead>();
     for (const r of results) for (const rr of r.recommended_reads) merged.set(readKey(rr), rr);
     return [...merged.values()];
+}
+
+// ---------------------------------------------------------------------------
+// `node` — one node, its location, its edges, its degree (3.1)
+// ---------------------------------------------------------------------------
+
+/** One edge as the node view renders it: who, how, which way, how far. */
+export interface NodeEdgeLine {
+    /** The node at the OTHER end — the caller for an in-edge, the callee for an out-edge. */
+    id: string;
+    label: string;
+    relation: Relation;
+    confidence: string;
+    hops: number;
+}
+
+export interface NodeResult {
+    source: string;
+    /** The resolved id, or `''` when nothing resolved and `refusal` is set. */
+    id: string;
+    label: string;
+    kind: string;
+    /** File + 1-based inclusive line range, or `null` for a placeholder node. */
+    location: RecommendedRead | null;
+    /** DIRECT edge counts, always 1-hop — a degree is not a property of a walk. */
+    in_degree: number;
+    out_degree: number;
+    in: NodeEdgeLine[];
+    out: NodeEdgeLine[];
+    truncated: boolean;
+    /** Set when the seed did not resolve exactly; every other field is empty. */
+    refusal?: string;
+}
+
+export interface NodeOptions {
+    direction?: 'in' | 'out' | 'both';
+    /** 1-3. Anything outside the range is clamped rather than refused. */
+    depth?: number;
+    /** Restrict to one relation of the closed vocabulary. */
+    relation?: Relation;
+}
+
+/** Hard cap per direction, so one hub node cannot return an unbounded payload. */
+const NODE_EDGE_CAP = 200;
+
+/**
+ * Walk one direction from `start`, recording each edge once, breadth-first.
+ *
+ * `seen` is keyed on the NODE, so a cycle terminates; the edge list can still
+ * carry two lines into the same node by different relations, which is a real
+ * distinction a caller asked for when it passed no `relation`.
+ */
+function walkDirection(
+    g: LoadedGraph,
+    start: string,
+    dir: 'in' | 'out',
+    depth: number,
+    relation: Relation | undefined,
+): { lines: NodeEdgeLine[]; truncated: boolean } {
+    const lines: NodeEdgeLine[] = [];
+    const seen = new Set<string>([start]);
+    let frontier = [start];
+    let truncated = false;
+    for (let hop = 1; hop <= depth && frontier.length > 0; hop += 1) {
+        const next: string[] = [];
+        for (const cur of frontier) {
+            for (const e of (dir === 'out' ? g.out : g.in).get(cur) ?? []) {
+                if (relation !== undefined && e.relation !== relation) continue;
+                const other = dir === 'out' ? e.target : e.source;
+                if (lines.length >= NODE_EDGE_CAP) {
+                    truncated = true;
+                    break;
+                }
+                lines.push({
+                    id: sanitizeLabel(other),
+                    label: label(g, other),
+                    relation: e.relation,
+                    confidence: e.confidence,
+                    hops: hop,
+                });
+                if (!seen.has(other)) {
+                    seen.add(other);
+                    next.push(other);
+                }
+            }
+            if (truncated) break;
+        }
+        if (truncated) break;
+        frontier = next;
+    }
+    return { lines, truncated };
+}
+
+/**
+ * `node <seed>` — what one node IS, rather than what a walk from it reaches.
+ *
+ * The five readers before it all answer a question about a neighbourhood
+ * (`query`, `explain`, `affected`, `path`) or about a set (`dead`, `untested`).
+ * None answers "where does this live, who reaches it, what does it reach, how
+ * connected is it" — which is the question an agent asks first and had to
+ * assemble from two calls and a file read.
+ *
+ * Nothing new is walked: the edge maps are the ones `affected` already uses, so
+ * this adds a view, not an index.
+ */
+export function node(g: LoadedGraph, seed: string, opts: NodeOptions = {}): NodeResult {
+    const empty = {
+        source: g.source,
+        id: '',
+        label: '',
+        kind: '',
+        location: null,
+        in_degree: 0,
+        out_degree: 0,
+        in: [] as NodeEdgeLine[],
+        out: [] as NodeEdgeLine[],
+        truncated: false,
+    };
+    const { id, ambiguous, more } = resolveExactNode(g, seed);
+    if (id === null) {
+        return {
+            ...empty,
+            refusal:
+                ambiguous.length > 0
+                    ? `'${sanitizeLabel(seed)}' is a label on ${more ? 'more than ' : ''}` +
+                      `${String(ambiguous.length)} nodes — re-ask with one id: ` +
+                      `${ambiguous.map((a) => sanitizeLabel(a)).join(', ')}` +
+                      (more ? ' (list truncated)' : '')
+                    : `'${sanitizeLabel(seed)}' matches no node id and no node label. This tool ` +
+                      'resolves exactly (id, then label) and does not score free text — use ' +
+                      '`query` if a best-guess match is what you want.',
+        };
+    }
+    const n = g.byId.get(id);
+    const direction = opts.direction ?? 'both';
+    const depth = Math.min(3, Math.max(1, Math.trunc(opts.depth ?? 1)));
+    const inWalk =
+        direction === 'out' ? { lines: [], truncated: false } : walkDirection(g, id, 'in', depth, opts.relation);
+    const outWalk =
+        direction === 'in' ? { lines: [], truncated: false } : walkDirection(g, id, 'out', depth, opts.relation);
+    const degreeOf = (edges: readonly CodeEdge[] | undefined): number =>
+        opts.relation === undefined ? (edges?.length ?? 0) : (edges ?? []).filter((e) => e.relation === opts.relation).length;
+    return {
+        source: g.source,
+        id: sanitizeLabel(id),
+        label: label(g, id),
+        kind: n?.kind ?? '',
+        location: recommendedReadFor(g, id),
+        in_degree: degreeOf(g.in.get(id)),
+        out_degree: degreeOf(g.out.get(id)),
+        in: inWalk.lines,
+        out: outWalk.lines,
+        truncated: inWalk.truncated || outWalk.truncated,
+    };
 }

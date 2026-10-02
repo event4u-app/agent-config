@@ -244,7 +244,10 @@ describe('_concern_matches_tool — the per-concern `tools:` filter', () => {
     });
 
     it('filters exactly on the declared names', () => {
-        const c = { name: 'code-graph-context', tools: ['Grep', 'Glob', 'Read'] };
+        // A hand-written list, not a shipped concern's — the subject is the
+        // matcher's exactness, and naming a real concern here would make the
+        // assertions below drift every time that concern's set changes.
+        const c = { name: 'example', tools: ['Grep', 'Glob', 'Read'] };
         expect(_concern_matches_tool(c, 'Grep')).toBe(true);
         expect(_concern_matches_tool(c, 'Read')).toBe(true);
         expect(_concern_matches_tool(c, 'Bash')).toBe(false);
@@ -279,7 +282,7 @@ describe('the shipped manifest filter matches its concern source', () => {
         const manifest = _load_yaml(path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'));
         const concerns = (manifest as Record<string, Record<string, Record<string, unknown>>>)['concerns'];
         const declared = concerns?.['code-graph-context']?.['tools'];
-        expect(declared).toEqual(['Grep', 'Glob', 'Read']);
+        expect(declared).toEqual(['Grep', 'Glob', 'Read', 'Bash']);
 
         const src = fs.readFileSync(
             path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'code_graph_context_hook.ts'),

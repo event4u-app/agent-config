@@ -1,7 +1,13 @@
 /**
- * The five code-graph MCP tools (`road-to-a-graph-that-is-shipped` 4.1).
+ * The code-graph MCP tools (`road-to-a-graph-that-is-shipped` 4.1).
  *
- * `graph_impact`, `graph_tests_for`, `graph_dead`, `graph_query`, `graph_path`.
+ * `graph_impact`, `graph_tests_for`, `graph_dead`, `graph_query`, `graph_path`
+ * — and `graph_node`, added by `road-to-a-graph-that-feeds-the-gate` 3.1. The
+ * first five all answer about a NEIGHBOURHOOD or a SET; none answered "where
+ * does this live, who reaches it, what does it reach, how connected is it",
+ * which is the question an agent asks first and had to assemble from two calls
+ * and a file read.
+ *
  * They are the agent-facing half of Phase 3: the verbs exist on the CLI and an
  * agent that has to shell out to reach them will not, so the engine's answers
  * were unreachable from the surface the consumer actually talks to. Risk-Register
@@ -39,7 +45,15 @@ import { changedFiles } from '../code_graph/cli.js';
 import { detectSources, graphState, NATIVE_CACHE_REL, pickSource } from '../code_graph/detect.js';
 import { resolvePath } from './path_util.js';
 import { isTestFile } from '../code_graph/build.js';
-import { loadGraph, type LoadedGraph, path as graphPathVerb, query as graphQueryVerb } from '../code_graph/query.js';
+import {
+    loadGraph,
+    type LoadedGraph,
+    node as graphNodeVerb,
+    type NodeOptions,
+    path as graphPathVerb,
+    query as graphQueryVerb,
+} from '../code_graph/query.js';
+import type { Relation } from '../code_graph/types.js';
 import {
     dead,
     entryPointsFromFile,
@@ -96,6 +110,16 @@ function str(args: Record<string, unknown>, key: string): string {
     const v = args[key];
     return typeof v === 'string' ? v.trim() : '';
 }
+
+/**
+ * The closed relation vocabulary, as a schema enum.
+ *
+ * Spelled out rather than derived from the `Relation` union, which erases at
+ * compile time — and pinned by a test against that union so the two cannot
+ * drift. An enum that silently lost a value would turn a legal filter into a
+ * rejected argument.
+ */
+const RELATIONS = ['calls', 'imports', 'uses', 'inherits', 'member', 'tests'] as const;
 
 function num(args: Record<string, unknown>, key: string, dflt: number): number {
     const v = args[key];
@@ -260,6 +284,51 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
                 staleness,
                 ...graphQueryVerb(g, symbol, num(args, 'budget', 1500)),
             }));
+        },
+    },
+
+    graph_node: {
+        name: 'graph_node',
+        side_effect: 'ro',
+        description:
+            'One symbol in full: where it is declared, what reaches it, what it ' +
+            'reaches, and how connected it is. Resolves EXACTLY (node id, then ' +
+            'label) and refuses anything it cannot — it never scores free text, ' +
+            'so an answer is always about the node you named.',
+        input_schema: {
+            type: 'object',
+            required: ['id'],
+            properties: {
+                id: { type: 'string', description: 'Node id `<relpath>#<sym>` or an exact label.' },
+                direction: {
+                    type: 'string',
+                    enum: ['in', 'out', 'both'],
+                    default: 'both',
+                    description: 'Which edges to walk. `in` = who reaches it, `out` = what it reaches.',
+                },
+                depth: { type: 'integer', minimum: 1, maximum: 3, default: 1, description: 'Hop limit.' },
+                relation: {
+                    type: 'string',
+                    enum: RELATIONS,
+                    description: 'Restrict to one relation. Omit for all of them.',
+                },
+            },
+            additionalProperties: false,
+        },
+        handler: async (args, root) => {
+            const id = str(args, 'id');
+            if (id === '') return { status: 'error', error: 'id must be a non-empty string' };
+            const staleness = graphState(root);
+            const opts: NodeOptions = {};
+            const dir = str(args, 'direction');
+            if (dir === 'in' || dir === 'out' || dir === 'both') opts.direction = dir;
+            // `num` clamps at >0 only; the 1-3 band is the verb's, so an
+            // out-of-band value is clamped there rather than rejected here —
+            // two places enforcing one band is how they drift apart.
+            opts.depth = num(args, 'depth', 1);
+            const rel = str(args, 'relation');
+            if ((RELATIONS as readonly string[]).includes(rel)) opts.relation = rel as Relation;
+            return withGraph(root, (g) => ({ staleness, ...graphNodeVerb(g, id, opts) }));
         },
     },
 

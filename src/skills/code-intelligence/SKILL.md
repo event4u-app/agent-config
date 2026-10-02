@@ -245,13 +245,25 @@ paragraph claiming "the same five answers" directly after a list of four:
 | `graph_dead` | `dead` |
 | `graph_query` | `query` |
 | `graph_path` | `path` |
+| `graph_node` | no CLI verb — one symbol's location, in-edges, out-edges and degree |
 
 `untested` has no tool of its own; it is a flag on `graph_impact`, because the
-two answer the same question over the same diff and a sixth tool would have cost
-standing context for a boolean. `graph_impact` is the only one that is not
+two answer the same question over the same diff and a separate tool would have
+cost standing context for a boolean. `graph_impact` is the only one that is not
 read-only — it runs `git diff --name-only` to resolve its rev — and
 `graph_dead`'s refusal arrives as `status: "refused"`, never as `status: "ok"`
 with an empty list.
+
+`graph_node` is the one entry with no CLI verb behind it, and the one that
+REFUSES a seed it cannot resolve exactly. Every other reader answers about a
+neighbourhood or a set, where a best-guess seed costs the caller one wrong line
+among several; a node view's every field — the location, the degree, both edge
+lists — is a statement about ONE node, so a guess is wrong in all of them at
+once. It resolves on the exact tiers of the same seed ladder (node id, then
+label) and returns `status: "refused"` naming the candidates when a label is
+ambiguous, rather than scoring free text — which is the retrieval class the
+measured null covers (`docs/CLAIMS.md`, `code-graph-retrieval-null`). Use
+`graph_query` when a best-guess match is what you want.
 
 **No ordering claim is added here, and no measurement claim either.** These
 verbs are cheaper than reconstructing the same relationship by hand — that is a

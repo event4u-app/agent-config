@@ -1,0 +1,2431 @@
+diff --git a/agents/evidence/analysis/graph-feeder-recall-2026-Q4.md b/agents/evidence/analysis/graph-feeder-recall-2026-Q4.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..11e0784ebc577416f691061e610f439bc5448569
+--- /dev/null
++++ b/agents/evidence/analysis/graph-feeder-recall-2026-Q4.md
+@@ -0,0 +1,97 @@
++<!-- evidence-type: analysis -->
++
++# Graph feeder recall — 2026 Q4
++
++**Status: `underpowered`. n = 0 of a required n = 50.**
++
++This is the pre-registration of a measurement, written before its data exists,
++and it is deliberately not the measurement. ADR-277 reopens detector F when its
++catch rate is read off labelled data; `road-to-a-graph-that-feeds-the-gate` step
++3.2 shipped the instrument that produces that data, and it shipped in the same
++change as this page. There is therefore no stop record older than the recorder,
++and every number below is a bar rather than a result.
++
++Writing the bars first is the point. A recall threshold chosen after the counts
++are in is a threshold chosen by the counts.
++
++## What is being measured
++
++Two detectors answer the same question — *did this turn change production code
++without the test that would have caught the failure?* — from different evidence:
++
++| Arm | Evidence | Where |
++|---|---|---|
++| **F** | the transcript: production edits, no test file touched, a completion claim | `detectUntestedChange`, `src/scripts/hooks/turn_end_gate_hook.ts` |
++| **graph** | the code graph: changed symbols with no accepted `tests` edge reaching them or their file | `untested`, `src/scripts/code_graph/verbs.ts` |
++
++The feeder writes both verdicts for the same stop, so recall, the union, and
++each arm's unique catches are all readable from one record:
++`agents/state/graph-feeder/<session>.jsonl`, one row per stop, written only
++where a graph exists.
++
++## The labelling protocol
++
++```
++50 STOP RECORDS. 25 CARRYING AN UNTESTED PRODUCTION EDIT, 25 NOT.
++LABELLED BY A PERSON OR A COUNCIL SEAT — NEVER BY THE HOOK'S OWN RUN,
++AND NEVER BY THE MODEL WHOSE DETECTOR IS BEING SCORED.
++```
++
++Risk-Register rank 4 of the owning roadmap names the failure this forbids: a
++corpus labelled by the model under test decides its own promotion. The label is
++the ground truth, so its independence is the whole experiment; a row's own `f`
++and `graph` fields are the predictions and may never be read while labelling.
++
++Procedure, once n ≥ 50 rows exist:
++
++1. Draw rows from `agents/state/graph-feeder/*.jsonl` across distinct sessions.
++   A row's `paths` and `path_count` are the labeller's input; `f`, `f_mode`,
++   `graph`, `graph_untested` and `graph_tested` are withheld.
++2. For each row, the labeller answers one question: **did this turn change
++   production code that no test exercises?** Yes / no / cannot tell. A
++   `cannot tell` is dropped and replaced, and the count of drops is reported —
++   a corpus that needed many replacements is a corpus with a definition problem.
++3. Record who labelled (a named person, or the council seats and the session
++   date) alongside the counts. An unattributed label set does not satisfy this
++   step.
++4. Report, for F, for the graph, and for their union: recall =
++   caught / 25 positives, with the 95 % Wilson interval from
++   `wilsonInterval(caught, 25)` (`src/scripts/_lib/capture_rate.ts`). Report
++   false positives against the 25 negatives on the same footing.
++
++Wilson rather than the normal approximation for the reason that module records:
++near a proportion of 1 the normal interval runs above 1 and understates the
++spread, which is exactly where a detector's recall is expected to sit.
++
++## Current reading
++
++| Arm | Positives caught | n | Recall | 95 % Wilson |
++|---|---|---|---|---|
++| F | — | 0 | — | [0, 1] |
++| graph | — | 0 | — | [0, 1] |
++| union | — | 0 | — | [0, 1] |
++
++`[0, 1]` at n = 0 is the honest interval and is not `[0, 0]`: nothing was
++measured, which is a different statement from measuring zero. The same
++distinction `capture_rate.ts` makes in code.
++
++**`underpowered`** — below n = 50 this page reports the bar and the gap, never a
++rate. A recall quoted off a handful of rows would be read as a result and reused
++as one.
++
++## What this page does NOT authorize
++
++Nothing. Step 3.4 of the owning roadmap — promoting the graph verdict into
++detector F's live decision — stays deferred, and it is deferred behind an owner
++amendment to ADR-277 rather than behind this page. A filled-in table here is an
++input to that amendment, never a substitute for it, and no reading of these
++numbers changes what the stop gate refuses.
++
++## What closes the gap
++
++- Stop records accumulate wherever the gate runs in a repository with a built
++  code graph. The instrument is on by default and writes nothing where no graph
++  exists, so the corpus grows from ordinary use rather than from a campaign.
++- At n ≥ 50 across distinct sessions, run the protocol above and replace the
++  `Current reading` table, the status line, and this section with the result and
++  the labeller attribution.
+diff --git a/agents/evidence/ratifications/drain-graph-feeds-the-gate.md b/agents/evidence/ratifications/drain-graph-feeds-the-gate.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..70eea36a1644c2d091bb5842c5376e96e1b32db3
+--- /dev/null
++++ b/agents/evidence/ratifications/drain-graph-feeds-the-gate.md
+@@ -0,0 +1,117 @@
++---
++proposed_by: claude-opus-5/drain-graph-feeds-the-gate-2026-10-01
++implemented_by: claude-opus-5/drain-graph-feeds-the-gate-2026-10-01
++reviewed_by: council/anthropic+openai-2026-10-01
++providers:
++  - anthropic
++  - openai
++verdict: ratified
++effective_after: merge
++---
++
++<!-- evidence-type: ratification -->
++
++# Ratification — routing the shell tool to the code-graph context concern
++
++Covers one block in `src/scripts/hook_manifest.yaml`: the `code-graph-context`
++concern's per-concern tool filter moves from `[Grep, Glob, Read]` to
++`[Grep, Glob, Read, Bash]`, with its comment updated to name the fourth branch
++and the host-naming caveat. Nothing else on a gated surface changed — no concern
++added or removed, no `fail_closed`, no `severity`, no `script`, no event binding,
++no ordering.
++
++## Why the verdict is `ratified` and not `confirmed-non-expanding`
++
++```
++THE TWO SEATS SPLIT ON THE LABEL AND AGREED ON LANDING IT.
++THE STRONGER LABEL IS RECORDED, BECAUSE ONE SEAT ARGUED IN SUBSTANCE
++THAT TRIGGER REACH *IS* PART OF A CAPABILITY BOUNDARY — AND THE
++CONTRACT SAYS A MISLABELLED EXPANSION IS REVIEW ERROR, NOT AN OPTION.
++```
++
++`anthropic` returned `confirmed-non-expanding`; `openai` returned `ratified`,
++opening with *"this is a small, acceptable expansion and should be ratified — not
++classified as non-expanding"*. Both approve the change; the disagreement is
++entirely about which passing label is honest. The implementer records the one a
++reviewer explicitly asked for rather than the one more favourable to the
++implementer, which is the only direction this choice may fall in a document the
++implementer writes about their own diff.
++
++## What the council decided
++
++Council 2026-10-01, seats `anthropic` and `openai`, 2 rounds with blind peer
++review, subscription transport, $0.0000 spent, 2/2 present and concluded.
++
++**Where they agreed.** The concern cannot block, deny or mutate: it is
++`severity: advisory`, `fail_closed: false`, and its output is lowered to the
++host's structured context envelope at exit 0 or swallowed entirely. Adding the
++shell tool grants no permission to execute the inspected command — the concern
++reads `tool_input.command`, classifies the head, and emits one line. The `tools:`
++key is an in-process dispatcher filter, not a host matcher, so the dispatcher was
++already invoked for the event. Missing a host-specific shell alias (`BashTool`,
++`launch-process`) reduces coverage rather than disabling a guard, which is the
++distinction the manifest's own comment already draws between advisory concerns
++and the four blocking guards that deliberately declare no filter.
++
++**Where they disagreed, and it is the load-bearing half.** `openai` held that
++defining authority as only execute/block/mutate is *"too brittle for a
++constitutional rule intended to prevent self-ratified power growth"*, and that
++the change widens two things that count: the concern now receives and classifies
++shell-command input it previously did not receive, and its emitted context can
++influence agent behaviour during an additional class of tool call. Its words:
++*"'Same code, more trigger points' does not imply 'same effective power'; trigger
++scope is part of a component's capability boundary."*
++
++`anthropic`'s counter, which is the strongest argument on the other side and is
++recorded rather than dropped: authority is what a component *can* do, not how
++often it does it, and `needs_payload_bodies: [input]` means the concern never
++sees command OUTPUT, so it cannot chain observations or build a picture of system
++state. It also noted that the accompanying latch change TIGHTENS the concern —
++once per distinct target with a five-line session cap, where it previously spoke
++once per session.
++
++**What the blind peer round caught, and it was right.** Both reviewers flagged
++that `openai` treated a `git status` probe as pivotal evidence while describing
++it as *"apparently"* performing host-side activity — an unverified premise used
++as a settled one. The probe is real: step 2.3 of the same change adds
++`git status --porcelain` to the staleness read. It is stated here as fact rather
++than left as the reviewer's hedge.
++
++## The conditions `openai` attached, and what was done about each
++
++| Condition | Disposition |
++|---|---|
++| *"Verify that command text is neither persisted nor included in diagnostics."* | **Found a real gap and closed it in this change.** The latch persisted the search TERM — a term that can carry a customer name, a token fragment or an internal hostname. It now persists a truncated SHA-256 digest (`latchKey`), which answers "have I spoken about this one" exactly as well because nothing reads it back. A test writes a sensitive-looking term and asserts the plaintext is absent from the file. Not claimed as a security boundary: a short digest of a short term is guessable by anyone who can enumerate terms. It is PII-exclusion by construction — the plaintext is not there to leak. The emitted line never carried the command and still does not. |
++| *"Bound or cache the `git status` probe independently of the message-rate cap; limiting output does not necessarily limit work."* | **Already bound, and the binding is the same latch rather than a second one.** `wouldSpeak` is checked BEFORE `graphState`, and it is false for a repeat and past the cap — so the probe runs at most once per distinct target and at most five times per session, which is a bound on WORK and not only on output. Stated rather than assumed, because the reviewer's objection is exactly that the two can come apart. |
++| *"Test unverified-host swallowing, the five-line session limit, deduplication by search target, and non-matching shell aliases."* | Covered: the unverified-host case asserts a `windsurf` emission produces empty stdout at its legacy exit; the cap and the dedup are the step's own fixture (three distinct patterns, a repeat, a sixth); non-matching commands assert `bashSearchToken` returns null for `ls`, `npm test`, `git log` and the empty string, which is also the no-latch path. |
++| *"Document that trigger-set widening counts as expansion when it exposes a concern to a new payload category or creates new host activity."* | Recorded here, as the reason this artifact says `ratified`. Not written into a contract by this change — a rule about how future reviewers must classify is a governance edit of its own and would need its own ratification. Named as deliberately deferred rather than silently dropped. |
++
++A second-round reviewer added that broad shell-input visibility *"can expose
++secrets, paths, credentials, and operational intent absent from Read, Glob, or
++Grep calls."* That is the same concern as the first condition and is why the
++digest change landed rather than being argued away.
++
++## What this record does NOT establish
++
++That the reviewer was independent in the platform sense. It was not: the seats
++are models the implementing session invoked, and their verdicts are quoted
++process evidence, never authentication. The standing qualification from this
++repository's earlier ratifications applies unchanged — a committed record is
++evidence, not proof that anyone decided. The authorising event is a human's
++review and merge of this change.
++
++It also does not establish that the host-naming caveat is harmless. On a host
++that calls its shell tool anything but `Bash`, this concern will not route, and
++nothing in this change detects that. It is a missed advisory line, which is the
++trade the manifest already refuses for a security guard and accepts for a
++context line — stated so a later reader does not have to re-derive it.
++
++## Not ratified by this record
++
++- **No change to any blocking guard.** The four blocking PreToolUse guards still
++  declare no `tools:` filter and are untouched.
++- **No change to `fail_closed`, `severity` or the dispatcher.** The filter's
++  semantics are the dispatcher's and were not edited.
++- **Nothing about step 3.2's turn-end feeder**, which touches
++  `src/scripts/hooks/turn_end_gate_hook.ts` and writes a local record. That file
++  is not on the gated-surface list and this artifact makes no claim about it.
+diff --git a/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md b/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
+index 3c34b26e89d6d5e9f2ac513f60bdfdf66d19d7e6..7ca72b69b147772b0793145326a8d23813fe8641 100644
+--- a/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
++++ b/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
+@@ -40,7 +40,7 @@ refuses.
+ 
+ ## Phase 1 — Make the stale text true
+ 
+-- [ ] **1.1 Correct the settings comment and the two prose mentions, keep the key.**
++- [x] **1.1 Correct the settings comment and the two prose mentions, keep the key.**
+       The comment block above `code_graph: enabled: false`
+       (`src/config/agent-settings.template.yml:1579-1606`) says the parser is a
+       devDependency; `package.json:138` lists `web-tree-sitter` under `dependencies` and
+@@ -53,24 +53,24 @@ refuses.
+ 
+ ## Phase 2 — A hook that reaches the search, and a staleness that sees the edit
+ 
+-- [ ] **2.1 Match `Bash` and read the command.** Add `Bash` to the matcher at
++- [x] **2.1 Match `Bash` and read the command.** Add `Bash` to the matcher at
+       `hook_manifest.yaml:511` and to the pin test; in `classifyTool`
+       (`code_graph_context_hook.ts:66-81`) treat a command whose head is `grep`, `rg`,
+       `ag`, `find` or `git grep` as a structure search. Any other Bash command is silent
+       and does not latch.
+       verify: `npx vitest run tests/scripts/code_graph_context_hook.test.ts` -> 0
+-- [ ] **2.2 Latch once per target, cap five per session.** Key the latch
++- [x] **2.2 Latch once per target, cap five per session.** Key the latch
+       (`code_graph_context_hook.ts:88-114`) on the search token as well as the session,
+       so the line fires once per distinct token, at most five times per session.
+       verify: fixture — three distinct patterns yield three lines, the same pattern twice yields one, a sixth pattern yields none
+-- [ ] **2.3 Staleness reports `edited` from `git status --porcelain`.** In `detect.ts`,
++- [x] **2.3 Staleness reports `edited` from `git status --porcelain`.** In `detect.ts`,
+       after the commit count, a non-empty porcelain result over indexed paths yields a
+       fourth state `edited` beside `fresh` / `behind:N` / `absent` (`:201`); `behind:0`
+       stays the unknown-count fallback. The mtime variant is not used: restoring a
+       stashed file rewrites its mtime and would never return to `fresh`.
+       `corrected-from-reproduction`.
+       verify: fixture in a temporary repository — modify an indexed file -> `edited`; revert with `git checkout -- <file>` -> `fresh`
+-- [ ] **2.4 The MCP answers carry the new state.** `graph_tools.ts:258-260,287-289`
++- [x] **2.4 The MCP answers carry the new state.** `graph_tools.ts:258-260,287-289`
+       already print `graphState`; add a fixture that the MCP `graph_query` envelope's
+       `staleness` reads `edited`. The CLI `query` verb has no `--json`, so the supplied
+       CLI verify was unexecutable. `corrected-from-reproduction`.
+@@ -78,13 +78,13 @@ refuses.
+ 
+ ## Phase 3 — One node tool, and the gate feeder in shadow
+ 
+-- [ ] **3.1 `graph_node`: location, in-edges, out-edges, degree.** One MCP tool beside the
++- [x] **3.1 `graph_node`: location, in-edges, out-edges, degree.** One MCP tool beside the
+       five, over the loaded graph `affected` already walks (`code_graph/query.ts:339`).
+       Parameters `id`, `direction` (`in|out|both`), `depth` 1–3, `relation` over the closed
+       vocabulary; the seed ladder (`query.ts:196-207`) stays the only resolver; no
+       free-text scoring.
+       verify: `npx vitest run tests/scripts/code_graph.test.ts -t 'graph_node'` -> 0
+-- [ ] **3.2 `untested --diff` in shadow beside detector F, on its own record.** When F is
++- [x] **3.2 `untested --diff` in shadow beside detector F, on its own record.** When F is
+       evaluated and the graph state is `fresh` or `edited`, also call `untested` over the
+       turn's edit paths (`ToolCall.path`, `src/scripts/_lib/turn_end_transcript.ts:34-40`)
+       and append both verdicts to a new per-stop file under `agents/state/` — not to
+@@ -98,6 +98,15 @@ refuses.
+       run; report F recall, graph recall and their union with `capture_rate.wilsonInterval`
+       (`_lib/capture_rate.ts:90`). Below n = 50 the report prints `underpowered`.
+       verify: `grep -c 'underpowered\|n = 50' agents/evidence/analysis/graph-feeder-recall-2026-Q4.md` -> /[1-9]/
++      STATE 2026-10-01: the page exists and the verify passes, and the step stays OPEN
++      deliberately. It carries the PRE-REGISTRATION — the two arms, the labelling
++      protocol, the Wilson reporting shape — written before any data existed, which is
++      the only moment a threshold cannot be chosen by the counts. Its reading is
++      `underpowered`, n = 0: step 3.2 shipped the recorder in the same change, so no
++      stop record predates it. Flipping this box on an n = 0 page is exactly the
++      condition D5 names as its own revisit trigger, so it is not flipped. What closes
++      it: n >= 50 rows across distinct sessions in `agents/state/graph-feeder/`, then
++      the protocol on that page, labelled by a person or a council seat and attributed.
+ - [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3; the ADR-277 reopen is
+       an owner amendment, not a step here.
+ 
+diff --git a/dist/agent-src/contexts/execution/auto-dispatch-classification.md b/dist/agent-src/contexts/execution/auto-dispatch-classification.md
+index da54984d28144134b5a679af367a51d8a94a0989..e29a5020d121623a2ba0baa61f967cd1d3ca244a 100644
+--- a/dist/agent-src/contexts/execution/auto-dispatch-classification.md
++++ b/dist/agent-src/contexts/execution/auto-dispatch-classification.md
+@@ -224,7 +224,7 @@ NEVER A SILENTLY DEGRADED ANSWER. NO LLM CLASSIFIER FALLBACK (CUT C3).
+ 
+ | Task pattern | Lookup class | Primitive |
+ |---|---|---|
+-| "where is X defined" / "confirm X's definition location" | `definition` | capped `rg` (definition-shaped patterns, `--max-count`); `code_graph query` only as an opportunistic accelerant when an index is present + fresh + `hooks.code_graph.enabled: true` |
++| "where is X defined" / "confirm X's definition location" | `definition` | capped `rg` (definition-shaped patterns, `--max-count`); `code_graph query` only as an opportunistic accelerant when an index is present and fresh — `hooks.code_graph.enabled` gates nothing here, or anywhere: it is inert and registered only (`docs/MIGRATION.md`) |
+ | "who calls / imports X" / "confirm call sites" | `references` | capped `rg` (reference-shaped patterns); same optional `code_graph affected` accelerant clause |
+ | "does string Y exist" / "probe candidate strings" | `string-existence` | FTS one-shot (`memory_lookup` for the knowledge corpus) or capped `rg -n --max-count` for the codebase |
+ | "run report Z" / "run check_*" | `report-run` | direct script run, wrapped per the **measured** rtk allowlist (`internal/bench/rtk-savings/RESULTS.md` — wrap only the ~55%-savings class) |
+@@ -232,9 +232,12 @@ NEVER A SILENTLY DEGRADED ANSWER. NO LLM CLASSIFIER FALLBACK (CUT C3).
+ **Why rg-first** (council 2026-07-28, 2 rounds): the pre-registered benchmark
+ behind the `code-graph-retrieval-null` claim (`docs/CLAIMS.md`) measured
+ native-graph recall 0.365 vs grep 0.797 on graph-shaped questions — an
+-indexing gap that kept `code_graph.enabled` false BY DEFAULT until that flag
+-was retired (2026-09-07) — not permanently: the 2026-08-15 withdrawal retracted
+-that, and the figures predate the 2026-08-22 extractor repair. The accelerant
++indexing gap that is why the engine is reached only as an accelerant. The
++`code_graph.enabled` flag that once carried that default was not retired: the
++hook it gated was replaced on 2026-09-07 by one that reads no flag, so the key
++is inert and stays registered (`docs/MIGRATION.md`). The null is not permanent
++either — the 2026-08-15 withdrawal retracted that, and the figures predate the
++2026-08-22 extractor repair. The accelerant
+ clause above is that bound's escape hatch, reached only when a caller passes a
+ usable graph, which no production caller yet does.
+ 
+diff --git a/dist/agent-src/skills/code-intelligence/SKILL.md b/dist/agent-src/skills/code-intelligence/SKILL.md
+index ec76e271949169e5933d3c53d6372260bf9e18bf..b4e949ecad26f64d14a5a3d68a7c3ea4a4aec16e 100644
+--- a/dist/agent-src/skills/code-intelligence/SKILL.md
++++ b/dist/agent-src/skills/code-intelligence/SKILL.md
+@@ -245,14 +245,26 @@ paragraph claiming "the same five answers" directly after a list of four:
+ | `graph_dead` | `dead` |
+ | `graph_query` | `query` |
+ | `graph_path` | `path` |
++| `graph_node` | no CLI verb — one symbol's location, in-edges, out-edges and degree |
+ 
+ `untested` has no tool of its own; it is a flag on `graph_impact`, because the
+-two answer the same question over the same diff and a sixth tool would have cost
+-standing context for a boolean. `graph_impact` is the only one that is not
++two answer the same question over the same diff and a separate tool would have
++cost standing context for a boolean. `graph_impact` is the only one that is not
+ read-only — it runs `git diff --name-only` to resolve its rev — and
+ `graph_dead`'s refusal arrives as `status: "refused"`, never as `status: "ok"`
+ with an empty list.
+ 
++`graph_node` is the one entry with no CLI verb behind it, and the one that
++REFUSES a seed it cannot resolve exactly. Every other reader answers about a
++neighbourhood or a set, where a best-guess seed costs the caller one wrong line
++among several; a node view's every field — the location, the degree, both edge
++lists — is a statement about ONE node, so a guess is wrong in all of them at
++once. It resolves on the exact tiers of the same seed ladder (node id, then
++label) and returns `status: "refused"` naming the candidates when a label is
++ambiguous, rather than scoring free text — which is the retrieval class the
++measured null covers (`docs/CLAIMS.md`, `code-graph-retrieval-null`). Use
++`graph_query` when a best-guess match is what you want.
++
+ **No ordering claim is added here, and no measurement claim either.** These
+ verbs are cheaper than reconstructing the same relationship by hand — that is a
+ claim about the ALTERNATIVE being a manual reconstruction, not about grep.
+diff --git a/docs/contracts/mcp-tool-inventory.md b/docs/contracts/mcp-tool-inventory.md
+index 82387e078f5087698ff46fc0f05e0a5f1fa4ae24..5724d8f972ae47b081568f38f7cde60ca44046e5 100644
+--- a/docs/contracts/mcp-tool-inventory.md
++++ b/docs/contracts/mcp-tool-inventory.md
+@@ -14,9 +14,9 @@ keep-beta-until: 2026-08-14
+ 
+ ## Summary
+ 
+-- **Total tools:** 36
+-- **By transport:** stdio=25
+-- **By side-effect:** fs-write=8, ro=24, shell=4
++- **Total tools:** 37
++- **By transport:** stdio=26
++- **By side-effect:** fs-write=8, ro=25, shell=4
+ - **Discovery-only stubs (no implementation):** 11
+ 
+ ## Tools
+@@ -33,32 +33,33 @@ keep-beta-until: 2026-08-14
+ | `conformance_check` | `ro` | stdio | [`consumer_tool_catalog.json:162`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L162) | [`tools.ts:1703`](../../src/scripts/mcp_server/tools.ts#L1703) |
+ | `council_estimate` | `ro` | stdio | [`consumer_tool_catalog.json:178`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L178) | [`tools.ts:1741`](../../src/scripts/mcp_server/tools.ts#L1741) |
+ | `doctor_report` | `ro` | stdio | [`consumer_tool_catalog.json:210`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L210) | [`tools.ts:1688`](../../src/scripts/mcp_server/tools.ts#L1688) |
+-| `graph_dead` | `ro` | stdio | [`consumer_tool_catalog.json:226`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L226) | [`graph_tools.ts:163`](../../src/scripts/mcp_server/graph_tools.ts#L163) |
+-| `graph_impact` | `shell` | stdio | [`consumer_tool_catalog.json:252`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L252) | [`graph_tools.ts:106`](../../src/scripts/mcp_server/graph_tools.ts#L106) |
+-| `graph_path` | `ro` | stdio | [`consumer_tool_catalog.json:287`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L287) | [`graph_tools.ts:266`](../../src/scripts/mcp_server/graph_tools.ts#L266) |
+-| `graph_query` | `ro` | stdio | [`consumer_tool_catalog.json:322`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L322) | [`graph_tools.ts:239`](../../src/scripts/mcp_server/graph_tools.ts#L239) |
+-| `graph_tests_for` | `ro` | stdio | [`consumer_tool_catalog.json:352`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L352) | [`graph_tools.ts:141`](../../src/scripts/mcp_server/graph_tools.ts#L141) |
+-| `lint_skills` | `ro` | stdio | [`consumer_tool_catalog.json:376`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L376) | [`tools.ts:1237`](../../src/scripts/mcp_server/tools.ts#L1237) |
+-| `list_commands` | `ro` | stdio | [`consumer_tool_catalog.json:400`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L400) | [`tools.ts:1529`](../../src/scripts/mcp_server/tools.ts#L1529) |
+-| `list_rules` | `ro` | stdio | [`consumer_tool_catalog.json:416`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L416) | [`tools.ts:1545`](../../src/scripts/mcp_server/tools.ts#L1545) |
+-| `list_skills` | `ro` | stdio | [`consumer_tool_catalog.json:432`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L432) | [`tools.ts:1513`](../../src/scripts/mcp_server/tools.ts#L1513) |
+-| `memory_get` | `ro` | stdio | [`consumer_tool_catalog.json:448`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L448) | [`tools.ts:1473`](../../src/scripts/mcp_server/tools.ts#L1473) |
+-| `memory_lookup` | `ro` | stdio | [`consumer_tool_catalog.json:476`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L476) | [`tools.ts:1405`](../../src/scripts/mcp_server/tools.ts#L1405) |
+-| `memory_signal` | `fs-write` | stdio | [`consumer_tool_catalog.json:531`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L531) | [`tools.ts:1588`](../../src/scripts/mcp_server/tools.ts#L1588) |
+-| `memory_status` | `ro` | stdio | [`consumer_tool_catalog.json:565`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L565) | [`tools.ts:1498`](../../src/scripts/mcp_server/tools.ts#L1498) |
+-| `mine_session` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:581`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L581) | _stub-only_ |
+-| `read_resource_body` | `ro` | stdio | [`consumer_tool_catalog.json:588`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L588) | [`tools.ts:1562`](../../src/scripts/mcp_server/tools.ts#L1562) |
+-| `roadmap_archive` | `fs-write` | stdio | [`consumer_tool_catalog.json:612`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L612) | [`tools.ts:1647`](../../src/scripts/mcp_server/tools.ts#L1647) |
+-| `roadmap_progress` | `fs-write` | stdio | [`consumer_tool_catalog.json:628`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L628) | [`tools.ts:1623`](../../src/scripts/mcp_server/tools.ts#L1623) |
+-| `run_quality_checks` | `shell` | _(stub)_ | [`consumer_tool_catalog.json:650`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L650) | _stub-only_ |
+-| `run_tests` | `shell` | stdio | [`consumer_tool_catalog.json:657`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L657) | [`tools.ts:1771`](../../src/scripts/mcp_server/tools.ts#L1771) |
+-| `skill_trigger_eval` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:682`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L682) | _stub-only_ |
+-| `suggest_command` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:689`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L689) | _stub-only_ |
+-| `suggest_skill_for_task` | `ro` | stdio | [`consumer_tool_catalog.json:696`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L696) | [`tools.ts:1205`](../../src/scripts/mcp_server/tools.ts#L1205) |
+-| `sync_agent_settings` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:726`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L726) | _stub-only_ |
+-| `sync_gitignore` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:733`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L733) | _stub-only_ |
+-| `telemetry_report` | `ro` | stdio | [`consumer_tool_catalog.json:740`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L740) | [`tools.ts:1718`](../../src/scripts/mcp_server/tools.ts#L1718) |
+-| `update_form_request_messages` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:763`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L763) | _stub-only_ |
++| `graph_dead` | `ro` | stdio | [`consumer_tool_catalog.json:226`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L226) | [`graph_tools.ts:187`](../../src/scripts/mcp_server/graph_tools.ts#L187) |
++| `graph_impact` | `shell` | stdio | [`consumer_tool_catalog.json:252`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L252) | [`graph_tools.ts:130`](../../src/scripts/mcp_server/graph_tools.ts#L130) |
++| `graph_node` | `ro` | stdio | [`consumer_tool_catalog.json:287`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L287) | [`graph_tools.ts:290`](../../src/scripts/mcp_server/graph_tools.ts#L290) |
++| `graph_path` | `ro` | stdio | [`consumer_tool_catalog.json:340`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L340) | [`graph_tools.ts:335`](../../src/scripts/mcp_server/graph_tools.ts#L335) |
++| `graph_query` | `ro` | stdio | [`consumer_tool_catalog.json:375`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L375) | [`graph_tools.ts:263`](../../src/scripts/mcp_server/graph_tools.ts#L263) |
++| `graph_tests_for` | `ro` | stdio | [`consumer_tool_catalog.json:405`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L405) | [`graph_tools.ts:165`](../../src/scripts/mcp_server/graph_tools.ts#L165) |
++| `lint_skills` | `ro` | stdio | [`consumer_tool_catalog.json:429`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L429) | [`tools.ts:1237`](../../src/scripts/mcp_server/tools.ts#L1237) |
++| `list_commands` | `ro` | stdio | [`consumer_tool_catalog.json:453`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L453) | [`tools.ts:1529`](../../src/scripts/mcp_server/tools.ts#L1529) |
++| `list_rules` | `ro` | stdio | [`consumer_tool_catalog.json:469`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L469) | [`tools.ts:1545`](../../src/scripts/mcp_server/tools.ts#L1545) |
++| `list_skills` | `ro` | stdio | [`consumer_tool_catalog.json:485`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L485) | [`tools.ts:1513`](../../src/scripts/mcp_server/tools.ts#L1513) |
++| `memory_get` | `ro` | stdio | [`consumer_tool_catalog.json:501`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L501) | [`tools.ts:1473`](../../src/scripts/mcp_server/tools.ts#L1473) |
++| `memory_lookup` | `ro` | stdio | [`consumer_tool_catalog.json:529`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L529) | [`tools.ts:1405`](../../src/scripts/mcp_server/tools.ts#L1405) |
++| `memory_signal` | `fs-write` | stdio | [`consumer_tool_catalog.json:584`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L584) | [`tools.ts:1588`](../../src/scripts/mcp_server/tools.ts#L1588) |
++| `memory_status` | `ro` | stdio | [`consumer_tool_catalog.json:618`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L618) | [`tools.ts:1498`](../../src/scripts/mcp_server/tools.ts#L1498) |
++| `mine_session` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:634`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L634) | _stub-only_ |
++| `read_resource_body` | `ro` | stdio | [`consumer_tool_catalog.json:641`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L641) | [`tools.ts:1562`](../../src/scripts/mcp_server/tools.ts#L1562) |
++| `roadmap_archive` | `fs-write` | stdio | [`consumer_tool_catalog.json:665`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L665) | [`tools.ts:1647`](../../src/scripts/mcp_server/tools.ts#L1647) |
++| `roadmap_progress` | `fs-write` | stdio | [`consumer_tool_catalog.json:681`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L681) | [`tools.ts:1623`](../../src/scripts/mcp_server/tools.ts#L1623) |
++| `run_quality_checks` | `shell` | _(stub)_ | [`consumer_tool_catalog.json:703`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L703) | _stub-only_ |
++| `run_tests` | `shell` | stdio | [`consumer_tool_catalog.json:710`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L710) | [`tools.ts:1771`](../../src/scripts/mcp_server/tools.ts#L1771) |
++| `skill_trigger_eval` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:735`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L735) | _stub-only_ |
++| `suggest_command` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:742`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L742) | _stub-only_ |
++| `suggest_skill_for_task` | `ro` | stdio | [`consumer_tool_catalog.json:749`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L749) | [`tools.ts:1205`](../../src/scripts/mcp_server/tools.ts#L1205) |
++| `sync_agent_settings` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:779`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L779) | _stub-only_ |
++| `sync_gitignore` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:786`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L786) | _stub-only_ |
++| `telemetry_report` | `ro` | stdio | [`consumer_tool_catalog.json:793`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L793) | [`tools.ts:1718`](../../src/scripts/mcp_server/tools.ts#L1718) |
++| `update_form_request_messages` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:816`](../../src/scripts/mcp_server/consumer_tool_catalog.json#L816) | _stub-only_ |
+ 
+ ## Glossary
+ 
+diff --git a/src/agent-src/contexts/execution/auto-dispatch-classification.md b/src/agent-src/contexts/execution/auto-dispatch-classification.md
+index 811c98491acda59d9a789086baaf6c8036e2d6e0..3750396b0c12c5aabbb458c5bb366be7ce1f305e 100644
+--- a/src/agent-src/contexts/execution/auto-dispatch-classification.md
++++ b/src/agent-src/contexts/execution/auto-dispatch-classification.md
+@@ -224,7 +224,7 @@ NEVER A SILENTLY DEGRADED ANSWER. NO LLM CLASSIFIER FALLBACK (CUT C3).
+ 
+ | Task pattern | Lookup class | Primitive |
+ |---|---|---|
+-| "where is X defined" / "confirm X's definition location" | `definition` | capped `rg` (definition-shaped patterns, `--max-count`); `code_graph query` only as an opportunistic accelerant when an index is present + fresh + `hooks.code_graph.enabled: true` |
++| "where is X defined" / "confirm X's definition location" | `definition` | capped `rg` (definition-shaped patterns, `--max-count`); `code_graph query` only as an opportunistic accelerant when an index is present and fresh — `hooks.code_graph.enabled` gates nothing here, or anywhere: it is inert and registered only (`docs/MIGRATION.md`) |
+ | "who calls / imports X" / "confirm call sites" | `references` | capped `rg` (reference-shaped patterns); same optional `code_graph affected` accelerant clause |
+ | "does string Y exist" / "probe candidate strings" | `string-existence` | FTS one-shot (`memory_lookup` for the knowledge corpus) or capped `rg -n --max-count` for the codebase |
+ | "run report Z" / "run check_*" | `report-run` | direct script run, wrapped per the **measured** rtk allowlist (`internal/bench/rtk-savings/RESULTS.md` — wrap only the ~55%-savings class) |
+@@ -232,9 +232,12 @@ NEVER A SILENTLY DEGRADED ANSWER. NO LLM CLASSIFIER FALLBACK (CUT C3).
+ **Why rg-first** (council 2026-07-28, 2 rounds): the pre-registered benchmark
+ behind the `code-graph-retrieval-null` claim (`docs/CLAIMS.md`) measured
+ native-graph recall 0.365 vs grep 0.797 on graph-shaped questions — an
+-indexing gap that kept `code_graph.enabled` false BY DEFAULT until that flag
+-was retired (2026-09-07) — not permanently: the 2026-08-15 withdrawal retracted
+-that, and the figures predate the 2026-08-22 extractor repair. The accelerant
++indexing gap that is why the engine is reached only as an accelerant. The
++`code_graph.enabled` flag that once carried that default was not retired: the
++hook it gated was replaced on 2026-09-07 by one that reads no flag, so the key
++is inert and stays registered (`docs/MIGRATION.md`). The null is not permanent
++either — the 2026-08-15 withdrawal retracted that, and the figures predate the
++2026-08-22 extractor repair. The accelerant
+ clause above is that bound's escape hatch, reached only when a caller passes a
+ usable graph, which no production caller yet does.
+ 
+diff --git a/src/config/agent-settings.template.yml b/src/config/agent-settings.template.yml
+index 7c72622089a6093930718af0accadf7696415634..6d9f8476d7041c155c2bad82ffea94637ed242f5 100644
+--- a/src/config/agent-settings.template.yml
++++ b/src/config/agent-settings.template.yml
+@@ -1576,34 +1576,37 @@ hooks:
+   ui_route_nudge:
+     enabled: false
+ 
+-  # PreToolUse code-graph nudge (ADR-124 Phase 4). Default-OFF. When enabled
+-  # AND a native code-graph engine has built a cache (or the repo ships a
+-  # graph.json / SCIP index), WARNS once per session (exit 2, never blocks) as
+-  # the agent is about to Grep/Glob or Read a source file: query the graph
+-  # first for "who calls / where used / impact" questions (or rebuild if the
+-  # index is stale, or build one if absent). Source G's strict block-first-read
+-  # mode is deliberately un-ported. Build the cache with
+-  # `agent-config code-graph build`.
++  # INERT, AND REGISTERED ON PURPOSE (ADR-124 Phase 4 -> ADR-259).
++  #
++  # Nothing reads this key. The PreToolUse nudge it used to gate was replaced
++  # on 2026-09-07 by the `code-graph-context` concern
++  # (src/scripts/hooks/code_graph_context_hook.ts), which reads no flag: it is
++  # silent whenever no graph source exists, so a consumer who never runs
++  # `agent-config code-graph build` never hears from it, and the flag's premise
++  # — "do not advertise a capability the consumer cannot have" — is gone.
++  # Setting this to `true` therefore enables nothing, and setting it to `false`
++  # disables nothing.
++  #
++  # The key STAYS because docs/MIGRATION.md (the code_graph row) commits to
++  # exactly that — "the surfaces stay registered and disabled". Deleting a key a
++  # consumer may already have set is the breaking change the commitment exists
++  # to avoid; docs/contracts/settings-classes.md classifies it accordingly
++  # (classified, not deleted).
+   #
+   # DEPRECATED (honest null, 2026-07-28): the pre-registered 2-arm retrieval
+   # benchmark measured the native graph at recall 0.365 vs grep 0.797 on
+   # graph-shaped questions across 3 real repos (internal/bench/reports/
+-  # code-graph-vs-grep.md; claim code-graph-retrieval-null). `enabled: false`
+-  # is the DEFAULT and is not permanent — the removal commitment this comment
+-  # used to carry was withdrawn on 2026-08-15 (docs/MIGRATION.md, the code_graph
+-  # row), and "permanent" was retracted with it. What holds is the default and
+-  # its reopen condition, which is the same one that was always written here:
+-  # external evidence — a consumer case the graph answers and disciplined grep
+-  # cannot — or a re-measurement on a build that postdates the extractor repair
++  # code-graph-vs-grep.md; claim code-graph-retrieval-null). That null is about
++  # the ENGINE, not about this key, and it still stands — the reopen condition
++  # is external evidence (a consumer case the graph answers and disciplined grep
++  # cannot) or a re-measurement on a build that postdates the extractor repair
+   # of 2026-08-22, which the 2026-07-28 figures predate.
+   #
+-  # The engine's parser pair is NO LONGER a runtime dependency (~51 MB that
+-  # every consumer installed for a path none of them can reach); it is a
+-  # devDependency, which npm does not install for consumers. Flipping this to
+-  # `true` is therefore not sufficient — install the ABI-locked pair too:
+-  #   npm i web-tree-sitter@0.24.7 tree-sitter-wasms@0.1.13
+-  # Both versions are exact because the pair is ABI-coupled (grammar ABI 14).
+-  # The loader raises this same hint if the pair is missing.
++  # The engine ships to consumers. `web-tree-sitter` is a runtime dependency
++  # (package.json) and the three loadable grammars are vendored at
++  # src/vendor/grammars/, so there is no separate parser install to perform and
++  # no ABI pair to line up by hand. Build the cache with
++  # `agent-config code-graph build`.
+   code_graph:
+     enabled: false
+ 
+diff --git a/src/config/evaluator-budgets.json b/src/config/evaluator-budgets.json
+index 317c7672ad50b540a13d61d88bf33b7569bb4af2..78bd0ab09cc46347135b219b42d5c15b04398331 100644
+--- a/src/config/evaluator-budgets.json
++++ b/src/config/evaluator-budgets.json
+@@ -65,11 +65,11 @@
+       "baseline_note": "80 → 81 on 2026-08-03 (release 9.15.0 gate). This RECORDS growth that already shipped through its own reviewed PR; it does not authorize new surface. The +1 is f02db54c2 (fix(cli): register routing:doctor in the CLI registry) — the command existed, only its registry entry was missing, and the registering PR did not move this budget. The gate did its job again: breach WARNS on main and BLOCKS on release, which is the conscious-decision point rather than a silently raised cap. Re-measured 2026-08-03 via the pinned method: 81. Headroom stays zero by design — the next registry addition must move this number in its own PR. 81 → 82 on 2026-08-04: the `handoff` subcommand (road-to-agent-handoff-resume Phase 4) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 82. 82 → 84 on 2026-08-04: the `route:explain` + `route:audit` verbs (routing-correctness validation surface) register in the same PR that adds the surface. Re-measured via the pinned method: 84. 84 → 85 on 2026-08-05: the `settings:set` verb (road-to-zero-ceremony-settings Phase 2 — the one agent-reachable settings writer) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 85. 85 → 86 on 2026-08-06: the `conformance:behavior` verb (road-to-agent-behavior-conformance Phase 5 — replays the local transcript store through the four mechanised conformance checks) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 86. 86 → 88 on 2026-08-07: the `sessions:list` + `sessions:claim` verbs (road-to-parallel-session-coordination — the shell surface of the shared session register, needed because /roadmap:next is command markdown and can only reach the register through a shell call) register in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 88. 88 → 89 on 2026-08-08: the `council:status` verb registers in the same PR that adds the surface, per this record's own contract. It exists because an agent in a consumer project announced \"kein Council konfiguriert (keine .agent-settings.yml)\" and substituted a weaker path while the council was configured user-globally the whole time — there was no verb that answered availability, so the only route was an inference from a filename, and the intuitive filename is the one location ADR-104 guarantees is never consulted. Re-measured via the pinned method: 89. 89 → 91 on 2026-08-08: the `self-repair:status` + `self-repair:release` verbs (the queued-defect reader and the single Hard-Floor-gated outward step of the self-repair loop — the loop is deliberately unable to publish unless a human runs the release command) register in the same PR that adds the surface, per this record's own contract. Landed alongside the +1 council:status move in the same branch. Re-measured via the pinned method: 91. 91 → 94 on 2026-08-08: the `packs:active`, `settings:get` and `mcp:available` verbs (road-to-capability-answerability Phase 2 — the three capability probes for the gaps that had none) register in the same PR that adds the surface, per this record's own contract. Each answers a question that was previously only inferable from a filename: which packs are active and from which file, what a setting resolves to and which file set it, and what is declared in mcp.json versus what can actually launch. 94 -> 95 in the same PR: `brand:status` (Phase 2.4 — brand-layer presence, which the rule depended on and no surface could answer). Re-measured twice via the pinned method on the unchanged tree: 95/95. 95 → 96 on 2026-08-10: the `session:recycle` verb (road-to-token-economy-recycling Phase 2.2 — the deterministic producer of the main-session recycle envelope; the recycle advisory names this exact verb, so it must exist as a shell surface) registers in the same PR that adds the surface, per this record's own contract. Re-measured via the pinned method: 96. 96 -> 97 on 2026-08-10: the `gates` verb registers in the same PR that adds the surface, per this record's own contract. It exists because the blocker fields the dashboard already parses (Owner, What to do, Resolved when — CI-enforced by lint_roadmap_blockers) had no owner-filtered reader: the dashboard counts the open blockers across a 600-line file and links each to a per-roadmap anchor, so \"which of these are mine\" was a manual read of every anchor. The same inference-from-a-filename shape as the council:status entry above, one layer up. This branch and the session:recycle branch each measured 96 independently and landed on the same number for different verbs; the merge makes it 97, re-measured twice via the pinned method on the merged tree: 97/97. 97 -> 98 on 2026-08-15: the `workspace:doctor` verb (road-to-inbox-harvest-2026-08-c-workspace-identity Phase 3 — the read-only report over the new `workspaceIdentity()` resolver) registers in the same PR that adds the surface, per this record's own contract. It exists for the same inference-from-a-filename shape as the council:status and gates entries above, one layer down: the tree answered \"where am I\" in eight ad-hoc places across six files, and the 12.0.0 span shipped the same worktree misclassification twice, so no verb could be asked which checkout is the main one. Read-only by construction — the roadmap's Non-goals put worktree disposal out of scope and its Risk 3 names \"the pressure read becomes a disposal path by accident\" as the failure to design against, so the command carries no --fix and no --prune. Re-measured twice via the pinned method on the unchanged tree: 98/98. 98 -> 99 on 2026-08-17: the `council:quota` verb (road-to-council-quota-accounting-truth Phase 2) registers in the same PR that adds the surface, per this record's own contract. Exactly the inference-from-a-filename shape as the council:status entry above, one layer down: `cmd_quota` had existed in council_cli.ts and been reachable only via `scripts-run`, so the documented recovery path for an exhausted shared counter -- read the usage, reset one provider -- did not resolve through `agent-config`, and an operator debugging a quota failure met `unknown command`. The verb is read-only apart from the pre-existing `--reset <provider>`, which already required `--confirm`. Re-measured twice via the pinned method on the unchanged tree: 99/99. 99 -> 100 on 2026-08-19: the `decision:memo` verb (road-to-long-horizon-execution Phase 2.2, sequencing UOTL Phase 4.3 -- the decision-memo channel) registers in the same PR that adds the surface, per this record's own contract. It exists because the question ladder gained a rung between \"halt and ask\" and \"decide silently\": a resolution the run makes without contacting the operator is only legitimate if it is reviewable afterwards, and there was no surface that wrote such a record with a fixed shape. Write-and-list only, local-only (agents/runtime/ is gitignored), and it gates nothing -- the locked decision classes are refused at the config schema, never in the ledger. 100 -> 101 in the same PR: `run:supervise` (Phase 3.1 -- the out-of-process watcher for runs whose session died with open steps left). It is the operator-facing half of session continuity: nothing anywhere had the job of noticing that a claimed run stopped moving, so a roadmap 40% done and a roadmap finished looked identical from outside the dead session. Report-only by default and it NEVER merges, pushes or closes -- the auto-merge the reference design carries is a named rejection in the roadmap's harvest section, not an unbuilt feature. Re-measured twice via the pinned method on the unchanged tree: 101/101. 101 → 102 on 2026-08-22: the `adr:effective` verb (road-to-evidence-based-adr-governance step 2.2 — the effective-state projection over one decision record) registers in the same PR that adds the surface, per this record's own contract. It exists because current truth about an ADR was only reconstructable from linear prose: an agent had to read the body, then every amendment, and decide for itself which clauses still stand. The verb reports status, the Decision verbatim, clauses the record's own amendments superseded, active amendments, the three descriptive axes and the review-trigger state. It AUTHORIZES NOTHING — Phase 2 of that roadmap is titled \"surfacing only; no authority\" and its AC-7 forbids any authority consequence, so the verb reports an absent axis as absent (`— (no provenance axis)`, `— (ungraded)`, `absent → evidence`) and an unresolvable trigger as `indeterminate` rather than inferring one. Re-measured twice via the pinned method on the unchanged tree: 102/102. 102 → 104 on 2026-08-22: the `council:grant-billing` + `council:revoke-billing` verbs (road-to-billing-cliff-gate Phase 2 — the run-scoped billing grant that lets `ai_council.fallback.api_on_quota: 'ask'` be answered once per run instead of once per seat) register in the same PR that adds the surface, per this record's own contract. The two are a pair by construction rather than by convenience: a grant that can be issued and not revoked would outlive its run, which is the failure the run-scoped TTL exists to prevent. Re-measured via the pinned method: 104. 104 -> 106 on 2026-08-23: the `ui:audit` + `ui:render` verbs (road-to-frontend-power E2.1 and E3.1 -- the two Class-A commands that give the frontend obligations an artefact a gate can read and a render a verdict can cite) register in the same PR that adds the surface, per this record's own contract. The two are a pair by construction rather than by convenience: `ui-audit-gate`'s enforced_by moved from `none` to a carrier in the same change, and that carrier reports `verification: degraded` whenever the render artefact is absent -- so an audit verb without a render verb would ship a gate that can never reach `verified`. Both are Class A under ADR-124: they terminate, their whole state is a rebuildable directory under agents/runtime/state/, and ui:render closes chromium in a `finally` on every path with no --serve, watch or cache for a resident browser to hide in. Re-measured via the pinned method on the unchanged tree: 106. 106 → 107 on 2026-08-23: the `roadmap:context` verb (road-to-roadmap-situational-awareness — the single live probe that answers what else is in flight before a roadmap is picked) registers in the same PR that adds the surface, per this record's own contract. Its branch measured 105 against a base of 104 and this branch measured 106 against the same base for `ui:audit` + `ui:render`; the merge makes it 107, re-measured on the merged tree via the pinned method (registry enumeration): 107. 107 → 108 on 2026-08-26: the `roadmap:set-step` verb (road-to-skill-ecosystem-runtime-enforcement Phase 6 — the single sanctioned writer of a checkbox glyph) registers in the same PR that adds the surface, per this record's own contract. It exists because the glyph is written today by whatever edits the file, and a concurrent writer destroys work SILENTLY: the loser of an overwrite receives no error. The verb carries an advisory lock, a line-anchored edit that cannot span entries even in principle, a step-count invariant asserted against the LIVE pre-write file rather than an in-memory snapshot, and a post-write survival check. Re-measured via the pinned method (registry enumeration) on the unchanged tree: 108. 108 → 109 on 2026-08-26: the `stubs:due` verb (road-to-inbox-harvest-2026-08-f-owner-decision-queue step 2.1 — the read-only reader over `agents/roadmaps/stubs/` frontmatter) registers in the same PR that adds the surface, per this record's own contract. It exists because step 1.2 backfills a `review_by:` date into 77 parked files, and an AI council (2026-08-26, 2/2) made the ordering a RULE rather than a preference: dates without a reader are strictly worse than no dates, because a stale date certifies attention nobody paid. The verb is read-only by construction — it authors nothing under `agents/roadmaps/stubs/`, so `check_no_stub_inventory_table` stays green and unmodified, and `roadmap:progress` consumes only its two COUNTS for the dashboard header (two integers, no rows, nothing for the deleted index tables to grow back from). Re-measured via the pinned method (registry enumeration) on the unchanged tree: 109. 109 → 110 on 2026-09-03: the `hooks:effect` verb (road-to-wired-instruments Phase 1.1 — the CLI entry for `hook_effect_doctor`) registers in the same PR that adds the surface, per this record's own contract. It exists because the probe and its five-state vocabulary were built, tested and reachable from nothing: `grep -rn 'hook_effect_doctor|hook_effect_probe' src Taskfile.yml .github` returned only the two modules themselves, and a closed roadmap recorded the wiring as landed at `src/scripts/hooks_doctor.ts:88`, a line that is the closing brace of a filesystem helper in a file with zero references to the probe. Deliberately NOT merged into `hooks:doctor`: that verb reads the MANIFEST (what is declared) and this one reads what happened (what took effect), and the probe's own header names merging them as the thing to avoid — a declaration report and an execution report are different instruments, and merging them makes the cheap one expensive. Read-only apart from a scratch root it removes in a `finally`. Re-measured via the pinned method (registry enumeration) on the unchanged tree: 110."
+     },
+     "mcp_public_tool_count": {
+-      "max": 25,
+-      "last_measured": 25,
+-      "last_measured_at": "2026-09-09",
++      "max": 26,
++      "last_measured": 26,
++      "last_measured_at": "2026-10-01",
+       "method": "tools/list length on the stdio server (post-ADR-132: implemented tools only)",
+-      "baseline_note": "19 → 20 on 2026-08-17 (release 13.0.0 gate). The +1 is 866bd9861 (feat(mcp): recover what the host dropped — real ranker tool + a route to it, road-to-inbox-harvest-2026-08-d-runtime-skill-routing Phase 4): `suggest_skill_for_task` was promoted from a discovery STUB to a real ALLOWLIST entry and removed from STUB_TOOLS. Worth stating precisely, because the consumer-visible NAME did not grow — the stub already published that name and its `task` + `limit` input schema, which the promotion carried over verbatim. What grew is the count of tools tools/list actually returns, which is exactly what this metric measures post-ADR-132: implemented tools only. Same shape as the cli_help_command_count history above — this RECORDS growth that already shipped through its own reviewed PR (866bd9861 is on main), it does not authorize new surface. The registering PR did not move this budget, so the gate did its job: the breach warned on main and blocked on the release ref, which is the conscious-decision point rather than a silently raised cap. Re-measured twice via the pinned method on a freshly built dist/mcp/server.mjs: 20/20. Headroom stays zero by design — the next tool that leaves STUB_TOOLS must move this number in its own PR. 20 → 25 on 2026-09-09 (release 14.23.0 gate). The +5 are `graph_impact`, `graph_tests_for`, `graph_dead`, `graph_query` and `graph_path` — 9452f29b4 (feat(mcp): five graph tools, the pinned install hint, and the skill description; road-to-a-graph-that-is-shipped Phase 4.1), which is on main. They are the agent-facing readers of the code graph: the roadmap Risk-Register rank 1 is \"the install grows and the graph is still unread\", and an agent that has to shell out to reach a verb will not, so the tools ARE the mitigation rather than a convenience. Same shape as every entry above — this RECORDS growth that already shipped through its own reviewed PR; it does not authorize new surface. The registering PR did not move this budget, so the gate did its job again: the breach warned on main and BLOCKED on the release ref, which is the conscious-decision point rather than a silently raised cap. The move is +25%, over the 10% creep rule, and that is the intended reading: five tools in one commit is a surface decision, not creep. Re-measured three times via the pinned method on a freshly built dist/mcp/server.mjs: 25/25/25, the returned name set differing from the 20-tool set by exactly the five graph_* entries. Headroom stays zero by design — the next tool that leaves STUB_TOOLS must move this number in its own PR."
++      "baseline_note": "19 → 20 on 2026-08-17 (release 13.0.0 gate). The +1 is 866bd9861 (feat(mcp): recover what the host dropped — real ranker tool + a route to it, road-to-inbox-harvest-2026-08-d-runtime-skill-routing Phase 4): `suggest_skill_for_task` was promoted from a discovery STUB to a real ALLOWLIST entry and removed from STUB_TOOLS. Worth stating precisely, because the consumer-visible NAME did not grow — the stub already published that name and its `task` + `limit` input schema, which the promotion carried over verbatim. What grew is the count of tools tools/list actually returns, which is exactly what this metric measures post-ADR-132: implemented tools only. Same shape as the cli_help_command_count history above — this RECORDS growth that already shipped through its own reviewed PR (866bd9861 is on main), it does not authorize new surface. The registering PR did not move this budget, so the gate did its job: the breach warned on main and blocked on the release ref, which is the conscious-decision point rather than a silently raised cap. Re-measured twice via the pinned method on a freshly built dist/mcp/server.mjs: 20/20. Headroom stays zero by design — the next tool that leaves STUB_TOOLS must move this number in its own PR. 20 → 25 on 2026-09-09 (release 14.23.0 gate). The +5 are `graph_impact`, `graph_tests_for`, `graph_dead`, `graph_query` and `graph_path` — 9452f29b4 (feat(mcp): five graph tools, the pinned install hint, and the skill description; road-to-a-graph-that-is-shipped Phase 4.1), which is on main. They are the agent-facing readers of the code graph: the roadmap Risk-Register rank 1 is \"the install grows and the graph is still unread\", and an agent that has to shell out to reach a verb will not, so the tools ARE the mitigation rather than a convenience. Same shape as every entry above — this RECORDS growth that already shipped through its own reviewed PR; it does not authorize new surface. The registering PR did not move this budget, so the gate did its job again: the breach warned on main and BLOCKED on the release ref, which is the conscious-decision point rather than a silently raised cap. The move is +25%, over the 10% creep rule, and that is the intended reading: five tools in one commit is a surface decision, not creep. Re-measured three times via the pinned method on a freshly built dist/mcp/server.mjs: 25/25/25, the returned name set differing from the 20-tool set by exactly the five graph_* entries. Headroom stays zero by design — the next tool that leaves STUB_TOOLS must move this number in its own PR. 25 → 26 on 2026-10-01: the +1 is `graph_node` (road-to-a-graph-that-feeds-the-gate step 3.1), and this entry moves in the SAME PR that adds the surface, which is what every entry above asks of the next one. Why a sixth graph tool rather than an argument on one of the five: the five all answer about a NEIGHBOURHOOD (`graph_query`, `graph_path`, `graph_impact`) or about a SET (`graph_dead`, `graph_tests_for`), and none answers the question an agent asks first — where does this symbol live, who reaches it, what does it reach, how connected is it — which had to be assembled from two calls plus a file read. It walks the edge maps `affected` already walks, so it adds a view and not an index. It is also the one graph tool that REFUSES rather than guesses: it resolves on the exact tiers of the existing seed ladder (node id, then label) and returns a refusal naming the candidates when a label is ambiguous or nothing matches exactly, because free-text retrieval is the row the graph measurably lost (`docs/CLAIMS.md` code-graph-retrieval-null) and every field it returns is a statement about ONE node. Re-measured twice via the pinned method on a freshly built dist/mcp/server.mjs: 26/26, the returned name set differing from the 25-tool set by exactly `graph_node`. Headroom stays zero by design."
+     }
+   }
+ }
+diff --git a/src/scripts/_lib/graph_feeder_record.ts b/src/scripts/_lib/graph_feeder_record.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..972d41bfdc8969d625a6a0edb90cd4dacd7c77b1
+--- /dev/null
++++ b/src/scripts/_lib/graph_feeder_record.ts
+@@ -0,0 +1,195 @@
++/**
++ * The graph feeder record — detector F's verdict and the code graph's, side by
++ * side, on every stop where a graph existed (`road-to-a-graph-that-feeds-the-gate`
++ * step 3.2).
++ *
++ * WHY A SEPARATE RECORD AND NOT `ShadowRecord` (D3). `ShadowRecord` is written
++ * only on the `stop_hook_active` and `refused_turn` layers and is the Q1
++ * instrument of `road-to-a-stop-that-holds` — a live measurement window with its
++ * own denominator. Folding a second signal into it would contaminate a reading
++ * somebody else is taking, which is a worse failure than a second file.
++ *
++ * WHY IT CHANGES NO VERDICT. The whole point of a shadow is that it costs the
++ * turn nothing: every function here is wrapped, every failure path returns
++ * silently, and no caller branches on the result. Step 3.4 — promoting the graph
++ * verdict into F — is DEFERRED behind step 3.3's recall measurement and behind
++ * an owner amendment to ADR-277, and nothing in this module anticipates it.
++ *
++ * WHAT A ROW MAY CONTAIN. The fields are a closed set of enums, counts and
++ * repo-relative source paths. There is no field able to hold a prompt, a file
++ * body, a reply or a command — the same PII-exclusion-by-construction discipline
++ * `domain-safety-pii` § Surface 2 asks of a log line, and the same shape
++ * `ToolCall` already has. Paths are in the set because they are the evidence a
++ * human labeller needs in step 3.3 and because the gate's own refusal text
++ * already quotes them; they are capped so one turn cannot write an unbounded row.
++ */
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++
++import { detectSources, type GraphState, NATIVE_CACHE_REL, pickSource } from '../code_graph/detect.js';
++import { loadGraph } from '../code_graph/query.js';
++import { untested } from '../code_graph/verbs.js';
++
++/** At most this many edit paths per row. */
++const MAX_PATHS = 5;
++
++/**
++ * At most this many rows per session file.
++ *
++ * `agents/state/` is local and gitignored, but "local" is not "free": a long
++ * session appends on every turn end, and an instrument that grows without a
++ * bound is the failure the gate's own refusal-state history already records.
++ * Past the cap the writer stops rather than rotating — a truncated tail is a
++ * readable sample, and a rotation would silently drop the earliest rows that a
++ * recall reading most wants.
++ */
++export const MAX_ROWS_PER_SESSION = 200;
++
++/** The graph's half of the verdict. `null` means the graph did not contribute. */
++export type GraphVerdict = 'untested' | 'tested' | 'no-seeds' | null;
++
++/** One stop, as the feeder records it. */
++export interface GraphFeederRow {
++    at: string;
++    /** The turn's ordinal — how many genuine user prompts preceded it. */
++    turn: number;
++    /** Which stop layer produced this row: the live verdict, or a retry. */
++    layer: string;
++    graph_state: GraphState;
++    /** Did detector F fire on this turn? */
++    f: boolean;
++    /** F's evidence class when it fired — `transcript` or `record`. */
++    f_mode: string | null;
++    graph: GraphVerdict;
++    /** How many changed symbols the graph found no test edge for. */
++    graph_untested: number;
++    /** How many it did find one for — so the ratio is readable. */
++    graph_tested: number;
++    /** The turn's edit paths, capped at {@link MAX_PATHS}. */
++    paths: string[];
++    /** How many edit paths there were in total, when the list is capped. */
++    path_count: number;
++}
++
++export function feederFile(workspaceRoot: string, sessionKey: string): string {
++    return path.join(workspaceRoot, 'agents', 'state', 'graph-feeder', `${sessionKey}.jsonl`);
++}
++
++/**
++ * Run `untested` over the turn's edit paths.
++ *
++ * Returns `null` — the graph contributed nothing — for every reason there is:
++ * no usable source, a SCIP index with no owned reader, no edit paths, or any
++ * throw at all. A verdict this module cannot stand behind is not a verdict.
++ */
++export function graphUntestedVerdict(
++    root: string,
++    state: GraphState,
++    paths: readonly string[],
++): { verdict: GraphVerdict; untested: number; tested: number } {
++    const none = { verdict: null, untested: 0, tested: 0 } as const;
++    // `behind:N` and `absent` contribute nothing, by the step's own terms: an
++    // answer from an index that predates the change is not evidence about the
++    // change.
++    if (state !== 'fresh' && state !== 'edited') return none;
++    if (paths.length === 0) return none;
++    let picked;
++    try {
++        picked = pickSource(detectSources(root, path.join(root, NATIVE_CACHE_REL)));
++    } catch {
++        return none;
++    }
++    if (!picked || picked.kind === 'scip') return none;
++    let g;
++    try {
++        g = loadGraph(picked.path, `${picked.kind}:${path.relative(root, picked.path)}`);
++    } catch {
++        return none;
++    }
++    try {
++        const r = untested(g, paths, state);
++        if (r.seeds.length === 0) return { verdict: 'no-seeds', untested: 0, tested: 0 };
++        return {
++            verdict: r.untested.length > 0 ? 'untested' : 'tested',
++            untested: r.untested.length,
++            tested: r.tested.length,
++        };
++    } catch {
++        return none;
++    } finally {
++        // The handle owns an open database; a stop hook that leaked one per turn
++        // would hold a descriptor for the life of the session.
++        try {
++            g.close();
++        } catch {
++            /* nothing to do about a failed close */
++        }
++    }
++}
++
++/** Append one row, or do nothing at all. Never throws, never returns a verdict. */
++export function appendFeederRow(workspaceRoot: string, sessionKey: string, row: GraphFeederRow): void {
++    try {
++        const file = feederFile(workspaceRoot, sessionKey);
++        let existing = 0;
++        try {
++            existing = fs
++                .readFileSync(file, 'utf-8')
++                .split('\n')
++                .filter((l) => l.trim() !== '').length;
++        } catch {
++            /* absent is zero */
++        }
++        if (existing >= MAX_ROWS_PER_SESSION) return;
++        fs.mkdirSync(path.dirname(file), { recursive: true });
++        fs.appendFileSync(file, `${JSON.stringify(row)}\n`);
++    } catch {
++        // An instrument is never a reason to change what the gate does.
++    }
++}
++
++/** Read a session's rows back, skipping anything unparseable. */
++export function readFeederRows(workspaceRoot: string, sessionKey: string): GraphFeederRow[] {
++    try {
++        return fs
++            .readFileSync(feederFile(workspaceRoot, sessionKey), 'utf-8')
++            .split('\n')
++            .filter((l) => l.trim() !== '')
++            .map((l) => {
++                try {
++                    return JSON.parse(l) as GraphFeederRow;
++                } catch {
++                    return null;
++                }
++            })
++            .filter((r): r is GraphFeederRow => r !== null);
++    } catch {
++        return [];
++    }
++}
++
++/** Build the row. Pure, so the shape can be asserted without a filesystem. */
++export function buildFeederRow(input: {
++    turn: number;
++    layer: string;
++    state: GraphState;
++    fFired: boolean;
++    fMode: string | null;
++    paths: readonly string[];
++    graph: { verdict: GraphVerdict; untested: number; tested: number };
++    at?: string;
++}): GraphFeederRow {
++    return {
++        at: input.at ?? new Date().toISOString(),
++        turn: input.turn,
++        layer: input.layer,
++        graph_state: input.state,
++        f: input.fFired,
++        f_mode: input.fMode,
++        graph: input.graph.verdict,
++        graph_untested: input.graph.untested,
++        graph_tested: input.graph.tested,
++        paths: input.paths.slice(0, MAX_PATHS).map((p) => p),
++        path_count: input.paths.length,
++    };
++}
+diff --git a/src/scripts/code_graph/detect.ts b/src/scripts/code_graph/detect.ts
+index 3862d8d455315eefe2227ca91c04108de263b0a5..e4780a78041eec80c5bd53321d22e9e5dbd85b21 100644
+--- a/src/scripts/code_graph/detect.ts
++++ b/src/scripts/code_graph/detect.ts
+@@ -18,6 +18,7 @@ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ 
+ import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
++import { EXT_LANG } from './types.js';
+ import { validateGraph } from './validate.js';
+ 
+ export type SourceKind = 'consumer' | 'scip' | 'native';
+@@ -189,7 +190,12 @@ export function computeVerdict(root: string, nativeCache: string): VerdictJSON {
+ export const NATIVE_CACHE_REL = path.join('agents', 'runtime', 'state', 'code-graph-v1.json');
+ 
+ /**
+- * The three-state staleness token every consumer of the graph reports.
++ * The four-state staleness token every consumer of the graph reports.
++ *
++ * `edited` is the fourth and newest (`road-to-a-graph-that-feeds-the-gate` 2.3).
++ * Without it an uncommitted change to an indexed file read as `fresh` — the one
++ * state that says "nothing stands between this answer and the tree" — which is
++ * the reading most likely to be wrong while someone is editing.
+  *
+  * Lives HERE rather than in the PreToolUse hook that first needed it
+  * (`hooks/code_graph_context_hook.ts`, step 1.2). Phase 3's verbs must each
+@@ -198,7 +204,57 @@ export const NATIVE_CACHE_REL = path.join('agents', 'runtime', 'state', 'code-gr
+  * the engine, never the other way round. The hook re-exports this so its own
+  * consumers are unaffected.
+  */
+-export type GraphState = 'absent' | 'fresh' | `behind:${number}`;
++export type GraphState = 'absent' | 'fresh' | 'edited' | `behind:${number}`;
++
++/**
++ * The working tree carries an uncommitted change to a file the extractor would
++ * index.
++ *
++ * WHY POINT-IN-TIME PORCELAIN AND NOT THE ARTIFACT'S MTIME. An mtime comparison
++ * looks cheaper and is wrong in the one direction that matters: restoring a
++ * stashed or checked-out file rewrites its mtime, so a tree put back exactly as
++ * the graph saw it would read stale forever and never return to `fresh`. The
++ * porcelain result describes a CONTENT difference, so a revert is visible as a
++ * revert.
++ *
++ * "Indexed paths" is read as *paths of the kind the extractor indexes* —
++ * `EXT_LANG`'s extensions — not as the node set of a loaded graph. Loading the
++ * graph to answer a freshness question would mean opening the index on every
++ * PreToolUse call this now runs on, which is the latency the Risk Register
++ * names; the extension filter answers the same question with no read. It can
++ * over-report (a `.ts` file the build excluded) and cannot under-report, and
++ * over-reporting `edited` only ever makes an answer look worth less than it is.
++ *
++ * Untracked files count. A source file that exists only in the working tree is
++ * precisely something the index cannot know about.
++ */
++function hasUncommittedIndexedEdit(root: string): boolean {
++    let out: string;
++    try {
++        out = execFileSync('git', ['-C', root, 'status', '--porcelain'], {
++            env: hardenedSpawnEnv(),
++            encoding: 'utf-8',
++            stdio: ['ignore', 'pipe', 'ignore'],
++        });
++    } catch {
++        // Not a repository, or the probe failed: nothing is known, and an
++        // unknown is reported as the state the caller already had.
++        return false;
++    }
++    for (const raw of out.split('\n')) {
++        if (raw.length < 4) continue;
++        // `XY <path>`; a rename or copy is `XY <old> -> <new>`, and the NEW path
++        // is the one on disk. Quotes appear under core.quotepath for non-ASCII.
++        let p = raw.slice(3);
++        const arrow = p.indexOf(' -> ');
++        if (arrow !== -1) p = p.slice(arrow + 4);
++        p = p.trim().replace(/^"|"$/g, '');
++        const dot = p.lastIndexOf('.');
++        if (dot === -1) continue;
++        if (p.slice(dot).toLowerCase() in EXT_LANG) return true;
++    }
++    return false;
++}
+ 
+ /**
+  * Resolve the graph's state for `root`.
+@@ -206,7 +262,10 @@ export type GraphState = 'absent' | 'fresh' | `behind:${number}`;
+  * `absent` means no source at all — the silent case. A picked source whose
+  * staleness is UNKNOWN reads as `fresh`, mirroring {@link computeVerdict}'s own
+  * `picked.stale ? STALE : FRESH`: unknown is not treated as stale, because
+- * inventing a commit count would be worse than reporting none.
++ * inventing a commit count would be worse than reporting none. A source level
++ * with HEAD then reads `edited` instead of `fresh` while the working tree
++ * carries an uncommitted change to an indexable file — see
++ * {@link hasUncommittedIndexedEdit} for why that probe is porcelain, not mtime.
+  *
+  * `nativeCache` overrides where the native graph is looked for. It exists
+  * because a verb invoked with an explicit `--graph <path>` would otherwise
+@@ -218,7 +277,13 @@ export type GraphState = 'absent' | 'fresh' | `behind:${number}`;
+ export function graphState(root: string, nativeCache?: string): GraphState {
+     const picked = pickSource(detectSources(root, nativeCache ?? path.join(root, NATIVE_CACHE_REL)));
+     if (!picked) return 'absent';
+-    if (picked.stale !== true) return 'fresh';
+-    const behind = picked.commits_behind;
+-    return `behind:${typeof behind === 'number' ? behind : 0}`;
++    if (picked.stale === true) {
++        const behind = picked.commits_behind;
++        return `behind:${typeof behind === 'number' ? behind : 0}`;
++    }
++    // The commit count comes FIRST and wins: `behind:N` already says the index
++    // predates committed work, and reporting `edited` instead would hide the
++    // larger gap behind the smaller one. Only a graph level with HEAD has an
++    // uncommitted edit as its whole remaining distance.
++    return hasUncommittedIndexedEdit(root) ? 'edited' : 'fresh';
+ }
+diff --git a/src/scripts/code_graph/query.ts b/src/scripts/code_graph/query.ts
+index 97eac741b585ce1c965d56ee9886cc5dffb8beb6..d2faf5ad566bd71c86331ab96b0e9858de76e5b8 100644
+--- a/src/scripts/code_graph/query.ts
++++ b/src/scripts/code_graph/query.ts
+@@ -16,7 +16,7 @@ import {
+     loadSerializedFromTwin,
+     openGraphIndex,
+ } from './sqlite_store.js';
+-import type { CodeEdge, CodeGraph, CodeNode } from './types.js';
++import type { CodeEdge, CodeGraph, CodeNode, Relation } from './types.js';
+ import { validateGraph } from './validate.js';
+ 
+ const APPROX_CHARS_PER_TOKEN = 4;
+@@ -203,6 +203,33 @@ function resolveSeedsTiered(g: LoadedGraph, seed: string, limit = 5): SeedResolu
+     return { ids: ranked.slice(0, limit).map((r) => r.id), weak: true };
+ }
+ 
++/**
++ * The EXACT half of the ladder above — id, then label — with no BM25 tier.
++ *
++ * `graph_node` is a node tool: every field it returns (location, degree, the
++ * edge lists) is a statement about ONE node, so answering about a best-guess
++ * node is worse than refusing. D4 of `road-to-a-graph-that-feeds-the-gate` makes
++ * that explicit for this tool — free-text retrieval is the row the graph lost,
++ * so a node answer never rests on a score.
++ *
++ * Still the same ladder and not a second resolver: this calls
++ * {@link resolveSeedsTiered} and reads its `weak` flag, so a change to the
++ * exact tiers reaches both callers.
++ *
++ * `ambiguous` carries the candidates when a LABEL resolves to several nodes.
++ * Picking the first would be the silent guess this function exists to avoid; the
++ * caller re-asks with one of the ids.
++ */
++export function resolveExactNode(
++    g: LoadedGraph,
++    seed: string,
++): { id: string | null; ambiguous: string[] } {
++    const r = resolveSeedsTiered(g, seed);
++    if (r.weak || r.ids.length === 0) return { id: null, ambiguous: [] };
++    if (r.ids.length > 1) return { id: null, ambiguous: r.ids };
++    return { id: r.ids[0] as string, ambiguous: [] };
++}
++
+ /** Resolve a free-text seed to node ids: exact id → exact label → BM25. */
+ export function resolveSeeds(g: LoadedGraph, seed: string, limit = 5): string[] {
+     return resolveSeedsTiered(g, seed, limit).ids;
+@@ -421,3 +448,155 @@ export function mergeRecommendedReads(results: readonly QueryResult[]): Recommen
+     for (const r of results) for (const rr of r.recommended_reads) merged.set(readKey(rr), rr);
+     return [...merged.values()];
+ }
++
++// ---------------------------------------------------------------------------
++// `node` — one node, its location, its edges, its degree (3.1)
++// ---------------------------------------------------------------------------
++
++/** One edge as the node view renders it: who, how, which way, how far. */
++export interface NodeEdgeLine {
++    /** The node at the OTHER end — the caller for an in-edge, the callee for an out-edge. */
++    id: string;
++    label: string;
++    relation: Relation;
++    confidence: string;
++    hops: number;
++}
++
++export interface NodeResult {
++    source: string;
++    /** The resolved id, or `''` when nothing resolved and `refusal` is set. */
++    id: string;
++    label: string;
++    kind: string;
++    /** File + 1-based inclusive line range, or `null` for a placeholder node. */
++    location: RecommendedRead | null;
++    /** DIRECT edge counts, always 1-hop — a degree is not a property of a walk. */
++    in_degree: number;
++    out_degree: number;
++    in: NodeEdgeLine[];
++    out: NodeEdgeLine[];
++    truncated: boolean;
++    /** Set when the seed did not resolve exactly; every other field is empty. */
++    refusal?: string;
++}
++
++export interface NodeOptions {
++    direction?: 'in' | 'out' | 'both';
++    /** 1-3. Anything outside the range is clamped rather than refused. */
++    depth?: number;
++    /** Restrict to one relation of the closed vocabulary. */
++    relation?: Relation;
++}
++
++/** Hard cap per direction, so one hub node cannot return an unbounded payload. */
++const NODE_EDGE_CAP = 200;
++
++/**
++ * Walk one direction from `start`, recording each edge once, breadth-first.
++ *
++ * `seen` is keyed on the NODE, so a cycle terminates; the edge list can still
++ * carry two lines into the same node by different relations, which is a real
++ * distinction a caller asked for when it passed no `relation`.
++ */
++function walkDirection(
++    g: LoadedGraph,
++    start: string,
++    dir: 'in' | 'out',
++    depth: number,
++    relation: Relation | undefined,
++): { lines: NodeEdgeLine[]; truncated: boolean } {
++    const lines: NodeEdgeLine[] = [];
++    const seen = new Set<string>([start]);
++    let frontier = [start];
++    let truncated = false;
++    for (let hop = 1; hop <= depth && frontier.length > 0; hop += 1) {
++        const next: string[] = [];
++        for (const cur of frontier) {
++            for (const e of (dir === 'out' ? g.out : g.in).get(cur) ?? []) {
++                if (relation !== undefined && e.relation !== relation) continue;
++                const other = dir === 'out' ? e.target : e.source;
++                if (lines.length >= NODE_EDGE_CAP) {
++                    truncated = true;
++                    break;
++                }
++                lines.push({
++                    id: sanitizeLabel(other),
++                    label: label(g, other),
++                    relation: e.relation,
++                    confidence: e.confidence,
++                    hops: hop,
++                });
++                if (!seen.has(other)) {
++                    seen.add(other);
++                    next.push(other);
++                }
++            }
++            if (truncated) break;
++        }
++        if (truncated) break;
++        frontier = next;
++    }
++    return { lines, truncated };
++}
++
++/**
++ * `node <seed>` — what one node IS, rather than what a walk from it reaches.
++ *
++ * The five readers before it all answer a question about a neighbourhood
++ * (`query`, `explain`, `affected`, `path`) or about a set (`dead`, `untested`).
++ * None answers "where does this live, who reaches it, what does it reach, how
++ * connected is it" — which is the question an agent asks first and had to
++ * assemble from two calls and a file read.
++ *
++ * Nothing new is walked: the edge maps are the ones `affected` already uses, so
++ * this adds a view, not an index.
++ */
++export function node(g: LoadedGraph, seed: string, opts: NodeOptions = {}): NodeResult {
++    const empty = {
++        source: g.source,
++        id: '',
++        label: '',
++        kind: '',
++        location: null,
++        in_degree: 0,
++        out_degree: 0,
++        in: [] as NodeEdgeLine[],
++        out: [] as NodeEdgeLine[],
++        truncated: false,
++    };
++    const { id, ambiguous } = resolveExactNode(g, seed);
++    if (id === null) {
++        return {
++            ...empty,
++            refusal:
++                ambiguous.length > 0
++                    ? `'${sanitizeLabel(seed)}' is a label on ${String(ambiguous.length)} nodes — ` +
++                      `re-ask with one id: ${ambiguous.map((a) => sanitizeLabel(a)).join(', ')}`
++                    : `'${sanitizeLabel(seed)}' matches no node id and no node label. This tool ` +
++                      'resolves exactly (id, then label) and does not score free text — use ' +
++                      '`query` if a best-guess match is what you want.',
++        };
++    }
++    const n = g.byId.get(id);
++    const direction = opts.direction ?? 'both';
++    const depth = Math.min(3, Math.max(1, Math.trunc(opts.depth ?? 1)));
++    const inWalk =
++        direction === 'out' ? { lines: [], truncated: false } : walkDirection(g, id, 'in', depth, opts.relation);
++    const outWalk =
++        direction === 'in' ? { lines: [], truncated: false } : walkDirection(g, id, 'out', depth, opts.relation);
++    const degreeOf = (edges: readonly CodeEdge[] | undefined): number =>
++        opts.relation === undefined ? (edges?.length ?? 0) : (edges ?? []).filter((e) => e.relation === opts.relation).length;
++    return {
++        source: g.source,
++        id: sanitizeLabel(id),
++        label: label(g, id),
++        kind: n?.kind ?? '',
++        location: recommendedReadFor(g, id),
++        in_degree: degreeOf(g.in.get(id)),
++        out_degree: degreeOf(g.out.get(id)),
++        in: inWalk.lines,
++        out: outWalk.lines,
++        truncated: inWalk.truncated || outWalk.truncated,
++    };
++}
+diff --git a/src/scripts/hook_manifest.json b/src/scripts/hook_manifest.json
+index 85edabd93c036a4d0eae6300e92405d231d27b56..ea7c5db6bee978284101f5de3c27aee14c896dac 100644
+--- a/src/scripts/hook_manifest.json
++++ b/src/scripts/hook_manifest.json
+@@ -1 +1 @@
+-{"fingerprint":"92eb4d7160f46e49f0924f0a3a86ef88434b528fa14506ef19242c8527d80580:99792","manifest":{"schema_version":1,"concerns":{"chat-history":{"script":"src/scripts/chat_history.ts","args":["hook-dispatch"],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["result"]},"hot-context":{"script":"src/scripts/hot_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"handoff-context":{"script":"src/scripts/handoff_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"roadmap-progress":{"script":"src/scripts/roadmap_progress_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"onboarding-gate":{"script":"src/scripts/onboarding_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"context-hygiene":{"script":"src/scripts/context_hygiene_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"verify-before-complete":{"script":"src/scripts/before_complete_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"ship-diff-volume":{"script":"src/scripts/hooks/ship_diff_volume_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"minimal-safe-diff":{"script":"src/scripts/minimal_safe_diff_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"injection-scan":{"script":"src/scripts/injection_scan_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"block-no-verify":{"script":"src/scripts/hooks/block_no_verify.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"block-kernel-rule-writes":{"script":"src/scripts/hooks/block_kernel_rule_writes.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"block-plumbing-writes":{"script":"src/scripts/hooks/block_plumbing_writes.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"one-question-per-ask":{"script":"src/scripts/hooks/one_question_per_ask_hook.ts","args":[],"fail_closed":false,"severity":"blocking","tools":["AskUserQuestion","AskQuestion","UserQuestion","ask_user_question","ask_question","user_question"],"needs_payload_bodies":["input"]},"block-speaking-inbox-dir":{"script":"src/scripts/hooks/block_speaking_inbox_dir.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"block-config-weakening":{"script":"src/scripts/hooks/block_config_weakening.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"rtk-wrap":{"script":"src/scripts/hooks/rtk_wrap_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"design-slop":{"script":"src/scripts/hooks/design_slop_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"design-pass":{"script":"src/scripts/hooks/design_pass_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"design-pass-stop":{"script":"src/scripts/hooks/design_pass_hook.ts","args":["--slot","stop"],"fail_closed":false,"severity":"advisory"},"ui-route-nudge":{"script":"src/scripts/hooks/ui_route_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"suggestion-capture":{"script":"src/scripts/hooks/suggestion_capture_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"chain-nudge":{"script":"src/scripts/hooks/chain_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"code-graph-context":{"script":"src/scripts/hooks/code_graph_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Grep","Glob","Read"],"needs_payload_bodies":["input"]},"memory-learn":{"script":"src/scripts/memory_learn_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"first-run-gate":{"script":"src/scripts/first_run_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"profile-staleness":{"script":"src/scripts/profile_staleness_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"wrapper-freshness":{"script":"src/scripts/wrapper_freshness_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"surface-probe":{"script":"src/scripts/surface_probe_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"team-review-gate":{"script":"src/scripts/team_review_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"pr-url-reminder":{"script":"src/scripts/pr_url_reminder_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"push-settle":{"script":"src/scripts/hooks/push_settle_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"language-mirror":{"script":"src/scripts/language_mirror_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"git-authorization":{"script":"src/scripts/git_authorization_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"evidence-independence":{"script":"src/scripts/hooks/evidence_independence.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"session-canary":{"script":"src/scripts/session_canary_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"council-availability":{"script":"src/scripts/council_availability_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"telemetry-disclosure":{"script":"src/scripts/telemetry_disclosure_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"telemetry-flush":{"script":"src/scripts/hooks/telemetry_flush_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"self-repair":{"script":"src/scripts/self_repair_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"session-register":{"script":"src/scripts/session_register_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"orchestration-record":{"script":"src/scripts/hooks/orchestration_record_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Agent","Task"],"needs_payload_bodies":["input","result"]},"telemetry-usage":{"script":"src/scripts/hooks/telemetry_usage_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Skill"],"needs_payload_bodies":["input"]},"delegation-nudge":{"script":"src/scripts/hooks/delegation_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","nudge_rank":1},"skill-route":{"script":"src/scripts/hooks/skill_route_hook.ts","args":[],"fail_closed":false,"severity":"advisory","nudge_rank":2},"rule-inject":{"script":"src/scripts/hooks/rule_inject_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"obligation-settle":{"script":"src/scripts/hooks/obligation_settle_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"end-review-nudge":{"script":"src/scripts/hooks/end_review_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","skip_on_refusal_retry":true},"review-baseline":{"script":"src/scripts/hooks/review_baseline_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"turn-end-gate":{"script":"src/scripts/hooks/turn_end_gate_hook.ts","args":[],"fail_closed":false,"severity":"blocking"},"comment-discipline":{"script":"src/scripts/hooks/comment_discipline_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Write","Edit"],"needs_payload_bodies":["input"]},"edit-shape":{"script":"src/scripts/hooks/edit_shape_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Write"],"needs_payload_bodies":["input"]},"reread-guard":{"script":"src/scripts/hooks/reread_guard_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Read","Edit","Write"],"needs_payload_bodies":["input"]},"memory-recall":{"script":"src/scripts/hooks/memory_recall_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Bash","Edit","Write","MultiEdit","str-replace-editor","save-file","launch-process"],"needs_payload_bodies":["input"]},"session-eol":{"script":"src/scripts/hooks/session_eol_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"run-continuation":{"script":"src/scripts/hooks/run_continuation_hook.ts","args":[],"fail_closed":false,"severity":"blocking"},"interruption-ledger":{"script":"src/scripts/hooks/interruption_ledger_hook.ts","args":[],"fail_closed":false,"severity":"advisory","skip_on_refusal_retry":true},"subagent-ledger":{"script":"src/scripts/hooks/subagent_ledger_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"tool-result-bytes":{"script":"src/scripts/hooks/tool_result_bytes_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"spawn-guard-shadow":{"script":"src/scripts/hooks/spawn_guard_shadow_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Agent","Task"]},"source-first-gate":{"script":"src/scripts/hooks/source_first_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"journal-record":{"script":"src/scripts/hooks/journal_record_hook.ts","args":[],"fail_closed":false,"severity":"advisory"}},"roles":{"worker":{"drop":["delegation-nudge","skill-route","end-review-nudge","review-baseline","council-availability","team-review-gate","self-repair","session-eol","interruption-ledger"]}},"platforms":{"augment":{"ask":"text","session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"pre_tool_use":["block-no-verify","evidence-independence","block-kernel-rule-writes","block-plumbing-writes","block-config-weakening","block-speaking-inbox-dir","rtk-wrap","design-slop","ui-route-nudge","code-graph-context","chain-nudge","ship-diff-volume","reread-guard","memory-recall"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"claude":{"ask":"native","session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register","review-baseline","journal-record"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush","journal-record"],"stop":["chat-history","verify-before-complete","team-review-gate","end-review-nudge","obligation-settle","turn-end-gate","self-repair","session-register","session-eol","interruption-ledger","roadmap-progress","design-pass-stop","suggestion-capture","journal-record","run-continuation"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","delegation-nudge","skill-route","git-authorization","session-canary","self-repair","session-register","rule-inject","suggestion-capture","journal-record"],"pre_tool_use":["block-no-verify","evidence-independence","block-kernel-rule-writes","block-plumbing-writes","block-config-weakening","block-speaking-inbox-dir","one-question-per-ask","rtk-wrap","design-slop","ui-route-nudge","code-graph-context","chain-nudge","ship-diff-volume","reread-guard","spawn-guard-shadow","source-first-gate","memory-recall"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","language-mirror","design-pass","journal-record"],"pre_compact":["language-mirror","rule-inject","journal-record"],"subagent_start":["subagent-ledger","journal-record"],"subagent_stop":["subagent-ledger","journal-record"]},"cowork":{"ask":"text","session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"pre_tool_use":["block-no-verify","evidence-independence","block-kernel-rule-writes","block-plumbing-writes","block-config-weakening","block-speaking-inbox-dir","rtk-wrap","design-slop","ui-route-nudge","code-graph-context","chain-nudge","ship-diff-volume","reread-guard","spawn-guard-shadow","source-first-gate","memory-recall"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"],"subagent_start":["subagent-ledger"],"subagent_stop":["subagent-ledger"]},"cursor":{"ask":"text","session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"cline":{"ask":"text","session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"windsurf":{"ask":"text","session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","profile-staleness","wrapper-freshness","surface-probe","session-register"],"stop":["chat-history","verify-before-complete","self-repair","session-register","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","language-mirror","git-authorization","session-canary","self-repair","session-register"]},"gemini":{"ask":"text","session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"copilot":{"ask":"text","fallback_only":true}},"native_event_aliases":{"augment":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use"},"claude":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact","SubagentStart":"subagent_start","SubagentStop":"subagent_stop"},"cowork":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact","SubagentStart":"subagent_start","SubagentStop":"subagent_stop"},"cursor":{"sessionStart":"session_start","sessionEnd":"session_end","stop":"stop","beforeSubmitPrompt":"user_prompt_submit","postToolUse":"post_tool_use","preToolUse":"pre_tool_use","preCompact":"pre_compact"},"cline":{"TaskStart":"session_start","TaskResume":"session_start","TaskComplete":"session_end","TaskCancel":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact"},"windsurf":{"pre_user_prompt":"user_prompt_submit","post_cascade_response":"stop","post_setup_worktree":"session_start"},"gemini":{"SessionStart":"session_start","SessionEnd":"session_end","BeforeAgent":"user_prompt_submit","AfterAgent":"stop","BeforeTool":"pre_tool_use","AfterTool":"post_tool_use"}}}}
+\ No newline at end of file
++{"fingerprint":"7e514b9eb79c1c447a14daecb33484eb730edbe64a76f838c837b9b4633868bf:100339","manifest":{"schema_version":1,"concerns":{"chat-history":{"script":"src/scripts/chat_history.ts","args":["hook-dispatch"],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["result"]},"hot-context":{"script":"src/scripts/hot_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"handoff-context":{"script":"src/scripts/handoff_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"roadmap-progress":{"script":"src/scripts/roadmap_progress_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"onboarding-gate":{"script":"src/scripts/onboarding_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"context-hygiene":{"script":"src/scripts/context_hygiene_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"verify-before-complete":{"script":"src/scripts/before_complete_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"ship-diff-volume":{"script":"src/scripts/hooks/ship_diff_volume_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"minimal-safe-diff":{"script":"src/scripts/minimal_safe_diff_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"injection-scan":{"script":"src/scripts/injection_scan_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"block-no-verify":{"script":"src/scripts/hooks/block_no_verify.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"block-kernel-rule-writes":{"script":"src/scripts/hooks/block_kernel_rule_writes.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"block-plumbing-writes":{"script":"src/scripts/hooks/block_plumbing_writes.ts","args":[],"fail_closed":true,"severity":"blocking","needs_payload_bodies":["input"]},"one-question-per-ask":{"script":"src/scripts/hooks/one_question_per_ask_hook.ts","args":[],"fail_closed":false,"severity":"blocking","tools":["AskUserQuestion","AskQuestion","UserQuestion","ask_user_question","ask_question","user_question"],"needs_payload_bodies":["input"]},"block-speaking-inbox-dir":{"script":"src/scripts/hooks/block_speaking_inbox_dir.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"block-config-weakening":{"script":"src/scripts/hooks/block_config_weakening.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"rtk-wrap":{"script":"src/scripts/hooks/rtk_wrap_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"design-slop":{"script":"src/scripts/hooks/design_slop_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"design-pass":{"script":"src/scripts/hooks/design_pass_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"design-pass-stop":{"script":"src/scripts/hooks/design_pass_hook.ts","args":["--slot","stop"],"fail_closed":false,"severity":"advisory"},"ui-route-nudge":{"script":"src/scripts/hooks/ui_route_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"suggestion-capture":{"script":"src/scripts/hooks/suggestion_capture_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"chain-nudge":{"script":"src/scripts/hooks/chain_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"code-graph-context":{"script":"src/scripts/hooks/code_graph_context_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Grep","Glob","Read","Bash"],"needs_payload_bodies":["input"]},"memory-learn":{"script":"src/scripts/memory_learn_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"first-run-gate":{"script":"src/scripts/first_run_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"profile-staleness":{"script":"src/scripts/profile_staleness_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"wrapper-freshness":{"script":"src/scripts/wrapper_freshness_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"surface-probe":{"script":"src/scripts/surface_probe_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"team-review-gate":{"script":"src/scripts/team_review_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"pr-url-reminder":{"script":"src/scripts/pr_url_reminder_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"push-settle":{"script":"src/scripts/hooks/push_settle_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input","result"]},"language-mirror":{"script":"src/scripts/language_mirror_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"git-authorization":{"script":"src/scripts/git_authorization_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"evidence-independence":{"script":"src/scripts/hooks/evidence_independence.ts","args":[],"fail_closed":false,"severity":"blocking","needs_payload_bodies":["input"]},"session-canary":{"script":"src/scripts/session_canary_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"council-availability":{"script":"src/scripts/council_availability_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"telemetry-disclosure":{"script":"src/scripts/telemetry_disclosure_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"telemetry-flush":{"script":"src/scripts/hooks/telemetry_flush_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"self-repair":{"script":"src/scripts/self_repair_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"session-register":{"script":"src/scripts/session_register_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"orchestration-record":{"script":"src/scripts/hooks/orchestration_record_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Agent","Task"],"needs_payload_bodies":["input","result"]},"telemetry-usage":{"script":"src/scripts/hooks/telemetry_usage_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Skill"],"needs_payload_bodies":["input"]},"delegation-nudge":{"script":"src/scripts/hooks/delegation_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","nudge_rank":1},"skill-route":{"script":"src/scripts/hooks/skill_route_hook.ts","args":[],"fail_closed":false,"severity":"advisory","nudge_rank":2},"rule-inject":{"script":"src/scripts/hooks/rule_inject_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"obligation-settle":{"script":"src/scripts/hooks/obligation_settle_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"end-review-nudge":{"script":"src/scripts/hooks/end_review_nudge_hook.ts","args":[],"fail_closed":false,"severity":"advisory","skip_on_refusal_retry":true},"review-baseline":{"script":"src/scripts/hooks/review_baseline_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"turn-end-gate":{"script":"src/scripts/hooks/turn_end_gate_hook.ts","args":[],"fail_closed":false,"severity":"blocking"},"comment-discipline":{"script":"src/scripts/hooks/comment_discipline_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Write","Edit"],"needs_payload_bodies":["input"]},"edit-shape":{"script":"src/scripts/hooks/edit_shape_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Write"],"needs_payload_bodies":["input"]},"reread-guard":{"script":"src/scripts/hooks/reread_guard_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Read","Edit","Write"],"needs_payload_bodies":["input"]},"memory-recall":{"script":"src/scripts/hooks/memory_recall_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Bash","Edit","Write","MultiEdit","str-replace-editor","save-file","launch-process"],"needs_payload_bodies":["input"]},"session-eol":{"script":"src/scripts/hooks/session_eol_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"run-continuation":{"script":"src/scripts/hooks/run_continuation_hook.ts","args":[],"fail_closed":false,"severity":"blocking"},"interruption-ledger":{"script":"src/scripts/hooks/interruption_ledger_hook.ts","args":[],"fail_closed":false,"severity":"advisory","skip_on_refusal_retry":true},"subagent-ledger":{"script":"src/scripts/hooks/subagent_ledger_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"tool-result-bytes":{"script":"src/scripts/hooks/tool_result_bytes_hook.ts","args":[],"fail_closed":false,"severity":"advisory"},"spawn-guard-shadow":{"script":"src/scripts/hooks/spawn_guard_shadow_hook.ts","args":[],"fail_closed":false,"severity":"advisory","tools":["Agent","Task"]},"source-first-gate":{"script":"src/scripts/hooks/source_first_gate_hook.ts","args":[],"fail_closed":false,"severity":"advisory","needs_payload_bodies":["input"]},"journal-record":{"script":"src/scripts/hooks/journal_record_hook.ts","args":[],"fail_closed":false,"severity":"advisory"}},"roles":{"worker":{"drop":["delegation-nudge","skill-route","end-review-nudge","review-baseline","council-availability","team-review-gate","self-repair","session-eol","interruption-ledger"]}},"platforms":{"augment":{"ask":"text","session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"pre_tool_use":["block-no-verify","evidence-independence","block-kernel-rule-writes","block-plumbing-writes","block-config-weakening","block-speaking-inbox-dir","rtk-wrap","design-slop","ui-route-nudge","code-graph-context","chain-nudge","ship-diff-volume","reread-guard","memory-recall"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"claude":{"ask":"native","session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register","review-baseline","journal-record"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush","journal-record"],"stop":["chat-history","verify-before-complete","team-review-gate","end-review-nudge","obligation-settle","turn-end-gate","self-repair","session-register","session-eol","interruption-ledger","roadmap-progress","design-pass-stop","suggestion-capture","journal-record","run-continuation"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","delegation-nudge","skill-route","git-authorization","session-canary","self-repair","session-register","rule-inject","suggestion-capture","journal-record"],"pre_tool_use":["block-no-verify","evidence-independence","block-kernel-rule-writes","block-plumbing-writes","block-config-weakening","block-speaking-inbox-dir","one-question-per-ask","rtk-wrap","design-slop","ui-route-nudge","code-graph-context","chain-nudge","ship-diff-volume","reread-guard","spawn-guard-shadow","source-first-gate","memory-recall"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","language-mirror","design-pass","journal-record"],"pre_compact":["language-mirror","rule-inject","journal-record"],"subagent_start":["subagent-ledger","journal-record"],"subagent_stop":["subagent-ledger","journal-record"]},"cowork":{"ask":"text","session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"pre_tool_use":["block-no-verify","evidence-independence","block-kernel-rule-writes","block-plumbing-writes","block-config-weakening","block-speaking-inbox-dir","rtk-wrap","design-slop","ui-route-nudge","code-graph-context","chain-nudge","ship-diff-volume","reread-guard","spawn-guard-shadow","source-first-gate","memory-recall"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"],"subagent_start":["subagent-ledger"],"subagent_stop":["subagent-ledger"]},"cursor":{"ask":"text","session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"cline":{"ask":"text","session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"windsurf":{"ask":"text","session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","profile-staleness","wrapper-freshness","surface-probe","session-register"],"stop":["chat-history","verify-before-complete","self-repair","session-register","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","language-mirror","git-authorization","session-canary","self-repair","session-register"]},"gemini":{"ask":"text","session_start":["chat-history","hot-context","handoff-context","session-canary","council-availability","telemetry-disclosure","first-run-gate","onboarding-gate","verify-before-complete","minimal-safe-diff","profile-staleness","wrapper-freshness","surface-probe","session-register"],"session_end":["chat-history","memory-learn","session-register","roadmap-progress","telemetry-flush"],"stop":["chat-history","verify-before-complete","self-repair","session-register","roadmap-progress","design-pass-stop"],"user_prompt_submit":["chat-history","verify-before-complete","minimal-safe-diff","language-mirror","git-authorization","session-canary","self-repair","session-register"],"post_tool_use":["chat-history","roadmap-progress","context-hygiene","verify-before-complete","minimal-safe-diff","injection-scan","pr-url-reminder","push-settle","orchestration-record","telemetry-usage","tool-result-bytes","edit-shape","comment-discipline","design-pass"]},"copilot":{"ask":"text","fallback_only":true}},"native_event_aliases":{"augment":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use"},"claude":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact","SubagentStart":"subagent_start","SubagentStop":"subagent_stop"},"cowork":{"SessionStart":"session_start","SessionEnd":"session_end","Stop":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact","SubagentStart":"subagent_start","SubagentStop":"subagent_stop"},"cursor":{"sessionStart":"session_start","sessionEnd":"session_end","stop":"stop","beforeSubmitPrompt":"user_prompt_submit","postToolUse":"post_tool_use","preToolUse":"pre_tool_use","preCompact":"pre_compact"},"cline":{"TaskStart":"session_start","TaskResume":"session_start","TaskComplete":"session_end","TaskCancel":"stop","UserPromptSubmit":"user_prompt_submit","PostToolUse":"post_tool_use","PreToolUse":"pre_tool_use","PreCompact":"pre_compact"},"windsurf":{"pre_user_prompt":"user_prompt_submit","post_cascade_response":"stop","post_setup_worktree":"session_start"},"gemini":{"SessionStart":"session_start","SessionEnd":"session_end","BeforeAgent":"user_prompt_submit","AfterAgent":"stop","BeforeTool":"pre_tool_use","AfterTool":"post_tool_use"}}}}
+\ No newline at end of file
+diff --git a/src/scripts/hook_manifest.yaml b/src/scripts/hook_manifest.yaml
+index 33fdb9f5255f62ad7d0da49ecddc4bcc38137ef9..16b427adcc82171b4b347a37d505f947777e8fab 100644
+--- a/src/scripts/hook_manifest.yaml
++++ b/src/scripts/hook_manifest.yaml
+@@ -495,8 +495,17 @@ concerns:
+     # never filtered) and for why the filter is NOT a host `matcher`.
+     #
+     # This set is not a guess: the hook's entire branch surface is
+-    # `name === 'Grep' || name === 'Glob'` and `name === 'Read'`
+-    # (code_graph_context_hook.ts), and a test pins the manifest list against it.
++    # `name === 'Grep' || name === 'Glob'`, `name === 'Read'` and
++    # `name === 'Bash'` (code_graph_context_hook.ts), and a test pins the
++    # manifest list against it.
++    #
++    # `Bash` is the ONE host-named tool declared here, and the caveat the
++    # blocking-guard paragraph below raises applies to it: on a host that calls
++    # the shell `launch-process` or `BashTool` this concern will not see it. That
++    # is a missed advisory line, not a disabled guard — the trade the paragraph
++    # below refuses for a security hook is the right one for a context line, and
++    # the alternative (dropping the filter) would dispatch this concern on every
++    # tool call in the session.
+     #
+     # Deliberately NOT declared on the four blocking PreToolUse guards
+     # (block-no-verify, block-kernel-rule-writes, block-plumbing-writes,
+@@ -508,7 +517,7 @@ concerns:
+     # re-read `tool_name` and return early; paying one dispatch to keep a guard
+     # correct is the right trade, and the cheap filter is reserved for advisory
+     # concerns whose set is provable from their own source.
+-    tools: [Grep, Glob, Read]
++    tools: [Grep, Glob, Read, Bash]
+     needs_payload_bodies: [input]
+   # road-to-reachable-code-memory Phase 4 — session_end learning-sidecar
+   # aggregation. Joins the EXISTING session_end concern set (no new platform
+diff --git a/src/scripts/hooks/code_graph_context_hook.ts b/src/scripts/hooks/code_graph_context_hook.ts
+index 5a0d9ddbd8d3078eb6a440971088dac8c1770c5b..9a0630b675c22c5306d506171b8b3de246ef37b2 100644
+--- a/src/scripts/hooks/code_graph_context_hook.ts
++++ b/src/scripts/hooks/code_graph_context_hook.ts
+@@ -31,10 +31,15 @@
+  * "per-host `enforced_by` resolved from the table, not from a host name" means
+  * in practice.
+  *
+- * Once per session (a latch keyed by session id), so it cannot nag.
++ * Once per distinct SEARCH TARGET, capped at five lines per session (step 2.2),
++ * so it cannot nag. It was once-per-session until step 2.1 added `Bash`: with
++ * shell searches in scope a single line covered the first `grep` of a session
++ * and nothing after it, which is the opposite of the problem — the state that
++ * matters is the state at the question being asked.
+  * fail_closed: false — every error path returns allow; a context line must
+  * never break a tool call.
+  */
++import { createHash } from 'node:crypto';
+ import fs from 'node:fs';
+ import path from 'node:path';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+@@ -55,13 +60,70 @@ function isObject(v: unknown): v is JsonObject {
+ interface ToolIntent {
+     isSearch: boolean;
+     isCodeRead: boolean;
++    /**
++     * What this call is ABOUT — a Grep/Glob pattern, a read path, or the search
++     * term of a shell search. The per-target latch key (step 2.2): the same
++     * question asked twice is one question, and a hook that answered it once
++     * has nothing to add the second time.
++     *
++     * Empty when the call is neither a search nor a code read, and never the
++     * raw command line of an arbitrary Bash call — see {@link bashSearchToken}.
++     */
++    target: string;
++}
++
++/**
++ * The shell search heads this hook recognises.
++ *
++ * A closed list on purpose. "Any Bash command might be a search" is the reading
++ * that makes the hook chatty — Risk-Register rank 2 — so a command whose head
++ * is not here is silent AND does not latch, exactly as a non-code `Read` is.
++ */
++const SEARCH_HEADS = new Set(['grep', 'rg', 'ag', 'find', 'ack', 'fd']);
++
++/**
++ * The thing a shell search is searching FOR, or `null` when the command is not
++ * a structure search at all.
++ *
++ * `git grep` is the one two-word head, so it is handled before the single-word
++ * set rather than by putting `git` in it — `git log` is not a search.
++ *
++ * The token is the first argument that is not an option and not an option's
++ * value we can recognise; failing that, the command's head, which collapses a
++ * flag-only search onto one latch slot rather than leaking the whole command
++ * line into a state file. Shell metacharacters end the read: everything after a
++ * pipe belongs to another command.
++ */
++export function bashSearchToken(command: string): string | null {
++    const words = command.trim().split(/\s+/).filter((w) => w !== '');
++    if (words.length === 0) return null;
++    let i = 0;
++    let head = (words[0] as string).split('/').pop() as string;
++    if (head === 'git' && words[1] === 'grep') {
++        head = 'git grep';
++        i = 2;
++    } else if (SEARCH_HEADS.has(head)) {
++        i = 1;
++    } else {
++        return null;
++    }
++    for (; i < words.length; i += 1) {
++        const w = words[i] as string;
++        if (w === '|' || w === '||' || w === '&&' || w === ';') break;
++        if (w.startsWith('-')) continue;
++        return w.replace(/^["']|["']$/g, '');
++    }
++    return head;
+ }
+ 
+ /**
+  * Best-effort read of the intercepted tool + its target from the envelope.
+  *
+- * Carried over from the nudge unchanged, and the manifest's `tools:` filter is
+- * pinned against exactly this branch surface — Grep, Glob, Read.
++ * The manifest's `tools:` filter is pinned against exactly this branch surface
++ * — Grep, Glob, Read, Bash. `Bash` joined it in step 2.1 for the reason the
++ * step gives: the searches an agent actually runs in this tree are shell
++ * searches, so a matcher that saw only the structured search tools was watching
++ * the door nobody uses.
+  */
+ export function classifyTool(envelope: JsonObject): ToolIntent {
+     const payload = isObject(envelope['payload']) ? envelope['payload'] : envelope;
+@@ -71,13 +133,29 @@ export function classifyTool(envelope: JsonObject): ToolIntent {
+     const ti = (isObject(payload['tool_input']) ? payload['tool_input'] : envelope['tool_input']) as
+         | JsonObject
+         | undefined;
+-    const isSearch = name === 'Grep' || name === 'Glob';
+-    let isCodeRead = false;
++    const silent: ToolIntent = { isSearch: false, isCodeRead: false, target: '' };
++
++    if (name === 'Grep' || name === 'Glob') {
++        const pat = isObject(ti) ? (ti['pattern'] ?? ti['query']) : undefined;
++        return { isSearch: true, isCodeRead: false, target: typeof pat === 'string' ? pat : name };
++    }
+     if (name === 'Read' && isObject(ti)) {
+         const fp = ti['file_path'] ?? ti['path'];
+-        if (typeof fp === 'string') isCodeRead = CODE_EXT.test(fp);
++        if (typeof fp === 'string' && CODE_EXT.test(fp)) {
++            return { isSearch: false, isCodeRead: true, target: fp };
++        }
++        return silent;
+     }
+-    return { isSearch, isCodeRead };
++    if (name === 'Bash' && isObject(ti)) {
++        const cmd = ti['command'];
++        if (typeof cmd !== 'string') return silent;
++        const token = bashSearchToken(cmd);
++        // Any other Bash command is silent AND does not latch: it consumed no
++        // slot, so the next real search still gets its line.
++        if (token === null) return silent;
++        return { isSearch: true, isCodeRead: false, target: token };
++    }
++    return silent;
+ }
+ 
+ function sessionId(envelope: JsonObject): string {
+@@ -88,33 +166,103 @@ function sessionId(envelope: JsonObject): string {
+ function latchFile(root: string): string {
+     return path.join(root, 'agents', 'runtime', 'state', 'code-graph-context.json');
+ }
+-function alreadySpoke(root: string, session: string): boolean {
++
++/**
++ * At most this many context lines in one session (step 2.2).
++ *
++ * The cap is the chattiness bound, and it is the half that does not depend on
++ * the agent's behaviour: per-target alone is unbounded, because a session that
++ * greps thirty distinct symbols would hear thirty lines and the consumer would
++ * turn the hook off. Five is a stated default, not a measurement — a session
++ * that has been told the graph's state five times has been told.
++ */
++export const MAX_CONTEXT_LINES_PER_SESSION = 5;
++
++/**
++ * What the latch file records for a target: a truncated digest, never the
++ * target itself.
++ *
++ * A council review of step 2.1 (2026-10-01, anthropic + openai) asked for one
++ * concrete thing before the shell tool was routed here — that command text is
++ * neither persisted nor carried into diagnostics. Routing on the shell tool
++ * makes the target a search TERM an operator typed, and a term can be a
++ * customer name, a token fragment or an internal hostname. Nothing downstream
++ * needs to read it back: the latch answers "have I spoken about this one", and
++ * equality over a digest answers that exactly as well.
++ *
++ * Not a security boundary and not claimed as one — a short digest of a short
++ * term is guessable by anyone who can enumerate terms. It is the same
++ * PII-exclusion-by-construction move `domain-safety-pii` § Surface 2 asks for:
++ * the file is shaped so the plaintext is not in it to leak.
++ */
++export function latchKey(target: string): string {
++    return createHash('sha256').update(target).digest('hex').slice(0, 16);
++}
++
++/**
++ * Should this target get a line, given what this session already heard?
++ *
++ * Pure, so the two rules it encodes can be tested without a filesystem: a
++ * repeat is silent at any count, and a NEW target is silent once the cap is
++ * reached. Takes the target in the clear and hashes here, so no caller can
++ * forget to.
++ */
++export function speaksFor(spoken: readonly string[], target: string): boolean {
++    if (spoken.includes(latchKey(target))) return false;
++    return spoken.length < MAX_CONTEXT_LINES_PER_SESSION;
++}
++
++function readLatch(root: string): Record<string, string[]> {
+     try {
+-        const state = JSON.parse(fs.readFileSync(latchFile(root), 'utf-8')) as Record<string, boolean>;
+-        return state[session] === true;
++        const raw = JSON.parse(fs.readFileSync(latchFile(root), 'utf-8')) as Record<string, unknown>;
++        const out: Record<string, string[]> = {};
++        for (const [k, v] of Object.entries(raw)) {
++            // A pre-2.2 file stored `true` per session. Read it as "this session
++            // is done", which is what it meant — never as an empty list, which
++            // would hand an upgraded session a fresh budget it already spent.
++            if (Array.isArray(v)) out[k] = v.filter((x): x is string => typeof x === 'string');
++            else if (v === true) out[k] = Array.from({ length: MAX_CONTEXT_LINES_PER_SESSION }, (_, i) => `legacy:${String(i)}`);
++        }
++        return out;
+     } catch {
+-        return false;
++        return {};
+     }
+ }
+-function latch(root: string, session: string): void {
++
++/**
++ * The cheap read-only half, so the `git status` probe behind `graphState` runs
++ * only for a call that could still produce a line (Risk-Register rank 3).
++ *
++ * Advisory only — {@link latchTarget} re-reads and remains the authority. A
++ * disagreement between the two can only come from a concurrent write, and it
++ * resolves toward silence, which is the safe direction for a context line.
++ */
++export function wouldSpeak(root: string, session: string, target: string): boolean {
++    return speaksFor(readLatch(root)[session] ?? [], target);
++}
++
++/**
++ * Decide and record in one step, because the two must not drift apart: a reader
++ * that says yes and a writer that records something else is how a cap leaks.
++ * Returns whether the caller may speak.
++ */
++export function latchTarget(root: string, session: string, target: string): boolean {
++    const state = readLatch(root);
++    const spoken = state[session] ?? [];
++    if (!speaksFor(spoken, target)) return false;
+     try {
++        state[session] = [...spoken, latchKey(target)];
+         const p = latchFile(root);
+-        let state: Record<string, boolean> = {};
+-        try {
+-            state = JSON.parse(fs.readFileSync(p, 'utf-8')) as Record<string, boolean>;
+-        } catch {
+-            /* fresh */
+-        }
+-        state[session] = true;
+         fs.mkdirSync(path.dirname(p), { recursive: true });
+         fs.writeFileSync(p, JSON.stringify(state));
+     } catch {
+         /* fail-open: a persistence failure must not break the tool call */
+     }
++    return true;
+ }
+ 
+ /**
+- * The three-state staleness token this hook reports.
++ * The four-state staleness token this hook reports.
+  *
+  * Re-exported, not defined here: Phase 3's verbs must print the same token, and
+  * an engine module importing this hook to learn it would invert the dependency
+@@ -139,6 +287,13 @@ export function contextLine(state: GraphState): string {
+             'grep is the other path — say which one answered.'
+         );
+     }
++    if (state === 'edited') {
++        return (
++            'code-graph: level with HEAD, but indexed files are edited in the working tree. ' +
++            'Relationship answers miss anything written since the last build — ' +
++            '`agent-config code-graph refresh` picks the edits up, or use grep and say so.'
++        );
++    }
+     const n = state.slice('behind:'.length);
+     return (
+         `code-graph: ${n} commit(s) behind. Relationship answers may miss anything newer — ` +
+@@ -160,11 +315,14 @@ export function main(): number {
+     const pr = envelope['workspace_root'] ?? envelope['project_root'];
+     const root = typeof cwd === 'string' && cwd ? cwd : typeof pr === 'string' && pr ? pr : '.';
+ 
+-    const { isSearch, isCodeRead } = classifyTool(envelope);
++    const { isSearch, isCodeRead, target } = classifyTool(envelope);
+     if (!isSearch && !isCodeRead) return EXIT_ALLOW;
+ 
+     const session = sessionId(envelope);
+-    if (alreadySpoke(root, session)) return EXIT_ALLOW; // once per session
++    // Once per distinct target, at most five per session (2.2). Checked BEFORE
++    // `graphState`, because that call now runs a `git status` probe and a line
++    // this session will not emit must not pay for one.
++    if (!wouldSpeak(root, session, target)) return EXIT_ALLOW;
+ 
+     let state: GraphState;
+     try {
+@@ -176,7 +334,7 @@ export function main(): number {
+     // so a session that builds a graph mid-flight still gets the line once.
+     if (state === 'absent') return EXIT_ALLOW;
+ 
+-    latch(root, session);
++    if (!latchTarget(root, session, target)) return EXIT_ALLOW;
+     process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: contextLine(state) })}\n`);
+     return EXIT_WARN;
+ }
+diff --git a/src/scripts/hooks/turn_end_gate_hook.ts b/src/scripts/hooks/turn_end_gate_hook.ts
+index 130ba94bfe7a8037c165083bc51e6fe2b0b03d35..788b900b0d40146c21cdbe6555b7e73adcc6ca2e 100644
+--- a/src/scripts/hooks/turn_end_gate_hook.ts
++++ b/src/scripts/hooks/turn_end_gate_hook.ts
+@@ -186,6 +186,16 @@ export { readTurnRunState };
+ // Detector E, extracted to `_lib` where its prose costs no ratchet debt.
+ // Re-exported so every existing importer of this module is unchanged.
+ import { detectDroppedDecision } from '../_lib/dropped_decision.js';
++// Step 3.2 of `road-to-a-graph-that-feeds-the-gate` — the shadow feeder. It
++// lives in `_lib` for the reason every other extraction here does: this file
++// sits against a 1,500-line shrink-only source budget, and the module it would
++// otherwise grow into is one a recall reading has to be able to open on its own.
++import {
++    appendFeederRow,
++    buildFeederRow,
++    graphUntestedVerdict,
++} from '../_lib/graph_feeder_record.js';
++import { type GraphState, graphState } from '../code_graph/detect.js';
+ import { isVerificationCommand } from '../_lib/verification_command.js';
+ // Round 8 — the record path detector C prefers over its own regex. The regex
+ // reads a command's TEXT and `echo test` matches it; these read what the run
+@@ -1276,6 +1286,54 @@ function runDetectors(inputs: DetectorInputs): Finding[] {
+     return findings;
+ }
+ 
++/**
++ * Write the graph feeder row for ONE stop (step 3.2).
++ *
++ * Called from both stop paths with the findings that path already computed, so
++ * the F verdict in the row is the SAME verdict the gate acted on — never a
++ * second evaluation written beside it, which is the shape
++ * `obligation_settle_hook.ts` names as measuring nothing.
++ *
++ * It changes no exit code, and the whole body is wrapped: a stop that crashed on
++ * its own instrument would be a new failure mode on a path that is supposed to
++ * cost nothing. The graph half is skipped outright unless the state is `fresh`
++ * or `edited` — an answer from an index that predates the change is not evidence
++ * about the change.
++ */
++function recordGraphFeeder(inputs: DetectorInputs, findings: readonly Finding[], layer: string): void {
++    if (is_replay_mode()) return;
++    try {
++        let state: GraphState;
++        try {
++            state = graphState(inputs.workspaceRoot);
++        } catch {
++            return;
++        }
++        // No graph at all is the silent case, exactly as it is for the context
++        // hook: a consumer who never builds one never grows this file.
++        if (state === 'absent') return;
++        const paths = inputs.toolCalls
++            .filter((c) => _EDIT_TOOLS.has(c.name) && c.path !== undefined)
++            .map((c) => c.path as string);
++        const f = findings.find((x) => x.detector === 'untested');
++        appendFeederRow(
++            inputs.workspaceRoot,
++            inputs.sessionKey,
++            buildFeederRow({
++                turn: inputs.turnOrdinal,
++                layer,
++                state,
++                fFired: f !== undefined,
++                fMode: f?.mode ?? null,
++                paths,
++                graph: graphUntestedVerdict(inputs.workspaceRoot, state, paths),
++            }),
++        );
++    } catch {
++        // An instrument is never a reason to change what the gate does.
++    }
++}
++
+ /**
+  * Record what this retry WOULD have been refused for, then let it end.
+  *
+@@ -1289,6 +1347,7 @@ function recordShadow(inputs: DetectorInputs, layer: ShadowLayer): void {
+     if (is_replay_mode()) return;
+     try {
+         const findings = runDetectors(inputs);
++        recordGraphFeeder(inputs, findings, layer);
+         const file = sessionShadowFile(inputs.workspaceRoot, inputs.sessionKey);
+         let prev: ShadowRecord | null = null;
+         try {
+@@ -1361,6 +1420,10 @@ export function main(): number {
+     // warranted"; there is no second, configurable notion of warranted layered
+     // on top of it.
+     const findings = runDetectors(inputs);
++    // The live verdict's own row. It is written BEFORE the branch below, so a
++    // turn the gate allows and a turn it refuses are both in the record — a
++    // recall reading needs the allowed turns as its negative arm.
++    recordGraphFeeder(inputs, findings, 'live');
+     if (findings.length === 0) return EXIT_ALLOW;
+ 
+     markRefusedTurn(
+diff --git a/src/scripts/mcp_server/consumer_tool_catalog.json b/src/scripts/mcp_server/consumer_tool_catalog.json
+index 31e74a4db4001381c7d712c05f0f0a6cb51377ee..3d82687541a7f923f7b1603d1fc02c7018cb204f 100644
+--- a/src/scripts/mcp_server/consumer_tool_catalog.json
++++ b/src/scripts/mcp_server/consumer_tool_catalog.json
+@@ -283,6 +283,59 @@
+         "readOnlyHint": false
+       }
+     },
++    {
++      "name": "graph_node",
++      "description": "One symbol in full: where it is declared, what reaches it, what it reaches, and how connected it is. Resolves EXACTLY (node id, then label) and refuses anything it cannot — it never scores free text, so an answer is always about the node you named.",
++      "side_effect": "ro",
++      "implemented_on": [
++        "stdio"
++      ],
++      "input_schema": {
++        "type": "object",
++        "required": [
++          "id"
++        ],
++        "properties": {
++          "id": {
++            "type": "string",
++            "description": "Node id `<relpath>#<sym>` or an exact label."
++          },
++          "direction": {
++            "type": "string",
++            "enum": [
++              "in",
++              "out",
++              "both"
++            ],
++            "default": "both",
++            "description": "Which edges to walk. `in` = who reaches it, `out` = what it reaches."
++          },
++          "depth": {
++            "type": "integer",
++            "minimum": 1,
++            "maximum": 3,
++            "default": 1,
++            "description": "Hop limit."
++          },
++          "relation": {
++            "type": "string",
++            "enum": [
++              "calls",
++              "imports",
++              "uses",
++              "inherits",
++              "member",
++              "tests"
++            ],
++            "description": "Restrict to one relation. Omit for all of them."
++          }
++        },
++        "additionalProperties": false
++      },
++      "annotations": {
++        "readOnlyHint": true
++      }
++    },
+     {
+       "name": "graph_path",
+       "description": "The shortest relation chain between two symbols, direction preserved. Answers \"how does A reach B\" without reading the files between. `(no path found)` when unconnected is an answer.",
+diff --git a/src/scripts/mcp_server/graph_tools.ts b/src/scripts/mcp_server/graph_tools.ts
+index 2fff538d4a3b4fa45928e00ef7b912a9e76e9d2f..3f83d376835acdfb38381d54fc9cec93be9380c2 100644
+--- a/src/scripts/mcp_server/graph_tools.ts
++++ b/src/scripts/mcp_server/graph_tools.ts
+@@ -1,7 +1,13 @@
+ /**
+- * The five code-graph MCP tools (`road-to-a-graph-that-is-shipped` 4.1).
++ * The code-graph MCP tools (`road-to-a-graph-that-is-shipped` 4.1).
++ *
++ * `graph_impact`, `graph_tests_for`, `graph_dead`, `graph_query`, `graph_path`
++ * — and `graph_node`, added by `road-to-a-graph-that-feeds-the-gate` 3.1. The
++ * first five all answer about a NEIGHBOURHOOD or a SET; none answered "where
++ * does this live, who reaches it, what does it reach, how connected is it",
++ * which is the question an agent asks first and had to assemble from two calls
++ * and a file read.
+  *
+- * `graph_impact`, `graph_tests_for`, `graph_dead`, `graph_query`, `graph_path`.
+  * They are the agent-facing half of Phase 3: the verbs exist on the CLI and an
+  * agent that has to shell out to reach them will not, so the engine's answers
+  * were unreachable from the surface the consumer actually talks to. Risk-Register
+@@ -39,7 +45,15 @@ import { changedFiles } from '../code_graph/cli.js';
+ import { detectSources, graphState, NATIVE_CACHE_REL, pickSource } from '../code_graph/detect.js';
+ import { resolvePath } from './path_util.js';
+ import { isTestFile } from '../code_graph/build.js';
+-import { loadGraph, type LoadedGraph, path as graphPathVerb, query as graphQueryVerb } from '../code_graph/query.js';
++import {
++    loadGraph,
++    type LoadedGraph,
++    node as graphNodeVerb,
++    type NodeOptions,
++    path as graphPathVerb,
++    query as graphQueryVerb,
++} from '../code_graph/query.js';
++import type { Relation } from '../code_graph/types.js';
+ import {
+     dead,
+     entryPointsFromFile,
+@@ -97,6 +111,16 @@ function str(args: Record<string, unknown>, key: string): string {
+     return typeof v === 'string' ? v.trim() : '';
+ }
+ 
++/**
++ * The closed relation vocabulary, as a schema enum.
++ *
++ * Spelled out rather than derived from the `Relation` union, which erases at
++ * compile time — and pinned by a test against that union so the two cannot
++ * drift. An enum that silently lost a value would turn a legal filter into a
++ * rejected argument.
++ */
++const RELATIONS = ['calls', 'imports', 'uses', 'inherits', 'member', 'tests'] as const;
++
+ function num(args: Record<string, unknown>, key: string, dflt: number): number {
+     const v = args[key];
+     return typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : dflt;
+@@ -263,6 +287,51 @@ export const GRAPH_TOOLS: Record<string, BuiltinTool> = {
+         },
+     },
+ 
++    graph_node: {
++        name: 'graph_node',
++        side_effect: 'ro',
++        description:
++            'One symbol in full: where it is declared, what reaches it, what it ' +
++            'reaches, and how connected it is. Resolves EXACTLY (node id, then ' +
++            'label) and refuses anything it cannot — it never scores free text, ' +
++            'so an answer is always about the node you named.',
++        input_schema: {
++            type: 'object',
++            required: ['id'],
++            properties: {
++                id: { type: 'string', description: 'Node id `<relpath>#<sym>` or an exact label.' },
++                direction: {
++                    type: 'string',
++                    enum: ['in', 'out', 'both'],
++                    default: 'both',
++                    description: 'Which edges to walk. `in` = who reaches it, `out` = what it reaches.',
++                },
++                depth: { type: 'integer', minimum: 1, maximum: 3, default: 1, description: 'Hop limit.' },
++                relation: {
++                    type: 'string',
++                    enum: RELATIONS,
++                    description: 'Restrict to one relation. Omit for all of them.',
++                },
++            },
++            additionalProperties: false,
++        },
++        handler: async (args, root) => {
++            const id = str(args, 'id');
++            if (id === '') return { status: 'error', error: 'id must be a non-empty string' };
++            const staleness = graphState(root);
++            const opts: NodeOptions = {};
++            const dir = str(args, 'direction');
++            if (dir === 'in' || dir === 'out' || dir === 'both') opts.direction = dir;
++            // `num` clamps at >0 only; the 1-3 band is the verb's, so an
++            // out-of-band value is clamped there rather than rejected here —
++            // two places enforcing one band is how they drift apart.
++            opts.depth = num(args, 'depth', 1);
++            const rel = str(args, 'relation');
++            if ((RELATIONS as readonly string[]).includes(rel)) opts.relation = rel as Relation;
++            return withGraph(root, (g) => ({ staleness, ...graphNodeVerb(g, id, opts) }));
++        },
++    },
++
+     graph_path: {
+         name: 'graph_path',
+         side_effect: 'ro',
+diff --git a/src/skills/code-intelligence/SKILL.md b/src/skills/code-intelligence/SKILL.md
+index ec76e271949169e5933d3c53d6372260bf9e18bf..b4e949ecad26f64d14a5a3d68a7c3ea4a4aec16e 100644
+--- a/src/skills/code-intelligence/SKILL.md
++++ b/src/skills/code-intelligence/SKILL.md
+@@ -245,14 +245,26 @@ paragraph claiming "the same five answers" directly after a list of four:
+ | `graph_dead` | `dead` |
+ | `graph_query` | `query` |
+ | `graph_path` | `path` |
++| `graph_node` | no CLI verb — one symbol's location, in-edges, out-edges and degree |
+ 
+ `untested` has no tool of its own; it is a flag on `graph_impact`, because the
+-two answer the same question over the same diff and a sixth tool would have cost
+-standing context for a boolean. `graph_impact` is the only one that is not
++two answer the same question over the same diff and a separate tool would have
++cost standing context for a boolean. `graph_impact` is the only one that is not
+ read-only — it runs `git diff --name-only` to resolve its rev — and
+ `graph_dead`'s refusal arrives as `status: "refused"`, never as `status: "ok"`
+ with an empty list.
+ 
++`graph_node` is the one entry with no CLI verb behind it, and the one that
++REFUSES a seed it cannot resolve exactly. Every other reader answers about a
++neighbourhood or a set, where a best-guess seed costs the caller one wrong line
++among several; a node view's every field — the location, the degree, both edge
++lists — is a statement about ONE node, so a guess is wrong in all of them at
++once. It resolves on the exact tiers of the same seed ladder (node id, then
++label) and returns `status: "refused"` naming the candidates when a label is
++ambiguous, rather than scoring free text — which is the retrieval class the
++measured null covers (`docs/CLAIMS.md`, `code-graph-retrieval-null`). Use
++`graph_query` when a best-guess match is what you want.
++
+ **No ordering claim is added here, and no measurement claim either.** These
+ verbs are cheaper than reconstructing the same relationship by hand — that is a
+ claim about the ALTERNATIVE being a manual reconstruction, not about grep.
+diff --git a/tests/scripts/code_graph.test.ts b/tests/scripts/code_graph.test.ts
+index 001f63849df24085db928fe018fec709422f1807..8299e27139190555aa0b0b8c64461eff5740f2cd 100644
+--- a/tests/scripts/code_graph.test.ts
++++ b/tests/scripts/code_graph.test.ts
+@@ -6,6 +6,7 @@
+  * (golden-checksum), schema validation, and the structural no-network
+  * guarantee. Integration tests load the real vendored WASM grammars.
+  */
++import { execFileSync } from 'node:child_process';
+ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+@@ -14,11 +15,20 @@ import { describe, expect, it } from 'vitest';
+ 
+ import * as os from 'node:os';
+ 
++import { GRAPH_TOOLS } from '../../src/scripts/mcp_server/graph_tools.js';
++import type { BuiltinTool } from '../../src/scripts/mcp_server/tools.js';
+ import { buildFromRepo, buildGraph, serializeGraph, type SourceFile } from '../../src/scripts/code_graph/build.js';
+ import { pickSource, type SourceVerdict } from '../../src/scripts/code_graph/detect.js';
+ import { extractFile } from '../../src/scripts/code_graph/extract.js';
+ import { loadLanguage } from '../../src/scripts/code_graph/loader.js';
+-import { affected, loadGraph, path as graphPath, query, resolveSeeds } from '../../src/scripts/code_graph/query.js';
++import {
++    affected,
++    loadGraph,
++    node as graphNode,
++    path as graphPath,
++    query,
++    resolveSeeds,
++} from '../../src/scripts/code_graph/query.js';
+ import { sanitizeLabel } from '../../src/scripts/code_graph/sanitize.js';
+ import { EXPECTED_GRAMMAR_ABI, type Lang } from '../../src/scripts/code_graph/types.js';
+ import { validateGraph } from '../../src/scripts/code_graph/validate.js';
+@@ -320,3 +330,149 @@ describe('no-network guarantee (structural)', () => {
+         }
+     });
+ });
++
++// ---------------------------------------------------------------------------
++// road-to-a-graph-that-feeds-the-gate — step 2.4
++// ---------------------------------------------------------------------------
++
++/**
++ * A consumer root that is a real repository, with its graph built AFTER the
++ * commit so the index starts level with HEAD.
++ *
++ * Real git metadata is the point: step 2.3 reads `edited` out of the porcelain
++ * status, so a tmpdir without a repository could only ever assert the fallback.
++ */
++async function committedConsumerRig(): Promise<string> {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cg-edited-'));
++    const run = (args: readonly string[]): void => {
++        execFileSync('git', ['-C', dir, ...args], { stdio: ['ignore', 'ignore', 'ignore'] });
++    };
++    run(['init', '-q', '-b', 'main']);
++    run(['config', 'user.email', 'fixture@example.com']);
++    run(['config', 'user.name', 'fixture']);
++    fs.mkdirSync(path.join(dir, 'src'));
++    fs.writeFileSync(path.join(dir, 'src', 'service.ts'), 'export function handle(x: string): string {\n    return x.trim();\n}\n');
++    run(['add', '-A']);
++    run(['commit', '-q', '-m', 'fixture']);
++    await buildFromRepo(dir, path.join(dir, 'agents/runtime/state/code-graph-v1.json'));
++    return dir;
++}
++
++describe('2.4 — the MCP answers carry the new state', () => {
++    it('reports staleness edited once an indexed file is changed in the working tree', async () => {
++        // The CLI `query` verb has no `--json`, so the MCP envelope is where the
++        // token is machine-readable at all. `graph_query` already prints
++        // `staleness`; what 2.3 added is a fourth value it can carry, and this
++        // is the fixture that the value actually reaches the wire.
++        const root = await committedConsumerRig();
++        const q = GRAPH_TOOLS['graph_query'];
++        expect(q).toBeDefined();
++
++        const before = await (q as BuiltinTool).handler({ symbol: 'src/service.ts#handle' }, root);
++        expect(before['status']).toBe('ok');
++        expect(before['staleness']).toBe('fresh');
++
++        fs.writeFileSync(
++            path.join(root, 'src', 'service.ts'),
++            'export function handle(x: string): string {\n    return x.trimStart();\n}\n',
++        );
++        const after = await (q as BuiltinTool).handler({ symbol: 'src/service.ts#handle' }, root);
++        expect(after['status']).toBe('ok');
++        expect(after['staleness']).toBe('edited');
++
++        fs.rmSync(root, { recursive: true, force: true });
++    });
++});
++
++// ---------------------------------------------------------------------------
++// road-to-a-graph-that-feeds-the-gate — step 3.1, the graph_node view
++// ---------------------------------------------------------------------------
++
++describe('3.1 — graph_node answers about one node, or refuses', () => {
++    async function nodeFixture() {
++        const { graph } = await buildFixture();
++        const tmp = path.join(os.tmpdir(), `cg-node-${process.pid}-${graph.edges.length}.json`);
++        fs.writeFileSync(tmp, serializeGraph(graph));
++        return loadGraph(tmp, 'native:fixture');
++    }
++
++    it('reports location, in-edges, out-edges and degree for an exact id', async () => {
++        const g = await nodeFixture();
++        const r = graphNode(g, 'app/Base.php#Base::shared');
++        expect(r.refusal).toBeUndefined();
++        expect(r.id).toBe('app/Base.php#Base::shared');
++        expect(r.location?.path).toBe('app/Base.php');
++        // Foo::handle reaches it through $this-> up the hierarchy, so the
++        // in-edge list is the "who calls this" answer that needed two calls
++        // before.
++        expect(r.in.some((e) => e.id === 'app/Foo.php#Foo::handle' && e.relation === 'calls')).toBe(true);
++        expect(r.in_degree).toBe(r.in.filter((e) => e.hops === 1).length);
++        expect(r.out_degree).toBe(r.out.filter((e) => e.hops === 1).length);
++    });
++
++    it('resolves an exact LABEL as well as an id', async () => {
++        const g = await nodeFixture();
++        const r = graphNode(g, 'render');
++        expect(r.refusal).toBeUndefined();
++        expect(r.id).toBe('app/widget.ts#Widget::render');
++        expect(r.out.length).toBeGreaterThan(0);
++    });
++
++    it('refuses an AMBIGUOUS label and names the candidates instead of picking one', async () => {
++        const g = await nodeFixture();
++        // `shared` is a method on both the PHP and the TypeScript Base. Picking
++        // the first would be the silent guess the refusal exists to avoid.
++        const r = graphNode(g, 'shared');
++        expect(r.refusal).toContain('re-ask with one id');
++        expect(r.refusal).toContain('app/Base.php#Base::shared');
++        expect(r.refusal).toContain('app/base.ts#Base::shared');
++        expect(r.id).toBe('');
++    });
++
++    it('REFUSES free text rather than scoring it — D4', async () => {
++        const g = await nodeFixture();
++        // `query` happily BM25-matches this; a node view must not, because every
++        // field it returns is a statement about one specific node.
++        expect(query(g, 'handle foo').seeds.length).toBeGreaterThan(0);
++        const r = graphNode(g, 'handle foo');
++        expect(r.refusal).toBeDefined();
++        expect(r.refusal).toContain('does not score free text');
++        expect(r.id).toBe('');
++        expect(r.in).toStrictEqual([]);
++        expect(r.out).toStrictEqual([]);
++    });
++
++    it('honours direction, depth and the relation filter', async () => {
++        const g = await nodeFixture();
++        const outOnly = graphNode(g, 'app/Foo.php#Foo::handle', { direction: 'out' });
++        expect(outOnly.in).toStrictEqual([]);
++        expect(outOnly.out.length).toBeGreaterThan(0);
++
++        const inOnly = graphNode(g, 'app/Base.php#Base::shared', { direction: 'in' });
++        expect(inOnly.out).toStrictEqual([]);
++        expect(inOnly.in.length).toBeGreaterThan(0);
++
++        const callsOnly = graphNode(g, 'app/Foo.php#Foo::handle', { direction: 'out', relation: 'calls' });
++        expect(callsOnly.out.every((e) => e.relation === 'calls')).toBe(true);
++        expect(callsOnly.out.length).toBeGreaterThan(0);
++
++        // Depth is clamped to 1-3 rather than refused, and a deeper walk can
++        // only ever add lines.
++        const deep = graphNode(g, 'app/Foo.php#Foo::handle', { direction: 'out', depth: 99 });
++        expect(deep.out.length).toBeGreaterThanOrEqual(outOnly.out.length);
++        expect(deep.out.every((e) => e.hops >= 1 && e.hops <= 3)).toBe(true);
++    });
++
++    it('is registered as a read-only MCP tool whose relation enum IS the closed vocabulary', () => {
++        const t = GRAPH_TOOLS['graph_node'];
++        expect(t).toBeDefined();
++        expect(t?.side_effect).toBe('ro');
++        const props = (t as BuiltinTool).input_schema['properties'] as Record<string, { enum?: string[] }>;
++        // Pinned against the union in types.ts, which erases at compile time —
++        // an enum that silently lost a value would reject a legal filter.
++        const declared = fs.readFileSync(path.join(CODE_GRAPH_DIR, 'types.ts'), 'utf-8');
++        const union = /export type Relation = ([^;]+);/.exec(declared)?.[1] ?? '';
++        const vocab = [...union.matchAll(/'([a-z-]+)'/g)].map((m) => m[1] as string).sort();
++        expect([...(props['relation']?.enum ?? [])].sort()).toStrictEqual(vocab);
++    });
++});
+diff --git a/tests/scripts/code_graph_context_hook.test.ts b/tests/scripts/code_graph_context_hook.test.ts
+index 6c83fca48f2502f9033bf2ec227757173f2915d2..fa007dcaa316a756be4dc022dd463f4165baf3af 100644
+--- a/tests/scripts/code_graph_context_hook.test.ts
++++ b/tests/scripts/code_graph_context_hook.test.ts
+@@ -9,19 +9,34 @@
+  * reaches a verified host as structured `additionalContext` rather than as a
+  * bare exit-2 echo.
+  */
++import { execFileSync } from 'node:child_process';
+ import * as fs from 'node:fs';
+ import * as os from 'node:os';
+ import * as path from 'node:path';
+ 
+ import { describe, expect, it } from 'vitest';
+ 
+-import { classifyTool, contextLine, graphState } from '../../src/scripts/hooks/code_graph_context_hook.js';
++import {
++    bashSearchToken,
++    classifyTool,
++    contextLine,
++    graphState,
++    latchKey,
++    latchTarget,
++    MAX_CONTEXT_LINES_PER_SESSION,
++    speaksFor,
++    wouldSpeak,
++} from '../../src/scripts/hooks/code_graph_context_hook.js';
+ import { emitFor } from '../../src/scripts/hooks/host_semantics.js';
+ 
+ function tmpRoot(): string {
+     return fs.mkdtempSync(path.join(os.tmpdir(), 'cg-context-'));
+ }
+ 
++function runGit(root: string, args: readonly string[]): void {
++    execFileSync('git', ['-C', root, ...args], { stdio: ['ignore', 'ignore', 'ignore'] });
++}
++
+ const MINIMAL_GRAPH = JSON.stringify({
+     schema_version: 2,
+     source_checksum: 'x',
+@@ -39,6 +54,27 @@ function writeNativeCache(root: string): void {
+     fs.writeFileSync(p, MINIMAL_GRAPH);
+ }
+ 
++/**
++ * A real repository with one committed indexed file and a native cache.
++ *
++ * A real one, not a tmpdir: step 2.3's state is read out of `git status`, so a
++ * fixture without git metadata could only assert the fallback. The cache is
++ * written AFTER the commit so its mtime is newer and the source reads
++ * un-stale — `edited` is then the whole difference the probe contributes.
++ */
++function gitRepoWithGraph(): string {
++    const root = tmpRoot();
++    runGit(root, ['init', '-q', '-b', 'main']);
++    runGit(root, ['config', 'user.email', 'fixture@example.com']);
++    runGit(root, ['config', 'user.name', 'fixture']);
++    fs.writeFileSync(path.join(root, 'a.php'), '<?php function a() {}\n');
++    fs.writeFileSync(path.join(root, 'README.md'), 'readme\n');
++    runGit(root, ['add', '-A']);
++    runGit(root, ['commit', '-q', '-m', 'fixture']);
++    writeNativeCache(root);
++    return root;
++}
++
+ describe('classifyTool — eligibility', () => {
+     it('treats Grep and Glob as searches', () => {
+         expect(classifyTool({ tool_name: 'Grep' }).isSearch).toBe(true);
+@@ -60,7 +96,7 @@ describe('classifyTool — eligibility', () => {
+     });
+ });
+ 
+-describe('graphState — the three states', () => {
++describe('graphState — absent and fresh', () => {
+     it('is absent with no graph anywhere', () => {
+         expect(graphState(tmpRoot())).toBe('absent');
+     });
+@@ -142,3 +178,153 @@ describe('the envelope a verified host receives', () => {
+         expect(emission.exit).toBe(2);
+     });
+ });
++
++// ---------------------------------------------------------------------------
++// road-to-a-graph-that-feeds-the-gate — Phase 2
++// ---------------------------------------------------------------------------
++
++describe('bashSearchToken — step 2.1, the search inside a shell command', () => {
++    it('reads the term out of each recognised head', () => {
++        expect(bashSearchToken('grep -rn "classifyTool" src/')).toBe('classifyTool');
++        expect(bashSearchToken('rg classifyTool')).toBe('classifyTool');
++        expect(bashSearchToken('ag --nocolor needle')).toBe('needle');
++        expect(bashSearchToken('find . -name "*.ts"')).toBe('.');
++        expect(bashSearchToken('git grep latchTarget')).toBe('latchTarget');
++        expect(bashSearchToken('/usr/bin/grep foo')).toBe('foo');
++    });
++
++    it('is null for every other command, so the hook stays silent and latches nothing', () => {
++        // Risk-Register rank 2: "every shell call is a candidate line" is what
++        // makes a consumer turn the hook off.
++        for (const cmd of ['ls -la', 'npm test', 'git log --oneline', 'node x.js', '']) {
++            expect(bashSearchToken(cmd)).toBeNull();
++        }
++    });
++
++    it('stops at a shell metacharacter rather than reading the next command', () => {
++        expect(bashSearchToken('grep -l | xargs sed')).toBe('grep');
++    });
++});
++
++describe('classifyTool — step 2.1 routes the shell tool, and every call names its target', () => {
++    it('treats a shell search as a search and keys it on the term', () => {
++        const t = classifyTool({ tool_name: 'Bash', tool_input: { command: 'rg contextLine src' } });
++        expect(t.isSearch).toBe(true);
++        expect(t.target).toBe('contextLine');
++    });
++
++    it('leaves a non-search shell call silent', () => {
++        const t = classifyTool({ tool_name: 'Bash', tool_input: { command: 'npm run build' } });
++        expect(t.isSearch).toBe(false);
++        expect(t.isCodeRead).toBe(false);
++        expect(t.target).toBe('');
++    });
++
++    it('keys Grep/Glob on the pattern and Read on the path', () => {
++        expect(classifyTool({ tool_name: 'Grep', tool_input: { pattern: 'abc' } }).target).toBe('abc');
++        expect(classifyTool({ tool_name: 'Glob', tool_input: { pattern: '**/*.ts' } }).target).toBe('**/*.ts');
++        expect(classifyTool({ tool_name: 'Read', tool_input: { file_path: 'src/a.ts' } }).target).toBe('src/a.ts');
++    });
++});
++
++describe('the latch — step 2.2, once per target and five per session', () => {
++    it('speaksFor: a repeat is silent at any count, a new target is silent at the cap', () => {
++        // The stored form is the DIGEST, so the spoken list is built with
++        // `latchKey` — a test that passed plaintext here would pass against a
++        // latch that stores plaintext and is exactly what must not regress.
++        expect(speaksFor([], 'a')).toBe(true);
++        expect(speaksFor([latchKey('a')], 'a')).toBe(false);
++        expect(speaksFor([latchKey('a'), latchKey('b')], 'c')).toBe(true);
++        const targets = ['a', 'b', 'c', 'd', 'e'];
++        const full = targets.map(latchKey);
++        expect(full.length).toBe(MAX_CONTEXT_LINES_PER_SESSION);
++        expect(targets.every((t) => !speaksFor(full, t))).toBe(true);
++        expect(speaksFor(full, 'f')).toBe(false);
++    });
++
++    it('persists a digest of the search term, never the term — the council condition on 2.1', () => {
++        // Routing the shell tool here makes the latch key a search TERM an
++        // operator typed, which can carry a customer name, a token fragment or
++        // an internal hostname. Nothing reads it back, so nothing needs it.
++        const root = tmpRoot();
++        expect(latchTarget(root, 's', 'ACME-Corp-secret-token')).toBe(true);
++        const raw = fs.readFileSync(
++            path.join(root, 'agents', 'runtime', 'state', 'code-graph-context.json'),
++            'utf-8',
++        );
++        expect(raw).not.toContain('ACME-Corp-secret-token');
++        expect(raw).toContain(latchKey('ACME-Corp-secret-token'));
++        // And the digest still answers the only question the latch asks.
++        expect(latchTarget(root, 's', 'ACME-Corp-secret-token')).toBe(false);
++    });
++
++    it('three distinct patterns yield three lines, the same pattern twice yields one, a sixth yields none', () => {
++        const root = tmpRoot();
++        const s = 'session-1';
++        expect(['p1', 'p2', 'p3'].map((p) => latchTarget(root, s, p))).toEqual([true, true, true]);
++        // The same pattern again is not a second line.
++        expect(latchTarget(root, s, 'p1')).toBe(false);
++        // Two more distinct patterns reach the cap; the sixth does not speak.
++        expect(latchTarget(root, s, 'p4')).toBe(true);
++        expect(latchTarget(root, s, 'p5')).toBe(true);
++        expect(latchTarget(root, s, 'p6')).toBe(false);
++    });
++
++    it('keeps sessions apart', () => {
++        const root = tmpRoot();
++        expect(latchTarget(root, 'a', 'p')).toBe(true);
++        expect(latchTarget(root, 'a', 'p')).toBe(false);
++        expect(latchTarget(root, 'b', 'p')).toBe(true);
++    });
++
++    it('reads a pre-2.2 boolean latch as a spent session, never as a fresh budget', () => {
++        const root = tmpRoot();
++        const p = path.join(root, 'agents', 'runtime', 'state', 'code-graph-context.json');
++        fs.mkdirSync(path.dirname(p), { recursive: true });
++        fs.writeFileSync(p, JSON.stringify({ old: true }));
++        expect(latchTarget(root, 'old', 'anything')).toBe(false);
++        expect(wouldSpeak(root, 'old', 'anything')).toBe(false);
++    });
++});
++
++describe('graphState — step 2.3, the fourth state sees the uncommitted edit', () => {
++    it('reads edited for a modified indexed file and fresh once it is restored', () => {
++        const root = gitRepoWithGraph();
++        const file = path.join(root, 'a.php');
++        expect(graphState(root)).toBe('fresh');
++
++        fs.writeFileSync(file, '<?php function b() {}\n');
++        expect(graphState(root)).toBe('edited');
++
++        // The REVERT is the half an mtime probe cannot do: restoring the file
++        // rewrites its mtime, so a staleness read off mtime would never return.
++        runGit(root, ['checkout', '--', 'a.php']);
++        expect(graphState(root)).toBe('fresh');
++    });
++
++    it('ignores a change to a file no extractor indexes', () => {
++        const root = gitRepoWithGraph();
++        fs.writeFileSync(path.join(root, 'README.md'), 'changed\n');
++        expect(graphState(root)).toBe('fresh');
++    });
++
++    it('counts an untracked source file, which is exactly what the index cannot know', () => {
++        const root = gitRepoWithGraph();
++        fs.writeFileSync(path.join(root, 'new.ts'), 'export const x = 1;\n');
++        expect(graphState(root)).toBe('edited');
++    });
++});
++
++describe('contextLine — the edited branch', () => {
++    it('names the state and the repair without claiming an ordering', () => {
++        const line = contextLine('edited');
++        expect(line).toContain('code-graph:');
++        expect(line).toContain('code-graph refresh');
++        const lower = line.toLowerCase();
++        expect(lower).not.toContain('graph-first');
++        expect(lower).not.toContain('instead of grep');
++        expect(lower).not.toContain('before grep');
++        expect(line).not.toContain('\n');
++        expect(line.length).toBeLessThanOrEqual(260);
++    });
++});
+diff --git a/tests/scripts/graph_feeder_record.test.ts b/tests/scripts/graph_feeder_record.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..4c663f2eb6e7210b9f3b18888de0edd6ac9b8fb9
+--- /dev/null
++++ b/tests/scripts/graph_feeder_record.test.ts
+@@ -0,0 +1,214 @@
++/**
++ * The graph feeder record — `road-to-a-graph-that-feeds-the-gate` step 3.2.
++ *
++ * Two layers, for the reason the gate's own suite gives: the row BUILDER is a
++ * pure function and is asserted as one, while the claim that matters — the
++ * shadow changes no exit code — can only be made against the real process,
++ * because an in-process call cannot show that a graph loaded at turn end left
++ * the gate's verdict alone.
++ *
++ * The exit-code assertion is comparative on purpose. "Exit 1 with a graph
++ * present" proves nothing by itself; the same turn run WITHOUT a graph and
++ * WITH one, exiting identically, is what rules the graph out as an input.
++ */
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++import { afterAll, describe, expect, it } from 'vitest';
++
++import { buildFromRepo } from '../../src/scripts/code_graph/build.js';
++import {
++    buildFeederRow,
++    graphUntestedVerdict,
++    MAX_ROWS_PER_SESSION,
++    readFeederRows,
++} from '../../src/scripts/_lib/graph_feeder_record.js';
++import { deriveSessionKey } from '../../src/scripts/hooks/turn_end_gate_hook.js';
++
++const HERE = path.dirname(fileURLToPath(import.meta.url));
++const REPO_ROOT = path.resolve(HERE, '..', '..');
++const HOOK = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'turn_end_gate_hook.ts');
++const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
++const SESSION = 'graph-feeder-fixture-session';
++
++const tmp_dirs: string[] = [];
++afterAll(() => {
++    for (const d of tmp_dirs.splice(0)) fs.rmSync(d, { recursive: true, force: true });
++});
++
++const SERVICE = 'export function handle(x: string): string {\n    return x.trim();\n}\n';
++const MAIN = "import { handle } from './service.js';\n\nexport function run(): string {\n    return handle('a');\n}\n";
++
++/**
++ * A workspace with production code and NO test file — the shape step 3.2's
++ * verify names ("an untested production edit").
++ *
++ * `withGraph` decides whether a native cache is built. The dir is not a git
++ * repository, so freshness is unknown and `graphState` reads `fresh`, which is
++ * exactly the state the feeder acts on.
++ */
++async function rig(withGraph: boolean): Promise<{ dir: string; home: string }> {
++    const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'graph-feeder-')));
++    const home = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'graph-feeder-home-')));
++    tmp_dirs.push(dir, home);
++    fs.mkdirSync(path.join(dir, 'src'));
++    fs.writeFileSync(path.join(dir, 'src', 'service.ts'), SERVICE);
++    fs.writeFileSync(path.join(dir, 'src', 'main.ts'), MAIN);
++    if (withGraph) await buildFromRepo(dir, path.join(dir, 'agents/runtime/state/code-graph-v1.json'));
++    return { dir, home };
++}
++
++/** A turn that edited production code and claimed it was done. */
++function transcript(home: string, tag: string): string {
++    const file = path.join(home, `transcript-${tag}.jsonl`);
++    fs.writeFileSync(
++        file,
++        [
++            { type: 'user', message: { content: 'mach das fertig' } },
++            {
++                type: 'assistant',
++                message: { content: [{ type: 'tool_use', name: 'Edit', input: { file_path: 'src/service.ts' } }] },
++            },
++            { type: 'assistant', message: { content: [{ type: 'text', text: 'Fertig. Der Service trimmt jetzt.' }] } },
++        ]
++            .map((e) => JSON.stringify(e))
++            .join('\n') + '\n',
++    );
++    return file;
++}
++
++function runHook(dir: string, home: string, transcriptPath: string): { status: number; stderr: string } {
++    const r = spawnSync(
++        TSX,
++        [HOOK],
++        {
++            encoding: 'utf8',
++            cwd: dir,
++            input: JSON.stringify({
++                schema_version: 1,
++                platform: 'claude',
++                event: 'stop',
++                native_event: 'Stop',
++                session_id: SESSION,
++                workspace_root: dir,
++                payload: { transcript_path: transcriptPath },
++                settings: {},
++            }),
++            env: {
++                ...process.env,
++                HOME: home,
++                USERPROFILE: home,
++                EVENT4U_CONFIG_HOME: path.join(home, '.event4u', 'agent-config'),
++            },
++        },
++    );
++    return { status: r.status ?? 1, stderr: r.stderr ?? '' };
++}
++
++describe('3.2 — both verdicts land on the feeder record, and the exit code does not move', () => {
++    it('writes F and the graph verdict for an untested production edit, with the verdict unchanged', async () => {
++        const withGraph = await rig(true);
++        const withoutGraph = await rig(false);
++
++        const a = runHook(withGraph.dir, withGraph.home, transcript(withGraph.home, 'a'));
++        const b = runHook(withoutGraph.dir, withoutGraph.home, transcript(withoutGraph.home, 'b'));
++
++        // THE claim of a shadow: identical verdicts on the identical turn, with
++        // and without a graph. If the graph ever reaches the exit code, this is
++        // the assertion that says so.
++        expect(a.status, a.stderr).toBe(b.status);
++        expect(a.stderr).toContain('untested');
++
++        const key = deriveSessionKey(SESSION);
++        const rows = readFeederRows(withGraph.dir, key);
++        expect(rows.length).toBeGreaterThan(0);
++        const row = rows[0];
++        expect(row?.graph_state).toBe('fresh');
++        // F fired — the turn edited production code, touched no test and said done.
++        expect(row?.f).toBe(true);
++        expect(row?.f_mode).toBe('transcript');
++        // And so did the graph, independently: nothing in the index tests `handle`.
++        expect(row?.graph).toBe('untested');
++        expect(row?.graph_untested).toBeGreaterThan(0);
++        expect(row?.paths).toContain('src/service.ts');
++
++        // NOT the Q1 instrument (D3): the shadow record this step must not
++        // contaminate is a different file, and it keeps its own shape.
++        const feeder = path.join(withGraph.dir, 'agents', 'state', 'graph-feeder', `${key}.jsonl`);
++        expect(fs.existsSync(feeder)).toBe(true);
++        expect(feeder).not.toContain('runtime');
++
++        // A repository with no graph grows no file at all — a consumer who never
++        // builds one never pays for this.
++        expect(readFeederRows(withoutGraph.dir, key)).toStrictEqual([]);
++    }, 120_000);
++});
++
++describe('graphUntestedVerdict — the graph half, in isolation', () => {
++    it('contributes nothing on a stale or absent graph, or with no edit paths', async () => {
++        const { dir } = await rig(true);
++        // `behind:N` and `absent` are the two states the step says contribute
++        // nothing; the probe must not even look.
++        expect(graphUntestedVerdict(dir, 'behind:3', ['src/service.ts']).verdict).toBeNull();
++        expect(graphUntestedVerdict(dir, 'absent', ['src/service.ts']).verdict).toBeNull();
++        expect(graphUntestedVerdict(dir, 'fresh', []).verdict).toBeNull();
++    }, 120_000);
++
++    it('answers untested for a production file no test imports', async () => {
++        const { dir } = await rig(true);
++        const r = graphUntestedVerdict(dir, 'fresh', ['src/service.ts']);
++        expect(r.verdict).toBe('untested');
++        expect(r.untested).toBeGreaterThan(0);
++    }, 120_000);
++
++    it('reports no-seeds for a path the index does not carry', async () => {
++        const { dir } = await rig(true);
++        // A real answer, not an error: the graph was consulted and had nothing
++        // to say about this path, which is different from not consulting it.
++        expect(graphUntestedVerdict(dir, 'fresh', ['docs/README.md']).verdict).toBe('no-seeds');
++    }, 120_000);
++});
++
++describe('buildFeederRow — the row shape', () => {
++    it('caps the path list, keeps the true count, and carries no free-form field', () => {
++        const row = buildFeederRow({
++            turn: 3,
++            layer: 'live',
++            state: 'edited',
++            fFired: false,
++            fMode: null,
++            paths: ['a.ts', 'b.ts', 'c.ts', 'd.ts', 'e.ts', 'f.ts', 'g.ts'],
++            graph: { verdict: 'tested', untested: 0, tested: 2 },
++            at: '2026-10-01T00:00:00.000Z',
++        });
++        expect(row.paths).toHaveLength(5);
++        expect(row.path_count).toBe(7);
++        // PII-exclusion by construction: the key set is closed, so there is no
++        // field a prompt, a reply or a command could be written into even by
++        // mistake. Asserted rather than described, because a later field that
++        // CAN hold free text is exactly the regression this guards.
++        expect(Object.keys(row).sort()).toStrictEqual(
++            [
++                'at',
++                'f',
++                'f_mode',
++                'graph',
++                'graph_state',
++                'graph_tested',
++                'graph_untested',
++                'layer',
++                'path_count',
++                'paths',
++                'turn',
++            ].sort(),
++        );
++    });
++
++    it('declares a per-session row cap, so the instrument cannot grow without bound', () => {
++        expect(MAX_ROWS_PER_SESSION).toBeGreaterThan(0);
++        expect(Number.isInteger(MAX_ROWS_PER_SESSION)).toBe(true);
++    });
++});
+diff --git a/tests/scripts/hooks/dispatch_hook.test.ts b/tests/scripts/hooks/dispatch_hook.test.ts
+index 2495c9daa36ee9058c0e832e0c27ec0a3209dc87..04d9b05333300052fabffa53da40ac99004780ad 100644
+--- a/tests/scripts/hooks/dispatch_hook.test.ts
++++ b/tests/scripts/hooks/dispatch_hook.test.ts
+@@ -244,7 +244,10 @@ describe('_concern_matches_tool — the per-concern `tools:` filter', () => {
+     });
+ 
+     it('filters exactly on the declared names', () => {
+-        const c = { name: 'code-graph-context', tools: ['Grep', 'Glob', 'Read'] };
++        // A hand-written list, not a shipped concern's — the subject is the
++        // matcher's exactness, and naming a real concern here would make the
++        // assertions below drift every time that concern's set changes.
++        const c = { name: 'example', tools: ['Grep', 'Glob', 'Read'] };
+         expect(_concern_matches_tool(c, 'Grep')).toBe(true);
+         expect(_concern_matches_tool(c, 'Read')).toBe(true);
+         expect(_concern_matches_tool(c, 'Bash')).toBe(false);
+@@ -279,7 +282,7 @@ describe('the shipped manifest filter matches its concern source', () => {
+         const manifest = _load_yaml(path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'));
+         const concerns = (manifest as Record<string, Record<string, Record<string, unknown>>>)['concerns'];
+         const declared = concerns?.['code-graph-context']?.['tools'];
+-        expect(declared).toEqual(['Grep', 'Glob', 'Read']);
++        expect(declared).toEqual(['Grep', 'Glob', 'Read', 'Bash']);
+ 
+         const src = fs.readFileSync(
+             path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'code_graph_context_hook.ts'),
+diff --git a/tests/scripts/mcp_graph_tools.test.ts b/tests/scripts/mcp_graph_tools.test.ts
+index 74afd843e0c59137f0f5da8a88fe23966b03c683..94f96428be497fb672deba92f542e8ea51a062b5 100644
+--- a/tests/scripts/mcp_graph_tools.test.ts
++++ b/tests/scripts/mcp_graph_tools.test.ts
+@@ -25,7 +25,7 @@ import { ALLOWLIST, ToolCache } from '../../src/scripts/mcp_server/tools.js';
+ import { TELEMETRY_FILENAME, TELEMETRY_REL_DIR } from '../../src/scripts/mcp_server/telemetry.js';
+ import catalog from '../../src/scripts/mcp_server/consumer_tool_catalog.json' with { type: 'json' };
+ 
+-const NAMES = ['graph_impact', 'graph_tests_for', 'graph_dead', 'graph_query', 'graph_path'] as const;
++const NAMES = ['graph_impact', 'graph_tests_for', 'graph_dead', 'graph_query', 'graph_path', 'graph_node'] as const;
+ 
+ const dirs: string[] = [];
+ afterEach(() => {
+@@ -61,8 +61,8 @@ function telemetryRows(root: string): Record<string, unknown>[] {
+         .map((l) => JSON.parse(l) as Record<string, unknown>);
+ }
+ 
+-describe('4.1 — the five graph tools are registered', () => {
+-    it('all five are in ALLOWLIST, so they are implemented rather than stubs', () => {
++describe('4.1 — the graph tools are registered', () => {
++    it('all of them are in ALLOWLIST, so they are implemented rather than stubs', () => {
+         for (const n of NAMES) {
+             expect(ALLOWLIST[n], `${n} missing from ALLOWLIST`).toBeDefined();
+             expect(ALLOWLIST[n]?.name).toBe(n);
+@@ -70,9 +70,12 @@ describe('4.1 — the five graph tools are registered', () => {
+         expect(Object.keys(GRAPH_TOOLS).sort()).toStrictEqual([...NAMES].sort());
+     });
+ 
+-    it('the catalogue carries 36 tools, and all five are among them', () => {
++    it('the catalogue carries 37 tools, and all the graph tools are among them', () => {
++        // 36 → 37 with `graph_node` (road-to-a-graph-that-feeds-the-gate 3.1).
++        // The catalogue is generated from ALLOWLIST by `build_mcp_catalog`, so
++        // this count moves only when a real tool is registered.
+         const tools = (catalog as { tools: { name: string; implemented_on: string[] }[] }).tools;
+-        expect(tools).toHaveLength(36);
++        expect(tools).toHaveLength(37);
+         const byName = new Map(tools.map((t) => [t.name, t]));
+         for (const n of NAMES) {
+             expect(byName.get(n), `${n} missing from the catalogue`).toBeDefined();
+@@ -88,14 +91,14 @@ describe('4.1 — the five graph tools are registered', () => {
+         // has no "read-only subprocess" value, and understating the mechanism is
+         // the failure a capability enum exists to prevent.
+         expect(ALLOWLIST['graph_impact']?.side_effect).toBe('shell');
+-        for (const n of ['graph_tests_for', 'graph_dead', 'graph_query', 'graph_path']) {
++        for (const n of ['graph_tests_for', 'graph_dead', 'graph_query', 'graph_path', 'graph_node']) {
+             expect(ALLOWLIST[n]?.side_effect, `${n} should be read-only`).toBe('ro');
+         }
+     });
+ });
+ 
+ describe('4.1 — a fixture session, dispatched through the real ToolCache', () => {
+-    it('answers from the graph and writes a telemetry row for every one of the five', async () => {
++    it('answers from the graph and writes a telemetry row for every one of them', async () => {
+         const root = await consumerRig();
+         const cache = new ToolCache();
+ 
+@@ -103,6 +106,19 @@ describe('4.1 — a fixture session, dispatched through the real ToolCache', ()
+         expect(q['status']).toBe('ok');
+         expect(q['staleness']).toBe('fresh');
+ 
++        const n = await cache.dispatch('graph_node', { id: 'src/service.ts#handle' }, root);
++        expect(n['status']).toBe('ok');
++        expect(n['id']).toBe('src/service.ts#handle');
++        expect((n['location'] as { path: string }).path).toBe('src/service.ts');
++        // `run` imports it and the test file imports it — the in-edge list IS
++        // the "who reaches this" answer.
++        expect((n['in'] as { id: string }[]).length).toBeGreaterThan(0);
++
++        // The refusal reaches the wire as a status a caller can branch on,
++        // exactly like graph_dead's.
++        const nRefused = await cache.dispatch('graph_node', { id: 'handle something' }, root);
++        expect(nRefused['status']).toBe('refused');
++
+         const t = await cache.dispatch('graph_tests_for', { symbol: 'src/service.ts#handle' }, root);
+         expect(t['status']).toBe('ok');
+         expect(t['tests']).toStrictEqual(['tests/service.test.ts']);

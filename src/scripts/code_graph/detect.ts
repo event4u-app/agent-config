@@ -19,6 +19,7 @@ import * as path from 'node:path';
 
 import { load_agent_settings } from '../_lib/agent_settings.js';
 import { hardenedSpawnEnv } from '../_lib/spawn_env.js';
+import { EXT_LANG } from './types.js';
 import { validateGraph } from './validate.js';
 
 export type SourceKind = 'consumer' | 'scip' | 'native';
@@ -228,7 +229,12 @@ export function computeVerdict(root: string, nativeCache: string): VerdictJSON {
 export const NATIVE_CACHE_REL = path.join('agents', 'runtime', 'state', 'code-graph-v1.json');
 
 /**
- * The three-state staleness token every consumer of the graph reports.
+ * The four-state staleness token every consumer of the graph reports.
+ *
+ * `edited` is the fourth and newest (`road-to-a-graph-that-feeds-the-gate` 2.3).
+ * Without it an uncommitted change to an indexed file read as `fresh` — the one
+ * state that says "nothing stands between this answer and the tree" — which is
+ * the reading most likely to be wrong while someone is editing.
  *
  * Lives HERE rather than in the PreToolUse hook that first needed it
  * (`hooks/code_graph_context_hook.ts`, step 1.2). Phase 3's verbs must each
@@ -237,7 +243,73 @@ export const NATIVE_CACHE_REL = path.join('agents', 'runtime', 'state', 'code-gr
  * the engine, never the other way round. The hook re-exports this so its own
  * consumers are unaffected.
  */
-export type GraphState = 'absent' | 'fresh' | `behind:${number}`;
+export type GraphState = 'absent' | 'fresh' | 'edited' | `behind:${number}`;
+
+/**
+ * The working tree carries an uncommitted change to a file the extractor would
+ * index.
+ *
+ * WHY POINT-IN-TIME PORCELAIN AND NOT THE ARTIFACT'S MTIME. An mtime comparison
+ * looks cheaper and is wrong in the one direction that matters: restoring a
+ * stashed or checked-out file rewrites its mtime, so a tree put back exactly as
+ * the graph saw it would read stale forever and never return to `fresh`. The
+ * porcelain result describes a CONTENT difference, so a revert is visible as a
+ * revert.
+ *
+ * "Indexed paths" is read as *paths of the kind the extractor indexes* —
+ * `EXT_LANG`'s extensions — not as the node set of a loaded graph. Loading the
+ * graph to answer a freshness question would mean opening the index on every
+ * PreToolUse call this now runs on, which is the latency the Risk Register
+ * names; the extension filter answers the same question with no read. It can
+ * over-report (a `.ts` file the build excluded) and cannot under-report, and
+ * over-reporting `edited` only ever makes an answer look worth less than it is.
+ *
+ * Untracked files count. A source file that exists only in the working tree is
+ * precisely something the index cannot know about.
+ *
+ * `--untracked-files=all` IS LOAD-BEARING, and the default was wrong. Plain
+ * porcelain COLLAPSES an untracked directory to one entry — `?? src/` — which
+ * carries no extension, so the filter below skipped it and an entire new source
+ * tree read as `fresh`. A completion review reproduced exactly that, and it is
+ * the one direction the paragraph above promises cannot happen. The cost is
+ * enumerating untracked files rather than untracked directories; `.gitignore`
+ * still applies, so a vendored tree stays out of it.
+ */
+function hasUncommittedIndexedEdit(root: string): boolean {
+    let out: string;
+    try {
+        out = execFileSync('git', ['-C', root, 'status', '--porcelain', '--untracked-files=all'], {
+            env: hardenedSpawnEnv(),
+            encoding: 'utf-8',
+            stdio: ['ignore', 'pipe', 'ignore'],
+            // Both bounds are the review's: Node's 1 MB default would throw
+            // ENOBUFS on a large working tree, the catch below would return
+            // false, and the state would read `fresh` — a second silent
+            // under-report on a probe that runs at PreToolUse and at every stop.
+            // The timeout bounds the other failure: this probe sits in front of
+            // a tool call, so a hung git must not hold one up.
+            maxBuffer: 32 * 1024 * 1024,
+            timeout: 5_000,
+        });
+    } catch {
+        // Not a repository, or the probe failed: nothing is known, and an
+        // unknown is reported as the state the caller already had.
+        return false;
+    }
+    for (const raw of out.split('\n')) {
+        if (raw.length < 4) continue;
+        // `XY <path>`; a rename or copy is `XY <old> -> <new>`, and the NEW path
+        // is the one on disk. Quotes appear under core.quotepath for non-ASCII.
+        let p = raw.slice(3);
+        const arrow = p.indexOf(' -> ');
+        if (arrow !== -1) p = p.slice(arrow + 4);
+        p = p.trim().replace(/^"|"$/g, '');
+        const dot = p.lastIndexOf('.');
+        if (dot === -1) continue;
+        if (p.slice(dot).toLowerCase() in EXT_LANG) return true;
+    }
+    return false;
+}
 
 /**
  * Resolve the graph's state for `root`.
@@ -245,7 +317,10 @@ export type GraphState = 'absent' | 'fresh' | `behind:${number}`;
  * `absent` means no source at all — the silent case. A picked source whose
  * staleness is UNKNOWN reads as `fresh`, mirroring {@link computeVerdict}'s own
  * `picked.stale ? STALE : FRESH`: unknown is not treated as stale, because
- * inventing a commit count would be worse than reporting none.
+ * inventing a commit count would be worse than reporting none. A source level
+ * with HEAD then reads `edited` instead of `fresh` while the working tree
+ * carries an uncommitted change to an indexable file — see
+ * {@link hasUncommittedIndexedEdit} for why that probe is porcelain, not mtime.
  *
  * `nativeCache` overrides where the native graph is looked for. It exists
  * because a verb invoked with an explicit `--graph <path>` would otherwise
@@ -257,7 +332,13 @@ export type GraphState = 'absent' | 'fresh' | `behind:${number}`;
 export function graphState(root: string, nativeCache?: string): GraphState {
     const picked = pickSource(detectSources(root, nativeCache ?? path.join(root, NATIVE_CACHE_REL)));
     if (!picked) return 'absent';
-    if (picked.stale !== true) return 'fresh';
-    const behind = picked.commits_behind;
-    return `behind:${typeof behind === 'number' ? behind : 0}`;
+    if (picked.stale === true) {
+        const behind = picked.commits_behind;
+        return `behind:${typeof behind === 'number' ? behind : 0}`;
+    }
+    // The commit count comes FIRST and wins: `behind:N` already says the index
+    // predates committed work, and reporting `edited` instead would hide the
+    // larger gap behind the smaller one. Only a graph level with HEAD has an
+    // uncommitted edit as its whole remaining distance.
+    return hasUncommittedIndexedEdit(root) ? 'edited' : 'fresh';
 }
