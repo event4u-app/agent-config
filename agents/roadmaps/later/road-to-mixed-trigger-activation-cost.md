@@ -18,8 +18,10 @@ execution:
 > **50** consumed rounds, `lean_projection` in **48**, plus `inbox-2026-10-c`
 > (2026-10-01). That round's roadmaps take this file's blocker instrument
 > (`road-to-a-rule-carrier-that-works-outside-the-repo` step 0.2) and correct
-> its trigger table (`road-to-rule-triggers-and-links-that-hold` step 1.1:
-> `roadmap-progress-sync` is not path-only, its `command` triggers are dropped).
+> its trigger table (`road-to-rule-triggers-and-links-that-hold` step 1.1,
+> merged 2026-10-02: `roadmap-progress-sync` was never path-only, and its three
+> `command` triggers were being dropped — claim 2 below now carries the
+> emitter's own reading rather than a grep's).
 > **Owner question, posed 2026-10-01:** once step 0.2 there has merged, archive
 > this file into that round's roadmaps, or keep it parked for its Phase 3
 > measurement? Recommendation: keep it parked until 0.2's first record exists.
@@ -127,7 +129,7 @@ this tree can settle it).
 | # | Claim | Verdict | Evidence |
 |---|---|---|---|
 | 1 | Guard absent at 12.0.0, present at 12.1.0; commit `33c7c20` | **still-true** | `git tag --contains 33c7c20` → `12.1.0`, `13.0.0`; `_has_non_path_trigger` introduced in that commit's `src/scripts/condense.ts` diff |
-| 2 | 25 path-shaped rules, 19 mixed, 6 path-only | **still-true, exact** | `grep -l 'file_pattern\|path_prefix' src/rules/*.md` → 25; of those, 19 also carry `- keyword:` / `- phrase:`; the 6 remainder are `rule-type-governance`, `no-roadmap-references`, `source-confidentiality`, `source-of-truth`, `roadmap-progress-sync`, `skill-quality` |
+| 2 | 25 path-shaped rules, 19 mixed, 6 path-only | **corrected 2026-10-02** | The grep behind it (`- keyword:` / `- phrase:`) is not the emitter's predicate, and the gap is one rule: `roadmap-progress-sync` carries no keyword and three `command:` triggers, so it was counted path-only here while the emitter — which also missed `command` — gave it an exclusive `paths:` and dropped those three routes. `road-to-rule-triggers-and-links-that-hold` step 1.1 made the predicate a negation of the two path-shaped keys. Read the figures from the emitter rather than a grep: `./scripts-run src/scripts/rule_activation_census --json` → 21 path-shaped, **18 mixed**, 3 path-only (`design-review-after-ui-write`, `source-of-truth`, `ui-audit-gate`) over a 121-rule corpus. The other four names in the old remainder no longer declare a path-shaped trigger at all |
 | 3 | The 19 load unconditionally on Claude | **still-true** | zero of the projected `.claude/rules/*.md` carry a `paths:` block; every sampled member of the 19 is present in the projection |
 | 4 | Guard rationale + the `design-fidelity` 21-route finding | **still-true** | commit message of `33c7c20`; comment block in `src/scripts/condense.ts` at `_claude_paths_plan` |
 | 5 | `design-review-after-ui-write` mandates pre-inventory + post-review per component edit, model-carried | **still-true** | `src/rules/design-review-after-ui-write.md` (Iron Law + allow-list + honest-scope sections) |

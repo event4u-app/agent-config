@@ -131,8 +131,11 @@ export function classify_rule(
     const type = typeof meta['type'] === 'string' ? (meta['type'] as string) : 'unknown';
     const always = Boolean(meta['alwaysApply'] || type === 'always');
 
-    // `_has_non_path_trigger` is the guard's own predicate and is deliberately
-    // narrower than `has_text_trigger` looks: it ignores `command:` triggers.
+    // `_has_non_path_trigger` is the guard's own predicate, and it is BROADER
+    // than `has_text_trigger`: it counts every match key that is not
+    // path-shaped, so `command:` triggers count too. It used to enumerate
+    // `keyword` and `phrase` and therefore missed them — `roadmap-progress-sync`
+    // read as path-only here while losing three command routes on Claude.
     // Reported separately rather than conflated, because a rule that is mixed by
     // the guard's definition is the one that flipped.
     const mixed = has_path_trigger && _has_non_path_trigger(meta);
