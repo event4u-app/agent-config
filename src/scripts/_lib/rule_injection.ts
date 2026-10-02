@@ -166,19 +166,15 @@ export function ruleSources(repoRoot: string): RuleSources {
         if (statKind(shipped) === 'file') router = shipped;
     }
 
-    const why =
-        router !== null && dirs.length > 0
-            ? null
-            : pkg === null
-              ? `${PACKAGE_ROOT_ENV} unset`
-              : router === null
-                ? `no dist/router.json under ${repoRoot} or ${pkg}`
-                : `no dist/agent-src/rules under ${repoRoot} or ${pkg}`;
-    return {
-        dirs,
-        router,
-        gap: why === null ? null : `rule-inject: no rule source resolved — ${why}`,
-    };
+    let gap: string | null = null;
+    if (router === null || dirs.length === 0) {
+        const miss =
+            pkg === null
+                ? `${PACKAGE_ROOT_ENV} unset`
+                : `no ${router === null ? 'dist/router.json' : 'dist/agent-src/rules'} under ${repoRoot} or ${pkg}`;
+        gap = `rule-inject: no rule source — ${miss}`;
+    }
+    return { dirs, router, gap };
 }
 
 export function loadRouter(repoRoot: string): Router {

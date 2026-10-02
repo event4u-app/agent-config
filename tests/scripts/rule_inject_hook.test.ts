@@ -288,7 +288,7 @@ describe('rule-inject — never blocks (1.5)', () => {
         clearHookStdinOverride();
     });
 
-    it('a tree with no router returns allow rather than throwing', () => {
+    it('a tree with no router reports the gap rather than throwing', () => {
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-norouter-'));
         fs.writeFileSync(
             path.join(root, '.agent-settings.yml'),
@@ -301,8 +301,14 @@ describe('rule-inject — never blocks (1.5)', () => {
             session_id: 's-x',
             prompt: 'fix the failing migration',
         });
-        expect(rc).toBe(0);
-        expect(out).toBe('');
+        // Until step 1.1 this returned allow and emitted nothing, which is the
+        // silence the step exists to end: a tree configured for delivery that
+        // cannot find a corpus now SAYS so. Still never throws, and the host
+        // exit is still 0 — an advisory warn is not a block, which
+        // `rule_inject_foreign_matrix.test.ts` asserts through the dispatcher.
+        expect(rc).toBe(2);
+        expect(out).toContain('no rule source');
+        expect(out).not.toContain('<rule id=');
         fs.rmSync(root, { recursive: true, force: true });
     });
 
@@ -549,37 +555,42 @@ describe('rule-inject — foreign-project resolution (1.1)', () => {
         expect(out).not.toContain('PROMPT RULE BODY');
     });
 
-    it('no package root resolves — one diagnostic line, never a silent empty delivery', () => {
+    it('no package root resolves — one diagnostic reason, and no rule body', () => {
         const project = makeForeignProject({ settings: DELIVERY_SETTINGS });
-        const { rc, out, err } = runWithPackage(null, {
+        const { rc, out } = runWithPackage(null, {
             event: 'user_prompt_submit',
             workspace: project,
             session_id: 'foreign-2',
             payload: { prompt: 'plan the migration' },
         });
-        expect(rc).toBe(0);
-        expect(out).toBe('');
-        expect(err).toContain('AGENT_CONFIG_PACKAGE_ROOT');
-        expect(err.trim().split('\n')).toHaveLength(1);
+        // A warn carrying a `reason` and no body. The dispatcher turns that
+        // into `additionalContext` at exit 0 on this host — asserted end to end
+        // in `rule_inject_foreign_matrix.test.ts`, which is the only place that
+        // can see the translation.
+        expect(rc).toBe(2);
+        const reply = JSON.parse(out) as Record<string, unknown>;
+        expect(reply['reason']).toContain('AGENT_CONFIG_PACKAGE_ROOT');
+        expect(reply['additional_context']).toBeUndefined();
+        expect(out).not.toContain('<rule id=');
     });
 
     it('a package root moved after install names both trees it looked in', () => {
         const project = makeForeignProject({ settings: DELIVERY_SETTINGS });
         const pkg = makePackageRoot();
         fs.rmSync(pkg, { recursive: true, force: true });
-        const { rc, out, err } = runWithPackage(pkg, {
+        const { rc, out } = runWithPackage(pkg, {
             event: 'user_prompt_submit',
             workspace: project,
             session_id: 'foreign-3',
             payload: { prompt: 'plan the migration' },
         });
-        expect(rc).toBe(0);
-        expect(out).toBe('');
+        expect(rc).toBe(2);
+        const reason = (JSON.parse(out) as { reason: string }).reason;
         // A set-but-gone root is a DIFFERENT operator action from an unset one,
         // so it must not produce the unset wording. It names both trees.
-        expect(err).toContain(project);
-        expect(err).toContain(pkg);
-        expect(err).not.toContain('unset');
+        expect(reason).toContain(project);
+        expect(reason).toContain(pkg);
+        expect(reason).not.toContain('unset');
     });
 
     it('the maintainer checkout still answers from its own tree', () => {

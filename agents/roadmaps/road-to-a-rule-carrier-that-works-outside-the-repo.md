@@ -303,9 +303,44 @@ Reproduced on 2026-10-01:
       host's installed rule directory is not delivered. One source of truth for
       scope.
       verify: `npx vitest run tests/scripts/rule_inject_hook.test.ts -t scope` -> 0
+
+      **Not started 2026-10-02 — blocked on `hook-bundle-ceiling-exhausted`
+      below, not on design.** The scope is known and was established while
+      sizing the step: Claude Code loads `~/.claude/rules/` and
+      `<project>/.claude/rules/` BOTH (`install.ts:1991`, `:2031-2032`), so the
+      scope is their union and the body still comes from the package — the
+      installed layer declares what is in scope, the package supplies the text.
+      In `delivery` mode those files are thin stubs, which is exactly why the
+      two halves cannot be the same read.
+
+      The step needs a directory read plus a filter in the carrier, and the
+      bundle has 30 bytes of headroom. Pinned so the work has a red to turn
+      green: `rule_inject_foreign_matrix.test.ts`'s last case asserts that a
+      consumer `.claude/rules` directory is NOT yet the scope.
+
+      **What shipping 1.1 without 1.3 actually costs, stated plainly.** 13
+      router tier rules are maintainer-only by `workspaces` and neither hook
+      file reads that key, so a consumer can now receive a body for a rule the
+      install never meant for them. The register's risk 1 bounds the harm —
+      the installed layer is still eager, so a wrong delivery duplicates rather
+      than loses — and that bound is real but it is not a reason to call this
+      done. It is the first thing the next run should close.
 - [ ] **1.4 The host form.** Delivered text has frontmatter and block comments
       stripped, by the same parser the thin projector uses.
       verify: `npx vitest run tests/scripts/rule_inject_hook.test.ts -t host-form` -> 0
+
+      **Not started 2026-10-02 — blocked on `hook-bundle-ceiling-exhausted`,
+      and MEASURED rather than estimated.** The implementation is two lines:
+      `project_thin_rules.ts` already reads `ruleBody` from
+      `_lib/rule_law_section.ts`, which strips frontmatter and HTML comments and
+      is therefore literally "the same parser the thin projector uses". Importing
+      it into the carrier and calling it at the one emission site was written,
+      built and measured: **+396 B, putting the bundle 357 B over the ceiling.**
+      Reverted rather than shipped.
+
+      This is the cheapest of the five remaining steps, and it is the number
+      that makes the blocker below concrete: a two-line change reusing a module
+      that already exists does not fit.
 - [ ] **1.5 A delivery the host does not replace, and that hides nothing.** The
       rule-produced string stays under 8,000 characters (D2), in the order D1
       fixes; the high-consequence class is the one
@@ -316,22 +351,104 @@ Reproduced on 2026-10-01:
       truncated. `hook-token-budget.json`'s `rule-inject` row (`:35`) is
       restated in characters.
       verify: `npx vitest run tests/scripts/rule_inject_hook.test.ts -t composed-budget` -> 0
+
+      **Not started 2026-10-02 — blocked on `hook-bundle-ceiling-exhausted`.
+      One premise of the step has changed and should not be re-derived.** It
+      says the high-consequence class is "empty until it lands". It has landed:
+      `road-to-rule-laws-that-can-stand` merged as #2177, and
+      `src/config/rule-consequence-class.json` now carries **28 members** with
+      five declared `no_stub`. `_lib/rule_consequence_class.ts` reads it and
+      `_lib/rule_law_section.ts::lawText` produces the law form, so D1's
+      ordering has both inputs it was waiting for and the step is implementable
+      the moment there are bytes for it.
+
+      Of the five open steps this is the one with the most user-visible cost:
+      the draft's bundle run measured 109 of 323 composed strings over the
+      host's 10,000-character replacement threshold, so roughly a third of
+      fires are currently replaced by a path and a 2,000-character preview.
 - [ ] **1.6 Re-deliver after compaction.** On the session-start slot with source
       `compact`, emit the law section of each rule in the pre-compaction
       seen-set, under the same budget. The seen-set keeps rule ids, never body
       copies.
       verify: `npx vitest run tests/scripts/rule_inject_hook.test.ts -t compact` -> 0
+
+      **Not started 2026-10-02 — blocked on `hook-bundle-ceiling-exhausted`.**
+      Needs a third binding: the manifest binds `rule-inject` on
+      `user_prompt_submit` and `pre_compact` for `claude` and not on
+      `session_start`, so the slot the step emits on does not currently reach
+      this concern. That binding is free; the handler and the law-form emission
+      behind it are not.
 - [ ] **1.7 State leaves the consumer's tree.** The seen-set moves under the
       global root, keyed by project; the delivered-row ledger that
       `road-to-a-stop-that-holds` reads keeps its join. The installer writes the
       package's ignore block on the `--no-ui` path so dispatcher state under
       `agents/` does not appear as untracked files.
       verify: `npx vitest run tests/scripts/rule_inject_hook.test.ts -t state-location` -> 0
-- [ ] **1.8 A foreign-project matrix.** End to end on the built bundle: empty
+
+      **Not started 2026-10-02 — blocked on `hook-bundle-ceiling-exhausted`.**
+      The seen-set is still written under `<workspace>/agents/runtime/state/rule-inject/`
+      (`statePath`), so every consumer session leaves state in its own tree.
+      `road-to-a-stop-that-holds` Phase 3 reads the delivered-row ledger this
+      concern writes beside it, and the two are keyed on the same session id, so
+      the join is intact for now and the move must keep it.
+- [x] **1.8 A foreign-project matrix.** End to end on the built bundle: empty
       project, project with its own `.claude/rules`, package moved after
       install, no source checkout, cwd changed mid-session, maintainer scope,
       settings absent, settings `eager-all`, settings `delivery`.
       verify: `npx vitest run tests/scripts/rule_inject_foreign_matrix.test.ts` -> 0
+
+      **Done 2026-10-02, eleven columns, and it earned its place twice over.**
+      Each case copies the BUILT bundle, the manifest, the shipped config and a
+      small router into a temp directory and runs that, so the tree under test
+      carries no `src/scripts/**/*.ts` at all — the "no source checkout" column
+      is a property of the fixture rather than an assertion about it, and one
+      case checks that property directly so the fixture cannot quietly stop
+      testing what it claims.
+
+      **Why nothing smaller would do.** Two things that actually broke in
+      consumers are invisible from inside the module: the bundle's own idea of
+      where the package is (`dispatch_hook` computes `REPO_ROOT` with a
+      `__AGENT_CONFIG_BUNDLE__` sentinel picking two levels instead of three, so
+      the answer is right only in a real build), and the dispatcher's env
+      handling. On the second, the matrix corrected a belief this lane had been
+      working from: `_run_concern_inproc` REPLACES `process.env` with
+      `hardenedSpawnEnv({ AGENT_CONFIG_PACKAGE_ROOT: REPO_ROOT })` before
+      calling a concern, so an externally-supplied package root is scrubbed. A
+      consumer cannot spoof it and a test cannot inject one — which is why the
+      fixture stages a tree that IS an install.
+
+      **It found a real defect in 1.1, which is the whole reason to write it.**
+      Step 1.1 shipped its diagnostic as `process.stderr.write`. That line is
+      never seen: `_run_concern_inproc` captures a concern's stderr and
+      `dispatch_hook` re-emits it only at `rc >= 3`, so a concern exiting allow
+      is silent BY CONSTRUCTION — the exact failure the diagnostic exists to
+      end, reproduced one layer up. No in-process fixture could have caught it.
+      The concern now warns with a `reason`, and the measured landing place is
+      recorded rather than assumed: `emitFor` translates an advisory warn on
+      this slot into `hookSpecificOutput.additionalContext` at exit 0, so the
+      line reaches the MODEL, not the operator's terminal. That is the host's
+      translation, not a choice: `reason` alone has no terminal-facing path on
+      this slot. It is the right landing anyway — the agent is what the user is
+      talking to, so an agent told its corpus is missing can say so.
+
+      Two consequences are stated rather than left implicit. The cost is one
+      short line per turn for as long as the install stays broken; bounding it
+      to once per session needs a state write the bundle ceiling cannot afford
+      at this commit (30 bytes of headroom), so it is deferred here rather than
+      silently skipped. And `rule_inject_hook.test.ts`'s "a tree with no router
+      returns allow" changed meaning: a tree configured for delivery that cannot
+      find a corpus now reports instead of being silent. The host exit is still
+      0 — an advisory concern never blocks, which the matrix asserts through the
+      dispatcher rather than taking on trust.
+
+      **Sensitivity was checked, not assumed.** Disabling the package-root
+      branch turns 5 of the 11 columns red — exactly the delivery-dependent
+      ones — while the six that do not depend on it stay green.
+
+      One column is pinned rather than satisfied: a consumer `.claude/rules`
+      directory is NOT yet the delivery scope, because 1.3 is not built. The
+      case asserts what the carrier does TODAY, so implementing 1.3 has a red to
+      turn green rather than a behaviour to discover.
 
 ## What this roadmap deliberately does not do
 
@@ -343,6 +460,82 @@ Reproduced on 2026-10-01:
   delivers back.
 - No rule-retrieval MCP server (`road-to-skill-delivery-over-mcp` closed
   measured-null).
+
+## Blockers
+
+### blocker: hook-bundle-ceiling-exhausted
+
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3
+- **Ownership:** product-owned
+- **Blocks:** steps 1.3, 1.4, 1.5, 1.6 and 1.7, and AC-1's "only rules the
+  install carries" clause and AC-2 through them. 1.1, 1.2 and 1.8 are closed
+  and merged; everything still open on this phase is open for this one reason
+  and not for a design one.
+- **What to do:** `src/config/hook-bundle-budget.json` caps the composed hook
+  bundle at `max_bytes: 1550000`. `main` measured **1,549,697 B** on
+  2026-10-02 — **303 bytes**, 0.02 % of the ceiling. After 1.1 and 1.2 the
+  tree measures **1,549,970 B**, leaving **30 bytes**. Every concern is inlined
+  into `dist/hooks/dispatch.js`, so this is not a rule-inject budget; it is the
+  budget for any runtime code added anywhere in the hook estate.
+
+  The number is measured, not estimated. Step 1.4 — the cheapest of the five,
+  two lines reusing `_lib/rule_law_section.ts::ruleBody`, the parser the thin
+  projector already calls — was written, built and measured at **+396 B**,
+  landing the bundle 357 B over. It was reverted rather than shipped.
+
+  This lane paid for 1.1 and 1.2 out of its own cost rather than asking, which
+  is the precedent set by the lane that landed #2178. The explicit
+  `_lib/rule_sources.ts` module that 1.1 was first written against cost
+  2,822 B; folding the same resolution into the functions that already existed
+  cost 1,628 B. Replacing the two hand-rolled settings readers let esbuild
+  tree-shake 2,122 B out. Both were real reductions and both are spent.
+
+  There is nothing left to reclaim inside this concern's dependency closure.
+  Every module in it — `rule_injection`, `obligations`, `obligation_frequency`,
+  `router_match`, `hook_settings`, `agent_settings` — is shared with at least
+  one other concern, and the six heaviest modules in the bundle
+  (`chat_history` 55,899 B, `ai_council/config` 42,037 B, `ai_council/clients`
+  37,732 B, `memory_lookup` 34,757 B, `work_engine/stack/runner` 26,952 B,
+  `lint_code_comments` 18,787 B) each reach the bundle through exactly one
+  importer which is the concern that needs it. Trimming any of them removes a
+  capability rather than a redundancy.
+
+  So the decision is one of: raise `max_bytes` with a `raise_log` entry naming
+  what was added; or lower the estate's cost deliberately somewhere that is not
+  this phase. The file's own `shrink_only_note` says a raise needs a recorded
+  reason and that "the enforcement is review reading `raise_log`" — a raise is
+  therefore permitted with a record, and it is an owner call because the
+  ceiling is a ratchet and the previous raise (2026-10-01, 1,500,000 ->
+  1,550,000) was itself a response to the trunk outrunning a number derived on
+  a branch. Its own `what_would_have_caught_it` names the cause: a ceiling
+  derived against a base that no longer exists. The same thing has now happened
+  again within one day, which is the fact worth deciding on rather than the
+  bytes.
+- **Recommendation:** raise it, with the `raise_log` entry naming this phase
+  and the five steps, and re-derive the headroom against the MERGE result
+  rather than a branch — the lesson the existing entry already wrote down and
+  which a second exhaustion in a day confirms. Roughly 6 KB would carry 1.3
+  through 1.7 at the shapes sized above. The honest alternative is to leave the
+  ceiling and accept that the phase stops here, in which case
+  `road-to-an-installed-layer-that-is-thinned` stays blocked, because its
+  `relates:` note gates on this phase having merged and three of eight steps is
+  not that.
+- **If you do nothing:** the carrier works outside the repo — that is 1.1 and
+  1.2, merged — but it delivers more than the install carries (13 router tier
+  rules are maintainer-only by `workspaces` and neither hook file reads that
+  key), it delivers raw files with frontmatter, and roughly a third of composed
+  strings stay over the host's 10,000-character replacement threshold, where
+  the host substitutes a path and a 2,000-character preview. The register's
+  risk 1 bounds the first of those: the installed layer is still eager, so a
+  wrong delivery duplicates rather than loses. The third is not bounded by
+  anything and is the standing cost.
+- **Resolved when:** `./scripts-run src/scripts/check_hook_bundle_composition`
+  is green with 1.3 through 1.7 implemented, and
+  `npx vitest run tests/scripts/rule_inject_foreign_matrix.test.ts` is green
+  with its `.claude/rules` case rewritten from "NOT yet the delivery scope" to
+  the scope assertion 1.3 owes.
 
 ## Decisions
 

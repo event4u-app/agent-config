@@ -428,8 +428,31 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     // cannot find its corpus must not fail a turn.
     const { gap } = ruleSources(root);
     if (gap !== null) {
-        process.stderr.write(`${gap}\n`);
-        return EXIT_ALLOW;
+        // Fail CLOSED and SAY SO, through the channel the dispatcher actually
+        // surfaces. Writing to stderr looks right and is not: `_run_concern_inproc`
+        // captures a concern's stderr and `dispatch_hook` re-emits it only at
+        // rc >= 3 (a crash), so a concern exiting allow is silent by
+        // construction — which is the exact failure this diagnostic exists to
+        // end, reproduced one layer up. Found by the 1.8 matrix against the
+        // built bundle; no in-process fixture could have seen it.
+        //
+        // WHERE IT ACTUALLY LANDS, measured against the built bundle rather
+        // than assumed: on Claude Code `emitFor` translates an advisory warn on
+        // this slot into `hookSpecificOutput.additionalContext` at exit 0, so
+        // this line reaches the MODEL, not the operator's terminal. That is the
+        // host's translation and not a choice available here — `reason` alone
+        // has no terminal-facing path on this slot.
+        //
+        // It is the right place anyway: the agent is what the user is talking
+        // to, so an agent told its rule corpus is missing can say so. The cost
+        // is one short line per turn for as long as the install stays broken,
+        // which is bounded and deliberate. Bounding it further — once per
+        // session, via the seen-set — needs a state write this concern cannot
+        // currently afford (`src/config/hook-bundle-budget.json` left 30 bytes
+        // of headroom at this commit), and is recorded in the roadmap rather
+        // than silently skipped.
+        process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: gap })}\n`);
+        return EXIT_WARN;
     }
 
     const seen = readSeen(root, session);
