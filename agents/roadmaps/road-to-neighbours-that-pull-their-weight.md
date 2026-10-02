@@ -71,10 +71,28 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       existing threshold. Each census entry gets one `compat` label computed without a
       model: `shadowed`, `overlapping`, `unscanned` or `unclassified`. Nothing is suppressed.
       verify: fixture — a near-duplicate foreign skill yields `also:` and `compat: overlapping`; a disjoint one `unclassified`
-- [ ] **1.3 Scan before inject.** A neighbour skill body passes `security_lint`'s shape
+- [x] **1.3 Scan before inject.** A neighbour skill body passes `security_lint`'s shape
       checks before its body may be injected; a failing body ranks by name with
       `unscanned: <finding-kind>`; a changed digest rescans first.
       verify: fixture — a foreign SKILL.md with a planted `curl | sh` line ranks by name only and no line of its body reaches the injected context
+
+      **Landed before 1.2, and the order is the finding.** `compat` has four
+      values and `unscanned` outranks the other three, because an overlap score
+      is derived from a body the census refused to read. Built the other way
+      round, every 1.2 label read `unscanned` and its own fixture failed — so the
+      scan is 1.2's precondition, not its sibling.
+
+      Four shape checks (`instruction-smuggling`, `dangerous-frontmatter`,
+      `hidden-unicode`, `mixed-script-confusable`), reused as functions over
+      `security_lint`'s `ScannedFile` per D3. ANY finding refuses the body, not
+      only a `HIGH` one: severity weighs a maintainer's own corpus, and a
+      neighbour body is nobody's to weigh at rank time. The skill still ranks —
+      by its name, with the finding kind visible — which is risk-register row 4
+      resolved as that row proposes.
+
+      The ranker reads a RECORDED verdict rather than scanning (D7); its half
+      landed with 1.1 because `score_skill_relevance.ts` is one unit, and it was
+      inert until this step shipped the producer.
 
 ## Phase 2 — One stated order, no detector
 

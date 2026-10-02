@@ -7,8 +7,13 @@
  * `_lib/neighbour_census.ts`; everything here is presentation and the one
  * summary line the full `doctor` run links to.
  *
- * Read-only by construction. Nothing in this path writes, removes, or refuses
- * anything — a label is a report, never a gate.
+ * Refuses nothing. No label here removes, blocks, or rewrites a neighbour's
+ * artifact — a label is a report, never a gate.
+ *
+ * It is no longer read-ONLY, and the write is named rather than implied:
+ * `agents/reports/neighbour-scan.json`, the shape-scan verdicts the ranker reads
+ * on the hook path. Nothing outside that directory is touched, and a failed
+ * write is not a failed census.
  */
 
 import * as fs from 'node:fs';
@@ -19,9 +24,12 @@ import * as YAML from 'yaml';
 
 import {
     census,
+    fileDigest,
     gatedEventsFrom,
+    scanCachePath,
     type NeighbourCensus,
 } from '../_lib/neighbour_census.js';
+import { scanNeighbourBody, writeScanCache } from '../_lib/neighbour_scan.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
 
 interface ManifestShape {
@@ -58,17 +66,49 @@ function ourSkillNames(packageRoot: string): Set<string> {
     }
 }
 
+/**
+ * The census, with the shape scan wired in and its verdicts recorded.
+ *
+ * This verb is the ONLY producer of `agents/reports/neighbour-scan.json`, which
+ * is why the ranker treats that file's absence as `no-scan-record` — a refusal —
+ * rather than as a pass. The scan is memoized per path because the census reads
+ * a body once but a later step will want the same verdict without paying the
+ * four linters twice.
+ */
 export function runCensus(
     projectRoot: string,
     packageRoot: string,
     homeRoot?: string,
 ): NeighbourCensus {
-    return census(projectRoot, {
+    const scanned = new Map<string, string | null>();
+    const scan = (p: string): string | null => {
+        const hit = scanned.get(p);
+        if (hit !== undefined) return hit;
+        const kind = scanNeighbourBody(p).kind;
+        scanned.set(p, kind);
+        return kind;
+    };
+    const base = {
         gatedEvents: gatedEvents(packageRoot),
         templatesRoot: path.join(packageRoot, 'src', 'agent-src', 'templates'),
         ourSkillNames: ourSkillNames(packageRoot),
+        packageRoot,
+        scan,
         ...(homeRoot === undefined ? {} : { homeRoot }),
-    });
+    };
+    const full = census(projectRoot, base);
+    writeScanCache(
+        scanCachePath(projectRoot),
+        // `fileDigest`, not the census's own `digest`: the ranker re-digests the
+        // file bytes it is about to index, and a cache written under a different
+        // digest function would read as `digest-changed` on every prompt.
+        full.skills.map((s) => ({
+            qualified: s.qualified,
+            digest: fileDigest(s.source) ?? '',
+            unscanned: s.unscanned,
+        })),
+    );
+    return full;
 }
 
 /** The one line the full `doctor` run prints, linking to this verb. */
@@ -104,7 +144,14 @@ export function renderText(c: NeighbourCensus): string[] {
         out.push(`  ${title} (${rows.length})`);
         for (const r of rows) out.push(`      ${r.id}`);
     };
-    section('skills', c.skills);
+    if (c.skills.length > 0) {
+        out.push('');
+        out.push(`  skills (${c.skills.length})`);
+        for (const s of c.skills) {
+            const why = s.unscanned === null ? '' : ` unscanned: ${s.unscanned}`;
+            out.push(`      ${s.qualified}  compat: ${s.compat}${why}`);
+        }
+    }
     section('commands', c.commands);
     section('agents', c.agents);
     section('mcp servers', c.mcp_servers);
