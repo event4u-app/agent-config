@@ -9,13 +9,11 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { main } from '../../src/scripts/lint_agent_security.js';
 import { runInProc } from '../_lib/run_in_process.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
 function runTs(args: string[]) {
     return runInProc(main, args);
