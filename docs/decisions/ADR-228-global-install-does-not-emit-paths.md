@@ -27,6 +27,30 @@ review_trigger: >-
 recorded in `road-to-inbox-harvest-2026-08-b-release-integrity` that had held
 that roadmap unarchivable at 12/12 steps done.
 
+> **Successor note, 2026-10-02 — the code contradicts the title, and the record
+> says so rather than being quietly re-read.** `renderClaudeRule`
+> (`src/install/claudeRuleRewrite.ts:213`, the emitting branch at `:221-226`)
+> writes a `paths:` frontmatter block for every rule whose plan yields globs, and
+> `install.ts:3034` calls `rewriteAndReport` over `<anchor>/rules` for
+> `tool_id === 'claude-code'` — where the anchor on a consumer install is the
+> GLOBAL `~/.claude`. So a global install does emit `paths:` today, on exactly
+> the layer this record's title says it does not.
+>
+> **What this note does and does not do.** It does not reverse the decision, and
+> it does not change the status: which behaviour is correct is a question for the
+> owner, and the two readings are genuinely different claims — this record
+> rejected emitting `paths:` for the DIVERGING set (24 rules whose host-native
+> path route and router route disagree), while the code emits for every
+> path-shaped plan. It is possible that both are intended and the title is the
+> only thing that is wrong. What the note establishes is that the contradiction
+> is real, measured, and no longer silent: a reader who cited this ADR for what
+> the installer does would have been wrong, and `superseded_by: —` gave them no
+> reason to check.
+>
+> Recorded by step 0.5 of `road-to-a-rule-carrier-that-works-outside-the-repo`,
+> whose Phase 0 changes no behaviour by design. The repair, if the title is what
+> should hold, belongs to that file's Phase 1 or to a successor ADR — not here.
+
 ## Context
 
 Two writers produce Claude Code rule trees and they do not agree on frontmatter.

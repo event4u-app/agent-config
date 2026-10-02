@@ -682,6 +682,34 @@ export function runEndpoints(corpusDir: string): EndpointResult[] {
     ]);
     const thinnedAndPathOnly = pathOnlyReach.filter((id) => !alwaysEager.has(id));
 
+    // PROMPT-LEVEL beside RULE-LEVEL — step 0.4 of
+    // `road-to-a-rule-carrier-that-works-outside-the-repo`.
+    //
+    // The two numbers above are per RULE: a rule counts as reachable when ANY
+    // of its labelled positives matches. That is the right unit for the bar —
+    // "no labelled rule left unreachable" — and it is the wrong unit for the
+    // question a reader actually asks next, which is how much of the corpus the
+    // shipped binding delivers. A rule reachable on one of twelve prompts and a
+    // rule reachable on all twelve are the same row in `byRule`.
+    //
+    // So the pair is reported in both units. The SUMMARY view has computed the
+    // prompt-level figures since the two-readings split landed; what was missing
+    // is that `--endpoints`, which is the view a claim cites, printed only the
+    // rule-level half. A reader comparing the two views saw 99/102 and 305/335
+    // and had no way to tell they measure different things.
+    const promptHonoured = positives.filter((c) => reach(c, true)).length;
+    const promptIgnored = positives.filter((c) => reach(c, false)).length;
+
+    // The SUMMARY view prints a LOWER pair over the same corpus, and the gap is
+    // not noise. `scoreExact` calls `matchTierRules(router, c.prompt, of)` with
+    // three arguments and drops the case's `command`, so a positive whose rule
+    // is reached by a `command:` trigger scores as a miss there and as a hit
+    // here. Recorded rather than repaired: this phase changes no behaviour, and
+    // the SUMMARY figures are cited in a roadmap and in the prereg. Both
+    // readings are printed so neither view has to be trusted over the other.
+    const summaryHonoured = scoreExact(router, cases, true);
+    const summaryIgnored = scoreExact(router, cases, false);
+
     // (c) A near-miss must never deliver its labelled rule.
     const exact = scoreExact(router, cases, true);
 
@@ -716,7 +744,15 @@ export function runEndpoints(corpusDir: string): EndpointResult[] {
                 `${byRule.size - pathOnlyReach.length}/${byRule.size}; reachable only via a ` +
                 `path trigger: ${pathOnlyReach.length === 0 ? 'none' : pathOnlyReach.join(', ')}` +
                 ` (of which thinned, i.e. at no scope on that route: ` +
-                `${thinnedAndPathOnly.length === 0 ? 'none' : thinnedAndPathOnly.join(', ')})`,
+                `${thinnedAndPathOnly.length === 0 ? 'none' : thinnedAndPathOnly.join(', ')})` +
+                ` | per-prompt reach: ${promptIgnored}/${positives.length} with open_files ` +
+                `IGNORED against ${promptHonoured}/${positives.length} honoured — the same ` +
+                `corpus in prompts rather than in rules, because a rule reachable on one of ` +
+                `twelve positives and one reachable on all twelve are one row above` +
+                ` | SUMMARY prints ${summaryIgnored.hits}/${summaryIgnored.positives} and ` +
+                `${summaryHonoured.hits}/${summaryHonoured.positives} for the same corpus: ` +
+                `scoreExact drops the case's command trigger, so a command-reached positive ` +
+                `misses there and hits here`,
             bar: 'unreachable == 0 (a rule with zero matched positives is a rule the mode removed)',
             passed: unreachable.length === 0,
         },
