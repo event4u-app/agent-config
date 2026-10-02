@@ -45,7 +45,7 @@ Two providers were consulted and the verdict is **not** a concurrence. The
 anthropic seat argued the ignore "reduces automated security oversight" and
 that the peer-range claim was unverifiable from the diff. The openai seat
 rejected the first point on the documented behaviour — dependabot does not
-apply version `ignore` rules to **security** updates, so a CVE fixed only in
+apply version-ignore rules to **security** updates, so a CVE fixed only in
 mermaid 12 would still be proposed — and narrowed the second to a
 documentation concern rather than an authority question.
 
