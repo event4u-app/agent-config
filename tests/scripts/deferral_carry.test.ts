@@ -37,8 +37,8 @@ function _repo(files: Record<string, string>): string {
     return d;
 }
 
-const BLOCKER = (id: string): string =>
-    `### blocker: ${id}\n\n- **Status:** open\n- **Owner:** user\n- **Blocks:** 1.2\n` +
+const BLOCKER = (id: string, owner = 'implementer'): string =>
+    `### blocker: ${id}\n\n- **Status:** open\n- **Owner:** ${owner}\n- **Blocks:** 1.2\n` +
     `- **What to do:** run \`./scripts-run src/scripts/x\`\n- **Resolved when:** the window closes\n`;
 
 const parent = (deferred: string, blockers = ''): string =>
@@ -125,6 +125,61 @@ describe('the sweep carries bare deferrals, then archives', () => {
         // the sweep did not paper over it with a carry of its own.
         expect(existsSync(join(root, active('', CHILD)))).toBe(false);
         expect(existsSync(join(root, active('', SRC)))).toBe(true);
+    });
+});
+
+describe('owner-dependent blockers — the owner decides, step by step', () => {
+    const owned = (): string =>
+        parent(
+            '- [~] **1.2 Decide the fallback.** <!-- blocked-by: owner-call -->\n      verify: the decision is recorded\n',
+            BLOCKER('owner-call', 'maintainer'),
+        );
+
+    it('writes nothing and prints the decision with the FIRST step on screen', () => {
+        const before = owned();
+        const root = _repo({ [active('', SRC)]: before });
+        const out: string[] = [];
+        const write = process.stdout.write.bind(process.stdout);
+        process.stdout.write = ((c: string) => (out.push(String(c)), true)) as typeof process.stdout.write;
+        try {
+            main(['--all', '--repo-root', root]);
+        } finally {
+            process.stdout.write = write;
+        }
+        const text = out.join('');
+
+        expect(read(root, active('', SRC))).toBe(before);
+        expect(existsSync(join(root, active('', CHILD)))).toBe(false);
+        expect(existsSync(join(root, `agents/roadmaps/later/${CHILD}.md`))).toBe(false);
+        expect(text).toContain('Work them step by step, starting with:');
+        expect(text).toContain('- [~] **1.2 Decide the fallback.**');
+        // One JSON line a subagent forwards to its orchestrator unchanged.
+        const line = text.split('\n').find((l) => l.trim().startsWith('OWNER-DECISION ')) as string;
+        const record = JSON.parse(line.trim().slice('OWNER-DECISION '.length));
+        expect(record.owner_blockers).toEqual(['owner-call']);
+        expect(record.first_step).toContain('1.2 Decide the fallback.');
+    });
+
+    it('an owner value the list does not know is treated as the owner', () => {
+        const root = _repo({
+            [active('', SRC)]: parent('- [~] **1.2 later** <!-- blocked-by: who-knows -->\n', BLOCKER('who-knows', 'whoever')),
+        });
+        main(['--all', '--repo-root', root]);
+        expect(existsSync(join(root, archived(SRC)))).toBe(false);
+    });
+
+    it('`--owner-decision later` archives the parent and parks steps + blockers in later/', () => {
+        const root = _repo({ [active('', SRC)]: owned() });
+        main(['--all', '--owner-decision', 'later', '--repo-root', root]);
+
+        expect(existsSync(join(root, archived(SRC)))).toBe(true);
+        expect(existsSync(join(root, active('', CHILD)))).toBe(false);
+        const parked = read(root, `agents/roadmaps/later/${CHILD}.md`);
+        expect(parked).toMatch(/^status: later$/m);
+        expect(parked).toMatch(/^entry_condition:\n {2}what: .+\n {2}when: .+\n {2}who: owner$/m);
+        expect(parked).toContain('### blocker: owner-call');
+        expect(parked).toContain('(../archive/road-to-parent.md)');
+        expect(deferralProblems(root, `${SRC}.md`, read(root, archived(SRC)))).toEqual([]);
     });
 });
 

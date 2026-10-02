@@ -65,7 +65,7 @@ import {
     collect,
     parse_blockers,
 } from './update_roadmap_progress.js';
-import { BLOCK_END_RE, DEFERRED_RESOLUTION_RE, DEFERRED_STEP_RE, planCarry } from './deferral_carry.js';
+import { BLOCK_END_RE, DEFERRED_RESOLUTION_RE, DEFERRED_STEP_RE, planCarry, type CarryPlan, type OwnerDecision } from './deferral_carry.js';
 import { guardedBaselineProblems, parseGuardedBaselines } from './guarded_baseline.js';
 
 import { isCliEntry } from './_cli_entry.js';
@@ -582,7 +582,7 @@ export function deferralProblems(
 /** Archive every complete active roadmap: no open steps, and every `[~]` resolved. */
 function archive_completed(
     root: string,
-    opts: { changed_only: boolean; base: string; dry_run: boolean; carry?: boolean },
+    opts: { changed_only: boolean; base: string; dry_run: boolean; carry?: boolean; owner_decision?: OwnerDecision },
 ): ArchiveRecord[] {
     const { changed_only, base, dry_run } = opts;
     const carry = opts.carry ?? true;
@@ -652,9 +652,15 @@ function archive_completed(
             const inScope = !changed_only || (touched as Set<string>).has(old_rel);
             const bare = parseDeferredItems(roadmapText).some((d) => d.kind === null);
             if (carry && inScope && bare) {
-                const outcome = planCarry(root, stats.rel, roadmapText, open_blockers, _today());
+                const outcome = planCarry(root, stats.rel, roadmapText, open_blockers, _today(), opts.owner_decision ?? 'ask');
                 if ('refused' in outcome) {
                     process.stderr.write(`  ⚠️  ${stats.rel}: deferrals not carried — ${outcome.refused}.\n`);
+                } else if (outcome.plan.ownerBlockers.length > 0 && !outcome.plan.parked) {
+                    // The steps wait on the OWNER. Nothing is written: whether
+                    // to park them or work them is the owner's call, and the
+                    // step-by-step offer needs the first step on screen.
+                    process.stdout.write(_ownerDecisionBlock(stats.rel, outcome.plan));
+                    continue;
                 } else {
                     const { plan } = outcome;
                     process.stdout.write(
@@ -668,6 +674,7 @@ function archive_completed(
                         archived.push({ roadmap: old_rel, archived_to: `agents/roadmaps/archive/${stats.rel}`, refs_migrated: [] });
                         continue;
                     }
+                    fs.mkdirSync(path.dirname(path.join(root, plan.destRel)), { recursive: true });
                     fs.writeFileSync(path.join(root, plan.destRel), plan.destText, 'utf-8');
                     fs.writeFileSync(abs, plan.sourceText, 'utf-8');
                     // Staged so the blocker-divergence check below compares the
@@ -745,6 +752,34 @@ function archive_completed(
         archived.push({ roadmap: old_rel, archived_to: new_rel, refs_migrated: refs });
     }
     return archived;
+}
+
+/**
+ * The owner question, rendered for a human AND forwarded verbatim by a
+ * subagent: the trailing `OWNER-DECISION` line is one JSON object, so an
+ * orchestrator can re-present the decision without re-deriving it. A subagent
+ * never answers it and never re-runs with `--owner-decision later` itself.
+ */
+function _ownerDecisionBlock(rel: string, plan: CarryPlan): string {
+    const ids = plan.ownerBlockers.join(', ');
+    const park = `agents/roadmaps/later/${plan.destSlug}.md`;
+    const step = plan.firstStep.split('\n').map((l) => `             ${l}`).join('\n');
+    const record = {
+        roadmap: `agents/roadmaps/${rel}`,
+        owner_blockers: plan.ownerBlockers,
+        deferred_steps: plan.carried,
+        park_to: park,
+        archive_command: './agent-config roadmap:archive --all --owner-decision later',
+        first_step: plan.firstStep,
+    };
+    return (
+        `  ❓  ${rel}: ${plan.carried} deferred step(s) wait on owner blocker(s) ${ids} — not archived; the owner decides:\n` +
+        `        1. Archive it — the steps and their blockers park in ${park}\n` +
+        `           (${record.archive_command})\n` +
+        '        2. Work them step by step, starting with:\n' +
+        `${step}\n` +
+        `  OWNER-DECISION ${JSON.stringify(record)}\n`
+    );
 }
 
 function _today(): string {
@@ -853,7 +888,7 @@ function _runTwin(root: string, script: string): void {
 const _PROG = 'archive_completed_roadmaps.py';
 
 function _usage(): string {
-    return `usage: ${_PROG} [-h] [--all] [--base BASE] [--dry-run] [--no-carry] [--repo-root REPO_ROOT]\n`;
+    return `usage: ${_PROG} [-h] [--all] [--base BASE] [--dry-run] [--no-carry] [--owner-decision later] [--repo-root REPO_ROOT]\n`;
 }
 
 interface Args {
@@ -861,6 +896,7 @@ interface Args {
     base: string;
     dry_run: boolean;
     carry: boolean;
+    owner_decision: OwnerDecision;
     repo_root: string | null;
 }
 
@@ -869,6 +905,7 @@ function _parseArgs(argv: readonly string[]): Args {
     let base = 'origin/main';
     let dry_run = false;
     let carry = true;
+    let owner_decision: OwnerDecision = 'ask';
     let repo_root: string | null = null;
     const emitError = (msg: string): never => {
         process.stderr.write(_usage());
@@ -890,6 +927,13 @@ function _parseArgs(argv: readonly string[]): Args {
         } else if (tok === '--no-carry') {
             carry = false;
             i += 1;
+        } else if (tok === '--owner-decision' || tok.startsWith('--owner-decision=')) {
+            const val = tok.includes('=') ? tok.slice(tok.indexOf('=') + 1) : argv[i + 1];
+            if (val !== 'later' && val !== 'ask') {
+                emitError("argument --owner-decision: expected 'later' or 'ask'");
+            }
+            owner_decision = val as OwnerDecision;
+            i += tok.includes('=') ? 1 : 2;
         } else if (tok === '--base') {
             const val = argv[i + 1];
             if (val === undefined) {
@@ -914,7 +958,7 @@ function _parseArgs(argv: readonly string[]): Args {
             emitError(`unrecognized arguments: ${tok}`);
         }
     }
-    return { all, base, dry_run, carry, repo_root };
+    return { all, base, dry_run, carry, owner_decision, repo_root };
 }
 
 function main(argv?: readonly string[]): number {
@@ -929,6 +973,7 @@ function main(argv?: readonly string[]): number {
         base: ns.base,
         dry_run: ns.dry_run,
         carry: ns.carry,
+        owner_decision: ns.owner_decision,
     });
     if (archived.length === 0) {
         process.stdout.write('  ℹ️  No completed roadmaps to archive.\n');

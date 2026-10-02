@@ -1066,6 +1066,26 @@ manual flow below applies only to what the sweep refuses: an open blocker no
 deferred step names, a hand-written annotation that fails validation, or a run
 with `--no-carry`.
 
+**Owner-dependent blockers stop the carry.** When a carried step names a blocker
+whose `Owner:` is the human (`maintainer` / `user` / `owner`, or any value that is
+not `implementer` / `council` / `agent` / `ai`), the sweep writes nothing and
+prints a `❓` block plus one `OWNER-DECISION {json}` line. Put that decision to
+the owner as ONE numbered-options question, never resolve it yourself:
+
+1. **Archive it** — run `./agent-config roadmap:archive --all --owner-decision later`:
+   the parent archives, the steps and their blockers park in
+   `later/<slug>-carried.md`.
+2. **Step by step** — show the FIRST step (`first_step`, verbatim) with its
+   blocker's question, in the same message, so the owner can answer it or push
+   it to later in one reply. An answer → do the step, flip it, show the next
+   one. "Later" → leave that step `[~]` and show the next one. When no step is
+   left to show, re-run the sweep with `--owner-decision later`: what is still
+   deferred parks, the parent archives.
+
+A **subagent** never answers this and never passes `--owner-decision` itself: it
+stops and returns the `OWNER-DECISION` line verbatim, and the orchestrator puts
+it to the owner. A non-interactive run ends on the question, not on a report.
+
 Before any `git mv` to `archive/` the sweep refused, count `[~]` items in the
 closing roadmap. If `count_deferred > 0`, archival is **blocked** per
 [`roadmap-progress-sync § Iron Law 3`](../../rules/roadmap-progress-sync.md).

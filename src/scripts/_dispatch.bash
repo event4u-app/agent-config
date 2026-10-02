@@ -240,7 +240,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   roadmap:archive            Archive completed roadmaps (branch-touched by default;
                              --all for every complete one; --dry-run to preview;
                              bare [~] steps are carried to a follow-up first,
-                             --no-carry to leave them blocking)
+                             --no-carry to leave them blocking; owner-blocked
+                             steps ask first, --owner-decision later parks them)
   stubs:due                  Read-only: roadmap stubs past their `review_by:`
                              date, plus the decisions routed to the owner.
                              Writes nothing. Flags: --json, --counts,

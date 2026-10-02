@@ -30,6 +30,11 @@
  *     parent with a status line naming where it went. The open-blocker count is
  *     unchanged, it only changes file.
  *
+ * NOT automatic when a moved blocker waits on the OWNER (owner decision
+ * 2026-10-02): the sweep then writes nothing and asks — archive with the steps
+ * parked in `later/` (`--owner-decision later`), or work them step by step with
+ * the first one on screen. The procedure lives in `roadmap-process-loop` § 6a.
+ *
  * Refused, so nothing is written, when the parent would still not archive
  * afterwards: an open blocker no carried step names is a decision the parent
  * itself raised, and carrying around it would strand the child with steps that
@@ -58,6 +63,23 @@ const BLOCKED_BY_RE = /blocked-by:\s*([A-Za-z0-9._-]+)/g;
 const BLOCKER_HEAD_RE = /^###[ \t]+blocker:[ \t]*(.+?)[ \t]*$/i;
 const STATUS_LINE_RE = /^([ \t]*-[ \t]+\*\*Status:\*\*[ \t]*)(.*)$/;
 const AC_HEADING_RE = /^##[ \t]+acceptance/i;
+const OWNER_LINE_RE = /^[ \t]*-[ \t]+\*\*Owner:\*\*[ \t]*`?([A-Za-z]+)/;
+
+/**
+ * Blocker owners that are NOT the human owner. Everything else — `maintainer`,
+ * `user`, `owner`, and any value this list does not name — is owner-dependent:
+ * in doubt it is the owner's decision, so an unrecognised owner fails closed.
+ */
+const AGENT_SIDE_OWNERS: ReadonlySet<string> = new Set(['implementer', 'council', 'agent', 'ai']);
+
+/**
+ * What happens to deferrals whose blockers wait on the owner.
+ *
+ * `ask` (default): nothing is written; the sweep reports the decision instead —
+ * archive with the steps parked in `later/`, or work them step by step.
+ * `later`: the owner chose to archive; the carry lands in `later/`.
+ */
+export type OwnerDecision = 'ask' | 'later';
 
 /** The lightweight cap `lint_roadmap_complexity` enforces, with margin. */
 const LIGHTWEIGHT_LINE_BUDGET = 500;
@@ -78,6 +100,7 @@ interface BlockerSpan {
     start: number;
     end: number;
     open: boolean;
+    ownerDependent: boolean;
 }
 
 export interface CarryPlan {
@@ -87,6 +110,12 @@ export interface CarryPlan {
     sourceText: string;
     carried: number;
     movedBlockers: string[];
+    /** Moved blockers only the owner can resolve. Non-empty ⇒ the owner decides. */
+    ownerBlockers: string[];
+    /** The first carried step, verbatim, for the step-by-step offer. */
+    firstStep: string;
+    /** True when the carry targets `later/` (owner chose to archive). */
+    parked: boolean;
 }
 
 export type CarryOutcome = { plan: CarryPlan } | { refused: string };
@@ -137,7 +166,17 @@ function _blockerSpans(lines: readonly string[]): BlockerSpan[] {
             .map((l) => STATUS_LINE_RE.exec(l))
             .find((s) => s !== null);
         const value = (status?.[2] ?? 'open').trim().toLowerCase();
-        spans.push({ id: (m[1] as string).trim(), start: i, end, open: !/^resolved\b/.test(value) });
+        const owner = lines
+            .slice(i, end)
+            .map((l) => OWNER_LINE_RE.exec(l))
+            .find((o) => o !== null);
+        spans.push({
+            id: (m[1] as string).trim(),
+            start: i,
+            end,
+            open: !/^resolved\b/.test(value),
+            ownerDependent: !AGENT_SIDE_OWNERS.has((owner?.[1] ?? '').toLowerCase()),
+        });
     }
     return spans;
 }
@@ -172,6 +211,7 @@ export function planCarry(
     text: string,
     openBlockerIds: readonly string[],
     date: string,
+    ownerDecision: OwnerDecision = 'ask',
 ): CarryOutcome {
     const sourceSlug = rel.replace(/\.md$/, '');
     const lines = text.split('\n');
@@ -188,6 +228,8 @@ export function planCarry(
         };
     }
     const moved = _blockerSpans(lines).filter((b) => b.open && named.has(b.id));
+    const ownerBlockers = moved.filter((b) => b.ownerDependent).map((b) => b.id);
+    const parked = ownerBlockers.length > 0 && ownerDecision === 'later';
 
     const destSlug = nextCarrySlug(root, sourceSlug);
     const annotation = `<!-- deferred-resolution: carried-to=${destSlug} -->`;
@@ -216,7 +258,7 @@ export function planCarry(
         `# ${_title(text, sourceSlug)} — carried`,
         '',
         `> **Source:** carried by the archival sweep on ${date} from`,
-        `> [\`${sourceSlug}\`](archive/${sourceSlug}.md), which closed every other step.`,
+        `> [\`${sourceSlug}\`](${parked ? '../' : ''}archive/${sourceSlug}.md), which closed every other step.`,
         '> Each step below was `[~]` there and is restated verbatim as open work, so',
         '> archiving the parent buried nothing. Blockers the steps name moved with them.',
         '',
@@ -253,18 +295,36 @@ export function planCarry(
         '',
     ].join('\n');
     const complexity = body.split('\n').length > LIGHTWEIGHT_LINE_BUDGET ? 'structural' : 'lightweight';
+    // Parked: `status: later` plus the three-part `entry_condition:` mapping
+    // `lint_roadmap_later_disposition` requires, and the growth claim the
+    // `later_roadmaps` count needs — a new file in `later/` is not a parking
+    // move, so no allowance covers it otherwise.
+    const ids = ownerBlockers.join(', ');
+    const parkedKeys = parked
+        ? 'entry_condition:\n' +
+          `  what: the owner resolves blocker(s) ${ids}\n` +
+          '  when: whenever the owner takes the next step\n' +
+          '  who: owner\n' +
+          `estate_growth_exempt: >-\n  Owner-chosen archive of ${sourceSlug}: its deferred steps wait on owner\n` +
+          `  blocker(s) ${ids} and are parked here instead of left active. The parent\n` +
+          '  is archived in the same change, so the active count drops by one.\n'
+        : '';
     const destText =
-        `---\ncomplexity: ${complexity}\nstatus: ready\nexecution:\n  mode: phase-checkpoints\n` +
-        `parent_roadmap: ${sourceSlug}\n---\n${body}`;
+        `---\ncomplexity: ${complexity}\nstatus: ${parked ? 'later' : 'ready'}\nexecution:\n  mode: phase-checkpoints\n` +
+        `parent_roadmap: ${sourceSlug}\n${parkedKeys}---\n${body}`;
+    const destRel = parked ? `agents/roadmaps/later/${destSlug}.md` : `agents/roadmaps/${destSlug}.md`;
 
     return {
         plan: {
             destSlug,
-            destRel: `agents/roadmaps/${destSlug}.md`,
+            destRel,
             destText,
             sourceText: out.join('\n'),
             carried: steps.length,
             movedBlockers: moved.map((b) => b.id),
+            ownerBlockers,
+            firstStep: (steps[0] as BareStep).block.join('\n'),
+            parked,
         },
     };
 }
