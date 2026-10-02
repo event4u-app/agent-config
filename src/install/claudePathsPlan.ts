@@ -189,6 +189,21 @@ export interface ClaudePathsPlan {
 }
 
 /**
+ * The two trigger keys `derive_trigger_globs` turns into a host glob. Kept
+ * beside it deliberately: the day a third path-shaped key is added there, this
+ * set is the other half of the same edit, and a reader looking at either one
+ * sees the pair.
+ */
+const PATH_SHAPED_TRIGGER_KEYS: ReadonlySet<string> = new Set(['file_pattern', 'path_prefix']);
+
+/**
+ * Keys on a trigger object that match nothing. `reason:` documents why the
+ * trigger exists; counting it would make every annotated path trigger look
+ * mixed and scope nothing at all.
+ */
+const NON_MATCHING_TRIGGER_KEYS: ReadonlySet<string> = new Set(['reason']);
+
+/**
  * Does this rule declare any trigger that is NOT path-shaped?
  *
  * Load-bearing for `_claude_paths_plan` below, because one `triggers:` list
@@ -199,6 +214,18 @@ export interface ClaudePathsPlan {
  * rule loads unconditionally. The emitter fed both semantics from one list, so
  * a rule that declared keywords *and* one path glob silently became
  * path-gated-only on Claude.
+ *
+ * **The test is a negation, not a list of non-path kinds**, and the difference
+ * is not stylistic. The predicate used to enumerate `keyword` and `phrase`,
+ * which left `command` — a prompt route like any other — uncounted:
+ * `roadmap-progress-sync` declares one `path_prefix` and three `command`
+ * triggers, so it was emitted with an exclusive `paths:` and its three command
+ * routes never fired on this host. A list can only ever be as current as its
+ * last edit; the schema's `additionalProperties: false` means a new match key
+ * arrives as a deliberate schema change, and until someone teaches
+ * `derive_trigger_globs` to make a glob from it, treating it as promptable is
+ * the fail-safe reading — the rule stays unconditional rather than silently
+ * narrowing to a path it does not have.
  */
 export function _has_non_path_trigger(meta: Record<string, unknown>): boolean {
     const triggers = meta['triggers'];
@@ -206,8 +233,21 @@ export function _has_non_path_trigger(meta: Record<string, unknown>): boolean {
     for (const t of triggers) {
         if (t === null || typeof t !== 'object' || Array.isArray(t)) continue;
         const obj = t as Record<string, unknown>;
-        if (typeof obj['keyword'] === 'string' && obj['keyword']) return true;
-        if (typeof obj['phrase'] === 'string' && obj['phrase']) return true;
+        for (const [key, value] of Object.entries(obj)) {
+            if (PATH_SHAPED_TRIGGER_KEYS.has(key) || NON_MATCHING_TRIGGER_KEYS.has(key)) continue;
+            // A string that is not blank, or ANY non-string value. The schema
+            // types all five match keys as strings today, so the second half is
+            // for the key that arrives later: a `keyword: ["a","b"]` read as
+            // "not a string, so not a trigger" would silently narrow the rule
+            // to a path it does not have, which is the exact failure the
+            // negation above exists to prevent. Undefined and null are the one
+            // shape that means "absent".
+            if (typeof value === 'string') {
+                if (value.trim() !== '') return true;
+            } else if (value !== undefined && value !== null) {
+                return true;
+            }
+        }
     }
     return false;
 }
@@ -230,8 +270,10 @@ export function _claude_paths_plan(meta: Record<string, unknown>): ClaudePathsPl
     const globs: string[] = [];
     const dropped: ClaudePathsPlan['dropped'] = [];
 
-    // A rule that ALSO declares keyword / phrase triggers gets no `paths:` at
-    // all, and therefore keeps loading unconditionally on Claude Code.
+    // A rule that ALSO declares a non-path trigger — keyword, phrase, command,
+    // or a match key added to the schema later — gets no `paths:` at all, and
+    // therefore keeps loading unconditionally on Claude Code. The predicate is
+    // a negation of the two path-shaped keys, deliberately: see its docblock.
     //
     // Emitting `paths:` here would narrow the rule to a path match and discard
     // every keyword the author wrote, because this host reads the list as the

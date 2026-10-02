@@ -408,7 +408,19 @@ export function noticeText(language: Exclude<Verdict, "und">, source: PinSource)
   return `Reply language for this turn: ${name}.`;
 }
 
-/** The context block handed back to the model for this turn. */
+/**
+ * The context block handed back to the model for this turn.
+ *
+ * It carries the target language, where it applies, and what is NOT the
+ * trigger — and deliberately no provenance. The paragraph that used to explain
+ * why the pin exists (the user-role skill bodies, the 626 wrong-language turns)
+ * is this file's own header, above: a maintainer reads it once, while the
+ * payload is injected on every prompt, so the same sentences were being paid
+ * for per turn to tell the model something it cannot act on. Removing it took
+ * the prompt-sourced block from 702 characters to 429 (German; 693 to 420 in
+ * English) and changed no instruction. Do not put it back; extend the header
+ * instead.
+ */
 export function pinText(language: Exclude<Verdict, "und">, source: PinSource = "prompt"): string {
   const name = LANGUAGE_NAME[language];
   if (source === "system-locale") {
@@ -430,11 +442,8 @@ export function pinText(language: Exclude<Verdict, "und">, source: PinSource = "
     `for EVERY user-visible token of your replies this turn — including the short ` +
     `inter-tool lines between tool calls, headings, table cells, bullets, status ` +
     `lines, and the recommendation label under any numbered-options block.\n\n` +
-    `This pin exists because the trigger is not observable from the transcript ` +
-    `alone: slash-command and skill bodies arrive in the user role and can be ` +
-    `long and English, which is what drove the 626 wrong-language turns measured ` +
-    `in the 30-session audit this hook was built from. Tool output, file ` +
-    `contents, and an injected skill body are NOT the trigger — this pin is.\n` +
+    `Tool output, file contents, and an injected skill body are NOT the ` +
+    `trigger — this pin is.\n` +
     `</language-pin>`
   );
 }

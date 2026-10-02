@@ -26,6 +26,7 @@ import {
 import {
     loadCorpus,
     quantile,
+    runEndpoints,
     runSelftest,
     scoreExact,
     scoreLexical,
@@ -192,5 +193,67 @@ describe('one matcher, offline and at runtime (step 0.5, AC-4)', () => {
         // And neither re-implements the trigger semantics.
         expect(hook).not.toContain('function trigger_matches');
         expect(model).not.toContain('function trigger_matches');
+    });
+});
+
+describe('b-recall publishes both units — road-to-a-rule-carrier 0.4', () => {
+    // The endpoint's BAR is per rule ("no labelled rule left unreachable") and
+    // the question a reader asks next is per prompt. Before 0.4 only the first
+    // was printed, so a reader comparing `--endpoints` with the SUMMARY view saw
+    // 99/102 and 305/335 with nothing saying they are different units.
+
+    const reading = (): string => {
+        const r = runEndpoints(CORPUS).find((e) => e.id === 'b-recall');
+        expect(r).toBeDefined();
+        return (r as { reading: string }).reading;
+    };
+
+    it('carries the per-rule pair it always carried', () => {
+        expect(reading()).toMatch(/\d+\/\d+ rules reachable/);
+        expect(reading()).toContain('open_files IGNORED');
+    });
+
+    it('carries the per-prompt pair beside it', () => {
+        expect(reading()).toMatch(
+            /per-prompt reach: \d+\/\d+ with open_files IGNORED against \d+\/\d+ honoured/,
+        );
+    });
+
+    it('the per-prompt denominators are the positive count, not the rule count', () => {
+        const m = /per-prompt reach: (\d+)\/(\d+) with open_files IGNORED against (\d+)\/(\d+)/.exec(
+            reading(),
+        );
+        expect(m).not.toBeNull();
+        const [, ign, denomA, hon, denomB] = m as RegExpExecArray;
+        expect(denomA).toBe(denomB);
+        // The corpus has far more positives than labelled rules; a denominator
+        // that equalled the rule count would mean the pair was computed in the
+        // unit it exists to contrast with.
+        expect(Number(denomA)).toBeGreaterThan(200);
+        // Ignoring open_files can only lose reach, never gain it.
+        expect(Number(ign)).toBeLessThanOrEqual(Number(hon));
+    });
+
+    it('names the SUMMARY readings and why they differ', () => {
+        // Both views are printed with the cause attached, so neither has to be
+        // trusted over the other. The cause is `scoreExact` dropping the case's
+        // command trigger — stated, not left for a reader to rediscover.
+        expect(reading()).toMatch(/SUMMARY prints \d+\/\d+ and \d+\/\d+ for the same corpus/);
+        expect(reading()).toContain("scoreExact drops the case's command trigger");
+    });
+
+    it('the named SUMMARY figures are the ones scoreExact actually produces', () => {
+        // The clause above is only worth printing if it is true, so it is joined
+        // back to its source rather than asserted as prose.
+        const cases = loadCorpus(CORPUS);
+        const router = JSON.parse(
+            fs.readFileSync(path.join(REPO_ROOT, 'dist', 'router.json'), 'utf-8'),
+        ) as Router;
+        const honoured = scoreExact(router, cases, true);
+        const ignored = scoreExact(router, cases, false);
+        expect(reading()).toContain(
+            `SUMMARY prints ${String(ignored.hits)}/${String(ignored.positives)} and ` +
+                `${String(honoured.hits)}/${String(honoured.positives)}`,
+        );
     });
 });

@@ -111,16 +111,67 @@ Reproduced on 2026-10-01:
       enforced (a gate blocks the forbidden outcome). A pointer is never
       recorded above A1.
       verify: `npx vitest run tests/scripts/rule_inject_hook.test.ts -t arrival` -> 0
-- [ ] **0.4 Prompt-only reach beside mechanism reach.** Add the per-prompt pair
+- [x] **0.4 Prompt-only reach beside mechanism reach.** Add the per-prompt pair
       (305 against 333 of 335) to `model_rule_injection --endpoints` and to the
       `non_inference` of the claim at `docs/CLAIMS.md:368`.
       verify: `./scripts-run src/scripts/model_rule_injection --endpoints | grep -c 'open_files'` -> /^[1-9]/
-- [ ] **0.5 Truth surfaces.** `docs/CLAIMS.md:365` and `:368`, and
+
+      **Done 2026-10-02, and the pair came in three numbers rather than two.**
+      `--endpoints` now prints the per-prompt reach beside the per-rule one, and
+      the claim's `non_inference` carries both units with the warning that they
+      are not interchangeable. The third number is a finding: the per-prompt pair
+      computed here reads **307/335 ignored against 335/335 honoured**, while the
+      SUMMARY view of the same script over the same corpus reads **305/335 and
+      333/335**. The cause is located, not guessed — `scoreExact`
+      (`model_rule_injection.ts:202`) calls `matchTierRules(router, c.prompt, of)`
+      with three arguments and drops the case's `command`, so a positive whose
+      rule is reached by a `command:` trigger scores as a miss there and as a hit
+      in the endpoints view. Both readings are printed with the cause named,
+      rather than one being silently preferred; repairing `scoreExact` is a
+      behaviour change and Phase 0 makes none.
+- [x] **0.5 Truth surfaces.** `docs/CLAIMS.md:365` and `:368`, and
       `agents/evidence/analysis/payload-three-number-split-2026-09.md:18` and
       `:51`, state they were measured on a project-scope tree; `:365`'s 98/101
       becomes the current reading; one of `README.md:125` / `:186` goes;
       ADR-228 gains a successor note naming `claudeRuleRewrite.ts:213`.
       verify: `./scripts-run src/scripts/check_claims` -> 0
+
+      **Done 2026-10-02, item by item.**
+
+      - `docs/CLAIMS.md` — the `thin-inject-delivery-equivalence` row's
+        `non_inference` now opens with the project-scope statement: every figure
+        in it is the reach of the MAINTAINER checkout, because
+        `model_rule_injection` resolves router and bodies from the repository
+        root it runs in. It says in the same breath that no number there licenses
+        a statement about a consumer until this file's Phase 1 merges.
+      - The stale `98/101` is now `99/102 as of 2026-10-02`, with the old reading
+        kept and dated rather than overwritten — the corpus gained a labelled
+        rule, so the two are not a correction of each other.
+      - `payload-three-number-split-2026-09.md` carries the same scope statement
+        above its table, with the number that makes it concrete: the round's real
+        install into an empty `HOME` measured 338,225 characters against row 2's
+        24,537, about fourteen times, because the installer does not read
+        `lean_projection` at all.
+      - ADR-228 gains a successor note naming `claudeRuleRewrite.ts:213` and the
+        call site that reaches the global layer (`install.ts:3034`,
+        `tool_id === 'claude-code'`). The note does NOT reverse the decision or
+        change the status: the record rejected emitting for the DIVERGING set
+        while the code emits for every path-shaped plan, so it is possible both
+        are intended and only the title is wrong. What it removes is the silence.
+      - `README.md` — **nothing to remove.** The step expected two contradicting
+        default-scope statements at `:125` and `:186`; at this HEAD only one
+        survives (`:188`, global-only per ADR-020), and a grep for every other
+        scope statement finds only `--project` rows in the command table, which
+        describe a flag rather than claim a default. Fixed before this run, and
+        recorded as checked rather than silently dropped.
+
+> **Phase 0 state after the 2026-10-02 run: 0.4 and 0.5 closed, 0.1 to 0.3 not
+> started.** The three open steps are each a new instrument — an installed-layer
+> report run against a temporary `HOME`, a binding of the host's instruction-load
+> event, and an arrival-level counter at the dispatcher — and starting one
+> without finishing it would leave a half-wired measurement that reads as
+> coverage. They are untouched rather than partially built, which is the state a
+> later run can act on without first undoing anything.
 
 ## Phase 1 — A carrier that works where consumers are
 

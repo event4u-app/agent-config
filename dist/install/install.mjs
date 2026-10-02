@@ -12041,14 +12041,22 @@ function _expanded_pattern_count(pattern) {
   return n;
 }
 var CLAUDE_PATHS_PATTERN_BUDGET = 1e3;
+var PATH_SHAPED_TRIGGER_KEYS = /* @__PURE__ */ new Set(["file_pattern", "path_prefix"]);
+var NON_MATCHING_TRIGGER_KEYS = /* @__PURE__ */ new Set(["reason"]);
 function _has_non_path_trigger(meta) {
   const triggers = meta["triggers"];
   if (!Array.isArray(triggers)) return false;
   for (const t of triggers) {
     if (t === null || typeof t !== "object" || Array.isArray(t)) continue;
     const obj = t;
-    if (typeof obj["keyword"] === "string" && obj["keyword"]) return true;
-    if (typeof obj["phrase"] === "string" && obj["phrase"]) return true;
+    for (const [key, value] of Object.entries(obj)) {
+      if (PATH_SHAPED_TRIGGER_KEYS.has(key) || NON_MATCHING_TRIGGER_KEYS.has(key)) continue;
+      if (typeof value === "string") {
+        if (value.trim() !== "") return true;
+      } else if (value !== void 0 && value !== null) {
+        return true;
+      }
+    }
   }
   return false;
 }
@@ -12208,7 +12216,59 @@ function rewriteClaudeRules(rulesDir, preserved = /* @__PURE__ */ new Set()) {
 }
 
 // src/install/wizard-plan.ts
+var CLAUDE_SKILL_BUNDLE = [
+  ["dist/agent-src/rules", "rules"],
+  ["dist/agent-src/skills", "skills"],
+  // Commands ship to ~/.claude/commands/ — native Claude Code slash-
+  // command surface. Verified empirically 2026-05-28: rich frontmatter
+  // (disable-model-invocation, custom fields) tolerated; nested
+  // subdirs route as `/<cluster>:<sub>`. Council session 2026-05-28
+  // converged on Option B (native slash-only) — see
+  // agents/runtime/council/responses/claude-code-distribution.json
+  // and scripts/install.py:_CLAUDE_SKILL_BUNDLE for the Python mirror.
+  ["dist/agent-src/commands", "commands"],
+  ["dist/agent-src/personas", "personas"]
+];
 var RULE_SOURCE_REL = "dist/agent-src/rules";
+var GLOBAL_DEPLOY_SOURCES = {
+  "claude-code": CLAUDE_SKILL_BUNDLE,
+  augment: [
+    ["dist/agent-src/rules", "rules"],
+    ["dist/agent-src/skills", "skills"],
+    ["dist/agent-src/commands", "commands"],
+    ["dist/agent-src/contexts", "contexts"],
+    ["dist/agent-src/personas", "personas"],
+    ["dist/agent-src/templates", "templates"]
+  ],
+  cursor: [
+    ["dist/agent-src/rules", "rules"],
+    ["dist/agent-src/commands", "commands"],
+    ["dist/agent-src/personas", "personas"]
+  ],
+  windsurf: [
+    ["dist/agent-src/rules", "rules"]
+  ],
+  cline: [
+    ["dist/agent-src/rules", ""]
+  ],
+  "gemini-cli": CLAUDE_SKILL_BUNDLE,
+  codex: CLAUDE_SKILL_BUNDLE,
+  continue: CLAUDE_SKILL_BUNDLE,
+  roocode: CLAUDE_SKILL_BUNDLE,
+  kilocode: CLAUDE_SKILL_BUNDLE,
+  qoder: CLAUDE_SKILL_BUNDLE,
+  opencode: CLAUDE_SKILL_BUNDLE,
+  trae: CLAUDE_SKILL_BUNDLE,
+  antigravity: CLAUDE_SKILL_BUNDLE,
+  codebuddy: CLAUDE_SKILL_BUNDLE,
+  droid: CLAUDE_SKILL_BUNDLE,
+  warp: CLAUDE_SKILL_BUNDLE,
+  kiro: [
+    ["dist/agent-src/rules", "rules"],
+    ["dist/agent-src/skills", "steering"],
+    ["dist/agent-src/personas", "personas"]
+  ]
+};
 
 // src/shared/settingsSurface.ts
 function unwrapRef(root) {
@@ -20566,47 +20626,6 @@ var PROJECT_BRIDGE_MARKERS = {
   zed: ".zed/agent-config.md",
   jetbrains: ".jetbrains/agent-config.md",
   kiro: ".kiro/steering/agent-config.md"
-};
-var _CLAUDE_SKILL_BUNDLE = [
-  ["dist/agent-src/rules", "rules"],
-  ["dist/agent-src/skills", "skills"],
-  ["dist/agent-src/commands", "commands"],
-  ["dist/agent-src/personas", "personas"]
-];
-var GLOBAL_DEPLOY_SOURCES = {
-  "claude-code": _CLAUDE_SKILL_BUNDLE,
-  augment: [
-    ["dist/agent-src/rules", "rules"],
-    ["dist/agent-src/skills", "skills"],
-    ["dist/agent-src/commands", "commands"],
-    ["dist/agent-src/contexts", "contexts"],
-    ["dist/agent-src/personas", "personas"],
-    ["dist/agent-src/templates", "templates"]
-  ],
-  cursor: [
-    ["dist/agent-src/rules", "rules"],
-    ["dist/agent-src/commands", "commands"],
-    ["dist/agent-src/personas", "personas"]
-  ],
-  windsurf: [["dist/agent-src/rules", "rules"]],
-  cline: [["dist/agent-src/rules", ""]],
-  "gemini-cli": _CLAUDE_SKILL_BUNDLE,
-  codex: _CLAUDE_SKILL_BUNDLE,
-  continue: _CLAUDE_SKILL_BUNDLE,
-  roocode: _CLAUDE_SKILL_BUNDLE,
-  kilocode: _CLAUDE_SKILL_BUNDLE,
-  qoder: _CLAUDE_SKILL_BUNDLE,
-  opencode: _CLAUDE_SKILL_BUNDLE,
-  trae: _CLAUDE_SKILL_BUNDLE,
-  antigravity: _CLAUDE_SKILL_BUNDLE,
-  codebuddy: _CLAUDE_SKILL_BUNDLE,
-  droid: _CLAUDE_SKILL_BUNDLE,
-  warp: _CLAUDE_SKILL_BUNDLE,
-  kiro: [
-    ["dist/agent-src/rules", "rules"],
-    ["dist/agent-src/skills", "steering"],
-    ["dist/agent-src/personas", "personas"]
-  ]
 };
 function claudeDesktopMarkerBody(lockfile, anchor, bundles_dir, bundle_count) {
   return `# agent-config \u2014 Claude Desktop marker

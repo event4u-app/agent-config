@@ -274,6 +274,48 @@ describe("pinText", () => {
   });
 });
 
+describe("pinText — length is a per-prompt cost, so the history is not in it", () => {
+  // This block is injected on EVERY prompt. A paragraph explaining why the pin
+  // exists is read once by a maintainer and paid for on every turn, so it
+  // belongs in this file's header — where it already was, verbatim — and not
+  // in the payload. What stays is what the model must act on: the target
+  // language, where it applies, and what is NOT the trigger.
+  it("drops the provenance paragraph, keeping the target language and the instruction", () => {
+    const text = pinText("de");
+    expect(text).toContain("German");
+    expect(text).toMatch(/NOT the trigger/);
+    // The history: the audit's turn count and the mechanism behind it.
+    expect(text).not.toMatch(/626/);
+    expect(text).not.toMatch(/30-session audit/);
+    expect(text).not.toMatch(/This pin exists because/);
+  });
+
+  it("keeps both provenances under their per-prompt length budget", () => {
+    // A ratchet over the measured maximum, not a round number: the longest
+    // language name moves the block, so both branches are pinned at their
+    // German reading plus a few characters of headroom.
+    //
+    // Before the move: prompt 702 (de) / 693 (en). After: 429 / 420 — a 273-
+    // character saving on every prompt that carries a pin, with no instruction
+    // removed. The locale branch never carried the history and is pinned here
+    // only so a later edit cannot move the cost from one branch to the other.
+    expect(pinText("de").length).toBeLessThanOrEqual(440);
+    expect(pinText("en").length).toBeLessThanOrEqual(440);
+    expect(pinText("de", "system-locale").length).toBeLessThanOrEqual(520);
+    expect(pinText("en", "system-locale").length).toBeLessThanOrEqual(520);
+  });
+
+  it("leaves the rationale readable in the header rather than deleting it", () => {
+    const header = fs.readFileSync(
+      new URL("../../src/scripts/language_mirror_hook.ts", import.meta.url),
+      "utf-8",
+    );
+    const head = header.slice(0, header.indexOf("*/"));
+    expect(head).toMatch(/626/);
+    expect(head).toMatch(/user` role/);
+  });
+});
+
 describe("run", () => {
   it("pins de on a German prompt and emits the context block", () => {
     const rc = run(envelope(REAL_GERMAN_PROMPT), { consumer_root: tmp });

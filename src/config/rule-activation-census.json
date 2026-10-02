@@ -1,11 +1,10 @@
 {
     "_comment": "Rule-activation ratchet baseline (road-to-mixed-trigger-activation-cost step 4.1). Two axes: the scoped/mixed ID SETS are pinned by identity, and the unconditional token total may only walk DOWN. Raising a number here to clear a failing check is the config-weakening move this repo blocks by construction — every raise needs a baseline_history entry whose reason is a real sentence. Regenerate with `check_rule_activation_census --write-baseline`; never hand-edit the counts.",
-    "measured_at_commit": "unrecorded",
+    "measured_at_commit": "b78ae3dbc4e328b0c91dc355e753b3ae545a1c23",
     "tokens_exact": true,
-    "unconditional_tokens": 113699,
+    "unconditional_tokens": 116633,
     "scoped_ids": [
         "design-review-after-ui-write",
-        "roadmap-progress-sync",
         "source-of-truth",
         "ui-audit-gate"
     ],
@@ -26,6 +25,7 @@
         "php-coding",
         "provider-lifecycle-discipline",
         "roadmap-ci-steps-policy",
+        "roadmap-progress-sync",
         "settings-ask-protocol"
     ],
     "baseline_history": [
@@ -48,6 +48,10 @@
         {
             "date": "2026-08-23",
             "reason": "Re-anchored for one new rule, playbook-precedence, which ships with ADR-244's sixth context type and states that a repository's OWN configured playbook outranks a shipped skill for the same task. WHY THE DELTA IS THIS LARGE, stated rather than implied: the rule is 4,398 chars of source, but it declares seven triggers and every one of them is a keyword or phrase, so the emitter writes NO `paths:` block at all and the host loads it in every session -- the same mixed-trigger cost `ui-audit-gate` and `design-review-after-ui-write` each paid before being re-scoped to paths in road-to-mixed-trigger-activation-cost Phase 2. That is the honest reading of this number: it is not the price of the obligation, it is the price of expressing the obligation with keywords. A playbook lives at a known location, so a path-scoped form is available and would return most of these tokens; it is not cut here because the trigger set is the rule author's design decision and re-cutting it inside a merge-queue drain would change routing behaviour nobody reviewed. Recorded as the next candidate for that Phase-2 treatment rather than silently absorbed."
+        },
+        {
+            "date": "2026-10-02",
+            "reason": "RE-ANCHOR for road-to-rule-triggers-and-links-that-hold step 1.1, and the moved rule is the whole point rather than a side effect. _has_non_path_trigger enumerated keyword and phrase, so a command trigger did not count: roadmap-progress-sync declares one path_prefix and three command triggers and was therefore emitted with an exclusive paths: on Claude Code, where that key is the whole gate, so its three command routes never fired. The predicate is now a negation of the two path-shaped keys. scoped 4 -> 3 and mixed 17 -> 18 are that one rule moving, and it moves in the direction that RESTORES a route rather than removing one. THE COST IS REAL AND IS NOT HIDDEN: the unconditional corpus grows 113,699 -> 116,633 exact-BPE tokens, +2,934, which is roadmap-progress-sync now loading unconditionally instead of on a path match. That is exactly the trade the roadmaps risk register anticipated (row 1, Phase 1): a rule that gains paths-less emission becomes standing text on every session, and only rules with a non-path trigger change. Paying 2,934 tokens to stop silently dropping three command routes is the trade this roadmap chose; the alternative was a rule that fires on a file touch and never on the command that is its actual subject. REVISIT IF: the thinning work lands and roadmap-progress-sync becomes a delivery-mode stub, at which point the unconditional total should fall well below this anchor rather than being re-raised."
         }
     ]
 }

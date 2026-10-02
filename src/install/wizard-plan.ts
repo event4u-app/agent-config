@@ -64,6 +64,26 @@ export const USER_SCOPE_PATHS: Readonly<Record<string, string>> = {
 /**
  * Universal Anthropic-shaped skill bundle deployed to markdown-skills
  * tools. Mirrors `_CLAUDE_SKILL_BUNDLE` in the retired Python installer (ADR-200).
+ *
+ * NOT deploying `contexts/` and `guidelines/` here is a held decision, not an
+ * oversight — see the `rule-link-targets-change-the-frozen-install-abi` blocker
+ * on `road-to-rule-triggers-and-links-that-hold`.
+ *
+ * A rule is authored against the package tree and projected verbatim, so
+ * `](../guidelines/x.md)` resolves in `dist/agent-src/rules/` and then does
+ * not resolve in the install, because this table does not carry those two
+ * directories. Measured by `report_installed_rule_links`: 160 of 550 links in
+ * an installed Claude rule directory point nowhere, 113 of them into exactly
+ * those two. Adding them is the cheaper of the two repairs on the budget that
+ * is scarce — 0 standing characters against **5,198** for rewriting those same
+ * 113 links to absolute package paths, at a 48-character install prefix (the
+ * report prints the prefix it used; the figure scales with it).
+ *
+ * It is held because this table is part of the FROZEN install ABI
+ * (`docs/contracts/install-layout.md`), and any change to it owes an
+ * `install_layout_version` bump plus a deprecation window: old and new shape
+ * side by side for a minor cycle, with in-place migration. That is a release
+ * commitment, not an implementation detail, so it is the owner's to make.
  */
 const CLAUDE_SKILL_BUNDLE: ReadonlyArray<readonly [string, string]> = [
     ['dist/agent-src/rules',    'rules'],
