@@ -4,6 +4,8 @@ tier: "2b"
 description: "Beneficial change blocked by a lock (honest-null, don't-relitigate memory, budget canon, ADR) — surface a council re-evaluation offer, never drop"
 alwaysApply: false
 council_depth: deep
+load_context:
+  - ../contexts/authority/decision-revisit-gate-enforcement.md
 triggers:
   - keyword: "don't relitigate"
   - keyword: "honest null"
@@ -22,7 +24,7 @@ workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 collision_ok:
   "honest null": "this rule asks whether a recorded null may be REVISITED; evaluator-independence asks how one was PRODUCED — different decision points on the same artefact"
-# obligation: line 31
+# obligation: line 33
 enforced_by:
   - "instruction-only: no gate can observe an agent citing a decision it never opened; adr_cite_check is deterministic where it runs and nothing makes it run"
 obligation_frequency: "per-task"
@@ -51,11 +53,10 @@ what the package may ever become.
 **The default venue is the council, and this is a correction, not a new
 policy.** [`ai-council`](../skills/ai-council/SKILL.md)'s Iron Law already sends
 a decision the agent cannot settle from the tree to the council first, and its
-class table lists "reopening a recorded decision". The old "offers the user a
-path" wording made every lock an owner interrupt; measured across 26 days of
-transcripts, the agent reported a lock and waited while the owner voided the
-decision retroactively — twice with the lock report timestamped **before** the
-override demand. The ordering was the defect; the permission was never missing.
+class table lists "reopening a recorded decision". The measurement behind that
+correction, and why the five steps below are inlined rather than only routed, are
+in
+[`contexts/authority/decision-revisit-gate-enforcement.md`](../contexts/authority/decision-revisit-gate-enforcement.md).
 
 **Mechanism-match check comes FIRST**: a verdict settles the *mechanism it
 tested*, not every future proposal that resembles it — if the blocked change
@@ -78,13 +79,6 @@ distinction.
    changed since.
 4. **Route it** — council by default (below), user only for the reserved set.
 5. **Record** the outcome with scope and `revisit-if`.
-
-The five are stated here, not only behind a route, because the route was
-measurably unreachable: `decision-review` ships `install.default: false` in the
-non-default `analysis-workbench` pack, so a pack-legal install received the
-obligation and not the procedure. `routes_to` now names two always-on skills;
-the backward-audit depth in
-`decision-review` stays optional.
 
 Full catalog (honest nulls, don't-relitigate notes, budget-canon lines, ADRs,
 hard structural caps), the per-step detail, when-NOT-to-fire and the failure
@@ -180,21 +174,9 @@ precedent-creates-no-authority clause: [`adr-layout § Reopen authority`](../doc
 
 ## Honest enforcement — `instruction-only`
 
-`adr_cite_check` is deterministic where it runs, and nothing makes it run. No
-gate can observe an agent citing a decision it never opened, so step 2 above is
-model-carried — the same honesty boundary
-[`security-sensitive-stop`](security-sensitive-stop.md) and
-[`active-remediation`](active-remediation.md) state for their own obligations.
-
-Two reach limits, named rather than implied. The tool lives in this repository's
-`src/scripts/` and is **not** exposed as an `agent-config` verb, so a consumer
-install performs step 2 by hand; wiring the verb touches six further surfaces
-plus the curated `dist/agent-src/scripts/` list and is deliberately out of this
-change. And `docs/decisions/` is projected into no agent-visible tree at all —
-the agent sees ADR *numbers* cited across rules and skills, almost never ADR
-*text*. Until that changes, "evaluate before citing" means opening the file.
-
-`docs/contracts/` is unprojected on the same terms (`dist/agent-src/` carries no
-`docs/`), so the burden table this rule points at is maintainer-reachable only.
-That is why the reserved-set table above stays here rather than becoming a
-pointer: a consumer install receives these lines and not the contract.
+Step 2 is model-carried: no gate can observe an agent citing a decision it
+never opened. Why that is so, which two reach limits the tool has in a
+consumer install, and why `docs/decisions/` is projected into no
+agent-visible tree are recorded in
+[`contexts/authority/decision-revisit-gate-enforcement.md`](../contexts/authority/decision-revisit-gate-enforcement.md),
+named in `load_context` above.

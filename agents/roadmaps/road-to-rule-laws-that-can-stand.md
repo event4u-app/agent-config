@@ -63,7 +63,7 @@ Reproduced on 2026-10-01:
       name. A body is what a full runtime delivery carries, so it is priced in
       the same unit.
       verify: `npx vitest run tests/scripts/lint_rule_law_section.test.ts -t body-ceiling` -> 0
-- [ ] **1.4 History behind `load_context`.** Move enforcement history and
+- [x] **1.4 History behind `load_context`.** Move enforcement history and
       mechanism discussion out of `session-canary`, `decision-revisit-gate` and
       `design-fidelity` first, into a context file each rule names in
       `load_context`. Nothing is deleted and no obligation moves: the obligation

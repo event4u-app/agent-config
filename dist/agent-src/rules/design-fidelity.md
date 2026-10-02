@@ -2,6 +2,8 @@
 type: "auto"
 tier: "2a"
 description: "A provided prototype/mockup/design system is the spec — build 1:1; never swap fonts, controls, or layout unconfirmed"
+load_context:
+  - ../contexts/communication/rules-auto/design-fidelity-enforcement.md
 triggers:
   - keyword: "prototype"
   - keyword: "mockup"
@@ -39,7 +41,7 @@ collision_ok:
   "mockup": "a provided mockup is the spec — 1:1 fidelity floor"
 enforced_by:
   - "instruction-only: no artifact in this tree records a fidelity comparison. lint_design_slop and lint_design_quality measure generic AI-aesthetic tells and accessibility; neither reads the handover, so a 1:1 claim is model-carried"
-# obligation: line 58
+# obligation: line 60
 obligation_frequency: "per-edit"
 ---
 
@@ -155,26 +157,21 @@ a third-party builder's share link, need one word in the prompt — the
 builder-URL trigger was tried and **withdrawn** as over-broad, and stays pinned
 silent rather than merely absent.
 
-Every class carries its own near-miss row in `ROUTING_MATRIX`
-([`design_fidelity_routing.test.ts`](../../tests/scripts/design_fidelity_routing.test.ts)),
-and the row must test the direction the NEW trigger opens, not one that was
-already closed — apply that before writing a trigger, not after. Why each class
-is shaped as it is, why `*.html` and a bare builder host are refused, and the
-worked example behind the direction rule:
-[`design-fidelity-routing`](../guidelines/design-fidelity-routing.md).
+Each class carries a near-miss row in the routing matrix, and a new trigger's
+row must test the direction that trigger opens. The matrix, the reasons behind
+each class, and the worked example are in
+[`design-fidelity-enforcement`](../contexts/communication/rules-auto/design-fidelity-enforcement.md).
 
 Body migrated to [`guideline:design-fidelity-mechanics`](../guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — URL / live-page handover (extraction into the `design-system.json` contract before the first UI write, the retrieval order, the lock boundary), surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## Honest enforcement — `instruction-only`
 
-Nothing records a fidelity comparison. The estate's two design linters measure
-generic AI-aesthetic tells (`lint_design_slop`) and accessibility
-(`lint_design_quality`); neither opens the handover, so nothing can tell a
-proven 1:1 from an asserted one. The proof clause in the Iron Law is therefore
-model-carried, and the committed matrix
-([`design-review`](../skills/design-review/SKILL.md) § Fidelity proof) is the
-control — a reviewer can open it, which is more than any gate here does.
+Nothing records a fidelity comparison, so the proof clause in the Iron Law is
+model-carried and the committed matrix is the control. Which two linters exist,
+what each measures and why neither can tell a proven 1:1 from an asserted one:
+[`design-fidelity-enforcement`](../contexts/communication/rules-auto/design-fidelity-enforcement.md),
+named in `load_context` above.
 
 ## See also
 

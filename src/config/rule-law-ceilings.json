@@ -1,5 +1,5 @@
 {
-    "_comment": "Per-rule law-section and body ceilings (road-to-rule-laws-that-can-stand Phase 1). SHRINK-ONLY on every axis: an id may LEAVE `missing`, never join it; a recorded exception is a ceiling the rule may fall below and never rise above. Raising one to clear a red is the config-weakening move this repo blocks by construction \u2014 `--write-baseline` refuses to raise, it only re-records the smaller of old and current. A rule at its exception is not thereby correct, only not worse. Regenerate with `lint_rule_law_section --write-baseline`; never hand-edit the counts, but DO hand-edit `owner`, `review` and `reason` \u2014 those are the review contract and the generator only seeds them.",
+    "_comment": "Per-rule law-section and body ceilings (road-to-rule-laws-that-can-stand Phase 1). SHRINK-ONLY on every axis: an id may LEAVE `missing`, never join it; a recorded exception is a ceiling the rule may fall below and never rise above. Raising one to clear a red is the config-weakening move this repo blocks by construction — `--write-baseline` refuses to raise, it only re-records the smaller of old and current. A rule at its exception is not thereby correct, only not worse. Regenerate with `lint_rule_law_section --write-baseline`; never hand-edit the counts, but DO hand-edit `owner`, `review` and `reason` — those are the review contract and the generator only seeds them.",
     "measured_at_commit": "30f7d21f6",
     "missing": [
         "architecture",
@@ -72,13 +72,13 @@
             "reason": "Carries the freshness ladder, the 3-failure rule, loop detection and the 15/25 read-loop rule, each with its own self-check. Already migrated once into context-hygiene-mechanics and re-grew."
         },
         "decision-revisit-gate": {
-            "chars": 9843,
+            "chars": 8566,
             "owner": "agent-config-maintainer",
             "review": "2026-12-01",
             "reason": "The largest rule in the tree. Carries the five-step gate, the two descriptive axes, the owner-reserved table and an honest-enforcement section. Phase 1.4 of road-to-rule-laws-that-can-stand names it as a first mover for the load_context split."
         },
         "design-fidelity": {
-            "chars": 9102,
+            "chars": 8777,
             "owner": "agent-config-maintainer",
             "review": "2026-12-01",
             "reason": "Carries the artefact-maturity axis, the fidelity-mode table and the routing matrix. Phase 1.4 names it as a first mover."
@@ -88,12 +88,6 @@
             "owner": "agent-config-maintainer",
             "review": "2026-12-01",
             "reason": "Three laws plus the deferred-item resolution procedure and the later/PR-gate dispositions. The dispositions are mechanism, not obligation, and are the load_context candidate."
-        },
-        "session-canary": {
-            "chars": 8390,
-            "owner": "agent-config-maintainer",
-            "review": "2026-12-01",
-            "reason": "Over half the body is enforcement history \u2014 three dated conformance audits and their measured miss rates. Phase 1.4 names it as a first mover; the history is the canonical load_context candidate in the whole tree."
         },
         "settings-ask-protocol": {
             "chars": 8099,
