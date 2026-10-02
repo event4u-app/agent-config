@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
+consequence_class: "authority-bypass"
 description: "Legal-pack output (contract/NDA/DPA review, triage) — never a final legal call; attorney-review line; EU/DE-only"
 triggers:
   - keyword: "NDA"

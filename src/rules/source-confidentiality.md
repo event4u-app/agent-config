@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "mechanical-already"
+consequence_class: "security-boundary"
 description: "Naming an external repo this package copied/harvested/compared against — keep the tracked tree source-anonymous"
 alwaysApply: false
 validator_ignore:

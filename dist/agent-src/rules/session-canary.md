@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
+consequence_class: "authority-bypass"
 description: "personal.canary_name set — open every new task by name (liveness canary); keep the reply-close markers alive (ONE end-summary, PR URL last)"
 alwaysApply: false
 load_context:

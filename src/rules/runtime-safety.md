@@ -1,6 +1,7 @@
 ---
 type: auto
 tier: "2b"
+consequence_class: "security-boundary"
 description: "Skill declares execution metadata — enforce safety constraints for assisted/automated execution types"
 triggers:
   - keyword: "execution"

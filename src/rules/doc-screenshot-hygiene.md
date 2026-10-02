@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
+consequence_class: "irreversible-external"
 description: "Doc screenshots — anonymize sensitive data before shipping; data-bearing shots human-gated (published egress); terminal/CLI/IDE shots forbidden"
 triggers:
   - keyword: "screenshot"

@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "3"
+consequence_class: "authority-bypass"
 description: "Ask-or-act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor stays"
 alwaysApply: false
 load_context:

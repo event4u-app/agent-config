@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
+consequence_class: "irreversible-external"
 description: "Production/infra/security/external-system output — blast radius + rollback; Hard-Floor never autonomous"
 triggers:
   - keyword: "production"

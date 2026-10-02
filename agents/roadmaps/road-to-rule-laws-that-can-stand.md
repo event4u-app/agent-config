@@ -73,14 +73,14 @@ Reproduced on 2026-10-01:
 
 ## Phase 2 — The class whose law stands
 
-- [ ] **2.1 A falsifiable consequence criterion.** A rule is high-consequence
+- [x] **2.1 A falsifiable consequence criterion.** A rule is high-consequence
       when its obligation governs an irreversible external action, a security or
       data-exposure boundary, or an authority bypass. The criterion is written
       into the rule schema's documentation, and each class member records which
       clause it meets. The list is what the criterion produces, not a list
       chosen first.
       verify: `npx vitest run tests/scripts/rule_consequence_class.test.ts` -> 0
-- [ ] **2.2 The standing law is the source law.** `build_thin` gains one form:
+- [x] **2.2 The standing law is the source law.** `build_thin` gains one form:
       stub plus the rule's own law section, byte-copied and digest-checked, for
       class members only. A class member whose law section is missing or over
       2,000 characters fails the projection rather than shipping a shortened

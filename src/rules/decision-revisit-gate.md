@@ -1,6 +1,7 @@
 ---
 type: "auto"
 tier: "2b"
+consequence_class: "authority-bypass"
 description: "Beneficial change blocked by a lock (honest-null, don't-relitigate memory, budget canon, ADR) — surface a council re-evaluation offer, never drop"
 alwaysApply: false
 council_depth: deep
