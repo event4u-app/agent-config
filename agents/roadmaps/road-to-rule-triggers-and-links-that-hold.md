@@ -55,11 +55,24 @@ Reproduced on 2026-10-01:
 
 ## Phase 1 — Repair, then measure
 
-- [ ] **1.1 Every non-path trigger counts.** `_has_non_path_trigger` returns
+- [x] **1.1 Every non-path trigger counts.** `_has_non_path_trigger` returns
       true for any trigger kind that is not path-shaped (`command`, and any
       kind added later), not for a hard-coded pair. The stub's 18-rule list and
       the later roadmap's trigger table are corrected in the same change.
       verify: `npx vitest run tests/scripts/condense_glob_emit.test.ts -t command` -> 0
+      done 2026-10-02: the predicate iterates the trigger object's own keys and
+      skips `file_pattern` / `path_prefix` (the two `derive_trigger_globs`
+      consumes) and `reason` (documentation, matches nothing); every other
+      non-empty string key counts. Five tests added, three seen red first —
+      a `command` trigger, a mixed path + command plan, and an unknown future
+      key — and the two that already passed pin the directions that must NOT
+      move (`reason:` on a path trigger, an empty match key).
+      `./scripts-run src/scripts/rule_activation_census --json` now reports
+      21 path-shaped / **18 mixed** / 3 path-only over 121 rules, and
+      `roadmap-progress-sync` has moved from `scoped_ids` to `mixed_ids`,
+      which is the three dropped command routes coming back. The stub's
+      arrivals note and body now read as repaired rather than pending, and the
+      later roadmap's claim 2 carries the emitter's reading instead of a grep's.
 - [ ] **1.2 Links that resolve where the file lands.** When the installer writes a rule file, rewrite
       the 160 links of Context to absolute package paths, or have the installer also write the
       directories they point into — whichever adds less standing text, measured
@@ -114,8 +127,11 @@ Reproduced on 2026-10-01:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No rule with a non-path trigger is emitted with an exclusive
-      `paths:` on Claude.
+- [x] AC-1 — No rule with a non-path trigger is emitted with an exclusive
+      `paths:` on Claude. Read from the emitter's own decision path:
+      `rule_activation_census --json` reports `scoped_ids` =
+      `design-review-after-ui-write`, `source-of-truth`, `ui-audit-gate`, and
+      `mixed ∩ scoped` is empty.
 - [ ] AC-2 — A link check over an installed rule directory reports zero
       unresolved links.
 - [ ] AC-3 — The single-token, obligation-mechanism and per-spawn readings are

@@ -5,7 +5,7 @@ review_by: 2026-12-08
 
 # Stub: road to a path-activation route under `delivery`
 
-> **Arrivals:** 2 — latest `inbox-2026-10-c` (2026-10-01), which found that `roadmap-progress-sync` is emitted WITH an exclusive `paths:` (its `command` triggers are not counted by `_has_non_path_trigger`), so the list below holds 17 rules that get no `paths:` plus one that loses its command triggers — corrected by `road-to-rule-triggers-and-links-that-hold` step 1.1; earlier: `inbox-2026-09-ab` (2026-09-29).
+> **Arrivals:** 2 — latest `inbox-2026-10-c` (2026-10-01), which found that `roadmap-progress-sync` was emitted WITH an exclusive `paths:` (its `command` triggers were not counted by `_has_non_path_trigger`), so the list below held 17 rules that got no `paths:` plus one that lost its command triggers. **Repaired 2026-10-02** by `road-to-rule-triggers-and-links-that-hold` step 1.1: the predicate is now a negation of the two path-shaped keys, and `rule_activation_census --json` reports `mixed: 18` against exactly the 18 ids below, so the list is uniform again. Earlier: `inbox-2026-09-ab` (2026-09-29).
 
 > **Stub — not active work.** Created 2026-09-08 by the owner-delegated drain run
 > holding `road-to-delivery-for-every-host`, as the receiver for R2 finding 1 on
@@ -50,10 +50,13 @@ code and both narrowing it:
    `ui-audit-gate`) are the path-only rules the existing exemption already keeps
    full-bodied. **No thinned rule is unreachable.**
 2. **They never had a separate host-native path route on this host.**
-   `_claude_paths_plan` (`src/install/claudePathsPlan.ts:250`) emits no `paths:`
+   `_claude_paths_plan` (`src/install/claudePathsPlan.ts`) emits no `paths:`
    for a mixed-trigger rule *on purpose*, because Claude Code reads the key as the
    whole gate and would discard every keyword the author wrote. So under
-   `eager-all` these 18 loaded UNCONDITIONALLY.
+   `eager-all` these 18 loaded UNCONDITIONALLY — true of all 18 only since
+   2026-10-02, when the predicate stopped enumerating `keyword` and `phrase` and
+   started negating the path-shaped keys; before that `roadmap-progress-sync`
+   was the one member of the list that did carry `paths:`.
 
 What is therefore lost is the difference between **unconditional** and
 **prompt-triggered**: a session that touches a matching file and says nothing that

@@ -12041,14 +12041,18 @@ function _expanded_pattern_count(pattern) {
   return n;
 }
 var CLAUDE_PATHS_PATTERN_BUDGET = 1e3;
+var PATH_SHAPED_TRIGGER_KEYS = /* @__PURE__ */ new Set(["file_pattern", "path_prefix"]);
+var NON_MATCHING_TRIGGER_KEYS = /* @__PURE__ */ new Set(["reason"]);
 function _has_non_path_trigger(meta) {
   const triggers = meta["triggers"];
   if (!Array.isArray(triggers)) return false;
   for (const t of triggers) {
     if (t === null || typeof t !== "object" || Array.isArray(t)) continue;
     const obj = t;
-    if (typeof obj["keyword"] === "string" && obj["keyword"]) return true;
-    if (typeof obj["phrase"] === "string" && obj["phrase"]) return true;
+    for (const [key, value] of Object.entries(obj)) {
+      if (PATH_SHAPED_TRIGGER_KEYS.has(key) || NON_MATCHING_TRIGGER_KEYS.has(key)) continue;
+      if (typeof value === "string" && value.trim() !== "") return true;
+    }
   }
   return false;
 }

@@ -21,6 +21,7 @@ import {
   _emit_windsurf_rule,
   _escape_claude_bracket,
   _expanded_pattern_count,
+  _has_non_path_trigger,
   _is_unresolved_placeholder,
   derive_trigger_globs,
 } from "../../src/scripts/condense.js";
@@ -353,5 +354,54 @@ describe("_emit_claude_rule — frontmatter carries `paths:` and nothing else", 
     _emit_claude_rule(src, target);
     const out = fs.readFileSync(target, "utf-8");
     expect(out.endsWith(body)).toBe(true);
+  });
+});
+
+describe("_has_non_path_trigger — a negation, not a list of kinds", () => {
+  // The defect this closes: the predicate enumerated `keyword` and `phrase`,
+  // so a `command` trigger — a prompt route like any other — did not count.
+  // `roadmap-progress-sync` declares one `path_prefix` and three `command`
+  // triggers and was therefore emitted with an EXCLUSIVE `paths:` on Claude
+  // Code, which discards every command route its author wrote.
+  //
+  // A list of non-path kinds can only ever be as current as its last edit; a
+  // negation of the two path-shaped kinds cannot miss a kind added later.
+  it("counts a command trigger as a non-path trigger", () => {
+    expect(_has_non_path_trigger({ triggers: [{ command: "/roadmap:process-step" }] })).toBe(true);
+  });
+
+  it("leaves a mixed path + command rule unconditional, and says which pattern it dropped", () => {
+    const plan = _claude_paths_plan({
+      triggers: [
+        { path_prefix: "agents/roadmaps/" },
+        { command: "/roadmap:process-step" },
+        { command: "/roadmap:process-phase" },
+      ],
+    });
+    expect(plan.globs).toEqual([]);
+    expect(plan.dropped).toEqual([{ pattern: "agents/roadmaps/**", reason: "mixed-triggers" }]);
+  });
+
+  it("counts a match key the predicate has never heard of", () => {
+    // The negation's whole point: a key added to the schema later is non-path
+    // until someone teaches `derive_trigger_globs` to make a glob from it.
+    expect(_has_non_path_trigger({ triggers: [{ utterance: "ship it" }] })).toBe(true);
+  });
+
+  it("still reads a path-only rule as path-only, `reason` notwithstanding", () => {
+    // `reason:` documents a trigger, it does not match anything. Counting it
+    // would make every annotated path trigger mixed and scope nothing at all.
+    expect(
+      _has_non_path_trigger({
+        triggers: [
+          { path_prefix: "infra/", reason: "terraform lives here" },
+          { file_pattern: "*.tf" },
+        ],
+      }),
+    ).toBe(false);
+  });
+
+  it("ignores an empty match key, which routes nothing", () => {
+    expect(_has_non_path_trigger({ triggers: [{ command: "" }] })).toBe(false);
   });
 });
