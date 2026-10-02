@@ -100,6 +100,18 @@ Reproduced on 2026-10-01:
       28 tests, the two load-bearing ones seen red first and re-proven by
       removing the `guidelines` entry and watching both fail (98 > 47, and the
       undeployed-directory assertion), then restoring it.
+      **A second defect, found while fixing the first and fixed with it.**
+      `GLOBAL_DEPLOY_SOURCES` was defined TWICE — once in `src/scripts/install.ts`
+      for the CLI, once in `src/install/wizard-plan.ts` for the wizard — and the
+      two were byte-identical across all 18 host rows, verified by diffing the
+      live objects. The first version of this step edited only the install.ts
+      copy, so the wizard would have kept installing without the two
+      directories: same install, two answers, depending which path a user took.
+      `wizard-plan.ts` is now the only definition and carries them once behind a
+      named `RULE_LINK_TARGETS` constant; `install.ts` imports and re-exports
+      it, so no caller changed. That is the shared path repaired rather than the
+      reported call site patched, and it takes `install.ts` 5,231 → 5,175 lines,
+      which let `check_source_size_budget`'s baseline go 17,620 → 17,592.
 - [x] **1.3 Single-word triggers, reported.** A report over the routing matrix:
       tier rules with a one-token keyword that fires on more than 5 % of the
       corpus's prompts labelled against another rule. `rename` and `delete`
