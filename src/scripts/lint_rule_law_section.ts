@@ -66,6 +66,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { asOf } from './_lib/as_of.js';
 import { measureRuleFile, type RuleLawMeasure } from './_lib/rule_law_section.js';
 import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 
@@ -442,7 +443,7 @@ export function main(argv: string[] | null = null): number {
         return selfTest();
     }
     if (args.writeBaseline) {
-        const today = new Date().toISOString().slice(0, 10);
+        const today = asOf().toISOString().slice(0, 10);
         writeBaseline(args.root, today);
         process.stdout.write(`wrote ${CONFIG_REL}\n`);
         return 0;
