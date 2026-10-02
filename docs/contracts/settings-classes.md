@@ -247,8 +247,8 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 124 |
-| **Total** | **153** |
+| C — guarded | 125 |
+| **Total** | **154** |
 
 It rose again on 2026-09-13 when `road-to-adversarial-verification-and-long-runs`
 Phase 0 added three C keys: `quality.local_auto_run_in_mission` (`consent` — it
@@ -382,9 +382,9 @@ the template, which is the drift this contract exists to prevent.
 |---|---|
 | derivable | 83 |
 | un-inferrable | 9 |
-| consent | 47 |
+| consent | 48 |
 | policy | 14 |
-| **Total** | **153** |
+| **Total** | **154** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -622,6 +622,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `hooks.design_pass.enabled` | C | `false` | C-test 1 — it configures code that runs on every tool call and at every turn end, and unlike its two `hooks.*` neighbours its stop pass can BLOCK rather than warn | policy — whether an operator accepts a gate that can refuse a turn is a risk preference, not a fact the tree can compute. The two neighbours are `derivable` because they only ever warn; the block is the discriminator. `road-to-frontend-power` transfers the default flip to the owner for the same reason |
 | `hooks.code_graph.enabled` | C | `false` | INERT since 2026-09-07 — the nudge it gated was replaced by `code-graph-context`, which reads no flag. The KEY stays registered because `docs/MIGRATION.md` commits to exactly that ("the surfaces stay registered and disabled"): removing it is a breaking change for any consumer who set it, and the row was briefly marked REMOVED, which left the template's own leaf unclassified. Classified, not deleted. | derivable — the index-detection probe the replacement hook already runs; no index means silence |
 | `hooks.suggestion_capture.enabled` | C | `false` | configures code that runs at every turn end and every prompt | consent |
+| `hooks.verify_before_complete.touched_file_quality` | C | `"off"` | C-test 1 — it decides whether the stop hook SPAWNS the project's own quality commands over the turn's edited files, so the cost it authorises is other people's processes on the operator's machine | consent — running a consumer's toolchain against their working tree is a thing to be permitted, not a fact the tree can derive. The three values are not a severity ladder the agent may climb: `shadow` records, `warn` adds one advisory line, and the flip from one to the other is the owner decision `road-to-touched-files-that-pass-their-own-tools` 2.3 defers |
 | `decision_engine.surface_traces` | C | `false` | the decision engine’s own black box; the agent must not be able to close it | derivable — the engine's own active-gate state; there is nothing to surface when no gate fired |
 | `decision_engine.min_confidence` | C | `"off"` | the confidence gate | derivable — the confidence band the scoring engine already computes at the plan phase |
 | `decision_engine.block_on_risk` | C | `"off"` | the risk-class gate | derivable — the risk class the engine already computes at the implement phase; the Hard Floor covers the irreversible end unconditionally |

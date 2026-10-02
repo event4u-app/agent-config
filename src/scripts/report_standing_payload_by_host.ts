@@ -54,6 +54,11 @@ import {
     type SlotFireSizes,
 } from './_lib/activation_payload.js';
 import { loadRouter, pathOnlyRuleIds } from './_lib/rule_injection.js';
+// The windsurf emitter itself, not a second renderer beside it — 3.1 of
+// `road-to-a-hook-bundle-with-one-yaml-reader`, whose Risk 3 is precisely a
+// census that measures a file nobody receives. `condense.generate_windsurfrules`
+// writes with this same function.
+import { render_windsurfrules } from './_lib/windsurf_render.js';
 import { CAP_BYTES } from './hooks/rule_inject_hook.js';
 
 // Re-exported rather than redefined: this module was their only home until the
@@ -99,7 +104,46 @@ export interface HostSurface {
      */
     readonly anchor: string;
     readonly note: string;
+    /**
+     * Where a SINGLE-FILE row's byte figure comes from. Absent on per-rule-tree
+     * rows, which read the projection source like every other row.
+     *
+     * `road-to-a-hook-bundle-with-one-yaml-reader` 3.1. Until this field existed
+     * every single-file row read its surface off disk with `fs.readFileSync`,
+     * and three of the four surfaces are UNTRACKED generated projections. So the
+     * published windsurf figure was a function of when the checkout last ran
+     * `task generate-tools` — `absent` on a fresh worktree, some older byte count
+     * on a stale one, and nothing in the artifact said which. A census whose
+     * number moves with the measurer's housekeeping is not a measurement.
+     *
+     * Three kinds, and the rule that picks between them is reproducibility, not
+     * convenience: `render` recomputes the surface from the emitter itself;
+     * `tracked` reads a file that is IN GIT, so its bytes are the repository's;
+     * `unrenderable` refuses with a named reason rather than publishing a figure
+     * it cannot stand behind. Reading an untracked file is not one of the three.
+     */
+    readonly bytes?: ByteSource;
 }
+
+/** How a single-file surface's byte figure is obtained. See {@link HostSurface.bytes}. */
+export type ByteSource =
+    | {
+          /** Recomputed in memory by the emitter that writes the surface. */
+          readonly kind: 'render';
+          readonly detail: string;
+      }
+    | {
+          /** Read from a file tracked in git, so the figure is the repository's. */
+          readonly kind: 'tracked';
+          /** Repo-relative path actually read — not always `surface`. */
+          readonly path: string;
+          readonly detail: string;
+      }
+    | {
+          /** No in-memory emitter and no tracked file: the row reports a refusal. */
+          readonly kind: 'unrenderable';
+          readonly reason: string;
+      };
 
 /**
  * The host axis, taken from `docs/enforcement-by-host.md:18-28` rather than
@@ -108,19 +152,19 @@ export interface HostSurface {
 export const HOST_SURFACES: readonly HostSurface[] = [
     {
         host: 'augment', surface: '.augment/rules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:2495',
+        writer: 'src/scripts/condense.ts:2484',
         anchor: '\'.augment/rules\',',
         note: 'copies by default; symlinks under `augment.rules_use_symlinks`',
     },
     {
         host: 'claude-code', surface: '.claude/rules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:1188',
+        writer: 'src/scripts/condense.ts:1183',
         anchor: '_emit_claude_rule(',
         note: '`_emit_claude_rule` rewrites frontmatter to the host\'s own `paths:` key',
     },
     {
         host: 'cline', surface: '.clinerules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:1190',
+        writer: 'src/scripts/condense.ts:1185',
         anchor: 'fs.symlinkSync(',
         note: 'symlink per rule into the projection',
     },
@@ -129,6 +173,16 @@ export const HOST_SURFACES: readonly HostSurface[] = [
         writer: 'src/scripts/generate_capability_matrix.ts:138',
         anchor: '_INSTALL_TIME_CELLS',
         note: 'NOT written by `condense`: the installer aggregates it from `src/agent-src/templates/copilot-instructions.md`, which is why the capability matrix marks this cell `adapter` and footnotes it as install-time',
+        bytes: {
+            kind: 'tracked',
+            path: '.github/copilot-instructions.md',
+            detail:
+                'the surface is COMMITTED in this repository, so its bytes are the ' +
+                'repository\'s rather than this checkout\'s. The installer aggregates a ' +
+                'consumer\'s copy from a template at install time and there is no in-memory ' +
+                'emitter to call here; a tracked read is reproducible on any clone, which is ' +
+                'the property the figure needs.',
+        },
     },
     {
         host: 'cowork', surface: null, perRuleTree: false,
@@ -138,21 +192,40 @@ export const HOST_SURFACES: readonly HostSurface[] = [
     },
     {
         host: 'cursor', surface: '.cursor/rules', perRuleTree: true,
-        writer: 'src/scripts/condense.ts:1190',
+        writer: 'src/scripts/condense.ts:1185',
         anchor: 'fs.symlinkSync(',
-        note: 'symlink per rule, plus `.mdc` companions at `condense.ts:1418`',
+        note: 'symlink per rule, plus `.mdc` companions at `condense.ts:1407`',
     },
     {
         host: 'gemini', surface: 'GEMINI.md', perRuleTree: false,
-        writer: 'src/scripts/condense.ts:1494',
+        writer: 'src/scripts/condense.ts:1483',
         anchor: '\'GEMINI.md\'',
-        note: 'single file',
+        note: 'single file — a symlink to the tracked `AGENTS.md`, so the bytes are that file\'s',
+        bytes: {
+            kind: 'tracked',
+            path: 'AGENTS.md',
+            detail:
+                '`generate_gemini_md` writes a SYMLINK to `AGENTS.md` and no content of its ' +
+                'own, so the emitter\'s output IS that file and reading it is calling the ' +
+                'emitter. `GEMINI.md` itself is untracked and is never read for the figure — ' +
+                'on a checkout that has not generated it, the row is unchanged.',
+        },
     },
     {
         host: 'windsurf', surface: '.windsurfrules', perRuleTree: false,
-        writer: 'src/scripts/condense.ts:1238',
+        writer: 'src/scripts/condense.ts:1227',
         anchor: '\'.windsurfrules\'',
-        note: 'single concatenated file',
+        note: 'single concatenated file, rendered here by `condense.render_windsurfrules` rather than read off disk',
+        bytes: {
+            kind: 'render',
+            detail:
+                'rendered in memory by `condense.render_windsurfrules`, the function ' +
+                '`generate_windsurfrules` writes with — never a second renderer. It is fed the ' +
+                'SAME unscoped, non-manual rule set every other row uses, not the install-local ' +
+                'scoped-and-deduplicated set the writer passes, so it reports this table\'s ' +
+                'stated unit: the upper bound a consumer install receives. Reading `.windsurfrules` ' +
+                'off disk reported instead when the checkout last ran `task generate-tools`.',
+        },
     },
     {
         host: 'codex', surface: '.codex/agent-config.md', perRuleTree: false,
@@ -164,6 +237,16 @@ export const HOST_SURFACES: readonly HostSurface[] = [
         // to close, one level down.
         anchor: '\'.codex\', \'agent-config.md\'',
         note: 'written by the installer, not by `condense`; absent in this checkout',
+        bytes: {
+            kind: 'unrenderable',
+            reason:
+                'written by the installer into a consumer project, not by any emitter this ' +
+                'repository can call in memory, and not committed here. There is no byte count ' +
+                'this tree can stand behind, so the row refuses rather than publishing one. It ' +
+                'read `absent` before this change too — the difference is that `absent` then ' +
+                'meant "not on this disk right now" and could have become a number on a ' +
+                'checkout that happened to have run an install.',
+        },
     },
 ];
 
@@ -214,13 +297,90 @@ export function manualCorpusChars(root: string): number {
     return chars;
 }
 
-/** Bytes of a single-file surface, or `null` when it is absent from this checkout. */
+/**
+ * Bytes of a file at `rel`, or `null` when it cannot be read.
+ *
+ * ONLY LEGITIMATE BEHIND A TRACKEDNESS CHECK, and `generate_host_cost_table` is
+ * its one remaining caller — it tests `isTracked` first and reports
+ * `unverifiable` otherwise, so what it reads is always in the committed tree.
+ * THIS CENSUS NO LONGER USES IT: an unguarded read of an untracked generated
+ * projection is the 3.1 defect, and `singleFileBytes` below is what replaced it
+ * here. Kept rather than deleted because the guarded caller is correct as it
+ * stands and rewriting it would change a different generated table.
+ */
 export function singleFileChars(root: string, rel: string): number | null {
     try {
         return Buffer.byteLength(fs.readFileSync(path.join(root, rel), 'utf-8'), 'utf-8');
     } catch {
         return null;
     }
+}
+
+/** The non-manual rules a per-tool tree receives — the unit every row in this table reports. */
+export function projectedRuleBasenames(root: string): string[] {
+    const dir = path.join(root, RULES_DIST_REL);
+    return fs
+        .readdirSync(dir)
+        .filter((f) => f.endsWith('.md'))
+        .filter((f) => !isManualRule(fs.readFileSync(path.join(dir, f), 'utf-8')))
+        .sort();
+}
+
+/** A single-file row's figure, with how it was obtained — or why there is none. */
+export interface SingleFileMeasure {
+    /** Bytes, or `null` when the row refuses. */
+    readonly bytes: number | null;
+    /** `render` · `tracked:<path>` · `refused` — printed in the artifact. */
+    readonly how: string;
+    /** Set when `bytes` is null. */
+    readonly reason?: string;
+}
+
+/**
+ * Bytes of a single-file surface, computed from what the tree GENERATES rather
+ * than from what happens to sit on this disk.
+ *
+ * `road-to-a-hook-bundle-with-one-yaml-reader` 3.1. The predecessor
+ * (`singleFileChars`) read the surface with `fs.readFileSync`, and three of the
+ * four single-file surfaces are untracked generated projections — so the figure
+ * it published was a reading of the measurer's housekeeping. This function never
+ * reads an untracked file: it renders, reads a tracked one, or refuses.
+ *
+ * A row with no `bytes` declaration is a programming error rather than a
+ * fallback to the old behaviour, and it throws. A silent fallback is how the
+ * defect would come back one row at a time.
+ */
+export function singleFileBytes(root: string, h: HostSurface): SingleFileMeasure {
+    const src = h.bytes;
+    if (src === undefined) {
+        throw new Error(
+            `${h.host}: single-file surface with no \`bytes\` source declared. Declare render, ` +
+                'tracked or unrenderable — reading the surface off disk is not an option here.',
+        );
+    }
+    if (src.kind === 'unrenderable') {
+        return { bytes: null, how: 'refused', reason: src.reason };
+    }
+    if (src.kind === 'tracked') {
+        try {
+            const text = fs.readFileSync(path.join(root, src.path), 'utf-8');
+            return { bytes: Buffer.byteLength(text, 'utf-8'), how: `tracked:${src.path}` };
+        } catch {
+            return {
+                bytes: null,
+                how: 'refused',
+                reason: `${src.path} is tracked but could not be read from this root`,
+            };
+        }
+    }
+    // `render` — windsurf is the only one, and the renderer is named rather than
+    // dispatched on, because a table of host → renderer with one row is a lookup
+    // pretending to be a mechanism.
+    if (h.host !== 'windsurf') {
+        throw new Error(`${h.host}: declares a render source but no renderer is wired for it`);
+    }
+    const text = render_windsurfrules(path.join(root, RULES_DIST_REL), projectedRuleBasenames(root));
+    return { bytes: Buffer.byteLength(text, 'utf-8'), how: 'render' };
 }
 
 /**
@@ -365,16 +525,29 @@ export function renderArtifact(root: string, pin: string): string {
             );
             continue;
         }
-        const chars = singleFileChars(root, h.surface);
-        const bytes = chars === null ? 'absent' : String(chars);
-        const toks = chars === null ? 'absent' : String(tokensChars4(chars));
-        L.push(`| \`${h.host}\` | \`${h.surface}\` | single file | ${bytes} | ${toks} | \`${h.writer}\` |`);
+        const m = singleFileBytes(root, h);
+        const bytes = m.bytes === null ? 'refused' : String(m.bytes);
+        const toks = m.bytes === null ? 'refused' : String(tokensChars4(m.bytes));
+        L.push(
+            `| \`${h.host}\` | \`${h.surface}\` | single file (${m.how}) | ${bytes} | ${toks} | \`${h.writer}\` |`,
+        );
     }
+    L.push('');
+    L.push('**Where the single-file figures come from.** Each is RENDERED by the emitter that writes');
+    L.push('the surface, or read from a file tracked in git — never read off an untracked generated');
+    L.push('projection, which is what the `(…)` in the Shape column names. Three of the four');
+    L.push('single-file surfaces are untracked, so the earlier read-off-disk figure reported when');
+    L.push('this checkout last ran `task generate-tools` rather than anything about the tree. A row');
+    L.push('with neither an emitter nor a tracked file reads `refused` and says why below.');
     L.push('');
     L.push('Notes per host:');
     L.push('');
     for (const h of HOST_SURFACES) {
         L.push(`- \`${h.host}\` — ${h.note}`);
+        if (h.bytes !== undefined) {
+            const detail = h.bytes.kind === 'unrenderable' ? h.bytes.reason : h.bytes.detail;
+            L.push(`  - bytes (\`${h.bytes.kind}\`): ${detail}`);
+        }
     }
     L.push('');
     L.push('## The two units, recorded once');

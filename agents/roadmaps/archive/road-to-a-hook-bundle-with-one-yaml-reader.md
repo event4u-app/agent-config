@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: completed
 execution:
   mode: autonomous
 estate_offset_exempt: "Two payload-measurement defects no active roadmap owns: the hook bundle carries a second YAML parser beside a source comment that calls the other one the only YAML reader, and the standing-payload census reads one host's surface from whatever the working tree last generated. Merging into road-to-a-kernel-that-guards-its-plumbing was rejected because that roadmap verifies the bundle's integrity, not its size; the archived payload roadmaps closed before either defect existed, and parking an active roadmap would not shrink the bundle."
@@ -45,26 +45,26 @@ fresh worktree and on a long-lived checkout.
 
 ## Phase 1 — One parser on the dispatch path
 
-- [ ] **1.1 Measure the bundle and its parsers.** Build the hook bundle in a
+- [x] **1.1 Measure the bundle and its parsers.** Build the hook bundle in a
       checkout with a real `node_modules` (a symlinked one rewrites tracked
       bundle paths), record its bytes and the esbuild metafile's per-package
       share for `js-yaml` and `yaml` in
       `agents/evidence/analysis/hook-bundle-composition-<date>.md`.
       verify: `grep -c 'js-yaml' agents/evidence/analysis/hook-bundle-composition-*.md` -> /^[1-9]/
-- [ ] **1.2 Read the settings contract without `js-yaml`.** Port the class
+- [x] **1.2 Read the settings contract without `js-yaml`.** Port the class
       contract read in `block_config_weakening.ts` to the `yaml` package the
       bundle already carries, keeping its fail-closed path (an unreadable
       contract refuses). The existing class-C tests must pass unchanged, and a
       YAML 1.1 versus 1.2 boolean case (`on`, `yes`) is added before the swap.
       verify: `npx vitest run tests/scripts/hooks/block_config_weakening.test.ts` -> 0
-- [ ] **1.3 A second YAML parser in the bundle fails a test.** Read the
+- [x] **1.3 A second YAML parser in the bundle fails a test.** Read the
       metafile from the bundle build and fail if more than one YAML package
       contributes bytes. Seen red with `js-yaml` still imported.
       verify: `npx vitest run tests/scripts/hook_bundle_composition.test.ts` -> 0
 
 ## Phase 2 — The bundle has a byte ceiling
 
-- [ ] **2.1 Ratchet the bundle size.** Record the post-1.2 byte count as a
+- [x] **2.1 Ratchet the bundle size.** Record the post-1.2 byte count as a
       ceiling in a budget file the bundle-freshness job already reads, shrink-only
       with a recorded reason on any raise, and fail a planted bundle one byte
       over. Registered with a gate-coverage row and a self-test.
@@ -72,16 +72,44 @@ fresh worktree and on a long-lived checkout.
 
 ## Phase 3 — The census reads what the tree generates
 
-- [ ] **3.1 Render the single-file surfaces instead of reading them.** For each
+- [x] **3.1 Render the single-file surfaces instead of reading them.** For each
       single-file host surface the census reports, compute the bytes from the
       emitter's output in memory (the same function `condense.ts` writes with),
       or refuse with a named reason when the emitter cannot be called. Never read
       an untracked file's current contents as the figure.
       verify: `npx vitest run tests/scripts/report_standing_payload_by_host.test.ts` -> 0
-- [ ] **3.2 Prove it is checkout-independent.** Run the census in a fresh
+- [x] **3.2 Prove it is checkout-independent.** Run the census in a fresh
       worktree with no generated trees and in this checkout; the windsurf row
       must match.
       verify: `npx vitest run tests/scripts/report_standing_payload_by_host.test.ts -t fresh` -> 0
+
+## Outcome (2026-10-01)
+
+Measured, not asserted — the full composition tables are in
+`agents/evidence/analysis/hook-bundle-composition-2026-10-01.md`.
+
+| Quantity | Before | After |
+|---|---:|---:|
+| `dist/hooks/dispatch.js` bytes | 1,564,211 | 1,469,738 |
+| YAML packages in the bundle | 2 | 1 |
+| Published windsurf standing-payload figure | 34,160 | 398,211 |
+
+The 1,564,211 reproduces the source rescore's figure exactly, so the growth it
+reported was real rather than a measurement artefact of its own checkout.
+
+The windsurf row is the one number that moved UP, and the direction is the
+finding: the published 34,160 bytes was a stale `.windsurfrules` read off
+whichever checkout last emitted the artifact, against 398,211 bytes the emitter
+actually renders for the unscoped corpus every other row in that table reports.
+An eleven-fold understatement sat in a contract document (`rule-router.md`) with
+nothing able to see it, because the figure's own source was the thing that
+varied. Both now come from the renderer.
+
+**D1's revisit condition fired halfway and the decision stands.** `js-yaml` IS
+the smaller parser (95,846 B against 258,839 B), but the condition is a
+conjunction and its second half fails: there are seven `yaml` importers on the
+dispatch path against one `js-yaml` importer, and one of the seven is
+`dispatch_hook.ts` itself. Recorded as evaluated rather than silently satisfied.
 
 ## Gap table
 
@@ -110,8 +138,8 @@ fresh worktree and on a long-lived checkout.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `dist/hooks/dispatch.js` contains one YAML parser and a test fails
+- [x] AC-1 — `dist/hooks/dispatch.js` contains one YAML parser and a test fails
       when a second is bundled.
-- [ ] AC-2 — The hook bundle has a byte ceiling that fails a planted bundle over it.
-- [ ] AC-3 — The standing-payload census reports the same windsurf figure in a
+- [x] AC-2 — The hook bundle has a byte ceiling that fails a planted bundle over it.
+- [x] AC-3 — The standing-payload census reports the same windsurf figure in a
       fresh worktree and in a long-lived checkout.

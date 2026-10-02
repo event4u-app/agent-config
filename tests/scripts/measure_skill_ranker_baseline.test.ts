@@ -28,15 +28,21 @@ import { parse as parseYaml } from 'yaml';
 import {
     MIN_POWERED_N,
     MIN_PROMPTS_PER_PACK,
+    SEALED_MODULUS,
+    type SliceName,
     allPacks,
     main,
     measureAccuracy,
     packCensus,
     packsBelow,
     packsForSkill,
+    partitionBySlice,
+    rankOptionsFor,
     readMatrixCases,
     readMatrixLabelledPrompts,
     readMatrixPrompts,
+    sliceForId,
+    sliceSizes,
 } from '../../src/scripts/measure_skill_ranker_baseline';
 
 const REPO = path.resolve(__dirname, '..', '..');
@@ -327,5 +333,180 @@ describe('the live routing matrix carries its labels', () => {
             for (const s of p.expected) if (!known.has(s)) unknown.add(s);
         }
         expect([...unknown].sort(), 'expected_skills naming no shipped skill').toEqual([]);
+    });
+});
+
+// The held-out partition (road-to-a-ranker-that-routes 1.2). Every property
+// below is about the SEAL, not about the split ratio: a partition that is not
+// deterministic, not disjoint, or not stable under corpus growth cannot carry a
+// lift claim, because the slice a number was read on would not be the slice a
+// later reader reproduces.
+describe('holdout — the sealed slice is a function of the id and nothing else', () => {
+    const ids = Array.from({ length: 2000 }, (_, i) => `rule-${String(i % 97)}#positives[${String(i)}]`);
+
+    it('is deterministic — a PINNED vector, because nothing weaker can fail', () => {
+        // Hoisting one call into a variable does not make a pure-function
+        // identity falsifiable: `f(x)` against a stored `f(x)` is still the same
+        // expression over the same input, and passes for every implementation
+        // including a broken one. The only falsifiable form is a fixed
+        // id -> slice table, which a changed hash, modulus or key WILL break.
+        //
+        // This vector is the CONTRACT, not a convenience: the sealed slice must
+        // not move silently between releases, and these rows are what notices.
+        const pinned: [string, 'tuning' | 'sealed'][] = [
+            ['alpha#positives[0]', 'tuning'],
+            ['alpha#positives[1]', 'tuning'],
+            ['docker-commands#near_misses[0]', 'sealed'],
+            ['docker-commands#positives[0]', 'tuning'],
+            ['alpha#positives[10]', 'sealed'],
+        ];
+        for (const [id, want] of pinned) expect(sliceForId(id), id).toBe(want);
+        // Both labels appear above, so a function stuck on one of them fails here.
+        expect(new Set(pinned.map(([, s]) => s))).toEqual(new Set(['tuning', 'sealed']));
+    });
+
+    it('assigns every id to exactly one of the two slices', () => {
+        // Two halves: the IMAGE is both labels, so neither slice is empty; and
+        // the assignment is in the closed set, so nothing returns a third value
+        // or undefined. An earlier version asserted only the image, which would
+        // pass for a function that returned both — and the version after it
+        // "fixed" that with `expect(x === 'a' ? 'b' : 'a').not.toBe(x)`, which
+        // compares a value to its own negation and cannot fail either.
+        expect(new Set(ids.map(sliceForId))).toEqual(new Set(['tuning', 'sealed']));
+        const labels = new Set(ids.map(sliceForId));
+        expect([...labels].sort()).toEqual(['sealed', 'tuning']);
+        expect(ids.every((id) => (['tuning', 'sealed'] as string[]).includes(sliceForId(id)))).toBe(true);
+    });
+
+    it('is stable when a section is APPENDED to, and moves rows when one is INSERTED into', () => {
+        // The real matrix id is `rule#section[ordinal]` and the ordinal is
+        // POSITIONAL, so this is the limitation the docblock now states instead
+        // of denying. Written against the real id shape rather than synthetic
+        // ids, because an earlier version of this suite asserted that a pure
+        // function of a string is stable — which cannot fail.
+        const section = (count: number): string[] =>
+            Array.from({ length: count }, (_, i) => `alpha#positives[${String(i)}]`);
+
+        // APPEND: ids 0..39 survive verbatim when the section grows to 45, so
+        // the partition of the first 40 is unchanged. Compared as two computed
+        // maps rather than id-against-itself.
+        const before = section(40);
+        const appended = section(45);
+        const sliceOf = (list: string[]): Record<string, string> =>
+            Object.fromEntries(list.map((id) => [id, sliceForId(id)]));
+        const beforeMap = sliceOf(before);
+        const appendedMap = sliceOf(appended);
+        for (const id of before) {
+            expect(appendedMap[id], `${id} changed slice on an append`).toBe(beforeMap[id]);
+        }
+
+        // INSERT at position 0: every row's ordinal shifts by one, so each row's
+        // slice is now read off a DIFFERENT id. Some must move, or the seal
+        // would be stable in a way this corpus cannot deliver.
+        const renumbered = before.map((_, i) => `alpha#positives[${String(i + 1)}]`);
+        const moved = before.filter((id, i) => beforeMap[id] !== sliceForId(renumbered[i] as string));
+        expect(moved.length, 'a mid-section insert must be shown to move rows').toBeGreaterThan(0);
+    });
+
+    it('partitions disjointly and exhaustively, and `all` is the identity', () => {
+        const rows = ids.map((id) => ({ id }));
+        const tuning = partitionBySlice(rows, 'tuning');
+        const sealed = partitionBySlice(rows, 'sealed');
+        expect(tuning.length + sealed.length).toBe(rows.length);
+        expect(partitionBySlice(rows, 'all')).toHaveLength(rows.length);
+        const inSealed = new Set(sealed.map((r) => r.id));
+        expect(
+            tuning.some((r) => inSealed.has(r.id)),
+            'a row in both slices',
+        ).toBe(false);
+    });
+
+    it('is independent of the order the rows arrive in', () => {
+        const rows = ids.map((id) => ({ id }));
+        const forward = partitionBySlice(rows, 'sealed')
+            .map((r) => r.id)
+            .sort();
+        const backward = partitionBySlice([...rows].reverse(), 'sealed')
+            .map((r) => r.id)
+            .sort();
+        expect(backward).toEqual(forward);
+    });
+
+    it('keeps a row on its own side of the seal when the corpus grows', () => {
+        // The defect this refuses: a share applied to a shuffled list would move
+        // rows across the boundary the moment a prompt is added, so a sealed
+        // reading would silently stop being held out from the earlier tuning.
+        const before = new Set(
+            partitionBySlice(
+                ids.slice(0, 1000).map((id) => ({ id })),
+                'sealed',
+            ).map((r) => r.id),
+        );
+        const after = new Set(
+            partitionBySlice(
+                ids.map((id) => ({ id })),
+                'sealed',
+            ).map((r) => r.id),
+        );
+        for (const id of before) expect(after.has(id), `${id} changed slice`).toBe(true);
+    });
+
+    it(`holds roughly one row in ${String(SEALED_MODULUS)} back, measured rather than assumed`, () => {
+        // A floor and a ceiling, not a value: the hash is not a shuffle and the
+        // exact count is a property of the ids, so pinning it would make any new
+        // fixture a red test.
+        const share = ids.filter((id) => sliceForId(id) === 'sealed').length / ids.length;
+        expect(share).toBeGreaterThan(0.1);
+        expect(share).toBeLessThan(0.3);
+    });
+
+    it('reports the sizes of BOTH slices whichever one was read', () => {
+        const sizes = sliceSizes(ids.map((id) => ({ id })));
+        expect(sizes.all).toBe(ids.length);
+        expect(sizes.tuning + sizes.sealed).toBe(sizes.all);
+        expect(sizes.sealed_modulus).toBe(SEALED_MODULUS);
+    });
+
+    it('the CLI refuses an unknown slice rather than silently reading the whole corpus', () => {
+        expect(main(['--slice', 'the-good-half'])).toBe(2);
+        expect(main(['--slice'])).toBe(2);
+    });
+
+    it('an unknown --ranker is refused, never resolved to the baseline', () => {
+        // The failure this refuses: every consumer echoes the requested label
+        // into its output, so resolving a typo to `{}` published a keyword-v1
+        // number under another configuration's name.
+        expect(() => rankOptionsFor('keyword-v3')).toThrow(/unknown --ranker/);
+        expect(main(['--ranker', 'keyword-v3'])).toBe(2);
+        expect(rankOptionsFor('idf')).toEqual({ idfWeighting: true });
+    });
+
+    it('a sliced arm names its slice and both sizes, over a fixture corpus', () => {
+        skill('docker', ['engineering-base'], 'Containers and images.');
+        const lines = ['rule: alpha', 'positives:'];
+        for (let i = 0; i < 200; i += 1) {
+            lines.push(`  - prompt: "containers and images question number ${String(i)}"`);
+            lines.push('    expected_skills: [docker]');
+        }
+        write('tests/eval/routing-matrix/alpha.yaml', `${lines.join('\n')}\n`);
+        const arm = (s: SliceName): ReturnType<typeof measureAccuracy> =>
+            measureAccuracy({
+                corpus: 'routing-matrix',
+                repo: root,
+                skillsDir: path.join(root, 'src', 'skills'),
+                rankOpts: {},
+                slice: s,
+            });
+        const whole = arm('all');
+        const tuning = arm('tuning');
+        const sealed = arm('sealed');
+        expect(whole.slice).toBe('all');
+        expect(tuning.slice).toBe('tuning');
+        expect(sealed.slice).toBe('sealed');
+        expect(tuning.corpus_prompts + sealed.corpus_prompts).toBe(whole.corpus_prompts);
+        // The sizes block describes the FULL corpus in every arm, so a reader of
+        // a sealed-only report can see what it was held out from.
+        expect(sealed.slice_sizes.all).toBe(whole.corpus_prompts);
+        expect(sealed.slice_sizes.sealed).toBe(sealed.corpus_prompts);
     });
 });

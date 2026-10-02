@@ -79,6 +79,79 @@ export function hookSectionEnabled(root: string, section: string): boolean {
 }
 
 /**
+ * Raw scalar at `hooks.<section>.<key>` in `.agent-settings.yml`, or `''`.
+ *
+ * The `hookSectionEnabled` sibling above answers one boolean question and is
+ * the right shape for a default-OFF switch. This one exists because
+ * `hooks.verify_before_complete.touched_file_quality` is a three-valued mode
+ * (`off | shadow | warn`), and collapsing it into a boolean would lose exactly
+ * the distinction the roadmap's Phase 2 turns on — `shadow` records and says
+ * nothing, `warn` records and emits one line.
+ *
+ * It reuses the section scoping of `hookSectionEnabled` verbatim, including the
+ * ACTUAL-indent close that the 4-space-file defect produced: a reader that
+ * closed the section on a fixed depth would read a sibling section's value under
+ * this key's name, which for a mode string is worse than for a flag — the wrong
+ * value is a legal one.
+ *
+ * Interpretation is NOT done here. `''` means "nothing was written", and the
+ * caller decides what that defaults to — the same producer/consumer split
+ * `leanProjectionModeRaw` makes below, and for the same reason.
+ */
+export function hookSectionValue(root: string, section: string, key: string): string {
+    const file = path.join(root, SETTINGS_FILE);
+    let text: string;
+    try {
+        if (!fs.statSync(file).isFile()) return '';
+        text = fs.readFileSync(file, 'utf-8');
+    } catch {
+        return '';
+    }
+
+    const esc = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const sectionPattern = new RegExp(`^(\\s+)${esc(section)}\\s*:\\s*$`);
+    const keyPattern = new RegExp(`^\\s+${esc(key)}\\s*:\\s*(.+)$`);
+    let inHooks = false;
+    let sectionIndent: number | null = null;
+
+    const indentOf = (line: string): number => line.length - line.replace(/^\s+/, '').length;
+
+    for (const raw of text.split(/\r\n|\r|\n/)) {
+        const line = raw.replace(/\s+$/, '');
+        if (!line || line.replace(/^\s+/, '').startsWith('#')) continue;
+
+        if (!(line.startsWith(' ') || line.startsWith('\t'))) {
+            inHooks = /^hooks\s*:\s*$/.test(line);
+            sectionIndent = null;
+            continue;
+        }
+
+        if (inHooks) {
+            const opened = sectionPattern.exec(line);
+            if (opened) {
+                sectionIndent = opened[1]!.length;
+                continue;
+            }
+            if (sectionIndent !== null && indentOf(line) <= sectionIndent) {
+                sectionIndent = null;
+            }
+        }
+
+        if (sectionIndent !== null) {
+            const m = keyPattern.exec(line);
+            if (m) {
+                return (m[1] ?? '')
+                    .replace(/\s+#.*$/, '')
+                    .trim()
+                    .replace(/^["']|["']$/g, '');
+            }
+        }
+    }
+
+    return '';
+}
+
+/**
  * Raw `lean_projection.mode` string out of `.agent-settings.yml`, or `''`.
  *
  * Same indentation-shaped discipline as `hookSectionEnabled` above and for the

@@ -112,16 +112,47 @@ export default defineConfig({
         // claimed as one. What it is: halving the worker count to halve the
         // contention, on the reasoning that the tests are spawn-bound.
         //
-        // WHY NOT RAISE `testTimeout`: it is a real guard on a CLI's wall-clock,
-        // and widening it to absorb a concurrency change would retire the guard
-        // to hide the cause. A percentage rather than an absolute count because
-        // the latter is not portable between a 4-core runner and an 18-core
-        // laptop. If CI still times out at 50%, the next move is a
-        // per-test timeout on the spawn-bound files — named here so it is not
-        // re-derived as a global raise.
+        // A percentage rather than an absolute count because the latter is not
+        // portable between a 4-core runner and an 18-core laptop.
+        //
+        // WHY THE BUDGET WAS RAISED, 2026-10-01, reversing the note this
+        // replaces. That note read: "WHY NOT RAISE `testTimeout`: it is a real
+        // guard on a CLI's wall-clock, and widening it to absorb a concurrency
+        // change would retire the guard to hide the cause. … If CI still times
+        // out at 50%, the next move is a per-test timeout on the spawn-bound
+        // files — named here so it is not re-derived as a global raise."
+        //
+        // CI still timed out at 50%, so the per-file move was taken FIRST, on
+        // three files measured red in CI. It did not hold, and the reason is
+        // the population rather than the remedy: a fourth file timed out on
+        // `main` ITSELF within the hour — `tests/hooks/continuity_switches.test.ts`,
+        // 22,117 ms for 7 tests on macos shard 3/4 — against a list that had
+        // looked complete. The spawn-bound set is not three files; it is most
+        // of the real-repo CLI suites, and patching it one file at a time reds
+        // a PR every time it meets one nobody has patched yet.
+        //
+        // WHAT THE MEASUREMENT SHOWS: in the failing runs there was no assertion
+        // error anywhere in the set — only `Test timed out in 10000ms` — and the
+        // SIBLINGS of each timed-out case measured 8,130 / 8,648 / 9,383 ms
+        // against the 10,000 ms budget. A guard whose healthy cases sit at
+        // 85-95 % of it is not catching regressions; it is calibrated below the
+        // runner's speed, and every red it produces costs a CI cycle to re-run.
+        //
+        // WHAT THIS GIVES UP, stated rather than implied: a 10 s wall-clock
+        // assertion on every test. 30 s is ~3x the observed worst case, so a
+        // genuine hang still fails and a CLI that got three times slower still
+        // fails — but a regression that merely doubles a 4 s test now passes.
+        // Nothing here measures per-test wall-clock on purpose; if that axis
+        // matters it needs its own instrument, not a timeout standing in for one.
+        //
+        // NOT TOUCHED: files carrying their own larger budget keep it
+        // (`code_graph_indexed_read.test.ts` at 120 s), and `maxWorkers: '50%'`
+        // stays exactly as reasoned above — this changes the budget, not the
+        // contention hypothesis, which remains unverified in the direction that
+        // note already admits.
         maxWorkers: '50%',
-        testTimeout: 10_000,
-        hookTimeout: 10_000,
+        testTimeout: 30_000,
+        hookTimeout: 30_000,
         reporters: process.env.CI ? ['default'] : ['default'],
     },
 });
