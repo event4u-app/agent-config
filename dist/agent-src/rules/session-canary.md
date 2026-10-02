@@ -96,7 +96,7 @@ re-injecting ~800 characters every turn would buy the same coverage at roughly
 40× the tokens over a long session.
 
 Four dated conformance audits stand behind those two slots — what the session-scope carrier fixed, what the second audit measured when it did not follow, why the proposed delivery check is undecidable as written, and the per-session figure that replaced it. They are the record, not the obligation, and live in
-[`contexts/execution/session-canary-enforcement-history.md`](../contexts/execution/session-canary-enforcement-history.md),
+`contexts/execution/session-canary-enforcement-history.md`,
 named in `load_context` above so a session that reaches this rule can open them.
 
 **Two declared gaps, neither papered over.** On **Augment** there is no

@@ -160,7 +160,7 @@ silent rather than merely absent.
 Each class carries a near-miss row in the routing matrix, and a new trigger's
 row must test the direction that trigger opens. The matrix, the reasons behind
 each class, and the worked example are in
-[`design-fidelity-enforcement`](../contexts/communication/rules-auto/design-fidelity-enforcement.md).
+`design-fidelity-enforcement`.
 
 Body migrated to [`guideline:design-fidelity-mechanics`](../docs/guidelines/design-fidelity-mechanics.md) (per P4 of `road-to-kernel-and-router.md`) — URL / live-page handover (extraction into the `design-system.json` contract before the first UI write, the retrieval order, the lock boundary), surgical visual edits (targeted-edit vs redesign-trigger discipline, stable anchors), asset & imagery discipline (owned-asset path, third-party delivery is self-hosted by default, real-imagery-as-proof, iconography floor, no unrequested filler), deviation-surfacing shape, failure-mode catalog, `daf-*` fixtures.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
@@ -170,7 +170,7 @@ Trigger-set above activates this routing on demand, independent of the disciplin
 Nothing records a fidelity comparison, so the proof clause in the Iron Law is
 model-carried and the committed matrix is the control. Which two linters exist,
 what each measures and why neither can tell a proven 1:1 from an asserted one:
-[`design-fidelity-enforcement`](../contexts/communication/rules-auto/design-fidelity-enforcement.md),
+`design-fidelity-enforcement`,
 named in `load_context` above.
 
 ## See also

@@ -57,7 +57,7 @@ a decision the agent cannot settle from the tree to the council first, and its
 class table lists "reopening a recorded decision". The measurement behind that
 correction, and why the five steps below are inlined rather than only routed, are
 in
-[`contexts/authority/decision-revisit-gate-enforcement.md`](../contexts/authority/decision-revisit-gate-enforcement.md).
+`contexts/authority/decision-revisit-gate-enforcement.md`.
 
 **Mechanism-match check comes FIRST**: a verdict settles the *mechanism it
 tested*, not every future proposal that resembles it — if the blocked change
@@ -179,5 +179,5 @@ Step 2 is model-carried: no gate can observe an agent citing a decision it
 never opened. Why that is so, which two reach limits the tool has in a
 consumer install, and why `docs/decisions/` is projected into no
 agent-visible tree are recorded in
-[`contexts/authority/decision-revisit-gate-enforcement.md`](../contexts/authority/decision-revisit-gate-enforcement.md),
+`contexts/authority/decision-revisit-gate-enforcement.md`,
 named in `load_context` above.
