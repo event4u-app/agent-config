@@ -1,0 +1,23 @@
+{
+    "skill": "quality-tools",
+    "description": "10 exemplars + 5 near-misses + 2 counterexamples. Exemplars cover the four stacks the mode table now routes — PHPStan / Rector / ECS for php, Biome / tsc for js, Ruff / mypy for python, gofmt / go vet for go — in DE and EN. Near-misses cover the skills that own an adjacent job: test-driven-development (write the test, not run the linter), testing-anti-patterns (the test is wrong), test-performance (the suite is slow), systematic-debugging (a failure to diagnose) and verify-completion-evidence (the evidence gate). Counterexamples guard the two directions the vocabulary over-claims: asking for a tool the repository does not have, and the word 'quality' used about prose.",
+    "queries": [
+        { "q": "phpstan says mixed on this method — how do I type it properly?", "trigger": true, "class": "exemplar" },
+        { "q": "run rector on the changed files and show me what it would rewrite", "trigger": true, "class": "exemplar" },
+        { "q": "fix the code style in the files I touched", "trigger": true, "class": "exemplar" },
+        { "q": "biome is complaining about import order in this package", "trigger": true, "class": "exemplar" },
+        { "q": "which lint and type commands should I run on this python repo before pushing?", "trigger": true, "class": "exemplar" },
+        { "q": "ruff and mypy both have config here — what is the right order to run them in?", "trigger": true, "class": "exemplar" },
+        { "q": "gofmt reports nothing but CI still fails on formatting — what am I missing?", "trigger": true, "class": "exemplar" },
+        { "q": "welche Quality-Tools laufen in diesem Projekt und in welcher Reihenfolge?", "trigger": true, "class": "exemplar", "language": "de" },
+        { "q": "mach bitte einen Lint- und Typecheck-Durchlauf über die geänderten Dateien", "trigger": true, "class": "exemplar", "language": "de" },
+        { "q": "is golangci-lint worth running when go vet is already green?", "trigger": true, "class": "exemplar" },
+        { "q": "write a failing test for this bug before I fix it", "trigger": false, "class": "near-miss" },
+        { "q": "this test asserts a hardcoded value — is that wrong?", "trigger": false, "class": "near-miss" },
+        { "q": "our suite takes eleven minutes, where is the time going?", "trigger": false, "class": "near-miss" },
+        { "q": "the endpoint 500s only in staging — help me find out why", "trigger": false, "class": "near-miss" },
+        { "q": "what evidence do I need before I can call this done?", "trigger": false, "class": "near-miss" },
+        { "q": "install phpstan in this go module", "trigger": false, "class": "counterexample" },
+        { "q": "improve the quality of this README's prose", "trigger": false, "class": "counterexample" }
+    ]
+}

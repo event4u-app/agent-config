@@ -1,0 +1,22 @@
+{
+    "skill": "test-performance",
+    "description": "9 exemplars + 5 near-misses + 2 counterexamples. Exemplars cover the slow-suite ask in DE and EN — database setup, seeders, parallelisation, CI wall-clock — and, added 2026-10-02 with the per-ecosystem instrument table, the same ask on a non-PHP stack. Near-misses cover the neighbours: test-driven-development (the discipline, not the clock), testing-anti-patterns (a wrong test rather than a slow one), quality-tools (lint and types), web-perf (the application is slow, not the suite) and systematic-debugging (a flake to diagnose). Counterexamples guard the two over-claims: production performance work, and deleting tests to make the suite faster.",
+    "queries": [
+        { "q": "our test suite takes eleven minutes — where is the time going?", "trigger": true, "class": "exemplar" },
+        { "q": "every test refreshes the database, can we avoid that?", "trigger": true, "class": "exemplar" },
+        { "q": "should we run the suite in parallel, and what breaks if we do?", "trigger": true, "class": "exemplar" },
+        { "q": "the seeders dominate our CI wall-clock time", "trigger": true, "class": "exemplar" },
+        { "q": "which are the twenty slowest tests in this pytest suite?", "trigger": true, "class": "exemplar" },
+        { "q": "go test looks instant on the second run — is it actually running?", "trigger": true, "class": "exemplar" },
+        { "q": "unsere Testsuite ist zu langsam, woran liegt das?", "trigger": true, "class": "exemplar", "language": "de" },
+        { "q": "wie messe ich, welche Tests die meiste Zeit kosten?", "trigger": true, "class": "exemplar", "language": "de" },
+        { "q": "vitest spends most of its time in transform — what do I do about that?", "trigger": true, "class": "exemplar" },
+        { "q": "write the failing test before implementing the fix", "trigger": false, "class": "near-miss" },
+        { "q": "this test asserts a value the code produces — that is tautological", "trigger": false, "class": "near-miss" },
+        { "q": "run the linter and the type-checker over my diff", "trigger": false, "class": "near-miss" },
+        { "q": "the dashboard takes four seconds to load for real users", "trigger": false, "class": "near-miss" },
+        { "q": "this test fails about one run in twenty and I cannot reproduce it", "trigger": false, "class": "near-miss" },
+        { "q": "profile the production checkout endpoint under load", "trigger": false, "class": "counterexample" },
+        { "q": "delete the slowest tests so CI finishes faster", "trigger": false, "class": "counterexample" }
+    ]
+}

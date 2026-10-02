@@ -1,0 +1,24 @@
+{
+    "skill": "test-driven-development",
+    "description": "10 exemplars + 6 near-misses + 2 counterexamples. Exemplars cover the red-green-refactor ask in DE and EN and — added 2026-10-02 with the per-ecosystem filtered-probe table — the stack-neutral form of 'which command do I run for one failing test'. Near-misses cover the neighbours the description already names or implies: testing-anti-patterns (the test itself is wrong), test-case-discovery (what to test, before any test exists), quality-tools (lint and types, not tests), test-performance (the suite is slow), api-testing (the HTTP shape) and systematic-debugging (diagnose first). Counterexamples guard the two over-claims: asking for tests AFTER the code is written and merged, which is not TDD, and the word 'refactor' used about prose.",
+    "queries": [
+        { "q": "write the failing test first, then implement the fix", "trigger": true, "class": "exemplar" },
+        { "q": "I want to do this TDD — red, green, refactor", "trigger": true, "class": "exemplar" },
+        { "q": "start with a test that reproduces the bug before touching the code", "trigger": true, "class": "exemplar" },
+        { "q": "how do I run just the one test I am iterating on instead of the whole suite?", "trigger": true, "class": "exemplar" },
+        { "q": "what is the filtered-test command for this repo while I work red to green?", "trigger": true, "class": "exemplar" },
+        { "q": "schreib bitte zuerst einen fehlschlagenden Test und dann die Implementierung", "trigger": true, "class": "exemplar", "language": "de" },
+        { "q": "ich will das testgetrieben machen — erst rot, dann grün", "trigger": true, "class": "exemplar", "language": "de" },
+        { "q": "this is legacy code I do not understand — pin its behavior before I change it", "trigger": true, "class": "exemplar" },
+        { "q": "my test passed on the very first run, is that a problem?", "trigger": true, "class": "exemplar" },
+        { "q": "should the refactor step come before or after the test goes green?", "trigger": true, "class": "exemplar" },
+        { "q": "this assertion only passes for one crafted input — rewrite it", "trigger": false, "class": "near-miss" },
+        { "q": "enumerate the edge cases we should cover for this endpoint", "trigger": false, "class": "near-miss" },
+        { "q": "run phpstan and ecs over the diff", "trigger": false, "class": "near-miss" },
+        { "q": "the suite is slow because every test refreshes the database", "trigger": false, "class": "near-miss" },
+        { "q": "assert the JSON response shape of this route", "trigger": false, "class": "near-miss" },
+        { "q": "the deploy fails intermittently and I do not know why yet", "trigger": false, "class": "near-miss" },
+        { "q": "we shipped this last month — backfill some tests for the coverage report", "trigger": false, "class": "counterexample" },
+        { "q": "refactor the wording of this paragraph so it reads better", "trigger": false, "class": "counterexample" }
+    ]
+}

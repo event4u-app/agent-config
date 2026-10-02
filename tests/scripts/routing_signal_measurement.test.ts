@@ -82,7 +82,12 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 0x29 = 41, `tailwind-engineer` at 0x2e = 46. The ordering claim stays
         // scoped to the original 18 for the reason the 19th row already
         // established: a row authored today predates nothing.
-        expect(sealed.length).toBe(22);
+        //
+        // 22 -> 24 on 2026-10-02: road-to-stacks-beyond-php edited four skill
+        // bodies, check_routing_coverage requires a corpus on every touched
+        // skill, and two of the four hashed below the ceiling —
+        // `quality-tools` at 0x20 = 32 and `test-performance` at 0x10 = 16.
+        expect(sealed.length).toBe(24);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -137,9 +142,17 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 19 -> 22 and the train count moves 84 -> 85, and BOTH train-side
         // published measurements are re-taken in the same change, which a
         // holdout-only growth does not owe.
+        //
+        // 107 -> 111 on 2026-10-02: road-to-stacks-beyond-php added an
+        // ecosystem-keyed paragraph to three skills and two reference bodies to
+        // a fourth, and every touched skill owes a corpus. The split was not
+        // chosen — `quality-tools` (0x20) and `test-performance` (0x10) seal,
+        // `test-driven-development` (0x47) and `api-testing` (0x67) train. So
+        // the holdout moves 22 -> 24, the train count 85 -> 87, and BOTH
+        // train-side published measurements are re-taken in the same change.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(107);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(22);
+        expect(all.length).toBe(111);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(24);
     });
 });
 
@@ -153,8 +166,11 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // `design-system-capture`, the one of that day's four corpora whose
         // name hashes above the ceiling. The other three sealed and are
         // deliberately NOT counted here — that they are absent from this number
-        // is the seal working.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(85);
+        // is the seal working. 85 -> 87 on 2026-10-02: `test-driven-development`
+        // and `api-testing`, the two of road-to-stacks-beyond-php's four corpora
+        // whose names hash above the ceiling; `quality-tools` and
+        // `test-performance` sealed and are absent here for the same reason.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(87);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {
