@@ -56,7 +56,7 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       returns each skill with `origin: package | project | home`, where `package` means
       claimed by the installed-tools lockfile — a consumer's own skills live in
       `~/.claude/skills`, so root is never origin. Drop the first-wins dedupe so two
-      `design-system` skills both rank; a foreign one prints `project:design-system` or
+      `design-system` skills both rank; a foreign one prints `project:design-system` or <!-- ref-ignore -->
       `home:design-system`, ours the bare name. `corrected-from-reproduction`.
       verify: fixture — a foreign `design-system` beside ours yields two ranked entries, one qualified
 
