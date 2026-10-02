@@ -60,6 +60,31 @@ export const USER_SCOPE_PATHS = {
  * Universal Anthropic-shaped skill bundle deployed to markdown-skills
  * tools. Mirrors `_CLAUDE_SKILL_BUNDLE` in the retired Python installer (ADR-200).
  */
+/**
+ * Directories the RULE BODIES link into, deployed for that reason alone.
+ *
+ * A rule is authored against the package tree and projected verbatim, so
+ * `](../guidelines/x.md)` resolves in `dist/agent-src/rules/` and then does or
+ * does not resolve in the install, depending on this file — which no rule
+ * author ever sees. Measured by `report_installed_rule_links` before these two
+ * entries existed: 160 of 550 links in an installed Claude rule directory
+ * pointed nowhere, 113 of them into exactly these two directories.
+ *
+ * The alternative was to rewrite those links to absolute package paths. Same
+ * repair, priced differently: +7,285 characters of standing text INSIDE rule
+ * bodies, which is what the host loads as instructions, against 0 for
+ * deploying — files under `contexts/` and `guidelines/` are not instruction
+ * files, they are link targets a reader follows. The cheaper option on the
+ * budget that is actually scarce wins.
+ *
+ * `cline` deliberately does not get them: it installs rules at the install
+ * ROOT, so every `../x` link climbs out of the tree by construction and no
+ * entry here could change that.
+ */
+const RULE_LINK_TARGETS = [
+    ['dist/agent-src/contexts', 'contexts'],
+    ['dist/agent-src/guidelines', 'guidelines'],
+];
 const CLAUDE_SKILL_BUNDLE = [
     ['dist/agent-src/rules', 'rules'],
     ['dist/agent-src/skills', 'skills'],
@@ -72,6 +97,7 @@ const CLAUDE_SKILL_BUNDLE = [
     // and scripts/install.py:_CLAUDE_SKILL_BUNDLE for the Python mirror.
     ['dist/agent-src/commands', 'commands'],
     ['dist/agent-src/personas', 'personas'],
+    ...RULE_LINK_TARGETS,
 ];
 /**
  * Per-tool content deployment plan for `--global` installs. Each entry
@@ -103,14 +129,17 @@ export const GLOBAL_DEPLOY_SOURCES = {
         ['dist/agent-src/contexts', 'contexts'],
         ['dist/agent-src/personas', 'personas'],
         ['dist/agent-src/templates', 'templates'],
+        ['dist/agent-src/guidelines', 'guidelines'],
     ],
     cursor: [
         ['dist/agent-src/rules', 'rules'],
         ['dist/agent-src/commands', 'commands'],
         ['dist/agent-src/personas', 'personas'],
+        ...RULE_LINK_TARGETS,
     ],
     windsurf: [
         ['dist/agent-src/rules', 'rules'],
+        ...RULE_LINK_TARGETS,
     ],
     cline: [
         ['dist/agent-src/rules', ''],
@@ -131,6 +160,7 @@ export const GLOBAL_DEPLOY_SOURCES = {
         ['dist/agent-src/rules', 'rules'],
         ['dist/agent-src/skills', 'steering'],
         ['dist/agent-src/personas', 'personas'],
+        ...RULE_LINK_TARGETS,
     ],
 };
 /**

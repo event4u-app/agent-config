@@ -114,7 +114,7 @@ import {
 } from '../install/rule_scope.js';
 import { isExclusivelyPackageOnly, stampHostLayerFingerprint } from '../install/partitionEligibility.js'; // ADR-236
 import * as claude_rule_rewrite from '../install/claudeRuleRewrite.js';
-import { RULE_SOURCE_REL } from '../install/wizard-plan.js';
+import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
 import { settingsSchema } from '../server/schemas/settings.js';
 import { zodToJsonSchema } from 'zod-to-json-schema';
@@ -1752,75 +1752,19 @@ export const PROJECT_BRIDGE_MARKERS: Record<string, string> = {
 };
 
 /**
- * `contexts/` and `guidelines/` are here because the RULES link into them.
+ * Re-exported from `wizard-plan.ts`, which is now the ONLY definition.
  *
- * A rule body is authored against the package tree and projected verbatim, so
- * `](../guidelines/x.md)` resolves in `dist/agent-src/rules/` and then does or
- * does not resolve in the install, depending on this list — which no rule
- * author ever sees. Measured by `report_installed_rule_links` before the two
- * entries were added: 160 of 550 links in an installed Claude rule directory
- * pointed nowhere, 113 of them into exactly these two directories.
+ * It was defined here too, and the two copies were byte-identical in every
+ * one of their 18 host rows — a duplicate of the same truth, and the kind
+ * that stays correct right up until somebody edits one of them. Step 1.2 of
+ * `road-to-rule-triggers-and-links-that-hold` did exactly that: it added two
+ * directories here and the wizard kept installing without them.
  *
- * The alternative (step 1.2's option A) was to rewrite those links to absolute
- * package paths. Same repair, priced differently: +7,285 characters of
- * standing text INSIDE rule bodies, which is the text the host loads as
- * instructions, against 0 for deploying — files under `contexts/` and
- * `guidelines/` are not instruction files, they are link targets a reader
- * follows. The cheaper option on the budget that is actually scarce wins.
+ * Re-exported rather than moved-and-left-broken so every caller of
+ * `install.ts::GLOBAL_DEPLOY_SOURCES` keeps working unchanged. Imported as
+ * well as re-exported because this file's own call sites read the binding.
  */
-const _CLAUDE_SKILL_BUNDLE: ReadonlyArray<readonly [string, string]> = [
-    ['dist/agent-src/rules', 'rules'],
-    ['dist/agent-src/skills', 'skills'],
-    ['dist/agent-src/commands', 'commands'],
-    ['dist/agent-src/personas', 'personas'],
-    ['dist/agent-src/contexts', 'contexts'],
-    ['dist/agent-src/guidelines', 'guidelines'],
-];
-
-export const GLOBAL_DEPLOY_SOURCES: Record<string, ReadonlyArray<readonly [string, string]>> = {
-    'claude-code': _CLAUDE_SKILL_BUNDLE,
-    augment: [
-        ['dist/agent-src/rules', 'rules'],
-        ['dist/agent-src/skills', 'skills'],
-        ['dist/agent-src/commands', 'commands'],
-        ['dist/agent-src/contexts', 'contexts'],
-        ['dist/agent-src/personas', 'personas'],
-        ['dist/agent-src/templates', 'templates'],
-        ['dist/agent-src/guidelines', 'guidelines'],
-    ],
-    cursor: [
-        ['dist/agent-src/rules', 'rules'],
-        ['dist/agent-src/commands', 'commands'],
-        ['dist/agent-src/personas', 'personas'],
-        ['dist/agent-src/contexts', 'contexts'],
-        ['dist/agent-src/guidelines', 'guidelines'],
-    ],
-    windsurf: [
-        ['dist/agent-src/rules', 'rules'],
-        ['dist/agent-src/contexts', 'contexts'],
-        ['dist/agent-src/guidelines', 'guidelines'],
-    ],
-    cline: [['dist/agent-src/rules', '']],
-    'gemini-cli': _CLAUDE_SKILL_BUNDLE,
-    codex: _CLAUDE_SKILL_BUNDLE,
-    continue: _CLAUDE_SKILL_BUNDLE,
-    roocode: _CLAUDE_SKILL_BUNDLE,
-    kilocode: _CLAUDE_SKILL_BUNDLE,
-    qoder: _CLAUDE_SKILL_BUNDLE,
-    opencode: _CLAUDE_SKILL_BUNDLE,
-    trae: _CLAUDE_SKILL_BUNDLE,
-    antigravity: _CLAUDE_SKILL_BUNDLE,
-    codebuddy: _CLAUDE_SKILL_BUNDLE,
-    droid: _CLAUDE_SKILL_BUNDLE,
-    warp: _CLAUDE_SKILL_BUNDLE,
-    kiro: [
-        ['dist/agent-src/rules', 'rules'],
-        ['dist/agent-src/skills', 'steering'],
-        ['dist/agent-src/personas', 'personas'],
-        ['dist/agent-src/contexts', 'contexts'],
-        ['dist/agent-src/guidelines', 'guidelines'],
-    ],
-};
+export { GLOBAL_DEPLOY_SOURCES };
 
 const _CLAUDE_DESKTOP_MARKER_TEMPLATE_HEAD = `# agent-config — Claude Desktop marker
 
