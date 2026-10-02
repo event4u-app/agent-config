@@ -35,6 +35,19 @@ on:
       # Any workflow-file change must trigger the REQUIRED Consistency check
       # too, or a workflow-only PR deadlocks on "Expected — Waiting for status".
       - ".github/workflows/**"
+      # Dependency manifests ANYWHERE, for the same deadlock reason — and
+      # deliberately as a `**` glob rather than two more literal directories.
+      # `.github/dependabot.yml` runs four ecosystems: npm at `/`, `/site` and
+      # `/deploy/telemetry-worker`, plus github-actions at `/`. Only the last
+      # was reachable, through `.github/workflows/**` above; the three npm
+      # configs touch nothing else in this list, so EVERY npm bump opened a PR
+      # that could never merge — measured on #2163 (deploy/telemetry-worker)
+      # and #2164 (site), both sitting at "Expected — Waiting for status to be
+      # reported" with the other required context already green. The glob, not
+      # the two paths, because a fifth ecosystem in a fourth directory would
+      # otherwise reproduce this a third time.
+      - "**/package.json"
+      - "**/package-lock.json"
       # docs-only PR shape (per docs/contracts/branch-protection-policy.md):
       # Consistency is a REQUIRED check for docs-only PRs, so it must trigger
       # on the docs-only paths or such PRs deadlock (required check never runs).
@@ -74,6 +87,11 @@ on:
       # Any workflow-file change must trigger the REQUIRED Consistency check
       # too, or a workflow-only PR deadlocks on "Expected — Waiting for status".
       - ".github/workflows/**"
+      # Dependency manifests anywhere — mirrors the pull_request list above so
+      # a merged dependency bump is measured on `main` the same way it was on
+      # the PR. See that list for why this is a glob and not two directories.
+      - "**/package.json"
+      - "**/package-lock.json"
       # docs-only PR shape (per docs/contracts/branch-protection-policy.md):
       # Consistency is a REQUIRED check for docs-only PRs, so it must trigger
       # on the docs-only paths or such PRs deadlock (required check never runs).
