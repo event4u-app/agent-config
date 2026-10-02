@@ -39,6 +39,14 @@
  * covers. An unqualified claim this file's own code contradicts is worse than
  * the narrower one it is replaced by.
  *
+ * NOT REACHED YET, AND SAYING SO HERE BECAUSE THIS IS WHERE A READER LOOKS.
+ * The manifest entry for this concern carries `tools: [Skill]`, which the
+ * dispatcher matches exactly, so it is not invoked for an MCP call at all and
+ * the branch below is dead in production. Held as the
+ * `mcp-recorder-unreachable-behind-the-tools-filter` blocker on
+ * road-to-neighbours-that-pull-their-weight: the manifest is a gated
+ * governance surface and the council split on the edit rather than converging.
+ *
  * NO OUTBOUND CALL EXISTS HERE, DELIBERATELY. Transport is Phase 2 and is
  * blocked on `sink-choice`; org-wide enablement is Phase 3 and is blocked on
  * `dpo-signoff`. This concern appends to a local JSONL file and stops.

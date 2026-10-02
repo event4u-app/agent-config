@@ -870,10 +870,7 @@ concerns:
   # `telemetry.remote.enabled` is true AND the org pack supplied an endpoint,
   # an org id, and a salt. A clone of this repository carries the key names
   # and no values, so it cannot reach the write path. Inactive ⇒ zero
-  # telemetry file operations and zero network calls. "Telemetry" is load-
-  # bearing: the concern's non-`Skill` path writes a LOCAL census store
-  # (`agents/runtime/neighbour-tool-use.json`) on every install, which is a
-  # file operation and is not telemetry — see the concern's own header.
+  # telemetry file operations and zero network calls.
   #
   # It appends to a LOCAL JSONL file and stops — no outbound call exists in
   # this concern. Transport is Phase 2 (blocked on `sink-choice`); org-wide
@@ -904,33 +901,9 @@ concerns:
     fail_closed: false
     severity: advisory
     effect: telemetry
-    # NO `tools:` KEY, AND ITS ABSENCE IS THE POINT. This concern had
-    # `tools: [Skill]`, which was provable from its source while `Skill` was
-    # the only branch surface. It is not any more: the non-`Skill` path now
-    # records a foreign `mcp__<server>__<tool>` NAME for the neighbour census
-    # (road-to-neighbours-that-pull-their-weight 3.3), and that surface is a
-    # PREFIX over names no manifest can enumerate.
-    #
-    # `_concern_matches_tool` matches EXACTLY — `names.includes(tool_name)`,
-    # no globbing — so there is no value of this key that admits the second
-    # surface. Left at `[Skill]` the dispatcher skips the concern for every
-    # MCP call and the recorder is unreachable while its unit tests, which call
-    # `run()` directly, stay green: coverage on the manifest with the
-    # observation floor at zero.
-    #
-    # Pinned by `tests/scripts/neighbour_mcp_use.test.ts` against THIS file,
-    # with a negative control that re-adds `[Skill]` and watches the assertion
-    # fail — so the key cannot return without a red. An end-to-end probe
-    # through the built `dist/hooks/dispatch.js` was attempted first and proved
-    # nothing: the concern did not run for a `Skill` envelope either, so the
-    # probe never reached it. That is a fact about that environment, not a
-    # verdict about the filter, and it is recorded rather than dressed up as one.
-    #
-    # What the removal costs, stated rather than waved away: the concern is
-    # spawned on every post-tool call again and returns after two string
-    # comparisons. It costs no extra PAYLOAD — `keep_by_concern` is built over
-    # every concern before this filter is applied (`dispatch_hook.ts:1294`),
-    # so `needs_payload_bodies: [input]` already priced in regardless.
+    # Provable from the hook's own source: the only branch surface is
+    # `extractToolName(payload) !== SKILL_TOOL_NAME`.
+    tools: [Skill]
     # `[input]` only, and provable by reading the hook: it takes the skill
     # name from `tool_input.skill` and the host/session from the envelope.
     # It never touches `tool_response` — a skill invocation's RESULT body is

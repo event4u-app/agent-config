@@ -129,27 +129,38 @@ describe('mcp servers carry observed use', () => {
  * names are not enumerable. The entry therefore carries no `tools:` key, and
  * this asserts that against the SHIPPED manifest rather than against a literal.
  */
-describe('the recorder is reachable through the dispatcher', () => {
-    it('the shipped telemetry-usage entry admits an mcp__ tool name', () => {
+describe('the recorder is NOT reachable through the dispatcher — the open blocker', () => {
+    it('the shipped telemetry-usage entry still filters the recorder out', () => {
+        // This asserts a DEFECT, deliberately, and it is the falsifiable half
+        // of the `mcp-recorder-unreachable-behind-the-tools-filter` blocker on
+        // road-to-neighbours-that-pull-their-weight. The recorder below records
+        // nothing in production: `tools: [Skill]` makes the dispatcher skip the
+        // concern for every MCP call. Removing the key is a hook-plumbing edit
+        // that the council split on (2026-10-02, anthropic + openai), so it is
+        // owner-reserved rather than taken here.
+        //
+        // When the blocker closes, this test FLIPS to `true` — which is the
+        // point. A gap recorded only in prose is a gap the next run rediscovers.
         const manifest = parse(
             fs.readFileSync(path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'), 'utf-8'),
         ) as { concerns: Record<string, Record<string, unknown>> };
         const entry = manifest.concerns['telemetry-usage'];
 
         expect(entry).toBeDefined();
-        expect(_concern_matches_tool(entry as never, 'mcp__acme__alpha')).toBe(true);
         expect(_concern_matches_tool(entry as never, 'Skill')).toBe(true);
+        expect(_concern_matches_tool(entry as never, 'mcp__acme__alpha')).toBe(false);
     });
 
-    it('NEGATIVE CONTROL — the filter this entry must not carry would silence it', () => {
-        // Without this the assertion above passes for a filter that admits
-        // everything, which is indistinguishable from a filter that was never
-        // consulted. `tools: [Skill]` is the exact shape that was there.
-        expect(_concern_matches_tool({ tools: ['Skill'] } as never, 'mcp__acme__alpha')).toBe(false);
-        // And a glob is not an escape: matching is exact, so this is also false.
+    it('and no value of the key could admit one — matching is exact', () => {
+        // Why the blocker is a design question and not a one-line edit: a glob
+        // is not an escape, so "narrow the filter instead of removing it" is
+        // not an available option under the current dispatcher.
         expect(_concern_matches_tool({ tools: ['Skill', 'mcp__*'] } as never, 'mcp__acme__alpha')).toBe(
             false,
         );
+        // Control: an absent key does admit it, so the assertion above is
+        // about the filter's VALUE and not about a matcher that always refuses.
+        expect(_concern_matches_tool({} as never, 'mcp__acme__alpha')).toBe(true);
     });
 });
 

@@ -179,7 +179,7 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       definition source, and the observation this slot CAN make is 3.3's name
       recorder. Revisit-if: a reader of third-party MCP tool descriptors exists in
       `src/scripts/`.
-- [x] **3.3 Foreign MCP servers counted by use.** `telemetry_usage_hook.ts` returns early
+- [~] **3.3 Foreign MCP servers counted by use.** `telemetry_usage_hook.ts` returns early
       for every non-`Skill` tool (`:250`), so a small recorder of foreign `mcp__*` tool
       names is new; the census gains distinct tools used per server in 30 days.
       Advertised counts stay `unknown` — nothing launches a server to ask.
@@ -215,18 +215,31 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       handshake with a neighbour's process, and `0` therefore reads as "none
       observed", never as "none exist".
 
-      **A fourth piece the step did not anticipate, and the unit tests could
-      not have caught.** `telemetry-usage` carried `tools: [Skill]` in
-      `hook_manifest.yaml` — a per-concern dispatcher filter that was provable
-      from the hook's source while `Skill` was its only branch surface.
-      `_concern_matches_tool` matches EXACTLY, so no value of that key admits
-      `mcp__<server>__<tool>`: the names are not enumerable. Left in place the
-      dispatcher skips the concern for every MCP call and the recorder is
-      unreachable while every test above — all of which call `run()` directly —
+      **THE RECORDER DOES NOT RUN YET, AND THIS STEP IS REOPENED TO SAY SO.**
+      It was marked `[x]` and merged in #2179 before this was found.
+      `telemetry-usage` carries `tools: [Skill]` in `hook_manifest.yaml` — a
+      per-concern dispatcher filter that was provable from the hook's source
+      while `Skill` was its only branch surface. `_concern_matches_tool` matches
+      EXACTLY, so no value of that key admits `mcp__<server>__<tool>`: the names
+      are not enumerable. The dispatcher therefore skips the concern for every
+      MCP call while every test above — all of which call `run()` directly —
       stays green. That is coverage on the manifest with the observation floor
-      at zero, which is the failure 3.2's own deferral names one layer up. The
-      key is removed, and a test pins the shipped entry against an `mcp__` name
-      with a negative control that re-adds `[Skill]` and watches it go red.
+      at zero, the failure 3.2's own deferral names one layer up.
+
+      Removing the key was implemented and then REVERTED, because the manifest
+      is a gated governance surface and the council split on it (2026-10-02,
+      anthropic + openai, both seats answering): one `ratified` with conditions,
+      one `refused` as implemented. They converged on the facts — it IS
+      authority-expanding, so `confirmed-non-expanding` would be a false label;
+      the "not telemetry" framing is a contested classification, not a fact; and
+      a concern named `telemetry-usage` should not carry both opt-in network
+      telemetry and default-on local collection — and on the alternative: a
+      separately named concern receiving a dispatcher-reduced payload. A split
+      is an escalation condition, not an approval, so the edit is held as the
+      `mcp-recorder-unreachable-behind-the-tools-filter` blocker rather than
+      landed on one seat's vote. What ships here is the correctness work the
+      recorder needs either way, plus a test that asserts the gap and flips
+      green when the blocker closes.
 
       **An independent reviewer over the whole delta found five more, and the
       two that mattered were in the matching itself.** Dispatched per
@@ -274,6 +287,64 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 - `doctor neighbours --contradictions` prints a verdict table or `n/a` and changes no file.
 - The stop-gate shadow row carries `set_by`; the fingerprint ledger gets one row on a mutated foreign tool and none on a stable one.
 
+## Blockers
+
+### blocker: mcp-recorder-unreachable-behind-the-tools-filter
+
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3
+- **Ownership:** product-owned
+- **Blocks:** step 3.3. The recorder, the store and the census field are all
+  built, tested and merged (#2179, #2180); the dispatcher never calls them.
+  `tools_used_30d` reads `0` on every install and will keep reading `0` until
+  this closes, which is a number that looks like a measurement.
+- **What to do:** `telemetry-usage` in `src/scripts/hook_manifest.yaml` carries
+  `tools: [Skill]`. `_concern_matches_tool` (`src/scripts/hooks/dispatch_hook.ts`)
+  matches EXACTLY — `names.includes(tool_name)`, no globbing — so the dispatcher
+  skips the concern for every `mcp__<server>__<tool>` call, and no value of the
+  key admits one because MCP tool names are not enumerable. Three shapes were
+  identified; the last is the council's:
+  1. **Remove the key.** One line. Implemented and reverted — see below.
+  2. **Give the filter a prefix form.** Changes a dispatcher contract read by
+     `lint_hook_manifest` and by every concern, and costs shared-hook-bundle
+     bytes against a ceiling with 170 B of headroom.
+  3. **A separately named concern** (e.g. `mcp-usage-observation`) with its own
+     default-on local-observation semantics, receiving a dispatcher-reduced
+     payload carrying only the tool name, and its own retention statement.
+     Still a hook-plumbing edit, so still gated — but it is classified honestly
+     rather than inheriting a telemetry concern's opt-in vocabulary.
+- **Why it is not an agent call:** `hook_manifest.yaml` is a gated governance
+  surface and ADR-268 § 4 forbids an agent ratifying its own increase in power.
+  Option 1 was implemented, put to the council on 2026-10-02 (anthropic +
+  openai, both seats answering, subscription-authed, $0.00), and the council
+  SPLIT: one `ratified` with conditions, one `refused` as implemented. They
+  converged on everything except the verdict — it IS authority-expanding, so
+  `confirmed-non-expanding` would be a false label; "the write is not telemetry"
+  is a contested classification rather than a fact; a concern named
+  `telemetry-usage` should not carry both opt-in network telemetry and
+  default-on local collection; and option 3 is the right shape. A split is an
+  escalation condition, not an approval, so the edit was reverted rather than
+  landed on one seat's vote.
+- **Recommendation:** take option 3, and carry the two conditions both seats
+  asked for: state plainly in the concern's own text that local neighbour-usage
+  measurement is default-on and bypasses the telemetry opt-in, and ship a test
+  proving the store holds tool NAMES only — no arguments, no responses, no
+  session id. Option 1 remains defensible if the rename is judged not worth a
+  new concern, but it needs a second council pass, not this one's split.
+- **If you do nothing:** the census prints `tools_used_30d: 0` for every
+  neighbour on every install, indistinguishable from a neighbour nobody uses.
+  The cost is standing rather than compounding — the field is honest about being
+  an observation floor, and the text surface prints `advertised: unknown` beside
+  it — but it is the instrumentation artifact this step exists to replace.
+- **Resolved when:** `_concern_matches_tool` admits `mcp__acme__alpha` for
+  whichever concern owns the recorder, which the test
+  `the recorder is NOT reachable through the dispatcher` in
+  `tests/scripts/neighbour_mcp_use.test.ts` asserts the negative of today — it
+  flips when this closes — AND a ratification artifact under
+  `agents/evidence/ratifications/` records a non-split verdict for the manifest
+  edit that does it.
+
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
@@ -289,6 +360,7 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 | D8 | reversible-technical | agent | `skill_origin.ts` parses the installed-tools manifest itself instead of reusing `readRecordedHashes` | measured 1,706 bytes of the shared hook bundle for a hash map whose keys are the whole requirement; two of the three existing readers already parse it directly because the shared one drops the nested `files[]` rows | the shared reader gains a paths-only accessor, or the bundle stops being size-capped |
 | D9 | reversible-technical | agent | 3.3's store is local-only under gitignored `agents/runtime/`, and is NOT gated on the telemetry opt-in | it feeds `doctor neighbours`, a report the consumer runs on their own tree — no transport reads it and the Class-A spool never sees it. Gating it on an org switch would print `0` on every install that never enabled one, which is the same instrumentation artifact the usage hook's own header records from the collector it replaced. What is recorded is a tool NAME the consumer's `.mcp.json` already lists — no arguments, no responses, no session id | a transport is ever pointed at this file, at which point it becomes a telemetry surface and inherits that gate |
 | D10 | reversible-technical | agent | a server is matched on its SANITISED segment, both sides, not on the raw `.mcp.json` key | hosts rewrite the key before embedding it — `claude.ai Claude Docs` arrives as `mcp__claude_ai_Claude_Docs__…`. An exact-key match reports `0` for every server whose name carries a dot or a space, and a reader cannot tell that zero from "never used" | a host is observed embedding a key under a different transformation than `[^A-Za-z0-9_-] -> _` |
+| D12 | product-owned | owner | PENDING `mcp-recorder-unreachable-behind-the-tools-filter` — the manifest edit that makes the recorder reachable is held; the council split on it rather than converging | `_concern_matches_tool` matches exactly and `hook_manifest.yaml` is a gated surface under ADR-268 § 4; council 2026-10-02 (anthropic + openai) returned one `ratified`-with-conditions and one `refused`-as-implemented, converging on the facts and on option 3 but not on a verdict | the owner picks one of the blocker's three options, or a second council pass converges |
 | D11 | reversible-technical | agent | `telemetry_usage_hook.ts`'s bundle guard moves from the top of `_isCliEntry` to its call site | measured: inside the function esbuild folds the define to `if (true) return false` and still emits the nine unreachable lines after it — 475 B of dead code in a bundle `check_hook_bundle_composition` caps at 1,550,000. At the call site the statement folds to `if (false)`, which is dropped, and the unreferenced function with it. Behavior outside the bundle is identical: `__AGENT_CONFIG_BUNDLE__` is undeclared there, the first operand short-circuits, and `!__AGENT_CONFIG_BUNDLE__` is never evaluated | esbuild starts eliminating the dead tail on its own, at which point the guard can move back and ~45 other hook files become the same saving |
 
 ## Risk Register
