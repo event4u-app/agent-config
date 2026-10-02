@@ -8,6 +8,7 @@ entry_condition:
   what: the owner resolves blocker(s) legal-user-type-is-a-product-call
   when: whenever the owner takes the next step
   who: owner
+review_by: 2026-12-31
 estate_growth_exempt: >-
   Owner-chosen archive of road-to-a-trunk-whose-own-gates-are-green: its deferred steps wait on owner
   blocker(s) legal-user-type-is-a-product-call and are parked here instead of left active. The parent

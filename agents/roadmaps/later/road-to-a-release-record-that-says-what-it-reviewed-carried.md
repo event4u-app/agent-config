@@ -8,6 +8,7 @@ entry_condition:
   what: the owner resolves blocker(s) review-ceiling-is-spend, container-e2e-promotion
   when: whenever the owner takes the next step
   who: owner
+review_by: 2026-12-31
 estate_growth_exempt: >-
   Owner-chosen archive of road-to-a-release-record-that-says-what-it-reviewed: its deferred steps wait on owner
   blocker(s) review-ceiling-is-spend, container-e2e-promotion and are parked here instead of left active. The parent

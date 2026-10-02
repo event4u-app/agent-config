@@ -8,6 +8,7 @@ entry_condition:
   what: the owner resolves blocker(s) kill-switch-owner-decision, d1-stop-ladder-after-reading
   when: whenever the owner takes the next step
   who: owner
+review_by: 2026-12-31
 estate_growth_exempt: >-
   Owner-chosen archive of road-to-a-stop-that-holds: its deferred steps wait on owner
   blocker(s) kill-switch-owner-decision, d1-stop-ladder-after-reading and are parked here instead of left active. The parent
