@@ -52,23 +52,62 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 
 ## Phase 1 — A route line that says where the skill came from
 
-- [ ] **1.1 Origin from the lockfile, and both same-named skills ranked.** The catalogue
+- [x] **1.1 Origin from the lockfile, and both same-named skills ranked.** The catalogue
       returns each skill with `origin: package | project | home`, where `package` means
       claimed by the installed-tools lockfile — a consumer's own skills live in
       `~/.claude/skills`, so root is never origin. Drop the first-wins dedupe so two
-      `design-system` skills both rank; a foreign one prints `project:design-system` or
+      `design-system` skills both rank; a foreign one prints `project:design-system` or <!-- ref-ignore -->
       `home:design-system`, ours the bare name. `corrected-from-reproduction`.
       verify: fixture — a foreign `design-system` beside ours yields two ranked entries, one qualified
-- [ ] **1.2 Overlap from a two-root mode of the existing audit.** `audit_skill_overlap`
+
+      **Landed in `src/scripts/_lib/skill_origin.ts` and the ranker.** The dedupe in
+      `_load_skills_across` now keys on the QUALIFIED name, so a collision between two
+      owners ranks twice and only the same package skill reached through two roots still
+      collapses. Origin is read from `agents/installed-tools.lock`, never from the root —
+      decision D6 records why, and why a tree with no manifest qualifies nothing.
+- [x] **1.2 Overlap from a two-root mode of the existing audit.** `audit_skill_overlap`
       takes one `--root` (`:97,701-703`); add a cross-root pair mode (neighbour × ours),
       cached by the census digest, and print `also: <our-skill>` when a pair crosses its
       existing threshold. Each census entry gets one `compat` label computed without a
       model: `shadowed`, `overlapping`, `unscanned` or `unclassified`. Nothing is suppressed.
       verify: fixture — a near-duplicate foreign skill yields `also:` and `compat: overlapping`; a disjoint one `unclassified`
-- [ ] **1.3 Scan before inject.** A neighbour skill body passes `security_lint`'s shape
+
+      **A cross product, not `find_pairs` over a merged list.** Merging the two
+      sides would also pair our skills against each other, re-deriving the
+      same-corpus report under another name and burying the pairs the caller
+      asked for; the cross product is also the cheaper half. The threshold is the
+      existing 0.70, so `compat: overlapping` is comparable to every historical
+      number — a second, softer bar invented for neighbours would be comparable
+      to nothing.
+
+      The pairs run over the neighbour skills the census FOUND, never over whole
+      roots: `~/.claude/skills` holds this package's own installed skills beside a
+      neighbour's, so pairing the root would publish our own install as an
+      overlap. Cached in `agents/reports/neighbour-overlap.json`, keyed by a
+      digest over both sides' file bytes — risk-register row 3, closed as that row
+      proposes.
+- [x] **1.3 Scan before inject.** A neighbour skill body passes `security_lint`'s shape
       checks before its body may be injected; a failing body ranks by name with
       `unscanned: <finding-kind>`; a changed digest rescans first.
       verify: fixture — a foreign SKILL.md with a planted `curl | sh` line ranks by name only and no line of its body reaches the injected context
+
+      **Landed before 1.2, and the order is the finding.** `compat` has four
+      values and `unscanned` outranks the other three, because an overlap score
+      is derived from a body the census refused to read. Built the other way
+      round, every 1.2 label read `unscanned` and its own fixture failed — so the
+      scan is 1.2's precondition, not its sibling.
+
+      Four shape checks (`instruction-smuggling`, `dangerous-frontmatter`,
+      `hidden-unicode`, `mixed-script-confusable`), reused as functions over
+      `security_lint`'s `ScannedFile` per D3. ANY finding refuses the body, not
+      only a `HIGH` one: severity weighs a maintainer's own corpus, and a
+      neighbour body is nobody's to weigh at rank time. The skill still ranks —
+      by its name, with the finding kind visible — which is risk-register row 4
+      resolved as that row proposes.
+
+      The ranker reads a RECORDED verdict rather than scanning (D7); its half
+      landed with 1.1 because `score_skill_relevance.ts` is one unit, and it was
+      inert until this step shipped the producer.
 
 ## Phase 2 — One stated order, no detector
 
@@ -153,6 +192,15 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       — is still the real work and is still independent; what cannot be done before
       Phase 1 is *publishing* the number. Recorded here rather than left for the
       next run to rediscover.
+
+      **Half of that note was already wrong when it was written, and Phase 1
+      settled the rest.** `doctor neighbours` and `_lib/neighbour_census.ts` both
+      existed at the time — the grep that reported otherwise searched for a
+      filename pattern the surface does not use. Phase 1 added `origin`, `compat`
+      and `also` to its skill entries, so the surface this step publishes into is
+      now there and carries per-entry labels. What is still missing is only the
+      recorder: `telemetry_usage_hook.ts` still returns early for every
+      non-`Skill` tool, so no foreign `mcp__*` name is counted anywhere.
       verify: `agent-config doctor neighbours --json` -> /"tools_used_30d":\s*[0-9]+/
 - [~] **3.4 Suggest `permissions.deny` for never-used foreign tools.** Deferred: writing a
       consumer's permission block is Class C and a product decision (K15).
@@ -175,6 +223,9 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 | D3 | reversible-technical | agent | scan with the existing `security_lint` shapes | `_lib/security_lint.ts` is the corpus scanner | a planted fixture slips through |
 | D4 | reversible-technical | evidence | fingerprint observe-only on `post_tool_use` | the stub's council record, 2026-09-06 | the stub's owner record chooses refusal |
 | D5 | deterministic | evidence | source precedence sits below the four bands, never beside them | `agent-authority.md:12-26` "Hard Floor wins, always"; the second author's eight-band order put the user's turn above the floor (K26) | the band table is superseded |
+| D6 | reversible-technical | agent | a tree with NO installed-tools manifest qualifies nothing — every skill resolves `package` and the route line is byte-identical to before 1.1 | nothing on disk records a claim there, so a `home:` prefix would be a guess printed in the shape of a fact; the authored `src/skills` is the one exception and is a construction, not a guess | a second artifact records what this package wrote, at which point absence of the manifest stops meaning absence of evidence |
+| D7 | reversible-technical | agent | the ranker reads a WRITTEN scan verdict rather than running the shape checks itself | the four linters plus `node:child_process` would be inlined into the shared hook bundle, which `check_hook_bundle_composition` caps; measured, the split keeps every one of them out and the census CLI is the only producer | the scan becomes cheap enough to run per prompt, or the bundle stops being shared |
+| D8 | reversible-technical | agent | `skill_origin.ts` parses the installed-tools manifest itself instead of reusing `readRecordedHashes` | measured 1,706 bytes of the shared hook bundle for a hash map whose keys are the whole requirement; two of the three existing readers already parse it directly because the shared one drops the nested `files[]` rows | the shared reader gains a paths-only accessor, or the bundle stops being size-capped |
 
 ## Risk Register
 

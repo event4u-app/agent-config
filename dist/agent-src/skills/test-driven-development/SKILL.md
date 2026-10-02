@@ -313,6 +313,23 @@ export async function retry<T>(op: () => Promise<T>): Promise<T> {
 Run again → passes. Configurable attempt count, backoff, and jitter all
 wait for their own failing tests.
 
+## The filtered probe, per ecosystem
+
+The discipline above is stack-independent; the **command** is not, and every
+runner invocation elsewhere in this file is a PHP one. Resolve the runner with
+`resolve_toolchain` (`work_engine/stack/runner.ts`) and read its `ecosystems`,
+then filter with that ecosystem's own form — never the whole suite:
+
+| `ecosystems` | Filtered probe |
+|---|---|
+| `php` | `vendor/bin/pest --filter '<name>'` · `php artisan test --filter '<name>'` |
+| `js` | `npx vitest run -t '<name>'` · `npx jest -t '<name>'` |
+| `python` | `pytest -k '<expr>'` · `pytest path/to/test.py::test_name` |
+| `go` | `go test -run '<regexp>' ./pkg/...` |
+
+A TypeScript repository resolves the ecosystem `js`, never `typescript`. The
+whole suite is the final gate and never the per-iteration probe, in every row.
+
 ## Gotchas
 
 * Running the full suite instead of a filtered test hides the RED→GREEN

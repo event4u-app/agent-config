@@ -70,6 +70,20 @@ export const ROOT = path.resolve(path.dirname(_HERE), '..', '..', '..');
  * CLI turns that into a distinct exit code rather than an empty list.
  */
 import { DEFAULT_CATALOGUE_ROOTS, resolveSkillCatalogueRoots } from '../_lib/skill_catalogue.js';
+// Authorship + scan primitives only. Deliberately NOT `neighbour_census.js`,
+// whose module graph reaches the host-hook merger, the secret detector and the
+// install-ownership reader — this module is inlined into the shared hook bundle,
+// where every byte is paid by every concern on every dispatch.
+import {
+    fileDigest,
+    makeSkillOriginResolver,
+    qualifiedSkillName,
+    readScanCache,
+    scanCachePath,
+    scanVerdict,
+    type ScanCache,
+    type SkillOrigin,
+} from '../_lib/skill_origin.js';
 
 /**
  * Every readable catalogue root, in precedence order — possibly empty.
@@ -177,6 +191,19 @@ function _rstrip(s: string): string {
 
 export interface Skill {
     name: string;
+    /**
+     * Where the skill came from — `package` for ours, `project` / `home` for a
+     * neighbour another installer put in a root this ranker unions in.
+     */
+    origin: SkillOrigin;
+    /** What a route line prints: `name` for ours, `origin:name` otherwise. */
+    qualified: string;
+    /**
+     * Finding kind when a neighbour body did not pass the shape scan, else
+     * `null`. Such a skill is still ranked — by its NAME only; see
+     * {@link _load_skills}.
+     */
+    unscanned: string | null;
     description: string;
     personas: string[];
     terms: Set<string>;
@@ -278,27 +305,82 @@ export function _body_signals(body: string): { whenToUse: string; headings: stri
 }
 
 /**
- * Load one root, or several with the FIRST occurrence of a name winning.
- *
- * Precedence by name, never by root: every root is read, and a collision
- * resolves to the earliest root that carries it — `resolveSkillCatalogueRoots`
- * owns what that order means. Reading only the first root is the defect this
- * replaced; silently ranking one name twice would be the next one.
+ * Everything a load needs to know about who owns a file and whether its body was
+ * scanned. Built once per `rank` call, never per file.
  */
-function _load_skills_across(roots: readonly string[], opts: RankOptions = {}): Skill[] {
+export interface NeighbourContext {
+    origin: (skillMdPath: string) => SkillOrigin;
+    scans: ScanCache | null;
+}
+
+/**
+ * The context for a workspace: manifest-backed origins plus the scan cache.
+ *
+ * Built once per `rank` call rather than per file — one manifest read and one
+ * cache read for a catalogue of several hundred entries.
+ */
+export function defaultNeighbourContext(workspaceRoot: string = ROOT): NeighbourContext {
+    return {
+        origin: makeSkillOriginResolver(workspaceRoot, { packageRoot: ROOT }),
+        scans: readScanCache(scanCachePath(workspaceRoot)),
+    };
+}
+
+/**
+ * Load one root, or several, with the FIRST occurrence of a QUALIFIED name winning.
+ *
+ * **It used to dedupe on the bare name, and that was the defect.** Every root is
+ * read, so a second package's `design-system` in `~/.claude/skills` and ours both
+ * reached this loop — and whichever root came second was dropped, silently, with
+ * the surviving row printing one bare name. The reader could not tell which skill
+ * the route line meant, and in the direction where the neighbour came first, ours
+ * was simply gone.
+ *
+ * Deduping on the qualified name keeps the only collision that is genuinely a
+ * duplicate — the same PACKAGE skill reached through two roots, which is the
+ * authored tree beside its own projection — and lets a collision between two
+ * different owners rank twice, which is the thing a reader needs to see. A
+ * no-manifest tree labels everything `package` (`makeOriginResolver`), so there
+ * the behavior is byte-identical to the bare-name dedupe it replaced.
+ */
+function _load_skills_across(
+    roots: readonly string[],
+    opts: RankOptions = {},
+    ctx?: NeighbourContext,
+): Skill[] {
+    const context = ctx ?? defaultNeighbourContext();
     const out: Skill[] = [];
     const seen = new Set<string>();
     for (const root of roots) {
-        for (const s of _load_skills(root, opts)) {
-            if (seen.has(s.name)) continue;
-            seen.add(s.name);
+        for (const s of _load_skills(root, opts, context)) {
+            if (seen.has(s.qualified)) continue;
+            seen.add(s.qualified);
             out.push(s);
         }
     }
     return out;
 }
 
-function _load_skills(skillsDir: string, opts: RankOptions = {}): Skill[] {
+/**
+ * One root's skills.
+ *
+ * A NEIGHBOUR whose body did not pass the shape scan is loaded with every term
+ * source but its name emptied — description, triggers, `## When to use`,
+ * headings and personas — so it ranks by name and nothing from the file can
+ * reach the index or, through it, the injected route line. It is NOT dropped:
+ * a skill hidden for a finding is a skill the reader cannot weigh, and the
+ * finding kind rides along on `unscanned` instead.
+ *
+ * "Did not pass" includes "was never scanned". `scanVerdict` refuses a missing
+ * census record and a stale digest as firmly as a real finding, which is what
+ * makes this a floor rather than a preference — a gate that passes on missing
+ * evidence is satisfied by deleting the evidence.
+ */
+function _load_skills(
+    skillsDir: string,
+    opts: RankOptions = {},
+    ctx: NeighbourContext = defaultNeighbourContext(),
+): Skill[] {
     // The body is parsed only when a flag indexes it. Under keyword-v1 the
     // loader's work is exactly what it always was, which is what keeps the
     // default path's per-prompt cost comparable to the pre-flag reading.
@@ -323,8 +405,32 @@ function _load_skills(skillsDir: string, opts: RankOptions = {}): Skill[] {
         const { whenToUse, headings } = wantsBody
             ? _body_signals(_body_of(text))
             : { whenToUse: '', headings: [] as string[] };
+        const origin = ctx.origin(skillMd);
+        const qualified = qualifiedSkillName(name, origin);
+        const verdict =
+            origin === 'package'
+                ? ({ ok: true } as const)
+                : scanVerdict(ctx.scans, qualified, fileDigest(skillMd));
+        if (!verdict.ok) {
+            skills.push({
+                name,
+                origin,
+                qualified,
+                unscanned: verdict.kind,
+                description: '',
+                personas: [],
+                terms: _tokenize(name),
+                triggerText: [],
+                whenToUseText: '',
+                headingText: [],
+            });
+            continue;
+        }
         skills.push({
             name,
+            origin,
+            qualified,
+            unscanned: null,
             description: desc,
             personas: personaList,
             terms: _tokenize(name + ' ' + desc),
@@ -419,14 +525,25 @@ export type RankRow = [string, number, string[]];
 
 /**
  * @param skillsDir one root, or several to rank across (see `_load_skills_across`).
+ * @param ctx       origin + scan context; omitted, it is built from {@link ROOT}.
+ *
+ * Row names are QUALIFIED (`project:design-system`) for a neighbour and bare for
+ * ours, so two same-named skills are two distinguishable rows rather than one
+ * ambiguous one. On a tree with no installed-tools manifest every skill resolves
+ * to `package` and every row is bare, which is what it was before.
  */
 export function rank(
     task: string,
     skillsDir: string | readonly string[],
     opts: RankOptions = {},
+    ctx?: NeighbourContext,
 ): RankRow[] {
     const taskTerms = _tokenize(task);
-    const skills = _load_skills_across(typeof skillsDir === 'string' ? [skillsDir] : skillsDir, opts);
+    const skills = _load_skills_across(
+        typeof skillsDir === 'string' ? [skillsDir] : skillsDir,
+        opts,
+        ctx,
+    );
     // ONE term set per skill, shared between the document-frequency pass and the
     // scoring loop — the two used to tokenize the whole catalogue separately.
     const termSets = skills.map((s) => _terms(s, opts));
@@ -436,7 +553,7 @@ export function rank(
         const s = skills[i] as Skill;
         const score = _score(taskTerms, s, termSets[i] as ReadonlySet<string>, opts, stats);
         if (score > 0) {
-            rows.push([s.name, score, [...s.personas]]);
+            rows.push([s.qualified, score, [...s.personas]]);
         }
     }
     // rows.sort(key=lambda r: (-r[1], r[0])) — Python stable tuple sort.

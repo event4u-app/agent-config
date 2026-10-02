@@ -60,7 +60,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  f6d6748183ab383cd13ccc76e3b0729d8e6b74f4c982ae1115505eb42e01758e
+SET-SHA256  4fc64b5e40274e080e10c2a3df4927cbc1dbc1fe2eec221044eaa8bba9535206
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -228,6 +228,16 @@ no count is written down here.
 
 ## Holdout — sealed
 
+> **22 -> 24 on 2026-10-02** (`road-to-stacks-beyond-php`, steps 1.2 and 1.4).
+> Four skills gained a corpus because the lane edited their bodies and
+> `check_routing_coverage` requires every touched skill to carry one; two of the
+> four hashed below the ceiling and seal — `quality-tools` at 0x20 = 32 and
+> `test-performance` at 0x10 = 16. The other two, `test-driven-development`
+> (0x47 = 71) and `api-testing` (0x67 = 103), are train, so BOTH train-side
+> published measurements are re-taken in the same change. The ordering claim
+> stays scoped to the 18 rows sealed on 2026-08-30, for the reason the 19th row
+> already established: a row authored today predates nothing.
+
 Sealed means: **no proposer, curator, or analyzer authored in Phase 5 may read
 these files, and no candidate may be selected against them.** Phase 4's cascade
 opens the sealed set for promotion candidates only — decision E7, which is still
@@ -251,10 +261,12 @@ open and which this file does not settle.
 | `overbuild-review-lens` | `32ef2f64da160c5cbc5fef3b4e3d38d83e8f39b918ba4574e43e2f9256ae69f2` |
 | `php-coder` | `25950ef2e90e4055ba30de21b32204727dd953275a681f99ac60c5a59592be83` |
 | `playbook-authoring` | `e615f614da3c14439fca70f3477272a8323e579ac4961ce2ce83c3c0f099949b` |
+| `quality-tools` | `d6dfc15a7258796dc586cb897d96e536d09cda6f276e95f6d8900bc79ace900f` |
 | `review-routing` | `9fd8b380be9addab50039ecba11ea668db0e57de27c57a65ca1b089acd3b8bcc` |
 | `schema-review` | `7c98b3409de8ebb6ef3ee999a46e9c07f69574809c42283b25d2ab384f6cd53f` |
 | `skill-improvement-pipeline` | `67e8594b0bbe6427ec2ad12d46e5910345725dd8ab8436b47a1bfa078a173135` |
 | `tailwind-engineer` | `7b925bfdaca4a4f315bea04c1ae63a9a98a4e6766d7ce951a7c1c56fbd2e5014` |
+| `test-performance` | `67d425384f8507688fdbe18d18d8235fa3dcf7fd1e2d4213a8e581f27fd80152` |
 | `threat-modeling` | `6bdb1d3b44939ac8f6ba78bb6145ca3bea91adb50991cd44bd700987adf903f2` |
 | `worktree-lifecycle` | `1cdde59eaaadc1cb7dfa1cd86d9852326c352a7dcd884dbcbaa414f36d176326` |
 
@@ -268,6 +280,7 @@ open and which this file does not settle.
 | `ai-code-blindspots` | `27a9e87dabf2d158b5f646739c69222b534b3ea2420a099a67bf85c00ea3ba23` |
 | `alerting-doctrine` | `bded213edcbeeee6e3bf078e478ab4fdaa553855bdafda147813cf6198d8b8ba` |
 | `analysis-skill-router` | `df90b10374f26c8c267ff0bdecc5039d9cfb58e501ed000f02a70d4b3b8269fd` |
+| `api-testing` | `599a7998d6cc58e71cbaf6c72154a334e0831e085516ee0fb345dbefd7ce1b88` |
 | `architecture-review-lens` | `0aea3490d1337d4d72688e35164191f510fbf0dbda3db2408585d18d0746aada` |
 | `blameless-post-mortem` | `719dabb662d9937dabb178d097dc73e458c6b31210532b309896580aefd6c48c` |
 | `blast-radius-analyzer` | `353806c436295cd6e83c4e9e7ac0e4de61501e01cec65a9b0d57e2c183f9a391` |
@@ -341,6 +354,7 @@ open and which this file does not settle.
 | `storybook-workshop` | `3aff4c3fddd06e0e265ca4afbb02cdbce16b000dd2d3fd6405504d015a1efd27` |
 | `supply-chain-intake` | `e61b2fcb6409cf0817ea8527a1fda3b1cdabb35e28264146a0d449991e9fe87c` |
 | `test-case-discovery` | `563ff838264c39c9e132e1e18206c7b0d52639bd42203f790109f9ec0df2603d` |
+| `test-driven-development` | `9a1ec696c72915adde002efffdc6a887c967b63f5330c616126d07617be7aa0b` |
 | `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |
 | `ui-apply-generic` | `e3f02e3ba53fb96def30fca6752f400d15b6b63209072928bff9e239aaac7ec5` |
 | `ui-component-architect` | `a9b864a568aa32d2bccd96f524a69d24042f05cdd29b339d45bf9ff6b95b9da5` |

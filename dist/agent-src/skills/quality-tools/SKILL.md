@@ -27,6 +27,8 @@ Use this skill whenever running or configuring code quality tools:
 
 - **PHP**: PHPStan (static analysis), Rector (automated refactoring), ECS (coding standards)
 - **JS/TS**: Biome (linting + formatting), TypeScript compiler (type checking), Jest/Vitest (tests)
+- **Python**: Ruff (linting + formatting), mypy (type checking), pytest (tests)
+- **Go**: `gofmt`, `go vet`, optionally golangci-lint, `go test`
 
 ## Modes
 
@@ -39,8 +41,16 @@ stack calls for.
 |---|---|---|
 | PHP (`.php` changed) | [`references/php-tools.md`](references/php-tools.md) | Tool detection, PHPStan / ECS / Rector commands and flags, combined pipeline, config files, baseline policy, PHPStan error handling, testing framework, git-aware execution |
 | JS/TS (`.js` / `.ts` / `.tsx` changed) | [`references/js-ts-tools.md`](references/js-ts-tools.md) | Detection, Biome, TypeScript type checking, Jest / Vitest, the JS/TS workflow sequence |
+| Python (`.py` changed, or `pyproject.toml`) | [`references/python-tools.md`](references/python-tools.md) | Detection from `pyproject.toml`, Ruff, mypy, pytest, the workflow sequence, virtualenv and `setup.cfg` gotchas |
+| Go (`.go` changed, or `go.mod`) | [`references/go-tools.md`](references/go-tools.md) | `gofmt`, `go vet`, golangci-lint where present, `go test`, the workflow sequence, vendor and build-tag gotchas |
 
-Both stacks changed → load both mode bodies and run both pipelines.
+More than one stack changed → load each mode body and run each pipeline.
+
+**The resolver decides which row applies, not the file extension alone.**
+`resolve_toolchain` returns the ecosystems it found and the quality commands
+per ecosystem; the rows above name what those commands are. A TypeScript
+repository resolves the ecosystem `js`, never `typescript` — the pack name and
+the ecosystem label are different vocabularies.
 
 ## Execution policy — on demand only, never proactive
 
