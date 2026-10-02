@@ -35,8 +35,10 @@ left to read as finished.
       `run_continuation_hook.ts:1018`, `state_io.ts:42`, …), with owner class;
       resolve blocker `daemon-host-kill-switch` in the adversarial roadmap by
       pointing its `Resolved when` at the table.
-      verify: `grep -rhoE "AGENT_CONFIG_[A-Z_]+" src/scripts/hooks src/scripts/_lib | grep -v __AGENT_CONFIG_BUNDLE__ | sort -u | wc -l`
-      equals the table's row count.
+      verify: `./scripts-run src/scripts/check_kill_switch_table` -> 0
+      (carried 2026-10-02: the original clause was a raw grep piped into a line
+      count with no expectation, which cannot fail; this gate compares the switch
+      set against the table's rows every run, as the note below records.)
       <!-- TABLE HALF DONE AND VERIFIED 2026-09-29, `b9e9d9e34`; STEP STAYS OPEN on
       its second half. `docs/contracts/hook-architecture-v1.md` § Kill switches
       carries 28 rows with an owner class each (`maintainer` / `harness` /
