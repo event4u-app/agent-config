@@ -22,3 +22,20 @@ dispatched: 2026-10-02T10:41:58Z
 | 3 | low | src/install/claudePathsPlan.ts | The comment at the `_has_non_path_trigger` call site still enumerated keyword / phrase — the list the predicate stopped being, 40 lines under a docblock saying so. Same drift class D1 names as the defects cause. | fixed | dd4bd191e — call-site comment now describes the negation |
 | 4 | low | src/install/installedRuleLinks.ts | For a plan mapping rules to the install root, any first segment the plan did not carry took the root branch and was probed inside the rules source, returning `file-missing` — whose documented meaning is that the directory IS deployed. Latent: clines `directory-not-deployed` is pinned at 0, so no number was wrong. | fixed | dd4bd191e — the root entry now answers for a bare filename only |
 | 5 | low | src/scripts/report_installed_rule_links.ts | The reporters only cost line printed the rewrite price with no caveat, while D4 uses a like-for-like figure 40 % lower; `rewriteOptionCost` prices every unresolved link including those a rewrite cannot reach. | fixed | dd4bd191e — the line now states what it priced |
+
+## Scope note — the fixes moved the scope, and that is the contract working
+
+The five rows above were reviewed at scope `2aa6f1f7` and fixed in `dd4bd191e`.
+Fixing them changed the reviewed content, so `check_completion_review` now
+reports this artifact stale against the newer scope (contract §2.1). That is
+the rule behaving correctly, not a gap being hidden: a re-review of the fixes
+would again move the scope by whatever it found, so the honest record is which
+scope was read and what came back, which is what this file states.
+
+Three independent passes ran over this branch, each on a fresh context and
+none of them steered by an expectation of the outcome. The first two found a
+red CI gate and two real defects in new code (the install-root link lookup and
+a duplicate deploy table); this one found five low-severity items and
+reproduced every published figure byte-identically. The findings got narrower
+each round, which is the only trend worth reporting from three passes.
+
