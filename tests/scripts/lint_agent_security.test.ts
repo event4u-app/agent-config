@@ -9,21 +9,11 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { main } from '../../src/scripts/lint_agent_security.js';
 import { runInProc } from '../_lib/run_in_process.js';
 
-// Spawn-bound over the real repo: every case here runs the CLI across the whole
-// tree, so these are the slowest and most contention-sensitive tests in the suite.
-// On a loaded macOS runner the siblings measure 8.1-9.4 s against the 10 s global
-// budget and whichever case runs first tips over it — four PRs went red on exactly
-// that this way, with no assertion error anywhere in the set. vitest.config.ts names
-// this remedy by name ("a per-test timeout on the spawn-bound files") and rules out
-// the global raise, because widening the budget for every test would retire a real
-// wall-clock guard to hide one file's cost. 30 s is ~3x the observed worst case and
-// still fails a genuine hang.
-vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 });
 
 function runTs(args: string[]) {
     return runInProc(main, args);
