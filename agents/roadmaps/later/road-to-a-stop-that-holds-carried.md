@@ -1,179 +1,44 @@
 ---
 complexity: structural
-status: ready
-parent_roadmap: road-to-a-ledger-that-closes-the-loop
+status: later
 execution:
   mode: phase-checkpoints
-estate_growth_exempt: "open_blockers rises by five, and every one of them existed before this change as prose inside an HTML comment under its own step. Steps 1.4, 2.2, 2.3, 3.3, 3.4 and 4.1 each recorded a real obstacle in a paragraph no gate reads: scanOpenSteps counted open=7 blocked=0 at the merge base, so the continuation ladder re-proposed a step waiting on a maintainer decision and two waiting on elapsed calendar time. Promoting them to structured entries under ## Blockers with inline blocked-by markers makes the same five obstacles machine-readable; it creates no new debt and disposes of none, which is why neither an archive nor a park is available as the offset. The five are not one: they gate different steps, carry different owners (one maintainer decision, four agent-probeable windows) and come due on four different dates, so merging them would hold an acceptance criterion closed for three weeks past its own condition."
-estate_offset_exempt: "Supersedes road-to-a-ledger-that-closes-the-loop, but does not dispose of it: that file is active and ready, and archiving it executes the supersession rather than declaring it. Disposing of it in the same diff that merely adds the plan would retire live work on an inbox round's authority."
-relates:
-  - slug: road-to-a-ledger-that-closes-the-loop
-    relation: supersedes
-    note: "carries its 6.1 and AC-6 verbatim (§ Phase 3) under a deferred-resolution annotation; the ledger file was archived 2026-10-01 by its own closing round, which flipped those two items to `[~] carried-to=road-to-a-stop-that-holds` against the `parent_roadmap:` back-link above — so this roadmap is now the single live owner of the shadow window, and no archive step is owed here"
-  - slug: road-to-adversarial-verification-and-long-runs
-    relation: extends
-    note: "its open blocker daemon-host-kill-switch receives the kill-switch table of step 1.4"
-depends: [road-to-a-kernel-that-guards-its-plumbing]
+parent_roadmap: road-to-a-stop-that-holds
+entry_condition:
+  what: the owner resolves blocker(s) kill-switch-owner-decision, d1-stop-ladder-after-reading
+  when: whenever the owner takes the next step
+  who: owner
+review_by: 2026-12-31
+estate_growth_exempt: >-
+  Owner-chosen archive of road-to-a-stop-that-holds: its deferred steps wait on owner
+  blocker(s) kill-switch-owner-decision, d1-stop-ladder-after-reading and are parked here instead of left active. The parent
+  is archived in the same change, so the active count drops by one.
 ---
-# Road to a stop that holds
+# Road to a stop that holds — carried
 
-> **Source:** ten-package code audit (2026-09-28), rows Episode closure 3,
-> Mission persistence 3, Obligation ledger 3, Decision closure 4, Test-first 4
-> against S9 at 6/6/6/6/8. Tree facts at `8de8a4c`, re-verified in the second
-> pass: Layer 1 allows on `stop_hook_active` (`turn_end_gate_hook.ts:1199`),
-> Layer 2 on `alreadyRefusedTurn` (`:1297`, reads `refused_turn === turnOrdinal`,
-> `:909-925`); Detector C `detectUnverifiedEdit` (`:731-754`) scans
-> `toolCalls` after the last edit against `_VERIFY_RE` (`:709`); the
-> PostToolUse recorder `before_complete_hook.ts:387-450` persists
-> `last_verification {command, tool, at, vacuous, counted}` and `ci_last` but
-> no exit code and no output; `obligation_settle_hook.ts` allows on every path
-> and its reading shows **80 delivered rows, 0 shadow rows** across 4 ledgers
-> (`road-to-a-ledger-that-closes-the-loop.md:205-216`).
-
-## Context
-
-Carried from `agents/roadmaps/archive/road-to-a-ledger-that-closes-the-loop.md`
-(template rule 17): its step 6.1 "Arm it only after the pre-registered bar
-holds" and AC-6 are reproduced verbatim in § Phase 3, with the emitter defect
-that kept its bar at zero fixed first.
-
-> **corrected-from-reproduction (2026-09-29, /analyze:inbox t06).** The supplied
-> file was reproduced against `main` read-only. Every `file:line` in its Source
-> block resolved. ONE correction applied: the Risk Register `Risk type` column
-> used values outside the enum `lint_plan_risk_register` enforces (`product` |
-> `implementation`), which `status: draft` exempts and which reds the file the
-> moment it flips to `ready`. The column is normalised; nothing else changed.
+> **Source:** carried by the archival sweep on 2026-10-02 from
+> [`road-to-a-stop-that-holds`](../archive/road-to-a-stop-that-holds.md), which closed every other step.
+> Each step below was `[~]` there and is restated verbatim as open work, so
+> archiving the parent buried nothing. Blockers the steps name moved with them.
 
 ## Goal
 
-A turn that changed production code cannot end on a verification the code
-did not see pass: the stop gate reads a persisted run record with a command,
-an exit code and a parsed test summary, classified by a pure module; the
-contract's own Q1 instrument (shadow read on the allow path) makes the
-re-refusal share a number; and the obligation ledger's shadow rows exist so
-its pre-registered bar can be read — armed only by that reading.
+Every step road-to-a-stop-that-holds deferred is either done here or explicitly disposed
+of — a step that still cannot run is re-deferred with its reason, never
+left to read as finished.
 
-## Prerequisites
+## Phase 1 — Deferred steps carried from road-to-a-stop-that-holds
 
-- `road-to-a-kernel-that-guards-its-plumbing` Phase 1 landed (the gate's files
-  are covered by the ratified-edit path).
-- `tests/scripts/turn_end_gate_hook.test.ts`, `turn_end_verify_allowlist.test.ts`,
-  `tests/scripts/hooks/before_complete_*.test.ts` green at the start ref.
-- Every fixture in this lane is either red at the start ref or marked
-  `already_fixed` with a code citation; none is invented to keep a step
-  relevant. Sabotage-first: each guard's test is shown red with the guard
-  neutralised before the fix lands; a source-string assertion never
-  satisfies a primary `verify:` line.
-
-## Phase 1 — Verification is a record, not a regex
-
-- [x] **1.1 Add `src/scripts/_lib/verification_evidence.ts` (new).** Pure
-      classifier over a run record `{command, exit_code: number|null,
-      stdout_tail, stderr_tail, runner}` → one of
-      `PASS_EVIDENCE_OK | FAIL_EVIDENCE | INVALID_RUN(reason)` with reasons
-      `zero_tests_discovered | nonzero_exit_without_test_failure |
-      fixture_or_load_failure | unreadable_record | not_a_verification_command |
-      exit_code_unavailable | timeout_or_killed`. Parsers: vitest/jest summary line, TAP, pytest
-      `-q` tail, phpunit/pest summary. `exit_code: null` (a host that omits it)
-      → `exit_code_unavailable`, never a pass. No fs, no spawn, no clock.
-      verify: `tests/scripts/verification_evidence.test.ts` (new) — one
-      fixture per verdict and runner; `echo test` → `not_a_verification_command`;
-      0 tests → `zero_tests_discovered`; `exit_code: null` → `exit_code_unavailable`;
-      `npm test && exit 1` → `FAIL_EVIDENCE`; `ls build` →
-      `not_a_verification_command`; a killed vitest (`exit_code: 137|143`, no
-      summary) → `timeout_or_killed`, never a pass.
-      <!-- closed 2026-09-29, `d63895955`. `src/scripts/_lib/verification_evidence.ts`;
-      `tests/scripts/verification_evidence.test.ts` 43 green (36 at 1.1, 7 added by 1.3).
-      Every fixture the verify line names exists and passes, `exit_code: null` and
-      an absent field both included. TWO DESIGN CHOICES NOT IN THE PLAN, both
-      recorded because a reader will ask: (a) exit 0 with NO parsable summary is a
-      PASS — `tsc --noEmit`, `eslint` and `phpstan` print nothing on success, and a
-      classifier demanding a summary would reclassify the most common green signal
-      in this tree as invalid; (b) `not_a_verification_command` is decided by a
-      BLOCK list of executables that assert nothing, not an allow list, because it
-      is a REFUSING reason and an allow list would put every runner the module has
-      never met — `bash scripts/test.sh`, an in-house wrapper — into it on day one.
-      `INSTRUMENT_GAP_REASONS` splits the two reasons that describe the instrument
-      from the five that describe the run, which is Risk 1's mitigation made
-      readable by the consumer instead of re-derived from a comment.
-      SABOTAGE: dropping the `canVerify` guard and turning a missing exit code
-      into a pass failed exactly 5 of 36 and no others; restored from a copy. -->
-- [x] **1.2 Extend the existing recorder, not the manifest.** In
-      `before_complete_hook.ts` (`verify-before-complete`,
-      `hook_manifest.yaml:118-123`, `needs_payload_bodies: [input, result]`,
-      already bound on every host's `post_tool_use`): read `exit_code` and the
-      last 4 KB of `tool_response|toolResponse|output|stdout|result`
-      (`:324-335` already resolves the field) and append a per-turn
-      `verification_runs[]` entry beside `last_verification` in the existing
-      state file (`statePathFor`, `:128`; digest convention `state_io.ts:675`).
-      Each entry carries the post-tool ordinal (or `at`) so a record can be
-      placed against the turn's edit sequence without a transcript read.
-      No new concern id (K16); the `post_tool_use` slot budget is untouched.
-      verify: after `npx vitest run tests/scripts/verification_evidence.test.ts`
-      in a session, the state file carries one `verification_runs` entry with
-      `exit_code: 0` and `runner: vitest`; `tests/scripts/hooks/before_complete_hook.test.ts`
-      extended, not rewritten.
-      <!-- closed 2026-09-29, `99255cd9f`. No new concern id, no manifest edit, no
-      change to the `post_tool_use` slot budget — the existing recorder grew the
-      array. `tests/scripts/hooks/before_complete_hook.test.ts` 35 green, extended
-      (31 pre-existing cases untouched).
-      ONE FIELD BEYOND THE PLAN: `after_edits`, the recorder's edit counter as it
-      stood when the command ran. The plan asks for "the post-tool ordinal (or
-      `at`)"; an ordinal against the TURN's edit count is what a reader can compare
-      without a clock, so the field is the counter rather than a sequence number,
-      and `edits_this_turn` is written beside it. `EDIT_TOOLS` carries all twelve
-      names the bound platforms use, not the gate's four: a missed edit name makes
-      a run look LATER than it was, which is the one direction that could clear an
-      unverified edit.
-      SABOTAGE: hardcoding the exit code to 0 and neutering the edit counter failed
-      exactly 4 of 35 and no others; restored from a copy. -->
-- [x] **1.3 Detector C reads records, and keeps a replay mode.** In
-      `turn_end_gate_hook.ts` `detectUnverifiedEdit`: when the state file has
-      `verification_runs` for this turn, fire iff none classifies
-      `PASS_EVIDENCE_OK` **with an ordinal after the turn's last edit** (the
-      regex path already scans only after the last edit, `:718-725`; the record
-      path must keep that or it regresses); when the file has none (transcript replay through
-      `measure_turn_end_gate.ts` / `check_detector_corpus.ts`), fall back to
-      the `toolCalls` scan so the false-positive corpus stays replayable. The
-      fallback is logged as `mode: transcript`.
-      verify: `turn_end_gate_hook.test.ts:1427` ("is silent when a verification
-      run follows the edit") rewritten to the record form; a new case:
-      `echo test` + edit + no record → refused; edit → pass → edit → refused
-      (proof predates the final mutation); `turn_end_verify_allowlist.test.ts`
-      unchanged (it pins the selector, which still exists);
-      `measure_turn_end_gate` reproduces its last committed corpus reading.
-      <!-- closed 2026-09-29, `dcb07e09b`. `turn_end_gate_hook.test.ts` 130 green;
-      `turn_end_verify_allowlist.test.ts` 56 green and UNTOUCHED;
-      `check_detector_corpus` reports 3 detectors x 3 classes, 22 fixtures, all
-      behaving — `measure_turn_end_gate` calls `detectUnverifiedEdit(pendingCalls)`
-      with no run state, so its corpus reading is unchanged BY CONSTRUCTION and not
-      merely observed to be.
-      Every fixture the verify line names exists: `:1427` rewritten to pin the
-      transcript MODE alongside its unchanged assertion, `echo test` + edit +
-      record → refused, and edit → pass → edit → refused on `after_edits` (1) being
-      below the turn total (2).
-      THE PLAN'S LIVENESS CONDITION IS TIGHTENED, and this is the one substantive
-      deviation. It reads "when the state file has `verification_runs` for this
-      turn" — taken literally that key is present in the recorder's EMPTY state, so
-      a host binding no `post_tool_use` slot has a file carrying `[]` written by
-      the prompt and stop events alone, and reading it as "the turn ran nothing"
-      would refuse EVERY editing turn on that host whatever the operator ran. The
-      predicate is therefore `edits_this_turn >= 1`, the one field only a post-tool
-      event can raise. Ownership is checked as detector D checks `ci_last`: a
-      foreign file's passing record would vouch for a run this session never made.
-      An instrument gap falls back to the transcript rather than refusing, per
-      Risk 1.
-      SABOTAGE: making the record path yield to the regex unless the run FAILED,
-      and removing the freshness clause, failed exactly 5 — the four record-mode
-      refusals and the placement case — and no others; restored from copies. -->
-- [~] **1.4 Kill-switch table.** <!-- blocked-by: kill-switch-owner-decision | asked: no — the question is already open and already put, as `daemon-host-kill-switch` in `road-to-adversarial-verification-and-long-runs.md`; re-asking it from a second file would duplicate a live decision rather than advance it --> Add `## Kill switches` to
+- [ ] **1.4 Kill-switch table.** <!-- blocked-by: kill-switch-owner-decision | asked: no — the question is already open and already put, as `daemon-host-kill-switch` in `road-to-adversarial-verification-and-long-runs.md`; re-asking it from a second file would duplicate a live decision rather than advance it --> Add `## Kill switches` to
       `docs/contracts/hook-architecture-v1.md` listing every
       `AGENT_CONFIG_[A-Z_]+` the hooks read (bracket form —
       `run_continuation_hook.ts:1018`, `state_io.ts:42`, …), with owner class;
       resolve blocker `daemon-host-kill-switch` in the adversarial roadmap by
       pointing its `Resolved when` at the table.
-      verify: `grep -rhoE "AGENT_CONFIG_[A-Z_]+" src/scripts/hooks src/scripts/_lib | grep -v __AGENT_CONFIG_BUNDLE__ | sort -u | wc -l`
-      equals the table's row count.
+      verify: `./scripts-run src/scripts/check_kill_switch_table` -> 0
+      (carried 2026-10-02: the original clause was a raw grep piped into a line
+      count with no expectation, which cannot fail; this gate compares the switch
+      set against the table's rows every run, as the note below records.)
       <!-- TABLE HALF DONE AND VERIFIED 2026-09-29, `b9e9d9e34`; STEP STAYS OPEN on
       its second half. `docs/contracts/hook-architecture-v1.md` § Kill switches
       carries 28 rows with an owner class each (`maintainer` / `harness` /
@@ -222,121 +87,7 @@ its pre-registered bar can be read — armed only by that reading.
       AC-5 closed on it; `check_kill_switch_table` now compares the two SETS
       every run, which is why the count moving from 28 to 30 by merge did not
       silently invalidate the criterion. -->
-
-## Phase 2 — Q1 becomes a number (the contract's instrument, no second refusal)
-
-- [x] **2.1 Shadow read on the allow path.** Per
-      `turn-end-detector-demotion.md:342-354`: on a retry (Layer 1 or Layer 2
-      true), before returning `EXIT_ALLOW`, run the detectors once more and
-      record `would_refuse_again: {detector, turnOrdinal}` into the session
-      state. Verdict stays `EXIT_ALLOW`; latency budget: the extra transcript
-      read happens only on retries (`hook-latency-budget.json` `any_hook_event.p95_ci: 250`).
-      verify: fixture retry that still promises → allowed AND a
-      `would_refuse_again` row; `bench_hook_latency --gate` green.
-      <!-- closed 2026-09-30. The 2026-09-29 note below was a SCHEDULING note, not
-      an impossibility, and it said so: "belongs in its own reviewed change with
-      its own latency measurement". This is that change — it carries nothing else
-      structural. Both halves of its reasoning are answered rather than waived.
-
-      THE RESTRUCTURING IT NAMED IS THE ONE THAT LANDED, and the alternative it
-      ruled out stayed ruled out. `main()` now calls `assembleDetectorInputs()`
-      once and `runDetectors()` once; the live verdict and the shadow read call
-      the same two functions, so there is exactly one detector-assembly and the
-      settle hook's rule — "a detector whose shadow measurement and live
-      behaviour come from different code measures nothing" — is satisfied by
-      construction rather than by care.
-
-      THE VERDICT IS UNCHANGED ON EVERY PATH, and that is the property that made
-      this safe to do here. Both layers still `return EXIT_ALLOW` unconditionally;
-      the shadow only writes. `turn_end_gate_hook.test.ts` 145 green (131
-      pre-existing, all untouched), `turn_end_verify_allowlist.test.ts` 56 green
-      and untouched, `turn_end_refusals.test.ts` 21 green,
-      `verification_record_roundtrip.test.ts` 16 green, `check_detector_corpus`
-      3 detectors x 3 classes / 22 fixtures all behaving.
-
-      THE ROWS DO NOT GO WHERE THE PLAN SAYS, and this is the one deviation. The
-      plan says "into the session state", which reads as the refusal record —
-      but `refused_turn` there is the re-entrancy WEDGE guard, `parseRecord`
-      rejects any record lacking it, and a Layer-1 retry can occur with no
-      refusal by this gate at all (another stop concern blocked). Writing there
-      meant either synthesising a `refused_turn` this gate never wrote or
-      loosening the parser protecting it. The rows go to a sibling,
-      `<key>.shadow.json`, in the same directory and owned by the same module;
-      a fixture asserts the refusal record is byte-identical across a retry.
-
-      `retries_observed` IS RECORDED BESIDE THE ROWS, beyond the plan's
-      `{detector, turnOrdinal}`. Without it an empty row list cannot be told
-      apart from "no retry happened" — opposite readings of the same file — and
-      Q1 could never read below 1. The fixture that proves it is the clean
-      retry.
-
-      ONE DEFECT THIS STEP INTRODUCED AND FIXED IN THE SAME CHANGE, recorded
-      because a green suite hid it for one run: `pruneAgedRefusalState` scans the
-      directory for `*.json`, and `<key>.shadow.json` matches. `parseRecord`
-      rejects it, the unparseable branch KEEPS what it cannot read — correct for
-      a corrupt refusal record and exactly wrong here — so every shadow record
-      would have lived forever, which is the unbounded growth that pruner exists
-      to stop. It now ages shadow records on their own `last_at`; sabotaged, the
-      fix fails exactly one test.
-
-      LATENCY, measured rather than asserted. `bench_hook_latency --gate` is
-      GREEN on this branch: `pre_tool_use` p95 66 ms against a 175 ms cap, `stop`
-      p95 119 ms against the 250 ms `any_hook_event` cap, n=50 per slot, darwin.
-      UNIT AND LIMIT: these are local darwin readings, not the CI runner's, and
-      CI is the authoritative leg — see § Cost this branch added, whose readings
-      were CI's. Bundle delta, measured by building `dist/hooks/dispatch.js` at
-      the merge base and at HEAD in the same worktree: 1,555,324 -> 1,560,056
-      bytes, **+4,732 B / +0.304 %**, against the +19,110 B / +1.34 % the
-      previous pass of this roadmap added.
-
-      THAT NUMBER WENT STALE THREE TIMES BEFORE IT WAS RIGHT, and all three are
-      recorded rather than silently overwritten, because a measured figure that
-      ages is indistinguishable from a fresh one to every reader. +3,288 B, read
-      mid-change before the pruner fix landed. +3,856 B, aged within the hour
-      when CI's source-size ratchet forced the transcript extraction. +3,942 B,
-      aged again when the independent review's two structural findings were
-      fixed. Each reading was correct when taken and wrong by the time anyone
-      could act on it.
-
-      THE LESSON IS ABOUT WHEN, NOT ABOUT CARE, and it is the durable half.
-      What caught every one of them was a gate on a different subject — the
-      pre-push bundle-content check refusing a stale `dist/hooks/dispatch.js`.
-      Nothing in this tree compares a number written in a roadmap against the
-      thing it measures, and no amount of diligence closes that gap for a figure
-      taken before the last edit. Take it last.
-
-      The non-retry path pays NOTHING new — the same
-      reads in the same order, relocated — and a retry now pays what a non-retry
-      turn already paid, which this bench reads as 0.324 ms of `turn-end-gate`
-      concern time.
-
-      SABOTAGE, twice. Neutralising the shadow write failed exactly 5 of 145 and
-      no others. Making the fold append a row even when no detector fired — the
-      change that would make Q1 read 1 forever — failed exactly 2, the clean
-      retry and its pure-fold sibling. Restored from copies both times.
-
-      INDEPENDENTLY REVIEWED, and the review changed the shipped record. A
-      fresh subagent on a neutral prompt (committed at
-      `agents/evidence/reviews/stop-that-holds-shadow-read.review-input/prompt.md`)
-      reviewed the whole branch diff and returned *"mergeable on the code, I
-      would not merge the record as it stands"*, with 12 findings. It
-      reproduced six sabotages independently and every published number. Two
-      of its findings were structural and are fixed here rather than noted:
-      `retries_observed` was a POOLED counter, which made the per-layer Q1 the
-      rows are shaped for uncomputable — a clean retry adds no row, so it left
-      no layer trace anywhere — and step 2.2 instructed exactly the pooling the
-      `layer` field exists to prevent. The counter is now keyed by layer and
-      2.2 says so. Full dispositions:
-      `agents/evidence/reviews/stop-that-holds-shadow-read.findings.md`.
-
-      Q1 IS STILL INERT, and shipping the producer did not change that. Its
-      reader is 2.2. `docs/contracts/turn-end-detector-demotion.md` is corrected
-      in this same change on three points that this step made false: instrument 1
-      no longer "does not ship here", the rows are not on the session record, and
-      the non-termination valve's unreachability no longer shares a cause with
-      Q1's. The word "inert" is deliberately NOT removed — that is 2.2's work and
-      removing it now would claim a reading nobody has. -->
-- [~] **2.2 Q1 in the detector report.** <!-- blocked-by: q1-shadow-reading-window --> `measure_turn_end_gate.ts` prints
+- [ ] **2.2 Q1 in the detector report.** <!-- blocked-by: q1-shadow-reading-window --> `measure_turn_end_gate.ts` prints
       Q1 = `would_refuse_again` rows / eligible initial refusals per detector;
       the contract's § Q1 loses the word "inert" and names the reader.
       verify: report shows a non-null Q1 after one week of sessions; contract
@@ -444,7 +195,7 @@ its pre-registered bar can be read — armed only by that reading.
       quantities and § The two instruments, both of which already name these two
       fields as the obstacle. The retry-conditioned share stays — it is a real
       reading over the same corpus and the two answer different questions. -->
-- [~] **2.3 Publish the reading** <!-- blocked-by: q1-shadow-reading-window --> to `agents/evidence/analysis/turn-end-q1-<date>.md`
+- [ ] **2.3 Publish the reading** <!-- blocked-by: q1-shadow-reading-window --> to `agents/evidence/analysis/turn-end-q1-<date>.md`
       and open programme blocker `d1-stop-ladder-after-reading`.
       verify: file exists; the blocker's `What to do` cites it.
       <!-- DEFERRED 2026-10-01 on elapsed calendar time, and on nothing else.
@@ -472,83 +223,7 @@ its pre-registered bar can be read — armed only by that reading.
       and so is a sample that never grew past n=1. Publish what the command
       says. The one thing that is not available is publishing n=1 as though it
       were the reading, which is why this step did not close alongside 2.2. -->
-
-## Phase 3 — The obligation ledger can refuse (carried)
-
-- [x] **3.1 Reproduce the zero-shadow defect before fixing it.** Test: seed a
-      ledger with delivered rows (as `rule_inject_hook.ts:281` writes them,
-      keyed on the envelope `session_id`, `:390`), run `obligation_settle_hook`
-      with `CLAUDE_CODE_SESSION_ID` unset (the dispatcher sets none,
-      `dispatch_hook.ts:728`) → expect the early return at `:148` and zero
-      shadow rows. Then fix the join: the settle hook resolves the session
-      the same way the injector does (envelope, then env fallback). Both
-      arrays live in one `agents/runtime/state/obligations/<digest>.json`
-      (`_lib/obligations.ts:57-62`); no path change.
-      verify: the reproducing test fails before and passes after; a session in
-      this repository that edits code without discharging gains a `shadow`
-      row.
-      <!-- closed 2026-09-29, `5c9415258`. `tests/hooks/obligation_settle.test.ts`
-      27 green (21 pre-existing untouched, 6 added).
-      RED FIRST, and the red is the defect and not a missing export: with the
-      envelope on stdin and `CLAUDE_CODE_SESSION_ID` unset, four of the six new
-      cases failed on "expected [] to have a length of 1 but got +0" — the hook ran
-      to completion and wrote no shadow row.
-      THE PLAN NAMES THE WRONG SIDE OF THE JOIN, recorded because step 3.2 repeats
-      the error. The defect is entirely in the READER: `rule_inject_hook.ts`'s
-      delivered-row write is byte-unchanged. The settle hook read
-      `CLAUDE_CODE_SESSION_ID`, which the dispatcher never sets — it hands each
-      concern the envelope on stdin and `AGENT_CONFIG_PACKAGE_ROOT` in the
-      environment, nothing else — and returned allow when it was empty. So every
-      dispatched stop event was a non-reading. The fix resolves envelope
-      `session_id` / `sessionId`, then the nested payload's, then the environment
-      as a last resort: the same order and both spellings the injector accepts.
-      The env name gains no siblings, because a name the writer never keys on
-      addresses a ledger that cannot exist. The ROOT moves with it as one join, not
-      a second change: a ledger is addressed by root AND session, and the two
-      disagree on hosts whose shim does not chdir.
-      THE SECOND HALF OF THE VERIFY IS NOT DISCHARGED HERE. A live shadow row needs
-      a dispatched stop event from a session running the INSTALLED hook bundle, not
-      this worktree's source, so it cannot be produced inside the change that fixes
-      it. The fixture proves the mechanism end to end through `main()`; the live row
-      is AC-3's seven-day window.
-      SABOTAGE: reversing the precedence so the environment wins failed exactly the
-      FALLBACK-ordering case and nothing else; restored from a copy.
-      FIGURE THAT DID NOT REPRODUCE — the source block's "80 delivered rows, 0
-      shadow rows across 4 ledgers". UNIT: one JSON array element in `delivered[]`
-      / `shadow[]` of each `agents/runtime/state/obligations/*.json`, measured
-      2026-09-29 on this machine. READING: 187 delivered, 0 shadow, 8 ledgers. The
-      zero-shadow half reproduces exactly and is the load-bearing half; the counts
-      are a day of growth past the 2026-09-28 audit and nothing here carries them
-      forward. -->
-- [x] **3.2 Reset the bar window from 3.1's commit** — mandated by clause (2)
-      of `docs/CLAIMS.md:1211` on any change to the delivered-row write path
-      (the join is that path). Numbers unchanged (K7).
-      verify: `check_claims` exits 0; `last_verified` names 3.1's commit.
-      <!-- closed 2026-09-29, `ab59f866f`. `check_claims` exits 0 — 102 ledger
-      entries, 61 backed, 33 unbacked inventory. `build_proof` re-run in the same
-      change per the CLAIMS-edit obligation; it wrote no diff.
-      Clause (9) on `obligation-settle-shadow-bar` records the reset at
-      `5c9415258`. Numbers unchanged (K7): the bar, the sample floor, the window
-      and the demotion condition are exactly as pre-registered 2026-09-13; what
-      reset is QUALIFICATION, and every row written before that commit is out of
-      the sample.
-      THE STEP'S CITATION IS CORRECTED IN THE CLAIM RATHER THAN REPEATED. It
-      mandates the reset "on any change to the delivered-row write path (the join
-      is that path)". It is not that path, and none of the five surfaces clause (2)
-      enumerates was touched either — so a reader checking the enumeration alone
-      would find no trigger and conclude wrongly that qualification survived. The
-      reset is owed on clause (2)'s LEADING phrase, "anything altering the
-      detector's exposure": before `5c9415258` the reader could not produce a row
-      at all, which is a larger exposure change than any of the five.
-      `last_verified` is the DATE, `2026-09-29`, with the commit in the clause
-      body. The step asks for the commit in that field; every other entry in the
-      ledger carries a date there, and writing a sha into a date field to satisfy a
-      verify line would corrupt the field for every reader of it. The commit is
-      recorded, and traceable, one line away.
-      CONSEQUENCE the clause also carries: clause (8)'s "179 delivered / 0 shadow"
-      first reading is disarmed as a base rate — its zero-shadow half is now
-      explained by this defect rather than by clean turns. -->
-- [~] **3.3 Carried verbatim** <!-- blocked-by: obligation-shadow-bar-window --> **— 6.1 Arm it only after the pre-registered bar
+- [ ] **3.3 Carried verbatim** <!-- blocked-by: obligation-shadow-bar-window --> **— 6.1 Arm it only after the pre-registered bar
       holds.** Flip `obligation-settle` to `severity: blocking` only when the
       `CLAIMS.md` reading meets all four parts; the flip PR carries the
       reading and extends `BLOCKING_ALLOWLIST` in
@@ -592,7 +267,7 @@ its pre-registered bar can be read — armed only by that reading.
       found a path by which a row gets written at all. If that investigation
       closes and rows start accruing, 28 days is enough for 100 of them. If it
       does not, (4) fires on the date and this step closes as a null. -->
-- [~] **3.4 Carried — AC-6 of the parent:** <!-- blocked-by: obligation-shadow-bar-window --> the armed detector refuses a turn
+- [ ] **3.4 Carried — AC-6 of the parent:** <!-- blocked-by: obligation-shadow-bar-window --> the armed detector refuses a turn
       that wrote files under an undischarged obligation and allows one that
       discharged it, on this repository's own sessions.
       verify: two fixture sessions; `report_obligation_settle` (existing reader
@@ -620,10 +295,7 @@ its pre-registered bar can be read — armed only by that reading.
       alongside it). Then two fixture sessions through
       `report_obligation_settle`, plus the deletion case — remove the referenced
       `DischargeRow` from the allowed fixture and assert settlement reopens. -->
-
-## Phase 4 — A refusing ladder (gated on programme blocker d1)
-
-- [~] **4.1 Only if D1 is "yes":** <!-- blocked-by: d1-stop-ladder-after-reading | asked: no — D1 is a decision ON the Q1 reading, and the reading does not exist; putting it now would be asking for a guess, which is what step 2.3 exists to prevent --> replace Layer 2's boolean with the
+- [ ] **4.1 Only if D1 is "yes":** <!-- blocked-by: d1-stop-ladder-after-reading | asked: no — D1 is a decision ON the Q1 reading, and the reading does not exist; putting it now would be asking for a guess, which is what step 2.3 exists to prevent --> replace Layer 2's boolean with the
       contract's ladder — refuse a retry that still carries no
       `PASS_EVIDENCE_OK` record, allow unconditionally at the third
       consecutive refusal (`turn-end-detector-demotion.md:330-336`), write a
@@ -660,136 +332,7 @@ its pre-registered bar can be read — armed only by that reading.
       causes. The work on "yes" is the ladder, the test replacement at
       `turn_end_gate_hook.test.ts:962`, and the contract amendment. -->
 
-## Phase 5 — Test-first as evidence
-
-- [x] **5.1 `RED_THEN_GREEN` in the record, checked at the stop.** Two
-      `verification_runs` entries for the same test file — the earlier
-      `FAIL_EVIDENCE` naming a test the later `PASS_EVIDENCE_OK` names as
-      passing — classify `RED_THEN_GREEN`. Detector F ("completion claim over
-      production code no test accompanies", `:757`) accepts a new test file
-      only with that pair present. `check_test_delta.ts` is **not** extended:
-      its header (`:9-13`) states it cannot see order and CI cannot reach
-      gitignored session state.
-      verify: fixture pair red→green allowed; green→green with a new test file
-      refused with `no_red_evidence`.
-      <!-- closed 2026-09-29, `04bb5ea4a`. `turn_end_gate_hook.test.ts` 130 green;
-      both fixtures the verify line names exist — a red→green pair over one target
-      is allowed, and green→green with a new test file is refused with
-      `no_red_evidence` in the reason.
-      THREE CASES BEYOND THE VERIFY, because each is a way the pair could be
-      claimed without being observed: a green that PREDATES the last edit, a red
-      and a green over DIFFERENT targets, and a whole-suite red pairing with a
-      whole-suite green (allowed — it is a legitimate sequence, and pairing it with
-      a single-file run would claim one nobody saw).
-      `check_test_delta.ts` is NOT extended, per the step. Its header states it
-      cannot see order and CI cannot reach gitignored session state; both still
-      hold.
-      SCOPE NARROWED FROM THE STEP'S WORDING. It asks for "the earlier
-      FAIL_EVIDENCE naming a test the later PASS_EVIDENCE_OK names as passing" —
-      i.e. matching an individual test NAME across two outputs. The unit here is
-      the test FILE the command names (`testTargetKey`), because cross-output
-      name matching is fragile in a way that would produce `no_red_evidence` on
-      honest work — a refusing verdict — whenever a runner's formatting differs
-      from the parser's expectation. File-level is the coarser and safer read of
-      the same sequence.
-      Without records the escape is UNCHANGED, and an instrument gap is not a
-      missing red: a transcript cannot see an exit code, so refusing on a
-      transcript-only host would refuse every honest turn there.
-      SABOTAGE: letting any pass satisfy the pair — dropping both the target match
-      and the placement — failed exactly 3 (green→green, stale green, mismatched
-      targets) and no others; restored from a copy. -->
-
-## Review round — 2026-09-30
-
-An independent review was dispatched to a fresh subagent on the pushed branch
-with a neutral prompt. **Its verdict was `do not merge on the current
-evidence`, and it was right.** Findings and dispositions:
-`agents/evidence/reviews/stop-that-holds.findings.md` (20 findings — 2 critical,
-7 medium, 11 low; 17 fixed here, 2 accepted, 3 deferred with reasons).
-
-**The two critical findings were reproduced independently before being acted
-on**, against 1,077 object-shaped and 11 string-shaped tool results in this
-machine's own Claude Code transcripts, and they change what several closed steps
-above may be read as claiming:
-
-1. **Step 1.2's verify line was satisfied by a payload shape no host sends.**
-   Claude Code's Bash result carries NO exit-code field: success is an object
-   `{stdout, stderr, interrupted, isImage, noOutputExpected}`, failure is the
-   bare string `Error: Exit code N\n…`. So on the only host that binds the
-   turn-end gate, every recorded run carried `exit_code: null`, classified
-   `exit_code_unavailable`, became an instrument gap, and the turn ended
-   normally — **including a turn whose vitest run had just reported two
-   failures, with that count sitting parseable in the record**. The Goal at the
-   top of this file was false as first shipped. Fixed in `728259377`: three
-   readings with provenance on the row.
-2. **The recorder JSON-stringified an object response**, and every parser here
-   is line-anchored, so no summary could ever be parsed from the success shape.
-   Latent behind finding 1 and live the moment it was fixed — where it would
-   have turned detector F into a refusal of honest TDD. Fixed in the same commit.
-
-**Why both were invisible to a green suite, which is the durable lesson.** Every
-gate-side fixture hand-wrote `stdout_tail` with real newlines and an explicit
-`exit_code`; every recorder-side test asserted only that the stored string
-CONTAINED a summary. Nothing crossed the producer/consumer seam, and nothing used
-a real host payload shape. `tests/scripts/verification_record_roundtrip.test.ts`
-now does: 16 cases through the real recorder into the real classifier, and **13
-of them fail against the pre-fix recorder** — which is the measurement of how
-much the hand-written fixtures were hiding.
-
-Three further findings were false-refusal paths on a BLOCKING gate, each now a
-fixture: a load-failure phrase overriding a clean summary, the canonical TDD
-first red (`Cannot find module`) not counting as a red, and detector F firing on
-any test edit rather than a new test file. And **AC-5's "28 == 28" was already
-false at the merge base** — a merge had brought in one more switch — so
-`check_kill_switch_table` now compares the two sets on every run rather than a
-reader recounting by hand.
-
-## Cost this branch added, measured rather than asserted
-
-**The hook-latency gate's `pre_tool_use` cap is red on this branch's CI, and the
-budget's own `revisit_if` trigger has fired.** Recorded here and in
-`src/config/hook-latency-budget.json` because that budget was pre-registered
-precisely so it could not be spent silently.
-
-- Three consecutive CI runs: p50 **172 / 175 / 176 ms**, p95 **179 / 176 / 176
-  ms** against a 175 ms cap. The budget's `revisit_if` reads *"the p50 — not the
-  p95 — of a green run rises above 160 ms"*, and the historical p50 range it
-  cites is 111-148. So this is not simply runner variance by the file's own
-  discriminator.
-- **What this branch contributed**: `npm run build:hooks` produces 1,443,442
-  bytes here against 1,424,332 at the merge base — **+19,110 B, +1.34%**. Every
-  concern shares one bundle, so that is paid by every slot including
-  `pre_tool_use`, which none of this branch's six changed files is bound on. At
-  ~149 ms of non-spawn work the proportional share is **~2 ms**: real, and far
-  short of the 24-64 ms by which the p50 exceeds its historical range. The
-  branch is a contributor, not the cause.
-- **`--legal-comments=none` was measured as a mitigation and recovers 635
-  bytes.** The growth is code, not prose, so it cannot be given back without
-  removing the feature.
-- **The 2026-10-01 pass (step 2.2, partial) added +0 bytes**, measured the same way:
-  `npm run build:hooks` at the merge base and at HEAD both produce 1,565,516
-  bytes, byte-identical. The Q1 rollup is tree-shaken out — the hook path
-  imports `turn_end_refusals` for the record types and never for the reader,
-  and `measure_turn_end_gate.ts` is a CLI script no bundle entry reaches.
-  Recorded here beside the other two deltas so the trend across passes is
-  readable in one place: +19,110 B, then +4,732 B, then 0. It does not relieve
-  the cap red, which this block already attributes to the first pass; it means
-  the third pass is not a contributor to it.
-- **The cap is NOT raised.** The budget block states that raising it again
-  without a measured distribution beside it is the config-bending the block
-  exists to make visible. Its own routing sends a fired trigger to
-  `road-to-per-turn-hook-economy` D-2 and to the maintainer.
-
 ## Blockers
-
-Promoted 2026-09-30 from prose. Every entry below already existed as a
-paragraph inside a closed step's HTML comment, where no gate reads it:
-`scanOpenSteps` measured `open: 7, blocked: 0` at the merge base, so the
-continuation ladder was free to re-propose a step waiting on a maintainer
-decision and two waiting on elapsed calendar time. After this change it
-measures `open: 0, blocked: 6`. Nothing here is newly discovered and nothing
-newly refused — the obstacles are the same ones, in a shape the ladder, the
-dashboard and the archival sweep can act on.
 
 ### blocker: kill-switch-owner-decision
 - **Status:** open
@@ -1140,121 +683,15 @@ dashboard and the archival sweep can act on.
   entry and AC-3 had already written down.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-02 | reviewer: archive-sweep/auto-carry -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | Parser misses a consumer's runner and refuses honest work | implementation | A passing run classifies `INVALID_RUN` | Only absence of any record or `FAIL_EVIDENCE` refuses; every `INVALID_RUN` reason is logged as a finding, never refused on | Phase 1 — Verification is a record, not a regex |
-| 2 | Shadow read on retries breaks the stop-slot budget | implementation | Extra transcript read per retry | Retries only; `bench_hook_latency --gate` in the PR | Phase 2 — Q1 becomes a number (the contract's instrument, no second refusal) |
-| 3 | The join fix changes the delivered-row semantics the bar was registered on | product | Window must restart | Clause (2) of the claim mandates exactly that; 3.2 does it | Phase 3 — The obligation ledger can refuse (carried) |
-| 4 | A reader publishes a number a bar is read against, and it is a different quantity | product | `measure_turn_end_gate --q1` prints a retry-conditioned share while § The bars registers Q1; the two disagree in direction | Renamed `retryConditionedShare`; the report header, the function docstring and the contract all state it is not bar-comparable, and three dispatch-censored detectors print no number at all | Phase 2 — Q1 becomes a number (the contract's instrument, no second refusal) |
-
-**Re-reviewed 2026-10-01, and this time a fourth row WAS added.** All four rows
-re-read against the 2.2 pass and its independent review, not only the ones it
-touched.
-
-- **Row 1 — carried forward unchanged, and that is a finding rather than an
-  omission.** 2.2 added no parser and no new `INVALID_RUN` reason, so nothing
-  about its refusing or reporting direction moved. Its open half is still open:
-  a passing run whose runner no parser has met classifies `PASS_EVIDENCE_OK` on
-  its exit code alone.
-- **Row 2 — cost direction MEASURED AND FLAT for this pass.** The row watches
-  whether the shadow mechanism spends the stop-slot budget. 2.2 adds a reader
-  that no hook imports: `npm run build:hooks` at the merge base and at HEAD
-  produce byte-identical bundles (1,565,516 B, digest `bc62ee1a…`), and the
-  rollup is tree-shaken out entirely. So this pass is not a contributor to the
-  live `pre_tool_use` cap red § Cost this branch added records. The row stays
-  open on the earlier passes, whose +19,110 B and +4,732 B are unaffected by
-  this reading.
-- **Row 3 — still DISCHARGED**, and untouched by 2.2.
-- **Row 4 — NEW, and it is the risk the independent review of 2026-10-01
-  found realised rather than hypothetical.** The branch shipped a reader, called
-  its output Q1, and edited the contract to say Q1 was readable — while the
-  number divided by every retry on the layer rather than by the detector's own
-  refusals. Ten retries, nine after `verification` refusals and one after a
-  `language` refusal, one `language` row: Q1 for B is 100 % and that reader
-  printed 10 %. Opposite verdicts against the same bar.
-
-  **Why it is a row rather than a closed defect, which is the opposite call from
-  the one 2.1 made for its pruner bug.** That candidate was found and fixed
-  inside its change with a test that fails when the fix is removed — a mechanism
-  closed it. This one is mitigated by NAMING: the function, the report header
-  and the contract all say the number is not bar-comparable, and nothing
-  prevents a future reader carrying it to the bars table anyway. A mitigation
-  that depends on someone reading a sentence is a live risk, and the file's own
-  rule is that a register entry for a closed defect reads as live risk — the
-  converse applies here. It closes when the producer records the originating
-  detector and the reader computes the registered quantity.
-
-**Disposition after the 2026-09-30 pass**, kept for the record: Row 1's disposition is carried forward unchanged and
-that is a finding rather than an omission: 2.1 added no parser and no new
-`INVALID_RUN` reason, so nothing about its refusing or reporting direction
-moved. Row 3 stays discharged. Row 2 is rewritten below, from NOT YET INCURRED
-to incurred-and-measured.
-
-**NO FOURTH ROW WAS ADDED, and the candidate is named so the absence is
-readable.** 2.1 puts a second record shape in a directory whose pruner did not
-know about it — unbounded growth, which is exactly the shape row 1's sibling
-risks take. It is not a row because it was found and fixed inside the same
-change, with a test that fails when the fix is removed; a register entry for a
-closed defect reads as live risk and dilutes the three that are.
-
-**Disposition after the 2026-09-29 pass**, re-reviewed against the steps that
-closed rather than left standing:
-
-- **Risk 1 — MITIGATED as designed, and the mitigation is readable rather than
-  asserted.** `INSTRUMENT_GAP_REASONS` in `_lib/verification_evidence.ts` is an
-  exported set the consumer reads, so "an instrument gap is never refused on" is
-  a branch two detectors take (C and F both fall back on it) instead of a rule a
-  comment states. Still live for the OTHER half the row names: a passing run
-  whose runner no parser has met classifies `PASS_EVIDENCE_OK` on its exit code
-  alone — see step 1.1's note on why exit 0 with no summary is a pass — so the
-  refusing direction of this risk is closed and the reporting direction is not.
-- **Risk 2 — INCURRED 2026-09-30 AND MEASURED, which is the outcome the row
-  asked for rather than an escape from it.** Step 2.1 landed, so a retry now
-  does carry the extra transcript read the row names. The mitigation the row
-  specifies was executed literally: retries only — the non-retry path performs
-  the same reads in the same order, relocated into
-  `assembleDetectorInputs()` — and `bench_hook_latency --gate` ran in this PR
-  and is green, `stop` p95 119 ms against the 250 ms `any_hook_event` cap and
-  `pre_tool_use` p95 66 ms against 175, n=50 per slot.
-
-  **What that reading does NOT establish, stated because the row will be read
-  again by someone deciding whether the budget was spent.** It is a darwin
-  local measurement, and the § Cost this branch added block above is about CI
-  readings, where the same slot read 176-179 ms on the previous pass. Local
-  green is a necessary condition and not the authoritative one; CI is. The
-  comparable number that IS portable is the bundle delta, measured by building
-  `dist/hooks/dispatch.js` at the merge base and at HEAD in one worktree:
-  +4,732 B / +0.304 %, against +19,110 B / +1.34 % for the previous pass.
-  (Recorded three times before it was right — step 2.1's note carries every
-  stale reading and what caught them.)
-
-  **The risk does not close, it narrows.** Its refusing direction — a shadow
-  read wedging a turn — is closed by construction and by fixture: both layers
-  still return `EXIT_ALLOW` unconditionally and the whole shadow body is
-  wrapped, so no failure in it can change a verdict. Its cost direction stays
-  live until a CI run of this branch reports the stop slot.
-- **Risk 3 — DISCHARGED.** Step 3.2 did exactly what the row's mitigation names:
-  clause (9) of `obligation-settle-shadow-bar` resets qualification at
-  `5c9415258` with the numbers unchanged. The row's premise turned out to be
-  imprecise in the same way the step was — the semantics that changed were the
-  READER's, not the delivered-row write's — which strengthens rather than
-  weakens the case for the reset, and is recorded in the claim.
+| 1 | Carried steps stay blocked indefinitely | implementation | A step deferred once for elapsed time or a decision can sit here as long as it sat in the parent | It now counts as open work in the dashboard instead of as 100 %, and its blocker is listed where the estate gates count it | Phase 1 — Deferred steps carried from road-to-a-stop-that-holds |
 
 ## Acceptance Criteria
 
-- [x] AC-1 — A turn that edits a non-doc file with `echo test` as its only
-      verification is refused at its first stop naming the missing record; the
-      same turn with a `PASS_EVIDENCE_OK` entry ends normally.
-      <!-- closed 2026-09-29. Both halves are fixtures in
-      `tests/scripts/turn_end_gate_hook.test.ts` § "record mode — step 1.3":
-      "refuses `echo test` — the record path reads the run, not the word" asserts
-      the refusal AND asserts that the same tool calls WITHOUT a record are
-      allowed, which is the before/after in one case; "is silent when a PASSING
-      record sits after the last edit" is the second half. The refusal names the
-      verdict — `not_a_verification_command` — rather than restating the rule. -->
-- [~] AC-2 — <!-- blocked-by: q1-shadow-reading-window --> `measure_turn_end_gate` prints a non-null Q1 per detector and the
+- [ ] AC-2 — <!-- blocked-by: q1-shadow-reading-window --> `measure_turn_end_gate` prints a non-null Q1 per detector and the
       contract no longer calls Q1 inert.
       <!-- SPLIT 2026-10-01, because its two clauses are in different states and
       a single box would misreport whichever it did not describe. Revised the
@@ -1285,7 +722,7 @@ closed rather than left standing:
       SO THIS CLOSES WHEN both producer fields are recorded (step 2.2's note
       carries the procedure) and a reading over a real window is published by
       2.3. n at 2026-10-01 is 2 records / 2 retries, which is not a rate. -->
-- [~] AC-3 — <!-- blocked-by: obligation-shadow-rows-live --> The obligation ledger in this repository's own sessions gains
+- [ ] AC-3 — <!-- blocked-by: obligation-shadow-rows-live --> The obligation ledger in this repository's own sessions gains
       shadow rows within seven days of 3.1.
       <!-- DEFERRED 2026-10-01 on elapsed time: 3.1 landed 2026-09-29 at
       `5c9415258` and the seven days end 2026-10-06. Read five days early
@@ -1309,7 +746,7 @@ closed rather than left standing:
       never reached a write, or it reached one and computed "nothing to record"
       on both arms — that is the thing to establish first. Full reading under
       `### blocker: obligation-shadow-rows-live`. -->
-- [~] AC-4 — <!-- blocked-by: obligation-shadow-bar-window --> (carried AC-6) once armed, the detector refuses an undischarged
+- [ ] AC-4 — <!-- blocked-by: obligation-shadow-bar-window --> (carried AC-6) once armed, the detector refuses an undischarged
       write and allows a discharged one.
       <!-- OPEN — blocked on 3.3's arming, whose window resets to 2026-09-29. -->
       <!-- DEFERRED 2026-10-01. Condition re-executed: `check_claims` exits 0,
@@ -1319,35 +756,3 @@ closed rather than left standing:
       EARLIEST SETTLEMENT 2026-10-29, on either branch — armed and demonstrated,
       or filed `resolved-null` under clause (4), which this criterion then
       closes as carried-null rather than unmet. -->
-- [x] AC-5 — The kill-switch table's row count equals the grep count.
-      <!-- closed 2026-09-29. 28 == 28, with the measurement unit published above
-      the number in `docs/contracts/hook-architecture-v1.md` § Kill switches and
-      the plan's own grep corrected there — it could not remove the token it
-      named. See step 1.4's evidence for the three findings. AC-5 is about the
-      COUNT and is closed; step 1.4 stays open on its blocker half. -->
-
-## Provenance
-
-Source-derived (template rule 19). Pre-council draft; council notes are
-inlined before promotion.
-
-| Descriptor | Token | Drawn in, per defect |
-|---|---|---|
-| S9 — phase-loop reference | `ENC1:<mint>` | RED-evidence verdict vocabulary (`zero_tests_discovered`, `fixture_or_load_failure`, `nonzero_exit_without_test_failure`) for the defect "Detector C reads command text" |
-| S3 — prose-corpus reference | `ENC1:<mint>` | negative control: deny-once keyed on a command hash — the shape 4.1's ladder is not |
-
-Gap-table: KEEP 1.1, 1.3, 1.4, 2.1–2.3, 3.1–3.2, 5.1; FOLD 1.2 (into the
-existing recorder), 3.3–3.4 (carried from the parent); CUT "new
-verification-record concern" (recorder exists), "retire
-verify-before-complete" (feeds Detector D), "native delivery writer" (80
-delivered rows exist — wrong root cause). From the parallel proposal
-`road-to-observed-completion-kernel` (consolidated by the programme): ADOPTED
-`timeout_or_killed`, the record ordinal, the edit→pass→edit fixture, the
-delete-discharge fixture, the ratification-backed discharge and the
-`already_fixed`/sabotage-first disciplines; CUT its `ToolObservation` record
-and completion state machine (second vocabularies beside `RUN_TERMINAL_STATES`
-and `JournalEvent.terminal_state|verification_ref`), its
-HARD/EVIDENCE_REQUIRED/ADVISORY classes (second taxonomy beside
-`REFUSABLE_CLASSES`, `obligation_frequency.ts:185-215`), its "denied for
-every N" test (asserts the wedge `turn-end-detector-demotion.md:86-87,333-336`
-forbids), and its HEAD-digest freshness (adds a git spawn to the stop slot).

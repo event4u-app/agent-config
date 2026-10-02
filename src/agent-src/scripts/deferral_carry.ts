@@ -181,6 +181,12 @@ function _blockerSpans(lines: readonly string[]): BlockerSpan[] {
     return spans;
 }
 
+function _plusDays(date: string, days: number): string {
+    const d = new Date(`${date}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + days);
+    return d.toISOString().slice(0, 10);
+}
+
 /** The first `<base>-carried[-N]` slug no roadmap directory already holds. */
 export function nextCarrySlug(root: string, sourceSlug: string): string {
     const base = sourceSlug.replace(/-carried(-\d+)?$/, '');
@@ -305,6 +311,9 @@ export function planCarry(
           `  what: the owner resolves blocker(s) ${ids}\n` +
           '  when: whenever the owner takes the next step\n' +
           '  who: owner\n' +
+          // `lint_roadmap_later_disposition` rule C: a park with no review date
+          // reads exactly like an abandonment.
+          `review_by: ${_plusDays(date, 90)}\n` +
           `estate_growth_exempt: >-\n  Owner-chosen archive of ${sourceSlug}: its deferred steps wait on owner\n` +
           `  blocker(s) ${ids} and are parked here instead of left active. The parent\n` +
           '  is archived in the same change, so the active count drops by one.\n'

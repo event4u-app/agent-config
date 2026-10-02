@@ -54,7 +54,7 @@ Reproduced on 2026-10-01, all three read-only except where noted:
 
 ## Phase 2 — The orphan user-type value
 
-- [~] <!-- blocked-by: legal-user-type-is-a-product-call | asked: no — non-interactive inbox run; the question is carried in the round disposition Owner decisions block --> **2.1 Apply the owner's choice.** Either author `user-types/legal.yml`
+- [~] <!-- blocked-by: legal-user-type-is-a-product-call | asked: no — non-interactive inbox run; the question is carried in the round disposition Owner decisions block --> **2.1 Apply the owner's choice.** Either author `user-types/legal.yml` <!-- deferred-resolution: carried-to=road-to-a-trunk-whose-own-gates-are-green-carried -->
       (tagline, recommended packs, install-path hint) or remove `legal` from the
       five legal-review-prep skills' `recommended_for_user_types`, then lower or
       delete the baseline entry in the same change.
@@ -81,7 +81,7 @@ Reproduced on 2026-10-01, all three read-only except where noted:
 ## Blockers
 
 ### blocker: legal-user-type-is-a-product-call
-- **Status:** open
+- **Status:** resolved — carried, still open, to `road-to-a-trunk-whose-own-gates-are-green-carried` with the steps it blocks (was: open)
 - **Owner:** owner
 - **Blocks:** 2.1
 - **What to do:** pick exactly one — (a) author `user-types/legal.yml` so the
@@ -139,5 +139,5 @@ does is left undecided below.
 ## Acceptance Criteria
 
 - [x] AC-1 — `lint_pack_boundaries` exits 0 on `main` without a baseline raise.
-- [~] AC-2 — <!-- blocked-by: legal-user-type-is-a-product-call | asked: no — non-interactive inbox run; the question is carried in the round disposition Owner decisions block --> `audit_user_type_axis` exits 0.
+- [~] AC-2 — <!-- blocked-by: legal-user-type-is-a-product-call | asked: no — non-interactive inbox run; the question is carried in the round disposition Owner decisions block --> `audit_user_type_axis` exits 0. <!-- deferred-resolution: carried-to=road-to-a-trunk-whose-own-gates-are-green-carried -->
 - [x] AC-3 — `lint_workflow_security` runs in a pull-request workflow.

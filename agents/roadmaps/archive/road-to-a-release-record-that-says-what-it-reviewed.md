@@ -136,7 +136,7 @@ Reproduced on 2026-10-01, not read:
       Sensitivity probed by sabotage: removing the `reviewed >= total` guard reds
       exactly the two full-coverage cases and nothing else.
       verify: `npx vitest run tests/scripts/check_finding_dispositions.test.ts -t partial` -> 0
-- [~] <!-- blocked-by: review-ceiling-is-spend | asked: no — non-interactive inbox run; the question is carried in the round disposition Owner decisions block --> **2.2 Decide what the post-cut
+- [~] <!-- blocked-by: review-ceiling-is-spend | asked: no — non-interactive inbox run; the question is carried in the round disposition Owner decisions block --> **2.2 Decide what the post-cut <!-- deferred-resolution: carried-to=road-to-a-release-record-that-says-what-it-reviewed-carried -->
       delta gets.** Either review the commits after the ledger's recorded head
       when `self-review-gate.yml` finds an existing ledger, or keep the skip and
       say in the workflow notice that the post-cut delta is unreviewed. Raising
@@ -193,7 +193,7 @@ Reproduced on 2026-10-01, not read:
       27 and a comment at line 69 naming "the server-spawned install.py". Both
       now say `install.ts`; neither scenario changed.
       verify: `grep -c 'install.py' tests/fixtures/installer-e2e/run-scenarios.sh` -> /^0$/
-- [~] <!-- blocked-by: container-e2e-promotion | asked: no — non-interactive inbox run; the question is carried in the round disposition Owner decisions block --> **4.2 Wire or declare the
+- [~] <!-- blocked-by: container-e2e-promotion | asked: no — non-interactive inbox run; the question is carried in the round disposition Owner decisions block --> **4.2 Wire or declare the <!-- deferred-resolution: carried-to=road-to-a-release-record-that-says-what-it-reviewed-carried -->
       container test.** Either add `tests/fixtures/installer-e2e.Dockerfile` as a
       release-validation job, or state in ADR-087's follow-up that it stays
       manual. The upgrade-preserve scenario the source asks for already runs
@@ -235,7 +235,7 @@ Reproduced on 2026-10-01, not read:
 ## Blockers
 
 ### blocker: review-ceiling-is-spend
-- **Status:** open
+- **Status:** resolved — carried, still open, to `road-to-a-release-record-that-says-what-it-reviewed-carried` with the steps it blocks (was: open)
 - **Probed:** 2026-10-01 — `grep -n 'post-cut\|delta\|unreviewed'
   .github/workflows/self-review-gate.yml` returns nothing, exit 1. The workflow
   neither runs a delta review nor prints an unreviewed-delta notice, so the
@@ -254,7 +254,7 @@ Reproduced on 2026-10-01, not read:
   in the record says so.
 
 ### blocker: container-e2e-promotion
-- **Status:** open
+- **Status:** resolved — carried, still open, to `road-to-a-release-record-that-says-what-it-reviewed-carried` with the steps it blocks (was: open)
 - **Probed:** 2026-10-01 — `grep -rn 'installer-e2e' .github/workflows
   docs/decisions/ADR-087-installer-e2e-test-strategy.md` exits 0, and the hits
   are a FALSE POSITIVE on the literal string: all nine are inside ADR-087 naming
@@ -293,5 +293,5 @@ Reproduced on 2026-10-01, not read:
 - [x] AC-3 — `fact_claims` written by the self-review gate survives ingest.
 - [x] AC-4 — Every major carrying a `BREAKING CHANGES` section has a
       `BREAKING_CHANGES.md` row, and a fixture missing one fails the lint.
-- [~] AC-5 — <!-- blocked-by: review-ceiling-is-spend | asked: no — non-interactive inbox run; the question is carried in the round disposition Owner decisions block --> The post-cut delta is
+- [~] AC-5 — <!-- blocked-by: review-ceiling-is-spend | asked: no — non-interactive inbox run; the question is carried in the round disposition Owner decisions block --> The post-cut delta is <!-- deferred-resolution: carried-to=road-to-a-release-record-that-says-what-it-reviewed-carried -->
       either reviewed or named as unreviewed in the workflow output.

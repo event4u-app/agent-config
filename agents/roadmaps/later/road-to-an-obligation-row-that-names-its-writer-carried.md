@@ -8,6 +8,7 @@ entry_condition:
   what: the owner resolves blocker(s) shadow-corpus-is-one-machine
   when: whenever the owner takes the next step
   who: owner
+review_by: 2026-12-31
 estate_growth_exempt: >-
   Owner-chosen archive of road-to-an-obligation-row-that-names-its-writer: its deferred steps wait on owner
   blocker(s) shadow-corpus-is-one-machine and are parked here instead of left active. The parent
