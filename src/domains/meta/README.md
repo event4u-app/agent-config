@@ -7,9 +7,9 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 302
+- **artefacts**: 303
 
-## Commands (156)
+## Commands (157)
 
 - **`agent-handoff`** — Pick a recent session, generate a handoff from its transcript, and seed a fresh session with it — or summarize the live conversation for copy-paste.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -117,7 +117,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`review`** — Review orchestrator — routes to changes (seven-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns)
 - **`review-changes`** — Self-review local changes before creating a PR — dispatches to seven specialized judges (bug, security, tests, quality, architecture, spec, overbuild) and consolidates verdicts
 - **`review-routing`** — Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml
-- **`roadmap`** — Roadmap orchestrator — routes to create (authoring), process-step / process-phase / process-full (autonomous execution), and next (pick a roadmap and ship it).
+- **`roadmap`** — Roadmap orchestrator — routes to create (authoring), process-step / process-phase / process-full (execution), next (pick a roadmap and ship it), and triage-parked (drain later/ and skipped/).
 - **`roadmap-ai-council`** — Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options.
 - **`roadmap-create`** — Interactively create a new roadmap file in agents/roadmaps/
 - **`roadmap-materialize`** — Materialise a roadmap into a self-contained, importable ticket bundle under agents/tickets/
@@ -125,6 +125,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`roadmap-process-full`** — Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
 - **`roadmap-process-phase`** — Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster.
 - **`roadmap-process-step`** — Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out.
+- **`roadmap-triage-parked`** — Drain later/ and skipped/ — verify each parked roadmap against the current tree, run its resume condition, then promote, absorb, archive, or re-park it with a fresh reason.
 - **`rule-compliance-audit`** — Audit rule trigger quality, simulate activation, detect overlaps, find never-activating rules, and replay the router matcher over recent prompts (route:audit)
 - **`security-audit-config`** — Audit an assembled agent config (CLAUDE.md, .cursor/rules, settings, MCP, hooks, skills) for prompt-injection / supply-chain risk — A–F score per category, mapped to OWASP Agentic Top 10
 - **`skill`** — Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it.

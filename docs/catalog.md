@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **742 public artefacts** shipped by
+Consumer-facing catalog of all **743 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -451,7 +451,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../dist/agent-src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../dist/agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (203)
+## Commands (204)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -608,7 +608,7 @@ are excluded.
 | command | [`review`](../dist/agent-src/commands/review.md) | cluster: review | Review orchestrator — routes to changes (seven-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns) |
 | command | [`review-changes`](../dist/agent-src/commands/review/changes.md) | cluster: review | Self-review local changes before creating a PR — dispatches to seven specialized judges (bug, security, tests, quality, architecture, spec, overbuild) and consolidates verdicts |
 | command | [`review-routing`](../dist/agent-src/commands/review/routing.md) | cluster: review | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
-| command | [`roadmap`](../dist/agent-src/commands/roadmap.md) | cluster: roadmap | Roadmap orchestrator — routes to create (authoring), process-step / process-phase / process-full (autonomous execution), and next (pick a roadmap and ship it). |
+| command | [`roadmap`](../dist/agent-src/commands/roadmap.md) | cluster: roadmap | Roadmap orchestrator — routes to create (authoring), process-step / process-phase / process-full (execution), next (pick a roadmap and ship it), and triage-parked (drain later/ and skipped/). |
 | command | [`roadmap-ai-council`](../dist/agent-src/commands/roadmap/ai-council.md) | cluster: roadmap | Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options. |
 | command | [`roadmap-create`](../dist/agent-src/commands/roadmap/create.md) | cluster: roadmap | Interactively create a new roadmap file in agents/roadmaps/ |
 | command | [`roadmap-materialize`](../dist/agent-src/commands/roadmap/materialize.md) | cluster: roadmap | Materialise a roadmap into a self-contained, importable ticket bundle under agents/tickets/ |
@@ -616,6 +616,7 @@ are excluded.
 | command | [`roadmap-process-full`](../dist/agent-src/commands/roadmap/process-full.md) | cluster: roadmap | Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries. |
 | command | [`roadmap-process-phase`](../dist/agent-src/commands/roadmap/process-phase.md) | cluster: roadmap | Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster. |
 | command | [`roadmap-process-step`](../dist/agent-src/commands/roadmap/process-step.md) | cluster: roadmap | Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out. |
+| command | [`roadmap-triage-parked`](../dist/agent-src/commands/roadmap/triage-parked.md) | cluster: roadmap | Drain later/ and skipped/ — verify each parked roadmap against the current tree, run its resume condition, then promote, absorb, archive, or re-park it with a fresh reason. |
 | command | [`rule-compliance-audit`](../dist/agent-src/commands/rule-compliance-audit.md) |  | Audit rule trigger quality, simulate activation, detect overlaps, find never-activating rules, and replay the router matcher over recent prompts (route:audit) |
 | command | [`security-audit-config`](../dist/agent-src/commands/security-audit-config.md) |  | Audit an assembled agent config (CLAUDE.md, .cursor/rules, settings, MCP, hooks, skills) for prompt-injection / supply-chain risk — A–F score per category, mapped to OWASP Agentic Top 10 |
 | command | [`skill`](../dist/agent-src/commands/skill.md) | cluster: skill | Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it. |
