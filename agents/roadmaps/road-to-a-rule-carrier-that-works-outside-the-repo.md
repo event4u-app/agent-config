@@ -345,22 +345,29 @@ Reproduced on 2026-10-01:
 
       Bundle cost: **+780 B** (1,497,769 -> 1,498,549 on the gate's probe
       build).
-- [ ] **1.4 The host form.** Delivered text has frontmatter and block comments
+- [x] **1.4 The host form.** Delivered text has frontmatter and block comments
       stripped, by the same parser the thin projector uses.
       verify: `npx vitest run tests/scripts/rule_inject_hook.test.ts -t host-form` -> 0
 
-      **Not started 2026-10-02 — blocked on `hook-bundle-ceiling-exhausted`,
-      and MEASURED rather than estimated.** The implementation is two lines:
-      `project_thin_rules.ts` already reads `ruleBody` from
-      `_lib/rule_law_section.ts`, which strips frontmatter and HTML comments and
-      is therefore literally "the same parser the thin projector uses". Importing
-      it into the carrier and calling it at the one emission site was written,
-      built and measured: **+396 B, putting the bundle 357 B over the ceiling.**
-      Reverted rather than shipped.
+      **Done 2026-10-03, and it was the two lines the 2026-10-02 run said it
+      was.** `buildInjection` emits `rule_law_section.ruleBody(raw)` instead of
+      `raw.trim()`, which is literally the function `project_thin_rules.ts`
+      calls, so "what a stub carries" and "what a delivery carries" cannot drift
+      into two spellings. One fixture asserts the emitted inner text is
+      byte-identical to `ruleBody(RAW)` rather than merely free of the strings it
+      should not contain — a `not.toContain` suite passes against any number of
+      wrong parsers.
 
-      This is the cheapest of the five remaining steps, and it is the number
-      that makes the blocker below concrete: a two-line change reusing a module
-      that already exists does not fit.
+      **One behaviour the step did not specify, decided here and recorded.** A
+      file with nothing left after the strip — frontmatter plus comments and no
+      prose — is now not delivered at all, where before it would have been
+      emitted as its raw frontmatter. An empty `<rule>` element is framing with
+      no content inside it, and it would be charged against 1.5's budget.
+
+      **Measured cost: +435 B** (1,498,549 -> 1,498,984 on the gate's probe
+      build), against the +396 B the previous run measured on a tree without
+      1.3. The number was the whole argument of the blocker below; what changed
+      is not the number but the headroom it is spent against.
 - [ ] **1.5 A delivery the host does not replace, and that hides nothing.** The
       rule-produced string stays under 8,000 characters (D2), in the order D1
       fixes; the high-consequence class is the one

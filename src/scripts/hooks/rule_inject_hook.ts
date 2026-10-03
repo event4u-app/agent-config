@@ -48,6 +48,15 @@
  * exists at all, nothing declares a scope and no filter applies; see
  * `rule_layer_overlap.hostRuleLayerIds` for why that is not the empty set.
  *
+ * THE HOST FORM, BY THE PROJECTOR'S OWN PARSER (step 1.4). Delivered text is
+ * `rule_law_section.ruleBody` of the file: frontmatter and HTML comments
+ * removed. Both are bytes the model cannot act on — the frontmatter is the
+ * routing surface the router has already read, and the comments are authoring
+ * scaffolding no host renders. `project_thin_rules.ts` calls the same function
+ * for the same reason, so "what a stub carries" and "what a delivery carries"
+ * cannot drift into two spellings. A file with nothing left after the strip is
+ * not delivered: an empty `<rule>` element is framing with no content in it.
+ *
  * ONE MATCHER, SHARED WITH THE OFFLINE MODEL. Everything about selection,
  * ordering, capping and body loading comes from `_lib/rule_injection.ts`, which
  * `model_rule_injection.ts` also imports. Step 0.5 states the reason in as many
@@ -123,6 +132,7 @@ import {
     ruleSources,
     selectForInjection,
 } from '../_lib/rule_injection.js';
+import { ruleBody } from '../_lib/rule_law_section.js';
 import { hostRuleLayerIds } from '../_lib/rule_layer_overlap.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
@@ -344,10 +354,18 @@ export function buildInjection(
     const parts: string[] = [];
     const ids: string[] = [];
     for (const m of sel.selected) {
-        const body = loadRuleBody(root, m.id);
-        if (body === null) continue;
+        const raw = loadRuleBody(root, m.id);
+        // STEP 1.4 — the host form, by the parser the thin projector uses.
+        // `ruleBody` strips frontmatter and HTML comments: the first is the
+        // routing surface the router already read, the second is authoring
+        // scaffolding no host renders to a model. Shipping either charges the
+        // delivery for bytes the model cannot act on. A file with nothing left
+        // after the strip carries no obligation and is not delivered — an empty
+        // `<rule>` element is framing with no content inside it.
+        const body = raw === null ? '' : ruleBody(raw);
+        if (body === '') continue;
         ids.push(m.id);
-        parts.push(`<rule id="${m.id}" tier="${m.tier}">\n${body.trim()}\n</rule>`);
+        parts.push(`<rule id="${m.id}" tier="${m.tier}">\n${body}\n</rule>`);
     }
     if (ids.length === 0) return null;
     return { rules: ids, bytes: sel.bytes, body: parts.join('\n\n') };

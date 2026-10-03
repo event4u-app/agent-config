@@ -24,6 +24,7 @@ import {
     statePath,
 } from '../../src/scripts/hooks/rule_inject_hook.js';
 import { readDelivered } from '../../src/scripts/_lib/obligations.js';
+import { ruleBody } from '../../src/scripts/_lib/rule_law_section.js';
 
 const ROUTER = {
     kernel: ['kernel-rule'],
@@ -703,5 +704,76 @@ describe('rule-inject — delivery scope is what the install carries (1.3)', () 
             payload: { prompt: 'plan the migration' },
         });
         expect(rules(out)).toEqual(['prompt-rule']);
+    });
+});
+
+/** Overwrite one rule's projected body in the package corpus of `root`. */
+function putBody(root: string, id: string, text: string): void {
+    fs.writeFileSync(path.join(root, 'dist', 'agent-src', 'rules', `${id}.md`), text, 'utf-8');
+}
+
+describe('rule-inject — host-form: the delivered text (1.4)', () => {
+    const RAW = [
+        '---',
+        'description: routing surface, never payload',
+        'type: auto',
+        'triggers:',
+        '  - keyword: migration',
+        '---',
+        '',
+        '# Prompt Rule',
+        '',
+        '<!-- risk-review: v1 | reviewed: 2026-10-03 -->',
+        '',
+        'THE OBLIGATION LINE.',
+        '',
+        '<!-- harvest:some-id -->',
+        '',
+    ].join('\n');
+
+    it('frontmatter and HTML comments never reach the payload', () => {
+        const root = makeRoot({ delivery: true });
+        putBody(root, 'prompt-rule', RAW);
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'host-form-1',
+            payload: { prompt: 'plan the migration' },
+        });
+        expect(rules(out)).toEqual(['prompt-rule']);
+        expect(out).toContain('THE OBLIGATION LINE.');
+        // The router already read the frontmatter; shipping it again charges the
+        // delivery for bytes the model cannot act on.
+        expect(out).not.toContain('routing surface, never payload');
+        expect(out).not.toContain('risk-review');
+        expect(out).not.toContain('harvest:some-id');
+        expect(out).not.toContain('---');
+    });
+
+    it('is the same parser the thin projector uses — not a second regex', () => {
+        const root = makeRoot({ delivery: true });
+        putBody(root, 'prompt-rule', RAW);
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'host-form-2',
+            payload: { prompt: 'plan the migration' },
+        });
+        const body = (JSON.parse(out) as { additional_context: string }).additional_context;
+        const inner = /<rule id="prompt-rule"[^>]*>\n([\s\S]*)\n<\/rule>/.exec(body)?.[1];
+        expect(inner).toBe(ruleBody(RAW));
+    });
+
+    it('a file that is nothing but frontmatter and comments delivers no rule element', () => {
+        const root = makeRoot({ delivery: true });
+        putBody(root, 'prompt-rule', '---\ntype: auto\n---\n\n<!-- nothing else -->\n');
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'host-form-3',
+            payload: { prompt: 'plan the migration' },
+        });
+        // An empty `<rule>` element is framing with no content inside it.
+        expect(out).toBe('');
     });
 });
