@@ -97,6 +97,17 @@ describe("isSyntheticPrompt", () => {
     expect(
       isSyntheticPrompt('<agent-message from="a4a13492d7dc3d89e">\n[Subagent hand-back] …'),
     ).toBe(true);
+    // The fourth shape, and the first with NO envelope tag at all — the host
+    // resumes a rate-limited session with a plain English sentence. 5 of the
+    // 153 hook-sourced user records in this project's capture open with it.
+    // Measured 2026-10-03: it pinned a German session to `en` with
+    // prompt_chars 148, which is this string's exact length, and the turn-end
+    // gate then refused every German reply for the rest of the run.
+    expect(
+      isSyntheticPrompt(
+        "Your claude.ai usage limit has reset. Continue the task you were working on when the limit was reached; do not repeat work that is already complete.",
+      ),
+    ).toBe(true);
   });
 
   it("does not fire on a human prompt, including one that quotes a notification", () => {
@@ -111,6 +122,15 @@ describe("isSyntheticPrompt", () => {
     expect(
       isSyntheticPrompt(
         'warum hat dieses <agent-message from="x"> meinen Sprach-Pin gesetzt?',
+      ),
+    ).toBe(false);
+    // The usage-limit sentence is the one shape here matched as PROSE rather
+    // than as an envelope tag, so the anchor is the whole guard and this case
+    // is what proves it holds: a human asking about the message keeps their
+    // turn, because their question does not open at character zero with it.
+    expect(
+      isSyntheticPrompt(
+        "warum sagt er mir Your claude.ai usage limit has reset mitten im Lauf?",
       ),
     ).toBe(false);
   });
