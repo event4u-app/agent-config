@@ -1,0 +1,37 @@
+You are reviewing a change in the repository checkout at
+<worktree>
+on branch `drain/rule-links-repo-tree-20261003`.
+
+Scope: the complete delta `git diff origin/main...HEAD` — every changed file, no
+subset. Read it yourself; do not take any summary of it on trust.
+
+Report findings. For each one give: file:line, what is wrong, and why it matters.
+Severity your own judgement.
+
+Things worth checking, non-exhaustive — look beyond this list:
+- Each markdown link that became a code span: does the code span name a path that
+  actually exists in this repository? Run `test -e <path>` for every one.
+- Did any link disappear whose target was reachable from an installed rule
+  directory (i.e. a link that was NOT dead)?
+- `src/` is the only source of truth; `dist/agent-src/` is a byte-exact
+  projection with path rewriting. Does every `src/rules/*.md` change have a
+  matching `dist/agent-src/rules/*.md` change and vice versa?
+- Frontmatter: `validator_ignore` entries, `# obligation: line N` markers,
+  `enforced_by` — are any of them now describing something that is not in the
+  file?
+- `tests/scripts/install_rule_links.test.ts`: are the pinned numbers reproducible?
+  Run `./scripts-run src/scripts/report_installed_rule_links` and check.
+  Is the new test actually able to fail, or is it tautological?
+- The roadmap `agents/roadmaps/road-to-rule-triggers-and-links-that-hold.md`:
+  does any number in it contradict what the tree reads today? Does any claim in
+  the blocker text contradict the roadmap's own `## What this roadmap
+  deliberately does not do` section, or the `## Decisions` table?
+- `agents/settings/policies/media/` reachability: `./scripts-run
+  src/scripts/lint_media_policy_linkage` must stay green — check it does, and
+  check WHY it does (which substring satisfies it).
+- Anything the change broke that no gate in this repository would catch.
+
+Do not edit any file. Do not commit. Do not push. Report only.
+
+Run commands from the worktree directory above with absolute paths. `node_modules`
+is present there. Do not run two `vitest` invocations at the same time.
