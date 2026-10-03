@@ -2028,8 +2028,9 @@ export function _gate_rule_layer_overlap(
     layer: string | null,
     dry_run: boolean,
 ): boolean {
-    const global_dir = path.join(os.homedir(), '.claude', 'rules');
-    const project_dir = path.join(project_root, '.claude', 'rules');
+    // ONE source of truth for which directories the host loads, shared with the
+    // delivery carrier's scope filter (`rule_layer_overlap.hostRuleLayerDirs`).
+    const [global_dir, project_dir] = rule_layer_overlap.hostRuleLayerDirs(project_root);
     const g = rule_layer_overlap.readRuleLayer(global_dir);
     const p = rule_layer_overlap.readRuleLayer(project_dir);
     if (g === null || p === null) return true; // only one layer exists — nothing to double

@@ -300,32 +300,51 @@ Reproduced on 2026-10-01:
       2,122 B — more than the 719 B the cascade resolver adds. The cheaper
       option and the correct one were the same one here, which is worth
       recording because the opposite was assumed when D3 was taken.
-- [ ] **1.3 Deliver only what the install carries.** A rule with no file in the
+- [x] **1.3 Deliver only what the install carries.** A rule with no file in the
       host's installed rule directory is not delivered. One source of truth for
       scope.
       verify: `npx vitest run tests/scripts/rule_inject_hook.test.ts -t scope` -> 0
 
-      **Not started 2026-10-02 — blocked on `hook-bundle-ceiling-exhausted`
-      below, not on design.** The scope is known and was established while
-      sizing the step: Claude Code loads `~/.claude/rules/` and
-      `<project>/.claude/rules/` BOTH (`install.ts:1991`, `:2031-2032`), so the
-      scope is their union and the body still comes from the package — the
-      installed layer declares what is in scope, the package supplies the text.
-      In `delivery` mode those files are thin stubs, which is exactly why the
-      two halves cannot be the same read.
+      **Done 2026-10-03, on the design the 2026-10-02 run had already
+      established.** `hostRuleLayerDirs` and `hostRuleLayerIds` in
+      `_lib/rule_layer_overlap.ts` are the one source of truth: the installer's
+      overlap gate now calls the first instead of spelling the pair out inline,
+      and `buildInjection` filters its matches through the second. The body
+      still comes from the package corpus `ruleSources` resolves, and one
+      fixture asserts exactly that — a consumer whose host layer carries
+      `prompt-rule.md` with the text `INSTALLED STUB` receives `PROMPT RULE
+      BODY` and never the stub, which is the half that stops the filter from
+      quietly becoming a second body source.
 
-      The step needs a directory read plus a filter in the carrier, and the
-      bundle has 75 bytes of headroom. Pinned so the work has a red to turn
-      green: `rule_inject_foreign_matrix.test.ts`'s last case asserts that a
-      consumer `.claude/rules` directory is NOT yet the scope.
+      **`null` is a third answer, and it is the one that keeps 1.1 repaired.**
+      `hostRuleLayerIds` returns `null` when NEITHER directory exists, and the
+      carrier applies no filter on `null`. An empty set means the install wrote
+      a rule layer carrying nothing, so nothing is in scope; `null` means
+      nothing exists to declare a scope at all — a maintainer checkout, or a
+      host this install writes no rules directory for. Scoping to the empty set
+      there would make the carrier silent again in precisely the tree step 1.1
+      taught it to speak in. Both readings have their own fixture so the
+      distinction cannot be collapsed by accident.
 
-      **What shipping 1.1 without 1.3 actually costs, stated plainly.** 13
-      router tier rules are maintainer-only by `workspaces` and neither hook
-      file reads that key, so a consumer can now receive a body for a rule the
-      install never meant for them. The register's risk 1 bounds the harm —
-      the installed layer is still eager, so a wrong delivery duplicates rather
-      than loses — and that bound is real but it is not a reason to call this
-      done. It is the first thing the next run should close.
+      **Two fixtures had to stop reading the developer's machine before any of
+      this could be measured.** `os.homedir()` reads `$HOME` on POSIX, so the
+      moment the scope filter existed, `rule_inject_hook.test.ts` resolved the
+      maintainer's own 105-file `~/.claude/rules` and nine cases went red
+      locally while staying green in CI. Both that file and the foreign matrix
+      now stage a `HOME` of their own — the matrix passes it into the spawned
+      bundle's env — so every column is a statement about the fixture rather
+      than about one laptop. This was a pre-existing exposure that only the new
+      filter made visible; it is recorded rather than quietly fixed.
+
+      The matrix's pinned column is rewritten from "a consumer `.claude/rules`
+      directory is NOT yet the delivery scope" to the scope assertion the step
+      owes, and a twelfth column covers the user layer on its own. Both run the
+      BUILT bundle through the dispatcher, so what is proven is that the
+      dispatcher reaches the filter — not that the function works when called
+      directly.
+
+      Bundle cost: **+780 B** (1,497,769 -> 1,498,549 on the gate's probe
+      build).
 - [ ] **1.4 The host form.** Delivered text has frontmatter and block comments
       stripped, by the same parser the thin projector uses.
       verify: `npx vitest run tests/scripts/rule_inject_hook.test.ts -t host-form` -> 0

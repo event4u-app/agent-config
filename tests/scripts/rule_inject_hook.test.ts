@@ -9,7 +9,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
     clearHookStdinOverride,
@@ -89,7 +89,23 @@ function rules(out: string): string[] {
     return [...parsed.additional_context.matchAll(/<rule id="([^"]+)"/g)].map((m) => m[1] as string);
 }
 
+/**
+ * A home directory with no `~/.claude/rules` in it.
+ *
+ * NOT a convenience. Since step 1.3 the carrier scopes delivery to the host's
+ * rule layers, and `os.homedir()` reads `$HOME` on POSIX — so without this every
+ * case below would read the DEVELOPER's installed corpus and answer differently
+ * on a maintainer machine than in CI. A fixture whose verdict depends on who ran
+ * it is not a fixture.
+ */
+const HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-home-'));
+
+beforeEach(() => {
+    vi.stubEnv('HOME', HOME);
+});
+
 afterEach(() => {
+    vi.unstubAllEnvs();
     clearHookStdinOverride();
 });
 
@@ -600,6 +616,90 @@ describe('rule-inject — foreign-project resolution (1.1)', () => {
             event: 'user_prompt_submit',
             workspace: root,
             session_id: 'maintainer-1',
+            payload: { prompt: 'plan the migration' },
+        });
+        expect(rules(out)).toEqual(['prompt-rule']);
+    });
+});
+
+/**
+ * Write `ids` as `.md` files into one host rule layer.
+ *
+ * Each case stages its own layer rather than reading the machine's, because
+ * `os.homedir()` reads `$HOME`: a fixture that read the developer's installed
+ * corpus would answer differently in CI.
+ */
+function hostLayer(root: string, ids: string[]): void {
+    const dir = path.join(root, '.claude', 'rules');
+    fs.mkdirSync(dir, { recursive: true });
+    for (const id of ids) fs.writeFileSync(path.join(dir, `${id}.md`), 'INSTALLED STUB\n', 'utf-8');
+}
+
+describe('rule-inject — delivery scope is what the install carries (1.3)', () => {
+    it('a rule the project rule layer does not carry is NOT delivered', () => {
+        const root = makeRoot({ delivery: true });
+        hostLayer(root, ['some-other-rule']);
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'scope-1',
+            payload: { prompt: 'plan the migration' },
+        });
+        expect(rules(out)).toEqual([]);
+    });
+
+    it('a rule the project rule layer DOES carry is delivered, body from the package corpus', () => {
+        const root = makeRoot({ delivery: true });
+        hostLayer(root, ['prompt-rule']);
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'scope-2',
+            payload: { prompt: 'plan the migration' },
+        });
+        expect(rules(out)).toEqual(['prompt-rule']);
+        // The installed file says WHICH rule is in scope and never what it
+        // says: under `delivery` it is a thin stub, so a carrier reading the
+        // body from there would ship the stub.
+        expect(out).toContain('PROMPT RULE BODY');
+        expect(out).not.toContain('INSTALLED STUB');
+    });
+
+    it('the USER layer counts too — the host loads both, so the scope is their union', () => {
+        const root = makeRoot({ delivery: true });
+        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-userhome-'));
+        hostLayer(home, ['prompt-rule']);
+        vi.stubEnv('HOME', home);
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'scope-3',
+            payload: { prompt: 'plan the migration' },
+        });
+        expect(rules(out)).toEqual(['prompt-rule']);
+    });
+
+    it('an EMPTY host rule layer scopes to nothing — a declaration, not an absence', () => {
+        const root = makeRoot({ delivery: true });
+        fs.mkdirSync(path.join(root, '.claude', 'rules'), { recursive: true });
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'scope-4',
+            payload: { prompt: 'plan the migration' },
+        });
+        expect(rules(out)).toEqual([]);
+    });
+
+    it('NO host rule layer anywhere applies no filter — never the silence 1.1 repaired', () => {
+        // `null` from `hostRuleLayerIds` is a different answer from an empty
+        // set: scoping to empty in a tree that declares no layer would make the
+        // carrier silent again in exactly the tree 1.1 taught it to speak in.
+        const root = makeRoot({ delivery: true });
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'scope-5',
             payload: { prompt: 'plan the migration' },
         });
         expect(rules(out)).toEqual(['prompt-rule']);

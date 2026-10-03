@@ -25,6 +25,7 @@
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 /**
@@ -138,6 +139,63 @@ export function compareLayers(
         project_only: only_in(project_layer, global_layer),
         redundant_chars,
     };
+}
+
+/**
+ * The two directories Claude Code loads rules from, user layer first.
+ *
+ * ONE SOURCE OF TRUTH FOR SCOPE (`road-to-a-rule-carrier-that-works-outside-the-repo`
+ * step 1.3). Two readers need this pair and both used to spell it out inline:
+ * the installer's overlap gate, and — once the carrier started resolving bodies
+ * from the package rather than from the workspace — the delivery scope itself.
+ * A carrier scoping on one list while the installer gates on another would
+ * deliver a rule the install never wrote, which is the state step 1.3 exists to
+ * end.
+ *
+ * It is a UNION and not a precedence chain. The host loads both with no dedup —
+ * that is the whole reason this module exists — so a rule present in either
+ * layer is loaded, and "what the install carries" is the union of the two.
+ *
+ * `os.homedir()` rather than a settings key: the installer resolves the user
+ * layer the same way, and a second spelling of "where is home" is a second
+ * thing to disagree about.
+ */
+export function hostRuleLayerDirs(projectRoot: string): [string, string] {
+    return [
+        path.join(os.homedir(), '.claude', 'rules'),
+        path.join(projectRoot, '.claude', 'rules'),
+    ];
+}
+
+/**
+ * Rule ids present in either host rule layer, or `null` when NEITHER directory
+ * exists.
+ *
+ * `null` IS A DIFFERENT ANSWER FROM AN EMPTY SET, and the difference is the
+ * contract. An empty set means the install wrote a rule layer and it carries
+ * nothing, so nothing is in scope. `null` means no rule layer exists to declare
+ * a scope at all: a maintainer checkout, or a host this install writes no rules
+ * directory for. Scoping to the empty set there would re-create exactly the
+ * silence step 1.1 repaired, so the caller applies no filter instead.
+ *
+ * Names only, never bodies. This runs on the `user_prompt_submit` hot path, and
+ * {@link readRuleLayer} beside it reads every file's contents because ITS
+ * caller compares them. A scope check never needs a byte of any of them.
+ */
+export function hostRuleLayerIds(projectRoot: string): Set<string> | null {
+    const ids = new Set<string>();
+    let found = false;
+    for (const dir of hostRuleLayerDirs(projectRoot)) {
+        let names: string[];
+        try {
+            names = fs.readdirSync(dir);
+        } catch {
+            continue;
+        }
+        found = true;
+        for (const n of names) if (n.endsWith('.md')) ids.add(n.slice(0, -3));
+    }
+    return found ? ids : null;
 }
 
 /**

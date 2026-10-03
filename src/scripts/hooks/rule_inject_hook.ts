@@ -36,6 +36,18 @@
  * does. On any other host, and on a `lean_projection.mode: eager-all` rollback,
  * it emits nothing.
  *
+ * THE INSTALL DECLARES THE SCOPE, THE PACKAGE SUPPLIES THE TEXT (step 1.3).
+ * A rule is delivered only when the host's own rule directories carry a file
+ * for it — `~/.claude/rules/` and `<project>/.claude/rules/`, as a union,
+ * because the host loads both. The router is the PACKAGE's list of what could
+ * route and is a larger set: 13 router tier rules are maintainer-only by
+ * `workspaces`, and before this filter a consumer could receive a body for a
+ * rule their install never carried. The two halves cannot be one read — under
+ * `delivery` the installed files are thin stubs by construction, so they can say
+ * WHICH rules are in scope and never WHAT they say. Where no host rule directory
+ * exists at all, nothing declares a scope and no filter applies; see
+ * `rule_layer_overlap.hostRuleLayerIds` for why that is not the empty set.
+ *
  * ONE MATCHER, SHARED WITH THE OFFLINE MODEL. Everything about selection,
  * ordering, capping and body loading comes from `_lib/rule_injection.ts`, which
  * `model_rule_injection.ts` also imports. Step 0.5 states the reason in as many
@@ -111,6 +123,7 @@ import {
     ruleSources,
     selectForInjection,
 } from '../_lib/rule_injection.js';
+import { hostRuleLayerIds } from '../_lib/rule_layer_overlap.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
@@ -305,8 +318,26 @@ export function buildInjection(
     } catch {
         return null; // no router — nothing to deliver, and never a failure
     }
+    // STEP 1.3 — the install declares the scope, the package supplies the text.
+    //
+    // The router is the PACKAGE's list of every rule that could route. What a
+    // given consumer is actually under is what their install wrote into the
+    // host's rule directories, and the two are not the same set: 13 router tier
+    // rules are maintainer-only by `workspaces`, and before this filter a
+    // consumer could receive a body for a rule their install never carried.
+    //
+    // The two halves cannot be one read, and that is the reason this is a
+    // filter rather than a different body source. In `delivery` mode the
+    // installed files are thin stubs by construction, so the installed layer can
+    // say WHICH rules are in scope and never WHAT they say; the body still comes
+    // from the package corpus `ruleSources` resolves.
+    //
+    // `null` means no host rule layer exists to declare a scope — see
+    // `hostRuleLayerIds`. No filter then, because scoping to an empty set would
+    // re-create the silence step 1.1 repaired.
+    const scope = hostRuleLayerIds(root);
     const matches = matchTierRules(router, prompt, openFiles, command).filter(
-        (m) => !seen.has(m.id),
+        (m) => !seen.has(m.id) && (scope === null || scope.has(m.id)),
     );
     if (matches.length === 0) return null;
     const sel = selectForInjection(root, matches, CAP_BYTES);

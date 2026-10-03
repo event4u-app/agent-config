@@ -104,11 +104,22 @@ interface Fired {
     stderr: string;
 }
 
+/**
+ * A home directory with no `~/.claude/rules` in it.
+ *
+ * Since step 1.3 the carrier scopes delivery to the host's rule layers, and
+ * `os.homedir()` reads `$HOME` on POSIX. Without this the matrix would read the
+ * DEVELOPER's installed corpus and answer differently on a maintainer machine
+ * than in CI — and every column below would be a statement about one laptop.
+ * `opts.home` lets a case stage a user layer of its own.
+ */
+let HOME = '';
+
 function dispatch(
     install: string,
     workspace: string,
     session: string,
-    opts: { cwd?: string } = {},
+    opts: { cwd?: string; home?: string } = {},
 ): Fired {
     const r = spawnSync(
         process.execPath,
@@ -127,7 +138,12 @@ function dispatch(
                 prompt: PROMPT,
             }),
             cwd: opts.cwd ?? workspace,
-            env: { ...process.env, AGENT_CONFIG_REPLAY: '', AGENT_CONFIG_SESSION_ROLE: '' },
+            env: {
+                ...process.env,
+                AGENT_CONFIG_REPLAY: '',
+                AGENT_CONFIG_SESSION_ROLE: '',
+                HOME: opts.home ?? HOME,
+            },
         },
     );
     const stdout = r.stdout ?? '';
@@ -157,6 +173,7 @@ beforeAll(() => {
             return;
         }
     }
+    HOME = mkdtemp('rule-inject-home-');
     try {
         INSTALL = makeInstall();
     } catch (e) {
@@ -299,18 +316,32 @@ describe('rule-inject — foreign-project matrix on the built bundle (1.8)', () 
         expect(r.stdout).toContain('additionalContext');
     });
 
-    it('a consumer .claude/rules directory is NOT yet the delivery scope — pinned for 1.3', () => {
+    it('a consumer .claude/rules directory IS the delivery scope (1.3)', () => {
         requireStaged();
-        // Step 1.3 will make the installed rule directory the scope, so that a
-        // rule the install does not carry is never delivered. It is not built
-        // yet, and this pins what the carrier does TODAY so that implementing
-        // 1.3 has a red to turn green rather than a behaviour to discover.
+        // The install declares WHICH rules a consumer is under; the package
+        // supplies the text. `second-rule` routes and its body exists in the
+        // package corpus, and it is still not delivered, because this consumer's
+        // install never wrote it.
         const ws = mkdtemp('rim-scope-');
         const rules = path.join(ws, '.claude', 'rules');
         fs.mkdirSync(rules, { recursive: true });
-        fs.writeFileSync(path.join(rules, 'prompt-rule.md'), 'stub\n', 'utf-8');
+        fs.writeFileSync(path.join(rules, 'prompt-rule.md'), 'INSTALLED STUB\n', 'utf-8');
         const r = dispatch(INSTALL, ws, 'rim-9');
-        // `second-rule` has no file in that directory. Today it still arrives.
-        expect(r.ids).toContain('second-rule');
+        expect(r.ids).toContain('prompt-rule');
+        expect(r.ids).not.toContain('second-rule');
+        // And the body is the package's, not the stub the host layer carries.
+        expect(r.stdout).toContain('PROMPT RULE BODY');
+        expect(r.stdout).not.toContain('INSTALLED STUB');
+    });
+
+    it('a rule only the USER layer carries is in scope — the host loads both', () => {
+        requireStaged();
+        const ws = mkdtemp('rim-scope-user-');
+        const home = mkdtemp('rim-scope-home-');
+        const rules = path.join(home, '.claude', 'rules');
+        fs.mkdirSync(rules, { recursive: true });
+        fs.writeFileSync(path.join(rules, 'second-rule.md'), 'INSTALLED STUB\n', 'utf-8');
+        const r = dispatch(INSTALL, ws, 'rim-11', { home });
+        expect(r.ids).toEqual(['second-rule']);
     });
 });
