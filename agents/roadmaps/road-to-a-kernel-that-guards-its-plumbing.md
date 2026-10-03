@@ -217,6 +217,16 @@ deny message names its own kill switch.
 > window's readings behind it. The registration is carried with 3.3 rather
 > than under 3.2 because 3.3 is its only consumer and the window that
 > validates it is 3.3's own.
+>
+> **CLOSED 2026-10-03. The window elapsed and was read rather than assumed.**
+> 69 clean `warn-only window:` lines across 23 distinct CI runner sessions,
+> zero INCOMPLETE, zero overruns, plus three passes on the 1 vCPU
+> `hardware_reference.floor` class that nothing had previously sampled —
+> tightest margin there 5.08x. The tally against the blocker's four quantified
+> conditions, the run table and the container's own environment report are in
+> `agents/evidence/analysis/concern-sla-warn-only-window.md`. Phase 3 is
+> closed; this blockquote is kept rather than deleted because what each of the
+> three original conditions turned out to be is the useful part.
 
 - [x] **3.1 Bundle integrity once per session, cached.** `build:hooks` writes
       `dist/hooks/dispatch.sha256`; `check_hook_bundle_content.ts` (exists,
@@ -323,7 +333,7 @@ deny message names its own kill switch.
       slow and environment-dependent — and a mocked spawn would test the mock.
       The A/B is recorded in `concernSlaPass`'s header where the next reader
       meets it.
-- [ ] **3.3 Fail closed by severity, after 3.2.** Amend
+- [x] **3.3 Fail closed by severity, after 3.2.** Amend
       `hook-architecture-v1.md:125`: rc ≥ 3 or timeout on a
       `severity: blocking` concern → `EXIT_BLOCK` with `execution_failed`
       named; advisory concerns keep fail-open; `:303` unchanged.
@@ -448,6 +458,86 @@ deny message names its own kill switch.
       post-hoc overrun verdict on the default path, not a preemption, and 3.3
       must say which it is landing.
 
+      **LANDED 2026-10-03, and here is which thing it does.** The runtime
+      change is the SEVERITY RESOLUTION and nothing else: `rc >= 3` on a
+      `severity: blocking` concern now refuses, where the branch previously
+      read the `fail_closed:` flag and six of the nine blocking guards
+      therefore permitted the call precisely when they broke. `sla_ms x 3`
+      stays a HARNESS OBSERVATION — the line
+      `src/scripts/_lib/concern_sla_window.ts` prints on every bench run,
+      gating nothing. No runtime warn-only path is added and no runtime
+      timeout reads the budget. That is the declaration the blocker asked for,
+      stated in the direction that does not widen anything.
+
+      **The timeout clause is refused, on a measurement rather than on a
+      preference.** An earlier revision of this branch wired
+      `sla_ms x 3` into `_run_concern`'s `spawnSync` timeout and the two
+      changes were lethal together. `concern_sla_ms` is derived from the
+      dispatcher's own per-concern `duration_ms`, which brackets
+      `main_fn(argsList)` and nothing else; the registered rows are 0.564 to
+      1.587 ms, so the bound is 1.7 to 4.8 ms. A spawn timeout must also cover
+      fork, interpreter start and module load, and the same bench's
+      `control (node -e 0)` row measures that term ALONE at p95 17 ms on the
+      1 vCPU class and 26 ms on the GitHub runner. Probed against the real
+      dispatcher: `AGENT_CONFIG_HOOKS_ISOLATED=1` on `claude/pre_tool_use`
+      returned `ETIMEDOUT` for all six blocking concerns, left no verdict, and
+      the new severity branch turned each one into a deny — exit 2 on an
+      ordinary `Read`. Risk 1 of this register, firing on every host instead of
+      a slow one, through a documented escape hatch. Re-wiring it needs a
+      SPAWN-path measurement this tree does not have; a second reading of the
+      in-process number cannot supply it.
+      `dispatch_hook.test.ts` § "the spawn path keeps the historical timeout"
+      pins the direction with a concern NAMED for a registered SLA row, so the
+      case reds if the bound returns.
+
+      **The stop slot spends its refusal once, and that clause is new.** Step
+      3.3's own verify line calls the reversal "lane 1's file, this lane's
+      decision, recorded in the programme as D3" — and no record of D3 exists
+      anywhere in this repository, searched. The Prerequisites line asserting
+      it came verbatim from an externally supplied draft and was never
+      verified, so the reversal shipped with no prior authority behind it and
+      is carried by this change's own review instead. `turn-end-gate` and
+      `run-continuation` are `severity: blocking` on `stop` and carry neither
+      `fail_closed: true` nor `skip_on_refusal_retry`, and both read
+      `stop_hook_active` INSIDE `main()` where a crash never reaches it. So the
+      dispatcher bounds it: a crash refuses the first Stop and, on the retry
+      the host marks, falls back to fail-open. A guard that broke loses the
+      power to refuse forever on the strength of being broken; a guard that
+      DECIDED to refuse returns 1 and never reaches this branch.
+
+      **Window readings behind the flip.** 69 clean `warn-only window:` lines,
+      23 distinct CI runner sessions, 0 INCOMPLETE, 0 overruns, plus three
+      1 vCPU passes with a tightest margin of 5.08x. Tally, run table and
+      container report:
+      `agents/evidence/analysis/concern-sla-warn-only-window.md`.
+
+      **Bundle cost.** `check_hook_bundle_composition` reads 1,507,218 B on the
+      base and 1,508,804 B with this change — **+1,586 B**, leaving 41,196 B of
+      headroom under the 1,550,000 B ceiling.
+
+      **Independently reviewed, and the review found a defect the author did
+      not.** AI council 2026-10-03, 2/2 provider-diverse
+      (anthropic/claude-sonnet-4-5 + openai/codex-default), $0.00 on
+      subscription seats. Verdict `ratified` from both seats — this is an
+      authority EXPANSION, not an alignment, because `fail_closed:` was a
+      separate policy dimension and `severity` is being widened to absorb it.
+      (BLOCKING, both seats) `proc.status ?? 0` read a signal-terminated child
+      as exit 0, i.e. ALLOW, at precisely the moment the new branch exists to
+      refuse — fixed, with a fixture that gets the spawned process killed and
+      a case in each direction. Further findings taken: the `fail_closed:`
+      manifest comments now say what the flag still decides (the
+      stdin-read-failure deny) instead of what it stopped deciding; the
+      contract's "full traceback" claim is corrected to the diagnostic each
+      failure actually produces; the asymmetric blast radius (`stop` bounded
+      by the retry, `pre_tool_use` not) is stated in the contract; the escape
+      hatch is printed on stderr beside a `pre_tool_use` refusal rather than
+      left in a source comment; and the window counts were replaced by a path,
+      after the review found two different tallies inside one diff. The one
+      finding NOT actioned is the in-process synchronous hang, which no clause
+      here releases — recorded in the contract as an unbounded case rather
+      than closed. Artifact:
+      `agents/evidence/ratifications/drain-kernel-plumbing-3-3-severity.md`.
+
 ## Phase 4 — One exit-code table
 
 - [x] **4.1 `src/scripts/hooks/exit_codes.ts` (new).** One frozen table
@@ -488,9 +578,27 @@ discovered and nothing newly refused — the same obstacle, in a shape the
 dashboard, the archival sweep and the continuation ladder can act on.
 
 ### blocker: warn-only-window-not-elapsed
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 3 — human-only
+- **Resolved:** 2026-10-03, by READING the window rather than by waiting
+  further. Tally against the four quantified conditions below: (a) **69** clean
+  `warn-only window:` lines against a floor of 10; (b) **23** distinct CI runner
+  sessions against a floor of 2; (c) **0** runs reporting INCOMPLETE; (d) the
+  1 vCPU `hardware_reference.floor` class **sampled**, three passes, all clean,
+  tightest margin 5.08x — the sampling branch rather than the recorded-decision
+  branch. The reset rule never fired: no run named an overrun. Run table,
+  per-concern margins and the container's own environment report:
+  `agents/evidence/analysis/concern-sla-warn-only-window.md`.
+- **Its `Class: 3 — human-only` label was wrong, and the correction is worth
+  keeping.** The class was assigned because elapsed calendar time cannot be
+  spent by a session, which is true and is about the WAIT. The exit criterion
+  this blocker itself added is four counts over CI log lines, and counting is
+  not a human-only act. Under capability-before-role the label follows the exit
+  criterion, not the inconvenience; filed as `3` it told the continuation ladder
+  that no agent could close it, which is why it sat open after the readings it
+  needed already existed. A blocker whose exit criterion is quantified is
+  agent-checkable by construction.
 - **Ownership:** destructive-owned
 - **Blocks:** Phase 3 — step 3.3 and AC-3. Every other step and criterion on
   this roadmap is closed.
@@ -550,7 +658,11 @@ dashboard, the archival sweep and the continuation ladder can act on.
   this roadmap landed regresses, and nothing it landed depends on the flip.
 - **Resolved when:** the registered `concern_sla_ms` values have been observed
   across a warn-only window without a blocking concern exceeding
-  `sla_ms × 3`.
+  `sla_ms × 3`. **Met** — see § Resolved above. What the readings license is
+  the bound as an OBSERVATION, which is what this blocker asked for in as many
+  words; step 3.3 accordingly lands the severity resolution and leaves
+  `sla_ms × 3` unwired, for a unit mismatch these readings cannot answer and
+  that its own closing record carries.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-30 | reviewer: ai-council-2of2-anthropic-openai -->
@@ -581,8 +693,21 @@ dashboard, the archival sweep and the continuation ladder can act on.
       sidecar rather than the bundle, because `block_plumbing_writes` refused
       the bundle edit — step 1.2 working, and the same `mismatch` through the
       same branch either way.
-- [ ] AC-3 — After the measured window, a blocking concern that throws or
-      exceeds `sla_ms × 3` refuses; an advisory one allows with an issue row.
+- [x] AC-3 — After the measured window, a blocking concern that throws refuses;
+      an advisory one allows with an issue row. **The "or exceeds `sla_ms × 3`"
+      half is NOT met and was refused rather than missed** — see 3.3's closing
+      record and `agents/evidence/analysis/concern-sla-warn-only-window.md`
+      § What this window does and does not license. `concern_sla_ms` measures
+      in-process concern work (0.564-1.587 ms registered) and a `spawnSync`
+      timeout must also cover interpreter start, which the same bench measures
+      at p95 17 ms on 1 vCPU and 26 ms on the runner. Wired and probed, it
+      ETIMEDOUTs all six blocking `pre_tool_use` concerns and turns each
+      non-verdict into a deny — exit 2 on an ordinary `Read`. Meeting that half
+      needs a SPAWN-path measurement this tree does not have, which is a new
+      measurement rather than a second reading of this one. The criterion is
+      ticked on the half that was landed and the other half is carried as the
+      narrowing it is, because a box ticked over an unmet clause is worse than
+      an open box.
 - [x] AC-4 — `lint-deny-text` and `lint-exit-codes` are in CI and green.
 - [x] AC-5 — A Class C key edit in project settings is refused; a Class A
       key edit is not; no user-global file is touched.
