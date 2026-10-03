@@ -220,6 +220,7 @@ When the user picks option 1 or 2 in step 4b:
 | Never started, scope decision reversed | `skipped/` |
 | Superseded by another roadmap | `skipped/` — add a pointer line at the top: `> Superseded by agents/roadmaps/{other}.md` |
 | Research proved the direction wrong | `skipped/` — add a 1-line reason at the top |
+| A `skipped/` or `later/` roadmap re-checked by `/roadmap:triage-parked` and found to hold nothing left to resume | `archive/` — `status: archived`, plus a `> Archived from <folder>/ on <date>` line carrying the original reason |
 
 If in doubt: archive beats skipped. `skipped/` is reserved for roadmaps where
 no meaningful work was invested and the scope itself was rejected.

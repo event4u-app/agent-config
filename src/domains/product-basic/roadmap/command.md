@@ -2,13 +2,13 @@
 model_tier: medium
 name: roadmap
 disable-model-invocation: true
-argument-hint: "[create|ai-council|process-step|process-phase|process-full|next] [args]"
+argument-hint: "[create|ai-council|process-step|process-phase|process-full|next|triage-parked] [args]"
 pack: product-basic
-intent: "Roadmap dispatcher — create, process-step, process-phase, process-full, next, ai-council"
-routes_to: [roadmap-create, roadmap-ai-council, roadmap-materialize, roadmap-process-step, roadmap-process-phase, roadmap-process-full, roadmap-next]
+intent: "Roadmap dispatcher — create, process-step, process-phase, process-full, next, triage-parked, ai-council"
+routes_to: [roadmap-create, roadmap-ai-council, roadmap-materialize, roadmap-process-step, roadmap-process-phase, roadmap-process-full, roadmap-next, roadmap-triage-parked]
 replaces: []
 visibility: advanced
-description: Roadmap orchestrator — routes to create (authoring), process-step / process-phase / process-full (autonomous execution), and next (pick a roadmap and ship it).
+description: Roadmap orchestrator — routes to create (authoring), process-step / process-phase / process-full (execution), next (pick a roadmap and ship it), and triage-parked (drain later/ and skipped/).
 cluster: roadmap
 type: orchestrator
 suggestion:
@@ -40,6 +40,7 @@ paused for confirmation before every step) was removed —
 | `/roadmap:process-phase` (**default execution scope**) | `commands/roadmap/process-phase.md` | Autonomously process every open step in the current phase |
 | `/roadmap:process-full` | `commands/roadmap/process-full.md` | Autonomously process every open step across every phase; `--all` iterates the whole active estate, `--worktree` isolates the workspace |
 | `/roadmap:next` | `commands/roadmap/next.md` | Screen for the next executable roadmap, then carry it to a reviewable PR (selection + `process-full` + delivery) |
+| `/roadmap:triage-parked` | `commands/roadmap/triage-parked.md` | Re-check every roadmap in `later/` and `skipped/` against the current tree; promote, absorb, archive, or re-park each one |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -71,6 +72,7 @@ each only binds a scope delta.
    > 4. process-phase — process the current phase (default)
    > 5. process-full — process every open step across every phase
    > 6. next — pick the next executable roadmap and ship it to a PR
+   > 7. triage-parked — drain later/ and skipped/ against the current tree
 
 ## Rules
 
@@ -91,3 +93,8 @@ each only binds a scope delta.
   [`/roadmap:next`](roadmap/next.md), which is the only sub that
   screens and selects. The three `process-*` subs never choose across
   roadmaps.
+- **Parked-estate intents** (*"go through later/ and skipped/"*, *"geh die
+  geparkten Roadmaps durch"*, *"which parked roadmaps are unblocked now?"*) route
+  to [`/roadmap:triage-parked`](roadmap/triage-parked.md) — the only sub that
+  reads `later/` and `skipped/`. It moves and rewrites plans; it never executes
+  one.

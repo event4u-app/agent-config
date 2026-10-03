@@ -1,0 +1,47 @@
+{
+  "skill": "roadmap-triage-parked",
+  "last_eval": "2026-10-03",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers draining the parked back room: re-checking roadmaps in agents/roadmaps/later/ and skipped/ against the current tree, running their resume conditions, and promoting, absorbing or archiving them so the folders shrink. Should-not-trigger covers the near-miss neighbours that each own a different surface: /roadmap:next (selects among ACTIVE roadmaps and ships one), /roadmap:process-full (executes a named roadmap), /analyze:inbox (analyzes a dropped agents/tmp/ artifact, not a parked roadmap), archiving a single just-finished active roadmap, and a read-only dashboard question.",
+  "queries": [
+    {
+      "q": "geh die Roadmaps in later und skipped durch und übernimm was noch relevant ist in die aktiven",
+      "trigger": true
+    },
+    {
+      "q": "check which roadmaps in agents/roadmaps/later have a resume condition that already fired",
+      "trigger": true
+    },
+    {
+      "q": "the later/ folder is rotting — verify each parked roadmap against the tree and archive what is done",
+      "trigger": true
+    },
+    {
+      "q": "triage the skipped roadmaps: still rejected, or can we finally archive them?",
+      "trigger": true
+    },
+    {
+      "q": "re-evaluate the parked roadmaps and promote the ones that are unblocked now",
+      "trigger": true
+    },
+    {
+      "q": "pick the next executable roadmap and ship it as a PR",
+      "trigger": false
+    },
+    {
+      "q": "process every open step of road-to-stacks-beyond-php.md",
+      "trigger": false
+    },
+    {
+      "q": "analyze the review I dropped in agents/tmp and turn it into a roadmap",
+      "trigger": false
+    },
+    {
+      "q": "the last step of road-to-decision-closure is done, archive it",
+      "trigger": false
+    },
+    {
+      "q": "how many open roadmap steps are left on the dashboard?",
+      "trigger": false
+    }
+  ]
+}
