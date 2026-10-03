@@ -19,7 +19,7 @@ applies_to_user_types:
 validator_ignore:
   - type: "substring"
     pattern: "../../docs/"
-    reason: "Rule routes to docs/contracts/persona-schema.md and docs/personas.md — the canonical persona catalog and schema live there by design."
+    reason: "Rule routes to docs/contracts/persona-schema.md — the canonical persona schema lives there by design."
   - type: "substring"
     pattern: ".agent-src.uncondensed/"
     reason: "Rule documents the persona authoring tree (.agent-src.uncondensed/personas/) as the deprecation-path operand."
@@ -48,6 +48,6 @@ Trigger-set above activates this routing on demand, independent of the disciplin
 ## See also
 
 - [`docs/contracts/persona-schema.md`](../docs/contracts/persona-schema.md) — schema lock, tiers, sections, size budgets, linter enforcement surface, and the migrated governance checks (§ 8).
-- [`docs/personas.md`](../../docs/personas.md) — active persona catalog, citation map, ownership column.
+- `docs/personas.md` — active persona catalog, citation map, ownership column.
 - [`ai-council`](../skills/ai-council/SKILL.md) — neutral second-opinion mechanism used for merge / deprecation decisions.
 - [`skill-quality`](skill-quality.md) — sibling discipline rule for skill files.

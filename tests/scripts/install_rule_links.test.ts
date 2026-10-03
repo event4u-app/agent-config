@@ -141,54 +141,65 @@ describe("rewriteOptionCost — the measurement behind the 1.2 decision", () => 
 /**
  * Unresolved links a host ships today, as a shrink-only ratchet.
  *
- * Measured 2026-10-02 by `report_installed_rule_links`. These are the numbers
- * BEFORE the repair, and they stay that way on purpose: the repair that would
- * take `claude-code` from 160 to 47 is adding `contexts/` and `guidelines/` to
- * the deploy plan, and that plan is part of the frozen install ABI
- * (`docs/contracts/install-layout.md`), so changing it owes an
- * `install_layout_version` bump and a deprecation window. That is an owner
- * decision, held as the `rule-link-targets-change-the-frozen-install-abi`
- * blocker on `road-to-rule-triggers-and-links-that-hold`.
+ * Re-measured 2026-10-03 by `report_installed_rule_links`, DOWN from the
+ * 160 / 97 / 260 / 273 first pinned on 2026-10-02. The repair that moved them
+ * is the repo-tree link form: 23 links that named a path no install has ever
+ * held — `../../scripts/`, `../../src/scripts/`, `../../../LEGAL_NOTICE.md`,
+ * `../../docs/`, `agents/settings/policies/media/`, one `templates/` file — are
+ * now code spans carrying the path the repository actually has. Four of them
+ * named a file the repository does not have either (`scripts/*.ts` for files
+ * that live under `src/scripts/`), so the link was dead in both trees.
  *
- * What the 160 is made of, because the parts have different answers:
+ * The count is structural, not filesystem-dependent: every unresolved link
+ * here is `directory-not-deployed` or `outside-install-root`, verdicts decided
+ * from the deploy plan alone, and `file-missing` is 0. A worktree and CI read
+ * the same number.
  *
- *   · **113 into `contexts/` and `guidelines/`** — the deployable ones, the
- *     blocker's subject.
+ * What `claude-code`'s 135 is made of, because the parts have different answers:
+ *
+ *   · **112 into `contexts/` and `guidelines/`** — the deployable ones. The
+ *     repair is adding two rows to the deploy plan, which is part of the frozen
+ *     install ABI (`docs/contracts/install-layout.md`), so it owes an
+ *     `install_layout_version` bump and a deprecation window. That is an owner
+ *     decision, held as the `rule-link-targets-change-the-frozen-install-abi`
+ *     blocker on `road-to-rule-triggers-and-links-that-hold`.
  *   · **22 into `docs/`** — `dist/agent-src/` carries no `docs/` at all, by a
  *     decision several rules state in their own text ("`docs/contracts/` is
  *     unprojected ... maintainer-reachable only"). Deploying cannot fix a
- *     directory the projection does not produce.
- *   · **23 climbing out of the install root** — `../../tests/`, `../../src/`,
- *     `agents/settings/policies/`. These name the repository, not the package;
- *     no install has ever held them.
- *   · **2 one-off targets** — `scripts/hooks/evidence_independence.ts`, which
- *     is not in the projection either, and one file under `templates/`.
+ *     directory the projection does not produce, and repairing them from the
+ *     link side would prejudge whether it ever should.
+ *   · **1 climbing out of the install root** — the `../../tests/golden/`
+ *     fixture link in `direct-answers.md`. It is the same defect as the 23
+ *     repaired above and is left alone for one reason only: `direct-answers` is
+ *     a kernel rule, and a kernel-rule edit ships in its own PR with a 24 h
+ *     soak (`scope-control` § Kernel-rule edits). One link does not justify
+ *     spending that window; the next kernel PR can carry it.
  *
- * `cline` is the outlier at 273 because it installs rules at the install ROOT,
+ * `cline` is the outlier at 247 because it installs rules at the install ROOT,
  * so a `../x` link climbs out of the tree by construction — a layout decision,
- * not a missing directory. Its other 277 links are siblings and resolve; an
+ * not a missing directory. Its other 275 links are siblings and resolve; an
  * earlier version of this file read them as undeployed and pinned cline at 550,
  * which is the maximum possible value and could never have caught a regression.
  */
 const UNRESOLVED_BASELINE: Record<string, number> = {
-  "claude-code": 160,
-  augment: 97,
-  cursor: 260,
-  windsurf: 273,
-  cline: 273,
-  "gemini-cli": 160,
-  codex: 160,
-  continue: 160,
-  roocode: 160,
-  kilocode: 160,
-  qoder: 160,
-  opencode: 160,
-  trae: 160,
-  antigravity: 160,
-  codebuddy: 160,
-  droid: 160,
-  warp: 160,
-  kiro: 273,
+  "claude-code": 135,
+  augment: 73,
+  cursor: 234,
+  windsurf: 247,
+  cline: 247,
+  "gemini-cli": 135,
+  codex: 135,
+  continue: 135,
+  roocode: 135,
+  kilocode: 135,
+  qoder: 135,
+  opencode: 135,
+  trae: 135,
+  antigravity: 135,
+  codebuddy: 135,
+  droid: 135,
+  warp: 135,
+  kiro: 247,
 };
 
 describe("the real install plan", () => {
@@ -216,8 +227,8 @@ describe("the real install plan", () => {
   }
 
   it("the deployable share of claude-code's unresolved links is exactly the blocker's subject", () => {
-    // 112 of the 158 would resolve by adding two directories to the deploy
-    // plan; the other 46 would not, and that split is what the blocker's
+    // 112 of the 135 would resolve by adding two directories to the deploy
+    // plan; the other 23 would not, and that split is what the blocker's
     // recommendation rests on. Pinned so a future reader can tell the two
     // populations apart without re-deriving them — and so the blocker cannot
     // quietly stop describing the tree.
@@ -238,6 +249,27 @@ describe("the real install plan", () => {
     expect(deployable.map((d) => [d.directory, d.count, d.verdict])).toEqual([
       ["contexts", 62, "directory-not-deployed"],
       ["guidelines", 50, "directory-not-deployed"],
+    ]);
+  });
+
+  it("the remainder is the two populations a deploy entry cannot reach", () => {
+    // The other half of the split above, pinned in the same way and for the
+    // same reason. 23 repo-tree links left this set on 2026-10-03; what stays
+    // is 22 `docs/` links the projection does not produce and ONE climb-out,
+    // and the climb-out is held by the kernel-rule soak window rather than by
+    // anything about the link. A new `scripts`, `templates` or
+    // `outside-install-root` row appearing here is a rule author reaching for
+    // a path form the install has never held — which is exactly the direction
+    // this pin exists to refuse.
+    const pairs = GLOBAL_DEPLOY_SOURCES["claude-code"];
+    expect(pairs).toBeDefined();
+    const report = auditInstalledRuleLinks(deployPlanFrom(pairs!), REPO_ROOT);
+    const remainder = report.by_directory.filter(
+      (d) => d.directory !== "contexts" && d.directory !== "guidelines",
+    );
+    expect(remainder.map((d) => [d.directory, d.count, d.verdict])).toEqual([
+      ["docs", 22, "directory-not-deployed"],
+      ["../../tests/golden/outcomes/", 1, "outside-install-root"],
     ]);
   });
 

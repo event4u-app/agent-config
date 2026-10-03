@@ -58,7 +58,7 @@ THESE SKILLS ARE A RESEARCH-AND-DRAFTING AID, NOT LEGAL ADVICE.
 THEY DO NOT REPLACE A LICENSED ATTORNEY. NO ONE MAY RELY ON THEM AS DEFINITIVE.
 ```
 
-Every output is a **draft / research aid for a human attorney to verify** — not legal advice, not a legal opinion, not a substitute for a qualified lawyer. Non-removable from the pack. See [`LEGAL_NOTICE.md`](../../../LEGAL_NOTICE.md).
+Every output is a **draft / research aid for a human attorney to verify** — not legal advice, not a legal opinion, not a substitute for a qualified lawyer. Non-removable from the pack. See `LEGAL_NOTICE.md`.
 
 ## Consent gate — refuse until acknowledged
 
@@ -134,7 +134,7 @@ Active whenever any of these are in the request, the open file, or the loaded sk
 ## See also
 
 - [`legal-practice-profile`](../skills/legal-practice-profile/SKILL.md) — the migrated operating mechanics (consent gate, council gate, RDG line, headers, jurisdiction honesty, GREEN gate, privilege circle, distribution stance)
-- [`LEGAL_NOTICE.md`](../../../LEGAL_NOTICE.md) — repo-root legal notice (no advice / no attorney-client / no warranty)
+- `LEGAL_NOTICE.md` — repo-root legal notice (no advice / no attorney-client / no warranty)
 - `domain-safety-disclaimer` — generic advisory-content floor (`not-legal-advice`)
 - `domain-safety-pii` — privilege/PII markers on drafts, logs, exports
 - `lethal-trifecta-guard` — egress gate the privilege-outbound block builds on
