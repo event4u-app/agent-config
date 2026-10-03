@@ -47,9 +47,16 @@ const ROUTER = {
     tier_2: [{ id: 'second-rule', triggers: [{ keyword: 'zzmigration' }] }],
 };
 
+/**
+ * `prompt-rule` carries an Iron Law section and `second-rule` does not.
+ *
+ * That asymmetry is what the compaction column reads: a restore sends LAWS, so
+ * a rule with one comes back as `law` and a rule without one is reported rather
+ * than having its whole body sent in a slot that asked for its law.
+ */
 const BODIES: Record<string, string> = {
     'kernel-rule': 'KERNEL BODY\n',
-    'prompt-rule': 'PROMPT RULE BODY\n',
+    'prompt-rule': '# prompt-rule\n\n## Iron Law\n\n```\nPROMPT RULE LAW.\n```\n\n## Notes\n\nPROMPT RULE BODY\n',
     'second-rule': 'SECOND RULE BODY\n',
 };
 
@@ -104,30 +111,48 @@ interface Fired {
     stderr: string;
 }
 
+/**
+ * A home directory with no `~/.claude/rules` in it.
+ *
+ * Since step 1.3 the carrier scopes delivery to the host's rule layers, and
+ * `os.homedir()` reads `$HOME` on POSIX. Without this the matrix would read the
+ * DEVELOPER's installed corpus and answer differently on a maintainer machine
+ * than in CI — and every column below would be a statement about one laptop.
+ * `opts.home` lets a case stage a user layer of its own.
+ */
+let HOME = '';
+
 function dispatch(
     install: string,
     workspace: string,
     session: string,
-    opts: { cwd?: string } = {},
+    opts: { cwd?: string; home?: string; event?: string; payload?: Record<string, unknown> } = {},
 ): Fired {
     const r = spawnSync(
         process.execPath,
         [
             path.join(install, BUNDLE_REL),
             '--platform', 'claude',
-            '--event', 'user_prompt_submit',
+            '--event', opts.event ?? 'user_prompt_submit',
             '--project-dir', workspace,
         ],
         {
             encoding: 'utf-8',
-            input: JSON.stringify({
-                session_id: session,
-                cwd: workspace,
-                hook_event_name: 'UserPromptSubmit',
-                prompt: PROMPT,
-            }),
+            input: JSON.stringify(
+                opts.payload ?? {
+                    session_id: session,
+                    cwd: workspace,
+                    hook_event_name: 'UserPromptSubmit',
+                    prompt: PROMPT,
+                },
+            ),
             cwd: opts.cwd ?? workspace,
-            env: { ...process.env, AGENT_CONFIG_REPLAY: '', AGENT_CONFIG_SESSION_ROLE: '' },
+            env: {
+                ...process.env,
+                AGENT_CONFIG_REPLAY: '',
+                AGENT_CONFIG_SESSION_ROLE: '',
+                HOME: opts.home ?? HOME,
+            },
         },
     );
     const stdout = r.stdout ?? '';
@@ -157,6 +182,7 @@ beforeAll(() => {
             return;
         }
     }
+    HOME = mkdtemp('rule-inject-home-');
     try {
         INSTALL = makeInstall();
     } catch (e) {
@@ -299,18 +325,71 @@ describe('rule-inject — foreign-project matrix on the built bundle (1.8)', () 
         expect(r.stdout).toContain('additionalContext');
     });
 
-    it('a consumer .claude/rules directory is NOT yet the delivery scope — pinned for 1.3', () => {
+    it('a consumer .claude/rules directory IS the delivery scope (1.3)', () => {
         requireStaged();
-        // Step 1.3 will make the installed rule directory the scope, so that a
-        // rule the install does not carry is never delivered. It is not built
-        // yet, and this pins what the carrier does TODAY so that implementing
-        // 1.3 has a red to turn green rather than a behaviour to discover.
+        // The install declares WHICH rules a consumer is under; the package
+        // supplies the text. `second-rule` routes and its body exists in the
+        // package corpus, and it is still not delivered, because this consumer's
+        // install never wrote it.
         const ws = mkdtemp('rim-scope-');
         const rules = path.join(ws, '.claude', 'rules');
         fs.mkdirSync(rules, { recursive: true });
-        fs.writeFileSync(path.join(rules, 'prompt-rule.md'), 'stub\n', 'utf-8');
+        fs.writeFileSync(path.join(rules, 'prompt-rule.md'), 'INSTALLED STUB\n', 'utf-8');
         const r = dispatch(INSTALL, ws, 'rim-9');
-        // `second-rule` has no file in that directory. Today it still arrives.
-        expect(r.ids).toContain('second-rule');
+        expect(r.ids).toContain('prompt-rule');
+        expect(r.ids).not.toContain('second-rule');
+        // And the body is the package's, not the stub the host layer carries.
+        expect(r.stdout).toContain('PROMPT RULE BODY');
+        expect(r.stdout).not.toContain('INSTALLED STUB');
+    });
+
+    it('the compaction restore reaches the concern through the DISPATCHER (1.6)', () => {
+        requireStaged();
+        // The binding, not the function. `rule-inject` was added to `claude`'s
+        // `session_start` list in the manifest, and the dispatcher decides which
+        // concerns a slot reaches: a suite that only calls `main()` stays green
+        // over a concern the dispatcher never invokes.
+        const ws = mkdtemp('rim-compact-');
+        const session = 'rim-12';
+        const first = dispatch(INSTALL, ws, session);
+        expect(first.ids).toContain('prompt-rule');
+
+        const compacted = dispatch(INSTALL, ws, session, {
+            event: 'pre_compact',
+            payload: { session_id: session, cwd: ws, hook_event_name: 'PreCompact' },
+        });
+        expect(compacted.status).toBe(0);
+
+        const restored = dispatch(INSTALL, ws, session, {
+            event: 'session_start',
+            payload: {
+                session_id: session,
+                cwd: ws,
+                hook_event_name: 'SessionStart',
+                source: 'compact',
+            },
+        });
+        expect(restored.status).toBe(0);
+        expect(restored.stdout).toContain('prompt-rule=law');
+        expect(restored.stdout).toContain('PROMPT RULE LAW.');
+        // The law, not the body, for the rule that HAS one.
+        expect(restored.stdout).not.toContain('PROMPT RULE BODY');
+        // `second-rule` has no law section, so there is nothing to send in that
+        // form and no budget decision was made about it. It comes back as its
+        // body rather than carrying a label that blames a budget — which is
+        // what every label on a restore has to be true of.
+        expect(restored.stdout).toContain('second-rule=full');
+        expect(restored.stdout).toContain('SECOND RULE BODY');
+    });
+
+    it('a rule only the USER layer carries is in scope — the host loads both', () => {
+        requireStaged();
+        const ws = mkdtemp('rim-scope-user-');
+        const home = mkdtemp('rim-scope-home-');
+        const rules = path.join(home, '.claude', 'rules');
+        fs.mkdirSync(rules, { recursive: true });
+        fs.writeFileSync(path.join(rules, 'second-rule.md'), 'INSTALLED STUB\n', 'utf-8');
+        const r = dispatch(INSTALL, ws, 'rim-11', { home });
+        expect(r.ids).toEqual(['second-rule']);
     });
 });

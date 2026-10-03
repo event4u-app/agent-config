@@ -88,6 +88,7 @@ import * as user_global_paths from '../_lib/user_global_paths.js';
 import { jsonDumpsIndent2 as _jsonDumpsIndent2 } from './_py_json.js';
 import * as budget from './cli_call_budget.js';
 import { appendEvent } from './events_log.js';
+import { OPENAI_CLI_VENDOR_DEFAULT } from './vendor_defaults.js';
 
 export const ANTHROPIC_KEY_FILENAME = 'anthropic.key';
 export const OPENAI_KEY_FILENAME = 'openai.key';
@@ -124,23 +125,12 @@ export const DEFAULT_PERPLEXITY_MODEL = 'sonar-pro';
 // divergence is a one-line change, not a hunt through inline literals.
 // (`xai` / `perplexity` CLI reuse their API constants: their CLIs are
 // community wrappers around the same paid API, so the values do not diverge.)
-/**
- * Sentinel: let the codex CLI pick its own model, by omitting `--model`.
- *
- * This is not a placeholder for a value nobody looked up. Measured
- * 2026-08-15 against `codex exec --json` on a ChatGPT-account (subscription)
- * transport, every explicitly named candidate was refused with
- * `400 invalid_request_error: The '<model>' model is not supported when using
- * Codex with a ChatGPT account.` — `gpt-4o`, `gpt-5` (this constant's previous
- * value) and `gpt-5.1-codex` alike. Omitting the flag answered normally.
- *
- * So the only value known to work on this transport is "whatever the CLI
- * chooses", and pinning ANY name here would re-break the seat the next time
- * the vendor rotates its lineup. The label is carried into records as-is so a
- * reader can see that no model was pinned, rather than a name being implied
- * that nobody verified.
- */
-export const OPENAI_CLI_VENDOR_DEFAULT = 'codex-default';
+// `OPENAI_CLI_VENDOR_DEFAULT` lives in `vendor_defaults.ts`, re-exported here
+// so every existing importer keeps resolving. It moved because `config.ts`
+// wanted that one string and was charged this whole module for it in the
+// composed hook bundle — 51,523 bytes on every dispatch; the reasoning and the
+// measurement are in that file's header.
+export { OPENAI_CLI_VENDOR_DEFAULT } from './vendor_defaults.js';
 
 /**
  * Models MEASURED to be refused by the codex subscription transport, with the

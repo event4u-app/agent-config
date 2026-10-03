@@ -82,7 +82,7 @@ import * as budget from './cli_call_budget.js';
 // `import type` and is erased at build, so there is no runtime cycle today.
 // Converting it to a value import — or adding any other runtime import from
 // quorum into config — creates a real ESM cycle in the loader's init path.
-import { OPENAI_CLI_VENDOR_DEFAULT } from './clients.js';
+import { OPENAI_CLI_VENDOR_DEFAULT } from './vendor_defaults.js';
 import { parseSeatFields, type PolicyExclusion } from './seat_policy.js';
 import type { ContentClass } from './content_ceiling.js';
 import { SOLO_FLOOR_MIN_PRESENT } from './quorum.js';

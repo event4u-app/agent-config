@@ -1525,7 +1525,17 @@ platforms:
 
   claude:
     ask:              native
-    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, review-baseline, journal-record]
+    session_start:    [chat-history, hot-context, handoff-context, session-canary, council-availability, telemetry-disclosure, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff, profile-staleness, wrapper-freshness, surface-probe, session-register, review-baseline, journal-record, rule-inject]
+    # `rule-inject` is bound here for ONE source: `compact`
+    # (road-to-a-rule-carrier-that-works-outside-the-repo step 1.6). The concern
+    # returns before reading anything on `startup`, `resume`, `clear` and
+    # `fork`, so this binding costs a function call per session on every other
+    # source. It exists because `pre_compact` can only re-ARM delivery — it
+    # cannot deliver, since the host is about to discard the context it would
+    # emit into. The law sections of the pre-compaction seen-set are sent here
+    # instead, under the same 8,000-character budget, which is the half the
+    # concern's own header used to end at: a rule whose trigger does not recur
+    # was not restored at all.
     session_end:      [chat-history, memory-learn, session-register, roadmap-progress, telemetry-flush, journal-record]
     stop:             [chat-history, verify-before-complete, team-review-gate, end-review-nudge, obligation-settle, turn-end-gate, self-repair, session-register, session-eol, interruption-ledger, roadmap-progress, design-pass-stop, suggestion-capture, journal-record, run-continuation]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff, language-mirror, delegation-nudge, skill-route, git-authorization, session-canary, self-repair, session-register, rule-inject, suggestion-capture, journal-record]

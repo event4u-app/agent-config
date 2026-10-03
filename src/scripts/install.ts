@@ -96,6 +96,7 @@ import * as rule_layer_overlap from './_lib/rule_layer_overlap.js';
 import * as installed_tools from './_lib/installed_tools.js';
 import { collect_drift, format_drift_report } from './_lib/install_drift.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
+import * as gitignore_block from './_lib/gitignore_block.js';
 // The LIBRARY half, deliberately not `capture_skill_catalogue.js`: that module
 // is a CLI entry with a top-level `process.exit()`, and esbuild would bundle
 // that exit into the installer a consumer loads (`check_installer_import_purity`
@@ -2028,8 +2029,9 @@ export function _gate_rule_layer_overlap(
     layer: string | null,
     dry_run: boolean,
 ): boolean {
-    const global_dir = path.join(os.homedir(), '.claude', 'rules');
-    const project_dir = path.join(project_root, '.claude', 'rules');
+    // ONE source of truth for which directories the host loads, shared with the
+    // delivery carrier's scope filter (`rule_layer_overlap.hostRuleLayerDirs`).
+    const [global_dir, project_dir] = rule_layer_overlap.hostRuleLayerDirs(project_root);
     const g = rule_layer_overlap.readRuleLayer(global_dir);
     const p = rule_layer_overlap.readRuleLayer(project_dir);
     if (g === null || p === null) return true; // only one layer exists — nothing to double
@@ -5042,6 +5044,9 @@ function _main_project_install(
     if (will_launch) {
         return _wizard_spawn(project_root);
     }
+    // No wizard, so nothing else installs the managed ignore block.
+    const ign = gitignore_block.write_managed_block(project_root, opts.dry_run);
+    if (ign > 0) success(`.gitignore: ${opts.dry_run ? 'would add ' : '+'}${ign} managed entries`);
     return 0;
 }
 

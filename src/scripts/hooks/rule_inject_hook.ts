@@ -36,41 +36,90 @@
  * does. On any other host, and on a `lean_projection.mode: eager-all` rollback,
  * it emits nothing.
  *
+ * THE INSTALL DECLARES THE SCOPE, THE PACKAGE SUPPLIES THE TEXT (step 1.3).
+ * A rule is delivered only when the host's own rule directories carry a file
+ * for it — `~/.claude/rules/` and `<project>/.claude/rules/`, as a union,
+ * because the host loads both. The router is the PACKAGE's list of what could
+ * route and is a larger set: 13 router tier rules are maintainer-only by
+ * `workspaces`, and before this filter a consumer could receive a body for a
+ * rule their install never carried. The two halves cannot be one read — under
+ * `delivery` the installed files are thin stubs by construction, so they can say
+ * WHICH rules are in scope and never WHAT they say. Where no host rule directory
+ * exists at all, nothing declares a scope and no filter applies; see
+ * `rule_layer_overlap.hostRuleLayerIds` for why that is not the empty set.
+ *
+ * THE HOST FORM, BY THE PROJECTOR'S OWN PARSER (step 1.4). Delivered text is
+ * `rule_law_section.ruleBody` of the file: frontmatter and HTML comments
+ * removed. Both are bytes the model cannot act on — the frontmatter is the
+ * routing surface the router has already read, and the comments are authoring
+ * scaffolding no host renders. `project_thin_rules.ts` calls the same function
+ * for the same reason, so "what a stub carries" and "what a delivery carries"
+ * cannot drift into two spellings. A file with nothing left after the strip is
+ * not delivered: an empty `<rule>` element is framing with no content in it.
+ *
+ * ONE STRING THE HOST DOES NOT REPLACE, AND A MANIFEST (step 1.5). Claude Code
+ * substitutes an `additionalContext` over 10,000 CHARACTERS with a path and a
+ * 2,000-character preview, so an oversized delivery does not arrive truncated —
+ * it does not arrive. {@link COMPOSED_CHARS} bounds the whole rule-produced
+ * string at 8,000, and `compose` fills it in the order D1 fixes: the law of
+ * every matched high-consequence rule, then the highest-priority full body that
+ * fits, then further bodies, then the law of everything still unsent, then the
+ * manifest. Nothing is ever cut mid-obligation — a rule whose law alone does not
+ * fit is REPORTED, because half a law reads like a whole one.
+ *
+ * AND EVERY MATCH IS IN THE MANIFEST, labelled `full`, `law`, `omitted_budget`
+ * or `source_unavailable`. A pointer is never labelled delivered. This is where
+ * `selectForInjection`'s `dropped` list is finally read: before it, a body the
+ * byte cap discarded left no trace, so a consumer could not tell a rule that did
+ * not match from one that matched and was thrown away.
+ *
  * ONE MATCHER, SHARED WITH THE OFFLINE MODEL. Everything about selection,
  * ordering, capping and body loading comes from `_lib/rule_injection.ts`, which
  * `model_rule_injection.ts` also imports. Step 0.5 states the reason in as many
  * words: an experiment whose offline pricing and runtime delivery use different
  * matchers measures nothing.
  *
- * ONCE PER SESSION PER RULE, RE-ARMED ON COMPACTION. A rule's body is injected
- * the first time one of its triggers fires and not again, because the model
- * already has it. Compaction is exactly the event that makes that false, so
- * `pre_compact` clears the seen-set — the same pin-lost shape `language-mirror`
- * uses. State lives under `agents/runtime/state/`, the class
- * `context-hygiene.json` already occupies; no new state convention is created.
+ * ONCE PER SESSION PER RULE, RE-ARMED AND RESTORED ON COMPACTION. A rule's body
+ * is injected the first time one of its triggers fires and not again, because
+ * the model already has it. Compaction is exactly the event that makes that
+ * false, so `pre_compact` empties the seen-set — the same pin-lost shape
+ * `language-mirror` uses.
+ *
+ * STATE LIVES UNDER THE USER-GLOBAL ROOT, KEYED BY PROJECT (step 1.7). It used
+ * to be `<workspace>/agents/runtime/state/rule-inject/`, so every consumer
+ * session left dispatcher bookkeeping as untracked files inside someone else's
+ * repository. The seen-set is state about a SESSION, not about the project.
+ * The delivered-row ledger beside it is deliberately NOT moved — see
+ * {@link statePath} for the join that depends on where it is.
  *
  * WHAT IS RE-DELIVERED AFTER A COMPACTION, EXACTLY
- * (road-to-delivery-for-every-host 2.4 — stated because a rule lost at a
- * compaction boundary is lost for the rest of the session, and "re-armed" alone
- * does not say what a reader may rely on):
+ * (road-to-delivery-for-every-host 2.4, amended by step 1.6 — stated because a
+ * rule lost at a compaction boundary used to be lost for the rest of the
+ * session, and "re-armed" alone does not say what a reader may rely on):
  *
- *   · `pre_compact` clears the WHOLE seen-set for that session, not the rules
+ *   · `pre_compact` empties the WHOLE seen-set for that session, not the rules
  *     matched on the compacted turn. There is no per-rule bookkeeping to be
- *     partially wrong about.
+ *     partially wrong about. Since 1.6 it also hands those ids to `pending`
+ *     rather than deleting them — see {@link armRestore}.
  *   · Nothing is delivered BY the compaction itself. The slot emits zero bytes
- *     and exits allow; re-arming is silent.
- *   · A rule's body returns on the NEXT turn whose trigger matches it — which
- *     means a rule whose trigger does not fire again is NOT restored. Delivery
- *     is trigger-driven on both sides of the boundary; compaction resets the
- *     de-duplication, it does not replay a transcript.
- *   · The seen-set is per session, so a compaction in one session re-arms only
- *     that session.
+ *     and exits allow; re-arming is silent. It cannot deliver: the host is about
+ *     to discard the context it would emit into.
+ *   · `session_start` with `source: compact` sends the LAW section of every
+ *     rule in that pending set, under the same 8,000-character budget, once.
+ *     That is the half this paragraph used to end at: a rule whose trigger does
+ *     not recur is no longer unrestored. A rule with no law section is reported
+ *     in the manifest rather than having its whole body sent in its place.
+ *   · A rule's BODY still returns on the next turn whose trigger matches it.
+ *     The restore does not re-arm the de-duplication and does not replace
+ *     trigger-driven delivery; it covers the gap between the two.
+ *   · The seen-set is per session, so a compaction in one session re-arms and
+ *     restores only that session.
  *
- * Held by three fixtures in `tests/scripts/rule_inject_hook.test.ts` under
- * "once per session per rule, re-armed on compaction": the dedup case, the
- * matched-rule → compaction → matching-turn → body-present case, and the
- * per-session case. All three predate this roadmap; 2.4 adds the contract
- * above, not the coverage, and says so rather than claiming new tests.
+ * Held by fixtures in `tests/scripts/rule_inject_hook.test.ts` under "once per
+ * session per rule" and "re-deliver after a compact", and — for the BINDING
+ * rather than the function — by the dispatcher column in
+ * `rule_inject_foreign_matrix.test.ts`, because a suite that only calls `main()`
+ * stays green over a slot the dispatcher never routes to this concern.
  *
  * NEVER BLOCKS. Every failure path returns 0: unreadable stdin, malformed JSON,
  * missing router, unreadable body, unwritable state. The one non-zero exit is
@@ -90,12 +139,14 @@
  * claude 2.1.241, three verdicts). Delivery is therefore orchestrator-only, and
  * no third binding is added.
  */
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { hookSectionEnabled } from '../_lib/hook_settings.js';
+import * as user_global_paths from '../_lib/user_global_paths.js';
 import { deliversBodies, resolveLeanProjection } from '../_lib/lean_projection_mode.js';
 import { enforcement_class_from_frontmatter } from '../_lib/obligation_frequency.js';
 import {
@@ -105,12 +156,19 @@ import {
     type WriterInput,
 } from '../_lib/obligations.js';
 import {
+    allTierRules,
+    bytesOf,
     loadRuleBody,
     loadRouter,
     matchTierRules,
     ruleSources,
     selectForInjection,
+    type SelectionResult,
+    type TierRuleMatch,
 } from '../_lib/rule_injection.js';
+import { readConsequenceClass, stubLawIds } from '../_lib/rule_consequence_class.js';
+import { lawText, ruleBody } from '../_lib/rule_law_section.js';
+import { hostRuleLayerIds } from '../_lib/rule_layer_overlap.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
@@ -186,45 +244,142 @@ export function workspaceRoot(env: JsonObject): string {
 // ── seen-set state ───────────────────────────────────────────────────────
 
 export interface SeenState {
+    /** Ids already delivered in this session. */
     rules: string[];
+    /**
+     * Ids the compaction boundary took away, waiting for the restore slot.
+     *
+     * IDS, NEVER TEXT. The restore re-reads each rule's law from the corpus; a
+     * seen-set that cached bodies would be a second copy of the rule layer
+     * living in a consumer's state directory, going stale on every upgrade.
+     */
+    pending?: string[];
 }
 
+/**
+ * A stable, readable, collision-free directory name for one project root.
+ *
+ * The basename alone collides — a developer with `~/work/api` and
+ * `~/clients/api` would share a seen-set and silently lose deliveries in both.
+ * The digest alone is unreadable, and this directory is one a human opens when
+ * a delivery looks wrong. Both, so neither problem is the one you get.
+ */
+function projectKey(root: string): string {
+    const abs = path.resolve(root);
+    const name = (path.basename(abs) || 'root').replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 40);
+    return `${name}-${createHash('sha256').update(abs, 'utf-8').digest('hex').slice(0, 12)}`;
+}
+
+/**
+ * Where this session's seen-set lives (step 1.7).
+ *
+ * UNDER THE USER-GLOBAL ROOT, KEYED BY PROJECT. It used to be written to
+ * `<workspace>/agents/runtime/state/rule-inject/`, so every consumer session
+ * left dispatcher bookkeeping inside someone else's repository — untracked
+ * files in their `git status`, in a directory their `.gitignore` says nothing
+ * about unless this package's managed block was installed. The seen-set is
+ * state ABOUT a session, not about the project, and the project is the one
+ * place it has no business being.
+ *
+ * THE DELIVERED-ROW LEDGER IS DELIBERATELY NOT MOVED WITH IT.
+ * `recordDelivered` writes through `_lib/obligations.ts`, which resolves under
+ * the project root, and `road-to-a-stop-that-holds` Phase 3 reads those rows
+ * and joins them on the session id. Moving the ledger would be a second,
+ * larger change with a live consumer; moving only the seen-set leaves that join
+ * untouched by construction, because the two were never keyed on each other.
+ *
+ * `EVENT4U_CONFIG_HOME` and `$HOME` resolve the root, so a test points it
+ * somewhere disposable instead of writing into the developer's own state.
+ *
+ * ONE COST, STATED: an upgrade mid-session orphans the old file and the seen-set
+ * reads empty, which re-injects each matched rule once more. Session state is
+ * per session and cheap to rebuild; a migration step for it would be more code
+ * than the duplicate it prevents.
+ */
 export function statePath(root: string, session: string): string {
     const safe = session.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 80) || 'unknown';
-    return path.join(root, 'agents', 'runtime', 'state', 'rule-inject', `${safe}.json`);
+    return path.join(
+        user_global_paths.write_target(path.join('state', 'rule-inject', projectKey(root))),
+        `${safe}.json`,
+    );
 }
 
-export function readSeen(root: string, session: string): Set<string> {
+function readState(root: string, session: string): SeenState {
     try {
         const raw = fs.readFileSync(statePath(root, session), 'utf-8');
         const parsed = JSON.parse(raw) as SeenState;
-        return new Set(Array.isArray(parsed.rules) ? parsed.rules.map(String) : []);
+        return {
+            rules: Array.isArray(parsed.rules) ? parsed.rules.map(String) : [],
+            pending: Array.isArray(parsed.pending) ? parsed.pending.map(String) : [],
+        };
     } catch {
-        return new Set(); // fresh session, or a file nothing can parse
+        return { rules: [], pending: [] }; // fresh session, or a file nothing can parse
     }
 }
 
-export function writeSeen(root: string, session: string, seen: Set<string>): void {
+export function readSeen(root: string, session: string): Set<string> {
+    return new Set(readState(root, session).rules);
+}
+
+function writeState(root: string, session: string, state: SeenState): void {
     const p = statePath(root, session);
     try {
         fs.mkdirSync(path.dirname(p), { recursive: true });
-        const payload: SeenState = { rules: [...seen].sort() };
-        fs.writeFileSync(`${p}.tmp`, `${JSON.stringify(payload)}\n`, 'utf-8');
+        fs.writeFileSync(`${p}.tmp`, `${JSON.stringify(state)}\n`, 'utf-8');
         fs.renameSync(`${p}.tmp`, p);
     } catch {
         /* unwritable state must never fail a turn — worst case a re-injection */
     }
 }
 
-export function clearSeen(root: string, session: string): void {
-    try {
-        fs.rmSync(statePath(root, session), { force: true });
-    } catch {
-        /* ignore */
-    }
+export function writeSeen(root: string, session: string, seen: Set<string>): void {
+    const prev = readState(root, session);
+    writeState(root, session, { rules: [...seen].sort(), pending: prev.pending ?? [] });
 }
 
-// ── payload extraction ───────────────────────────────────────────────────
+/**
+ * Hand the seen-set to the restore slot instead of deleting it (step 1.6).
+ *
+ * `pre_compact` used to `rm` this file, which re-armed delivery correctly and
+ * threw away the one thing the restore needs. The de-duplication is still
+ * cleared — `rules` goes empty, so a rule whose trigger fires again gets its
+ * BODY back exactly as before — and the ids move to `pending`, where
+ * `session_start` with `source: compact` reads them and sends each rule's LAW.
+ *
+ * That is the half the header used to end at: a rule whose trigger does not
+ * recur was not restored at all, and a rule lost at a compaction boundary is
+ * lost for the rest of the session.
+ */
+export function armRestore(root: string, session: string): void {
+    const prev = readState(root, session);
+    const pending = [...new Set([...prev.rules, ...(prev.pending ?? [])])].sort();
+    if (pending.length === 0) {
+        try {
+            fs.rmSync(statePath(root, session), { force: true });
+        } catch {
+            /* ignore */
+        }
+        return;
+    }
+    writeState(root, session, { rules: [], pending });
+}
+
+/** The ids waiting for the restore slot. */
+export function readPending(root: string, session: string): Set<string> {
+    return new Set(readState(root, session).pending ?? []);
+}
+
+/**
+ * Drop the pending set, once the restore it fed has actually been built.
+ *
+ * SEPARATE FROM THE READ on purpose. A single take-and-clear loses the set when
+ * the build fails, on a slot that does not fire again for that boundary — so
+ * the clear is the caller's last step rather than its first.
+ */
+export function clearPending(root: string, session: string): void {
+    const prev = readState(root, session);
+    if ((prev.pending ?? []).length > 0) writeState(root, session, { rules: prev.rules, pending: [] });
+}
 
 /** The user's prompt, across the shapes the hosts use. */
 export function extractPrompt(payload: JsonObject): string {
@@ -238,12 +393,60 @@ export function extractFilePath(payload: JsonObject): string | null {
     return str(ti, 'file_path', 'path', 'filePath', 'notebook_path');
 }
 
-// ── decision ─────────────────────────────────────────────────────────────
+/**
+ * Per-fire ceiling on the whole rule-produced string, in CHARACTERS (D2).
+ *
+ * CHARACTERS, because that is the unit the host's own threshold is in. Claude
+ * Code replaces an `additionalContext` longer than 10,000 CHARACTERS with a
+ * path and a 2,000-character preview, so a delivery over that line is not
+ * truncated — it is substituted, and the obligation text never arrives at all.
+ *
+ * WHICH STRING IT BOUNDS, stated because the two readings give different
+ * margins and D2's own wording did not separate them. This number bounds the
+ * RULE-PRODUCED string: the `<rule>` elements and the manifest, which is what
+ * this concern emits. The host's 10,000 applies to the `additionalContext` it
+ * assembles, and the other concerns on this slot measured 1,272 characters of
+ * non-rule text. So the margin is 2,000 if the host measures this concern's
+ * payload alone, and **728** if it measures the assembled string — the
+ * conservative reading, and still a margin. 8,000 is safe under both; which
+ * reading is right has not been established here and the smaller number is the
+ * one to plan against.
+ *
+ * IT BOUNDS THE WHOLE STRING, framing and manifest included, because that is
+ * what the host measures. {@link CAP_BYTES} above bounds something else — the
+ * SELECTION, shared byte-for-byte with the offline model — and both still
+ * apply: selection drops whole bodies to stay under the byte cap, then
+ * composition drops or demotes to stay under this one.
+ *
+ * THE TWO CANNOT BREACH EACH OTHER AT ANY RATIO THIS CORPUS PRODUCES, and the
+ * ratio is measured rather than assumed: over the 121 projected rule files the
+ * mean is 1.0088 bytes per character and the per-file maximum is 1.0346
+ * (`no-decorative-emojis-in-git-surfaces.md`), so 8,000 characters is at most
+ * 8,277 bytes against a registered 16,384. A composed string would have to
+ * average 2.05 bytes per character to reach the byte row, which no Markdown
+ * rule corpus produces. `per_concern_caps_chars` in
+ * `src/config/hook-token-budget.json` registers this number in its own unit
+ * rather than converting it into the bytes map, and a fixture pins both.
+ */
+export const COMPOSED_CHARS = 8000;
+
+/**
+ * What a matched rule actually got, as the manifest labels it.
+ *
+ * `full` and `law` mean text arrived. `omitted_budget` and `source_unavailable`
+ * mean it did not, and both are a POINTER — an id the model can ask for. A
+ * pointer is never labelled delivered; that distinction is the whole reason the
+ * manifest has four values instead of a present/absent flag.
+ */
+export type DeliveryForm = 'full' | 'law' | 'omitted_budget' | 'source_unavailable';
 
 export interface Injection {
+    /** Ids whose TEXT was emitted — what the ledger records. */
     rules: string[];
     bytes: number;
     body: string;
+    /** Every matched rule with the form it got, in router order. */
+    manifest: Array<[string, DeliveryForm]>;
 }
 
 /**
@@ -285,6 +488,256 @@ export function recordDelivered(root: string, session: string, ruleIds: string[]
 }
 
 /**
+ * Ids whose LAW may stand on its own, empty when the config is unreachable.
+ *
+ * `stubLawIds` and not `Object.keys(members)`: the `no_stub` subset is exactly
+ * the members whose law is missing or too long to carry the obligation alone,
+ * which is why the projector ships those full-bodied. Serving one of them its
+ * law here would be the thin-stub defect `rule_consequence_class.ts` exists to
+ * prevent, reproduced at the delivery end — and `stubLawIds` is that module's
+ * own answer, so re-deriving the distinction here would be a second reader of a
+ * class that is supposed to have one.
+ *
+ * MEMOISED PER ROOT. The config is 12 kB of JSON and this runs on the
+ * `user_prompt_submit` hot path; a dispatch is one process and an install does
+ * not change under it.
+ */
+const HI_CACHE = new Map<string, Set<string>>();
+
+function highConsequenceIds(root: string): Set<string> {
+    const hit = HI_CACHE.get(root);
+    if (hit !== undefined) return hit;
+    let out = new Set<string>();
+    for (const r of [root, ruleSources(root).pkg]) {
+        if (r === null) continue;
+        try {
+            out = stubLawIds(readConsequenceClass(r));
+            break;
+        } catch {
+            continue;
+        }
+    }
+    HI_CACHE.set(root, out);
+    return out;
+}
+
+/** The manifest block, which is part of the budgeted string rather than beside it. */
+function manifestText(rows: Array<[string, DeliveryForm]>): string {
+    return `<rule-manifest>\n${rows.map(([id, f]) => `${id}=${f}`).join('\n')}\n</rule-manifest>`;
+}
+
+/**
+ * Compose one fire under {@link COMPOSED_CHARS}, in the order D1 fixes.
+ *
+ * THE ORDER IS A DECISION, not an implementation detail. D1:
+ *
+ *   1. the law of every matched HIGH-CONSEQUENCE rule,
+ *   2. then the highest-priority full body that fits,
+ *   3. then further full bodies,
+ *   4. then the law of everything still unsent,
+ *   5. then the manifest.
+ *
+ * Phase 1 first because a high-consequence rule's law arriving is worth more
+ * than a lower-consequence rule's whole body, and a budget that filled in
+ * priority order alone would spend itself before reaching it.
+ *
+ * PHASE 1 IS A FLOOR AND NEVER A CEILING, which is the half the first
+ * implementation got backwards. A rule served its law in phase 1 can be
+ * UPGRADED to its whole body in phase 2 when the budget still has room for the
+ * difference — `put` replaces the part in place and charges only the delta.
+ * Without that, the 23 class members with a law section could never receive
+ * their body however empty the budget was: `security-sensitive-stop` would have
+ * dropped 5,687 characters to 429 on every fire, and its id still enters the
+ * seen-set, so the body would not have come back later either. D1's "then the
+ * highest-priority full body that fits" reads as a floor and has to behave like
+ * one.
+ *
+ * EVERY MATCHED CLASS MEMBER REACHES PHASE 1, including one the byte cap
+ * dropped. `selectForInjection` ranks on score alone and knows nothing about
+ * the class, so a high-consequence rule can lose that race; D1 says "every
+ * matched", so the text for a dropped class member is loaded here rather than
+ * left unreachable.
+ *
+ * NOTHING IS EVER TRUNCATED. A rule whose law alone does not fit is REPORTED —
+ * `omitted_budget` in the manifest — because half an obligation reads like a
+ * whole one and is the more dangerous output. The manifest's space is reserved
+ * BEFORE any text is admitted, using the longest label for every matched id, so
+ * the report can never be the thing that pushes the string over.
+ *
+ * `sel.dropped` is read here, and that is the point of the step as much as the
+ * budget is: before this, a body dropped by the byte cap left no trace at all,
+ * so a consumer could not tell a rule that did not match from one that matched
+ * and was silently discarded.
+ */
+function compose(
+    root: string,
+    sel: SelectionResult,
+    hi: Set<string>,
+    lawOnly = false,
+): Injection | null {
+    const form = new Map<string, DeliveryForm>();
+    const full = new Map<string, string>();
+    const read = (id: string): void => {
+        const raw = loadRuleBody(root, id);
+        // STEP 1.4 — the host form, by the parser the thin projector uses.
+        // `ruleBody` strips frontmatter and HTML comments: the first is the
+        // routing surface the router already read, the second is authoring
+        // scaffolding no host renders to a model. A file with nothing left after
+        // the strip carries no obligation — an empty `<rule>` element is framing
+        // with no content inside it.
+        const body = raw === null ? '' : ruleBody(raw);
+        if (body === '') {
+            form.set(id, 'source_unavailable');
+            return;
+        }
+        form.set(id, 'omitted_budget');
+        full.set(id, body);
+    };
+    for (const m of sel.dropped) {
+        if (hi.has(m.id)) {
+            read(m.id);
+            continue;
+        }
+        form.set(m.id, (sel.bodyBytes.get(m.id) ?? 0) === 0 ? 'source_unavailable' : 'omitted_budget');
+    }
+    for (const m of sel.selected) read(m.id);
+
+    const all = [...sel.selected, ...sel.dropped].sort((a, b) => a.order - b.order);
+    const tiers = new Map(all.map((m) => [m.id, m.tier]));
+    const reserve = manifestText(all.map((m) => [m.id, 'source_unavailable']));
+    let left = COMPOSED_CHARS - reserve.length - 2;
+    // BOTH UNITS RESERVE THE MANIFEST. The byte row is the registered one, so a
+    // manifest charged against the character budget and not against this one
+    // would let the emission exceed the row it is registered at.
+    let bytesLeft = CAP_BYTES - bytesOf(reserve) - 2;
+    const parts: string[] = [];
+    const partOf = new Map<string, number>();
+    const put = (id: string, kind: 'full' | 'law', text: string): boolean => {
+        const part = `<rule id="${id}" tier="${tiers.get(id) ?? ''}" form="${kind}">\n${text}\n</rule>`;
+        const at = partOf.get(id);
+        const prev = at === undefined ? '' : (parts[at] as string);
+        const sep = at === undefined && parts.length > 0 ? 2 : 0;
+        // BOTH UNITS, INDEPENDENTLY. The measured 1.0346 bytes-per-character
+        // maximum over today's corpus says the character budget binds first, and
+        // a measurement over one corpus is evidence rather than an invariant: a
+        // 6,000-character payload of three-byte code points is 18,000 bytes.
+        // Safety that rests on a ratio stops being safety the day the corpus
+        // changes, so the registered byte row is enforced here too and the ratio
+        // is what makes the second check almost never bind rather than what
+        // makes it unnecessary.
+        const cost = part.length - prev.length + sep;
+        const costBytes = bytesOf(part) - bytesOf(prev) + sep;
+        if (cost > left || costBytes > bytesLeft) return false;
+        left -= cost;
+        bytesLeft -= costBytes;
+        if (at === undefined) {
+            partOf.set(id, parts.length);
+            parts.push(part);
+        } else {
+            parts[at] = part;
+        }
+        form.set(id, kind);
+        return true;
+    };
+
+    const ranked = [...all].sort((a, b) => b.score - a.score || a.order - b.order);
+    for (const m of ranked) {
+        const body = full.get(m.id);
+        if (body === undefined || !hi.has(m.id)) continue;
+        const law = lawText(body);
+        // A class member with no law section cannot be served by phase 1. It is
+        // left to compete for a full body below rather than reported, which is
+        // `no_stub`'s own answer to the same state.
+        if (law !== null) put(m.id, 'law', law);
+    }
+    for (const m of ranked) {
+        const body = full.get(m.id);
+        if (body === undefined || form.get(m.id) === 'full') continue;
+        // A RESTORE SENDS LAWS, with one exception: a rule with NO law section
+        // has no law to send, and reporting it `omitted_budget` would blame a
+        // budget decision nobody made. Those compete for their body instead, so
+        // every label on the restore is true.
+        if (lawOnly && lawText(body) !== null) continue;
+        put(m.id, 'full', body);
+    }
+    for (const m of ranked) {
+        const body = full.get(m.id);
+        if (body === undefined || form.get(m.id) !== 'omitted_budget') continue;
+        const law = lawText(body);
+        if (law !== null) put(m.id, 'law', law);
+    }
+
+    const rows: Array<[string, DeliveryForm]> = all.map((m) => [
+        m.id,
+        form.get(m.id) ?? 'source_unavailable',
+    ]);
+    const ids = rows.filter(([, f]) => f === 'full' || f === 'law').map(([id]) => id);
+    // THE MANIFEST IS BOUNDED TOO, and by construction rather than by how many
+    // rules this router happens to carry. Its space is reserved above at the
+    // longest label, so it always fits what was reserved — but if the RESERVE
+    // itself exceeded the budget (enough matches that the report alone is over
+    // 8,000 characters) the fill loop would admit nothing and the manifest
+    // would be the whole emission, over the cap. No router today comes close;
+    // "no corpus today comes close" is the shape of claim the byte check above
+    // exists because of, so this is a property instead.
+    //
+    // UNDELIVERED ROWS GO FIRST. A row for a rule whose text IS in this string
+    // must never be the one dropped — that would report a delivered rule as
+    // omitted, which is the one thing AC-2 forbids outright.
+    const order = [...rows.keys()].sort(
+        (a, b) =>
+            Number(['full', 'law'].includes((rows[a] as [string, DeliveryForm])[1])) -
+            Number(['full', 'law'].includes((rows[b] as [string, DeliveryForm])[1])),
+    );
+    const head = parts.join('\n\n') + (parts.length > 0 ? '\n\n' : '');
+    let drop = 0;
+    let body = head + manifestText(rows);
+    while (body.length > COMPOSED_CHARS && drop < rows.length) {
+        drop += 1;
+        const cut = new Set(order.slice(0, drop));
+        const kept = rows.filter((_, i) => !cut.has(i));
+        body = head + manifestText([...kept, [`+${drop}`, 'omitted_budget']]);
+    }
+    return { rules: ids, bytes: bytesOf(body), body, manifest: rows };
+}
+
+/**
+ * Build the post-compaction restore, or `null` for silence (step 1.6).
+ *
+ * LAWS, NOT BODIES, and the asymmetry with a normal fire is the point. A
+ * compaction removed text the model was already under; re-sending every body
+ * would re-spend the whole budget on rules whose obligations the session may
+ * never touch again. The law is the part that cannot be inferred from the rest,
+ * so it is what the budget buys back. Everything that does not fit is reported
+ * in the same manifest as any other fire.
+ *
+ * The router supplies each id's tier and declaration order, because the
+ * seen-set deliberately carries neither — see {@link SeenState.pending}.
+ */
+function restore(root: string, ids: Set<string>): Injection | null {
+    if (ids.size === 0) return null;
+    let router;
+    try {
+        router = loadRouter(root);
+    } catch {
+        return null;
+    }
+    const selected: TierRuleMatch[] = [];
+    let order = 0;
+    for (const r of allTierRules(router)) {
+        if (ids.has(r.id)) selected.push({ id: r.id, tier: r.tier, score: 0, order });
+        order += 1;
+    }
+    if (selected.length === 0) return null;
+    return compose(
+        root,
+        { selected, dropped: [], bytes: 0, bodyBytes: new Map() },
+        new Set(selected.map((m) => m.id)),
+        true,
+    );
+}
+
+/**
  * Build the injection for one event, or `null` for silence.
  *
  * `prompt` drives keyword / phrase / command triggers; `openFiles` drives
@@ -305,21 +758,30 @@ export function buildInjection(
     } catch {
         return null; // no router — nothing to deliver, and never a failure
     }
+    // STEP 1.3 — the install declares the scope, the package supplies the text.
+    //
+    // The router is the PACKAGE's list of every rule that could route. What a
+    // given consumer is actually under is what their install wrote into the
+    // host's rule directories, and the two are not the same set: 13 router tier
+    // rules are maintainer-only by `workspaces`, and before this filter a
+    // consumer could receive a body for a rule their install never carried.
+    //
+    // The two halves cannot be one read, and that is the reason this is a
+    // filter rather than a different body source. In `delivery` mode the
+    // installed files are thin stubs by construction, so the installed layer can
+    // say WHICH rules are in scope and never WHAT they say; the body still comes
+    // from the package corpus `ruleSources` resolves.
+    //
+    // `null` means no host rule layer exists to declare a scope — see
+    // `hostRuleLayerIds`. No filter then, because scoping to an empty set would
+    // re-create the silence step 1.1 repaired.
+    const scope = hostRuleLayerIds(root);
     const matches = matchTierRules(router, prompt, openFiles, command).filter(
-        (m) => !seen.has(m.id),
+        (m) => !seen.has(m.id) && (scope === null || scope.has(m.id)),
     );
     if (matches.length === 0) return null;
     const sel = selectForInjection(root, matches, CAP_BYTES);
-    const parts: string[] = [];
-    const ids: string[] = [];
-    for (const m of sel.selected) {
-        const body = loadRuleBody(root, m.id);
-        if (body === null) continue;
-        ids.push(m.id);
-        parts.push(`<rule id="${m.id}" tier="${m.tier}">\n${body.trim()}\n</rule>`);
-    }
-    if (ids.length === 0) return null;
-    return { rules: ids, bytes: sel.bytes, body: parts.join('\n\n') };
+    return compose(root, sel, highConsequenceIds(root));
 }
 
 // ── main ─────────────────────────────────────────────────────────────────
@@ -396,8 +858,29 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const session = str(env, 'session_id', 'sessionId') ?? str(payload, 'session_id', 'sessionId') ?? 'unknown';
 
     if (slot === 'pre_compact') {
-        clearSeen(root, session);
-        return EXIT_ALLOW; // re-arm is silent; the next turn re-injects
+        armRestore(root, session);
+        return EXIT_ALLOW; // re-arm is silent; the restore happens on the next slot
+    }
+    if (slot === 'session_start') {
+        // ONLY on `source: compact`. `startup`, `resume`, `clear` and `fork`
+        // either begin a session that never had a seen-set or hand back a
+        // transcript the host already restored; emitting there would be a
+        // duplicate, and on `fork` a duplicate belonging to a session that is
+        // still alive. An unknown source emits nothing rather than guessing —
+        // the same stance `handoff-context`'s `sourceGate` takes.
+        if ((str(payload, 'source') ?? str(env, 'source')) !== 'compact') return EXIT_ALLOW;
+        if (!gateOpen(root, _isCliEntry(), ruleSources(root).pkg)) return EXIT_ALLOW;
+        // READ, then BUILD, then clear — never clear first. A restore that
+        // fires twice on one boundary is a duplicate delivery, so the set has to
+        // be cleared; clearing it BEFORE the build means a build that fails
+        // (the package moved mid-session, or an upgrade renamed every pending
+        // rule out of the router) loses the set permanently and silently, on the
+        // one slot that does not come round again.
+        const restored = restore(root, readPending(root, session));
+        if (restored === null) return EXIT_ALLOW;
+        clearPending(root, session);
+        recordDelivered(root, session, restored.rules);
+        return emit(restored, slot);
     }
     if (slot !== 'user_prompt_submit' && slot !== 'pre_tool_use') return EXIT_ALLOW;
 
@@ -465,10 +948,15 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     writeSeen(root, session, seen);
     recordDelivered(root, session, injection.rules);
 
+    return emit(injection, slot);
+}
+
+/** The one place a delivery reaches the host, shared by the fire and the restore. */
+function emit(injection: Injection, slot: string): number {
     process.stdout.write(
         `${JSON.stringify({
             decision: 'warn',
-            reason: `rule-inject: ${injection.rules.length} rule body/bodies on ${slot} (${injection.bytes} B)`,
+            reason: `rule-inject: ${injection.rules.length}/${injection.manifest.length} matched rule(s) sent on ${slot} (${injection.body.length} chars)`,
             additional_context: injection.body,
         })}\n`,
     );

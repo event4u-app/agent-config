@@ -65,6 +65,7 @@ import {
     triggerlessRuleIds,
     type Router,
 } from './_lib/rule_injection.js';
+import { ruleBody } from './_lib/rule_law_section.js';
 import {
     renderArmExperiment,
     runArmExperiment,
@@ -817,13 +818,23 @@ export function runSelftest(corpusDir: string): SelftestCase[] {
         });
     } else {
         const id = injection.rules[0] as string;
-        const projected = loadRuleBody(REPO_ROOT, id) ?? '';
-        const mutated = `${projected.trim().slice(0, -1)}~MUTATED~`;
+        // THE DELIVERED FORM, not the raw file. Since step 1.4 the concern emits
+        // `ruleBody` of the projection — frontmatter and HTML comments stripped
+        // by the same parser `project_thin_rules` uses — so comparing against
+        // the raw file asserts a substring the payload no longer contains. The
+        // endpoint's claim is unchanged: the payload carries the body verbatim
+        // and rejects a mutation of it. What "the body" means moved, and this
+        // moved with it.
+        const projected = ruleBody(loadRuleBody(REPO_ROOT, id) ?? '');
+        const mutated = `${projected.slice(0, -1)}~MUTATED~`;
         out.push({
             endpoint: 'a-delivery',
             name: 'one-byte mutation rejected',
-            passed: injection.body.includes(projected.trim()) && !injection.body.includes(mutated),
-            detail: `${id}: the concern's payload carries the projected body verbatim and rejects a mutation of it`,
+            passed:
+                projected !== ''
+                && injection.body.includes(projected)
+                && !injection.body.includes(mutated),
+            detail: `${id}: the concern's payload carries the delivered body verbatim and rejects a mutation of it`,
         });
     }
 
