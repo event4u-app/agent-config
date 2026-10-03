@@ -50,6 +50,30 @@
  * typed. Its literal stops before the `>` because the element carries an
  * attribute; the anchor at character zero is unchanged.
  *
+ * **The fourth shape has NO envelope tag, and it is the exception this file's
+ * own "structural, not linguistic" rule has to name rather than quietly break.**
+ * The host resumes a rate-limited session with a plain sentence —
+ * `Your claude.ai usage limit has reset. Continue the task you were working
+ * on…` — carrying no element, no bracket and no stamp. 5 of the 153
+ * hook-sourced user records in this project's capture open with it. Measured
+ * 2026-10-03: it pinned a German session to `en` with `prompt_chars: 148`,
+ * which is that sentence's exact length, and every German reply for the rest
+ * of the run was then refused by the turn-end gate as wrong-language.
+ *
+ * Matching prose is what the paragraph above warns against, so what makes this
+ * one admissible is stated rather than assumed: it is a FIXED host string, not
+ * a linguistic pattern, and the character-zero anchor does the same work a tag
+ * would — a human asking *why did I get "Your claude.ai usage limit has
+ * reset"* does not open with it. A test pins that direction. If the host ever
+ * reworded the sentence this guard would silently stop matching, which is the
+ * honest failure mode: it under-filters back to today's behaviour rather than
+ * misfiring on a real turn.
+ *
+ * It is deliberately NOT added to `machine_wake.ts`. There the same
+ * misclassification retains an authorization instead of mis-pinning a reply,
+ * and a prose match is too weak a warrant for that consequence — see the
+ * asymmetry note below, which this is the first real test of.
+ *
  * **A SECOND VOCABULARY ANSWERS THIS SAME QUESTION AND THE TWO HAVE DRIFTED.**
  * `_lib/machine_wake.ts`'s `humanTypedThisTurn` guards per-turn STATE on this
  * slot (the git-authorization ledger, the suggestion latch) while this one
@@ -70,6 +94,7 @@ export function isSyntheticPrompt(prompt: string): boolean {
     head.startsWith("<system-reminder>") ||
     head.startsWith("<local-command-caveat>") ||
     head.startsWith("<agent-message") ||
+    head.startsWith("Your claude.ai usage limit has reset") ||
     /^\[SYSTEM NOTIFICATION\b/.test(head)
   );
 }
