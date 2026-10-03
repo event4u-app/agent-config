@@ -471,19 +471,62 @@ Reproduced on 2026-10-01:
 
       Bundle cost: **+1,843 B** (1,502,829 -> 1,504,672 on the gate's probe
       build).
-- [ ] **1.7 State leaves the consumer's tree.** The seen-set moves under the
+- [x] **1.7 State leaves the consumer's tree.** The seen-set moves under the
       global root, keyed by project; the delivered-row ledger that
       `road-to-a-stop-that-holds` reads keeps its join. The installer writes the
       package's ignore block on the `--no-ui` path so dispatcher state under
       `agents/` does not appear as untracked files.
       verify: `npx vitest run tests/scripts/rule_inject_hook.test.ts -t state-location` -> 0
 
-      **Not started 2026-10-02 — blocked on `hook-bundle-ceiling-exhausted`.**
-      The seen-set is still written under `<workspace>/agents/runtime/state/rule-inject/`
-      (`statePath`), so every consumer session leaves state in its own tree.
-      `road-to-a-stop-that-holds` Phase 3 reads the delivered-row ledger this
-      concern writes beside it, and the two are keyed on the same session id, so
-      the join is intact for now and the move must keep it.
+      **Done 2026-10-03, both halves.** `statePath` resolves through
+      `user_global_paths.write_target('state/rule-inject/<projectKey>')`, where
+      the key is the project's basename plus a 12-hex digest of its absolute
+      path. Both halves earn their place: the basename alone collides — a
+      developer with `~/work/api` and `~/clients/api` would share one seen-set
+      and lose deliveries in both — and the digest alone is unreadable in a
+      directory a human opens when a delivery looks wrong. A fixture asserts two
+      roots with the SAME session id do not share state.
+
+      **How the ledger join was verified, because "nothing else changed" is what
+      a broken join says right up until it is found.** `recordDelivered` writes
+      through `_lib/obligations.ts`, which resolves under the PROJECT root
+      (`path.join(root, statePathFor(session_id))`) and is joined on the session
+      id. The seen-set and the ledger were never keyed on each other, so moving
+      one cannot move the other — but that is an argument, and the step asked
+      for the join. So there is a fixture: after a fire it reads
+      `readDelivered(root, session)` back by project root plus session id — the
+      same two arguments the reader on the other side of the join uses — gets
+      the delivered row, and gets an empty list for a different session id. A
+      sixth fixture drives a compaction restore afterwards, so the moved state
+      and the unmoved ledger are exercised in one session.
+
+      **One fixture had gone vacuous and was repointed rather than left green.**
+      "An unwritable state directory still delivers" blocked
+      `<root>/agents/runtime/state/rule-inject`, which after the move is a path
+      nothing writes: the case would have passed over a mechanism it no longer
+      touched. It now derives the directory from `statePath` itself, so the next
+      move cannot leave it asserting nothing.
+
+      **The installer half needed a module extraction the gate asked for.**
+      `_write_gitignore_block` runs on the path where the wizard will NOT
+      launch, append-only so a consumer's own lines inside the block survive,
+      and best-effort throughout — an installer that failed because it could not
+      tidy a listing would be worse than the listing. Importing `sync_gitignore.ts`
+      for it was refused by `check_installer_import_purity`: that file ends in a
+      module-level `process.exit()` behind a CLI-entry guard, and inside
+      `dist/install/install.mjs` the guard is TRUE because the bundle IS argv[1],
+      so a consumer install would exit after writing its payload. The pure half
+      moved to `_lib/gitignore_block.ts` with no entry and no exit, and
+      `sync_gitignore.ts` re-exports every name it owned — the CLI contract and
+      the ported pytest call sites are unchanged, and its 28 fixtures are green
+      on the re-export.
+
+      **One cost, stated.** An upgrade mid-session orphans the old state file and
+      the seen-set reads empty, re-injecting each matched rule once more. Session
+      state is per session and cheap to rebuild; a migration step would be more
+      code than the duplicate it prevents.
+
+      Bundle cost: **+342 B** (1,505,307 -> 1,505,649 as the gate reads it).
 - [x] **1.8 A foreign-project matrix.** End to end on the built bundle: empty
       project, project with its own `.claude/rules`, package moved after
       install, no source checkout, cwd changed mid-session, maintainer scope,
@@ -558,7 +601,7 @@ Reproduced on 2026-10-01:
 
 ### blocker: hook-bundle-ceiling-exhausted
 
-- **Status:** open
+- **Status:** resolved
 - **Owner:** maintainer
 - **Class:** 3
 - **Ownership:** product-owned
@@ -622,7 +665,33 @@ Reproduced on 2026-10-01:
   derived against a base that no longer exists. The same thing has now happened
   again within one day, which is the fact worth deciding on rather than the
   bytes.
-- **Recommendation:** raise it, with the `raise_log` entry naming this phase
+- **Resolution 2026-10-03 — the second option, and the ceiling was not
+  touched.** The blocker's own `What to do` offered two: raise `max_bytes` with
+  a `raise_log` entry, or "lower the estate's cost deliberately somewhere that
+  is not this phase". The second was taken. `ai_council/config.ts` imported ONE
+  string, `OPENAI_CLI_VENDOR_DEFAULT`, from `clients.js`, and `config.ts` is
+  reachable from `council-availability` on `session_start` — so that one edge
+  charged every hook dispatch on every slot for the whole council transport
+  layer. Measured with the gate's own command: **51,523 B**. The constant moved
+  to a dependency-free `ai_council/vendor_defaults.ts` and `clients.ts`
+  re-exports it, so every existing importer resolves unchanged and no capability
+  is removed — every entry point that talks to a vendor CLI still imports
+  `clients.ts` directly.
+
+  Readings, same command throughout: `origin/main` **1,549,925 B** (75 B of
+  headroom), after the split **1,498,404 B** (51,596 B), with 1.3 through 1.7
+  landed **1,505,649 B** (44,351 B). The five steps cost 780 + 435 + 3,845 +
+  1,843 + 342 = **7,245 B**, against the ~6 KB the blocker estimated.
+
+  **What this does NOT settle.** The blocker's standing finding is intact: the
+  trunk gained 133 B from one unrelated lane in a single day, and a ceiling
+  derived on a branch is still a statement about that branch. This resolution
+  bought one phase its headroom; it did not change the ratchet, the derivation
+  doctrine, or the fact that the next lane to touch any concern measures against
+  whatever the trunk is at that moment. The raise remains available and
+  undecided — it was not needed here, which is a different thing from being
+  refused.
+- **Earlier recommendation (not taken):** raise it, with the `raise_log` entry naming this phase
   and the five steps, and re-derive the headroom against the MERGE result
   rather than a branch — the lesson the existing entry already wrote down and
   which a second exhaustion in a day confirms. Roughly 6 KB would carry 1.3
@@ -644,7 +713,10 @@ Reproduced on 2026-10-01:
   is green with 1.3 through 1.7 implemented, and
   `npx vitest run tests/scripts/rule_inject_foreign_matrix.test.ts` is green
   with its `.claude/rules` case rewritten from "NOT yet the delivery scope" to
-  the scope assertion 1.3 owes.
+  the scope assertion 1.3 owes. Both executed 2026-10-03: the gate reads
+  1,505,649 B / 1,550,000 with 1.3-1.7 landed, and the matrix is green at 13
+  columns with that case rewritten to the scope assertion plus a twelfth column
+  for the user layer and a thirteenth for the compaction restore.
 
 ## Decisions
 
@@ -654,6 +726,10 @@ Reproduced on 2026-10-01:
 | D2 | contested-technical | council:inbox-2026-10-c-standing-form | 8,000 chars on the whole rule-produced string, framing and manifest included | Both seats; leaves ~2,000 under the 10,000 host cap beside the 1,272 chars of non-rule text measured on the slot | The host's cap, preview size or composition semantics change |
 | D3 | reversible-technical | agent | One resolver, not a parity test between three | A parity test keeps three readers that can drift again; `lean_projection_mode.ts` already exists to be the one | — |
 | D4 | reversible-technical | agent | Arrival levels are named A0–A3 | The draft set used R0–R4 for both size rungs and arrival levels; two meanings under one label is how a pointer gets counted as arrival | — |
+| D5 | reversible-technical | agent | Pay for Phase 1's runtime code by breaking one import edge in `ai_council`, rather than raising `max_bytes` | The blocker's own second option. `config.ts` took one string from `clients.js` and was charged 51,523 B of composed hook bundle for it; the split removes no capability and the ceiling is untouched | A future lane needs more than the 44,351 B this leaves, or the trunk consumes it first |
+| D6 | reversible-technical | agent | No host rule layer anywhere → no scope filter, which is a different answer from an empty layer | Scoping to the empty set in a tree that declares no layer re-creates the silence 1.1 repaired; an empty layer IS a declaration and scopes to nothing | A host is found that writes a rules directory only sometimes, making absence ambiguous |
+| D7 | reversible-technical | agent | Register the composed budget in characters in its own `per_concern_caps_chars` section, leaving the bytes row at 16,384 | Converting needs a bytes-per-character ratio that drifts with the corpus; measured mean 1.0088 and per-file max 1.0346, so 8,000 chars is at most 8,277 B and the two cannot breach each other | The corpus starts producing text dense enough to close that gap — a fixture re-measures the maximum and reds first |
+| D8 | reversible-technical | agent | A fire where every match is unsendable emits a manifest, where it previously emitted nothing | AC-2's "no match absent from a delivery" taken literally; it is what makes a broken install visible from the model's side | The per-turn cost of a persistent broken install is measured and judged worse than the silence |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
@@ -666,10 +742,27 @@ Reproduced on 2026-10-01:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — In a project that is not this repository, the built bundle delivers
+- [x] AC-1 — In a project that is not this repository, the built bundle delivers
       a matching rule and only rules the install carries.
-- [ ] AC-2 — No composed string over the D2 budget across the frozen corpus, and
+
+      Both halves on the BUILT bundle through the dispatcher
+      (`rule_inject_foreign_matrix.test.ts`): a consumer carrying no corpus of
+      its own receives `prompt-rule`, and a consumer whose `.claude/rules`
+      carries only `prompt-rule.md` receives that rule and not `second-rule`,
+      whose body exists in the package corpus and routes on the same prompt.
+- [x] AC-2 — No composed string over the D2 budget across the frozen corpus, and
       no match absent from a delivery.
+
+      Measured 2026-10-03 rather than argued, because a reserve-then-fill loop
+      is exactly the shape that is wrong in the one case nobody wrote down. The
+      sweep routes every prompt in `tests/eval/routing-matrix` against this
+      repository's real router and real bodies, from an empty workspace with the
+      repository as the package root so the scope filter does not narrow it:
+      **444 fires over 588 prompts, worst composed string 7,943 characters** —
+      under the 8,000 budget and under the host's 10,000-character replacement
+      threshold. The draft's run measured 109 of 323 over that threshold. The
+      second half is structural: every matched rule is a manifest row, including
+      the ones `selectForInjection` dropped, which nothing read before.
 - [x] AC-3 — Installer, projector and carrier return the same mode in every
       fixture of 1.2.
 - [ ] AC-4 — The installed-layer report and the arrival record exist and every

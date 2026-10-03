@@ -96,6 +96,7 @@ import * as rule_layer_overlap from './_lib/rule_layer_overlap.js';
 import * as installed_tools from './_lib/installed_tools.js';
 import { collect_drift, format_drift_report } from './_lib/install_drift.js';
 import * as user_global_paths from './_lib/user_global_paths.js';
+import * as gitignore_block from './_lib/gitignore_block.js';
 // The LIBRARY half, deliberately not `capture_skill_catalogue.js`: that module
 // is a CLI entry with a top-level `process.exit()`, and esbuild would bundle
 // that exit into the installer a consumer loads (`check_installer_import_purity`
@@ -4248,6 +4249,55 @@ function run_interactive_init(project_root: string, force: boolean): number {
     return 0;
 }
 
+/**
+ * Write the package's managed `.gitignore` block when the wizard will not run.
+ *
+ * WHY HERE AND NOT EVERYWHERE. The block is normally installed by
+ * `refresh --project` / `sync:gitignore`, which the browser wizard reaches. A
+ * `--no-ui` install reaches neither, so a headless consumer ends up with a
+ * package that writes dispatcher state under `agents/` and a `.gitignore` that
+ * says nothing about it: `git status` fills with untracked runtime files the
+ * developer did not create and cannot place.
+ *
+ * APPEND-ONLY, NEVER `replace`. A consumer's own entries inside the block are
+ * theirs; this adds the managed ones that are missing and touches nothing else.
+ * Everything here is best-effort — no `.gitignore`, no git repository, an
+ * unreadable template or an unwritable file all return quietly. An installer
+ * that failed because it could not tidy a listing would be worse than the
+ * listing.
+ */
+export function _write_gitignore_block(project_root: string, dry_run: boolean): boolean {
+    const target = path.join(project_root, gitignore_block.DEFAULT_GITIGNORE);
+    let template: string[];
+    try {
+        template = gitignore_block.load_template(gitignore_block.DEFAULT_TEMPLATE);
+    } catch {
+        return false;
+    }
+    let existing: string[] = [];
+    try {
+        existing = fs.readFileSync(target, 'utf-8').split('\n');
+        if (existing.length > 0 && existing[existing.length - 1] === '') existing.pop();
+    } catch {
+        if (!pathExists(path.join(project_root, '.git'))) return false;
+    }
+    const [lines, added] = gitignore_block.sync_block(existing, template);
+    if (added.length === 0) return false;
+    if (dry_run) {
+        process.stdout.write(
+            `  Would add ${added.length} entr${added.length === 1 ? 'y' : 'ies'} to .gitignore\n`,
+        );
+        return true;
+    }
+    try {
+        writeText(target, gitignore_block.format_file(lines));
+    } catch {
+        return false;
+    }
+    success(`.gitignore: +${added.length} managed entr${added.length === 1 ? 'y' : 'ies'}`);
+    return true;
+}
+
 // --- Wizard auto-launch ---
 
 const _WIZARD_READY_RE = /^WIZARD_READY (http:\/\/(?:127\.0\.0\.1|localhost):\d+\/\S*)\r?$/;
@@ -5043,6 +5093,9 @@ function _main_project_install(
     if (will_launch) {
         return _wizard_spawn(project_root);
     }
+    // No wizard, so nothing else will install the managed ignore block — see
+    // `_write_gitignore_block`.
+    _write_gitignore_block(project_root, opts.dry_run);
     return 0;
 }
 

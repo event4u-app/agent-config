@@ -16,6 +16,7 @@ import {
     setHookStdinOverride,
 } from '../../src/scripts/hooks/hook_stdin.js';
 import {
+    buildInjection,
     CAP_BYTES,
     COMPOSED_CHARS,
     gateOpen,
@@ -336,9 +337,12 @@ describe('rule-inject — never blocks (1.5)', () => {
     it('an unwritable state directory still delivers rather than failing the turn', () => {
         const root = makeRoot({ delivery: true });
         // A FILE where the state directory must go: mkdir fails, write fails,
-        // and the concern must still emit.
-        fs.mkdirSync(path.join(root, 'agents', 'runtime', 'state'), { recursive: true });
-        fs.writeFileSync(path.join(root, 'agents', 'runtime', 'state', 'rule-inject'), 'x', 'utf-8');
+        // and the concern must still emit. Derived from `statePath` rather than
+        // written out by hand, so that moving the state (step 1.7 did) cannot
+        // leave this case blocking a directory nothing uses any more.
+        const dir = path.dirname(statePath(root, 's-ro'));
+        fs.mkdirSync(path.dirname(dir), { recursive: true });
+        fs.writeFileSync(dir, 'x', 'utf-8');
         const { rc, out } = run({
             event: 'user_prompt_submit',
             workspace: root,
@@ -1103,5 +1107,122 @@ describe('rule-inject — re-deliver after a compact (1.6)', () => {
             payload: { source: 'compact' },
         });
         expect(composed(out).length).toBeLessThanOrEqual(COMPOSED_CHARS);
+    });
+});
+
+describe('rule-inject — state-location: the seen-set leaves the consumer tree (1.7)', () => {
+    function fire(root: string, session: string): void {
+        run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: session,
+            payload: PROMPT,
+        });
+    }
+
+    it('writes nothing under the workspace', () => {
+        const root = makeRoot({ delivery: true });
+        fire(root, 'st-1');
+        expect(fs.existsSync(path.join(root, 'agents', 'runtime', 'state', 'rule-inject'))).toBe(
+            false,
+        );
+        expect([...readSeen(root, 'st-1')]).toEqual(['prompt-rule']);
+    });
+
+    it('writes under the user-global root, keyed by project', () => {
+        const root = makeRoot({ delivery: true });
+        fire(root, 'st-2');
+        const p = statePath(root, 'st-2');
+        expect(fs.existsSync(p)).toBe(true);
+        expect(p.startsWith(path.join(HOME, '.event4u', 'agent-config'))).toBe(true);
+        expect(p).toContain(path.join('state', 'rule-inject'));
+        // Readable AND unique: the basename is there for a human opening the
+        // directory, the digest is there because two projects can share one.
+        expect(path.basename(path.dirname(p))).toMatch(/^.+-[0-9a-f]{12}$/);
+    });
+
+    it('two projects with the same session id do not share a seen-set', () => {
+        const a = makeRoot({ delivery: true });
+        const b = makeRoot({ delivery: true });
+        fire(a, 'st-3');
+        expect(statePath(a, 'st-3')).not.toBe(statePath(b, 'st-3'));
+        expect([...readSeen(a, 'st-3')]).toEqual(['prompt-rule']);
+        // B never fired, so B's rule is still deliverable under the same id.
+        expect([...readSeen(b, 'st-3')]).toEqual([]);
+    });
+
+    it('the delivered-row ledger stays in the project and keeps its session join', () => {
+        // `road-to-a-stop-that-holds` Phase 3 reads these rows and joins them on
+        // the session id. The seen-set moving must not touch that, and the two
+        // were never keyed on each other — this asserts it rather than assuming
+        // it, because "nothing else changed" is exactly what a join break says
+        // right up until it is found.
+        const root = makeRoot({ delivery: true });
+        fire(root, 'st-4');
+        const rows = readDelivered(root, 'st-4');
+        expect(rows.map((r) => r.rule)).toEqual(['prompt-rule']);
+        // In the PROJECT tree, read back by project root plus session id — the
+        // same two arguments the reader on the other side of the join uses.
+        expect(readDelivered(root, 'st-other')).toEqual([]);
+    });
+
+    it('a restore after a compaction reads the moved state, not the old path', () => {
+        const root = makeRoot({ delivery: true });
+        putBody(root, 'prompt-rule', withLaw('prompt-rule', 200));
+        fire(root, 'st-5');
+        run({ event: 'pre_compact', workspace: root, session_id: 'st-5', payload: {} });
+        const { out } = run({
+            event: 'session_start',
+            workspace: root,
+            session_id: 'st-5',
+            payload: { source: 'compact' },
+        });
+        expect(manifest(out)).toEqual({ 'prompt-rule': 'law' });
+    });
+});
+
+describe('rule-inject — composed-budget over the FROZEN corpus (AC-2)', () => {
+    it('no composed string exceeds the budget, against this repository own router and bodies', () => {
+        // The acceptance criterion asks for a measurement, not an argument. The
+        // composer cannot exceed the cap by construction, and a construction
+        // argument is exactly what a reserve-then-fill loop gets wrong in the
+        // one case nobody wrote down. So this sweeps every prompt in
+        // `tests/eval/routing-matrix` against the REAL router and the REAL
+        // bodies and reads the number off.
+        const repo = path.resolve(__dirname, '..', '..');
+        const dir = path.join(repo, 'tests', 'eval', 'routing-matrix');
+        const prompts: string[] = [];
+        for (const f of fs.readdirSync(dir)) {
+            if (!f.endsWith('.yaml')) continue;
+            for (const line of fs.readFileSync(path.join(dir, f), 'utf-8').split('\n')) {
+                const m = /^\s*-\s*prompt:\s*"([\s\S]*)"\s*$/.exec(line);
+                if (m) prompts.push((m[1] as string).replace(/\\"/g, '"'));
+            }
+        }
+        // A sweep that silently found nothing would pass vacuously.
+        expect(prompts.length).toBeGreaterThan(200);
+
+        // Routed from an EMPTY workspace with the repository as the package
+        // root, so the sweep measures the whole router rather than whatever
+        // `.claude/rules` the machine running it happens to carry. The scope
+        // filter is a per-consumer narrowing; the budget has to hold for the
+        // widest fire the corpus can produce, not the narrowest.
+        const ws = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-corpus-'));
+        vi.stubEnv('AGENT_CONFIG_PACKAGE_ROOT', repo);
+
+        let worst = 0;
+        let fires = 0;
+        for (const prompt of prompts) {
+            const inj = buildInjection(ws, prompt, null, null, new Set());
+            if (inj === null) continue;
+            fires += 1;
+            worst = Math.max(worst, inj.body.length);
+        }
+        expect(fires).toBeGreaterThan(100);
+        // Measured 2026-10-03: 444 fires over 588 prompts, worst 7,943 chars.
+        expect(worst).toBeLessThanOrEqual(COMPOSED_CHARS);
+        // And under the host's own replacement threshold, which is what the
+        // budget exists to stay below.
+        expect(worst).toBeLessThan(10_000);
     });
 });

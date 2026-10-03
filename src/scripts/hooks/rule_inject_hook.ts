@@ -83,8 +83,14 @@
  * is injected the first time one of its triggers fires and not again, because
  * the model already has it. Compaction is exactly the event that makes that
  * false, so `pre_compact` empties the seen-set — the same pin-lost shape
- * `language-mirror` uses. State lives under `agents/runtime/state/`, the class
- * `context-hygiene.json` already occupies; no new state convention is created.
+ * `language-mirror` uses.
+ *
+ * STATE LIVES UNDER THE USER-GLOBAL ROOT, KEYED BY PROJECT (step 1.7). It used
+ * to be `<workspace>/agents/runtime/state/rule-inject/`, so every consumer
+ * session left dispatcher bookkeeping as untracked files inside someone else's
+ * repository. The seen-set is state about a SESSION, not about the project.
+ * The delivered-row ledger beside it is deliberately NOT moved — see
+ * {@link statePath} for the join that depends on where it is.
  *
  * WHAT IS RE-DELIVERED AFTER A COMPACTION, EXACTLY
  * (road-to-delivery-for-every-host 2.4, amended by step 1.6 — stated because a
@@ -133,12 +139,14 @@
  * claude 2.1.241, three verdicts). Delivery is therefore orchestrator-only, and
  * no third binding is added.
  */
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { hookSectionEnabled } from '../_lib/hook_settings.js';
+import * as user_global_paths from '../_lib/user_global_paths.js';
 import { deliversBodies, resolveLeanProjection } from '../_lib/lean_projection_mode.js';
 import { enforcement_class_from_frontmatter } from '../_lib/obligation_frequency.js';
 import {
@@ -248,9 +256,52 @@ export interface SeenState {
     pending?: string[];
 }
 
+/**
+ * A stable, readable, collision-free directory name for one project root.
+ *
+ * The basename alone collides — a developer with `~/work/api` and
+ * `~/clients/api` would share a seen-set and silently lose deliveries in both.
+ * The digest alone is unreadable, and this directory is one a human opens when
+ * a delivery looks wrong. Both, so neither problem is the one you get.
+ */
+function projectKey(root: string): string {
+    const abs = path.resolve(root);
+    const name = (path.basename(abs) || 'root').replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 40);
+    return `${name}-${createHash('sha256').update(abs, 'utf-8').digest('hex').slice(0, 12)}`;
+}
+
+/**
+ * Where this session's seen-set lives (step 1.7).
+ *
+ * UNDER THE USER-GLOBAL ROOT, KEYED BY PROJECT. It used to be written to
+ * `<workspace>/agents/runtime/state/rule-inject/`, so every consumer session
+ * left dispatcher bookkeeping inside someone else's repository — untracked
+ * files in their `git status`, in a directory their `.gitignore` says nothing
+ * about unless this package's managed block was installed. The seen-set is
+ * state ABOUT a session, not about the project, and the project is the one
+ * place it has no business being.
+ *
+ * THE DELIVERED-ROW LEDGER IS DELIBERATELY NOT MOVED WITH IT.
+ * `recordDelivered` writes through `_lib/obligations.ts`, which resolves under
+ * the project root, and `road-to-a-stop-that-holds` Phase 3 reads those rows
+ * and joins them on the session id. Moving the ledger would be a second,
+ * larger change with a live consumer; moving only the seen-set leaves that join
+ * untouched by construction, because the two were never keyed on each other.
+ *
+ * `EVENT4U_CONFIG_HOME` and `$HOME` resolve the root, so a test points it
+ * somewhere disposable instead of writing into the developer's own state.
+ *
+ * ONE COST, STATED: an upgrade mid-session orphans the old file and the seen-set
+ * reads empty, which re-injects each matched rule once more. Session state is
+ * per session and cheap to rebuild; a migration step for it would be more code
+ * than the duplicate it prevents.
+ */
 export function statePath(root: string, session: string): string {
     const safe = session.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 80) || 'unknown';
-    return path.join(root, 'agents', 'runtime', 'state', 'rule-inject', `${safe}.json`);
+    return path.join(
+        user_global_paths.write_target(path.join('state', 'rule-inject', projectKey(root))),
+        `${safe}.json`,
+    );
 }
 
 function readState(root: string, session: string): SeenState {
@@ -332,8 +383,6 @@ export function extractFilePath(payload: JsonObject): string | null {
     if (!isObject(ti)) return null;
     return str(ti, 'file_path', 'path', 'filePath', 'notebook_path');
 }
-
-// ── decision ─────────────────────────────────────────────────────────────
 
 /**
  * Per-fire ceiling on the whole rule-produced string, in CHARACTERS (D2).
