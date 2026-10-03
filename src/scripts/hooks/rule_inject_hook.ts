@@ -57,6 +57,22 @@
  * cannot drift into two spellings. A file with nothing left after the strip is
  * not delivered: an empty `<rule>` element is framing with no content in it.
  *
+ * ONE STRING THE HOST DOES NOT REPLACE, AND A MANIFEST (step 1.5). Claude Code
+ * substitutes an `additionalContext` over 10,000 CHARACTERS with a path and a
+ * 2,000-character preview, so an oversized delivery does not arrive truncated —
+ * it does not arrive. {@link COMPOSED_CHARS} bounds the whole rule-produced
+ * string at 8,000, and `compose` fills it in the order D1 fixes: the law of
+ * every matched high-consequence rule, then the highest-priority full body that
+ * fits, then further bodies, then the law of everything still unsent, then the
+ * manifest. Nothing is ever cut mid-obligation — a rule whose law alone does not
+ * fit is REPORTED, because half a law reads like a whole one.
+ *
+ * AND EVERY MATCH IS IN THE MANIFEST, labelled `full`, `law`, `omitted_budget`
+ * or `source_unavailable`. A pointer is never labelled delivered. This is where
+ * `selectForInjection`'s `dropped` list is finally read: before it, a body the
+ * byte cap discarded left no trace, so a consumer could not tell a rule that did
+ * not match from one that matched and was thrown away.
+ *
  * ONE MATCHER, SHARED WITH THE OFFLINE MODEL. Everything about selection,
  * ordering, capping and body loading comes from `_lib/rule_injection.ts`, which
  * `model_rule_injection.ts` also imports. Step 0.5 states the reason in as many
@@ -126,13 +142,16 @@ import {
     type WriterInput,
 } from '../_lib/obligations.js';
 import {
+    bytesOf,
     loadRuleBody,
     loadRouter,
     matchTierRules,
     ruleSources,
     selectForInjection,
+    type SelectionResult,
 } from '../_lib/rule_injection.js';
-import { ruleBody } from '../_lib/rule_law_section.js';
+import { readConsequenceClass } from '../_lib/rule_consequence_class.js';
+import { lawText, ruleBody } from '../_lib/rule_law_section.js';
 import { hostRuleLayerIds } from '../_lib/rule_layer_overlap.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
@@ -263,10 +282,51 @@ export function extractFilePath(payload: JsonObject): string | null {
 
 // ── decision ─────────────────────────────────────────────────────────────
 
+/**
+ * Per-fire ceiling on the whole rule-produced string, in CHARACTERS (D2).
+ *
+ * CHARACTERS, because that is the unit the host's own threshold is in. Claude
+ * Code replaces an `additionalContext` longer than 10,000 CHARACTERS with a
+ * path and a 2,000-character preview, so a delivery over that line is not
+ * truncated — it is substituted, and the obligation text never arrives at all.
+ * 8,000 leaves roughly 2,000 under the threshold beside the 1,272 characters of
+ * non-rule text measured on this slot.
+ *
+ * IT BOUNDS THE WHOLE STRING, framing and manifest included, because that is
+ * what the host measures. {@link CAP_BYTES} above bounds something else — the
+ * SELECTION, shared byte-for-byte with the offline model — and both still
+ * apply: selection drops whole bodies to stay under the byte cap, then
+ * composition drops or demotes to stay under this one.
+ *
+ * THE TWO CANNOT BREACH EACH OTHER AT ANY RATIO THIS CORPUS PRODUCES, and the
+ * ratio is measured rather than assumed: over the 121 projected rule files the
+ * mean is 1.0088 bytes per character and the per-file maximum is 1.0346
+ * (`no-decorative-emojis-in-git-surfaces.md`), so 8,000 characters is at most
+ * 8,277 bytes against a registered 16,384. A composed string would have to
+ * average 2.05 bytes per character to reach the byte row, which no Markdown
+ * rule corpus produces. `per_concern_caps_chars` in
+ * `src/config/hook-token-budget.json` registers this number in its own unit
+ * rather than converting it into the bytes map, and a fixture pins both.
+ */
+export const COMPOSED_CHARS = 8000;
+
+/**
+ * What a matched rule actually got, as the manifest labels it.
+ *
+ * `full` and `law` mean text arrived. `omitted_budget` and `source_unavailable`
+ * mean it did not, and both are a POINTER — an id the model can ask for. A
+ * pointer is never labelled delivered; that distinction is the whole reason the
+ * manifest has four values instead of a present/absent flag.
+ */
+export type DeliveryForm = 'full' | 'law' | 'omitted_budget' | 'source_unavailable';
+
 export interface Injection {
+    /** Ids whose TEXT was emitted — what the ledger records. */
     rules: string[];
     bytes: number;
     body: string;
+    /** Every matched rule with the form it got, in router order. */
+    manifest: Array<[string, DeliveryForm]>;
 }
 
 /**
@@ -305,6 +365,128 @@ export function recordDelivered(root: string, session: string, ruleIds: string[]
     } catch {
         return 0;
     }
+}
+
+/**
+ * Ids of the high-consequence rule class, empty when the config is unreachable.
+ *
+ * The class is `road-to-rule-laws-that-can-stand`'s, read from the file that
+ * roadmap's step 2.1 produced — never re-derived here. An unreachable config
+ * degrades to "no rule is high-consequence", which costs those rules their
+ * guaranteed slot in the order and never costs anyone a delivery.
+ */
+function highConsequenceIds(root: string): Set<string> {
+    for (const r of [root, ruleSources(root).pkg]) {
+        if (r === null) continue;
+        try {
+            return new Set(Object.keys(readConsequenceClass(r).members));
+        } catch {
+            continue;
+        }
+    }
+    return new Set();
+}
+
+/** The manifest block, which is part of the budgeted string rather than beside it. */
+function manifestText(rows: Array<[string, DeliveryForm]>): string {
+    return `<rule-manifest>\n${rows.map(([id, f]) => `${id}=${f}`).join('\n')}\n</rule-manifest>`;
+}
+
+/**
+ * Compose one fire under {@link COMPOSED_CHARS}, in the order D1 fixes.
+ *
+ * THE ORDER IS A DECISION, not an implementation detail. D1:
+ *
+ *   1. the law of every matched HIGH-CONSEQUENCE rule,
+ *   2. then the highest-priority full body that fits,
+ *   3. then further full bodies,
+ *   4. then the law of everything still unsent,
+ *   5. then the manifest.
+ *
+ * Phase 1 first because a high-consequence rule's law arriving is worth more
+ * than a lower-consequence rule's whole body, and a budget that filled in
+ * priority order alone would spend itself before reaching it.
+ *
+ * NOTHING IS EVER TRUNCATED. A rule whose law alone does not fit is REPORTED —
+ * `omitted_budget` in the manifest — because half an obligation reads like a
+ * whole one and is the more dangerous output. The manifest's space is reserved
+ * BEFORE any text is admitted, using the longest label for every matched id, so
+ * the report can never be the thing that pushes the string over.
+ *
+ * `sel.dropped` is read here, and that is the point of the step as much as the
+ * budget is: before this, a body dropped by the byte cap left no trace at all,
+ * so a consumer could not tell a rule that did not match from one that matched
+ * and was silently discarded.
+ */
+function compose(root: string, sel: SelectionResult, hi: Set<string>): Injection | null {
+    const form = new Map<string, DeliveryForm>();
+    const full = new Map<string, string>();
+    for (const m of sel.dropped) {
+        form.set(m.id, (sel.bodyBytes.get(m.id) ?? 0) === 0 ? 'source_unavailable' : 'omitted_budget');
+    }
+    for (const m of sel.selected) {
+        const raw = loadRuleBody(root, m.id);
+        // STEP 1.4 — the host form, by the parser the thin projector uses.
+        // `ruleBody` strips frontmatter and HTML comments: the first is the
+        // routing surface the router already read, the second is authoring
+        // scaffolding no host renders to a model. A file with nothing left after
+        // the strip carries no obligation — an empty `<rule>` element is framing
+        // with no content inside it.
+        const body = raw === null ? '' : ruleBody(raw);
+        if (body === '') {
+            form.set(m.id, 'source_unavailable');
+            continue;
+        }
+        form.set(m.id, 'omitted_budget');
+        full.set(m.id, body);
+    }
+
+    const all = [...sel.selected, ...sel.dropped].sort((a, b) => a.order - b.order);
+    const tiers = new Map(all.map((m) => [m.id, m.tier]));
+    let left =
+        COMPOSED_CHARS - manifestText(all.map((m) => [m.id, 'source_unavailable'])).length - 2;
+    const parts: string[] = [];
+    const ids: string[] = [];
+    const add = (id: string, kind: 'full' | 'law', text: string): boolean => {
+        const part = `<rule id="${id}" tier="${tiers.get(id) ?? ''}" form="${kind}">\n${text}\n</rule>`;
+        const cost = part.length + (parts.length === 0 ? 0 : 2);
+        if (cost > left) return false;
+        left -= cost;
+        parts.push(part);
+        ids.push(id);
+        form.set(id, kind);
+        return true;
+    };
+
+    const ranked = [...sel.selected].sort((a, b) => b.score - a.score || a.order - b.order);
+    for (const m of ranked) {
+        const body = full.get(m.id);
+        if (body === undefined || !hi.has(m.id)) continue;
+        const law = lawText(body);
+        // A class member with no law section cannot be served by phase 1. It is
+        // left to compete for a full body below rather than reported, which is
+        // `no_stub`'s own answer to the same state.
+        if (law !== null) add(m.id, 'law', law);
+    }
+    for (const m of ranked) {
+        const body = full.get(m.id);
+        if (body === undefined || form.get(m.id) !== 'omitted_budget') continue;
+        add(m.id, 'full', body);
+    }
+    for (const m of ranked) {
+        const body = full.get(m.id);
+        if (body === undefined || form.get(m.id) !== 'omitted_budget') continue;
+        const law = lawText(body);
+        if (law !== null) add(m.id, 'law', law);
+    }
+
+    const rows: Array<[string, DeliveryForm]> = all.map((m) => [
+        m.id,
+        form.get(m.id) ?? 'source_unavailable',
+    ]);
+    parts.push(manifestText(rows));
+    const body = parts.join('\n\n');
+    return { rules: ids, bytes: bytesOf(body), body, manifest: rows };
 }
 
 /**
@@ -351,24 +533,7 @@ export function buildInjection(
     );
     if (matches.length === 0) return null;
     const sel = selectForInjection(root, matches, CAP_BYTES);
-    const parts: string[] = [];
-    const ids: string[] = [];
-    for (const m of sel.selected) {
-        const raw = loadRuleBody(root, m.id);
-        // STEP 1.4 — the host form, by the parser the thin projector uses.
-        // `ruleBody` strips frontmatter and HTML comments: the first is the
-        // routing surface the router already read, the second is authoring
-        // scaffolding no host renders to a model. Shipping either charges the
-        // delivery for bytes the model cannot act on. A file with nothing left
-        // after the strip carries no obligation and is not delivered — an empty
-        // `<rule>` element is framing with no content inside it.
-        const body = raw === null ? '' : ruleBody(raw);
-        if (body === '') continue;
-        ids.push(m.id);
-        parts.push(`<rule id="${m.id}" tier="${m.tier}">\n${body}\n</rule>`);
-    }
-    if (ids.length === 0) return null;
-    return { rules: ids, bytes: sel.bytes, body: parts.join('\n\n') };
+    return compose(root, sel, highConsequenceIds(root));
 }
 
 // ── main ─────────────────────────────────────────────────────────────────
@@ -517,7 +682,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     process.stdout.write(
         `${JSON.stringify({
             decision: 'warn',
-            reason: `rule-inject: ${injection.rules.length} rule body/bodies on ${slot} (${injection.bytes} B)`,
+            reason: `rule-inject: ${injection.rules.length}/${injection.manifest.length} matched rule(s) sent on ${slot} (${injection.body.length} chars)`,
             additional_context: injection.body,
         })}\n`,
     );

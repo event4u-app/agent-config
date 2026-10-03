@@ -368,7 +368,7 @@ Reproduced on 2026-10-01:
       build), against the +396 B the previous run measured on a tree without
       1.3. The number was the whole argument of the blocker below; what changed
       is not the number but the headroom it is spent against.
-- [ ] **1.5 A delivery the host does not replace, and that hides nothing.** The
+- [x] **1.5 A delivery the host does not replace, and that hides nothing.** The
       rule-produced string stays under 8,000 characters (D2), in the order D1
       fixes; the high-consequence class is the one
       `road-to-rule-laws-that-can-stand` step 2.1 declares, empty until it lands.
@@ -379,20 +379,54 @@ Reproduced on 2026-10-01:
       restated in characters.
       verify: `npx vitest run tests/scripts/rule_inject_hook.test.ts -t composed-budget` -> 0
 
-      **Not started 2026-10-02 — blocked on `hook-bundle-ceiling-exhausted`.
-      One premise of the step has changed and should not be re-derived.** It
-      says the high-consequence class is "empty until it lands". It has landed:
-      `road-to-rule-laws-that-can-stand` merged as #2177, and
-      `src/config/rule-consequence-class.json` now carries **28 members** with
-      five declared `no_stub`. `_lib/rule_consequence_class.ts` reads it and
-      `_lib/rule_law_section.ts::lawText` produces the law form, so D1's
-      ordering has both inputs it was waiting for and the step is implementable
-      the moment there are bytes for it.
+      **Done 2026-10-03.** `compose` in `rule_inject_hook.ts` fills the string in
+      D1's order — high-consequence laws, then the highest-priority full body
+      that fits, then further bodies, then the laws of the rest, then the
+      manifest — under `COMPOSED_CHARS = 8000`. The high-consequence class is
+      read from `src/config/rule-consequence-class.json` through
+      `_lib/rule_consequence_class.ts`, never re-derived; an unreachable config
+      degrades to "no rule is high-consequence", which costs those rules their
+      guaranteed slot and costs nobody a delivery.
 
-      Of the five open steps this is the one with the most user-visible cost:
-      the draft's bundle run measured 109 of 323 composed strings over the
-      host's 10,000-character replacement threshold, so roughly a third of
-      fires are currently replaced by a path and a 2,000-character preview.
+      **The manifest is inside the budget, not beside it.** Its worst-case
+      length — every matched id at the longest label — is reserved before any
+      text is admitted, so the report can never be the thing that pushes the
+      string over. Four labels, and the distinction between them is the step:
+      `omitted_budget` blames a budget decision, `source_unavailable` blames the
+      install, and one fixture asserts a rule whose source IS readable gets the
+      first, because the fallback label would have silently blamed the wrong
+      thing.
+
+      **`selectForInjection`'s `dropped` list is now read**, which the Context
+      called out and which no amount of budgeting would have fixed on its own.
+      Before this, a body the byte cap discarded left no trace, so a consumer
+      could not tell a rule that did not match from one that matched and was
+      thrown away.
+
+      **The budget is registered in its own unit rather than converted.**
+      `hook-token-budget.json` gains a `per_concern_caps_chars` section carrying
+      `rule-inject: 8000`; the bytes row stays at 16,384 and its reason now says
+      it is the outer envelope the SELECTION stays inside rather than the bound
+      that binds at emission. Converting would have needed a bytes-per-character
+      ratio that drifts with the corpus. The claim that the two cannot breach
+      each other is measured, not asserted: over the 121 projected rule files the
+      mean is 1.0088 B/char and the per-file maximum 1.0346, so 8,000 characters
+      is at most 8,277 bytes — a composed string would have to average 2.05
+      B/char to reach the byte row. A fixture re-measures that maximum over the
+      real corpus rather than quoting it, so a corpus that did start producing
+      such a string fails a test instead of silently having a path substituted
+      for its obligations.
+
+      **One behaviour changed outside what the step asked for, and is recorded
+      rather than folded in.** A fire where every match is `source_unavailable`
+      now emits a manifest where it previously emitted nothing at all. That is
+      AC-2's "no match absent from a delivery" taken literally, and it is what
+      makes a broken install visible from the model's side; the cost is one short
+      line per turn for as long as it stays broken. The 1.4 fixture that asserted
+      total silence in that state is updated in this change and says so.
+
+      Bundle cost: **+3,845 B** (1,498,984 -> 1,502,829 on the gate's probe
+      build), the composer plus the consequence-class reader.
 - [ ] **1.6 Re-deliver after compaction.** On the session-start slot with source
       `compact`, emit the law section of each rule in the pre-compaction
       seen-set, under the same budget. The seen-set keeps rule ids, never body

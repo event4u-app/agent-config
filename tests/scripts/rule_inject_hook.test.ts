@@ -17,6 +17,7 @@ import {
 } from '../../src/scripts/hooks/hook_stdin.js';
 import {
     CAP_BYTES,
+    COMPOSED_CHARS,
     gateOpen,
     main,
     readSeen,
@@ -24,7 +25,7 @@ import {
     statePath,
 } from '../../src/scripts/hooks/rule_inject_hook.js';
 import { readDelivered } from '../../src/scripts/_lib/obligations.js';
-import { ruleBody } from '../../src/scripts/_lib/rule_law_section.js';
+import { lawText, ruleBody } from '../../src/scripts/_lib/rule_law_section.js';
 
 const ROUTER = {
     kernel: ['kernel-rule'],
@@ -773,7 +774,190 @@ describe('rule-inject — host-form: the delivered text (1.4)', () => {
             session_id: 'host-form-3',
             payload: { prompt: 'plan the migration' },
         });
-        // An empty `<rule>` element is framing with no content inside it.
-        expect(out).toBe('');
+        // An empty `<rule>` element is framing with no content inside it. The
+        // match is still REPORTED — step 1.5's manifest labels it rather than
+        // dropping it, because a silent drop is indistinguishable from no match.
+        expect(out).not.toContain('<rule id=');
+        expect(out).toContain('prompt-rule=source_unavailable');
+    });
+});
+
+/** Parse the manifest block out of a delivery, as `id -> form`. */
+function manifest(out: string): Record<string, string> {
+    const block = /<rule-manifest>\n([\s\S]*?)\n<\/rule-manifest>/.exec(composed(out))?.[1] ?? '';
+    const rows: Record<string, string> = {};
+    for (const line of block.split('\n')) {
+        const [id, form] = line.split('=');
+        if (id !== undefined && form !== undefined) rows[id] = form;
+    }
+    return rows;
+}
+
+/** The whole rule-produced string, which is what the budget bounds. */
+function composed(out: string): string {
+    return (JSON.parse(out) as { additional_context: string }).additional_context;
+}
+
+/** Replace the router so a case can state exactly which rules compete. */
+function putRouter(root: string, tier1: string[], tier2: string[]): void {
+    const t = (ids: string[], extra = false): unknown[] =>
+        ids.map((id) => ({
+            id,
+            triggers: extra
+                ? [{ keyword: 'migration' }, { keyword: 'plan' }]
+                : [{ keyword: 'migration' }],
+        }));
+    fs.writeFileSync(
+        path.join(root, 'dist', 'router.json'),
+        JSON.stringify({ kernel: [], tier_1: t(tier1, true), tier_2: t(tier2) }),
+        'utf-8',
+    );
+}
+
+/**
+ * A body whose law section is SHORT and whose tail is long.
+ *
+ * The `## Notes` heading is load-bearing: a law section runs to the next
+ * heading of the same or shallower depth, so without one the law would be the
+ * whole body and a demotion would save nothing.
+ */
+function withLaw(id: string, tail: number): string {
+    return (
+        `# ${id}\n\n## Iron Law\n\n\`\`\`\nLAW OF ${id.toUpperCase()}.\n\`\`\`\n\n`
+        + `## Notes\n\n${'tail '.repeat(tail)}`
+    );
+}
+
+const PROMPT = { prompt: 'plan the migration' };
+
+describe('rule-inject — composed-budget: one string, and a manifest (1.5)', () => {
+    it('every matched rule appears in the manifest, delivered or not', () => {
+        const root = makeRoot({ delivery: true });
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'cb-1',
+            payload: PROMPT,
+        });
+        expect(manifest(out)).toEqual({ 'prompt-rule': 'full' });
+    });
+
+    it('a body the byte cap dropped is reported, never silently gone', () => {
+        // Before this step `selectForInjection`'s `dropped` list was read by
+        // nothing, so a consumer could not tell a rule that did not match from
+        // one that matched and was discarded.
+        const root = makeRoot({ delivery: true });
+        putRouter(root, ['prompt-rule'], ['blade-rule', 'views-rule']);
+        for (const id of ['prompt-rule', 'blade-rule', 'views-rule']) {
+            putBody(root, id, `# ${id}\n\n${'x '.repeat(CAP_BYTES)}`);
+        }
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'cb-2',
+            payload: PROMPT,
+        });
+        const rows = manifest(out);
+        // `blade-rule` and `views-rule` lose the byte cap to the higher-scoring
+        // rule. Their sources are readable, so `omitted_budget` is the only
+        // honest label — `source_unavailable` would blame the install for a
+        // budget decision.
+        expect(rows).toEqual({
+            'prompt-rule': 'omitted_budget',
+            'blade-rule': 'omitted_budget',
+            'views-rule': 'omitted_budget',
+        });
+        expect(composed(out).length).toBeLessThanOrEqual(COMPOSED_CHARS);
+    });
+
+    it('a rule with no readable source is reported as such, never as delivered', () => {
+        const root = makeRoot({ delivery: true });
+        fs.rmSync(path.join(root, 'dist', 'agent-src', 'rules', 'prompt-rule.md'));
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'cb-3',
+            payload: PROMPT,
+        });
+        expect(manifest(out)['prompt-rule']).toBe('source_unavailable');
+        expect(rules(out)).toEqual([]);
+        // A path alone is never labelled delivered.
+        expect(composed(out)).not.toContain('form="full"');
+    });
+
+    it('a body that does not fit is DEMOTED to its law, never truncated', () => {
+        const root = makeRoot({ delivery: true });
+        putRouter(root, ['prompt-rule'], ['blade-rule']);
+        putBody(root, 'prompt-rule', withLaw('prompt-rule', 900));
+        putBody(root, 'blade-rule', withLaw('blade-rule', 900));
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'cb-5',
+            payload: PROMPT,
+        });
+        const text = composed(out);
+        expect(text.length).toBeLessThanOrEqual(COMPOSED_CHARS);
+        const rows = manifest(out);
+        expect(rows['prompt-rule']).toBe('full');
+        expect(rows['blade-rule']).toBe('law');
+        // Demoted, not cut: the law is whole and the body's tail is absent.
+        const lawPart = /<rule id="blade-rule"[^>]*form="law">\n([\s\S]*?)\n<\/rule>/.exec(text)?.[1];
+        expect(lawPart).toBe(lawText(ruleBody(withLaw('blade-rule', 900))));
+    });
+
+    it('a high-consequence law goes FIRST, ahead of a higher-scoring full body (D1)', () => {
+        const root = makeRoot({ delivery: true });
+        putRouter(root, ['prompt-rule'], ['blade-rule']);
+        putBody(root, 'prompt-rule', withLaw('prompt-rule', 900));
+        putBody(root, 'blade-rule', withLaw('blade-rule', 900));
+        // `blade-rule` scores lower and sorts later, and is declared
+        // high-consequence — so its LAW is admitted before the other rule's body
+        // competes for what is left. Without phase 1 the budget would be spent
+        // on `prompt-rule` first and this law would not be in the string.
+        const cfg = path.join(root, 'src', 'config');
+        fs.mkdirSync(cfg, { recursive: true });
+        fs.writeFileSync(
+            path.join(cfg, 'rule-consequence-class.json'),
+            JSON.stringify({
+                members: { 'blade-rule': { clause: 'security-boundary', why: 'fixture' } },
+            }),
+            'utf-8',
+        );
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'cb-6',
+            payload: PROMPT,
+        });
+        const text = composed(out);
+        expect(manifest(out)['blade-rule']).toBe('law');
+        expect(text.indexOf('LAW OF BLADE-RULE.')).toBeLessThan(
+            text.indexOf('<rule id="prompt-rule"'),
+        );
+    });
+
+    it('the character budget is the registered row, and the byte row still bounds it', () => {
+        const repo = path.resolve(__dirname, '..', '..');
+        const budget = JSON.parse(
+            fs.readFileSync(path.join(repo, 'src', 'config', 'hook-token-budget.json'), 'utf-8'),
+        ) as {
+            per_concern_caps_chars: Record<string, number>;
+            per_concern_caps_bytes: Record<string, number>;
+        };
+        expect(budget.per_concern_caps_chars['rule-inject']).toBe(COMPOSED_CHARS);
+        expect(budget.per_concern_caps_bytes['rule-inject']).toBe(CAP_BYTES);
+
+        // The claim the two-unit registration rests on, re-measured here rather
+        // than quoted: no projected rule file is dense enough for a composed
+        // string of COMPOSED_CHARS to reach the byte row.
+        const dir = path.join(repo, 'dist', 'agent-src', 'rules');
+        let worst = 0;
+        for (const f of fs.readdirSync(dir)) {
+            if (!f.endsWith('.md')) continue;
+            const t = fs.readFileSync(path.join(dir, f), 'utf-8');
+            worst = Math.max(worst, Buffer.byteLength(t, 'utf-8') / t.length);
+        }
+        expect(worst).toBeLessThan(CAP_BYTES / COMPOSED_CHARS);
     });
 });
