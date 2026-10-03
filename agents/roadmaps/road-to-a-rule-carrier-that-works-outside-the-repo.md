@@ -558,6 +558,116 @@ Reproduced on 2026-10-01:
       code than the duplicate it prevents.
 
       Bundle cost: **+342 B** (1,505,307 -> 1,505,649 as the gate reads it).
+
+## What an independent review found after Phase 1 closed
+
+A fresh reviewer read the whole branch delta against this file's Goal, Context,
+steps and Acceptance Criteria on 2026-10-03, with a prompt that stated the scope
+and the question and no expectation of the outcome. It returned 17 findings. The
+two it rated **high** were one defect seen from two sides, and it was a real
+delivery regression that every fixture on the branch had passed over.
+
+**Phase 1 was a ceiling where D1 says floor.** A high-consequence rule's law was
+emitted in phase 1 and its form set to `law`; phase 2 then skipped anything not
+still `omitted_budget`, so a class member could never receive its whole body
+however empty the budget was. Its id entered the seen-set on the way out, so the
+body did not come back on a later turn either. Measured by the reviewer against
+the real config and corpus: 23 of the 28 class members have a law section, and
+`security-sensitive-stop` would have dropped from 5,687 characters to 429 on
+every fire — 92.5 % withheld, from the rules the class exists to protect. D1's
+"then the highest-priority full body that fits" reads as a floor and now behaves
+like one: `put` replaces a part in place and charges only the delta, so a law is
+upgraded to its body when the budget has room.
+
+**And the class was read with the wrong reader.** `highConsequenceIds` used
+`Object.keys(members)`, which includes the `no_stub` subset — the members whose
+law was DECLARED unable to stand alone, which is why the projector ships those
+full-bodied. `_lib/rule_consequence_class.ts` exports `stubLawIds` for exactly
+this distinction and it is now what the carrier calls, so the one module that
+owns the class has one reader again.
+
+Neither had a fixture that could have caught it: the D1 ordering case sized both
+bodies so only one fit, which cannot distinguish a floor from a ceiling. Four
+cases now do, each checked by neutralising the mechanism.
+
+**Three more defects, fixed:**
+
+- A matched class member the BYTE cap dropped never reached phase 1 at all,
+  because `ranked` was built from `sel.selected` alone and `selectForInjection`
+  knows nothing about the class. D1 says "every matched"; the text for a dropped
+  member is loaded now.
+- `takePending` cleared the pending set BEFORE the restore was built, so a build
+  that failed — the package moved mid-session, or an upgrade renamed the pending
+  rules out of the router — lost the set permanently and silently, on the one
+  slot that does not come round again. Split into `readPending` and
+  `clearPending`, with the clear last.
+- The byte budget did not reserve the manifest while the character budget did,
+  so the emitted bytes could exceed the registered row by the manifest's length.
+  Both units reserve it now.
+
+**Two labels were untrue of the rule they named**, which matters because the
+four-value vocabulary is the step's contract:
+
+- A restore labelled a law-less rule `omitted_budget`, which by 1.5's own
+  wording blames a budget decision nobody made. Those compete for their body
+  instead, so every label on a restore is true. The matrix column is updated.
+- The manifest truncation dropped rows in router order, which could in principle
+  report a DELIVERED rule as omitted — the one thing AC-2 forbids outright.
+  Undelivered rows are dropped first now.
+
+**Three fixtures were vacuous or machine-dependent, and are repaired:**
+
+- "The restore obeys the same character budget" used bodies whose LAWS were
+  forty characters, so it asserted a 400-character string against an 8,000 cap
+  and would have stayed green with the budget code deleted.
+- "Two projects with the same session id do not share a seen-set" built both
+  roots with `mkdtemp`, so their basenames already differed and the digest half
+  of `projectKey` — the half that does the work — was never exercised. The new
+  case gives both roots the basename `api`.
+- `EVENT4U_CONFIG_HOME` is honoured AHEAD of `$HOME` by `event4u_root` and is
+  deliberately not neutralised by `hermetic-env.ts`, so a developer carrying it
+  would red the state-location cases. The same machine-dependence class step 1.3
+  found in `$HOME`, one variable over. Stubbed.
+
+**Five findings are recorded and NOT fixed, each with the reason:**
+
+- **The scope filter narrows this checkout to 13 rules.** `<repo>/.claude/rules`
+  carries only what `~/.claude` lacks (the complement projection `generate-tools`
+  writes), so on a maintainer machine with no global install the union is 13 of
+  ~120. That is the filter being RIGHT: the scope is what the host actually
+  loads, and a host that loads 13 files has the agent under 13 rules. It reads
+  as a regression only against the step's framing, not against its contract.
+- **The dispatcher prepends this concern's own `reason` line** to the payload
+  (`_parse_concern_stdout` joins `stated` and `extra`), adding ~60-70 characters
+  outside this concern's own budget — against the 728-character margin under the
+  conservative reading. Noted in risk-register row 5 rather than absorbed,
+  because which string the host measures is the open question that row names.
+- **A readable file that strips to empty is labelled `source_unavailable`.**
+  There is no usable source text, which is what that label says; the alternative
+  blames a budget decision nobody made. Recorded as a choice between two
+  imperfect labels in a closed four-value vocabulary.
+- **The seen-set has no retention.** It accumulates one file per (project,
+  session) under the user-global root forever, and `janitor.ts` is
+  project-scoped and never swept `rule-inject` even at the old location. A real
+  gap, and a janitor change is a different surface from this phase.
+- **`per_slot_sum_caps_bytes.session_start` was not re-checked** when 1.6 added
+  an emitter to that slot. The slot sums are an authoring-time control read by
+  `bench_hook_injection`, and re-deriving one is a measurement this phase did
+  not take.
+
+**What the reviewer checked and could not fault** is recorded because coverage
+and silence are different things: the reserve-then-fill arithmetic (hand-computed
+at the boundary), the byte-check fixture's sensitivity, the D1 ordering
+fixture's sensitivity, the manifest-truncation property, `statePath` and the
+absence of any other reader of the old location, the ledger join, the `$HOME`
+fix, the completeness of the `gitignore_block` extraction, `write_managed_block`'s
+append-only behaviour, the `ai_council` import split, the manifest/compiled-JSON
+consistency, and `emitFor`'s landing place.
+
+One infrastructure observation, pre-existing and not this diff's:
+`tests/_lib/ensure-build-artefacts.ts` builds `dist/` only when ABSENT, so the
+foreign matrix exercises whatever `dist/hooks/dispatch.js` is on disk. A stale
+local build would make those 13 columns a statement about older code.
 - [x] **1.8 A foreign-project matrix.** End to end on the built bundle: empty
       project, project with its own `.claude/rules`, package moved after
       install, no source checkout, cwd changed mid-session, maintainer scope,

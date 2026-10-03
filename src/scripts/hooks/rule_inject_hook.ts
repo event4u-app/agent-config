@@ -166,7 +166,7 @@ import {
     type SelectionResult,
     type TierRuleMatch,
 } from '../_lib/rule_injection.js';
-import { readConsequenceClass } from '../_lib/rule_consequence_class.js';
+import { readConsequenceClass, stubLawIds } from '../_lib/rule_consequence_class.js';
 import { lawText, ruleBody } from '../_lib/rule_law_section.js';
 import { hostRuleLayerIds } from '../_lib/rule_layer_overlap.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -364,12 +364,21 @@ export function armRestore(root: string, session: string): void {
     writeState(root, session, { rules: [], pending });
 }
 
-/** Read the pending set and clear it — a restore that fires twice is a duplicate. */
-export function takePending(root: string, session: string): Set<string> {
+/** The ids waiting for the restore slot. */
+export function readPending(root: string, session: string): Set<string> {
+    return new Set(readState(root, session).pending ?? []);
+}
+
+/**
+ * Drop the pending set, once the restore it fed has actually been built.
+ *
+ * SEPARATE FROM THE READ on purpose. A single take-and-clear loses the set when
+ * the build fails, on a slot that does not fire again for that boundary — so
+ * the clear is the caller's last step rather than its first.
+ */
+export function clearPending(root: string, session: string): void {
     const prev = readState(root, session);
-    const pending = prev.pending ?? [];
-    if (pending.length > 0) writeState(root, session, { rules: prev.rules, pending: [] });
-    return new Set(pending);
+    if ((prev.pending ?? []).length > 0) writeState(root, session, { rules: prev.rules, pending: [] });
 }
 
 /** The user's prompt, across the shapes the hosts use. */
@@ -479,23 +488,37 @@ export function recordDelivered(root: string, session: string, ruleIds: string[]
 }
 
 /**
- * Ids of the high-consequence rule class, empty when the config is unreachable.
+ * Ids whose LAW may stand on its own, empty when the config is unreachable.
  *
- * The class is `road-to-rule-laws-that-can-stand`'s, read from the file that
- * roadmap's step 2.1 produced — never re-derived here. An unreachable config
- * degrades to "no rule is high-consequence", which costs those rules their
- * guaranteed slot in the order and never costs anyone a delivery.
+ * `stubLawIds` and not `Object.keys(members)`: the `no_stub` subset is exactly
+ * the members whose law is missing or too long to carry the obligation alone,
+ * which is why the projector ships those full-bodied. Serving one of them its
+ * law here would be the thin-stub defect `rule_consequence_class.ts` exists to
+ * prevent, reproduced at the delivery end — and `stubLawIds` is that module's
+ * own answer, so re-deriving the distinction here would be a second reader of a
+ * class that is supposed to have one.
+ *
+ * MEMOISED PER ROOT. The config is 12 kB of JSON and this runs on the
+ * `user_prompt_submit` hot path; a dispatch is one process and an install does
+ * not change under it.
  */
+const HI_CACHE = new Map<string, Set<string>>();
+
 function highConsequenceIds(root: string): Set<string> {
+    const hit = HI_CACHE.get(root);
+    if (hit !== undefined) return hit;
+    let out = new Set<string>();
     for (const r of [root, ruleSources(root).pkg]) {
         if (r === null) continue;
         try {
-            return new Set(Object.keys(readConsequenceClass(r).members));
+            out = stubLawIds(readConsequenceClass(r));
+            break;
         } catch {
             continue;
         }
     }
-    return new Set();
+    HI_CACHE.set(root, out);
+    return out;
 }
 
 /** The manifest block, which is part of the budgeted string rather than beside it. */
@@ -518,6 +541,23 @@ function manifestText(rows: Array<[string, DeliveryForm]>): string {
  * than a lower-consequence rule's whole body, and a budget that filled in
  * priority order alone would spend itself before reaching it.
  *
+ * PHASE 1 IS A FLOOR AND NEVER A CEILING, which is the half the first
+ * implementation got backwards. A rule served its law in phase 1 can be
+ * UPGRADED to its whole body in phase 2 when the budget still has room for the
+ * difference — `put` replaces the part in place and charges only the delta.
+ * Without that, the 23 class members with a law section could never receive
+ * their body however empty the budget was: `security-sensitive-stop` would have
+ * dropped 5,687 characters to 429 on every fire, and its id still enters the
+ * seen-set, so the body would not have come back later either. D1's "then the
+ * highest-priority full body that fits" reads as a floor and has to behave like
+ * one.
+ *
+ * EVERY MATCHED CLASS MEMBER REACHES PHASE 1, including one the byte cap
+ * dropped. `selectForInjection` ranks on score alone and knows nothing about
+ * the class, so a high-consequence rule can lose that race; D1 says "every
+ * matched", so the text for a dropped class member is loaded here rather than
+ * left unreachable.
+ *
  * NOTHING IS EVER TRUNCATED. A rule whose law alone does not fit is REPORTED —
  * `omitted_budget` in the manifest — because half an obligation reads like a
  * whole one and is the more dangerous output. The manifest's space is reserved
@@ -537,11 +577,8 @@ function compose(
 ): Injection | null {
     const form = new Map<string, DeliveryForm>();
     const full = new Map<string, string>();
-    for (const m of sel.dropped) {
-        form.set(m.id, (sel.bodyBytes.get(m.id) ?? 0) === 0 ? 'source_unavailable' : 'omitted_budget');
-    }
-    for (const m of sel.selected) {
-        const raw = loadRuleBody(root, m.id);
+    const read = (id: string): void => {
+        const raw = loadRuleBody(root, id);
         // STEP 1.4 — the host form, by the parser the thin projector uses.
         // `ruleBody` strips frontmatter and HTML comments: the first is the
         // routing surface the router already read, the second is authoring
@@ -550,42 +587,60 @@ function compose(
         // with no content inside it.
         const body = raw === null ? '' : ruleBody(raw);
         if (body === '') {
-            form.set(m.id, 'source_unavailable');
+            form.set(id, 'source_unavailable');
+            return;
+        }
+        form.set(id, 'omitted_budget');
+        full.set(id, body);
+    };
+    for (const m of sel.dropped) {
+        if (hi.has(m.id)) {
+            read(m.id);
             continue;
         }
-        form.set(m.id, 'omitted_budget');
-        full.set(m.id, body);
+        form.set(m.id, (sel.bodyBytes.get(m.id) ?? 0) === 0 ? 'source_unavailable' : 'omitted_budget');
     }
+    for (const m of sel.selected) read(m.id);
 
     const all = [...sel.selected, ...sel.dropped].sort((a, b) => a.order - b.order);
     const tiers = new Map(all.map((m) => [m.id, m.tier]));
-    let left =
-        COMPOSED_CHARS - manifestText(all.map((m) => [m.id, 'source_unavailable'])).length - 2;
+    const reserve = manifestText(all.map((m) => [m.id, 'source_unavailable']));
+    let left = COMPOSED_CHARS - reserve.length - 2;
+    // BOTH UNITS RESERVE THE MANIFEST. The byte row is the registered one, so a
+    // manifest charged against the character budget and not against this one
+    // would let the emission exceed the row it is registered at.
+    let bytesLeft = CAP_BYTES - bytesOf(reserve) - 2;
     const parts: string[] = [];
-    const ids: string[] = [];
-    let bytesLeft = CAP_BYTES;
-    const add = (id: string, kind: 'full' | 'law', text: string): boolean => {
+    const partOf = new Map<string, number>();
+    const put = (id: string, kind: 'full' | 'law', text: string): boolean => {
         const part = `<rule id="${id}" tier="${tiers.get(id) ?? ''}" form="${kind}">\n${text}\n</rule>`;
-        const cost = part.length + (parts.length === 0 ? 0 : 2);
+        const at = partOf.get(id);
+        const prev = at === undefined ? '' : (parts[at] as string);
+        const sep = at === undefined && parts.length > 0 ? 2 : 0;
         // BOTH UNITS, INDEPENDENTLY. The measured 1.0346 bytes-per-character
         // maximum over today's corpus says the character budget binds first, and
-        // a measurement over one corpus is evidence rather than an invariant: an
-        // 8,000-character payload of 4-byte code points is 32,000 bytes. Safety
-        // that rests on a ratio stops being safety the day the corpus changes,
-        // so the registered byte row is enforced here too and the ratio is what
-        // makes the second check almost never bind rather than what makes it
-        // unnecessary.
-        const costBytes = bytesOf(part) + (parts.length === 0 ? 0 : 2);
+        // a measurement over one corpus is evidence rather than an invariant: a
+        // 6,000-character payload of three-byte code points is 18,000 bytes.
+        // Safety that rests on a ratio stops being safety the day the corpus
+        // changes, so the registered byte row is enforced here too and the ratio
+        // is what makes the second check almost never bind rather than what
+        // makes it unnecessary.
+        const cost = part.length - prev.length + sep;
+        const costBytes = bytesOf(part) - bytesOf(prev) + sep;
         if (cost > left || costBytes > bytesLeft) return false;
-        bytesLeft -= costBytes;
         left -= cost;
-        parts.push(part);
-        ids.push(id);
+        bytesLeft -= costBytes;
+        if (at === undefined) {
+            partOf.set(id, parts.length);
+            parts.push(part);
+        } else {
+            parts[at] = part;
+        }
         form.set(id, kind);
         return true;
     };
 
-    const ranked = [...sel.selected].sort((a, b) => b.score - a.score || a.order - b.order);
+    const ranked = [...all].sort((a, b) => b.score - a.score || a.order - b.order);
     for (const m of ranked) {
         const body = full.get(m.id);
         if (body === undefined || !hi.has(m.id)) continue;
@@ -593,39 +648,55 @@ function compose(
         // A class member with no law section cannot be served by phase 1. It is
         // left to compete for a full body below rather than reported, which is
         // `no_stub`'s own answer to the same state.
-        if (law !== null) add(m.id, 'law', law);
+        if (law !== null) put(m.id, 'law', law);
     }
-    for (const m of lawOnly ? [] : ranked) {
+    for (const m of ranked) {
         const body = full.get(m.id);
-        if (body === undefined || form.get(m.id) !== 'omitted_budget') continue;
-        add(m.id, 'full', body);
+        if (body === undefined || form.get(m.id) === 'full') continue;
+        // A RESTORE SENDS LAWS, with one exception: a rule with NO law section
+        // has no law to send, and reporting it `omitted_budget` would blame a
+        // budget decision nobody made. Those compete for their body instead, so
+        // every label on the restore is true.
+        if (lawOnly && lawText(body) !== null) continue;
+        put(m.id, 'full', body);
     }
     for (const m of ranked) {
         const body = full.get(m.id);
         if (body === undefined || form.get(m.id) !== 'omitted_budget') continue;
         const law = lawText(body);
-        if (law !== null) add(m.id, 'law', law);
+        if (law !== null) put(m.id, 'law', law);
     }
 
     const rows: Array<[string, DeliveryForm]> = all.map((m) => [
         m.id,
         form.get(m.id) ?? 'source_unavailable',
     ]);
+    const ids = rows.filter(([, f]) => f === 'full' || f === 'law').map(([id]) => id);
     // THE MANIFEST IS BOUNDED TOO, and by construction rather than by how many
     // rules this router happens to carry. Its space is reserved above at the
     // longest label, so it always fits what was reserved — but if the RESERVE
     // itself exceeded the budget (enough matches that the report alone is over
     // 8,000 characters) the fill loop would admit nothing and the manifest
     // would be the whole emission, over the cap. No router today comes close;
-    // "no corpus today comes close" is the shape of claim the composed-budget
-    // byte check exists because of, so this is a property instead.
-    let shown = rows.length;
-    let body = `${parts.join('\n\n')}${parts.length > 0 ? '\n\n' : ''}${manifestText(rows)}`;
-    while (body.length > COMPOSED_CHARS && shown > 0) {
-        shown -= 1;
-        const kept: Array<[string, DeliveryForm]> = rows.slice(0, shown);
-        const tail = manifestText([...kept, [`+${rows.length - shown}`, 'omitted_budget']]);
-        body = `${parts.join('\n\n')}${parts.length > 0 ? '\n\n' : ''}${tail}`;
+    // "no corpus today comes close" is the shape of claim the byte check above
+    // exists because of, so this is a property instead.
+    //
+    // UNDELIVERED ROWS GO FIRST. A row for a rule whose text IS in this string
+    // must never be the one dropped — that would report a delivered rule as
+    // omitted, which is the one thing AC-2 forbids outright.
+    const order = [...rows.keys()].sort(
+        (a, b) =>
+            Number(['full', 'law'].includes((rows[a] as [string, DeliveryForm])[1])) -
+            Number(['full', 'law'].includes((rows[b] as [string, DeliveryForm])[1])),
+    );
+    const head = parts.join('\n\n') + (parts.length > 0 ? '\n\n' : '');
+    let drop = 0;
+    let body = head + manifestText(rows);
+    while (body.length > COMPOSED_CHARS && drop < rows.length) {
+        drop += 1;
+        const cut = new Set(order.slice(0, drop));
+        const kept = rows.filter((_, i) => !cut.has(i));
+        body = head + manifestText([...kept, [`+${drop}`, 'omitted_budget']]);
     }
     return { rules: ids, bytes: bytesOf(body), body, manifest: rows };
 }
@@ -799,10 +870,15 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         // the same stance `handoff-context`'s `sourceGate` takes.
         if ((str(payload, 'source') ?? str(env, 'source')) !== 'compact') return EXIT_ALLOW;
         if (!gateOpen(root, _isCliEntry(), ruleSources(root).pkg)) return EXIT_ALLOW;
-        // Taken, not read: a restore that fires twice on one boundary is a
-        // duplicate delivery, and the second one costs the budget again.
-        const restored = restore(root, takePending(root, session));
+        // READ, then BUILD, then clear — never clear first. A restore that
+        // fires twice on one boundary is a duplicate delivery, so the set has to
+        // be cleared; clearing it BEFORE the build means a build that fails
+        // (the package moved mid-session, or an upgrade renamed every pending
+        // rule out of the router) loses the set permanently and silently, on the
+        // one slot that does not come round again.
+        const restored = restore(root, readPending(root, session));
         if (restored === null) return EXIT_ALLOW;
+        clearPending(root, session);
         recordDelivered(root, session, restored.rules);
         return emit(restored, slot);
     }

@@ -9,7 +9,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
     clearHookStdinOverride,
@@ -51,7 +51,7 @@ const BODIES: Record<string, string> = {
 
 /** A tree carrying a router, bodies, and optionally the delivery-mode setting. */
 function makeRoot(opts: { delivery: boolean; hosts?: string }): string {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-hook-'));
+    const root = mkdtemp('rule-inject-hook-');
     fs.mkdirSync(path.join(root, 'dist', 'agent-src', 'rules'), { recursive: true });
     fs.writeFileSync(path.join(root, 'dist', 'router.json'), JSON.stringify(ROUTER), 'utf-8');
     for (const [id, text] of Object.entries(BODIES)) {
@@ -103,13 +103,34 @@ function rules(out: string): string[] {
  */
 const HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-home-'));
 
+/** Every throwaway tree this file makes, removed at the end of the run. */
+const MADE: string[] = [HOME];
+
+function mkdtemp(prefix: string): string {
+    const d = fs.mkdtempSync(path.join(os.tmpdir(), prefix));
+    MADE.push(d);
+    return d;
+}
+
 beforeEach(() => {
     vi.stubEnv('HOME', HOME);
+    // `event4u_root()` honours `EVENT4U_CONFIG_HOME` AHEAD of `$HOME`, and
+    // `hermetic-env.ts` deliberately does not neutralise it. Unstubbed, a
+    // developer or runner carrying that variable reds the state-location cases
+    // — the same machine-dependence `$HOME` had before step 1.3 exposed it.
+    vi.stubEnv('EVENT4U_CONFIG_HOME', '');
 });
 
 afterEach(() => {
     vi.unstubAllEnvs();
     clearHookStdinOverride();
+});
+
+afterAll(() => {
+    while (MADE.length > 0) {
+        const d = MADE.pop();
+        if (d !== undefined) fs.rmSync(d, { recursive: true, force: true });
+    }
 });
 
 describe('rule-inject — default OFF means zero bytes', () => {
@@ -676,7 +697,7 @@ describe('rule-inject — delivery scope is what the install carries (1.3)', () 
 
     it('the USER layer counts too — the host loads both, so the scope is their union', () => {
         const root = makeRoot({ delivery: true });
-        const home = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-userhome-'));
+        const home = mkdtemp('rule-inject-userhome-');
         hostLayer(home, ['prompt-rule']);
         vi.stubEnv('HOME', home);
         const { out } = run({
@@ -828,6 +849,14 @@ function putRouter(root: string, tier1: string[], tier2: string[]): void {
  * heading of the same or shallower depth, so without one the law would be the
  * whole body and a demotion would save nothing.
  */
+/** A body whose LAW is long, for the cases where the law is what competes. */
+function withLongLaw(id: string, law: number): string {
+    return (
+        `# ${id}\n\n## Iron Law\n\n\`\`\`\nLAW OF ${id.toUpperCase()}.\n${'law '.repeat(law)}\n\`\`\`\n\n`
+        + `## Notes\n\nshort tail\n`
+    );
+}
+
 function withLaw(id: string, tail: number): string {
     return (
         `# ${id}\n\n## Iron Law\n\n\`\`\`\nLAW OF ${id.toUpperCase()}.\n\`\`\`\n\n`
@@ -1091,7 +1120,11 @@ describe('rule-inject — re-deliver after a compact (1.6)', () => {
         const root = makeRoot({ delivery: true });
         putRouter(root, ['prompt-rule'], ['blade-rule', 'views-rule']);
         for (const id of ['prompt-rule', 'blade-rule', 'views-rule']) {
-            putBody(root, id, withLaw(id, 900));
+            // LONG laws, not long bodies. A restore sends laws, so a fixture
+            // whose laws are forty characters asserts a 400-character string
+            // against an 8,000 cap and stays green with the budget code deleted.
+            // Three 3,500-character laws cannot all fit, so the cap binds.
+            putBody(root, id, withLongLaw(id, 700));
         }
         run({
             event: 'user_prompt_submit',
@@ -1207,7 +1240,7 @@ describe('rule-inject — composed-budget over the FROZEN corpus (AC-2)', () => 
         // `.claude/rules` the machine running it happens to carry. The scope
         // filter is a per-consumer narrowing; the budget has to hold for the
         // widest fire the corpus can produce, not the narrowest.
-        const ws = fs.mkdtempSync(path.join(os.tmpdir(), 'rule-inject-corpus-'));
+        const ws = mkdtemp('rule-inject-corpus-');
         vi.stubEnv('AGENT_CONFIG_PACKAGE_ROOT', repo);
 
         let worst = 0;
@@ -1311,5 +1344,202 @@ describe('rule-inject — composed-budget: the manifest is bounded too', () => {
         // And it says how many rows it could not show, rather than dropping
         // them where a reader would read the list as complete.
         expect(text).toMatch(/\n\+\d+=omitted_budget\n<\/rule-manifest>$/);
+    });
+});
+
+describe('rule-inject — composed-budget: phase 1 is a floor, never a ceiling', () => {
+    /** Declare `ids` as the high-consequence class, with `noStub` carved out. */
+    function declareClass(root: string, ids: string[], noStub: string[] = []): void {
+        const cfg = path.join(root, 'src', 'config');
+        fs.mkdirSync(cfg, { recursive: true });
+        const row = { clause: 'security-boundary', why: 'fixture' };
+        fs.writeFileSync(
+            path.join(cfg, 'rule-consequence-class.json'),
+            JSON.stringify({
+                members: Object.fromEntries(ids.map((id) => [id, row])),
+                no_stub: Object.fromEntries(noStub.map((id) => [id, { ...row, reason: 'fixture' }])),
+            }),
+            'utf-8',
+        );
+    }
+
+    it('a high-consequence rule gets its WHOLE body when the budget has room', () => {
+        // The regression this exists for: phase 1 emits the law and sets
+        // `form = 'law'`, phase 2 skips anything not `omitted_budget`, and the
+        // 23 class members with a law section could then never receive their
+        // body however empty the budget was. Their id still enters the seen-set,
+        // so the body would not come back on a later turn either.
+        const root = makeRoot({ delivery: true });
+        putRouter(root, ['prompt-rule'], []);
+        declareClass(root, ['prompt-rule']);
+        putBody(root, 'prompt-rule', withLaw('prompt-rule', 100));
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'floor-1',
+            payload: PROMPT,
+        });
+        expect(manifest(out)).toEqual({ 'prompt-rule': 'full' });
+        expect(composed(out)).toContain('tail tail');
+        // Upgraded in place, not emitted twice.
+        expect(composed(out).match(/<rule id="prompt-rule"/g)).toHaveLength(1);
+    });
+
+    it('and keeps the law when the budget has room for that and nothing more', () => {
+        const root = makeRoot({ delivery: true });
+        putRouter(root, ['prompt-rule'], []);
+        declareClass(root, ['prompt-rule']);
+        putBody(root, 'prompt-rule', withLaw('prompt-rule', 3000));
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'floor-2',
+            payload: PROMPT,
+        });
+        expect(manifest(out)).toEqual({ 'prompt-rule': 'law' });
+        expect(composed(out)).toContain('LAW OF PROMPT-RULE.');
+        expect(composed(out)).not.toContain('tail tail');
+    });
+
+    it('a no_stub member does NOT take the guaranteed phase-1 slot', () => {
+        // `stubLawIds` and not `Object.keys(members)`: the `no_stub` subset is
+        // exactly the members whose law is missing or too long to carry the
+        // obligation, which is why the projector ships them full-bodied.
+        //
+        // Sized so the difference is observable: `prompt-rule` scores higher and
+        // its body nearly fills the budget. Read through `stubLawIds`,
+        // `blade-rule` is not in phase 1 and the higher-scoring body lands
+        // whole. Read through `Object.keys(members)`, `blade-rule`'s law takes
+        // the guaranteed slot first and `prompt-rule` no longer fits — a rule
+        // whose law was declared unable to stand would have pre-empted one that
+        // can.
+        const root = makeRoot({ delivery: true });
+        putRouter(root, ['prompt-rule'], ['blade-rule']);
+        declareClass(root, ['blade-rule'], ['blade-rule']);
+        putBody(root, 'prompt-rule', `# prompt-rule\n\n${'x '.repeat(3900)}`);
+        putBody(root, 'blade-rule', withLongLaw('blade-rule', 700));
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'floor-3',
+            payload: PROMPT,
+        });
+        expect(manifest(out)['prompt-rule']).toBe('full');
+        expect(manifest(out)['blade-rule']).toBe('omitted_budget');
+    });
+
+    it('a class member the BYTE cap dropped still gets its law — D1 says every matched', () => {
+        // `selectForInjection` ranks on score alone and knows nothing about the
+        // class, so a high-consequence rule can lose that race and land in
+        // `dropped`. D1 guarantees the law of EVERY matched member, so the text
+        // for a dropped member is loaded rather than left unreachable.
+        const root = makeRoot({ delivery: true });
+        putRouter(root, ['prompt-rule'], ['blade-rule']);
+        // `prompt-rule` scores higher and is alone big enough to exhaust the
+        // byte cap, so `blade-rule` is dropped by the selection.
+        putBody(root, 'prompt-rule', `# prompt-rule\n\n${'x '.repeat(CAP_BYTES)}`);
+        putBody(root, 'blade-rule', withLaw('blade-rule', 50));
+        declareClass(root, ['blade-rule']);
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'floor-4',
+            payload: PROMPT,
+        });
+        // DELIVERED, in some form — not reported. `law` is the floor D1
+        // guarantees; phase 2 upgrades it to `full` here because the oversized
+        // `prompt-rule` body never fit the character budget and left room. What
+        // this pins is that a dropped class member is reachable at all: without
+        // the dropped-set read it has no text loaded, phases 2 and 3 skip it,
+        // and it comes back `omitted_budget`.
+        expect(['law', 'full']).toContain(manifest(out)['blade-rule']);
+        expect(composed(out)).toContain('LAW OF BLADE-RULE.');
+    });
+});
+
+describe('rule-inject — state-location: the digest half of the project key', () => {
+    it('two projects with the SAME basename do not share a seen-set', () => {
+        // The collision the key exists for. Two `mkdtemp` roots already differ
+        // by basename, so a test built from those passes with the digest
+        // removed — it asserts nothing about the half that does the work.
+        const a = path.join(makeRoot({ delivery: true }), 'api');
+        const b = path.join(makeRoot({ delivery: true }), 'api');
+        fs.mkdirSync(a);
+        fs.mkdirSync(b);
+        expect(path.basename(a)).toBe(path.basename(b));
+        const pa = statePath(a, 'same-id');
+        const pb = statePath(b, 'same-id');
+        expect(pa).not.toBe(pb);
+        // Readable AND unique: both carry the shared basename, and the digests
+        // are what separate them.
+        expect(path.basename(path.dirname(pa))).toMatch(/^api-[0-9a-f]{12}$/);
+        expect(path.basename(path.dirname(pb))).toMatch(/^api-[0-9a-f]{12}$/);
+    });
+});
+
+describe('rule-inject — the restore keeps its pending set when it cannot build', () => {
+    it('a router that disappeared mid-session leaves the pending set intact', () => {
+        // Clearing before the build means a build that fails loses the set
+        // permanently, on the one slot that does not come round again for that
+        // boundary.
+        const root = makeRoot({ delivery: true });
+        putBody(root, 'prompt-rule', withLaw('prompt-rule', 50));
+        run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'keep-1',
+            payload: PROMPT,
+        });
+        run({ event: 'pre_compact', workspace: root, session_id: 'keep-1', payload: {} });
+        fs.rmSync(path.join(root, 'dist', 'router.json'));
+
+        const failed = run({
+            event: 'session_start',
+            workspace: root,
+            session_id: 'keep-1',
+            payload: { source: 'compact' },
+        });
+        expect(failed.rc).toBe(0);
+        const state = JSON.parse(fs.readFileSync(statePath(root, 'keep-1'), 'utf-8')) as {
+            pending: string[];
+        };
+        expect(state.pending).toEqual(['prompt-rule']);
+
+        // And once the router is back, the restore it was holding still fires.
+        fs.writeFileSync(
+            path.join(root, 'dist', 'router.json'),
+            JSON.stringify(ROUTER),
+            'utf-8',
+        );
+        const { out } = run({
+            event: 'session_start',
+            workspace: root,
+            session_id: 'keep-1',
+            payload: { source: 'compact' },
+        });
+        expect(manifest(out)).toEqual({ 'prompt-rule': 'law' });
+    });
+
+    it('a rule with NO law section comes back as its body, not as a budget excuse', () => {
+        // A restore sends laws, so a law-less rule has nothing to send in that
+        // form — and `omitted_budget` would blame a budget decision nobody made.
+        // Those compete for their body instead, so every label on the restore is
+        // true of the rule it names.
+        const root = makeRoot({ delivery: true });
+        run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'nolaw-1',
+            payload: PROMPT,
+        });
+        run({ event: 'pre_compact', workspace: root, session_id: 'nolaw-1', payload: {} });
+        const { out } = run({
+            event: 'session_start',
+            workspace: root,
+            session_id: 'nolaw-1',
+            payload: { source: 'compact' },
+        });
+        expect(manifest(out)).toEqual({ 'prompt-rule': 'full' });
+        expect(composed(out)).toContain('PROMPT RULE BODY');
     });
 });

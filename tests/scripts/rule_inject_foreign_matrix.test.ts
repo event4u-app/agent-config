@@ -372,10 +372,14 @@ describe('rule-inject — foreign-project matrix on the built bundle (1.8)', () 
         expect(restored.status).toBe(0);
         expect(restored.stdout).toContain('prompt-rule=law');
         expect(restored.stdout).toContain('PROMPT RULE LAW.');
-        // The law, not the body — and `second-rule`, which has no law section,
-        // is reported rather than sent whole.
+        // The law, not the body, for the rule that HAS one.
         expect(restored.stdout).not.toContain('PROMPT RULE BODY');
-        expect(restored.stdout).toContain('second-rule=omitted_budget');
+        // `second-rule` has no law section, so there is nothing to send in that
+        // form and no budget decision was made about it. It comes back as its
+        // body rather than carrying a label that blames a budget — which is
+        // what every label on a restore has to be true of.
+        expect(restored.stdout).toContain('second-rule=full');
+        expect(restored.stdout).toContain('SECOND RULE BODY');
     });
 
     it('a rule only the USER layer carries is in scope — the host loads both', () => {
