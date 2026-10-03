@@ -155,6 +155,46 @@ capability_gap: >-
 > AC-5 would have closed either way; the argument for why it was allowed to close was wrong,
 > and only an independent pass over this run's own reasoning surfaced it.
 
+> **SUPERSEDED IN PART AGAIN, 2026-10-03 — still 28 of 30, and this round adds no close
+> because there was none available to take honestly.** A `process-full` drain run at
+> `main@7fdfd0a4d` re-ran every one of the twenty-three `<!-- verify: -->` commands the file
+> carries rather than reading the notes under them. **All twenty-eight closed boxes verify
+> green on this tree**: 231 assertions across the eight named test files, `check_test_delta
+> --self-test` 8/8, `check_enforcement_matrix` 32/32, `doctor --json` five `satisfied`
+> `forge_protection` rows with `read_from_forge: true`, `allow_auto_merge` still `true` on
+> the forge. Recorded as a reproduction rather than left implicit, because the thing that
+> reopened AC-5 on 2026-09-30 was precisely a box nobody re-ran.
+>
+> **AC-4 re-reproduced a third time, and the denial is quoted from this run.** The edit to
+> `src/rules/verify-before-complete.md:45` was attempted and refused at tool-call time:
+> `block-kernel-rule-writes: BLOCKED — kernel rule verify-before-complete is immutable —
+> tighten-only via the override exception registry`, followed by the guard's own sentence
+> *"Legitimate change requires a human action outside the agent session."* Two independent
+> reasons keep the box open and they are worth keeping apart: the guard refuses the call, and
+> `scope-control` § Kernel-rule edits requires any kernel change to ship in its own PR with a
+> ≥ 24 h soak — so even a lifted guard would not permit this edit to ride in a roadmap PR.
+> The second reason survives the first being removed, which the earlier notes did not say.
+>
+> **AC-6 moved as far as an agent may move it, and no further.** The decision half stays
+> owner-reserved on the 2026-10-01 council's 2/2 convergent verdict, and this run did not
+> re-litigate it. What it did instead is put the brief **where the answer goes**: the
+> `destructive:` section of `docs/enforcement-by-host.md` now carries the open question, the
+> two options, the threat scenario, the undefined semantics, the recorded dissent and the
+> `revisit-if` — under an Iron Law saying the column measures capability and authorises
+> nothing. That closes the gap the council itself named: seven settled-looking cells with
+> nothing on the page telling a reader the policy behind them was never taken. **No decision
+> was recorded and no preferred fallback was written into the column** — doing either is the
+> inventory-into-permission move both seats warned against.
+>
+> **Phase 7.2's second clause is the same shape as AC-4 and is named here for the first
+> time.** `non-destructive-by-default`'s `enforced_by:` still reads `none`; that rule is also
+> one of the nine kernel rules, so the two outstanding kernel edits in this file belong to one
+> future kernel PR with one soak window, not to two separate ones.
+>
+> **Terminal state of this run: `blocked`.** Every open step is externally impossible for an
+> agent under ADR-237 § 4 — one behind a deterministic guard plus a soak window, one behind an
+> owner decision a council has already confirmed is not the agent's to take.
+
 > **Source:** `agents/tmp.old/inbox-2026-09-w/` — an inbox round carrying two challenge-me
 > interviews with the owner plus three generations of consolidated proposals. Verified against
 > `main@399beecab` on 2026-09-08.
@@ -636,7 +676,13 @@ before the record is signed.
       **The second clause is OWED, not delivered.** `non-destructive-by-default`'s
       `enforced_by:` still reads `none`: it is a kernel rule and
       `block_kernel_rule_writes` refused the edit at tool-call time — reproduced, not
-      assumed. Lifting it is a human action outside an agent session. -->
+      assumed. Lifting it is a human action outside an agent session.
+      **2026-10-03: a second, independent obstacle recorded, and the pairing named.** Beyond
+      the guard, `scope-control` § Kernel-rule edits requires a kernel change to ship in its
+      own PR with a ≥ 24 h soak, which no autonomous mandate lifts — so this clause cannot
+      ride in a roadmap PR even with the guard lifted. It is the same shape as AC-4's
+      outstanding edit to `verify-before-complete`, and the two are the only kernel edits this
+      file owes: ONE kernel PR and ONE soak window closes both. -->
       <!-- verify: ./scripts-run src/scripts/check_enforcement_matrix --quiet -->
 - [x] **7.3 The council may veto a typed op, never grant one.** Under a mission: a council
       check that the op belongs to the mission → a native ask naming the object → execute. Per
@@ -998,6 +1044,17 @@ before the record is signed.
   below is `manual-only`, while anthropic's, if forced to choose, is the opposite — no
   autonomous mode on a host without an enforceable stop. The full decision brief
   the council specified is under AC-6. `Resolved when` is unchanged.
+- **Third input, 2026-10-03 — the brief now sits where the decision gets made, and this is
+  still not a resolution:** the `destructive:` section of `docs/enforcement-by-host.md` carries
+  the eight-item brief from AC-6 verbatim in substance — the seven hosts and the missing
+  capability, the two options, the threat scenario under `manual-only`, the unresolved prior
+  question of whether model-carried destructive confirmation is already the approved baseline,
+  the undefined operational semantics of `manual-only` itself, the dissent between this
+  blocker's recommendation and the opposing council reading, the ADR-268 § 0 tension, and the
+  three-branch `revisit-if`. It opens with an Iron Law that the column measures capability and
+  authorises nothing. **No cell was changed and no fallback was recorded.** A reader of that
+  page can now see that the policy is open, which they could not before; the decision is still
+  untaken, so `Resolved when` is unchanged.
 - **If you do nothing:** the daemon ships observation-only and never enforces, which is the
   honest state and also means the eleven typed ops carry no mechanical guard on seven of eight
   hosts.
@@ -1127,6 +1184,21 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       guard temporarily lifted by the person who owns it. Nothing else is outstanding; the
       box flips the moment `grep -rn 'N=3' src/rules` returns nothing, and `T3`'s offender
       assertion must be narrowed to the empty set in the same change.
+      **RE-REPRODUCED 2026-10-03 at `main@7fdfd0a4d`, and a SECOND independent reason is
+      recorded that the earlier rounds did not state.** `grep -rn 'N=3' src/rules` still
+      returns exactly one line, the same link label. The edit was attempted again and denied
+      at tool-call time, verbatim: `block-kernel-rule-writes: BLOCKED — kernel rule
+      verify-before-complete is immutable — tighten-only via the override exception registry`,
+      with the guard's own follow-on *"Legitimate change requires a human action outside the
+      agent session."*
+      The new reason is independent of the guard: `scope-control` § Kernel-rule edits requires
+      every kernel-rule change to ship in **its own PR with a ≥ 24 h soak between merges**, and
+      says the autonomous mandate does not lift it. So this edit could not ride in a roadmap
+      PR even on a tree where `block-kernel-rule-writes` had been lifted. Three rounds recorded
+      only the guard, which made the obstacle look like one removable thing; it is two, and the
+      soak survives the guard. **Pair it with Phase 7.2's second clause** —
+      `non-destructive-by-default`'s `enforced_by:` is the other outstanding kernel edit in this
+      file — so one kernel PR and one soak window closes both.
       <!-- OPEN 2026-09-14 — two of three clauses are met and the third is agent-impossible.
       MET: `fix_loop_max` defaults to 10 (`agent-settings.template.yml:760`, the Zod schema's
       `.default(10)`, and `missionExecution`'s fallback). MET: no escalation path maps a count
@@ -1416,6 +1488,25 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       as a recorded decision beside each `manual-only` row, and the `Resolved when` of
       `daemon-host-kill-switch` below. The box flips when that is written; nothing else about
       this criterion is outstanding.
+      **2026-10-03 — the measurement half re-verified, and the brief moved to where the answer
+      goes.** `./scripts-run src/scripts/check_enforcement_matrix --quiet` exits 0 on this tree
+      with *"32 host-slot row(s) in docs/enforcement-by-host.md match
+      src/scripts/hooks/host_lowering.yaml"*; all eight `destructive:` rows still carry the
+      reading they came from. That half is unchanged and stays done.
+      What changed is **location, not authority**. The eight-item brief above lived only inside
+      an acceptance criterion of a 1,400-line roadmap, which satisfied the council's 2d
+      literally and not in substance: the owner reads `docs/enforcement-by-host.md`, and that
+      page showed seven settled-looking `manual-only` cells with nothing saying the policy
+      behind them was never taken — the exact inventory-read-as-permission confusion both seats
+      flagged. The `destructive:` section now opens with an Iron Law stating the column measures
+      capability and authorises nothing, then carries the question, the two options, the threat
+      scenario, the unresolved prior question, the undefined `manual-only` semantics, the
+      recorded dissent, the ADR-268 § 0 tension and the `revisit-if`.
+      **Nothing was decided and no preferred fallback was written into the column.** The
+      distinction is the whole point of the edit: stating that a decision is open is not taking
+      it, while typing `manual-only` beside a row as settled policy would be. `Resolved when`
+      is unchanged, and this criterion stays `[~]` for the same reason it did on 2026-10-01 —
+      the owner has not chosen.
       <!-- OPEN 2026-09-14 — the MEASUREMENT half is complete, the DECISION half is
       owner-reserved and that is the whole remaining distance. All eight rows carry a value
       and the reading it came from (`host_lowering.yaml`, 2026-09-13): one `hook`, seven
