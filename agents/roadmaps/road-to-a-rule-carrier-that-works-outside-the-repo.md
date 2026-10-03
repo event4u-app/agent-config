@@ -763,13 +763,21 @@ Reproduced on 2026-10-01:
 | D8 | reversible-technical | agent | A fire where every match is unsendable emits a manifest, where it previously emitted nothing | AC-2's "no match absent from a delivery" taken literally; it is what makes a broken install visible from the model's side | The per-turn cost of a persistent broken install is measured and judged worse than the silence |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-03 | reviewer: claude/host -->
+
+Re-reviewed 2026-10-03 after Phase 1 closed 1.3 through 1.7. Rows 1 and 2 had
+their mitigations SHIP rather than remain planned, and the mitigation column now
+says which fixture holds each one; row 3 is untouched because the steps it
+anchors to are untouched. Rows 4 and 5 are new and belong to what this run
+built, not to what it planned.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | The carrier starts delivering into every consumer session | product | 1.1 turns a silent concern into a live one; a wrong trigger now costs real context in someone else's project. | 1.3 limits delivery to installed rules, 1.5 caps the string, and the installed layer is still eager, so nothing is lost if a delivery is wrong — only duplicated. | Phase 1 — A carrier that works where consumers are |
-| 2 | One mode resolver changes the projector's answer | implementation | Making the hook agree with the projector could also move the projector. | 1.2's test states the template value and every layer's expected result before the code changes. | Phase 1 — A carrier that works where consumers are |
+| 1 | The carrier starts delivering into every consumer session | product | 1.1 turns a silent concern into a live one; a wrong trigger now costs real context in someone else's project. | DISCHARGED 2026-10-03. 1.3 scopes delivery to the host's own rule layers and 1.5 caps the string at 8,000 characters; both are held by fixtures that drive the BUILT bundle through the dispatcher. The installed layer is still eager, so a wrong delivery duplicates rather than loses. | Phase 1 — A carrier that works where consumers are |
+| 2 | One mode resolver changes the projector's answer | implementation | Making the hook agree with the projector could also move the projector. | DISCHARGED 2026-10-02 by measurement, not argument: `task sync` + `task generate-tools` produced zero changes to the tracked projection, and `check_rule_projection_integrity` reports 39 entries complete across three host trees. | Phase 1 — A carrier that works where consumers are |
 | 3 | The installed-layer report reads a host rule the host does not count | implementation | Which files the host sums is inferred, not documented. | 0.2's first record compares its load count with 0.1's. | Phase 0 — Instruments, no behaviour change |
+| 4 | A broken install reports once per turn, forever | product | 1.5 emits a manifest whenever a match cannot be sent, and a `source_unavailable` rule is not added to the seen-set, so a consumer whose corpus is missing a routed rule gets one manifest line per matching turn for as long as it stays missing. | The line is short and it is the signal that makes the breakage visible from the model's side, which is the half that was silent before. Bounding it to once per session needs a state write; measure the real per-turn cost before adding one, because a bound that hides a broken install is worse than the line. | Phase 1 — A carrier that works where consumers are |
+| 5 | The host measures a larger string than this budget bounds | implementation | 8,000 characters bounds the RULE-PRODUCED string. If the host's 10,000-character threshold applies to the assembled `additionalContext`, the margin is 728 rather than 2,000, and a future concern added to this slot consumes it. | Both readings are stated at the constant and in the registered row, with 728 named as the one to plan against. Raised by the openai seat of the 2026-10-03 ratification council; which reading is right is not established and is the thing to settle before any concern is added to `user_prompt_submit`. | Phase 1 — A carrier that works where consumers are |
 
 ## Acceptance Criteria
 
