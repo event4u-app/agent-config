@@ -75,13 +75,13 @@ This routing rule is the bridge: it sits in the always-loaded rule set so the tr
 
 ## CI reachability guarantee
 
-`src/scripts/lint_media_policy_linkage.ts` fails the build if any policy file under `agents/settings/policies/media/` is not linked from:
+`src/scripts/lint_media_policy_linkage.ts` fails the build if any policy file under `agents/settings/policies/media/` is not referenced from:
 
 - this routing rule, **or**
 - a skill's `## Policies` see-also block, **or**
 - another policy file's `## See also` block.
 
-A policy that no skill, rule, or sibling policy references is a silent policy. The CI check is the structural reachability guarantee that the agent-in-the-loop model rests on.
+A policy that no skill, rule, or sibling policy references is a silent policy. The gate matches the path as a substring, so the code spans above satisfy it exactly as a markdown link would — the word is **referenced**, not linked, and it is chosen rather than loose: a reading that demanded a link would un-reference all seven policies from the rule that routes them. The CI check is the structural reachability guarantee that the agent-in-the-loop model rests on.
 
 ## See also
 

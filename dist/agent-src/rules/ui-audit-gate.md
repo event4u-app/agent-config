@@ -52,7 +52,7 @@ obligation_frequency: "per-edit"
 # UI Audit Gate
 
 Defense-in-depth twin of the dispatcher gate in
-`src/agent-src/templates/scripts/work_engine/directives/ui/audit.ts`.
+[`directives/ui/audit.ts`](../templates/scripts/work_engine/directives/ui/audit.ts).
 The dispatcher refuses to advance past `refine` without `state.ui_audit`;
 this rule refuses the write even when the agent acts outside the dispatcher.
 

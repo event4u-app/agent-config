@@ -143,19 +143,35 @@ describe("rewriteOptionCost — the measurement behind the 1.2 decision", () => 
  *
  * Re-measured 2026-10-03 by `report_installed_rule_links`, DOWN from the
  * 160 / 97 / 260 / 273 first pinned on 2026-10-02. The repair that moved them
- * is the repo-tree link form: 23 links that named a path no install has ever
+ * is the repo-tree link form: 22 links that named a path no install has ever
  * held — `../../scripts/`, `../../src/scripts/`, `../../../LEGAL_NOTICE.md`,
- * `../../docs/`, `agents/settings/policies/media/`, one `templates/` file — are
- * now code spans carrying the path the repository actually has. Four of them
- * named a file the repository does not have either (`scripts/*.ts` for files
- * that live under `src/scripts/`), so the link was dead in both trees.
+ * `../../docs/`, `agents/settings/policies/media/` — are now code spans
+ * carrying the path the repository actually has. FIVE of them resolved nowhere
+ * in the repository either: three `scripts/*.ts` naming files that live under
+ * `src/scripts/`, and `../../../LEGAL_NOTICE.md` twice, which climbs above the
+ * repository root. Those were dead in both trees.
+ *
+ * One link that LOOKS like the same defect is deliberately untouched, and it
+ * is the one an independent review caught being repaired: the `templates/`
+ * link in `ui-audit-gate.md`. `GLOBAL_DEPLOY_SOURCES.augment` maps
+ * `dist/agent-src/templates` → `templates` beside `rules`, so from an
+ * installed augment rule that link RESOLVES. Turning it into a code span
+ * traded a working link for a dead repo path, which no gate here can see —
+ * this ratchet bounds unresolved links, and nothing bounds RESOLVED links from
+ * shrinking. Before repairing a link that reads as repo-tree, check whether
+ * some host's deploy plan already carries its first segment.
  *
  * The count is structural, not filesystem-dependent: every unresolved link
  * here is `directory-not-deployed` or `outside-install-root`, verdicts decided
  * from the deploy plan alone, and `file-missing` is 0. A worktree and CI read
- * the same number.
+ * the same number. That is what allows the baseline to sit at the exact
+ * reading rather than above it — and the consequence is worth naming: there is
+ * now ZERO headroom, so one ordinary new `](../contexts/…)` or
+ * `](../guidelines/…)` link in any rule reds all 18 host rows at once. That is
+ * the ratchet working, not a misconfiguration, and the fix is to re-measure
+ * and state what the link buys, never to add slack back.
  *
- * What `claude-code`'s 135 is made of, because the parts have different answers:
+ * What `claude-code`'s 136 is made of, because the parts have different answers:
  *
  *   · **112 into `contexts/` and `guidelines/`** — the deployable ones. The
  *     repair is adding two rows to the deploy plan, which is part of the frozen
@@ -169,37 +185,41 @@ describe("rewriteOptionCost — the measurement behind the 1.2 decision", () => 
  *     directory the projection does not produce, and repairing them from the
  *     link side would prejudge whether it ever should.
  *   · **1 climbing out of the install root** — the `../../tests/golden/`
- *     fixture link in `direct-answers.md`. It is the same defect as the 23
+ *     fixture link in `direct-answers.md`. It is the same defect as the 22
  *     repaired above and is left alone for one reason only: `direct-answers` is
  *     a kernel rule, and a kernel-rule edit ships in its own PR with a 24 h
  *     soak (`scope-control` § Kernel-rule edits). One link does not justify
  *     spending that window; the next kernel PR can carry it.
+ *   · **1 into `templates/`** — the augment-resolving link above. It is
+ *     unresolved for this host and for every other host that does not deploy
+ *     `templates/`, and the honest repair is a deploy row, not a code span:
+ *     1.7 MB for one link, against 1.6 MB for the 112 the ABI blocker covers.
  *
- * `cline` is the outlier at 247 because it installs rules at the install ROOT,
+ * `cline` is the outlier at 248 because it installs rules at the install ROOT,
  * so a `../x` link climbs out of the tree by construction — a layout decision,
  * not a missing directory. Its other 275 links are siblings and resolve; an
  * earlier version of this file read them as undeployed and pinned cline at 550,
  * which is the maximum possible value and could never have caught a regression.
  */
 const UNRESOLVED_BASELINE: Record<string, number> = {
-  "claude-code": 135,
+  "claude-code": 136,
   augment: 73,
-  cursor: 234,
-  windsurf: 247,
-  cline: 247,
-  "gemini-cli": 135,
-  codex: 135,
-  continue: 135,
-  roocode: 135,
-  kilocode: 135,
-  qoder: 135,
-  opencode: 135,
-  trae: 135,
-  antigravity: 135,
-  codebuddy: 135,
-  droid: 135,
-  warp: 135,
-  kiro: 247,
+  cursor: 235,
+  windsurf: 248,
+  cline: 248,
+  "gemini-cli": 136,
+  codex: 136,
+  continue: 136,
+  roocode: 136,
+  kilocode: 136,
+  qoder: 136,
+  opencode: 136,
+  trae: 136,
+  antigravity: 136,
+  codebuddy: 136,
+  droid: 136,
+  warp: 136,
+  kiro: 248,
 };
 
 describe("the real install plan", () => {
@@ -227,8 +247,8 @@ describe("the real install plan", () => {
   }
 
   it("the deployable share of claude-code's unresolved links is exactly the blocker's subject", () => {
-    // 112 of the 135 would resolve by adding two directories to the deploy
-    // plan; the other 23 would not, and that split is what the blocker's
+    // 112 of the 136 would resolve by adding two directories to the deploy
+    // plan; the other 24 would not, and that split is what the blocker's
     // recommendation rests on. Pinned so a future reader can tell the two
     // populations apart without re-deriving them — and so the blocker cannot
     // quietly stop describing the tree.
@@ -254,13 +274,16 @@ describe("the real install plan", () => {
 
   it("the remainder is the two populations a deploy entry cannot reach", () => {
     // The other half of the split above, pinned in the same way and for the
-    // same reason. 23 repo-tree links left this set on 2026-10-03; what stays
-    // is 22 `docs/` links the projection does not produce and ONE climb-out,
-    // and the climb-out is held by the kernel-rule soak window rather than by
-    // anything about the link. A new `scripts`, `templates` or
-    // `outside-install-root` row appearing here is a rule author reaching for
-    // a path form the install has never held — which is exactly the direction
-    // this pin exists to refuse.
+    // same reason. 22 repo-tree links left this set on 2026-10-03; what stays
+    // is 22 `docs/` links the projection does not produce, ONE climb-out held
+    // by the kernel-rule soak window rather than by anything about the link,
+    // and ONE `templates/` link that already resolves on augment and must not
+    // be "repaired" into a code span. A new `scripts` row, or a second
+    // `outside-install-root` row, is a rule author reaching for a path form
+    // the install has never held — which is exactly the direction this pin
+    // exists to refuse. The `templates` row is pinned at 1 in BOTH directions:
+    // it may not grow, and it may not silently disappear either, because the
+    // way it disappears is by destroying a link augment resolves.
     const pairs = GLOBAL_DEPLOY_SOURCES["claude-code"];
     expect(pairs).toBeDefined();
     const report = auditInstalledRuleLinks(deployPlanFrom(pairs!), REPO_ROOT);
@@ -270,7 +293,25 @@ describe("the real install plan", () => {
     expect(remainder.map((d) => [d.directory, d.count, d.verdict])).toEqual([
       ["docs", 22, "directory-not-deployed"],
       ["../../tests/golden/outcomes/", 1, "outside-install-root"],
+      ["templates", 1, "directory-not-deployed"],
     ]);
+  });
+
+  it("augment resolves the templates link the other hosts cannot", () => {
+    // The regression an independent review caught on 2026-10-03, pinned so it
+    // cannot be made twice. `ui-audit-gate.md` links into `../templates/`, and
+    // augment is the one rules-carrying host whose deploy plan writes that
+    // directory beside `rules/`. For every OTHER host the same link is
+    // unresolved — which is what makes it look like a repo-tree link form and
+    // is why it was briefly turned into a code span.
+    const pairs = GLOBAL_DEPLOY_SOURCES["augment"];
+    expect(pairs).toBeDefined();
+    const report = auditInstalledRuleLinks(deployPlanFrom(pairs!), REPO_ROOT);
+    const templatesLink = report.audits.find(
+      (a) => a.rule === "ui-audit-gate" && a.target.startsWith("../templates/"),
+    );
+    expect(templatesLink, "ui-audit-gate no longer links into ../templates/").toBeDefined();
+    expect(templatesLink!.verdict).toBe("resolved");
   });
 
   it("cline's sibling links resolve — its unresolved share is the climb, not the siblings", () => {
