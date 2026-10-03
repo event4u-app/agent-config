@@ -6,6 +6,7 @@
 // python3-vs-tsx golden-parity layer was retired with the Python→TS final
 // deletion (the Python dispatcher no longer exists); end-to-end dispatcher
 // behaviour is covered by dispatcher_feedback_traversal.test.ts.
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -26,6 +27,7 @@ import {
     _payload_tool_name,
     _reduce,
     _resolve_concerns,
+    _resolve_execution_failure,
     _severity_for,
 } from '../../../src/scripts/hooks/dispatch_hook.js';
 
@@ -292,5 +294,349 @@ describe('the shipped manifest filter matches its concern source', () => {
             [...src.matchAll(/name === '([A-Za-z]+)'/g)].map((m) => m[1] as string),
         );
         expect([...branched].sort()).toEqual([...(declared as string[])].sort());
+    });
+});
+
+// --- step 3.3: rc >= 3 resolves by declared severity -------------------
+//
+// Six of nine `severity: blocking` concerns used to permit the call whenever
+// they crashed, because the branch read the `fail_closed:` flag rather than the
+// declaration that authorises a refusal in the first place. These pin the new
+// resolution in both directions, plus the one-retry bound that keeps a broken
+// stop-slot guard from refusing a turn end indefinitely.
+
+describe('dispatch_hook — _resolve_execution_failure', () => {
+    it('refuses for a blocking concern that could not decide', () => {
+        expect(_resolve_execution_failure({ name: 'g', severity: 'blocking' }, false)).toBe(
+            EXIT_BLOCK,
+        );
+    });
+
+    it('refuses a blocking concern that never opted in via fail_closed', () => {
+        // The flag is no longer consulted here. Six concerns depend on this.
+        expect(
+            _resolve_execution_failure(
+                { name: 'g', severity: 'blocking', fail_closed: false },
+                false,
+            ),
+        ).toBe(EXIT_BLOCK);
+    });
+
+    it('fails OPEN on the refusal retry, so a deterministic crash cannot wedge a turn', () => {
+        expect(
+            _resolve_execution_failure({ name: 'turn-end-gate', severity: 'blocking' }, true),
+        ).toBe(EXIT_ALLOW);
+    });
+
+    it('fails open for an advisory concern even when it declares fail_closed', () => {
+        // Severity decides, and it decides BOTH directions. A `fail_closed`
+        // advisory concern would otherwise be promoted here and downgraded
+        // again by `_is_advisory` — two steps to the answer severity already has.
+        expect(
+            _resolve_execution_failure(
+                { name: 'a', severity: 'advisory', fail_closed: true },
+                false,
+            ),
+        ).toBe(EXIT_ALLOW);
+    });
+
+    it('fails open when severity is absent or unrecognised, and is case-insensitive', () => {
+        // The safe direction for a typo: an undeclared concern inherits the
+        // historical fail-open, never a refusal it was never authorised to make.
+        expect(_resolve_execution_failure({ name: 'x' }, false)).toBe(EXIT_ALLOW);
+        expect(_resolve_execution_failure({ name: 'x', severity: 'blocked' }, false)).toBe(
+            EXIT_ALLOW,
+        );
+        expect(_resolve_execution_failure({ name: 'x', severity: 'BLOCKING' }, false)).toBe(
+            EXIT_BLOCK,
+        );
+    });
+});
+
+// --- step 3.3 end-to-end: the resolution is WIRED, not merely defined --
+//
+// The unit cases above pin the decision; these run the real dispatcher so the
+// branch is proved reachable from a dispatch. `concern_exits_3` rather than
+// `concern_throws`, because an uncaught throw exits 1 — a verdict — and never
+// reaches the error band this step changed.
+
+const TSX_BIN = path.join(
+    REPO_ROOT,
+    'node_modules',
+    '.bin',
+    process.platform === 'win32' ? 'tsx.cmd' : 'tsx',
+);
+const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'hooks', 'dispatch_hook.ts');
+
+describe('dispatch_hook end-to-end — rc >= 3 resolves by severity', () => {
+    function manifestWith(severity: string, event = 'pre_tool_use', native = 'PreToolUse') {
+        const p = path.join(tmp, `manifest-${severity}-${event}.yaml`);
+        fs.writeFileSync(
+            p,
+            [
+                'schema_version: 1',
+                'concerns:',
+                '  boom:',
+                '    script: tests/hooks/fixtures/concern_exits_3.ts',
+                '    fail_closed: false',
+                `    severity: ${severity}`,
+                'platforms:',
+                '  claude:',
+                `    ${event}: [boom]`,
+                'native_event_aliases:',
+                '  claude:',
+                `    ${native}: ${event}`,
+                '',
+            ].join('\n'),
+            'utf8',
+        );
+        return p;
+    }
+
+    function dispatch(
+        ws: string,
+        manifest: string,
+        payload: Record<string, unknown>,
+        event = 'pre_tool_use',
+        native = 'PreToolUse',
+    ) {
+        return spawnSync(
+            TSX_BIN,
+            [
+                TS_SCRIPT,
+                '--platform',
+                'claude',
+                '--event',
+                event,
+                '--native-event',
+                native,
+                '--manifest',
+                manifest,
+            ],
+            { cwd: ws, input: JSON.stringify(payload), encoding: 'utf8' },
+        );
+    }
+
+    function workspace() {
+        const ws = path.join(tmp, `ws-${String(Math.random()).slice(2)}`);
+        fs.mkdirSync(ws, { recursive: true });
+        return ws;
+    }
+
+    function issueRows(ws: string): Array<Record<string, unknown>> {
+        const log = path.join(ws, 'agents', 'runtime', 'state', 'dispatch-issues.jsonl');
+        if (!fs.existsSync(log)) return [];
+        return fs
+            .readFileSync(log, 'utf-8')
+            .split('\n')
+            .filter((l) => l.trim() !== '')
+            .map((l) => JSON.parse(l) as Record<string, unknown>);
+    }
+
+    it('a blocking concern that could not decide refuses the call', () => {
+        const ws = workspace();
+        const r = dispatch(ws, manifestWith('blocking'), {
+            session_id: 'e2e-blocking',
+            tool_name: 'Bash',
+        });
+        // Claude lowers an internal BLOCK onto exit 2 on pre_tool_use; the
+        // assertion that matters is that it is NOT the allow the old flag-based
+        // branch produced for a concern without `fail_closed: true`.
+        expect(r.status).not.toBe(EXIT_ALLOW);
+    });
+
+    it('an advisory concern that could not decide allows, and leaves an issue row', () => {
+        const ws = workspace();
+        const r = dispatch(ws, manifestWith('advisory'), {
+            session_id: 'e2e-advisory',
+            tool_name: 'Bash',
+        });
+        expect(r.status).toBe(EXIT_ALLOW);
+        const rows = issueRows(ws);
+        expect(rows.some((row) => row['issue'] === 'execution_failed')).toBe(true);
+        expect(rows.some((row) => row['hook'] === 'boom')).toBe(true);
+    });
+
+    it('a blocking stop concern allows once the host marks the refusal retry', () => {
+        // The bound that keeps a deterministic crash from refusing every turn
+        // end. Same manifest, same concern, same failure — only the host's
+        // `stop_hook_active` differs.
+        const m = manifestWith('blocking', 'stop', 'Stop');
+        const first = dispatch(
+            workspace(),
+            m,
+            { session_id: 'e2e-stop-first' },
+            'stop',
+            'Stop',
+        );
+        const retry = dispatch(
+            workspace(),
+            m,
+            { session_id: 'e2e-stop-retry', stop_hook_active: true },
+            'stop',
+            'Stop',
+        );
+        expect(first.status).not.toBe(EXIT_ALLOW);
+        expect(retry.status).toBe(EXIT_ALLOW);
+    });
+});
+
+// --- step 3.3: the spawn timeout stays 30 s, and why that is a finding ----
+//
+// Step 3.3's text also reads "timeout for a blocking concern becomes
+// `sla_ms x 3`". That half is NOT landed, because the two quantities are not
+// the same thing: `concern_sla_ms` is derived from the dispatcher's own
+// per-concern `duration_ms`, which brackets the concern's work alone (0.564 to
+// 1.587 ms registered), while a `spawnSync` timeout must also cover fork,
+// interpreter start and module load — a term the bench's control row measures
+// at p95 17 ms on 1 vCPU and 26 ms on the GitHub runner.
+//
+// Wired, it kills every spawned blocking concern before it has run a line; the
+// severity resolution above then turns each of those non-verdicts into a deny.
+// Probed on the real dispatcher: `AGENT_CONFIG_HOOKS_ISOLATED=1` on
+// `claude/pre_tool_use` returned `ETIMEDOUT` for all six blocking concerns and
+// exit 2 for an ordinary `Read`.
+//
+// This pins the direction. The concern is NAMED for a registered SLA row, so a
+// future `sla_ms x 3` bound would apply to it and this case would red.
+
+describe('dispatch_hook — the spawn path keeps the historical timeout', () => {
+    it('allows a blocking concern whose name carries a registered SLA row', () => {
+        const ws = path.join(tmp, `ws-spawn-${String(Math.random()).slice(2)}`);
+        fs.mkdirSync(ws, { recursive: true });
+        // `block-no-verify` is `sla_ms: 0.921` in hook-latency-budget.json, so
+        // `sla_ms x 3` would be a 3 ms kill — less than node's own startup.
+        const manifest = path.join(tmp, 'manifest-spawn-sla.yaml');
+        fs.writeFileSync(
+            manifest,
+            [
+                'schema_version: 1',
+                'concerns:',
+                '  block-no-verify:',
+                '    script: tests/hooks/fixtures/concern_allow.ts',
+                '    fail_closed: true',
+                '    severity: blocking',
+                'platforms:',
+                '  claude:',
+                '    pre_tool_use: [block-no-verify]',
+                'native_event_aliases:',
+                '  claude:',
+                '    PreToolUse: pre_tool_use',
+                '',
+            ].join('\n'),
+            'utf8',
+        );
+        const r = spawnSync(
+            TSX_BIN,
+            [
+                TS_SCRIPT,
+                '--platform',
+                'claude',
+                '--event',
+                'pre_tool_use',
+                '--native-event',
+                'PreToolUse',
+                '--manifest',
+                manifest,
+            ],
+            {
+                cwd: ws,
+                input: JSON.stringify({ session_id: 'spawn-sla', tool_name: 'Read' }),
+                encoding: 'utf8',
+            },
+        );
+        expect(r.stderr).not.toMatch(/ETIMEDOUT/);
+        expect(r.status).toBe(EXIT_ALLOW);
+    });
+});
+
+// --- step 3.3: a SIGNALLED spawn is a no-verdict, not an exit 0 ----------
+//
+// `_run_concern` read the spawn result as `proc.status ?? 0`. A child killed
+// by a signal has `status === null` and `signal` set, and reaches that line
+// with no `proc.error` whenever the signal came from outside this process —
+// an OOM kill, a supervisor SIGTERM, an abort in the child's own runtime. The
+// coalescing default turned every one of those into ALLOW.
+//
+// It was harmless while the error band meant fail-open for six of the nine
+// blocking concerns. With the severity resolution above it is the difference
+// between a guard that refuses when it is killed and one that waves the call
+// through at exactly that moment. Found by an independent review, 2026-10-03.
+
+describe('dispatch_hook — a signalled concern leaves no verdict', () => {
+    function signalManifest(severity: string): string {
+        const p = path.join(tmp, `manifest-signal-${severity}.yaml`);
+        fs.writeFileSync(
+            p,
+            [
+                'schema_version: 1',
+                'concerns:',
+                '  killed:',
+                '    script: tests/hooks/fixtures/concern_self_signals.ts',
+                '    fail_closed: false',
+                `    severity: ${severity}`,
+                'platforms:',
+                '  claude:',
+                '    pre_tool_use: [killed]',
+                'native_event_aliases:',
+                '  claude:',
+                '    PreToolUse: pre_tool_use',
+                '',
+            ].join('\n'),
+            'utf8',
+        );
+        return p;
+    }
+
+    function dispatchSignal(ws: string, manifest: string, session: string) {
+        return spawnSync(
+            TSX_BIN,
+            [
+                TS_SCRIPT,
+                '--platform',
+                'claude',
+                '--event',
+                'pre_tool_use',
+                '--native-event',
+                'PreToolUse',
+                '--manifest',
+                manifest,
+            ],
+            {
+                cwd: ws,
+                input: JSON.stringify({ session_id: session, tool_name: 'Bash' }),
+                encoding: 'utf8',
+            },
+        );
+    }
+
+    function rowsIn(ws: string): Array<Record<string, unknown>> {
+        const log = path.join(ws, 'agents', 'runtime', 'state', 'dispatch-issues.jsonl');
+        if (!fs.existsSync(log)) return [];
+        return fs
+            .readFileSync(log, 'utf-8')
+            .split('\n')
+            .filter((l) => l.trim() !== '')
+            .map((l) => JSON.parse(l) as Record<string, unknown>);
+    }
+
+    it('refuses the call when the killed concern is blocking', () => {
+        const ws = path.join(tmp, `ws-sig-b-${String(Math.random()).slice(2)}`);
+        fs.mkdirSync(ws, { recursive: true });
+        const r = dispatchSignal(ws, signalManifest('blocking'), 'sig-blocking');
+        expect(r.status).not.toBe(EXIT_ALLOW);
+    });
+
+    it('allows when advisory, and records the signal in the issue row', () => {
+        const ws = path.join(tmp, `ws-sig-a-${String(Math.random()).slice(2)}`);
+        fs.mkdirSync(ws, { recursive: true });
+        const r = dispatchSignal(ws, signalManifest('advisory'), 'sig-advisory');
+        expect(r.status).toBe(EXIT_ALLOW);
+        const rows = rowsIn(ws);
+        const failed = rows.filter((row) => row['issue'] === 'execution_failed');
+        expect(failed.length).toBeGreaterThan(0);
+        // The signal is NAMED, not just the absence of an exit code — a
+        // refusal whose cause reads "unknown" is one nobody can act on.
+        expect(JSON.stringify(failed)).toMatch(/SIGKILL/);
     });
 });

@@ -110,9 +110,13 @@ const BLOCKING_ALLOWLIST = new Set([
     //     picker, and the filter lists candidate names rather than claiming
     //     one.
     //   · fail_closed: FALSE, like block-speaking-inbox-dir and unlike the
-    //     three above it. An unrecognised payload shape is ALLOWED: blocking
-    //     what it cannot parse would wedge a session over a SHAPE defect.
-    //     The guarantee is only about the case the guard actually decided.
+    //     three above it. An unrecognised payload shape is ALLOWED by the
+    //     CONCERN — it returns allow rather than refusing what it cannot parse,
+    //     and the guarantee is only about the case the guard actually decided.
+    //     Distinguish that from a CRASH: since severity resolves rc >= 3, a
+    //     throw here refuses the call. The concern deciding "I cannot read
+    //     this, allow" and the concern failing to decide at all are different
+    //     events and now get different answers, which is the whole point.
     //   · WHY REFUSAL RATHER THAN A NUDGE. The alternative to a deny is
     //     truncating to the first question, and a truncation hides exactly the
     //     decisions the user was owed — invisibly, at the moment they were
@@ -125,8 +129,14 @@ const BLOCKING_ALLOWLIST = new Set([
     //
     //   · it is default OFF (`hooks.turn_end_gate.enabled`), so it
     //     soaks before it binds — the shape the round-6 council asked for;
-    //   · `fail_closed: false`, so a crash lets the turn END. A turn-end
-    //     gate that fails closed does not degrade, it wedges the session;
+    //   · `fail_closed: false` — which the dispatcher no longer reads on the
+    //     rc >= 3 branch, because severity decides it now. So a crash here
+    //     refuses the FIRST Stop and releases on the retry, where
+    //     `stop_hook_active` falls the resolution back to fail-open. The old
+    //     note ("a crash lets the turn END") held unconditionally and no longer
+    //     does; what it was protecting — a turn-end gate that fails closed
+    //     wedges rather than degrades — is protected by the one-retry bound
+    //     instead, in the dispatcher, the only layer a crash does not bypass;
     //   · re-entrancy is two independent layers (`stop_hook_active`, and a
     //     marker keyed on the last USER message, never the reply), stated
     //     and tested BEFORE registration — round 6 recorded that hole as the
@@ -153,8 +163,11 @@ const BLOCKING_ALLOWLIST = new Set([
     //     A session that claimed nothing is untouched — which is most of them,
     //     and is why this needs no soak switch to be narrow. Kill switch:
     //     `AGENT_CONFIG_NO_RUN_CONTINUATION=1`.
-    //   · `fail_closed: false`, so a crash lets the turn END. A continuation
-    //     that fails closed does not degrade the session, it wedges it.
+    //   · `fail_closed: false`, and the same correction as `turn-end-gate`
+    //     above applies: severity now resolves rc >= 3, so a crash refuses one
+    //     Stop and releases on the retry. A continuation that failed closed
+    //     INDEFINITELY would wedge the session rather than degrade it, which is
+    //     what the one-retry bound exists to prevent.
     //   · TERMINATION is the property that makes a blocking loop safe, and it
     //     is three independent rungs — 25 iterations, a 4 h wall clock, and a
     //     3-engagement stall — each of which now STAMPS the state instead of
