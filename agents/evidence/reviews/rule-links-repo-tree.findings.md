@@ -1,10 +1,10 @@
 # Findings: rule-links-repo-tree
-<!-- completion-review: v1 | reviewed: 2026-10-03 | scope: ee829d1ca473ca9fdb19cb80d9ce0fb4206199097fafec7697b019f77d2684c9 | diff: 88514ea1d21e83931f0eb0cfc31dfffac01bac54 | reviewer: subagent-opus-rule-links-repo-tree | prompt_hash: 8b50cc5955ef19ff690052ac26c164564ae49711af4e248933d035bb94fadc7e -->
+<!-- completion-review: v1 | reviewed: 2026-10-03 | scope: f96da9d078135651af7285a3b08c4672b6dbd5f8a490c6a7d5a839a9dfd66d17 | diff: b6cde6868d1cc64822824522def91c7e5858b04f | reviewer: subagent-opus-rule-links-repo-tree | prompt_hash: 8b50cc5955ef19ff690052ac26c164564ae49711af4e248933d035bb94fadc7e -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 88514ea1d21e83931f0eb0cfc31dfffac01bac54
-  scope_hash: ee829d1ca473ca9fdb19cb80d9ce0fb4206199097fafec7697b019f77d2684c9
+  diff_sha: b6cde6868d1cc64822824522def91c7e5858b04f
+  scope_hash: f96da9d078135651af7285a3b08c4672b6dbd5f8a490c6a7d5a839a9dfd66d17
   roadmap: agents/roadmaps/road-to-rule-triggers-and-links-that-hold.md
   roadmap_hash: 6da77b318009a7d95608bfb5fe3939261a09e077d74b466a95e69244e2a00d58
   ac_hash: 0753b295f8f0ccc0008baba81bfb25fc80f24716ecc13ed348ebea60c3640047
@@ -30,6 +30,22 @@ self-chosen subset: the scope is "the complete delta, no subset", and the
 checklist asks for findings rather than for confirmation. Finding 1 is the
 evidence the pass was real — it reversed a change the implementing session had
 already measured, committed and written a commit message justifying.
+
+**Re-bound twice after the review, and the reason each time is checkable rather
+than asserted.** First `ac_hash`, which was recorded wrong: the verifier names
+every field that diverges and it named only that one, so `scope_hash` and
+`roadmap_hash` both held — the roadmap was byte-identical to what this manifest
+records, and only the value derived FROM it was off. A fresh dispatch refused to
+overwrite this file *because it already bound the scope being dispatched*, which
+is the same fact from the producer's side.
+
+Then the whole binding, after `origin/main` was merged in. A merge moves the
+scope hash without changing the reviewed content, and that distinction decides
+between a re-bind and a re-review, so it was measured: the file sets at both
+heads are identical (32 and 32, `diff` reports no difference), and of those 32
+exactly two blobs differ — this artifact itself, which the scope excludes, and
+`src/domains/meta/pack.yaml`, a generated token count. The other 30 are
+byte-identical. No reviewed content moved.
 
 The prompt as committed carries `<worktree>` where the dispatch carried the
 absolute worktree path. That path is machine-local and identifies a developer's
