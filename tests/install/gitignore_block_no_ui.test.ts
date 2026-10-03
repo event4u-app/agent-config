@@ -11,8 +11,13 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { _write_gitignore_block } from '../../src/scripts/install.js';
-import { SECTION_HEADER, template_entries, load_template, DEFAULT_TEMPLATE } from '../../src/scripts/_lib/gitignore_block.js';
+import {
+    DEFAULT_TEMPLATE,
+    SECTION_HEADER,
+    load_template,
+    template_entries,
+    write_managed_block,
+} from '../../src/scripts/_lib/gitignore_block.js';
 
 const made: string[] = [];
 
@@ -35,10 +40,10 @@ afterEach(() => {
     }
 });
 
-describe('_write_gitignore_block — the headless install path', () => {
+describe('write_managed_block — the headless install path', () => {
     it('writes the managed block into a project that has none', () => {
         const root = project('node_modules/\n');
-        expect(_write_gitignore_block(root, false)).toBe(true);
+        expect(write_managed_block(root, false)).toBeGreaterThan(0);
         const text = read(root);
         expect(text).toContain(SECTION_HEADER);
         // The entry class the step exists for: dispatcher state under agents/.
@@ -49,9 +54,9 @@ describe('_write_gitignore_block — the headless install path', () => {
 
     it('is idempotent — a second call changes nothing and says so', () => {
         const root = project('');
-        expect(_write_gitignore_block(root, false)).toBe(true);
+        expect(write_managed_block(root, false)).toBeGreaterThan(0);
         const first = read(root);
-        expect(_write_gitignore_block(root, false)).toBe(false);
+        expect(write_managed_block(root, false)).toBe(0);
         expect(read(root)).toBe(first);
     });
 
@@ -60,7 +65,7 @@ describe('_write_gitignore_block — the headless install path', () => {
         // is theirs, and an installer that rewrote the block would eat it.
         const entries = template_entries(load_template(DEFAULT_TEMPLATE));
         const root = project(`${SECTION_HEADER}\n${entries[0] as string}\n/my-own-thing\n`);
-        expect(_write_gitignore_block(root, false)).toBe(true);
+        expect(write_managed_block(root, false)).toBeGreaterThan(0);
         const text = read(root);
         expect(text).toContain('/my-own-thing');
         for (const e of entries) expect(text).toContain(e);
@@ -68,14 +73,14 @@ describe('_write_gitignore_block — the headless install path', () => {
 
     it('a dry run writes nothing', () => {
         const root = project('node_modules/\n');
-        expect(_write_gitignore_block(root, true)).toBe(true);
+        expect(write_managed_block(root, true)).toBeGreaterThan(0);
         expect(read(root)).toBe('node_modules/\n');
     });
 
     it('a directory that is not a repository and has no .gitignore is left alone', () => {
         const root = fs.mkdtempSync(path.join(os.tmpdir(), 'gitignore-no-repo-'));
         made.push(root);
-        expect(_write_gitignore_block(root, false)).toBe(false);
+        expect(write_managed_block(root, false)).toBe(0);
         expect(fs.existsSync(path.join(root, '.gitignore'))).toBe(false);
     });
 });

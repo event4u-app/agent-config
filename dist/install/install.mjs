@@ -10523,6 +10523,36 @@ function format_file(lines) {
   const text = lines.join("\n");
   return text.replace(/\n+$/, "") + "\n";
 }
+function write_managed_block(project_root, dry_run) {
+  const target = path14.join(project_root, DEFAULT_GITIGNORE);
+  let template;
+  try {
+    template = load_template(DEFAULT_TEMPLATE);
+  } catch {
+    return 0;
+  }
+  let existing = [];
+  if (_isFile(target)) {
+    existing = _splitlines(fs15.readFileSync(target, "utf-8"));
+  } else if (!_isFile(path14.join(project_root, ".git")) && !_isDir(path14.join(project_root, ".git"))) {
+    return 0;
+  }
+  const [lines, added] = sync_block(existing, template);
+  if (added.length === 0 || dry_run) return added.length;
+  try {
+    fs15.writeFileSync(target, format_file(lines), "utf-8");
+  } catch {
+    return 0;
+  }
+  return added.length;
+}
+function _isDir(p) {
+  try {
+    return fs15.statSync(p).isDirectory();
+  } catch {
+    return false;
+  }
+}
 
 // src/scripts/_lib/skill_catalogue.ts
 import * as fs16 from "node:fs";
@@ -18470,7 +18500,7 @@ var _RULES = [
   ["internal", "go-internal", ""],
   ["cmd", "go-internal", ""]
 ];
-function _isDir(p) {
+function _isDir2(p) {
   try {
     return fs25.statSync(p).isDirectory();
   } catch {
@@ -18499,7 +18529,7 @@ function _list_module_subdirs(root) {
   }
   const out = [];
   for (const name of entries) {
-    if (!_isDir(path23.join(root, name))) {
+    if (!_isDir2(path23.join(root, name))) {
       continue;
     }
     if (name.startsWith(".")) {
@@ -18538,7 +18568,7 @@ function detect_module_roots(project_root) {
   const medium = [];
   for (const [rel_path, stack, namespace_template] of _RULES) {
     const abs_path = path23.join(project_root, rel_path);
-    if (!_isDir(abs_path)) {
+    if (!_isDir2(abs_path)) {
       continue;
     }
     const subdirs = _list_module_subdirs(abs_path);
@@ -18743,7 +18773,7 @@ function _isFile3(p) {
     return false;
   }
 }
-function _isDir2(p) {
+function _isDir3(p) {
   try {
     return fs28.statSync(p).isDirectory();
   } catch {
@@ -18854,7 +18884,7 @@ function _detect_legacy_settings(project) {
 }
 function _detect_empty_shell(project) {
   const shell = path25.join(project, LEGACY_AGENT_CONFIG_SHELL);
-  if (!_isDir2(shell) || _isSymlink(shell)) {
+  if (!_isDir3(shell) || _isSymlink(shell)) {
     return false;
   }
   try {
@@ -19036,7 +19066,7 @@ function _delete_legacy_settings(project) {
     }
   }
   const settings_dir = path25.join(project, "settings");
-  if (_isDir2(settings_dir) && !_isSymlink(settings_dir)) {
+  if (_isDir3(settings_dir) && !_isSymlink(settings_dir)) {
     try {
       if (fs28.readdirSync(settings_dir).length === 0) {
         fs28.rmdirSync(settings_dir);
@@ -22447,38 +22477,6 @@ function run_interactive_init(project_root, force) {
   success(`Wrote ${path26.relative(project_root, target)} (${user_type} / ${stack} / ${verbosity})`);
   return 0;
 }
-function _write_gitignore_block(project_root, dry_run) {
-  const target = path26.join(project_root, DEFAULT_GITIGNORE);
-  let template;
-  try {
-    template = load_template(DEFAULT_TEMPLATE);
-  } catch {
-    return false;
-  }
-  let existing = [];
-  try {
-    existing = fs29.readFileSync(target, "utf-8").split("\n");
-    if (existing.length > 0 && existing[existing.length - 1] === "") existing.pop();
-  } catch {
-    if (!pathExists(path26.join(project_root, ".git"))) return false;
-  }
-  const [lines, added] = sync_block(existing, template);
-  if (added.length === 0) return false;
-  if (dry_run) {
-    process4.stdout.write(
-      `  Would add ${added.length} entr${added.length === 1 ? "y" : "ies"} to .gitignore
-`
-    );
-    return true;
-  }
-  try {
-    writeText(target, format_file(lines));
-  } catch {
-    return false;
-  }
-  success(`.gitignore: +${added.length} managed entr${added.length === 1 ? "y" : "ies"}`);
-  return true;
-}
 var _WIZARD_READY_RE = /^WIZARD_READY (http:\/\/(?:127\.0\.0\.1|localhost):\d+\/\S*)\r?$/;
 var _WIZARD_TIMEOUTS = [10, 20, 40, 80];
 function _wizard_should_launch(opts) {
@@ -23161,7 +23159,8 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
   if (will_launch) {
     return _wizard_spawn(project_root);
   }
-  _write_gitignore_block(project_root, opts.dry_run);
+  const ign = write_managed_block(project_root, opts.dry_run);
+  if (ign > 0) success(`.gitignore: ${opts.dry_run ? "would add " : "+"}${ign} managed entries`);
   return 0;
 }
 function _resolvedArgv1() {
@@ -23254,7 +23253,6 @@ export {
   _validate_scope,
   _verify_deploy_targets,
   _wizard_should_launch,
-  _write_gitignore_block,
   _write_settings_surface_snapshot,
   _yaml_scalar,
   deepMerge as deep_merge,

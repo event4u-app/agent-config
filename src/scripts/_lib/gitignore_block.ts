@@ -258,3 +258,57 @@ export function format_file(lines: readonly string[]): string {
     const text = lines.join('\n');
     return text.replace(/\n+$/, '') + '\n';
 }
+
+/**
+ * Write the managed block into a project that has no wizard to do it.
+ *
+ * WHY IT EXISTS. The block is normally installed by `refresh --project` /
+ * `sync:gitignore`, which the browser wizard reaches. A `--no-ui` install
+ * reaches neither, so a headless consumer ended up with a package that writes
+ * dispatcher state under `agents/` and a `.gitignore` that says nothing about
+ * it: `git status` fills with untracked runtime files the developer did not
+ * create and cannot place.
+ *
+ * APPEND-ONLY, NEVER `replace`. A line a developer put inside the block is
+ * theirs; this adds the managed entries that are missing and touches nothing
+ * else.
+ *
+ * BEST-EFFORT THROUGHOUT. No `.gitignore` and no git repository, an unreadable
+ * template, an unwritable file — each returns 0 quietly. An installer that
+ * failed because it could not tidy a listing would be worse than the listing.
+ *
+ * Returns the number of entries added (0 when nothing changed), and writes
+ * nothing when `dry_run`. Reporting is the caller's: this module owns no
+ * output convention.
+ */
+export function write_managed_block(project_root: string, dry_run: boolean): number {
+    const target = path.join(project_root, DEFAULT_GITIGNORE);
+    let template: string[];
+    try {
+        template = load_template(DEFAULT_TEMPLATE);
+    } catch {
+        return 0;
+    }
+    let existing: string[] = [];
+    if (_isFile(target)) {
+        existing = _splitlines(fs.readFileSync(target, 'utf-8'));
+    } else if (!_isFile(path.join(project_root, '.git')) && !_isDir(path.join(project_root, '.git'))) {
+        return 0;
+    }
+    const [lines, added] = sync_block(existing, template);
+    if (added.length === 0 || dry_run) return added.length;
+    try {
+        fs.writeFileSync(target, format_file(lines), 'utf-8');
+    } catch {
+        return 0;
+    }
+    return added.length;
+}
+
+function _isDir(p: string): boolean {
+    try {
+        return fs.statSync(p).isDirectory();
+    } catch {
+        return false;
+    }
+}
