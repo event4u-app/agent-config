@@ -1226,3 +1226,64 @@ describe('rule-inject — composed-budget over the FROZEN corpus (AC-2)', () => 
         expect(worst).toBeLessThan(10_000);
     });
 });
+
+describe('rule-inject — composed-budget at the boundary and in bytes (council round 1)', () => {
+    /** A body of exactly `n` characters, with no law section. */
+    function sized(id: string, n: number): string {
+        const head = `# ${id}\n\n`;
+        return head + 'x'.repeat(Math.max(0, n - head.length));
+    }
+
+    it('admits the body that lands the string exactly ON the budget, and refuses the one over it', () => {
+        // The boundary itself rather than a wide fire, because an off-by-one in
+        // a reserve-then-fill loop is invisible to every case that is not at
+        // the edge.
+        const root = makeRoot({ delivery: true });
+        putRouter(root, ['prompt-rule'], []);
+        const framing = '<rule id="prompt-rule" tier="tier_1" form="full">\n\n</rule>\n\n'.length;
+        const reserve = '<rule-manifest>\nprompt-rule=source_unavailable\n</rule-manifest>'.length;
+
+        putBody(root, 'prompt-rule', sized('prompt-rule', COMPOSED_CHARS - framing - reserve));
+        const exact = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'cb-edge-1',
+            payload: PROMPT,
+        });
+        expect(manifest(exact.out)['prompt-rule']).toBe('full');
+        expect(composed(exact.out).length).toBeLessThanOrEqual(COMPOSED_CHARS);
+
+        putBody(root, 'prompt-rule', sized('prompt-rule', COMPOSED_CHARS - framing - reserve + 1));
+        const over = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'cb-edge-2',
+            payload: PROMPT,
+        });
+        // One character more and it is reported, never shortened to fit.
+        expect(manifest(over.out)['prompt-rule']).toBe('omitted_budget');
+        expect(composed(over.out).length).toBeLessThanOrEqual(COMPOSED_CHARS);
+    });
+
+    it('the BYTE row binds independently — a dense payload under the char budget is still capped', () => {
+        // The measured 1.0346 bytes-per-character maximum over today's corpus is
+        // evidence, not an invariant: one BMP code point is one character and
+        // three UTF-8 bytes, so 6,000 of them are 6,000 characters and 18,000
+        // bytes — under the character budget and over the byte row. Built from
+        // a code point rather than written as a literal so the file stays ASCII.
+        const root = makeRoot({ delivery: true });
+        putRouter(root, ['prompt-rule'], []);
+        const dense = `# prompt-rule\n\n${String.fromCharCode(0x3042).repeat(6000)}`;
+        expect(dense.length).toBeLessThan(COMPOSED_CHARS);
+        expect(Buffer.byteLength(dense, 'utf-8')).toBeGreaterThan(CAP_BYTES);
+        putBody(root, 'prompt-rule', dense);
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'cb-dense',
+            payload: PROMPT,
+        });
+        expect(manifest(out)['prompt-rule']).toBe('omitted_budget');
+        expect(Buffer.byteLength(composed(out), 'utf-8')).toBeLessThanOrEqual(CAP_BYTES);
+    });
+});

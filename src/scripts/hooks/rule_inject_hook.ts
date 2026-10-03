@@ -391,8 +391,17 @@ export function extractFilePath(payload: JsonObject): string | null {
  * Code replaces an `additionalContext` longer than 10,000 CHARACTERS with a
  * path and a 2,000-character preview, so a delivery over that line is not
  * truncated — it is substituted, and the obligation text never arrives at all.
- * 8,000 leaves roughly 2,000 under the threshold beside the 1,272 characters of
- * non-rule text measured on this slot.
+ *
+ * WHICH STRING IT BOUNDS, stated because the two readings give different
+ * margins and D2's own wording did not separate them. This number bounds the
+ * RULE-PRODUCED string: the `<rule>` elements and the manifest, which is what
+ * this concern emits. The host's 10,000 applies to the `additionalContext` it
+ * assembles, and the other concerns on this slot measured 1,272 characters of
+ * non-rule text. So the margin is 2,000 if the host measures this concern's
+ * payload alone, and **728** if it measures the assembled string — the
+ * conservative reading, and still a margin. 8,000 is safe under both; which
+ * reading is right has not been established here and the smaller number is the
+ * one to plan against.
  *
  * IT BOUNDS THE WHOLE STRING, framing and manifest included, because that is
  * what the host measures. {@link CAP_BYTES} above bounds something else — the
@@ -554,10 +563,21 @@ function compose(
         COMPOSED_CHARS - manifestText(all.map((m) => [m.id, 'source_unavailable'])).length - 2;
     const parts: string[] = [];
     const ids: string[] = [];
+    let bytesLeft = CAP_BYTES;
     const add = (id: string, kind: 'full' | 'law', text: string): boolean => {
         const part = `<rule id="${id}" tier="${tiers.get(id) ?? ''}" form="${kind}">\n${text}\n</rule>`;
         const cost = part.length + (parts.length === 0 ? 0 : 2);
-        if (cost > left) return false;
+        // BOTH UNITS, INDEPENDENTLY. The measured 1.0346 bytes-per-character
+        // maximum over today's corpus says the character budget binds first, and
+        // a measurement over one corpus is evidence rather than an invariant: an
+        // 8,000-character payload of 4-byte code points is 32,000 bytes. Safety
+        // that rests on a ratio stops being safety the day the corpus changes,
+        // so the registered byte row is enforced here too and the ratio is what
+        // makes the second check almost never bind rather than what makes it
+        // unnecessary.
+        const costBytes = bytesOf(part) + (parts.length === 0 ? 0 : 2);
+        if (cost > left || costBytes > bytesLeft) return false;
+        bytesLeft -= costBytes;
         left -= cost;
         parts.push(part);
         ids.push(id);

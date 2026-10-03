@@ -427,6 +427,37 @@ Reproduced on 2026-10-01:
 
       Bundle cost: **+3,845 B** (1,498,984 -> 1,502,829 on the gate's probe
       build), the composer plus the consequence-class reader.
+
+      **Three things changed after the ratification council read the diff
+      (2026-10-03, anthropic + openai, both `ratified`), and they are the
+      council's findings rather than this lane's second thoughts.**
+
+      - **The margin was stated ambiguously, and D2's own wording is where it
+        came from.** "Leaves roughly 2,000 under the 10,000-character
+        threshold" is true only if the host measures THIS concern's payload
+        alone. If it measures the `additionalContext` it assembles, the 1,272
+        characters of non-rule text on this slot make the real margin **728**.
+        Both readings are now stated, in the constant's own header and in the
+        registered row, and the smaller one is named as the one to plan
+        against. Which reading is right is not established here.
+      - **The corpus ratio is evidence, not an invariant — so the byte row is
+        enforced too.** The 1.0346 bytes-per-character maximum describes
+        today's 121 files; one BMP code point is one character and three UTF-8
+        bytes, so a 6,000-character payload can be 18,000 bytes, under the
+        character budget and over the 16,384-byte row. `compose` now checks
+        both units independently at emission and a fixture emits exactly that
+        payload. The ratio is what makes the second check almost never bind,
+        not what makes it unnecessary. **+150 B.**
+      - **A boundary fixture, because a reserve-then-fill loop is wrong at the
+        edge or nowhere.** One case sizes a body so the composed string lands
+        exactly ON `COMPOSED_CHARS` and asserts it is delivered `full`, then
+        adds one character and asserts the same rule comes back
+        `omitted_budget` — reported, never shortened.
+
+      The council's third finding, possible duplication between the constant
+      and the registered row, was already covered: the fixture that reads
+      `per_concern_caps_chars['rule-inject']` asserts equality with
+      `COMPOSED_CHARS`, which is the explicit equality test it asked for.
 - [x] **1.6 Re-deliver after compaction.** On the session-start slot with source
       `compact`, emit the law section of each rule in the pre-compaction
       seen-set, under the same budget. The seen-set keeps rule ids, never body
