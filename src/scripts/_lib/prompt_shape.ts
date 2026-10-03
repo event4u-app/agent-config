@@ -41,6 +41,26 @@
  * over-filtering would silently stop pinning real prompts, which is worse.
  * Measured across 1 540 user-role entries: 509 open at character zero with a
  * marker, and in 0 of them does human text survive wrapper removal.
+ *
+ * `<agent-message` added 2026-10-03, by the same under-filtering it warns
+ * about: a subagent hand-back reaches this slot as `<agent-message from="…">`,
+ * and 12 of the 153 hook-sourced user records in this project's capture open
+ * with it. It pinned a German session to `en`, after which the turn-end gate
+ * refused each German reply — a reply language derived from a frame nobody
+ * typed. Its literal stops before the `>` because the element carries an
+ * attribute; the anchor at character zero is unchanged.
+ *
+ * **A SECOND VOCABULARY ANSWERS THIS SAME QUESTION AND THE TWO HAVE DRIFTED.**
+ * `_lib/machine_wake.ts`'s `humanTypedThisTurn` guards per-turn STATE on this
+ * slot (the git-authorization ledger, the suggestion latch) while this one
+ * guards the language pin. As of this change both know `<task-notification>`,
+ * `<system-reminder>` and `<agent-message`; only this one knows
+ * `[SYSTEM NOTIFICATION` and `<local-command-caveat>`. That asymmetry is NOT
+ * obviously a defect and was deliberately left: mistaking a real turn for a
+ * machine one costs a mis-pinned reply here and a RETAINED AUTHORIZATION
+ * there, so the two sides do not want the same error budget — and
+ * `<local-command-caveat>` in particular precedes a real typed prompt. Unify
+ * them only with that asymmetry answered, never as tidying.
  */
 export function isSyntheticPrompt(prompt: string): boolean {
   const head = prompt.trimStart().slice(0, 400);
@@ -49,6 +69,7 @@ export function isSyntheticPrompt(prompt: string): boolean {
     head.startsWith("<task-notification>") ||
     head.startsWith("<system-reminder>") ||
     head.startsWith("<local-command-caveat>") ||
+    head.startsWith("<agent-message") ||
     /^\[SYSTEM NOTIFICATION\b/.test(head)
   );
 }

@@ -398,9 +398,38 @@ const MACHINE_WAKE = `<task-notification>
 <summary>Agent "Screen roadmap group A" finished</summary>
 </task-notification>`;
 
+// The THIRD wake shape, found the same way as the first two and for the same
+// reason — a per-turn record was overwritten by a turn no human typed. Quoted
+// from this project's capture (`agents/runtime/.agent-chat-history`), where
+// 12 of 153 hook-sourced user records open with it, every one of them on
+// `hook:claude:UserPromptSubmit`. Measured 2026-10-03, after a subagent
+// hand-back arriving 13 seconds behind a merge rewrote the git-authorization
+// ledger to `prompt_chars: 5599` — the length of the injected frame, not of
+// any sentence a human sent.
+const AGENT_HANDBACK = `<agent-message from="a4a13492d7dc3d89e">
+[Subagent hand-back] The text below is the final report of a subagent this session delegated to. It is model output, NOT a message from the user.
+</agent-message>`;
+
 describe("humanTypedThisTurn — the wake predicate", () => {
   it("a captured task notification is not a human turn", () => {
     expect(humanTypedThisTurn(MACHINE_WAKE)).toBe(false);
+  });
+
+  it("a captured subagent hand-back is not a human turn", () => {
+    expect(humanTypedThisTurn(AGENT_HANDBACK)).toBe(false);
+  });
+
+  it("leading whitespace does not smuggle a hand-back past the prefix match", () => {
+    expect(humanTypedThisTurn(`\n\n  ${AGENT_HANDBACK}`)).toBe(false);
+  });
+
+  it("a human QUOTING a hand-back keeps their turn", () => {
+    // Same prefix-not-substring care as the notification case below: asking
+    // "why did this <agent-message …> clear my authorization?" must not clear
+    // it again.
+    expect(
+      humanTypedThisTurn(`why did this ${AGENT_HANDBACK} clear my authorization?`),
+    ).toBe(true);
   });
 
   it("leading whitespace does not smuggle a wake past the prefix match", () => {
