@@ -2,14 +2,21 @@
 
 # Graph feeder recall — 2026 Q4
 
-**Status: `underpowered`. n = 0 of a required n = 50.**
+**Status: `underpowered`. Labelled n = 0 of a required n = 50.**
+
+**Accrual, re-measured 2026-10-03: 8 rows across 2 distinct sessions** in
+`agents/state/graph-feeder/` (`10a3804e…` 4 rows, `21f33898…` 4 rows). The
+recorder has begun producing data. That is a different count from the one in the
+status line above and the two must not be collapsed: an accrued row is a pair of
+PREDICTIONS, and only a row a person or a council seat has labelled is EVIDENCE
+about recall. 8 accrued is 8 toward the draw; it is 0 toward the corpus.
 
 This is the pre-registration of a measurement, written before its data exists,
 and it is deliberately not the measurement. ADR-277 reopens detector F when its
 catch rate is read off labelled data; `road-to-a-graph-that-feeds-the-gate` step
 3.2 shipped the instrument that produces that data, and it shipped in the same
-change as this page. There is therefore no stop record older than the recorder,
-and every number below is a bar rather than a result.
+change as this page. No stop record predates the recorder, so every number below
+is a bar rather than a result.
 
 Writing the bars first is the point. A recall threshold chosen after the counts
 are in is a threshold chosen by the counts.
@@ -91,6 +98,11 @@ spread, which is exactly where a detector's recall is expected to sit.
 `[0, 1]` at n = 0 is the honest interval and is not `[0, 0]`: nothing was
 measured, which is a different statement from measuring zero. The same
 distinction `capture_rate.ts` makes in code.
+
+The `n` column is the LABELLED corpus, which is why it stays 0 while the accrual
+figure in the header moves. Nothing in this table advances when a row is merely
+recorded; it advances when a row is drawn, withheld from its own predictions,
+labelled by a person or a council seat, and attributed.
 
 **`underpowered`** — below n = 50 this page reports the bar and the gap, never a
 rate. A recall quoted off a handful of rows would be read as a result and reused
