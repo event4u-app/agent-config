@@ -117,7 +117,7 @@ export function auditLink(
     // `''`), there is no such segment: a sibling link like `](scope-control.md)`
     // resolves to `scope-control.md`, whose first segment is a FILE NAME. Read
     // literally that is `directory-not-deployed` for a file the install writes
-    // right beside the rule — 277 of cline's 550 links, every one of them fine.
+    // right beside the rule — 275 of cline's 523 links, every one of them fine.
     // The `''` key exists in the plan precisely for this and could never be
     // reached by a first-segment lookup.
     const rootSource = plan.get('');

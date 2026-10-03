@@ -121,6 +121,7 @@ commands:
   # not buried as skills). council / challenge-me / research / roadmap.
   product:
     - challenge-me
+    - challenge-me/closure
     - challenge-me/vision
     - challenge-me/with-docs
     - council
@@ -147,6 +148,7 @@ commands:
     - roadmap/process-full
     - roadmap/process-phase
     - roadmap/process-step
+    - roadmap/triage-parked
 
   # Platform / system surface (feedback-6) — NOT a flow. memory · analytics ·
   # governance · config · introspection, reached on demand.

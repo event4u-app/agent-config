@@ -79,7 +79,7 @@ name it and suggest a fresh session or `/agent-handoff`, per
 
 ## Enforcement — per turn, which is the closest reachable cover for per task
 
-> **Enforced by:** [`scripts/session_canary_hook.ts`](../../scripts/session_canary_hook.ts),
+> **Enforced by:** `src/scripts/session_canary_hook.ts`,
 > bound in **two** slots. `session_start` injects the full `<session-canary>`
 > contract once, so a fresh conversation cannot start without it.
 > `user_prompt_submit` injects a one-line beat every turn, which is what

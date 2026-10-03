@@ -100,7 +100,7 @@ describe('check_cluster_patterns — names_sub', () => {
 });
 
 describe('check_cluster_patterns — check_completeness', () => {
-    // The real `/roadmap` dispatcher is the fixture: it has 6 sub-command
+    // The real `/roadmap` dispatcher is the fixture: it has 8 sub-command
     // directories on disk, so a hub body/frontmatter that omits one must fail.
     const roadmap = path.join(
         build_slug_map().get('roadmap') ?? '',
@@ -117,7 +117,7 @@ describe('check_cluster_patterns — check_completeness', () => {
     });
 
     it('accepts a hub that names every on-disk sub in both places', () => {
-        const subs = ['ai-council', 'create', 'materialize', 'next', 'process-full', 'process-phase', 'process-step'];
+        const subs = ['ai-council', 'create', 'materialize', 'next', 'process-full', 'process-phase', 'process-step', 'triage-parked'];
         const body = subs.map((s) => `| \`/roadmap:${s}\` | x | y |`).join('\n');
         const fm = {
             type: 'orchestrator',
@@ -127,7 +127,7 @@ describe('check_cluster_patterns — check_completeness', () => {
     });
 
     it('accepts a bare sub name in routes_to as well as the prefixed slug', () => {
-        const subs = ['ai-council', 'create', 'materialize', 'next', 'process-full', 'process-phase', 'process-step'];
+        const subs = ['ai-council', 'create', 'materialize', 'next', 'process-full', 'process-phase', 'process-step', 'triage-parked'];
         const body = subs.map((s) => `| \`/roadmap ${s}\` | x | y |`).join('\n');
         const fm = { type: 'orchestrator', routes_to: `[${subs.join(', ')}]` };
         expect(check_completeness('roadmap', roadmap, fm, body)).toEqual([]);

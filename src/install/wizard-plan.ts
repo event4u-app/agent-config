@@ -72,12 +72,16 @@ export const USER_SCOPE_PATHS: Readonly<Record<string, string>> = {
  * A rule is authored against the package tree and projected verbatim, so
  * `](../guidelines/x.md)` resolves in `dist/agent-src/rules/` and then does
  * not resolve in the install, because this table does not carry those two
- * directories. Measured by `report_installed_rule_links`: 160 of 550 links in
- * an installed Claude rule directory point nowhere, 113 of them into exactly
- * those two. Adding them is the cheaper of the two repairs on the budget that
- * is scarce — 0 standing characters against **5,198** for rewriting those same
- * 113 links to absolute package paths, at a 48-character install prefix (the
- * report prints the prefix it used; the figure scales with it).
+ * directories. Measured by `report_installed_rule_links` on 2026-10-03: 136 of
+ * 523 links in an installed Claude rule directory point nowhere, 112 of them
+ * into exactly those two. Adding them is the cheaper of the two repairs on the
+ * budget that is scarce — 0 standing characters against **5,152** for rewriting
+ * those same 112 links to absolute package paths, at a 48-character install
+ * prefix (the report prints the prefix it used; the figure scales with it).
+ *
+ * The totals were 160 of 550 when this was first measured and 158 of 545 on
+ * 2026-10-02; what fell since is the OTHER population — repo-tree link forms no
+ * install ever held — so the 112 this paragraph is about has not moved.
  *
  * It is held because this table is part of the FROZEN install ABI
  * (`docs/contracts/install-layout.md`), and any change to it owes an
