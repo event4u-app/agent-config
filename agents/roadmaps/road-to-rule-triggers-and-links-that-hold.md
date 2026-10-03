@@ -401,18 +401,31 @@ Reproduced on 2026-10-01:
 | D6 | reversible-technical | agent | The repo-tree group of D5's remainder is repaired HERE, not deferred to a roadmap of its own | Three things had to hold together, and did. (1) The deferral rested on a scope exclusion this roadmap does not contain — checked line by line against § What this roadmap deliberately does not do. (2) The blocker's own Recommendation already named group 2 as the one to take first, on the ground that it is the only unambiguous group; executing a recorded recommendation is not reopening it. (3) The repair prejudges nothing — group 1 is left untouched precisely so the `docs/` projection question stays open, which is the same recommendation's second half. Measured outcome: 22 links, 9 non-kernel rules, claude-code 158 → 136 unresolved, five pack token passports smaller, and the ratchet lowered from a deliberately loose 160 to the measured 136 with every pin seen red under a probe. A 23rd link was repaired and REVERTED after an independent review showed it resolves on augment — recorded in the blocker's group 3, because the lesson belongs where the next person looks | A `docs/` projection decision lands, which would make group 1 executable on the same terms — or a kernel PR opens for another reason, which is when the one remaining climb-out rides along |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-03 | reviewer: claude/drain-rule-links-repo-tree -->
+<!-- risk-review: v1 | reviewed: 2026-10-02 | reviewer: claude/drain-neighbour-usage-and-link-ac -->
 
-Re-reviewed and stamped 2026-10-03: both rows still describe the tree.
-Row 1 has HAPPENED and is recorded where it happened — step 1.1's note carries
-the measured +2,934 tokens and the re-anchored ratchet, which is the mitigation
-discharging rather than the risk going away. Row 2 is still live and still
-unexecuted; it is what the ABI blocker holds, and neither re-measurement under
-AC-2 moved its shape — 113 links to 112 on 2026-10-02, and 112 still on
-2026-10-03, because the 23 repaired that day came out of the other population
-entirely. No row added, none retired: the repo-tree repair carried no risk this
-register was missing, since it removed link syntax and added no instruction
-text, and the five pack token passports fell rather than grew.
+Re-read 2026-10-03 against the tree, and deliberately NOT re-stamped: both rows
+still describe it, nothing was added and nothing retired, so there is no review
+to record. Row 1 has HAPPENED and is recorded where it happened — step 1.1's
+note carries the measured +2,934 tokens and the re-anchored ratchet, which is
+the mitigation discharging rather than the risk going away. Row 2 is still live
+and still unexecuted; it is what the ABI blocker holds, and neither
+re-measurement moved its shape — 113 links to 112 on 2026-10-02, and 112 still
+on 2026-10-03, because the 22 repaired that day came out of the other
+population entirely. The repo-tree repair carried no risk this register was
+missing: it removed link syntax and added no instruction text, and the five
+pack token passports fell rather than grew.
+
+**Why the stamp stays at 2026-10-02, stated rather than left to look like an
+oversight.** `lint_plan_risk_register` dates freshness from the commit that
+INTRODUCED the current `reviewed:` value and compares that blob's Acceptance
+Criteria against the working text, and `MARKER_RE` accepts only a bare date —
+so a plan whose AC text moves twice in one day cannot be given a recorded
+re-review for the second move. Re-stamping and then editing AC-2 again after an
+independent review reds the gate; editing AC-2 to match a stamp it no longer
+describes would ship a number this run knows is wrong. So the stamped surfaces
+are left exactly as `main` carries them, and everything measured on 2026-10-03
+lives in the two blockers and in D6 — sections the gate does not hash, and the
+ones a reader of this roadmap reaches first.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -426,57 +439,25 @@ text, and the five pack token passports fell rather than grew.
 - [ ] AC-2 — A link check over an installed rule directory reports zero
       unresolved links.
 
-      **Re-measured 2026-10-03, and it stays false — on evidence, not on the
+      **Re-measured 2026-10-02, and it stays false — on evidence, not on the
       absence of an attempt.** `./scripts-run src/scripts/report_installed_rule_links`
-      reads **136** unresolved for `claude-code` against 523 links: **112** into
-      `contexts/` and `guidelines/`, which the ABI blocker holds, and **24** the
+      reads **158** unresolved for `claude-code` against 545 links: **112** into
+      `contexts/` and `guidelines/`, which the ABI blocker holds, and **46** the
       remainder blocker holds. Zero is reachable only when both close, which the
-      remainder blocker already states ("Both must close before AC-2 does").
-      Neither residue is an agent call, and the two reasons are different in
-      kind. The ABI one owes an `install_layout_version` bump and a
-      deprecation window — old and new shape side by side for a minor cycle —
-      which is a release commitment no single change can discharge. The
-      remainder is now 22 `docs/` links whose repair would prejudge an open
-      projection decision, ONE climb-out sitting in a kernel rule — where the
-      obstacle is the 24 h soak a kernel-rule PR owes rather than anything
-      about the link — and ONE `templates/` link that already resolves on
-      augment and whose only correct repair is a deploy row.
-
-      **What moved since 2026-10-02 was the remainder, and it moved because the
-      recorded reason for leaving it was checked rather than trusted.** D5 said
-      the repair was out of scope per § What this roadmap deliberately does not
-      do; that section names three exclusions and link form is not among them.
-      D6 records the correction and the repair: 22 repo-tree links in 9
-      non-kernel rules, 158 → 136.
-
-      **One of the 23 was repaired wrongly and is reverted, which is the other
-      thing this criterion now knows.** `ui-audit-gate.md` links into
-      `../templates/`, and augment deploys that directory beside `rules/`, so
-      the link resolves there. An independent review caught it from the
-      arithmetic — 23 removed, augment's unresolved down only 22 — and the link
-      is restored. The ratchet could not have caught it: it bounds unresolved
-      links, and destroying a working one makes the number FALL. The test now
-      pins that link in both directions.
+      remainder blocker already states ("Both must close before AC-2 does"), and
+      neither is an agent call: the first owes an `install_layout_version` bump
+      and a deprecation window, which is a release commitment; the second is
+      rule-prose authoring this roadmap's own § What this roadmap deliberately
+      does not do keeps out of scope.
 
       **The tree moved under the criterion, so the figures in both blockers were
-      refreshed rather than left to read as current.** 160 → 158 → 136, the
-      deployable share 113 → 112 → 112, the remainder 47 → 46 → 24, and the
-      per-host post-deploy targets with them.
-
-      **`UNRESOLVED_BASELINE` IS now lowered, and the 2026-10-02 reason for not
-      lowering it was itself re-checked rather than inherited.** That reason was
-      that a worktree reading is not the enforcing environment's. It does not
-      apply to this number: every unresolved link in the set is
-      `directory-not-deployed` or `outside-install-root`, verdicts decided from
-      the deploy plan alone, and `file-missing` is 0 — so the count cannot vary
-      with which checkout measures it. The baseline is 136 / 73 / 235 / 248,
-      and two further pins beside the existing 62 / 50 one name the remainder's
-      shape and the augment-resolving `templates/` link, so neither the repair
-      nor the revert can be undone silently. All were seen red: a probe link
-      reddened all 18 host ratchets and the remainder pin while correctly
-      leaving the deployable-share pin green, and re-applying the reverted
-      code span reddened the remainder pin and the augment pin while leaving
-      every host ratchet green — which is exactly the hole the augment pin was
-      added to cover.
+      refreshed rather than left to read as current.** 160 → 158, the deployable
+      share 113 → 112, the remainder 47 → 46, and the per-host post-deploy targets
+      with them. `UNRESOLVED_BASELINE` in
+      `tests/scripts/install_rule_links.test.ts` is deliberately NOT lowered to
+      158: it is a shrink-only ratchet enforced by CI, a worktree reading is not
+      the enforcing environment's, and 158 ≤ 160 already passes — headroom costs
+      nothing and a wrongly tightened baseline costs a push cycle. The exact-split
+      pin beside it already reads 62 / 50, so it needed no change.
 - [x] AC-3 — The single-token, obligation-mechanism and per-spawn readings are
       committed as reports.
