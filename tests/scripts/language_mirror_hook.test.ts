@@ -89,6 +89,14 @@ describe("isSyntheticPrompt", () => {
     expect(
       isSyntheticPrompt("<local-command-caveat>\nx\n</local-command-caveat>"),
     ).toBe(true);
+    // The subagent hand-back, added 2026-10-03. Measured in this project's
+    // capture: 12 of 153 hook-sourced user records open with it, every one on
+    // `hook:claude:UserPromptSubmit`. Found because a German session pinned
+    // `en` off a hand-back frame and the turn-end gate then refused the
+    // German reply — a reply language derived from a turn nobody typed.
+    expect(
+      isSyntheticPrompt('<agent-message from="a4a13492d7dc3d89e">\n[Subagent hand-back] …'),
+    ).toBe(true);
   });
 
   it("does not fire on a human prompt, including one that quotes a notification", () => {
@@ -98,6 +106,11 @@ describe("isSyntheticPrompt", () => {
     expect(
       isSyntheticPrompt(
         "why did I get a [SYSTEM NOTIFICATION - NOT USER INPUT] here?",
+      ),
+    ).toBe(false);
+    expect(
+      isSyntheticPrompt(
+        'warum hat dieses <agent-message from="x"> meinen Sprach-Pin gesetzt?',
       ),
     ).toBe(false);
   });
