@@ -585,7 +585,10 @@ Risk 1 is **dormant**. No relabel has been taken, the corpus and protocol are
 untouched, and the two baselines reproduce to the digit — 390 labelled rows at
 top-1 0.208 (0.170–0.251), the 26-prompt corpus at 0.615 (0.425–0.776) and
 still verdict `underpowered`. The non-overlap the risk predicted is unchanged,
-and so is the open question about which explanation holds.
+and so is its disposition: which of the two explanations holds is not decided
+here and stays recorded where step 1.2 put it,
+`agents/evidence/analysis/skill-routing-precision-2026-09.md`. This pass took
+no new evidence bearing on it and therefore moves it neither way.
 
 Risk 2 is **unchanged**, for the third consecutive pass. The probe was executed,
 not re-read: 0 `observed-true`, nothing is default-on, 3.1 and AC-4 stay open.
