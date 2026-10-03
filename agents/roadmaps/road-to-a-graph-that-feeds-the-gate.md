@@ -107,6 +107,14 @@ refuses.
       condition D5 names as its own revisit trigger, so it is not flipped. What closes
       it: n >= 50 rows across distinct sessions in `agents/state/graph-feeder/`, then
       the protocol on that page, labelled by a person or a council seat and attributed.
+      STATE 2026-10-03, re-measured rather than re-read: the recorder is producing
+      data — 8 rows across 2 distinct sessions in `agents/state/graph-feeder/`. The
+      LABELLED corpus is still n = 0, so the page's status is unchanged and the box
+      stays open; accrual and corpus are separate counts and only the second one
+      closes this step. The 2026-10-01 line above is kept rather than rewritten: it
+      records the state at pre-registration, and the accrual figure is what moved.
+      Re-measure before flipping — this count is a reading taken on a date, not a
+      standing fact, and `agents/state/` is local and gitignored, so a clone reads 0.
 - [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3; the ADR-277 reopen is
       an owner amendment, not a step here.
 
