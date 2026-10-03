@@ -21,7 +21,7 @@ triggers:
 validator_ignore:
   - type: "substring"
     pattern: "../../docs/"
-    reason: "See-also routes to docs/threat-model.md — the canonical attack-surface doc lives there by design."
+    reason: "Rule routes to docs/guidelines/agent-infra/memory-access.md — the memory-consult procedure lives there by design."
 self_contained: true
 workspaces: [engineering]
 packs: [engineering-base]
@@ -131,4 +131,4 @@ model-carried, honestly uncovered). Adjacent validators (`check_secret_leak`,
 `lint_agent_security`) cover neighbouring surfaces, not this stop — claiming
 them here would inflate coverage, so they are not claimed.
 
-See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-safe-diff` · `think-before-action` · [`untrusted-input-defense`](untrusted-input-defense.md) · [`lethal-trifecta-guard`](lethal-trifecta-guard.md) · [`secret-vcs-guard`](secret-vcs-guard.md) · [`docs/threat-model.md`](../../docs/threat-model.md).
+See also: `threat-modeling` · `authz-review` · `data-flow-mapper` · `minimal-safe-diff` · `think-before-action` · [`untrusted-input-defense`](untrusted-input-defense.md) · [`lethal-trifecta-guard`](lethal-trifecta-guard.md) · [`secret-vcs-guard`](secret-vcs-guard.md) · `docs/threat-model.md`.

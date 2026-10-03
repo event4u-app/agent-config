@@ -122,11 +122,11 @@ ITEM 1 IS ENFORCED. ITEMS 2, 3 AND 4 ARE NOT — 4 ONLY WARNS.
 NEVER CITE A GUARD THAT WARNS AS ONE THAT BLOCKS.
 ```
 
-[`evidence_independence.ts`](../scripts/hooks/evidence_independence.ts), a
+`src/scripts/hooks/evidence_independence.ts`, a
 `pre_tool_use` concern, BLOCKS item 1 on the one host that honours a deny and
 only WARNS on item 4. Item 2 is enforced by nothing — a narrowed scope is not
 decidable from a prompt. Item 3 is enforced by
-[`check_review_prompt_binding.ts`](../../src/scripts/check_review_prompt_binding.ts),
+`src/scripts/check_review_prompt_binding.ts`,
 where **omission beats substitution**: not committing the prompt package drops
 the round out of the checkable set with no finding.
 

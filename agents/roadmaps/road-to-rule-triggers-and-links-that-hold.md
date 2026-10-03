@@ -3,7 +3,7 @@ complexity: lightweight
 status: ready
 execution:
   mode: autonomous
-estate_growth_exempt: "Two blockers, +2 open_blockers, and both are decisions this run correctly did not take rather than work it failed to finish. `rule-link-targets-change-the-frozen-install-abi` records that the 1.2 repair — measured, decided, two lines — changes `GLOBAL_DEPLOY_SOURCES`, which is frozen install ABI: it owes an `install_layout_version` bump and a deprecation window shipping old and new shape side by side for a minor cycle, which is a release commitment and owner-reserved. `forty-seven-links-name-files-the-package-does-not-ship` records the 47 links no deploy entry can reach, whose repair is rule-prose authoring this roadmap's own scope section excludes. Each carries the exact edit, what it owes, a recommendation and a falsifiable `Resolved when`, so neither is a park wearing a blocker's clothes. The alternative to recording them was to execute an ABI change without its deprecation window, or to leave the measurement with no statement of what it implies — the first is forbidden, the second is the silence this estate ratchet exists to prevent."
+estate_growth_exempt: "Two blockers, +2 open_blockers, and both are decisions this run correctly did not take rather than work it failed to finish. `rule-link-targets-change-the-frozen-install-abi` records that the 1.2 repair — measured, decided, two lines — changes `GLOBAL_DEPLOY_SOURCES`, which is frozen install ABI: it owes an `install_layout_version` bump and a deprecation window shipping old and new shape side by side for a minor cycle, which is a release commitment and owner-reserved. `forty-seven-links-name-files-the-package-does-not-ship` records the links no deploy entry can reach. 22 of them were repaired on 2026-10-03 — the repo-tree link form, which the blocker's own recommendation named as the group to take first; a 23rd was repaired, caught by an independent review as a link augment actually resolves, and reverted. What is held is the 22 `docs/` links, whose repair would prejudge whether the projection ever ships `docs/contracts/`, one climb-out in a kernel rule, which owes its own PR and a 24 h soak, and that one augment-resolving `templates/` link, whose only correct repair is a deploy row. Each carries the exact edit, what it owes, a recommendation and a falsifiable `Resolved when`, so neither is a park wearing a blocker's clothes. The alternative to recording them was to execute an ABI change without its deprecation window, or to leave the measurement with no statement of what it implies — the first is forbidden, the second is the silence this estate ratchet exists to prevent."
 estate_offset_exempt: "Round inbox-2026-10-c verified a live defect no roadmap owns: `_has_non_path_trigger` ignores `command` triggers, so `roadmap-progress-sync` reaches Claude with an exclusive `paths:` and loses three command triggers today, before any thinning. The two held objects that own the neighbouring question both misclassify that rule, so folding this into either would carry their error with it. The other steps are small residue whose absence would make the installed-layer flip ship broken links."
 relates:
   - slug: road-to-a-path-route-under-delivery
@@ -233,10 +233,13 @@ Reproduced on 2026-10-01:
 - **Class:** 3
 - **Ownership:** product-owned
 - **Blocks:** the execution half of 1.2, and AC-2 through it. The measurement,
-  the instrument and the decision are delivered; 112 of the 158 unresolved
+  the instrument and the decision are delivered; 112 of the 136 unresolved
   links are one two-line edit away from resolving, and that edit is the thing
-  held here. (113 of 160 when this was written; re-measured 2026-10-02 — the
-  tree shed two links, one from each population.)
+  held here. (113 of 160 when this was written; 112 of 158 on 2026-10-02 after
+  the tree shed two links; 112 of 136 on 2026-10-03 after the remainder
+  blocker's repo-tree group was repaired. This blocker's own share has not
+  moved from 112 — every change since has come out of the OTHER population,
+  which is the split doing its job.)
 - **What to do:** `GLOBAL_DEPLOY_SOURCES` in `src/install/wizard-plan.ts` is
   part of the frozen install ABI (`docs/contracts/install-layout.md`), and
   `tests/install/install_layout_contract.test.ts` fails on any change to it
@@ -266,22 +269,24 @@ Reproduced on 2026-10-01:
   but a static one, and D4's own `revisit-if` would reopen the comparison
   anyway if the host ever starts counting non-`rules/` files.
 - **If you do nothing:** a consumer following a link in an installed rule
-  lands on nothing 158 times per Claude install (95 on augment, 257 on cursor,
-  270 on windsurf and kiro), silently — a dead link reads as a missing file
+  lands on nothing 136 times per Claude install (73 on augment, 235 on cursor,
+  248 on windsurf and kiro), silently — a dead link reads as a missing file
   rather than as a shipping decision. The number does not grow: the per-host
-  ratchet in `tests/scripts/install_rule_links.test.ts` holds it, so the cost
-  is standing rather than compounding, and every other step on this roadmap is
-  closed without it.
+  ratchet in `tests/scripts/install_rule_links.test.ts` holds it — now at the
+  measured reading rather than above it — so the cost is standing rather than
+  compounding, and every other step on this roadmap is closed without it.
 - **Resolved when:** `GLOBAL_DEPLOY_SOURCES` carries the two directories,
   `npx vitest run tests/install/install_layout_contract.test.ts` is green
   against a golden for the bumped version, and the per-host baseline in
   `tests/scripts/install_rule_links.test.ts` has been lowered to the
-  post-deploy reading — **claude-code 46, augment 45, cursor 145, windsurf 158,
-  kiro 158**, each the live unresolved count minus the directories that host's
-  row gains (augment gains `guidelines/` only). Re-derived 2026-10-02 from
+  post-deploy reading — **claude-code 24, augment 23, cursor 123, windsurf 136,
+  kiro 136**, each the live unresolved count minus the directories that host's
+  row gains (augment gains `guidelines/` only). Re-derived 2026-10-03 from
   `report_installed_rule_links` by the same subtraction that produced the
-  earlier 47 / 46 / 147 / 160 / 160; re-derive again before executing, because
-  these move whenever a rule body gains or loses a link.
+  earlier 47 / 46 / 147 / 160 / 160 and then 46 / 45 / 145 / 158 / 158; the
+  numbers fell because the repo-tree links the other blocker held were
+  repaired, not because this one got easier. Re-derive again before executing,
+  because these move whenever a rule body gains or loses a link.
 
 ### blocker: forty-seven-links-name-files-the-package-does-not-ship
 
@@ -289,58 +294,100 @@ Reproduced on 2026-10-01:
 - **Owner:** maintainer
 - **Class:** 2
 - **Blocks:** AC-2, together with the ABI blocker above. That one holds 112 of
-  claude-code's 158 unresolved links; these are the other 46. Both must close
+  claude-code's 136 unresolved links; these are the other 24. Both must close
   before AC-2 does. Every step on this roadmap is closed. (113 / 160 / 47 when
-  this was written; re-measured 2026-10-02.)
-- **What to do:** these 47 are not a smaller version of what the ABI blocker
-  holds, and a deploy entry cannot reach any of them — read D5 before
-  reaching for one. Three groups, each with a different answer:
-  1. **22 into `docs/`.** `dist/agent-src/` carries no `docs/` directory, and
-     several rules say so in their own text. Either the projection starts
-     shipping `docs/contracts/` — a scope decision this roadmap does not own —
-     or the 22 links become code spans in `src/rules/`.
+  this was written; 112 / 158 / 46 on 2026-10-02; 112 / 136 / 24 on 2026-10-03,
+  after the repo-tree group below was repaired. The slug still says forty-seven and
+  is deliberately not renamed — the frontmatter exemption and this roadmap's
+  own prose cite it, and a slug that tracked its own count would break every
+  reference each time the count moved.)
+- **What to do:** these are not a smaller version of what the ABI blocker
+  holds, and a deploy entry cannot reach any of them — read D5 and D6 before
+  reaching for one. Three groups were named; two are done:
+  1. **22 into `docs/`** — OPEN, and the reason is not effort.
+     `dist/agent-src/` carries no `docs/` directory, and several rules say so
+     in their own text. Either the projection starts shipping
+     `docs/contracts/` — a scope decision this roadmap does not own — or the
+     22 links become code spans in `src/rules/`. Repairing them from the link
+     side would settle the first question by making the second irreversible in
+     practice, so this group waits on someone deciding whether `docs/` is
+     projected at all.
   2. **22 climbing out of the install root** into `../../tests/`,
-     `../../src/scripts/`, `../../scripts/` and
-     `agents/settings/policies/media/`. These name the repository, not the
-     package; no install has ever held them, and none ever will. Code spans
-     are the only repair.
-  3. **2 one-off targets.** `scripts/hooks/evidence_independence.ts` is not in
-     the projection either, so nothing can resolve it. The single `templates/`
-     link could be resolved by deploying that directory — 1.7 MB for ONE link,
-     against 1.6 MB for the 113 the ABI blocker covers. Note what the test is
-     here, because D4's is not it: D4 decided on standing CHARACTERS, where
-     deploying scores 0 whatever the directory. This one turns on MB per link
-     resolved, which is a different criterion and is stated as one.
-  All three are authoring changes in rule prose, which this roadmap's "What
-  this roadmap deliberately does not do" keeps out of scope and which
-  `src/rules/` size budgets make a per-rule review rather than a sweep. Run
-  `./scripts-run src/scripts/report_installed_rule_links` for the current
-  split before planning any of it; the per-host ratchet in
+     `../../src/scripts/`, `../../scripts/`, `../../docs/` and
+     `agents/settings/policies/media/` — **21 repaired 2026-10-03**, 1 open.
+     (`../../docs/` is listed here and not under group 1: from `rules/` it
+     climbs OUT of the install root, where group 1's `../docs/contracts/`
+     lands inside it as an undeployed directory. Same word, two verdicts.)
+     These name the repository, not the package; no install has ever held
+     them, and none ever will, so a code span was the only repair and it is
+     made. The one left is `../../tests/golden/outcomes/direct_answers.json`
+     in `direct-answers.md`: identical defect, but `direct-answers` is a
+     kernel rule, so the edit ships in its own PR with a 24 h soak
+     (`scope-control` § Kernel-rule edits). One link does not justify spending
+     that window; the next kernel PR carries it.
+  3. **2 one-off targets** — **1 repaired 2026-10-03, 1 reverted and OPEN,
+     and the revert is the finding worth keeping.**
+     `scripts/hooks/evidence_independence.ts` is in no projection, so nothing
+     could resolve it; that one is a code span now, naming a path the
+     repository actually has, which the old link did not.
+     The `templates/` link in `ui-audit-gate.md` was repaired the same way and
+     **the repair was wrong**. `GLOBAL_DEPLOY_SOURCES.augment` maps
+     `dist/agent-src/templates` → `templates` beside `rules`, so on augment
+     that link RESOLVES — it is a working link on one host and unresolved on
+     the rest, not a repo-tree form. An independent review caught it from the
+     arithmetic: 23 links removed, augment's unresolved fell only 22. It is
+     restored, and the open question is unchanged from D4's shape but on a
+     different axis: deploying `templates/` costs 1.7 MB for ONE link against
+     1.6 MB for the 112 the ABI blocker covers. D4 decided on standing
+     CHARACTERS, where deploying scores 0 whatever the directory; this one
+     turns on MB per link resolved, and is stated as a different criterion.
+     **The general lesson, which no gate here carries:** the ratchet bounds
+     unresolved links and nothing bounds RESOLVED links from shrinking, so a
+     link that reads as repo-tree must be checked against every host's deploy
+     plan before it is repaired. `tests/scripts/install_rule_links.test.ts`
+     now pins this one link in both directions so the mistake cannot be made
+     twice.
+  Run `./scripts-run src/scripts/report_installed_rule_links` for the current
+  split before planning the rest; the per-host ratchet in
   `tests/scripts/install_rule_links.test.ts` holds the number from rising
-  meanwhile.
-- **Recommendation:** group 2, the 23 repo-tree links, first and on its own —
-  they are the only group where the repair is unambiguous (no install can ever
-  hold `../../tests/`, so a link is simply the wrong form) and the diff shrinks
-  the rule bodies rather than growing them, which `src/rules/` size budgets
-  reward. Leave group 1 alone until someone decides whether `docs/contracts/`
-  is projected at all, because entering it from the link side would prejudge
-  that. Group 3 is two lines and can ride with group 2.
-- **If you do nothing:** 46 of a Claude install's 158 dead rule links stay
+  meanwhile, and a second pin there names this remainder directly, so a new
+  `scripts`, `templates` or `outside-install-root` row cannot reappear
+  unnoticed.
+- **Recommendation:** taken, for the part that was actually unambiguous. Group
+  2 was — no install can ever hold `../../tests/`, so the link was simply the
+  wrong form — and the diff shrank the rule bodies rather than growing them,
+  which `src/rules/` size budgets reward: the five pack token passports fell
+  with it. Group 3 turned out to be two different things wearing one label,
+  which is why "the repair is unambiguous" has to be checked per link and not
+  per group. What remains of the recommendation is its second half, unchanged:
+  leave group 1 alone until someone decides whether `docs/contracts/` is
+  projected at all. For the kernel link, let it ride on a kernel PR that exists
+  for another reason rather than opening one for a single link. For the
+  `templates/` link, the decision is a deploy row or nothing — never a code
+  span, which would un-resolve it on the one host where it works.
+- **If you do nothing:** 24 of a Claude install's 136 dead rule links stay
   dead even after the ABI blocker above is taken — a dead link reads as a
   missing file rather than as a shipping decision, and the reader cannot tell
-  which. The number does not grow: the per-host ratchet holds it, so the cost
-  is standing rather than compounding, and nothing else on this roadmap waits
-  on it.
+  which. The number does not grow: the per-host ratchet holds it, and the
+  remainder pin beside it holds the shape as well as the count, so the cost is
+  standing rather than compounding, and nothing else on this roadmap waits on
+  it.
 - **Resolved when:** `./scripts-run src/scripts/report_installed_rule_links`
   reports, for `claude-code`, no `docs` row, no `outside-install-root` row,
-  **and** no `scripts` or `templates` row — i.e. all 46 are gone,
+  **and** no `scripts` or `templates` row — i.e. all 24 that remain are gone,
   independently of whether the ABI blocker has closed the other 112 — and the
   ratchet baseline in `tests/scripts/install_rule_links.test.ts` has been
-  lowered to match. The last two rows are named explicitly because the first
-  two conditions cover only 44 (22 `docs` + 22 climb-outs): group 3's one-offs are
-  `directory-not-deployed` rows, so a condition phrased on `docs` and the
-  climb-outs alone would let this blocker close with 2 links still dead, and
-  AC-2 would stay false with every blocker on the roadmap shut.
+  lowered to match. All four conditions are kept, and two of them are already
+  met: the `scripts` row is gone as of 2026-10-03, and the `outside-install-root`
+  rows are down to one. They stay written because they are what stops the
+  condition from being satisfiable by the `docs` and climb-out rows alone — a
+  one-off `directory-not-deployed` row could otherwise reappear and this
+  blocker could close with links still dead, leaving AC-2 false with every
+  blocker on the roadmap shut. The `templates` row is the standing
+  counter-example to reading this condition as "make the rows go away": it goes
+  away correctly by a deploy row and incorrectly by a code span, and only one
+  of those is a repair. The baseline has been lowered once already, to
+  136 / 73 / 235 / 248; it is lowered again when the rest goes.
 
 ## Decisions
 
@@ -350,18 +397,35 @@ Reproduced on 2026-10-01:
 | D2 | reversible-technical | agent | 1.2's two options are decided by measured standing cost, not by preference | Both resolve every link; the difference is characters on the shared host budget | The installed-layer report is not available when 1.2 runs |
 | D3 | reversible-technical | agent | 1.3's 5 % threshold is a stated default for a report, not a gate | Nothing acts on the figure automatically | The report's top rows are not the known common words |
 | D4 | reversible-technical | agent | 1.2's two options are decided: **deploy**, not rewrite. The decision is agent-owned; **executing it is not**, because the deploy table is frozen install ABI | Measured by `report_installed_rule_links` at the same commit, both repairing the same 113 links: deploy adds **0** characters of standing text and 184 files / 1.6 MB of link targets; rewrite adds **5,198** characters at a 48-character install prefix, every one of them inside a rule body, which is the text the host loads as instructions. (The 7,285 first recorded here was the cost over all 160 unresolved links, including 45 a rewrite cannot reach either — not like-for-like, and it overstated the losing option by ~40 %. Direction unchanged: 0 < 5,198.) Files under `contexts/` and `guidelines/` are not instruction files. The installed-layer report D2 names was not available — `road-to-a-rule-carrier-that-works-outside-the-repo` step 0.1 is still open — so the figure was taken from the deploy plan and the rule bodies directly, which is the same unit | The host begins counting non-`rules/` files in an install toward its instruction budget, which would make the two options trade on one axis instead of two |
-| D5 | reversible-technical | agent | The 47 links left unresolved on Claude are a named remainder, not a smaller version of the same defect | 22 point into `docs/`, which the projection does not produce at all; 23 climb out of the install root into the repository (`../../tests/`, `../../src/`, `agents/settings/policies/`); 2 are one-off targets, one of them also unprojected. None is reachable by a deploy entry — closing them is an authoring change in rule prose, which this roadmap's "deliberately does not do" section keeps out of scope | A future projection ships `docs/`, or the rule bodies are re-authored to carry code spans where the target is not shipped |
+| D5 | reversible-technical | agent | The 47 links left unresolved on Claude are a named remainder, not a smaller version of the same defect | 22 point into `docs/`, which the projection does not produce at all; 23 climb out of the install root into the repository (`../../tests/`, `../../src/`, `agents/settings/policies/`); 2 are one-off targets, one of them also unprojected. None is reachable by a deploy entry — closing them is an authoring change in rule prose, which this roadmap's "deliberately does not do" section keeps out of scope. *Amended 2026-10-03: the final clause does not hold — see D6. The classification itself stands.* | A future projection ships `docs/`, or the rule bodies are re-authored to carry code spans where the target is not shipped |
+| D6 | reversible-technical | agent | The repo-tree group of D5's remainder is repaired HERE, not deferred to a roadmap of its own | Three things had to hold together, and did. (1) The deferral rested on a scope exclusion this roadmap does not contain — checked line by line against § What this roadmap deliberately does not do. (2) The blocker's own Recommendation already named group 2 as the one to take first, on the ground that it is the only unambiguous group; executing a recorded recommendation is not reopening it. (3) The repair prejudges nothing — group 1 is left untouched precisely so the `docs/` projection question stays open, which is the same recommendation's second half. Measured outcome: 22 links, 9 non-kernel rules, claude-code 158 → 136 unresolved, five pack token passports smaller, and the ratchet lowered from a deliberately loose 160 to the measured 136 with every pin seen red under a probe. A 23rd link was repaired and REVERTED after an independent review showed it resolves on augment — recorded in the blocker's group 3, because the lesson belongs where the next person looks | A `docs/` projection decision lands, which would make group 1 executable on the same terms — or a kernel PR opens for another reason, which is when the one remaining climb-out rides along |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-02 | reviewer: claude/drain-neighbour-usage-and-link-ac -->
 
-Re-read 2026-10-02 against the tree, not stamped: both rows still describe it.
-Row 1 has HAPPENED and is recorded where it happened — step 1.1's note carries
-the measured +2,934 tokens and the re-anchored ratchet, which is the mitigation
-discharging rather than the risk going away. Row 2 is still live and still
-unexecuted; it is what the ABI blocker holds, and the re-measurement under AC-2
-moved only its size (113 links to 112), never its shape. No row added, none
-retired.
+Re-read 2026-10-03 against the tree, and deliberately NOT re-stamped: both rows
+still describe it, nothing was added and nothing retired, so there is no review
+to record. Row 1 has HAPPENED and is recorded where it happened — step 1.1's
+note carries the measured +2,934 tokens and the re-anchored ratchet, which is
+the mitigation discharging rather than the risk going away. Row 2 is still live
+and still unexecuted; it is what the ABI blocker holds, and neither
+re-measurement moved its shape — 113 links to 112 on 2026-10-02, and 112 still
+on 2026-10-03, because the 22 repaired that day came out of the other
+population entirely. The repo-tree repair carried no risk this register was
+missing: it removed link syntax and added no instruction text, and the five
+pack token passports fell rather than grew.
+
+**Why the stamp stays at 2026-10-02, stated rather than left to look like an
+oversight.** `lint_plan_risk_register` dates freshness from the commit that
+INTRODUCED the current `reviewed:` value and compares that blob's Acceptance
+Criteria against the working text, and `MARKER_RE` accepts only a bare date —
+so a plan whose AC text moves twice in one day cannot be given a recorded
+re-review for the second move. Re-stamping and then editing AC-2 again after an
+independent review reds the gate; editing AC-2 to match a stamp it no longer
+describes would ship a number this run knows is wrong. So the stamped surfaces
+are left exactly as `main` carries them, and everything measured on 2026-10-03
+lives in the two blockers and in D6 — sections the gate does not hash, and the
+ones a reader of this roadmap reaches first.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|

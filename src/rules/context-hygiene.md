@@ -22,7 +22,7 @@ obligation_frequency: "per-turn"
 
 # Context Hygiene
 
-> **Enforced by:** [`scripts/context_hygiene_hook.ts`](../../scripts/context_hygiene_hook.ts)
+> **Enforced by:** `src/scripts/context_hygiene_hook.ts`
 > on Augment + Claude Code (`PostToolUse`). Run `agent-config hooks:status` to
 > see whether that slot is actually bound on the host you are on — this line is
 > a statement about the manifest, not about your install. The hook maintains
