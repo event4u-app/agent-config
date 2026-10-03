@@ -436,6 +436,64 @@ this package's own configuration, which is the same honesty boundary the generat
 region above states for itself: a cell says what has been written down about a
 host, never what the host does.
 
+### `manual-only` is a measurement here, and the policy it implies is UNDECIDED
+
+```
+THIS COLUMN MEASURES CAPABILITY AND AUTHORISES NOTHING.
+NEVER READ A `manual-only` CELL AS A RECORDED DECISION THAT AUTONOMY
+MAY PROCEED THERE. THE FALLBACK POLICY FOR THE SEVEN IS AN OPEN
+OWNER DECISION — `daemon-host-kill-switch`.
+```
+
+The seven rows above say *no layer here can refuse a typed op*. They do **not**
+say what should follow from that, and the two candidate answers are not
+interchangeable. Stated here rather than only in the roadmap, because a reader
+arriving at this table sees seven settled-looking cells and nothing telling them
+the policy behind the cells was never taken.
+
+**The decision brief**, so it takes one reading:
+
+1. **The seven hosts** are `augment`, `cursor`, `cline`, `gemini`, `windsurf`,
+   `cowork`, `copilot`. The missing capability is a `pre_tool_use` binding whose
+   configured outcome is a refusal.
+2. **The two options.** (a) `destructive: manual-only` — autonomy continues on
+   those hosts with model-carried confirmation as the only guard. (b) No
+   autonomous mode on those hosts at all.
+3. **The threat scenario the choice turns on.** Under (a) a typed destructive op
+   proceeds whenever the model fails to classify it as destructive or skips the
+   confirmation, with nothing downstream able to refuse the call.
+4. **An unresolved prior question.** Whether model-carried destructive
+   confirmation on unenforceable hosts is *already* the approved baseline, or
+   whether this choice establishes it. The tree does not record which.
+5. **`manual-only`'s operational semantics are undefined** and need stating with
+   the choice: who classifies an op as destructive, whether confirmation is
+   per-action or standing, and what prevents the action mutating after approval.
+6. **The dissent is recorded rather than resolved.** The blocker's own
+   recommendation is `manual-only`; the opposing reading, held by one council
+   seat, is no autonomous mode without an enforceable stop.
+7. **Option (b) may conflict with ADR-268 § 0's declared autonomy outcome**,
+   which is itself owner-protected. That tension is why this cannot be settled
+   one layer down.
+
+**Why no agent writes the answer into this section.** A 2/2 convergent council
+pass of 2026-10-01 found the choice **owner-reserved** on two independent
+grounds: the options are not authority-equivalent — prohibiting autonomy
+preserves the restrictive state while authorising `manual-only` establishes a
+safety floor no host can enforce — and fixing whether the Hard Floor applies on
+one host or eight is governance self-amendment under
+[`decision-revisit-gate`](../src/rules/decision-revisit-gate.md)'s own
+owner-reserved table. The same pass named the specific error available here:
+writing a preferred fallback into this column would convert an inventory into a
+permission.
+
+**`revisit-if`:** a host gains deny-capable pre-execution enforcement · an
+external enforcement mechanism is demonstrated and tested · the owner explicitly
+approves model-carried destructive confirmation as the safety floor for that host.
+
+**Where the answer goes when it is taken:** here, as a recorded decision beside
+each `manual-only` row, and in the `Resolved when` of `daemon-host-kill-switch`
+in `road-to-adversarial-verification-and-long-runs`.
+
 `non-destructive-by-default`'s `enforced_by:` should name the live layer on the
 current host. **It still reads `none` and this change did not move it**: that rule
 is one of the nine kernel rules, and `block_kernel_rule_writes` refuses every agent
