@@ -641,7 +641,7 @@ four-value vocabulary is the step's contract:
   (`_parse_concern_stdout` joins `stated` and `extra`), adding ~60-70 characters
   outside this concern's own budget — against the 728-character margin under the
   conservative reading. Noted in risk-register row 5 rather than absorbed,
-  because which string the host measures is the open question that row names.
+  because which string the host measures is precisely what that row is for.
 - **A readable file that strips to empty is labelled `source_unavailable`.**
   There is no usable source text, which is what that label says; the alternative
   blames a budget decision nobody made. Recorded as a choice between two
