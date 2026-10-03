@@ -7,7 +7,7 @@ inputs:
   scope_hash: ee829d1ca473ca9fdb19cb80d9ce0fb4206199097fafec7697b019f77d2684c9
   roadmap: agents/roadmaps/road-to-rule-triggers-and-links-that-hold.md
   roadmap_hash: 6da77b318009a7d95608bfb5fe3939261a09e077d74b466a95e69244e2a00d58
-  ac_hash: 2811d9537de14de6c607c768b6f12050667a90a4d297968ea680d829d1d13e5d
+  ac_hash: 0753b295f8f0ccc0008baba81bfb25fc80f24716ecc13ed348ebea60c3640047
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-10-03T04:00:00Z
