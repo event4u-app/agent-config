@@ -12,8 +12,7 @@
  * Per `docs/contracts/hook-architecture-v1.md`. Reads `src/scripts/hook_manifest.yaml`,
  * resolves which concerns fire on the given (platform, event) tuple, and runs each
  * sequentially with the stdin envelope contract. Reduces concern exit codes per the
- * spec (0=allow, 1=block, 2=warn, ≥3=error → resolved by the concern's declared
- * `severity`: blocking refuses, advisory fails open).
+ * spec (0=allow, 1=block, 2=warn, ≥3=error → resolved by declared `severity`).
  *
  * Invocation:
  *
@@ -60,11 +59,18 @@ import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js';
 export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
+// Severity policy — what a declaration means when the concern said nothing.
+// Re-exported so the move out of this file left every importer unaffected.
+import {
+  _is_advisory, _is_blocking, _resolve_execution_failure,
+  classifySpawnResult, noVerdictRefusalNotice, SPAWN_TIMEOUT_MS,
+} from './concern_failure_policy.js';
+export { _is_advisory, _is_blocking, _resolve_execution_failure };
 import { _py_json_dumps } from './py_json_dumps.js';
 import { _fallback_yaml } from './fallback_yaml.js';
 import { detectSurface } from '../_lib/surface.js';
 import { recordCapture, recordOpportunity } from "../_lib/collector_denominator.js";
-import { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN, EXIT_USAGE, EXIT_ERROR } from './exit_codes.js';
+import { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN, EXIT_USAGE } from './exit_codes.js';
 export { EXIT_ALLOW, EXIT_BLOCK, EXIT_WARN };
 export { _fallback_yaml } from './fallback_yaml.js';
 
@@ -129,109 +135,6 @@ export function _severity_for(rc: number): string {
   return _SEVERITY_BY_EXIT[rc] ?? "error";
 }
 
-/**
- * P0.2 (road-to-rule-coherence) — is this concern declared advisory?
- *
- * An advisory concern MUST never produce a BLOCK verdict on any host. Four
- * PreToolUse concerns document themselves as advisory in prose
- * (`design_slop_hook`: "FLAGS, NEVER A BLOCK") while the transport happily
- * turned their WARN into a host-level deny. Prose is not enforcement: the
- * manifest now declares severity and the dispatcher enforces the ceiling.
- */
-export function _is_advisory(concern: JsonObject): boolean {
-  return String(concern["severity"] ?? "").trim().toLowerCase() === "advisory";
-}
-
-/**
- * Is this concern declared `severity: blocking`?
- *
- * The positive twin of `_is_advisory`, and NOT its negation. A concern whose
- * `severity` is absent, misspelt or any third value is neither — and step 3.3
- * below promotes a crash to a refusal only on an EXPLICIT `blocking`, so an
- * undeclared concern keeps the historical fail-open rather than inheriting a
- * refusal from a typo. `lint_hook_manifest` requires the key, so the middle
- * case should not exist; this reads it as the safe direction anyway, because
- * the cost of the two mistakes is not symmetric.
- */
-export function _is_blocking(concern: JsonObject): boolean {
-  return String(concern["severity"] ?? "").trim().toLowerCase() === "blocking";
-}
-
-/**
- * What an `rc >= 3` (crash / could-not-decide) becomes — step 3.3 of
- * `road-to-a-kernel-that-guards-its-plumbing`.
- *
- * WHAT CHANGED, AND WHAT AUTHORISES IT.
- * Until this step the resolution read the `fail_closed:` FLAG: a crash blocked
- * when the concern opted in and allowed otherwise. Three of nine
- * `severity: blocking` concerns carried the flag, so six guards declared
- * blocking in the manifest — the declaration that AUTHORISES a refusal, and the
- * one `_is_advisory` already enforces as a ceiling — and then allowed the call
- * through whenever they crashed. A guard that refuses when it works and permits
- * when it breaks is not a guard: a crash is exactly the moment the check did
- * not happen, so it is the moment the answer matters most.
- *
- * So `severity` now decides both directions. It is the ceiling (an advisory
- * concern may never block) AND the floor (a blocking concern that could not
- * decide refuses). `fail_closed:` is no longer consulted on this branch — all
- * three concerns carrying it are `severity: blocking`, so no verdict moves
- * because it stopped being read here.
- *
- * WHAT A SLOW CONCERN IS NOT, ON EITHER PATH.
- * This branch resolves a concern that produced NO VERDICT. It is not a latency
- * gate and no reading of `concern_sla_ms` reaches it. On the default in-process
- * route a kill-timeout cannot preempt synchronous code, so an overrun there is
- * a POST-HOC observation about a concern that did in fact answer — refusing it
- * afterwards would deny a call whose guard passed, buying no enforcement while
- * spending exactly the availability risk Risk 1 of the owning roadmap holds
- * down. On the spawn route the timeout stays the historical 30 s, because the
- * registered SLA measures in-process concern work and is three to fifteen times
- * smaller than interpreter startup alone; `SPAWN_TIMEOUT_MS` carries that
- * measurement and the probe that refused the substitution.
- *
- * So `sla_ms x 3` remains what the warn-only window made it: a number the bench
- * prints beside each measured p95, gating nothing. The readings behind it live
- * in ONE artifact — `agents/evidence/analysis/concern-sla-warn-only-window.md`
- * — and no count is repeated here. A review of an earlier revision found two
- * different tallies in one diff, because the number had been pasted into an
- * implementation comment and the artifact kept accumulating. A comment that
- * carries a count will eventually carry a stale one; a comment that carries a
- * path cannot. They validate the bound as an OBSERVATION, which is the only
- * thing this step asks of them.
- *
- * The discriminator for this branch is whether a VERDICT EXISTS. A crash and a
- * killed spawn leave none, so they fail closed. A slow success leaves one, so
- * it is honoured, however slow it was.
- *
- * THE ONE-RETRY ESCAPE, AND WHY THE STOP SLOT NEEDS IT.
- * `turn-end-gate` and `run-continuation` are `severity: blocking` on `stop`,
- * and `tests/hooks/concern_severity.test.ts` records the hazard in as many
- * words: a turn-end gate that fails closed "does not degrade, it wedges the
- * session". Neither carries `skip_on_refusal_retry`, so without this clause a
- * DETERMINISTIC crash in either would refuse every Stop, indefinitely, with no
- * escape the user can reach.
- *
- * So the promotion is spent ONCE. On the retry the host itself marks
- * (`stop_hook_active`, read by `_is_refusal_retry`) a crash falls back to
- * fail-open and the turn ends. The legitimate refusal path is untouched: a
- * concern that DECIDED to refuse returns `EXIT_BLOCK` and never reaches this
- * branch. What a broken concern loses is only the power to refuse forever on
- * the strength of being broken.
- *
- * `pre_tool_use` is untouched by the clause — `_is_refusal_retry` is false on
- * every event but `stop` — and that asymmetry is deliberate. A crashing
- * tool-call guard refuses every attempt, which is the right answer there: the
- * user can run a different command and nothing is wedged, whereas a turn that
- * cannot end leaves no move at all.
- */
-export function _resolve_execution_failure(
-  concern: JsonObject,
-  refusal_retry: boolean,
-): number {
-  if (!_is_blocking(concern)) return EXIT_ALLOW;
-  if (refusal_retry) return EXIT_ALLOW;
-  return EXIT_BLOCK;
-}
 
 function _now_iso(): string {
   // Python: datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ").
@@ -658,14 +561,9 @@ function _resolve_tsx_invocation(
  * spawn-per-concern path (also used by the bench harness for A/B numbers).
  *
  * Known trade-off vs the spawn path: a kill-timeout cannot preempt in-process
- * synchronous code, so a slow concern is bounded on neither route — the spawn
- * timeout stays the historical 30 s for the measured reason `SPAWN_TIMEOUT_MS`
- * carries, and an overrun is an observation the latency bench prints. A CRASH
- * is a different matter and is caught here: it surfaces as rc 3 and the caller
- * now resolves it by declared severity, so a blocking concern that threw no
- * longer passes the call through. The latency budget gate
- * (hook-latency-budget.json) remains the standing regression net for the cost
- * itself.
+ * synchronous code, so a slow concern is bounded on neither route — see
+ * `SPAWN_TIMEOUT_MS`. A CRASH is caught here, surfaces as rc 3, and the caller
+ * resolves it by declared severity.
  */
 /**
  * ## Why this still re-serialises the envelope per concern (step 1.1, MEASURED NULL)
@@ -775,47 +673,6 @@ function _run_concern_inproc(
   return { rc, stderr: err, stdout: out, duration_ms: performance.now() - started };
 }
 
-/**
- * The spawn kill-timeout, and why `concern_sla_ms` is NOT what sets it.
- *
- * Step 3.3 of `road-to-a-kernel-that-guards-its-plumbing` reads "timeout for a
- * blocking concern becomes `sla_ms x 3`". That clause is NOT landed, and the
- * reason is a unit mismatch that is measurable rather than arguable.
- *
- * `concern_sla_ms` is derived from the per-concern `duration_ms` this file
- * reports into the timings sink, which on the in-process route brackets
- * `main_fn(argsList)` and nothing else — the concern's OWN work. The registered
- * rows are 0.564 to 1.587 ms, so `sla_ms x 3` is 1.7 to 4.8 ms.
- *
- * A `spawnSync` timeout bounds something else entirely: fork, interpreter
- * start, module graph load, and only then the same work. The bench's own
- * control row measures the interpreter term alone at p95 17 ms on the 1 vCPU
- * reference class and 26 ms on the GitHub runner — three to fifteen times the
- * whole proposed bound, before the concern has run a line.
- *
- * Wiring it was tried on this branch and probed against the real dispatcher.
- * With `AGENT_CONFIG_HOOKS_ISOLATED=1` on `claude/pre_tool_use`, all six
- * blocking concerns returned `ETIMEDOUT`, left no verdict, and — resolved by
- * `_resolve_execution_failure` — turned the dispatch into a deny: exit 2 on an
- * ordinary `Read`. That is Risk 1 of the owning roadmap ("fail-closed wedges
- * slow hosts") firing on every host rather than a slow one, reached through a
- * documented escape hatch. The two changes are individually defensible and
- * lethal together, which is exactly the shape a measured bound is supposed to
- * prevent.
- *
- * So the bound stays where the window put it: an observation
- * `src/scripts/_lib/concern_sla_window.ts` prints on every bench run, gating
- * nothing. The spawn path keeps the historical 30 s. Re-wiring it needs a
- * SPAWN-path measurement — which this tree does not have, because the sink it
- * would come from records the in-process number — and not a second reading of
- * the one registered here.
- *
- * `spawn_path_keeps_the_historical_timeout` in `dispatch_hook.test.ts` pins
- * this: it dispatches a blocking concern whose NAME carries a registered SLA
- * row down the spawn path and asserts the call is allowed. Under the bound it
- * reds.
- */
-const SPAWN_TIMEOUT_MS = 30000;
 
 function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
   // In-process fast path — the default whenever the concern is in the
@@ -867,78 +724,31 @@ function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
     encoding: "utf-8",
     cwd: workspace,
     env: concern_env,
-    // The historical bound, unchanged. `concern_sla_ms` measures in-process
-    // concern work and is not a spawn budget — see `SPAWN_TIMEOUT_MS` above for
-    // the measurement that refused the substitution.
-    timeout: SPAWN_TIMEOUT_MS,
+    timeout: SPAWN_TIMEOUT_MS, // historical bound; `SPAWN_TIMEOUT_MS` says why
   });
   const elapsed = performance.now() - started;
-  if (proc.error) {
-    // OSError / timeout equivalent — log execution-failed so the
-    // never-block contract keeps a trace.
-    const err = proc.error as NodeJS.ErrnoException;
-    const typeName =
-      err.code === "ETIMEDOUT" ? "TimeoutExpired" : err.name || "OSError";
+  // Three ways a spawn produces no verdict; `classifySpawnResult` owns the
+  // reading, this writes the record and carries the code.
+  const outcome = classifySpawnResult(proc.error, proc.status, proc.signal);
+  if (outcome.issueDetail !== null) {
     log_dispatch_issue(
       workspace,
       String(concern["name"] || "unknown"),
       "execution_failed",
-      `${typeName}: ${err.message}`,
+      outcome.issueDetail,
       fix_hint(),
     );
+  }
+  if (outcome.noVerdict) {
     return {
-      rc: 3,
-      stderr: `${String(concern["name"])}: ${err.message}`,
+      rc: outcome.rc,
+      stderr: `${String(concern["name"])}: ${String(outcome.stderrNote)}\n${proc.stderr || ""}`,
       stdout: "",
       duration_ms: elapsed,
     };
-  }
-  // A SIGNALLED child has `status === null` and `signal` set, and reaches here
-  // with no `proc.error` whenever the signal came from outside this process —
-  // an OOM kill, a SIGTERM from a supervisor, a crash in the child's own
-  // runtime. `proc.status ?? 0` read that as exit 0, i.e. ALLOW, which is a
-  // fail-OPEN at the one moment the branch below exists to fail closed: the
-  // concern was killed, so it decided nothing. The coalescing default was
-  // harmless while the error band meant fail-open for six of nine blocking
-  // concerns; with the severity resolution it is the difference between a
-  // guard that refuses when it is killed and one that waves the call through.
-  // Found by an independent review, 2026-10-03, and it had been latent since
-  // the spawn path was written.
-  if (proc.status === null) {
-    const sig = proc.signal === null ? "unknown signal" : proc.signal;
-    log_dispatch_issue(
-      workspace,
-      String(concern["name"] || "unknown"),
-      "execution_failed",
-      `concern was terminated by ${sig} without a verdict`,
-      fix_hint(),
-    );
-    return {
-      rc: EXIT_ERROR,
-      stderr: `${String(concern["name"])}: terminated by ${sig}\n${proc.stderr || ""}`,
-      stdout: "",
-      duration_ms: elapsed,
-    };
-  }
-  const status = proc.status;
-  if (status >= 3) {
-    // A spawned concern that EXITS in the error band, as opposed to one the
-    // runtime killed. Until step 3.3 this case logged nothing: `proc.error`
-    // covers a timeout or an OSError, and the in-process path logs its own
-    // throw, but a child that simply exited 3 fell between the two. That was
-    // survivable while the band meant fail-open for most concerns; now it can
-    // produce a refusal, and a refusal whose cause is in no record is one
-    // nobody can act on.
-    log_dispatch_issue(
-      workspace,
-      String(concern["name"] || "unknown"),
-      "execution_failed",
-      `concern exited ${String(status)} without a verdict`,
-      fix_hint(),
-    );
   }
   return {
-    rc: status,
+    rc: outcome.rc,
     stderr: proc.stderr || "",
     stdout: proc.stdout || "",
     duration_ms: elapsed,
@@ -1503,30 +1313,17 @@ export function main(argv?: string[]): number {
     let rc = rawRcResult;
     const raw_rc = rc;
     if (rc >= 3) {
-      // Resolved by the concern's DECLARED SEVERITY, never by the number and no
-      // longer by the `fail_closed:` flag. Every crash path has already written
-      // an `execution_failed` issue row by the time this runs, so the refusal
-      // below is traceable to a named failure rather than to a bare non-zero
-      // code. See `_resolve_execution_failure`.
+      // Resolved by DECLARED SEVERITY, no longer by `fail_closed:`. Every
+      // crash path has already written an `execution_failed` row, so a refusal
+      // here is traceable to a named failure. See `_resolve_execution_failure`.
       rc = _resolve_execution_failure(concern, refusal_retry);
       if (stderr_text) {
         process.stderr.write(stderr_text);
       }
-      // The ESCAPE, printed where the refusal is produced rather than left in
-      // a source comment. Both review seats named the same gap: on
-      // `pre_tool_use` a deterministically crashing blocking concern refuses
-      // every tool call, and the operator cannot discover the escape hatch
-      // from inside a wedged session. `stop` is bounded by the one-retry
-      // clause above and needs no such line, so this prints only where the
-      // denial can repeat.
+      // The escape, printed only where a denial can repeat — `stop` is bounded
+      // by the one-retry clause above. Reasoning: `noVerdictRefusalNotice`.
       if (rc === EXIT_BLOCK && !refusal_retry) {
-        process.stderr.write(
-          `dispatch_hook: '${String(concern["name"])}' is severity: blocking ` +
-            `and produced no verdict, so this call is refused. If it keeps ` +
-            `failing, AGENT_CONFIG_HOOKS_ISOLATED=1 runs concerns out of ` +
-            `process and agents/runtime/state/dispatch-issues.jsonl names the ` +
-            `cause.\n`,
-        );
+        process.stderr.write(noVerdictRefusalNotice(String(concern["name"])));
       }
     }
     // P0.2 severity ceiling: an advisory concern can never block, on any host.

@@ -134,6 +134,29 @@ Finding 5 is worth keeping for its shape rather than its size: a safety
 justification that embeds a count in an implementation comment will eventually
 embed a stale one, and the fix is a path, not a more careful paste.
 
+## A gap the extraction surfaced, recorded rather than accepted
+
+`dispatch_hook.ts` sat at exactly 1,500 lines on `main` — precisely on the
+`check_source_size_budget` cap — so the step's additions were a ratchet
+violation on arrival. The fix was the move the ratchet's own doctrine asks for:
+the no-verdict policy now lives in `src/scripts/hooks/concern_failure_policy.ts`
+and the dispatcher re-exports it, so no importer changed.
+
+**The gated-surface pattern did not follow it.**
+`check_kernel_edit_ratified`'s regex names `src/scripts/hooks/dispatch_hook.ts`
+and `src/scripts/hooks/*-dispatcher.sh` and nothing else under `hooks/`, so
+`_resolve_execution_failure` — the function this artifact ratifies — now sits in
+a file the ratification gate does not watch. Verified by running the gate on
+this diff: three gated surfaces reported, and the new module is not among them.
+
+That is this roadmap's own subject reappearing one file down, and it is stated
+rather than left to be discovered. It is deliberately NOT fixed here: widening
+the pattern edits the gate, which is on the gated list as the ratification
+mechanism itself, so it needs its own ratification and its own change. The
+reviewers of this diff reviewed the logic, not the gate, and a self-gated edge
+case is exactly the thing not to slip into a diff that was reviewed for
+something else.
+
 ## What the reviewers could not check
 
 Both seats saw the source diff and the narrative; neither saw the test files,

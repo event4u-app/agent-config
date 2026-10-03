@@ -512,8 +512,37 @@ deny message names its own kill switch.
       `agents/evidence/analysis/concern-sla-warn-only-window.md`.
 
       **Bundle cost.** `check_hook_bundle_composition` reads 1,507,218 B on the
-      base and 1,508,804 B with this change — **+1,586 B**, leaving 41,196 B of
+      base and 1,508,928 B with this change — **+1,710 B**, leaving 41,072 B of
       headroom under the 1,550,000 B ceiling.
+
+      **The severity policy moved to its own file, and the move SURFACED a gap
+      in this roadmap's own subject.** `dispatch_hook.ts` measured exactly
+      1,500 lines on `main` — sitting precisely on the
+      `check_source_size_budget` cap — so every line this step added was a
+      ratchet violation. The ratchet turns one way and the doctrine every entry
+      in `gate-violation-baselines.json` records is that a MOVE gives the
+      budget back where raising the baseline spends it, so the whole
+      no-verdict policy went to
+      `src/scripts/hooks/concern_failure_policy.ts`: `_is_advisory`,
+      `_is_blocking`, `_resolve_execution_failure`, `SPAWN_TIMEOUT_MS`,
+      `classifySpawnResult` and the refusal notice. The dispatcher re-exports
+      them, so no importer or test changed. Same move
+      `_lib/concern_sla_window.ts` made out of `bench_hook_latency.ts`, and the
+      better boundary on its own terms: the new file answers what a declaration
+      MEANS, the dispatcher runs concerns.
+
+      **The gap: `check_kernel_edit_ratified`'s gated-surface pattern names
+      `src/scripts/hooks/dispatch_hook.ts` and `*-dispatcher.sh` and nothing
+      else under `hooks/`, so the decision logic is now in a file the
+      ratification gate does not watch.** Verified by running the gate on this
+      diff: it reports three gated surfaces and the new module is not among
+      them. That is this roadmap's own subject — "the plumbing that decides
+      whether a guard runs at all was not governed" — reappearing one file
+      down, and it is recorded rather than quietly accepted. It is NOT fixed
+      here: widening the pattern edits `check_kernel_edit_ratified.ts`, which
+      is itself on the gated list as the ratification mechanism, so it needs
+      its own ratification and its own change. This step's council reviewed the
+      logic, not the gate.
 
       **Independently reviewed, and the review found a defect the author did
       not.** AI council 2026-10-03, 2/2 provider-diverse
