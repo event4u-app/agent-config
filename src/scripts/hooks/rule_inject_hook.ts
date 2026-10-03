@@ -95,12 +95,8 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { hookSectionEnabled, leanProjectionHostsRaw, leanProjectionModeRaw } from '../_lib/hook_settings.js';
-import {
-    deliversBodies,
-    normalizeLeanProjectionMode,
-    resolveLeanProjectionHosts,
-} from '../_lib/lean_projection_mode.js';
+import { hookSectionEnabled } from '../_lib/hook_settings.js';
+import { deliversBodies, resolveLeanProjection } from '../_lib/lean_projection_mode.js';
 import { enforcement_class_from_frontmatter } from '../_lib/obligation_frequency.js';
 import {
     appendDelivered,
@@ -112,6 +108,7 @@ import {
     loadRuleBody,
     loadRouter,
     matchTierRules,
+    ruleSources,
     selectForInjection,
 } from '../_lib/rule_injection.js';
 import { readHookStdin } from './hook_stdin.js';
@@ -361,10 +358,16 @@ export const DELIVERY_HOST = 'claude-code';
  * to open. `AGENT_CONFIG_REPLAY` re-imposes it, which is what keeps
  * `bench_hook_injection` measuring the configured tree rather than the probe.
  */
-export function gateOpen(root: string, cliEntry: boolean): boolean {
-    const mode = normalizeLeanProjectionMode(leanProjectionModeRaw(root));
-    const hosts = resolveLeanProjectionHosts(leanProjectionHostsRaw(root)).hosts;
-    if (deliversBodies(mode) && hosts.includes(DELIVERY_HOST)) return true;
+export function gateOpen(root: string, cliEntry: boolean, packageRoot?: string | null): boolean {
+    // ONE resolver since step 1.2 — the full cascade (template base, canonical
+    // `agents/settings/`, project root, user-global), not the legacy root file
+    // this concern used to read alone. `packageRoot` is where the template is
+    // found; inside the bundle nothing else can locate it.
+    const { mode, hosts } = resolveLeanProjection({
+        projectRoot: root,
+        packageRoot: packageRoot ?? null,
+    });
+    if (deliversBodies(mode) && hosts.hosts.includes(DELIVERY_HOST)) return true;
     if (hookSectionEnabled(root, 'rule_inject')) return true;
     return cliEntry && process.env['AGENT_CONFIG_REPLAY'] !== '1';
 }
@@ -397,7 +400,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return EXIT_ALLOW; // re-arm is silent; the next turn re-injects
     }
     if (slot !== 'user_prompt_submit' && slot !== 'pre_tool_use') return EXIT_ALLOW;
-    if (!gateOpen(root, _isCliEntry())) return EXIT_ALLOW;
+
+    // Resolved ONCE, before the gate. The gate needs the package root to find
+    // the settings template and the delivery needs it to find the corpus;
+    // reading the environment and probing the filesystem twice for the same
+    // answer is a cost every hook dispatch on every slot would pay.
+    const src = ruleSources(root);
+    if (!gateOpen(root, _isCliEntry(), src.pkg)) return EXIT_ALLOW;
 
     let prompt = '';
     let openFiles: string[] | null = null;
@@ -413,6 +422,39 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         const fp = extractFilePath(payload);
         if (fp === null) return EXIT_ALLOW;
         openFiles = [fp];
+    }
+
+    // Fail CLOSED and SAY SO. An empty delivery is indistinguishable from "no
+    // rule matched", which is the exact silence this concern shipped with; one
+    // line on stderr — which the dispatcher captures — is what makes a broken
+    // install diagnosable from outside this file. Still allow: a carrier that
+    // cannot find its corpus must not fail a turn.
+    if (src.gap !== null) {
+        // Fail CLOSED and SAY SO, through the channel the dispatcher actually
+        // surfaces. Writing to stderr looks right and is not: `_run_concern_inproc`
+        // captures a concern's stderr and `dispatch_hook` re-emits it only at
+        // rc >= 3 (a crash), so a concern exiting allow is silent by
+        // construction — which is the exact failure this diagnostic exists to
+        // end, reproduced one layer up. Found by the 1.8 matrix against the
+        // built bundle; no in-process fixture could have seen it.
+        //
+        // WHERE IT ACTUALLY LANDS, measured against the built bundle rather
+        // than assumed: on Claude Code `emitFor` translates an advisory warn on
+        // this slot into `hookSpecificOutput.additionalContext` at exit 0, so
+        // this line reaches the MODEL, not the operator's terminal. That is the
+        // host's translation and not a choice available here — `reason` alone
+        // has no terminal-facing path on this slot.
+        //
+        // It is the right place anyway: the agent is what the user is talking
+        // to, so an agent told its rule corpus is missing can say so. The cost
+        // is one short line per turn for as long as the install stays broken,
+        // which is bounded and deliberate. Bounding it further — once per
+        // session, via the seen-set — needs a state write this concern cannot
+        // currently afford (`src/config/hook-bundle-budget.json` left 30 bytes
+        // of headroom at this commit), and is recorded in the roadmap rather
+        // than silently skipped.
+        process.stdout.write(`${JSON.stringify({ decision: 'warn', reason: src.gap })}\n`);
+        return EXIT_WARN;
     }
 
     const seen = readSeen(root, session);

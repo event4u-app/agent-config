@@ -1,20 +1,65 @@
 /**
- * `lean_projection.mode` — ONE definition of what the three modes mean.
+ * `lean_projection.mode` — ONE definition of what the three modes mean, and
+ * since step 1.2 of `road-to-a-rule-carrier-that-works-outside-the-repo`, ONE
+ * reader that produces it.
  *
- * The projector (`condense.ts`) resolves the value with a real YAML parse; the
- * delivery concern (`hooks/rule_inject_hook.ts`) resolves it with an
- * indentation-shaped read, because a hook must never fail a tool call because a
- * parser could not load. Two readers is unavoidable. Two *normalisations* is
- * not, and would be the defect worth preventing: a projector that writes thin
- * files while the concern believes the mode is off delivers pointers and no
- * bodies, which is exactly the 36.2 % arm the delivery mode exists to replace.
+ * ── What this module used to be, and why that was not enough ──
  *
- * So each side supplies the raw string from its own reader and this module
- * decides what it means. Anything unrecognised — absent key, typo, `null`,
- * a non-string — is `eager-all`: the parser fallback, which is NOT the value
- * the template ships (see the type below), because a mode nobody can spell
- * must never silently thin the standing corpus.
+ * It owned the NORMALISATION and left each caller its own READER: the projector
+ * (`condense.ts`) resolved the value with a real YAML parse over the full
+ * settings cascade; the delivery concern (`hooks/rule_inject_hook.ts`) resolved
+ * it with an indentation-shaped read of `<cwd>/.agent-settings.yml` alone. The
+ * header argued that two readers were unavoidable and that two *normalisations*
+ * were the only thing worth preventing.
+ *
+ * Measured on 2026-10-02, that split was not a stylistic difference — it was a
+ * disagreement about WHICH FILE. The installer writes settings to
+ * `<root>/agents/settings/.agent-settings.yml` (`agent_settings.ts`'s canonical
+ * write target; `install.ts:4108`). The concern read `<root>/.agent-settings.yml`,
+ * the LEGACY location, and nothing else. On a normal install the concern
+ * therefore read a file that does not exist, got `''`, normalised it to
+ * `eager-all`, and closed its own gate — while the projector, reading the
+ * canonical file, had written thin stubs. That is the pointer arm the delivery
+ * mode exists to replace, reached by configuration rather than by choice, and
+ * it is a SECOND independent cause of the silence step 1.1 repaired: a consumer
+ * that fixed the package root alone would still have received nothing.
+ *
+ * The user-global layer was invisible to the concern for the same reason, which
+ * matters more than it sounds: ADR-020 installs are global-only, so for those
+ * consumers the ONLY layer carrying a mode is one the concern never opened.
+ *
+ * ── D3: one resolver, not a parity test between three ──
+ *
+ * The roadmap's D3 records the choice and the reason — a parity test keeps
+ * three readers that can drift again, and this module already existed to be the
+ * one. `resolveLeanProjection` below is that resolver. It reads the layers in
+ * the order `load_agent_settings` defines (template base, user-global,
+ * project), through `project_settings_path`, which prefers the canonical file
+ * and falls back to the legacy one, so a hand-edited root file still works.
+ *
+ * ── Why the template path is passed in rather than resolved ──
+ *
+ * `agent_settings.default_template_path()` derives the package root from
+ * `import.meta.url` three directories up. That is correct for a module at
+ * `<pkg>/src/scripts/_lib/`; inside the composed hook bundle `import.meta.url`
+ * is `<pkg>/dist/hooks/dispatch.js`, so the same arithmetic yields the PARENT
+ * of the package and the template read misses. Verified in the built bundle,
+ * not inferred. With no template the base layer is `{}` and an unconfigured
+ * consumer resolves to `eager-all` — the silence again, one layer lower. So a
+ * caller that knows the real package root (the carrier does: the dispatcher
+ * passes it) hands it over, and the resolver reads the template from there.
+ *
+ * ── What has NOT changed ──
+ *
+ * Anything unrecognised — absent key, typo, `null`, a non-string — is still
+ * `eager-all`: the parser fallback, which is NOT the value the template ships
+ * (see the type below), because a mode nobody can spell must never silently
+ * thin the standing corpus. That fallback now fires only when no layer carried
+ * a value at all, rather than whenever the concern looked in the wrong place.
  */
+import * as path from 'node:path';
+
+import { load_agent_settings } from './agent_settings.js';
 
 /**
  * The three projection shapes, and the two different defaults they answer to.
@@ -179,4 +224,57 @@ export function describeDroppedHosts(res: LeanProjectionHosts): string[] {
  */
 export function thinsHost(mode: LeanProjectionMode, hosts: readonly string[], hostId: string): boolean {
     return writesThinFiles(mode) && hosts.includes(hostId);
+}
+
+export interface ResolvedLeanProjection {
+    readonly mode: LeanProjectionMode;
+    readonly hosts: LeanProjectionHosts;
+}
+
+export interface ResolveOptions {
+    /** Project tree whose settings cascade is read. */
+    readonly projectRoot?: string | null;
+    /** Explicit settings file, overriding `projectRoot`. Tests and `condense` pin this. */
+    readonly settingsPath?: string | null;
+    /** Install root carrying `src/config/agent-settings.template.yml`. */
+    readonly packageRoot?: string | null;
+}
+
+/**
+ * THE resolver. Every surface that asks "which delivery mode" calls this.
+ *
+ * Tolerant like everything else on a hook path: `load_agent_settings` answers
+ * with defaults on an unreadable or malformed file and never throws, and the
+ * normalisers above turn anything unrecognised into the safe value. A caller
+ * on a hot path pays one cascade read per prompt.
+ */
+export function resolveLeanProjection(opts: ResolveOptions = {}): ResolvedLeanProjection {
+    // The LEGACY root path, deliberately, and not `project_settings_path`'s
+    // either-or pick. `load_agent_settings` expands whatever it is given into
+    // `[the file, <its dir>/agents/settings/.agent-settings.yml, <its dir>/
+    // agents/settings/.agent-settings.local.yml]` and merges them deepest-wins,
+    // so handing it the root path reads BOTH the legacy and the canonical file
+    // — which is strictly more than picking one, and is what a tree carrying
+    // both should resolve to. It also keeps one export out of this module's
+    // import list, which is runtime bytes in the composed hook bundle.
+    const file =
+        opts.settingsPath ?? path.join(opts.projectRoot ?? process.cwd(), '.agent-settings.yml');
+    const tpl =
+        opts.packageRoot == null
+            ? null
+            : path.join(opts.packageRoot, 'src', 'config', 'agent-settings.template.yml');
+    let lean: unknown;
+    try {
+        lean = load_agent_settings(
+            tpl === null ? { project_path: file } : { project_path: file, template_path: tpl },
+        )['lean_projection'];
+    } catch {
+        /* a settings layer nothing can read must never fail a turn */
+    }
+    const obj = typeof lean === 'object' && lean !== null && !Array.isArray(lean) ? lean : {};
+    const o = obj as Record<string, unknown>;
+    return {
+        mode: normalizeLeanProjectionMode(o['mode'] ?? ''),
+        hosts: resolveLeanProjectionHosts(o['hosts']),
+    };
 }
