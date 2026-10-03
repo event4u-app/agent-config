@@ -1109,11 +1109,28 @@ concerns:
   # detector's own trigger conditions, which is the same shape `delegation-nudge`
   # uses — no signal, no output. `hooks.turn_end_gate.*` is in REMOVED_KEYS.
   #
-  # fail_closed: FALSE, deliberately and unlike every other blocking concern
-  # here: a crash in a turn-end gate must let the turn END. Failing closed on
-  # this slot does not degrade the session, it wedges it. Re-entrancy is two
-  # independent layers (`stop_hook_active`; a marker keyed on the last USER
-  # message, never the reply) — see the hook's file header.
+  # fail_closed: FALSE — and read what that flag still DOES before changing it.
+  # Since the dispatcher resolves rc >= 3 by SEVERITY it no longer decides the
+  # crash branch at all; it decides the stdin-read-failure deny
+  # (`stdin_failure_policy._is_fail_closed_blocking`), and nothing else. An
+  # independent review named the old wording a reviewer trap: an operator
+  # reading "fail_closed: false — a crash must let the turn END" would believe
+  # they were configuring crash behaviour, and flipping it would change the
+  # read-failure deny instead. The REASON it was set false is still true —
+  # failing closed on a turn-end gate does not degrade the session, it wedges
+  # it — but the flag is no longer what delivers it.
+  #
+  # What answers it now lives in the dispatcher, which is the only layer that
+  # can: a blocking `stop` concern spends its refusal ONCE, and on the retry the
+  # host marks (`stop_hook_active`) a crash falls back to fail-open and the turn
+  # ends. The hook's own two re-entrancy layers cannot do this job — both run
+  # INSIDE `main()`, so a crash never reaches them.
+  #
+  # The trade is deliberate: one refused Stop buys a guard that no longer
+  # permits every turn end precisely when it is broken, and the second Stop
+  # releases. Re-entrancy inside the hook stays what it was (`stop_hook_active`;
+  # a marker keyed on the last USER message, never the reply) — see the hook's
+  # file header.
   turn-end-gate:
     script: src/scripts/hooks/turn_end_gate_hook.ts
     args: []
@@ -1252,6 +1269,12 @@ concerns:
   # always. Events: agents/runtime/state/run-continuation.jsonl. Kill switch:
   # AGENT_CONFIG_NO_RUN_CONTINUATION=1. fail_closed: false — the only block
   # it ever emits is the one carrying its own continuation text.
+  # fail_closed: false — and as for `turn-end-gate` above, the dispatcher now
+  # resolves rc >= 3 by SEVERITY rather than by this flag, so a crash here
+  # refuses the first Stop and releases on the retry. What the flag still
+  # decides is the stdin-read-failure deny, not crash behaviour; changing it
+  # changes that and nothing else. The only block this concern DECIDES to emit
+  # is still the one carrying its own continuation text.
   run-continuation:
     script: src/scripts/hooks/run_continuation_hook.ts
     args: []

@@ -122,8 +122,70 @@ under the concurrency rules below.
 | `0` | allow | no-op; pass through |
 | `1` | block | dispatcher exits 1, surfaces `reason` to platform's deny channel |
 | `2` | warn | dispatcher exits 0, logs `reason` to stderr, sets `additionalContext` if platform supports it |
-| `≥ 3` | error | dispatcher logs full traceback, exits 0 (fail-open) unless `concerns.<name>.fail_closed: true` in settings |
+| `≥ 3` | error | dispatcher logs whatever diagnostic the failure produced — a traceback for an in-process throw, the signal name for a killed spawn, the exit code for a child that simply exited in the band — plus an `execution_failed` issue row, then resolves by the concern's declared `severity`: `blocking` → `EXIT_BLOCK`, anything else → exits 0 (fail-open) |
 | `continue: false` (field) | **not adopted as of 2026-09-12** | this suite does not emit this primitive and defines no precedence for it. Any proposal to emit it must reopen this decision and specify precedence, emitter ownership, supported-host behavior, and the use case that existing verdicts cannot express |
+
+**`severity` decides the error row in BOTH directions, and `fail_closed:` no
+longer decides it at all.** It was already the ceiling — an advisory concern
+emitting `1` is downgraded to warn by `dispatch_hook._is_advisory` — and it is
+now also the floor: a `severity: blocking` concern that crashed, timed out, or
+otherwise could not decide refuses, whether or not it carries `fail_closed:
+true`. The flag used to be the whole test, which left six of nine blocking
+guards permitting the call precisely when they broke. All three concerns that
+carry the flag are `severity: blocking`, so no verdict changed because the
+branch stopped reading it.
+
+**`sla_ms x 3` bounds nothing at runtime, and that is a measurement rather than
+an omission.** `concern_sla_ms` in `src/config/hook-latency-budget.json` is
+derived from the dispatcher's own per-concern `duration_ms`, which brackets the
+concern's work and nothing else — the registered rows are 0.564 to 1.587 ms. A
+`spawnSync` timeout also has to cover fork, interpreter start and module load,
+and the bench's control row measures that term alone at p95 17 ms on the 1 vCPU
+reference class and 26 ms on the GitHub runner. Wiring the bound was probed
+against the real dispatcher on this branch: under `AGENT_CONFIG_HOOKS_ISOLATED=1`
+all six blocking `pre_tool_use` concerns returned `ETIMEDOUT`, left no verdict,
+and were resolved by the row above into a deny — exit 2 on an ordinary `Read`.
+So the spawn path keeps its historical 30 s, the in-process route is unbounded
+as it always was (a kill-timeout cannot preempt synchronous code there), and
+`sla_ms x 3` stays what the warn-only window made it: a number the latency bench
+prints beside each measured p95, gating nothing. Re-wiring it needs a SPAWN-path
+measurement this tree does not have.
+
+**The error row's discriminator is whether a VERDICT EXISTS**, not how slow the
+concern was and not which route it took. A crash, a killed spawn and a child
+terminated by a signal leave none, so they resolve by severity. A slow success
+leaves one, so it is honoured. The third of those was a live fail-open until
+2026-10-03: `proc.status ?? 0` coalesced a signalled child's `null` status into
+exit 0, so an OOM kill or a supervisor SIGTERM read as ALLOW at exactly the
+moment this row exists to refuse.
+
+**`fail_closed:` is narrower now, not dead, and the difference matters to anyone
+editing the manifest.** It no longer decides the error row. It still decides the
+stdin-read-failure deny (`stdin_failure_policy._is_fail_closed_blocking`, the
+2026-08-20 council's option (c)): a payload the dispatcher could not read denies
+only where the slot is block-capable AND at least one selected concern is both
+`severity: blocking` and `fail_closed: true`. Three concerns carry the flag and
+all three are blocking, so nothing moved when the error row stopped reading it.
+
+**The two slots carry different blast radii, and the asymmetry is deliberate.**
+On `stop` a crash refuses once and the host's marked retry releases it, so the
+worst case is one refused turn end. On `pre_tool_use` there is no retry marker
+and a deterministically crashing blocking concern refuses EVERY tool call for as
+long as it keeps crashing — a tool guard that permits while broken is not a
+guard, so refusing is the right answer, but it is an unbounded denial and is
+recorded as one rather than argued away. The dispatcher prints the escape
+(`AGENT_CONFIG_HOOKS_ISOLATED=1`, and the `dispatch-issues.jsonl` row naming the
+cause) on stderr beside the refusal, because an escape an operator cannot find
+from inside a wedged session is not an escape. What is NOT bounded on either
+slot is a synchronous in-process hang: it returns no code at all, so it never
+reaches this row, and no clause here releases it.
+
+**A blocking `stop` concern spends its refusal once.** On the retry the host
+marks with `stop_hook_active`, an `rc >= 3` falls back to fail-open and the turn
+ends. Without that clause a deterministic crash in a stop-slot guard would
+refuse every turn end with no escape — a wedged session rather than a degraded
+one. A concern that *decided* to refuse is unaffected: it returns `1` and never
+reaches the error row.
 
 **The `warn` row above says what the dispatcher does, and nothing about whether
 the turn ends.** Read as a complete account it invites the conclusion that an
