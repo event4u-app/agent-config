@@ -7371,7 +7371,7 @@ var require_dist = __commonJS({
 import { spawn, spawnSync as spawnSync2 } from "node:child_process";
 import * as crypto5 from "node:crypto";
 import * as fs28 from "node:fs";
-import * as os8 from "node:os";
+import * as os9 from "node:os";
 import * as path25 from "node:path";
 import process4 from "node:process";
 import { fileURLToPath as fileURLToPath6, pathToFileURL as pathToFileURL2 } from "node:url";
@@ -10168,6 +10168,7 @@ function splitlines3(text) {
 
 // src/scripts/_lib/rule_layer_overlap.ts
 import * as fs13 from "node:fs";
+import * as os5 from "node:os";
 import * as path12 from "node:path";
 var INSTALLER_PROVENANCE_KEYS = ["package", "source_path"];
 function stripProvenance(text) {
@@ -10219,6 +10220,12 @@ function compareLayers(global_layer, project_layer) {
     redundant_chars
   };
 }
+function hostRuleLayerDirs(projectRoot) {
+  return [
+    path12.join(os5.homedir(), ".claude", "rules"),
+    path12.join(projectRoot, ".claude", "rules")
+  ];
+}
 function readRuleLayer(dir) {
   let names;
   try {
@@ -10269,14 +10276,14 @@ function decideLayerAction(report, choice, global_dir, project_dir) {
 var import_yaml = __toESM(require_dist(), 1);
 import * as crypto3 from "node:crypto";
 import * as fs14 from "node:fs";
-import * as os5 from "node:os";
+import * as os6 from "node:os";
 import * as path13 from "node:path";
 function expanduser7(p) {
   if (p === "~") {
-    return os5.homedir();
+    return os6.homedir();
   }
   if (p.startsWith("~/") || process.platform === "win32" && p.startsWith("~\\")) {
-    return path13.join(os5.homedir(), p.slice(2));
+    return path13.join(os6.homedir(), p.slice(2));
   }
   return p;
 }
@@ -11186,7 +11193,7 @@ function hostBindings(host, table = loadHostLowering()) {
 // src/scripts/_lib/agent_settings.ts
 import { createRequire as createRequire2 } from "node:module";
 import * as fs19 from "node:fs";
-import * as os6 from "node:os";
+import * as os7 from "node:os";
 import * as path18 from "node:path";
 import { fileURLToPath as fileURLToPath3 } from "node:url";
 
@@ -11562,10 +11569,10 @@ function _validate_root_path(p, origin_label) {
 }
 function _expanduser(p) {
   if (p === "~") {
-    return os6.homedir();
+    return os7.homedir();
   }
   if (p.startsWith("~/") || process.platform === "win32" && p.startsWith("~\\")) {
-    return path18.join(os6.homedir(), p.slice(2));
+    return path18.join(os7.homedir(), p.slice(2));
   }
   return p;
 }
@@ -11908,7 +11915,7 @@ function ruleFileArrives(sourcePath, scope) {
 
 // src/install/partitionEligibility.ts
 import * as fs22 from "node:fs";
-import * as os7 from "node:os";
+import * as os8 from "node:os";
 
 // src/install/hostLayerFingerprint.ts
 import { createHash as createHash6 } from "node:crypto";
@@ -11984,7 +11991,7 @@ function stampHostLayerFingerprint(installedVersion, tools, lockfilePath, skip2,
     return null;
   }
   try {
-    const fingerprint = fingerprintLayers(hostLayerInputs(os7.homedir()));
+    const fingerprint = fingerprintLayers(hostLayerInputs(os8.homedir()));
     write_lockfile(installedVersion, [...tools], {
       path: lockfilePath,
       host_layer_fingerprint: fingerprint
@@ -19218,7 +19225,7 @@ var SCOPE_DETECT_AI_DIRS = [
 ];
 
 // src/install/paths.ts
-import { homedir as homedir10, tmpdir } from "node:os";
+import { homedir as homedir11, tmpdir } from "node:os";
 import { join as join26 } from "node:path";
 var INSTALL_ROOT_SUBPATH = ".event4u/agent-config";
 var INSTALL_LOG_FILENAME = "install-log.jsonl";
@@ -19226,7 +19233,7 @@ function resolveHome(home) {
   if (home && home.length > 0) {
     return home;
   }
-  const fromOs = homedir10();
+  const fromOs = homedir11();
   if (!fromOs) {
     throw new Error(
       "Cannot resolve home directory \u2014 both $HOME (POSIX) and $USERPROFILE (Windows) are unset."
@@ -19331,9 +19338,9 @@ var ArgparseExit2 = class extends Error {
   code;
 };
 function expanduser8(p) {
-  if (p === "~") return os8.homedir();
+  if (p === "~") return os9.homedir();
   if (p.startsWith("~/") || p.startsWith("~\\")) {
-    return path25.join(os8.homedir(), p.slice(2));
+    return path25.join(os9.homedir(), p.slice(2));
   }
   return p;
 }
@@ -19869,7 +19876,7 @@ function ensure_augment_bridge(project_root, force) {
     ".augment/settings.json"
   );
 }
-var AUGMENT_USER_DIR = path25.join(os8.homedir(), ".augment");
+var AUGMENT_USER_DIR = path25.join(os9.homedir(), ".augment");
 var AUGMENT_USER_HOOKS_DIR = path25.join(AUGMENT_USER_DIR, "hooks");
 var AUGMENT_DISPATCHER_TRAMPOLINE = "augment-dispatcher.sh";
 var AUGMENT_LEGACY_TRAMPOLINES = [
@@ -19972,7 +19979,7 @@ function ensure_cursor_bridge(project_root, force) {
     ".cursor/hooks.json"
   );
 }
-var CURSOR_USER_DIR = path25.join(os8.homedir(), ".cursor");
+var CURSOR_USER_DIR = path25.join(os9.homedir(), ".cursor");
 var CURSOR_USER_HOOKS_DIR = path25.join(CURSOR_USER_DIR, "hooks");
 var CURSOR_DISPATCHER_TRAMPOLINE = "cursor-dispatcher.sh";
 function ensure_cursor_user_hooks(package_root, force) {
@@ -20056,7 +20063,7 @@ function ensure_cline_bridge(project_root, force) {
     skip(".clinerules/hooks/ already up to date");
   }
 }
-var CLINE_USER_DIR = path25.join(os8.homedir(), "Documents", "Cline", "Hooks");
+var CLINE_USER_DIR = path25.join(os9.homedir(), "Documents", "Cline", "Hooks");
 var CLINE_DISPATCHER_TRAMPOLINE = "cline-dispatcher.sh";
 function ensure_cline_user_hooks(package_root, force) {
   const src = path25.join(package_root, "scripts", "hooks", CLINE_DISPATCHER_TRAMPOLINE);
@@ -20108,7 +20115,7 @@ function ensure_windsurf_bridge(project_root, force) {
     ".windsurf/hooks.json"
   );
 }
-var WINDSURF_USER_DIR = path25.join(os8.homedir(), ".codeium", "windsurf");
+var WINDSURF_USER_DIR = path25.join(os9.homedir(), ".codeium", "windsurf");
 var WINDSURF_USER_HOOKS_DIR = path25.join(WINDSURF_USER_DIR, "hooks");
 var WINDSURF_DISPATCHER_TRAMPOLINE = "windsurf-dispatcher.sh";
 function ensure_windsurf_user_hooks(package_root, force) {
@@ -20164,7 +20171,7 @@ function ensure_gemini_bridge(project_root, force) {
     ".gemini/settings.json"
   );
 }
-var GEMINI_USER_DIR = path25.join(os8.homedir(), ".gemini");
+var GEMINI_USER_DIR = path25.join(os9.homedir(), ".gemini");
 var GEMINI_USER_HOOKS_DIR = path25.join(GEMINI_USER_DIR, "hooks");
 var GEMINI_DISPATCHER_TRAMPOLINE = "gemini-dispatcher.sh";
 function ensure_gemini_user_hooks(package_root, force) {
@@ -20655,7 +20662,7 @@ To remove this marker, delete this file.
 `;
 }
 var _CLAUDE_DESKTOP_BUNDLES_SUBPATH = "claude-desktop/bundles";
-var GLOBAL_ROOT = path25.join(os8.homedir(), ".event4u", "agent-config");
+var GLOBAL_ROOT = path25.join(os9.homedir(), ".event4u", "agent-config");
 var GLOBAL_USER_SETTINGS_PATH = path25.join(GLOBAL_ROOT, ".agent-user.yml");
 var GLOBAL_AGENT_SETTINGS_PATH = path25.join(GLOBAL_ROOT, ".agent-settings.yml");
 function _bridge_marker(tool_id, scope) {
@@ -20735,8 +20742,7 @@ function _suppress_rule_layer(project_root, suppress_dir) {
   success(`.claude/settings.local.json: claudeMdExcludes += ${entry}`);
 }
 function _gate_rule_layer_overlap(project_root, layer, dry_run) {
-  const global_dir = path25.join(os8.homedir(), ".claude", "rules");
-  const project_dir = path25.join(project_root, ".claude", "rules");
+  const [global_dir, project_dir] = hostRuleLayerDirs(project_root);
   const g = readRuleLayer(global_dir);
   const p = readRuleLayer(project_dir);
   if (g === null || p === null) return true;
@@ -21044,7 +21050,7 @@ function _run_migrate_to_global(project_root) {
   }
 }
 function _format_global_root_for_marker(global_root) {
-  const home = resolvePath(os8.homedir());
+  const home = resolvePath(os9.homedir());
   const resolved = resolvePath(global_root);
   const rel = path25.relative(home, resolved);
   if (rel === "" || rel.startsWith("..") || path25.isAbsolute(rel)) {
@@ -22336,7 +22342,7 @@ function _wizard_cli_dist(_project_root) {
   return pathExists(cli) ? cli : null;
 }
 function _server_info_path() {
-  return path25.join(os8.homedir(), ".event4u", "agent-config", "local-server.json");
+  return path25.join(os9.homedir(), ".event4u", "agent-config", "local-server.json");
 }
 function _pid_is_agent_config(pid) {
   let res;
@@ -22432,7 +22438,7 @@ function _wizard_spawn(project_root, pass_project_root = true) {
 function _wizard_run_sync(cmd, env, cli) {
   const total = _WIZARD_TIMEOUTS.reduce((a, b) => a + b, 0);
   const log_path = path25.join(
-    os8.tmpdir(),
+    os9.tmpdir(),
     `agent-config-wizard-${process4.pid}-${Date.now()}.log`
   );
   let child;

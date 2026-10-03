@@ -47,9 +47,16 @@ const ROUTER = {
     tier_2: [{ id: 'second-rule', triggers: [{ keyword: 'zzmigration' }] }],
 };
 
+/**
+ * `prompt-rule` carries an Iron Law section and `second-rule` does not.
+ *
+ * That asymmetry is what the compaction column reads: a restore sends LAWS, so
+ * a rule with one comes back as `law` and a rule without one is reported rather
+ * than having its whole body sent in a slot that asked for its law.
+ */
 const BODIES: Record<string, string> = {
     'kernel-rule': 'KERNEL BODY\n',
-    'prompt-rule': 'PROMPT RULE BODY\n',
+    'prompt-rule': '# prompt-rule\n\n## Iron Law\n\n```\nPROMPT RULE LAW.\n```\n\n## Notes\n\nPROMPT RULE BODY\n',
     'second-rule': 'SECOND RULE BODY\n',
 };
 
@@ -119,24 +126,26 @@ function dispatch(
     install: string,
     workspace: string,
     session: string,
-    opts: { cwd?: string; home?: string } = {},
+    opts: { cwd?: string; home?: string; event?: string; payload?: Record<string, unknown> } = {},
 ): Fired {
     const r = spawnSync(
         process.execPath,
         [
             path.join(install, BUNDLE_REL),
             '--platform', 'claude',
-            '--event', 'user_prompt_submit',
+            '--event', opts.event ?? 'user_prompt_submit',
             '--project-dir', workspace,
         ],
         {
             encoding: 'utf-8',
-            input: JSON.stringify({
-                session_id: session,
-                cwd: workspace,
-                hook_event_name: 'UserPromptSubmit',
-                prompt: PROMPT,
-            }),
+            input: JSON.stringify(
+                opts.payload ?? {
+                    session_id: session,
+                    cwd: workspace,
+                    hook_event_name: 'UserPromptSubmit',
+                    prompt: PROMPT,
+                },
+            ),
             cwd: opts.cwd ?? workspace,
             env: {
                 ...process.env,
@@ -332,6 +341,41 @@ describe('rule-inject — foreign-project matrix on the built bundle (1.8)', () 
         // And the body is the package's, not the stub the host layer carries.
         expect(r.stdout).toContain('PROMPT RULE BODY');
         expect(r.stdout).not.toContain('INSTALLED STUB');
+    });
+
+    it('the compaction restore reaches the concern through the DISPATCHER (1.6)', () => {
+        requireStaged();
+        // The binding, not the function. `rule-inject` was added to `claude`'s
+        // `session_start` list in the manifest, and the dispatcher decides which
+        // concerns a slot reaches: a suite that only calls `main()` stays green
+        // over a concern the dispatcher never invokes.
+        const ws = mkdtemp('rim-compact-');
+        const session = 'rim-12';
+        const first = dispatch(INSTALL, ws, session);
+        expect(first.ids).toContain('prompt-rule');
+
+        const compacted = dispatch(INSTALL, ws, session, {
+            event: 'pre_compact',
+            payload: { session_id: session, cwd: ws, hook_event_name: 'PreCompact' },
+        });
+        expect(compacted.status).toBe(0);
+
+        const restored = dispatch(INSTALL, ws, session, {
+            event: 'session_start',
+            payload: {
+                session_id: session,
+                cwd: ws,
+                hook_event_name: 'SessionStart',
+                source: 'compact',
+            },
+        });
+        expect(restored.status).toBe(0);
+        expect(restored.stdout).toContain('prompt-rule=law');
+        expect(restored.stdout).toContain('PROMPT RULE LAW.');
+        // The law, not the body — and `second-rule`, which has no law section,
+        // is reported rather than sent whole.
+        expect(restored.stdout).not.toContain('PROMPT RULE BODY');
+        expect(restored.stdout).toContain('second-rule=omitted_budget');
     });
 
     it('a rule only the USER layer carries is in scope — the host loads both', () => {

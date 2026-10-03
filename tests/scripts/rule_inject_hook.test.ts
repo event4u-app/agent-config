@@ -277,7 +277,10 @@ describe('rule-inject — once per session per rule, re-armed on compaction (1.4
         const cleared = run({ workspace: root, session_id: 's-compact' }, ['--event', 'pre_compact']);
         expect(cleared.rc).toBe(0);
         expect(cleared.out).toBe('');
-        expect(fs.existsSync(statePath(root, 's-compact'))).toBe(false);
+        // The de-duplication is cleared, which is what "re-armed" means. The
+        // FILE survives since step 1.6: it now carries the ids forward in
+        // `pending` so the restore slot can send their laws. Asserting the file
+        // was unlinked was asserting an implementation detail of the clearing.
         expect([...readSeen(root, 's-compact')]).toEqual([]);
         // Re-armed: the same prompt delivers again.
         expect(rules(run(env).out)).toEqual(['prompt-rule']);
@@ -959,5 +962,146 @@ describe('rule-inject — composed-budget: one string, and a manifest (1.5)', ()
             worst = Math.max(worst, Buffer.byteLength(t, 'utf-8') / t.length);
         }
         expect(worst).toBeLessThan(CAP_BYTES / COMPOSED_CHARS);
+    });
+});
+
+describe('rule-inject — re-deliver after a compact (1.6)', () => {
+    /** Deliver `prompt-rule`, then cross a compaction boundary. */
+    function upToCompaction(session: string): string {
+        const root = makeRoot({ delivery: true });
+        putBody(root, 'prompt-rule', withLaw('prompt-rule', 200));
+        run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: session,
+            payload: PROMPT,
+        });
+        run({ event: 'pre_compact', workspace: root, session_id: session, payload: {} });
+        return root;
+    }
+
+    it('session_start with source compact sends the LAW of each rule the boundary took', () => {
+        const root = upToCompaction('cp-1');
+        const { rc, out } = run({
+            event: 'session_start',
+            workspace: root,
+            session_id: 'cp-1',
+            payload: { source: 'compact' },
+        });
+        expect(rc).toBe(2);
+        expect(manifest(out)).toEqual({ 'prompt-rule': 'law' });
+        expect(composed(out)).toContain('LAW OF PROMPT-RULE.');
+        // The law, not the body: its tail stays out.
+        expect(composed(out)).not.toContain('tail tail');
+    });
+
+    it('any other source sends nothing — the host already has that context', () => {
+        for (const source of ['startup', 'resume', 'clear', 'fork', 'wat']) {
+            const root = upToCompaction(`cp-src-${source}`);
+            const { rc, out } = run({
+                event: 'session_start',
+                workspace: root,
+                session_id: `cp-src-${source}`,
+                payload: { source },
+            });
+            expect([rc, out]).toEqual([0, '']);
+        }
+    });
+
+    it('the restore fires once — a second session_start on the same boundary is silent', () => {
+        const root = upToCompaction('cp-2');
+        const first = run({
+            event: 'session_start',
+            workspace: root,
+            session_id: 'cp-2',
+            payload: { source: 'compact' },
+        });
+        expect(first.rc).toBe(2);
+        const second = run({
+            event: 'session_start',
+            workspace: root,
+            session_id: 'cp-2',
+            payload: { source: 'compact' },
+        });
+        expect([second.rc, second.out]).toEqual([0, '']);
+    });
+
+    it('a restore does NOT re-arm the de-duplication — a re-matching trigger still sends the body', () => {
+        // The pre-1.6 contract, unchanged: `pre_compact` empties `rules`, so a
+        // rule whose trigger fires again gets its whole body back. The restore
+        // is for the rules whose trigger does not recur.
+        const root = upToCompaction('cp-3');
+        run({
+            event: 'session_start',
+            workspace: root,
+            session_id: 'cp-3',
+            payload: { source: 'compact' },
+        });
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'cp-3',
+            payload: PROMPT,
+        });
+        expect(manifest(out)).toEqual({ 'prompt-rule': 'full' });
+        expect(composed(out)).toContain('tail tail');
+    });
+
+    it('the seen-set carries ids across the boundary, never body copies', () => {
+        const root = upToCompaction('cp-4');
+        const state = JSON.parse(fs.readFileSync(statePath(root, 'cp-4'), 'utf-8')) as {
+            rules: string[];
+            pending: string[];
+        };
+        expect(state).toEqual({ rules: [], pending: ['prompt-rule'] });
+        // A state file that cached bodies would be a second copy of the rule
+        // layer in the consumer's tree, going stale on every upgrade.
+        expect(fs.readFileSync(statePath(root, 'cp-4'), 'utf-8')).not.toContain('LAW OF');
+    });
+
+    it('a compaction with nothing delivered yet restores nothing', () => {
+        const root = makeRoot({ delivery: true });
+        run({ event: 'pre_compact', workspace: root, session_id: 'cp-5', payload: {} });
+        const { rc, out } = run({
+            event: 'session_start',
+            workspace: root,
+            session_id: 'cp-5',
+            payload: { source: 'compact' },
+        });
+        expect([rc, out]).toEqual([0, '']);
+    });
+
+    it('a restored rule whose source is gone is reported, never silently absent', () => {
+        const root = upToCompaction('cp-6');
+        fs.rmSync(path.join(root, 'dist', 'agent-src', 'rules', 'prompt-rule.md'));
+        const { out } = run({
+            event: 'session_start',
+            workspace: root,
+            session_id: 'cp-6',
+            payload: { source: 'compact' },
+        });
+        expect(manifest(out)).toEqual({ 'prompt-rule': 'source_unavailable' });
+    });
+
+    it('the restore obeys the same character budget', () => {
+        const root = makeRoot({ delivery: true });
+        putRouter(root, ['prompt-rule'], ['blade-rule', 'views-rule']);
+        for (const id of ['prompt-rule', 'blade-rule', 'views-rule']) {
+            putBody(root, id, withLaw(id, 900));
+        }
+        run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'cp-7',
+            payload: PROMPT,
+        });
+        run({ event: 'pre_compact', workspace: root, session_id: 'cp-7', payload: {} });
+        const { out } = run({
+            event: 'session_start',
+            workspace: root,
+            session_id: 'cp-7',
+            payload: { source: 'compact' },
+        });
+        expect(composed(out).length).toBeLessThanOrEqual(COMPOSED_CHARS);
     });
 });

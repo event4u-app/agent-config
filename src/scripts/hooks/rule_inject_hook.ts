@@ -79,35 +79,41 @@
  * words: an experiment whose offline pricing and runtime delivery use different
  * matchers measures nothing.
  *
- * ONCE PER SESSION PER RULE, RE-ARMED ON COMPACTION. A rule's body is injected
- * the first time one of its triggers fires and not again, because the model
- * already has it. Compaction is exactly the event that makes that false, so
- * `pre_compact` clears the seen-set — the same pin-lost shape `language-mirror`
- * uses. State lives under `agents/runtime/state/`, the class
+ * ONCE PER SESSION PER RULE, RE-ARMED AND RESTORED ON COMPACTION. A rule's body
+ * is injected the first time one of its triggers fires and not again, because
+ * the model already has it. Compaction is exactly the event that makes that
+ * false, so `pre_compact` empties the seen-set — the same pin-lost shape
+ * `language-mirror` uses. State lives under `agents/runtime/state/`, the class
  * `context-hygiene.json` already occupies; no new state convention is created.
  *
  * WHAT IS RE-DELIVERED AFTER A COMPACTION, EXACTLY
- * (road-to-delivery-for-every-host 2.4 — stated because a rule lost at a
- * compaction boundary is lost for the rest of the session, and "re-armed" alone
- * does not say what a reader may rely on):
+ * (road-to-delivery-for-every-host 2.4, amended by step 1.6 — stated because a
+ * rule lost at a compaction boundary used to be lost for the rest of the
+ * session, and "re-armed" alone does not say what a reader may rely on):
  *
- *   · `pre_compact` clears the WHOLE seen-set for that session, not the rules
+ *   · `pre_compact` empties the WHOLE seen-set for that session, not the rules
  *     matched on the compacted turn. There is no per-rule bookkeeping to be
- *     partially wrong about.
+ *     partially wrong about. Since 1.6 it also hands those ids to `pending`
+ *     rather than deleting them — see {@link armRestore}.
  *   · Nothing is delivered BY the compaction itself. The slot emits zero bytes
- *     and exits allow; re-arming is silent.
- *   · A rule's body returns on the NEXT turn whose trigger matches it — which
- *     means a rule whose trigger does not fire again is NOT restored. Delivery
- *     is trigger-driven on both sides of the boundary; compaction resets the
- *     de-duplication, it does not replay a transcript.
- *   · The seen-set is per session, so a compaction in one session re-arms only
- *     that session.
+ *     and exits allow; re-arming is silent. It cannot deliver: the host is about
+ *     to discard the context it would emit into.
+ *   · `session_start` with `source: compact` sends the LAW section of every
+ *     rule in that pending set, under the same 8,000-character budget, once.
+ *     That is the half this paragraph used to end at: a rule whose trigger does
+ *     not recur is no longer unrestored. A rule with no law section is reported
+ *     in the manifest rather than having its whole body sent in its place.
+ *   · A rule's BODY still returns on the next turn whose trigger matches it.
+ *     The restore does not re-arm the de-duplication and does not replace
+ *     trigger-driven delivery; it covers the gap between the two.
+ *   · The seen-set is per session, so a compaction in one session re-arms and
+ *     restores only that session.
  *
- * Held by three fixtures in `tests/scripts/rule_inject_hook.test.ts` under
- * "once per session per rule, re-armed on compaction": the dedup case, the
- * matched-rule → compaction → matching-turn → body-present case, and the
- * per-session case. All three predate this roadmap; 2.4 adds the contract
- * above, not the coverage, and says so rather than claiming new tests.
+ * Held by fixtures in `tests/scripts/rule_inject_hook.test.ts` under "once per
+ * session per rule" and "re-deliver after a compact", and — for the BINDING
+ * rather than the function — by the dispatcher column in
+ * `rule_inject_foreign_matrix.test.ts`, because a suite that only calls `main()`
+ * stays green over a slot the dispatcher never routes to this concern.
  *
  * NEVER BLOCKS. Every failure path returns 0: unreadable stdin, malformed JSON,
  * missing router, unreadable body, unwritable state. The one non-zero exit is
@@ -142,6 +148,7 @@ import {
     type WriterInput,
 } from '../_lib/obligations.js';
 import {
+    allTierRules,
     bytesOf,
     loadRuleBody,
     loadRouter,
@@ -149,6 +156,7 @@ import {
     ruleSources,
     selectForInjection,
     type SelectionResult,
+    type TierRuleMatch,
 } from '../_lib/rule_injection.js';
 import { readConsequenceClass } from '../_lib/rule_consequence_class.js';
 import { lawText, ruleBody } from '../_lib/rule_law_section.js';
@@ -228,7 +236,16 @@ export function workspaceRoot(env: JsonObject): string {
 // ── seen-set state ───────────────────────────────────────────────────────
 
 export interface SeenState {
+    /** Ids already delivered in this session. */
     rules: string[];
+    /**
+     * Ids the compaction boundary took away, waiting for the restore slot.
+     *
+     * IDS, NEVER TEXT. The restore re-reads each rule's law from the corpus; a
+     * seen-set that cached bodies would be a second copy of the rule layer
+     * living in a consumer's state directory, going stale on every upgrade.
+     */
+    pending?: string[];
 }
 
 export function statePath(root: string, session: string): string {
@@ -236,37 +253,73 @@ export function statePath(root: string, session: string): string {
     return path.join(root, 'agents', 'runtime', 'state', 'rule-inject', `${safe}.json`);
 }
 
-export function readSeen(root: string, session: string): Set<string> {
+function readState(root: string, session: string): SeenState {
     try {
         const raw = fs.readFileSync(statePath(root, session), 'utf-8');
         const parsed = JSON.parse(raw) as SeenState;
-        return new Set(Array.isArray(parsed.rules) ? parsed.rules.map(String) : []);
+        return {
+            rules: Array.isArray(parsed.rules) ? parsed.rules.map(String) : [],
+            pending: Array.isArray(parsed.pending) ? parsed.pending.map(String) : [],
+        };
     } catch {
-        return new Set(); // fresh session, or a file nothing can parse
+        return { rules: [], pending: [] }; // fresh session, or a file nothing can parse
     }
 }
 
-export function writeSeen(root: string, session: string, seen: Set<string>): void {
+export function readSeen(root: string, session: string): Set<string> {
+    return new Set(readState(root, session).rules);
+}
+
+function writeState(root: string, session: string, state: SeenState): void {
     const p = statePath(root, session);
     try {
         fs.mkdirSync(path.dirname(p), { recursive: true });
-        const payload: SeenState = { rules: [...seen].sort() };
-        fs.writeFileSync(`${p}.tmp`, `${JSON.stringify(payload)}\n`, 'utf-8');
+        fs.writeFileSync(`${p}.tmp`, `${JSON.stringify(state)}\n`, 'utf-8');
         fs.renameSync(`${p}.tmp`, p);
     } catch {
         /* unwritable state must never fail a turn — worst case a re-injection */
     }
 }
 
-export function clearSeen(root: string, session: string): void {
-    try {
-        fs.rmSync(statePath(root, session), { force: true });
-    } catch {
-        /* ignore */
-    }
+export function writeSeen(root: string, session: string, seen: Set<string>): void {
+    const prev = readState(root, session);
+    writeState(root, session, { rules: [...seen].sort(), pending: prev.pending ?? [] });
 }
 
-// ── payload extraction ───────────────────────────────────────────────────
+/**
+ * Hand the seen-set to the restore slot instead of deleting it (step 1.6).
+ *
+ * `pre_compact` used to `rm` this file, which re-armed delivery correctly and
+ * threw away the one thing the restore needs. The de-duplication is still
+ * cleared — `rules` goes empty, so a rule whose trigger fires again gets its
+ * BODY back exactly as before — and the ids move to `pending`, where
+ * `session_start` with `source: compact` reads them and sends each rule's LAW.
+ *
+ * That is the half the header used to end at: a rule whose trigger does not
+ * recur was not restored at all, and a rule lost at a compaction boundary is
+ * lost for the rest of the session.
+ */
+export function armRestore(root: string, session: string): void {
+    const prev = readState(root, session);
+    const pending = [...new Set([...prev.rules, ...(prev.pending ?? [])])].sort();
+    if (pending.length === 0) {
+        try {
+            fs.rmSync(statePath(root, session), { force: true });
+        } catch {
+            /* ignore */
+        }
+        return;
+    }
+    writeState(root, session, { rules: [], pending });
+}
+
+/** Read the pending set and clear it — a restore that fires twice is a duplicate. */
+export function takePending(root: string, session: string): Set<string> {
+    const prev = readState(root, session);
+    const pending = prev.pending ?? [];
+    if (pending.length > 0) writeState(root, session, { rules: prev.rules, pending: [] });
+    return new Set(pending);
+}
 
 /** The user's prompt, across the shapes the hosts use. */
 export function extractPrompt(payload: JsonObject): string {
@@ -418,7 +471,12 @@ function manifestText(rows: Array<[string, DeliveryForm]>): string {
  * so a consumer could not tell a rule that did not match from one that matched
  * and was silently discarded.
  */
-function compose(root: string, sel: SelectionResult, hi: Set<string>): Injection | null {
+function compose(
+    root: string,
+    sel: SelectionResult,
+    hi: Set<string>,
+    lawOnly = false,
+): Injection | null {
     const form = new Map<string, DeliveryForm>();
     const full = new Map<string, string>();
     for (const m of sel.dropped) {
@@ -468,7 +526,7 @@ function compose(root: string, sel: SelectionResult, hi: Set<string>): Injection
         // `no_stub`'s own answer to the same state.
         if (law !== null) add(m.id, 'law', law);
     }
-    for (const m of ranked) {
+    for (const m of lawOnly ? [] : ranked) {
         const body = full.get(m.id);
         if (body === undefined || form.get(m.id) !== 'omitted_budget') continue;
         add(m.id, 'full', body);
@@ -487,6 +545,42 @@ function compose(root: string, sel: SelectionResult, hi: Set<string>): Injection
     parts.push(manifestText(rows));
     const body = parts.join('\n\n');
     return { rules: ids, bytes: bytesOf(body), body, manifest: rows };
+}
+
+/**
+ * Build the post-compaction restore, or `null` for silence (step 1.6).
+ *
+ * LAWS, NOT BODIES, and the asymmetry with a normal fire is the point. A
+ * compaction removed text the model was already under; re-sending every body
+ * would re-spend the whole budget on rules whose obligations the session may
+ * never touch again. The law is the part that cannot be inferred from the rest,
+ * so it is what the budget buys back. Everything that does not fit is reported
+ * in the same manifest as any other fire.
+ *
+ * The router supplies each id's tier and declaration order, because the
+ * seen-set deliberately carries neither — see {@link SeenState.pending}.
+ */
+function restore(root: string, ids: Set<string>): Injection | null {
+    if (ids.size === 0) return null;
+    let router;
+    try {
+        router = loadRouter(root);
+    } catch {
+        return null;
+    }
+    const selected: TierRuleMatch[] = [];
+    let order = 0;
+    for (const r of allTierRules(router)) {
+        if (ids.has(r.id)) selected.push({ id: r.id, tier: r.tier, score: 0, order });
+        order += 1;
+    }
+    if (selected.length === 0) return null;
+    return compose(
+        root,
+        { selected, dropped: [], bytes: 0, bodyBytes: new Map() },
+        new Set(selected.map((m) => m.id)),
+        true,
+    );
 }
 
 /**
@@ -610,8 +704,24 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const session = str(env, 'session_id', 'sessionId') ?? str(payload, 'session_id', 'sessionId') ?? 'unknown';
 
     if (slot === 'pre_compact') {
-        clearSeen(root, session);
-        return EXIT_ALLOW; // re-arm is silent; the next turn re-injects
+        armRestore(root, session);
+        return EXIT_ALLOW; // re-arm is silent; the restore happens on the next slot
+    }
+    if (slot === 'session_start') {
+        // ONLY on `source: compact`. `startup`, `resume`, `clear` and `fork`
+        // either begin a session that never had a seen-set or hand back a
+        // transcript the host already restored; emitting there would be a
+        // duplicate, and on `fork` a duplicate belonging to a session that is
+        // still alive. An unknown source emits nothing rather than guessing —
+        // the same stance `handoff-context`'s `sourceGate` takes.
+        if ((str(payload, 'source') ?? str(env, 'source')) !== 'compact') return EXIT_ALLOW;
+        if (!gateOpen(root, _isCliEntry(), ruleSources(root).pkg)) return EXIT_ALLOW;
+        // Taken, not read: a restore that fires twice on one boundary is a
+        // duplicate delivery, and the second one costs the budget again.
+        const restored = restore(root, takePending(root, session));
+        if (restored === null) return EXIT_ALLOW;
+        recordDelivered(root, session, restored.rules);
+        return emit(restored, slot);
     }
     if (slot !== 'user_prompt_submit' && slot !== 'pre_tool_use') return EXIT_ALLOW;
 
@@ -679,6 +789,11 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     writeSeen(root, session, seen);
     recordDelivered(root, session, injection.rules);
 
+    return emit(injection, slot);
+}
+
+/** The one place a delivery reaches the host, shared by the fire and the restore. */
+function emit(injection: Injection, slot: string): number {
     process.stdout.write(
         `${JSON.stringify({
             decision: 'warn',

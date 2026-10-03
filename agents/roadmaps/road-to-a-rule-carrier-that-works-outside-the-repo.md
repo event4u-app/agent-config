@@ -427,18 +427,50 @@ Reproduced on 2026-10-01:
 
       Bundle cost: **+3,845 B** (1,498,984 -> 1,502,829 on the gate's probe
       build), the composer plus the consequence-class reader.
-- [ ] **1.6 Re-deliver after compaction.** On the session-start slot with source
+- [x] **1.6 Re-deliver after compaction.** On the session-start slot with source
       `compact`, emit the law section of each rule in the pre-compaction
       seen-set, under the same budget. The seen-set keeps rule ids, never body
       copies.
       verify: `npx vitest run tests/scripts/rule_inject_hook.test.ts -t compact` -> 0
 
-      **Not started 2026-10-02 — blocked on `hook-bundle-ceiling-exhausted`.**
-      Needs a third binding: the manifest binds `rule-inject` on
-      `user_prompt_submit` and `pre_compact` for `claude` and not on
-      `session_start`, so the slot the step emits on does not currently reach
-      this concern. That binding is free; the handler and the law-form emission
-      behind it are not.
+      **Done 2026-10-03, and the third binding was indeed the free part.**
+      `rule-inject` is now in `claude`'s `session_start` list, and the concern
+      returns on every source but `compact` — `startup`, `resume`, `clear` and
+      `fork` either begin a session that never had a seen-set or hand back a
+      transcript the host already restored, and an unknown source emits nothing
+      rather than guessing, which is the stance `handoff-context`'s `sourceGate`
+      already takes.
+
+      **`pre_compact` stops deleting the state file.** It empties `rules`, which
+      is what "re-armed" always meant, and moves the ids to `pending`, which is
+      what the restore slot reads. The reason `pre_compact` cannot do the
+      delivery itself is worth stating because it looks like the obvious place:
+      the host is about to discard the context it would emit into.
+
+      **Ids, never text.** The restore re-reads each rule's law from the corpus
+      and gets the tier and router order from the router, so nothing about a
+      rule's CONTENT is cached in a consumer's state directory where it would go
+      stale on the next upgrade. One fixture reads the state file and asserts
+      both halves: the shape, and that no law text is in it.
+
+      **Laws and not bodies, and a rule with no law is reported.** Re-sending
+      every body would re-spend the whole budget on rules the session may never
+      touch again; the law is the part that cannot be inferred from the rest.
+      `compose` grew one `lawOnly` flag rather than a second composer, so the
+      budget, the order and the manifest are the same code on both paths — a
+      restore that reported differently from a fire would be two contracts.
+
+      **The binding is proven at the dispatcher, not at the function.** The 1.8
+      matrix gains a column that drives `pre_compact` and then
+      `session_start source=compact` through the BUILT bundle and asserts the law
+      arrives. That column was written because the sibling failure mode is
+      live: a concern can be bound in a manifest the dispatcher never routes to
+      it, and every `main()` fixture stays green over it. Sensitivity checked by
+      removing the binding — the column goes red while all twelve others stay
+      green.
+
+      Bundle cost: **+1,843 B** (1,502,829 -> 1,504,672 on the gate's probe
+      build).
 - [ ] **1.7 State leaves the consumer's tree.** The seen-set moves under the
       global root, keyed by project; the delivered-row ledger that
       `road-to-a-stop-that-holds` reads keeps its join. The installer writes the
