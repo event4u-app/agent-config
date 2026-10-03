@@ -230,6 +230,31 @@ tested on one consumer before anyone argues about routers or byte budgets.
       `measured: true` for an unresolvable base reds exactly `an unresolvable
       base is NOT read as an empty touch set`. Restored from `/tmp/bak`.
 
+      **Evidence (2026-10-03) — re-verified, and the one figure that moved is
+      this step's own mechanism working.** `--self-test` returns `13/13 case(s)
+      behaved (9 rejecting, floor 13)` unchanged. The census does not: it reads
+      **188 of 299**, where this step recorded 198 on 2026-09-29 and
+      `docs/SKILL_CENSUS.md` carried 197 from 2026-10-01.
+
+      That is honest drift in the direction the step was built to produce, and
+      the nine names are listed rather than summarised: `accessibility-auditor`,
+      `api-testing`, `quality-tools`, `tailwind-engineer`,
+      `test-driven-development`, `test-performance`, `design-system-capture`,
+      `review-routing`, `skill-improvement-pipeline`. Each was on the 2026-10-01
+      list and each now carries `src/skills/<name>/evals/triggers.json`; the
+      `frontend-design` row drops out of the table entirely. 197 − 9 = 188, and
+      the column sum is 188 independently.
+
+      The published table is regenerated in this change rather than left dated.
+      It self-declares as a snapshot and says *regenerate it rather than trusting
+      it*, so leaving a measured 188 in this roadmap beside a published 197 would
+      have created the exact internal contradiction the 2026-10-01 pass corrected
+      five instances of. No gate compares the two — that is still true, and is
+      why the correction is manual.
+
+      The step's recorded 198 is NOT rewritten: it was correct when written and
+      is dated. Only the published artefact follows the tree.
+
 ## Phase 3 — Path-scoped delivery, measured once
 
 - [ ] <!-- blocked-by: e3-witness-set-is-empty-here --> **3.1 Emit `paths:` frontmatter on projected `type: auto` rules for the
@@ -317,6 +342,39 @@ tested on one consumer before anyone argues about routers or byte budgets.
       roadmap whose own blocker is this one, so `[~]` would not merely be
       circular: it would red that gate the first time this file is archived.
       `[ ]` plus the live `blocked-by:` marker is kept.
+
+      **Evidence (2026-10-03) — a THIRD independent reading, and the value it
+      adds is that the state is known to be current rather than inherited.** The
+      probe was executed on this branch, not re-read from the block above:
+
+      ```
+      $ ./scripts-run src/scripts/report_host_injection_effect
+      scanned: 9 host(s)
+        observed-false   1
+        unobserved       8
+
+      $ grep -c '"state": "observed-true"' src/config/host-injection-effect.json
+      0
+      ```
+
+      Same three counts as 2026-09-30 and 2026-10-01, and **0 `observed-true`**.
+      The single `observed-false` is `cowork`, dated 2026-09-07; the other eight
+      are `unobserved`. Neither wake limb has fired: the upstream blocker
+      `no-host-observed-true-injection` in
+      `later/road-to-delivery-on-hook-hosts.md:704` still reads `Status: open`,
+      and 2026-12-08 is 66 days out.
+
+      **One reading detail this run adds, because a future session will hit it.**
+      The file carries **ten** `"state"` keys but the report scans **nine** hosts,
+      and the pair is consistent rather than contradictory: `_cursor_md_tree_loaded`
+      is an underscore-prefixed annotation row, not a host, and the report excludes
+      it. A bare `grep -c '"state": "observed-true"'` is still the right probe for
+      this blocker — it answers zero either way — but a session that greps the
+      other two states and compares them with the report's totals will find 1 + 9
+      against 1 + 8 and should not read that as drift. The blocker's `Resolved
+      when` asks for a ROW; the report's census is the admissibility arm, and
+      `tests/scripts/injection_effect.test.ts` (16 tests, green on this branch) is
+      the tripwire that reds when the two disagree.
 
       **Exact inputs a future session needs**, so the next run re-probes
       instead of re-deriving: (1) a row in `src/config/host-injection-effect.json`
@@ -415,8 +473,36 @@ tested on one consumer before anyone argues about routers or byte budgets.
       original `138325` would have quoted a ceiling the gate has since refused.
       The equality the step reports is unchanged and no second ratchet exists.
 
+      **Evidence (2026-10-03) — re-verified; the equality holds and the ceiling
+      moved again, for the same reason it moved last time.** Both commands were
+      re-run on this branch:
+
+      ```
+      $ ./scripts-run src/scripts/report_skill_menu_census --profile all
+        minimal       297        59076     14769      10047
+        balanced      297        59076     14769      10047
+        full          297        59076     14769      10047
+
+      $ ./scripts-run src/scripts/check_preamble_payload_budget
+      measured total 137017 tok (baseline 102520, +34497; ceiling 137017)
+      ✅  ceiling 137017 tok = base 137017 — zero net growth, design 107646.
+      ```
+
+      The menu figures are byte-identical to 2026-10-01 — 59,076 B across all
+      three profiles, equality intact, no preset declaring a skill-selecting key.
+      The payload ceiling reads 137,017 where the block above records 138,321, a
+      fall of 1,304 tokens. This is the third consecutive pass at which that
+      number has been lower than the one published before it (138,325 →
+      138,321 → 137,017) and it is **not** drift to correct: the bucket is
+      shrink-only, so each reading is the gate following a smaller tree down and
+      refusing to let it back up. Re-publishing any earlier value would quote a
+      ceiling the gate has since declined. The block above is left as the dated
+      record of its own run; this one carries the current reading.
+
+      No second ratchet exists and the equality the step reports is unchanged.
+
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-03 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -491,6 +577,39 @@ this file were wrong when they were written — `59132`, `14783`, `315 B`,
 honest drift and are treated differently, the first because a shrink-only
 ratchet moved it, the second because the census declares itself dated.
 
+**Re-review, 2026-10-03, on a third-reading and re-verification pass.** No row
+changes and no row is added; all three are re-read against commands re-run on
+this branch rather than against the paragraphs above them.
+
+Risk 1 is **dormant**. No relabel has been taken, the corpus and protocol are
+untouched, and the two baselines reproduce to the digit — 390 labelled rows at
+top-1 0.208 (0.170–0.251), the 26-prompt corpus at 0.615 (0.425–0.776) and
+still verdict `underpowered`. The non-overlap the risk predicted is unchanged,
+and so is its disposition: which of the two explanations holds is not decided
+here and stays recorded where step 1.2 put it,
+`agents/evidence/analysis/skill-routing-precision-2026-09.md`. This pass took
+no new evidence bearing on it and therefore moves it neither way.
+
+Risk 2 is **unchanged**, for the third consecutive pass. The probe was executed,
+not re-read: 0 `observed-true`, nothing is default-on, 3.1 and AC-4 stay open.
+The hazard is neither closer nor further. What this pass adds is small and
+belongs to containment rather than to the risk: the ten-keys-versus-nine-hosts
+reading detail is now written down in 3.1, so the next session does not
+mistake an annotation row for drift in the instrument.
+
+Risk 3 is **unchanged as a hazard and better evidenced as a mitigation.**
+`check_routing_coverage` is untouched and its self-test still reports 13/13 with
+nine rejecting cases. The census it feeds has fallen 197 → 188 because nine
+skills gained a corpus, which is the touched-skill scope producing the outcome
+it was built for — observed, not asserted. A gate reporting green while
+measuring nothing would not have moved that number.
+
+**No fourth row, and the reason is the same one the 2026-09-30 pass gave.** The
+one thing this pass corrects is a published figure, not a mechanism: the census
+table was nine units stale. Stale-but-dated is the condition that artefact
+declares for itself, so it creates no exposure a register row could track, and
+the correction is made in the same change that measured it.
+
 ## Acceptance Criteria
 
 - [x] AC-1 — The routing matrix carries ≥ 100 labelled prompts with a written
@@ -511,10 +630,11 @@ ratchet moved it, the second because the census declares itself dated.
       criterion was understating the gate it certifies.
 - [ ] <!-- blocked-by: e3-witness-set-is-empty-here --> AC-4 — One path-scoping effect report exists and the setting default
       matches its conclusion. **Open** — blocked with 3.1; see its blocker.
-      Re-probed 2026-10-01: `report_host_injection_effect` reads 9 hosts, 1
-      `observed-false`, 8 `unobserved`, 0 `observed-true`, so the report this
-      criterion requires still cannot be taken. See 3.1 § Evidence (2026-10-01)
-      for the run and for the three inputs that would unblock it.
+      Re-probed 2026-10-01 and again 2026-10-03: `report_host_injection_effect`
+      reads 9 hosts, 1 `observed-false`, 8 `unobserved`, 0 `observed-true` on
+      both dates, so the report this criterion requires still cannot be taken.
+      See 3.1 § Evidence (2026-10-03) for the third run and § Exact inputs for
+      the three that would unblock it.
 
 ## Blockers
 
@@ -546,6 +666,13 @@ ratchet moved it, the second because the census declares itself dated.
   re-probe is recorded as a second independent reading rather than as a new
   fact — the value of running it is that the state is known to be current, and
   a run that only re-read this line would not have established that.
+  **Re-measured a third time 2026-10-03** on `drain/menu-precision-third-reading`:
+  9 hosts scanned, 1 `observed-false` (`cowork`, 2026-09-07), 8 `unobserved`, 0
+  `observed-true`. Three independent readings on three dates now agree, and none
+  of them is a re-read of the one before it. The upstream blocker
+  `no-host-observed-true-injection` is still `open`
+  (`later/road-to-delivery-on-hook-hosts.md:704`) and 2026-12-08 is 66 days out,
+  so neither wake limb has fired.
 - **Recommendation:** leave it open and re-probe at the wake condition. The
   emission half is buildable today and is deliberately not built: its enabling
   condition provably cannot be evaluated in this environment, so shipping it
