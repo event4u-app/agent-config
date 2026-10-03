@@ -1287,3 +1287,29 @@ describe('rule-inject — composed-budget at the boundary and in bytes (council 
         expect(Buffer.byteLength(composed(out), 'utf-8')).toBeLessThanOrEqual(CAP_BYTES);
     });
 });
+
+describe('rule-inject — composed-budget: the manifest is bounded too', () => {
+    it('a fire whose REPORT alone would exceed the budget still emits within it', () => {
+        // The reserve is taken at the longest label, so the manifest always fits
+        // what was reserved. The case this covers is the reserve itself being
+        // over the cap: enough matched rules that the report alone is more than
+        // 8,000 characters. No router today comes close, and "no corpus today
+        // comes close" is exactly the shape of claim the byte check beside this
+        // one exists because of — so it is a property here, not an observation.
+        const root = makeRoot({ delivery: true });
+        const many = Array.from({ length: 400 }, (_, i) => `wide-rule-${String(i).padStart(4, '0')}`);
+        putRouter(root, many.slice(0, 1), many.slice(1));
+        for (const id of many) putBody(root, id, `# ${id}\n\nbody\n`);
+        const { out } = run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'cb-wide',
+            payload: PROMPT,
+        });
+        const text = composed(out);
+        expect(text.length).toBeLessThanOrEqual(COMPOSED_CHARS);
+        // And it says how many rows it could not show, rather than dropping
+        // them where a reader would read the list as complete.
+        expect(text).toMatch(/\n\+\d+=omitted_budget\n<\/rule-manifest>$/);
+    });
+});

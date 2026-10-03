@@ -611,8 +611,22 @@ function compose(
         m.id,
         form.get(m.id) ?? 'source_unavailable',
     ]);
-    parts.push(manifestText(rows));
-    const body = parts.join('\n\n');
+    // THE MANIFEST IS BOUNDED TOO, and by construction rather than by how many
+    // rules this router happens to carry. Its space is reserved above at the
+    // longest label, so it always fits what was reserved — but if the RESERVE
+    // itself exceeded the budget (enough matches that the report alone is over
+    // 8,000 characters) the fill loop would admit nothing and the manifest
+    // would be the whole emission, over the cap. No router today comes close;
+    // "no corpus today comes close" is the shape of claim the composed-budget
+    // byte check exists because of, so this is a property instead.
+    let shown = rows.length;
+    let body = `${parts.join('\n\n')}${parts.length > 0 ? '\n\n' : ''}${manifestText(rows)}`;
+    while (body.length > COMPOSED_CHARS && shown > 0) {
+        shown -= 1;
+        const kept: Array<[string, DeliveryForm]> = rows.slice(0, shown);
+        const tail = manifestText([...kept, [`+${rows.length - shown}`, 'omitted_budget']]);
+        body = `${parts.join('\n\n')}${parts.length > 0 ? '\n\n' : ''}${tail}`;
+    }
     return { rules: ids, bytes: bytesOf(body), body, manifest: rows };
 }
 
