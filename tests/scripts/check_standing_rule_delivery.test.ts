@@ -90,9 +90,11 @@ describe('reasonIsStated', () => {
 });
 
 describe('the shipped budgets.yml block is complete and its reason is stated', () => {
-    // The gate is not in CI (both inputs are machine-local — see the script's
-    // docstring), so this test is the only automatic check that its config block
-    // has not been half-edited or silently bumped.
+    // The gate is not in CI — it measures a MACHINE rather than a commit, so a
+    // runner would report the runner (see the script's docstring, corrected
+    // 2026-10-05: a runner CAN stage a user-scope install, it just has no
+    // reason to). This test is therefore the only automatic check that its
+    // config block has not been half-edited or silently bumped.
     const text = fs.readFileSync(
         path.join(process.cwd(), 'src', 'config', 'budgets.yml'),
         'utf-8',
