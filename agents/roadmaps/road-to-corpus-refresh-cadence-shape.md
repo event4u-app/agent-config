@@ -473,9 +473,11 @@ and in **no** workflow — checked against a control that did find
       obstacle, measured 2026-10-04:** `src/skills/database/` has **no `evals/`
       directory**, so the stamp edit below *will* red `check_routing_coverage`
       — which does block the pull request — until
-      `src/skills/database/evals/triggers.json` is written. Budget for the
-      corpus, not just the one-line edit; use `src/skills/api-design/evals/
-      triggers.json` (written by 1.2b) as the worked example.
+      `src/skills/database/evals/triggers.json` is written. <!-- ref-ignore -->
+      That path does not exist yet by design, which is why the line carrying it
+      is exempt from the reference check.
+      Budget for the corpus, not just the one-line edit; use the corpus 1.2b
+      wrote for `api-design` as the worked example.
 
       **Hand-over — exact anchors, read 2026-10-04.** In
       `src/skills/database/data/manifest.json`, line **33** currently reads
@@ -649,7 +651,7 @@ and in **no** workflow — checked against a control that did find
   anchors (file, line number, current content quoted) and the verbatim change
   for each. Neither may land on `2026-10-01` (1.2a) or `2026-10-04` (1.2b).
   **Cost is not equal between them, measured 2026-10-04:** 1.2c must also write
-  `src/skills/database/evals/triggers.json` or it reds `check_routing_coverage`,
+  `src/skills/database/evals/triggers.json` or it reds `check_routing_coverage`, <!-- ref-ignore -->
   which does block the PR; 1.2d needs no such corpus and is the cheaper of the
   two. **Keep their late-November and mid-December windows** rather than running
   them early: 1.2a and 1.2b are now only three days apart, so the spread the
