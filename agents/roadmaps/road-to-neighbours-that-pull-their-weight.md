@@ -112,6 +112,68 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 
 ## Phase 2 — One stated order, no detector
 
+> **One blocker holds all three steps, so the mechanics are written once here.**
+> `b6-neighbour-precedence` in `agents/roadmaps/road-to-leading-every-row.md:226`
+> is unanswered. Reproduced 2026-10-05 at `e6b71933a` by
+> `grep -rn 'b6-neighbour-precedence' --include='*.md' .`, which returns exactly
+> two lines — the blocker's own heading and step 2.1's `blocked-by` marker — and
+> no answer anywhere in the tree. Control for that negative:
+> `grep -rln 'b7-adr-088-premise' --include='*.md' .` returns
+> `agents/roadmaps/road-to-leading-every-row.md`, so the search reaches the file
+> it is searching. 2.2 takes 2.1's rule as its rubric and 2.3's list is a section
+> of that rule, so neither has an exit independent of 2.1.
+>
+> **A SECOND LOCK SITS UNDER b6 AND WOULD STOP 2.1 ON THE DAY IT IS ANSWERED.**
+> `check_preamble_payload_budget` gates a bucket named `project-scope rules`,
+> and that bucket is `censusRuleDir()` over `dist/agent-src/rules` — every `.md`
+> in the directory, counted by raw file size, with no filter on `type`. The two
+> anchors, both grep-citable rather than line-pinned:
+>
+> ```
+> grep -n "id: 'project-scope-rules'" -A2 src/scripts/_lib/prefix_stable_surfaces.ts
+>     root: 'dist/agent-src/rules',
+> grep -n 'export function censusRuleDir' -A20 src/scripts/_lib/carrier_divergence.ts
+>     if (!name.endsWith('.md')) continue;
+>     chars += fs.statSync(path.join(dir, name)).size;
+> ```
+>
+> A tier-2 routed rule is therefore charged exactly like an always-loaded one.
+> Measured 2026-10-05 at `e6b71933a`:
+>
+> ```
+> ./scripts-run src/scripts/check_preamble_payload_budget --as-of 2026-10-05T00:00:00Z
+>   project-scope rules                      121426 tok
+>   measured total                           137017 tok (baseline 102520, +34497; ceiling 137017)
+>   ceiling 137017 tok = base 137017 — zero net growth, design 107646
+> ```
+>
+> Zero headroom, and a probe says that is a hard edge rather than a rounding
+> margin: a **ten-byte** file written into `dist/agent-src/rules/` moved the
+> bucket to `121429` and the gate to
+> `❌ per-spawn preamble payload grew past the ratchet: 137020 > 137017 tok`.
+> The probe file was removed with `rm`.
+>
+> The gate prints its own two exits and neither is a ceiling edit — *"The ceiling
+> may NOT be widened to fit it — it is MEASURED at the base ref, so there is no
+> number to edit"*. The two it does sanction:
+>
+> 1. **An offsetting reduction in the same diff**, anywhere in the three buckets.
+> 2. **An approved, dated grant** in `src/config/preamble-payload-exceptions.json`.
+>
+> The size to offset or to grant is `ceil(bytes(src/rules/neighbour-precedence.md) / 4)`
+> tokens. Measured over the 120 files already in `dist/agent-src/rules/`:
+> median 3,752 B (≈ 938 tok), p75 5,387 B (≈ 1,347 tok), max 10,689 B. 2.3 adds
+> its `prose-only` list to the same file, so the two steps share one charge. This
+> is a four-figure token obligation on a bucket with zero headroom, not a
+> rounding one, and it is the number the b6 answer does not by itself supply.
+>
+> **Fifth exit, checked and absent.** Capability-before-role (ADR-237) opens no
+> exit here: the block is not an action an agent was conventionally barred from
+> performing, it is a missing answer to a product question with three enumerated
+> options, and no grant of authority supplies an answer the owner has not given.
+> The payload lock above is a separate matter and IS agent-executable — which is
+> why it is priced here rather than discovered on the day b6 lands.
+
 - [ ] **2.1 A projected rule `neighbour-precedence` below the four authority bands.** It
       leaves `src/rules/agent-authority.md:12-26` untouched — those bands govern autonomy,
       and the current-turn instruction never lifts band 1 — and orders *instruction
@@ -148,8 +210,9 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       `post_tool_use`, observe-only, per `agents/roadmaps/stubs/road-to-mcp-fingerprint-slot-binding.md`:
       its admissions-ledger row, `severity: advisory`, `fail_closed: false`, its three
       tests (first sighting silent, mutation reported, malformed input exit 0), the
-      concern comment, then delete the stub. This raises the concern count, which the
-      programme's growth claim covers.
+      concern comment, then delete the stub. This raises the concern count, and
+      the programme's growth claim does NOT cover that — corrected 2026-10-05, see
+      the concern-count note under the blocker below.
       verify: fixture — the same foreign tool with a mutated description on the second call yields one context line and one ledger row
 
       **Attempted 2026-10-02, and the attempt refutes the step's premise.** The
@@ -309,12 +372,37 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
   1. **Remove the key.** One line. Implemented and reverted — see below.
   2. **Give the filter a prefix form.** Changes a dispatcher contract read by
      `lint_hook_manifest` and by every concern, and costs shared-hook-bundle
-     bytes against a ceiling with 170 B of headroom.
+     bytes. ~~against a ceiling with 170 B of headroom~~ — **struck 2026-10-05:
+     that figure is stale by two orders of magnitude and it is the number both
+     option 2 and option 3 were priced against.** Re-measured at `e6b71933a`
+     after `npm run build:hooks`:
+     `./scripts-run src/scripts/check_hook_bundle_composition` ->
+     `hook bundle: 1508987 B / 1550000 B ceiling, 287 modules`, i.e. **41,013 B
+     of headroom**, not 170 B. The lanes that merged into `main` between
+     2026-10-02 and 2026-10-05 took ~40.8 kB out of the bundle. Bundle bytes are
+     therefore no longer the discriminator between these three shapes, and an
+     owner choosing on the 170 B figure would be choosing on a tree that no
+     longer exists.
   3. **A separately named concern** (e.g. `mcp-usage-observation`) with its own
      default-on local-observation semantics, receiving a dispatcher-reduced
      payload carrying only the tool name, and its own retention statement.
      Still a hook-plumbing edit, so still gated — but it is classified honestly
      rather than inheriting a telemetry concern's opt-in vocabulary.
+     **A second lock sits under this option, measured 2026-10-05.** A new
+     concern is +1 `concern_count`, and that metric's allowance is a hard zero:
+     `grep -n 'concern_count: 0' -B8 src/scripts/check_estate_count.ts` quotes
+     the reason in place — *"the concern axis joins `skill_count` in taking the
+     claim path or nothing … it must not carry a per-change freebie"*. Live
+     reading: `./scripts-run src/scripts/check_estate_count` ->
+     `concern_count 62 (floor 62 at origin/main, +0)`. Step 3.2 of this roadmap
+     said the programme's growth claim covers the rise; it does not — the
+     `estate_growth_exempt` line in `road-to-leading-every-row.md:7` enumerates
+     one programme file, six lanes, one parked file and the round's owner
+     questions, and names no concern. So option 3 additionally carries an
+     `estate_growth_exempt` claim for the concern, written into the frontmatter
+     of whichever roadmap lands it, in that same diff. Options 1 and 2 do not
+     raise `concern_count` at all. That is a real re-ordering of the three costs
+     and it did not exist on the page the council read.
 - **Why it is not an agent call:** `hook_manifest.yaml` is a gated governance
   surface and ADR-268 § 4 forbids an agent ratifying its own increase in power.
   Option 1 was implemented, put to the council on 2026-10-02 (anthropic +
@@ -327,6 +415,19 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
   default-on local collection; and option 3 is the right shape. A split is an
   escalation condition, not an approval, so the edit was reverted rather than
   landed on one seat's vote.
+- **The fifth exit, looked for and reported as found-but-owner-reserved.**
+  ADR-268 § 4's ratification ladder terminates in the owner *on
+  non-convergence*, and non-convergence was measured for **option 1 only** — the
+  council has never been asked about option 3, which both seats named as the
+  right shape. A second council pass on option 3 is therefore an exit the ladder
+  permits and this lane did not take, and that is a deliberate call rather than
+  an oversight: option 3 is one of three options this blocker hands to the
+  owner by name, both seats agreed the edit IS authority-expanding, and an agent
+  picking among an owner's own enumerated set is the owner-reserved dimension
+  the same § 4 ladder names beside non-convergence. What this run did instead is
+  re-price the set, because the exit is only worth taking on correct numbers:
+  the 170 B bundle figure was wrong by 41 kB and option 3 carries an estate claim
+  nobody had written down. Both corrections are above.
 - **Recommendation:** take option 3, and carry the two conditions both seats
   asked for: state plainly in the concern's own text that local neighbour-usage
   measurement is default-on and bypasses the telemetry opt-in, and ship a test
