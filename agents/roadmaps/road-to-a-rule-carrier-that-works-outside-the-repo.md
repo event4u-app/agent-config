@@ -86,7 +86,7 @@ Reproduced on 2026-10-01:
 
 ## Phase 0 — Instruments, no behaviour change
 
-- [ ] **0.1 An installed-layer report in the host's unit.** Install into a
+- [x] **0.1 An installed-layer report in the host's unit.** Install into a
       temporary `HOME` and report per host rule directory: files,
       unconditional files, characters after frontmatter and block-comment
       strip, the 20 largest files, package-owned against foreign files, scope
@@ -96,6 +96,59 @@ Reproduced on 2026-10-01:
       that adds one unscoped 5,000-character rule must move both the file and
       the character count.
       verify: `npx vitest run tests/scripts/installed_layer_report.test.ts` -> 0
+
+      **Done 2026-10-05, and the number it produces is comparable with nothing
+      that was already here.** `_lib/installed_layer.ts` reads every host rule
+      directory in both scopes — the five in `GLOBAL_RULE_DIRS` and the five in
+      `PROJECT_RULE_DIRS` — and reports files, unconditional files, characters
+      after the strip, the 20 largest, package-owned against foreign, scope and
+      host version. `installed_layer_report.ts` is the CLI; `--home` and
+      `--project` point it anywhere.
+
+      **The measurement did not exist in this tree before.** Every published
+      figure for the installed layer counts raw bytes of whole files:
+      `censusRuleDir` sums `statSync().size`, `charsAtRoot` does the same for a
+      directory, and `check_preamble_payload_budget` reads both. A host loads
+      neither the frontmatter (the routing surface the router already read) nor
+      the HTML comments (authoring scaffolding nothing renders), so the strip
+      this uses — `rule_law_section.ruleBody`, the projector's and the carrier's
+      own — produces a number strictly smaller than every baseline in
+      `budgets.yml` or the payload ratchet, by a margin that is whatever that
+      corpus spends on frontmatter. The library says so in its own header rather
+      than leaving a reader to discover it holding the two side by side.
+
+      **Reading on the maintainer machine, 2026-10-05:** 593 files, 590
+      unconditional, 1,960,380 characters across five hosts in two scopes.
+      `claude-code (global)` is the one layer where unconditional is not equal
+      to files — 105 files, 102 unconditional — which is ADR-228's successor
+      note made visible: `claudeRuleRewrite.ts:213` emits `paths:` on the global
+      layer for three rules.
+
+      **The step's own fixture, both halves.** One unscoped 5,000-character rule
+      moves files by 1 and characters by 5,000; the negative half — a SCOPED
+      5,000-character rule — moves characters by 5,000 and the unconditional
+      count by 0, which is what stops `unconditional` being satisfied by a
+      counter that returns the file count. Sensitivity checked: replacing the
+      strip with the raw file length reds 9 of 17 cases.
+
+      **The header of `check_standing_rule_delivery` is corrected, and so are
+      its two copies.** It said "no CI workflow performs a user-scope install"
+      and concluded that CI-observability "needs the `InstructionsLoaded` record
+      committed from a real session". The first is a workflow inventory; the
+      second turns it into a capability claim, and
+      `tests/install/global_install_hooks_smoke.test.ts` already drives the real
+      installer against a `mkdtemp` HOME. What survives is narrower and true:
+      the gate measures a MACHINE rather than a commit, so a CI run would report
+      the runner. `taskfiles/dev.yml` and the test's own comment carried the same
+      claim and are corrected with it.
+
+      **Two things this deliberately does NOT do.** It is not named `check_*` —
+      `_lib/gate_population.ts` enters any such script into the gate population
+      and the ledger then owes it a per-target accounting, which is the wrong
+      contract for an instrument and is `rule_activation_census`'s own stated
+      reason for the same choice. And `.mdc` files read as zero, which is the
+      blind spot every other census here has; fixing it in one reader would
+      produce two counts that disagree.
 - [ ] **0.2 Bind the host's instruction-load event as an observer.** Step 3.0 of
       `stubs/road-to-instructions-loaded-observer.md`, non-blocking, recording
       path, scope and load reason only — never file content. Its first session
@@ -104,7 +157,98 @@ Reproduced on 2026-10-01:
       Bash-first edit; which files reload after compaction; does the count
       equal 0.1's.
       verify: `npx vitest run tests/scripts/instructions_loaded_observer.test.ts` -> 0
-- [ ] **0.3 Count what the host sees.** At the dispatcher, on the composed
+
+      **BLOCKED on an owner decision, 2026-10-05 — and the block is a recorded
+      council refusal, not a missing capability.** The bundle ceiling that held
+      Phase 1 is NOT what stops this: measured this run with the gate's own
+      command, `origin/main` @ `24d6d5b0d` reads **1,508,987 B / 1,550,000**,
+      which is **41,013 B** of headroom. A concern for this slot fits many times
+      over.
+
+      What stops it is `standing-context-40k-disposition.md:94-96`, which
+      refuses disposition **D** (execute the binding now) on Rule-3 grounds:
+      *"registration emits install settings, so it changes what the installer
+      writes into a consumer's `.claude/settings.json`."* That is a
+      shipped-default change, and the record calls Rule 3 categorical
+      (`:46`).
+
+      **Mechanically confirmed rather than taken on the label.**
+      `build_claude_hook_matrix` (`src/scripts/_lib/claude_settings_hooks.ts:92`)
+      iterates `native_event_aliases.claude` and emits a row only where
+      `platforms.claude[<event>]` carries concerns, and
+      `claude_settings_hooks.ts` writes that matrix into the consumer's
+      settings file. A probe adding both halves to a copy of the manifest moved
+      the matrix from **10 native events to 11**, the added key being
+      `InstructionsLoaded`. The probe was removed with `rm`.
+
+      **The baselines the stub pins, re-read this run with controls, because a
+      zero that is really a broken grep is the failure this step would inherit:**
+
+      ```
+      grep -c '"instructions_loaded"' src/scripts/hooks/dispatch_hook.ts   # 0
+      grep -c '"user_prompt_submit"'  src/scripts/hooks/dispatch_hook.ts   # 1  (control)
+      grep -c 'InstructionsLoaded'    src/scripts/hook_manifest.yaml       # 0
+      grep -c 'UserPromptSubmit'      src/scripts/hook_manifest.yaml       # 4  (control)
+      ```
+
+      Both zeroes are real: the controls return non-zero on the same files with
+      the same tool.
+
+      **The second obstacle, measured rather than assumed, because the first one
+      lifting would not be enough.** Two more things stand behind the Rule-3
+      refusal, and an owner answering only the settings question would meet them
+      next:
+
+      1. **The exit condition needs a LATER session, and no repository
+         automation can supply one.** The step reads *"Its first session record
+         answers …"*; binding takes effect at session start, so a session cannot
+         observe its own registration — the stub states this as its own reason
+         for not splitting 3.0. A `vitest` file can hold the recorder's shape;
+         it cannot hold a fire. This is the capability-gated shape
+         `stubs/README.md` describes, and it is why the `verify:` above can go
+         green on a build that has never received the event.
+      2. **The test surface is larger than the stub's estimate.** The stub sized
+         it at "a ~24-file test surface on `hook_manifest.yaml`";
+         `grep -rl "hook_manifest" tests/ | wc -l` reads **57** this run. The
+         estimate is not wrong so much as stale, and the cost of the binding
+         should be re-sized against 57 before it is scheduled.
+
+      **The exact edits, so an owner who says yes does not have to re-derive
+      them.** Anchors by `grep -n` rather than by line number, because four
+      stale anchors have been found in this round:
+
+      - `grep -n '^  claude:' src/scripts/hook_manifest.yaml` → two hits; the
+        FIRST is `platforms.claude`, the SECOND is
+        `native_event_aliases.claude`. Under the first, beside the existing
+        `session_start:` row, add the concern list:
+
+        ```yaml
+            instructions_loaded: [rule-inject-observer]
+        ```
+
+        Under the second, beside `UserPromptSubmit:  user_prompt_submit`, add:
+
+        ```yaml
+            InstructionsLoaded: instructions_loaded
+        ```
+
+      - `grep -n 'EVENT_VOCABULARY' src/scripts/hooks/dispatch_hook.ts` → add
+        `"instructions_loaded"` to that set.
+
+      - The kill switch the council made non-optional
+        (`standing-context-40k-disposition.md:98-100`): the binding must be
+        independently removable and rolled back on hook failures, duplicate
+        events, a material session-start regression, or unexplained downstream
+        test breakage.
+
+      **The command that flips the condition** is not a command — it is the
+      owner answering one question: may a Phase-0 instrument change what the
+      installer writes into a consumer's `.claude/settings.json`? Yes → the
+      edits above, then re-size against the 57-file surface, then a live session
+      to fill the record. No → 0.2 stays open and AC-4 is unaffected, because
+      AC-4 names the installed-layer report and the arrival record and not this
+      observer.
+- [x] **0.3 Count what the host sees.** At the dispatcher, on the composed
       string, in characters: over-budget count, and per delivered rule its
       form (`body`, `law`, `pointer`) and arrival level. Arrival levels are
       A0 discoverable (a file or pointer exists), A1 routed (a trigger
@@ -112,6 +256,54 @@ Reproduced on 2026-10-01:
       enforced (a gate blocks the forbidden outcome). A pointer is never
       recorded above A1.
       verify: `npx vitest run tests/scripts/rule_inject_hook.test.ts -t arrival` -> 0
+
+      **Done 2026-10-05, and A1 turned out to be reachable two ways.** The
+      record is written at `emit()` — the one place a delivery reaches the host,
+      shared by the fire and the compaction restore — and carries, per fire:
+      `chars` (the composed string in CHARACTERS, the unit the host's own
+      replacement threshold is stated in), an `over_budget` column whose sum is
+      the count this step asks for, the slot, and one row per matched rule with
+      its form and its arrival level.
+
+      **The forms are three where the manifest has four, deliberately.**
+      `omitted_budget` and `source_unavailable` are different REASONS for the
+      same outcome — an id and no text — so `arrivalForm` collapses them to
+      `pointer`. The manifest keeps the distinction because a consumer
+      diagnosing a broken install needs the reason; a reader counting arrivals
+      does not.
+
+      **The two ways to stay at A1 are the finding.** One is the step's own
+      sentence taken literally: a pointer never carried text. The other is not
+      in the step and this run settled it — a composed string over
+      `HOST_REPLACE_CHARS` (10,000) carried text that the host then substituted
+      with a path and a 2,000-character preview, so every row in that fire is A1
+      however good its form looks. Recording those as A2 would be the instrument
+      reporting its own intent instead of the outcome, which is the one thing a
+      measurement of arrival must not do. 1.5 means `compose` cannot produce
+      such a string today, so that case is driven through `arrivalRecord`
+      directly; a fixture that went through `compose` would be asserting the
+      branch is unreachable rather than that it is right. The boundary is
+      asserted on both sides — exactly 10,000 is A2, 10,001 is A1.
+
+      **A0 and A3 are never written, and both omissions are asserted rather than
+      commented.** A0 is the level of a rule that never routed, and this concern
+      only ever sees rules that did; writing A0 rows would mean a per-turn sweep
+      of the router to record the absence of an event. A3 belongs to whatever
+      gate refuses the outcome — a carrier recording its own delivery as
+      `enforced` would be the emitter-record-read-as-compliance mistake the
+      delivered-row ledger carries a council lock against.
+
+      **Where it lands.** Beside the seen-set under the user-global root, keyed
+      by project, for the reason 1.7 moved that one: a measurement about a
+      session is not state about the project. JSONL and append-only, so a torn
+      last line costs that line and not the rows before it (asserted). The
+      delivered-row ledger stays where `road-to-a-stop-that-holds` Phase 3 joins
+      on it, untouched.
+
+      **Cost and sensitivity.** 1,156 B of hook bundle, measured with the gate's
+      own command: 1,508,987 → 1,510,143 against a 1,550,000 ceiling. Removing
+      the pointer cap reds "a pointer is never recorded above A1" and nothing
+      else.
 - [x] **0.4 Prompt-only reach beside mechanism reach.** Add the per-prompt pair
       (305 against 333 of 335) to `model_rule_injection --endpoints` and to the
       `non_inference` of the claim at `docs/CLAIMS.md:368`.
@@ -166,13 +358,25 @@ Reproduced on 2026-10-01:
         describe a flag rather than claim a default. Fixed before this run, and
         recorded as checked rather than silently dropped.
 
-> **Phase 0 state after the 2026-10-02 run: 0.4 and 0.5 closed, 0.1 to 0.3 not
-> started.** The three open steps are each a new instrument — an installed-layer
-> report run against a temporary `HOME`, a binding of the host's instruction-load
-> event, and an arrival-level counter at the dispatcher — and starting one
-> without finishing it would leave a half-wired measurement that reads as
-> coverage. They are untouched rather than partially built, which is the state a
-> later run can act on without first undoing anything.
+> **Phase 0 state after the 2026-10-05 run: 0.1, 0.3, 0.4 and 0.5 closed; 0.2
+> open on an owner decision.** The two instruments this run built are the two
+> that could be built: the installed-layer report and the arrival record are
+> both measurements over things this repository already has, so a fixture can
+> drive them end to end. 0.2 is the one that cannot, and for a reason that is
+> recorded rather than discovered — `standing-context-40k-disposition.md`
+> refuses the binding on Rule-3 grounds because registration changes what the
+> installer writes into a consumer's `.claude/settings.json`, which this run
+> confirmed by probe (the emitted matrix goes 10 native events to 11). The
+> earlier note's reason for leaving all three untouched — a half-wired
+> measurement reads as coverage — is why 0.2 is left with a hand-over rather
+> than a stub concern and a green test that has never seen the event.
+>
+> **The bundle ceiling is no longer the constraint anywhere in this file.**
+> Measured this run against the gate's own command on `origin/main` @
+> `24d6d5b0d`: **1,508,987 B / 1,550,000**, i.e. **41,013 B** of headroom, where
+> the blocker's resolution left 44,351 B. The trunk has consumed 3,338 B of it
+> since 2026-10-03 and the blocker's standing finding is intact; what changed is
+> that a Phase-0 concern is no longer competing for the last hundred bytes.
 
 ## Phase 1 — A carrier that works where consumers are
 
@@ -832,6 +1036,20 @@ local build would make those 13 columns a statement about older code.
   whatever the trunk is at that moment. The raise remains available and
   undecided — it was not needed here, which is a different thing from being
   refused.
+- **Re-read 2026-10-05, because `resolved` is a recording and this one is about
+  a number that moves.** Same command, `check_hook_bundle_composition`:
+  `origin/main` @ `24d6d5b0d` reads **1,508,987 B / 1,550,000**, i.e. **41,013 B**
+  of headroom against the 44,351 B the resolution recorded. The trunk has taken
+  **3,338 B** in two days, which is the standing finding continuing to hold
+  rather than a new one.
+
+  The resolution stands, and Phase 0 was sized against the live number rather
+  than against the recorded one: step 0.3 cost 1,156 B (1,508,987 → 1,510,143)
+  and step 0.1 cost 0 B, because `_lib/installed_layer.ts` is reached by no
+  concern. 39,857 B remain. The number worth carrying forward is the RATE, not
+  the balance: at 3,338 B per two days the resolution's 51,596 B is roughly a
+  month of trunk, and the next lane that needs a concern should re-read before
+  sizing rather than quoting this line.
 - **Earlier recommendation (not taken):** raise it, with the `raise_log` entry naming this phase
   and the five steps, and re-derive the headroom against the MERGE result
   rather than a branch — the lesson the existing entry already wrote down and
@@ -873,21 +1091,30 @@ local build would make those 13 columns a statement about older code.
 | D8 | reversible-technical | agent | A fire where every match is unsendable emits a manifest, where it previously emitted nothing | AC-2's "no match absent from a delivery" taken literally; it is what makes a broken install visible from the model's side | The per-turn cost of a persistent broken install is measured and judged worse than the silence |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-03 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-05 | reviewer: claude/host -->
 
-Re-reviewed 2026-10-03 after Phase 1 closed 1.3 through 1.7. Rows 1 and 2 had
-their mitigations SHIP rather than remain planned, and the mitigation column now
-says which fixture holds each one; row 3 is untouched because the steps it
-anchors to are untouched. Rows 4 and 5 are new and belong to what this run
-built, not to what it planned.
+Re-reviewed 2026-10-05 after Phase 0 closed 0.1 and 0.3, against measured
+numbers rather than against the plan. Row 3 moves for the first time: its
+mitigation named 0.2's first record as the thing that would discharge it, and
+0.2 is now blocked on a recorded council refusal, so the row says what the
+unmitigated state costs instead of pointing at work that is not coming. Row 5 is
+unchanged in substance and gains the one new fact this run produced about it —
+the arrival record now measures the rule-produced string in the host's own unit,
+which makes the 728-against-2,000 question answerable by a later reading rather
+than only arguable. Rows 1, 2 and 4 are untouched: nothing this run built
+touches delivery behaviour.
+
+Earlier review 2026-10-03, after Phase 1 closed 1.3 through 1.7: rows 1 and 2
+had their mitigations SHIP rather than remain planned, and the mitigation column
+says which fixture holds each one; rows 4 and 5 were new then.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The carrier starts delivering into every consumer session | product | 1.1 turns a silent concern into a live one; a wrong trigger now costs real context in someone else's project. | DISCHARGED 2026-10-03. 1.3 scopes delivery to the host's own rule layers and 1.5 caps the string at 8,000 characters; both are held by fixtures that drive the BUILT bundle through the dispatcher. The installed layer is still eager, so a wrong delivery duplicates rather than loses. | Phase 1 — A carrier that works where consumers are |
 | 2 | One mode resolver changes the projector's answer | implementation | Making the hook agree with the projector could also move the projector. | DISCHARGED 2026-10-02 by measurement, not argument: `task sync` + `task generate-tools` produced zero changes to the tracked projection, and `check_rule_projection_integrity` reports 39 entries complete across three host trees. | Phase 1 — A carrier that works where consumers are |
-| 3 | The installed-layer report reads a host rule the host does not count | implementation | Which files the host sums is inferred, not documented. | 0.2's first record compares its load count with 0.1's. | Phase 0 — Instruments, no behaviour change |
+| 3 | The installed-layer report reads a host rule the host does not count | implementation | Which files the host sums is inferred, not documented. | UNMITIGATED 2026-10-05, and the mitigation is not coming soon: it named 0.2's first record, and 0.2 is blocked on a recorded Rule-3 refusal. What the report does instead is state its own inference — `.md` only, `paths:` as the unconditional test, both scopes unioned — so a reader can check the assumption against a host rather than against a number. The exposure is bounded by the report being report-only: a wrong count misinforms, it gates nothing. | Phase 0 — Instruments, no behaviour change |
 | 4 | A broken install reports once per turn, forever | product | 1.5 emits a manifest whenever a match cannot be sent, and a match labelled `source_unavailable` is not added to the seen-set, so a consumer whose corpus is missing a routed rule gets one manifest line per matching turn for as long as it stays missing. | The line is short and it is the signal that makes the breakage visible from the model's side, which is the half that was silent before. Bounding it to once per session needs a state write; measure the real per-turn cost before adding one, because a bound that hides a broken install is worse than the line. | Phase 1 — A carrier that works where consumers are |
-| 5 | The host measures a larger string than this budget bounds | implementation | 8,000 characters bounds the RULE-PRODUCED string. If the host's 10,000-character threshold applies to the assembled `additionalContext`, the margin is 728 rather than 2,000, and a future concern added to this slot consumes it. | Both readings are stated at the constant and in the registered row, with 728 named as the one to plan against. Raised by the openai seat of the 2026-10-03 ratification council; which reading is right is not established and is the thing to settle before any concern is added to `user_prompt_submit`. | Phase 1 — A carrier that works where consumers are |
+| 5 | The host measures a larger string than this budget bounds | implementation | 8,000 characters bounds the RULE-PRODUCED string. If the host's 10,000-character threshold applies to the assembled `additionalContext`, the margin is 728 rather than 2,000, and a future concern added to this slot consumes it. | Both readings are stated at the constant and in the registered row, with 728 named as the one to plan against. Raised by the openai seat of the 2026-10-03 ratification council; which reading is right is not established and is the thing to settle before any concern is added to `user_prompt_submit`. 2026-10-05: 0.3's arrival record now carries `chars` per fire in the host's own unit, so the rule-produced half is a reading rather than an argument — and the record says in its own header that it measures that half and does not settle which string the host counts. | Phase 1 — A carrier that works where consumers are |
 
 ## Acceptance Criteria
 
@@ -914,5 +1141,23 @@ built, not to what it planned.
       the ones `selectForInjection` dropped, which nothing read before.
 - [x] AC-3 — Installer, projector and carrier return the same mode in every
       fixture of 1.2.
-- [ ] AC-4 — The installed-layer report and the arrival record exist and every
+- [x] AC-4 — The installed-layer report and the arrival record exist and every
       truth surface in 0.5 names the scope it was measured on.
+
+      All three clauses executed 2026-10-05. The installed-layer report is
+      `src/scripts/installed_layer_report.ts` over `_lib/installed_layer.ts`;
+      run on the maintainer machine it reads 593 files and 1,960,380 characters
+      across five hosts in two scopes. The arrival record is written at the
+      carrier's `emit()` and read back by `readArrival`; 11 cases hold its
+      shape, its two paths to A1, and the levels it refuses to write. The third
+      clause is 0.5's, re-executed rather than read off its note:
+      `./scripts-run src/scripts/check_claims` exits 0 at this head.
+
+      **What this criterion does NOT say, stated because the adjacent reading is
+      tempting.** It asks that the two instruments EXIST and that the truth
+      surfaces name their scope. It does not say the host has been observed
+      loading anything — that is 0.2, which is open, and the arrival record is
+      an emitter record by construction: it says the text left for the host, in
+      the host's unit, and whether the host's own threshold would have replaced
+      it. An independent observation of the loading end is the thing 0.2 buys
+      and nothing here substitutes for it.
