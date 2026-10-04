@@ -37,7 +37,9 @@ mechanism is something that ran, not something someone typed.
    both only read it. `skill_trigger_eval` — the interactive paid CLI everyone
    assumes bumps it, this roadmap's author included — writes its *result* file
    and never touches `triggers.json`. So a paid backfill of all 39 stale suites
-   would not move the gate by one day.
+   would not move the gate by one day. (**42 stale as of 2026-10-05, and four
+   further suites that carry no `last_eval` key at all** — a backfill reaches
+   neither group. See risk 5 and the blocker's 2026-10-05 re-measurement.)
 
    **Re-verified 2026-10-01, and the original search scope was too narrow —
    widening it finds a decoy, not a writer.** Grepping `src/` rather than
@@ -124,6 +126,82 @@ the durability precondition fact 2 shows is unmet.
       the arithmetic is current (re-measured below) and steps 1.2 and 1.3 are
       closed and mechanism-independent, so the implementation after the choice
       is small in all four branches.
+
+      **HAND-OVER, written 2026-10-05 so the remaining action is a decision and
+      not a re-derivation.** Every anchor below was read off the live tree on
+      that date. Pick one option; the edit under it is the whole implementation.
+      Line numbers are given with their current content so a drifted anchor is
+      recognisable rather than silently wrong.
+
+      *Common to options 1 and 2 — the part an agent cannot do.* Both need the
+      canary to write back into a protected branch. The anchor is
+      `.github/workflows/cross-model-canary.yml:47-48`:
+
+      ```yaml
+      permissions:
+        contents: read        # ← both options need `write` here, plus a
+                              #   branch-protection exception for the pushing
+                              #   actor. That is the Hard-Floor half.
+      ```
+
+      The rotation already runs at `cross-model-canary.yml:118-123` and its
+      output is already collected at `:135-139` — as an `actions/upload-artifact`
+      step, which is precisely why nothing durable survives. Measured cost,
+      identical for both: ~93 provider queries a week sustained at today's 111
+      suites, 140 in the peak week, 1110 per full pass.
+
+      **Option 1 — durable rotation results, gate reads them.** After the
+      permissions change, the upload step is replaced by a commit of the result
+      JSONs to a tracked path, and `check_trigger_evals.ts:144-155` is rewritten
+      to read the newest result per suite instead of a date field. Extra cost
+      beyond the queries: a tracked artifact that grows every week, so it needs
+      the retention answer `scale-discipline` R-A7 asks for.
+
+      **Option 2 — CI writes `last_eval`.** After the permissions change, one
+      step is added after the rotation that writes today's date into each
+      covered suite's `triggers.json` and commits. The gate is untouched. The
+      predicate is the trap already recorded above: write on a **completed**
+      run, not a passing one, since a floor-breaching run is still evidence
+      that an evaluation happened. Cheapest of the four to implement, and the
+      one that lets the system certify its own freshness.
+
+      **Option 3 — retire the freshness dimension.** The only option an agent
+      could implement unaided once chosen, and the choice itself is still the
+      owner's because it removes a recorded measure. Delete
+      `src/scripts/check_trigger_evals.ts:144-155` — the whole block from
+      `const raw = obj ? obj['last_eval'] : undefined;` through the closing
+      brace of the `else` — plus `MAX_AGE_DAYS` at `:35` and its re-export at
+      `:431`, and the doc line at `:19`. The structural smoke check below it
+      stays. This also disposes of risk 4 by construction: the string that
+      prints the fabrication recipe lives at `:152`, inside the deleted block.
+      Cost: zero queries, and trigger regressions stop being measured over time.
+
+      **Option 4 — lengthen the window.** Two constants move together, and the
+      second is the one a reader forgets:
+
+      ```ts
+      // src/scripts/check_trigger_evals.ts:35
+      const MAX_AGE_DAYS = 90;              // → the chosen window, e.g. 180
+
+      // src/scripts/trigger_eval_rotation.ts:71
+      export const ROTATION_CYCLE_WEEKS = 12;   // → ≤ window / 7, e.g. 24
+      ```
+
+      A cycle longer than the window re-introduces the defect 1.2 removed, so
+      `ROTATION_CYCLE_WEEKS × 7 ≤ MAX_AGE_DAYS` has to hold after the edit;
+      `tests/scripts/trigger_eval_rotation_growth.test.ts` pins the window it
+      checks and needs the same number. At 180 days the sustained bill halves
+      to ~47 queries a week. **This option does not finish the job on its own**
+      — four suites carry no field for any window to measure, so it also needs
+      the field-presence answer recorded against the option in the blocker.
+
+      *Under options 1, 2 and 4, risk 4's string at
+      `src/scripts/check_trigger_evals.ts:152` is still false after the edit* —
+      it names `skill_trigger_eval`, which does not write `triggers.json` under
+      any of them. It is rewritten in the same change to name whichever
+      mechanism was chosen. It was left alone here deliberately: its correct
+      text is a function of the choice, so writing it now would pre-empt the
+      owner.
 - [x] **1.2 Fix the coverage instability before any mechanism depends on it.**
       Whatever 1.1 picks, a rotation whose worst-case cycle exceeds the window
       makes it unsatisfiable. The re-basing start offset is the cause; a
@@ -144,6 +222,13 @@ the durability precondition fact 2 shows is unmet.
       **Evidence (2026-10-01).** Re-run on the drain pass rather than taken on
       trust: `npm run test:ts -- tests/scripts/trigger_eval_rotation_growth.test.ts`
       → `2 passed (2)`. The property it pins still holds against the live list.
+      **Evidence (2026-10-05).** Re-run again rather than read off the line
+      above, because the live suite list has grown since it was written:
+      `npm run test:ts -- tests/scripts/trigger_eval_rotation_growth.test.ts`
+      → `2 passed (2)`. The growth the test simulates has now also happened in
+      the tree — 102 suites on 2026-10-01, **111** today — and the property
+      still holds: adding suites shifts nobody else's slot, and worst-case
+      staleness is still the cycle length (84d) rather than a re-based window.
 - [x] **1.3 Bound the spend the chosen mechanism implies.** The rotation makes
       paid calls, measured at roughly 9.5 queries per suite. Any batch increase
       multiplies the weekly bill, and `required_batch` as proposed had a floor
@@ -171,14 +256,42 @@ the durability precondition fact 2 shows is unmet.
       `MAX_WEEKLY_QUERIES = 160`, and worst-case staleness (84d) is inside the
       gate's 90-day window. Note `QUERIES_PER_SUITE` is coded as `10`, not the
       ~9.5 the prose rounds from; the ceiling arithmetic uses the code's `10`.
+      **Evidence (2026-10-05), and the suite count has moved.**
+      `npm run test:ts -- tests/scripts/trigger_eval_rotation.test.ts` →
+      `13 passed (13)`. `rotation_plan(list_trigger_suites())` on the live tree
+      now returns `{ total: 111, cycleWeeks: 12, peakSuitesPerWeek: 14,
+      peakWeeklyQueries: 140, worstCaseStalenessDays: 84, withinCeiling: true }`
+      — **111 suites, up from 102 four days ago.** The bound still holds and
+      nothing about this step's claim has weakened: the peak week is unchanged
+      at 140 queries, comfortably inside `MAX_WEEKLY_QUERIES = 160`, because
+      identity slotting spreads nine new suites across the cycle instead of
+      stacking them. What moved is the full-pass bill D3 is being decided
+      against: 111 × 10 = **1110 queries**, not the ~1020 this roadmap records
+      elsewhere. That figure is corrected in the blocker below.
 
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
 | D1 | reversible-technical | evidence | Rotate by suite identity — a suite's slot is a hash of its own name — rather than by a positional window whose start re-bases on `total`. Cost: the batch stops being a tunable knob; how many suites run in a week follows from the hash spread and `rotation_plan` reports it. | `trigger_eval_rotation_growth.test.ts`, observed red at 24 weeks against the old scheme and green at ≤12 after; a second test pins that adding a suite leaves every existing suite's schedule unchanged | a scheme is found that is both stable under growth and gives an even weekly load — identity slotting buys stability at the price of an uneven bill, and that trade is not obviously optimal |
-| D2 | reversible-technical | evidence | State the weekly paid-call ceiling as `MAX_WEEKLY_QUERIES = 160` and make the bill derivable from `rotation_plan()` without a run. | measured at 102 suites: ~85 queries/week mean, 140 in the peak week; reds at roughly 117 suites | the suite count approaches 117, or `QUERIES_PER_SUITE` is re-measured away from ~9.5 |
-| D3 | business-owned | owner | **OPEN.** Which mechanism evidences freshness — see `## Blockers` → `freshness-mechanism-is-owner-owned`. Priced, not chosen. | the ~1020-queries-per-pass arithmetic below | — |
+| D2 | reversible-technical | evidence | State the weekly paid-call ceiling as `MAX_WEEKLY_QUERIES = 160` and make the bill derivable from `rotation_plan()` without a run. | re-measured 2026-10-05 at **111** suites: 140 queries in the peak week, `withinCeiling: true`. The decision stands; its **`revisit-if` figure did not** — see the correction note below this table | the peak week approaches `MAX_WEEKLY_QUERIES`, which `rotation_plan()` reports directly — **not** a suite count, because the count is the wrong proxy (correction below); or `QUERIES_PER_SUITE` is re-measured away from the coded `10` |
+| D3 | business-owned | owner | **OPEN.** Which mechanism evidences freshness — see `## Blockers` → `freshness-mechanism-is-owner-owned`. Priced, not chosen. | the 1110-queries-per-pass arithmetic below, re-measured 2026-10-05 at 111 suites | — |
+
+**Correction to D2's `revisit-if`, measured 2026-10-05.** The retired wording
+said the ceiling "reds at roughly 117 suites" and asked for a revisit as the
+count approached it. Executed against the live tree, it does not reproduce:
+growing the live 111-suite list one synthetic suite at a time, the first
+`withinCeiling: false` lands at **total 132–152 depending on the names added**
+(five name families probed: 132, 141, 151, 152, 152). The spread is the point —
+under identity slotting the peak week is a property of the **hash distribution
+of the names**, not of the count, so no single suite number is the threshold.
+A count-based `revisit-if` would therefore have fired at the wrong time in both
+directions: it would have raised an alarm at 117 when ~20 suites of headroom
+remained, and it offers no signal at all for a cluster of similarly-named
+suites arriving at a count it considers safe. The row now points at
+`rotation_plan().peakWeeklyQueries` against `MAX_WEEKLY_QUERIES`, which is the
+quantity the ceiling is actually stated over and which the function already
+returns. D2's **decision** is untouched — only the condition for revisiting it.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-28 | reviewer: claude/host -->
@@ -188,7 +301,8 @@ the durability precondition fact 2 shows is unmet.
 | 1 | Someone bumps the 39 dates to clear the red | implementation | It is a one-line edit per file and it makes a required-looking gate green instantly. It also asserts 39 evaluations that never ran — the exact defect the corpus-refresh roadmap was created to stop, in a second place | Fact 1 above states plainly that no writer exists, so a bumped date is provably an assertion rather than a record; 1.1 forces the mechanism question instead of the symptom | Phase 1 — Decide what freshness is evidenced by |
 | 2 | The gate is quietly deleted as "unenforceable" | product | It is local-only and blocks no merge, so removing it costs nothing today and loses the trigger-regression lock the suites exist for | 1.1 lists retirement as an explicit option with its cost named, so dropping the measure becomes a recorded decision rather than a cleanup | Phase 1 — Decide what freshness is evidenced by |
 | 3 | A mechanism is built on rotation results that still are not durable | implementation | Fact 2 is easy to miss: the results directory exists locally and looks persistent, but in CI it is an ephemeral artifact and the job has read-only contents permission | 1.1's verify demands the cost be recorded, and the CI write path is the cost; 1.2 is sequenced before any dependency on the rotation | Phase 1 — Decide what freshness is evidenced by |
-| 4 | The gate's own error text instructs the fabrication risk 1 forbids | implementation | Found 2026-10-01 while re-verifying fact 1, and not fixed here on purpose. `check_trigger_evals.ts:152` tells the reader to "re-run skill_trigger_eval and bump it" — but `skill_trigger_eval` writes a result file and never touches `triggers.json`, so the only way to obey that instruction literally is to hand-edit the date. The gate is printing the fabrication recipe 39 times per run, with the authority of a failing check behind it. This is a stronger pull toward risk 1 than risk 1 models, because it needs no initiative — the reader is being told | Left as a recorded finding rather than a drive-by fix: the line's correct replacement depends on which option 1.1 picks (under 3 it disappears with the read; under 1 or 2 it should name the CI mechanism; under 4 only the number moves), so fixing it now would pre-empt the owner's choice. Whoever closes 1.1 rewrites this string in the same change | Phase 1 — Decide what freshness is evidenced by |
+| 4 | The gate's own error text instructs the fabrication risk 1 forbids | implementation | Found 2026-10-01 while re-verifying fact 1, and not fixed here on purpose. `check_trigger_evals.ts:152` tells the reader to "re-run skill_trigger_eval and bump it" — but `skill_trigger_eval` writes a result file and never touches `triggers.json`, so the only way to obey that instruction literally is to hand-edit the date. The gate is printing the fabrication recipe 39 times per run — **42 times as of 2026-10-05**, since the instruction rides the staleness branch and three more suites have aged past the window — with the authority of a failing check behind it. This is a stronger pull toward risk 1 than risk 1 models, because it needs no initiative — the reader is being told | Left as a recorded finding rather than a drive-by fix: the line's correct replacement depends on which option 1.1 picks (under 3 it disappears with the read; under 1 or 2 it should name the CI mechanism; under 4 only the number moves), so fixing it now would pre-empt the owner's choice. Whoever closes 1.1 rewrites this string in the same change | Phase 1 — Decide what freshness is evidenced by |
+| 5 | A suite can arrive with no `last_eval` at all, and four already have | implementation | Found 2026-10-05, and it is a second failure direction this roadmap did not model. Every earlier reading recorded that all 102 suites carried the field and 39 had merely gone stale. That is no longer true: `src/skills/{api-testing,quality-tools,test-driven-development,test-performance}/evals/triggers.json` carry **no `last_eval` key**, all four added 2026-10-02 in `a3c839340` (#2173) — one day after the last re-measurement. Nothing in the tree requires the field when a suite is authored, so the gate's failing count now grows from ageing **and** from arrival. The consequence for the open decision is concrete and is recorded against option 4 in the blocker: a longer window does not clear a field that is absent | Not fixed here, and deliberately not by adding the field: writing a date into those four would assert four evaluations that never ran, which is risk 1 exactly. The structural fix — requiring the key at authoring time, independent of any freshness mechanism — is a gate this roadmap has no authorization to add, so it is recorded as a finding and priced under the blocker instead | Phase 1 — Decide what freshness is evidenced by |
 
 ## Blockers
 
@@ -228,6 +342,29 @@ the durability precondition fact 2 shows is unmet.
      measure and lowers the bill. 180 days halves the weekly cost to ~43 and
      keeps every other property; it says a trigger regression may go unnoticed
      for six months instead of three.
+     **Price corrected 2026-10-05 — this option no longer clears the gate on
+     its own, and that is measured, not argued.** Four suites now carry no
+     `last_eval` key at all (risk 5), and the gate's missing-field branch
+     (`check_trigger_evals.ts:144-147`) fires before any age comparison, so no
+     window length reaches them. Proven by running the gate with a reference
+     date that makes every dated suite fresh:
+
+     ```
+     $ ./scripts-run src/scripts/check_trigger_evals --today 2026-06-20
+     ❌ check-trigger-evals: trigger-set regression(s):
+        - src/skills/api-testing/evals/triggers.json: missing or non-ISO `last_eval` (got None)
+        - src/skills/quality-tools/evals/triggers.json: missing or non-ISO `last_eval` (got None)
+        - src/skills/test-driven-development/evals/triggers.json: missing or non-ISO `last_eval` (got None)
+        - src/skills/test-performance/evals/triggers.json: missing or non-ISO `last_eval` (got None)
+     ```
+
+     An effectively unlimited window leaves exactly those four red. Choosing
+     option 4 therefore also requires saying what happens to a suite authored
+     without the field — the same sub-question options 1 and 2 answer by
+     construction (their mechanism writes the key on first run) and option 3
+     answers by deleting the read. This does not disqualify option 4; it means
+     its price is a window **plus** a field-presence decision, where on
+     2026-09-30 it was priced as a window alone.
 - **Recommendation:** none offered. Three of the four options trade money
   against detection latency and the fourth gives up detection, and nothing in
   the tree establishes which the owner wants. Naming a preference here would be
@@ -262,6 +399,42 @@ the durability precondition fact 2 shows is unmet.
   prices has shifted. The only correction is cosmetic and in the owner's favour:
   `QUERIES_PER_SUITE` is `10` in code, so a full pass is ~1020 queries exactly
   rather than by rounding.
+- **Re-measured again 2026-10-05 — this time the numbers HAVE moved, in both
+  the bill and the failure count.** Same two commands, run against the live
+  tree:
+
+  ```
+  $ npx tsx -e "import('./src/scripts/trigger_eval_rotation.ts').then(m => console.log(JSON.stringify(m.rotation_plan(m.list_trigger_suites()))))"
+  {"total":111,"cycleWeeks":12,"peakSuitesPerWeek":14,"peakWeeklyQueries":140,
+   "worstCaseStalenessDays":84,"withinCeiling":true}
+
+  $ ./scripts-run src/scripts/check_trigger_evals          # 46 findings
+  … 42 × "`last_eval` <date> is <N>d old (> 90d)"
+  …  4 × "missing or non-ISO `last_eval` (got None)"
+  ```
+
+  Three corrections to what the owner is deciding against, none of them in the
+  owner's favour:
+  1. **The suite count is 111, not 102** — nine new suites in four days. A full
+     pass is 111 × 10 = **1110 queries**, not ~1020, and the sustained weekly
+     cost under a 90-day window rises with it to ~93. The peak week is
+     unchanged at 140 and still inside `MAX_WEEKLY_QUERIES = 160`, because
+     identity slotting spreads arrivals instead of stacking them.
+  2. **"None of them missing" has stopped being true.** The 2026-10-01 reading
+     recorded 39 failures, all staleness, every suite carrying the field. Today
+     it is **46 failures — 42 stale and 4 carrying no `last_eval` key at all**
+     (risk 5). All four arrived 2026-10-02 in `a3c839340`, the day after that
+     reading, so this is a four-day-old regression rather than a long-standing
+     one nobody had noticed.
+  3. **Option 4's price changed as a consequence of 2** — a longer window does
+     not reach an absent field. Recorded against that option above, with the
+     command that proves it.
+
+  The shape of the decision is unchanged and so is its ownership. What changed
+  is that the bill is ~9 % above the quoted figure and one of the four options
+  now carries a second question. Growth is also not a one-off — 102 → 111 in
+  four days — so a decision deferred further is decided against a larger
+  number again.
 - **Resolved when:** `grep -c 'OPEN' agents/roadmaps/road-to-trigger-eval-freshness-has-no-writer.md`
   no longer matches the `D3` row — that row names one of the four options — and
   the tree agrees with it: either a mechanism writes what the gate reads, or
@@ -270,6 +443,37 @@ the durability precondition fact 2 shows is unmet.
   writer search (fact 1's re-verification above) confirms the tree still has no
   writer for the gate's field. The blocker's `Status: open` is accurate, not
   stale.
+  **Executed again 2026-10-05: still UNMET — and a fifth exit was searched for
+  and does not exist.** Both limbs run against the live tree rather than read
+  off the line above:
+
+  ```
+  $ grep -n 'OPEN' agents/roadmaps/road-to-trigger-eval-freshness-has-no-writer.md
+  181:| D3 | business-owned | owner | **OPEN.** Which mechanism evidences freshness …
+
+  $ grep -rn "last_eval" src/ --include="*.ts" | grep -v "/evals/"
+  src/cli/commands/recordTriggerEval.ts:197:  …upstream.last_eval = record;     # upstream.last_eval, in manifest.json
+  src/scripts/check_trigger_evals.ts:144:    const raw = obj ? obj['last_eval'] : undefined;   # READ
+  src/scripts/lint_eval_freshness.ts:231:   const last_eval = upstream['last_eval'];           # READ, different surface
+  ```
+
+  Limb one fails: `D3` still reads `OPEN`. Limb two fails: the only writer in
+  the tree is still `recordTriggerEval.ts:197`, still writing a **different
+  key** (`upstream.last_eval`) into a **different file** (`manifest.json`) from
+  the top-level `last_eval` in `triggers.json` that line 144 reads.
+
+  **The owner-owned label was tested, not assumed, and it holds.** Under
+  capability-before-role the label follows the exit criterion, so the obvious
+  fifth exit was checked: evidence already durable in the repo that the gate
+  could be pointed at without any CI write path, which would make the fix
+  agent-capable. There is none. `internal/evals/results/` is gitignored
+  (`.gitignore:173`) and does not exist on disk; `src/skills/*/evals/last-run.json`
+  is gitignored too (`.gitignore:171`). So fact 2's durability finding holds from
+  the repository side as well as from the workflow-permissions side, every
+  remaining exit is one of the four priced options, and each of those is either
+  a recurring external spend or the removal of a recorded measure — both
+  owner-reserved under `decision-revisit-gate`. `Class: 3 — human-only` is
+  confirmed on this reading rather than carried over from the last one.
 
 ## Acceptance Criteria
 
@@ -287,6 +491,18 @@ the durability precondition fact 2 shows is unmet.
       inventing the answer. The exact inputs needed are listed under 1.1; this
       criterion closes automatically once one of them is supplied and
       implemented.
+      **Re-read 2026-10-05 — still unmet, and the question it asks has got one
+      answer harder.** The writer search was re-executed at the widened scope
+      and the tree still holds no writer for the gate's field, so a reader still
+      cannot name the mechanism. What moved is that "fresh" now has to cover a
+      case this criterion did not anticipate: four suites carry no `last_eval`
+      key at all (risk 5), so an answer to "what makes a suite fresh" has to say
+      what a suite that has never been evaluated *is*, not only how old a date
+      may be. Options 1 and 2 answer that implicitly, option 3 dissolves it, and
+      option 4 does not answer it — which is why option 4's price was corrected.
+      The hand-over written onto 1.1 on the same date carries the anchored edit
+      for each branch, so this criterion closes with one owner decision plus the
+      edit named under it.
 - [x] AC-2 — A growth-simulating test pins the rotation's worst-case staleness
       inside the enforced window, and has been observed red against the scheme
       it replaces.
@@ -295,6 +511,10 @@ the durability precondition fact 2 shows is unmet.
       asserts worst-case staleness stays within 12 weeks. It was observed red
       against the positional scheme at **24 weeks** before the replacement, so
       its sensitivity is demonstrated rather than assumed.
+      **Re-verified 2026-10-05:** `2 passed (2)`, against a live list that has
+      itself grown 102 → 111 since the criterion was written — the simulated
+      growth the test asserts over has now partly happened in the tree, and
+      worst-case staleness is still 84d inside the 90-day window.
 - [x] AC-3 — The weekly paid-call count of the rotation is derivable from the
       code and bounded by a stated ceiling.
       **MET 2026-09-30.** `rotation_plan()` is pure and returns the peak week's
@@ -302,3 +522,8 @@ the durability precondition fact 2 shows is unmet.
       is under `MAX_WEEKLY_QUERIES = 160`. Two tests: the live list is under the
       ceiling, and a 1000-suite list reports `withinCeiling: false` rather than
       billing silently.
+      **Re-verified 2026-10-05:** `13 passed (13)`, and the live list at 111
+      suites still reports `peakWeeklyQueries: 140, withinCeiling: true`. The
+      criterion holds; D2's `revisit-if` did not, and was corrected to watch
+      `peakWeeklyQueries` rather than a suite count — see the note under the
+      Decisions table.
