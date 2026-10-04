@@ -223,7 +223,8 @@ returns. D2's **decision** is untouched — only the condition for revisiting it
 | 1 | Someone bumps the 39 dates to clear the red | implementation | It is a one-line edit per file and it makes a required-looking gate green instantly. It also asserts 39 evaluations that never ran — the exact defect the corpus-refresh roadmap was created to stop, in a second place | Fact 1 above states plainly that no writer exists, so a bumped date is provably an assertion rather than a record; 1.1 forces the mechanism question instead of the symptom | Phase 1 — Decide what freshness is evidenced by |
 | 2 | The gate is quietly deleted as "unenforceable" | product | It is local-only and blocks no merge, so removing it costs nothing today and loses the trigger-regression lock the suites exist for | 1.1 lists retirement as an explicit option with its cost named, so dropping the measure becomes a recorded decision rather than a cleanup | Phase 1 — Decide what freshness is evidenced by |
 | 3 | A mechanism is built on rotation results that still are not durable | implementation | Fact 2 is easy to miss: the results directory exists locally and looks persistent, but in CI it is an ephemeral artifact and the job has read-only contents permission | 1.1's verify demands the cost be recorded, and the CI write path is the cost; 1.2 is sequenced before any dependency on the rotation | Phase 1 — Decide what freshness is evidenced by |
-| 4 | The gate's own error text instructs the fabrication risk 1 forbids | implementation | Found 2026-10-01 while re-verifying fact 1, and not fixed here on purpose. `check_trigger_evals.ts:152` tells the reader to "re-run skill_trigger_eval and bump it" — but `skill_trigger_eval` writes a result file and never touches `triggers.json`, so the only way to obey that instruction literally is to hand-edit the date. The gate is printing the fabrication recipe 39 times per run, with the authority of a failing check behind it. This is a stronger pull toward risk 1 than risk 1 models, because it needs no initiative — the reader is being told | Left as a recorded finding rather than a drive-by fix: the line's correct replacement depends on which option 1.1 picks (under 3 it disappears with the read; under 1 or 2 it should name the CI mechanism; under 4 only the number moves), so fixing it now would pre-empt the owner's choice. Whoever closes 1.1 rewrites this string in the same change | Phase 1 — Decide what freshness is evidenced by |
+| 4 | The gate's own error text instructs the fabrication risk 1 forbids | implementation | Found 2026-10-01 while re-verifying fact 1, and not fixed here on purpose. `check_trigger_evals.ts:152` tells the reader to "re-run skill_trigger_eval and bump it" — but `skill_trigger_eval` writes a result file and never touches `triggers.json`, so the only way to obey that instruction literally is to hand-edit the date. The gate is printing the fabrication recipe 39 times per run — **42 times as of 2026-10-05**, since the instruction rides the staleness branch and three more suites have aged past the window — with the authority of a failing check behind it. This is a stronger pull toward risk 1 than risk 1 models, because it needs no initiative — the reader is being told | Left as a recorded finding rather than a drive-by fix: the line's correct replacement depends on which option 1.1 picks (under 3 it disappears with the read; under 1 or 2 it should name the CI mechanism; under 4 only the number moves), so fixing it now would pre-empt the owner's choice. Whoever closes 1.1 rewrites this string in the same change | Phase 1 — Decide what freshness is evidenced by |
+| 5 | A suite can arrive with no `last_eval` at all, and four already have | implementation | Found 2026-10-05, and it is a second failure direction this roadmap did not model. Every earlier reading recorded that all 102 suites carried the field and 39 had merely gone stale. That is no longer true: `src/skills/{api-testing,quality-tools,test-driven-development,test-performance}/evals/triggers.json` carry **no `last_eval` key**, all four added 2026-10-02 in `a3c839340` (#2173) — one day after the last re-measurement. Nothing in the tree requires the field when a suite is authored, so the gate's failing count now grows from ageing **and** from arrival. The consequence for the open decision is concrete and is recorded against option 4 in the blocker: a longer window does not clear a field that is absent | Not fixed here, and deliberately not by adding the field: writing a date into those four would assert four evaluations that never ran, which is risk 1 exactly. The structural fix — requiring the key at authoring time, independent of any freshness mechanism — is a gate this roadmap has no authorization to add, so it is recorded as a finding and priced under the blocker instead | Phase 1 — Decide what freshness is evidenced by |
 
 ## Blockers
 
@@ -263,6 +264,29 @@ returns. D2's **decision** is untouched — only the condition for revisiting it
      measure and lowers the bill. 180 days halves the weekly cost to ~43 and
      keeps every other property; it says a trigger regression may go unnoticed
      for six months instead of three.
+     **Price corrected 2026-10-05 — this option no longer clears the gate on
+     its own, and that is measured, not argued.** Four suites now carry no
+     `last_eval` key at all (risk 5), and the gate's missing-field branch
+     (`check_trigger_evals.ts:144-147`) fires before any age comparison, so no
+     window length reaches them. Proven by running the gate with a reference
+     date that makes every dated suite fresh:
+
+     ```
+     $ ./scripts-run src/scripts/check_trigger_evals --today 2026-06-20
+     ❌ check-trigger-evals: trigger-set regression(s):
+        - src/skills/api-testing/evals/triggers.json: missing or non-ISO `last_eval` (got None)
+        - src/skills/quality-tools/evals/triggers.json: missing or non-ISO `last_eval` (got None)
+        - src/skills/test-driven-development/evals/triggers.json: missing or non-ISO `last_eval` (got None)
+        - src/skills/test-performance/evals/triggers.json: missing or non-ISO `last_eval` (got None)
+     ```
+
+     An effectively unlimited window leaves exactly those four red. Choosing
+     option 4 therefore also requires saying what happens to a suite authored
+     without the field — the same sub-question options 1 and 2 answer by
+     construction (their mechanism writes the key on first run) and option 3
+     answers by deleting the read. This does not disqualify option 4; it means
+     its price is a window **plus** a field-presence decision, where on
+     2026-09-30 it was priced as a window alone.
 - **Recommendation:** none offered. Three of the four options trade money
   against detection latency and the fourth gives up detection, and nothing in
   the tree establishes which the owner wants. Naming a preference here would be
@@ -297,6 +321,42 @@ returns. D2's **decision** is untouched — only the condition for revisiting it
   prices has shifted. The only correction is cosmetic and in the owner's favour:
   `QUERIES_PER_SUITE` is `10` in code, so a full pass is ~1020 queries exactly
   rather than by rounding.
+- **Re-measured again 2026-10-05 — this time the numbers HAVE moved, in both
+  the bill and the failure count.** Same two commands, run against the live
+  tree:
+
+  ```
+  $ npx tsx -e "import('./src/scripts/trigger_eval_rotation.ts').then(m => console.log(JSON.stringify(m.rotation_plan(m.list_trigger_suites()))))"
+  {"total":111,"cycleWeeks":12,"peakSuitesPerWeek":14,"peakWeeklyQueries":140,
+   "worstCaseStalenessDays":84,"withinCeiling":true}
+
+  $ ./scripts-run src/scripts/check_trigger_evals          # 46 findings
+  … 42 × "`last_eval` <date> is <N>d old (> 90d)"
+  …  4 × "missing or non-ISO `last_eval` (got None)"
+  ```
+
+  Three corrections to what the owner is deciding against, none of them in the
+  owner's favour:
+  1. **The suite count is 111, not 102** — nine new suites in four days. A full
+     pass is 111 × 10 = **1110 queries**, not ~1020, and the sustained weekly
+     cost under a 90-day window rises with it to ~93. The peak week is
+     unchanged at 140 and still inside `MAX_WEEKLY_QUERIES = 160`, because
+     identity slotting spreads arrivals instead of stacking them.
+  2. **"None of them missing" has stopped being true.** The 2026-10-01 reading
+     recorded 39 failures, all staleness, every suite carrying the field. Today
+     it is **46 failures — 42 stale and 4 carrying no `last_eval` key at all**
+     (risk 5). All four arrived 2026-10-02 in `a3c839340`, the day after that
+     reading, so this is a four-day-old regression rather than a long-standing
+     one nobody had noticed.
+  3. **Option 4's price changed as a consequence of 2** — a longer window does
+     not reach an absent field. Recorded against that option above, with the
+     command that proves it.
+
+  The shape of the decision is unchanged and so is its ownership. What changed
+  is that the bill is ~9 % above the quoted figure and one of the four options
+  now carries a second question. Growth is also not a one-off — 102 → 111 in
+  four days — so a decision deferred further is decided against a larger
+  number again.
 - **Resolved when:** `grep -c 'OPEN' agents/roadmaps/road-to-trigger-eval-freshness-has-no-writer.md`
   no longer matches the `D3` row — that row names one of the four options — and
   the tree agrees with it: either a mechanism writes what the gate reads, or
@@ -305,6 +365,37 @@ returns. D2's **decision** is untouched — only the condition for revisiting it
   writer search (fact 1's re-verification above) confirms the tree still has no
   writer for the gate's field. The blocker's `Status: open` is accurate, not
   stale.
+  **Executed again 2026-10-05: still UNMET — and a fifth exit was searched for
+  and does not exist.** Both limbs run against the live tree rather than read
+  off the line above:
+
+  ```
+  $ grep -n 'OPEN' agents/roadmaps/road-to-trigger-eval-freshness-has-no-writer.md
+  181:| D3 | business-owned | owner | **OPEN.** Which mechanism evidences freshness …
+
+  $ grep -rn "last_eval" src/ --include="*.ts" | grep -v "/evals/"
+  src/cli/commands/recordTriggerEval.ts:197:  …upstream.last_eval = record;     # upstream.last_eval, in manifest.json
+  src/scripts/check_trigger_evals.ts:144:    const raw = obj ? obj['last_eval'] : undefined;   # READ
+  src/scripts/lint_eval_freshness.ts:231:   const last_eval = upstream['last_eval'];           # READ, different surface
+  ```
+
+  Limb one fails: `D3` still reads `OPEN`. Limb two fails: the only writer in
+  the tree is still `recordTriggerEval.ts:197`, still writing a **different
+  key** (`upstream.last_eval`) into a **different file** (`manifest.json`) from
+  the top-level `last_eval` in `triggers.json` that line 144 reads.
+
+  **The owner-owned label was tested, not assumed, and it holds.** Under
+  capability-before-role the label follows the exit criterion, so the obvious
+  fifth exit was checked: evidence already durable in the repo that the gate
+  could be pointed at without any CI write path, which would make the fix
+  agent-capable. There is none. `internal/evals/results/` is gitignored
+  (`.gitignore:173`) and does not exist on disk; `src/skills/*/evals/last-run.json`
+  is gitignored too (`.gitignore:171`). So fact 2's durability finding holds from
+  the repository side as well as from the workflow-permissions side, every
+  remaining exit is one of the four priced options, and each of those is either
+  a recurring external spend or the removal of a recorded measure — both
+  owner-reserved under `decision-revisit-gate`. `Class: 3 — human-only` is
+  confirmed on this reading rather than carried over from the last one.
 
 ## Acceptance Criteria
 
