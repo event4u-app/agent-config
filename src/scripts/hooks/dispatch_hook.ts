@@ -12,7 +12,7 @@
  * Per `docs/contracts/hook-architecture-v1.md`. Reads `src/scripts/hook_manifest.yaml`,
  * resolves which concerns fire on the given (platform, event) tuple, and runs each
  * sequentially with the stdin envelope contract. Reduces concern exit codes per the
- * spec (0=allow, 1=block, 2=warn, ≥3=error → fail-open unless concern is fail_closed).
+ * spec (0=allow, 1=block, 2=warn, ≥3=error → resolved by declared `severity`).
  *
  * Invocation:
  *
@@ -59,6 +59,13 @@ import { _concern_body_classes, planPayloadShapes } from "./payload_stub.js";
 import { resolveSessionRole, type SessionRole } from "../_lib/session_role.js";
 import { stdinReadFailure, denyOnStdinFailure } from './stdin_failure_policy.js';
 export { stdinReadFailure, denyOnStdinFailure, _is_fail_closed_blocking } from './stdin_failure_policy.js';
+// Severity policy — what a declaration means when the concern said nothing.
+// Re-exported so the move out of this file left every importer unaffected.
+import {
+  _is_advisory, _is_blocking, _resolve_execution_failure,
+  classifySpawnResult, noVerdictRefusalNotice, SPAWN_TIMEOUT_MS,
+} from './concern_failure_policy.js';
+export { _is_advisory, _is_blocking, _resolve_execution_failure };
 import { _py_json_dumps } from './py_json_dumps.js';
 import { _fallback_yaml } from './fallback_yaml.js';
 import { detectSurface } from '../_lib/surface.js';
@@ -128,18 +135,6 @@ export function _severity_for(rc: number): string {
   return _SEVERITY_BY_EXIT[rc] ?? "error";
 }
 
-/**
- * P0.2 (road-to-rule-coherence) — is this concern declared advisory?
- *
- * An advisory concern MUST never produce a BLOCK verdict on any host. Four
- * PreToolUse concerns document themselves as advisory in prose
- * (`design_slop_hook`: "FLAGS, NEVER A BLOCK") while the transport happily
- * turned their WARN into a host-level deny. Prose is not enforcement: the
- * manifest now declares severity and the dispatcher enforces the ceiling.
- */
-export function _is_advisory(concern: JsonObject): boolean {
-  return String(concern["severity"] ?? "").trim().toLowerCase() === "advisory";
-}
 
 function _now_iso(): string {
   // Python: datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ").
@@ -565,10 +560,10 @@ function _resolve_tsx_invocation(
  * Escape hatch: AGENT_CONFIG_HOOKS_ISOLATED=1 forces the historical
  * spawn-per-concern path (also used by the bench harness for A/B numbers).
  *
- * Known trade-off vs the spawn path: the 30 s kill-timeout cannot preempt
- * in-process synchronous code. Concerns are repo-owned, budget-capped and
- * fail-open; the latency budget gate (hook-latency-budget.json) is the
- * standing regression net.
+ * Known trade-off vs the spawn path: a kill-timeout cannot preempt in-process
+ * synchronous code, so a slow concern is bounded on neither route — see
+ * `SPAWN_TIMEOUT_MS`. A CRASH is caught here, surfaces as rc 3, and the caller
+ * resolves it by declared severity.
  */
 /**
  * ## Why this still re-serialises the envelope per concern (step 1.1, MEASURED NULL)
@@ -678,6 +673,7 @@ function _run_concern_inproc(
   return { rc, stderr: err, stdout: out, duration_ms: performance.now() - started };
 }
 
+
 function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
   // In-process fast path — the default whenever the concern is in the
   // static registry (all manifest concerns; parity is CI-enforced).
@@ -728,31 +724,31 @@ function _run_concern(concern: ConcernDef, envelope: JsonObject): RunResult {
     encoding: "utf-8",
     cwd: workspace,
     env: concern_env,
-    timeout: 30000,
+    timeout: SPAWN_TIMEOUT_MS, // historical bound; `SPAWN_TIMEOUT_MS` says why
   });
   const elapsed = performance.now() - started;
-  if (proc.error) {
-    // OSError / timeout equivalent — log execution-failed so the
-    // never-block contract keeps a trace.
-    const err = proc.error as NodeJS.ErrnoException;
-    const typeName =
-      err.code === "ETIMEDOUT" ? "TimeoutExpired" : err.name || "OSError";
+  // Three ways a spawn produces no verdict; `classifySpawnResult` owns the
+  // reading, this writes the record and carries the code.
+  const outcome = classifySpawnResult(proc.error, proc.status, proc.signal);
+  if (outcome.issueDetail !== null) {
     log_dispatch_issue(
       workspace,
       String(concern["name"] || "unknown"),
       "execution_failed",
-      `${typeName}: ${err.message}`,
+      outcome.issueDetail,
       fix_hint(),
     );
+  }
+  if (outcome.noVerdict) {
     return {
-      rc: 3,
-      stderr: `${String(concern["name"])}: ${err.message}`,
+      rc: outcome.rc,
+      stderr: `${String(concern["name"])}: ${String(outcome.stderrNote)}\n${proc.stderr || ""}`,
       stdout: "",
       duration_ms: elapsed,
     };
   }
   return {
-    rc: proc.status ?? 0,
+    rc: outcome.rc,
     stderr: proc.stderr || "",
     stdout: proc.stdout || "",
     duration_ms: elapsed,
@@ -1317,13 +1313,17 @@ export function main(argv?: string[]): number {
     let rc = rawRcResult;
     const raw_rc = rc;
     if (rc >= 3) {
-      if (!concern["fail_closed"]) {
-        rc = EXIT_ALLOW; // fail-open
-      } else {
-        rc = EXIT_BLOCK;
-      }
+      // Resolved by DECLARED SEVERITY, no longer by `fail_closed:`. Every
+      // crash path has already written an `execution_failed` row, so a refusal
+      // here is traceable to a named failure. See `_resolve_execution_failure`.
+      rc = _resolve_execution_failure(concern, refusal_retry);
       if (stderr_text) {
         process.stderr.write(stderr_text);
+      }
+      // The escape, printed only where a denial can repeat — `stop` is bounded
+      // by the one-retry clause above. Reasoning: `noVerdictRefusalNotice`.
+      if (rc === EXIT_BLOCK && !refusal_retry) {
+        process.stderr.write(noVerdictRefusalNotice(String(concern["name"])));
       }
     }
     // P0.2 severity ceiling: an advisory concern can never block, on any host.

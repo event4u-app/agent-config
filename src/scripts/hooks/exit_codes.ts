@@ -114,7 +114,8 @@ export const EXIT_CODES: readonly ExitCodeRow[] = Object.freeze([
             'resolves it by the concern`s declared severity, never by the number itself',
         owner: 'no concern emits this on purpose; the runtime does',
         authorizedBy:
-            'hook_manifest.yaml `fail_closed` and `severity` together — see ' +
+            'hook_manifest.yaml `severity` alone — blocking refuses, anything else fails ' +
+            'open; `fail_closed` is no longer read on this branch. See ' +
             'docs/contracts/hook-architecture-v1.md § Exit-code semantics',
     }),
 ] as const);
