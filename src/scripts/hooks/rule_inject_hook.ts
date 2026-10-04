@@ -440,6 +440,108 @@ export const COMPOSED_CHARS = 8000;
  */
 export type DeliveryForm = 'full' | 'law' | 'omitted_budget' | 'source_unavailable';
 
+/**
+ * The host's own threshold, in the host's own unit (step 0.3).
+ *
+ * Claude Code REPLACES an `additionalContext` longer than this with a path and
+ * a 2,000-character preview. A composed string over this line is therefore not
+ * truncated — it is substituted, and the obligation text never arrives. That is
+ * why this number is the one the arrival record checks against rather than
+ * {@link COMPOSED_CHARS}: 8,000 is the budget this concern holds itself to, and
+ * 10,000 is the line past which the host stops delivering what it was handed.
+ *
+ * WHICH STRING IS MEASURED, stated because risk 5 of this roadmap's register
+ * says the answer is not established. This records the RULE-PRODUCED string,
+ * which is the only one this concern can see. If the host measures the
+ * ASSEMBLED `additionalContext` instead, the real margin is 728 rather than
+ * 2,000 and a reading of 0 here is necessary but not sufficient. The record is
+ * honest about which of the two it is; it does not settle the question.
+ */
+export const HOST_REPLACE_CHARS = 10000;
+
+/**
+ * The three forms step 0.3 names, which is not {@link DeliveryForm}'s four.
+ *
+ * `omitted_budget` and `source_unavailable` are different REASONS for the same
+ * outcome — an id the model can ask for and no text. The arrival record asks
+ * what the model got, so the two collapse to `pointer`; the manifest keeps the
+ * distinction, because a consumer diagnosing a broken install needs the reason
+ * and a reader counting arrivals does not.
+ */
+export type ArrivalForm = 'body' | 'law' | 'pointer';
+
+/**
+ * How far a matched rule got, in the levels D4 fixed (step 0.3).
+ *
+ * - `A0` discoverable — a file or pointer exists.
+ * - `A1` routed — a trigger matched.
+ * - `A2` arrived — the obligation text is in context.
+ * - `A3` enforced — a gate blocks the forbidden outcome.
+ *
+ * THIS CONCERN NEVER WRITES A0 OR A3, and both omissions are deliberate rather
+ * than unimplemented. A0 is the level of a rule that never routed, and this
+ * concern only ever sees rules that did — writing an A0 row per fire for every
+ * rule in the corpus would be a per-turn sweep of the router to record the
+ * absence of an event. A3 belongs to whatever gate refuses the outcome; a
+ * carrier that recorded its own delivery as `enforced` would be the
+ * emitter-record-read-as-compliance mistake the delivered ledger's own header
+ * carries a council lock against.
+ */
+export type ArrivalLevel = 'A0' | 'A1' | 'A2' | 'A3';
+
+/** One matched rule, with what it got and how far that got it. */
+export interface ArrivalRow {
+    readonly rule: string;
+    readonly form: ArrivalForm;
+    readonly arrival: ArrivalLevel;
+}
+
+/** One fire, measured on the composed string in the host's unit. */
+export interface ArrivalRecord {
+    /** The composed string's length in CHARACTERS — what the host counts. */
+    readonly chars: number;
+    /** 1 when this fire was over {@link HOST_REPLACE_CHARS}, else 0. Summing the column gives the over-budget count. */
+    readonly over_budget: number;
+    /** Which slot the fire reached the host on. */
+    readonly slot: string;
+    readonly at: string;
+    readonly rows: readonly ArrivalRow[];
+}
+
+/** The manifest's four reasons, as the three forms a reader of arrivals wants. */
+export function arrivalForm(f: DeliveryForm): ArrivalForm {
+    if (f === 'full') return 'body';
+    if (f === 'law') return 'law';
+    return 'pointer';
+}
+
+/**
+ * What this fire actually delivered, in the host's unit.
+ *
+ * TWO WAYS TO STAY AT A1, and they are different failures with the same
+ * reading. A pointer never carried text in the first place — step 0.3's "a
+ * pointer is never recorded above A1", taken literally. And a composed string
+ * the host REPLACES carried text that the host then did not deliver, so every
+ * row in that fire is A1 however good its form looked: the manifest says `body`
+ * and the model received a path. Recording those as A2 would be the instrument
+ * reporting its own intent instead of the outcome, which is the one thing a
+ * measurement of arrival must not do.
+ */
+export function arrivalRecord(injection: Injection, slot: string, now = stamp()): ArrivalRecord {
+    const chars = injection.body.length;
+    const replaced = chars > HOST_REPLACE_CHARS;
+    return {
+        chars,
+        over_budget: replaced ? 1 : 0,
+        slot,
+        at: now,
+        rows: injection.manifest.map(([rule, f]) => {
+            const form = arrivalForm(f);
+            return { rule, form, arrival: form === 'pointer' || replaced ? 'A1' : 'A2' };
+        }),
+    };
+}
+
 export interface Injection {
     /** Ids whose TEXT was emitted — what the ledger records. */
     rules: string[];
@@ -880,7 +982,7 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         if (restored === null) return EXIT_ALLOW;
         clearPending(root, session);
         recordDelivered(root, session, restored.rules);
-        return emit(restored, slot);
+        return emit(restored, slot, root, session);
     }
     if (slot !== 'user_prompt_submit' && slot !== 'pre_tool_use') return EXIT_ALLOW;
 
@@ -948,11 +1050,73 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     writeSeen(root, session, seen);
     recordDelivered(root, session, injection.rules);
 
-    return emit(injection, slot);
+    return emit(injection, slot, root, session);
+}
+
+/**
+ * Where this session's arrival record lives (step 0.3).
+ *
+ * BESIDE THE SEEN-SET, under the user-global root and keyed by project, for the
+ * reason step 1.7 moved that one: a measurement about a session is not state
+ * about the project, and a consumer's `git status` is the wrong place to learn
+ * what this dispatcher counted. The delivered-row ledger stays where it is —
+ * `road-to-a-stop-that-holds` Phase 3 joins on it — and this is a different
+ * record with a different reader, so the two do not have to live together.
+ *
+ * JSONL rather than one rewritten object: a fire appends, and an append cannot
+ * lose the rows already written by partially serialising the whole file. The
+ * over-budget COUNT the step asks for is the sum of the `over_budget` column,
+ * which a reader computes; storing a running total here would be a second
+ * number that can disagree with the rows it summarises.
+ */
+export function arrivalPath(root: string, session: string): string {
+    const safe = session.replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 80) || 'unknown';
+    return path.join(
+        user_global_paths.write_target(path.join('state', 'rule-inject', projectKey(root))),
+        `${safe}.arrival.jsonl`,
+    );
+}
+
+/**
+ * Append one fire's arrival record, best-effort.
+ *
+ * NEVER THROWS. This is an instrument, and a turn refused because an instrument
+ * missed a reading is worse than the missing reading — the same stance
+ * `appendDelivered` takes, for the same reason.
+ */
+export function recordArrival(root: string, session: string, record: ArrivalRecord): void {
+    try {
+        const p = arrivalPath(root, session);
+        fs.mkdirSync(path.dirname(p), { recursive: true });
+        fs.appendFileSync(p, `${JSON.stringify(record)}\n`, 'utf-8');
+    } catch {
+        /* an unwritable instrument costs a reading, never a turn */
+    }
+}
+
+/** Read back what this session recorded, dropping any line nothing can parse. */
+export function readArrival(root: string, session: string): ArrivalRecord[] {
+    let raw: string;
+    try {
+        raw = fs.readFileSync(arrivalPath(root, session), 'utf-8');
+    } catch {
+        return [];
+    }
+    const out: ArrivalRecord[] = [];
+    for (const line of raw.split('\n')) {
+        if (line.trim() === '') continue;
+        try {
+            out.push(JSON.parse(line) as ArrivalRecord);
+        } catch {
+            continue; // a torn last line must not cost the rows before it
+        }
+    }
+    return out;
 }
 
 /** The one place a delivery reaches the host, shared by the fire and the restore. */
-function emit(injection: Injection, slot: string): number {
+function emit(injection: Injection, slot: string, root: string, session: string): number {
+    recordArrival(root, session, arrivalRecord(injection, slot));
     process.stdout.write(
         `${JSON.stringify({
             decision: 'warn',

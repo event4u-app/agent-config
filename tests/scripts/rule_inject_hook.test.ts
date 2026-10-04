@@ -16,14 +16,19 @@ import {
     setHookStdinOverride,
 } from '../../src/scripts/hooks/hook_stdin.js';
 import {
+    arrivalPath,
+    arrivalRecord,
     buildInjection,
     CAP_BYTES,
     COMPOSED_CHARS,
     gateOpen,
+    HOST_REPLACE_CHARS,
     main,
+    readArrival,
     readSeen,
     recordDelivered,
     statePath,
+    type ArrivalRecord,
 } from '../../src/scripts/hooks/rule_inject_hook.js';
 import { readDelivered } from '../../src/scripts/_lib/obligations.js';
 import { lawText, ruleBody } from '../../src/scripts/_lib/rule_law_section.js';
@@ -1543,3 +1548,173 @@ describe('rule-inject — the restore keeps its pending set when it cannot build
         expect(composed(out)).toContain('PROMPT RULE BODY');
     });
 });
+
+describe('rule-inject — arrival: what the host actually sees (0.3)', () => {
+    function fire(root: string, session: string): void {
+        run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: session,
+            payload: PROMPT,
+        });
+    }
+
+    it('records one row per matched rule, with its form and its arrival level', () => {
+        const root = makeRoot({ delivery: true });
+        fire(root, 'ar-1');
+        const records = readArrival(root, 'ar-1');
+        expect(records).toHaveLength(1);
+        const rec = records[0] as ArrivalRecord;
+        expect(rec.rows).toEqual([{ rule: 'prompt-rule', form: 'body', arrival: 'A2' }]);
+        expect(rec.slot).toBe('user_prompt_submit');
+    });
+
+    it('measures the composed string in CHARACTERS, which is the host unit', () => {
+        // Not bytes. The host's replacement threshold is stated in characters
+        // and `compose` budgets in characters; a record in a third unit would
+        // have to be converted before anyone could compare it with either.
+        const root = makeRoot({ delivery: true });
+        fire(root, 'ar-2');
+        const rec = readArrival(root, 'ar-2')[0] as ArrivalRecord;
+        expect(rec.chars).toBe(composedCharsOf(root, 'ar-2'));
+        expect(rec.chars).toBeLessThanOrEqual(COMPOSED_CHARS);
+    });
+
+    it('the over-budget count is the sum of the column, and reads 0 under the composed budget', () => {
+        const root = makeRoot({ delivery: true });
+        fire(root, 'ar-3');
+        fire(root, 'ar-3'); // the seen-set makes the second fire silent — still one row
+        const records = readArrival(root, 'ar-3');
+        expect(records).toHaveLength(1);
+        expect(records.reduce((n, r) => n + r.over_budget, 0)).toBe(0);
+    });
+
+    it('a pointer is never recorded above A1', () => {
+        // `second-rule` routes on the same prompt and has no body file, so the
+        // manifest labels it `source_unavailable` — a pointer, by `arrivalForm`.
+        const root = makeRoot({ delivery: true });
+        putRouter(root, ['prompt-rule'], ['second-rule']);
+        fire(root, 'ar-4');
+        const rec = readArrival(root, 'ar-4')[0] as ArrivalRecord;
+        const byRule = new Map(rec.rows.map((r) => [r.rule, r]));
+        expect(byRule.get('second-rule')).toEqual({
+            rule: 'second-rule',
+            form: 'pointer',
+            arrival: 'A1',
+        });
+        expect(byRule.get('prompt-rule')?.arrival).toBe('A2');
+    });
+
+    it('A3 is never written by this concern, and neither is A0', () => {
+        // Asserted rather than commented, because those two are the levels an
+        // emitter is most tempted to claim. A carrier recording its own
+        // delivery as `enforced` would be the emitter-record-read-as-compliance
+        // mistake the delivered ledger carries a council lock against.
+        const root = makeRoot({ delivery: true });
+        putRouter(root, ['prompt-rule'], ['second-rule']);
+        fire(root, 'ar-5');
+        const levels = new Set(
+            readArrival(root, 'ar-5').flatMap((r) => r.rows.map((x) => x.arrival)),
+        );
+        expect(levels.has('A3')).toBe(false);
+        expect(levels.has('A0')).toBe(false);
+    });
+
+    it('a fire the host would REPLACE records every row at A1, whatever its form', () => {
+        // `arrivalRecord` is driven directly here, and that is the point rather
+        // than a shortcut: `compose` cannot produce a string over 10,000
+        // characters — which is what 1.5 bought — so a fixture that went
+        // through it would be asserting the branch is unreachable instead of
+        // asserting it is right.
+        const rec = arrivalRecord(
+            {
+                rules: ['a'],
+                bytes: 0,
+                body: 'x'.repeat(HOST_REPLACE_CHARS + 1),
+                manifest: [
+                    ['a', 'full'],
+                    ['b', 'law'],
+                    ['c', 'omitted_budget'],
+                ],
+            },
+            'user_prompt_submit',
+        );
+        expect(rec.over_budget).toBe(1);
+        expect(rec.rows.map((r) => r.arrival)).toEqual(['A1', 'A1', 'A1']);
+        // The FORM is unchanged. What was composed and what arrived are
+        // different questions, and the record answers both separately.
+        expect(rec.rows.map((r) => r.form)).toEqual(['body', 'law', 'pointer']);
+    });
+
+    it('one character under the threshold is still A2 — the boundary is not off by one', () => {
+        const rec = arrivalRecord(
+            { rules: ['a'], bytes: 0, body: 'x'.repeat(HOST_REPLACE_CHARS), manifest: [['a', 'full']] },
+            'user_prompt_submit',
+        );
+        expect(rec.over_budget).toBe(0);
+        expect(rec.rows[0]?.arrival).toBe('A2');
+    });
+
+    it('the record leaves the consumer tree, beside the seen-set', () => {
+        const root = makeRoot({ delivery: true });
+        fire(root, 'ar-6');
+        const p = arrivalPath(root, 'ar-6');
+        expect(fs.existsSync(p)).toBe(true);
+        expect(p.startsWith(path.join(HOME, '.event4u', 'agent-config'))).toBe(true);
+        // `agents/runtime/state` itself DOES exist in the workspace — the
+        // delivered-row ledger lives there by 1.7's deliberate carve-out, so
+        // the assertion is about this concern's own directory and not about the
+        // parent. Asserting the parent would fail for the right reason wearing
+        // the wrong name.
+        expect(fs.existsSync(path.join(root, 'agents', 'runtime', 'state', 'rule-inject'))).toBe(
+            false,
+        );
+    });
+
+    it('a restore after a compaction is recorded on its own slot', () => {
+        const root = makeRoot({ delivery: true });
+        putBody(root, 'prompt-rule', withLaw('prompt-rule', 200));
+        fire(root, 'ar-7');
+        run({ event: 'pre_compact', workspace: root, session_id: 'ar-7', payload: {} });
+        run({
+            event: 'session_start',
+            workspace: root,
+            session_id: 'ar-7',
+            payload: { source: 'compact' },
+        });
+        const records = readArrival(root, 'ar-7');
+        expect(records.map((r) => r.slot)).toEqual(['user_prompt_submit', 'session_start']);
+        expect((records[1] as ArrivalRecord).rows).toEqual([
+            { rule: 'prompt-rule', form: 'law', arrival: 'A2' },
+        ]);
+    });
+
+    it('a torn last line costs that line and not the rows before it', () => {
+        const root = makeRoot({ delivery: true });
+        fire(root, 'ar-8');
+        fs.appendFileSync(arrivalPath(root, 'ar-8'), '{"chars":1,', 'utf-8');
+        expect(readArrival(root, 'ar-8')).toHaveLength(1);
+    });
+
+    it('a fire that delivers nothing records nothing — silence is not a reading', () => {
+        const root = makeRoot({ delivery: true });
+        run({
+            event: 'user_prompt_submit',
+            workspace: root,
+            session_id: 'ar-9',
+            payload: { prompt: 'nothing here routes' },
+        });
+        expect(readArrival(root, 'ar-9')).toEqual([]);
+    });
+});
+
+/** The composed string's own length, read back off the delivery the fire emitted. */
+function composedCharsOf(root: string, session: string): number {
+    const { out } = run({
+        event: 'user_prompt_submit',
+        workspace: root,
+        session_id: `${session}-mirror`,
+        payload: PROMPT,
+    });
+    return composed(out).length;
+}
