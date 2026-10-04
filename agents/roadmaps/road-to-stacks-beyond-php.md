@@ -193,12 +193,13 @@ estate_growth_exempt: "two skills per stack for python, typescript and go, each 
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-10-02 | reviewer: claude/drain-stacks-beyond-php -->
+<!-- risk-review: v1 | reviewed: 2026-10-05 | reviewer: claude/stacks-beyond-php-closure -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | New skills are the engineering-base skill with a language name added | product | The neighbour's language-named skills are mostly this. | 1.1 runs first; only `create` rows promote; quality content goes to references. | Phase 1 — Composition before creation |
-| 2 | A monorepo yields several ecosystems and the payload grows | implementation | `ecosystems` can hold more than one entry. | 3.2 pins the Laravel payload byte-identical; a union larger than one pack is a finding. | Phase 3 — Prove it on one fixture per stack |
-| 3 | Phase 2 lands before b5 and the estate gate reds | implementation | An execution loop ignoring markers writes skills the ratchet refuses. | Each 2.x step carries the blocker marker; Phases 1 and 3 run without the answer. | Phase 2 — At most two skills per stack, behind the owner's cap |
+| 2 | A monorepo yields several ecosystems and the payload grows | implementation | `ecosystems` can hold more than one entry. | 3.2 pins the catalog bucket at `299-14845` with an executable oracle, re-measured 2026-10-05; a union larger than one pack is a finding. | Phase 3 — Prove it on one fixture per stack |
+| 3 | Phase 2 lands before b5 and the estate gate reds | implementation | An execution loop ignoring markers writes skills the ratchet refuses. | Each 2.x step carries the blocker marker; Phases 1 and 3 run without the answer; the Phase 2 hand-over states the measured cost (`skill_count` +1 reads 300, `skill_description_tokens` +19, gate red twice) and the `estate_growth_exempt` claim that pays it. | Phase 2 — At most two skills per stack, behind the owner's cap |
 | 4 | The runner-truth lane drops the binding instead of making it resolver-driven | implementation | Its step 2.1 reads "resolver-driven or drop it". | 1.3's fixture asserts only absence of `pest-testing` on python, which holds under either outcome. | Phase 1 — Composition before creation |
 | 5 | A binding site is de-bound in prose but left bound in frontmatter | implementation | Observed, not hypothesised: `bug/fix` kept `skills: [bug-analyzer, pest-testing]` and `framework: laravel` after its two siblings were de-bound. | 1.3's test reads the frontmatter of all three sites, and a fourth case refuses a `framework:` marker on any of them; the sensitivity was proven red. | Phase 1 — Composition before creation |
+| 6 | A recorded figure goes stale under a correctly-closed box | implementation | Observed, not hypothesised: 3.2 carried `138277` and a reproducibility claim its `--as-of` flag could not support; the live total was `137017` three days later, and the oracle named no expectation a gate could check. | Every `verify:` clause in this file now names a machine expectation (`roadmap_verify_share` 9/9, was 8/9), and 3.2's pins the bucket this lane moves rather than a total other lanes move. | Phase 3 — Prove it on one fixture per stack |
