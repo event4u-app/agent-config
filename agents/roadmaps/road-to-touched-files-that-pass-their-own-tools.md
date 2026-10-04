@@ -85,7 +85,13 @@ as verification.
       exists with its counters defined and the measured latency median
       (`agents/evidence/analysis/touched-file-quality-readings-2026-Q4.md`), and states
       plainly that zero means not-yet-observed rather than observed-to-be-zero. Closing
-      this box needs the window, not another page.
+      this box needs the window, not another page. Re-read 2026-10-05: the block is now a
+      command rather than a sentence — `git tag --contains d4760bb4f` (the one commit
+      carrying the whole pass) prints nothing, while the same check on `9bc8cd4f` prints
+      `16.2.0`, so the silence is a negative and not a broken command. The newest release
+      is tagged at `9bc8cd4`, which is also this plan's base ref, so it predates the
+      instrumentation outright. Run that command rather than re-deriving this paragraph;
+      the day it names a tag is the day the window opens.
       verify: `grep -c 'median' agents/evidence/analysis/touched-file-quality-readings-2026-Q4.md` -> /[1-9]/
 - [x] **2.2 `warn` emits one advisory line naming the command and the file**, capped at
       200 bytes, never a block.
