@@ -144,6 +144,13 @@ the durability precondition fact 2 shows is unmet.
       **Evidence (2026-10-01).** Re-run on the drain pass rather than taken on
       trust: `npm run test:ts -- tests/scripts/trigger_eval_rotation_growth.test.ts`
       → `2 passed (2)`. The property it pins still holds against the live list.
+      **Evidence (2026-10-05).** Re-run again rather than read off the line
+      above, because the live suite list has grown since it was written:
+      `npm run test:ts -- tests/scripts/trigger_eval_rotation_growth.test.ts`
+      → `2 passed (2)`. The growth the test simulates has now also happened in
+      the tree — 102 suites on 2026-10-01, **111** today — and the property
+      still holds: adding suites shifts nobody else's slot, and worst-case
+      staleness is still the cycle length (84d) rather than a re-based window.
 - [x] **1.3 Bound the spend the chosen mechanism implies.** The rotation makes
       paid calls, measured at roughly 9.5 queries per suite. Any batch increase
       multiplies the weekly bill, and `required_batch` as proposed had a floor
@@ -171,14 +178,42 @@ the durability precondition fact 2 shows is unmet.
       `MAX_WEEKLY_QUERIES = 160`, and worst-case staleness (84d) is inside the
       gate's 90-day window. Note `QUERIES_PER_SUITE` is coded as `10`, not the
       ~9.5 the prose rounds from; the ceiling arithmetic uses the code's `10`.
+      **Evidence (2026-10-05), and the suite count has moved.**
+      `npm run test:ts -- tests/scripts/trigger_eval_rotation.test.ts` →
+      `13 passed (13)`. `rotation_plan(list_trigger_suites())` on the live tree
+      now returns `{ total: 111, cycleWeeks: 12, peakSuitesPerWeek: 14,
+      peakWeeklyQueries: 140, worstCaseStalenessDays: 84, withinCeiling: true }`
+      — **111 suites, up from 102 four days ago.** The bound still holds and
+      nothing about this step's claim has weakened: the peak week is unchanged
+      at 140 queries, comfortably inside `MAX_WEEKLY_QUERIES = 160`, because
+      identity slotting spreads nine new suites across the cycle instead of
+      stacking them. What moved is the full-pass bill D3 is being decided
+      against: 111 × 10 = **1110 queries**, not the ~1020 this roadmap records
+      elsewhere. That figure is corrected in the blocker below.
 
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
 | D1 | reversible-technical | evidence | Rotate by suite identity — a suite's slot is a hash of its own name — rather than by a positional window whose start re-bases on `total`. Cost: the batch stops being a tunable knob; how many suites run in a week follows from the hash spread and `rotation_plan` reports it. | `trigger_eval_rotation_growth.test.ts`, observed red at 24 weeks against the old scheme and green at ≤12 after; a second test pins that adding a suite leaves every existing suite's schedule unchanged | a scheme is found that is both stable under growth and gives an even weekly load — identity slotting buys stability at the price of an uneven bill, and that trade is not obviously optimal |
-| D2 | reversible-technical | evidence | State the weekly paid-call ceiling as `MAX_WEEKLY_QUERIES = 160` and make the bill derivable from `rotation_plan()` without a run. | measured at 102 suites: ~85 queries/week mean, 140 in the peak week; reds at roughly 117 suites | the suite count approaches 117, or `QUERIES_PER_SUITE` is re-measured away from ~9.5 |
-| D3 | business-owned | owner | **OPEN.** Which mechanism evidences freshness — see `## Blockers` → `freshness-mechanism-is-owner-owned`. Priced, not chosen. | the ~1020-queries-per-pass arithmetic below | — |
+| D2 | reversible-technical | evidence | State the weekly paid-call ceiling as `MAX_WEEKLY_QUERIES = 160` and make the bill derivable from `rotation_plan()` without a run. | re-measured 2026-10-05 at **111** suites: 140 queries in the peak week, `withinCeiling: true`. The decision stands; its **`revisit-if` figure did not** — see the correction note below this table | the peak week approaches `MAX_WEEKLY_QUERIES`, which `rotation_plan()` reports directly — **not** a suite count, because the count is the wrong proxy (correction below); or `QUERIES_PER_SUITE` is re-measured away from the coded `10` |
+| D3 | business-owned | owner | **OPEN.** Which mechanism evidences freshness — see `## Blockers` → `freshness-mechanism-is-owner-owned`. Priced, not chosen. | the 1110-queries-per-pass arithmetic below, re-measured 2026-10-05 at 111 suites | — |
+
+**Correction to D2's `revisit-if`, measured 2026-10-05.** The retired wording
+said the ceiling "reds at roughly 117 suites" and asked for a revisit as the
+count approached it. Executed against the live tree, it does not reproduce:
+growing the live 111-suite list one synthetic suite at a time, the first
+`withinCeiling: false` lands at **total 132–152 depending on the names added**
+(five name families probed: 132, 141, 151, 152, 152). The spread is the point —
+under identity slotting the peak week is a property of the **hash distribution
+of the names**, not of the count, so no single suite number is the threshold.
+A count-based `revisit-if` would therefore have fired at the wrong time in both
+directions: it would have raised an alarm at 117 when ~20 suites of headroom
+remained, and it offers no signal at all for a cluster of similarly-named
+suites arriving at a count it considers safe. The row now points at
+`rotation_plan().peakWeeklyQueries` against `MAX_WEEKLY_QUERIES`, which is the
+quantity the ceiling is actually stated over and which the function already
+returns. D2's **decision** is untouched — only the condition for revisiting it.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-28 | reviewer: claude/host -->
