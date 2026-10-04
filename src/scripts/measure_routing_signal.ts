@@ -117,6 +117,59 @@ export function mcnemarExactP(gained: number, lost: number): number {
 
 const pp = (hits: number, total: number): number => (total === 0 ? 0 : (hits / total) * 100);
 
+/** The inputs the pre-registered verdict function reads, and nothing else. */
+export interface VerdictInputs {
+    readonly deltaRecall: number;
+    readonly deltaFalse: number;
+    readonly p: number;
+    readonly gained: number;
+    readonly lost: number;
+}
+
+/**
+ * The pre-registered verdict function, in its pre-registered ORDER.
+ *
+ * Extracted from `measure` on 2026-10-04 so the order can be tested against
+ * chosen inputs rather than against whatever the live corpus happens to
+ * produce. The behaviour is unchanged, deliberately: this is a move, not a
+ * rewrite, and the bars it reads are the same module-level constants.
+ *
+ * WHY IT HAD TO MOVE. The order is load-bearing — power floor, then guard,
+ * then primary — and the only thing pinning it was a test asserting that the
+ * LIVE run happened to be a case that discriminates: primary met AND guard
+ * breached, so a function checking the primary first would wrongly say
+ * `signal`. That witness is a property of the corpus, not of the code, and the
+ * corpus grows whenever a skill gains a trigger file. On 2026-10-04 one such
+ * growth moved delta-recall from 5.128 to 4.608 and the witness was gone,
+ * leaving the ordering guarded by nothing. Tested here against chosen inputs,
+ * the discriminating case is always available and no future corpus growth can
+ * take it away.
+ */
+export function verdictOf(i: VerdictInputs): { verdict: Verdict; reason: string } {
+    if (i.gained + i.lost < POWER_FLOOR_DISCORDANT) {
+        return {
+            verdict: 'underpowered',
+            reason: `${i.gained + i.lost} discordant positive pairs < power floor ${POWER_FLOOR_DISCORDANT}`,
+        };
+    }
+    if (i.deltaFalse > FALSE_ACTIVATION_GUARD_PP) {
+        return {
+            verdict: 'harmful',
+            reason: `false activation +${i.deltaFalse.toFixed(2)} pp breaches the +${FALSE_ACTIVATION_GUARD_PP.toFixed(1)} pp guard`,
+        };
+    }
+    if (i.deltaRecall >= RECALL_GAIN_BAR_PP && i.p < ALPHA) {
+        return {
+            verdict: 'signal',
+            reason: `recall +${i.deltaRecall.toFixed(2)} pp at p=${i.p.toExponential(2)}`,
+        };
+    }
+    return {
+        verdict: 'null',
+        reason: `recall +${i.deltaRecall.toFixed(2)} pp at p=${i.p.toExponential(2)} does not clear +${RECALL_GAIN_BAR_PP.toFixed(1)} pp and p<${ALPHA}`,
+    };
+}
+
 export function measure(repo = REPO, k = K): Measurement {
     const catalogue: CatalogueEntry[] = loadCatalogue(repo);
     const cases: CorpusCase[] = loadTrainCases(repo);
@@ -170,22 +223,7 @@ export function measure(repo = REPO, k = K): Measurement {
         (falsePp['description+body'] as number) - (falsePp['description'] as number);
     const p = mcnemarExactP(gained, lost);
 
-    // The pre-registered verdict function, in its pre-registered order.
-    let verdict: Verdict;
-    let reason: string;
-    if (gained + lost < POWER_FLOOR_DISCORDANT) {
-        verdict = 'underpowered';
-        reason = `${gained + lost} discordant positive pairs < power floor ${POWER_FLOOR_DISCORDANT}`;
-    } else if (deltaFalse > FALSE_ACTIVATION_GUARD_PP) {
-        verdict = 'harmful';
-        reason = `false activation +${deltaFalse.toFixed(2)} pp breaches the +${FALSE_ACTIVATION_GUARD_PP.toFixed(1)} pp guard`;
-    } else if (deltaRecall >= RECALL_GAIN_BAR_PP && p < ALPHA) {
-        verdict = 'signal';
-        reason = `recall +${deltaRecall.toFixed(2)} pp at p=${p.toExponential(2)}`;
-    } else {
-        verdict = 'null';
-        reason = `recall +${deltaRecall.toFixed(2)} pp at p=${p.toExponential(2)} does not clear +${RECALL_GAIN_BAR_PP.toFixed(1)} pp and p<${ALPHA}`;
-    }
+    const { verdict, reason } = verdictOf({ deltaRecall, deltaFalse, p, gained, lost });
 
     return {
         k,
