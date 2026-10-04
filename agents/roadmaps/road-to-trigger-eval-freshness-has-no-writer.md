@@ -124,6 +124,82 @@ the durability precondition fact 2 shows is unmet.
       the arithmetic is current (re-measured below) and steps 1.2 and 1.3 are
       closed and mechanism-independent, so the implementation after the choice
       is small in all four branches.
+
+      **HAND-OVER, written 2026-10-05 so the remaining action is a decision and
+      not a re-derivation.** Every anchor below was read off the live tree on
+      that date. Pick one option; the edit under it is the whole implementation.
+      Line numbers are given with their current content so a drifted anchor is
+      recognisable rather than silently wrong.
+
+      *Common to options 1 and 2 — the part an agent cannot do.* Both need the
+      canary to write back into a protected branch. The anchor is
+      `.github/workflows/cross-model-canary.yml:47-48`:
+
+      ```yaml
+      permissions:
+        contents: read        # ← both options need `write` here, plus a
+                              #   branch-protection exception for the pushing
+                              #   actor. That is the Hard-Floor half.
+      ```
+
+      The rotation already runs at `cross-model-canary.yml:118-123` and its
+      output is already collected at `:135-139` — as an `actions/upload-artifact`
+      step, which is precisely why nothing durable survives. Measured cost,
+      identical for both: ~93 provider queries a week sustained at today's 111
+      suites, 140 in the peak week, 1110 per full pass.
+
+      **Option 1 — durable rotation results, gate reads them.** After the
+      permissions change, the upload step is replaced by a commit of the result
+      JSONs to a tracked path, and `check_trigger_evals.ts:144-155` is rewritten
+      to read the newest result per suite instead of a date field. Extra cost
+      beyond the queries: a tracked artifact that grows every week, so it needs
+      the retention answer `scale-discipline` R-A7 asks for.
+
+      **Option 2 — CI writes `last_eval`.** After the permissions change, one
+      step is added after the rotation that writes today's date into each
+      covered suite's `triggers.json` and commits. The gate is untouched. The
+      predicate is the trap already recorded above: write on a **completed**
+      run, not a passing one, since a floor-breaching run is still evidence
+      that an evaluation happened. Cheapest of the four to implement, and the
+      one that lets the system certify its own freshness.
+
+      **Option 3 — retire the freshness dimension.** The only option an agent
+      could implement unaided once chosen, and the choice itself is still the
+      owner's because it removes a recorded measure. Delete
+      `src/scripts/check_trigger_evals.ts:144-155` — the whole block from
+      `const raw = obj ? obj['last_eval'] : undefined;` through the closing
+      brace of the `else` — plus `MAX_AGE_DAYS` at `:35` and its re-export at
+      `:431`, and the doc line at `:19`. The structural smoke check below it
+      stays. This also disposes of risk 4 by construction: the string that
+      prints the fabrication recipe lives at `:152`, inside the deleted block.
+      Cost: zero queries, and trigger regressions stop being measured over time.
+
+      **Option 4 — lengthen the window.** Two constants move together, and the
+      second is the one a reader forgets:
+
+      ```ts
+      // src/scripts/check_trigger_evals.ts:35
+      const MAX_AGE_DAYS = 90;              // → the chosen window, e.g. 180
+
+      // src/scripts/trigger_eval_rotation.ts:71
+      export const ROTATION_CYCLE_WEEKS = 12;   // → ≤ window / 7, e.g. 24
+      ```
+
+      A cycle longer than the window re-introduces the defect 1.2 removed, so
+      `ROTATION_CYCLE_WEEKS × 7 ≤ MAX_AGE_DAYS` has to hold after the edit;
+      `tests/scripts/trigger_eval_rotation_growth.test.ts` pins the window it
+      checks and needs the same number. At 180 days the sustained bill halves
+      to ~47 queries a week. **This option does not finish the job on its own**
+      — four suites carry no field for any window to measure, so it also needs
+      the field-presence answer recorded against the option in the blocker.
+
+      *Under options 1, 2 and 4, risk 4's string at
+      `src/scripts/check_trigger_evals.ts:152` is still false after the edit* —
+      it names `skill_trigger_eval`, which does not write `triggers.json` under
+      any of them. It is rewritten in the same change to name whichever
+      mechanism was chosen. It was left alone here deliberately: its correct
+      text is a function of the choice, so writing it now would pre-empt the
+      owner.
 - [x] **1.2 Fix the coverage instability before any mechanism depends on it.**
       Whatever 1.1 picks, a rotation whose worst-case cycle exceeds the window
       makes it unsatisfiable. The re-basing start offset is the cause; a
