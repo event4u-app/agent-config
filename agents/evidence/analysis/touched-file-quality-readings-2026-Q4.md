@@ -72,17 +72,28 @@ linter running offline. It then times `collectTouchedFileQuality` — the exact
 function the stop path calls, covering the recorder read, `git status`,
 `resolve_toolchain` and every spawn.
 
-Two runs on one machine (Apple Silicon, macOS 25.6, 2026-10-01):
+Three runs on one machine (Apple Silicon, macOS 25.6):
 
-| runs | p50 ms | p95 ms | max ms |
-|---|---|---|---|
-| 20 | 267.498 | 301.577 | 310.713 |
-| 30 | 242.969 | 443.571 | 506.567 |
+| Date | runs | p50 ms | p95 ms | max ms |
+|---|---|---|---|---|
+| 2026-10-01 | 20 | 267.498 | 301.577 | 310.713 |
+| 2026-10-01 | 30 | 242.969 | 443.571 | 506.567 |
+| 2026-10-05 | 20 | 321.833 | 381.845 | 387.837 |
 
-**`median_wall_ms` ≈ 243–267 ms** for this shape, and the p95 is the number worth
-arguing about: it moved from 302 to 444 ms between two runs of the same fixture
-on the same machine, so the tail is dominated by process-start variance rather
+**`median_wall_ms` ≈ 243–322 ms** for this shape, and the p95 is the number worth
+arguing about: across three runs of the same fixture on the same machine it reads
+302, 444 and 382 ms, so the tail is dominated by process-start variance rather
 than by the work. A single reading of it would have been a false precision.
+
+The third run was taken four days later, on a tree carrying four days of
+unrelated main, and it is reported because re-running a recorded figure is the
+only way to learn whether it has drifted. It had not: 382 ms lands inside the
+302–444 band the first two runs had already described, which is the band's own
+claim surviving a test it had not yet had. The p50 moved up by ~55 ms against the
+first run and ~79 ms against the second — same order as the p95 spread, and on a
+two-point-versus-one-point comparison that is not a trend anyone should price.
+What all three readings agree on is the shape of the answer: a few hundred
+milliseconds, dominated by process start, with no project-wide typecheck in it.
 
 What ran, and what did not:
 
