@@ -79,6 +79,42 @@ adapt by the resolver's ecosystem, quality lands as `quality-tools` references, 
 
 ## Phase 2 — At most two skills per stack, behind the owner's cap
 
+**Hand-over, measured 2026-10-05 against `origin/main` `18ac6b21e`.** All three steps share
+one blocker and one gate, so the mechanics are written once here; each step below carries
+only its own delta. Nothing in this block is a decision — it is the work that becomes
+executable the moment the owner answers.
+
+*The condition that releases them.* The owner picks one of (a) cap two per stack, (b) a
+different cap written into D3, (c) no new skills — the question is
+`road-to-leading-every-row.md:223`. Run the condition, never read a `Status:` line:
+
+```
+grep -n 'PENDING' agents/roadmaps/road-to-stacks-beyond-php.md
+```
+
+A hit on the D3 row means the question is open and no 2.x step may run. Zero hits means D3
+carries an answer, and the cap that answer names bounds the work below.
+
+*The second obstacle, under the first.* An answered b5 is necessary, not sufficient. The
+skill corpus has allowance zero (`src/scripts/check_estate_count.ts:741`), and this file's
+frontmatter carries `estate_offset_exempt`, which pays the roadmap-count half and not the
+skill-growth half. Probed on this branch — add one skill, run the gate, remove it, re-run:
+
+| state | `skill_count` | `skill_description_tokens` | gate |
+|---|---|---|---|
+| base | 299 | 11460 | ✅ within its ratchet |
+| one skill added | 300 (+1) | 11479 (+19) | ❌ twice, naming `estate_growth_exempt` as the only claim path |
+| probe removed | 299 | 11460 | ✅ within its ratchet |
+
+At the corpus mean of 38.3 description tokens per skill, six skills cost `skill_count` +6
+and `skill_description_tokens` ≈ +230, both against allowance 0. The claim is read from the
+diff, so it lands in the same change as the skills — verbatim, beside the existing
+`estate_offset_exempt:` key in this file's frontmatter:
+
+```yaml
+estate_growth_exempt: "two skills per stack for python, typescript and go, each mapping to a `create` row of agents/evidence/analysis/stack-composition-2026-Q4.md, under the cap the owner set at b5 of road-to-leading-every-row"
+```
+
 - [ ] **2.1 python: `testing-pytest`, `conventions-python`** — only rows 1.1 marked
       `create`; each carries `evals/triggers.json` with ≥ 8 positive and ≥ 4 near-miss rows
       on the creating diff.
@@ -108,21 +144,41 @@ adapt by the resolver's ecosystem, quality lands as `quality-tools` references, 
       `ecosystems: ['php']`, `vendor/bin/pest`, `vendor/bin/phpstan analyse`, and is
       asserted as the control case alongside the three new stacks.
 
-      **Reading, pinned with `--as-of 2026-10-02` so it is reproducible:** base ref
-      `21da7191` measures `138277`; this branch measures `138277`. Every bucket is
-      equal too — project-scope rules `122686` over 120 files, preloaded skills
-      catalog `14845` over 299 files, CLAUDE.md hierarchy `746`. The three `adapt`
-      paragraphs land in skill BODIES, and the catalog bucket carries descriptions,
-      so the payload is untouched by construction — the measurement confirms the
-      construction rather than discovering it.
-      verify: `./scripts-run src/scripts/check_preamble_payload_budget --json` total equal to the base-ref reading on the Laravel fixture
+      **Reading as taken, 2026-10-02 at base ref `21da7191`:** `138277` on both sides —
+      project-scope rules `122686` over 120 files, preloaded skills catalog `14845`
+      over 299 files, CLAUDE.md hierarchy `746`. The three `adapt` paragraphs land in
+      skill BODIES, and the catalog bucket carries descriptions, so the payload is
+      untouched by construction; the measurement confirms the construction rather
+      than discovering it.
+
+      **Re-measured 2026-10-05 at `origin/main` `18ac6b21e`: the total is `137017`, and
+      the step still holds.** The `-1260` sits entirely in project-scope rules
+      (`122686` → `121426`, still 120 files) — other lanes' rule edits, which this one
+      does not touch. The bucket this lane can move is byte-identical: preloaded skills
+      catalog `14845` over 299 files, CLAUDE.md hierarchy `746`.
+
+      Two corrections fall out of the re-measurement. **The `--as-of` pin did not make
+      the old reading reproducible** and was never able to: it feeds exception-expiry
+      evaluation (`src/scripts/check_preamble_payload_budget.ts:488-492`), not the
+      measured tree — with the pin and without it, today both read `137017`. **And the
+      total is the wrong oracle for this step**, because any unrelated rule edit moves
+      it, which is exactly how it drifted. The oracle below pins the catalog bucket
+      instead, which is the one a new Phase 2 skill moves. Sensitivity proven, not
+      assumed: one probe skill plus `task sync` reads `300-14879`; removing it and
+      re-syncing returns `299-14845`. The two fields are joined with `-` rather than a
+      space because `_lib/verify_clause.ts:116,135` takes at most one space-free token
+      after the arrow and drops a space-bearing expectation silently.
+      verify: `./scripts-run src/scripts/check_preamble_payload_budget --json | jq -r '.buckets[] | select(.name=="preloaded skills catalog") | "\(.files)-\(.tokens)"'` -> /^299-14845$/
 
 ## Acceptance criteria
 
 - The composition table exists before any skill is created, and every new skill maps to one `create` row.
 - A python fixture binds no `pest-testing` at any of the three sites; a Laravel fixture is unchanged.
 - No pack gains more than the owner's cap; quality content for python and go lives under `quality-tools/references/`. No pack gained anything: Phase 2 is blocked on `b5`.
-- The Laravel standing payload is byte-identical before and after. `138277` on both sides, every bucket equal.
+- The Laravel standing payload is byte-identical before and after. `138277` on both sides at
+  the 2026-10-02 base ref, every bucket equal. Re-measured 2026-10-05 at `18ac6b21e` the
+  total reads `137017`; the move is `project-scope rules` only, and the bucket this lane
+  touches is unchanged at `14845` over 299 files. The criterion holds on the fresh reading.
 
 ## Decisions
 
@@ -130,7 +186,7 @@ adapt by the resolver's ecosystem, quality lands as `quality-tools` references, 
 |---|---|---|---|---|---|
 | D1 | contested-technical | evidence | no reviewer subagents per stack | `later/road-to-database-evolution-tactics.md:132` CUT precedent | a stack reviewer the host cannot compose is measured |
 | D2 | deterministic | evidence | no `paths:`-scoped rules per stack | ADR-227 `:50-55` | ADR-227 is superseded |
-| D3 | product-owned | owner | PENDING programme blocker b5 — proposed: up to two skills per stack after 1.1 | `src/scripts/check_estate_count.ts:832` skill allowance 0 | the owner answers b5 differently |
+| D3 | product-owned | owner | PENDING programme blocker b5 — proposed: up to two skills per stack after 1.1 | `src/scripts/check_estate_count.ts:741` skill allowance 0, re-anchored 2026-10-05 — `:832` was `selfTest`'s fixture builder, which carries no allowance | the owner answers b5 differently |
 | D4 | reversible-technical | agent | no `composes:` frontmatter field; lineage lives in the 1.1 table | `skill.schema.json` has no such field; adding one is a schema change this lane does not need | `audit_skill_overlap` needs machine-readable lineage |
 | D5 | reversible-technical | agent | `/bug fix` loses `pest-testing` and `framework: laravel` | its 195-line body carries zero framework tokens; the marker declares a 100 %-one-stack coupling (`command.schema.json`) the file does not have | the body acquires Laravel-specific instructions |
 | D6 | reversible-technical | agent | the ecosystem label, not the pack name, is what an adapt paragraph keys on | measured: the typescript fixture resolves `ecosystems: ['js']`, never `typescript` | the resolver renames its labels |
