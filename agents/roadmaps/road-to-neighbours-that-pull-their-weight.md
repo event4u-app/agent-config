@@ -340,6 +340,59 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       list — esbuild strips a comment at module or statement level and PRESERVES
       one between call arguments, which is a per-byte fact this gate's own header
       does not state and the next author will otherwise rediscover.
+
+      **Re-run 2026-10-05 at `e6b71933a`: the block holds on its seventh reading,
+      and the ceiling it was priced against has moved.** Both halves of the
+      blocker's `Resolved when` were executed rather than read.
+      `npx vitest run tests/scripts/neighbour_mcp_use.test.ts` -> **15 passed**,
+      and the passing set includes `the shipped telemetry-usage entry still
+      filters the recorder out`, which is the assertion that FLIPS when the
+      blocker closes — so the recorder is still unreachable, measured rather
+      than quoted. The ratification half:
+      `grep -rl 'mcp-recorder-unreachable' agents/evidence/ratifications/`
+      returns **0 files**; control for that negative,
+      `grep -rl 'tree-keeps-neighbours' agents/evidence/ratifications/`, returns
+      `drain-tree-keeps-neighbours.md`, so the directory and the search both
+      work. Neither half has moved. The re-pricing of the three options — a
+      bundle ceiling with 41,013 B of headroom rather than 170 B, and a
+      `concern_count` allowance of zero that option 3 alone pays — is under the
+      blocker.
+
+      **The verify oracle on this step is weaker than its exit condition, and
+      this run deliberately left the command alone.** No ratifying decision
+      points at it: `grep -rl 'neighbours-that-pull-their-weight' docs/decisions/`
+      returns 0 files, control `grep -rl 'ADR-237' docs/decisions/` returns 9, so
+      strengthening is sanctioned. Two separate weaknesses, both reproduced:
+      `"tools_used_30d":\s*[0-9]+` is satisfied by `0`, which is exactly what an
+      unreachable recorder prints; and in a tree with no `.mcp.json` the census
+      emits `mcp_servers: []`, so the regex matches nothing at all and the clause
+      fails for a reason unrelated to the step — reproduced here, where
+      `./agent-config doctor neighbours --json` yields `mcp_servers len 0` and the
+      regex returns no line. What stopped the rewrite is that every candidate
+      replacement prejudges the owner's choice. An oracle keyed to the
+      `telemetry-usage` entry presumes option 1 or 2 and would never go green
+      under option 3; one keyed to a non-zero count would be wrong for a
+      consumer who genuinely calls no neighbour tool; a shape-neutral one — "some
+      `post_tool_use` concern owning the recorder admits `mcp__acme__alpha`" —
+      needs a script that does not exist, and new source here is a
+      `check_source_size_budget` ratchet entry for an oracle nobody can use until
+      the blocker closes. **The falsifiable oracle already exists and is named
+      here so the next run does not re-derive it:** the exit condition is that
+      `tests/scripts/neighbour_mcp_use.test.ts`'s `the recorder is NOT reachable
+      through the dispatcher` block STOPS passing. Whoever lands the owner's
+      chosen option rewrites that describe block to assert the positive, and that
+      is the moment this step's verify line can be rewritten to point at it
+      without presuming which option was chosen.
+
+      **Nothing here is on course to become undecidable, and it was counted
+      rather than assumed.** The store's window is forward-looking —
+      `TOOL_USE_WINDOW_DAYS = 30` in `_lib/neighbour_tool_use.ts` is applied by
+      the READER at query time, over days the writer stamps as it goes — so the
+      30 days start when the recorder starts, and a long block costs nothing
+      that a later measurement needs. This step carries no accumulating sample
+      that could expire empty; what it carries is a published `0` on every
+      install, which the blocker already records as standing rather than
+      compounding.
 - [~] **3.4 Suggest `permissions.deny` for never-used foreign tools.** Deferred: writing a
       consumer's permission block is Class C and a product decision (K15).
 
@@ -467,7 +520,7 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-10-02 | reviewer: claude/drain-neighbours-pull-weight -->
+<!-- risk-review: v1 | reviewed: 2026-10-05 | reviewer: claude/lane-neighbours-pull-weight-repriced -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -477,3 +530,5 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 | 4 | The shape scan cripples a legitimate neighbour skill | product | Shell snippets can be an installer skill's whole point. | The skill still ranks by name with the finding visible. | Phase 1 — A route line that says where the skill came from |
 | 5 | `set_by` misattributes our own refusal | implementation | A crashed hook that recorded nothing makes the next stop look foreign. | A missing previous record writes `unknown`, counted separately. | Phase 3 — The gate and the fingerprint know a neighbour acted |
 | 6 | A hook is bound to a slot that cannot supply its input | implementation | Observed, not hypothesised: 3.2's council chose `post_tool_use` without checking that the envelope carries a tool definition, and it does not. A recorder bound there would publish coverage and record nothing. | Decision D2 records the finding and what the slot can carry instead; the step is deferred with its revisit-if rather than bound to a slot that cannot feed it. | Phase 3 — The gate and the fingerprint know a neighbour acted |
+| 7 | A step reads as one answer away from landing when a second, unrelated gate would stop it | implementation | Measured 2026-10-05: an answer to `b6-neighbour-precedence` unblocks 2.1's content and leaves `check_preamble_payload_budget` at exactly its ceiling, where a ten-byte rule file reds the gate. A reader of the `blocked-by` marker alone would plan for one lock. | The phase-level note above Phase 2 prices the second lock with the probe that measured it and names the gate's own two sanctioned exits; the same pattern is applied to option 3 of the blocker, where `concern_count` has a zero allowance. | Phase 2 — One stated order, no detector |
+| 8 | A cost figure in a blocker goes stale and an owner decides on a tree that no longer exists | product | The blocker priced three options against a hook bundle with 170 B of headroom; three days later the measured figure was 41,013 B, which removes bundle bytes as the discriminator entirely. | Both figures are carried in place with the command that produced each, struck rather than overwritten, so the next reader can see which tree each belongs to; the re-run note on 3.3 restates every blocking condition as an executed command with a control. | Phase 3 — The gate and the fingerprint know a neighbour acted |
