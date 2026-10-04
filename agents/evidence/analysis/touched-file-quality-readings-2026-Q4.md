@@ -62,6 +62,33 @@ The same holds for `unscoped` (`tsc --noEmit` has no per-file form) and
 Zero here means **not yet observed**, not **observed to be zero**. The two are
 different claims and only the first is supported.
 
+### The release gate, as a command rather than a claim
+
+Re-read 2026-10-05. Until now this page asserted "no release carries the
+instrumentation" in prose, which a later reader can only believe or re-derive.
+It is one command, and it is the command that decides this step:
+
+```
+git tag --contains d4760bb4f        # the whole instrumentation, one commit
+```
+
+| Run | Output | Reading |
+|---|---|---|
+| `git tag --contains d4760bb4f` | *(empty)* | no release carries it |
+| `git tag --contains 9bc8cd4f` | `16.2.0` | the check reports a tag when one exists |
+
+The second row is the control, and it is why the first row's silence is a
+finding rather than a broken command. It is also the sharpest available
+statement of the gap: `9bc8cd4` is where the newest release is tagged **and**
+the base ref every anchor in the roadmap was read at, so the latest shipped
+release is pinned at precisely the commit the instrumentation landed *after*.
+The release did not miss it by a window of drift; it predates it outright.
+
+`d4760bb4f` is the single commit carrying the whole pass — module, stop-concern
+wiring, settings key, schema, bench and both fixtures, 12 files. There is no
+partial-landing case to reason about, so containment of that one commit is a
+complete test of whether a release can have produced a reading.
+
 ## Latency — measured, pre-release
 
 `./scripts-run src/scripts/bench_touched_file_quality` builds a consumer-shaped
@@ -72,17 +99,28 @@ linter running offline. It then times `collectTouchedFileQuality` — the exact
 function the stop path calls, covering the recorder read, `git status`,
 `resolve_toolchain` and every spawn.
 
-Two runs on one machine (Apple Silicon, macOS 25.6, 2026-10-01):
+Three runs on one machine (Apple Silicon, macOS 25.6):
 
-| runs | p50 ms | p95 ms | max ms |
-|---|---|---|---|
-| 20 | 267.498 | 301.577 | 310.713 |
-| 30 | 242.969 | 443.571 | 506.567 |
+| Date | runs | p50 ms | p95 ms | max ms |
+|---|---|---|---|---|
+| 2026-10-01 | 20 | 267.498 | 301.577 | 310.713 |
+| 2026-10-01 | 30 | 242.969 | 443.571 | 506.567 |
+| 2026-10-05 | 20 | 321.833 | 381.845 | 387.837 |
 
-**`median_wall_ms` ≈ 243–267 ms** for this shape, and the p95 is the number worth
-arguing about: it moved from 302 to 444 ms between two runs of the same fixture
-on the same machine, so the tail is dominated by process-start variance rather
+**`median_wall_ms` ≈ 243–322 ms** for this shape, and the p95 is the number worth
+arguing about: across three runs of the same fixture on the same machine it reads
+302, 444 and 382 ms, so the tail is dominated by process-start variance rather
 than by the work. A single reading of it would have been a false precision.
+
+The third run was taken four days later, on a tree carrying four days of
+unrelated main, and it is reported because re-running a recorded figure is the
+only way to learn whether it has drifted. It had not: 382 ms lands inside the
+302–444 band the first two runs had already described, which is the band's own
+claim surviving a test it had not yet had. The p50 moved up by ~55 ms against the
+first run and ~79 ms against the second — same order as the p95 spread, and on a
+two-point-versus-one-point comparison that is not a trend anyone should price.
+What all three readings agree on is the shape of the answer: a few hundred
+milliseconds, dominated by process start, with no project-wide typecheck in it.
 
 What ran, and what did not:
 
@@ -106,3 +144,9 @@ A release that ships `touched_file_quality`, at least one consumer running it in
 `shadow`, and the three stop-counters filled from real `quality_runs` records.
 Until then 2.1 is open and 2.3 — the `shadow → warn` default flip, already
 deferred to the owner — has no reading to rest on.
+
+The first of those three is checkable in one command, and it is the one that
+gates the other two: `git tag --contains d4760bb4f`. While it prints nothing,
+no consumer can have produced a reading and the counters above are structurally
+zero. The day it names a tag, the window has opened and the counters become a
+question about collection rather than about availability.
