@@ -3,7 +3,7 @@
  * Report what a host actually loads, per host rule directory (step 0.1).
  *
  * REPORT-ONLY, AND THE NAME SAYS SO. Phase 0 of
- * `road-to-a-rule-carrier-that-works-outside-the-repo` makes no behaviour
+ * `road-to-a-rule-carrier-that-works-outside-the-repo` makes no behavior
  * change, so this never fails on a number: exit 0 whenever it could read, 2 on
  * usage. It is also deliberately NOT named `check_*` or `lint_*` —
  * `_lib/gate_population.ts` enters any script with those prefixes into the gate

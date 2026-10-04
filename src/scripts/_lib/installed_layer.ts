@@ -19,7 +19,7 @@
  * frontmatter and comments.
  *
  * ONE LIBRARY, FOUR CONSUMERS. The report CLI is the only one wired in this
- * change (Phase 0 makes no behaviour change), and the shape is the reason the
+ * change (Phase 0 makes no behavior change), and the shape is the reason the
  * other three named in step 0.1 — CI, `doctor`, the upgrade receipt — can use
  * it without a second reader: every input is a PARAMETER. `home`, `projectRoot`
  * and `manifestPath` are supplied by the caller, never read off the process, so
