@@ -38,6 +38,35 @@ capability_gap: none
 > `F8`). AC-5 and AC-6's first clause are transcript claims on top, so neither closes on a
 > static probe alone.
 >
+> **Re-read 2026-10-04 — nothing closed, two readings moved, and a SECOND obstacle to the
+> kernel paragraph is now measured.** All four blockers were re-read by executing their
+> conditions against this tree at `30481f660` rather than by trusting their `Status:` lines,
+> and the two that read `open` still do. Two readings moved. The ask census now reads **633**
+> files under `src/domains`, `src/skills` and `src/agent-src/contexts`, not the 627 of
+> 2026-10-01, and both of its measurable targets are still MET — the corpus grew and the
+> targets held, which is the useful half of that number. And
+> `road-to-typed-grants-that-persist`'s step 3.2 — the first clause of
+> `interrupt-classes-owned-by-sibling`, and the step `DC-1` allocates the interrupt classes
+> to — has gone from `[ ]` to `[~]`: deferred, and refused on the control it removes rather
+> than merely unstarted. `DC-1`'s revisit condition was evaluated against that and does
+> **not** fire. A deferral is neither a withdrawal nor a retargeting away from
+> `user-interrupt-priority.md`, the step still names that file and still carries the three
+> classes, and the row says in terms that sibling slowness is not a trigger. The allocation
+> stands and 5.1's cause is unchanged.
+>
+> **The new fact is the preamble budget, and it changes what the kernel PR costs.** 3.1's
+> remaining paragraph has been recorded throughout as blocked by one thing, the kernel-write
+> deny. It is blocked by two. `check_preamble_payload_budget` prints
+> `measured total 137017 tok ... ceiling 137017` and the verdict
+> `zero net growth, design 107646`, so the preamble sits exactly at its ceiling with no
+> headroom at all: a maintainer who lifts the deny and writes the paragraph reds that gate on
+> the same PR unless the paragraph is offset by an equal reduction elsewhere in the preamble,
+> or the ceiling is deliberately moved. That is not a new gate and not a new rule — it is the
+> same gate whose +219 tok/spawn rejection of a four-line version 3.1 already records from
+> 2026-09-13, read again now that the margin is zero. It is written onto 3.1 as a hand-over,
+> with the anchor line and the exact paragraph, so the kernel PR is one decision rather than a
+> re-derivation.
+>
 > **What the 2026-10-01 drain run changed.** The third cause — *this file's 5.1 is word-for-
 > word the sibling's step 3.2* — was never a missing artefact. It was an undecided ownership
 > question, parked as `blocker: interrupt-classes-owned-by-sibling` with the note that it is
@@ -328,6 +357,47 @@ owner-owned residue remains, closure completes with zero owner interaction.
       `grep -niE 'AskUserQuestion|native|primitive' src/rules/ask-when-uncertain.md` returns
       nothing, so the paragraph naming the per-host primitive does not exist. Both clauses
       negative; the cause has not dissolved and the step stays open.
+      **Evidence (2026-10-04). Fifth reproduction, and the hand-over a maintainer needs.** The
+      guard was executed again rather than read. An `Edit` envelope naming
+      `src/rules/ask-when-uncertain.md` piped to `src/scripts/hooks/block_kernel_rule_writes`
+      exited **1** with `block-kernel-rule-writes: BLOCKED - kernel rule ask-when-uncertain is
+      immutable - tighten-only via the override exception registry`, followed by its own
+      sentence that *"Legitimate change requires a human action outside the agent session"*.
+      The second clause was checked on this run too and also still fails:
+      `grep -niE 'AskUserQuestion|native|primitive' src/rules/ask-when-uncertain.md` returns
+      nothing. `ask-when-uncertain` is still a member of `KERNEL_RULE_IDS`, at line 19 of
+      `src/scripts/_lib/kernel_rules.ts`. Both clauses negative for the fifth time.
+      **Hand-over, part 1 - where the paragraph goes.** Anchor file
+      `src/rules/ask-when-uncertain.md`, section `## How to ask`, immediately after line 39,
+      whose full text today is ``Numbered options (per [`user-interaction`](user-interaction.md)). Short.``
+      The paragraph below discharges BOTH of the blocker's resolution clauses at once: it names
+      the per-host primitive, and it makes
+      `grep -niE 'AskUserQuestion|native|primitive' src/rules/ask-when-uncertain.md` non-empty.
+      Verbatim, to be inserted as a new paragraph after that line:
+
+~~~markdown
+**Native where the host has one.** `hooks:status` prints `ask -> native` or `ask -> text` for
+the running host. On `native` the question goes through the host's structured-ask primitive
+with the recommendation as its default option; `text` is the numbered-block fallback and says
+so. One question per turn on either shape - the Iron Law above does not change with the form.
+~~~
+
+      **Hand-over, part 2 - the budget, measured on this run and not previously recorded here.**
+      Lifting the deny is necessary and NOT sufficient.
+      `./scripts-run src/scripts/check_preamble_payload_budget --as-of 2026-10-04T00:00:00Z`
+      reports `project-scope rules 121426 tok`, `measured total 137017 tok (baseline 102520,
+      +34497; ceiling 137017)` and the verdict `ceiling 137017 tok = base 137017 - zero net
+      growth, design 107646`. The ceiling is `max(design, payload at base ref)` and is measured
+      at the base ref, so there is no per-PR headroom: any net addition to a project-scope rule
+      reds the gate. The paragraph above is roughly 300 characters, about 75 tok/spawn by the
+      gate's own chars/4 accounting, so the kernel PR must offset it with an equal reduction
+      in the preamble, or move the ceiling deliberately. This reading is taken from the
+      gate's printed verdict. The sensitivity probe that would have confirmed it by inflating a
+      rule file and watching the gate go red was NOT run on this session: editing a rule file is
+      itself refused here, which is the same class of refusal as the kernel deny and is recorded
+      rather than worked around. The 2026-09-13 rejection at +219 tok/spawn noted above is that
+      same gate observed empirically when there was still margin to reject against, and it
+      agrees with this reading.
 - [x] **3.2 The host manifest records which shape each host has.** `hook_manifest.yaml` host
       rows gain `ask: native | text`, and `hooks:status` prints it.
       verify: `agent-config hooks:status` prints the ask shape for the current host.
@@ -523,8 +593,11 @@ is inlined instead.
   longer owner-locked, which is ADR-268 § 10, and the direction it may not be moved back in is
   § 0's table.
 - **Resolved when:** `grep -m1 '^status:' docs/decisions/ADR-268-*.md` reads `accepted` — it
-  does, verified 2026-09-08, re-executed 2026-09-30 and 2026-10-01 and still `accepted`. This
-  entry is read by executing its condition, never by trusting this field.
+  does, verified 2026-09-08, re-executed 2026-09-30, 2026-10-01 and 2026-10-04 and still
+  `accepted`. This entry is read by executing its condition, never by trusting this field.
+  The 2026-10-04 execution printed `status: accepted` against
+  `docs/decisions/ADR-268-mission-scoped-authority-persistence-and-ratified-self-amendment.md`
+  on this tree at `30481f660`.
 
 ### blocker: kernel-write-deny-ask-when-uncertain
 - **Status:** open
@@ -553,6 +626,14 @@ is inlined instead.
   rather than by reading the previous note. The second clause was checked on 2026-10-01 too
   and also fails: `grep -niE 'AskUserQuestion|native|primitive' src/rules/ask-when-uncertain.md`
   returns nothing.
+  **Fifth reproduction, 2026-10-04**, both clauses again, at `30481f660`: the guard exits 1
+  with the same `BLOCKED` line, and the `grep` is still empty. A second, independent obstacle
+  was measured on that run and is recorded in full on step 3.1 — the preamble payload budget
+  reads `zero net growth` with the ceiling equal to the base, so the paragraph cannot simply
+  be written once the deny is lifted; it must be offset by an equal reduction or the ceiling
+  moved. The **What to do** above is therefore still necessary and no longer sufficient, and
+  3.1 now carries the anchor line and the verbatim paragraph so the maintainer act is a
+  decision rather than a re-derivation.
 
 ### blocker: grant-object-undelivered
 - **Status:** open
@@ -574,8 +655,16 @@ is inlined instead.
 - **If you do nothing:** 4.1 and 5.1 stay open and correctly so. No behaviour is missing
   today, because the grant they would protect does not exist to be lost.
 - **Resolved when:** `grep -rln granted_by src tests` returns at least one path. It returned
-  nothing on 2026-09-13, 2026-09-14, 2026-09-30 and 2026-10-01 — the last reading taken at
-  `9f2b9fb4a`, which is that day's head of `origin/main` and not a stale checkout.
+  nothing on 2026-09-13, 2026-09-14, 2026-09-30, 2026-10-01 and 2026-10-04 — the 2026-10-01
+  reading taken at `9f2b9fb4a` and the 2026-10-04 one at `30481f660`, each that day's head of
+  `origin/main` and not a stale checkout. The 2026-10-04 run widened the sweep once, to check
+  the narrow scope is not hiding a delivery: `granted_by` appears in this file, in
+  `road-to-typed-grants-that-persist`, under `agents/evidence/reviews/`, and in ADR-260,
+  ADR-266 and ADR-268 — plans and records only, nothing under `src` or `tests`. The scope is
+  the point: the object has to exist in code, not in prose about code.
+  **The sibling moved away from delivering it, not toward it.** Its Phase 2 steps 2.1 and 2.2
+  and its 3.1 — the steps this entry names as the object's builders — all read `[~]` on
+  2026-10-04, deferred. The blocker holds for a slightly stronger reason than before.
 
 ### blocker: interrupt-classes-owned-by-sibling
 - **Status:** resolved
@@ -603,7 +692,14 @@ is inlined instead.
   hazard this entry existed to prevent is removed by the decision rather than by the parking.
 - **Resolved when:** `road-to-typed-grants-that-persist`'s step 3.2 reads `[x]`, **or** the
   allocation is recorded here. The first still does not hold — that step read `[ ]` on
-  2026-09-13, 2026-09-14, 2026-09-30 and 2026-10-01. The **second holds as of 2026-10-01**:
+  2026-09-13, 2026-09-14, 2026-09-30 and 2026-10-01, and on **2026-10-04 it reads `[~]`** —
+  deferred, refused on the control it removes and unverifiable until the sibling's 3.1 ledger
+  exists. `[~]` is not `[x]`, so the clause is unchanged in verdict while changed in fact.
+  `DC-1`'s revisit condition was evaluated against that change and does **not** fire: it names
+  withdrawal or retargeting away from `user-interrupt-priority.md`, and a deferral is neither
+  — the step still names that file and still carries the three classes — and the row says in
+  terms that sibling slowness is not a trigger. The allocation stands.
+  The **second holds as of 2026-10-01**:
   `DC-1` in `## Decisions` is that record. This entry is read by executing its condition —
   `grep -n 'DC-1' agents/roadmaps/road-to-decision-closure.md` returns the row — never by
   trusting this field.
@@ -688,6 +784,23 @@ resumed with the grant and decisions intact.
       the same rule that bounds the criterion: this run IS the party that would have produced
       the transcript, so its own reading of that transcript would be the self-commissioned
       evidence `evaluator-independence` names. Unchanged, not stalled.
+      **Re-verified 2026-10-04, by running the census again rather than citing the note above,
+      and the corpus moved while the targets did not.**
+      `./scripts-run src/scripts/ask_block_census` now reads **633** files under
+      `src/domains`, `src/skills` and `src/agent-src/contexts` — six more than the 627 of
+      2026-10-01 — and reports *zero technical owner asks in execution* **MET**, *zero
+      commit/push/CI/conflict asks* **MET**, and *zero repeats of an answered question*
+      **NOT MEASURED (transcript axis)**. The ask-shape breakdown was 184 single, 74 batch,
+      0 count-only, 0 file-parked, 21 bypass. That the corpus grew by six files while both
+      measurable targets still read MET is the useful content of this re-run: the static half
+      is not drifting as the tree grows. `F1-technical-ambiguities.md` still ships in
+      `tests/fixtures/decision-closure/`, and `closure_scan.test.ts` was re-run green on this
+      tree, producing twelve findings over `F1` and zero owner questions.
+      The missing half is unchanged, and unchanged for the same two reasons: `F1` is a detector
+      fixture rather than a roadmap under `agents/roadmaps/`, so `process-full` still has
+      nothing to execute over it, and the only agent that could run it is the one that would
+      then read its own transcript. This run did not attempt it either, for that second reason.
+      Unchanged, not stalled.
 - [ ] AC-6 — on a host with a native ask primitive, every owner ask used it; on a host without
       one, `hooks:status` says so.
       **HALF PROVEN, 2026-09-13.** The second clause holds: `ask: native | text` is a manifest
@@ -717,3 +830,17 @@ resumed with the grant and decisions intact.
       nothing, so the paragraph that would discharge it without touching the guard does not
       exist either. The transcript half fails on AC-5's two grounds. Discharging any one of the
       three still does not close this criterion.
+      **Re-verified 2026-10-04, both clauses, by counting rather than reading.** Second clause
+      holds and is unchanged in shape: `grep -c '^\s*ask:' src/scripts/hook_manifest.yaml`
+      returns **8**, and listing the matches shows exactly one `native` and seven `text`, the
+      same split as 2026-09-30 and 2026-10-01. `agent-config hooks:status` was run as well and
+      prints the shape per host — one `native  (structured-ask tool; the recommendation is its
+      default option)` and seven `text  (numbered text block — the fallback, and it says so)`
+      — so the row reaches the surface that reads it and does not merely sit in the manifest.
+      First clause unchanged and now blocked three ways rather than two: the kernel-write deny
+      was reproduced a fifth time against the guard itself, the paragraph that would discharge
+      the blocker without touching the guard still does not exist, and step 3.1 records a
+      newly measured third obstacle — the preamble payload budget is at `zero net growth`, so
+      even a lifted deny leaves the paragraph needing an offset or a deliberate ceiling move.
+      The transcript half fails on AC-5's two grounds. Discharging any one of the four still
+      does not close this criterion.
