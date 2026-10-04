@@ -37,7 +37,9 @@ mechanism is something that ran, not something someone typed.
    both only read it. `skill_trigger_eval` — the interactive paid CLI everyone
    assumes bumps it, this roadmap's author included — writes its *result* file
    and never touches `triggers.json`. So a paid backfill of all 39 stale suites
-   would not move the gate by one day.
+   would not move the gate by one day. (**42 stale as of 2026-10-05, and four
+   further suites that carry no `last_eval` key at all** — a backfill reaches
+   neither group. See risk 5 and the blocker's 2026-10-05 re-measurement.)
 
    **Re-verified 2026-10-01, and the original search scope was too narrow —
    widening it finds a decoy, not a writer.** Grepping `src/` rather than
@@ -489,6 +491,18 @@ returns. D2's **decision** is untouched — only the condition for revisiting it
       inventing the answer. The exact inputs needed are listed under 1.1; this
       criterion closes automatically once one of them is supplied and
       implemented.
+      **Re-read 2026-10-05 — still unmet, and the question it asks has got one
+      answer harder.** The writer search was re-executed at the widened scope
+      and the tree still holds no writer for the gate's field, so a reader still
+      cannot name the mechanism. What moved is that "fresh" now has to cover a
+      case this criterion did not anticipate: four suites carry no `last_eval`
+      key at all (risk 5), so an answer to "what makes a suite fresh" has to say
+      what a suite that has never been evaluated *is*, not only how old a date
+      may be. Options 1 and 2 answer that implicitly, option 3 dissolves it, and
+      option 4 does not answer it — which is why option 4's price was corrected.
+      The hand-over written onto 1.1 on the same date carries the anchored edit
+      for each branch, so this criterion closes with one owner decision plus the
+      edit named under it.
 - [x] AC-2 — A growth-simulating test pins the rotation's worst-case staleness
       inside the enforced window, and has been observed red against the scheme
       it replaces.
@@ -497,6 +511,10 @@ returns. D2's **decision** is untouched — only the condition for revisiting it
       asserts worst-case staleness stays within 12 weeks. It was observed red
       against the positional scheme at **24 weeks** before the replacement, so
       its sensitivity is demonstrated rather than assumed.
+      **Re-verified 2026-10-05:** `2 passed (2)`, against a live list that has
+      itself grown 102 → 111 since the criterion was written — the simulated
+      growth the test asserts over has now partly happened in the tree, and
+      worst-case staleness is still 84d inside the 90-day window.
 - [x] AC-3 — The weekly paid-call count of the rotation is derivable from the
       code and bounded by a stated ceiling.
       **MET 2026-09-30.** `rotation_plan()` is pure and returns the peak week's
@@ -504,3 +522,8 @@ returns. D2's **decision** is untouched — only the condition for revisiting it
       is under `MAX_WEEKLY_QUERIES = 160`. Two tests: the live list is under the
       ceiling, and a 1000-suite list reports `withinCeiling: false` rather than
       billing silently.
+      **Re-verified 2026-10-05:** `13 passed (13)`, and the live list at 111
+      suites still reports `peakWeeklyQueries: 140, withinCeiling: true`. The
+      criterion holds; D2's `revisit-if` did not, and was corrected to watch
+      `peakWeeklyQueries` rather than a suite count — see the note under the
+      Decisions table.
