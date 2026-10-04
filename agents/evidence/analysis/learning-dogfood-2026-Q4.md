@@ -12,13 +12,24 @@
 
 `memory.learn_on_session_end` ships OFF. The condition for proposing the
 default flip was written by the council of 2026-07-27 and lives verbatim in
-`src/config/agent-settings.template.yml:1376-1378`:
+`src/config/agent-settings.template.yml:1392-1394`, with the key it gates on
+`:1395`:
 
 > ```
 >   # human via /memory:propose. SHIPS OFF (council 2026-07-27): the default
 >   # flip is proposed only after the 30-day dogfood shows non-trivial signal
 >   # AND session-end p95 < 2 s.
 > ```
+
+**The line number drifts; the command does not.** Those numbers read `1376-1378`
+and `1379` until 2026-10-04, when a re-read found `1376` pointing at an
+unrelated memory-index comment sixteen lines above the council's. A reader on
+the wake date would have followed the citation to the wrong paragraph and had no
+way to notice. Cite it by the grep instead, which survives any further drift:
+
+```bash
+grep -n -B3 'learn_on_session_end' src/config/agent-settings.template.yml
+```
 
 Two thresholds, both load-bearing, quoted rather than paraphrased so a reader
 can check the copy against the source:
@@ -127,6 +138,68 @@ So the maintainer checkout's intake is the window's input, and it is per-machine
 exactly like the ledger beside it. That is the correct reading of the roadmap's
 acceptance criterion "at least one signal file exists in the **maintainer
 intake**": the file is in the checkout, not in the diff.
+
+## Mid-window reading — 2026-10-04
+
+Taken three days into the thirty, not to decide anything but to find out whether
+the window is on course to be decidable on its wake date. Each figure below is
+the command's output, and each negative carries the control that separates "no
+result" from "mistyped argument".
+
+**The ledger has not grown since the day it opened.**
+
+```bash
+$ wc -l < agents/runtime/state/learning-dogfood.jsonl
+2
+$ cat agents/runtime/state/learning-dogfood.jsonl
+{"at":"2026-10-01T10:33:35.108Z","wall_ms":1,"signals_in":0,"lessons_out":0,"preferred":0}
+{"at":"2026-10-01T10:40:19.060Z","wall_ms":1,"signals_in":3,"lessons_out":0,"preferred":0}
+```
+
+Both lines are the two this page already quotes as the opening readings. Three
+days of sessions have produced no third. The closing condition asks for **≥ 20**;
+the window is at **2**, with 27 days left to find 18.
+
+**The mechanism is not the explanation — it is wired and armed.** Four checks,
+each run against the live tree rather than inferred:
+
+| Claim | Command | Output |
+|---|---|---|
+| the concern is bound on `session_end` | `grep -n 'session_end:' src/scripts/hook_manifest.yaml` | `memory-learn` present in every platform row |
+| the native event maps to it | `grep -n 'SessionEnd' src/scripts/hook_manifest.yaml` | `SessionEnd: session_end` |
+| the concern is in the built bundle | `grep -c 'learning-dogfood' dist/hooks/dispatch.js` | `2` (control: `session-register` → `5`) |
+| the flag is on in this checkout | `grep -n learn_on_session_end .agent-settings.yml` | `learn_on_session_end: true` |
+
+The consent layer also grants rather than withholds: `.agent-settings.yml` is a
+hand-edited file with no provenance sidecar (`ls .agent-settings.provenance*` →
+no matches), which is exactly the case `consentVerdict` admits.
+
+**Readings are not being stranded in worktrees either.** The obvious hypothesis
+— that work happens in ephemeral worktrees, so each session's line lands in a
+tree that is later deleted — is false here:
+
+```bash
+$ find .claude/worktrees -maxdepth 4 -name 'learning-dogfood.jsonl' | wc -l
+0
+$ ls .claude/worktrees | wc -l
+116
+# control, same command against a path known to hold the file:
+$ find agents/runtime/state -maxdepth 2 -name 'learning-dogfood.jsonl'
+agents/runtime/state/learning-dogfood.jsonl
+```
+
+Zero ledgers across 116 worktrees, from a command proven to find the file when
+it is there. So the lines are not being written and discarded; they are not
+being written.
+
+**What this does and does not establish.** It establishes that the window is on
+course to close with far fewer than 20 readings, and that no missing wiring
+explains it. It does not establish why no session end has reached the concern —
+that is a question about how sessions in this checkout actually terminate, and
+nothing in the tree answers it. Whoever opens this page on 2026-10-31 should
+expect to read a ledger near 2, and should treat *that* as the finding rather
+than as a threshold failure: a window that recorded nothing has not shown a
+`preferred` count to be trivial, it has shown the window did not run.
 
 ## What this window cannot answer
 
