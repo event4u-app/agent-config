@@ -59,7 +59,7 @@ index 8f74f194fcdee655bfcc94154db4e5ad6764be32..2fd1a5c6e1816060f3a65b72bff2f447
      strategy:
        fail-fast: false
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..b2b273bbeedb6e1b88a45896281655f2c5de46c6 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..4ea722b2d4c6e9b561c7aea3c6d8e77adeba4b53 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
 @@ -35,10 +35,25 @@ keep-beta-reason: >-
@@ -158,7 +158,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..b2b273bbeedb6e1b88a45896281655f2
  
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
-@@ -93,19 +159,31 @@ procedure under its `OUT-OF-SHAPE` findings, and `release.ts` §
+@@ -93,19 +159,38 @@ procedure under its `OUT-OF-SHAPE` findings, and `release.ts` §
  
  ## Cut surface — heavy jobs that skip on release PRs
  
@@ -188,20 +188,27 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..b2b273bbeedb6e1b88a45896281655f2
 +| Workflow | Job | Why skipping it is safe on a release PR |
  |---|---|---|
 -| `tests.yml` | `install-tests` | release-PR diff has no `install.sh` / `scripts/install.py` / `tests/test_install.sh` |
++All seven `tests.yml` jobs carrying the guard are listed — derived from the
++`if:` lines, not from memory. An earlier version of this table named two jobs
++that no longer exist and omitted four that do skip, which is how a table nothing
++parses decays.
++
 +| `tests.yml` | `install-tests` | the allowlist has no `install.sh` / `scripts/install.py` / `tests/test_install.sh` |
  | `tests.yml` | `install-aux-tests` | same — orchestrator, key contracts, one-liner smoke all untouched |
 -| `tests.yml` | `python-tests` | release-PR diff has no `scripts/**` or `tests/**` (other than CHANGELOG via path filter — see below) |
 -| `tests.yml` | `node-tests` | release-PR diff has no `src/**`, `tests/{cli,server,ui}/**`, `packages/core/installer/**` |
 -| `tests.yml` | `windows-lockfile-export` | release-PR diff has no `scripts/install_global*.py`, `scripts/cmd_export.py`, lockfile test surface |
 -| `smoke-public-install.yml` | `smoke` | release-PR diff has no `scripts/install*`, `setup.sh`, `templates/**`, `package.json` runtime behaviour |
-+| `tests.yml` | `python-tests` | no `scripts/**` or `tests/**` (other than CHANGELOG via path filter — see below) |
 +| `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
-+| `tests.yml` | `windows-lockfile-export` | no `scripts/install_global*.py`, `scripts/cmd_export.py`, lockfile test surface |
++| `tests.yml` | `static-checks` | ESLint, `tsc` and prepack read source and manifests; the allowlist admits no source, and `package.json` version-field edits change no type and no lint result |
++| `tests.yml` | `golden-tests` | golden corpora live under `tests/` and `internal/`, neither admitted |
++| `tests.yml` | `collector-lifecycle` | exercises collector scripts under `src/scripts/`, none admitted |
++| `tests.yml` | `workspace-tests` | exercises workspace wiring under `src/` and `tests/`; the admitted pack and domain files are metadata those tests do not read |
 +| `smoke-public-install.yml` | `smoke` | no `scripts/install*`, `setup.sh`. TWO admitted paths are this job's own `paths:` triggers: `package.json`, whose content no gate reads (opening blockquote), and `src/agent-src/templates/agents/agent-project-settings.example.yml`, a version-pinned example file whose pin `check_template_pin_drift` gates on the kept surface |
  
  `push:` to `main` and the weekly cron on `smoke-public-install.yml` stay
  **unconditional** — those catch drift the PR matrix can't see.
-@@ -134,10 +212,9 @@ the feature-PR floor by adding:
+@@ -134,10 +219,9 @@ the feature-PR floor by adding:
  
  `release-validation.yml`'s fourth job, `release-install-e2e`
  (`tests/test_release_install_e2e.sh`), closes a gap the cut surface above
@@ -215,7 +222,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..b2b273bbeedb6e1b88a45896281655f2
  
  - a fresh `npm install -g` into an isolated npm prefix resolves the
    `agent-config` binary and ships no silent postinstall/GUI side effect;
-@@ -160,9 +237,10 @@ the source diff couldn't see was missing) cannot recur silently.
+@@ -160,9 +244,10 @@ the source diff couldn't see was missing) cannot recur silently.
  
  ## Consumer-matrix exemption — the tarball window
  
@@ -390,7 +397,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..7e202ab039809071bc35fbec58bebd20
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..3912fa0dc8c4932c5dad288fffcc7f11f1bec3b6 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..df050f4c00bb33a914b4b55fe648351cf51e08d1 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -1,7 +1,14 @@
@@ -490,7 +497,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..3912fa0dc8c4932c5dad288fffcc7f11
  });
  
  describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
-@@ -130,3 +205,55 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
+@@ -130,3 +205,77 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
          expect(out).not.toContain('land the files above on main');
      });
  });
@@ -520,24 +527,46 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..3912fa0dc8c4932c5dad288fffcc7f11
 +    it('every caller lets the writer choose the path it writes', () => {
 +        // `main` prefers `--out` over `defaultReportPath`, so a caller passing
 +        // one writes a name no test pins — the 16.3.0 drift class, one step
-+        // further out. Scanning every orchestration surface rather than the one
-+        // file that happens to hold the call today: a second invocation added
-+        // elsewhere is exactly what a single-file filter would miss.
-+        const roots = ['taskfiles', 'Taskfile.yml', 'src/scripts/release.ts', '.github/workflows'];
-+        const files = roots.flatMap((rel) => {
-+            const abs = path.join(REPO_ROOT, rel);
-+            if (!fs.existsSync(abs)) return [];
-+            return fs.statSync(abs).isDirectory()
-+                ? fs.readdirSync(abs).map((n) => path.join(abs, n))
-+                : [abs];
-+        });
-+        const invocations = files
-+            .filter((f) => fs.statSync(f).isFile())
++        // further out.
++        //
++        // Walks recursively and REQUIRES each root to exist. An earlier version
++        // skipped a missing root silently, so renaming one left it unscanned
++        // with the test still green — a scan that cannot tell "nothing here"
++        // from "did not look" is the shape this suite keeps finding.
++        const roots = ['taskfiles', 'Taskfile.yml', 'src/scripts', 'package.json', '.github/workflows'];
++        const walk = (abs: string): string[] => {
++            expect(fs.existsSync(abs)).toBe(true);
++            if (!fs.statSync(abs).isDirectory()) return [abs];
++            return fs.readdirSync(abs).flatMap((n) => walk(path.join(abs, n)));
++        };
++        const invocations = roots
++            .flatMap((rel) => walk(path.join(REPO_ROOT, rel)))
++            .filter((f) => !f.endsWith('report_evidence_temperature.ts'))
 +            .flatMap((f) => fs.readFileSync(f, 'utf8').split('\n'))
-+            .filter((line) => line.includes('report_evidence_temperature'));
++            .filter((line) => line.includes('report_evidence_temperature') && !line.trimStart().startsWith('*'));
 +        expect(invocations).toHaveLength(1);
 +        expect(invocations[0]).toContain('--write');
 +        expect(invocations[0]).not.toContain('--out');
++    });
++
++    it('the cut-surface table names exactly the jobs that skip', () => {
++        // The table is the only written justification for a branch-wide CI
++        // skip, and nothing parsed it — so it drifted: it named two jobs that
++        // had been removed and omitted four that do skip. Same remedy as the
++        // allowlist parity above, applied to the other list in the same file.
++        const workflow = fs.readFileSync(path.join(REPO_ROOT, '.github/workflows/tests.yml'), 'utf8');
++        const guarded: string[] = [];
++        let job = '';
++        for (const line of workflow.split('\n')) {
++            const header = /^ {2}([a-z][a-z0-9-]*):\s*$/.exec(line);
++            if (header) job = header[1] as string;
++            if (line.includes("startsWith(github.head_ref, 'release/')") && job !== '') {
++                guarded.push(job);
++            }
++        }
++        const doc = fs.readFileSync(CONTRACT, 'utf8');
++        const tabled = [...doc.matchAll(/^\| `tests\.yml` \| `([^`]+)` \|/gm)].map((m) => m[1] as string);
++        expect([...tabled].sort()).toEqual([...guarded].sort());
 +    });
 +
 +    it('the contract enumerates exactly the globs the gate compiles', () => {
@@ -547,7 +576,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..3912fa0dc8c4932c5dad288fffcc7f11
 +    });
 +});
 diff --git a/tests/scripts/report_evidence_temperature.test.ts b/tests/scripts/report_evidence_temperature.test.ts
-index 0a3a3f22b1324ae864c351888d25603a6034e64a..3fe7d062f3f2db4bcfb8ff8160bf90baeab630ac 100644
+index 0a3a3f22b1324ae864c351888d25603a6034e64a..67812bf486da6f82752ab88dc021178d69edb3d2 100644
 --- a/tests/scripts/report_evidence_temperature.test.ts
 +++ b/tests/scripts/report_evidence_temperature.test.ts
 @@ -9,6 +9,7 @@
@@ -558,7 +587,7 @@ index 0a3a3f22b1324ae864c351888d25603a6034e64a..3fe7d062f3f2db4bcfb8ff8160bf90ba
      citationKeys,
      classify,
      coldPathsIn,
-@@ -208,3 +209,50 @@ describe('latestReportBefore — what `--since latest` resolves to', () => {
+@@ -208,3 +209,51 @@ describe('latestReportBefore — what `--since latest` resolves to', () => {
          expect(latestReportBefore(['other-analysis.md'], 'evidence-temperature-1970-01-02.md')).toBeNull();
      });
  });
@@ -570,9 +599,10 @@ index 0a3a3f22b1324ae864c351888d25603a6034e64a..3fe7d062f3f2db4bcfb8ff8160bf90ba
 +        //
 +        // The runner's TZ is not pinned, and at offset 0 a local-time
 +        // implementation is indistinguishable from this one — so the test sets
-+        // the offset itself. Node applies a TZ change at runtime (verified on
-+        // v26), and each half of the pair is the one a local-time stamping
-+        // fails under that sign.
++        // the offset itself. Node applies a TZ change at runtime; the evidence
++        // that CI's runtimes do is this test passing there, on Node 20 and 22,
++        // not a local reading. Each half of the pair is the one a local-time
++        // stamping fails under that sign.
 +        const tz = process.env['TZ'];
 +        const lateOnThe5th = new Date(Date.UTC(2026, 9, 5, 23, 30));
 +        const earlyOnThe6th = new Date(Date.UTC(2026, 9, 6, 0, 30));
