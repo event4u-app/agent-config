@@ -342,6 +342,21 @@ internal/bench/corpora/*.local.yaml
 # council Q2: gitignored, no merge=union).
 /agents/memory/.agent-learning.json
 /agents/memory/LESSONS.md
+
+# Intake signal drops — local scratch, never committed. The intake DIRECTORY
+# SKELETON (.gitkeep + README.md) stays tracked so the write path exists on a
+# fresh clone; the content does not. That split is the stated intent of the
+# commit that introduced both ("skeleton tracked … signal content, which stays
+# local-scratch and blocked") and is enforced by check_knowledge_sharing, which
+# refuses to stage anything here but those two files.
+#
+# Added 2026-10-05 because the rule was enforced and never written down: the
+# gate blocked the commit while git reported the file as an ordinary untracked
+# addition, so every `git status` invited exactly the commit the gate refuses —
+# and the refusal said "gitignored intake staged" about a file that was not, in
+# fact, ignored.
+/agents/memory/intake/*.jsonl
+/agents/knowledge/intake/*.jsonl
 /fleet.yaml
 
 # scale-history bench artifacts are LLM-generated untrusted output — never committed (PR #1016 review)

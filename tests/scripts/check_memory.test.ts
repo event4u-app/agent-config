@@ -457,6 +457,47 @@ describe('check_memory.ts', () => {
         expect(result.status, result.stdout + result.stderr).toBe(0);
         expect(result.stdout).not.toContain('append-only violation');
     });
+
+    // The check declares its scope three times as JSONL — `INTAKE_GLOB`, the
+    // module docstring, and every fixture above — while the diff it runs asked
+    // git for the whole directory. So editing the directory's own README, which
+    // documents the very rule, was reported as an append-only violation of it.
+    //
+    // Measured 2026-10-05: correcting the prose that had the tracked/untracked
+    // split backwards reddened `Rule backstops` at
+    // `agents/memory/intake/README.md:3`.
+    it('append-only ignores a non-JSONL file in the intake directory', () => {
+        gitInit(tmp);
+        const intake = join(tmp, 'agents', 'memory', 'intake');
+        mkdirSync(intake, { recursive: true });
+        writeFileSync(join(intake, 'learnings.jsonl'), '{"id":"a","ts":"2026-01-01T00:00Z","type":"learning"}\n');
+        writeFileSync(join(intake, 'README.md'), 'old wording\n');
+        gitCommitAll(tmp, 'base');
+        // An in-place rewrite — the shape that fails for a JSONL file — of the
+        // documentation file the check does not claim to govern.
+        writeFileSync(join(intake, 'README.md'), 'corrected wording\n');
+        gitCommitAll(tmp, 'doc-edit');
+        const result = runAppendOnly(tmp, 'HEAD~1');
+        expect(result.status, result.stdout + result.stderr).toBe(0);
+        expect(result.stdout).not.toContain('append-only violation');
+    });
+
+    // The other direction, so the fix above cannot be a blanket exemption: a
+    // JSONL in-place edit in the same commit as a doc edit must still fail.
+    it('append-only still fails a JSONL edit that rides alongside a doc edit', () => {
+        gitInit(tmp);
+        const intake = join(tmp, 'agents', 'memory', 'intake');
+        mkdirSync(intake, { recursive: true });
+        writeFileSync(join(intake, 'learnings.jsonl'), '{"id":"a","ts":"2026-01-01T00:00Z","type":"learning"}\n');
+        writeFileSync(join(intake, 'README.md'), 'old wording\n');
+        gitCommitAll(tmp, 'base');
+        writeFileSync(join(intake, 'README.md'), 'corrected wording\n');
+        writeFileSync(join(intake, 'learnings.jsonl'), '{"id":"EDITED","ts":"2026-01-01T00:00Z","type":"learning"}\n');
+        gitCommitAll(tmp, 'doc-edit-plus-jsonl-rewrite');
+        const result = runAppendOnly(tmp, 'HEAD~1');
+        expect(result.status).toBe(1);
+        expect(result.stdout).toContain('append-only violation');
+    });
 });
 
 // KNOWN_TYPES ⊆ VALID_TYPES drift guard (memory/knowledge validation

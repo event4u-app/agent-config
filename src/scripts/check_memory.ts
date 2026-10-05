@@ -607,7 +607,13 @@ function _checkAppendOnly(base: string | null, findings: Finding[]): void {
         '--no-color',
         ref,
         '--',
-        'agents/memory/intake/',
+        // The JSONL drops, not the directory. `INTAKE_GLOB`, this module's
+        // docstring and every fixture in the suite all scope this check to
+        // `*.jsonl`; asking git for the directory made it govern the tracked
+        // skeleton too, so editing the README that documents the append-only
+        // rule was reported as a violation of it. `:(glob)` is explicit rather
+        // than relying on the default pathspec magic.
+        ':(glob)agents/memory/intake/*.jsonl',
     ]);
     if (rc !== 0) {
         findings.push(new Finding(INTAKE_GLOB, 0, 'warning', `append-only: git diff failed vs ${ref}`));
