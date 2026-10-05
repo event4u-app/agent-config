@@ -201,7 +201,11 @@ describe("rewriteOptionCost — the measurement behind the 1.2 decision", () => 
  *     `dist/agent-src/` carries no `docs/` at all, by a decision several rules
  *     state in their own text ("`docs/contracts/` is unprojected ...
  *     maintainer-reachable only"), so deploying cannot fix a directory the
- *     projection does not produce. The ONE that stays is in
+ *     projection does not produce. Repairing the 21 from the link side
+ *     prejudged none of that, which was the worry the hold recorded: a code
+ *     span reverts to a link by the reverse of the edit that made it, so
+ *     whether the projection ever ships `docs/contracts/` stays exactly as
+ *     open as it should. The ONE that stays is in
  *     `ask-when-uncertain.md`, and it stays for the same reason as the
  *     climb-out below and for no reason about the link: `ask-when-uncertain`
  *     is a kernel rule, so its edit ships in its own PR with a 24 h soak.
