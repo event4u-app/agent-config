@@ -134,6 +134,85 @@ duplicate events, material session-start regression, or unexplained downstream
 test breakage. Known cost before starting: a ~24-file test surface on
 `hook_manifest.yaml` plus the install settings emission.
 
+## Re-read 2026-10-06 — four corrections to item 1, none of them a reopening
+
+Carried here from step 0.2 of
+[`road-to-a-rule-carrier-that-works-outside-the-repo.md`](../road-to-a-rule-carrier-that-works-outside-the-repo.md),
+which takes this stub's 3.0 as a precondition and reached it in a drain lane. The
+step stays open there and is now registered as blocker
+`instructions-loaded-binding-is-owner-owned`; what follows is the evidence that
+accumulated against item 1 while that happened, recorded where the work lives
+rather than left in a roadmap that will eventually archive.
+
+**The refusal is unchanged and is not re-argued.** Disposition D stays refused on
+the Rule-3 ground above. Everything below is about the cost and the shape of a
+yes, not about whether the lock applies.
+
+1. **The baselines now have controls, and both zeroes survived them.** The
+   re-entry probe above reports two counts and nothing that would distinguish a
+   real zero from a mistyped path or a pattern that matches nothing anywhere —
+   which is the failure this repository gates against in the other direction
+   (a zero reported as a finding before the check was shown to work). Re-run
+   2026-10-06 with a control per command, on the same files with the same tool:
+
+   ```
+   grep -c '"instructions_loaded"' src/scripts/hooks/dispatch_hook.ts   # 0
+   grep -c '"user_prompt_submit"'  src/scripts/hooks/dispatch_hook.ts   # 1  (control)
+   grep -c 'InstructionsLoaded'    src/scripts/hook_manifest.yaml       # 0
+   grep -c 'UserPromptSubmit'      src/scripts/hook_manifest.yaml       # 4  (control)
+   ```
+
+   Both controls return non-zero, so both zeroes are real and the transfer
+   baseline of `0` / `0` holds at this head.
+
+2. **The known cost is stale by more than a factor of two.** The kill-switch
+   paragraph sizes item 1 at *"a ~24-file test surface on `hook_manifest.yaml`"*.
+   `grep -rl "hook_manifest" tests/ | wc -l` reads **57** on 2026-10-06. The
+   estimate is not wrong so much as superseded by three months of tree growth,
+   and the binding should be re-sized against 57 before it is scheduled rather
+   than against the number in the sentence above.
+
+3. **The shipped-default claim is now mechanically confirmed rather than taken
+   on the label.** `build_claude_hook_matrix`
+   (`src/scripts/_lib/claude_settings_hooks.ts:92`) iterates
+   `native_event_aliases.claude` and emits a row only where
+   `platforms.claude[<event>]` carries concerns; `claude_settings_hooks.ts`
+   writes that matrix into the consumer's settings file. A probe adding both
+   manifest halves to a copy of the manifest moved the matrix from **10 native
+   events to 11**, the added key being `InstructionsLoaded`. The probe was
+   removed with `rm`. So the Rule-3 reading is a property of the code path, not
+   an interpretation of the word "registration".
+
+4. **The hook-bundle ceiling is NOT a second blocker here, and the adjacent
+   reading is tempting enough to be worth closing.** A sibling roadmap exhausted
+   that ceiling to 75 bytes in October, so a reader meeting both files could
+   reasonably assume a concern for this slot has nowhere to live. Measured with
+   the gate's own command, `check_hook_bundle_composition` reads
+   **1,512,901 B / 1,550,000** at `origin/main` @ `5550dec9c` — **37,099 B** of
+   headroom, which a single observer concern fits into many times over. The
+   figure moves: the trunk took 3,914 B between `24d6d5b0d` and `5550dec9c`, so
+   re-read it rather than quoting this line.
+
+**The exact edits, so a scheduled run does not re-derive them.** Anchored by
+`grep -n` rather than by line number, because stale line anchors were found four
+times in the round that produced this section.
+
+- `grep -n '^  claude:' src/scripts/hook_manifest.yaml` → two hits; the FIRST is
+  `platforms.claude`, the SECOND is `native_event_aliases.claude`. Under the
+  first, beside the existing `session_start:` row, add the concern list
+  `instructions_loaded: [rule-inject-observer]`. Under the second, beside
+  `UserPromptSubmit:  user_prompt_submit`, add
+  `InstructionsLoaded: instructions_loaded`.
+- `grep -n 'EVENT_VOCABULARY' src/scripts/hooks/dispatch_hook.ts` → add
+  `"instructions_loaded"` to that set.
+- The kill switch above ships with it, unchanged and still not optional.
+
+**What a yes still would not buy.** The `verify:` is a later session's record,
+and binding takes effect at session start, so the run that lands the edits
+observes nothing — the reason this stub gives for not splitting 3.0, restated
+here because it is what makes the immediate return on a yes zero. A `vitest`
+file can hold the recorder's shape; it cannot hold a fire.
+
 ## Item 2 — a producer for the `rules_carried` / `rules_used` pair
 
 This is the blocker, and it is **settled, not reopened**. PR **#1484** (merged
