@@ -17,7 +17,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { _reset_template_defaults_cache } from '../../src/scripts/_lib/agent_settings.js';
 import { leanProjectionModeRaw } from '../../src/scripts/_lib/hook_settings.js';
@@ -35,6 +35,38 @@ const TEMPLATE = path.join(REPO_ROOT, 'src', 'config', 'agent-settings.template.
 function tree(): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'lean-parity-'));
 }
+
+/**
+ * The USER-GLOBAL layer is pinned to an empty temp root for every case here.
+ *
+ * Without this, "no settings file anywhere" is false on any machine whose
+ * `~/.event4u/agent-config/settings/.agent-settings.yml` carries a
+ * `lean_projection` block — `resolveLeanProjection` reads the full cascade by
+ * design, and the developer's own file is part of it. The cases below each
+ * state a layer state and then assert the answer for it, so a layer the case
+ * did not write must not be present; otherwise the suite measures the machine
+ * it runs on and quietly disagrees between a laptop and a CI runner.
+ *
+ * It did not fail before only because `MERGEABLE_KEYS` filtered the key out of
+ * the user-global layer entirely — a filter that was itself the defect
+ * `road-to-an-installed-layer-that-is-thinned` step 1.1 had to repair, since a
+ * global-only install has no other layer to carry the opt-in. Removing the
+ * filter made the missing isolation visible rather than creating it.
+ */
+let _savedEvent4uHome: string | undefined;
+let _isolatedHome: string;
+
+beforeEach(() => {
+    _isolatedHome = fs.mkdtempSync(path.join(os.tmpdir(), 'lean-parity-home-'));
+    _savedEvent4uHome = process.env['EVENT4U_CONFIG_HOME'];
+    process.env['EVENT4U_CONFIG_HOME'] = _isolatedHome;
+});
+
+afterEach(() => {
+    if (_savedEvent4uHome === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+    else process.env['EVENT4U_CONFIG_HOME'] = _savedEvent4uHome;
+    fs.rmSync(_isolatedHome, { recursive: true, force: true });
+});
 
 function write(root: string, rel: string[], body: string): void {
     const p = path.join(root, ...rel);
