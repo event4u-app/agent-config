@@ -107,14 +107,15 @@ import * as claude_desktop_bundler from './_lib/claude_desktop_bundler.js';
 import * as claude_settings_hooks from './_lib/claude_settings_hooks.js';
 import { hostBindings } from './hooks/host_lowering.js';
 import { find_project_root_with_anchor, load_agent_settings } from './_lib/agent_settings.js';
-import {
-    LEGACY_ALL,
-    ruleFileArrives,
-    ruleScopeFromSettings,
-    type RuleScope,
-} from '../install/rule_scope.js';
+import { ruleFileArrives, type RuleScope } from '../install/rule_scope.js';
 import { isExclusivelyPackageOnly, stampHostLayerFingerprint } from '../install/partitionEligibility.js'; // ADR-236
 import * as claude_rule_rewrite from '../install/claudeRuleRewrite.js';
+import {
+    describeThinInstalledLayer,
+    thinInstalledRuleLayer,
+} from '../install/installThinLayer.js';
+import { resolveGlobalRuleScope } from '../install/globalRuleScope.js';
+import { installerThinsHost } from './_lib/lean_projection_mode.js';
 import { GLOBAL_DEPLOY_SOURCES, RULE_SOURCE_REL } from '../install/wizard-plan.js';
 import { flattenSurface, computeSurfaceDelta, type SettingsSurface } from '../shared/settingsSurface.js';
 import { settingsSchema } from '../server/schemas/settings.js';
@@ -3005,14 +3006,37 @@ function _deploy_global_content(
             // Rules land verbatim from the copy above; see the module. It also
             // renders the flat-command wrapper report, unchanged.
             const res = _apply_claude_flat_command_wrappers(anchor, package_root, current_files, global_deploy_inventory.recorded_rel_files(tool_id, anchor));
+            const preserved_now = new Set(
+                tracker.conflictState.preserved.map((p) => path.resolve(p)),
+            );
             claude_rule_rewrite.rewriteAndReport(
                 path.join(anchor, 'rules'),
                 state.QUIET,
                 info,
                 warn,
                 res,
-                new Set(tracker.conflictState.preserved.map((p) => path.resolve(p))),
+                preserved_now,
             );
+            // Step 1.1 of road-to-an-installed-layer-that-is-thinned. Gated on
+            // `installerThinsHost`, which is false when the only layer carrying
+            // `lean_projection.mode` is the shipped template — that value is
+            // not a consent, and reading it as one would flip every consumer's
+            // default as a side effect of wiring this call.
+            if (installerThinsHost(tool_id, { packageRoot: package_root })) {
+                try {
+                    const thin = thinInstalledRuleLayer({
+                        rulesDir: path.join(anchor, 'rules'),
+                        packageRoot: package_root,
+                        preserved: preserved_now,
+                    });
+                    if (!state.QUIET) for (const l of describeThinInstalledLayer(thin)) info(l);
+                } catch (e) {
+                    // A thinning failure must never sink a deploy that already
+                    // wrote a correct, full-bodied layer: the fallback state is
+                    // today's behaviour, which is over-delivery, not breakage.
+                    warn(`claude-code: thinned rule layer not written — ${String(e)}`);
+                }
+            }
         }
 
         const missing_targets = _verify_deploy_targets(anchor, plan);
@@ -3247,65 +3271,21 @@ function _resolve_scoped_projection(
 }
 
 /**
- * Resolve the rule scope governing THIS global deploy — the same way the wizard
- * does (`src/server/routes/install.ts::_resolveRuleScope`), so the two global
- * paths cannot ship different rule sets for the same settings.
+ * Resolve the rule scope governing THIS global deploy.
  *
- * Settings resolution mirrors `_resolve_scoped_projection` above: an existing
- * global settings doc is authoritative, and only a genuinely fresh machine falls
- * through to the packaged template. Any read or parse failure resolves to
- * `LEGACY_ALL` — over-shipping is the safe direction, and the compat exclusion
- * (`source-of-truth.md`) still applies even then.
+ * Thin wrapper: the body moved to `src/install/globalRuleScope.ts` (see that
+ * module's header for why). Name, signature and behaviour are unchanged, so the
+ * re-export below and every caller and test keep what they had.
  */
 function _resolve_global_rule_scope(package_root: string): RuleScope {
-    const settings_path = _resolve_global_settings_path();
-
-    // No global settings artefact at all — a genuinely fresh machine. Fall
-    // through to the packaged template silently: there is no user decision to
-    // contradict, and this is the documented upgrade-compat path.
-    if (settings_path === null) {
-        try {
-            return ruleScopeFromSettings(_load_default_settings(package_root), package_root);
-        } catch {
-            return LEGACY_ALL;
-        }
-    }
-
-    // A doc EXISTS, so the user has expressed a configuration. Failing to read
-    // it is not the same as not having one: falling back to legacy-all here
-    // ships the maintainer-only rules the user may have deliberately scoped out,
-    // and `_load_yaml_doc` would report that as an indistinguishable `{}`. So
-    // parse it explicitly and be LOUD when it does not parse — over-shipping
-    // stays the safe direction, but it must not be a silent one.
-    let text: string;
-    try {
-        text = readText(settings_path);
-    } catch (e) {
-        warn(
-            `could not read ${settings_path} (${String(e)}) — rule scoping falls back ` +
-                'to legacy-all, so ALL rules including maintainer-only ones will be ' +
-                'installed. Fix the file to restore scoping.',
-        );
-        return LEGACY_ALL;
-    }
-    const parsed = yamlSafeLoad(text);
-    if (!_isPlainObject(parsed)) {
-        warn(
-            `${settings_path} is not a YAML mapping — rule scoping falls back to ` +
-                'legacy-all, so ALL rules including maintainer-only ones will be ' +
-                'installed. Fix the file to restore scoping.',
-        );
-        return LEGACY_ALL;
-    }
-    try {
-        return ruleScopeFromSettings(parsed as Record<string, unknown>, package_root);
-    } catch (e) {
-        warn(
-            `could not derive rule scope from ${settings_path} (${String(e)}) — ` +
-                'falling back to legacy-all; ALL rules will be installed.',
-        );
-        return LEGACY_ALL;
-    }
+    return resolveGlobalRuleScope({
+        settingsPath: _resolve_global_settings_path(),
+        packageRoot: package_root,
+        readText,
+        parseYaml: yamlSafeLoad,
+        loadDefaults: () => _load_default_settings(package_root),
+        warn,
+    });
 }
 
 /**

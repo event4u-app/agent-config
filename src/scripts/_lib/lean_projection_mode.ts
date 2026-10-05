@@ -362,3 +362,32 @@ export function leanProjectionModeChosen(
     const raw = rawExplicitLeanProjectionMode(opts);
     return raw !== '' && normalizeLeanProjectionMode(raw) === mode;
 }
+
+/**
+ * May the INSTALLER thin this host's rule tree?
+ *
+ * The host-aware sibling of {@link leanProjectionModeChosen}, and the predicate
+ * `road-to-an-installed-layer-that-is-thinned` step 1.1 keys on. It folds the
+ * three conditions that must hold together, once, so no caller has to remember
+ * to combine them:
+ *
+ * 1. **A human asked.** `modeExplicit` — false whenever the only layer carrying
+ *    the key is the shipped template, which already says `delivery`. Reading the
+ *    template as consent would thin every consumer's `~/.claude/rules` as a side
+ *    effect of wiring a reader, which is the owner-reserved default flip (that
+ *    roadmap's blocker, decision D4).
+ * 2. **The chosen mode actually writes stubs.** A consumer who explicitly chose
+ *    `eager-all` has set the key and must NOT be thinned on the strength of
+ *    having an opinion.
+ * 3. **This host is in scope.** The same `hosts:` list the projector honours, so
+ *    installer and projector cannot disagree about which trees are thinned.
+ *
+ * ONE cascade read, which is why this is not two {@link leanProjectionModeChosen}
+ * calls: that one answers "is the chosen mode exactly X" and knows nothing about
+ * `hosts`, so a caller combining it with a host check by hand would re-create the
+ * fold this function exists to own.
+ */
+export function installerThinsHost(hostId: string, opts: ResolveOptions = {}): boolean {
+    const { mode, hosts, modeExplicit } = resolveLeanProjection(opts);
+    return modeExplicit && thinsHost(mode, hosts.hosts, hostId);
+}
