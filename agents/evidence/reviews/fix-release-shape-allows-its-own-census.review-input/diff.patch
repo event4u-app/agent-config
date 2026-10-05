@@ -125,7 +125,7 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..92cc2651b0ff9b8cc33e45b653869873
                  if (stuff.startsWith('!')) {
                      stuff = '^' + stuff.slice(1);
 diff --git a/src/scripts/report_evidence_temperature.ts b/src/scripts/report_evidence_temperature.ts
-index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..f08910c31fe5c3e506f3104c6941d38417c2f1f1 100644
+index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..d81c2bd28eb5f89db1dfe84f7872eb4e59a1cde6 100644
 --- a/src/scripts/report_evidence_temperature.ts
 +++ b/src/scripts/report_evidence_temperature.ts
 @@ -67,6 +67,30 @@ export const REPORT_DIR = 'agents/evidence/analysis';
@@ -168,7 +168,18 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..f08910c31fe5c3e506f3104c6941d384
  }
  
  export interface Totals {
-@@ -389,7 +413,7 @@ function mib(bytes: number): string {
+@@ -385,11 +409,17 @@ function mib(bytes: number): string {
+  * `--since latest` resolves through this so the release pipeline needs no date
+  * arithmetic: the names sort lexicographically because they carry an ISO date,
+  * and the file about to be written is excluded so a same-day re-run compares
+- * against the previous release rather than against itself.
++ * against an earlier report rather than against itself.
++ *
++ * It picks the newest OTHER report, not the newest report of an earlier
++ * release. A release resumed across UTC midnight writes a second census, and
++ * that one's baseline is the first census of the same release — so its delta
++ * covers minutes, not a release. Nothing fails; the report is just narrower
++ * than its own heading suggests.
   */
  export function latestReportBefore(names: readonly string[], exclude: string): string | null {
      const candidates = names
@@ -177,7 +188,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..f08910c31fe5c3e506f3104c6941d384
          .sort();
      return candidates.at(-1) ?? null;
  }
-@@ -583,7 +607,7 @@ export function main(argv: readonly string[]): number {
+@@ -583,7 +613,7 @@ export function main(argv: readonly string[]): number {
          return 0;
      }
  
@@ -187,7 +198,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..f08910c31fe5c3e506f3104c6941d384
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..f429a963369e8b6c8c62262bb34cca07c6c98fbf 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..45aa0408903cb9bbcb8c8172e410a9ac5e331ac7 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -2,6 +2,7 @@
@@ -198,7 +209,25 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..f429a963369e8b6c8c62262bb34cca07
  
  function runCheck(files: readonly string[]): { code: number; out: string } {
      const out: string[] = [];
-@@ -113,6 +114,74 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -69,6 +70,17 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+         expect(out).toContain('OUT-OF-SHAPE: src/packs/core/installer/foo.ts');
+     });
+ 
++    it('the `*` entries admit any depth — recorded, not endorsed', () => {
++        // The denial above holds on the EXTENSION, not on the nesting: `foo.ts`
++        // matches no glob at any depth. fnmatch `*` crosses `/`, so the `*`
++        // entries do admit arbitrary depth, which the census entry avoids by
++        // using digit classes. Pinned here so the property is visible rather
++        // than discovered, and so narrowing these globs later is a deliberate
++        // edit to this assertion rather than a silent behaviour change.
++        expect(shape._matches('src/packs/core/installer/pack.yaml')).toBe(true);
++        expect(shape._matches('agents/evidence/release-findings/a/b/c.json')).toBe(true);
++    });
++
+     it('marketplace metadata only passes', () => {
+         expect(runCheck(['.claude-plugin/marketplace.json']).code).toBe(0);
+     });
+@@ -113,6 +125,81 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(shape._matches('src/packs/core/README.md')).toBe(true);
          expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
      });
@@ -259,8 +288,15 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..f429a963369e8b6c8c62262bb34cca07
 +        const tz = process.env['TZ'];
 +        try {
 +            process.env['TZ'] = 'Europe/Berlin';
++            // Guard, not decoration: both stamp assertions below go through
++            // `toISOString` and are therefore offset-invariant, so they pass
++            // whether or not the runtime honoured the line above. Without this
++            // the test degrades silently into the ambient-offset test it
++            // replaced. `getDate()` reads local time, so it is the probe.
++            expect(new Date(Date.UTC(2026, 9, 5, 23, 30)).getDate()).toBe(6);
 +            expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5, 23, 30)))).toBe('2026-10-05');
 +            process.env['TZ'] = 'America/New_York';
++            expect(new Date(Date.UTC(2026, 9, 6, 0, 30)).getDate()).toBe(5);
 +            expect(censusDateStamp(new Date(Date.UTC(2026, 9, 6, 0, 30)))).toBe('2026-10-06');
 +        } finally {
 +            if (tz === undefined) {
