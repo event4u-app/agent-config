@@ -183,7 +183,7 @@ false.
 | `tests.yml` | `python-tests` | no `scripts/**` or `tests/**` (other than CHANGELOG via path filter — see below) |
 | `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
 | `tests.yml` | `windows-lockfile-export` | no `scripts/install_global*.py`, `scripts/cmd_export.py`, lockfile test surface |
-| `smoke-public-install.yml` | `smoke` | no `scripts/install*`, `setup.sh`; the admitted `templates/` pair is one version-pinned example settings file and its generated twin, not installer input. `package.json` IS admitted and this job's own trigger — the opening blockquote records that its content is unread by any gate |
+| `smoke-public-install.yml` | `smoke` | no `scripts/install*`, `setup.sh`. TWO admitted paths are this job's own `paths:` triggers: `package.json`, whose content no gate reads (opening blockquote), and `src/agent-src/templates/agents/agent-project-settings.example.yml`, a version-pinned example file whose pin `check_template_pin_drift` gates on the kept surface |
 
 `push:` to `main` and the weekly cron on `smoke-public-install.yml` stay
 **unconditional** — those catch drift the PR matrix can't see.

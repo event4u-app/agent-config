@@ -63,11 +63,14 @@ concurrency:
 
 jobs:
   smoke:
-    # Release-PR skip per docs/contracts/release-pr-gating.md — release
-    # PRs only touch package.json / CHANGELOG / marketplace / pack
-    # manifests and cannot regress the install paths this matrix
-    # exercises. push: main + the weekly cron + workflow_dispatch stay
-    # unconditional so drift the PR matrix can't see still surfaces.
+    # Release-PR skip per docs/contracts/release-pr-gating.md § Cut surface —
+    # a release PR touches only that contract's allowlist, which admits no
+    # install script and no file this matrix executes. The list lives there,
+    # not here. Note the residue the contract records: `package.json` IS
+    # admitted and IS this workflow's trigger, and no gate reads its content,
+    # so a `bin` / `files` / `dependencies` edit would ride a release PR with
+    # this matrix skipped. push: main + the weekly cron + workflow_dispatch
+    # stay unconditional so drift the PR matrix can't see still surfaces.
     if: ${{ github.event_name != 'pull_request' || !startsWith(github.head_ref, 'release/') }}
     name: ${{ matrix.os }} · node ${{ matrix.node }}
     runs-on: ${{ matrix.os }}

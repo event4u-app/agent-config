@@ -92,8 +92,9 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         expect(shape._matches('src/domains/a/b/pack.yaml')).toBe(true);
         expect(shape._matches('src/domains/a/b/README.md')).toBe(true);
         expect(shape._matches('agents/evidence/release-findings/a/b/c.json')).toBe(true);
-        // The widest of the six: the `*` sits before the extension, not before
-        // a separator, so it swallows a whole path segment plus a filename.
+        // Here the `*` sits before the extension rather than before a
+        // separator, so it swallows a segment plus a filename. Same shape as
+        // the findings-ledger row above; neither is a superset of the other.
         expect(shape._matches('docs/archive/CHANGELOG-pre-x/evil.md')).toBe(true);
     });
 
@@ -227,14 +228,23 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
             .filter((g): g is string => g !== undefined);
     }
 
-    it('release-prepare lets the writer choose the path it writes', () => {
-        // The last layer of the binding. `main` prefers `--out` over
-        // `defaultReportPath`, so a pipeline passing one would write a name no
-        // test pins — the same drift class that broke 16.3.0, one step further
-        // out. Asserted against the real invocation rather than assumed.
-        const taskfile = fs.readFileSync(path.join(REPO_ROOT, 'taskfiles/content.yml'), 'utf8');
-        const invocations = taskfile
-            .split('\n')
+    it('every caller lets the writer choose the path it writes', () => {
+        // `main` prefers `--out` over `defaultReportPath`, so a caller passing
+        // one writes a name no test pins — the 16.3.0 drift class, one step
+        // further out. Scanning every orchestration surface rather than the one
+        // file that happens to hold the call today: a second invocation added
+        // elsewhere is exactly what a single-file filter would miss.
+        const roots = ['taskfiles', 'Taskfile.yml', 'src/scripts/release.ts', '.github/workflows'];
+        const files = roots.flatMap((rel) => {
+            const abs = path.join(REPO_ROOT, rel);
+            if (!fs.existsSync(abs)) return [];
+            return fs.statSync(abs).isDirectory()
+                ? fs.readdirSync(abs).map((n) => path.join(abs, n))
+                : [abs];
+        });
+        const invocations = files
+            .filter((f) => fs.statSync(f).isFile())
+            .flatMap((f) => fs.readFileSync(f, 'utf8').split('\n'))
             .filter((line) => line.includes('report_evidence_temperature'));
         expect(invocations).toHaveLength(1);
         expect(invocations[0]).toContain('--write');
