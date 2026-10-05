@@ -1,5 +1,5 @@
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..0d52aeb5863b179e0e4d3445fe15d56fa8bba67f 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..a03b13b47c61b5ce1907010350ee3fd0c038d9e1 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
 @@ -35,10 +35,17 @@ keep-beta-reason: >-
@@ -24,7 +24,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..0d52aeb5863b179e0e4d3445fe15d56f
  
  ## Release-PR shape
  
-@@ -53,12 +60,41 @@ hold:
+@@ -53,12 +60,40 @@ hold:
       `release.ts` § `set_lockfile_version`
     - `CHANGELOG.md`
     - `.claude-plugin/marketplace.json`
@@ -46,8 +46,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..0d52aeb5863b179e0e4d3445fe15d56f
 +     per-release evidence-temperature census written by
 +     `taskfiles/content.yml` § `release-prepare`, step 2 of `task release`.
 +     Pinned to the ISO date shape with fnmatch digit classes rather than `?`;
-+     the entry in `ALLOWLIST_GLOBS` carries why, and is the only place that
-+     reasoning is written down.
++     the entry in `ALLOWLIST_GLOBS` carries why.
 +   - `src/agent-src/templates/agents/agent-project-settings.example.yml` and
 +     its regenerated `dist/agent-src/` twin — the project-settings template
 +     pin, kept in lockstep with `package.json.version`
@@ -69,10 +68,10 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..0d52aeb5863b179e0e4d3445fe15d56f
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
 diff --git a/src/scripts/check_release_pr_shape.ts b/src/scripts/check_release_pr_shape.ts
-index ef101165f052ad6ca03020e4deb7189b01917e36..5febca2e38d306ee155b42c4d5c3a5637f5ebe9d 100644
+index ef101165f052ad6ca03020e4deb7189b01917e36..a75417b1ff72f03823ff078cc920b4d2ef21abc7 100644
 --- a/src/scripts/check_release_pr_shape.ts
 +++ b/src/scripts/check_release_pr_shape.ts
-@@ -45,6 +45,16 @@ const ALLOWLIST_GLOBS = [
+@@ -45,6 +45,18 @@ const ALLOWLIST_GLOBS = [
      // be able to carry the dispositions of its own self-review findings; the
      // finding-dispositions gate is red until blocking ones are recorded here.
      'agents/evidence/release-findings/*.json',
@@ -82,14 +81,16 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..5febca2e38d306ee155b42c4d5c3a563
 +    // matches any character: `????-??-??` would still require ten characters
 +    // with separators at offsets 4 and 7, so it admits not every sibling but
 +    // any whose name happens to carry that shape. Narrower than it reads, and
-+    // still wider than a date. Two reports in one release PR is not a defect:
++    // still wider than a date. Two reports can appear in one release PR:
 +    // `--resume` re-runs release-prepare, so a release carried across UTC
-+    // midnight writes a second census under the next day's name.
++    // midnight writes a second census. Its delta section is empty, because
++    // `--since latest` then resolves the baseline to the first census of the
++    // same release rather than to the previous release.
 +    'agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md', // code-comment-allow provenance-comment -- the glob IS this gate's operand, not where the code came from
      // Project-settings template pin — bumped by release.ts set_template_pin and
      // its regenerated dist twin (kept in lockstep with package.json.version).
      'src/agent-src/templates/agents/agent-project-settings.example.yml',
-@@ -87,12 +97,12 @@ function _fnmatchToRegExp(pat: string): RegExp {
+@@ -87,12 +99,12 @@ function _fnmatchToRegExp(pat: string): RegExp {
                  res += '\\[';
              } else {
                  let stuff = pat.slice(i, j);
@@ -159,7 +160,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..813abf635cefd6205bd944df079279e9
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..efc1984a8959ac9cb0ad6aef6045541fc1d1e400 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..e9ade5dcbb74314356174a2eb84068451beabd9c 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -2,6 +2,7 @@
@@ -170,7 +171,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..efc1984a8959ac9cb0ad6aef6045541f
  
  function runCheck(files: readonly string[]): { code: number; out: string } {
      const out: string[] = [];
-@@ -113,6 +114,72 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -113,6 +114,59 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(shape._matches('src/packs/core/README.md')).toBe(true);
          expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
      });
@@ -204,39 +205,26 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..efc1984a8959ac9cb0ad6aef6045541f
 +    });
 +
 +    it('the allowlist admits the path the census writer actually produces', () => {
-+        // The producer/consumer link. Both halves of the filename come from the
-+        // writer: `defaultReportPath` for directory, prefix and extension, and
-+        // `censusDateStamp` for the day — the same call `buildCensus` makes. No
-+        // part of the name is spelled a second time here, which is the point:
-+        // every other assertion in this file does spell it out, so a change on
-+        // the writing side would keep them green and red only during a live
-+        // `task release`, which is exactly how 16.3.0 broke. Two earlier passes
-+        // claimed this coupling was complete while the day was still re-derived
-+        // locally; a pinned date below guards the shape itself.
++        // Directory, prefix and extension come from the writer's own builder,
++        // and the day from the writer's own stamping, so a change to any of
++        // them moves this assertion too.
 +        expect(shape._matches(defaultReportPath(censusDateStamp()))).toBe(true);
 +        expect(shape._matches(defaultReportPath('2026-10-01'))).toBe(true);
 +    });
 +
 +    it('the census date stamp has the shape the allowlist glob was cut for', () => {
-+        // The date is the one part `defaultReportPath` takes as a parameter, so
-+        // the link above cannot pin it on its own. A shape change — a time
-+        // component, `YYYYMMDD` — reds on either assertion.
-+        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5, 23, 30)))).toBe('2026-10-05');
++        // The day is a parameter of `defaultReportPath`, so the link above does
++        // not pin its shape. A time component or `YYYYMMDD` reds here.
++        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))).toBe('2026-10-05');
 +        expect(shape._matches(defaultReportPath(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))))).toBe(true);
 +    });
 +
 +    it('the census date stamp is UTC on both sides of a day boundary', () => {
-+        // Two instants straddling midnight UTC, and the pair is what carries
-+        // this: a local-time implementation reds on the first under any
-+        // positive offset and on the second under any negative one. The TZ is
-+        // not pinned in vitest.config.ts, so neither assertion alone is
-+        // sensitive on an arbitrary runner — measured: +02:00 reds the first
-+        // and passes the second, -04:00 does the reverse.
-+        //
-+        // Under TZ=UTC both pass for a local-time implementation, and that is
-+        // not a gap in the test: at offset 0 the two implementations agree, so
-+        // there is no difference to detect. Said plainly because claiming
-+        // otherwise is the mistake this branch has now made four times.
++        // Measured against a local-time implementation: +02:00 reds the first
++        // assertion, -04:00 the second, TZ=UTC neither — at offset 0 the two
++        // implementations agree, so there is nothing to detect. An offset
++        // smaller than 30 minutes is not covered either. The TZ is not pinned
++        // in vitest.config.ts.
 +        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5, 23, 30)))).toBe('2026-10-05');
 +        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 6, 0, 30)))).toBe('2026-10-06');
 +    });

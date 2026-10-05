@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 77e7373d0eb71a2c267b5414aee9fa5d45fa91a3, review
-  artefacts excluded), scope hash `32499ac34ef9fcd8d39ac36fc058f306143eaf4ef293f46dbe05e002ed64824a`
+- diff: `diff.patch` — the review scope (branch head 507e25c438b22b801ebe959b038da79387aaf645, review
+  artefacts excluded), scope hash `60278b2c09e88d65cb8bed03f4c7903ee512eaf4eae192cbf99267d5187af7cb`
 - roadmap under review: none (`acceptance-criteria.md` is empty)
 
 Changed files:
@@ -52,7 +52,7 @@ Fill the findings table in `fix-release-shape-allows-its-own-census.findings.md`
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 32499ac34ef9fcd8d39ac36fc058f306143eaf4ef293f46dbe05e002ed64824a, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 60278b2c09e88d65cb8bed03f4c7903ee512eaf4eae192cbf99267d5187af7cb, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
