@@ -742,6 +742,103 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 > that forces a new era split (`# Era: 16.4.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [16.3.0](https://github.com/event4u-app/agent-config/compare/16.2.0...16.3.0) (2026-10-05)
+
+### Release highlights
+
+- **Behaviour changes:** Rule links that name a path the repository actually has, and the blocker that held them (#2185) (8031e09); Rule laws that can stand, and the class whose law stands with them (#2177) (9e2fe18); 100 % roadmaps archive — bare deferrals carried, owner blockers ask step by step (#2167) (074eee6); make the two pack-boundary gates green on the trunk and run the workflow-security audit in CI (#2155) (90a0ad5); A release record that says what it reviewed, and an index with every major (#2157) (8e30a53).
+- **Default changes + migration:** _none_
+- **Security and correctness:** 100 % roadmaps archive — bare deferrals carried, owner blockers ask step by step (#2167) (074eee6); make the two pack-boundary gates green on the trunk and run the workflow-security audit in CI (#2155) (90a0ad5).
+- **Honest nulls:** _none_
+- **Known limitations:** An installed layer measured against its limit, and the consent an installer must have before thinning (#2201) (src/scripts/install.ts declares a residual) (df7ea79); Two Phase-0 instruments closed against measurement, and the third blocked by a record rather than a ceiling (#2198) (src/scripts/check_standing_rule_delivery.ts declares a residual) (92027a2); A rule carrier that delivers what the install carries, in the host's form, in a string the host keeps (#2182) (src/scripts/install.ts declares a residual) (7fdfd0a); Rule triggers and installed links that hold (#2174) (src/scripts/install.ts declares a residual) (328a21b); A tree that keeps its neighbours (#2161) (src/scripts/install.ts declares a residual) (4399b5a); make the two pack-boundary gates green on the trunk and run the workflow-security audit in CI (#2155) (90a0ad5); +2 more.
+
+> **Governance mix:** governance-only 23 vs consumer-only 1 (taxonomy 1.1.0).
+
+### Features
+
+* **commands:** /roadmap:resolve-blockers — council first, owner one question at a time (#2204) ([5ddfc05](https://github.com/event4u-app/agent-config/commit/5ddfc05819a501b1066b713571e9073d1ce435c9))
+* **commands:** /roadmap:triage-parked — drain later/ and skipped/ (#2184) ([ab516fc](https://github.com/event4u-app/agent-config/commit/ab516fc19a420a7022eb7dc5f8b16f6d033fc6e8))
+* **evidence:** classify the evidence tree by reference, and rule out a cold location (#2153) ([590cebc](https://github.com/event4u-app/agent-config/commit/590cebc729a7a45fbe98e2ee55b8f231ac0329c2))
+* **hooks:** run the project's own quality tools over the files a turn edited (#2152) ([d4760bb](https://github.com/event4u-app/agent-config/commit/d4760bb4f47b7be902c9ec3b88c51d8aa818311e))
+* **memory-learn:** open the learning dogfood window and give it a screen (#2151) ([162889e](https://github.com/event4u-app/agent-config/commit/162889e8b16359904766927a7fbd896f961ed9b9))
+* **ui:** flip the carried-nothing shadow to a halt, closing road-to-a-ui-coverage-ledger-that-can-fail (#2149) ([cbd5d07](https://github.com/event4u-app/agent-config/commit/cbd5d07fe21af3a3de12e847b3b8da7f86f8bb81))
+
+### Bug Fixes
+
+* **archival:** 100 % roadmaps archive — bare deferrals carried, owner blockers ask step by step (#2167) ([074eee6](https://github.com/event4u-app/agent-config/commit/074eee6881d19b5f6d7ec8574a83c26dffd25353))
+* **gates:** make the two pack-boundary gates green on the trunk and run the workflow-security audit in CI (#2155) ([90a0ad5](https://github.com/event4u-app/agent-config/commit/90a0ad522d49a853d30ffb6f1fec46e2b802ae35))
+* **hooks:** make the bundle ceiling describe the trunk it defends (#2165) ([c399d09](https://github.com/event4u-app/agent-config/commit/c399d097eea2f30676b36604a2514ff0e22cd46d))
+
+### Documentation
+
+* **roadmaps:** drain road-to-leading-every-row — install above the fold, commit-mix baseline, seven owner questions put (#2148) ([8f32c31](https://github.com/event4u-app/agent-config/commit/8f32c316b489f6b8decfdacf57da72149e07dbd5))
+* **roadmaps:** land four roadmaps from inbox round inbox-2026-10-c (#2150) ([07f83a1](https://github.com/event4u-app/agent-config/commit/07f83a1f681869b9cea467f2ad88e5642ef55af9))
+* **roadmaps:** use the declared decision classes in the inbox-2026-10-a roadmaps ([ab5c92b](https://github.com/event4u-app/agent-config/commit/ab5c92b61936fdddfd5bb3e315d086b64bc1911e))
+* **roadmaps:** state the measured blocker growth in the round's claim ([2a52860](https://github.com/event4u-app/agent-config/commit/2a528602ea27b6407e9e999b8818f41ad1e9f0cb))
+* **evidence:** disposition for inbox round inbox-2026-10-a ([ea06fa1](https://github.com/event4u-app/agent-config/commit/ea06fa1fafe54db61b1313050c52d4c7497e799a))
+* **roadmaps:** record arrivals and owner questions on six held objects ([60f9e60](https://github.com/event4u-app/agent-config/commit/60f9e60f6d2940c49677479641a599d23cbd380b))
+* **roadmaps:** land eight roadmaps from inbox round inbox-2026-10-a ([2c34c3d](https://github.com/event4u-app/agent-config/commit/2c34c3d99b103bd704f917d1603e926f7dac3f0c))
+* **evidence:** declare the evidence type on the inbox-2026-10-b disposition ([8adf9ef](https://github.com/event4u-app/agent-config/commit/8adf9eff9b7908334ed29cb7ed4fbe48f2e05cda))
+* **evidence:** record the inbox-2026-10-b disposition ([a51740b](https://github.com/event4u-app/agent-config/commit/a51740b4b79d963af8ff2fd3551c26214430166e))
+* **stubs:** count the inbox-2026-10-b arrivals on four held stubs ([6f2bc0b](https://github.com/event4u-app/agent-config/commit/6f2bc0b116a78747bc98e1addfda25672ea76ed7))
+* **roadmaps:** land the leading-every-row programme and its lanes from inbox-2026-10-b ([6631412](https://github.com/event4u-app/agent-config/commit/6631412219157e4b26ee9f1eede6493ea38764c0))
+
+### Chores
+
+* **deps:** bump the site group in /site with 4 updates (#2170) ([7464482](https://github.com/event4u-app/agent-config/commit/7464482550df64e24f101988086f9c6fb1bd7945))
+* **deps-dev:** bump the telemetry-worker group across 1 directory with 2 updates (#2163) ([11eb5d8](https://github.com/event4u-app/agent-config/commit/11eb5d813dc9057e9f475b7a827aa9730d688447))
+
+### Other
+
+* The intake rule was enforced and never written down, so git kept inviting the commit the gate refuses (#2206) ([975d03d](https://github.com/event4u-app/agent-config/commit/975d03d01cc549c297a7a8ea92134b08005eb333))
+* Two roadmaps that read finished, and the three gates that keep each of them where it is (#2205) ([df377ca](https://github.com/event4u-app/agent-config/commit/df377ca64d0333105ffd80813caa94e11805c30b))
+* An installed layer measured against its limit, and the consent an installer must have before thinning (#2201) ([df7ea79](https://github.com/event4u-app/agent-config/commit/df7ea7928c9d9fe5815978b689198b79fc8158d3))
+* Archive the kernel-plumbing roadmap, which finished and stayed in the active set (#2203) ([901e8bc](https://github.com/event4u-app/agent-config/commit/901e8bc4e848283327f5c6811e4e221246a41210))
+* A blocker citation pointing at a test fixture, and a step oracle that cannot reach its own exit (#2202) ([c04d74b](https://github.com/event4u-app/agent-config/commit/c04d74bea094071c72a1421fb013ee12e8200f2f))
+* The first observed structured-ask row, and the subagent leg the absent one was read from (#2199) ([f73e77d](https://github.com/event4u-app/agent-config/commit/f73e77d0f93f55ab76658d86b38dde00222d1246))
+* An acceptance criterion closed on measurement, a guard claim withdrawn, and the second obstacle under a blocked gate (#2200) ([e3e4774](https://github.com/event4u-app/agent-config/commit/e3e4774e2c6f6e2aa24d8720e6aff38c095d67f4))
+* A calendar hold whose date had already passed, and the gate standing behind the stamp (#2196) ([6aa3c36](https://github.com/event4u-app/agent-config/commit/6aa3c36f9cbd596a65cb5b2faafa71cdd240b8f5))
+* Two Phase-0 instruments closed against measurement, and the third blocked by a record rather than a ceiling (#2198) ([92027a2](https://github.com/event4u-app/agent-config/commit/92027a20c350f5b53625a1efbd3157aaf163b26b))
+* Two locks under one owner question, a bundle figure stale by 41 kB, and the oracle a blocked step is waiting for (#2197) ([24d6d5b](https://github.com/event4u-app/agent-config/commit/24d6d5b0d93852ee106dd1a1a7eda9bca9b2c249))
+* A blocker that held on its fourth reading, and the line it cited having moved (#2195) ([780c27e](https://github.com/event4u-app/agent-config/commit/780c27e1ed0f36edc6cd59883dce36230dfef9d4))
+* A payload total that drifted under a pin that never pinned it (#2194) ([e6b7193](https://github.com/event4u-app/agent-config/commit/e6b71933a84bb15e432e86aced4c848897498716))
+* A blocker that held on its sixth reading, and the four edits it is waiting on (#2193) ([fe0cff8](https://github.com/event4u-app/agent-config/commit/fe0cff8a558897a47caba9eb6d9dbe80e90e2d4b))
+* A blocker stated in prose, re-stated as the command that decides it (#2192) ([18ac6b2](https://github.com/event4u-app/agent-config/commit/18ac6b21ec35c4132958dc382349acc6af9a3b53))
+* A fifth reading of two blockers that held, and a second obstacle under the first (#2191) ([afad042](https://github.com/event4u-app/agent-config/commit/afad042bb39e24f3edf5dbbbfccabbda0f3ddb00))
+* A guard that permitted the call precisely when it broke, in six places and a seventh shape (#2189) ([51ee084](https://github.com/event4u-app/agent-config/commit/51ee0844b564f8863b753606f1758c9c0ef6dbd3))
+* An accrual figure that moved while the labelled corpus did not (#2190) ([30481f6](https://github.com/event4u-app/agent-config/commit/30481f6605ade9ff06bbc9ca300ab8614781321c))
+* A third reading of a blocker that has not moved, and a census nine units behind the tree (#2187) ([50bec97](https://github.com/event4u-app/agent-config/commit/50bec97430107d9fe73a6561a4fb986150c57ea8))
+* The fourth wake shape has no envelope tag, and the anchor is the whole guard (#2188) ([97a5a64](https://github.com/event4u-app/agent-config/commit/97a5a647412e376bf8ac12b9065706710c956831))
+* Rule links that name a path the repository actually has, and the blocker that held them (#2185) ([8031e09](https://github.com/event4u-app/agent-config/commit/8031e09d6ff6ecc61be329f2af4a904bcc7be18f))
+* The third wake shape: a subagent hand-back is a turn nobody typed, in two vocabularies that both missed it (#2186) ([0199fd0](https://github.com/event4u-app/agent-config/commit/0199fd0c0a448f3fdf262373cc30971213954168))
+* Twenty-eight boxes re-run rather than read, and the policy behind seven settled-looking cells (#2183) ([d6a2da7](https://github.com/event4u-app/agent-config/commit/d6a2da7bca601dbe9432b35c6fd76fddd63c80db))
+* A rule carrier that delivers what the install carries, in the host's form, in a string the host keeps (#2182) ([7fdfd0a](https://github.com/event4u-app/agent-config/commit/7fdfd0a4d59c616153ffaa283e265708b87b88ae))
+* A rule carrier that works outside the repo: resolution, one mode answer, and the matrix that proves both (#2181) ([95dc7bf](https://github.com/event4u-app/agent-config/commit/95dc7bfb1ba8c5dcb43ce7cfe3f8d271093eacf9))
+* The MCP recorder does not run, and what it would record was wrong in five ways (#2180) ([59824fd](https://github.com/event4u-app/agent-config/commit/59824fd95acfe5f6772f8da02e9f52a7896d593c))
+* Neighbours counted by use, and the link criterion measured rather than assumed (#2179) ([cd26c2e](https://github.com/event4u-app/agent-config/commit/cd26c2e177976d85644fbe8fd9c5a973418bfcdc))
+* Rule laws that can stand, and the class whose law stands with them (#2177) ([9e2fe18](https://github.com/event4u-app/agent-config/commit/9e2fe189e85d4b1feabb0bef55680e02097f0ac7))
+* A route line that says where the skill came from (#2178) ([6bdc2b2](https://github.com/event4u-app/agent-config/commit/6bdc2b25ba6c6d06b94a2137ccfd336efc8f60b0))
+* Stacks beyond PHP: the composition gate, the third binding site, and four resolver fixtures (#2173) ([a3c8393](https://github.com/event4u-app/agent-config/commit/a3c839340059ef68c8a37568685739bb9f8c7fe3))
+* Say which tree the reach numbers came from, and publish the per-prompt pair (#2176) ([4871260](https://github.com/event4u-app/agent-config/commit/48712607ad706c502cb44938a288a39b64d3f784))
+* Rule triggers and installed links that hold (#2174) ([328a21b](https://github.com/event4u-app/agent-config/commit/328a21bef2d8f6660227f4f9656d2043751ff7fc))
+* The stop gate records who set stop_hook_active, and the fingerprint store cannot be bound where its council chose (#2175) ([379cd53](https://github.com/event4u-app/agent-config/commit/379cd535c6618d8d514b78654eef8c59461dc0a1))
+* The advisories were already fixed; the record was not (#2171) ([30f7d21](https://github.com/event4u-app/agent-config/commit/30f7d21f65146fd348bc354b33093794ab500bcf))
+* Dispositions the carried roadmaps were missing (#2172) ([11726a9](https://github.com/event4u-app/agent-config/commit/11726a985ca8de0e183c14d643519d7aa5d77d0c))
+* archive the three roadmaps main still held at 100 % (#2168) ([21da719](https://github.com/event4u-app/agent-config/commit/21da71917d1ad685737b10196245c8d323bd21f4))
+* Let dependency PRs reach their required check (#2169) ([540ee7a](https://github.com/event4u-app/agent-config/commit/540ee7a0bed2bf327c971f204ab90a346a768250))
+* A tree that keeps its neighbours (#2161) ([4399b5a](https://github.com/event4u-app/agent-config/commit/4399b5a0d6395631d808f6bc5f75aaa7eed7e573))
+* A graph that reaches the search, sees the edit, and feeds the gate in shadow (#2159) ([4958809](https://github.com/event4u-app/agent-config/commit/495880908332d55c9a4069f7266dc19c99c83824))
+* A release record that says what it reviewed, and an index with every major (#2157) ([8e30a53](https://github.com/event4u-app/agent-config/commit/8e30a533124b1c85b011bb463a6bd63c3fc3c6e1))
+* Three claims a roadmap makes about itself, made checkable (#2156) ([3a8498c](https://github.com/event4u-app/agent-config/commit/3a8498c2c00fcff37970e2eeabd4ebe7b43f8b9e))
+* Blocking severities where a refusal can land (#2154) ([81d712f](https://github.com/event4u-app/agent-config/commit/81d712f2706ffe6fcdf98f2198a5607d7c6faf17))
+* Give the three spawn-bound test suites their own timeout (#2166) ([aead73d](https://github.com/event4u-app/agent-config/commit/aead73d280f8c61de7cf604ef39c06274fb6baf4))
+* A ranker that routes: the null, and the two premises it refuted (#2162) ([213d870](https://github.com/event4u-app/agent-config/commit/213d870558b7fbcdc033ac6f8f0ef4c1a43a5a80))
+* One YAML reader in the hook bundle, a ceiling on it, and a census that renders (#2158) ([22b19e5](https://github.com/event4u-app/agent-config/commit/22b19e520c198b6f0aec2cbf8cb2851818c11fcc))
+* Record a verification command that fails on claude (#2160) ([29b1832](https://github.com/event4u-app/agent-config/commit/29b183256155f9a3dea3d3351268b62b33628fde))
+* Three surfaces that said more than they did (#2144) ([00612c1](https://github.com/event4u-app/agent-config/commit/00612c1f27edafcfa6340b41c56a0da281d6ebc2))
+
+Tests: 25888 (+896 since 16.2.0)
+
 # Era: pre-4.0.0 — archived
 
 > All entries from `3.2.0` and `3.3.0` live in
