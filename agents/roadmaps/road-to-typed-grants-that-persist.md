@@ -938,7 +938,27 @@ item. Phases 1-6 may run once 0.2 is chosen.
 | K9 | The 24-hour soak as the governance control | replaced by the ratification artifact; a window measures elapsed time, not control quality |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-05 | reviewer: claude/host -->
+
+> **Re-reviewed 2026-10-05 because this run moved an acceptance criterion, and an AC edit
+> stales the register's stamp.** `lint_plan_risk_register` did not refuse the push — it
+> reports this file as `draft-exempt` and scans 17 `ready` roadmaps, verified by running it —
+> so the re-review is owed by the contract rather than extracted by the gate, which is the
+> weaker position to be honest from and therefore worth saying. All five rows re-read against
+> figures executed this run, and **all five stand unchanged**: Risk 1 — 4.3's gate is still
+> unwritten (`ls src/scripts/check_typed_op_grant.ts` fails) and 1.1 is still denied, so the
+> gap it names is still open in the same direction. Risk 2 — confirmed live for the fifth
+> consecutive reading, the deny exercised against the real `Edit` tool rather than inspected.
+> Risk 3 — no grant can outlive an intent yet, because `LedgerState` has no writer. Risk 4 —
+> untouched; no ratification artifact was produced or consumed here. Risk 5 — the
+> `legacy_human_gate` ratchet is confirmed ABSENT from `src/config/gate-violation-baselines.json`,
+> so the miscount it warns about cannot have happened.
+> **One row gains a sharper mitigation from this run rather than a new risk.** Risk 1's
+> mitigation says 4.3 must land before 1.1. The step's own 2026-10-05 evidence now adds the
+> construction detail that makes that landing cheap: the gate must import
+> `./_lib/gate_ledger.js` from its first commit, because `check_gate_completeness` carries
+> negative headroom and would otherwise red the PR that lands the replacement Risk 1 demands.
+> No rank changed and no row was added, so the marker stays at `v1`.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -1562,6 +1582,29 @@ item. Phases 1-6 may run once 0.2 is chosen.
 PR carrying unique work · `G15` an authority-expanding kernel edit, inert until ratified.
 
 ## Acceptance Criteria
+
+> **All six executed 2026-10-05 at `6aa3c36f9`, each with a control beside any negative, so a
+> later run inherits readings rather than re-derives them.** 1 met, 5 open.
+> **AC-1 open** — `ls tests/e2e/autonomy/` fails; control, `ls tests/e2e/` lists five specs, so
+> the directory is genuinely absent rather than the listing broken.
+> **AC-2 open — and the first draft of this line was WRONG, corrected before it shipped.** It
+> read *"no corpus report exists"*; `find agents/evidence -iname '*ask*census*'` returns **two**,
+> `ask-block-census-baseline.md` and `ask-block-census-after-phase-4.md`. The reports exist and
+> the criterion is still open for a different reason, which is the one a later run needs:
+> `head -25` on the later report shows its **Roots** are `src/domains`, `src/skills`,
+> `src/agent-src/contexts` — the artefact tree, pinned at `b7222ea86` (2026-09-07) — and **not**
+> the 30-session corpus AC-2 names. Its totals are 183 `single` and 74 `batch` ask regions over
+> 623 files, so the criterion's *"no ask remains for a push, a commit, a CI fix or a conflict"*
+> is not in evidence either. What AC-2 wants is a census over SESSIONS; what exists is a census
+> over SOURCES, and they are different instruments wearing one script's name.
+> **AC-3 MET** — see below.
+> **AC-4 open** — `grep -n 'legacy_human_gate' src/config/gate-violation-baselines.json` returns
+> nothing; control, the file's first entries read back fine, so the ratchet is unregistered
+> rather than the grep misdirected.
+> **AC-5 open** — `grep -n 'autonomy:' src/config/agent-settings.template.yml` reads
+> `autonomy: auto`, not `on`.
+> **AC-6 open** — `ls src/scripts/check_typed_op_grant.ts` fails; control, the same `ls` against
+> `check_platform_anchor.ts` returns a 15,577-byte file.
 
 - [ ] AC-1 — `G1`-`G15` exist under `tests/e2e/autonomy/` and are green.
 - [ ] AC-2 — `ask_block_census` over the 30-session corpus reports that every remaining owner
