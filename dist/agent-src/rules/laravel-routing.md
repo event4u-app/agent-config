@@ -28,5 +28,5 @@ obligation_frequency: "none"
 
 **Iron Law.** Laravel-flavoured PHP → `laravel`. Discriminator: entry point and router, not the dependency list — `illuminate/*` with no skeleton marker is the third verdict.
 
-Body migrated to `skill:laravel`. Disambiguates the laravel ↔ symfony-workflow cluster head per [`adr-architectural-consensus-mechanism`](../docs/contracts/adr-architectural-consensus-mechanism.md).
+Body migrated to `skill:laravel`. Disambiguates the laravel ↔ symfony-workflow cluster head per `docs/contracts/adr-architectural-consensus-mechanism.md`.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

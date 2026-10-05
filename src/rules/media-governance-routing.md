@@ -87,4 +87,4 @@ A policy that no skill, rule, or sibling policy references is a silent policy. T
 
 - `agents/settings/policies/media/README.md` — the full enforcement-model contract.
 - [`ask-when-uncertain`](ask-when-uncertain.md) — the single-question refusal-path discipline every policy depends on.
-- [`docs/contracts/write-engine.md`](../../docs/contracts/write-engine.md) — the prose-disclosure precedent extended to media by `agents/settings/policies/media/disclosure.md`.
+- `docs/contracts/write-engine.md` — the prose-disclosure precedent extended to media by `agents/settings/policies/media/disclosure.md`.

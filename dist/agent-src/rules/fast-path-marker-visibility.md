@@ -81,6 +81,6 @@ this rule does not constrain their output.
 
 ## See also
 
-- [`ai-council-config § Low-impact council opt-in`](../docs/contracts/ai-council-config.md#low-impact-council-opt-in)
+- `docs/contracts/ai-council-config.md` § Low-impact council opt-in
 - [`direct-answers`](direct-answers.md) — invented-facts Iron Law (provenance kin).
 - `scripts/ai_council/low_impact.ts` — marker source.

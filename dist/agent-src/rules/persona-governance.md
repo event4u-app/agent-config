@@ -42,12 +42,12 @@ NO NEW SPECIALIST WITHOUT A DEPRECATION CANDIDATE WHEN THE DOMAIN IS FULL.
 
 Fires on creating, editing, or proposing a persona (review lens) — the four discipline checks: **1. per-domain cap (≤ 2 specialists)** · **2. skill citation floor (≥ 1 cite)** · **3. deprecation path (delete + record in commit)** · **4. schema conformance (skill linter)**.
 
-Body migrated to [`docs/contracts/persona-schema.md § 8`](../docs/contracts/persona-schema.md#-8--governance-discipline-the-four-checks) (per P4 of `road-to-kernel-and-router.md`) — the four checks' detail tables, failure modes, day-one state.
+Body migrated to `docs/contracts/persona-schema.md` § 8 (per P4 of `road-to-kernel-and-router.md`) — the four checks' detail tables, failure modes, day-one state.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## See also
 
-- [`docs/contracts/persona-schema.md`](../docs/contracts/persona-schema.md) — schema lock, tiers, sections, size budgets, linter enforcement surface, and the migrated governance checks (§ 8).
+- `docs/contracts/persona-schema.md` — schema lock, tiers, sections, size budgets, linter enforcement surface, and the migrated governance checks (§ 8).
 - `docs/personas.md` — active persona catalog, citation map, ownership column.
 - [`ai-council`](../skills/ai-council/SKILL.md) — neutral second-opinion mechanism used for merge / deprecation decisions.
 - [`skill-quality`](skill-quality.md) — sibling discipline rule for skill files.
