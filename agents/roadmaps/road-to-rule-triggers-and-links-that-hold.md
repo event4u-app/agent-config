@@ -3,7 +3,7 @@ complexity: lightweight
 status: ready
 execution:
   mode: autonomous
-estate_growth_exempt: "Two blockers, +2 open_blockers, and both are decisions this run correctly did not take rather than work it failed to finish. `rule-link-targets-change-the-frozen-install-abi` records that the 1.2 repair — measured, decided, two lines — changes `GLOBAL_DEPLOY_SOURCES`, which is frozen install ABI: it owes an `install_layout_version` bump and a deprecation window shipping old and new shape side by side for a minor cycle, which is a release commitment and owner-reserved. `forty-seven-links-name-files-the-package-does-not-ship` records the links no deploy entry can reach. 22 of them were repaired on 2026-10-03 — the repo-tree link form, which the blocker's own recommendation named as the group to take first; a 23rd was repaired, caught by an independent review as a link augment actually resolves, and reverted. What is held is the 22 `docs/` links, whose repair would prejudge whether the projection ever ships `docs/contracts/`, one climb-out in a kernel rule, which owes its own PR and a 24 h soak, and that one augment-resolving `templates/` link, whose only correct repair is a deploy row. Each carries the exact edit, what it owes, a recommendation and a falsifiable `Resolved when`, so neither is a park wearing a blocker's clothes. The alternative to recording them was to execute an ABI change without its deprecation window, or to leave the measurement with no statement of what it implies — the first is forbidden, the second is the silence this estate ratchet exists to prevent."
+estate_growth_exempt: "Two blockers, +2 open_blockers, and both are decisions this run correctly did not take rather than work it failed to finish. `rule-link-targets-change-the-frozen-install-abi` records that the 1.2 repair — measured, decided, two lines — changes `GLOBAL_DEPLOY_SOURCES`, which is frozen install ABI: it owes an `install_layout_version` bump and a deprecation window shipping old and new shape side by side for a minor cycle, which is a release commitment and owner-reserved. `forty-seven-links-name-files-the-package-does-not-ship` records the links no deploy entry can reach. 22 of them were repaired on 2026-10-03 — the repo-tree link form, which the blocker's own recommendation named as the group to take first; a 23rd was repaired, caught by an independent review as a link augment actually resolves, and reverted. A further 21 were repaired on 2026-10-06 — the `docs/` group, after the council reopened the hold recorded against it and found its foreclosure claim unsound (D7). What is held is now three links: one `docs/` link and one climb-out, both in kernel rules, which owe their own PR and a 24 h soak, and that one augment-resolving `templates/` link, whose only correct repair is a deploy row — and which, as the remainder blocker's own `Resolved when` correction records, therefore routes through the ABI blocker's owner gate rather than closing independently of it. Each carries the exact edit, what it owes, a recommendation and a falsifiable `Resolved when`, so neither is a park wearing a blocker's clothes. The alternative to recording them was to execute an ABI change without its deprecation window, or to leave the measurement with no statement of what it implies — the first is forbidden, the second is the silence this estate ratchet exists to prevent."
 estate_offset_exempt: "Round inbox-2026-10-c verified a live defect no roadmap owns: `_has_non_path_trigger` ignores `command` triggers, so `roadmap-progress-sync` reaches Claude with an exclusive `paths:` and loses three command triggers today, before any thinning. The two held objects that own the neighbouring question both misclassify that rule, so folding this into either would carry their error with it. The other steps are small residue whose absence would make the installed-layer flip ship broken links."
 relates:
   - slug: road-to-a-path-route-under-delivery
@@ -233,13 +233,16 @@ Reproduced on 2026-10-01:
 - **Class:** 3
 - **Ownership:** product-owned
 - **Blocks:** the execution half of 1.2, and AC-2 through it. The measurement,
-  the instrument and the decision are delivered; 112 of the 136 unresolved
+  the instrument and the decision are delivered; 112 of the 115 unresolved
   links are one two-line edit away from resolving, and that edit is the thing
   held here. (113 of 160 when this was written; 112 of 158 on 2026-10-02 after
   the tree shed two links; 112 of 136 on 2026-10-03 after the remainder
-  blocker's repo-tree group was repaired. This blocker's own share has not
-  moved from 112 — every change since has come out of the OTHER population,
-  which is the split doing its job.)
+  blocker's repo-tree group was repaired; 112 of 115 on 2026-10-06 after its
+  `docs/` group was repaired. This blocker's own share has not moved from 112
+  across four re-measurements — every change since has come out of the OTHER
+  population, which is the split doing its job, and which is now visible as a
+  near-pure reading: 112 of the 115 links a Claude install ships dead are this
+  one decision, and the remaining 3 are the other blocker entire.)
 - **What to do:** `GLOBAL_DEPLOY_SOURCES` in `src/install/wizard-plan.ts` is
   part of the frozen install ABI (`docs/contracts/install-layout.md`), and
   `tests/install/install_layout_contract.test.ts` fails on any change to it
@@ -269,24 +272,32 @@ Reproduced on 2026-10-01:
   but a static one, and D4's own `revisit-if` would reopen the comparison
   anyway if the host ever starts counting non-`rules/` files.
 - **If you do nothing:** a consumer following a link in an installed rule
-  lands on nothing 136 times per Claude install (73 on augment, 235 on cursor,
-  248 on windsurf and kiro), silently — a dead link reads as a missing file
-  rather than as a shipping decision. The number does not grow: the per-host
-  ratchet in `tests/scripts/install_rule_links.test.ts` holds it — now at the
-  measured reading rather than above it — so the cost is standing rather than
-  compounding, and every other step on this roadmap is closed without it.
+  lands on nothing 115 times per Claude install (52 on augment, 214 on cursor,
+  227 on windsurf, cline and kiro), silently — a dead link reads as a missing
+  file rather than as a shipping decision. The number does not grow: the
+  per-host ratchet in `tests/scripts/install_rule_links.test.ts` holds it — now
+  at the measured reading rather than above it — so the cost is standing rather
+  than compounding, and every other step on this roadmap is closed without it.
+  (136 / 73 / 235 / 248 before 2026-10-06; the fall is the other blocker's
+  `docs/` group being repaired, not this one getting smaller.)
 - **Resolved when:** `GLOBAL_DEPLOY_SOURCES` carries the two directories,
   `npx vitest run tests/install/install_layout_contract.test.ts` is green
   against a golden for the bumped version, and the per-host baseline in
   `tests/scripts/install_rule_links.test.ts` has been lowered to the
-  post-deploy reading — **claude-code 24, augment 23, cursor 123, windsurf 136,
-  kiro 136**, each the live unresolved count minus the directories that host's
-  row gains (augment gains `guidelines/` only). Re-derived 2026-10-03 from
-  `report_installed_rule_links` by the same subtraction that produced the
-  earlier 47 / 46 / 147 / 160 / 160 and then 46 / 45 / 145 / 158 / 158; the
-  numbers fell because the repo-tree links the other blocker held were
-  repaired, not because this one got easier. Re-derive again before executing,
-  because these move whenever a rule body gains or loses a link.
+  post-deploy reading — **claude-code 3, augment 2, cursor 102, windsurf 115,
+  cline 115, kiro 115**, each the live unresolved count minus the directories
+  that host's row gains (augment gains `guidelines/` only). Re-derived
+  2026-10-06 from `report_installed_rule_links` by the same subtraction that
+  produced the earlier 47 / 46 / 147 / 160 / 160, then 46 / 45 / 145 / 158 /
+  158, then 24 / 23 / 123 / 136 / 136; the numbers fell each time because the
+  links the OTHER blocker held were repaired, never because this one got
+  easier — its own share has sat at 112 throughout. Re-derive again before
+  executing, because these move whenever a rule body gains or loses a link.
+  **What the latest fall changes is the reading, not the work:** at
+  claude-code 3 the post-deploy remainder is now small enough to state
+  exhaustively — one kernel `docs/` link, one kernel climb-out, one
+  `templates/` link — so taking this blocker would leave a Claude install with
+  three dead links, all three named, instead of twenty-four unenumerated ones.
 
 ### blocker: forty-seven-links-name-files-the-package-does-not-ship
 
@@ -294,24 +305,37 @@ Reproduced on 2026-10-01:
 - **Owner:** maintainer
 - **Class:** 2
 - **Blocks:** AC-2, together with the ABI blocker above. That one holds 112 of
-  claude-code's 136 unresolved links; these are the other 24. Both must close
+  claude-code's 115 unresolved links; these are the other **3**. Both must close
   before AC-2 does. Every step on this roadmap is closed. (113 / 160 / 47 when
   this was written; 112 / 158 / 46 on 2026-10-02; 112 / 136 / 24 on 2026-10-03,
-  after the repo-tree group below was repaired. The slug still says forty-seven and
+  after the repo-tree group below was repaired; 112 / 115 / 3 on 2026-10-06,
+  after the `docs/` group was repaired per D7. The slug still says forty-seven and
   is deliberately not renamed — the frontmatter exemption and this roadmap's
   own prose cite it, and a slug that tracked its own count would break every
-  reference each time the count moved.)
+  reference each time the count moved. It is now off by a factor of fifteen,
+  which is the strongest argument for the convention rather than against it:
+  the name is an address, not a measurement.)
 - **What to do:** these are not a smaller version of what the ABI blocker
   holds, and a deploy entry cannot reach any of them — read D5 and D6 before
   reaching for one. Three groups were named; two are done:
-  1. **22 into `docs/`** — OPEN, and the reason is not effort.
+  1. **22 into `docs/`** — **21 repaired 2026-10-06, 1 open, and the open one
+     is held by the kernel window rather than by the `docs/` question.**
      `dist/agent-src/` carries no `docs/` directory, and several rules say so
-     in their own text. Either the projection starts shipping
-     `docs/contracts/` — a scope decision this roadmap does not own — or the
-     22 links become code spans in `src/rules/`. Repairing them from the link
-     side would settle the first question by making the second irreversible in
-     practice, so this group waits on someone deciding whether `docs/` is
-     projected at all.
+     in their own text. The hold recorded here was that repairing from the
+     link side "would settle the first question by making the second
+     irreversible in practice". That claim was reopened and did not survive
+     (D7): a code span becomes a link again by the reverse of the same
+     mechanical edit, and the option it was protecting — projecting
+     `docs/contracts/` — needs a deploy row, which is the ABI blocker's own
+     owner-reserved gate. So holding the links preserved no choice an agent
+     run could make; it only deferred a repair. Routed to the council, which
+     agreed (degraded, 1 of 2 seats), and executed for the 21 links in
+     non-kernel rules. D6's safety check was run first rather than assumed:
+     `docs` is unresolved on all 18 host rows, and `resolved` stayed at 387 on
+     every host while total links fell 523 → 502, which is the arithmetic that
+     caught the `templates/` mistake.
+     The one left is in `ask-when-uncertain.md`, a kernel rule — same window
+     as the climb-out in group 2, and the two should ride one kernel PR.
   2. **22 climbing out of the install root** into `../../tests/`,
      `../../src/scripts/`, `../../scripts/`, `../../docs/` and
      `agents/settings/policies/media/` — **21 repaired 2026-10-03**, 1 open.
@@ -325,6 +349,14 @@ Reproduced on 2026-10-01:
      kernel rule, so the edit ships in its own PR with a 24 h soak
      (`scope-control` § Kernel-rule edits). One link does not justify spending
      that window; the next kernel PR carries it.
+     **Amended 2026-10-06: it is no longer one link.** Group 1's repair left a
+     `docs/` link in `ask-when-uncertain.md`, also kernel, also held by nothing
+     but the same window. The kernel-held remainder is now exactly two links in
+     two kernel rules, and one PR with one soak discharges both — which is a
+     materially better trade than the one this line declined. Both are
+     mechanical one-line edits of the form already executed 43 times on this
+     roadmap, so the kernel PR carries review risk from its process, not from
+     its diff.
   3. **2 one-off targets** — **1 repaired 2026-10-03, 1 reverted and OPEN,
      and the revert is the finding worth keeping.**
      `scripts/hooks/evidence_independence.ts` is in no projection, so nothing
@@ -359,19 +391,28 @@ Reproduced on 2026-10-01:
   which `src/rules/` size budgets reward: the five pack token passports fell
   with it. Group 3 turned out to be two different things wearing one label,
   which is why "the repair is unambiguous" has to be checked per link and not
-  per group. What remains of the recommendation is its second half, unchanged:
-  leave group 1 alone until someone decides whether `docs/contracts/` is
-  projected at all. For the kernel link, let it ride on a kernel PR that exists
-  for another reason rather than opening one for a single link. For the
-  `templates/` link, the decision is a deploy row or nothing — never a code
-  span, which would un-resolve it on the one host where it works.
-- **If you do nothing:** 24 of a Claude install's 136 dead rule links stay
+  per group. **Its second half has now been taken too, and reversed on
+  evidence** (D7, 2026-10-06): "leave group 1 alone until someone decides
+  whether `docs/contracts/` is projected" rested on a foreclosure claim that
+  does not hold, and on a decision no agent run could take either way, so the
+  21 non-kernel links were repaired and the owner's projection option is
+  untouched.
+  What remains is narrower and sharper than before. For the two kernel links —
+  one `docs/`, one climb-out — open ONE kernel PR carrying both; the trade the
+  old line declined ("one link does not justify that window") is a different
+  trade at two links, and both diffs are one line each. For the `templates/`
+  link, the decision is a deploy row or nothing — never a code span, which
+  would un-resolve it on the one host where it works — and per the correction
+  below that row belongs with the ABI blocker's table rather than here.
+- **If you do nothing:** 3 of a Claude install's 115 dead rule links stay
   dead even after the ABI blocker above is taken — a dead link reads as a
   missing file rather than as a shipping decision, and the reader cannot tell
   which. The number does not grow: the per-host ratchet holds it, and the
   remainder pin beside it holds the shape as well as the count, so the cost is
   standing rather than compounding, and nothing else on this roadmap waits on
-  it.
+  it. (24 before 2026-10-06.) Two of the three are one kernel PR away; the
+  third is the `templates/` link, which is the ABI blocker's shape on a
+  different axis — see the correction in `Resolved when` below.
 - **Resolved when:** `./scripts-run src/scripts/report_installed_rule_links`
   reports, for `claude-code`, no `docs` row, no `outside-install-root` row,
   **and** no `scripts` or `templates` row — i.e. all 24 that remain are gone,
@@ -386,8 +427,32 @@ Reproduced on 2026-10-01:
   blocker on the roadmap shut. The `templates` row is the standing
   counter-example to reading this condition as "make the rows go away": it goes
   away correctly by a deploy row and incorrectly by a code span, and only one
-  of those is a repair. The baseline has been lowered once already, to
-  136 / 73 / 235 / 248; it is lowered again when the rest goes.
+  of those is a repair. The baseline has been lowered twice already — to
+  136 / 73 / 235 / 248, then to **115 / 52 / 214 / 227** on 2026-10-06; it is
+  lowered again when the rest goes.
+
+  **Correction 2026-10-06 — this condition is NOT independent of the ABI
+  blocker, and the word "independently" above is wrong.** Executing the
+  condition against the tree is what surfaced it. Three rows must go. Two are
+  one kernel PR away and are genuinely this blocker's own. The third is the
+  `templates` row, and this blocker's own § What to do states that its only
+  correct repair is a deploy row — "never a code span, which would un-resolve
+  it on the one host where it works". A deploy row is a change to
+  `GLOBAL_DEPLOY_SOURCES`, which is exactly the frozen install ABI the OTHER
+  blocker holds, owing the same `INSTALL_LAYOUT_VERSION` bump and the same
+  deprecation window. So as written this condition cannot be satisfied while
+  the ABI blocker is open: it claims to close independently and routes its last
+  row straight through the other blocker's owner gate.
+
+  That is a defect in the condition, not a reason to weaken it. The honest
+  reading is that AC-2 has **one** owner gate, not two — the ABI decision —
+  plus one kernel-soak window that is an agent-executable PR rather than a
+  decision. Left stated rather than rewritten, because changing a blocker's
+  closing condition to make it reachable is how a criterion quietly stops
+  describing the thing it was written to measure. The owner may prefer to
+  fold the `templates` row into the ABI blocker's deploy table, which is where
+  it would be executed anyway; that is a one-line merge of two conditions and
+  it is their call, not this run's.
 
 ## Decisions
 
@@ -399,9 +464,19 @@ Reproduced on 2026-10-01:
 | D4 | reversible-technical | agent | 1.2's two options are decided: **deploy**, not rewrite. The decision is agent-owned; **executing it is not**, because the deploy table is frozen install ABI | Measured by `report_installed_rule_links` at the same commit, both repairing the same 113 links: deploy adds **0** characters of standing text and 184 files / 1.6 MB of link targets; rewrite adds **5,198** characters at a 48-character install prefix, every one of them inside a rule body, which is the text the host loads as instructions. (The 7,285 first recorded here was the cost over all 160 unresolved links, including 45 a rewrite cannot reach either — not like-for-like, and it overstated the losing option by ~40 %. Direction unchanged: 0 < 5,198.) Files under `contexts/` and `guidelines/` are not instruction files. The installed-layer report D2 names was not available — `road-to-a-rule-carrier-that-works-outside-the-repo` step 0.1 is still open — so the figure was taken from the deploy plan and the rule bodies directly, which is the same unit | The host begins counting non-`rules/` files in an install toward its instruction budget, which would make the two options trade on one axis instead of two |
 | D5 | reversible-technical | agent | The 47 links left unresolved on Claude are a named remainder, not a smaller version of the same defect | 22 point into `docs/`, which the projection does not produce at all; 23 climb out of the install root into the repository (`../../tests/`, `../../src/`, `agents/settings/policies/`); 2 are one-off targets, one of them also unprojected. None is reachable by a deploy entry — closing them is an authoring change in rule prose, which this roadmap's "deliberately does not do" section keeps out of scope. *Amended 2026-10-03: the final clause does not hold — see D6. The classification itself stands.* | A future projection ships `docs/`, or the rule bodies are re-authored to carry code spans where the target is not shipped |
 | D6 | reversible-technical | agent | The repo-tree group of D5's remainder is repaired HERE, not deferred to a roadmap of its own | Three things had to hold together, and did. (1) The deferral rested on a scope exclusion this roadmap does not contain — checked line by line against § What this roadmap deliberately does not do. (2) The blocker's own Recommendation already named group 2 as the one to take first, on the ground that it is the only unambiguous group; executing a recorded recommendation is not reopening it. (3) The repair prejudges nothing — group 1 is left untouched precisely so the `docs/` projection question stays open, which is the same recommendation's second half. Measured outcome: 22 links, 9 non-kernel rules, claude-code 158 → 136 unresolved, five pack token passports smaller, and the ratchet lowered from a deliberately loose 160 to the measured 136 with every pin seen red under a probe. A 23rd link was repaired and REVERTED after an independent review showed it resolves on augment — recorded in the blocker's group 3, because the lesson belongs where the next person looks | A `docs/` projection decision lands, which would make group 1 executable on the same terms — or a kernel PR opens for another reason, which is when the one remaining climb-out rides along |
+| D7 | reversible-technical | council:2026-10-06-docs-links-degraded-1of2 | The `docs/` group of D5's remainder is repaired too — 21 of 22 links become code spans; the 22nd is kernel-held, not held by the question | The hold this reopens rested on one claim — that repairing from the link side makes projecting `docs/` "irreversible in practice". The council found that claim unsound and nothing in the tree supports it: a code span becomes a link again by the same mechanical edit that produced it, so the owner's option survives the repair intact. Two further things had to hold and did. (1) **The option the hold was protecting is not one this run could take anyway** — projecting `docs/contracts/` means a deploy row, which is frozen install ABI and owner-reserved, so holding the links preserved nothing an agent could decide; it only deferred a repair. (2) **D6's hard-won safety check passes cleanly here, and was run rather than assumed**: the `templates/` revert taught that a link reading as repo-tree must be checked against every host's deploy plan first, so `report_installed_rule_links` was read for all 18 host rows and `docs` is unresolved on every one of them. The arithmetic confirms it rather than the intent: total links 523 → 502 (−21) with `resolved` unchanged at **387 on every host** — the exact signal that caught the `templates/` mistake, where 23 links left and augment's unresolved fell only 22. Measured outcome: claude-code 136 → **115** unresolved, augment 73 → 52, cursor 235 → 214, windsurf / cline / kiro 248 → 227; seven pack token passports smaller; the ratchet lowered to the measured reading and probed red at 114 before restoring. Council seat 2 (anthropic) failed on API credit, not on judgement — recorded as degraded, which is a reading and not convergence | A `docs/` projection decision lands, which turns each code span back into a link by the reverse of this edit — or the kernel PR named in the remainder blocker opens, which is when the 22nd link rides along |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-02 | reviewer: claude/drain-neighbour-usage-and-link-ac -->
+
+Re-read again 2026-10-06 against the tree, and still NOT re-stamped, for the
+reason the next paragraph already gives. Both rows still describe the plan.
+Row 1 remains discharged at step 1.1. Row 2 is unchanged in shape and smaller
+in size: the `docs/` repair (D7) removed 21 links from the population row 2
+does NOT cover, so the deployable share it is about is still 112. The repair
+carried no risk this register is missing — it removed link syntax, added no
+instruction text, and the seven pack token passports fell rather than grew,
+which is the same direction the 2026-10-03 repair moved them.
 
 Re-read 2026-10-03 against the tree, and deliberately NOT re-stamped: both rows
 still describe it, nothing was added and nothing retired, so there is no review
@@ -439,25 +514,59 @@ ones a reader of this roadmap reaches first.
 - [ ] AC-2 — A link check over an installed rule directory reports zero
       unresolved links.
 
-      **Re-measured 2026-10-02, and it stays false — on evidence, not on the
+      **Re-measured 2026-10-06, and it stays false — on evidence, not on the
       absence of an attempt.** `./scripts-run src/scripts/report_installed_rule_links`
-      reads **158** unresolved for `claude-code` against 545 links: **112** into
-      `contexts/` and `guidelines/`, which the ABI blocker holds, and **46** the
+      reads **115** unresolved for `claude-code` against 502 links: **112** into
+      `contexts/` and `guidelines/`, which the ABI blocker holds, and **3** the
       remainder blocker holds. Zero is reachable only when both close, which the
-      remainder blocker already states ("Both must close before AC-2 does"), and
-      neither is an agent call: the first owes an `install_layout_version` bump
-      and a deprecation window, which is a release commitment; the second is
-      rule-prose authoring this roadmap's own § What this roadmap deliberately
-      does not do keeps out of scope.
+      remainder blocker already states ("Both must close before AC-2 does").
+
+      **What changed this round, and what did not.** The remainder fell 46 → 24
+      → **3** as its two executable groups were taken; the deployable share has
+      not moved from 112 across four measurements. So the criterion is now
+      almost entirely one decision: 112 of the 115 links a Claude install ships
+      dead are the ABI deploy row, and that is a release commitment — an
+      `INSTALL_LAYOUT_VERSION` bump plus a deprecation window deciding what a
+      consumer's next two minor upgrades do — which is owner-reserved and not
+      an agent call.
+
+      **The last clause of the old note is withdrawn.** It read that the
+      remainder "is rule-prose authoring this roadmap's own § What this roadmap
+      deliberately does not do keeps out of scope". Checked line by line, that
+      section excludes three things — a trigger rewrite from 1.3, an obligation
+      moved into a hook from 1.5, and a change to which rules are path-scoped
+      beyond the 1.1 predicate fix. None of them is link prose. D6 already made
+      this correction for the repo-tree group and the same reading applies to
+      the `docs/` group; the clause survived because it was never re-read, which
+      is the failure mode a `revisit-if` exists to catch.
+
+      Of the 3 that remain, 2 are one kernel PR away — an agent-executable
+      change gated on a 24 h soak, not on a decision — and the 3rd routes
+      through the ABI blocker's own owner gate (see that blocker's § Resolved
+      when correction). AC-2 therefore has exactly **one** open owner decision
+      behind it, and this is recorded here rather than left to be re-derived.
 
       **The tree moved under the criterion, so the figures in both blockers were
-      refreshed rather than left to read as current.** 160 → 158, the deployable
-      share 113 → 112, the remainder 47 → 46, and the per-host post-deploy targets
-      with them. `UNRESOLVED_BASELINE` in
-      `tests/scripts/install_rule_links.test.ts` is deliberately NOT lowered to
-      158: it is a shrink-only ratchet enforced by CI, a worktree reading is not
-      the enforcing environment's, and 158 ≤ 160 already passes — headroom costs
-      nothing and a wrongly tightened baseline costs a push cycle. The exact-split
-      pin beside it already reads 62 / 50, so it needed no change.
+      refreshed rather than left to read as current.** Across three rounds:
+      160 → 158 → 136 → **115**, the deployable share 113 → 112 and then flat,
+      the remainder 47 → 46 → 24 → **3**, and the per-host post-deploy targets
+      with them.
+
+      **`UNRESOLVED_BASELINE` IS lowered this round, to 115 / 52 / 214 / 227,
+      and the earlier refusal to lower it was right for its own round.** The
+      distinction is what moved the number. On 2026-10-02 the tree had merely
+      shed two links on its own, so tightening would have pinned a drift reading
+      and bought nothing. This round the fall is a repair this change makes, so
+      the baseline is the thing that stops it regressing — and the reading is
+      structural rather than environmental: every unresolved link is
+      `directory-not-deployed` or `outside-install-root`, verdicts decided from
+      the deploy plan alone, with `file-missing` at 0, so a worktree and CI read
+      the same number. That is what makes it safe to sit at the exact reading.
+      Proven rather than asserted: the claude-code row was probed at 114, seen
+      red with `expected 115 to be less than or equal to 114`, and restored — a
+      baseline never seen red has unknown sensitivity.
+      The exact-split pin beside it still reads 62 / 50 and needed no change;
+      the remainder pin moved from `docs 22` to `docs 1` and is the assertion
+      that would catch this repair being silently undone.
 - [x] AC-3 — The single-token, obligation-mechanism and per-spawn readings are
       committed as reports.
