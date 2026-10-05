@@ -256,10 +256,22 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  *
  *   The prose this block replaced avoided writing the literal field-plus-`true`
  *   pair on purpose, because a planning step verified that string's absence by
- *   grep. That constraint is checked and DEAD rather than forgotten: the step
- *   is archived, an archived step executes nothing, and the active set carries
- *   no such grep. Its own stated successor was to record the first observed
- *   row with its provenance — which is what this block now is.
+ *   grep. That grep is named rather than paraphrased —
+ *   `grep -c 'structured_ask: true' src/scripts/_lib/host_capability.ts`, step
+ *   2.2 of `agents/roadmaps/archive/road-to-asked-not-parked.md` — and re-run at
+ *   this tip it returns 1 where it returned 0. So the constraint is BROKEN, not
+ *   intact, and recording that is the point: a reader who is told only that it
+ *   is dead cannot tell which.
+ *
+ *   ARCHIVAL IS NOT WHY IT IS DEAD, and the distinction is load-bearing because
+ *   the archival reading implies an ACTIVE copy of the same clause would bite.
+ *   It would not. NOTHING IN THIS TREE EXECUTES A `verify:` CLAUSE'S COMMAND,
+ *   archived or active: `_lib/verify_clause.ts` is a parser, and its four
+ *   importers — `roadmap_verify_share`, `closure_scan`, `run_continuation_hook`
+ *   and `check_verify_expectation_delta` — shell out to nothing but `git`. The
+ *   step also scoped itself to its own merge ("returns 0 at merge"), which it
+ *   did. Its stated successor was to record the first observed row with its
+ *   provenance — which is what this block now is.
  */
 const HOST_CAPABILITY_REGISTRY: Readonly<Record<string, Partial<HostCapabilityManifest>>> = {
     claude: { subagent_spawn: true, parallel_spawn: true, structured_ask: true },

@@ -174,7 +174,18 @@ observed name. It does not —
 
 `STRUCTURED_ASK_SHAPES` is no longer empty, so `isStructuredAskTool(name,
 'claude')` now matches the observed tool name exactly instead of falling back to
-the name-shape pattern, and `one_question_per_ask_hook` on this host is a guard
-over a tool that demonstrably exists rather than one held in reserve. Its deny
-threshold is unchanged: the rule was always one question per call, and every
-observed call already carried one (47 of 48 — the 48th payload was unparsable, so its question count is unknown rather than one).
+the name-shape pattern. That branch is reachable only from a caller that passes a
+host id, and **no caller does**: both production callers —
+`hooks/one_question_per_ask_hook.ts:103` and `probe_unblocked_ask.ts:184` — call
+the matcher with one argument.
+
+**The hook's behaviour is byte-identical before and after this row, and the row
+is not what changed its standing.** An earlier draft of this paragraph read the
+two as cause and effect; the hook's own header spends a paragraph refusing that
+reading (§ `THIS GUARD DOES NOT USE THAT ROW`, `one_question_per_ask_hook.ts:21`),
+because `verdict()` passes no host id and the shape branch is unreachable from
+there. What makes it a guard over a tool that demonstrably exists rather than one
+held in reserve is the **observation** — 48 recorded calls — not the registry
+row. Its deny threshold is unchanged as well: the rule was always one question
+per call, and every parsed call already carried one (47 of 48 — the 48th payload
+was unparsable, so its question count is unknown rather than one).
