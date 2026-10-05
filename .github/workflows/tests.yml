@@ -58,9 +58,11 @@ jobs:
     #
     # Release-PR skip: docs/contracts/release-pr-gating.md § Cut surface —
     # a release PR (head branch `release/X.Y.Z`) touches only that
-    # contract's allowlist, which admits no install script and no file
-    # this job exercises. The list lives there, not here: a copy of it in
-    # this comment went stale once already. release-validation.yml
+    # contract's allowlist, which admits no install script and no test
+    # source. It does admit the npm manifests, which every job consumes —
+    # the contract's § Cut surface row says what covers them on the release
+    # path. The list lives there, not here: a copy of it in this comment
+    # went stale once already. release-validation.yml
     # is the kept surface for release PRs; push: main + workflow_dispatch
     # stay unconditional.
     if: ${{ !startsWith(github.head_ref, 'release/') }}

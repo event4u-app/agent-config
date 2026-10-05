@@ -1,4 +1,5 @@
 
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -240,7 +241,30 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
         // skipped a missing root silently, so renaming one left it unscanned
         // with the test still green — a scan that cannot tell "nothing here"
         // from "did not look" is the shape this suite keeps finding.
-        const roots = ['taskfiles', 'Taskfile.yml', 'src/scripts', 'package.json', '.github/workflows'];
+        // The roots are a claim about reach, so the claim is checked: every
+        // top-level entry that could hold an orchestration call is either
+        // scanned or named here as deliberately out of scope. A new top-level
+        // directory reds this rather than silently sitting outside the scan.
+        const roots = ['taskfiles', 'Taskfile.yml', 'src/scripts', 'package.json', '.github/workflows', 'hooks', 'tokens'];
+        const OUT_OF_SCOPE = new Set([
+            'agents', 'dist', 'docs', 'internal', 'node_modules', 'site', 'tests',
+            'src', 'coverage', 'evals', 'config', 'data', 'provenance',
+            'LICENSES', 'deploy', '.augment-plugin', '.claude-plugin', 'user-types',
+        ]);
+        // TRACKED directories only: a local build artifact (`test-results/`,
+        // coverage output) must not change this verdict, or the test reports a
+        // reach gap that exists on one machine.
+        const tracked = new Set(
+            execFileSync('git', ['ls-files'], { cwd: REPO_ROOT, encoding: 'utf8' })
+                .split('\n')
+                .filter((f) => f.includes('/'))
+                .map((f) => f.slice(0, f.indexOf('/'))),
+        );
+        const unscanned = [...tracked]
+            .filter((n) => !roots.some((r) => r === n || r.startsWith(`${n}/`)))
+            .filter((n) => !OUT_OF_SCOPE.has(n))
+            .sort();
+        expect(unscanned).toEqual([]);
         // Binary extensions are skipped; everything else is read. An earlier
         // version allowlisted text extensions instead, which silently dropped
         // EXTENSIONLESS files — and `src/scripts/install` and
@@ -252,7 +276,12 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
             if (isRoot && !fs.existsSync(abs)) {
                 throw new Error(`caller-scan root is missing: ${abs}`);
             }
-            if (!fs.statSync(abs).isDirectory()) return BINARY.test(abs) ? [] : [abs];
+            // `lstatSync`, not `statSync`: a symlinked directory under a root
+            // would otherwise recurse without bound and fail as a stack
+            // overflow rather than as a readable verdict.
+            const st = fs.lstatSync(abs);
+            if (st.isSymbolicLink()) return [];
+            if (!st.isDirectory()) return BINARY.test(abs) ? [] : [abs];
             return fs.readdirSync(abs).flatMap((n) => walk(path.join(abs, n)));
         };
         const invocations = roots
@@ -265,7 +294,10 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
             // in use today, because a caller added under a different spelling
             // is exactly what a single-literal filter would miss.
             .filter((line) => /report_evidence_temperature(\.ts)?\b/.test(line))
-            .filter((line) => !/^\s*(\/\/|#|\*)/.test(line))
+            // Strips a trailing comment before testing, so `foo() // …report…`
+            // and `/* …report… */` are not counted as callers.
+            .map((line) => line.replace(/\/\*.*?\*\//g, '').replace(/(\s|^)(\/\/|#).*$/, '$1'))
+            .filter((line) => /report_evidence_temperature(\.ts)?\b/.test(line))
             .filter((line) => !/^\s*["']?[\w.-]+["']?\s*:\s*$/.test(line));
         expect(invocations).toHaveLength(1);
         expect(invocations[0]).toContain('--write');

@@ -164,7 +164,11 @@ Skipped via `if: !startsWith(github.head_ref, 'release/')` guards on the heavy
 install/test jobs. The guard is on the BRANCH, not on paths — so the column
 below is the argument for why that is safe, not a condition the workflow
 evaluates. The argument rests on the allowlist in § Release-PR shape: it admits
-no install script, no test source, and no file these jobs execute. It is NOT the
+no install script and no test source. The two manifests it DOES admit are
+consumed by every one of these jobs — `npm ci` reads the lockfile, every step is
+an `npm run`, the smoke matrix runs the tarball's `bin` — so each job's row below
+names what covers that manifest on the release path rather than claiming nothing
+reaches it. It is NOT the
 stronger claim the opening blockquote withdraws — `package.json` is admitted and
 carries `bin`, `files`, `dependencies` and `engines`, whose content no gate
 reads. That residue is the blockquote's, not this section's, and the `smoke` row
@@ -187,7 +191,7 @@ parses decays.
 | `tests.yml` | `install-tests` | the allowlist has no `src/scripts/install.sh`, `src/scripts/install.ts` or `tests/test_install.sh` |
 | `tests.yml` | `install-aux-tests` | same — orchestrator, key contracts, one-liner smoke all untouched |
 | `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
-| `tests.yml` | `static-checks` | its source-reading steps have no admitted input: the allowlist carries no TypeScript and no test file. It does admit one generated file — the `dist/` template twin — whose freshness `consistency.yml` gates on the kept surface, and which this job's only generated-tree step (`dist/install/`) does not read. Its MANIFEST-reading steps each have a release-path twin: `npm audit` → `release-validation.yml` § `audit-gate`, `prepack-check` → `consumer-matrix.yml`, `publint` → `evaluator-umbrella.yml` (no head-ref guard, `paths:` leads with `package.json`, so it runs on every release PR by construction). This cell is prose over a step list nothing parses — read the job if the list matters |
+| `tests.yml` | `static-checks` | its source-reading steps have no admitted input: the allowlist carries no TypeScript and no test file. It does admit one generated file — the `dist/` template twin — whose freshness `consistency.yml` gates on the kept surface. Several steps here read generated trees (`prepack-check` reads `dist/cli`, `dist/hooks`, `dist/router.json`; the MCP-drift step rebuilds and diffs the committed catalog); none of them reads that twin. Its MANIFEST-reading steps each have a release-path twin: `npm audit` → `release-validation.yml` § `audit-gate`, `prepack-check` → `consumer-matrix.yml`, `publint` → `evaluator-umbrella.yml` (no head-ref guard, `paths:` leads with `package.json`, so it runs on every release PR by construction). This cell is prose over a step list nothing parses — read the job if the list matters |
 | `tests.yml` | `golden-tests` | golden corpora live under `tests/` and `internal/`, neither admitted |
 | `tests.yml` | `collector-lifecycle` | exercises collector scripts under `src/scripts/`, none admitted |
 | `tests.yml` | `workspace-tests` | exercises workspace wiring under `src/` and `tests/`; the admitted pack and domain files are metadata those tests do not read |
@@ -221,7 +225,8 @@ the feature-PR floor by adding:
 
 `release-validation.yml`'s fourth job, `release-install-e2e`
 (`tests/test_release_install_e2e.sh`), closes a gap the cut surface above
-does not cover: that the allowlist admits no file these jobs execute is a claim
+does not cover: that the allowlist admits no install script and no test
+source is a claim
 about the **source diff**, not about whether the **packed tarball**
 actually installs, upgrades, and boots as a real npm global package. Every
 release PR now proves, against the real tarball:
