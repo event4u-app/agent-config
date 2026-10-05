@@ -257,11 +257,11 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  *   The prose this block replaced avoided writing the literal field-plus-`true`
  *   pair on purpose, because a planning step verified that string's absence by
  *   grep. That grep is named rather than paraphrased —
- *   `grep -c 'structured_ask: true' src/scripts/_lib/host_capability.ts`, step
- *   2.2 of `agents/roadmaps/archive/road-to-asked-not-parked.md` — and re-run at
- *   this tip it returns 1 where it returned 0. So the constraint is BROKEN, not
- *   intact, and recording that is the point: a reader who is told only that it
- *   is dead cannot tell which.
+ *   `grep -c 'structured_ask: true' src/scripts/_lib/host_capability.ts` — and
+ *   re-run against this file it returns 1 where it returned 0. So the
+ *   constraint is BROKEN, not intact, and recording that is the point: a reader
+ *   who is told only that it is dead cannot tell which. The step that owned it
+ *   is archived and its address is left in the roadmap rather than copied here.
  *
  *   ARCHIVAL IS NOT WHY IT IS DEAD, and the distinction is load-bearing because
  *   the archival reading implies an ACTIVE copy of the same clause would bite.
