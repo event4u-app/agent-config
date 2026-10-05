@@ -129,6 +129,77 @@ loop whose observer ships disabled. Named once so no later round re-derives them
       not here. This file keeps questions; lanes keep decisions.
       verify: `grep -c 'PENDING' agents/roadmaps/road-to-stacks-beyond-php.md agents/roadmaps/road-to-neighbours-that-pull-their-weight.md` -> /:0$/
 
+      **Hand-over, measured 2026-10-05 against `origin/main` `f73e77d0f`.** All seven
+      blockers were run as commands rather than read as `Status:` lines. Nothing below is a
+      decision; it is what the next runner would otherwise re-derive.
+
+      *This step's own oracle cannot reach `:0`, whatever the owner answers.* Two of its
+      four hits are outside the two decisions it tracks:
+
+      ```
+      grep -n 'PENDING' agents/roadmaps/road-to-stacks-beyond-php.md agents/roadmaps/road-to-neighbours-that-pull-their-weight.md
+      ```
+
+      - `road-to-stacks-beyond-php.md:92` is the lane's own instruction text inside a
+        fenced block — `grep -n 'PENDING' agents/roadmaps/road-to-stacks-beyond-php.md` —
+        so the oracle counts the command that reads it.
+      - `road-to-neighbours-that-pull-their-weight.md:518` is row D12, whose blocker is
+        `mcp-recorder-unreachable-behind-the-tools-filter`, not b6.
+
+      Answering b5 and b6 therefore leaves this count at 2. The form that tracks exactly the
+      two rows is below; it is written, not installed, because narrowing a step's own exit is
+      a maintainer edit and the narrowed form stays red today either way:
+
+      ```
+      grep -c '^| D3 .*PENDING' agents/roadmaps/road-to-stacks-beyond-php.md; grep -c '^| D1 .*PENDING' agents/roadmaps/road-to-neighbours-that-pull-their-weight.md
+      ```
+
+      *b1's limb (a) reads green while the decision is unmade.* `grep -c 'no_envelope'
+      agents/roadmaps/stubs/road-to-subagent-return-gate.md` -> `2`, and
+      `grep -n 'no_envelope' …` places both hits at `:9-10`, inside the Arrivals blockquote
+      that quotes this file's own recommendation ("recommends option 4 keyed on
+      `no_envelope`"). The stub carries no `## Decisions` section — `grep -n '^## '` on it
+      returns four headings, none of them Decisions — and `grep -rn 'subagent-return-gate'
+      docs/decisions/` returns nothing, while the same grep for a slug that is cited there
+      returns two files. So limb 1 ("the stub records the chosen option as a `## Decisions`
+      row") is the condition that is still live, and limb (a) is not evidence of an answer.
+
+      *b2's window has lapsed rather than being merely unre-armed.* ADR-260 § 1 names
+      releases 14.19.0 through 14.21.0 with "Owner-set end date: 14.21.0";
+      `node -e "console.log(require('./package.json').version)"` reads `16.2.0`. The literal
+      `grep -n 'window' docs/decisions/ADR-260-*.md` matches one line, `:71`, which is the
+      admittance clause inside that window, not a window reaching the next cut.
+
+      *b4 points the owner at a section that does not exist.* `later/road-to-a-graph-that-wins.md`
+      `entry_condition` (`:9-14`) asks for two subject repositories "named in this file's
+      corpus header"; `grep -n '^## '` on that file returns eight headings — Goal, Why the
+      current benchmark cannot produce this, Phase 1-3, Null path, Kill register, Acceptance
+      Criteria — and no corpus header. Whoever answers b4 creates the section as well as the
+      names.
+
+      *b5 and b6 are the two circular blockers.* b5 resolves when D3 of
+      `road-to-stacks-beyond-php.md` stops reading `PENDING`; that row (`:189`) reads
+      "PENDING programme blocker b5". b6 resolves when D1 of
+      `road-to-neighbours-that-pull-their-weight.md` stops reading `PENDING`; that row
+      (`:507`) reads "PENDING programme blocker b6". Neither side moves the other; the owner
+      picking one of the enumerated options in each blocker is the only flip. b1, b2, b4, b7
+      and b8 are not circular — each resolves against a stub, an ADR or a parked file that
+      names the owner directly and does not point back here.
+
+      *b5's citation was wrong and is corrected in this change.* The blocker cited
+      `src/scripts/check_estate_count.ts:832` for the zero skill allowance. `sed -n '832p'`
+      reads `const budgetJson = (): string =>`, inside `function selfTest(): number {` which
+      opens at `:820` — a fixture builder carrying no allowance. `grep -n 'skill_count: 0'`
+      puts the real allowance at `:741`, which is where the stacks lane re-anchored it on
+      2026-10-05 (`road-to-stacks-beyond-php.md:189`). The citation here now reads `:741`.
+
+      *The cost b5 does not pay, re-confirmed at this tip.* `road-to-stacks-beyond-php.md:100-110`
+      records the probe: base `skill_count` 299 / `skill_description_tokens` 11460; one skill
+      added fails the gate twice; six skills cost +6 and roughly +230 against allowance 0.
+      This file's `estate_offset_exempt` pays the roadmap-count half only, so an answered b5
+      is necessary and not sufficient — the lane's own `estate_growth_exempt` claim lands in
+      the same change as the skills.
+
 ## Kill register
 
 What the round proposed and this tree already decided against, with the citation
@@ -217,7 +288,7 @@ K17–K22 for different items, which are renumbered K27–K32 here so one ID mea
 - **Status:** open
 - **Owner:** user
 - **Blocks:** Phase 3 — Owner decisions, then nothing else here
-- **Question:** May `road-to-stacks-beyond-php` add up to two skills per stack (testing and conventions; quality stays a `quality-tools` reference) under `estate_growth_exempt`, given `skill_count` has zero allowance (`src/scripts/check_estate_count.ts:832`)?
+- **Question:** May `road-to-stacks-beyond-php` add up to two skills per stack (testing and conventions; quality stays a `quality-tools` reference) under `estate_growth_exempt`, given `skill_count` has zero allowance (`src/scripts/check_estate_count.ts:741`)?
 - **Recommendation:** Yes, capped at two per stack and only for rows that lane's composition table marks `create`.
 - **If you do nothing:** the lane lands its composition table, routing and reference work; python and typescript packs stay at one artefact.
 - **What to do:** pick exactly one — (a) cap two per stack; (b) a different cap, written into that lane's D3 row; (c) no new skills.
