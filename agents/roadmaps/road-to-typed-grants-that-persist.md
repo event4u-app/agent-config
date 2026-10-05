@@ -41,7 +41,34 @@ capability_gap: none
 > per-step loop for a reversible operation, and it may not reverse the outcome. § 0 carries
 > the table that decides which of the two a proposed change is.
 
-> **STATE AS OF 2026-10-01 — read this before re-deriving anything below.** 4 done · 14
+> **STATE AS OF 2026-10-05 — read this FIRST; it supersedes the 2026-10-01 block below on the
+> counts and adds three things that block found no reason to look for.** Re-counted at
+> `origin/main` `6aa3c36f9` rather than inherited: **4 done · 14 deferred `[~]` · 7
+> open-and-blocked `[ ]`** — step glyphs identical to 2026-10-01, so no lane moved this file in
+> four days. **Acceptance criteria moved: AC-3 is now `[x]`, 5 of 6 remain open.**
+> **Three findings a later run should not re-derive.**
+> (1) **AC-3 was closable and is closed**, against the stricter of the two readings its sentence
+> admits — the weaker limb was discharged by a one-line supersession pointer on the archived
+> `merge-authority` blocker, not by amending the criterion to the reading that was already green.
+> (2) **The 2026-10-01 claim that this guard denies a read-only `grep` against a kernel rule is
+> FALSE and is withdrawn in place.** Both polarities were exercised on this tree: an in-place
+> `sed` at a kernel path is BLOCKED, the `grep -c` runs and returns 1, and the guard's own header
+> says reads stay allowed because a kernel rule is immutable rather than secret. A later session
+> must not read its own successful verify command as a missing control.
+> (3) **4.3 needs more than 3.1, and the delta is cheap if known in advance.** The step says
+> *"3.1's persisted ledger and nothing else"*; measured, `check_gate_completeness` is already 23
+> violations OVER its baseline on this branch's base, so a new gate has negative headroom and
+> must import `./_lib/gate_ledger.js` from its first commit to land `ledgered` rather than as
+> violation 238. Proven on the shipped `classifyGateSource` over all four polarities.
+> **What has NOT changed, and was re-executed rather than read:** the kernel deny is live (fifth
+> consecutive reproduction, against the real `Edit` tool), `LedgerState` is still a type with two
+> references and no writer, `check_typed_op_grant.ts` is still unwritten, `personal.autonomy`
+> still reads `auto`, `delivery.*` is still outside `MERGEABLE_KEYS`, and both open blockers
+> stand on human forge actions. The platform anchor's green now carries a **control** — the same
+> gate over an out-of-scope file reports `out_of_scope 1` and does not consult the forge — so for
+> the first time its pass is falsifiable rather than merely repeated.
+
+> **STATE AS OF 2026-10-01 — superseded on the counts by the block above; kept for its reasoning.** 4 done · 14
 > deferred `[~]` · 7 open-and-blocked `[ ]`. `scanOpenSteps` reads `{open: 0, blocked: 7}`.
 > **This file is not agent-executable, and that is a property of its subject rather than a
 > stall.** Every remaining step either edits a kernel rule behind a deny reproduced three times
@@ -649,6 +676,39 @@ item. Phases 1-6 may run once 0.2 is chosen.
       the mechanical replacement Phase 1.1's `enforced_by:` line promises and Risk 1 demands
       exists before the floor narrows — so it should be built FIRST among the unblocked work,
       not last.
+      **Evidence (2026-10-05) — THE SECOND OBSTACLE UNDER THE FIRST, measured by probe rather
+      than reasoned about, and it is a construction requirement rather than a block.** The
+      order above says 3.1's ledger *"and nothing else"*. That is now known to be incomplete:
+      the moment the ledger lands and this gate is written, a second gate has an opinion about
+      it, and a session that discovers it after authoring the gate will be looking at a red CI
+      it did not cause.
+      **What was measured.** `check_gate_completeness` is RED on the base of this branch —
+      `./scripts-run src/scripts/check_gate_completeness` exits **1** with *"237 violation(s)
+      against a baseline of 214 — 23 new"*, reading `89 ledgered · 12 exempt · 237 un-adopted ·
+      338 registered`. That red is pre-existing and nothing in this roadmap caused it; the point
+      is that a new gate arrives onto a ratchet with **negative** headroom, so a 238th un-adopted
+      gate is not absorbed.
+      **The probe, and the thing it taught by NOT moving.** A throwaway
+      `src/scripts/check_zz_probe.ts` was created and `check_gate_completeness` re-run: the
+      counts were **identical** — still `237 un-adopted · 338 registered`. No movement where
+      movement was expected, so the oracle was not installed and the cause was found instead.
+      `grep -n 'registered' src/scripts/check_gate_completeness.ts` points at
+      `registeredGateIds()` at `:105`, which is `local_closure(TASK_ROOTS, load_tasks(...))` over
+      `TASK_ROOTS = ['ci', 'consistency']` at `:57` — **the registry is the Taskfile closure, not
+      a filesystem glob.** A file in `src/scripts/` registers nothing. The probe was removed by
+      exact deletion.
+      **The avoidance path, proven on the shipped classifier rather than assumed.** The exported
+      pure function `classifyGateSource` was called directly over four sources, all four
+      polarities in one run: a bare gate → `unledgered` (i.e. violation 238); one importing
+      `./_lib/gate_ledger.js` → `ledgered`; one carrying `// ledger-exempt:` with a 60-character
+      reason → `exempt`; and one carrying `// ledger-exempt: n/a` → `malformed_exemption`, which
+      is a violation of a different class. The 20-character floor is `MIN_REASON_CHARS` at
+      `grep -n 'MIN_REASON_CHARS' src/scripts/check_gate_completeness.ts` → `:68`.
+      **So the hand-over is one sentence: `check_typed_op_grant.ts` must import
+      `./_lib/gate_ledger.js` and emit its `scanned:` line from the first commit**, and be
+      registered in `src/config/gate-coverage.yml` with CI-identical `argv` and a `min_scanned`
+      floor. Retrofitting the ledger import after the gate is wired means one PR that is red for
+      a reason the diff did create. This costs nothing to know now and a cycle to discover later.
 - [x] **4.4 Dispose of `check_no_automerge_key.ts`.** Delete it deliberately, per its own
       text, or leave it and record why. It matches `delivery.merge` either way, so this is a
       hygiene decision and not a blocker.
@@ -1305,6 +1365,39 @@ item. Phases 1-6 may run once 0.2 is chosen.
   procedure — which an agent run can re-measure and cannot advance. That is all this
   re-measurement did.
 
+- **RE-MEASURED 2026-10-05 against `origin/main` `6aa3c36f9` and the live forge. NO LIMB MOVED
+  since 2026-10-01, and this reading adds a control the previous five did not run.** Every
+  figure executed; none copied.
+  - **Limb 1 — still met.**
+    `./scripts-run src/scripts/check_platform_anchor --as-of 2026-10-05 --files src/rules/commit-policy.md`
+    exits **0**: `platform anchor PASS_WITH_ACCEPTED_RISK for event4u-app/agent-config`, over
+    applicable active ruleset `17749383`, with the two approval dimensions printing as
+    *"observed, not required here (see NON_NEGOTIABLE_FLOOR)"* and no finding. The
+    `thread-resolution-missing` regression of 2026-09-14 is still absent.
+  - **CONTROL, and it is the thing four earlier readings asserted without testing: the green is
+    an evaluation, not a vacuous skip.** The same gate against an out-of-scope file —
+    `--files README.md` — prints *"no kernel rule, governance hook, ratification mechanism or
+    platform expectation in the diff — the platform anchor is not consulted"* and
+    `ledger: planned 1 · completed 0 · failed 0 · out_of_scope 1`. The in-scope run reports
+    `completed 1 · out_of_scope 0`. So the gate discriminates, and limb 1's pass is a forge
+    read rather than a scope filter quietly swallowing the question.
+  - **The waiver is live, not lapsed.** `arr-2026-09-10-strict-status-checks` expires
+    **2026-12-09** — 65 days from this reading. A run arriving after that date must re-measure:
+    an expired waiver turns `PASS_WITH_ACCEPTED_RISK` back into a finding.
+  - **Limb 2 — still half-met, still the PAT, and the hit is still a comment.**
+    `grep -c check_platform_anchor taskfiles/ci-fast.yml` returns **2**.
+    `grep -rc check_platform_anchor .github/workflows/*.yml | grep -v ':0'` returns exactly one
+    line, `rule-backstops.yml:1`; reading that hit rather than counting it,
+    `grep -n check_platform_anchor .github/workflows/rule-backstops.yml` returns `:697`, whose
+    text begins *"`check_platform_anchor` is NOT wired here"*. A comment, not a step.
+  - **Item 2 — the unrehearsed recovery path — unchanged and still open.** Nothing in this run
+    rehearses a recovery, and re-measuring the absence of a bypass is not the same as testing
+    the way back from a lockout.
+  **Net: unchanged from 2026-10-01. Both residual items are forge actions a human performs.**
+  The one thing this reading contributes beyond a sixth identical net is the control above —
+  which is worth more than the net, because it is the first time this entry can say the green
+  was falsifiable rather than merely repeated.
+
 ### blocker: kernel-guard-first-crossing
 - **Status:** open
 - **Owner:** maintainer
@@ -1429,6 +1522,37 @@ item. Phases 1-6 may run once 0.2 is chosen.
   independent review, and the anchor in its post-ruling shape proves no such thing — a point the
   2026-09-13 reviewing council sharpened from the other side. A green anchor is a precondition
   that is once more satisfied; it is not the one the seats had in mind.
+- **Re-verified 2026-10-05 against `origin/main` `6aa3c36f9`. Both limbs unmet, the deny
+  reproduced for the FIFTH consecutive reading, and this one carries a polarity control the
+  previous four did not.** Executed, not carried forward:
+  `ls -l src/scripts/hooks/block_kernel_rule_writes.ts` **succeeds** where the clause requires
+  it to fail, at **11,345 bytes** — unchanged from 2026-10-01, so the guard file itself did not
+  move in the four days `main` did.
+  `grep -c block-kernel-rule-writes src/scripts/hook_manifest.yaml` returns **5** where the
+  clause requires 0 — the concern definition at **`:231`**, a comment at **`:557`**, and three
+  `pre_tool_use` binding lists at **`:1546`**, **`:1588`** and **`:1635`**. Every one of those
+  has drifted from the `:198`/`:502`/`:1427`/`:1459`/`:1506` of 2026-10-01.
+  `grep -n 'block_kernel_rule_writes' src/scripts/hooks/concern_registry.ts` returns `:54` (the
+  import) and **`:121`** (the registration) — the first reading in five where the registry line
+  did NOT drift. Fifth consecutive reading in which the manifest moves and the binding does not.
+  **The deny was exercised, not inspected.** Step 1.1's own edit — replacing the `this turn`
+  clause with *"Triggers below require an object-bound grant covering the op"* — was put to the
+  `Edit` tool against `src/rules/non-destructive-by-default.md`. The `pre_tool_use` dispatcher
+  refused it: `block-kernel-rule-writes: BLOCKED — kernel rule non-destructive-by-default is
+  immutable — tighten-only via the override exception registry`, remediation naming a human
+  action outside the agent session. Nothing was written: `git status --short` is empty and
+  `grep -c 'this turn' src/rules/non-destructive-by-default.md` still returns **1**.
+  **NEW THIS READING — the guard's reach is narrower than this entry claimed, and the claim is
+  withdrawn above rather than repeated.** A second probe fixed the polarity: an in-place
+  `sed -i '' -e 's/ZZZ_NO_SUCH_STRING_ZZZ/x/'` against the same kernel path is **BLOCKED** by
+  the same concern, while the read-only `grep -c` above **runs**. So the guard is live and
+  write-shaped-only, exactly as its own header says. Both halves matter: the BLOCKED sed is why
+  this blocker's negative is not a dead guard, and the running grep is why a later session must
+  not read its own verify command's success as a missing control.
+  **The 1.1 verify clause reproduces as corrected on 2026-10-01**, measured both ways this run:
+  `grep -c 'never act while asking' …` returns **0** and `grep -ic …` returns **1**. The `-i` is
+  load-bearing and the clause is satisfiable.
+  The alternative limb is unmet as before: no maintainer-authored kernel commit on this branch.
 
 ## Fixtures
 
