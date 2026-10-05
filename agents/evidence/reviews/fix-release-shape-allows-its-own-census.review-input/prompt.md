@@ -21,12 +21,14 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 03e9a4cff9e218e2a079c1066b9c9385826e719d, review
-  artefacts excluded), scope hash `787c6ee59d796bab781a417917ab187485f48f9c7c7ab16b5ad5d7c777e46d9e`
+- diff: `diff.patch` — the review scope (branch head b420e2ac0b15ca46e59a2de66ff7ef81d23a5b13, review
+  artefacts excluded), scope hash `76966bdb5b9caf382eeac4d594ec869c8f29a66b9e6172fedc37854f9fe5534d`
 - roadmap under review: none (`acceptance-criteria.md` is empty)
 
 Changed files:
 
+- .github/workflows/smoke-public-install.yml
+- .github/workflows/tests.yml
 - docs/contracts/release-pr-gating.md
 - src/scripts/check_release_pr_shape.ts
 - src/scripts/report_evidence_temperature.ts
@@ -53,7 +55,7 @@ Fill the findings table in `fix-release-shape-allows-its-own-census.findings.md`
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 787c6ee59d796bab781a417917ab187485f48f9c7c7ab16b5ad5d7c777e46d9e, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 76966bdb5b9caf382eeac4d594ec869c8f29a66b9e6172fedc37854f9fe5534d, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
