@@ -59,7 +59,7 @@ index 8f74f194fcdee655bfcc94154db4e5ad6764be32..2fd1a5c6e1816060f3a65b72bff2f447
      strategy:
        fail-fast: false
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..7a6027a5a8e6da59653aa94b5b7e935989940c47 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..c637ea35aa30be6e2281b73a10adf3bfa6a38780 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
 @@ -35,10 +35,25 @@ keep-beta-reason: >-
@@ -200,7 +200,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..7a6027a5a8e6da59653aa94b5b7e9359
 -| `tests.yml` | `windows-lockfile-export` | release-PR diff has no `scripts/install_global*.py`, `scripts/cmd_export.py`, lockfile test surface |
 -| `smoke-public-install.yml` | `smoke` | release-PR diff has no `scripts/install*`, `setup.sh`, `templates/**`, `package.json` runtime behaviour |
 +| `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
-+| `tests.yml` | `static-checks` | its source-reading steps (ESLint, `tsc`, MCP-catalog drift, test-delta, build freshness, hook-latency) have no admitted input. Its manifest-reading steps do not all have a release-path twin: `npm audit` runs as `release-validation.yml` § `audit-gate` and `prepack-check` via `consumer-matrix.yml`, but **`publint` has none** — and `publint` reads `files`, `bin` and `exports`, which is the opening blockquote's unread-content residue with a name. A version-field-only edit changes nothing it checks; nothing enforces that the edit is version-field-only |
++| `tests.yml` | `static-checks` | its source-reading steps (ESLint, `tsc`, MCP-catalog drift, test-delta, build freshness, hook-latency) have no admitted input. Every manifest-reading step has a release-path twin: `npm audit` → `release-validation.yml` § `audit-gate`, `prepack-check` → `consumer-matrix.yml`, and `publint` → `evaluator-umbrella.yml`, which carries no head-ref guard and whose `paths:` filter leads with `package.json`, so it runs on every release PR by construction |
 +| `tests.yml` | `golden-tests` | golden corpora live under `tests/` and `internal/`, neither admitted |
 +| `tests.yml` | `collector-lifecycle` | exercises collector scripts under `src/scripts/`, none admitted |
 +| `tests.yml` | `workspace-tests` | exercises workspace wiring under `src/` and `tests/`; the admitted pack and domain files are metadata those tests do not read |
@@ -208,7 +208,15 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..7a6027a5a8e6da59653aa94b5b7e9359
  
  `push:` to `main` and the weekly cron on `smoke-public-install.yml` stay
  **unconditional** — those catch drift the PR matrix can't see.
-@@ -134,10 +219,9 @@ the feature-PR floor by adding:
+@@ -118,6 +203,7 @@ the feature-PR floor by adding:
+ | Workflow | Job | Proves |
+ |---|---|---|
+ | `consistency.yml` | (existing) | `task consistency` — source-of-truth integrity |
++| `evaluator-umbrella.yml` | `umbrella` | `publint` plus the evaluator budgets. No head-ref guard; its `paths:` filter leads with `package.json`, which every release bumps, so it runs on release PRs by construction rather than by exception |
+ | `smoke.yml` | `smoke-contracts` | Contract self-checks (kernel, router, hashes) |
+ | `release-guard.yml` | `assert-version-matches-tag` | already gates `npm publish`; remains tag-trigger |
+ | `migration-dry-run.yml` | (existing) | Migration plan dry-runs |
+@@ -134,10 +220,9 @@ the feature-PR floor by adding:
  
  `release-validation.yml`'s fourth job, `release-install-e2e`
  (`tests/test_release_install_e2e.sh`), closes a gap the cut surface above
@@ -222,7 +230,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..7a6027a5a8e6da59653aa94b5b7e9359
  
  - a fresh `npm install -g` into an isolated npm prefix resolves the
    `agent-config` binary and ships no silent postinstall/GUI side effect;
-@@ -160,9 +244,10 @@ the source diff couldn't see was missing) cannot recur silently.
+@@ -160,9 +245,10 @@ the source diff couldn't see was missing) cannot recur silently.
  
  ## Consumer-matrix exemption — the tarball window
  
@@ -397,7 +405,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..7e202ab039809071bc35fbec58bebd20
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..0a2c2afc6d423e17baae9d762361bbf25990feb9 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..2820aeb3055adb5de8240f9498f3b7b5d7cac7b1 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -1,7 +1,14 @@
@@ -415,7 +423,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..0a2c2afc6d423e17baae9d762361bbf2
  
  function runCheck(files: readonly string[]): { code: number; out: string } {
      const out: string[] = [];
-@@ -69,6 +76,28 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -69,6 +76,31 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(out).toContain('OUT-OF-SHAPE: src/packs/core/installer/foo.ts');
      });
  
@@ -427,9 +435,12 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..0a2c2afc6d423e17baae9d762361bbf2
 +        // than discovered, and so narrowing these globs later is a deliberate
 +        // edit to this assertion rather than a silent behaviour change.
 +        //
-+        // ALL SIX `*` entries, not a sample: a reader checking whether a given
-+        // row is narrow should find its answer here rather than infer it from
-+        // a neighbour.
++        // EVERY `*` entry, not a sample: a reader checking whether a given row
++        // is narrow should find its answer here rather than infer it from a
++        // neighbour. The count is derived below rather than written down, so
++        // adding a seventh wildcard row reds this instead of aging a comment.
++        const wildcards = shape.ALLOWLIST_GLOBS.filter((g) => g.includes('*'));
++        expect(wildcards).toHaveLength(6);
 +        expect(shape._matches('src/packs/core/installer/pack.yaml')).toBe(true);
 +        expect(shape._matches('src/packs/core/installer/README.md')).toBe(true);
 +        expect(shape._matches('src/domains/a/b/pack.yaml')).toBe(true);
@@ -444,7 +455,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..0a2c2afc6d423e17baae9d762361bbf2
      it('marketplace metadata only passes', () => {
          expect(runCheck(['.claude-plugin/marketplace.json']).code).toBe(0);
      });
-@@ -113,6 +142,52 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -113,6 +145,52 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(shape._matches('src/packs/core/README.md')).toBe(true);
          expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
      });
@@ -497,7 +508,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..0a2c2afc6d423e17baae9d762361bbf2
  });
  
  describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
-@@ -130,3 +205,98 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
+@@ -130,3 +208,110 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
          expect(out).not.toContain('land the files above on main');
      });
  });
@@ -548,7 +559,11 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..0a2c2afc6d423e17baae9d762361bbf2
 +            .flatMap((rel) => walk(path.join(REPO_ROOT, rel), true))
 +            .filter((f) => !f.endsWith('report_evidence_temperature.ts'))
 +            .flatMap((f) => fs.readFileSync(f, 'utf8').split('\n'))
-+            .filter((line) => line.includes('report_evidence_temperature') && !line.trimStart().startsWith('*'));
++            // An INVOCATION, not a mention: the line must run the script. Prose
++            // naming the module in a comment is not a caller, and counting it
++            // as one would red this test on an edit that changes nothing.
++            .filter((line) => /scripts-run\s+src\/scripts\/report_evidence_temperature/.test(line))
++            .filter((line) => !/^\s*(\/\/|#|\*)/.test(line));
 +        expect(invocations).toHaveLength(1);
 +        expect(invocations[0]).toContain('--write');
 +        expect(invocations[0]).not.toContain('--out');
@@ -565,10 +580,15 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..0a2c2afc6d423e17baae9d762361bbf2
 +        // green. Comment lines are excluded — this contract and several
 +        // workflows quote the guard expression in prose, and a quotation is
 +        // not a guard.
-+        const WORKFLOWS = ['tests.yml', 'smoke-public-install.yml'];
++        // Derived, not listed: a hardcoded pair would be a third unparsed copy
++        // of a list — the decay this test exists to stop, one level up. Every
++        // workflow is scanned, so a guard added to a sixth file is caught.
++        const wfDir = path.join(REPO_ROOT, '.github/workflows');
++        const WORKFLOWS = fs.readdirSync(wfDir).filter((n) => n.endsWith('.yml') || n.endsWith('.yaml'));
++        expect(WORKFLOWS.length).toBeGreaterThan(0);
 +        const guarded: string[] = [];
 +        for (const wf of WORKFLOWS) {
-+            const text = fs.readFileSync(path.join(REPO_ROOT, '.github/workflows', wf), 'utf8');
++            const text = fs.readFileSync(path.join(wfDir, wf), 'utf8');
 +            let job = '';
 +            for (const line of text.split('\n')) {
 +                const header = /^ {2}([a-z][a-z0-9-]*):\s*$/.exec(line);
@@ -584,8 +604,11 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..0a2c2afc6d423e17baae9d762361bbf2
 +        // document-wide match would demand the two be equal.
 +        const doc = fs.readFileSync(CONTRACT, 'utf8');
 +        const from = doc.indexOf('## Cut surface');
-+        const section = doc.slice(from, doc.indexOf('\n## ', from + 1));
 +        expect(from).toBeGreaterThan(-1);
++        // `indexOf` returns -1 when § Cut surface is the last section; slice to
++        // the end in that case rather than dropping a character.
++        const next = doc.indexOf('\n## ', from + 1);
++        const section = doc.slice(from, next === -1 ? undefined : next);
 +        const tabled = [...section.matchAll(/^\| `([a-z-]+\.yml)` \| `([^`]+)` \|/gm)].map((m) => `${m[1]}:${m[2]}`);
 +        expect([...tabled].sort()).toEqual([...guarded].sort());
 +    });
