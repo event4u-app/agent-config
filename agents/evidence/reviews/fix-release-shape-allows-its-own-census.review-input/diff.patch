@@ -61,7 +61,7 @@ index 8f74f194fcdee655bfcc94154db4e5ad6764be32..2fd1a5c6e1816060f3a65b72bff2f447
      strategy:
        fail-fast: false
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..615a79e260287abbb0ad718b8059b32694bb6544 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..4a28965d5a13b18f9ee5192b84b1a6d098715f69 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
 @@ -35,10 +35,26 @@ keep-beta-reason: >-
@@ -203,7 +203,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..615a79e260287abbb0ad718b8059b326
 -| `tests.yml` | `windows-lockfile-export` | release-PR diff has no `scripts/install_global*.py`, `scripts/cmd_export.py`, lockfile test surface |
 -| `smoke-public-install.yml` | `smoke` | release-PR diff has no `scripts/install*`, `setup.sh`, `templates/**`, `package.json` runtime behaviour |
 +| `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
-+| `tests.yml` | `static-checks` | its source-reading steps have no admitted input — the allowlist carries no TypeScript, no test file and no generated tree. Its MANIFEST-reading steps each have a release-path twin: `npm audit` → `release-validation.yml` § `audit-gate`, `prepack-check` → `consumer-matrix.yml`, `publint` → `evaluator-umbrella.yml` (no head-ref guard, `paths:` leads with `package.json`, so it runs on every release PR by construction), and `npm ci` runs in every one of those jobs. This cell is prose over a step list nothing parses — read the job if the list matters |
++| `tests.yml` | `static-checks` | its source-reading steps have no admitted input: the allowlist carries no TypeScript and no test file. It does admit one generated file — the `dist/` template twin — whose freshness `consistency.yml` gates on the kept surface, and which this job's only generated-tree step (`dist/install/`) does not read. Its MANIFEST-reading steps each have a release-path twin: `npm audit` → `release-validation.yml` § `audit-gate`, `prepack-check` → `consumer-matrix.yml`, `publint` → `evaluator-umbrella.yml` (no head-ref guard, `paths:` leads with `package.json`, so it runs on every release PR by construction). This cell is prose over a step list nothing parses — read the job if the list matters |
 +| `tests.yml` | `golden-tests` | golden corpora live under `tests/` and `internal/`, neither admitted |
 +| `tests.yml` | `collector-lifecycle` | exercises collector scripts under `src/scripts/`, none admitted |
 +| `tests.yml` | `workspace-tests` | exercises workspace wiring under `src/` and `tests/`; the admitted pack and domain files are metadata those tests do not read |
@@ -416,7 +416,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..7e202ab039809071bc35fbec58bebd20
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..c622c4b28e8f4ed15c2780012fd9520a49ef6cd3 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..157ceaa7ca004b31012d1d2f78819a19d707e0ac 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -1,7 +1,14 @@
@@ -519,7 +519,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..c622c4b28e8f4ed15c2780012fd9520a
  });
  
  describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
-@@ -130,3 +208,113 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
+@@ -130,3 +208,117 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
          expect(out).not.toContain('land the files above on main');
      });
  });
@@ -556,14 +556,18 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..c622c4b28e8f4ed15c2780012fd9520a
 +        // with the test still green — a scan that cannot tell "nothing here"
 +        // from "did not look" is the shape this suite keeps finding.
 +        const roots = ['taskfiles', 'Taskfile.yml', 'src/scripts', 'package.json', '.github/workflows'];
-+        // Text extensions only: `src/scripts/` carries binary fixtures, and
-+        // reading an .mp4 as UTF-8 costs time to find nothing.
-+        const TEXT = /\.(ts|tsx|js|mjs|cjs|sh|bash|yml|yaml|json|md|py)$/;
++        // Binary extensions are skipped; everything else is read. An earlier
++        // version allowlisted text extensions instead, which silently dropped
++        // EXTENSIONLESS files — and `src/scripts/install` and
++        // `src/scripts/agent-config` are exactly that: executable dispatch
++        // scripts inside a scanned root. Denying known binaries keeps the
++        // unknown case readable rather than invisible.
++        const BINARY = /\.(mp4|mov|png|jpg|jpeg|gif|webp|pdf|zip|gz|tgz|ico|woff2?|ttf|mp3|wav)$/i;
 +        const walk = (abs: string, isRoot = false): string[] => {
 +            if (isRoot && !fs.existsSync(abs)) {
 +                throw new Error(`caller-scan root is missing: ${abs}`);
 +            }
-+            if (!fs.statSync(abs).isDirectory()) return TEXT.test(abs) ? [abs] : [];
++            if (!fs.statSync(abs).isDirectory()) return BINARY.test(abs) ? [] : [abs];
 +            return fs.readdirSync(abs).flatMap((n) => walk(path.join(abs, n)));
 +        };
 +        const invocations = roots
