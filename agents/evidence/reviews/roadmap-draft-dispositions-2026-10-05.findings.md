@@ -1,6 +1,6 @@
 # Completion review — draft-roadmap promotion and archival screen, 2026-10-05
 
-**Skipped:** no code surface for this completion — two roadmap files, each gaining one dated disposition note recording a promotion and archival screen; the validator reports 0 code path(s) of 2 changed file(s), scope 05c3da6f3806d9d535df7ccc5093376ba8d0c8c024d30a38cd524f7ddf324864, declared 2026-10-05
+**Skipped:** no code surface for this completion — two roadmap files, each gaining one dated disposition note recording a promotion and archival screen; the validator reports 0 code path(s) of 2 changed file(s), scope 68aeb0dcc554c0f18b5deabdeff4de0e0adc849fd2333f4be27f884dc468bced, declared 2026-10-05
 
 ## What this change is, and why R2 has nothing to bind to
 
@@ -61,6 +61,16 @@ true as a quotation, so the new note says to re-execute against the row text rat
 than the number, and does not rewrite the dated quotation. Separately, the first draft
 of that note asserted "now at line 278", which the note's own insertion immediately
 falsified — caught before commit and replaced with the content anchor.
+
+**6 — a gate caught the diff and the gate was right.** CI red on
+`check_verify_expectation_delta`: the note added to the adversarial roadmap quoted
+AC-4's existing `verify:` annotation verbatim, and that gate reads added clauses out
+of the diff rather than out of the step structure, so a quotation of an old clause
+arrives as a new one carrying no oracle. The clause where it actually lives is
+untouched; the note now names it in prose. Recorded because the shape generalises:
+quoting a roadmap's own annotations inside roadmap prose convicts the quoting change
+rather than the quoted one, and the repair is to stop reproducing the `verify:` token
+rather than to weaken anything.
 
 ## What this change deliberately does NOT do
 
