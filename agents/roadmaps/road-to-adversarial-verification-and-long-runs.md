@@ -211,6 +211,69 @@ capability_gap: >-
 > is reported as not working; the protected outcome protects the *goal* from being re-litigated,
 > never a mechanism from being measured.
 
+> **Screened for promotion and archival 2026-10-05, and it moves to neither — three
+> gates, each executed rather than read off a status line.** The file reads 28 done /
+> 0 open / 2 deferred, which is the shape that normally precedes an archive. It is not
+> this file's shape, and the difference is measurable in three independent places.
+>
+> **1. Archival is unreachable while `status: draft`, and that is not a policy — it is
+> `collect()`.** `archive_completed_roadmaps.ts` iterates `collect()` from
+> `update_roadmap_progress.ts`, and `collect()` skips any roadmap whose frontmatter
+> `status` is in `UNSCHEDULED_VALUES` (`update_roadmap_progress.ts:103`, a set whose only
+> member is `draft`). Executed on this tree, `collect()` over `agents/roadmaps/` returns
+> 11 roadmaps and this file is **ABSENT**; the same call over a scratch copy with the one
+> line flipped to `status: ready` returns it **PRESENT**. The sweep therefore never
+> considers the file, and `npx tsx src/agent-src/scripts/archive_completed_roadmaps.ts
+> --all --dry-run` prints `ℹ️  No completed roadmaps to archive.` — a silence about this
+> file, not a verdict on it.
+>
+> **2. Promoted to `ready`, the sweep sees it and refuses it — twice over.** Against a
+> scratch root holding this file with `status: ready`:
+> `⚠️  …: 2 unresolved deferral(s) — not archived.` — AC-4 and AC-6 carry no
+> `<!-- deferred-resolution: carried-to=<slug> -->` annotation. With the carry path on
+> (its default) the refusal escalates rather than clears:
+> `❓  …: 2 deferred step(s) wait on owner blocker(s) daemon-host-kill-switch — not
+> archived; the owner decides:` followed by an `OWNER-DECISION` record offering
+> archive-and-park to `agents/roadmaps/later/` or leave in place. That is an owner choice
+> by construction, so no agent run can close this file by archiving it.
+>
+> **3. Promotion itself is blocked, and by a gate that is nothing to do with the
+> deferrals.** With the status flipped in the working tree,
+> `./scripts-run src/scripts/lint_decision_classes` reds:
+> `❌ … 1 violation(s) · road-to-adversarial-verification-and-long-runs.md:181 —
+> unresolved decision marker 'open question' in a 'ready' roadmap`. The marker is the
+> phrase *"now carries the open question"* in this file's own AC-6 narration — prose
+> about a relocated question, not an undecided step — but the detector is text-level and
+> fires on `status: ready` only. Independently,
+> `./scripts-run src/scripts/check_estate_count` reds on the promotion of the two draft
+> roadmaps screened together: `active_roadmaps 11 → 13` and `open_blockers 60 → 62`
+> against the `origin/main` floor.
+>
+> **The precedent that prompted the screen does not transfer.**
+> `road-to-a-kernel-that-guards-its-plumbing` archived the same day at `status: ready`,
+> **0** deferrals and **0** open blockers (`901e8bc4e`, a pure `git mv`, one file, zero
+> insertions). This file differs on all three axes.
+>
+> **Hand-over — what would have to change, in order.** (a) Line 181, whose full current
+> text is `` > `destructive:` section of `docs/enforcement-by-host.md` now carries the open
+> question, the `` — rephrase it, or mark the line
+> `<!-- decision-marker: ignore -->`; re-check with
+> `./scripts-run src/scripts/lint_decision_classes`. (b) `agents/roadmaps/…:3`,
+> currently `status: draft` → `status: ready`, which also needs the
+> `check_estate_count` growth claimed or offset. (c) `daemon-host-kill-switch` resolved,
+> or the owner's archive-and-park answer given via
+> `./agent-config roadmap:archive --all --owner-decision later --only
+> road-to-adversarial-verification-and-long-runs.md`. Nothing in (a)-(c) is an agent
+> action: (a) is cosmetic but gated behind (b), and (b) and (c) are the owner's.
+>
+> **The two deferrals were re-executed, not inherited.** AC-4's own
+> `<!-- verify: grep -rln 'N=3' src/rules -->` returns `src/rules/verify-before-complete.md`
+> — one offender, a kernel rule, still agent-denied. AC-6's
+> `./scripts-run src/scripts/check_enforcement_matrix --quiet` exits 0 with *"32 host-slot
+> row(s) … match"*, so its measurement half stays done and its decision half stays the
+> owner's. Both `[~]` glyphs are carrying a real disposition; neither is an open step
+> wearing one.
+
 ## Goal
 
 *Ask the owner* stops being the quality and control loop. In its place: test-first where the
