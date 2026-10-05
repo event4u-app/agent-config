@@ -19,12 +19,17 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
     buildInstalledLayerReport,
+    defaultHostLimitsPath,
     isUnconditional,
+    LIMIT_WARN_FRACTION,
+    loadHostInstructionLimits,
     readLayer,
     renderInstalledLayerReport,
     TOP_FILES,
 } from '../../src/scripts/_lib/installed_layer.js';
 import { parseArgs } from '../../src/scripts/installed_layer_report.js';
+import { GLOBAL_RULE_DIRS } from '../../src/install/globalRuleLayers.js';
+import { installReceiptBudgetLines } from '../../src/install/installThinLayer.js';
 
 const made: string[] = [];
 
@@ -265,5 +270,226 @@ describe('installed-layer report — the CLI surface', () => {
     it('refuses an unknown flag and a flag with no value', () => {
         expect(parseArgs(['--nope'])).toBeNull();
         expect(parseArgs(['--home'])).toBeNull();
+    });
+});
+
+// ---------------------------------------------------------------------------
+// The combined total against a published limit — step 1.4 of
+// `road-to-an-installed-layer-that-is-thinned`, and the per-host row of 3.5.
+//
+// The two steps share ONE mechanism and are therefore tested together: 1.4 asks
+// for package-owned AND foreign characters measured against the host's
+// published limit with a warning at 80 %, and 3.5 asks for one row per host
+// carrying that limit. A row that could not carry both numbers would satisfy
+// neither step.
+// ---------------------------------------------------------------------------
+
+/** A published-limit table on disk, so no case inherits the shipped config. */
+function stageLimits(dir: string, table: Record<string, unknown>): string {
+    const p = path.join(dir, 'host-instruction-limits.json');
+    fs.writeFileSync(p, JSON.stringify(table), 'utf-8');
+    return p;
+}
+
+describe('installed-layer report — the combined total against a published limit', () => {
+    it('splits the combined total into package-owned and foreign CHARACTERS, not just files', () => {
+        const home = mkTmp('ilr-combined-');
+        const dir = stageGlobal(home, { 'a.md': rule(900), 'b.md': rule(100) });
+        // One file recorded, one not. The FILE split reads 1/1 either way, so
+        // only a character split can tell 900/100 from 100/900 — which is the
+        // whole reason this axis exists and why the file counts cannot serve.
+        const recorded = new Map<string, string | null>([[path.join(dir, 'a.md'), null]]);
+        const layer = readLayer('claude-code', 'global', dir, recorded);
+
+        expect(layer.package_owned).toBe(1);
+        expect(layer.foreign).toBe(1);
+        expect(layer.package_owned_chars).toBe(900);
+        expect(layer.foreign_chars).toBe(100);
+        // The split is exhaustive: nothing in the directory is in neither column.
+        expect(layer.package_owned_chars + layer.foreign_chars).toBe(layer.chars);
+    });
+
+    it('is produced by the INSTALL RECEIPT too, not only by the report CLI', () => {
+        // Step 1.4 says "at install, the receipt reports … and warns", and this
+        // suite's own verify command is what the step is closed against — so a
+        // case that exercises only the report module would let the step go green
+        // against a surface no consumer runs. `installReceiptBudgetLines` is the
+        // installer-side producer; it renders through the same
+        // `renderHostLimitRows` the report uses, which is why the two cannot
+        // drift into disagreeing about a number they both measured.
+        const home = mkTmp('ilr-combined-receipt-');
+        stageGlobal(home, { 'a.md': rule(900), 'b.md': rule(100) });
+
+        const lines = installReceiptBudgetLines(mkTmp('ilr-combined-receipt-pkg-'), home);
+
+        expect(lines.length).toBeGreaterThan(0);
+        expect(lines.join('\n')).toContain('host instruction budgets');
+        expect(lines.some((l) => l.includes('claude-code'))).toBe(true);
+        expect(lines.some((l) => l.includes('package-owned'))).toBe(true);
+    });
+
+    it('warns when the combined total crosses 80 % of the limit, and not one character before', () => {
+        const LIMIT = 1_000;
+        const cfg = mkTmp('ilr-combined-cfg-');
+        // Derived from LIMIT, never written as a literal: the two cases are
+        // "the smallest total that warns" and "the largest that does not".
+        const atThreshold = Math.ceil(LIMIT * LIMIT_WARN_FRACTION);
+        const justUnder = atThreshold - 1;
+
+        const warnHome = mkTmp('ilr-combined-warn-');
+        stageGlobal(warnHome, { 'a.md': rule(atThreshold) });
+        const warned = buildInstalledLayerReport({
+            home: warnHome,
+            projectRoot: mkTmp('ilr-combined-warn-proj-'),
+            hostLimitsPath: stageLimits(cfg, { 'claude-code': { limit: LIMIT, kind: 'reported' } }),
+        });
+        const warnRow = warned.limits.find((r) => r.host === 'claude-code');
+        expect(warnRow?.chars).toBe(atThreshold);
+        expect(warnRow?.warn).toBe(true);
+        expect(warnRow?.fraction).toBeCloseTo(atThreshold / LIMIT, 10);
+
+        const okHome = mkTmp('ilr-combined-ok-');
+        stageGlobal(okHome, { 'a.md': rule(justUnder) });
+        const ok = buildInstalledLayerReport({
+            home: okHome,
+            projectRoot: mkTmp('ilr-combined-ok-proj-'),
+            hostLimitsPath: stageLimits(cfg, { 'claude-code': { limit: LIMIT, kind: 'reported' } }),
+        });
+        expect(ok.limits.find((r) => r.host === 'claude-code')?.warn).toBe(false);
+    });
+
+    it('counts a foreign file toward the combined total, because the limit is shared', () => {
+        const LIMIT = 1_000;
+        const cfg = mkTmp('ilr-combined-shared-cfg-');
+        const home = mkTmp('ilr-combined-shared-');
+        // Package-owned alone is under 80 %; with the consumer's own file it is
+        // over. A report measuring only package-owned characters would call
+        // this install comfortable, which is the failure step 1.4 names.
+        stageGlobal(home, { 'ours.md': rule(500), 'theirs.md': rule(400) });
+        const report = buildInstalledLayerReport({
+            home,
+            projectRoot: mkTmp('ilr-combined-shared-proj-'),
+            hostLimitsPath: stageLimits(cfg, { 'claude-code': { limit: LIMIT, kind: 'reported' } }),
+        });
+        const row = report.limits.find((r) => r.host === 'claude-code');
+        expect(row?.chars).toBe(900);
+        expect(row?.warn).toBe(true);
+        // and the package-owned half on its own would NOT have warned
+        expect(500 / LIMIT).toBeLessThan(LIMIT_WARN_FRACTION);
+    });
+
+    it('renders the combined line with both halves and the warning word', () => {
+        const cfg = mkTmp('ilr-combined-render-cfg-');
+        const home = mkTmp('ilr-combined-render-');
+        stageGlobal(home, { 'a.md': rule(900) });
+        const lines = renderInstalledLayerReport(
+            buildInstalledLayerReport({
+                home,
+                projectRoot: mkTmp('ilr-combined-render-proj-'),
+                hostLimitsPath: stageLimits(cfg, {
+                    'claude-code': { limit: 1_000, kind: 'reported' },
+                }),
+            }),
+        );
+        const row = lines.find((l) => l.includes('claude-code —') && l.includes('package-owned +'));
+        expect(row).toBeDefined();
+        expect(row).toContain('900 chars');
+        expect(row).toContain('of 1000');
+        expect(row).toContain('WARNING');
+    });
+});
+
+describe('installed-layer report — one row per host, and an absent limit is never a pass', () => {
+    it('emits a row for every host the layer map knows, not only the ones with a limit', () => {
+        const home = mkTmp('ilr-rows-');
+        stageGlobal(home, { 'a.md': rule(10) });
+        const report = buildInstalledLayerReport({
+            home,
+            projectRoot: mkTmp('ilr-rows-proj-'),
+            hostLimitsPath: stageLimits(mkTmp('ilr-rows-cfg-'), {}),
+        });
+        const hosts = new Set(report.layers.map((l) => l.host));
+        expect(hosts.size).toBeGreaterThan(1);
+        expect(new Set(report.limits.map((r) => r.host))).toEqual(hosts);
+    });
+
+    it('a host with no recorded limit reports unpublished and NEVER warns, however large', () => {
+        const home = mkTmp('ilr-nolimit-');
+        stageGlobal(home, { 'huge.md': rule(500_000) });
+        const report = buildInstalledLayerReport({
+            home,
+            projectRoot: mkTmp('ilr-nolimit-proj-'),
+            hostLimitsPath: stageLimits(mkTmp('ilr-nolimit-cfg-'), {
+                'claude-code': { limit: null, kind: 'unpublished' },
+            }),
+        });
+        const row = report.limits.find((r) => r.host === 'claude-code');
+        expect(row?.chars).toBe(500_000);
+        expect(row?.limit).toBeNull();
+        expect(row?.kind).toBe('unpublished');
+        expect(row?.fraction).toBeNull();
+        expect(row?.warn).toBe(false);
+        const lines = renderInstalledLayerReport(report);
+        expect(lines.some((l) => l.includes('no published limit recorded'))).toBe(true);
+    });
+
+    it('an unreadable or missing table yields no limits and no warnings, never a fabricated one', () => {
+        const home = mkTmp('ilr-badcfg-');
+        stageGlobal(home, { 'a.md': rule(10_000) });
+        const bad = path.join(mkTmp('ilr-badcfg-cfg-'), 'host-instruction-limits.json');
+        fs.writeFileSync(bad, 'this is not json', 'utf-8');
+        for (const p of [bad, path.join(mkTmp('ilr-missing-'), 'nope.json')]) {
+            const report = buildInstalledLayerReport({
+                home,
+                projectRoot: mkTmp('ilr-badcfg-proj-'),
+                hostLimitsPath: p,
+            });
+            expect(report.limits.every((r) => r.limit === null && !r.warn)).toBe(true);
+        }
+    });
+
+    it('a non-positive or non-numeric limit is dropped rather than believed', () => {
+        const limits = loadHostInstructionLimits(
+            stageLimits(mkTmp('ilr-badval-cfg-'), {
+                _comment: 'not a host',
+                zero: { limit: 0, kind: 'reported' },
+                negative: { limit: -1, kind: 'reported' },
+                stringy: { limit: '150000', kind: 'reported' },
+                good: { limit: 10, kind: 'vendor-published' },
+            }),
+        );
+        expect(limits.has('_comment')).toBe(false);
+        for (const h of ['zero', 'negative', 'stringy']) expect(limits.get(h)?.limit).toBeNull();
+        expect(limits.get('good')).toEqual({ limit: 10, kind: 'vendor-published' });
+    });
+});
+
+describe('installed-layer report — the shipped table states where every figure came from', () => {
+    it('every host the global layer map knows has an entry', () => {
+        const shipped = JSON.parse(fs.readFileSync(defaultHostLimitsPath(), 'utf-8')) as Record<
+            string,
+            unknown
+        >;
+        for (const host of Object.keys(GLOBAL_RULE_DIRS)) {
+            expect(Object.keys(shipped)).toContain(host);
+        }
+    });
+
+    it('no figure is asserted without a source — the guard against an invented limit', () => {
+        const shipped = JSON.parse(fs.readFileSync(defaultHostLimitsPath(), 'utf-8')) as Record<
+            string,
+            { limit?: unknown; kind?: unknown; source?: unknown }
+        >;
+        for (const [host, e] of Object.entries(shipped)) {
+            if (host.startsWith('_')) continue;
+            if (typeof e.limit === 'number') {
+                expect(typeof e.source, `${host} states a limit and must cite it`).toBe('string');
+                expect((e.source as string).length).toBeGreaterThan(20);
+                expect(['vendor-published', 'reported']).toContain(e.kind);
+            } else {
+                expect(e.limit, `${host} has no limit and must say so with null`).toBeNull();
+                expect(e.kind).toBe('unpublished');
+            }
+        }
     });
 });

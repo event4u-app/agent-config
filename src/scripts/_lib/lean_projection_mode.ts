@@ -229,6 +229,30 @@ export function thinsHost(mode: LeanProjectionMode, hosts: readonly string[], ho
 export interface ResolvedLeanProjection {
     readonly mode: LeanProjectionMode;
     readonly hosts: LeanProjectionHosts;
+    /**
+     * Was `lean_projection.mode` set on a layer the USER controls — user-global,
+     * project, or project-local — rather than inherited from the shipped
+     * template?
+     *
+     * THE DISTINCTION IS NOT A REFINEMENT, IT IS A SAFETY BOUNDARY, and it is
+     * the one `road-to-an-installed-layer-that-is-thinned` names in its Context:
+     * the shipped template already says `mode: delivery`
+     * (`src/config/agent-settings.template.yml:212-214`), so the moment the
+     * INSTALLER resolves the mode through this resolver, the template value
+     * alone would thin every consumer's `~/.claude/rules` — a default flip
+     * arriving as a side effect of wiring a reader, with nobody deciding it.
+     *
+     * Whether that default flips is owner-reserved (that roadmap's blocker
+     * `default-flip-of-the-installed-layer`, decision D4). So the installer must
+     * be able to ask a question `mode` cannot answer: not "what is the mode" but
+     * "did a human ask for this". That is this flag, and it is why it reports
+     * provenance rather than a value.
+     *
+     * `false` whenever no layer the user controls carries the key — including
+     * when `mode` reads `delivery` from the template, which is exactly the case
+     * that must NOT be read as consent.
+     */
+    readonly modeExplicit: boolean;
 }
 
 export interface ResolveOptions {
@@ -246,7 +270,9 @@ export interface ResolveOptions {
  * Tolerant like everything else on a hook path: `load_agent_settings` answers
  * with defaults on an unreadable or malformed file and never throws, and the
  * normalisers above turn anything unrecognised into the safe value. A caller
- * on a hot path pays one cascade read per prompt.
+ * on a hot path pays ONE cascade read per prompt; `modeExplicit` is a lazy
+ * getter, so the second, template-isolated read happens only for a caller that
+ * actually reads provenance — which today is the installer and nothing else.
  */
 export function resolveLeanProjection(opts: ResolveOptions = {}): ResolvedLeanProjection {
     // The LEGACY root path, deliberately, and not `project_settings_path`'s
@@ -276,5 +302,141 @@ export function resolveLeanProjection(opts: ResolveOptions = {}): ResolvedLeanPr
     return {
         mode: normalizeLeanProjectionMode(o['mode'] ?? ''),
         hosts: resolveLeanProjectionHosts(o['hosts']),
+        // LAZY, and the hot path is the reason. Provenance needs a SECOND,
+        // template-isolated cascade, and only the installer reads it — the
+        // delivery concern on `user_prompt_submit` destructures `{ mode, hosts }`
+        // and discards this field, so computing it eagerly doubled the per-prompt
+        // settings read for an answer nobody asked for. A getter keeps the
+        // field's shape (`readonly modeExplicit: boolean`) and charges only the
+        // caller that touches it.
+        get modeExplicit(): boolean {
+            return rawExplicitLeanProjectionMode(opts) !== '';
+        },
     };
 }
+
+/**
+ * A path no tree contains, so `template_defaults` contributes nothing.
+ *
+ * This is the mechanism `load_agent_settings` documents for the purpose —
+ * "a test or tool that pins every other input can pin the defaults base too,
+ * and point it at a nonexistent file to isolate the cascade" — used here for a
+ * tool rather than a test. It is a reserved device filename on every platform
+ * this package runs on and is never created, so the read fails and the loader's
+ * own tolerance turns it into `{}`.
+ *
+ * The alternative — re-reading the YAML layers by hand — was rejected because
+ * it would be a SECOND reader of the same key, which is the precise defect step
+ * 1.2 of the carrier roadmap existed to remove. Isolating the base keeps one
+ * reader and changes only which layers it is given.
+ */
+const NO_TEMPLATE_LAYER = path.join(path.sep, 'dev', 'null', 'agent-config-absent-template.yml');
+
+/**
+ * The RAW `lean_projection.mode` string from the user-controlled layers only,
+ * or `''` when no such layer carries it.
+ *
+ * Raw and un-normalised on purpose: {@link normalizeLeanProjectionMode} maps
+ * everything unrecognised — `''` included — onto `eager-all`, so a normalised
+ * answer cannot tell "the user chose eager-all" from "the user chose nothing".
+ * Provenance needs exactly that distinction, so it has to be read before the
+ * normaliser runs.
+ */
+export function rawExplicitLeanProjectionMode(opts: ResolveOptions = {}): string {
+    const file =
+        opts.settingsPath ?? path.join(opts.projectRoot ?? process.cwd(), '.agent-settings.yml');
+    let lean: unknown;
+    try {
+        lean = load_agent_settings({ project_path: file, template_path: NO_TEMPLATE_LAYER })[
+            'lean_projection'
+        ];
+    } catch {
+        return ''; // a layer nothing can read states no preference
+    }
+    if (typeof lean !== 'object' || lean === null || Array.isArray(lean)) return '';
+    const m = (lean as Record<string, unknown>)['mode'];
+    return typeof m === 'string' ? m.trim() : '';
+}
+
+/**
+ * Did a human ask for this mode, and is it the one the caller is gated on?
+ *
+ * The question an installer actually has. `modeExplicit` alone is not enough —
+ * a consumer who explicitly set `eager-all` has set the key explicitly and must
+ * NOT be thinned — so the two conditions are folded here rather than left to
+ * every caller to remember to combine.
+ */
+export function leanProjectionModeChosen(
+    mode: LeanProjectionMode,
+    opts: ResolveOptions = {},
+): boolean {
+    const raw = rawExplicitLeanProjectionMode(opts);
+    return raw !== '' && normalizeLeanProjectionMode(raw) === mode;
+}
+
+/**
+ * May the INSTALLER thin this host's rule tree?
+ *
+ * The host-aware sibling of {@link leanProjectionModeChosen}, and the predicate
+ * `road-to-an-installed-layer-that-is-thinned` step 1.1 keys on. It folds the
+ * three conditions that must hold together, once, so no caller has to remember
+ * to combine them:
+ *
+ * 1. **A human asked.** `modeExplicit` — false whenever the only layer carrying
+ *    the key is the shipped template, which already says `delivery`. Reading the
+ *    template as consent would thin every consumer's `~/.claude/rules` as a side
+ *    effect of wiring a reader, which is the owner-reserved default flip (that
+ *    roadmap's blocker, decision D4).
+ * 2. **The chosen mode actually writes stubs.** A consumer who explicitly chose
+ *    `eager-all` has set the key and must NOT be thinned on the strength of
+ *    having an opinion.
+ * 3. **This host is in scope.** The same `hosts:` list the projector honours, so
+ *    installer and projector cannot disagree about which trees are thinned.
+ *
+ * ONE `resolveLeanProjection` call, which is why this is not two
+ * {@link leanProjectionModeChosen} calls: that one answers "is the chosen mode
+ * exactly X" and knows nothing about `hosts`, so a caller combining it with a
+ * host check by hand would re-create the fold this function exists to own.
+ *
+ * That is one CALL and two cascade READS here, because reading `modeExplicit`
+ * triggers its lazy getter and a second, template-isolated load. The installer
+ * runs once per deploy and does not care; the cost is named rather than rounded
+ * down because the same resolver serves the per-prompt delivery concern, which
+ * does NOT read provenance and therefore does not pay it.
+ */
+export function installerThinsHost(hostId: string, opts: ResolveOptions = {}): boolean {
+    const { mode, hosts, modeExplicit } = resolveLeanProjection({
+        ...opts,
+        settingsPath: opts.settingsPath ?? NO_PROJECT_LAYER,
+    });
+    return modeExplicit && thinsHost(mode, hosts.hosts, hostId);
+}
+
+/**
+ * A path no tree contains, so the PROJECT cascade contributes nothing.
+ *
+ * The same device {@link NO_TEMPLATE_LAYER} uses, pointed at the other end of
+ * the cascade, and the reason is scope rather than isolation: the thing
+ * {@link installerThinsHost} gates is a mutation of `~/.claude/rules`, which
+ * belongs to the MACHINE. A per-checkout value must not decide it, in either
+ * direction — a project saying `delivery` would thin the layer every other
+ * project on that machine reads, and a project saying `eager-all` would
+ * suppress an opt-in the user wrote user-globally, because the project cascade
+ * merges last and wins.
+ *
+ * `load_agent_settings` reads `user_global_settings_paths()` regardless of what
+ * `project_path` it is given, so pointing the project layer at nothing leaves
+ * exactly the machine-global layers — which is the scope the installer's
+ * sibling `_resolve_global_rule_scope` already resolves for the same deploy.
+ * A caller may still pass an explicit `settingsPath` (tests pin one). A
+ * `projectRoot` handed to {@link installerThinsHost} is DISCARDED — the `??`
+ * chain terminates at `settingsPath` before `projectRoot` is consulted — which
+ * is the intended behaviour and is stated here because a caller passing it and
+ * expecting it honoured would otherwise get no signal.
+ */
+const NO_PROJECT_LAYER = path.join(
+    path.sep,
+    'dev',
+    'null',
+    'agent-config-absent-project-settings.yml',
+);
