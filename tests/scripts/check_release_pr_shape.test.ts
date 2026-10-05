@@ -84,9 +84,12 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         // than discovered, and so narrowing these globs later is a deliberate
         // edit to this assertion rather than a silent behaviour change.
         //
-        // ALL SIX `*` entries, not a sample: a reader checking whether a given
-        // row is narrow should find its answer here rather than infer it from
-        // a neighbour.
+        // EVERY `*` entry, not a sample: a reader checking whether a given row
+        // is narrow should find its answer here rather than infer it from a
+        // neighbour. The count is derived below rather than written down, so
+        // adding a seventh wildcard row reds this instead of aging a comment.
+        const wildcards = shape.ALLOWLIST_GLOBS.filter((g) => g.includes('*'));
+        expect(wildcards).toHaveLength(6);
         expect(shape._matches('src/packs/core/installer/pack.yaml')).toBe(true);
         expect(shape._matches('src/packs/core/installer/README.md')).toBe(true);
         expect(shape._matches('src/domains/a/b/pack.yaml')).toBe(true);
@@ -252,7 +255,11 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
             .flatMap((rel) => walk(path.join(REPO_ROOT, rel), true))
             .filter((f) => !f.endsWith('report_evidence_temperature.ts'))
             .flatMap((f) => fs.readFileSync(f, 'utf8').split('\n'))
-            .filter((line) => line.includes('report_evidence_temperature') && !line.trimStart().startsWith('*'));
+            // An INVOCATION, not a mention: the line must run the script. Prose
+            // naming the module in a comment is not a caller, and counting it
+            // as one would red this test on an edit that changes nothing.
+            .filter((line) => /scripts-run\s+src\/scripts\/report_evidence_temperature/.test(line))
+            .filter((line) => !/^\s*(\/\/|#|\*)/.test(line));
         expect(invocations).toHaveLength(1);
         expect(invocations[0]).toContain('--write');
         expect(invocations[0]).not.toContain('--out');
@@ -269,10 +276,15 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
         // green. Comment lines are excluded — this contract and several
         // workflows quote the guard expression in prose, and a quotation is
         // not a guard.
-        const WORKFLOWS = ['tests.yml', 'smoke-public-install.yml'];
+        // Derived, not listed: a hardcoded pair would be a third unparsed copy
+        // of a list — the decay this test exists to stop, one level up. Every
+        // workflow is scanned, so a guard added to a sixth file is caught.
+        const wfDir = path.join(REPO_ROOT, '.github/workflows');
+        const WORKFLOWS = fs.readdirSync(wfDir).filter((n) => n.endsWith('.yml') || n.endsWith('.yaml'));
+        expect(WORKFLOWS.length).toBeGreaterThan(0);
         const guarded: string[] = [];
         for (const wf of WORKFLOWS) {
-            const text = fs.readFileSync(path.join(REPO_ROOT, '.github/workflows', wf), 'utf8');
+            const text = fs.readFileSync(path.join(wfDir, wf), 'utf8');
             let job = '';
             for (const line of text.split('\n')) {
                 const header = /^ {2}([a-z][a-z0-9-]*):\s*$/.exec(line);
@@ -288,8 +300,11 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
         // document-wide match would demand the two be equal.
         const doc = fs.readFileSync(CONTRACT, 'utf8');
         const from = doc.indexOf('## Cut surface');
-        const section = doc.slice(from, doc.indexOf('\n## ', from + 1));
         expect(from).toBeGreaterThan(-1);
+        // `indexOf` returns -1 when § Cut surface is the last section; slice to
+        // the end in that case rather than dropping a character.
+        const next = doc.indexOf('\n## ', from + 1);
+        const section = doc.slice(from, next === -1 ? undefined : next);
         const tabled = [...section.matchAll(/^\| `([a-z-]+\.yml)` \| `([^`]+)` \|/gm)].map((m) => `${m[1]}:${m[2]}`);
         expect([...tabled].sort()).toEqual([...guarded].sort());
     });

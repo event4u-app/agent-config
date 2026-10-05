@@ -186,7 +186,7 @@ parses decays.
 | `tests.yml` | `install-tests` | the allowlist has no `src/scripts/install.sh`, `src/scripts/install.ts` or `tests/test_install.sh` |
 | `tests.yml` | `install-aux-tests` | same — orchestrator, key contracts, one-liner smoke all untouched |
 | `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
-| `tests.yml` | `static-checks` | its source-reading steps (ESLint, `tsc`, MCP-catalog drift, test-delta, build freshness, hook-latency) have no admitted input. Its manifest-reading steps do not all have a release-path twin: `npm audit` runs as `release-validation.yml` § `audit-gate` and `prepack-check` via `consumer-matrix.yml`, but **`publint` has none** — and `publint` reads `files`, `bin` and `exports`, which is the opening blockquote's unread-content residue with a name. A version-field-only edit changes nothing it checks; nothing enforces that the edit is version-field-only |
+| `tests.yml` | `static-checks` | its source-reading steps (ESLint, `tsc`, MCP-catalog drift, test-delta, build freshness, hook-latency) have no admitted input. Every manifest-reading step has a release-path twin: `npm audit` → `release-validation.yml` § `audit-gate`, `prepack-check` → `consumer-matrix.yml`, and `publint` → `evaluator-umbrella.yml`, which carries no head-ref guard and whose `paths:` filter leads with `package.json`, so it runs on every release PR by construction |
 | `tests.yml` | `golden-tests` | golden corpora live under `tests/` and `internal/`, neither admitted |
 | `tests.yml` | `collector-lifecycle` | exercises collector scripts under `src/scripts/`, none admitted |
 | `tests.yml` | `workspace-tests` | exercises workspace wiring under `src/` and `tests/`; the admitted pack and domain files are metadata those tests do not read |
@@ -203,6 +203,7 @@ the feature-PR floor by adding:
 | Workflow | Job | Proves |
 |---|---|---|
 | `consistency.yml` | (existing) | `task consistency` — source-of-truth integrity |
+| `evaluator-umbrella.yml` | `umbrella` | `publint` plus the evaluator budgets. No head-ref guard; its `paths:` filter leads with `package.json`, which every release bumps, so it runs on release PRs by construction rather than by exception |
 | `smoke.yml` | `smoke-contracts` | Contract self-checks (kernel, router, hashes) |
 | `release-guard.yml` | `assert-version-matches-tag` | already gates `npm publish`; remains tag-trigger |
 | `migration-dry-run.yml` | (existing) | Migration plan dry-runs |
