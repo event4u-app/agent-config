@@ -148,6 +148,7 @@ commands:
     - roadmap/process-full
     - roadmap/process-phase
     - roadmap/process-step
+    - roadmap/resolve-blockers
     - roadmap/triage-parked
 
   # Platform / system surface (feedback-6) — NOT a flow. memory · analytics ·

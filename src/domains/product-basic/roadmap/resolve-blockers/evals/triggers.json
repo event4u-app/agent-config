@@ -1,0 +1,47 @@
+{
+  "skill": "roadmap-resolve-blockers",
+  "last_eval": "2026-10-05",
+  "description": "5 should-trigger + 5 should-not-trigger. Should-trigger covers checking and resolving roadmap ## Blockers entries: executing Resolved when conditions, closing settled blockers, deciding the rest in the AI council and asking the owner only for residue. Should-not-trigger covers the near-miss neighbours: /roadmap:next (selects and ships a roadmap), /roadmap:triage-parked (later/ and skipped/), /roadmap:ai-council (challenges a whole roadmap), /challenge-me closure (closes plan decisions before execution, not blockers), and a read-only dashboard count.",
+  "queries": [
+    {
+      "q": "lös die Roadmap-Blocker auf, Fragen bitte über den AI Council",
+      "trigger": true
+    },
+    {
+      "q": "check every open roadmap blocker and close the ones whose Resolved when already holds",
+      "trigger": true
+    },
+    {
+      "q": "which blockers still need me? decide the rest in the council",
+      "trigger": true
+    },
+    {
+      "q": "go through the ## Blockers sections and try to unblock the roadmaps",
+      "trigger": true
+    },
+    {
+      "q": "the blocker b2-consumer-first-rearm is stale — check it and resolve it if possible",
+      "trigger": true
+    },
+    {
+      "q": "pick the next executable roadmap and ship it as a PR",
+      "trigger": false
+    },
+    {
+      "q": "go through later/ and skipped/ and archive what is done",
+      "trigger": false
+    },
+    {
+      "q": "run the AI council over road-to-decision-closure.md before I execute it",
+      "trigger": false
+    },
+    {
+      "q": "close every open decision in this roadmap before execution starts",
+      "trigger": false
+    },
+    {
+      "q": "how many open blockers does the dashboard show?",
+      "trigger": false
+    }
+  ]
+}
