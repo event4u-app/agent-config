@@ -229,6 +229,30 @@ export function thinsHost(mode: LeanProjectionMode, hosts: readonly string[], ho
 export interface ResolvedLeanProjection {
     readonly mode: LeanProjectionMode;
     readonly hosts: LeanProjectionHosts;
+    /**
+     * Was `lean_projection.mode` set on a layer the USER controls — user-global,
+     * project, or project-local — rather than inherited from the shipped
+     * template?
+     *
+     * THE DISTINCTION IS NOT A REFINEMENT, IT IS A SAFETY BOUNDARY, and it is
+     * the one `road-to-an-installed-layer-that-is-thinned` names in its Context:
+     * the shipped template already says `mode: delivery`
+     * (`src/config/agent-settings.template.yml:212-214`), so the moment the
+     * INSTALLER resolves the mode through this resolver, the template value
+     * alone would thin every consumer's `~/.claude/rules` — a default flip
+     * arriving as a side effect of wiring a reader, with nobody deciding it.
+     *
+     * Whether that default flips is owner-reserved (that roadmap's blocker
+     * `default-flip-of-the-installed-layer`, decision D4). So the installer must
+     * be able to ask a question `mode` cannot answer: not "what is the mode" but
+     * "did a human ask for this". That is this flag, and it is why it reports
+     * provenance rather than a value.
+     *
+     * `false` whenever no layer the user controls carries the key — including
+     * when `mode` reads `delivery` from the template, which is exactly the case
+     * that must NOT be read as consent.
+     */
+    readonly modeExplicit: boolean;
 }
 
 export interface ResolveOptions {
@@ -276,5 +300,65 @@ export function resolveLeanProjection(opts: ResolveOptions = {}): ResolvedLeanPr
     return {
         mode: normalizeLeanProjectionMode(o['mode'] ?? ''),
         hosts: resolveLeanProjectionHosts(o['hosts']),
+        modeExplicit: rawExplicitLeanProjectionMode(opts) !== '',
     };
+}
+
+/**
+ * A path no tree contains, so `template_defaults` contributes nothing.
+ *
+ * This is the mechanism `load_agent_settings` documents for the purpose —
+ * "a test or tool that pins every other input can pin the defaults base too,
+ * and point it at a nonexistent file to isolate the cascade" — used here for a
+ * tool rather than a test. It is a reserved device filename on every platform
+ * this package runs on and is never created, so the read fails and the loader's
+ * own tolerance turns it into `{}`.
+ *
+ * The alternative — re-reading the YAML layers by hand — was rejected because
+ * it would be a SECOND reader of the same key, which is the precise defect step
+ * 1.2 of the carrier roadmap existed to remove. Isolating the base keeps one
+ * reader and changes only which layers it is given.
+ */
+const NO_TEMPLATE_LAYER = path.join(path.sep, 'dev', 'null', 'agent-config-absent-template.yml');
+
+/**
+ * The RAW `lean_projection.mode` string from the user-controlled layers only,
+ * or `''` when no such layer carries it.
+ *
+ * Raw and un-normalised on purpose: {@link normalizeLeanProjectionMode} maps
+ * everything unrecognised — `''` included — onto `eager-all`, so a normalised
+ * answer cannot tell "the user chose eager-all" from "the user chose nothing".
+ * Provenance needs exactly that distinction, so it has to be read before the
+ * normaliser runs.
+ */
+export function rawExplicitLeanProjectionMode(opts: ResolveOptions = {}): string {
+    const file =
+        opts.settingsPath ?? path.join(opts.projectRoot ?? process.cwd(), '.agent-settings.yml');
+    let lean: unknown;
+    try {
+        lean = load_agent_settings({ project_path: file, template_path: NO_TEMPLATE_LAYER })[
+            'lean_projection'
+        ];
+    } catch {
+        return ''; // a layer nothing can read states no preference
+    }
+    if (typeof lean !== 'object' || lean === null || Array.isArray(lean)) return '';
+    const m = (lean as Record<string, unknown>)['mode'];
+    return typeof m === 'string' ? m.trim() : '';
+}
+
+/**
+ * Did a human ask for this mode, and is it the one the caller is gated on?
+ *
+ * The question an installer actually has. `modeExplicit` alone is not enough —
+ * a consumer who explicitly set `eager-all` has set the key explicitly and must
+ * NOT be thinned — so the two conditions are folded here rather than left to
+ * every caller to remember to combine.
+ */
+export function leanProjectionModeChosen(
+    mode: LeanProjectionMode,
+    opts: ResolveOptions = {},
+): boolean {
+    const raw = rawExplicitLeanProjectionMode(opts);
+    return raw !== '' && normalizeLeanProjectionMode(raw) === mode;
 }
