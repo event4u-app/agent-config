@@ -1,0 +1,26 @@
+# Findings: fix-release-shape-allows-its-own-census
+<!-- completion-review: v1 | reviewed: 2026-10-05 | scope: 7c9c0c7715e14b73e5eec21ca3a1a90408b732495f9d6d6430f9e35592f07b64 | diff: 57bf88f54d84bc0eaf539478de86ce16a46e417a | reviewer: r2-fresh-subagent-fix-release-shape-allows-its-own-census | prompt_hash: 19998c781f6b318a88ffcd4aa567e079cbf5536e94f7ca4dfde09cabaf45d7cc -->
+<!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-fix-release-shape-allows-its-own-census"]}} -->
+<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-05 -->
+
+<!-- context-manifest: v1
+inputs:
+  diff_sha: 57bf88f54d84bc0eaf539478de86ce16a46e417a
+  scope_hash: 7c9c0c7715e14b73e5eec21ca3a1a90408b732495f9d6d6430f9e35592f07b64
+  roadmap: none
+  roadmap_hash: none
+  ac_hash: none
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-10-05T11:06:52Z
+-->
+
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | medium | docs/contracts/release-pr-gating.md:179-193 | The rebuilt cut-surface table is structurally broken: a four-line explanatory paragraph (181-184) sits directly under the delimiter row (180), and a blank line (185) separates it from the first data row (186). Under GFM those four prose lines are consumed as table rows, the blank line terminates the table, and rows 186-193 then form a plain paragraph with no preceding header or delimiter — so the one list the round set out to make trustworthy renders as literal pipe-delimited text. The note belongs above line 179. | fixed | af74e227c —  |
+| 2 | medium | docs/contracts/release-pr-gating.md:189 | The new `static-checks` row justifies the skip with "ESLint, `tsc` and prepack", but that job (.github/workflows/tests.yml:273-485) also runs `build_mcp_catalog --strict`, `check_test_delta`, `check_test_weakening`, `check_cli_registry_budget_sync`, the `dist/install/` freshness check, the hook-latency bench gate, `publint` and `npm audit`. Of those, `publint` runs nowhere else on the release path before merge — `npm audit` has `release-validation.yml` `audit-gate`, and `prepack-check` has `consumer-matrix.yml`, which § Consumer-matrix exemption states runs ON release PRs. The row then rests on "`package.json` version-field edits change no type and no lint result", the exact version-fields-only premise the opening blockquote of the same file withdraws as unenforced, and `publint` is the gate that reads `files`, `bin` and `exports`. The `smoke` row points back at that residue; this row, where it bites hardest, does not. | fixed | af74e227c —  |
+| 3 | medium | docs/contracts/release-pr-gating.md:186,193 | The rebuilt rows still name paths that do not exist. The `install-tests` row cites `install.sh` and `scripts/install.py`, and the `smoke` row cites `scripts/install*`; the repo has no top-level `scripts/` directory and no `install.py` — the installer is `src/scripts/install.sh` + `src/scripts/install.ts`, the job runs `bash tests/test_install.sh`, and smoke's own `paths:` filter names `src/scripts/install*`. The round rebuilt the Job column from the `if:` guards and left the Why column's path claims unverified: the same stale-path decay the diff set out to close, in the cells the new parity test explicitly does not read. | fixed | af74e227c —  |
+| 4 | low | tests/scripts/check_release_pr_shape.test.ts:552-570 | The test named "the cut-surface table names exactly the jobs that skip" reads only `.github/workflows/tests.yml`, and its row regex matches only contract rows whose first cell is `tests.yml`. The `smoke-public-install.yml` row is therefore unbound, and a negative guard added in any other workflow would leave the table stale with the test green — the scope is narrower than the name asserts, which is the "cannot tell nothing-here from did-not-look" shape the sibling test's own comment names, moved one level out. Separately, `guarded` is collected from any line containing the guard expression, so a comment quoting it (the style used in this very contract and in consistency.yml) would be counted as a guard. | fixed | af74e227c —  |
+| 5 | low | tests/scripts/check_release_pr_shape.test.ts:527-550 | `every caller lets the writer choose the path it writes` walks `src/scripts` recursively and reads every file as UTF-8 — 1,547 files, ~25 MB, including two `.mp4` fixtures under `src/scripts/media/lib/fixtures/` — splitting each into lines to find a single match, and runs an `expect(fs.existsSync(...))` per tree node (~1,500 assertions). A scan restricted to text extensions would assert the same property far cheaper. The roots list is also an unverified hand-maintained assumption: the round closed the missing-root case but not the never-listed-root case, which is the same blindness one step out. | fixed | af74e227c —  |
+
+<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->
