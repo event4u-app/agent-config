@@ -82,14 +82,15 @@ hold:
      its regenerated `dist/agent-src/` twin — the project-settings template
      pin, kept in lockstep with `package.json.version`
 
-   **`*` crosses `/` here.** These are fnmatch patterns, not shell or
-   `.gitignore` globs: `*` matches any character including a path separator, so
-   every `*` row above admits arbitrary depth —
-   `src/packs/core/installer/pack.yaml` and
-   `agents/evidence/release-findings/a/b/c.json` both pass. The census row uses
-   digit classes rather than `?` for exactly that reason. A reader predicting
-   the gate from this list needs that; both behaviours are pinned in
-   `tests/scripts/check_release_pr_shape.test.ts`.
+   **`*` and `?` both cross `/` here.** These are fnmatch patterns, not shell or
+   `.gitignore` globs: `*` becomes `.*` and `?` becomes `.`, both under the `s`
+   flag, so each matches a path separator like any other character. Every `*` row
+   above therefore admits arbitrary depth — `src/packs/core/installer/pack.yaml`
+   and `agents/evidence/release-findings/a/b/c.json` both pass. And the census
+   row uses digit classes rather than `?` for the same reason: `????-??-??` would
+   admit `evidence-temperature-x/yz-ab-cd.md`, while `[0-9]` cannot match a
+   separator at all. A reader predicting the gate from this list needs both
+   halves; each is pinned in `tests/scripts/check_release_pr_shape.test.ts`.
 
    This list and `ALLOWLIST_GLOBS` are one decision recorded twice, so they
    drift: the entry a release-flow step needs is added where that step broke

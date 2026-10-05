@@ -172,6 +172,17 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         expect(shape._matches(defaultReportPath(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))))).toBe(true);
     });
 
+});
+
+describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
+    it('an out-of-shape finding carries the land-on-main procedure', () => {
+        const { code, out } = runCheck(['package.json', 'src/scripts/skill_linter.ts']);
+        expect(code).toBe(1);
+        expect(out).toContain('OUT-OF-SHAPE: src/scripts/skill_linter.ts');
+        expect(out).toContain('land the files above on main via their own PR');
+        expect(out).toContain('task release -- --resume --yes');
+    });
+
     it('a shape-clean diff carries no remediation prose', () => {
         const { code, out } = runCheck(['package.json', 'CHANGELOG.md']);
         expect(code).toBe(0);
