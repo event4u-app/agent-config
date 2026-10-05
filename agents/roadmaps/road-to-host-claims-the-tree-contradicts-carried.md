@@ -54,6 +54,16 @@ left to read as finished.
       returns **278**, so the field is present and populated across the corpus and
       carries no timeout in any of them. The condition is unmet by measurement.
 
+      **Re-run at this lane's tip, not only at its start.** The wake command
+      below returns **0** files, and its control has moved **278 -> 282** — four
+      more transcripts carry `hookError` than when the paragraph above was
+      written, so the corpus is still accumulating and the zero is a live
+      reading rather than a frozen one. The drift has a mundane cause worth
+      naming, because it bounds what the control proves: the corpus includes the
+      sessions that probe it, so re-running inflates the denominator by the act
+      of measuring. That weakens the control as a growth signal and not at all
+      as a presence signal, which is the only thing it is used for here.
+
       **Why this one is not recoverable the way 3.3 was.** A delivered tool
       surface leaves a durable artefact in every transcript it appears in; a
       reached timeout leaves one only in the session where it happens. Searching
