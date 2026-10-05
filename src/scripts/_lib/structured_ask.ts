@@ -15,10 +15,13 @@
  *
  * What is observed, and what is a shape guess — the line is drawn explicitly.
  *
- * `STRUCTURED_ASK_SHAPES` is **empty**. No host in this repository's registry
- * carries an observed structured-ask tool, so there is no per-host tool name to
- * match on, and inventing one from a vendor's documentation is exactly what
- * `host-capability-manifest.md` § Observation protocol forbids.
+ * `STRUCTURED_ASK_SHAPES` carries **one** row, for `claude`, written from an
+ * observation under `host-capability-manifest.md` § Observation protocol —
+ * 48 `AskUserQuestion` `tool_use` blocks across host versions 2.1.252 to
+ * 2.1.284, 2026-09-01 to 2026-10-02. Artefact:
+ * `agents/evidence/analysis/structured-ask-host-observation-2026-10.md`.  code-comment-allow provenance-comment -- the observation protocol declares a row inadmissible without its artefact citation, so this pointer is part of the contract the row satisfies, not evidence duplicated from a roadmap
+ * Every other host has no row, which is "never looked", and inventing one from
+ * a vendor's documentation is exactly what that protocol forbids.
  *
  * `STRUCTURED_ASK_TOOL_NAME_RE` is therefore a **name-shape pattern, not a host
  * fact**. It exists so that if such a tool ever appears in a transcript, the
@@ -29,8 +32,13 @@
  * `STRUCTURED_ASK_SHAPES` with the protocol's four-part citation.
  *
  * Consequence, stated rather than discovered later: `native` is expected to be
- * **0** on every corpus this repo can scan today. That is the honest reading of
- * a capability nobody has observed, not a broken detector.
+ * **0** on every corpus this repo can scan today — and the 2026-10 observation
+ * does NOT change that, which is worth stating because it looks like it should.
+ * `probe_unblocked_ask` partitions hand-back ask turns, and a picker call is
+ * answered by a `tool_result` rather than by a free user turn, so it was never
+ * in that probe's denominator. The zero means "no prose hand-back used a picker
+ * instead"; it never meant "no picker exists". The earlier wording attributed
+ * the zero to the capability being unobserved, which is the half that was wrong.
  */
 
 /** The per-host shape of a structured-ask tool, once one has been OBSERVED. */
@@ -48,12 +56,19 @@ export interface StructuredAskShape {
 /**
  * Observed per-host structured-ask shapes.
  *
- * EMPTY, deliberately. A row is written only from an observation in a real
- * session under `contexts/execution/host-capability-manifest.md` § Observation
- * protocol — host · host version · transcript reference · date. Never from a
- * host's documentation, and never by analogy to another host.
+ * A row is written only from an observation in a real session under
+ * `contexts/execution/host-capability-manifest.md` § Observation protocol —
+ * host · host version · transcript reference · date. Never from a host's
+ * documentation, and never by analogy to another host.
+ *
+ * `claude`'s row is the first, and the two numeric fields are **observed
+ * maxima over 48 calls, not host ceilings**: no call carried two questions, so
+ * the host was never asked to accept two. The guard's threshold does not rest
+ * on them — one question per call is this repo's own rule either way.
  */
-export const STRUCTURED_ASK_SHAPES: Readonly<Record<string, StructuredAskShape>> = {};
+export const STRUCTURED_ASK_SHAPES: Readonly<Record<string, StructuredAskShape>> = {
+    claude: { tool: 'AskUserQuestion', max_questions: 1, max_options_per_question: 4, free_text: true },
+};
 
 /** The observed shape for `hostId`, or `undefined` when none has been observed. */
 export function structuredAskShape(

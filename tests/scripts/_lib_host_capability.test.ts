@@ -131,10 +131,12 @@ describe('resolveHostCapabilities — registry hit', () => {
             ...ALL_FALSE,
             subagent_spawn: true,
             parallel_spawn: true,
-            // `structured_ask: false` in the row is an OBSERVATION (Claude Code
-            // 2.1.263, 2026-09-07: the delivered tool surface carried no such
-            // tool), not the safe default — see the provenance block below.
-            structured_ask: false,
+            // `structured_ask: true` is an OBSERVATION of the MAIN-session
+            // delivered surface (48 `AskUserQuestion` calls, Claude Code
+            // 2.1.252-2.1.284, 2026-09-01 to 2026-10-02). The row read `false`
+            // until 2026-10-05 on a subagent leg, which carries no picker
+            // because a subagent has no user to ask.
+            structured_ask: true,
         });
     });
 
@@ -187,6 +189,7 @@ describe('resolveHostCapabilities — override beats registry', () => {
             ...ALL_FALSE,
             subagent_spawn: true,
             parallel_spawn: true,
+            structured_ask: true,
         });
     });
 });
@@ -201,11 +204,13 @@ describe('resolveHostCapabilities — strict-true coercion unchanged', () => {
             ...ALL_FALSE,
             subagent_spawn: true,
             parallel_spawn: true,
+            structured_ask: true,
         });
         expect(resolveHostCapabilities('claude', 42)).toEqual({
             ...ALL_FALSE,
             subagent_spawn: true,
             parallel_spawn: true,
+            structured_ask: true,
         });
     });
 });
@@ -216,6 +221,7 @@ describe('resolveHostCapabilities — array override treated as absent (F8)', ()
             ...ALL_FALSE,
             subagent_spawn: true,
             parallel_spawn: true,
+            structured_ask: true,
         });
     });
 
