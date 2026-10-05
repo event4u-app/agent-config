@@ -1,0 +1,24 @@
+# Findings: fix-release-shape-allows-its-own-census
+<!-- completion-review: v1 | reviewed: 2026-10-05 | scope: 7bddd15ca561013e543ced06ccae581738da270d4ec11d21dda070597c60f5f7 | diff: d2620ab56922c92618d09afab67798f0a2538ddc | reviewer: r2-fresh-subagent-fix-release-shape-allows-its-own-census | prompt_hash: 587671e55a3bdffb97beaecff3b251bd7e0ea851a9163e4e66fe23cfafd48f88 -->
+<!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-fix-release-shape-allows-its-own-census"]}} -->
+<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-05 -->
+
+<!-- context-manifest: v1
+inputs:
+  diff_sha: d2620ab56922c92618d09afab67798f0a2538ddc
+  scope_hash: 7bddd15ca561013e543ced06ccae581738da270d4ec11d21dda070597c60f5f7
+  roadmap: none
+  roadmap_hash: none
+  ac_hash: none
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-10-05T11:34:09Z
+-->
+
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | medium | tests/scripts/check_release_pr_shape.test.ts:243 | `every caller lets the writer choose the path it writes` hardcodes its own scan surface twice: a five-root list (`taskfiles`, `Taskfile.yml`, `src/scripts`, `package.json`, `.github/workflows`) and a single invocation spelling (`/scripts-run\s+src\/scripts\/report_evidence_temperature/`, line 261). A caller added anywhere else (`src/cli/`, `scripts/`, a hook, a composite action) or invoked any other way (`tsx src/scripts/report_evidence_temperature.ts`, an npm-script alias, `node dist/...`) can pass `--out` with this test green — reinstating the writer/gate path-drift class the test exists to close. The test enforces existence of each root (lines 250-252) but nothing enforces coverage of the root set or of the invocation form, so it cannot itself tell "no other caller" from "did not look" — the exact shape its own comment at line 244-249 says this suite keeps finding. | fixed | d8fb666ed —  |
+| 2 | low | docs/contracts/release-pr-gating.md:189 | The `static-checks` row enumerates six "source-reading steps" (ESLint, `tsc`, MCP-catalog drift, test-delta, build freshness, hook-latency) but the job runs three more that read non-admitted source and are omitted: `No silent test weakening` (`check_test_weakening`), `CLI registry ↔ evaluator budget sync`, and `Build (dist/cli + UI bundle)` (tests.yml:324, 332, 338). The companion universal — "Every manifest-reading step has a release-path twin" — names three pairs and omits `npm ci` (tests.yml:299), which reads `package.json` and `package-lock.json`, both admitted, and is given no twin. The same diff derived the cut-surface table and the wildcard count from the tree precisely because "a table nothing parses decays"; this cell is an unparsed list of the same kind and is already incomplete at authoring time. | fixed | d8fb666ed —  |
+| 3 | low | .github/workflows/smoke-public-install.yml:69 | The rewritten comment names exactly one admitted path that is also this workflow's trigger — `package.json` — while the contract section it points at names two (release-pr-gating.md:193 adds `src/agent-src/templates/agents/agent-project-settings.example.yml`, admitted and covered by this workflow's own `paths:` entry `src/agent-src/templates/**` at line 53). The diff rewrote both surfaces in the same change and they already disagree on the count, which is the two-copies-of-one-claim drift the branch is removing elsewhere. | fixed | d8fb666ed —  |
+| 4 | low | docs/contracts/release-pr-gating.md:193 | The new `smoke` row forward-references "a version-pinned example file whose pin `check_template_pin_drift` gates on the kept surface", but the § Kept surface table it sends the reader to carries no such entry: the `version-consistency` row (line 212) describes only `package.json` / `marketplace.json` version agreement. The claim is true (`release-validation.yml:354`, inside job `version-consistency`, guarded `startsWith(github.head_ref, 'release/')`), but a reader following the pointer cannot confirm it, and the kept-surface table is unparsed so the omission will not surface. | fixed | d8fb666ed —  |
+| 5 | low | docs/contracts/release-pr-gating.md:40 | Two prose lines introduced by this diff break the document's ~78-column wrap: line 40 at 101 chars ("paths the code had already renamed. The file-set claim was verified against PR #238 (3.3.0) and the") and line 225 at 123 chars ("actually installs, upgrades, and boots as a real npm global package. Every release PR now proves, against the real tarball:"). Both read as un-rewrapped splices where new text was joined to a surviving tail. | fixed | d8fb666ed —  |

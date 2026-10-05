@@ -67,6 +67,30 @@ export const REPORT_DIR = 'agents/evidence/analysis';
 /** Reports of this family are excluded from the reference index — see `isSelfReport`. */
 const REPORT_PREFIX = 'evidence-temperature-';
 
+/** Extension of a census report. Shared by the writer and by `--since latest`. */
+const REPORT_EXT = '.md';
+
+/**
+ * The day a census is stamped with. UTC, so a run either side of local midnight
+ * names the same report.
+ */
+export function censusDateStamp(now: Date = new Date()): string {
+    return now.toISOString().slice(0, 10);
+}
+
+/**
+ * The path `--write` composes for a census taken on `generatedAt`. Every part of
+ * the name comes from a constant this module shares — `REPORT_DIR`,
+ * `REPORT_PREFIX`, `REPORT_EXT` — or from `censusDateStamp`, and
+ * `latestReportBefore` filters on the same two, so discovery and writing cannot
+ * drift apart. The release-PR shape gate's test goes through this builder too.
+ * Writer and gate holding independent spellings of this name is what broke
+ * `task release` for 16.3.0.
+ */
+export function defaultReportPath(generatedAt: string): string {
+    return path.posix.join(REPORT_DIR, `${REPORT_PREFIX}${generatedAt}${REPORT_EXT}`);
+}
+
 /** File extensions a path token may end in. Anything else is not a path to us. */
 const PATH_EXTENSIONS = [
     'md',
@@ -350,7 +374,7 @@ export function buildCensus(root: string): Census {
     } catch {
         commit = 'unknown';
     }
-    return { generatedAt: new Date().toISOString().slice(0, 10), commit, files };
+    return { generatedAt: censusDateStamp(), commit, files };
 }
 
 export interface Totals {
@@ -385,11 +409,18 @@ function mib(bytes: number): string {
  * `--since latest` resolves through this so the release pipeline needs no date
  * arithmetic: the names sort lexicographically because they carry an ISO date,
  * and the file about to be written is excluded so a same-day re-run compares
- * against the previous release rather than against itself.
+ * against an earlier report rather than against itself.
+ *
+ * It picks the newest OTHER report, not the newest report of an earlier
+ * release. A release resumed across UTC midnight writes a second census, and
+ * that one's baseline is the first census of the same release — so its delta
+ * covers minutes, not a release. The heading it renders under says "since the
+ * previous report", which is exactly that, so nothing misreports; a reader
+ * wanting a release-wide delta compares against the earlier release by hand.
  */
 export function latestReportBefore(names: readonly string[], exclude: string): string | null {
     const candidates = names
-        .filter((n) => n.startsWith(REPORT_PREFIX) && n.endsWith('.md') && n !== exclude)
+        .filter((n) => n.startsWith(REPORT_PREFIX) && n.endsWith(REPORT_EXT) && n !== exclude)
         .sort();
     return candidates.at(-1) ?? null;
 }
@@ -583,7 +614,7 @@ export function main(argv: readonly string[]): number {
         return 0;
     }
 
-    const dest = out ?? path.join(REPORT_DIR, `${REPORT_PREFIX}${census.generatedAt}.md`);
+    const dest = out ?? defaultReportPath(census.generatedAt);
 
     let previousCold: Set<string> | null = null;
     if (since === 'latest') {

@@ -45,6 +45,16 @@ const ALLOWLIST_GLOBS = [
     // be able to carry the dispositions of its own self-review findings; the
     // finding-dispositions gate is red until blocking ones are recorded here.
     'agents/evidence/release-findings/*.json',
+    // Evidence-temperature census — `taskfiles/content.yml` § release-prepare
+    // writes one per release, so without this entry the pipeline generates a
+    // file its own shape step refuses. Digit classes rather than `?`: fnmatch
+    // `?` compiles to `.` under the `s` flag, so it matches any character AND
+    // crosses `/` — `????-??-??` admits `evidence-temperature-x/yz-ab-cd.md`,
+    // which `[0-9]` cannot. Two reports can appear in one release PR, and
+    // both are in shape: `--resume` re-runs release-prepare, so a release
+    // carried across UTC midnight writes a second census. What that one
+    // contains is the census's business, not this gate's.
+    'agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md', // code-comment-allow provenance-comment -- the glob IS this gate's operand, not where the code came from
     // Project-settings template pin — bumped by release.ts set_template_pin and
     // its regenerated dist twin (kept in lockstep with package.json.version).
     'src/agent-src/templates/agents/agent-project-settings.example.yml',
@@ -52,16 +62,26 @@ const ALLOWLIST_GLOBS = [
 ] as const;
 
 /**
- * Translate a Python `fnmatch` shell pattern to a RegExp, mirroring
- * `fnmatch.translate`. fnmatch is case-sensitive on POSIX (fnmatchcase
- * semantics on the normalized path); `*` and `?` do NOT cross path
- * separators is NOT a property of fnmatch — `*` matches everything
- * including `/`. The allowlist relies on that (e.g. nested-file rejection
- * in the test works because none of the globs end with the file).
+ * Translate a Python `fnmatch` shell pattern to a RegExp, following
+ * `fnmatch.translate` for the constructs the allowlist actually uses: `*` and
+ * `[0-9]`. No entry uses `?`, and bracket handling beyond that one class is
+ * unverified against CPython — see the note at the bracket branch.
+ *
+ * Matching is case-sensitive, as `fnmatchcase` on a normalized path.
+ *
+ * THE PROPERTY THE WILDCARD ENTRIES TURN ON — the literal paths are unaffected:
+ * in fnmatch, `*` and `?` DO cross path separators.
+ * `*` becomes `.*` and `?` becomes `.`, both under the `s` flag, so each matches
+ * `/` like any other character. Glob syntax elsewhere (shells, .gitignore) stops
+ * `*` at a segment boundary; this does not. So the pack entry admits any depth
+ * beneath `src/packs/`, and the census entry uses digit classes precisely
+ * because they cannot match a separator. Both sides are pinned in
+ * `check_release_pr_shape.test.ts`.
  */
 function _fnmatchToRegExp(pat: string): RegExp {
-    // Mirror Python fnmatch.translate: `*` → `.*`, `?` → `.`, `[seq]` kept,
-    // everything else escaped. The full pattern is anchored with `(?s:...)\Z`.
+    // `*` → `.*`, `?` → `.`, a bracket class kept, everything else escaped.
+    // CPython does more inside a class (hyphen and set-operator escaping, `(?!)`
+    // for an empty one) and this does not — see the bracket branch below.
     let i = 0;
     const n = pat.length;
     let res = '';
@@ -87,12 +107,13 @@ function _fnmatchToRegExp(pat: string): RegExp {
                 res += '\\[';
             } else {
                 let stuff = pat.slice(i, j);
-                if (!stuff.includes('-')) {
-                    stuff = stuff.replace(/\\/g, '\\\\');
-                } else {
-                    // Rare; not used by the allowlist. Keep simple escape.
-                    stuff = stuff.replace(/\\/g, '\\\\');
-                }
+                // The two arms this replaces were byte-identical, so the branch
+                // implemented nothing. Bracket handling here is checked against
+                // `[0-9]`, the only class the allowlist uses; anything else is
+                // untested against CPython, whose behaviour also varies by
+                // version. Add a bracket glob and verify it rather than assuming
+                // this mirrors `fnmatch.translate` beyond that one case.
+                stuff = stuff.replace(/\\/g, '\\\\');
                 i = j + 1;
                 if (stuff.startsWith('!')) {
                     stuff = '^' + stuff.slice(1);
@@ -105,7 +126,9 @@ function _fnmatchToRegExp(pat: string): RegExp {
             res += c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         }
     }
-    // Python uses `(?s:%s)\Z` — dotAll + full match.
+    // Full match with dotAll. Python spells the same thing `(?s:%s)\Z`; in JS
+    // `$` without the `m` flag does not match before a trailing newline, so
+    // `^(?:…)$` is equivalent rather than merely similar.
     return new RegExp(`^(?:${res})$`, 's');
 }
 

@@ -56,10 +56,13 @@ jobs:
     # 9 tests/shard the fs contention that hurt at the un-sharded
     # -P 8 setting is no longer a concern.
     #
-    # Release-PR skip: docs/contracts/release-pr-gating.md — release
-    # PRs (head branch `release/X.Y.Z`) only touch package.json /
-    # CHANGELOG / marketplace / pack manifests and cannot regress the
-    # install script paths this job exercises. release-validation.yml
+    # Release-PR skip: docs/contracts/release-pr-gating.md § Cut surface —
+    # a release PR (head branch `release/X.Y.Z`) touches only that
+    # contract's allowlist, which admits no install script and no test
+    # source. It does admit the npm manifests, which every job consumes —
+    # the contract's § Cut surface row says what covers them on the release
+    # path. The list lives there, not here: a copy of it in this comment
+    # went stale once already. release-validation.yml
     # is the kept surface for release PRs; push: main + workflow_dispatch
     # stay unconditional.
     if: ${{ !startsWith(github.head_ref, 'release/') }}
@@ -184,9 +187,12 @@ jobs:
     # collapsed to a single build invocation.
     name: Node Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
     runs-on: ${{ matrix.os }}
-    # Release-PR skip per docs/contracts/release-pr-gating.md — release
-    # PRs don't touch src/** or tests/**; ESLint, tsc, vitest,
-    # prepack-check have nothing new to prove.
+    # Release-PR skip per docs/contracts/release-pr-gating.md § Cut surface.
+    # The allowlist DOES admit five paths under src/ — pack and domain
+    # metadata, their READMEs, the settings-template pin — but no TypeScript
+    # and no test source, so ESLint, tsc, vitest and prepack-check have
+    # nothing new to prove. The contract's enumeration is the list; it is
+    # deliberately not copied here.
     if: ${{ !startsWith(github.head_ref, 'release/') }}
     strategy:
       fail-fast: false
