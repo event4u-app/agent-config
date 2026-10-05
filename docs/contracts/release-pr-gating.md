@@ -42,8 +42,14 @@ keep-beta-reason: >-
 > summary and the enumeration below is the list; it is NOT restated here, because a
 > second prose copy went stale for months and named paths the code had already
 > renamed. The file-set claim was verified against PR #238 (3.3.0) and the
-> allowlist has grown since, so what carries the argument now is the enumeration,
-> not that observation: none of its entries is install or runtime code.
+> allowlist has grown since, so what carries the argument is what the release
+> flow WRITES into those paths: version fields, changelog prose, generated
+> manifests and two report artifacts. Stated precisely, because the categorical
+> version — "no entry is install or runtime code" — is false of its own first two
+> entries, and `check_release_pr_shape` matches paths and never reads content:
+> nothing here stops a release PR from editing `bin`, `files`, `dependencies` or
+> `engines` in `package.json` with the install matrix skipped. That residual gap
+> is held by review, not by a gate.
 
 ## Release-PR shape
 

@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import * as shape from '../../src/scripts/check_release_pr_shape.js';
-import { defaultReportPath } from '../../src/scripts/report_evidence_temperature.js';
+import { censusDateStamp, defaultReportPath } from '../../src/scripts/report_evidence_temperature.js';
 
 function runCheck(files: readonly string[]): { code: number; out: string } {
     const out: string[] = [];
@@ -144,16 +144,26 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
     });
 
     it('the allowlist admits the path the census writer actually produces', () => {
-        // The producer/consumer link, and it goes through the writer's own path
-        // builder rather than re-spelling any part of the name. Every other
-        // assertion in this file writes the path out a second time, so a change
-        // on the writing side would keep them all green and red only during a
-        // live `task release` — which is exactly how 16.3.0 broke. Re-deriving
-        // only the directory and prefix here would leave the date shape and the
-        // extension un-pinned, which is two thirds of a coupling.
-        const today = new Date().toISOString().slice(0, 10);
-        expect(shape._matches(defaultReportPath(today))).toBe(true);
+        // The producer/consumer link. Both halves of the filename come from the
+        // writer: `defaultReportPath` for directory, prefix and extension, and
+        // `censusDateStamp` for the day — the same call `buildCensus` makes. No
+        // part of the name is spelled a second time here, which is the point:
+        // every other assertion in this file does spell it out, so a change on
+        // the writing side would keep them green and red only during a live
+        // `task release`, which is exactly how 16.3.0 broke. Two earlier passes
+        // claimed this coupling was complete while the day was still re-derived
+        // locally; a pinned date below guards the shape itself.
+        expect(shape._matches(defaultReportPath(censusDateStamp()))).toBe(true);
         expect(shape._matches(defaultReportPath('2026-10-01'))).toBe(true);
+    });
+
+    it('the census date stamp has the shape the allowlist glob was cut for', () => {
+        // The date is the one part `defaultReportPath` takes as a parameter, so
+        // the link above cannot pin it on its own. A stamping change — a time
+        // component, `YYYYMMDD`, a local-time date — reds here instead of
+        // during a release.
+        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5, 23, 30)))).toBe('2026-10-05');
+        expect(shape._matches(defaultReportPath(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))))).toBe(true);
     });
 });
 

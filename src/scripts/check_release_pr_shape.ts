@@ -51,7 +51,9 @@ const ALLOWLIST_GLOBS = [
     // matches any character: `????-??-??` would still require ten characters
     // with separators at offsets 4 and 7, so it admits not every sibling but
     // any whose name happens to carry that shape. Narrower than it reads, and
-    // still wider than a date. A second report here is a decision.
+    // still wider than a date. Two reports in one release PR is not a defect:
+    // `--resume` re-runs release-prepare, so a release carried across UTC
+    // midnight writes a second census under the next day's name.
     'agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md', // code-comment-allow provenance-comment -- the glob IS this gate's operand, not where the code came from
     // Project-settings template pin — bumped by release.ts set_template_pin and
     // its regenerated dist twin (kept in lockstep with package.json.version).

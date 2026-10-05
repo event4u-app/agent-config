@@ -68,12 +68,21 @@ export const REPORT_DIR = 'agents/evidence/analysis';
 const REPORT_PREFIX = 'evidence-temperature-';
 
 /**
- * The path `--write` composes for a census taken on `generatedAt` (an ISO
- * `YYYY-MM-DD` day, as `buildCensus` stamps it). The one place the name is
- * spelled; `main` and the release-PR shape gate's test both go through it, so a
- * change to the directory, the prefix, the date shape or the extension moves
- * both sides at once. Writer and gate holding two independent spellings of this
- * name is what broke `task release` for 16.3.0.
+ * The day a census is stamped with. UTC, so a run either side of local midnight
+ * names the same report.
+ */
+export function censusDateStamp(now: Date = new Date()): string {
+    return now.toISOString().slice(0, 10);
+}
+
+/**
+ * The path `--write` composes for a census taken on `generatedAt`. The one place
+ * the name is spelled; `main` and the release-PR shape gate's test both go
+ * through it, and through `censusDateStamp` for the day, so a change to the
+ * directory, the prefix, the date shape or the extension moves both sides at
+ * once. Writer and gate holding independent spellings of this name is what broke
+ * `task release` for 16.3.0 — and splitting the day out is what makes that
+ * sentence true of the whole filename rather than of three of its four parts.
  */
 export function defaultReportPath(generatedAt: string): string {
     return path.posix.join(REPORT_DIR, `${REPORT_PREFIX}${generatedAt}.md`);
@@ -362,7 +371,7 @@ export function buildCensus(root: string): Census {
     } catch {
         commit = 'unknown';
     }
-    return { generatedAt: new Date().toISOString().slice(0, 10), commit, files };
+    return { generatedAt: censusDateStamp(), commit, files };
 }
 
 export interface Totals {
