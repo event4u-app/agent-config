@@ -1,5 +1,5 @@
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..ec318dc1f2d30acb7e4a8ecb95489d074690dbb2 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..44d03993d761f6d33ea27f57ac88d9a40f97c585 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
 @@ -35,10 +35,18 @@ keep-beta-reason: >-
@@ -25,7 +25,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..ec318dc1f2d30acb7e4a8ecb95489d07
  
  ## Release-PR shape
  
-@@ -53,12 +61,49 @@ hold:
+@@ -53,12 +61,50 @@ hold:
       `release.ts` § `set_lockfile_version`
     - `CHANGELOG.md`
     - `.claude-plugin/marketplace.json`
@@ -52,14 +52,15 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..ec318dc1f2d30acb7e4a8ecb95489d07
 +     its regenerated `dist/agent-src/` twin — the project-settings template
 +     pin, kept in lockstep with `package.json.version`
 +
-+   **`*` crosses `/` here.** These are fnmatch patterns, not shell or
-+   `.gitignore` globs: `*` matches any character including a path separator, so
-+   every `*` row above admits arbitrary depth —
-+   `src/packs/core/installer/pack.yaml` and
-+   `agents/evidence/release-findings/a/b/c.json` both pass. The census row uses
-+   digit classes rather than `?` for exactly that reason. A reader predicting
-+   the gate from this list needs that; both behaviours are pinned in
-+   `tests/scripts/check_release_pr_shape.test.ts`.
++   **`*` and `?` both cross `/` here.** These are fnmatch patterns, not shell or
++   `.gitignore` globs: `*` becomes `.*` and `?` becomes `.`, both under the `s`
++   flag, so each matches a path separator like any other character. Every `*` row
++   above therefore admits arbitrary depth — `src/packs/core/installer/pack.yaml`
++   and `agents/evidence/release-findings/a/b/c.json` both pass. And the census
++   row uses digit classes rather than `?` for the same reason: `????-??-??` would
++   admit `evidence-temperature-x/yz-ab-cd.md`, while `[0-9]` cannot match a
++   separator at all. A reader predicting the gate from this list needs both
++   halves; each is pinned in `tests/scripts/check_release_pr_shape.test.ts`.
 +
 +   This list and `ALLOWLIST_GLOBS` are one decision recorded twice, so they
 +   drift: the entry a release-flow step needs is added where that step broke
@@ -78,7 +79,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..ec318dc1f2d30acb7e4a8ecb95489d07
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
 diff --git a/src/scripts/check_release_pr_shape.ts b/src/scripts/check_release_pr_shape.ts
-index ef101165f052ad6ca03020e4deb7189b01917e36..c3fd75967970b02bfcbd9e26706f92da7202412e 100644
+index ef101165f052ad6ca03020e4deb7189b01917e36..d046d729cd497321dda975671c8c54585479b8d4 100644
 --- a/src/scripts/check_release_pr_shape.ts
 +++ b/src/scripts/check_release_pr_shape.ts
 @@ -45,6 +45,16 @@ const ALLOWLIST_GLOBS = [
@@ -145,6 +146,15 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..c3fd75967970b02bfcbd9e26706f92da
                  i = j + 1;
                  if (stuff.startsWith('!')) {
                      stuff = '^' + stuff.slice(1);
+@@ -166,7 +185,7 @@ function check(files: readonly string[]): number {
+                 'test matrix skips on release/* heads, so code must not ride a release PR\n' +
+                 '(docs/contracts/release-pr-gating.md § Mid-release fixes).\n' +
+                 'Fix: land the files above on main via their own PR, then\n' +
+-                '  git checkout release/X.Y.Z && git merge origin/main && git push\n' +
++                                '  git checkout release/X.Y.Z && git merge origin/main && git push\n' +
+                 '— their release-PR diff becomes empty and this check goes green.\n' +
+                 'Then resume with: task release -- --resume --yes\n',
+         );
 diff --git a/src/scripts/report_evidence_temperature.ts b/src/scripts/report_evidence_temperature.ts
 index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..d81c2bd28eb5f89db1dfe84f7872eb4e59a1cde6 100644
 --- a/src/scripts/report_evidence_temperature.ts
@@ -219,7 +229,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..d81c2bd28eb5f89db1dfe84f7872eb4e
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..b704555f356b2500a4edac846236c8e551e46fb4 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..85acf3be78f8084a2e9a9ecd6c1438eebebc519f 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -2,6 +2,7 @@
@@ -248,19 +258,11 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..b704555f356b2500a4edac846236c8e5
      it('marketplace metadata only passes', () => {
          expect(runCheck(['.claude-plugin/marketplace.json']).code).toBe(0);
      });
-@@ -113,15 +125,51 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -113,6 +125,53 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(shape._matches('src/packs/core/README.md')).toBe(true);
          expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
      });
--});
- 
--describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
--    it('an out-of-shape finding carries the land-on-main procedure', () => {
--        const { code, out } = runCheck(['package.json', 'src/scripts/skill_linter.ts']);
--        expect(code).toBe(1);
--        expect(out).toContain('OUT-OF-SHAPE: src/scripts/skill_linter.ts');
--        expect(out).toContain('land the files above on main via their own PR');
--        expect(out).toContain('task release -- --resume --yes');
++
 +    it('the evidence-temperature census release-prepare writes passes', () => {
 +        const { code } = runCheck([
 +            'package.json',
@@ -305,9 +307,11 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..b704555f356b2500a4edac846236c8e5
 +        // not pin its shape. A time component or `YYYYMMDD` reds here.
 +        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))).toBe('2026-10-05');
 +        expect(shape._matches(defaultReportPath(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))))).toBe(true);
-     });
++    });
++
+ });
  
-     it('a shape-clean diff carries no remediation prose', () => {
+ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
 diff --git a/tests/scripts/report_evidence_temperature.test.ts b/tests/scripts/report_evidence_temperature.test.ts
 index 0a3a3f22b1324ae864c351888d25603a6034e64a..9d2604496ca0590d643a583fa96c98490902157a 100644
 --- a/tests/scripts/report_evidence_temperature.test.ts
