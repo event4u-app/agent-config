@@ -53,12 +53,30 @@ hold:
      `release.ts` § `set_lockfile_version`
    - `CHANGELOG.md`
    - `.claude-plugin/marketplace.json`
-   - `packages/*/pack.yaml`
-   - `packages/*/README.md`
+   - `.augment-plugin/plugin.json`, `.augment-plugin/marketplace.json` —
+     version-synced by `release.ts` § `set_augment_manifest_version`; both
+     ship in the tarball, so a release PR must carry them
+   - `src/packs/*/pack.yaml`, `src/packs/*/README.md`
+   - `src/domains/*/pack.yaml`, `src/domains/*/README.md`
    - `docs/archive/CHANGELOG-pre-*.md` — emitted by `release.ts`'s
      automatic CHANGELOG era split (see `docs/contracts/CHANGELOG-conventions.md`
      § Era splits) when the current era crosses its line cap on an
      era-boundary release.
+   - `agents/evidence/release-findings/*.json` — the finding-disposition
+     ledger; the `finding-dispositions` gate is red until a release's own
+     blocking self-review findings are recorded there
+   - `agents/evidence/analysis/evidence-temperature-YYYY-MM-DD.md` — the
+     per-release evidence-temperature census written by
+     `taskfiles/content.yml` § `release-prepare`, step 2 of `task release`.
+     Pinned to the ISO date shape with fnmatch digit classes, because `?`
+     matches any character and would admit every sibling report.
+   - `src/agent-src/templates/agents/agent-project-settings.example.yml` and
+     its regenerated `dist/agent-src/` twin — the project-settings template
+     pin, kept in lockstep with `package.json.version`
+
+   This list and `ALLOWLIST_GLOBS` are one decision recorded twice, so they
+   drift: the entry a release-flow step needs is added where that step broke
+   and not here. A change to either edits both.
 
 Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
 The script exits 0 when both hold; non-zero with a per-file diff naming any
