@@ -10,10 +10,19 @@
  *    from a holdout skill reaches the measurement.
  *
  * 2. THE VERDICT FUNCTION. It was pre-registered with an ORDER — power floor,
- *    then guard, then primary — and the order is load-bearing: the run that
- *    actually happened clears the recall bar AND breaches the guard, so a
- *    verdict function that checked the primary first would have returned
- *    `signal` on the same numbers. That exact combination is pinned.
+ *    then guard, then primary — and the order is load-bearing: on inputs where
+ *    the primary is met AND the guard is breached, a verdict function that
+ *    checked the primary first would return `signal`. That combination is
+ *    pinned against CHOSEN inputs through `verdictOf`.
+ *
+ *    It used to be pinned against the live run, which happened to be such a
+ *    case. That was a property of the CORPUS, not of the code, and the corpus
+ *    grows whenever a skill gains a trigger file: on 2026-10-04 one such growth
+ *    moved delta-recall 5.128 -> 4.608, the live run stopped discriminating,
+ *    and the ordering was left guarded by nothing. The bars were NOT touched —
+ *    re-tuning a bar to a result is the move this file exists to prevent. The
+ *    witness moved off the corpus instead, where no future growth can remove
+ *    it, and the live run is now asserted for what it actually shows.
  *
  * 3. THE PUBLISHED VERDICT REPRODUCES. Step 6.5 derives its input set from the
  *    committed verdict file. A verdict nobody recomputes is a verdict nobody
@@ -45,6 +54,7 @@ import {
     RECALL_GAIN_BAR_PP,
     mcnemarExactP,
     measure,
+    verdictOf,
     verdictRecord,
 } from '../../src/scripts/measure_routing_signal.js';
 
@@ -150,8 +160,16 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // `test-driven-development` (0x47) and `api-testing` (0x67) train. So
         // the holdout moves 22 -> 24, the train count 85 -> 87, and BOTH
         // train-side published measurements are re-taken in the same change.
+        //
+        // 111 -> 112 on 2026-10-04: road-to-corpus-refresh-cadence-shape step
+        // 1.2b re-checked `api-design` against RFC 9110/9457/7396/8288, which
+        // edited that skill's `data/`, and every touched skill owes a corpus.
+        // `sha256('api-design')[0:2]` is 0xbb = 187, far above the ceiling of
+        // 51, so it lands in `train`: the holdout stays at the same 24 and the
+        // train count moves 87 -> 88. The second line is what checks that
+        // rather than assuming it.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(111);
+        expect(all.length).toBe(112);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(24);
     });
 });
@@ -170,7 +188,9 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // and `api-testing`, the two of road-to-stacks-beyond-php's four corpora
         // whose names hash above the ceiling; `quality-tools` and
         // `test-performance` sealed and are absent here for the same reason.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(87);
+        // 87 -> 88 on 2026-10-04: `api-design`, whose name hashes above the
+        // ceiling and therefore trains. See the partition note above.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(88);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {
@@ -218,13 +238,61 @@ describe('5.1 — McNemar exact, against values computable by hand', () => {
 describe('5.1 — the verdict function is the pre-registered one, in its order', () => {
     const m = measure(REPO);
 
-    it('the run that happened clears the recall bar and still is not `signal`', () => {
-        // The load-bearing polarity. Primary met, guard breached: a verdict
-        // function that tested the primary first would return `signal` here.
-        expect(m.deltaRecallPp).toBeGreaterThanOrEqual(RECALL_GAIN_BAR_PP);
-        expect(m.pValue).toBeLessThan(0.05);
+    it('guard beats primary — the load-bearing polarity, on chosen inputs', () => {
+        // THE discriminating case, and it is now constructed rather than
+        // borrowed from whatever the corpus currently measures: primary met
+        // (recall at the bar, p under alpha) AND guard breached. A verdict
+        // function that tested the primary first returns `signal` here; the
+        // pre-registered order returns `harmful`.
+        const disc = verdictOf({
+            deltaRecall: RECALL_GAIN_BAR_PP + 0.5,
+            deltaFalse: FALSE_ACTIVATION_GUARD_PP + 0.5,
+            p: 0.01,
+            gained: 60,
+            lost: 40,
+        });
+        expect(disc.verdict).toBe('harmful');
+
+        // And the same inputs with the guard cleared DO reach `signal`, which
+        // is what makes the line above a test of the order rather than of a
+        // function that always says `harmful`.
+        expect(
+            verdictOf({
+                deltaRecall: RECALL_GAIN_BAR_PP + 0.5,
+                deltaFalse: FALSE_ACTIVATION_GUARD_PP - 0.5,
+                p: 0.01,
+                gained: 60,
+                lost: 40,
+            }).verdict,
+        ).toBe('signal');
+    });
+
+    it('power beats guard — the other ordering edge', () => {
+        // The power floor is checked before the guard, so an underpowered run
+        // that would otherwise trip the guard reports `underpowered`.
+        expect(
+            verdictOf({
+                deltaRecall: RECALL_GAIN_BAR_PP + 0.5,
+                deltaFalse: FALSE_ACTIVATION_GUARD_PP + 0.5,
+                p: 0.01,
+                gained: 1,
+                lost: 1,
+            }).verdict,
+        ).toBe('underpowered');
+    });
+
+    it('the run that happened is `harmful`, on the guard and not on the primary', () => {
+        // What the LIVE run shows, asserted for itself rather than as a stand-in
+        // for the ordering property above. As of 2026-10-04 the primary is no
+        // longer met (delta recall 4.608 against the 5.0 bar, p = 0.077), and
+        // the verdict is still `harmful` because the guard is breached — now
+        // the only reason, where it used to be one of two. Both directions are
+        // pinned so a future corpus growth that restores the primary is a
+        // reported change rather than a silent one.
         expect(m.deltaFalseActivationPp).toBeGreaterThan(FALSE_ACTIVATION_GUARD_PP);
         expect(m.verdict).toBe('harmful');
+        expect(m.deltaRecallPp).toBeLessThan(RECALL_GAIN_BAR_PP);
+        expect(m.pValue).toBeGreaterThan(0.05);
     });
 
     it('power is checked before the guard', () => {

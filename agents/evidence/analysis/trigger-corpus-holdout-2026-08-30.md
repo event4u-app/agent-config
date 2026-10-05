@@ -60,7 +60,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  4fc64b5e40274e080e10c2a3df4927cbc1dbc1fe2eec221044eaa8bba9535206
+SET-SHA256  afcf4824a43a3948d20ba6f913a7d72ff5910a4c1e9a6b7c2f677f829e96e03a
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -272,6 +272,21 @@ open and which this file does not settle.
 
 ## Train
 
+> **+1 on 2026-10-04** (`road-to-corpus-refresh-cadence-shape`, step 1.2b).
+> `api-design` gained a corpus because that step re-checked its grounding data
+> against RFC 9110/9457/7396/8288 and `check_routing_coverage` requires every
+> touched skill to carry one. `sha256('api-design')[0:2]` is 0xbb = 187, above
+> the ceiling of 51, so it is **train**: no holdout row moves, the sealed set is
+> the same 24, and the ordering claim is untouched. `SET-SHA256` moves because
+> it is computed over ALL rows, holdout and train alike — `4fc64b5e…` -> `afcf4824…`. Both
+> train-side published measurements are re-taken in the same change, and one of
+> them moved a verdict input: delta-recall fell 5.128 -> 4.608 pp, below the
+> pre-registered 5.0 bar it previously cleared. The verdict is unchanged in kind
+> (`harmful`, on the false-activation guard), but the live run no longer
+> exercises the guard-beats-primary ordering, so that property was moved onto
+> chosen inputs in `routing_signal_measurement.test.ts` rather than left
+> resting on a corpus that keeps growing. No bar was edited.
+
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|
 | `adr-create` | `18995bba7bbdc905296f545a25c90cd94fa306909d78af8fc79e3d5621f313f6` |
@@ -280,6 +295,7 @@ open and which this file does not settle.
 | `ai-code-blindspots` | `27a9e87dabf2d158b5f646739c69222b534b3ea2420a099a67bf85c00ea3ba23` |
 | `alerting-doctrine` | `bded213edcbeeee6e3bf078e478ab4fdaa553855bdafda147813cf6198d8b8ba` |
 | `analysis-skill-router` | `df90b10374f26c8c267ff0bdecc5039d9cfb58e501ed000f02a70d4b3b8269fd` |
+| `api-design` | `c31fca74eb9330bf63341858f51b46a23fd56e48253eda0a12165892cac576c3` |
 | `api-testing` | `599a7998d6cc58e71cbaf6c72154a334e0831e085516ee0fb345dbefd7ce1b88` |
 | `architecture-review-lens` | `0aea3490d1337d4d72688e35164191f510fbf0dbda3db2408585d18d0746aada` |
 | `blameless-post-mortem` | `719dabb662d9937dabb178d097dc73e458c6b31210532b309896580aefd6c48c` |
