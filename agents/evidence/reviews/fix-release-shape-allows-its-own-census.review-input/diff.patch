@@ -63,7 +63,7 @@ index 8f74f194fcdee655bfcc94154db4e5ad6764be32..4e9aaa214b723179d5bdc16d14d762eb
      strategy:
        fail-fast: false
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..332abc1fa30401bf5e30579e8f63f3db514b45f4 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..01721fcc68e3f8f77ebb851972c27ee4f3f1a40c 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
 @@ -35,10 +35,26 @@ keep-beta-reason: >-
@@ -163,7 +163,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..332abc1fa30401bf5e30579e8f63f3db
  
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
-@@ -93,19 +160,42 @@ procedure under its `OUT-OF-SHAPE` findings, and `release.ts` §
+@@ -93,19 +160,45 @@ procedure under its `OUT-OF-SHAPE` findings, and `release.ts` §
  
  ## Cut surface — heavy jobs that skip on release PRs
  
@@ -177,11 +177,13 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..332abc1fa30401bf5e30579e8f63f3db
 +install/test jobs. The guard is on the BRANCH, not on paths — so the column
 +below is the argument for why that is safe, not a condition the workflow
 +evaluates. The argument rests on the allowlist in § Release-PR shape: it admits
-+no install script and no test source. The two manifests it DOES admit are
-+consumed by every one of these jobs — `npm ci` reads the lockfile, every step is
-+an `npm run`, the smoke matrix runs the tarball's `bin` — so each job's row below
-+names what covers that manifest on the release path rather than claiming nothing
-+reaches it. It is NOT the
++no install script and no test source. It DOES admit five manifests — the two npm
++ones and three plugin/marketplace files — and the npm pair is consumed by every
++one of these jobs: `npm ci` reads the lockfile, every step is an `npm run`, the
++smoke matrix runs the tarball's `bin`. Where a job's coverage of those depends on
++a release-path twin, its row below names the twin; the rows that argue purely
++from code absence are the ones where no step reads a manifest at all. It is NOT
++the
 +stronger claim the opening blockquote withdraws — `package.json` is admitted and
 +carries `bin`, `files`, `dependencies` and `engines`, whose content no gate
 +reads. That residue is the blockquote's, not this section's, and the `smoke` row
@@ -189,13 +191,14 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..332abc1fa30401bf5e30579e8f63f3db
 +
 +It does admit six paths under `src/` and `dist/`: pack and domain metadata
 +(`pack.yaml` ×2), their READMEs (×2), and the project-settings template pin with
-+its regenerated twin. One of the six sits under both `src/` and `templates/`, so
-+the sets overlap rather than add. None is code any job below exercises, which is
++its regenerated twin. Six distinct files — the pin also sits under a
++`templates/` segment, so a count by directory NAME would double-count it. None is code any job below exercises, which is
 +the claim; "the diff has no `src/**`" would be the stronger claim, and it is
 +false.
 +
-+All seven `tests.yml` jobs carrying the guard are listed — derived from the
-+`if:` lines, not from memory. An earlier version of this table named two jobs
++Every `tests.yml` job carrying the guard is listed, plus the one in
++`smoke-public-install.yml` — derived from the `if:` lines, not from memory, and
++asserted by `the cut-surface table names exactly the jobs that skip`. An earlier version of this table named two jobs
 +that no longer exist and omitted four that do skip, which is how a table nothing
 +parses decays.
 +
@@ -217,7 +220,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..332abc1fa30401bf5e30579e8f63f3db
  
  `push:` to `main` and the weekly cron on `smoke-public-install.yml` stay
  **unconditional** — those catch drift the PR matrix can't see.
-@@ -118,12 +208,13 @@ the feature-PR floor by adding:
+@@ -118,12 +211,13 @@ the feature-PR floor by adding:
  | Workflow | Job | Proves |
  |---|---|---|
  | `consistency.yml` | (existing) | `task consistency` — source-of-truth integrity |
@@ -232,7 +235,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..332abc1fa30401bf5e30579e8f63f3db
  | `release-validation.yml` (release-truth) | `surface-equality` | PR body equals the CHANGELOG entry (whitespace-normalized) — release.ts derives all four surfaces (PR body, changelog, GitHub release notes, annotated tag message) from the changelog section at the relevant head |
  | `release-validation.yml` (release-truth) | `highlight-plausibility` | curated head cannot claim `_none_` against a populated span-derived category (security commits, behaviour/default changes, honest nulls, removed public surface). **Prose polish is not gated** — an un-rewritten generator-derived head line warns and exits 0, because curating the head is retro-curation and not a merge precondition; the decision and its rejected branch are recorded in [`CHANGELOG-conventions.md` § Curated-head cadence](CHANGELOG-conventions.md#curated-head-cadence--retro-curation-not-a-merge-precondition) |
  | `release-validation.yml` (release-truth) | `finding-dispositions` | every blocking/high self-review finding carries a committed disposition in `agents/evidence/release-findings/<version>.json` — ingest via `check_finding_dispositions --ingest`; the ledger (never the PR comment) is the record |
-@@ -134,10 +225,11 @@ the feature-PR floor by adding:
+@@ -134,10 +228,11 @@ the feature-PR floor by adding:
  
  `release-validation.yml`'s fourth job, `release-install-e2e`
  (`tests/test_release_install_e2e.sh`), closes a gap the cut surface above
@@ -248,7 +251,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..332abc1fa30401bf5e30579e8f63f3db
  
  - a fresh `npm install -g` into an isolated npm prefix resolves the
    `agent-config` binary and ships no silent postinstall/GUI side effect;
-@@ -160,9 +252,10 @@ the source diff couldn't see was missing) cannot recur silently.
+@@ -160,9 +255,10 @@ the source diff couldn't see was missing) cannot recur silently.
  
  ## Consumer-matrix exemption — the tarball window
  
@@ -423,7 +426,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..7e202ab039809071bc35fbec58bebd20
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..9c6300cefe80919a410a7d207bc5be21560666d1 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..12ef0689d905945ab18e29e104cf1771e47a9636 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -1,7 +1,15 @@
@@ -527,7 +530,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..9c6300cefe80919a410a7d207bc5be21
  });
  
  describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
-@@ -130,3 +209,148 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
+@@ -130,3 +209,110 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
          expect(out).not.toContain('land the files above on main');
      });
  });
@@ -559,63 +562,25 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..9c6300cefe80919a410a7d207bc5be21
 +        // one writes a name no test pins — the 16.3.0 drift class, one step
 +        // further out.
 +        //
-+        // Walks recursively and REQUIRES each root to exist. An earlier version
-+        // skipped a missing root silently, so renaming one left it unscanned
-+        // with the test still green — a scan that cannot tell "nothing here"
-+        // from "did not look" is the shape this suite keeps finding.
-+        // The roots are a claim about reach, so the claim is checked: every
-+        // top-level entry that could hold an orchestration call is either
-+        // scanned or named here as deliberately out of scope. A new top-level
-+        // directory reds this rather than silently sitting outside the scan.
-+        const roots = ['taskfiles', 'Taskfile.yml', 'src/scripts', 'package.json', '.github/workflows', 'hooks', 'tokens'];
-+        const OUT_OF_SCOPE = new Set([
-+            'agents', 'dist', 'docs', 'internal', 'node_modules', 'site', 'tests',
-+            'src', 'coverage', 'evals', 'config', 'data', 'provenance',
-+            'LICENSES', 'deploy', '.augment-plugin', '.claude-plugin', 'user-types',
-+        ]);
-+        // TRACKED directories only: a local build artifact (`test-results/`,
-+        // coverage output) must not change this verdict, or the test reports a
-+        // reach gap that exists on one machine.
-+        const tracked = new Set(
-+            execFileSync('git', ['ls-files'], { cwd: REPO_ROOT, encoding: 'utf8' })
-+                .split('\n')
-+                .filter((f) => f.includes('/'))
-+                .map((f) => f.slice(0, f.indexOf('/'))),
-+        );
-+        const unscanned = [...tracked]
-+            .filter((n) => !roots.some((r) => r === n || r.startsWith(`${n}/`)))
-+            .filter((n) => !OUT_OF_SCOPE.has(n))
-+            .sort();
-+        expect(unscanned).toEqual([]);
-+        // Binary extensions are skipped; everything else is read. An earlier
-+        // version allowlisted text extensions instead, which silently dropped
-+        // EXTENSIONLESS files — and `src/scripts/install` and
-+        // `src/scripts/agent-config` are exactly that: executable dispatch
-+        // scripts inside a scanned root. Denying known binaries keeps the
-+        // unknown case readable rather than invisible.
++        // Scans EVERY tracked file. Earlier versions scanned a root list, and
++        // each round found another hole in it: a missing root skipped silently,
++        // extensionless files dropped, top-level files discarded, a parent
++        // marked scanned because one child was a root. A reach claim needs
++        // either a check or no reach claim; `git ls-files` removes the question.
 +        const BINARY = /\.(mp4|mov|png|jpg|jpeg|gif|webp|pdf|zip|gz|tgz|ico|woff2?|ttf|mp3|wav)$/i;
-+        const walk = (abs: string, isRoot = false): string[] => {
-+            if (isRoot && !fs.existsSync(abs)) {
-+                throw new Error(`caller-scan root is missing: ${abs}`);
-+            }
-+            // `lstatSync`, not `statSync`: a symlinked directory under a root
-+            // would otherwise recurse without bound and fail as a stack
-+            // overflow rather than as a readable verdict.
-+            const st = fs.lstatSync(abs);
-+            if (st.isSymbolicLink()) return [];
-+            if (!st.isDirectory()) return BINARY.test(abs) ? [] : [abs];
-+            return fs.readdirSync(abs).flatMap((n) => walk(path.join(abs, n)));
-+        };
-+        const invocations = roots
-+            .flatMap((rel) => walk(path.join(REPO_ROOT, rel), true))
-+            .filter((f) => !f.endsWith('report_evidence_temperature.ts'))
-+            .flatMap((f) => fs.readFileSync(f, 'utf8').split('\n'))
-+            // An INVOCATION, not a mention: a comment naming the module is not
-+            // a caller. Matches any execution spelling — `scripts-run`, `tsx`,
-+            // `node`, a bare path in an npm script — rather than the one form
-+            // in use today, because a caller added under a different spelling
-+            // is exactly what a single-literal filter would miss.
-+            .filter((line) => /report_evidence_temperature(\.ts)?\b/.test(line))
++        const files = execFileSync('git', ['ls-files'], { cwd: REPO_ROOT, encoding: 'utf8' })
++            .split('\n')
++            .filter((f) => f !== '' && !BINARY.test(f))
++            // Markdown is prose, never an invocation; the module's own file and
++            // the suites that import it name it by definition.
++            .filter((f) => !f.endsWith('.md'))
++            .filter((f) => f !== 'src/scripts/report_evidence_temperature.ts')
++            .filter((f) => !f.startsWith('tests/'))
++            // Review artifacts hold committed diffs of this very file.
++            .filter((f) => !f.startsWith('agents/evidence/'));
++        expect(files.length).toBeGreaterThan(100);
++        const invocations = files
++            .flatMap((f) => fs.readFileSync(path.join(REPO_ROOT, f), 'utf8').split('\n'))
 +            // Strips a trailing comment before testing, so `foo() // …report…`
 +            // and `/* …report… */` are not counted as callers.
 +            .map((line) => line.replace(/\/\*.*?\*\//g, '').replace(/(\s|^)(\/\/|#).*$/, '$1'))
