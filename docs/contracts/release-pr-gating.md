@@ -37,11 +37,12 @@ keep-beta-reason: >-
 > unaffected either way. Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
 > only touch the allowlist enumerated under § Release-PR shape below. The paths
 > are NOT listed here: a second copy of that list went stale for months and named
-> paths the code had already renamed. The file-set claim was verified against PR #238 (3.3.0) and the
-> allowlist has grown since, so what carries the argument is what the release
-> flow WRITES into those paths: version fields, changelog prose, generated
-> manifests and two report artifacts. Stated that way because the categorical
-> version — "no entry is install or runtime code" — is false of several of them:
+> paths the code had already renamed. The file-set claim was verified against
+> PR #238 (3.3.0) and the allowlist has grown since, so what carries the
+> argument is what the release flow WRITES into those paths: version fields,
+> changelog prose, generated manifests and two report artifacts. Stated that
+> way because the categorical version — "no entry is install or runtime code" —
+> is false of several of them:
 > the npm manifests carry `bin`, `files`, `dependencies` and `engines`, and the
 > plugin and marketplace manifests ship in the tarball. `check_release_pr_shape`
 > matches paths and never reads content, so nothing here stops a release PR from
@@ -186,7 +187,7 @@ parses decays.
 | `tests.yml` | `install-tests` | the allowlist has no `src/scripts/install.sh`, `src/scripts/install.ts` or `tests/test_install.sh` |
 | `tests.yml` | `install-aux-tests` | same — orchestrator, key contracts, one-liner smoke all untouched |
 | `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
-| `tests.yml` | `static-checks` | its source-reading steps (ESLint, `tsc`, MCP-catalog drift, test-delta, build freshness, hook-latency) have no admitted input. Every manifest-reading step has a release-path twin: `npm audit` → `release-validation.yml` § `audit-gate`, `prepack-check` → `consumer-matrix.yml`, and `publint` → `evaluator-umbrella.yml`, which carries no head-ref guard and whose `paths:` filter leads with `package.json`, so it runs on every release PR by construction |
+| `tests.yml` | `static-checks` | its source-reading steps have no admitted input — the allowlist carries no TypeScript, no test file and no generated tree. Its MANIFEST-reading steps each have a release-path twin: `npm audit` → `release-validation.yml` § `audit-gate`, `prepack-check` → `consumer-matrix.yml`, `publint` → `evaluator-umbrella.yml` (no head-ref guard, `paths:` leads with `package.json`, so it runs on every release PR by construction), and `npm ci` runs in every one of those jobs. This cell is prose over a step list nothing parses — read the job if the list matters |
 | `tests.yml` | `golden-tests` | golden corpora live under `tests/` and `internal/`, neither admitted |
 | `tests.yml` | `collector-lifecycle` | exercises collector scripts under `src/scripts/`, none admitted |
 | `tests.yml` | `workspace-tests` | exercises workspace wiring under `src/` and `tests/`; the admitted pack and domain files are metadata those tests do not read |
@@ -209,7 +210,7 @@ the feature-PR floor by adding:
 | `migration-dry-run.yml` | (existing) | Migration plan dry-runs |
 | `release-validation.yml` (Phase B) | `release-shape` | shape detector — fails closed if diff exits the allowlist |
 | `release-validation.yml` (Phase B) | `changelog-entry` | CHANGELOG carries an entry matching the head-branch version |
-| `release-validation.yml` (Phase B) | `version-consistency` | `package.json` / `marketplace.json` agree on the version (pack manifests carry no version field) |
+| `release-validation.yml` (Phase B) | `version-consistency` | `package.json` / `marketplace.json` agree on the version (pack manifests carry no version field), and `check_template_pin_drift` holds the settings-template pin to it — the check § Cut surface's `smoke` row forward-references |
 | `release-validation.yml` (release-truth) | `surface-equality` | PR body equals the CHANGELOG entry (whitespace-normalized) — release.ts derives all four surfaces (PR body, changelog, GitHub release notes, annotated tag message) from the changelog section at the relevant head |
 | `release-validation.yml` (release-truth) | `highlight-plausibility` | curated head cannot claim `_none_` against a populated span-derived category (security commits, behaviour/default changes, honest nulls, removed public surface). **Prose polish is not gated** — an un-rewritten generator-derived head line warns and exits 0, because curating the head is retro-curation and not a merge precondition; the decision and its rejected branch are recorded in [`CHANGELOG-conventions.md` § Curated-head cadence](CHANGELOG-conventions.md#curated-head-cadence--retro-curation-not-a-merge-precondition) |
 | `release-validation.yml` (release-truth) | `finding-dispositions` | every blocking/high self-review finding carries a committed disposition in `agents/evidence/release-findings/<version>.json` — ingest via `check_finding_dispositions --ingest`; the ledger (never the PR comment) is the record |
@@ -222,7 +223,8 @@ the feature-PR floor by adding:
 (`tests/test_release_install_e2e.sh`), closes a gap the cut surface above
 does not cover: that the allowlist admits no file these jobs execute is a claim
 about the **source diff**, not about whether the **packed tarball**
-actually installs, upgrades, and boots as a real npm global package. Every release PR now proves, against the real tarball:
+actually installs, upgrades, and boots as a real npm global package. Every
+release PR now proves, against the real tarball:
 
 - a fresh `npm install -g` into an isolated npm prefix resolves the
   `agent-config` binary and ships no silent postinstall/GUI side effect;

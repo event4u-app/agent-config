@@ -255,11 +255,14 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
             .flatMap((rel) => walk(path.join(REPO_ROOT, rel), true))
             .filter((f) => !f.endsWith('report_evidence_temperature.ts'))
             .flatMap((f) => fs.readFileSync(f, 'utf8').split('\n'))
-            // An INVOCATION, not a mention: the line must run the script. Prose
-            // naming the module in a comment is not a caller, and counting it
-            // as one would red this test on an edit that changes nothing.
-            .filter((line) => /scripts-run\s+src\/scripts\/report_evidence_temperature/.test(line))
-            .filter((line) => !/^\s*(\/\/|#|\*)/.test(line));
+            // An INVOCATION, not a mention: a comment naming the module is not
+            // a caller. Matches any execution spelling — `scripts-run`, `tsx`,
+            // `node`, a bare path in an npm script — rather than the one form
+            // in use today, because a caller added under a different spelling
+            // is exactly what a single-literal filter would miss.
+            .filter((line) => /report_evidence_temperature(\.ts)?\b/.test(line))
+            .filter((line) => !/^\s*(\/\/|#|\*)/.test(line))
+            .filter((line) => !/^\s*["']?[\w.-]+["']?\s*:\s*$/.test(line));
         expect(invocations).toHaveLength(1);
         expect(invocations[0]).toContain('--write');
         expect(invocations[0]).not.toContain('--out');
