@@ -42,6 +42,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
     GLOBAL_RULE_DIRS,
@@ -82,8 +83,65 @@ export interface LayerReading {
     readonly chars: number;
     readonly package_owned: number;
     readonly foreign: number;
+    /**
+     * The same split as `package_owned` / `foreign`, in CHARACTERS.
+     *
+     * Both axes are kept because they answer different questions and the file
+     * counts alone cannot answer the one step 1.4 asks. "How many of the files
+     * does this install claim" is a reaping question; "how much of what the
+     * host loads does this install account for" is a budget question, and one
+     * 30,000-character rule against twenty 200-character ones makes the two
+     * readings disagree by an order of magnitude. The limit rows below are
+     * built from the character axis for exactly that reason.
+     */
+    readonly package_owned_chars: number;
+    readonly foreign_chars: number;
     /** The {@link TOP_FILES} largest, by the SAME measure as `chars`. */
     readonly top: readonly RuleFileReading[];
+}
+
+/**
+ * The fraction of a published limit at which the report warns.
+ *
+ * 0.8 is step 1.4's number, not a tuned one. It is a WARNING threshold and
+ * never a gate: crossing it changes what the report says and nothing else, so
+ * no install fails here.
+ */
+export const LIMIT_WARN_FRACTION = 0.8;
+
+/** What this tree can say about a host's published instruction budget. */
+export type HostLimitKind = 'vendor-published' | 'reported' | 'unpublished';
+
+/**
+ * One host, measured against its published limit — step 3.5's per-host row.
+ *
+ * The row is per HOST and not per directory, because the limit applies to what
+ * the host loads and the host unions its global and project layers. A host
+ * whose two directories are each comfortably under the limit can still be over
+ * it together, and a per-directory row would never show that.
+ */
+export interface HostLimitReading {
+    readonly host: string;
+    /** `null` when this tree records no limit — which fires no warning. */
+    readonly limit: number | null;
+    readonly kind: HostLimitKind;
+    /** Every scope for this host, summed. */
+    readonly chars: number;
+    readonly package_owned_chars: number;
+    readonly foreign_chars: number;
+    /** `chars / limit`, or `null` when there is no limit to be a fraction of. */
+    readonly fraction: number | null;
+    /**
+     * True only when a limit EXISTS and the combined total reaches
+     * {@link LIMIT_WARN_FRACTION} of it — 80 %, not 100 %. The field is an
+     * early warning, which is the whole point of a fraction below 1.
+     *
+     * An absent limit never warns. That is the conservative direction and it is
+     * deliberate: a warning derived from a limit nobody recorded would be a
+     * fabricated finding, which is worse than a silent row a reader can see is
+     * unmeasured.
+     */
+    readonly warn: boolean;
 }
 
 export interface InstalledLayerReport {
@@ -94,6 +152,8 @@ export interface InstalledLayerReport {
     /** False when no installed-tools manifest resolved — then every file reads foreign. */
     readonly manifest_present: boolean;
     readonly layers: readonly LayerReading[];
+    /** One row per host, against its published limit. Step 3.5. */
+    readonly limits: readonly HostLimitReading[];
     /** Every layer summed, which is what the host loads when it unions the two scopes. */
     readonly totals: {
         readonly files: number;
@@ -101,6 +161,8 @@ export interface InstalledLayerReport {
         readonly chars: number;
         readonly package_owned: number;
         readonly foreign: number;
+        readonly package_owned_chars: number;
+        readonly foreign_chars: number;
     };
 }
 
@@ -141,7 +203,16 @@ export function readLayer(
     dir: string,
     recorded: ReadonlyMap<string, string | null>,
 ): LayerReading {
-    const empty = { files: 0, unconditional: 0, chars: 0, package_owned: 0, foreign: 0, top: [] };
+    const empty = {
+        files: 0,
+        unconditional: 0,
+        chars: 0,
+        package_owned: 0,
+        foreign: 0,
+        package_owned_chars: 0,
+        foreign_chars: 0,
+        top: [],
+    };
     let names: string[];
     try {
         names = fs.readdirSync(dir);
@@ -193,8 +264,133 @@ export function readLayer(
         chars: readings.reduce((n, r) => n + r.chars, 0),
         package_owned: readings.filter((r) => r.package_owned).length,
         foreign: readings.filter((r) => !r.package_owned).length,
+        package_owned_chars: readings.reduce((n, r) => n + (r.package_owned ? r.chars : 0), 0),
+        foreign_chars: readings.reduce((n, r) => n + (r.package_owned ? 0 : r.chars), 0),
         top,
     };
+}
+
+/** The shape of one entry in `src/config/host-instruction-limits.json`. */
+interface RawHostLimit {
+    readonly limit?: unknown;
+    readonly kind?: unknown;
+}
+
+/**
+ * Where the limits live, derived from this module rather than from `cwd`.
+ *
+ * The two `..` hops climb from `src/scripts/_lib` to `src/`, which is where
+ * `config/` lives — NOT to the package root, though the comment said so until
+ * 2026-10-05. The result is correct and the arithmetic stated for it was not,
+ * which is the half a future reader would trust when changing the hops.
+ *
+ * `fileURLToPath`, NOT `new URL(...).pathname` — the claimed parity with
+ * `default_template_path()` was only half true until 2026-10-05. A `pathname`
+ * percent-encodes, so a package under a directory with a space resolved to
+ * `/Users/x/My%20Projects/...`, and on Windows it yields a leading-slash drive
+ * path. Either way the read fails, `loadHostInstructionLimits` swallows it and
+ * returns an empty map, and EVERY host then reads `unpublished` with `warn`
+ * false — the budget measurement degrading to "not measured" with no signal,
+ * which is the one failure mode this file's own limit table was written to
+ * avoid.
+ */
+export function defaultHostLimitsPath(): string {
+    return path.join(
+        path.dirname(fileURLToPath(import.meta.url)),
+        '..',
+        '..',
+        'config',
+        'host-instruction-limits.json',
+    );
+}
+
+/**
+ * Read the published-limit table.
+ *
+ * TOLERANT IN ONE DIRECTION ONLY. An unreadable or malformed file yields an
+ * EMPTY table, so every host reads `unpublished` and nothing warns — a reading
+ * this tree cannot stand behind must never become a warning it can. A present
+ * entry whose `limit` is not a positive finite number is treated the same way,
+ * because a `0` or a string would otherwise make every install look saturated.
+ */
+export function loadHostInstructionLimits(
+    file: string = defaultHostLimitsPath(),
+): ReadonlyMap<string, { limit: number | null; kind: HostLimitKind }> {
+    const out = new Map<string, { limit: number | null; kind: HostLimitKind }>();
+    let raw: unknown;
+    try {
+        raw = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    } catch {
+        return out; // no table ⇒ no limits ⇒ no warnings
+    }
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return out;
+    for (const [host, v] of Object.entries(raw as Record<string, unknown>)) {
+        if (host.startsWith('_')) continue; // `_comment` and friends are not hosts
+        if (typeof v !== 'object' || v === null || Array.isArray(v)) continue;
+        const e = v as RawHostLimit;
+        const n = e.limit;
+        const limit = typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : null;
+        const k = e.kind;
+        const kind: HostLimitKind =
+            limit === null
+                ? 'unpublished'
+                : k === 'vendor-published' || k === 'reported'
+                  ? k
+                  : 'reported'; // a cited figure with no stated kind is the weaker one
+        out.set(host, { limit, kind });
+    }
+    return out;
+}
+
+/**
+ * Fold the per-directory readings into one row per host, against its limit.
+ *
+ * Exported so a caller holding layers it built itself — the install receipt,
+ * which measures before and after — can produce the same rows without
+ * re-reading the tree.
+ */
+export function buildHostLimitRows(
+    layers: readonly LayerReading[],
+    limits: ReadonlyMap<string, { limit: number | null; kind: HostLimitKind }>,
+): HostLimitReading[] {
+    const byHost = new Map<string, { chars: number; owned: number; foreign: number }>();
+    for (const l of layers) {
+        if (!l.present) continue;
+        const acc = byHost.get(l.host) ?? { chars: 0, owned: 0, foreign: 0 };
+        acc.chars += l.chars;
+        acc.owned += l.package_owned_chars;
+        acc.foreign += l.foreign_chars;
+        byHost.set(l.host, acc);
+    }
+    // EVERY host that has a directory gets a row, present or not — a host whose
+    // layer is absent reads 0 against its limit, which is a real answer and the
+    // one step 3.5 asks for ("one row per host with a published limit").
+    for (const l of layers) if (!byHost.has(l.host)) byHost.set(l.host, { chars: 0, owned: 0, foreign: 0 });
+    // AND every host the LIMITS table knows, whether or not a layer reached it.
+    // Rows were layer-driven while the requirement is limit-driven, so a limit
+    // recorded for a host the layer map does not list disappeared silently —
+    // the two sources agree today, which means they can only diverge in the
+    // direction the code did not cover.
+    for (const [host, e] of limits) if (e.limit !== null && !byHost.has(host)) {
+        byHost.set(host, { chars: 0, owned: 0, foreign: 0 });
+    }
+    const rows: HostLimitReading[] = [];
+    for (const host of [...byHost.keys()].sort()) {
+        const a = byHost.get(host) as { chars: number; owned: number; foreign: number };
+        const e = limits.get(host) ?? { limit: null, kind: 'unpublished' as HostLimitKind };
+        const fraction = e.limit === null ? null : a.chars / e.limit;
+        rows.push({
+            host,
+            limit: e.limit,
+            kind: e.kind,
+            chars: a.chars,
+            package_owned_chars: a.owned,
+            foreign_chars: a.foreign,
+            fraction,
+            warn: fraction !== null && fraction >= LIMIT_WARN_FRACTION,
+        });
+    }
+    return rows;
 }
 
 export interface ReportOptions {
@@ -204,6 +400,12 @@ export interface ReportOptions {
     readonly manifestPath?: string | null;
     /** Supplied rather than shelled, so a fixture is not at the mercy of a CLI being on PATH. */
     readonly hostVersion?: string;
+    /**
+     * The published-limit table. A parameter for the same reason `home` is: a
+     * fixture must be able to state the limit it is measuring against instead
+     * of inheriting whatever the shipped config happens to say today.
+     */
+    readonly hostLimitsPath?: string | null;
 }
 
 /**
@@ -237,8 +439,22 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
             chars: acc.chars + l.chars,
             package_owned: acc.package_owned + l.package_owned,
             foreign: acc.foreign + l.foreign,
+            package_owned_chars: acc.package_owned_chars + l.package_owned_chars,
+            foreign_chars: acc.foreign_chars + l.foreign_chars,
         }),
-        { files: 0, unconditional: 0, chars: 0, package_owned: 0, foreign: 0 },
+        {
+            files: 0,
+            unconditional: 0,
+            chars: 0,
+            package_owned: 0,
+            foreign: 0,
+            package_owned_chars: 0,
+            foreign_chars: 0,
+        },
+    );
+    const limits = buildHostLimitRows(
+        layers,
+        loadHostInstructionLimits(opts.hostLimitsPath ?? defaultHostLimitsPath()),
     );
     return {
         home: opts.home,
@@ -246,6 +462,7 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
         host_version: opts.hostVersion ?? 'unknown',
         manifest_present: manifestPath !== null && fs.existsSync(manifestPath),
         layers,
+        limits,
         totals,
     };
 }
@@ -281,5 +498,41 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
         `  TOTAL — ${String(t.files)} files, ${String(t.unconditional)} unconditional, ` +
             `${String(t.chars)} chars, ${String(t.package_owned)} package-owned / ${String(t.foreign)} foreign`,
     );
+    out.push(...renderHostLimitRows(report.limits));
+    return out;
+}
+
+/**
+ * The budget block — one row per host, against its published limit.
+ *
+ * Extracted so the REPORT and the INSTALL RECEIPT print the same bytes. They
+ * answer the same question at two moments, and a consumer comparing a receipt
+ * against a later report must not have to decide whether a wording difference
+ * means a measurement difference.
+ */
+export function renderHostLimitRows(rows: readonly HostLimitReading[]): string[] {
+    // ONE ROW PER HOST, against its published limit — steps 1.4 and 3.5. The
+    // combined figure is what the row is about: a consumer's own instruction
+    // files sit in the same budget as this package's, so a package-owned number
+    // alone would understate what the host is actually holding.
+    const out: string[] = [
+        'host instruction budgets — package-owned + foreign against the published limit',
+    ];
+    for (const r of rows) {
+        const split =
+            `${String(r.package_owned_chars)} package-owned + ` +
+            `${String(r.foreign_chars)} foreign = ${String(r.chars)} chars`;
+        if (r.limit === null) {
+            out.push(`  ${r.host} — ${split}; no published limit recorded — not measured`);
+            continue;
+        }
+        const pct = ((r.fraction as number) * 100).toFixed(1);
+        out.push(
+            `  ${r.host} — ${split}; ${pct}% of ${String(r.limit)} (${r.kind})` +
+                (r.warn
+                    ? ` — WARNING: at or past ${String(Math.round(LIMIT_WARN_FRACTION * 100))}% of the published limit`
+                    : ''),
+        );
+    }
     return out;
 }

@@ -337,6 +337,14 @@ describe('MERGEABLE_KEYS', () => {
             // ADR-271: `design-fidelity.md` tells the reader to resolve this
             // key through the cascade, and the cascade then filtered it out.
             'design.fidelity_mode',
+            // ADR-278: both keys describe a MACHINE — which host rule trees
+            // exist on it, and how much of the rule corpus loads at rest — and
+            // the layer the installer thins (`~/.claude/rules`) belongs to the
+            // machine, not to any checkout. On an ADR-020 global-only install
+            // the user-global file is the ONLY layer that can carry the opt-in,
+            // and it was the one layer being filtered.
+            'lean_projection.mode',
+            'lean_projection.hosts',
         ]);
     });
 

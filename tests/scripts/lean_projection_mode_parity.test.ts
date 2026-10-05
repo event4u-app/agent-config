@@ -17,11 +17,13 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { _reset_template_defaults_cache } from '../../src/scripts/_lib/agent_settings.js';
 import { leanProjectionModeRaw } from '../../src/scripts/_lib/hook_settings.js';
 import {
+    leanProjectionModeChosen,
+    rawExplicitLeanProjectionMode,
     resolveLeanProjection,
     type ResolvedLeanProjection,
 } from '../../src/scripts/_lib/lean_projection_mode.js';
@@ -33,6 +35,38 @@ const TEMPLATE = path.join(REPO_ROOT, 'src', 'config', 'agent-settings.template.
 function tree(): string {
     return fs.mkdtempSync(path.join(os.tmpdir(), 'lean-parity-'));
 }
+
+/**
+ * The USER-GLOBAL layer is pinned to an empty temp root for every case here.
+ *
+ * Without this, "no settings file anywhere" is false on any machine whose
+ * `~/.event4u/agent-config/settings/.agent-settings.yml` carries a
+ * `lean_projection` block — `resolveLeanProjection` reads the full cascade by
+ * design, and the developer's own file is part of it. The cases below each
+ * state a layer state and then assert the answer for it, so a layer the case
+ * did not write must not be present; otherwise the suite measures the machine
+ * it runs on and quietly disagrees between a laptop and a CI runner.
+ *
+ * It did not fail before only because `MERGEABLE_KEYS` filtered the key out of
+ * the user-global layer entirely — a filter that was itself the defect
+ * `road-to-an-installed-layer-that-is-thinned` step 1.1 had to repair, since a
+ * global-only install has no other layer to carry the opt-in. Removing the
+ * filter made the missing isolation visible rather than creating it.
+ */
+let _savedEvent4uHome: string | undefined;
+let _isolatedHome: string;
+
+beforeEach(() => {
+    _isolatedHome = fs.mkdtempSync(path.join(os.tmpdir(), 'lean-parity-home-'));
+    _savedEvent4uHome = process.env['EVENT4U_CONFIG_HOME'];
+    process.env['EVENT4U_CONFIG_HOME'] = _isolatedHome;
+});
+
+afterEach(() => {
+    if (_savedEvent4uHome === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+    else process.env['EVENT4U_CONFIG_HOME'] = _savedEvent4uHome;
+    fs.rmSync(_isolatedHome, { recursive: true, force: true });
+});
 
 function write(root: string, rel: string[], body: string): void {
     const p = path.join(root, ...rel);
@@ -142,5 +176,94 @@ describe('resolveLeanProjection — one answer per layer state (1.2)', () => {
             packageRoot: REPO_ROOT,
         });
         expect(r.mode).toBe('eager-all');
+    });
+});
+
+// ---------------------------------------------------------------------------
+// Provenance — "did a HUMAN ask for this", which `mode` cannot answer.
+//
+// Step 1.1 of `road-to-an-installed-layer-that-is-thinned` keys the installer
+// on `lean_projection.mode: delivery` "set on a layer OTHER than the shipped
+// template", and the reason is in that roadmap's Context: the template already
+// ships `delivery`, so an installer that merely resolved the mode would thin
+// every consumer the day it started reading it — a consumer-facing default flip
+// nobody decided, while the decision itself is owner-reserved (blocker
+// `default-flip-of-the-installed-layer`).
+//
+// The first case below is therefore the whole point: template says `delivery`,
+// user said nothing, and the answer must be "not chosen".
+// ---------------------------------------------------------------------------
+
+describe('resolveLeanProjection — provenance, so a template value is never read as consent', () => {
+    it('the TEMPLATE saying delivery is NOT explicit, and is not a choice of delivery', () => {
+        const root = tree();
+        _reset_template_defaults_cache();
+        const r = resolveLeanProjection({ projectRoot: root, packageRoot: REPO_ROOT });
+        // The mode resolves to the template value — unchanged, and the carrier
+        // depends on it.
+        expect(r.mode).toBe('delivery');
+        // and it is nonetheless not a decision anyone took
+        expect(r.modeExplicit).toBe(false);
+        expect(leanProjectionModeChosen('delivery', { projectRoot: root })).toBe(false);
+        expect(rawExplicitLeanProjectionMode({ projectRoot: root })).toBe('');
+    });
+
+    it('a project layer saying delivery IS explicit, and IS a choice of delivery', () => {
+        const root = tree();
+        write(root, ['.agent-settings.yml'], 'lean_projection:\n  mode: delivery\n');
+        _reset_template_defaults_cache();
+        expect(
+            resolveLeanProjection({ projectRoot: root, packageRoot: REPO_ROOT }).modeExplicit,
+        ).toBe(true);
+        expect(leanProjectionModeChosen('delivery', { projectRoot: root })).toBe(true);
+    });
+
+    it('the CANONICAL layer the installer writes counts, not only the legacy root file', () => {
+        // The installer writes `agents/settings/.agent-settings.yml`. A
+        // provenance reader that only opened the legacy root path would call
+        // every real install "not explicit" — the same which-file defect step
+        // 1.2 removed, reintroduced one question later.
+        const root = tree();
+        write(root, ['agents', 'settings', '.agent-settings.yml'], 'lean_projection:\n  mode: delivery\n');
+        _reset_template_defaults_cache();
+        expect(leanProjectionModeChosen('delivery', { projectRoot: root })).toBe(true);
+    });
+
+    it('explicit eager-all is explicit, and is NOT a choice of delivery', () => {
+        // The case that makes `modeExplicit` insufficient on its own: a human
+        // who explicitly asked for the full layer has set the key, and must not
+        // be thinned because the key is set.
+        const root = tree();
+        write(root, ['.agent-settings.yml'], 'lean_projection:\n  mode: eager-all\n');
+        _reset_template_defaults_cache();
+        expect(
+            resolveLeanProjection({ projectRoot: root, packageRoot: REPO_ROOT }).modeExplicit,
+        ).toBe(true);
+        expect(leanProjectionModeChosen('delivery', { projectRoot: root })).toBe(false);
+        expect(leanProjectionModeChosen('eager-all', { projectRoot: root })).toBe(true);
+    });
+
+    it('an unrecognised explicit value is explicit but chooses nothing it did not say', () => {
+        const root = tree();
+        write(root, ['.agent-settings.yml'], 'lean_projection:\n  mode: banana\n');
+        _reset_template_defaults_cache();
+        expect(
+            resolveLeanProjection({ projectRoot: root, packageRoot: REPO_ROOT }).modeExplicit,
+        ).toBe(true);
+        // `banana` normalises to the safe value, so it chooses eager-all and
+        // emphatically not delivery.
+        expect(leanProjectionModeChosen('delivery', { projectRoot: root })).toBe(false);
+    });
+
+    it('provenance does not depend on a package root being findable', () => {
+        // The installer may resolve provenance before it has decided anything
+        // about the template. With no package root the MODE falls back, and the
+        // explicit answer must still be the user's.
+        const root = tree();
+        write(root, ['.agent-settings.yml'], 'lean_projection:\n  mode: delivery\n');
+        _reset_template_defaults_cache();
+        expect(resolveLeanProjection({ projectRoot: root, packageRoot: null }).modeExplicit).toBe(
+            true,
+        );
     });
 });

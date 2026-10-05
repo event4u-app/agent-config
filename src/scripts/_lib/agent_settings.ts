@@ -305,6 +305,17 @@ export const MERGEABLE_KEYS: readonly string[] = [
     // GUI; whitelisting decides only whether the value SURVIVES the merge
     // (ADR-271, road-to-design-intent-conformance 2.3).
     'design.fidelity_mode',
+    // `lean_projection.*` is a per-MACHINE setting and the install it governs is
+    // a user-scope one: the layer being thinned is `~/.claude/rules`, which
+    // belongs to the machine and not to any checkout. Without these two rows a
+    // consumer who wrote the opt-in into the user-global file got no error, no
+    // warning and no effect — the same silent-filter defect the two entries
+    // above repair, reaching a third key, and unsatisfiable-by-construction on
+    // an ADR-020 global-only install, where no project layer exists to carry it.
+    // Whitelisting decides only whether a value SURVIVES the merge: it sets
+    // nothing, and `installerThinsHost` still refuses a template-only value.
+    'lean_projection.mode',
+    'lean_projection.hosts',
 ];
 
 /** The shipped template, relative to the package root. */
