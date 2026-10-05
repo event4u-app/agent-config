@@ -266,8 +266,8 @@ capability_gap: >-
 > road-to-adversarial-verification-and-long-runs.md`. Nothing in (a)-(c) is an agent
 > action: (a) is cosmetic but gated behind (b), and (b) and (c) are the owner's.
 >
-> **The two deferrals were re-executed, not inherited.** AC-4's own
-> `<!-- verify: grep -rln 'N=3' src/rules -->` returns `src/rules/verify-before-complete.md`
+> **The two deferrals were re-executed, not inherited.** AC-4's own verify annotation,
+> which runs `grep -rln 'N=3' src/rules`, returns `src/rules/verify-before-complete.md`
 > — one offender, a kernel rule, still agent-denied. AC-6's
 > `./scripts-run src/scripts/check_enforcement_matrix --quiet` exits 0 with *"32 host-slot
 > row(s) … match"*, so its measurement half stays done and its decision half stays the
