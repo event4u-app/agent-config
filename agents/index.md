@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **744 artefacts** in this package.
+Maintainer-facing index of all **745 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
@@ -436,7 +436,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../src/rules/user-interrupt-priority.md) | auto | New user instruction mid-flight — STOP the current task, run the new one in full, ASK before resuming |
 | rule | [`verify-before-complete`](../src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (204)
+## Commands (205)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -593,7 +593,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`review`](../src/domains/engineering-base/review/command.md) | cluster: review | Review orchestrator — routes to changes (seven-judge self-review of the local diff) and routing (compute reviewer roles + historical bug patterns) |
 | command | [`review-changes`](../src/domains/engineering-base/review/changes/command.md) | cluster: review | Self-review local changes before creating a PR — dispatches to seven specialized judges (bug, security, tests, quality, architecture, spec, overbuild) and consolidates verdicts |
 | command | [`review-routing`](../src/domains/engineering-base/review/routing/command.md) | cluster: review | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
-| command | [`roadmap`](../src/domains/product-basic/roadmap/command.md) | cluster: roadmap | Roadmap orchestrator — routes to create (authoring), process-step / process-phase / process-full (execution), next (pick a roadmap and ship it), and triage-parked (drain later/ and skipped/). |
+| command | [`roadmap`](../src/domains/product-basic/roadmap/command.md) | cluster: roadmap | Roadmap orchestrator — create (authoring), process-step / -phase / -full (execution), next (pick and ship), triage-parked (later/, skipped/), resolve-blockers. |
 | command | [`roadmap-ai-council`](../src/domains/product-basic/roadmap/ai-council/command.md) | cluster: roadmap | Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options. |
 | command | [`roadmap-create`](../src/domains/product-basic/roadmap/create/command.md) | cluster: roadmap | Interactively create a new roadmap file in agents/roadmaps/ |
 | command | [`roadmap-materialize`](../src/domains/product-basic/roadmap/materialize/command.md) | cluster: roadmap | Materialise a roadmap into a self-contained, importable ticket bundle under agents/tickets/ |
@@ -601,6 +601,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | command | [`roadmap-process-full`](../src/domains/product-basic/roadmap/process-full/command.md) | cluster: roadmap | Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries. |
 | command | [`roadmap-process-phase`](../src/domains/product-basic/roadmap/process-phase/command.md) | cluster: roadmap | Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster. |
 | command | [`roadmap-process-step`](../src/domains/product-basic/roadmap/process-step/command.md) | cluster: roadmap | Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out. |
+| command | [`roadmap-resolve-blockers`](../src/domains/product-basic/roadmap/resolve-blockers/command.md) | cluster: roadmap | Check every open roadmap blocker, close what the tree already settled, decide the rest in the AI council, and ask the owner only for real residue — one question at a time. |
 | command | [`roadmap-triage-parked`](../src/domains/product-basic/roadmap/triage-parked/command.md) | cluster: roadmap | Drain later/ and skipped/ — verify each parked roadmap against the current tree, run its resume condition, then promote, absorb, archive, or re-park it with a fresh reason. |
 | command | [`rule-compliance-audit`](../src/domains/meta/rule-compliance-audit/command.md) |  | Audit rule trigger quality, simulate activation, detect overlaps, find never-activating rules, and replay the router matcher over recent prompts (route:audit) |
 | command | [`security-audit-config`](../src/domains/engineering-base/security-audit-config/command.md) |  | Audit an assembled agent config (CLAUDE.md, .cursor/rules, settings, MCP, hooks, skills) for prompt-injection / supply-chain risk — A–F score per category, mapped to OWASP Agentic Top 10 |

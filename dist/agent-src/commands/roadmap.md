@@ -2,13 +2,13 @@
 model_tier: medium
 name: roadmap
 disable-model-invocation: true
-argument-hint: "[create|ai-council|process-step|process-phase|process-full|next|triage-parked] [args]"
+argument-hint: "[create|ai-council|process-step|process-phase|process-full|next|triage-parked|resolve-blockers] [args]"
 pack: product-basic
-intent: "Roadmap dispatcher — create, process-step, process-phase, process-full, next, triage-parked, ai-council"
-routes_to: [roadmap-create, roadmap-ai-council, roadmap-materialize, roadmap-process-step, roadmap-process-phase, roadmap-process-full, roadmap-next, roadmap-triage-parked]
+intent: "Roadmap dispatcher — create, process-step, process-phase, process-full, next, triage-parked, resolve-blockers, ai-council"
+routes_to: [roadmap-create, roadmap-ai-council, roadmap-materialize, roadmap-process-step, roadmap-process-phase, roadmap-process-full, roadmap-next, roadmap-triage-parked, roadmap-resolve-blockers]
 replaces: []
 visibility: advanced
-description: Roadmap orchestrator — routes to create (authoring), process-step / process-phase / process-full (execution), next (pick a roadmap and ship it), and triage-parked (drain later/ and skipped/).
+description: Roadmap orchestrator — create (authoring), process-step / -phase / -full (execution), next (pick and ship), triage-parked (later/, skipped/), resolve-blockers.
 cluster: roadmap
 type: orchestrator
 suggestion:
@@ -41,6 +41,7 @@ paused for confirmation before every step) was removed —
 | `/roadmap:process-full` | `commands/roadmap/process-full.md` | Autonomously process every open step across every phase; `--all` iterates the whole active estate, `--worktree` isolates the workspace |
 | `/roadmap:next` | `commands/roadmap/next.md` | Screen for the next executable roadmap, then carry it to a reviewable PR (selection + `process-full` + delivery) |
 | `/roadmap:triage-parked` | `commands/roadmap/triage-parked.md` | Re-check every roadmap in `later/` and `skipped/` against the current tree; promote, absorb, archive, or re-park each one |
+| `/roadmap:resolve-blockers` | `commands/roadmap/resolve-blockers.md` | Check every open blocker, close what the tree settled, decide the rest in the AI council, ask the owner one question at a time |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
@@ -73,6 +74,7 @@ each only binds a scope delta.
    > 5. process-full — process every open step across every phase
    > 6. next — pick the next executable roadmap and ship it to a PR
    > 7. triage-parked — drain later/ and skipped/ against the current tree
+   > 8. resolve-blockers — check and resolve open roadmap blockers, council first
 
 ## Rules
 
@@ -98,3 +100,8 @@ each only binds a scope delta.
   to [`/roadmap:triage-parked`](roadmap/triage-parked.md) — the only sub that
   reads `later/` and `skipped/`. It moves and rewrites plans; it never executes
   one.
+- **Blocker intents** (*"resolve the blockers"*, *"lös die Blocker auf"*,
+  *"which blockers still need me?"*) route to
+  [`/roadmap:resolve-blockers`](roadmap/resolve-blockers.md) — council first,
+  the owner one question at a time. It decides and records; it never executes
+  the unblocked work.
