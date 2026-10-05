@@ -45,6 +45,12 @@ const ALLOWLIST_GLOBS = [
     // be able to carry the dispositions of its own self-review findings; the
     // finding-dispositions gate is red until blocking ones are recorded here.
     'agents/evidence/release-findings/*.json',
+    // Evidence-temperature census — `taskfiles/content.yml` § release-prepare
+    // writes one per release, so without this entry the pipeline generates a
+    // file its own shape step refuses. Digit classes, never `?`: fnmatch's `?`
+    // matches ANY character, so a `????-??-??` spelling would admit every
+    // sibling report. A second report here is a decision, not a glob effect.
+    'agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md', // code-comment-allow provenance-comment -- the glob IS this gate's operand, not where the code came from
     // Project-settings template pin — bumped by release.ts set_template_pin and
     // its regenerated dist twin (kept in lockstep with package.json.version).
     'src/agent-src/templates/agents/agent-project-settings.example.yml',

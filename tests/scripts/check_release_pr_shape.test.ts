@@ -113,6 +113,27 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         expect(shape._matches('src/packs/core/README.md')).toBe(true);
         expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
     });
+
+    it('the evidence-temperature census release-prepare writes passes', () => {
+        const { code } = runCheck([
+            'package.json',
+            'CHANGELOG.md',
+            'agents/evidence/analysis/evidence-temperature-2026-10-05.md',
+        ]);
+        expect(code).toBe(0);
+    });
+
+    it('the census glob admits the ISO date shape and nothing else under it', () => {
+        expect(shape._matches('agents/evidence/analysis/evidence-temperature-2026-10-05.md')).toBe(true);
+        // The denial half, and the reason the glob uses digit classes: fnmatch's
+        // `?` matches any character, so a `????-??-??` spelling would pass each
+        // of these. They are the polarity this entry is pinned against.
+        expect(shape._matches('agents/evidence/analysis/evidence-temperature-anything.md')).toBe(false);
+        expect(shape._matches('agents/evidence/analysis/evidence-temperature-aaaa-bb-cc.md')).toBe(false);
+        expect(shape._matches('agents/evidence/analysis/evidence-temperature-2026-1-5.md')).toBe(false);
+        expect(shape._matches('agents/evidence/analysis/some-other-report.md')).toBe(false);
+        expect(shape._matches('agents/evidence/analysis/nested/evidence-temperature-2026-10-05.md')).toBe(false);
+    });
 });
 
 describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
