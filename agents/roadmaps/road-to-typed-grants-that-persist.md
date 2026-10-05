@@ -41,7 +41,34 @@ capability_gap: none
 > per-step loop for a reversible operation, and it may not reverse the outcome. § 0 carries
 > the table that decides which of the two a proposed change is.
 
-> **STATE AS OF 2026-10-01 — read this before re-deriving anything below.** 4 done · 14
+> **STATE AS OF 2026-10-05 — read this FIRST; it supersedes the 2026-10-01 block below on the
+> counts and adds three things that block found no reason to look for.** Re-counted at
+> `origin/main` `6aa3c36f9` rather than inherited: **4 done · 14 deferred `[~]` · 7
+> open-and-blocked `[ ]`** — step glyphs identical to 2026-10-01, so no lane moved this file in
+> four days. **Acceptance criteria moved: AC-3 is now `[x]`, 5 of 6 remain open.**
+> **Three findings a later run should not re-derive.**
+> (1) **AC-3 was closable and is closed**, against the stricter of the two readings its sentence
+> admits — the weaker limb was discharged by a one-line supersession pointer on the archived
+> `merge-authority` blocker, not by amending the criterion to the reading that was already green.
+> (2) **The 2026-10-01 claim that this guard denies a read-only `grep` against a kernel rule is
+> FALSE and is withdrawn in place.** Both polarities were exercised on this tree: an in-place
+> `sed` at a kernel path is BLOCKED, the `grep -c` runs and returns 1, and the guard's own header
+> says reads stay allowed because a kernel rule is immutable rather than secret. A later session
+> must not read its own successful verify command as a missing control.
+> (3) **4.3 needs more than 3.1, and the delta is cheap if known in advance.** The step says
+> *"3.1's persisted ledger and nothing else"*; measured, `check_gate_completeness` is already 23
+> violations OVER its baseline on this branch's base, so a new gate has negative headroom and
+> must import `./_lib/gate_ledger.js` from its first commit to land `ledgered` rather than as
+> violation 238. Proven on the shipped `classifyGateSource` over all four polarities.
+> **What has NOT changed, and was re-executed rather than read:** the kernel deny is live (fifth
+> consecutive reproduction, against the real `Edit` tool), `LedgerState` is still a type with two
+> references and no writer, `check_typed_op_grant.ts` is still unwritten, `personal.autonomy`
+> still reads `auto`, `delivery.*` is still outside `MERGEABLE_KEYS`, and both open blockers
+> stand on human forge actions. The platform anchor's green now carries a **control** — the same
+> gate over an out-of-scope file reports `out_of_scope 1` and does not consult the forge — so for
+> the first time its pass is falsifiable rather than merely repeated.
+
+> **STATE AS OF 2026-10-01 — superseded on the counts by the block above; kept for its reasoning.** 4 done · 14
 > deferred `[~]` · 7 open-and-blocked `[ ]`. `scanOpenSteps` reads `{open: 0, blocked: 7}`.
 > **This file is not agent-executable, and that is a property of its subject rather than a
 > stall.** Every remaining step either edits a kernel rule behind a deny reproduced three times
@@ -649,6 +676,39 @@ item. Phases 1-6 may run once 0.2 is chosen.
       the mechanical replacement Phase 1.1's `enforced_by:` line promises and Risk 1 demands
       exists before the floor narrows — so it should be built FIRST among the unblocked work,
       not last.
+      **Evidence (2026-10-05) — THE SECOND OBSTACLE UNDER THE FIRST, measured by probe rather
+      than reasoned about, and it is a construction requirement rather than a block.** The
+      order above says 3.1's ledger *"and nothing else"*. That is now known to be incomplete:
+      the moment the ledger lands and this gate is written, a second gate has an opinion about
+      it, and a session that discovers it after authoring the gate will be looking at a red CI
+      it did not cause.
+      **What was measured.** `check_gate_completeness` is RED on the base of this branch —
+      `./scripts-run src/scripts/check_gate_completeness` exits **1** with *"237 violation(s)
+      against a baseline of 214 — 23 new"*, reading `89 ledgered · 12 exempt · 237 un-adopted ·
+      338 registered`. That red is pre-existing and nothing in this roadmap caused it; the point
+      is that a new gate arrives onto a ratchet with **negative** headroom, so a 238th un-adopted
+      gate is not absorbed.
+      **The probe, and the thing it taught by NOT moving.** A throwaway
+      `src/scripts/check_zz_probe.ts` was created and `check_gate_completeness` re-run: the
+      counts were **identical** — still `237 un-adopted · 338 registered`. No movement where
+      movement was expected, so the oracle was not installed and the cause was found instead.
+      `grep -n 'registered' src/scripts/check_gate_completeness.ts` points at
+      `registeredGateIds()` at `:105`, which is `local_closure(TASK_ROOTS, load_tasks(...))` over
+      `TASK_ROOTS = ['ci', 'consistency']` at `:57` — **the registry is the Taskfile closure, not
+      a filesystem glob.** A file in `src/scripts/` registers nothing. The probe was removed by
+      exact deletion.
+      **The avoidance path, proven on the shipped classifier rather than assumed.** The exported
+      pure function `classifyGateSource` was called directly over four sources, all four
+      polarities in one run: a bare gate → `unledgered` (i.e. violation 238); one importing
+      `./_lib/gate_ledger.js` → `ledgered`; one carrying `// ledger-exempt:` with a 60-character
+      reason → `exempt`; and one carrying `// ledger-exempt: n/a` → `malformed_exemption`, which
+      is a violation of a different class. The 20-character floor is `MIN_REASON_CHARS` at
+      `grep -n 'MIN_REASON_CHARS' src/scripts/check_gate_completeness.ts` → `:68`.
+      **So the hand-over is one sentence: `check_typed_op_grant.ts` must import
+      `./_lib/gate_ledger.js` and emit its `scanned:` line from the first commit**, and be
+      registered in `src/config/gate-coverage.yml` with CI-identical `argv` and a `min_scanned`
+      floor. Retrofitting the ledger import after the gate is wired means one PR that is red for
+      a reason the diff did create. This costs nothing to know now and a cycle to discover later.
 - [x] **4.4 Dispose of `check_no_automerge_key.ts`.** Delete it deliberately, per its own
       text, or leave it and record why. It matches `delivery.merge` either way, so this is a
       hygiene decision and not a blocker.
@@ -878,7 +938,27 @@ item. Phases 1-6 may run once 0.2 is chosen.
 | K9 | The 24-hour soak as the governance control | replaced by the ratification artifact; a window measures elapsed time, not control quality |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-09-08 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-05 | reviewer: claude/host -->
+
+> **Re-reviewed 2026-10-05 because this run moved an acceptance criterion, and an AC edit
+> stales the register's stamp.** `lint_plan_risk_register` did not refuse the push — it
+> reports this file as `draft-exempt` and scans 17 `ready` roadmaps, verified by running it —
+> so the re-review is owed by the contract rather than extracted by the gate, which is the
+> weaker position to be honest from and therefore worth saying. All five rows re-read against
+> figures executed this run, and **all five stand unchanged**: Risk 1 — 4.3's gate is still
+> unwritten (`ls src/scripts/check_typed_op_grant.ts` fails) and 1.1 is still denied, so the
+> gap it names is still open in the same direction. Risk 2 — confirmed live for the fifth
+> consecutive reading, the deny exercised against the real `Edit` tool rather than inspected.
+> Risk 3 — no grant can outlive an intent yet, because `LedgerState` has no writer. Risk 4 —
+> untouched; no ratification artifact was produced or consumed here. Risk 5 — the
+> `legacy_human_gate` ratchet is confirmed ABSENT from `src/config/gate-violation-baselines.json`,
+> so the miscount it warns about cannot have happened.
+> **One row gains a sharper mitigation from this run rather than a new risk.** Risk 1's
+> mitigation says 4.3 must land before 1.1. The step's own 2026-10-05 evidence now adds the
+> construction detail that makes that landing cheap: the gate must import
+> `./_lib/gate_ledger.js` from its first commit, because `check_gate_completeness` carries
+> negative headroom and would otherwise red the PR that lands the replacement Risk 1 demands.
+> No rank changed and no row was added, so the marker stays at `v1`.
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -1305,6 +1385,39 @@ item. Phases 1-6 may run once 0.2 is chosen.
   procedure — which an agent run can re-measure and cannot advance. That is all this
   re-measurement did.
 
+- **RE-MEASURED 2026-10-05 against `origin/main` `6aa3c36f9` and the live forge. NO LIMB MOVED
+  since 2026-10-01, and this reading adds a control the previous five did not run.** Every
+  figure executed; none copied.
+  - **Limb 1 — still met.**
+    `./scripts-run src/scripts/check_platform_anchor --as-of 2026-10-05 --files src/rules/commit-policy.md`
+    exits **0**: `platform anchor PASS_WITH_ACCEPTED_RISK for event4u-app/agent-config`, over
+    applicable active ruleset `17749383`, with the two approval dimensions printing as
+    *"observed, not required here (see NON_NEGOTIABLE_FLOOR)"* and no finding. The
+    `thread-resolution-missing` regression of 2026-09-14 is still absent.
+  - **CONTROL, and it is the thing four earlier readings asserted without testing: the green is
+    an evaluation, not a vacuous skip.** The same gate against an out-of-scope file —
+    `--files README.md` — prints *"no kernel rule, governance hook, ratification mechanism or
+    platform expectation in the diff — the platform anchor is not consulted"* and
+    `ledger: planned 1 · completed 0 · failed 0 · out_of_scope 1`. The in-scope run reports
+    `completed 1 · out_of_scope 0`. So the gate discriminates, and limb 1's pass is a forge
+    read rather than a scope filter quietly swallowing the question.
+  - **The waiver is live, not lapsed.** `arr-2026-09-10-strict-status-checks` expires
+    **2026-12-09** — 65 days from this reading. A run arriving after that date must re-measure:
+    an expired waiver turns `PASS_WITH_ACCEPTED_RISK` back into a finding.
+  - **Limb 2 — still half-met, still the PAT, and the hit is still a comment.**
+    `grep -c check_platform_anchor taskfiles/ci-fast.yml` returns **2**.
+    `grep -rc check_platform_anchor .github/workflows/*.yml | grep -v ':0'` returns exactly one
+    line, `rule-backstops.yml:1`; reading that hit rather than counting it,
+    `grep -n check_platform_anchor .github/workflows/rule-backstops.yml` returns `:697`, whose
+    text begins *"`check_platform_anchor` is NOT wired here"*. A comment, not a step.
+  - **Item 2 — the unrehearsed recovery path — unchanged and still open.** Nothing in this run
+    rehearses a recovery, and re-measuring the absence of a bypass is not the same as testing
+    the way back from a lockout.
+  **Net: unchanged from 2026-10-01. Both residual items are forge actions a human performs.**
+  The one thing this reading contributes beyond a sixth identical net is the control above —
+  which is worth more than the net, because it is the first time this entry can say the green
+  was falsifiable rather than merely repeated.
+
 ### blocker: kernel-guard-first-crossing
 - **Status:** open
 - **Owner:** maintainer
@@ -1395,11 +1508,31 @@ item. Phases 1-6 may run once 0.2 is chosen.
   written — `grep -c 'this turn'` returns 1 and `git status --short` is empty.
   **One thing this run learned that the previous three did not, and it widens the blocker
   slightly.** The guard also fires on **Bash** calls whose command text carries a kernel-rule
-  path in a write-ish argument shape: a read-only `grep -c … src/rules/non-destructive-by-default.md`
-  was refused by the same concern. That is the guard's documented conservatism
-  (*"literal shell-argument write shapes"*) rather than a defect, but it means a future session
-  verifying 1.1 must expect its own verify command to be denied — which is worth knowing before
-  it reads the denial as a failed edit.
+  path in a write-ish argument shape.
+  **WITHDRAWN 2026-10-05 — the half of that sentence naming a READ was false, and it is
+  corrected here rather than quietly dropped.** It went on: *"a read-only `grep -c …
+  src/rules/non-destructive-by-default.md` was refused by the same concern … a future session
+  verifying 1.1 must expect its own verify command to be denied."* Executed verbatim at
+  `6aa3c36f9`, `grep -c 'this turn' src/rules/non-destructive-by-default.md` **runs and returns
+  1**. It is not refused, and a future session must NOT expect its verify command to be denied —
+  reading the old note would have made a successful verify look like a missing control.
+  **Both polarities were exercised in the same session on the same tree, so the negative is a
+  real negative and not a dead guard.** Write shape: `sed -i '' -e 's/ZZZ_NO_SUCH_STRING_ZZZ/x/'`
+  on the same path → `block-kernel-rule-writes: BLOCKED — kernel rule non-destructive-by-default
+  is immutable`. Read shape: the `grep -c` above → exit 0, output `1`. The guard's own header
+  settles which is intended — `grep -n 'Reads stay allowed' src/scripts/hooks/block_kernel_rule_writes.ts`
+  returns `:164`, *"Reads stay allowed — a kernel rule is immutable, not secret"* — and its Bash
+  branch is enumerated from `grep -n 'deliberately narrow' …` at `:162` as redirection, an
+  in-place `sed`, a `tee`/`truncate`/`rm`, or a `mv`/`cp` DESTINATION.
+  A `grep` is none of those. So the 2026-10-01 denial was real but misattributed: something
+  refused that call and it was not this concern.
+  **Searched for other copies, because one instance is a sample.**
+  `grep -rniI 'read-only .grep\|verify command to be denied' --include="*.md" .` over the tree
+  (excluding `node_modules`) returns **2 lines, both inside this one paragraph**, and the same
+  pattern over the session memory store returns **0**. Control, run in the same breath so the
+  zero is a reading rather than a broken grep: `grep -rlI 'DENY REPRODUCED' --include="*.md" .`
+  returns this file, and the memory-store control returns three files. Population searched,
+  count 1 site, 1 file — this one.
   The alternative limb is unmet as before: no maintainer-authored kernel commit on this branch,
   and an agent cannot author one — the deny's design, not a gap in it.
   **Relationship to the sibling blocker, restated because it moved this week.**
@@ -1409,6 +1542,37 @@ item. Phases 1-6 may run once 0.2 is chosen.
   independent review, and the anchor in its post-ruling shape proves no such thing — a point the
   2026-09-13 reviewing council sharpened from the other side. A green anchor is a precondition
   that is once more satisfied; it is not the one the seats had in mind.
+- **Re-verified 2026-10-05 against `origin/main` `6aa3c36f9`. Both limbs unmet, the deny
+  reproduced for the FIFTH consecutive reading, and this one carries a polarity control the
+  previous four did not.** Executed, not carried forward:
+  `ls -l src/scripts/hooks/block_kernel_rule_writes.ts` **succeeds** where the clause requires
+  it to fail, at **11,345 bytes** — unchanged from 2026-10-01, so the guard file itself did not
+  move in the four days `main` did.
+  `grep -c block-kernel-rule-writes src/scripts/hook_manifest.yaml` returns **5** where the
+  clause requires 0 — the concern definition at **`:231`**, a comment at **`:557`**, and three
+  `pre_tool_use` binding lists at **`:1546`**, **`:1588`** and **`:1635`**. Every one of those
+  has drifted from the `:198`/`:502`/`:1427`/`:1459`/`:1506` of 2026-10-01.
+  `grep -n 'block_kernel_rule_writes' src/scripts/hooks/concern_registry.ts` returns `:54` (the
+  import) and **`:121`** (the registration) — the first reading in five where the registry line
+  did NOT drift. Fifth consecutive reading in which the manifest moves and the binding does not.
+  **The deny was exercised, not inspected.** Step 1.1's own edit — replacing the `this turn`
+  clause with *"Triggers below require an object-bound grant covering the op"* — was put to the
+  `Edit` tool against `src/rules/non-destructive-by-default.md`. The `pre_tool_use` dispatcher
+  refused it: `block-kernel-rule-writes: BLOCKED — kernel rule non-destructive-by-default is
+  immutable — tighten-only via the override exception registry`, remediation naming a human
+  action outside the agent session. Nothing was written: `git status --short` is empty and
+  `grep -c 'this turn' src/rules/non-destructive-by-default.md` still returns **1**.
+  **NEW THIS READING — the guard's reach is narrower than this entry claimed, and the claim is
+  withdrawn above rather than repeated.** A second probe fixed the polarity: an in-place
+  `sed -i '' -e 's/ZZZ_NO_SUCH_STRING_ZZZ/x/'` against the same kernel path is **BLOCKED** by
+  the same concern, while the read-only `grep -c` above **runs**. So the guard is live and
+  write-shaped-only, exactly as its own header says. Both halves matter: the BLOCKED sed is why
+  this blocker's negative is not a dead guard, and the running grep is why a later session must
+  not read its own verify command's success as a missing control.
+  **The 1.1 verify clause reproduces as corrected on 2026-10-01**, measured both ways this run:
+  `grep -c 'never act while asking' …` returns **0** and `grep -ic …` returns **1**. The `-i` is
+  load-bearing and the clause is satisfiable.
+  The alternative limb is unmet as before: no maintainer-authored kernel commit on this branch.
 
 ## Fixtures
 
@@ -1419,12 +1583,59 @@ PR carrying unique work · `G15` an authority-expanding kernel edit, inert until
 
 ## Acceptance Criteria
 
+> **All six executed 2026-10-05 at `6aa3c36f9`, each with a control beside any negative, so a
+> later run inherits readings rather than re-derives them.** 1 met, 5 open.
+> **AC-1 open** — `ls tests/e2e/autonomy/` fails; control, `ls tests/e2e/` lists five specs, so
+> the directory is genuinely absent rather than the listing broken.
+> **AC-2 open — and the first draft of this line was WRONG, corrected before it shipped.** It
+> read *"no corpus report exists"*; `find agents/evidence -iname '*ask*census*'` returns **two**,
+> `ask-block-census-baseline.md` and `ask-block-census-after-phase-4.md`. The reports exist and
+> the criterion is still open for a different reason, which is the one a later run needs:
+> `head -25` on the later report shows its **Roots** are `src/domains`, `src/skills`,
+> `src/agent-src/contexts` — the artefact tree, pinned at `b7222ea86` (2026-09-07) — and **not**
+> the 30-session corpus AC-2 names. Its totals are 183 `single` and 74 `batch` ask regions over
+> 623 files, so the criterion's *"no ask remains for a push, a commit, a CI fix or a conflict"*
+> is not in evidence either. What AC-2 wants is a census over SESSIONS; what exists is a census
+> over SOURCES, and they are different instruments wearing one script's name.
+> **AC-3 MET** — see below.
+> **AC-4 open** — `grep -n 'legacy_human_gate' src/config/gate-violation-baselines.json` returns
+> nothing; control, the file's first entries read back fine, so the ratchet is unregistered
+> rather than the grep misdirected.
+> **AC-5 open** — `grep -n 'autonomy:' src/config/agent-settings.template.yml` reads
+> `autonomy: auto`, not `on`.
+> **AC-6 open** — `ls src/scripts/check_typed_op_grant.ts` fails; control, the same `ls` against
+> `check_platform_anchor.ts` returns a 15,577-byte file.
+
 - [ ] AC-1 — `G1`-`G15` exist under `tests/e2e/autonomy/` and are green.
 - [ ] AC-2 — `ask_block_census` over the 30-session corpus reports that every remaining owner
       ask is either a typed op or owner-owned residue; no ask remains for a push, a commit, a
       CI fix or a conflict.
-- [ ] AC-3 — ADR-239's `merge-authority` blocker reads `resolved` and points at ADR-268 § 3;
+- [x] AC-3 — ADR-239's `merge-authority` blocker reads `resolved` and points at ADR-268 § 3;
       ADR-255 § 4 carries a scoped `superseded_by`.
+      **MET 2026-10-05 at `6aa3c36f9`, and discharged against the STRICTER of the two readings
+      this sentence admits.** Two limbs were already true and were executed rather than read:
+      `grep -n -A3 '^### blocker: merge-authority' agents/roadmaps/archive/road-to-drain-commands.md`
+      reads `- **Status:** resolved` at `:410`, and `grep -n superseded_by docs/decisions/ADR-255*.md`
+      reads `superseded_by: 260 (§§ 1 · 2 · 3 · 5 only), 268 (§ 4 only)` at `:7` — scoped, which
+      is what the second limb asks for.
+      **The third limb was ambiguous and the ambiguity is recorded rather than resolved in the
+      convenient direction.** *"…reads `resolved` and points at ADR-268 § 3"* parses two ways:
+      the pointer is ADR-239's (met — `grep -n '268' docs/decisions/ADR-239-*.md` returns exactly
+      one line, the frontmatter `superseded_by: 268 (§ 3 only)` at `:7`), or the pointer is the
+      BLOCKER's (not met — its resolution text is dated 2026-08-22 and predates ADR-268 by
+      seventeen days). Amending the AC to the reading that was already green would be selecting
+      the verdict, so the weaker limb was DISCHARGED instead: the archived blocker now carries a
+      one-line supersession pointer at `agents/roadmaps/archive/road-to-drain-commands.md:463`,
+      written as a note beside the 2026-08-22 disposition rather than as an edit to it. Both
+      readings now hold.
+      **What the pointer deliberately does NOT claim, because the second obstacle is real.** The
+      blocker's reopening condition is *owner approval PLUS an accepted design whose authorization
+      is target-bound, head-SHA-bound, tamper-resistant, agent-unwritable*. ADR-268 § 3 discharges
+      the approval half only. The design half is Phase 3.1 and was re-measured this run:
+      `grep -rn LedgerState src --include "*.ts"` returns **2** hits, both in
+      `src/scripts/_lib/mission_record.ts` (`:87`, `:128`) — a type with no writer, no reader and
+      no file. So AC-3 is met and AC-6 is not, which is the correct split: this criterion is about
+      the RECORDS pointing at each other, not about the mechanism existing.
 - [ ] AC-4 — the `legacy_human_gate` ratchet is registered and its count at HEAD is below the
       count measured at this pin.
 - [ ] AC-5 — `personal.autonomy` ships `on` and no autonomy-detection context remains in the
