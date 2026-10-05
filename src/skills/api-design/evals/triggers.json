@@ -1,0 +1,63 @@
+{
+    "skill": "api-design",
+    "last_eval": "2026-10-04",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-04 under road-to-corpus-refresh-cadence-shape 1.2b, which touched this skill's grounding corpus and so brought it into check_routing_coverage's touched-skill scope. `last_eval` carries the authoring date, not a live eval result — the convention this tree already follows (see 1.2a's note on the same field); no live trigger eval ran for this file. Exemplars cover the design request in its explicit and implicit forms, including the 'expose this as an endpoint' phrasing this skill's own description names, and the German equivalent. Near-misses are three neighbours that share API vocabulary and are still somebody else's job: implementing an already-designed endpoint and writing endpoint tests, both named in this skill's SKILL.md 'Do NOT use when' block, plus emitting the OpenAPI document, which it does not name and which is included because it runs over the same endpoint list immediately afterwards. Counterexamples guard the 'API' homonym (consuming a third-party interface, not designing ours) and routine work that names an endpoint without asking anything about its contract.",
+    "queries": [
+        {
+            "q": "design the endpoints for a new subscriptions resource — paths, payloads, error shape",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "we need to expose this as an endpoint, can you work out the shape?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "is adding this field a breaking change, or can it ride the current API version?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "how should this list endpoint paginate, and what do we return when a filter matches nothing?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "wir brauchen eine neue REST-Schnittstelle für Rechnungen — entwirf die Endpunkte und die Fehlerstruktur",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "the route shape is already agreed — write the controller and wire it up",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "same endpoint, one step later: the design decisions are made and the ask is the implementation → api-endpoint, which this skill's SKILL.md names in its 'Do NOT use when' block"
+        },
+        {
+            "q": "add integration tests for the orders endpoint covering the 422 and 404 responses",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "names endpoints, status codes and response shapes — the same vocabulary — but asks for coverage of a design that already exists → api-testing, also named in this skill's SKILL.md"
+        },
+        {
+            "q": "generate the OpenAPI spec for the endpoints we already have",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "documents an existing endpoint set rather than deciding its shape → openapi. Not named in this skill's SKILL.md, unlike the two above; included because it runs over the same endpoint list immediately after design"
+        },
+        {
+            "q": "the payment provider's API keeps returning 429 — add retries and backoff to our client",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'API' homonym — consuming somebody else's interface, not designing ours. Guards triggering on the word rather than the subject"
+        },
+        {
+            "q": "our /reports endpoint is slow under load — profile it and find the bottleneck",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "names an endpoint but asks nothing about its contract; this is a performance investigation, not a design question"
+        }
+    ]
+}
