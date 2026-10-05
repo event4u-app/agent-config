@@ -460,6 +460,19 @@ Council Q2: a flag on the existing sub, not a new `process-all` command.
   **The policy question is undecided, not rejected** — reopening requires owner
   approval plus an accepted design whose authorization is target-bound,
   head-SHA-bound, tamper-resistant, agent-unwritable, and kill-switch-subject.
+- **Superseded in part, 2026-10-05 — a one-line pointer rather than an edit, so
+  the 2026-08-22 disposition above stands as written.** The owner-approval half
+  of the reopening condition is discharged: `docs/decisions/ADR-268-mission-scoped-authority-persistence-and-ratified-self-amendment.md`
+  § 3 decides merge authority, was owner-directed to `accepted` on 2026-09-08,
+  and ADR-239's own frontmatter now reads `superseded_by: 268 (§ 3 only)`.
+  **The design half is NOT discharged, and that is the live residual.** The
+  clause above requires an authorization that is *agent-unwritable*; measured
+  2026-10-05 at `6aa3c36f9`, `grep -rn LedgerState src --include "*.ts"` returns
+  exactly two hits — the `export interface LedgerState` at
+  `src/scripts/_lib/mission_record.ts:87` and a parameter at `:128` — so the
+  grant store is a type with no writer, no reader and no file. Until it exists
+  with an owner-bound write path, the reopening condition is half-met and
+  `--merge` stays cancelled here.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-21 | reviewer: claude/host -->
