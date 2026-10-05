@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-c reproduced, at HEAD, that the prompt-submit rule carrier delivers nothing outside this repository (router and bodies resolve from the session cwd), and that where it does fire a third of the composed strings exceed the host's 10,000-char cap. Every consumer runs it in someone else's project, so it is the precondition for thinning the installed layer the host warns about; no active roadmap owns the carrier, and parking one to buy the slot would leave the 338,225-char installed layer with no route down."
-estate_growth_exempt: "open_blockers 60 -> 61: this change records hook-bundle-ceiling-exhausted, and the blocker is a discovery rather than a deferral. The composed hook bundle measured 1,549,697 B against a 1,550,000 B ceiling on main, and step 1.4 of this file - two lines reusing the parser the thin projector already calls - was written, built and measured at +396 B, 357 B over. The lane paid 2,822 -> 1,628 B on its own resolution, tree-shook 2,122 B of superseded readers, and gave back a further 148 B after merging main, which is every byte it had; the remaining five steps need runtime code and there is none to spend. Raising the ceiling is an owner call on a shrink-only ratchet, so the finding cannot be closed from here and recording it is the honest alternative to shipping five steps as silently unstarted. It is also not a private cost: main went from 303 to 170 bytes of headroom in one day when #2179 landed, so the next lane to touch any concern meets the same wall and this row is where it will look."
+estate_growth_exempt: "open_blockers 63 -> 64: this change registers instructions-loaded-binding-is-owner-owned, and the entry is a repair rather than a deferral. Step 0.2 already carried BLOCKED prose naming a recorded council refusal (standing-context-40k-disposition.md:94-96, Rule 3 categorical), but it carried no registered entry and no inline marker - and run-continuation, the stop-slot concern that re-engages an autonomous run, decides open-vs-blocked from the inline annotation alone and never parses ## Blockers. So an impossible step read as runnable work to the one mechanism that acts on it, and every stop fire re-engaged an agent into a step whose exit condition needs a later session no repository automation can supply. The honest alternatives were both worse: flip 0.2 to [~] and reach count_open == 0 (the laundering the [~] prohibition in roadmap-process-loop.md exists to stop), or leave the prose unreadable by the carrier. The entry closes no box, changes no behaviour, and the superseded hook-bundle-ceiling claim it replaces was spent on a blocker that is now resolved."
 relates:
   - slug: road-to-instructions-loaded-observer
     relation: extends
@@ -149,7 +149,7 @@ Reproduced on 2026-10-01:
       reason for the same choice. And `.mdc` files read as zero, which is the
       blind spot every other census here has; fixing it in one reader would
       produce two counts that disagree.
-- [ ] **0.2 Bind the host's instruction-load event as an observer.** Step 3.0 of
+- [ ] <!-- blocked-by: instructions-loaded-binding-is-owner-owned | asked: no — a `process-full` drain lane is a non-interactive context with no owner channel; the question is put verbatim in the blocker entry and stays open --> **0.2 Bind the host's instruction-load event as an observer.** Step 3.0 of
       `stubs/road-to-instructions-loaded-observer.md`, non-blocking, recording
       path, scope and load reason only — never file content. Its first session
       record answers: does a user-layer rule with `paths:` load on a path match;
@@ -944,6 +944,111 @@ local build would make those 13 columns a statement about older code.
 
 ## Blockers
 
+### blocker: instructions-loaded-binding-is-owner-owned
+
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3
+- **Ownership:** product-owned
+- **Blocks:** step 0.2, and nothing else. AC-4 is explicitly unaffected and says
+  so in its own text: it names the installed-layer report and the arrival
+  record, not this observer. Phase 1 is closed and merged; this entry is the
+  reason the file's `count_open` stays at 1 rather than being laundered to 0.
+- **Why it exists at all, when the step already carried its own prose.** The
+  step's 2026-10-05 note said BLOCKED and named the refusal, but carried no
+  registered entry and no inline marker. Two mechanisms read blockedness from
+  two different places and only one of them parses `## Blockers`:
+  `run-continuation`, the stop-slot concern that re-engages an autonomous run,
+  decides open-vs-blocked from the inline
+  `<!-- blocked-by: ... -->` annotation alone
+  (`roadmap-process-loop.md` § 3c). Without the marker an impossible step counts
+  as open work to that concern, which re-engages an agent into it on every stop
+  fire until the stall rung fires — the mechanism whose job is to detect a stall
+  manufacturing one. The prose was true and unreadable by the thing that acts on
+  it. This entry and the marker on 0.2's own line are that repair, and they
+  change no behaviour and close no box.
+- **What to do:** put one question, and it is the owner's. *May a Phase-0 instrument
+  change what the installer writes into a consumer's `.claude/settings.json`?*
+
+  Registering `InstructionsLoaded` is not a local edit. `build_claude_hook_matrix`
+  (`src/scripts/_lib/claude_settings_hooks.ts:92`) iterates
+  `native_event_aliases.claude` and emits a row wherever
+  `platforms.claude[<event>]` carries concerns, and `claude_settings_hooks.ts`
+  writes that matrix into the consumer's settings file — so the binding is a
+  shipped-default change by construction, not by interpretation. A probe adding
+  both manifest halves to a copy of the manifest moved the matrix from 10 native
+  events to 11, the added key being `InstructionsLoaded`; the probe was removed
+  with `rm`. `standing-context-40k-disposition.md:94-96` refuses disposition D on
+  exactly that ground and calls Rule 3 categorical (`:46`).
+
+  Yes → the exact edits are written out at step 0.2 so nobody has to re-derive
+  them, anchored by `grep -n` rather than by line number; then re-size against
+  the 57-file `hook_manifest` test surface (the stub's "~24-file" estimate is
+  stale, re-counted this run); then a later live session to fill the record; and
+  the kill switch the council made non-optional
+  (`standing-context-40k-disposition.md:98-100`) ships with it.
+
+  No → 0.2 stays open and this entry records why. The work itself is not lost:
+  it is held in full by `stubs/road-to-instructions-loaded-observer.md`, whose
+  step 3.0 this step takes as a precondition, and that stub now carries the
+  findings this lane added.
+- **What is NOT the reason, stated because the adjacent reading is tempting and
+  was wrong once already.** The hook-bundle ceiling below is not what stops
+  this. Measured this run with the gate's own command,
+  `check_hook_bundle_composition` reads **1,512,901 B / 1,550,000** at
+  `origin/main` @ `5550dec9c` — **37,099 B** of headroom. A concern for this slot
+  fits many times over. Quoting the ceiling here would be citing a lock that
+  does not apply.
+- **The second half, which an owner answering only the settings question would
+  meet next.** The step's exit condition is *"Its first session record
+  answers …"*. Binding takes effect at session start, so a session cannot
+  observe its own registration — the stub states this as its own reason for not
+  splitting 3.0. A `vitest` file can hold the recorder's shape; it cannot hold a
+  fire, which is why 0.2's `verify:` can go green on a build that has never
+  received the event. So a yes unblocks the edits and still leaves the record
+  waiting on a later session. Both halves are external to any single run, which
+  is why this is a blocker rather than a decision the lane could have closed.
+- **Recommendation:** answer **no for this roadmap's Phase 0**, and schedule the
+  binding where it belongs instead — as the stub's own step 3.0, travelling with
+  the fork 3.1 that reads its datum. Three reasons, in order of weight.
+
+  First, the phase header. Phase 0 is titled *"Instruments, no behaviour
+  change"*, and this is the one step in it that changes what every consumer's
+  `.claude/settings.json` receives. The other four — 0.1, 0.3, 0.4, 0.5 — are
+  reports and records that gate nothing, and all four closed. A step that
+  contradicts its own phase header is misfiled, not merely blocked, and a yes
+  here would land a shipped-default change under a heading promising none.
+
+  Second, a yes buys nothing observable on its own. The exit condition needs a
+  later session, so the immediate return on landing the edits is zero records;
+  the value arrives only when someone runs a session and reads the recorder
+  back. Nothing about this file's remaining work depends on that, and
+  `road-to-an-installed-layer-that-is-thinned` gates on Phase 1 having merged,
+  which it has.
+
+  Third, the costs it would carry are sized but unpaid: a 57-file
+  `hook_manifest` test surface (the stub's "~24-file" estimate re-counted this
+  run), plus the non-optional kill switch. That is a scheduling decision with a
+  budget, which is the stub's shape rather than a Phase-0 instrument's.
+
+  What this recommendation does NOT claim: it does not re-decide the council's
+  refusal and it does not say the observer is not worth building. The stub's own
+  record is that the capability was measured to exist on the host and that the
+  work became buildable; the argument here is about WHERE and WHEN, which is the
+  half an owner can act on without reopening a lock.
+- **If you do nothing:** the carrier keeps working outside the repo — Phase 1 is
+  merged — and the loading end stays unobserved. The cost is bounded and
+  already written down: Risk 3 in the register is UNMITIGATED for this reason,
+  and its exposure is that the installed-layer report's inference about which
+  files a host counts is checkable against a host but not against this suite.
+  The report gates nothing, so a wrong count misinforms rather than breaking
+  anything. AC-4 is unaffected.
+- **Resolved when:** the owner answers the single question above, recorded here
+  with the date; a yes additionally needs the manifest and vocabulary edits
+  landed, `npx vitest run tests/scripts/instructions_loaded_observer.test.ts`
+  green, and one later session's record filled — the last of which no
+  repository automation can supply.
+
 ### blocker: hook-bundle-ceiling-exhausted
 
 - **Status:** resolved
@@ -1089,9 +1194,12 @@ local build would make those 13 columns a statement about older code.
 | D6 | reversible-technical | agent | No host rule layer anywhere → no scope filter, which is a different answer from an empty layer | Scoping to the empty set in a tree that declares no layer re-creates the silence 1.1 repaired; an empty layer IS a declaration and scopes to nothing | A host is found that writes a rules directory only sometimes, making absence ambiguous |
 | D7 | reversible-technical | agent | Register the composed budget in characters in its own `per_concern_caps_chars` section, leaving the bytes row at 16,384 | Converting needs a bytes-per-character ratio that drifts with the corpus; measured mean 1.0088 and per-file max 1.0346, so 8,000 chars is at most 8,277 B and the two cannot breach each other | The corpus starts producing text dense enough to close that gap — a fixture re-measures the maximum and reds first |
 | D8 | reversible-technical | agent | A fire where every match is unsendable emits a manifest, where it previously emitted nothing | AC-2's "no match absent from a delivery" taken literally; it is what makes a broken install visible from the model's side | The per-turn cost of a persistent broken install is measured and judged worse than the silence |
+| D9 | reversible-technical | agent | The file stays ACTIVE rather than being parked in `later/`, although its only open step is gated on an owner decision | Parking looks right by the later-disposition test and is wrong here for one reason: `lint_roadmap_blockers` scopes to the active tree plus `stubs/`, and `/roadmap:resolve-blockers` states that `later/`, `archive/` and `skipped/` are out of scope because "their blockers are history". Moving the file would reclassify a live, undecided owner question as history and remove it from both gates that read it — undoing the repair this change makes | The owner answers `instructions-loaded-binding-is-owner-owned`, or the blocker gates widen to `later/` |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-05 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
+
+Re-reviewed 2026-10-06 by the drain lane that registered step 0.2's blocker. **No row changes substance and none is discharged** — the change registers blockedness and moves no delivery behaviour, so a review that moved a row would be describing work this change did not do. Row 3 gains the blocker id, which is traceability rather than mitigation: it stays UNMITIGATED and its exposure is unchanged. Row 5's 728-against-2,000 question is re-read and still unsettled, and this change adds no concern to `user_prompt_submit`, which is the act row 5 names as the thing to settle first. Rows 1, 2 and 4 are untouched.
 
 Re-reviewed 2026-10-05 after Phase 0 closed 0.1 and 0.3, against measured
 numbers rather than against the plan. Row 3 moves for the first time: its
@@ -1112,7 +1220,7 @@ says which fixture holds each one; rows 4 and 5 were new then.
 |------|------|-----------|-------------|------------|----------------|
 | 1 | The carrier starts delivering into every consumer session | product | 1.1 turns a silent concern into a live one; a wrong trigger now costs real context in someone else's project. | DISCHARGED 2026-10-03. 1.3 scopes delivery to the host's own rule layers and 1.5 caps the string at 8,000 characters; both are held by fixtures that drive the BUILT bundle through the dispatcher. The installed layer is still eager, so a wrong delivery duplicates rather than loses. | Phase 1 — A carrier that works where consumers are |
 | 2 | One mode resolver changes the projector's answer | implementation | Making the hook agree with the projector could also move the projector. | DISCHARGED 2026-10-02 by measurement, not argument: `task sync` + `task generate-tools` produced zero changes to the tracked projection, and `check_rule_projection_integrity` reports 39 entries complete across three host trees. | Phase 1 — A carrier that works where consumers are |
-| 3 | The installed-layer report reads a host rule the host does not count | implementation | Which files the host sums is inferred, not documented. | UNMITIGATED 2026-10-05, and the mitigation is not coming soon: it named 0.2's first record, and 0.2 is blocked on a recorded Rule-3 refusal. What the report does instead is state its own inference — `.md` only, `paths:` as the unconditional test, both scopes unioned — so a reader can check the assumption against a host rather than against a number. The exposure is bounded by the report being report-only: a wrong count misinforms, it gates nothing. | Phase 0 — Instruments, no behaviour change |
+| 3 | The installed-layer report reads a host rule the host does not count | implementation | Which files the host sums is inferred, not documented. | UNMITIGATED 2026-10-05, and the mitigation is not coming soon: it named 0.2's first record, and 0.2 is blocked on a recorded Rule-3 refusal — registered 2026-10-06 as `instructions-loaded-binding-is-owner-owned`, so the dependency is readable by the blocker gates rather than only by a reader of this cell. What the report does instead is state its own inference — `.md` only, `paths:` as the unconditional test, both scopes unioned — so a reader can check the assumption against a host rather than against a number. The exposure is bounded by the report being report-only: a wrong count misinforms, it gates nothing. | Phase 0 — Instruments, no behaviour change |
 | 4 | A broken install reports once per turn, forever | product | 1.5 emits a manifest whenever a match cannot be sent, and a match labelled `source_unavailable` is not added to the seen-set, so a consumer whose corpus is missing a routed rule gets one manifest line per matching turn for as long as it stays missing. | The line is short and it is the signal that makes the breakage visible from the model's side, which is the half that was silent before. Bounding it to once per session needs a state write; measure the real per-turn cost before adding one, because a bound that hides a broken install is worse than the line. | Phase 1 — A carrier that works where consumers are |
 | 5 | The host measures a larger string than this budget bounds | implementation | 8,000 characters bounds the RULE-PRODUCED string. If the host's 10,000-character threshold applies to the assembled `additionalContext`, the margin is 728 rather than 2,000, and a future concern added to this slot consumes it. | Both readings are stated at the constant and in the registered row, with 728 named as the one to plan against. Raised by the openai seat of the 2026-10-03 ratification council; which reading is right is not established and is the thing to settle before any concern is added to `user_prompt_submit`. 2026-10-05: 0.3's arrival record now carries `chars` per fire in the host's own unit, so the rule-produced half is a reading rather than an argument — and the record says in its own header that it measures that half and does not settle which string the host counts. | Phase 1 — A carrier that works where consumers are |
 
