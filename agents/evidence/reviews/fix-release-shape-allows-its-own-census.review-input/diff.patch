@@ -1,8 +1,8 @@
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..3363553d3a1772758fa209a2a8da8eb6b44e5632 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..ea0da0f63373f76cc70932c9e96fb99ef077208d 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
-@@ -35,10 +35,15 @@ keep-beta-reason: >-
+@@ -35,10 +35,21 @@ keep-beta-reason: >-
  > older one is matrix-level. Current per-job numbers live in
  > [`ci-cost-budget.md`](ci-cost-budget.md); the skip argument below is
  > unaffected either way. Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
@@ -17,12 +17,18 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..3363553d3a1772758fa209a2a8da8eb6
 +> summary and the enumeration below is the list; it is NOT restated here, because a
 +> second prose copy went stale for months and named paths the code had already
 +> renamed. The file-set claim was verified against PR #238 (3.3.0) and the
-+> allowlist has grown since, so what carries the argument now is the enumeration,
-+> not that observation: none of its entries is install or runtime code.
++> allowlist has grown since, so what carries the argument is what the release
++> flow WRITES into those paths: version fields, changelog prose, generated
++> manifests and two report artifacts. Stated precisely, because the categorical
++> version — "no entry is install or runtime code" — is false of its own first two
++> entries, and `check_release_pr_shape` matches paths and never reads content:
++> nothing here stops a release PR from editing `bin`, `files`, `dependencies` or
++> `engines` in `package.json` with the install matrix skipped. That residual gap
++> is held by review, not by a gate.
  
  ## Release-PR shape
  
-@@ -53,12 +58,32 @@ hold:
+@@ -53,12 +64,32 @@ hold:
       `release.ts` § `set_lockfile_version`
     - `CHANGELOG.md`
     - `.claude-plugin/marketplace.json`
@@ -58,10 +64,10 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..3363553d3a1772758fa209a2a8da8eb6
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
 diff --git a/src/scripts/check_release_pr_shape.ts b/src/scripts/check_release_pr_shape.ts
-index ef101165f052ad6ca03020e4deb7189b01917e36..6748d527e746aa4465a809312a24672c8e596b58 100644
+index ef101165f052ad6ca03020e4deb7189b01917e36..5febca2e38d306ee155b42c4d5c3a5637f5ebe9d 100644
 --- a/src/scripts/check_release_pr_shape.ts
 +++ b/src/scripts/check_release_pr_shape.ts
-@@ -45,6 +45,14 @@ const ALLOWLIST_GLOBS = [
+@@ -45,6 +45,16 @@ const ALLOWLIST_GLOBS = [
      // be able to carry the dispositions of its own self-review findings; the
      // finding-dispositions gate is red until blocking ones are recorded here.
      'agents/evidence/release-findings/*.json',
@@ -71,12 +77,14 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..6748d527e746aa4465a809312a24672c
 +    // matches any character: `????-??-??` would still require ten characters
 +    // with separators at offsets 4 and 7, so it admits not every sibling but
 +    // any whose name happens to carry that shape. Narrower than it reads, and
-+    // still wider than a date. A second report here is a decision.
++    // still wider than a date. Two reports in one release PR is not a defect:
++    // `--resume` re-runs release-prepare, so a release carried across UTC
++    // midnight writes a second census under the next day's name.
 +    'agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md', // code-comment-allow provenance-comment -- the glob IS this gate's operand, not where the code came from
      // Project-settings template pin — bumped by release.ts set_template_pin and
      // its regenerated dist twin (kept in lockstep with package.json.version).
      'src/agent-src/templates/agents/agent-project-settings.example.yml',
-@@ -87,12 +95,12 @@ function _fnmatchToRegExp(pat: string): RegExp {
+@@ -87,12 +97,12 @@ function _fnmatchToRegExp(pat: string): RegExp {
                  res += '\\[';
              } else {
                  let stuff = pat.slice(i, j);
@@ -96,20 +104,29 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..6748d527e746aa4465a809312a24672c
                  if (stuff.startsWith('!')) {
                      stuff = '^' + stuff.slice(1);
 diff --git a/src/scripts/report_evidence_temperature.ts b/src/scripts/report_evidence_temperature.ts
-index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..b3f8b541b796bd49db86350f54dfe1cf08db4bb8 100644
+index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..813abf635cefd6205bd944df079279e92027f5e5 100644
 --- a/src/scripts/report_evidence_temperature.ts
 +++ b/src/scripts/report_evidence_temperature.ts
-@@ -67,6 +67,18 @@ export const REPORT_DIR = 'agents/evidence/analysis';
+@@ -67,6 +67,27 @@ export const REPORT_DIR = 'agents/evidence/analysis';
  /** Reports of this family are excluded from the reference index — see `isSelfReport`. */
  const REPORT_PREFIX = 'evidence-temperature-';
  
 +/**
-+ * The path `--write` composes for a census taken on `generatedAt` (an ISO
-+ * `YYYY-MM-DD` day, as `buildCensus` stamps it). The one place the name is
-+ * spelled; `main` and the release-PR shape gate's test both go through it, so a
-+ * change to the directory, the prefix, the date shape or the extension moves
-+ * both sides at once. Writer and gate holding two independent spellings of this
-+ * name is what broke `task release` for 16.3.0.
++ * The day a census is stamped with. UTC, so a run either side of local midnight
++ * names the same report.
++ */
++export function censusDateStamp(now: Date = new Date()): string {
++    return now.toISOString().slice(0, 10);
++}
++
++/**
++ * The path `--write` composes for a census taken on `generatedAt`. The one place
++ * the name is spelled; `main` and the release-PR shape gate's test both go
++ * through it, and through `censusDateStamp` for the day, so a change to the
++ * directory, the prefix, the date shape or the extension moves both sides at
++ * once. Writer and gate holding independent spellings of this name is what broke
++ * `task release` for 16.3.0 — and splitting the day out is what makes that
++ * sentence true of the whole filename rather than of three of its four parts.
 + */
 +export function defaultReportPath(generatedAt: string): string {
 +    return path.posix.join(REPORT_DIR, `${REPORT_PREFIX}${generatedAt}.md`);
@@ -118,7 +135,16 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..b3f8b541b796bd49db86350f54dfe1cf
  /** File extensions a path token may end in. Anything else is not a path to us. */
  const PATH_EXTENSIONS = [
      'md',
-@@ -583,7 +595,7 @@ export function main(argv: readonly string[]): number {
+@@ -350,7 +371,7 @@ export function buildCensus(root: string): Census {
+     } catch {
+         commit = 'unknown';
+     }
+-    return { generatedAt: new Date().toISOString().slice(0, 10), commit, files };
++    return { generatedAt: censusDateStamp(), commit, files };
+ }
+ 
+ export interface Totals {
+@@ -583,7 +604,7 @@ export function main(argv: readonly string[]): number {
          return 0;
      }
  
@@ -128,18 +154,18 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..b3f8b541b796bd49db86350f54dfe1cf
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..8c50277951bec6de6e2ad323f9ebc125c4f66477 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..41e8319f5473a3de2e7e23a7691dc370f2253b04 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -2,6 +2,7 @@
  import { describe, expect, it } from 'vitest';
  
  import * as shape from '../../src/scripts/check_release_pr_shape.js';
-+import { defaultReportPath } from '../../src/scripts/report_evidence_temperature.js';
++import { censusDateStamp, defaultReportPath } from '../../src/scripts/report_evidence_temperature.js';
  
  function runCheck(files: readonly string[]): { code: number; out: string } {
      const out: string[] = [];
-@@ -113,6 +114,47 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -113,6 +114,57 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(shape._matches('src/packs/core/README.md')).toBe(true);
          expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
      });
@@ -173,16 +199,26 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..8c50277951bec6de6e2ad323f9ebc125
 +    });
 +
 +    it('the allowlist admits the path the census writer actually produces', () => {
-+        // The producer/consumer link, and it goes through the writer's own path
-+        // builder rather than re-spelling any part of the name. Every other
-+        // assertion in this file writes the path out a second time, so a change
-+        // on the writing side would keep them all green and red only during a
-+        // live `task release` — which is exactly how 16.3.0 broke. Re-deriving
-+        // only the directory and prefix here would leave the date shape and the
-+        // extension un-pinned, which is two thirds of a coupling.
-+        const today = new Date().toISOString().slice(0, 10);
-+        expect(shape._matches(defaultReportPath(today))).toBe(true);
++        // The producer/consumer link. Both halves of the filename come from the
++        // writer: `defaultReportPath` for directory, prefix and extension, and
++        // `censusDateStamp` for the day — the same call `buildCensus` makes. No
++        // part of the name is spelled a second time here, which is the point:
++        // every other assertion in this file does spell it out, so a change on
++        // the writing side would keep them green and red only during a live
++        // `task release`, which is exactly how 16.3.0 broke. Two earlier passes
++        // claimed this coupling was complete while the day was still re-derived
++        // locally; a pinned date below guards the shape itself.
++        expect(shape._matches(defaultReportPath(censusDateStamp()))).toBe(true);
 +        expect(shape._matches(defaultReportPath('2026-10-01'))).toBe(true);
++    });
++
++    it('the census date stamp has the shape the allowlist glob was cut for', () => {
++        // The date is the one part `defaultReportPath` takes as a parameter, so
++        // the link above cannot pin it on its own. A stamping change — a time
++        // component, `YYYYMMDD`, a local-time date — reds here instead of
++        // during a release.
++        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5, 23, 30)))).toBe('2026-10-05');
++        expect(shape._matches(defaultReportPath(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))))).toBe(true);
 +    });
  });
  
