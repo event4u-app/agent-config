@@ -165,12 +165,14 @@ install/test jobs. The guard is on the BRANCH, not on paths — so the column
 below is the argument for why that is safe, not a condition the workflow
 evaluates. The argument rests on the allowlist in § Release-PR shape: it admits
 no install script and no test source. It DOES admit five manifests — the two npm
-ones and three plugin/marketplace files — and the npm pair is consumed by every
-one of these jobs: `npm ci` reads the lockfile, every step is an `npm run`, the
-smoke matrix runs the tarball's `bin`. Where a job's coverage of those depends on
-a release-path twin, its row below names the twin; the rows that argue purely
-from code absence are the ones where no step reads a manifest at all. It is NOT
-the
+ones and three plugin/marketplace files — and every job here consumes the npm
+pair, if only because each runs `npm ci` against the lockfile.
+
+So no row can argue that nothing reads a manifest. What the rows argue instead is
+that nothing here VALIDATES one: a job that merely installs from the lockfile
+proves nothing about it either way, and the two jobs with steps that do inspect
+manifest content (`static-checks`, `smoke`) name the release-path twin that
+inspects it instead. It is NOT the
 stronger claim the opening blockquote withdraws — `package.json` is admitted and
 carries `bin`, `files`, `dependencies` and `engines`, whose content no gate
 reads. That residue is the blockquote's, not this section's, and the `smoke` row
@@ -193,7 +195,7 @@ parses decays.
 |---|---|---|
 | `tests.yml` | `install-tests` | the allowlist has no `src/scripts/install.sh`, `src/scripts/install.ts` or `tests/test_install.sh` |
 | `tests.yml` | `install-aux-tests` | same — orchestrator, key contracts, one-liner smoke all untouched |
-| `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
+| `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template. **Residue**: `tests/scripts/lint_pack_boundaries.test.ts` validates the admitted `src/packs/*/pack.yaml` against the live tree, and no kept-surface workflow runs a pack lint — so a hand-edited pack manifest on a release branch is unchecked. `release.ts` writes no pack manifest, so the flow cannot produce this; a human can |
 | `tests.yml` | `static-checks` | its source-reading steps have no admitted input: the allowlist carries no TypeScript and no test file. It does admit one generated file — the `dist/` template twin — whose freshness `consistency.yml` gates on the kept surface. Several steps here read generated trees (`prepack-check` reads `dist/cli`, `dist/hooks`, `dist/router.json`; the MCP-drift step rebuilds and diffs the committed catalog); none of them reads that twin. Its MANIFEST-reading steps each have a release-path twin: `npm audit` → `release-validation.yml` § `audit-gate`, `prepack-check` → `consumer-matrix.yml`, `publint` → `evaluator-umbrella.yml` (no head-ref guard, `paths:` leads with `package.json`, so it runs on every release PR by construction). This cell is prose over a step list nothing parses — read the job if the list matters |
 | `tests.yml` | `golden-tests` | golden corpora live under `tests/` and `internal/`, neither admitted |
 | `tests.yml` | `collector-lifecycle` | exercises collector scripts under `src/scripts/`, none admitted |

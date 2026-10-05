@@ -69,12 +69,13 @@ const ALLOWLIST_GLOBS = [
  *
  * Matching is case-sensitive, as `fnmatchcase` on a normalized path.
  *
- * THE PROPERTY EVERY ENTRY TURNS ON: in fnmatch, `*` and `?` DO cross path
- * separators — `*` becomes `.*` and `?` becomes `.`, both under the `s` flag,
- * so each matches `/` like any other character. Glob syntax elsewhere (shells,
- * .gitignore) stops `*` at a segment boundary; this does not. So the pack entry
- * admits any depth beneath `src/packs/`, and the census entry uses digit classes
- * precisely because they cannot match a separator. Both sides are pinned in
+ * THE PROPERTY THE WILDCARD ENTRIES TURN ON — the literal paths are unaffected:
+ * in fnmatch, `*` and `?` DO cross path separators.
+ * `*` becomes `.*` and `?` becomes `.`, both under the `s` flag, so each matches
+ * `/` like any other character. Glob syntax elsewhere (shells, .gitignore) stops
+ * `*` at a segment boundary; this does not. So the pack entry admits any depth
+ * beneath `src/packs/`, and the census entry uses digit classes precisely
+ * because they cannot match a separator. Both sides are pinned in
  * `check_release_pr_shape.test.ts`.
  */
 function _fnmatchToRegExp(pat: string): RegExp {

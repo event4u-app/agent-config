@@ -232,40 +232,6 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
             .filter((g): g is string => g !== undefined);
     }
 
-    it('every caller lets the writer choose the path it writes', () => {
-        // `main` prefers `--out` over `defaultReportPath`, so a caller passing
-        // one writes a name no test pins — the 16.3.0 drift class, one step
-        // further out.
-        //
-        // Scans EVERY tracked file. Earlier versions scanned a root list, and
-        // each round found another hole in it: a missing root skipped silently,
-        // extensionless files dropped, top-level files discarded, a parent
-        // marked scanned because one child was a root. A reach claim needs
-        // either a check or no reach claim; `git ls-files` removes the question.
-        const BINARY = /\.(mp4|mov|png|jpg|jpeg|gif|webp|pdf|zip|gz|tgz|ico|woff2?|ttf|mp3|wav)$/i;
-        const files = execFileSync('git', ['ls-files'], { cwd: REPO_ROOT, encoding: 'utf8' })
-            .split('\n')
-            .filter((f) => f !== '' && !BINARY.test(f))
-            // Markdown is prose, never an invocation; the module's own file and
-            // the suites that import it name it by definition.
-            .filter((f) => !f.endsWith('.md'))
-            .filter((f) => f !== 'src/scripts/report_evidence_temperature.ts')
-            .filter((f) => !f.startsWith('tests/'))
-            // Review artifacts hold committed diffs of this very file.
-            .filter((f) => !f.startsWith('agents/evidence/'));
-        expect(files.length).toBeGreaterThan(100);
-        const invocations = files
-            .flatMap((f) => fs.readFileSync(path.join(REPO_ROOT, f), 'utf8').split('\n'))
-            // Strips a trailing comment before testing, so `foo() // …report…`
-            // and `/* …report… */` are not counted as callers.
-            .map((line) => line.replace(/\/\*.*?\*\//g, '').replace(/(\s|^)(\/\/|#).*$/, '$1'))
-            .filter((line) => /report_evidence_temperature(\.ts)?\b/.test(line))
-            .filter((line) => !/^\s*["']?[\w.-]+["']?\s*:\s*$/.test(line));
-        expect(invocations).toHaveLength(1);
-        expect(invocations[0]).toContain('--write');
-        expect(invocations[0]).not.toContain('--out');
-    });
-
     it('the cut-surface table names exactly the jobs that skip', () => {
         // The table is the only written justification for a branch-wide CI
         // skip, and nothing parsed it — so it drifted: it named two jobs that
@@ -288,7 +254,9 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
             const text = fs.readFileSync(path.join(wfDir, wf), 'utf8');
             let job = '';
             for (const line of text.split('\n')) {
-                const header = /^ {2}([a-z][a-z0-9-]*):\s*$/.exec(line);
+                // Any YAML key at job indentation, not just kebab-case: a job
+                // id this misses would attribute its guard to the PREVIOUS job.
+                const header = /^ {2}([A-Za-z_][\w-]*):\s*$/.exec(line);
                 if (header) job = header[1] as string;
                 if (line.trimStart().startsWith('#')) continue;
                 if (line.includes("!startsWith(github.head_ref, 'release/')") && job !== '') {
@@ -302,11 +270,11 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
         const doc = fs.readFileSync(CONTRACT, 'utf8');
         const from = doc.indexOf('## Cut surface');
         expect(from).toBeGreaterThan(-1);
-        // `indexOf` returns -1 when § Cut surface is the last section; slice to
-        // the end in that case rather than dropping a character.
+        // Ends at the next H2, which is structure rather than a sentence that
+        // could be reworded. -1 means § Cut surface is last: slice to the end.
         const next = doc.indexOf('\n## ', from + 1);
         const section = doc.slice(from, next === -1 ? undefined : next);
-        const tabled = [...section.matchAll(/^\| `([a-z-]+\.yml)` \| `([^`]+)` \|/gm)].map((m) => `${m[1]}:${m[2]}`);
+        const tabled = [...section.matchAll(/^\| `([a-z-]+\.ya?ml)` \| `([^`]+)` \|/gm)].map((m) => `${m[1]}:${m[2]}`);
         expect([...tabled].sort()).toEqual([...guarded].sort());
     });
 
@@ -314,5 +282,58 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
         // Set equality AND order: the two read as one list, so a reader
         // comparing them line by line should not have to re-sort either.
         expect(enumeratedGlobs()).toEqual([...shape.ALLOWLIST_GLOBS]);
+    });
+});
+
+describe('check_release_pr_shape — the census writer/pipeline binding', () => {
+    it('every caller lets the writer choose the path it writes', () => {
+        // `main` prefers `--out` over `defaultReportPath`, so a caller passing
+        // one writes a name no test pins — the 16.3.0 drift class, one step
+        // further out.
+        //
+        // Scans EVERY tracked file. Earlier versions scanned a root list, and
+        // each round found another hole in it: a missing root skipped silently,
+        // extensionless files dropped, top-level files discarded, a parent
+        // marked scanned because one child was a root. A reach claim needs
+        // either a check or no reach claim; `git ls-files` removes the question.
+        const BINARY = /\.(mp4|mov|png|jpg|jpeg|gif|webp|pdf|zip|gz|tgz|ico|woff2?|ttf|mp3|wav)$/i;
+        // `git grep -l` narrows to the files that mention the module before any
+        // read: the tracked tree is ~3.4k files and ~160 MB, and reading all of
+        // it to find one line is cost with no coverage behind it. Still every
+        // tracked file — grep is the index, not a root list. `|| true` because
+        // grep exits 1 on no match, which is a legitimate answer here.
+        const files = execFileSync(
+            'sh',
+            ['-c', "git grep -l 'report_evidence_temperature' -- . || true"],
+            { cwd: REPO_ROOT, encoding: 'utf8' },
+        )
+            .split('\n')
+            .filter((f) => f !== '' && !BINARY.test(f))
+            // Markdown is prose, never an invocation; the module's own file and
+            // the suites that import it name it by definition.
+            .filter((f) => !f.endsWith('.md'))
+            .filter((f) => f !== 'src/scripts/report_evidence_temperature.ts')
+            .filter((f) => !f.startsWith('tests/'))
+            // Review artifacts hold committed diffs of this very file.
+            .filter((f) => !f.startsWith('agents/evidence/'));
+        // grep found the module somewhere, so an empty set after filtering means
+        // the filters ate everything — which must not read as "no caller".
+        expect(files.length).toBeGreaterThan(0);
+        // Continuations are joined before matching: a shell or YAML call can
+        // carry `--write` on the matched line and `--out` on the next, which a
+        // line-scoped assertion would pass — the drift this test exists to catch.
+        const joinContinuations = (text: string): string[] =>
+            text.replace(/\\\n\s*/g, ' ').split('\n');
+        const invocations = files
+            .filter((f) => fs.existsSync(path.join(REPO_ROOT, f)))
+            .flatMap((f) => joinContinuations(fs.readFileSync(path.join(REPO_ROOT, f), 'utf8')))
+            // Strips a trailing comment before testing, so `foo() // …report…`
+            // and `/* …report… */` are not counted as callers.
+            .map((line) => line.replace(/\/\*.*?\*\//g, '').replace(/(\s|^)(\/\/|#).*$/, '$1'))
+            .filter((line) => /report_evidence_temperature(\.ts)?\b/.test(line))
+            .filter((line) => !/^\s*["']?[\w.-]+["']?\s*:\s*$/.test(line));
+        expect(invocations).toHaveLength(1);
+        expect(invocations[0]).toContain('--write');
+        expect(invocations[0]).not.toContain('--out');
     });
 });
