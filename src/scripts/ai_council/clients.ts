@@ -1669,17 +1669,22 @@ export function _foldSystemPrompt(system_prompt: string, user_prompt: string): s
 export class AnthropicCliClient extends CliClient {
     override subscription_label = 'claude-pro';
 
+    // `...opts` rather than a field list, in all five CLI subclasses, and the
+    // spread IS the fix rather than a tidy. Each of these constructors used to
+    // name six option fields explicitly and forward those — so when
+    // `CliClientOptions` grew a seventh, `consumer`, every subclass silently
+    // dropped it. Both construction sites passed it, `CliClient` read
+    // `opts.consumer ?? CLI_CONSUMER_UNKNOWN`, and the sidecar recorded
+    // `unknown` for every CLI call ever booked: measured 2026-10-05 as
+    // `{"anthropic":{"unknown":2},"openai":{"unknown":2}}` after a council
+    // round. A field list can forget a field. A spread cannot, so the eighth
+    // option needs no edit here and cannot repeat this.
+    //
+    // `model` stays explicit because it is the one field each subclass
+    // overrides with its own pinned default; everything else passes through.
     constructor(opts: CliClientOptions = {}) {
         super(
-            {
-                model: opts.model ?? DEFAULT_ANTHROPIC_CLI_MODEL,
-                binary: opts.binary,
-                timeout_seconds: opts.timeout_seconds,
-                max_calls_per_day: opts.max_calls_per_day,
-                warn_at: opts.warn_at,
-                cli_calls_path: opts.cli_calls_path,
-                consumer: opts.consumer,
-            },
+            { ...opts, model: opts.model ?? DEFAULT_ANTHROPIC_CLI_MODEL },
             { name: 'anthropic', default_binary: 'claude' },
         );
     }
@@ -1809,15 +1814,7 @@ export class OpenAICliClient extends CliClient {
 
     constructor(opts: CliClientOptions = {}) {
         super(
-            {
-                model: opts.model ?? DEFAULT_OPENAI_CLI_MODEL,
-                binary: opts.binary,
-                timeout_seconds: opts.timeout_seconds,
-                max_calls_per_day: opts.max_calls_per_day,
-                warn_at: opts.warn_at,
-                cli_calls_path: opts.cli_calls_path,
-                consumer: opts.consumer,
-            },
+            { ...opts, model: opts.model ?? DEFAULT_OPENAI_CLI_MODEL },
             { name: 'openai', default_binary: 'codex' },
         );
     }
@@ -2057,15 +2054,7 @@ export class GeminiCliClient extends CliClient {
 
     constructor(opts: CliClientOptions = {}) {
         super(
-            {
-                model: opts.model ?? DEFAULT_GEMINI_CLI_MODEL,
-                binary: opts.binary,
-                timeout_seconds: opts.timeout_seconds,
-                max_calls_per_day: opts.max_calls_per_day,
-                warn_at: opts.warn_at,
-                cli_calls_path: opts.cli_calls_path,
-                consumer: opts.consumer,
-            },
+            { ...opts, model: opts.model ?? DEFAULT_GEMINI_CLI_MODEL },
             { name: 'gemini', default_binary: 'gemini' },
         );
     }
@@ -2211,15 +2200,7 @@ export class XAICliClient extends CliClient {
 
     constructor(opts: CliClientOptions = {}) {
         super(
-            {
-                model: opts.model ?? DEFAULT_XAI_MODEL,
-                binary: opts.binary,
-                timeout_seconds: opts.timeout_seconds,
-                max_calls_per_day: opts.max_calls_per_day,
-                warn_at: opts.warn_at,
-                cli_calls_path: opts.cli_calls_path,
-                consumer: opts.consumer,
-            },
+            { ...opts, model: opts.model ?? DEFAULT_XAI_MODEL },
             { name: 'xai', default_binary: 'grok' },
         );
     }
@@ -2284,15 +2265,7 @@ export class PerplexityCliClient extends CliClient {
 
     constructor(opts: CliClientOptions = {}) {
         super(
-            {
-                model: opts.model ?? DEFAULT_PERPLEXITY_MODEL,
-                binary: opts.binary,
-                timeout_seconds: opts.timeout_seconds,
-                max_calls_per_day: opts.max_calls_per_day,
-                warn_at: opts.warn_at,
-                cli_calls_path: opts.cli_calls_path,
-                consumer: opts.consumer,
-            },
+            { ...opts, model: opts.model ?? DEFAULT_PERPLEXITY_MODEL },
             { name: 'perplexity', default_binary: 'perplexity' },
         );
     }
