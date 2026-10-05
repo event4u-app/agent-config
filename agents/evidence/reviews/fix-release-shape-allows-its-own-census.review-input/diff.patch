@@ -1,0 +1,86 @@
+diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
+index 6dec89bffea486d397670f86b71703004a7b9b56..6145eb5ff0db36fee61f573159fbd2d436649403 100644
+--- a/docs/contracts/release-pr-gating.md
++++ b/docs/contracts/release-pr-gating.md
+@@ -53,12 +53,30 @@ hold:
+      `release.ts` § `set_lockfile_version`
+    - `CHANGELOG.md`
+    - `.claude-plugin/marketplace.json`
+-   - `packages/*/pack.yaml`
+-   - `packages/*/README.md`
++   - `.augment-plugin/plugin.json`, `.augment-plugin/marketplace.json` —
++     version-synced by `release.ts` § `set_augment_manifest_version`; both
++     ship in the tarball, so a release PR must carry them
++   - `src/packs/*/pack.yaml`, `src/packs/*/README.md`
++   - `src/domains/*/pack.yaml`, `src/domains/*/README.md`
+    - `docs/archive/CHANGELOG-pre-*.md` — emitted by `release.ts`'s
+      automatic CHANGELOG era split (see `docs/contracts/CHANGELOG-conventions.md`
+      § Era splits) when the current era crosses its line cap on an
+      era-boundary release.
++   - `agents/evidence/release-findings/*.json` — the finding-disposition
++     ledger; the `finding-dispositions` gate is red until a release's own
++     blocking self-review findings are recorded there
++   - `agents/evidence/analysis/evidence-temperature-YYYY-MM-DD.md` — the
++     per-release evidence-temperature census written by
++     `taskfiles/content.yml` § `release-prepare`, step 2 of `task release`.
++     Pinned to the ISO date shape with fnmatch digit classes, because `?`
++     matches any character and would admit every sibling report.
++   - `src/agent-src/templates/agents/agent-project-settings.example.yml` and
++     its regenerated `dist/agent-src/` twin — the project-settings template
++     pin, kept in lockstep with `package.json.version`
++
++   This list and `ALLOWLIST_GLOBS` are one decision recorded twice, so they
++   drift: the entry a release-flow step needs is added where that step broke
++   and not here. A change to either edits both.
+ 
+ Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
+ The script exits 0 when both hold; non-zero with a per-file diff naming any
+diff --git a/src/scripts/check_release_pr_shape.ts b/src/scripts/check_release_pr_shape.ts
+index ef101165f052ad6ca03020e4deb7189b01917e36..6eb60bf77016e2b291b1da481e23af6cb3107159 100644
+--- a/src/scripts/check_release_pr_shape.ts
++++ b/src/scripts/check_release_pr_shape.ts
+@@ -45,6 +45,12 @@ const ALLOWLIST_GLOBS = [
+     // be able to carry the dispositions of its own self-review findings; the
+     // finding-dispositions gate is red until blocking ones are recorded here.
+     'agents/evidence/release-findings/*.json',
++    // Evidence-temperature census — `taskfiles/content.yml` § release-prepare
++    // writes one per release, so without this entry the pipeline generates a
++    // file its own shape step refuses. Digit classes, never `?`: fnmatch's `?`
++    // matches ANY character, so a `????-??-??` spelling would admit every
++    // sibling report. A second report here is a decision, not a glob effect.
++    'agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md', // code-comment-allow provenance-comment -- the glob IS this gate's operand, not where the code came from
+     // Project-settings template pin — bumped by release.ts set_template_pin and
+     // its regenerated dist twin (kept in lockstep with package.json.version).
+     'src/agent-src/templates/agents/agent-project-settings.example.yml',
+diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..83dfc77e4e2806a6b6e5bee8b3d755a332c28854 100644
+--- a/tests/scripts/check_release_pr_shape.test.ts
++++ b/tests/scripts/check_release_pr_shape.test.ts
+@@ -113,6 +113,27 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+         expect(shape._matches('src/packs/core/README.md')).toBe(true);
+         expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
+     });
++
++    it('the evidence-temperature census release-prepare writes passes', () => {
++        const { code } = runCheck([
++            'package.json',
++            'CHANGELOG.md',
++            'agents/evidence/analysis/evidence-temperature-2026-10-05.md',
++        ]);
++        expect(code).toBe(0);
++    });
++
++    it('the census glob admits the ISO date shape and nothing else under it', () => {
++        expect(shape._matches('agents/evidence/analysis/evidence-temperature-2026-10-05.md')).toBe(true);
++        // The denial half, and the reason the glob uses digit classes: fnmatch's
++        // `?` matches any character, so a `????-??-??` spelling would pass each
++        // of these. They are the polarity this entry is pinned against.
++        expect(shape._matches('agents/evidence/analysis/evidence-temperature-anything.md')).toBe(false);
++        expect(shape._matches('agents/evidence/analysis/evidence-temperature-aaaa-bb-cc.md')).toBe(false);
++        expect(shape._matches('agents/evidence/analysis/evidence-temperature-2026-1-5.md')).toBe(false);
++        expect(shape._matches('agents/evidence/analysis/some-other-report.md')).toBe(false);
++        expect(shape._matches('agents/evidence/analysis/nested/evidence-temperature-2026-10-05.md')).toBe(false);
++    });
+ });
+ 
+ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
