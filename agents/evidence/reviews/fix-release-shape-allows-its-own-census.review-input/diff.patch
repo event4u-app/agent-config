@@ -1,8 +1,8 @@
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..ea0da0f63373f76cc70932c9e96fb99ef077208d 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..0d52aeb5863b179e0e4d3445fe15d56fa8bba67f 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
-@@ -35,10 +35,21 @@ keep-beta-reason: >-
+@@ -35,10 +35,17 @@ keep-beta-reason: >-
  > older one is matrix-level. Current per-job numbers live in
  > [`ci-cost-budget.md`](ci-cost-budget.md); the skip argument below is
  > unaffected either way. Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
@@ -10,13 +10,9 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..ea0da0f63373f76cc70932c9e96fb99e
 -> `packages/*/pack.yaml`, `packages/*/README.md`, and the CHANGELOG era
 -> archive `docs/archive/CHANGELOG-pre-*.md` — verified against PR #238
 -> (3.3.0). They cannot regress install or runtime behaviour by construction.
-+> only touch the allowlist enumerated under § Release-PR shape below — version
-+> manifests, the changelog and its era archive, pack metadata, the project-settings
-+> template pin with its generated `dist/` twin, and the two release artifacts the
-+> flow itself writes (findings ledger, evidence-temperature census). That set is a
-+> summary and the enumeration below is the list; it is NOT restated here, because a
-+> second prose copy went stale for months and named paths the code had already
-+> renamed. The file-set claim was verified against PR #238 (3.3.0) and the
++> only touch the allowlist enumerated under § Release-PR shape below. The paths
++> are NOT listed here: a second copy of that list went stale for months and named
++> paths the code had already renamed. The file-set claim was verified against PR #238 (3.3.0) and the
 +> allowlist has grown since, so what carries the argument is what the release
 +> flow WRITES into those paths: version fields, changelog prose, generated
 +> manifests and two report artifacts. Stated precisely, because the categorical
@@ -28,7 +24,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..ea0da0f63373f76cc70932c9e96fb99e
  
  ## Release-PR shape
  
-@@ -53,12 +64,32 @@ hold:
+@@ -53,12 +60,41 @@ hold:
       `release.ts` § `set_lockfile_version`
     - `CHANGELOG.md`
     - `.claude-plugin/marketplace.json`
@@ -49,17 +45,26 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..ea0da0f63373f76cc70932c9e96fb99e
 +   - `agents/evidence/analysis/evidence-temperature-YYYY-MM-DD.md` — the
 +     per-release evidence-temperature census written by
 +     `taskfiles/content.yml` § `release-prepare`, step 2 of `task release`.
-+     Pinned to the ISO date shape with fnmatch digit classes rather than `?`,
-+     which matches any character: `????-??-??` would still require ten
-+     characters with separators at offsets 4 and 7, so it admits not every
-+     sibling report but any whose name carries that shape.
++     Pinned to the ISO date shape with fnmatch digit classes rather than `?`;
++     the entry in `ALLOWLIST_GLOBS` carries why, and is the only place that
++     reasoning is written down.
 +   - `src/agent-src/templates/agents/agent-project-settings.example.yml` and
 +     its regenerated `dist/agent-src/` twin — the project-settings template
 +     pin, kept in lockstep with `package.json.version`
 +
 +   This list and `ALLOWLIST_GLOBS` are one decision recorded twice, so they
 +   drift: the entry a release-flow step needs is added where that step broke
-+   and not here. A change to either edits both.
++   and not here. A change to either edits both — and that instruction is a weak
++   mechanism, which is why the blockquote above now carries no copy at all
++   rather than a third one to keep in sync.
++
++   This list survives where that one did not because the two are not the same
++   thing. The blockquote's copy existed to support an argument the paths were
++   not needed for; this enumeration IS the contract — a reader must be able to
++   predict the gate without reading TypeScript. Nothing mechanical binds them:
++   a parity check between this list and `ALLOWLIST_GLOBS` would, and does not
++   exist. Until it does, the drift this very change had to repair is held by an
++   instruction and by review.
  
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
@@ -154,7 +159,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..813abf635cefd6205bd944df079279e9
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..41e8319f5473a3de2e7e23a7691dc370f2253b04 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..efc1984a8959ac9cb0ad6aef6045541fc1d1e400 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -2,6 +2,7 @@
@@ -165,7 +170,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..41e8319f5473a3de2e7e23a7691dc370
  
  function runCheck(files: readonly string[]): { code: number; out: string } {
      const out: string[] = [];
-@@ -113,6 +114,57 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -113,6 +114,72 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(shape._matches('src/packs/core/README.md')).toBe(true);
          expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
      });
@@ -214,11 +219,26 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..41e8319f5473a3de2e7e23a7691dc370
 +
 +    it('the census date stamp has the shape the allowlist glob was cut for', () => {
 +        // The date is the one part `defaultReportPath` takes as a parameter, so
-+        // the link above cannot pin it on its own. A stamping change — a time
-+        // component, `YYYYMMDD`, a local-time date — reds here instead of
-+        // during a release.
++        // the link above cannot pin it on its own. A shape change — a time
++        // component, `YYYYMMDD` — reds on either assertion.
 +        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5, 23, 30)))).toBe('2026-10-05');
 +        expect(shape._matches(defaultReportPath(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))))).toBe(true);
++    });
++
++    it('the census date stamp is UTC on both sides of a day boundary', () => {
++        // Two instants straddling midnight UTC, and the pair is what carries
++        // this: a local-time implementation reds on the first under any
++        // positive offset and on the second under any negative one. The TZ is
++        // not pinned in vitest.config.ts, so neither assertion alone is
++        // sensitive on an arbitrary runner — measured: +02:00 reds the first
++        // and passes the second, -04:00 does the reverse.
++        //
++        // Under TZ=UTC both pass for a local-time implementation, and that is
++        // not a gap in the test: at offset 0 the two implementations agree, so
++        // there is no difference to detect. Said plainly because claiming
++        // otherwise is the mistake this branch has now made four times.
++        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5, 23, 30)))).toBe('2026-10-05');
++        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 6, 0, 30)))).toBe('2026-10-06');
 +    });
  });
  
