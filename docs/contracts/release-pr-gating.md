@@ -164,11 +164,13 @@ Skipped via `if: !startsWith(github.head_ref, 'release/')` guards on the heavy
 install/test jobs. The guard is on the BRANCH, not on paths — so the column
 below is the argument for why that is safe, not a condition the workflow
 evaluates. The argument rests on the allowlist in § Release-PR shape: it admits
-no install script and no test source. The two manifests it DOES admit are
-consumed by every one of these jobs — `npm ci` reads the lockfile, every step is
-an `npm run`, the smoke matrix runs the tarball's `bin` — so each job's row below
-names what covers that manifest on the release path rather than claiming nothing
-reaches it. It is NOT the
+no install script and no test source. It DOES admit five manifests — the two npm
+ones and three plugin/marketplace files — and the npm pair is consumed by every
+one of these jobs: `npm ci` reads the lockfile, every step is an `npm run`, the
+smoke matrix runs the tarball's `bin`. Where a job's coverage of those depends on
+a release-path twin, its row below names the twin; the rows that argue purely
+from code absence are the ones where no step reads a manifest at all. It is NOT
+the
 stronger claim the opening blockquote withdraws — `package.json` is admitted and
 carries `bin`, `files`, `dependencies` and `engines`, whose content no gate
 reads. That residue is the blockquote's, not this section's, and the `smoke` row
@@ -176,13 +178,14 @@ below points back at it.
 
 It does admit six paths under `src/` and `dist/`: pack and domain metadata
 (`pack.yaml` ×2), their READMEs (×2), and the project-settings template pin with
-its regenerated twin. One of the six sits under both `src/` and `templates/`, so
-the sets overlap rather than add. None is code any job below exercises, which is
+its regenerated twin. Six distinct files — the pin also sits under a
+`templates/` segment, so a count by directory NAME would double-count it. None is code any job below exercises, which is
 the claim; "the diff has no `src/**`" would be the stronger claim, and it is
 false.
 
-All seven `tests.yml` jobs carrying the guard are listed — derived from the
-`if:` lines, not from memory. An earlier version of this table named two jobs
+Every `tests.yml` job carrying the guard is listed, plus the one in
+`smoke-public-install.yml` — derived from the `if:` lines, not from memory, and
+asserted by `the cut-surface table names exactly the jobs that skip`. An earlier version of this table named two jobs
 that no longer exist and omitted four that do skip, which is how a table nothing
 parses decays.
 

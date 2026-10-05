@@ -237,63 +237,25 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
         // one writes a name no test pins — the 16.3.0 drift class, one step
         // further out.
         //
-        // Walks recursively and REQUIRES each root to exist. An earlier version
-        // skipped a missing root silently, so renaming one left it unscanned
-        // with the test still green — a scan that cannot tell "nothing here"
-        // from "did not look" is the shape this suite keeps finding.
-        // The roots are a claim about reach, so the claim is checked: every
-        // top-level entry that could hold an orchestration call is either
-        // scanned or named here as deliberately out of scope. A new top-level
-        // directory reds this rather than silently sitting outside the scan.
-        const roots = ['taskfiles', 'Taskfile.yml', 'src/scripts', 'package.json', '.github/workflows', 'hooks', 'tokens'];
-        const OUT_OF_SCOPE = new Set([
-            'agents', 'dist', 'docs', 'internal', 'node_modules', 'site', 'tests',
-            'src', 'coverage', 'evals', 'config', 'data', 'provenance',
-            'LICENSES', 'deploy', '.augment-plugin', '.claude-plugin', 'user-types',
-        ]);
-        // TRACKED directories only: a local build artifact (`test-results/`,
-        // coverage output) must not change this verdict, or the test reports a
-        // reach gap that exists on one machine.
-        const tracked = new Set(
-            execFileSync('git', ['ls-files'], { cwd: REPO_ROOT, encoding: 'utf8' })
-                .split('\n')
-                .filter((f) => f.includes('/'))
-                .map((f) => f.slice(0, f.indexOf('/'))),
-        );
-        const unscanned = [...tracked]
-            .filter((n) => !roots.some((r) => r === n || r.startsWith(`${n}/`)))
-            .filter((n) => !OUT_OF_SCOPE.has(n))
-            .sort();
-        expect(unscanned).toEqual([]);
-        // Binary extensions are skipped; everything else is read. An earlier
-        // version allowlisted text extensions instead, which silently dropped
-        // EXTENSIONLESS files — and `src/scripts/install` and
-        // `src/scripts/agent-config` are exactly that: executable dispatch
-        // scripts inside a scanned root. Denying known binaries keeps the
-        // unknown case readable rather than invisible.
+        // Scans EVERY tracked file. Earlier versions scanned a root list, and
+        // each round found another hole in it: a missing root skipped silently,
+        // extensionless files dropped, top-level files discarded, a parent
+        // marked scanned because one child was a root. A reach claim needs
+        // either a check or no reach claim; `git ls-files` removes the question.
         const BINARY = /\.(mp4|mov|png|jpg|jpeg|gif|webp|pdf|zip|gz|tgz|ico|woff2?|ttf|mp3|wav)$/i;
-        const walk = (abs: string, isRoot = false): string[] => {
-            if (isRoot && !fs.existsSync(abs)) {
-                throw new Error(`caller-scan root is missing: ${abs}`);
-            }
-            // `lstatSync`, not `statSync`: a symlinked directory under a root
-            // would otherwise recurse without bound and fail as a stack
-            // overflow rather than as a readable verdict.
-            const st = fs.lstatSync(abs);
-            if (st.isSymbolicLink()) return [];
-            if (!st.isDirectory()) return BINARY.test(abs) ? [] : [abs];
-            return fs.readdirSync(abs).flatMap((n) => walk(path.join(abs, n)));
-        };
-        const invocations = roots
-            .flatMap((rel) => walk(path.join(REPO_ROOT, rel), true))
-            .filter((f) => !f.endsWith('report_evidence_temperature.ts'))
-            .flatMap((f) => fs.readFileSync(f, 'utf8').split('\n'))
-            // An INVOCATION, not a mention: a comment naming the module is not
-            // a caller. Matches any execution spelling — `scripts-run`, `tsx`,
-            // `node`, a bare path in an npm script — rather than the one form
-            // in use today, because a caller added under a different spelling
-            // is exactly what a single-literal filter would miss.
-            .filter((line) => /report_evidence_temperature(\.ts)?\b/.test(line))
+        const files = execFileSync('git', ['ls-files'], { cwd: REPO_ROOT, encoding: 'utf8' })
+            .split('\n')
+            .filter((f) => f !== '' && !BINARY.test(f))
+            // Markdown is prose, never an invocation; the module's own file and
+            // the suites that import it name it by definition.
+            .filter((f) => !f.endsWith('.md'))
+            .filter((f) => f !== 'src/scripts/report_evidence_temperature.ts')
+            .filter((f) => !f.startsWith('tests/'))
+            // Review artifacts hold committed diffs of this very file.
+            .filter((f) => !f.startsWith('agents/evidence/'));
+        expect(files.length).toBeGreaterThan(100);
+        const invocations = files
+            .flatMap((f) => fs.readFileSync(path.join(REPO_ROOT, f), 'utf8').split('\n'))
             // Strips a trailing comment before testing, so `foo() // …report…`
             // and `/* …report… */` are not counted as callers.
             .map((line) => line.replace(/\/\*.*?\*\//g, '').replace(/(\s|^)(\/\/|#).*$/, '$1'))
