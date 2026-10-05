@@ -69,20 +69,19 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..deee71af039962fc784179a63d5519f2
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
 diff --git a/src/scripts/check_release_pr_shape.ts b/src/scripts/check_release_pr_shape.ts
-index ef101165f052ad6ca03020e4deb7189b01917e36..ab81e6a7036da5553d72958f5f7989deff837890 100644
+index ef101165f052ad6ca03020e4deb7189b01917e36..65ac97d049984b655669977457050ce15bea798c 100644
 --- a/src/scripts/check_release_pr_shape.ts
 +++ b/src/scripts/check_release_pr_shape.ts
-@@ -45,6 +45,17 @@ const ALLOWLIST_GLOBS = [
+@@ -45,6 +45,16 @@ const ALLOWLIST_GLOBS = [
      // be able to carry the dispositions of its own self-review findings; the
      // finding-dispositions gate is red until blocking ones are recorded here.
      'agents/evidence/release-findings/*.json',
 +    // Evidence-temperature census — `taskfiles/content.yml` § release-prepare
 +    // writes one per release, so without this entry the pipeline generates a
-+    // file its own shape step refuses. Digit classes rather than `?`, which
-+    // matches any character: `????-??-??` would still require ten characters
-+    // with separators at offsets 4 and 7, so it admits not every sibling but
-+    // any whose name happens to carry that shape. Narrower than it reads, and
-+    // still wider than a date. Two reports can appear in one release PR, and
++    // file its own shape step refuses. Digit classes rather than `?`: fnmatch
++    // `?` compiles to `.` under the `s` flag, so it matches any character AND
++    // crosses `/` — `????-??-??` admits `evidence-temperature-x/yz-ab-cd.md`,
++    // which `[0-9]` cannot. Two reports can appear in one release PR, and
 +    // both are in shape: `--resume` re-runs release-prepare, so a release
 +    // carried across UTC midnight writes a second census. What that one
 +    // contains is the census's business, not this gate's.
@@ -90,7 +89,7 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..ab81e6a7036da5553d72958f5f7989de
      // Project-settings template pin — bumped by release.ts set_template_pin and
      // its regenerated dist twin (kept in lockstep with package.json.version).
      'src/agent-src/templates/agents/agent-project-settings.example.yml',
-@@ -87,12 +98,13 @@ function _fnmatchToRegExp(pat: string): RegExp {
+@@ -87,12 +97,13 @@ function _fnmatchToRegExp(pat: string): RegExp {
                  res += '\\[';
              } else {
                  let stuff = pat.slice(i, j);
@@ -100,12 +99,12 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..ab81e6a7036da5553d72958f5f7989de
 -                    // Rare; not used by the allowlist. Keep simple escape.
 -                    stuff = stuff.replace(/\\/g, '\\\\');
 -                }
-+                // Python's `fnmatch.translate` branches on a `-` inside the
-+                // class and this port does not; the two arms it carried were
-+                // byte-identical, so the branch implemented no divergence. The
-+                // ranges differ in hyphen escaping, not in output for `[0-9]`,
-+                // and an invalid range throws in both languages — measured:
-+                // `[z-a]` raises in `re.compile` and in `new RegExp` alike.
++                // The two arms this replaces were byte-identical, so the branch
++                // implemented nothing. Bracket handling here is checked against
++                // `[0-9]`, the only class the allowlist uses; anything else is
++                // untested against CPython, whose behaviour also varies by
++                // version. Add a bracket glob and verify it rather than assuming
++                // this mirrors `fnmatch.translate` beyond that one case.
 +                stuff = stuff.replace(/\\/g, '\\\\');
                  i = j + 1;
                  if (stuff.startsWith('!')) {
@@ -161,7 +160,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..813abf635cefd6205bd944df079279e9
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..e9ade5dcbb74314356174a2eb84068451beabd9c 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..367500b1d668f547d29f36fa0870125fd77ec948 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -2,6 +2,7 @@
@@ -172,7 +171,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..e9ade5dcbb74314356174a2eb8406845
  
  function runCheck(files: readonly string[]): { code: number; out: string } {
      const out: string[] = [];
-@@ -113,6 +114,59 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -113,6 +114,62 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(shape._matches('src/packs/core/README.md')).toBe(true);
          expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
      });
@@ -203,6 +202,9 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..e9ade5dcbb74314356174a2eb8406845
 +        // green under `????-??-??`, so they prove the stem, never the digits.
 +        expect(shape._matches('agents/evidence/analysis/evidence-temperature-aaaa-bb-cc.md')).toBe(false);
 +        expect(shape._matches('agents/evidence/analysis/evidence-temperature-20z6-10-05.md')).toBe(false);
++        // fnmatch `?` compiles to `.` under the `s` flag and so crosses `/`;
++        // a digit class cannot. This path is the difference.
++        expect(shape._matches('agents/evidence/analysis/evidence-temperature-x/yz-ab-cd.md')).toBe(false);
 +    });
 +
 +    it('the allowlist admits the path the census writer actually produces', () => {
