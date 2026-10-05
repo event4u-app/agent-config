@@ -1,8 +1,14 @@
 
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
 import * as shape from '../../src/scripts/check_release_pr_shape.js';
 import { censusDateStamp, defaultReportPath } from '../../src/scripts/report_evidence_temperature.js';
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 function runCheck(files: readonly string[]): { code: number; out: string } {
     const out: string[] = [];
@@ -186,5 +192,34 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
         const { code, out } = runCheck(['package.json', 'CHANGELOG.md']);
         expect(code).toBe(0);
         expect(out).not.toContain('land the files above on main');
+    });
+});
+
+describe('check_release_pr_shape — contract/code allowlist parity', () => {
+    // The drift this asserts against has now been repaired by hand three times
+    // on this branch alone: the contract named `packages/*/pack.yaml` where the
+    // code says `src/packs/*`, omitted six entries, and kept a third copy in a
+    // blockquote. Each was found by review, which is why the contract's own text
+    // called that binding a weak mechanism. This is the mechanism.
+    const CONTRACT = path.join(REPO_ROOT, 'docs/contracts/release-pr-gating.md');
+
+    /** The backticked globs of § Release-PR shape's enumeration, in order. */
+    function enumeratedGlobs(): string[] {
+        const doc = fs.readFileSync(CONTRACT, 'utf8');
+        const start = doc.indexOf('2. **Diff file set is a subset of the version-bump allowlist:**');
+        expect(start).toBeGreaterThan(-1);
+        const end = doc.indexOf('\n\n   **`*` and `?` both cross', start);
+        expect(end).toBeGreaterThan(start);
+        return doc
+            .slice(start, end)
+            .split('\n')
+            .map((line) => /^ {3}- `([^`]+)`/.exec(line)?.[1])
+            .filter((g): g is string => g !== undefined);
+    }
+
+    it('the contract enumerates exactly the globs the gate compiles', () => {
+        // Set equality AND order: the two read as one list, so a reader
+        // comparing them line by line should not have to re-sort either.
+        expect(enumeratedGlobs()).toEqual([...shape.ALLOWLIST_GLOBS]);
     });
 });

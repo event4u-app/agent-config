@@ -68,11 +68,14 @@ hold:
      `release.ts` § `set_lockfile_version`
    - `CHANGELOG.md`
    - `.claude-plugin/marketplace.json`
-   - `.augment-plugin/plugin.json`, `.augment-plugin/marketplace.json` —
-     version-synced by `release.ts` § `set_augment_manifest_version`; both
-     ship in the tarball, so a release PR must carry them
-   - `src/packs/*/pack.yaml`, `src/packs/*/README.md`
-   - `src/domains/*/pack.yaml`, `src/domains/*/README.md`
+   - `.augment-plugin/plugin.json`
+   - `.augment-plugin/marketplace.json` — both version-synced by `release.ts`
+     § `set_augment_manifest_version`; both ship in the tarball, so a release
+     PR must carry them
+   - `src/packs/*/pack.yaml`
+   - `src/packs/*/README.md`
+   - `src/domains/*/pack.yaml`
+   - `src/domains/*/README.md`
    - `docs/archive/CHANGELOG-pre-*.md` — emitted by `release.ts`'s
      automatic CHANGELOG era split (see `docs/contracts/CHANGELOG-conventions.md`
      § Era splits) when the current era crosses its line cap on an
@@ -80,14 +83,15 @@ hold:
    - `agents/evidence/release-findings/*.json` — the finding-disposition
      ledger; the `finding-dispositions` gate is red until a release's own
      blocking self-review findings are recorded there
-   - `agents/evidence/analysis/evidence-temperature-YYYY-MM-DD.md` — the
-     per-release evidence-temperature census written by
+   - `agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md`
+     — the per-release evidence-temperature census written by
      `taskfiles/content.yml` § `release-prepare`, step 2 of `task release`.
-     Pinned to the ISO date shape with fnmatch digit classes rather than `?`;
-     the entry in `ALLOWLIST_GLOBS` carries why.
-   - `src/agent-src/templates/agents/agent-project-settings.example.yml` and
-     its regenerated `dist/agent-src/` twin — the project-settings template
-     pin, kept in lockstep with `package.json.version`
+     The ISO date shape in fnmatch digit classes rather than `?`; the entry in
+     `ALLOWLIST_GLOBS` carries why.
+   - `src/agent-src/templates/agents/agent-project-settings.example.yml`
+   - `dist/agent-src/templates/agents/agent-project-settings.example.yml` —
+     the project-settings template pin and its regenerated twin, kept in
+     lockstep with `package.json.version`
 
    **`*` and `?` both cross `/` here.** These are fnmatch patterns, not shell or
    `.gitignore` globs: `*` becomes `.*` and `?` becomes `.`, both under the `s`
@@ -99,19 +103,22 @@ hold:
    separator at all. A reader predicting the gate from this list needs both
    halves; each is pinned in `tests/scripts/check_release_pr_shape.test.ts`.
 
-   This list and `ALLOWLIST_GLOBS` are one decision recorded twice, so they
-   drift: the entry a release-flow step needs is added where that step broke
-   and not here. A change to either edits both — and that instruction is a weak
-   mechanism, which is why the blockquote above now carries no copy at all
-   rather than a third one to keep in sync.
+   This list and `ALLOWLIST_GLOBS` are one decision recorded twice, and they
+   drifted for months — the contract named `packages/*/pack.yaml` long after
+   the code said `src/packs/*`. An instruction to edit both was the only thing
+   binding them, and it failed.
 
-   This list survives where that one did not because the two are not the same
-   thing. The blockquote's copy existed to support an argument the paths were
-   not needed for; this enumeration IS the contract — a reader must be able to
-   predict the gate without reading TypeScript. Nothing mechanical binds them:
-   a parity check between this list and `ALLOWLIST_GLOBS` would, and does not
-   exist. Until it does, the drift this very change had to repair is held by an
-   instruction and by review.
+   **A test binds them now**: `the contract enumerates exactly the globs the
+   gate compiles` in `tests/scripts/check_release_pr_shape.test.ts` parses the
+   bullets above and asserts set-and-order equality against `ALLOWLIST_GLOBS`.
+   That is why every entry is one bullet carrying one backticked glob verbatim,
+   rather than a readable paraphrase: the list a reader predicts the gate from
+   and the list the gate compiles are now the same strings, checked.
+
+   The blockquote above carries no copy at all, because its copy supported an
+   argument the paths were not needed for. This enumeration stays, because it
+   IS the contract — a reader must be able to predict the gate without reading
+   TypeScript.
 
 Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
 The script exits 0 when both hold; non-zero with a per-file diff naming any
@@ -146,19 +153,25 @@ procedure under its `OUT-OF-SHAPE` findings, and `release.ts` §
 
 ## Cut surface — heavy jobs that skip on release PRs
 
-Skipped via `if: !startsWith(github.head_ref, 'release/')` guards on the
-heavy install/test jobs. These are the jobs that release PRs cannot regress
-by construction (no install scripts, no runtime code, no test source in the
-release-PR allowlist):
+Skipped via `if: !startsWith(github.head_ref, 'release/')` guards on the heavy
+install/test jobs. The guard is on the BRANCH, not on paths — so the column
+below is the argument for why that is safe, not a condition the workflow
+evaluates. The argument rests on the allowlist in § Release-PR shape: it admits
+no install script, no test source, and no executable code.
 
-| Workflow | Job | Why it cuts |
+It does admit five `src/**` paths and two under `templates/` — pack and domain
+metadata, their READMEs, and the project-settings template pin with its `dist/`
+twin. None is code any job below exercises, which is the claim; "the diff has no
+`src/**`" would be the stronger claim, and it is false.
+
+| Workflow | Job | Why skipping it is safe on a release PR |
 |---|---|---|
-| `tests.yml` | `install-tests` | release-PR diff has no `install.sh` / `scripts/install.py` / `tests/test_install.sh` |
+| `tests.yml` | `install-tests` | the allowlist has no `install.sh` / `scripts/install.py` / `tests/test_install.sh` |
 | `tests.yml` | `install-aux-tests` | same — orchestrator, key contracts, one-liner smoke all untouched |
-| `tests.yml` | `python-tests` | release-PR diff has no `scripts/**` or `tests/**` (other than CHANGELOG via path filter — see below) |
-| `tests.yml` | `node-tests` | release-PR diff has no `src/**`, `tests/{cli,server,ui}/**`, `packages/core/installer/**` |
-| `tests.yml` | `windows-lockfile-export` | release-PR diff has no `scripts/install_global*.py`, `scripts/cmd_export.py`, lockfile test surface |
-| `smoke-public-install.yml` | `smoke` | release-PR diff has no `scripts/install*`, `setup.sh`, `templates/**`, `package.json` runtime behaviour |
+| `tests.yml` | `python-tests` | no `scripts/**` or `tests/**` (other than CHANGELOG via path filter — see below) |
+| `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
+| `tests.yml` | `windows-lockfile-export` | no `scripts/install_global*.py`, `scripts/cmd_export.py`, lockfile test surface |
+| `smoke-public-install.yml` | `smoke` | no `scripts/install*`, `setup.sh`; the two admitted `templates/` files are a version-pinned example settings file, not installer input |
 
 `push:` to `main` and the weekly cron on `smoke-public-install.yml` stay
 **unconditional** — those catch drift the PR matrix can't see.
@@ -187,10 +200,9 @@ the feature-PR floor by adding:
 
 `release-validation.yml`'s fourth job, `release-install-e2e`
 (`tests/test_release_install_e2e.sh`), closes a gap the cut surface above
-does not cover: "release PRs cannot regress install or runtime behaviour"
-is a claim about the **source diff**, not about whether the **packed
-tarball** actually installs, upgrades, and boots as a real npm global
-package. Every release PR now proves, against the real tarball:
+does not cover: that the allowlist admits no executable code is a claim
+about the **source diff**, not about whether the **packed tarball**
+actually installs, upgrades, and boots as a real npm global package. Every release PR now proves, against the real tarball:
 
 - a fresh `npm install -g` into an isolated npm prefix resolves the
   `agent-config` binary and ships no silent postinstall/GUI side effect;
@@ -213,9 +225,10 @@ the source diff couldn't see was missing) cannot recur silently.
 
 ## Consumer-matrix exemption — the tarball window
 
-The cut surface above rests on "release PRs cannot regress install or
-runtime behaviour by construction". That argument covers the **source
-diff** — it is blind to the **published tarball**. Every historical
+The cut surface above rests on the allowlist admitting no executable code.
+That argument covers the **source diff** — it is blind to the **published
+tarball**, and, as the opening blockquote records, to the content of an
+admitted manifest. Every historical
 packaging incident (tarball missing `src/install/` across two minors,
 `tsx` absent from the package, npm-pin drift, the MCP worker deploy red
 across five releases) entered `main` on ordinary PRs and manifested only
