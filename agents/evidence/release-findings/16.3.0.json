@@ -184,7 +184,9 @@
       "kind": "correctness",
       "title": "Recorder-owned evaluator-measurements file edited by hand for the 25→26 tool-count move",
       "detail": "The file header says 'Do not hand-edit — refresh it from a real run'. The `conditions` text says the 26 count was re-measured three times locally on darwin/arm64 outside the umbrella container, and the `git_sha` and `recorded_at` were updated by hand. The metric is tree-derived and container-independent, so this is probably correct. It still bypasses the recorder path, the same shape as the earlier 20→25 move. It is the second consecutive release where the budget move landed only after the release gate blocked.",
-      "file": "agents/evidence/metrics/evaluator-measurements.json"
+      "file": "agents/evidence/metrics/evaluator-measurements.json",
+      "status": "false_positive",
+      "rationale": "The file was not hand-edited. It was refreshed by running `src/scripts/record_evaluator_measurements.mjs`, the writer its own `_comment` names, after `npm run build:mcp-bundle`; `mcp_public_tool_count` was re-measured three times (26/26/26) via the pinned method and the name set differs from the 25-tool set by exactly `graph_node`, which shipped in #2159 without moving the budget. The reviewer sees a diff and cannot see which command produced it — this is the class of finding that is correct about the artefact and wrong about the act."
     },
     {
       "finding_id": "636654f532ad",
