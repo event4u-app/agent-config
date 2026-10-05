@@ -238,13 +238,18 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
         // with the test still green — a scan that cannot tell "nothing here"
         // from "did not look" is the shape this suite keeps finding.
         const roots = ['taskfiles', 'Taskfile.yml', 'src/scripts', 'package.json', '.github/workflows'];
-        const walk = (abs: string): string[] => {
-            expect(fs.existsSync(abs)).toBe(true);
-            if (!fs.statSync(abs).isDirectory()) return [abs];
+        // Text extensions only: `src/scripts/` carries binary fixtures, and
+        // reading an .mp4 as UTF-8 costs time to find nothing.
+        const TEXT = /\.(ts|tsx|js|mjs|cjs|sh|bash|yml|yaml|json|md|py)$/;
+        const walk = (abs: string, isRoot = false): string[] => {
+            if (isRoot && !fs.existsSync(abs)) {
+                throw new Error(`caller-scan root is missing: ${abs}`);
+            }
+            if (!fs.statSync(abs).isDirectory()) return TEXT.test(abs) ? [abs] : [];
             return fs.readdirSync(abs).flatMap((n) => walk(path.join(abs, n)));
         };
         const invocations = roots
-            .flatMap((rel) => walk(path.join(REPO_ROOT, rel)))
+            .flatMap((rel) => walk(path.join(REPO_ROOT, rel), true))
             .filter((f) => !f.endsWith('report_evidence_temperature.ts'))
             .flatMap((f) => fs.readFileSync(f, 'utf8').split('\n'))
             .filter((line) => line.includes('report_evidence_temperature') && !line.trimStart().startsWith('*'));
@@ -258,18 +263,34 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
         // skip, and nothing parsed it — so it drifted: it named two jobs that
         // had been removed and omitted four that do skip. Same remedy as the
         // allowlist parity above, applied to the other list in the same file.
-        const workflow = fs.readFileSync(path.join(REPO_ROOT, '.github/workflows/tests.yml'), 'utf8');
+        //
+        // BOTH guarded workflows, not just the one with most rows: a guard
+        // added in the other file would otherwise age the table with this test
+        // green. Comment lines are excluded — this contract and several
+        // workflows quote the guard expression in prose, and a quotation is
+        // not a guard.
+        const WORKFLOWS = ['tests.yml', 'smoke-public-install.yml'];
         const guarded: string[] = [];
-        let job = '';
-        for (const line of workflow.split('\n')) {
-            const header = /^ {2}([a-z][a-z0-9-]*):\s*$/.exec(line);
-            if (header) job = header[1] as string;
-            if (line.includes("startsWith(github.head_ref, 'release/')") && job !== '') {
-                guarded.push(job);
+        for (const wf of WORKFLOWS) {
+            const text = fs.readFileSync(path.join(REPO_ROOT, '.github/workflows', wf), 'utf8');
+            let job = '';
+            for (const line of text.split('\n')) {
+                const header = /^ {2}([a-z][a-z0-9-]*):\s*$/.exec(line);
+                if (header) job = header[1] as string;
+                if (line.trimStart().startsWith('#')) continue;
+                if (line.includes("!startsWith(github.head_ref, 'release/')") && job !== '') {
+                    guarded.push(`${wf}:${job}`);
+                }
             }
         }
+        // Scoped to § Cut surface: the file holds a second workflow/job table
+        // (§ Kept surface) listing jobs that deliberately still run, and a
+        // document-wide match would demand the two be equal.
         const doc = fs.readFileSync(CONTRACT, 'utf8');
-        const tabled = [...doc.matchAll(/^\| `tests\.yml` \| `([^`]+)` \|/gm)].map((m) => m[1] as string);
+        const from = doc.indexOf('## Cut surface');
+        const section = doc.slice(from, doc.indexOf('\n## ', from + 1));
+        expect(from).toBeGreaterThan(-1);
+        const tabled = [...section.matchAll(/^\| `([a-z-]+\.yml)` \| `([^`]+)` \|/gm)].map((m) => `${m[1]}:${m[2]}`);
         expect([...tabled].sort()).toEqual([...guarded].sort());
     });
 

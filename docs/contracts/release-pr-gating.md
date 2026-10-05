@@ -176,21 +176,21 @@ the sets overlap rather than add. None is code any job below exercises, which is
 the claim; "the diff has no `src/**`" would be the stronger claim, and it is
 false.
 
-| Workflow | Job | Why skipping it is safe on a release PR |
-|---|---|---|
 All seven `tests.yml` jobs carrying the guard are listed — derived from the
 `if:` lines, not from memory. An earlier version of this table named two jobs
 that no longer exist and omitted four that do skip, which is how a table nothing
 parses decays.
 
-| `tests.yml` | `install-tests` | the allowlist has no `install.sh` / `scripts/install.py` / `tests/test_install.sh` |
+| Workflow | Job | Why skipping it is safe on a release PR |
+|---|---|---|
+| `tests.yml` | `install-tests` | the allowlist has no `src/scripts/install.sh`, `src/scripts/install.ts` or `tests/test_install.sh` |
 | `tests.yml` | `install-aux-tests` | same — orchestrator, key contracts, one-liner smoke all untouched |
 | `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
-| `tests.yml` | `static-checks` | ESLint, `tsc` and prepack read source and manifests; the allowlist admits no source, and `package.json` version-field edits change no type and no lint result |
+| `tests.yml` | `static-checks` | its source-reading steps (ESLint, `tsc`, MCP-catalog drift, test-delta, build freshness, hook-latency) have no admitted input. Its manifest-reading steps do not all have a release-path twin: `npm audit` runs as `release-validation.yml` § `audit-gate` and `prepack-check` via `consumer-matrix.yml`, but **`publint` has none** — and `publint` reads `files`, `bin` and `exports`, which is the opening blockquote's unread-content residue with a name. A version-field-only edit changes nothing it checks; nothing enforces that the edit is version-field-only |
 | `tests.yml` | `golden-tests` | golden corpora live under `tests/` and `internal/`, neither admitted |
 | `tests.yml` | `collector-lifecycle` | exercises collector scripts under `src/scripts/`, none admitted |
 | `tests.yml` | `workspace-tests` | exercises workspace wiring under `src/` and `tests/`; the admitted pack and domain files are metadata those tests do not read |
-| `smoke-public-install.yml` | `smoke` | no `scripts/install*`, `setup.sh`. TWO admitted paths are this job's own `paths:` triggers: `package.json`, whose content no gate reads (opening blockquote), and `src/agent-src/templates/agents/agent-project-settings.example.yml`, a version-pinned example file whose pin `check_template_pin_drift` gates on the kept surface |
+| `smoke-public-install.yml` | `smoke` | no `src/scripts/install*`, matching this job's own `paths:` filter. TWO admitted paths ARE among its triggers: `package.json`, whose content no gate reads (opening blockquote), and `src/agent-src/templates/agents/agent-project-settings.example.yml`, a version-pinned example file whose pin `check_template_pin_drift` gates on the kept surface |
 
 `push:` to `main` and the weekly cron on `smoke-public-install.yml` stay
 **unconditional** — those catch drift the PR matrix can't see.
