@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Round inbox-2026-10-c reproduced, at HEAD, that the prompt-submit rule carrier delivers nothing outside this repository (router and bodies resolve from the session cwd), and that where it does fire a third of the composed strings exceed the host's 10,000-char cap. Every consumer runs it in someone else's project, so it is the precondition for thinning the installed layer the host warns about; no active roadmap owns the carrier, and parking one to buy the slot would leave the 338,225-char installed layer with no route down."
-estate_growth_exempt: "open_blockers 60 -> 61: this change records hook-bundle-ceiling-exhausted, and the blocker is a discovery rather than a deferral. The composed hook bundle measured 1,549,697 B against a 1,550,000 B ceiling on main, and step 1.4 of this file - two lines reusing the parser the thin projector already calls - was written, built and measured at +396 B, 357 B over. The lane paid 2,822 -> 1,628 B on its own resolution, tree-shook 2,122 B of superseded readers, and gave back a further 148 B after merging main, which is every byte it had; the remaining five steps need runtime code and there is none to spend. Raising the ceiling is an owner call on a shrink-only ratchet, so the finding cannot be closed from here and recording it is the honest alternative to shipping five steps as silently unstarted. It is also not a private cost: main went from 303 to 170 bytes of headroom in one day when #2179 landed, so the next lane to touch any concern meets the same wall and this row is where it will look."
+estate_growth_exempt: "open_blockers 63 -> 64: this change registers instructions-loaded-binding-is-owner-owned, and the entry is a repair rather than a deferral. Step 0.2 already carried BLOCKED prose naming a recorded council refusal (standing-context-40k-disposition.md:94-96, Rule 3 categorical), but it carried no registered entry and no inline marker - and run-continuation, the stop-slot concern that re-engages an autonomous run, decides open-vs-blocked from the inline annotation alone and never parses ## Blockers. So an impossible step read as runnable work to the one mechanism that acts on it, and every stop fire re-engaged an agent into a step whose exit condition needs a later session no repository automation can supply. The honest alternatives were both worse: flip 0.2 to [~] and reach count_open == 0 (the laundering the [~] prohibition in roadmap-process-loop.md exists to stop), or leave the prose unreadable by the carrier. The entry closes no box, changes no behaviour, and the superseded hook-bundle-ceiling claim it replaces was spent on a blocker that is now resolved."
 relates:
   - slug: road-to-instructions-loaded-observer
     relation: extends
@@ -149,7 +149,7 @@ Reproduced on 2026-10-01:
       reason for the same choice. And `.mdc` files read as zero, which is the
       blind spot every other census here has; fixing it in one reader would
       produce two counts that disagree.
-- [ ] **0.2 Bind the host's instruction-load event as an observer.** Step 3.0 of
+- [ ] <!-- blocked-by: instructions-loaded-binding-is-owner-owned | asked: no — a `process-full` drain lane is a non-interactive context with no owner channel; the question is put verbatim in the blocker entry and stays open --> **0.2 Bind the host's instruction-load event as an observer.** Step 3.0 of
       `stubs/road-to-instructions-loaded-observer.md`, non-blocking, recording
       path, scope and load reason only — never file content. Its first session
       record answers: does a user-layer rule with `paths:` load on a path match;
@@ -943,6 +943,111 @@ local build would make those 13 columns a statement about older code.
   measured-null).
 
 ## Blockers
+
+### blocker: instructions-loaded-binding-is-owner-owned
+
+- **Status:** open
+- **Owner:** maintainer
+- **Class:** 3
+- **Ownership:** product-owned
+- **Blocks:** step 0.2, and nothing else. AC-4 is explicitly unaffected and says
+  so in its own text: it names the installed-layer report and the arrival
+  record, not this observer. Phase 1 is closed and merged; this entry is the
+  reason the file's `count_open` stays at 1 rather than being laundered to 0.
+- **Why it exists at all, when the step already carried its own prose.** The
+  step's 2026-10-05 note said BLOCKED and named the refusal, but carried no
+  registered entry and no inline marker. Two mechanisms read blockedness from
+  two different places and only one of them parses `## Blockers`:
+  `run-continuation`, the stop-slot concern that re-engages an autonomous run,
+  decides open-vs-blocked from the inline
+  `<!-- blocked-by: ... -->` annotation alone
+  (`roadmap-process-loop.md` § 3c). Without the marker an impossible step counts
+  as open work to that concern, which re-engages an agent into it on every stop
+  fire until the stall rung fires — the mechanism whose job is to detect a stall
+  manufacturing one. The prose was true and unreadable by the thing that acts on
+  it. This entry and the marker on 0.2's own line are that repair, and they
+  change no behaviour and close no box.
+- **What to do:** put one question, and it is the owner's. *May a Phase-0 instrument
+  change what the installer writes into a consumer's `.claude/settings.json`?*
+
+  Registering `InstructionsLoaded` is not a local edit. `build_claude_hook_matrix`
+  (`src/scripts/_lib/claude_settings_hooks.ts:92`) iterates
+  `native_event_aliases.claude` and emits a row wherever
+  `platforms.claude[<event>]` carries concerns, and `claude_settings_hooks.ts`
+  writes that matrix into the consumer's settings file — so the binding is a
+  shipped-default change by construction, not by interpretation. A probe adding
+  both manifest halves to a copy of the manifest moved the matrix from 10 native
+  events to 11, the added key being `InstructionsLoaded`; the probe was removed
+  with `rm`. `standing-context-40k-disposition.md:94-96` refuses disposition D on
+  exactly that ground and calls Rule 3 categorical (`:46`).
+
+  Yes → the exact edits are written out at step 0.2 so nobody has to re-derive
+  them, anchored by `grep -n` rather than by line number; then re-size against
+  the 57-file `hook_manifest` test surface (the stub's "~24-file" estimate is
+  stale, re-counted this run); then a later live session to fill the record; and
+  the kill switch the council made non-optional
+  (`standing-context-40k-disposition.md:98-100`) ships with it.
+
+  No → 0.2 stays open and this entry records why. The work itself is not lost:
+  it is held in full by `stubs/road-to-instructions-loaded-observer.md`, whose
+  step 3.0 this step takes as a precondition, and that stub now carries the
+  findings this lane added.
+- **What is NOT the reason, stated because the adjacent reading is tempting and
+  was wrong once already.** The hook-bundle ceiling below is not what stops
+  this. Measured this run with the gate's own command,
+  `check_hook_bundle_composition` reads **1,512,901 B / 1,550,000** at
+  `origin/main` @ `5550dec9c` — **37,099 B** of headroom. A concern for this slot
+  fits many times over. Quoting the ceiling here would be citing a lock that
+  does not apply.
+- **The second half, which an owner answering only the settings question would
+  meet next.** The step's exit condition is *"Its first session record
+  answers …"*. Binding takes effect at session start, so a session cannot
+  observe its own registration — the stub states this as its own reason for not
+  splitting 3.0. A `vitest` file can hold the recorder's shape; it cannot hold a
+  fire, which is why 0.2's `verify:` can go green on a build that has never
+  received the event. So a yes unblocks the edits and still leaves the record
+  waiting on a later session. Both halves are external to any single run, which
+  is why this is a blocker rather than a decision the lane could have closed.
+- **Recommendation:** answer **no for this roadmap's Phase 0**, and schedule the
+  binding where it belongs instead — as the stub's own step 3.0, travelling with
+  the fork 3.1 that reads its datum. Three reasons, in order of weight.
+
+  First, the phase header. Phase 0 is titled *"Instruments, no behaviour
+  change"*, and this is the one step in it that changes what every consumer's
+  `.claude/settings.json` receives. The other four — 0.1, 0.3, 0.4, 0.5 — are
+  reports and records that gate nothing, and all four closed. A step that
+  contradicts its own phase header is misfiled, not merely blocked, and a yes
+  here would land a shipped-default change under a heading promising none.
+
+  Second, a yes buys nothing observable on its own. The exit condition needs a
+  later session, so the immediate return on landing the edits is zero records;
+  the value arrives only when someone runs a session and reads the recorder
+  back. Nothing about this file's remaining work depends on that, and
+  `road-to-an-installed-layer-that-is-thinned` gates on Phase 1 having merged,
+  which it has.
+
+  Third, the costs it would carry are sized but unpaid: a 57-file
+  `hook_manifest` test surface (the stub's "~24-file" estimate re-counted this
+  run), plus the non-optional kill switch. That is a scheduling decision with a
+  budget, which is the stub's shape rather than a Phase-0 instrument's.
+
+  What this recommendation does NOT claim: it does not re-decide the council's
+  refusal and it does not say the observer is not worth building. The stub's own
+  record is that the capability was measured to exist on the host and that the
+  work became buildable; the argument here is about WHERE and WHEN, which is the
+  half an owner can act on without reopening a lock.
+- **If you do nothing:** the carrier keeps working outside the repo — Phase 1 is
+  merged — and the loading end stays unobserved. The cost is bounded and
+  already written down: Risk 3 in the register is UNMITIGATED for this reason,
+  and its exposure is that the installed-layer report's inference about which
+  files a host counts is checkable against a host but not against this suite.
+  The report gates nothing, so a wrong count misinforms rather than breaking
+  anything. AC-4 is unaffected.
+- **Resolved when:** the owner answers the single question above, recorded here
+  with the date; a yes additionally needs the manifest and vocabulary edits
+  landed, `npx vitest run tests/scripts/instructions_loaded_observer.test.ts`
+  green, and one later session's record filled — the last of which no
+  repository automation can supply.
 
 ### blocker: hook-bundle-ceiling-exhausted
 
