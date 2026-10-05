@@ -116,6 +116,42 @@ is a separate, owner-reserved question and is untouched here — it is blocker
   exists so a machine-wide file cannot set arbitrary project-shaped keys, and
   three repairs to its CONTENTS are not evidence against its EXISTENCE.
 
+## Evidence
+
+- `src/scripts/_lib/agent_settings.ts` — `_filter_whitelist` over the user-global
+  layer, and `MERGEABLE_KEYS` with the two new rows beside the two prior repairs
+  of the same filter. The filter is an exact-dotted-path match, so the rows admit
+  `lean_projection.mode` and `lean_projection.hosts` and nothing else.
+- `src/scripts/_lib/lean_projection_mode.ts` — the single resolver whose
+  `modeExplicit` the installer reads, and `installerThinsHost`, which refuses a
+  value whose only source is the shipped template. This is what carries the
+  "grants nothing and flips no default" claim: whitelisting makes the value
+  readable, and a separate predicate decides whether it is a consent.
+- `src/install/installThinLayer.ts` — the consumer of that predicate, and the
+  reason the scope argument is machine-shaped: the layer it rewrites is
+  `~/.claude/rules`.
+- `tests/lib/agent_settings.test.ts` — the exact-list pin this record is the ADR
+  for, moved by exactly the two rows.
+- `tests/scripts/install_thin_layer.test.ts` — the four `template-is-not-consent`
+  cases plus the production call shape from a cwd that disagrees with the
+  user-global layer, which is where "the project layer cannot decide this" is
+  asserted in both directions.
+- Measured both directions on an isolated probe, 2026-10-05, against a template
+  saying `delivery`/`[claude-code]` and a user-global file saying
+  `delivery`/`[cursor]`: before the rows, `modeExplicit: false`,
+  `hosts: ["claude-code"]`, raw explicit `""`; after, `modeExplicit: true`,
+  `hosts: ["cursor"]`, raw explicit `"delivery"`. The before reading is the
+  load-bearing one — it is the template answering a question the user had
+  already answered differently.
+- `agents/roadmaps/road-to-an-installed-layer-that-is-thinned.md` — step 1.1,
+  which this unblocks, and blocker `default-flip-of-the-installed-layer`, which
+  it does not touch.
+
+**Strength `E1`, and not higher.** The probe is a single reproduction on one
+machine with a synthetic cascade, not a measurement across installs; what it
+establishes is that the filter discarded the value and no longer does. No
+consumer install has been observed before and after.
+
 ## References
 
 - ADR-219, ADR-271 — the two prior repairs of the same filter.
