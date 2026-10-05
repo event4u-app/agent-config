@@ -1,8 +1,8 @@
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..a03b13b47c61b5ce1907010350ee3fd0c038d9e1 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..deee71af039962fc784179a63d5519f2a2a3379f 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
-@@ -35,10 +35,17 @@ keep-beta-reason: >-
+@@ -35,10 +35,18 @@ keep-beta-reason: >-
  > older one is matrix-level. Current per-job numbers live in
  > [`ci-cost-budget.md`](ci-cost-budget.md); the skip argument below is
  > unaffected either way. Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
@@ -15,16 +15,17 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..a03b13b47c61b5ce1907010350ee3fd0
 +> paths the code had already renamed. The file-set claim was verified against PR #238 (3.3.0) and the
 +> allowlist has grown since, so what carries the argument is what the release
 +> flow WRITES into those paths: version fields, changelog prose, generated
-+> manifests and two report artifacts. Stated precisely, because the categorical
-+> version — "no entry is install or runtime code" — is false of its own first two
-+> entries, and `check_release_pr_shape` matches paths and never reads content:
-+> nothing here stops a release PR from editing `bin`, `files`, `dependencies` or
-+> `engines` in `package.json` with the install matrix skipped. That residual gap
-+> is held by review, not by a gate.
++> manifests and two report artifacts. Stated that way because the categorical
++> version — "no entry is install or runtime code" — is false of several of them:
++> the npm manifests carry `bin`, `files`, `dependencies` and `engines`, and the
++> plugin and marketplace manifests ship in the tarball. `check_release_pr_shape`
++> matches paths and never reads content, so nothing here stops a release PR from
++> editing any of those fields with the install matrix skipped. That residual gap
++> is held by review, not by a gate, and it is wider than one file.
  
  ## Release-PR shape
  
-@@ -53,12 +60,40 @@ hold:
+@@ -53,12 +61,40 @@ hold:
       `release.ts` § `set_lockfile_version`
     - `CHANGELOG.md`
     - `.claude-plugin/marketplace.json`
@@ -68,10 +69,10 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..a03b13b47c61b5ce1907010350ee3fd0
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
 diff --git a/src/scripts/check_release_pr_shape.ts b/src/scripts/check_release_pr_shape.ts
-index ef101165f052ad6ca03020e4deb7189b01917e36..a75417b1ff72f03823ff078cc920b4d2ef21abc7 100644
+index ef101165f052ad6ca03020e4deb7189b01917e36..ab81e6a7036da5553d72958f5f7989deff837890 100644
 --- a/src/scripts/check_release_pr_shape.ts
 +++ b/src/scripts/check_release_pr_shape.ts
-@@ -45,6 +45,18 @@ const ALLOWLIST_GLOBS = [
+@@ -45,6 +45,17 @@ const ALLOWLIST_GLOBS = [
      // be able to carry the dispositions of its own self-review findings; the
      // finding-dispositions gate is red until blocking ones are recorded here.
      'agents/evidence/release-findings/*.json',
@@ -81,16 +82,15 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..a75417b1ff72f03823ff078cc920b4d2
 +    // matches any character: `????-??-??` would still require ten characters
 +    // with separators at offsets 4 and 7, so it admits not every sibling but
 +    // any whose name happens to carry that shape. Narrower than it reads, and
-+    // still wider than a date. Two reports can appear in one release PR:
-+    // `--resume` re-runs release-prepare, so a release carried across UTC
-+    // midnight writes a second census. Its delta section is empty, because
-+    // `--since latest` then resolves the baseline to the first census of the
-+    // same release rather than to the previous release.
++    // still wider than a date. Two reports can appear in one release PR, and
++    // both are in shape: `--resume` re-runs release-prepare, so a release
++    // carried across UTC midnight writes a second census. What that one
++    // contains is the census's business, not this gate's.
 +    'agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md', // code-comment-allow provenance-comment -- the glob IS this gate's operand, not where the code came from
      // Project-settings template pin — bumped by release.ts set_template_pin and
      // its regenerated dist twin (kept in lockstep with package.json.version).
      'src/agent-src/templates/agents/agent-project-settings.example.yml',
-@@ -87,12 +99,12 @@ function _fnmatchToRegExp(pat: string): RegExp {
+@@ -87,12 +98,13 @@ function _fnmatchToRegExp(pat: string): RegExp {
                  res += '\\[';
              } else {
                  let stuff = pat.slice(i, j);
@@ -101,10 +101,11 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..a75417b1ff72f03823ff078cc920b4d2
 -                    stuff = stuff.replace(/\\/g, '\\\\');
 -                }
 +                // Python's `fnmatch.translate` branches on a `-` inside the
-+                // class; this port never needed to, and the two arms it carried
-+                // were byte-identical. They read as an implemented divergence
-+                // that does not exist, and their comment claimed no allowlist
-+                // entry used a range — false since the census glob's `[0-9]`.
++                // class and this port does not; the two arms it carried were
++                // byte-identical, so the branch implemented no divergence. The
++                // ranges differ in hyphen escaping, not in output for `[0-9]`,
++                // and an invalid range throws in both languages — measured:
++                // `[z-a]` raises in `re.compile` and in `new RegExp` alike.
 +                stuff = stuff.replace(/\\/g, '\\\\');
                  i = j + 1;
                  if (stuff.startsWith('!')) {
