@@ -217,9 +217,10 @@ describe('censusDateStamp', () => {
         //
         // The runner's TZ is not pinned, and at offset 0 a local-time
         // implementation is indistinguishable from this one — so the test sets
-        // the offset itself. Node applies a TZ change at runtime (verified on
-        // v26), and each half of the pair is the one a local-time stamping
-        // fails under that sign.
+        // the offset itself. Node applies a TZ change at runtime; the evidence
+        // that CI's runtimes do is this test passing there, on Node 20 and 22,
+        // not a local reading. Each half of the pair is the one a local-time
+        // stamping fails under that sign.
         const tz = process.env['TZ'];
         const lateOnThe5th = new Date(Date.UTC(2026, 9, 5, 23, 30));
         const earlyOnThe6th = new Date(Date.UTC(2026, 9, 6, 0, 30));

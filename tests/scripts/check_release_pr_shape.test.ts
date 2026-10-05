@@ -231,24 +231,46 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
     it('every caller lets the writer choose the path it writes', () => {
         // `main` prefers `--out` over `defaultReportPath`, so a caller passing
         // one writes a name no test pins — the 16.3.0 drift class, one step
-        // further out. Scanning every orchestration surface rather than the one
-        // file that happens to hold the call today: a second invocation added
-        // elsewhere is exactly what a single-file filter would miss.
-        const roots = ['taskfiles', 'Taskfile.yml', 'src/scripts/release.ts', '.github/workflows'];
-        const files = roots.flatMap((rel) => {
-            const abs = path.join(REPO_ROOT, rel);
-            if (!fs.existsSync(abs)) return [];
-            return fs.statSync(abs).isDirectory()
-                ? fs.readdirSync(abs).map((n) => path.join(abs, n))
-                : [abs];
-        });
-        const invocations = files
-            .filter((f) => fs.statSync(f).isFile())
+        // further out.
+        //
+        // Walks recursively and REQUIRES each root to exist. An earlier version
+        // skipped a missing root silently, so renaming one left it unscanned
+        // with the test still green — a scan that cannot tell "nothing here"
+        // from "did not look" is the shape this suite keeps finding.
+        const roots = ['taskfiles', 'Taskfile.yml', 'src/scripts', 'package.json', '.github/workflows'];
+        const walk = (abs: string): string[] => {
+            expect(fs.existsSync(abs)).toBe(true);
+            if (!fs.statSync(abs).isDirectory()) return [abs];
+            return fs.readdirSync(abs).flatMap((n) => walk(path.join(abs, n)));
+        };
+        const invocations = roots
+            .flatMap((rel) => walk(path.join(REPO_ROOT, rel)))
+            .filter((f) => !f.endsWith('report_evidence_temperature.ts'))
             .flatMap((f) => fs.readFileSync(f, 'utf8').split('\n'))
-            .filter((line) => line.includes('report_evidence_temperature'));
+            .filter((line) => line.includes('report_evidence_temperature') && !line.trimStart().startsWith('*'));
         expect(invocations).toHaveLength(1);
         expect(invocations[0]).toContain('--write');
         expect(invocations[0]).not.toContain('--out');
+    });
+
+    it('the cut-surface table names exactly the jobs that skip', () => {
+        // The table is the only written justification for a branch-wide CI
+        // skip, and nothing parsed it — so it drifted: it named two jobs that
+        // had been removed and omitted four that do skip. Same remedy as the
+        // allowlist parity above, applied to the other list in the same file.
+        const workflow = fs.readFileSync(path.join(REPO_ROOT, '.github/workflows/tests.yml'), 'utf8');
+        const guarded: string[] = [];
+        let job = '';
+        for (const line of workflow.split('\n')) {
+            const header = /^ {2}([a-z][a-z0-9-]*):\s*$/.exec(line);
+            if (header) job = header[1] as string;
+            if (line.includes("startsWith(github.head_ref, 'release/')") && job !== '') {
+                guarded.push(job);
+            }
+        }
+        const doc = fs.readFileSync(CONTRACT, 'utf8');
+        const tabled = [...doc.matchAll(/^\| `tests\.yml` \| `([^`]+)` \|/gm)].map((m) => m[1] as string);
+        expect([...tabled].sort()).toEqual([...guarded].sort());
     });
 
     it('the contract enumerates exactly the globs the gate compiles', () => {

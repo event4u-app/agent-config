@@ -178,11 +178,18 @@ false.
 
 | Workflow | Job | Why skipping it is safe on a release PR |
 |---|---|---|
+All seven `tests.yml` jobs carrying the guard are listed — derived from the
+`if:` lines, not from memory. An earlier version of this table named two jobs
+that no longer exist and omitted four that do skip, which is how a table nothing
+parses decays.
+
 | `tests.yml` | `install-tests` | the allowlist has no `install.sh` / `scripts/install.py` / `tests/test_install.sh` |
 | `tests.yml` | `install-aux-tests` | same — orchestrator, key contracts, one-liner smoke all untouched |
-| `tests.yml` | `python-tests` | no `scripts/**` or `tests/**` (other than CHANGELOG via path filter — see below) |
 | `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
-| `tests.yml` | `windows-lockfile-export` | no `scripts/install_global*.py`, `scripts/cmd_export.py`, lockfile test surface |
+| `tests.yml` | `static-checks` | ESLint, `tsc` and prepack read source and manifests; the allowlist admits no source, and `package.json` version-field edits change no type and no lint result |
+| `tests.yml` | `golden-tests` | golden corpora live under `tests/` and `internal/`, neither admitted |
+| `tests.yml` | `collector-lifecycle` | exercises collector scripts under `src/scripts/`, none admitted |
+| `tests.yml` | `workspace-tests` | exercises workspace wiring under `src/` and `tests/`; the admitted pack and domain files are metadata those tests do not read |
 | `smoke-public-install.yml` | `smoke` | no `scripts/install*`, `setup.sh`. TWO admitted paths are this job's own `paths:` triggers: `package.json`, whose content no gate reads (opening blockquote), and `src/agent-src/templates/agents/agent-project-settings.example.yml`, a version-pinned example file whose pin `check_template_pin_drift` gates on the kept surface |
 
 `push:` to `main` and the weekly cron on `smoke-public-install.yml` stay
