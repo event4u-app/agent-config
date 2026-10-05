@@ -21,6 +21,67 @@ estate_offset_exempt: >-
 > correction to it would still have left the gate exactly as red. This roadmap
 > records what is actually wrong.
 
+> **Screened for promotion and archival 2026-10-05, and it moves to neither — every
+> verdict below is a command's output, not a reading of a status line.** The file reads
+> 4 done / 0 open / 2 deferred, which is the shape that normally precedes an archive.
+>
+> **1. Archival is unreachable while `status: draft`, and the gate is `collect()`.**
+> `archive_completed_roadmaps.ts` iterates `collect()` from
+> `update_roadmap_progress.ts`, which skips any roadmap whose frontmatter `status` is in
+> `UNSCHEDULED_VALUES` (`update_roadmap_progress.ts:103` — one member, `draft`).
+> Executed here: `collect()` over `agents/roadmaps/` returns 11 roadmaps with this file
+> **ABSENT**; over a scratch copy with the single line flipped to `status: ready` it
+> returns it **PRESENT**. So
+> `npx tsx src/agent-src/scripts/archive_completed_roadmaps.ts --all --dry-run` printing
+> `ℹ️  No completed roadmaps to archive.` is silence about this file, not a verdict on it.
+>
+> **2. Promoted to `ready`, the sweep sees it and refuses it.** Against a scratch root
+> holding this file at `status: ready`: `⚠️  …: 2 unresolved deferral(s) — not archived.`
+> — step 1.1 and AC-1 carry no `<!-- deferred-resolution: carried-to=<slug> -->`
+> annotation. With the carry path at its default the refusal becomes an owner question
+> rather than clearing: `❓  …: 2 deferred step(s) wait on owner blocker(s)
+> freshness-mechanism-is-owner-owned — not archived; the owner decides:`, with an
+> `OWNER-DECISION` record offering archive-and-park to `agents/roadmaps/later/` or leave
+> in place. No agent run can close this file by archiving it.
+>
+> **3. Promotion is blocked by the estate ratchet, and this file's own frontmatter
+> already said who promotes it.** `./scripts-run src/scripts/lint_decision_classes` is
+> **clean** on this file under a simulated `status: ready` — 0 violations, because `D3`'s
+> `OPEN` sits inside `## Decisions`, which that gate treats as the discharge record
+> rather than the defect. The block is elsewhere:
+> `./scripts-run src/scripts/check_estate_count` reds on the promotion of the two draft
+> roadmaps screened together — `active_roadmaps 11 → 13` and `open_blockers 60 → 62`
+> against the `origin/main` floor. And this file's `estate_offset_exempt` already states
+> the disposition in its own words: *"It ships as a draft, so it is already excluded from
+> the dashboard and from /roadmap:process-\* until a maintainer promotes it."*
+>
+> **The precedent that prompted the screen does not transfer.**
+> `road-to-a-kernel-that-guards-its-plumbing` archived the same day at `status: ready`,
+> **0** deferrals and **0** open blockers (`901e8bc4e`, a pure `git mv`). This file
+> differs on all three axes.
+>
+> **Hand-over.** (a) `agents/roadmaps/road-to-trigger-eval-freshness-has-no-writer.md:3`,
+> currently `status: draft` → `status: ready`, which also needs the `check_estate_count`
+> growth claimed or offset; the frontmatter reserves that act to a maintainer. (b) `D3`
+> answered — the row at `## Decisions` currently opens `| D3 | business-owned | owner |
+> **OPEN.**` — which is the `business-owned`, `Class: 3 — human-only` spend decision the
+> blocker prices. (c) Then either resolution of `freshness-mechanism-is-owner-owned`, or
+> the owner's archive answer via `./agent-config roadmap:archive --all --owner-decision
+> later --only road-to-trigger-eval-freshness-has-no-writer.md`.
+>
+> **The blocker's `Resolved when` was re-executed, both limbs, and is still UNMET.**
+> Limb one: `grep -n 'OPEN' …` still returns the `D3` row reading `**OPEN.**`. The
+> earlier 2026-10-05 note quotes that row at line 181, which was that day's offset; the
+> row has since moved down the file and its content is unchanged, so quote the row rather
+> than the offset when re-executing. Limb two:
+> `grep -rn "last_eval" src/ --include="*.ts" | grep -v "/evals/"` still shows the only
+> writer as `src/cli/commands/recordTriggerEval.ts:197`, writing `upstream.last_eval`
+> into `manifest.json` — a different key in a different file from the top-level
+> `last_eval` in `triggers.json` that `check_trigger_evals.ts:144` reads. The gate's own
+> count is unchanged from this file's 2026-10-05 reading: `./scripts-run
+> src/scripts/check_trigger_evals` reports 46 findings, 4 of them `missing or non-ISO`.
+> Both `[~]` glyphs are carrying a real disposition; neither is an open step wearing one.
+
 ## Goal
 
 `check_trigger_evals` either measures something a mechanism produces, or it
