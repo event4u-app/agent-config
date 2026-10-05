@@ -86,7 +86,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..ec5d284e883566033074ca894d66c917
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
 diff --git a/src/scripts/check_release_pr_shape.ts b/src/scripts/check_release_pr_shape.ts
-index ef101165f052ad6ca03020e4deb7189b01917e36..c3fd75967970b02bfcbd9e26706f92da7202412e 100644
+index ef101165f052ad6ca03020e4deb7189b01917e36..336ba0cfade803878fbff8ef1f2846b06f11e486 100644
 --- a/src/scripts/check_release_pr_shape.ts
 +++ b/src/scripts/check_release_pr_shape.ts
 @@ -45,6 +45,16 @@ const ALLOWLIST_GLOBS = [
@@ -106,7 +106,7 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..c3fd75967970b02bfcbd9e26706f92da
      // Project-settings template pin — bumped by release.ts set_template_pin and
      // its regenerated dist twin (kept in lockstep with package.json.version).
      'src/agent-src/templates/agents/agent-project-settings.example.yml',
-@@ -52,12 +62,20 @@ const ALLOWLIST_GLOBS = [
+@@ -52,16 +62,25 @@ const ALLOWLIST_GLOBS = [
  ] as const;
  
  /**
@@ -132,8 +132,15 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..c3fd75967970b02bfcbd9e26706f92da
 + * `check_release_pr_shape.test.ts`.
   */
  function _fnmatchToRegExp(pat: string): RegExp {
-     // Mirror Python fnmatch.translate: `*` → `.*`, `?` → `.`, `[seq]` kept,
-@@ -87,12 +105,13 @@ function _fnmatchToRegExp(pat: string): RegExp {
+-    // Mirror Python fnmatch.translate: `*` → `.*`, `?` → `.`, `[seq]` kept,
+-    // everything else escaped. The full pattern is anchored with `(?s:...)\Z`.
++    // `*` → `.*`, `?` → `.`, a bracket class kept, everything else escaped.
++    // CPython does more inside a class (hyphen and set-operator escaping, `(?!)`
++    // for an empty one) and this does not — see the bracket branch below.
+     let i = 0;
+     const n = pat.length;
+     let res = '';
+@@ -87,12 +106,13 @@ function _fnmatchToRegExp(pat: string): RegExp {
                  res += '\\[';
              } else {
                  let stuff = pat.slice(i, j);
@@ -153,6 +160,17 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..c3fd75967970b02bfcbd9e26706f92da
                  i = j + 1;
                  if (stuff.startsWith('!')) {
                      stuff = '^' + stuff.slice(1);
+@@ -105,7 +125,9 @@ function _fnmatchToRegExp(pat: string): RegExp {
+             res += c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+         }
+     }
+-    // Python uses `(?s:%s)\Z` — dotAll + full match.
++    // Full match with dotAll. Python spells the same thing `(?s:%s)\Z`; in JS
++    // `$` without the `m` flag does not match before a trailing newline, so
++    // `^(?:…)$` is equivalent rather than merely similar.
+     return new RegExp(`^(?:${res})$`, 's');
+ }
+ 
 diff --git a/src/scripts/report_evidence_temperature.ts b/src/scripts/report_evidence_temperature.ts
 index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..7e202ab039809071bc35fbec58bebd204b0d5c6b 100644
 --- a/src/scripts/report_evidence_temperature.ts
@@ -228,7 +246,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..7e202ab039809071bc35fbec58bebd20
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..85acf3be78f8084a2e9a9ecd6c1438eebebc519f 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..ddbb7112bbee1ba2a42eba49cdac7bc162b7babc 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -2,6 +2,7 @@
@@ -257,7 +275,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..85acf3be78f8084a2e9a9ecd6c1438ee
      it('marketplace metadata only passes', () => {
          expect(runCheck(['.claude-plugin/marketplace.json']).code).toBe(0);
      });
-@@ -113,6 +125,53 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -113,6 +125,52 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(shape._matches('src/packs/core/README.md')).toBe(true);
          expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
      });
@@ -307,7 +325,6 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..85acf3be78f8084a2e9a9ecd6c1438ee
 +        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))).toBe('2026-10-05');
 +        expect(shape._matches(defaultReportPath(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))))).toBe(true);
 +    });
-+
  });
  
  describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
