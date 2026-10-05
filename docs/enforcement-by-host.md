@@ -596,7 +596,17 @@ unanchored; the marker on these rows points at a page a reader can open.
 condition also asked, for the part that is a runtime claim rather than a
 documentation claim, for a session in which the timeout was actually reached and
 its effect on the 13 concerns recorded. No such session exists in this tree, so
-no cell above is marked as measured here and none may be cited as one. The
+no cell above is marked as measured here and none may be cited as one.
+
+**That absence was searched for on 2026-10-05, so it is now a measured zero
+rather than an unexamined one.** All 1257 `.jsonl` transcripts under the host's
+store were parsed per line and every timeout-shaped match classified by channel:
+71 sat in `toolUseResult` (Bash tool caps at 2m/3m/7m/10m, and greps of this
+file's own prose), 3 in agent or user prose, and **0 in `hookError`**. Two
+controls make the zero a finding: the same classifier did surface the real Bash
+timeouts, so it can see a timeout; and `hookError` is populated in 278 of those
+files, so the channel is instrumented and simply carries no timeout. The
+condition stays unmet — by measurement now, not by nobody having looked. The
 distinction is
 [`host-capability-manifest.md`](../src/agent-src/contexts/execution/host-capability-manifest.md)
 § Observation protocol's, and it is the reason every row carries the same
@@ -826,19 +836,21 @@ the narrowest sentence the manifest supports and no wider:
   Iron Law and [`user-interaction`](../src/rules/user-interaction.md)'s
   one-decision-point clause. That is L5 on the ladder above, and it is the
   floor everywhere.
-- **No host's delivered surface has been OBSERVED carrying a picker.** That is
-  why `STRUCTURED_ASK_SHAPES` is empty (`src/scripts/_lib/structured_ask.ts`)
-  and no per-host shape row exists. It is narrower than the claim this bullet
-  used to make — "it fires on nothing today, on every host" — and the narrowing
-  is the measurement base: `_lib/host_capability.ts` carries exactly one row,
-  `structured_ask: false` for `claude`, observed-absent on Claude Code 2.1.263
-  on 2026-09-07; the other eight hosts in the table at the top of this file have
-  no row at all, which is never-looked rather than measured. One dated reading of
-  one host version does not support a standing present-tense claim about nine
-  hosts, and the registry's own comment says so — the observation "is not a claim
-  that the vendor ships no such tool anywhere". The guard exists so the first
-  host whose delivered surface carries a picker meets the rule already in force.
-  A reader must not take its presence as evidence that any host has one.
+- **One host's delivered surface HAS been observed carrying a picker, and it is
+  `claude`.** `_lib/host_capability.ts` records `structured_ask: true` for it,
+  and `STRUCTURED_ASK_SHAPES` (`src/scripts/_lib/structured_ask.ts`) carries the
+  matching shape: 48 `AskUserQuestion` calls across host versions 2.1.252 to
+  2.1.284, 2026-09-01 to 2026-10-02, artefact
+  [`structured-ask-host-observation-2026-10.md`](../agents/evidence/analysis/structured-ask-host-observation-2026-10.md).
+  This bullet asserted the opposite until 2026-10-05, on a measurement base of
+  one `false` row read from a **subagent** leg — a leg that carries no picker
+  because a subagent has no user to ask. The reading was sound; the step from it
+  to a claim about the host was not, and which leg a surface was read from is now
+  part of every row. The other eight hosts in the table at the top of this file
+  still have no row at all, which is never-looked rather than measured, so
+  nothing here is a claim about them. The guard's deny threshold is unchanged —
+  one question per call is this repo's own Iron Law, and every observed call
+  already carried one.
 
 See also the artifact-projection view: [`capability-matrix.md`](capability-matrix.md).
 Its `hooks` row records which host consumes the `hooks/` **artifact** — that is a

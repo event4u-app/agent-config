@@ -14,33 +14,31 @@
  * names the count so the caller can split the ask instead of guessing what
  * happened.
  *
- * WHAT IT SEES, honestly. `_lib/structured_ask.ts` carries no observed
- * per-host tool, so this guard matches on a name SHAPE and is filtered by the
- * manifest's per-concern `tools:` key to the same candidate names. No host's
- * delivered surface has been OBSERVED in this tree carrying a question-picker
- * tool, which is why `STRUCTURED_ASK_SHAPES` is empty and no per-host shape row
- * exists — the same sentence `_lib/structured_ask.ts` already uses about itself.
+ * WHAT IT SEES, honestly. `_lib/structured_ask.ts` carries ONE observed
+ * per-host tool — `claude`'s `AskUserQuestion`, 48 calls across versions
+ * 2.1.252 to 2.1.284 between 2026-09-01 and 2026-10-02. On that host the guard
+ * therefore matches the observed tool name exactly; everywhere else it falls
+ * back to a name SHAPE, filtered by the manifest's per-concern `tools:` key to
+ * the same candidate names.
  *
- * That is NARROWER than the claim this header used to make. The earlier
- * sentence asserted that on every host measured today the concern therefore
- * matches nothing at all, and the two are different claims with only the first
- * supported. The old wording is described here rather than quoted, because
- * 1.1's drift check is a grep and a grep cannot tell a refuted quotation from
- * a live assertion. The measurement base is ONE row:
- * `_lib/host_capability.ts`'s registry records `structured_ask: false` for
- * `claude` alone, observed-absent on Claude Code 2.1.263 on 2026-09-07, and the
- * other eight hosts in `docs/enforcement-by-host.md` have no row at all — never
- * looked, not measured. "Every host measured" read against that table therefore
- * describes one host, and a present-tense claim about what the concern matches
- * turns one dated single-version reading into a standing property, which the registry's own
- * comment refuses in the same breath: the observation "is not a claim that the
- * vendor ships no such tool anywhere, and a later session observing one writes
- * the `true` row over it".
+ * This header carried the opposite claim until 2026-10-05 — that no host's
+ * delivered surface had been observed carrying a picker — and it was wrong in
+ * a specific, instructive way rather than merely stale. Its measurement base
+ * was one `false` row taken from a SUBAGENT leg, whose surface carries no
+ * picker because a subagent has no user to ask. The step from "this leg has
+ * none" to "no host has been observed with one" is the substitution the
+ * observation protocol exists to refuse, and the registry comment now records
+ * which leg each reading came from for that reason. The old wording is
+ * described rather than quoted, because 1.1's drift check is a grep and a grep
+ * cannot tell a refuted quotation from a live assertion.
  *
- * So the honest statement is about what has been looked at, not about what
- * fires. The concern exists so the first host whose delivered surface carries a
- * picker meets the rule already in force, not because a violation has been
- * observed.
+ * The other eight hosts in `docs/enforcement-by-host.md` still have no row at
+ * all — never looked, not measured — so nothing here is a claim about them.
+ *
+ * WHAT THE OBSERVATION DOES NOT CHANGE: the deny threshold. One question per
+ * call is `ask-when-uncertain`'s Iron Law, not a host limit, and all 47
+ * parsed calls already carried exactly one. The guard has had nothing to deny
+ * and that is the expected reading, not evidence it is inert.
  *
  * ENFORCEMENT REACH, also honestly. `fail_closed: false` and the exit-1 deny
  * are only a deny where the host both binds `pre_tool_use` AND honours the
