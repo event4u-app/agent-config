@@ -64,13 +64,20 @@ export const EVIDENCE_ROOT = 'agents/evidence';
 /** Where `--write` puts the report, relative to the repository root. */
 export const REPORT_DIR = 'agents/evidence/analysis';
 
+/** Reports of this family are excluded from the reference index — see `isSelfReport`. */
+const REPORT_PREFIX = 'evidence-temperature-';
+
 /**
- * Reports of this family are excluded from the reference index — see `isSelfReport`.
- * Exported so the release-PR shape gate's allowlist can be tested against the
- * name this writer actually produces, rather than against a second spelling of
- * it. The two drifting apart is what broke `task release` for 16.3.0.
+ * The path `--write` composes for a census taken on `generatedAt` (an ISO
+ * `YYYY-MM-DD` day, as `buildCensus` stamps it). The one place the name is
+ * spelled; `main` and the release-PR shape gate's test both go through it, so a
+ * change to the directory, the prefix, the date shape or the extension moves
+ * both sides at once. Writer and gate holding two independent spellings of this
+ * name is what broke `task release` for 16.3.0.
  */
-export const REPORT_PREFIX = 'evidence-temperature-';
+export function defaultReportPath(generatedAt: string): string {
+    return path.posix.join(REPORT_DIR, `${REPORT_PREFIX}${generatedAt}.md`);
+}
 
 /** File extensions a path token may end in. Anything else is not a path to us. */
 const PATH_EXTENSIONS = [
@@ -588,7 +595,7 @@ export function main(argv: readonly string[]): number {
         return 0;
     }
 
-    const dest = out ?? path.join(REPORT_DIR, `${REPORT_PREFIX}${census.generatedAt}.md`);
+    const dest = out ?? defaultReportPath(census.generatedAt);
 
     let previousCold: Set<string> | null = null;
     if (since === 'latest') {

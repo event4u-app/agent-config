@@ -36,11 +36,14 @@ keep-beta-reason: >-
 > [`ci-cost-budget.md`](ci-cost-budget.md); the skip argument below is
 > unaffected either way. Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
 > only touch the allowlist enumerated under § Release-PR shape below — version
-> manifests, the changelog and its era archive, pack metadata, and the two
-> generated release artifacts (findings ledger, evidence-temperature census).
-> The list is NOT restated here: a second prose copy went stale for months and
-> named paths the code had already renamed. They cannot regress install or
-> runtime behaviour by construction — verified against PR #238 (3.3.0).
+> manifests, the changelog and its era archive, pack metadata, the project-settings
+> template pin with its generated `dist/` twin, and the two release artifacts the
+> flow itself writes (findings ledger, evidence-temperature census). That set is a
+> summary and the enumeration below is the list; it is NOT restated here, because a
+> second prose copy went stale for months and named paths the code had already
+> renamed. The file-set claim was verified against PR #238 (3.3.0) and the
+> allowlist has grown since, so what carries the argument now is the enumeration,
+> not that observation: none of its entries is install or runtime code.
 
 ## Release-PR shape
 
@@ -70,8 +73,10 @@ hold:
    - `agents/evidence/analysis/evidence-temperature-YYYY-MM-DD.md` — the
      per-release evidence-temperature census written by
      `taskfiles/content.yml` § `release-prepare`, step 2 of `task release`.
-     Pinned to the ISO date shape with fnmatch digit classes, because `?`
-     matches any character and would admit every sibling report.
+     Pinned to the ISO date shape with fnmatch digit classes rather than `?`,
+     which matches any character: `????-??-??` would still require ten
+     characters with separators at offsets 4 and 7, so it admits not every
+     sibling report but any whose name carries that shape.
    - `src/agent-src/templates/agents/agent-project-settings.example.yml` and
      its regenerated `dist/agent-src/` twin — the project-settings template
      pin, kept in lockstep with `package.json.version`

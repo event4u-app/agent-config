@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import * as shape from '../../src/scripts/check_release_pr_shape.js';
-import { REPORT_DIR, REPORT_PREFIX } from '../../src/scripts/report_evidence_temperature.js';
+import { defaultReportPath } from '../../src/scripts/report_evidence_temperature.js';
 
 function runCheck(files: readonly string[]): { code: number; out: string } {
     const out: string[] = [];
@@ -144,14 +144,16 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
     });
 
     it('the allowlist admits the path the census writer actually produces', () => {
-        // The producer/consumer link. Every other assertion in this file spells
-        // the path out a second time, so a rename on the writing side would keep
-        // them all green and red only during a live `task release` — which is
-        // exactly how 16.3.0 broke. These two read the writer's own constants
-        // and today's date the same way `report_evidence_temperature` does.
+        // The producer/consumer link, and it goes through the writer's own path
+        // builder rather than re-spelling any part of the name. Every other
+        // assertion in this file writes the path out a second time, so a change
+        // on the writing side would keep them all green and red only during a
+        // live `task release` — which is exactly how 16.3.0 broke. Re-deriving
+        // only the directory and prefix here would leave the date shape and the
+        // extension un-pinned, which is two thirds of a coupling.
         const today = new Date().toISOString().slice(0, 10);
-        expect(shape._matches(`${REPORT_DIR}/${REPORT_PREFIX}${today}.md`)).toBe(true);
-        expect(shape._matches(`${REPORT_DIR}/${REPORT_PREFIX}2026-10-01.md`)).toBe(true);
+        expect(shape._matches(defaultReportPath(today))).toBe(true);
+        expect(shape._matches(defaultReportPath('2026-10-01'))).toBe(true);
     });
 });
 

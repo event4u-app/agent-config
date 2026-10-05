@@ -47,9 +47,11 @@ const ALLOWLIST_GLOBS = [
     'agents/evidence/release-findings/*.json',
     // Evidence-temperature census — `taskfiles/content.yml` § release-prepare
     // writes one per release, so without this entry the pipeline generates a
-    // file its own shape step refuses. Digit classes, never `?`: fnmatch's `?`
-    // matches ANY character, so a `????-??-??` spelling would admit every
-    // sibling report. A second report here is a decision, not a glob effect.
+    // file its own shape step refuses. Digit classes rather than `?`, which
+    // matches any character: `????-??-??` would still require ten characters
+    // with separators at offsets 4 and 7, so it admits not every sibling but
+    // any whose name happens to carry that shape. Narrower than it reads, and
+    // still wider than a date. A second report here is a decision.
     'agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md', // code-comment-allow provenance-comment -- the glob IS this gate's operand, not where the code came from
     // Project-settings template pin — bumped by release.ts set_template_pin and
     // its regenerated dist twin (kept in lockstep with package.json.version).
