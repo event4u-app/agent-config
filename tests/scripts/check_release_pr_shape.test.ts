@@ -241,14 +241,18 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
         // with the test still green — a scan that cannot tell "nothing here"
         // from "did not look" is the shape this suite keeps finding.
         const roots = ['taskfiles', 'Taskfile.yml', 'src/scripts', 'package.json', '.github/workflows'];
-        // Text extensions only: `src/scripts/` carries binary fixtures, and
-        // reading an .mp4 as UTF-8 costs time to find nothing.
-        const TEXT = /\.(ts|tsx|js|mjs|cjs|sh|bash|yml|yaml|json|md|py)$/;
+        // Binary extensions are skipped; everything else is read. An earlier
+        // version allowlisted text extensions instead, which silently dropped
+        // EXTENSIONLESS files — and `src/scripts/install` and
+        // `src/scripts/agent-config` are exactly that: executable dispatch
+        // scripts inside a scanned root. Denying known binaries keeps the
+        // unknown case readable rather than invisible.
+        const BINARY = /\.(mp4|mov|png|jpg|jpeg|gif|webp|pdf|zip|gz|tgz|ico|woff2?|ttf|mp3|wav)$/i;
         const walk = (abs: string, isRoot = false): string[] => {
             if (isRoot && !fs.existsSync(abs)) {
                 throw new Error(`caller-scan root is missing: ${abs}`);
             }
-            if (!fs.statSync(abs).isDirectory()) return TEXT.test(abs) ? [abs] : [];
+            if (!fs.statSync(abs).isDirectory()) return BINARY.test(abs) ? [] : [abs];
             return fs.readdirSync(abs).flatMap((n) => walk(path.join(abs, n)));
         };
         const invocations = roots
