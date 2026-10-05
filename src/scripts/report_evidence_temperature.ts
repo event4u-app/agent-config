@@ -409,7 +409,13 @@ function mib(bytes: number): string {
  * `--since latest` resolves through this so the release pipeline needs no date
  * arithmetic: the names sort lexicographically because they carry an ISO date,
  * and the file about to be written is excluded so a same-day re-run compares
- * against the previous release rather than against itself.
+ * against an earlier report rather than against itself.
+ *
+ * It picks the newest OTHER report, not the newest report of an earlier
+ * release. A release resumed across UTC midnight writes a second census, and
+ * that one's baseline is the first census of the same release — so its delta
+ * covers minutes, not a release. Nothing fails; the report is just narrower
+ * than its own heading suggests.
  */
 export function latestReportBefore(names: readonly string[], exclude: string): string | null {
     const candidates = names

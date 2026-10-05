@@ -70,6 +70,17 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         expect(out).toContain('OUT-OF-SHAPE: src/packs/core/installer/foo.ts');
     });
 
+    it('the `*` entries admit any depth — recorded, not endorsed', () => {
+        // The denial above holds on the EXTENSION, not on the nesting: `foo.ts`
+        // matches no glob at any depth. fnmatch `*` crosses `/`, so the `*`
+        // entries do admit arbitrary depth, which the census entry avoids by
+        // using digit classes. Pinned here so the property is visible rather
+        // than discovered, and so narrowing these globs later is a deliberate
+        // edit to this assertion rather than a silent behaviour change.
+        expect(shape._matches('src/packs/core/installer/pack.yaml')).toBe(true);
+        expect(shape._matches('agents/evidence/release-findings/a/b/c.json')).toBe(true);
+    });
+
     it('marketplace metadata only passes', () => {
         expect(runCheck(['.claude-plugin/marketplace.json']).code).toBe(0);
     });
@@ -171,8 +182,15 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         const tz = process.env['TZ'];
         try {
             process.env['TZ'] = 'Europe/Berlin';
+            // Guard, not decoration: both stamp assertions below go through
+            // `toISOString` and are therefore offset-invariant, so they pass
+            // whether or not the runtime honoured the line above. Without this
+            // the test degrades silently into the ambient-offset test it
+            // replaced. `getDate()` reads local time, so it is the probe.
+            expect(new Date(Date.UTC(2026, 9, 5, 23, 30)).getDate()).toBe(6);
             expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5, 23, 30)))).toBe('2026-10-05');
             process.env['TZ'] = 'America/New_York';
+            expect(new Date(Date.UTC(2026, 9, 6, 0, 30)).getDate()).toBe(5);
             expect(censusDateStamp(new Date(Date.UTC(2026, 9, 6, 0, 30)))).toBe('2026-10-06');
         } finally {
             if (tz === undefined) {
