@@ -35,10 +35,12 @@ keep-beta-reason: >-
 > older one is matrix-level. Current per-job numbers live in
 > [`ci-cost-budget.md`](ci-cost-budget.md); the skip argument below is
 > unaffected either way. Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
-> only touch `package.json`, `CHANGELOG.md`, `marketplace.json`,
-> `packages/*/pack.yaml`, `packages/*/README.md`, and the CHANGELOG era
-> archive `docs/archive/CHANGELOG-pre-*.md` — verified against PR #238
-> (3.3.0). They cannot regress install or runtime behaviour by construction.
+> only touch the allowlist enumerated under § Release-PR shape below — version
+> manifests, the changelog and its era archive, pack metadata, and the two
+> generated release artifacts (findings ledger, evidence-temperature census).
+> The list is NOT restated here: a second prose copy went stale for months and
+> named paths the code had already renamed. They cannot regress install or
+> runtime behaviour by construction — verified against PR #238 (3.3.0).
 
 ## Release-PR shape
 

@@ -2,6 +2,7 @@
 import { describe, expect, it } from 'vitest';
 
 import * as shape from '../../src/scripts/check_release_pr_shape.js';
+import { REPORT_DIR, REPORT_PREFIX } from '../../src/scripts/report_evidence_temperature.js';
 
 function runCheck(files: readonly string[]): { code: number; out: string } {
     const out: string[] = [];
@@ -125,14 +126,32 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
 
     it('the census glob admits the ISO date shape and nothing else under it', () => {
         expect(shape._matches('agents/evidence/analysis/evidence-temperature-2026-10-05.md')).toBe(true);
-        // The denial half, and the reason the glob uses digit classes: fnmatch's
-        // `?` matches any character, so a `????-??-??` spelling would pass each
-        // of these. They are the polarity this entry is pinned against.
+        // Denials the literal stem and the separators already carry — they hold
+        // under any date spelling, so they do NOT measure the digit classes.
         expect(shape._matches('agents/evidence/analysis/evidence-temperature-anything.md')).toBe(false);
-        expect(shape._matches('agents/evidence/analysis/evidence-temperature-aaaa-bb-cc.md')).toBe(false);
         expect(shape._matches('agents/evidence/analysis/evidence-temperature-2026-1-5.md')).toBe(false);
         expect(shape._matches('agents/evidence/analysis/some-other-report.md')).toBe(false);
         expect(shape._matches('agents/evidence/analysis/nested/evidence-temperature-2026-10-05.md')).toBe(false);
+    });
+
+    it('the census glob denies a non-digit date — the digit classes, measured', () => {
+        // These are the ONLY assertions in this file that go red if `[0-9]` is
+        // relaxed to `?`: a 4-2-2 shape with the right separators and the wrong
+        // character class. Measured, not assumed — the four denials above stay
+        // green under `????-??-??`, so they prove the stem, never the digits.
+        expect(shape._matches('agents/evidence/analysis/evidence-temperature-aaaa-bb-cc.md')).toBe(false);
+        expect(shape._matches('agents/evidence/analysis/evidence-temperature-20z6-10-05.md')).toBe(false);
+    });
+
+    it('the allowlist admits the path the census writer actually produces', () => {
+        // The producer/consumer link. Every other assertion in this file spells
+        // the path out a second time, so a rename on the writing side would keep
+        // them all green and red only during a live `task release` — which is
+        // exactly how 16.3.0 broke. These two read the writer's own constants
+        // and today's date the same way `report_evidence_temperature` does.
+        const today = new Date().toISOString().slice(0, 10);
+        expect(shape._matches(`${REPORT_DIR}/${REPORT_PREFIX}${today}.md`)).toBe(true);
+        expect(shape._matches(`${REPORT_DIR}/${REPORT_PREFIX}2026-10-01.md`)).toBe(true);
     });
 });
 

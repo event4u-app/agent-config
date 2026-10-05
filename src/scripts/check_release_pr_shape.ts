@@ -93,12 +93,12 @@ function _fnmatchToRegExp(pat: string): RegExp {
                 res += '\\[';
             } else {
                 let stuff = pat.slice(i, j);
-                if (!stuff.includes('-')) {
-                    stuff = stuff.replace(/\\/g, '\\\\');
-                } else {
-                    // Rare; not used by the allowlist. Keep simple escape.
-                    stuff = stuff.replace(/\\/g, '\\\\');
-                }
+                // Python's `fnmatch.translate` branches on a `-` inside the
+                // class; this port never needed to, and the two arms it carried
+                // were byte-identical. They read as an implemented divergence
+                // that does not exist, and their comment claimed no allowlist
+                // entry used a range — false since the census glob's `[0-9]`.
+                stuff = stuff.replace(/\\/g, '\\\\');
                 i = j + 1;
                 if (stuff.startsWith('!')) {
                     stuff = '^' + stuff.slice(1);
