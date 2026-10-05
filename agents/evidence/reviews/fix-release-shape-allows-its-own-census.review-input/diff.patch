@@ -1,8 +1,8 @@
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..44d03993d761f6d33ea27f57ac88d9a40f97c585 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..ec5d284e883566033074ca894d66c9178e75c412 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
-@@ -35,10 +35,18 @@ keep-beta-reason: >-
+@@ -35,10 +35,25 @@ keep-beta-reason: >-
  > older one is matrix-level. Current per-job numbers live in
  > [`ci-cost-budget.md`](ci-cost-budget.md); the skip argument below is
  > unaffected either way. Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
@@ -20,12 +20,19 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..44d03993d761f6d33ea27f57ac88d9a4
 +> the npm manifests carry `bin`, `files`, `dependencies` and `engines`, and the
 +> plugin and marketplace manifests ship in the tarball. `check_release_pr_shape`
 +> matches paths and never reads content, so nothing here stops a release PR from
-+> editing any of those fields with the install matrix skipped. That residual gap
-+> is held by review, not by a gate, and it is wider than one file.
++> editing any of those fields with the install matrix skipped.
++>
++> That gap is in the WHICH-PATHS gate's blind spot by construction and is not new
++> here — the checker has never opened a file. It does not contradict § Mid-release
++> fixes below: "no escape hatch" is about the path set, which is closed and has no
++> override, while this is about content inside an admitted path, which no gate
++> reads. Closing it needs a content check (version fields only in the npm and
++> plugin manifests) that does not exist; until one does, it is held by review, and
++> it is recorded here rather than left for a reader to infer from silence.
  
  ## Release-PR shape
  
-@@ -53,12 +61,50 @@ hold:
+@@ -53,12 +68,50 @@ hold:
       `release.ts` § `set_lockfile_version`
     - `CHANGELOG.md`
     - `.claude-plugin/marketplace.json`
@@ -79,7 +86,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..44d03993d761f6d33ea27f57ac88d9a4
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
 diff --git a/src/scripts/check_release_pr_shape.ts b/src/scripts/check_release_pr_shape.ts
-index ef101165f052ad6ca03020e4deb7189b01917e36..d046d729cd497321dda975671c8c54585479b8d4 100644
+index ef101165f052ad6ca03020e4deb7189b01917e36..c3fd75967970b02bfcbd9e26706f92da7202412e 100644
 --- a/src/scripts/check_release_pr_shape.ts
 +++ b/src/scripts/check_release_pr_shape.ts
 @@ -45,6 +45,16 @@ const ALLOWLIST_GLOBS = [
@@ -146,17 +153,8 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..d046d729cd497321dda975671c8c5458
                  i = j + 1;
                  if (stuff.startsWith('!')) {
                      stuff = '^' + stuff.slice(1);
-@@ -166,7 +185,7 @@ function check(files: readonly string[]): number {
-                 'test matrix skips on release/* heads, so code must not ride a release PR\n' +
-                 '(docs/contracts/release-pr-gating.md § Mid-release fixes).\n' +
-                 'Fix: land the files above on main via their own PR, then\n' +
--                '  git checkout release/X.Y.Z && git merge origin/main && git push\n' +
-+                                '  git checkout release/X.Y.Z && git merge origin/main && git push\n' +
-                 '— their release-PR diff becomes empty and this check goes green.\n' +
-                 'Then resume with: task release -- --resume --yes\n',
-         );
 diff --git a/src/scripts/report_evidence_temperature.ts b/src/scripts/report_evidence_temperature.ts
-index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..d81c2bd28eb5f89db1dfe84f7872eb4e59a1cde6 100644
+index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..7e202ab039809071bc35fbec58bebd204b0d5c6b 100644
 --- a/src/scripts/report_evidence_temperature.ts
 +++ b/src/scripts/report_evidence_temperature.ts
 @@ -67,6 +67,30 @@ export const REPORT_DIR = 'agents/evidence/analysis';
@@ -199,7 +197,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..d81c2bd28eb5f89db1dfe84f7872eb4e
  }
  
  export interface Totals {
-@@ -385,11 +409,17 @@ function mib(bytes: number): string {
+@@ -385,11 +409,18 @@ function mib(bytes: number): string {
   * `--since latest` resolves through this so the release pipeline needs no date
   * arithmetic: the names sort lexicographically because they carry an ISO date,
   * and the file about to be written is excluded so a same-day re-run compares
@@ -209,8 +207,9 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..d81c2bd28eb5f89db1dfe84f7872eb4e
 + * It picks the newest OTHER report, not the newest report of an earlier
 + * release. A release resumed across UTC midnight writes a second census, and
 + * that one's baseline is the first census of the same release — so its delta
-+ * covers minutes, not a release. Nothing fails; the report is just narrower
-+ * than its own heading suggests.
++ * covers minutes, not a release. The heading it renders under says "since the
++ * previous report", which is exactly that, so nothing misreports; a reader
++ * wanting a release-wide delta compares against the earlier release by hand.
   */
  export function latestReportBefore(names: readonly string[], exclude: string): string | null {
      const candidates = names
@@ -219,7 +218,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..d81c2bd28eb5f89db1dfe84f7872eb4e
          .sort();
      return candidates.at(-1) ?? null;
  }
-@@ -583,7 +613,7 @@ export function main(argv: readonly string[]): number {
+@@ -583,7 +614,7 @@ export function main(argv: readonly string[]): number {
          return 0;
      }
  
