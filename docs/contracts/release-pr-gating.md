@@ -45,8 +45,15 @@ keep-beta-reason: >-
 > the npm manifests carry `bin`, `files`, `dependencies` and `engines`, and the
 > plugin and marketplace manifests ship in the tarball. `check_release_pr_shape`
 > matches paths and never reads content, so nothing here stops a release PR from
-> editing any of those fields with the install matrix skipped. That residual gap
-> is held by review, not by a gate, and it is wider than one file.
+> editing any of those fields with the install matrix skipped.
+>
+> That gap is in the WHICH-PATHS gate's blind spot by construction and is not new
+> here — the checker has never opened a file. It does not contradict § Mid-release
+> fixes below: "no escape hatch" is about the path set, which is closed and has no
+> override, while this is about content inside an admitted path, which no gate
+> reads. Closing it needs a content check (version fields only in the npm and
+> plugin manifests) that does not exist; until one does, it is held by review, and
+> it is recorded here rather than left for a reader to infer from silence.
 
 ## Release-PR shape
 

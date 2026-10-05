@@ -414,8 +414,9 @@ function mib(bytes: number): string {
  * It picks the newest OTHER report, not the newest report of an earlier
  * release. A release resumed across UTC midnight writes a second census, and
  * that one's baseline is the first census of the same release — so its delta
- * covers minutes, not a release. Nothing fails; the report is just narrower
- * than its own heading suggests.
+ * covers minutes, not a release. The heading it renders under says "since the
+ * previous report", which is exactly that, so nothing misreports; a reader
+ * wanting a release-wide delta compares against the earlier release by hand.
  */
 export function latestReportBefore(names: readonly string[], exclude: string): string | null {
     const candidates = names

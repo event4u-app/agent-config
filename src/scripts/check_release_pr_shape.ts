@@ -185,7 +185,7 @@ function check(files: readonly string[]): number {
                 'test matrix skips on release/* heads, so code must not ride a release PR\n' +
                 '(docs/contracts/release-pr-gating.md § Mid-release fixes).\n' +
                 'Fix: land the files above on main via their own PR, then\n' +
-                                '  git checkout release/X.Y.Z && git merge origin/main && git push\n' +
+                '  git checkout release/X.Y.Z && git merge origin/main && git push\n' +
                 '— their release-PR diff becomes empty and this check goes green.\n' +
                 'Then resume with: task release -- --resume --yes\n',
         );
