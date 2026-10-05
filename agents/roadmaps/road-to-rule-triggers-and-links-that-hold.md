@@ -467,10 +467,22 @@ Reproduced on 2026-10-01:
 | D7 | reversible-technical | council:2026-10-06-docs-links-degraded-1of2 | The `docs/` group of D5's remainder is repaired too — 21 of 22 links become code spans; the 22nd is kernel-held, not held by the question | The hold this reopens rested on one claim — that repairing from the link side makes projecting `docs/` "irreversible in practice". The council found that claim unsound and nothing in the tree supports it: a code span becomes a link again by the same mechanical edit that produced it, so the owner's option survives the repair intact. Two further things had to hold and did. (1) **The option the hold was protecting is not one this run could take anyway** — projecting `docs/contracts/` means a deploy row, which is frozen install ABI and owner-reserved, so holding the links preserved nothing an agent could decide; it only deferred a repair. (2) **D6's hard-won safety check passes cleanly here, and was run rather than assumed**: the `templates/` revert taught that a link reading as repo-tree must be checked against every host's deploy plan first, so `report_installed_rule_links` was read for all 18 host rows and `docs` is unresolved on every one of them. The arithmetic confirms it rather than the intent: total links 523 → 502 (−21) with `resolved` unchanged at **387 on every host** — the exact signal that caught the `templates/` mistake, where 23 links left and augment's unresolved fell only 22. Measured outcome: claude-code 136 → **115** unresolved, augment 73 → 52, cursor 235 → 214, windsurf / cline / kiro 248 → 227; seven pack token passports smaller; the ratchet lowered to the measured reading and probed red at 114 before restoring. Council seat 2 (anthropic) failed on API credit, not on judgement — recorded as degraded, which is a reading and not convergence | A `docs/` projection decision lands, which turns each code span back into a link by the reverse of this edit — or the kernel PR named in the remainder blocker opens, which is when the 22nd link rides along |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-02 | reviewer: claude/drain-neighbour-usage-and-link-ac -->
+<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/drain-rule-triggers-links-hold -->
 
-Re-read again 2026-10-06 against the tree, and still NOT re-stamped, for the
-reason the next paragraph already gives. Both rows still describe the plan.
+Re-read again 2026-10-06 against the tree, and this time **re-stamped** — the
+2026-10-03 note below explains why it could not be, and that reason does not
+apply to this round. The gate dates freshness from the commit that INTRODUCED
+the current `reviewed:` value and compares that blob's Acceptance Criteria
+against the working text, so the thing it cannot express is an AC that moves
+*twice* after one stamp. The 2026-10-03 round was exactly that case and
+correctly left the stamp alone. This round moves AC-2 once, in the same change
+that re-stamps, so the introducing commit carries the AC text the stamp
+describes and the two agree by construction. Verified rather than assumed: the
+gate was run before the stamp and reported `stale_review` on this file, and run
+again after it and reported clean — the red was the instrument working, and
+it is recorded here because a stamp nobody saw fail is a stamp nobody tested.
+
+Both rows still describe the plan.
 Row 1 remains discharged at step 1.1. Row 2 is unchanged in shape and smaller
 in size: the `docs/` repair (D7) removed 21 links from the population row 2
 does NOT cover, so the deployable share it is about is still 112. The repair
@@ -490,7 +502,10 @@ population entirely. The repo-tree repair carried no risk this register was
 missing: it removed link syntax and added no instruction text, and the five
 pack token passports fell rather than grew.
 
-**Why the stamp stays at 2026-10-02, stated rather than left to look like an
+**Why the stamp stayed at 2026-10-02 through the 2026-10-03 round** — kept as
+the record of that round's reasoning, which was right for it; the stamp now
+reads 2026-10-06 for the reason given above. Stated rather than left to look
+like an
 oversight.** `lint_plan_risk_register` dates freshness from the commit that
 INTRODUCED the current `reviewed:` value and compares that blob's Acceptance
 Criteria against the working text, and `MARKER_RE` accepts only a bare date —
