@@ -229,6 +229,14 @@ describe('censusDateStamp', () => {
             // real tzdata rather than silently falling back to UTC. Both stamp
             // assertions go through `toISOString` and are offset-invariant, so
             // without the probes this test would pass while measuring nothing.
+            //
+            // Those are environment properties, so a leg lacking tzdata would
+            // red this while the implementation is fine. Measured rather than
+            // assumed: this file runs on `Node Tests`, whose eight legs are
+            // macos-latest and ubuntu-latest × 4 shards, all green with these
+            // probes in place. A leg added without tzdata reds here loudly,
+            // which is the right direction — a skip would restore the blindness
+            // the probes exist to remove.
             process.env['TZ'] = 'Europe/Berlin';
             expect(lateOnThe5th.getDate()).toBe(6);
             expect(censusDateStamp(lateOnThe5th)).toBe('2026-10-05');

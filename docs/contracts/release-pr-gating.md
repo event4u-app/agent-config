@@ -120,6 +120,12 @@ hold:
    IS the contract — a reader must be able to predict the gate without reading
    TypeScript.
 
+   What the test does NOT cover: the § Cut surface table below argues from the
+   allowlist in prose, and no parser reads those cells. That is why its rows now
+   argue ("no TypeScript source") instead of restating paths — a claim about the
+   allowlist's character survives an entry being added, where a copy of the list
+   would not.
+
 Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
 The script exits 0 when both hold; non-zero with a per-file diff naming any
 out-of-allowlist entry otherwise. It reads the diff shape only — it does
@@ -159,10 +165,12 @@ below is the argument for why that is safe, not a condition the workflow
 evaluates. The argument rests on the allowlist in § Release-PR shape: it admits
 no install script, no test source, and no executable code.
 
-It does admit five `src/**` paths and two under `templates/` — pack and domain
-metadata, their READMEs, and the project-settings template pin with its `dist/`
-twin. None is code any job below exercises, which is the claim; "the diff has no
-`src/**`" would be the stronger claim, and it is false.
+It does admit six paths under `src/` and `dist/`: pack and domain metadata
+(`pack.yaml` ×2), their READMEs (×2), and the project-settings template pin with
+its regenerated twin. One of the six sits under both `src/` and `templates/`, so
+the sets overlap rather than add. None is code any job below exercises, which is
+the claim; "the diff has no `src/**`" would be the stronger claim, and it is
+false.
 
 | Workflow | Job | Why skipping it is safe on a release PR |
 |---|---|---|
@@ -171,7 +179,7 @@ twin. None is code any job below exercises, which is the claim; "the diff has no
 | `tests.yml` | `python-tests` | no `scripts/**` or `tests/**` (other than CHANGELOG via path filter — see below) |
 | `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
 | `tests.yml` | `windows-lockfile-export` | no `scripts/install_global*.py`, `scripts/cmd_export.py`, lockfile test surface |
-| `smoke-public-install.yml` | `smoke` | no `scripts/install*`, `setup.sh`; the two admitted `templates/` files are a version-pinned example settings file, not installer input |
+| `smoke-public-install.yml` | `smoke` | no `scripts/install*`, `setup.sh`; the admitted `templates/` pair is one version-pinned example settings file and its generated twin, not installer input. `package.json` IS admitted and this job's own trigger — the opening blockquote records that its content is unread by any gate |
 
 `push:` to `main` and the weekly cron on `smoke-public-install.yml` stay
 **unconditional** — those catch drift the PR matrix can't see.
