@@ -35,13 +35,9 @@ keep-beta-reason: >-
 > older one is matrix-level. Current per-job numbers live in
 > [`ci-cost-budget.md`](ci-cost-budget.md); the skip argument below is
 > unaffected either way. Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
-> only touch the allowlist enumerated under § Release-PR shape below — version
-> manifests, the changelog and its era archive, pack metadata, the project-settings
-> template pin with its generated `dist/` twin, and the two release artifacts the
-> flow itself writes (findings ledger, evidence-temperature census). That set is a
-> summary and the enumeration below is the list; it is NOT restated here, because a
-> second prose copy went stale for months and named paths the code had already
-> renamed. The file-set claim was verified against PR #238 (3.3.0) and the
+> only touch the allowlist enumerated under § Release-PR shape below. The paths
+> are NOT listed here: a second copy of that list went stale for months and named
+> paths the code had already renamed. The file-set claim was verified against PR #238 (3.3.0) and the
 > allowlist has grown since, so what carries the argument is what the release
 > flow WRITES into those paths: version fields, changelog prose, generated
 > manifests and two report artifacts. Stated precisely, because the categorical
@@ -79,17 +75,26 @@ hold:
    - `agents/evidence/analysis/evidence-temperature-YYYY-MM-DD.md` — the
      per-release evidence-temperature census written by
      `taskfiles/content.yml` § `release-prepare`, step 2 of `task release`.
-     Pinned to the ISO date shape with fnmatch digit classes rather than `?`,
-     which matches any character: `????-??-??` would still require ten
-     characters with separators at offsets 4 and 7, so it admits not every
-     sibling report but any whose name carries that shape.
+     Pinned to the ISO date shape with fnmatch digit classes rather than `?`;
+     the entry in `ALLOWLIST_GLOBS` carries why, and is the only place that
+     reasoning is written down.
    - `src/agent-src/templates/agents/agent-project-settings.example.yml` and
      its regenerated `dist/agent-src/` twin — the project-settings template
      pin, kept in lockstep with `package.json.version`
 
    This list and `ALLOWLIST_GLOBS` are one decision recorded twice, so they
    drift: the entry a release-flow step needs is added where that step broke
-   and not here. A change to either edits both.
+   and not here. A change to either edits both — and that instruction is a weak
+   mechanism, which is why the blockquote above now carries no copy at all
+   rather than a third one to keep in sync.
+
+   This list survives where that one did not because the two are not the same
+   thing. The blockquote's copy existed to support an argument the paths were
+   not needed for; this enumeration IS the contract — a reader must be able to
+   predict the gate without reading TypeScript. Nothing mechanical binds them:
+   a parity check between this list and `ALLOWLIST_GLOBS` would, and does not
+   exist. Until it does, the drift this very change had to repair is held by an
+   instruction and by review.
 
 Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
 The script exits 0 when both hold; non-zero with a per-file diff naming any
