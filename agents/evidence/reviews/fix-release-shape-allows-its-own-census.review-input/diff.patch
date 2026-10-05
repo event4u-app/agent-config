@@ -1,5 +1,5 @@
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..deee71af039962fc784179a63d5519f2a2a3379f 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..ec318dc1f2d30acb7e4a8ecb95489d074690dbb2 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
 @@ -35,10 +35,18 @@ keep-beta-reason: >-
@@ -25,7 +25,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..deee71af039962fc784179a63d5519f2
  
  ## Release-PR shape
  
-@@ -53,12 +61,40 @@ hold:
+@@ -53,12 +61,49 @@ hold:
       `release.ts` § `set_lockfile_version`
     - `CHANGELOG.md`
     - `.claude-plugin/marketplace.json`
@@ -52,6 +52,15 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..deee71af039962fc784179a63d5519f2
 +     its regenerated `dist/agent-src/` twin — the project-settings template
 +     pin, kept in lockstep with `package.json.version`
 +
++   **`*` crosses `/` here.** These are fnmatch patterns, not shell or
++   `.gitignore` globs: `*` matches any character including a path separator, so
++   every `*` row above admits arbitrary depth —
++   `src/packs/core/installer/pack.yaml` and
++   `agents/evidence/release-findings/a/b/c.json` both pass. The census row uses
++   digit classes rather than `?` for exactly that reason. A reader predicting
++   the gate from this list needs that; both behaviours are pinned in
++   `tests/scripts/check_release_pr_shape.test.ts`.
++
 +   This list and `ALLOWLIST_GLOBS` are one decision recorded twice, so they
 +   drift: the entry a release-flow step needs is added where that step broke
 +   and not here. A change to either edits both — and that instruction is a weak
@@ -69,7 +78,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..deee71af039962fc784179a63d5519f2
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
 diff --git a/src/scripts/check_release_pr_shape.ts b/src/scripts/check_release_pr_shape.ts
-index ef101165f052ad6ca03020e4deb7189b01917e36..92cc2651b0ff9b8cc33e45b65386987368ee1c12 100644
+index ef101165f052ad6ca03020e4deb7189b01917e36..c3fd75967970b02bfcbd9e26706f92da7202412e 100644
 --- a/src/scripts/check_release_pr_shape.ts
 +++ b/src/scripts/check_release_pr_shape.ts
 @@ -45,6 +45,16 @@ const ALLOWLIST_GLOBS = [
@@ -89,22 +98,34 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..92cc2651b0ff9b8cc33e45b653869873
      // Project-settings template pin — bumped by release.ts set_template_pin and
      // its regenerated dist twin (kept in lockstep with package.json.version).
      'src/agent-src/templates/agents/agent-project-settings.example.yml',
-@@ -52,8 +62,12 @@ const ALLOWLIST_GLOBS = [
+@@ -52,12 +62,20 @@ const ALLOWLIST_GLOBS = [
  ] as const;
  
  /**
 - * Translate a Python `fnmatch` shell pattern to a RegExp, mirroring
 - * `fnmatch.translate`. fnmatch is case-sensitive on POSIX (fnmatchcase
+- * semantics on the normalized path); `*` and `?` do NOT cross path
+- * separators is NOT a property of fnmatch — `*` matches everything
+- * including `/`. The allowlist relies on that (e.g. nested-file rejection
+- * in the test works because none of the globs end with the file).
 + * Translate a Python `fnmatch` shell pattern to a RegExp, following
-+ * `fnmatch.translate` for the constructs this allowlist uses — `*`, `?` and
-+ * `[0-9]`. Bracket handling beyond that one class is unverified against
-+ * CPython; see the note at the bracket branch.
++ * `fnmatch.translate` for the constructs the allowlist actually uses: `*` and
++ * `[0-9]`. No entry uses `?`, and bracket handling beyond that one class is
++ * unverified against CPython — see the note at the bracket branch.
 + *
-+ * fnmatch is case-sensitive on POSIX (fnmatchcase
-  * semantics on the normalized path); `*` and `?` do NOT cross path
-  * separators is NOT a property of fnmatch — `*` matches everything
-  * including `/`. The allowlist relies on that (e.g. nested-file rejection
-@@ -87,12 +101,13 @@ function _fnmatchToRegExp(pat: string): RegExp {
++ * Matching is case-sensitive, as `fnmatchcase` on a normalized path.
++ *
++ * THE PROPERTY EVERY ENTRY TURNS ON: in fnmatch, `*` and `?` DO cross path
++ * separators — `*` becomes `.*` and `?` becomes `.`, both under the `s` flag,
++ * so each matches `/` like any other character. Glob syntax elsewhere (shells,
++ * .gitignore) stops `*` at a segment boundary; this does not. So the pack entry
++ * admits any depth beneath `src/packs/`, and the census entry uses digit classes
++ * precisely because they cannot match a separator. Both sides are pinned in
++ * `check_release_pr_shape.test.ts`.
+  */
+ function _fnmatchToRegExp(pat: string): RegExp {
+     // Mirror Python fnmatch.translate: `*` → `.*`, `?` → `.`, `[seq]` kept,
+@@ -87,12 +105,13 @@ function _fnmatchToRegExp(pat: string): RegExp {
                  res += '\\[';
              } else {
                  let stuff = pat.slice(i, j);
@@ -198,7 +219,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..d81c2bd28eb5f89db1dfe84f7872eb4e
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..45aa0408903cb9bbcb8c8172e410a9ac5e331ac7 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..b704555f356b2500a4edac846236c8e551e46fb4 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -2,6 +2,7 @@
@@ -227,11 +248,19 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..45aa0408903cb9bbcb8c8172e410a9ac
      it('marketplace metadata only passes', () => {
          expect(runCheck(['.claude-plugin/marketplace.json']).code).toBe(0);
      });
-@@ -113,6 +125,81 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -113,15 +125,51 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(shape._matches('src/packs/core/README.md')).toBe(true);
          expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
      });
-+
+-});
+ 
+-describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
+-    it('an out-of-shape finding carries the land-on-main procedure', () => {
+-        const { code, out } = runCheck(['package.json', 'src/scripts/skill_linter.ts']);
+-        expect(code).toBe(1);
+-        expect(out).toContain('OUT-OF-SHAPE: src/scripts/skill_linter.ts');
+-        expect(out).toContain('land the files above on main via their own PR');
+-        expect(out).toContain('task release -- --resume --yes');
 +    it('the evidence-temperature census release-prepare writes passes', () => {
 +        const { code } = runCheck([
 +            'package.json',
@@ -276,28 +305,52 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..45aa0408903cb9bbcb8c8172e410a9ac
 +        // not pin its shape. A time component or `YYYYMMDD` reds here.
 +        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))).toBe('2026-10-05');
 +        expect(shape._matches(defaultReportPath(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))))).toBe(true);
-+    });
+     });
+ 
+     it('a shape-clean diff carries no remediation prose', () => {
+diff --git a/tests/scripts/report_evidence_temperature.test.ts b/tests/scripts/report_evidence_temperature.test.ts
+index 0a3a3f22b1324ae864c351888d25603a6034e64a..9d2604496ca0590d643a583fa96c98490902157a 100644
+--- a/tests/scripts/report_evidence_temperature.test.ts
++++ b/tests/scripts/report_evidence_temperature.test.ts
+@@ -9,6 +9,7 @@
+ import { describe, expect, it } from 'vitest';
+ 
+ import {
++    censusDateStamp,
+     citationKeys,
+     classify,
+     coldPathsIn,
+@@ -208,3 +209,39 @@ describe('latestReportBefore — what `--since latest` resolves to', () => {
+         expect(latestReportBefore(['other-analysis.md'], 'evidence-temperature-1970-01-02.md')).toBeNull();
+     });
+ });
 +
-+    it('the census date stamp is UTC on both sides of a day boundary', () => {
-+        // The runner's own TZ is not pinned, and at offset 0 a local-time
++describe('censusDateStamp', () => {
++    it('is UTC on both sides of a day boundary', () => {
++        // Lives here, not in the release-gate test file: this exercises the
++        // census writer, and the gate only consumes its output.
++        //
++        // The runner's TZ is not pinned, and at offset 0 a local-time
 +        // implementation is indistinguishable from this one — so the test sets
-+        // the offset itself rather than depending on whatever the machine has.
-+        // Node applies a TZ change at runtime (verified on v26), and each half
-+        // of the pair is the one a local-time implementation fails under that
-+        // sign.
++        // the offset itself. Node applies a TZ change at runtime (verified on
++        // v26), and each half of the pair is the one a local-time stamping
++        // fails under that sign.
 +        const tz = process.env['TZ'];
++        const lateOnThe5th = new Date(Date.UTC(2026, 9, 5, 23, 30));
++        const earlyOnThe6th = new Date(Date.UTC(2026, 9, 6, 0, 30));
 +        try {
++            // Each probe below asserts TWO preconditions at once: that the
++            // runtime honoured the TZ assignment, and that the zone resolved to
++            // real tzdata rather than silently falling back to UTC. Both stamp
++            // assertions go through `toISOString` and are offset-invariant, so
++            // without the probes this test would pass while measuring nothing.
 +            process.env['TZ'] = 'Europe/Berlin';
-+            // Guard, not decoration: both stamp assertions below go through
-+            // `toISOString` and are therefore offset-invariant, so they pass
-+            // whether or not the runtime honoured the line above. Without this
-+            // the test degrades silently into the ambient-offset test it
-+            // replaced. `getDate()` reads local time, so it is the probe.
-+            expect(new Date(Date.UTC(2026, 9, 5, 23, 30)).getDate()).toBe(6);
-+            expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5, 23, 30)))).toBe('2026-10-05');
++            expect(lateOnThe5th.getDate()).toBe(6);
++            expect(censusDateStamp(lateOnThe5th)).toBe('2026-10-05');
++
 +            process.env['TZ'] = 'America/New_York';
-+            expect(new Date(Date.UTC(2026, 9, 6, 0, 30)).getDate()).toBe(5);
-+            expect(censusDateStamp(new Date(Date.UTC(2026, 9, 6, 0, 30)))).toBe('2026-10-06');
++            expect(earlyOnThe6th.getDate()).toBe(5);
++            expect(censusDateStamp(earlyOnThe6th)).toBe('2026-10-06');
 +        } finally {
 +            if (tz === undefined) {
 +                delete process.env['TZ'];
@@ -306,6 +359,4 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..45aa0408903cb9bbcb8c8172e410a9ac
 +            }
 +        }
 +    });
- });
- 
- describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
++});
