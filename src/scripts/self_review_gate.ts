@@ -34,7 +34,13 @@ import { appendFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { AnthropicClient, load_anthropic_key } from './ai_council/clients.js';
+import { CLI_CONSUMER_SELF_REVIEW } from './ai_council/cli_call_budget.js';
+import {
+    AnthropicClient,
+    AnthropicCliClient,
+    type ExternalAIClient,
+    load_anthropic_key,
+} from './ai_council/clients.js';
 import { independenceFields } from './_lib/review_independence.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -1012,6 +1018,49 @@ function resolveKey(): string | null {
     }
 }
 
+/** The transport a reviewer was reached on, for the run's own report. */
+interface Reviewer {
+    client: ExternalAIClient;
+    transport: 'cli' | 'api';
+    how: string;
+}
+
+/**
+ * Resolve the review client CLI-FIRST — the subscription transport before the
+ * metered one, which is the ordering the rest of this suite already uses for
+ * coding work and which the council has used since it grew a `mode: cli`.
+ *
+ * The ordering is not a preference. An API key is a METERED resource with a
+ * balance that runs out, and when it does the gate reports NEUTRAL — a release
+ * then carries no review at all. That is not hypothetical: it is how 16.3.0
+ * stalled, with six chunks returning `credit balance is too low` and the
+ * release step refusing for want of a findings artefact. A vendor CLI backed by
+ * a subscription has no balance to exhaust, so trying it first removes the one
+ * failure mode that has actually produced an unreviewed release here.
+ *
+ * `AnthropicCliClient`'s constructor THROWS when `claude` is not on PATH, which
+ * is the probe: a hosted GitHub runner has no vendor CLI and falls straight
+ * through to the API transport, so this change costs CI nothing and buys every
+ * local and self-hosted run a free review. The catch is deliberately broad —
+ * anything that goes wrong reaching for the CLI resolves to the API path rather
+ * than to a NEUTRAL, because a reviewed release beats a diagnosed one.
+ *
+ * Calls book against `CLI_CONSUMER_SELF_REVIEW` so the daily CLI counter can
+ * tell a review apart from a council round; without the attribution the gate's
+ * six chunks would read as unexplained council spend.
+ */
+function resolveReviewer(): Reviewer | null {
+    try {
+        const client = new AnthropicCliClient({ consumer: CLI_CONSUMER_SELF_REVIEW });
+        return { client, transport: 'cli', how: `vendor CLI (${client.binary}), subscription` };
+    } catch {
+        // No `claude` on PATH, or the client refused to construct. Fall through.
+    }
+    const key = resolveKey();
+    if (!key) return null;
+    return { client: new AnthropicClient({ api_key: key }), transport: 'api', how: 'ANTHROPIC_API_KEY' };
+}
+
 // ── CLI ───────────────────────────────────────────────────────────────
 export function main(argv: string[]): 0 | 2 {
     const dryRun = argv.includes('--dry-run');
@@ -1087,22 +1136,28 @@ export function main(argv: string[]): 0 | 2 {
         return 0;
     }
 
-    const key = resolveKey();
-    if (!key) {
+    const reviewer = resolveReviewer();
+    if (!reviewer) {
         // Explicit NEUTRAL state — never a bare green that reads as "reviewed".
+        // BOTH transports are named, because naming only the API one is what
+        // made the CLI path invisible: an operator reading this warning set the
+        // secret and never learned a logged-in `claude` would also have served.
         process.stdout.write(
-            '::warning::self-review-gate NEUTRAL — no ANTHROPIC_API_KEY configured, NOTHING was reviewed. ' +
-                'Set the repo secret to enable the live dogfooded review.\n',
+            '::warning::self-review-gate NEUTRAL — no reviewer reachable (no `claude` CLI on PATH, ' +
+                'no ANTHROPIC_API_KEY), NOTHING was reviewed. Log in to the vendor CLI or set the ' +
+                'repo secret to enable the live dogfooded review.\n',
         );
         const summary = process.env.GITHUB_STEP_SUMMARY;
         if (summary) {
             appendFileSync(
                 summary,
-                '### Self-review gate: NEUTRAL\n\nNo `ANTHROPIC_API_KEY` secret — nothing was reviewed. This is not a pass.\n',
+                '### Self-review gate: NEUTRAL\n\nNo reviewer reachable — neither the `claude` CLI ' +
+                    '(subscription) nor `ANTHROPIC_API_KEY` (metered). Nothing was reviewed. This is not a pass.\n',
             );
         }
         return 0;
     }
+    process.stdout.write(`::notice::self-review-gate — transport: ${reviewer.transport} (${reviewer.how}).\n`);
 
     // Belt-and-suspenders: the WHOLE live path is wrapped so that ANYTHING going
     // wrong — no API credit / balance (HTTP 402), rate-limit (429), network error,
@@ -1111,7 +1166,7 @@ export function main(argv: string[]): 0 | 2 {
     // gate is advisory by design. (Only an --enforce run with real blocking
     // findings returns 2 — an error is not a finding.)
     try {
-        const client = new AnthropicClient({ api_key: key });
+        const client = reviewer.client;
         const systemPrompt = buildSystemPrompt(plan.release, baseRef);
         const partition = plan.partition;
 

@@ -17,10 +17,30 @@ AI-reviewed" — that is only true once the maintainer arms it (below).
 | Job | Runs | Spend | Blocks merge |
 |---|---|---|---|
 | `gate-dry-run` | every PR | none (no API) | never — prints the review plan only |
-| `live-advisory` | every PR **iff** `ANTHROPIC_API_KEY` is set | up to `MAX_REVIEW_CHUNKS` review calls (see § Prompt budget) | never — posts findings, records what *would* block |
+| `live-advisory` | every PR **iff** a reviewer is reachable (vendor CLI, else `ANTHROPIC_API_KEY`) | up to `MAX_REVIEW_CHUNKS` review calls (see § Prompt budget) | never — posts findings, records what *would* block |
 
-Without the `ANTHROPIC_API_KEY` repo secret, `live-advisory` is a **logged
-no-op** (never a failing check) — exactly the `cross-model-canary.yml` pattern.
+With neither the `claude` CLI on PATH nor the `ANTHROPIC_API_KEY` repo secret,
+`live-advisory` is a **logged no-op** (never a failing check) — exactly the
+`cross-model-canary.yml` pattern.
+
+### Transport — CLI-first, API as the fallback
+
+`self_review_gate.ts` resolves its reviewer in one order, and the order is not a
+preference: the vendor CLI (subscription) before `ANTHROPIC_API_KEY` (metered).
+An API balance runs out, and when it does the gate reports NEUTRAL and the
+release carries no review at all. 16.3.0 stalled exactly there — six chunks
+returning `credit balance is too low`, no findings artefact, the release step
+refusing for want of one. A subscription has no balance to exhaust.
+
+A hosted GitHub runner has no vendor CLI on PATH, so the job in this workflow
+always takes the API path; the ordering costs CI nothing and buys every local
+and self-hosted run a review that an empty balance cannot stop. The CLI path
+books against the `self-review` consumer in the daily CLI counter, so a review
+is distinguishable from a council round in `agent-config council:quota`.
+
+This is the same resolution the council has used since its own CLI-first flip
+(`cli → api → unavailable`). The self-review gate was missed by that flip and
+is aligned here.
 
 
 ## Prompt budget and coverage
@@ -99,7 +119,9 @@ and zero-spend; the multi-model run is the maintainer's run-time act.
 ## Arming it (maintainer, one flip)
 
 1. Add the `ANTHROPIC_API_KEY` repo secret (per-PR budget sign-off) — turns
-   `live-advisory` from no-op into a real dogfooded review.
+   `live-advisory` from no-op into a real dogfooded review **on a hosted
+   runner**, which has no vendor CLI. On a self-hosted runner, or locally, a
+   logged-in `claude` CLI already serves and needs no secret (§ Transport).
 2. Pass `--enforce` in the live job to arm the teeth (block on
    security/claim × high+).
 3. Require the `Self-review gate` check in branch protection
