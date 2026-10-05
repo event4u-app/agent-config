@@ -1395,11 +1395,31 @@ item. Phases 1-6 may run once 0.2 is chosen.
   written — `grep -c 'this turn'` returns 1 and `git status --short` is empty.
   **One thing this run learned that the previous three did not, and it widens the blocker
   slightly.** The guard also fires on **Bash** calls whose command text carries a kernel-rule
-  path in a write-ish argument shape: a read-only `grep -c … src/rules/non-destructive-by-default.md`
-  was refused by the same concern. That is the guard's documented conservatism
-  (*"literal shell-argument write shapes"*) rather than a defect, but it means a future session
-  verifying 1.1 must expect its own verify command to be denied — which is worth knowing before
-  it reads the denial as a failed edit.
+  path in a write-ish argument shape.
+  **WITHDRAWN 2026-10-05 — the half of that sentence naming a READ was false, and it is
+  corrected here rather than quietly dropped.** It went on: *"a read-only `grep -c …
+  src/rules/non-destructive-by-default.md` was refused by the same concern … a future session
+  verifying 1.1 must expect its own verify command to be denied."* Executed verbatim at
+  `6aa3c36f9`, `grep -c 'this turn' src/rules/non-destructive-by-default.md` **runs and returns
+  1**. It is not refused, and a future session must NOT expect its verify command to be denied —
+  reading the old note would have made a successful verify look like a missing control.
+  **Both polarities were exercised in the same session on the same tree, so the negative is a
+  real negative and not a dead guard.** Write shape: `sed -i '' -e 's/ZZZ_NO_SUCH_STRING_ZZZ/x/'`
+  on the same path → `block-kernel-rule-writes: BLOCKED — kernel rule non-destructive-by-default
+  is immutable`. Read shape: the `grep -c` above → exit 0, output `1`. The guard's own header
+  settles which is intended — `grep -n 'Reads stay allowed' src/scripts/hooks/block_kernel_rule_writes.ts`
+  returns `:164`, *"Reads stay allowed — a kernel rule is immutable, not secret"* — and its Bash
+  branch is enumerated from `grep -n 'deliberately narrow' …` at `:162` as redirection, an
+  in-place `sed`, a `tee`/`truncate`/`rm`, or a `mv`/`cp` DESTINATION.
+  A `grep` is none of those. So the 2026-10-01 denial was real but misattributed: something
+  refused that call and it was not this concern.
+  **Searched for other copies, because one instance is a sample.**
+  `grep -rniI 'read-only .grep\|verify command to be denied' --include="*.md" .` over the tree
+  (excluding `node_modules`) returns **2 lines, both inside this one paragraph**, and the same
+  pattern over the session memory store returns **0**. Control, run in the same breath so the
+  zero is a reading rather than a broken grep: `grep -rlI 'DENY REPRODUCED' --include="*.md" .`
+  returns this file, and the memory-store control returns three files. Population searched,
+  count 1 site, 1 file — this one.
   The alternative limb is unmet as before: no maintainer-authored kernel commit on this branch,
   and an agent cannot author one — the deny's design, not a gap in it.
   **Relationship to the sibling blocker, restated because it moved this week.**
@@ -1423,8 +1443,32 @@ PR carrying unique work · `G15` an authority-expanding kernel edit, inert until
 - [ ] AC-2 — `ask_block_census` over the 30-session corpus reports that every remaining owner
       ask is either a typed op or owner-owned residue; no ask remains for a push, a commit, a
       CI fix or a conflict.
-- [ ] AC-3 — ADR-239's `merge-authority` blocker reads `resolved` and points at ADR-268 § 3;
+- [x] AC-3 — ADR-239's `merge-authority` blocker reads `resolved` and points at ADR-268 § 3;
       ADR-255 § 4 carries a scoped `superseded_by`.
+      **MET 2026-10-05 at `6aa3c36f9`, and discharged against the STRICTER of the two readings
+      this sentence admits.** Two limbs were already true and were executed rather than read:
+      `grep -n -A3 '^### blocker: merge-authority' agents/roadmaps/archive/road-to-drain-commands.md`
+      reads `- **Status:** resolved` at `:410`, and `grep -n superseded_by docs/decisions/ADR-255*.md`
+      reads `superseded_by: 260 (§§ 1 · 2 · 3 · 5 only), 268 (§ 4 only)` at `:7` — scoped, which
+      is what the second limb asks for.
+      **The third limb was ambiguous and the ambiguity is recorded rather than resolved in the
+      convenient direction.** *"…reads `resolved` and points at ADR-268 § 3"* parses two ways:
+      the pointer is ADR-239's (met — `grep -n '268' docs/decisions/ADR-239-*.md` returns exactly
+      one line, the frontmatter `superseded_by: 268 (§ 3 only)` at `:7`), or the pointer is the
+      BLOCKER's (not met — its resolution text is dated 2026-08-22 and predates ADR-268 by
+      seventeen days). Amending the AC to the reading that was already green would be selecting
+      the verdict, so the weaker limb was DISCHARGED instead: the archived blocker now carries a
+      one-line supersession pointer at `agents/roadmaps/archive/road-to-drain-commands.md:463`,
+      written as a note beside the 2026-08-22 disposition rather than as an edit to it. Both
+      readings now hold.
+      **What the pointer deliberately does NOT claim, because the second obstacle is real.** The
+      blocker's reopening condition is *owner approval PLUS an accepted design whose authorization
+      is target-bound, head-SHA-bound, tamper-resistant, agent-unwritable*. ADR-268 § 3 discharges
+      the approval half only. The design half is Phase 3.1 and was re-measured this run:
+      `grep -rn LedgerState src --include "*.ts"` returns **2** hits, both in
+      `src/scripts/_lib/mission_record.ts` (`:87`, `:128`) — a type with no writer, no reader and
+      no file. So AC-3 is met and AC-6 is not, which is the correct split: this criterion is about
+      the RECORDS pointing at each other, not about the mechanism existing.
 - [ ] AC-4 — the `legacy_human_gate` ratchet is registered and its count at HEAD is below the
       count measured at this pin.
 - [ ] AC-5 — `personal.autonomy` ships `on` and no autonomy-detection context remains in the
