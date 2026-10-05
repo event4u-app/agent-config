@@ -21,14 +21,15 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 3dada223d31c4cc8fff743859c66470c4763add1, review
-  artefacts excluded), scope hash `375c04f335c5f0b968b4e27a4b3429421b20e91f78a9b27eca92aa76687e29fa`
+- diff: `diff.patch` — the review scope (branch head d6ba9ad2adaff3d7febe124fd5a8875fae45c0ee, review
+  artefacts excluded), scope hash `0a5854d3a215a942936662ca1d249502b42107c1bdf2f0a90568b203a07da1cd`
 - roadmap under review: none (`acceptance-criteria.md` is empty)
 
 Changed files:
 
 - docs/contracts/release-pr-gating.md
 - src/scripts/check_release_pr_shape.ts
+- src/scripts/report_evidence_temperature.ts
 - tests/scripts/check_release_pr_shape.test.ts
 
 ## Output format (contract §2.2)
@@ -51,7 +52,7 @@ Fill the findings table in `fix-release-shape-allows-its-own-census.findings.md`
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 375c04f335c5f0b968b4e27a4b3429421b20e91f78a9b27eca92aa76687e29fa, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 0a5854d3a215a942936662ca1d249502b42107c1bdf2f0a90568b203a07da1cd, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel

@@ -1,8 +1,25 @@
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..6145eb5ff0db36fee61f573159fbd2d436649403 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..610e21f196b631b025ddb32c68f0a0cfe76d4cc2 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
-@@ -53,12 +53,30 @@ hold:
+@@ -35,10 +35,12 @@ keep-beta-reason: >-
+ > older one is matrix-level. Current per-job numbers live in
+ > [`ci-cost-budget.md`](ci-cost-budget.md); the skip argument below is
+ > unaffected either way. Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
+-> only touch `package.json`, `CHANGELOG.md`, `marketplace.json`,
+-> `packages/*/pack.yaml`, `packages/*/README.md`, and the CHANGELOG era
+-> archive `docs/archive/CHANGELOG-pre-*.md` — verified against PR #238
+-> (3.3.0). They cannot regress install or runtime behaviour by construction.
++> only touch the allowlist enumerated under § Release-PR shape below — version
++> manifests, the changelog and its era archive, pack metadata, and the two
++> generated release artifacts (findings ledger, evidence-temperature census).
++> The list is NOT restated here: a second prose copy went stale for months and
++> named paths the code had already renamed. They cannot regress install or
++> runtime behaviour by construction — verified against PR #238 (3.3.0).
+ 
+ ## Release-PR shape
+ 
+@@ -53,12 +55,30 @@ hold:
       `release.ts` § `set_lockfile_version`
     - `CHANGELOG.md`
     - `.claude-plugin/marketplace.json`
@@ -36,7 +53,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..6145eb5ff0db36fee61f573159fbd2d4
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
 diff --git a/src/scripts/check_release_pr_shape.ts b/src/scripts/check_release_pr_shape.ts
-index ef101165f052ad6ca03020e4deb7189b01917e36..6eb60bf77016e2b291b1da481e23af6cb3107159 100644
+index ef101165f052ad6ca03020e4deb7189b01917e36..a6e51213d9c603e72cccf96270806d726e86af48 100644
 --- a/src/scripts/check_release_pr_shape.ts
 +++ b/src/scripts/check_release_pr_shape.ts
 @@ -45,6 +45,12 @@ const ALLOWLIST_GLOBS = [
@@ -52,11 +69,58 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..6eb60bf77016e2b291b1da481e23af6c
      // Project-settings template pin — bumped by release.ts set_template_pin and
      // its regenerated dist twin (kept in lockstep with package.json.version).
      'src/agent-src/templates/agents/agent-project-settings.example.yml',
+@@ -87,12 +93,12 @@ function _fnmatchToRegExp(pat: string): RegExp {
+                 res += '\\[';
+             } else {
+                 let stuff = pat.slice(i, j);
+-                if (!stuff.includes('-')) {
+-                    stuff = stuff.replace(/\\/g, '\\\\');
+-                } else {
+-                    // Rare; not used by the allowlist. Keep simple escape.
+-                    stuff = stuff.replace(/\\/g, '\\\\');
+-                }
++                // Python's `fnmatch.translate` branches on a `-` inside the
++                // class; this port never needed to, and the two arms it carried
++                // were byte-identical. They read as an implemented divergence
++                // that does not exist, and their comment claimed no allowlist
++                // entry used a range — false since the census glob's `[0-9]`.
++                stuff = stuff.replace(/\\/g, '\\\\');
+                 i = j + 1;
+                 if (stuff.startsWith('!')) {
+                     stuff = '^' + stuff.slice(1);
+diff --git a/src/scripts/report_evidence_temperature.ts b/src/scripts/report_evidence_temperature.ts
+index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..cc096064ff5850e1290189cdb971fd5b23ea4db8 100644
+--- a/src/scripts/report_evidence_temperature.ts
++++ b/src/scripts/report_evidence_temperature.ts
+@@ -64,8 +64,13 @@ export const EVIDENCE_ROOT = 'agents/evidence';
+ /** Where `--write` puts the report, relative to the repository root. */
+ export const REPORT_DIR = 'agents/evidence/analysis';
+ 
+-/** Reports of this family are excluded from the reference index — see `isSelfReport`. */
+-const REPORT_PREFIX = 'evidence-temperature-';
++/**
++ * Reports of this family are excluded from the reference index — see `isSelfReport`.
++ * Exported so the release-PR shape gate's allowlist can be tested against the
++ * name this writer actually produces, rather than against a second spelling of
++ * it. The two drifting apart is what broke `task release` for 16.3.0.
++ */
++export const REPORT_PREFIX = 'evidence-temperature-';
+ 
+ /** File extensions a path token may end in. Anything else is not a path to us. */
+ const PATH_EXTENSIONS = [
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..83dfc77e4e2806a6b6e5bee8b3d755a332c28854 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..a24e30f3c66b52e9db38e38b0fe65f544ec80220 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
-@@ -113,6 +113,27 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -2,6 +2,7 @@
+ import { describe, expect, it } from 'vitest';
+ 
+ import * as shape from '../../src/scripts/check_release_pr_shape.js';
++import { REPORT_DIR, REPORT_PREFIX } from '../../src/scripts/report_evidence_temperature.js';
+ 
+ function runCheck(files: readonly string[]): { code: number; out: string } {
+     const out: string[] = [];
+@@ -113,6 +114,45 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(shape._matches('src/packs/core/README.md')).toBe(true);
          expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
      });
@@ -72,14 +136,32 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..83dfc77e4e2806a6b6e5bee8b3d755a3
 +
 +    it('the census glob admits the ISO date shape and nothing else under it', () => {
 +        expect(shape._matches('agents/evidence/analysis/evidence-temperature-2026-10-05.md')).toBe(true);
-+        // The denial half, and the reason the glob uses digit classes: fnmatch's
-+        // `?` matches any character, so a `????-??-??` spelling would pass each
-+        // of these. They are the polarity this entry is pinned against.
++        // Denials the literal stem and the separators already carry — they hold
++        // under any date spelling, so they do NOT measure the digit classes.
 +        expect(shape._matches('agents/evidence/analysis/evidence-temperature-anything.md')).toBe(false);
-+        expect(shape._matches('agents/evidence/analysis/evidence-temperature-aaaa-bb-cc.md')).toBe(false);
 +        expect(shape._matches('agents/evidence/analysis/evidence-temperature-2026-1-5.md')).toBe(false);
 +        expect(shape._matches('agents/evidence/analysis/some-other-report.md')).toBe(false);
 +        expect(shape._matches('agents/evidence/analysis/nested/evidence-temperature-2026-10-05.md')).toBe(false);
++    });
++
++    it('the census glob denies a non-digit date — the digit classes, measured', () => {
++        // These are the ONLY assertions in this file that go red if `[0-9]` is
++        // relaxed to `?`: a 4-2-2 shape with the right separators and the wrong
++        // character class. Measured, not assumed — the four denials above stay
++        // green under `????-??-??`, so they prove the stem, never the digits.
++        expect(shape._matches('agents/evidence/analysis/evidence-temperature-aaaa-bb-cc.md')).toBe(false);
++        expect(shape._matches('agents/evidence/analysis/evidence-temperature-20z6-10-05.md')).toBe(false);
++    });
++
++    it('the allowlist admits the path the census writer actually produces', () => {
++        // The producer/consumer link. Every other assertion in this file spells
++        // the path out a second time, so a rename on the writing side would keep
++        // them all green and red only during a live `task release` — which is
++        // exactly how 16.3.0 broke. These two read the writer's own constants
++        // and today's date the same way `report_evidence_temperature` does.
++        const today = new Date().toISOString().slice(0, 10);
++        expect(shape._matches(`${REPORT_DIR}/${REPORT_PREFIX}${today}.md`)).toBe(true);
++        expect(shape._matches(`${REPORT_DIR}/${REPORT_PREFIX}2026-10-01.md`)).toBe(true);
 +    });
  });
  
