@@ -78,8 +78,9 @@ const ALLOWLIST_GLOBS = [
  * `check_release_pr_shape.test.ts`.
  */
 function _fnmatchToRegExp(pat: string): RegExp {
-    // Mirror Python fnmatch.translate: `*` → `.*`, `?` → `.`, `[seq]` kept,
-    // everything else escaped. The full pattern is anchored with `(?s:...)\Z`.
+    // `*` → `.*`, `?` → `.`, a bracket class kept, everything else escaped.
+    // CPython does more inside a class (hyphen and set-operator escaping, `(?!)`
+    // for an empty one) and this does not — see the bracket branch below.
     let i = 0;
     const n = pat.length;
     let res = '';
@@ -124,7 +125,9 @@ function _fnmatchToRegExp(pat: string): RegExp {
             res += c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         }
     }
-    // Python uses `(?s:%s)\Z` — dotAll + full match.
+    // Full match with dotAll. Python spells the same thing `(?s:%s)\Z`; in JS
+    // `$` without the `m` flag does not match before a trailing newline, so
+    // `^(?:…)$` is equivalent rather than merely similar.
     return new RegExp(`^(?:${res})$`, 's');
 }
 

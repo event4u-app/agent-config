@@ -171,7 +171,6 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))).toBe('2026-10-05');
         expect(shape._matches(defaultReportPath(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))))).toBe(true);
     });
-
 });
 
 describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
