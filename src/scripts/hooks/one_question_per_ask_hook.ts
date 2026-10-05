@@ -168,6 +168,17 @@ export function selfTest(): number {
             false,
         ],
         [
+            // PINS THE HEADER'S INVARIANT. `ask_user_question` is not the name
+            // claude's observed shape row carries, so this case denies only
+            // while `verdict()` passes no host id and the name-SHAPE pattern
+            // decides. Thread a host id through and the shape branch rejects
+            // the name, the call stops being an ask, and this flips to allow —
+            // which is the silent narrowing the header says is not being made.
+            'a snake_case picker with two questions is still denied — this guard is host-blind',
+            { tool_name: 'ask_user_question', tool_input: { questions: [{}, {}] } },
+            true,
+        ],
+        [
             'an empty ask passes — malformed, but not this guard\'s failure',
             { tool_name: 'AskUserQuestion', tool_input: { questions: [] } },
             false,

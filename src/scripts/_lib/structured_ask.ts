@@ -23,22 +23,27 @@
  * Every other host has no row, which is "never looked", and inventing one from
  * a vendor's documentation is exactly what that protocol forbids.
  *
- * `STRUCTURED_ASK_TOOL_NAME_RE` is therefore a **name-shape pattern, not a host
- * fact**. It exists so that if such a tool ever appears in a transcript, the
- * probe MEASURES it rather than missing it — and so the number it reports today
- * (zero) is a measurement rather than an absence of instrumentation. A reader
- * must not read a match as evidence that a named host ships that tool; the only
- * thing that establishes that is an observation written into
+ * `STRUCTURED_ASK_TOOL_NAME_RE` is a **name-shape pattern, not a host fact**,
+ * and stays one even now that a host fact exists beside it: the pattern is what
+ * every caller passing no host id still matches on. It exists so that a picker
+ * appearing in a transcript is MEASURED rather than missed. A reader must not
+ * read a match as evidence that a named host ships that tool; the only thing
+ * that establishes that is an observation written into
  * `STRUCTURED_ASK_SHAPES` with the protocol's four-part citation.
  *
- * Consequence, stated rather than discovered later: `native` is expected to be
- * **0** on every corpus this repo can scan today — and the 2026-10 observation
- * does NOT change that, which is worth stating because it looks like it should.
+ * Consequence, stated rather than discovered later: `native` is **0** on every
+ * corpus this repo can scan today — and the 2026-10 observation does NOT change
+ * that, which is worth stating because it looks like it should.
  * `probe_unblocked_ask` partitions hand-back ask turns, and a picker call is
  * answered by a `tool_result` rather than by a free user turn, so it was never
  * in that probe's denominator. The zero means "no prose hand-back used a picker
- * instead"; it never meant "no picker exists". The earlier wording attributed
- * the zero to the capability being unobserved, which is the half that was wrong.
+ * instead"; it never meant "no picker exists".
+ *
+ * That makes the zero DEFINITIONAL for this probe, not a measurement of
+ * scarcity, and the earlier wording claimed the opposite on both halves: it
+ * called the zero a measurement, and attributed it to the capability being
+ * unobserved. The capability is observed and the zero is unchanged, which is
+ * the cleanest available proof that the two were never connected.
  */
 
 /** The per-host shape of a structured-ask tool, once one has been OBSERVED. */
@@ -52,7 +57,13 @@ export interface StructuredAskShape {
     readonly max_questions: number;
     /** The largest option count OBSERVED on one question — same caveat. */
     readonly max_options_per_question: number;
-    /** Whether the host's picker admits a free-text answer alongside the options. */
+    /**
+     * Whether the host's picker admits a free-text answer alongside the options.
+     * The WEAKEST of the four to establish, because it is read by negation — an
+     * answer carrying none of the offered labels. A cancelled ask looks the same
+     * from the outside, so a `true` here is "observed at least once", never a
+     * count. The citing artifact carries the per-row basis.
+     */
     readonly free_text: boolean;
 }
 
@@ -95,6 +106,18 @@ export const STRUCTURED_ASK_TOOL_NAME_RE = /^(ask[_-]?user[_-]?question|user[_-]
  * An observed per-host shape wins outright — that is a fact about the host. The
  * name-shape pattern is the fallback, and it is why the probe can report a
  * measured zero instead of nothing at all.
+ *
+ * KNOWN ASYMMETRY, named rather than left for the next reader to hit. With a
+ * row present, this returns `name === shape.tool`: ONE observed name becomes an
+ * exclusive allowlist, so every other picker name is answered `false` on that
+ * host — a universal negative from a single positive observation, which is the
+ * shape of inference the observation protocol refuses elsewhere. It is left as
+ * it is because the alternative (union of the row and the pattern) would make
+ * an observed row buy nothing, and because no caller is affected today: the one
+ * production caller, `hooks/one_question_per_ask_hook.ts`, passes no host id by
+ * design and never reaches this branch. A caller that does start passing one
+ * inherits the asymmetry, and `tests/scripts/ask_surface.test.ts` pins it so
+ * the inheritance is visible rather than silent.
  */
 export function isStructuredAskTool(name: string, hostId?: string | null): boolean {
     const shape = structuredAskShape(hostId);

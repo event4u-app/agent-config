@@ -68,6 +68,14 @@ payloads, and two are **observed maxima over 48 calls, not host ceilings** —
 stated as such so a later reader does not promote a sample maximum into a limit
 the host was never asked for.
 
+**Two different 47s appear below and they are not the same 47.** The question
+and option figures are over the **47 calls whose payload parsed** (48 minus the
+one `__unparsedToolInput`); `free_text` is over the **47 `tool_result` payloads
+that were not errors** (48 minus the one `is_error`). Whether those two
+exclusions fall on the same call is not established here, so the two
+denominators coincide in size by arithmetic and are not asserted to coincide in
+membership.
+
 | Field | Value | Basis |
 |---|---|---|
 | `tool` | `AskUserQuestion` | the only name seen; 48/48 calls |
@@ -131,6 +139,31 @@ unchanged for the leg it measured. It does not claim anything about the eight
 other hosts in `docs/enforcement-by-host.md`, which still carry no row at all
 and remain "never looked".
 
+## Blast radius of the boolean flip, enumerated rather than assumed
+
+An R2 reviewer asked which consumers of `manifest.structured_ask` the
+`false → true` flip reaches, and could not answer it under a branch-scoped tool
+allowlist. Answered here, repository-wide:
+
+```
+grep -rn "\.structured_ask\|structured_ask:" src/ --include='*.ts' \
+  | grep -v "_lib/host_capability.ts\|_lib/structured_ask.ts"
+```
+
+**Zero hits.** No production code outside `host_capability.ts` itself branches
+on the boolean; the field's remaining readers are its own normalizer, the
+registry, the tests that pin the row, and prose. So the flip changes the value
+an unwritten consumer would read and changes no behaviour that exists today.
+The field doc frames `false` as what keeps the agent from firing a call into a
+host with no tool — that guard is still correct, and it now reports a host that
+does have one.
+
+The reviewer's second unresolvable risk is answered the same way: whether the
+guard is dead on `claude` because the per-concern `tools:` filter omits the
+observed name. It does not —
+`grep -n AskUserQuestion src/scripts/hook_manifest.yaml` returns one line, and
+`AskUserQuestion` is first in that list.
+
 ## Consequence
 
 `STRUCTURED_ASK_SHAPES` is no longer empty, so `isStructuredAskTool(name,
@@ -138,4 +171,4 @@ and remain "never looked".
 the name-shape pattern, and `one_question_per_ask_hook` on this host is a guard
 over a tool that demonstrably exists rather than one held in reserve. Its deny
 threshold is unchanged: the rule was always one question per call, and every
-observed call already carried one.
+observed call already carried one (47 of 48 — the 48th payload was unparsable, so its question count is unknown rather than one).

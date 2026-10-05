@@ -602,7 +602,8 @@ no cell above is marked as measured here and none may be cited as one.
 rather than an unexamined one.** All 1257 `.jsonl` transcripts under the host's
 store were parsed per line and every timeout-shaped match classified by channel:
 71 sat in `toolUseResult` (Bash tool caps at 2m/3m/7m/10m, and greps of this
-file's own prose), 3 in agent or user prose, and **0 in `hookError`**. Two
+repository's own prose, this file's included), 3 in agent or user prose, and
+**0 in `hookError`**. Two
 controls make the zero a finding: the same classifier did surface the real Bash
 timeouts, so it can see a timeout; and `hookError` is populated in 278 of those
 files, so the channel is instrumented and simply carries no timeout. The
@@ -850,7 +851,7 @@ the narrowest sentence the manifest supports and no wider:
   still have no row at all, which is never-looked rather than measured, so
   nothing here is a claim about them. The guard's deny threshold is unchanged —
   one question per call is this repo's own Iron Law, and every observed call
-  already carried one.
+  already carried one (47 of 48 — the 48th payload was unparsable, so its question count is unknown rather than one).
 
 See also the artifact-projection view: [`capability-matrix.md`](capability-matrix.md).
 Its `hooks` row records which host consumes the `hooks/` **artifact** — that is a
