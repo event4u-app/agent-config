@@ -98,7 +98,7 @@ left to read as finished.
       deferred on turned out to be false. The step read as though the observation
       had to be *created*; it had already *happened* and was sitting in the host's
       transcript store, uncounted.
-      verify: `npx vitest run tests/scripts/ask_surface.test.ts tests/scripts/_lib_host_capability.test.ts --reporter=dot 2>&1 | grep -c '2 passed'` -> /^1$/
+      verify: `npx vitest run tests/scripts/ask_surface.test.ts tests/scripts/_lib_host_capability.test.ts` -> 0
 
       The oracle is the two test files rather than a grep for the row's literal
       text, and the swap is deliberate: a substring grep passes on a row whose
@@ -106,6 +106,11 @@ left to read as finished.
       shape values AND the narrowing the row causes, and
       `_lib_host_capability.test.ts` pins the registry boolean it has to agree
       with. A grep would have been an oracle weaker than the exit condition.
+
+      It reads the runner's **exit code**, not its printed counts. An
+      intermediate form counted lines matching `2 passed`, which a reviewer
+      showed is coupled to the test total — a suite of 52 would have matched
+      twice and false-redded a green run. The exit code carries no such coupling.
 
       **Evidence (2026-10-05).** 1257 `.jsonl` transcripts under the host's store
       were parsed per line; **48** blocks of `type: "tool_use"` carry a `name`

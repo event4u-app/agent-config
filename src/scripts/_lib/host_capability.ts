@@ -253,6 +253,13 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  *
  *   WHICH LEG THE SURFACE WAS READ FROM IS PART OF THE OBSERVATION. A row that
  *   does not say so invites exactly this substitution, so every row here says.
+ *
+ *   The prose this block replaced avoided writing the literal field-plus-`true`
+ *   pair on purpose, because a planning step verified that string's absence by
+ *   grep. That constraint is checked and DEAD rather than forgotten: the step
+ *   is archived, an archived step executes nothing, and the active set carries
+ *   no such grep. Its own stated successor was to record the first observed
+ *   row with its provenance — which is what this block now is.
  */
 const HOST_CAPABILITY_REGISTRY: Readonly<Record<string, Partial<HostCapabilityManifest>>> = {
     claude: { subagent_spawn: true, parallel_spawn: true, structured_ask: true },

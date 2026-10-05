@@ -145,13 +145,19 @@ An R2 reviewer asked which consumers of `manifest.structured_ask` the
 `false → true` flip reaches, and could not answer it under a branch-scoped tool
 allowlist. Answered here, repository-wide:
 
+The first form of this grep matched only dot-access and literal-key spellings,
+so a destructured or bracket read would have been invisible to it. Widened to
+the bare identifier, which cannot miss either:
+
 ```
-grep -rn "\.structured_ask\|structured_ask:" src/ --include='*.ts' \
+grep -rnE "structured_ask" src/ --include='*.ts' \
   | grep -v "_lib/host_capability.ts\|_lib/structured_ask.ts"
 ```
 
-**Zero hits.** No production code outside `host_capability.ts` itself branches
-on the boolean; the field's remaining readers are its own normalizer, the
+**Two hits, both non-branching:** `probe_unblocked_ask.ts:64` (a prose comment)
+and `probe_unblocked_ask.ts:83` (an `import` of `isStructuredAskTool`, which is
+the matcher, not the boolean). No production code outside `host_capability.ts`
+itself branches on the field; its remaining readers are its own normalizer, the
 registry, the tests that pin the row, and prose. So the flip changes the value
 an unwritten consumer would read and changes no behaviour that exists today.
 The field doc frames `false` as what keeps the agent from firing a call into a

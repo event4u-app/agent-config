@@ -113,11 +113,13 @@ export const STRUCTURED_ASK_TOOL_NAME_RE = /^(ask[_-]?user[_-]?question|user[_-]
  * host — a universal negative from a single positive observation, which is the
  * shape of inference the observation protocol refuses elsewhere. It is left as
  * it is because the alternative (union of the row and the pattern) would make
- * an observed row buy nothing, and because no caller is affected today: the one
- * production caller, `hooks/one_question_per_ask_hook.ts`, passes no host id by
- * design and never reaches this branch. A caller that does start passing one
- * inherits the asymmetry, and `tests/scripts/ask_surface.test.ts` pins it so
- * the inheritance is visible rather than silent.
+ * an observed row buy nothing, and because no caller is affected today. There
+ * are TWO production callers, both host-blind, enumerated rather than recalled:
+ * `hooks/one_question_per_ask_hook.ts:103` and `probe_unblocked_ask.ts:184`,
+ * each calling `isStructuredAskTool(name)` with no second argument. A caller
+ * that does start passing one inherits the asymmetry, and
+ * `tests/scripts/ask_surface.test.ts` pins it so the inheritance is visible
+ * rather than silent.
  */
 export function isStructuredAskTool(name: string, hostId?: string | null): boolean {
     const shape = structuredAskShape(hostId);
