@@ -118,7 +118,13 @@ jobs:
           node-version: '20'
       - run: npm ci --no-audit --no-fund --prefer-offline
         if: steps.ledger.outputs.reviewed != 'true'
-      - name: Dogfooded self-review (advisory; skips if ANTHROPIC_API_KEY absent)
+      # CLI-first, like every other review and coding surface in this suite: the
+      # script tries the vendor CLI (subscription, no balance to exhaust) before
+      # ANTHROPIC_API_KEY (metered). A hosted runner has no vendor CLI on PATH,
+      # so THIS job always takes the API path — the ordering buys local and
+      # self-hosted runs a review that cannot be stopped by an empty balance,
+      # which is exactly how 16.3.0 stalled. NEUTRAL now needs BOTH absent.
+      - name: Dogfooded self-review (advisory; CLI-first, falls back to ANTHROPIC_API_KEY)
         if: steps.ledger.outputs.reviewed != 'true'
         run: ./node_modules/.bin/tsx src/scripts/self_review_gate.ts --base "origin/${{ github.base_ref }}" --findings-out /tmp/self-review-findings.json
 
