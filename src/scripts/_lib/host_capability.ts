@@ -184,7 +184,7 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  *
  * `contexts/execution/host-capability-manifest.md` § Observation protocol states
  * the per-field criterion and the four-part citation (host · host version ·
- * transcript or artefact reference · date). A row without all four is not
+ * transcript or artifact reference · date). A row without all four is not
  * admissible, and no row may be filled from a host's documentation.
  *
  * ## REACHABILITY, 2026-08-22 — one of eight, and the other seven are recorded
@@ -221,7 +221,7 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  *   `duration_ms` — i.e. 420 child legs whose start and stop pair, which is the
  *   criterion (a measurable child duration, not an inferred one).
  *
- * `parallel_spawn: true` — OBSERVED. Same host, session and artefact.
+ * `parallel_spawn: true` — OBSERVED. Same host, session and artifact.
  *   **6,168** of 6,388 stop records carry `concurrent_open >= 2`, with a
  *   maximum of **30** concurrently open children. Overlapping intervals at one
  *   instant, which is the criterion — not two children in sequence.
@@ -239,13 +239,13 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  *   2026-10-05. claude (Claude Code, observed range 2.1.252 to 2.1.284,
  *   2026-09-01 to 2026-10-02): 48 `AskUserQuestion` `tool_use` blocks, 47 of
  *   them answered by a non-error `tool_result`, and the per-host shape is now
- *   recorded in `STRUCTURED_ASK_SHAPES`. Artefact:
- *   `agents/evidence/analysis/structured-ask-host-observation-2026-10.md`.  code-comment-allow provenance-comment -- the observation protocol declares a row inadmissible without its artefact citation, so this pointer is part of the contract the row satisfies, not evidence duplicated from a roadmap
+ *   recorded in `STRUCTURED_ASK_SHAPES`. Artifact:
+ *   `agents/evidence/analysis/structured-ask-host-observation-2026-10.md`.  code-comment-allow provenance-comment -- the observation protocol declares a row inadmissible without its artifact citation, so this pointer is part of the contract the row satisfies, not evidence duplicated from a roadmap
  *
  *   The earlier `false` (2.1.263, 2026-09-07,
  *   `structured-ask-host-observation-2026-09.md`) is not withdrawn as a
  *   reading. It was taken from a SUBAGENT leg, whose delivered surface carries
- *   no picker because a subagent has no user to ask; that artefact lists the
+ *   no picker because a subagent has no user to ask; that artifact lists the
  *   surface it saw and it is the subagent toolset. What it could not support
  *   was the step from there to a claim about the host. The earliest call
  *   recorded here is on 2.1.252, before the `false` reading on 2.1.263 — the

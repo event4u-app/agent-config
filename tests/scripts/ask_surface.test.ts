@@ -24,12 +24,20 @@ import {
 } from '../../src/scripts/_lib/structured_ask.js';
 
 describe('structured_ask — the shared definition', () => {
-    it('ships NO observed per-host shape', () => {
+    it('ships exactly the shapes a real session observed, and no others', () => {
         // The whole honesty claim of the module. A row here means a real
-        // session observed the tool; the registry being empty is the record
-        // that none has.
-        expect(Object.keys(STRUCTURED_ASK_SHAPES)).toEqual([]);
-        expect(structuredAskShape('claude')).toBeUndefined();
+        // session observed the tool, so the key set is pinned: `claude` is
+        // observed (48 AskUserQuestion calls, 2.1.252-2.1.284, 2026-09-01 to
+        // 2026-10-02), and a second key appearing without an artefact behind it
+        // is what this assertion exists to catch.
+        expect(Object.keys(STRUCTURED_ASK_SHAPES)).toEqual(['claude']);
+        expect(structuredAskShape('claude')).toEqual({
+            tool: 'AskUserQuestion',
+            max_questions: 1,
+            max_options_per_question: 4,
+            free_text: true,
+        });
+        expect(structuredAskShape('some-unobserved-host')).toBeUndefined();
         expect(structuredAskShape(null)).toBeUndefined();
     });
 

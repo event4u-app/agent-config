@@ -18,8 +18,8 @@
  * `STRUCTURED_ASK_SHAPES` carries **one** row, for `claude`, written from an
  * observation under `host-capability-manifest.md` § Observation protocol —
  * 48 `AskUserQuestion` `tool_use` blocks across host versions 2.1.252 to
- * 2.1.284, 2026-09-01 to 2026-10-02. Artefact:
- * `agents/evidence/analysis/structured-ask-host-observation-2026-10.md`.  code-comment-allow provenance-comment -- the observation protocol declares a row inadmissible without its artefact citation, so this pointer is part of the contract the row satisfies, not evidence duplicated from a roadmap
+ * 2.1.284, 2026-09-01 to 2026-10-02. Artifact:
+ * `agents/evidence/analysis/structured-ask-host-observation-2026-10.md`.  code-comment-allow provenance-comment -- the observation protocol declares a row inadmissible without its artifact citation, so this pointer is part of the contract the row satisfies, not evidence duplicated from a roadmap
  * Every other host has no row, which is "never looked", and inventing one from
  * a vendor's documentation is exactly what that protocol forbids.
  *

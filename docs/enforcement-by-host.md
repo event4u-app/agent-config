@@ -840,7 +840,7 @@ the narrowest sentence the manifest supports and no wider:
   `claude`.** `_lib/host_capability.ts` records `structured_ask: true` for it,
   and `STRUCTURED_ASK_SHAPES` (`src/scripts/_lib/structured_ask.ts`) carries the
   matching shape: 48 `AskUserQuestion` calls across host versions 2.1.252 to
-  2.1.284, 2026-09-01 to 2026-10-02, artefact
+  2.1.284, 2026-09-01 to 2026-10-02, artifact
   [`structured-ask-host-observation-2026-10.md`](../agents/evidence/analysis/structured-ask-host-observation-2026-10.md).
   This bullet asserted the opposite until 2026-10-05, on a measurement base of
   one `false` row read from a **subagent** leg — a leg that carries no picker
