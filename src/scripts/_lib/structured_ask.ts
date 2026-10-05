@@ -45,9 +45,12 @@
 export interface StructuredAskShape {
     /** The tool name as it appears in a transcript's `tool_use` block. */
     readonly tool: string;
-    /** How many questions one call may carry. `1` is the shape this repo wants. */
+    /**
+     * The largest question count OBSERVED in one call, never a host ceiling the
+     * host was asked for and refused. `1` is also the shape this repo wants.
+     */
     readonly max_questions: number;
-    /** How many options one question may offer. */
+    /** The largest option count OBSERVED on one question — same caveat. */
     readonly max_options_per_question: number;
     /** Whether the host's picker admits a free-text answer alongside the options. */
     readonly free_text: boolean;

@@ -16,10 +16,17 @@
  *
  * WHAT IT SEES, honestly. `_lib/structured_ask.ts` carries ONE observed
  * per-host tool — `claude`'s `AskUserQuestion`, 48 calls across versions
- * 2.1.252 to 2.1.284 between 2026-09-01 and 2026-10-02. On that host the guard
- * therefore matches the observed tool name exactly; everywhere else it falls
- * back to a name SHAPE, filtered by the manifest's per-concern `tools:` key to
- * the same candidate names.
+ * 2.1.252 to 2.1.284 between 2026-09-01 and 2026-10-02.
+ *
+ * THIS GUARD DOES NOT USE THAT ROW, and the distinction matters enough to say
+ * rather than leave to a reader. `verdict()` calls `isStructuredAskTool(tool)`
+ * with no host id, so the shape branch is unreachable from here and the name
+ * SHAPE pattern decides on every host, `claude` included — filtered by the
+ * manifest's per-concern `tools:` key to the same candidate names. Threading a
+ * host id through would NARROW what this guard matches on the one host where a
+ * picker is known to exist (`ask_user_question` would stop matching), which is
+ * a behaviour change and not a header repair, so it is deliberately not made
+ * here.
  *
  * This header carried the opposite claim until 2026-10-05 — that no host's
  * delivered surface had been observed carrying a picker — and it was wrong in

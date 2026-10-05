@@ -1,5 +1,11 @@
 <!-- evidence-type: analysis -->
 <!-- analyzed: 2026-10-05 | commit: 92027a20c | files: 1257 -->
+<!-- The two header fields answer different questions and the pairing reads as
+     one scope if that is not said: `commit` is the tree this analysis was
+     written against; `files` is the size of the corpus it measured, which is
+     the host's transcript store across every project directory and is not in
+     this repository at all. -->
+
 
 # Structured-ask capability — the first observed `true` row
 
@@ -67,7 +73,7 @@ the host was never asked for.
 | `tool` | `AskUserQuestion` | the only name seen; 48/48 calls |
 | `max_questions` | `1` | **observed maximum.** 47 calls carried exactly one question; 1 call carried an unparsed payload (`__unparsedToolInput`) and no question array. No call carried two, so the host was never asked to accept two and its ceiling is unmeasured. `1` is also the shape this repo wants — `ask-when-uncertain`'s one-question Iron Law — so the guard's threshold does not depend on this number being the host's limit |
 | `max_options_per_question` | `4` | **observed maximum.** Distribution over 47 questions: 4 with 2 options, 34 with 3, 9 with 4 |
-| `free_text` | `true` | 10 of the 47 non-error `tool_result` payloads carried an answer containing **none** of the labels that call offered, at lengths from 291 to 4361 characters. An answer that is not one of the options is a free-text answer |
+| `free_text` | `true` | 10 of the 47 non-error `tool_result` payloads carried an answer containing **none** of the labels that call offered, at lengths from 291 to 4361 characters. **Derived by negation, which is weaker than the three above and is flagged rather than smoothed over:** a cancelled or interrupted ask also produces a payload carrying no label, so the 10 is an upper bound on free-text answers, not a count of them. What makes `true` the honest value anyway is the lengths — a cancellation does not produce 4361 characters. A reader wanting the stronger form should pin one payload to a user utterance |
 
 Payload keys seen, for anyone extending the shape later: the call carries
 `questions`; each question carries `question`, `header`, `multiSelect`,

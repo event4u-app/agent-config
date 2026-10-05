@@ -47,6 +47,19 @@ describe('structured_ask — the shared definition', () => {
         expect(isStructuredAskTool('user-question')).toBe(true);
     });
 
+    it('an observed shape NARROWS matching to that exact name, and only for that host', () => {
+        // The shape branch became reachable with claude's first row, so the
+        // narrowing it causes is pinned rather than left to be discovered: on a
+        // host WITH a row, a name the shape pattern would accept is rejected
+        // unless it is the observed one. one_question_per_ask_hook passes no
+        // host id and so never takes this branch — see its header.
+        expect(isStructuredAskTool('AskUserQuestion', 'claude')).toBe(true);
+        expect(isStructuredAskTool('ask_user_question', 'claude')).toBe(false);
+        // No row for this host, so the name-shape fallback still decides.
+        expect(isStructuredAskTool('ask_user_question', 'some-unobserved-host')).toBe(true);
+        expect(isStructuredAskTool('ask_user_question', undefined)).toBe(true);
+    });
+
     it('does not match ordinary tools', () => {
         for (const name of ['Bash', 'Read', 'Edit', 'Task', 'WebSearch', 'AskTheDocs']) {
             expect(isStructuredAskTool(name)).toBe(false);

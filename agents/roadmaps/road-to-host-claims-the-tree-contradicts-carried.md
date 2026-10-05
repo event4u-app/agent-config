@@ -28,7 +28,10 @@ left to read as finished.
       and it cannot be manufactured from the tree: it needs a real session that
       crosses 30 s on that slot, with host, host version, transcript reference
       and date. Until then no cell in the new table may be cited as evidence
-      this package collected. Same shape as 3.3, and for the same reason.
+      this package collected. ~~Same shape as 3.3, and for the same reason.~~
+      **Struck 2026-10-05:** 3.3 closed and the shared shape was the reason it
+      had not. The two differ, and the difference is set out under "Why this one
+      is not recoverable" below.
 
       **Searched 2026-10-05, and the negative is now MEASURED rather than
       assumed.** The sibling step closed because its observation was recoverable
@@ -126,9 +129,12 @@ left to read as finished.
       `ask-when-uncertain`'s Iron Law, not a host ceiling, and all 47 parsed calls
       carried exactly one. The deny threshold is untouched.
 
-      **Correction to this file's own citation.** The line below cited
+      **Correction to this file's own citation.** Until this change the
+      disposition paragraph below cited
       `host-capability-manifest.md:115-121` for "comes from a real session and
-      never from a script". The fenced Iron Law sits at **117-119** and the
+      never from a script". That sentence is **removed**, not repaired, because
+      the premise it supported no longer holds; this paragraph is the record, so
+      the stale anchor is not silently dropped. The fenced Iron Law sits at **117-119** and the
       "deliberately not a script" half at **122** — outside the cited range. Use
       `grep -n 'A ROW IS WRITTEN FROM AN OBSERVATION' src/agent-src/contexts/execution/host-capability-manifest.md`
       and `grep -n 'deliberately not a script'` on the same file instead.
