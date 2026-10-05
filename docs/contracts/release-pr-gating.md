@@ -76,8 +76,7 @@ hold:
      per-release evidence-temperature census written by
      `taskfiles/content.yml` § `release-prepare`, step 2 of `task release`.
      Pinned to the ISO date shape with fnmatch digit classes rather than `?`;
-     the entry in `ALLOWLIST_GLOBS` carries why, and is the only place that
-     reasoning is written down.
+     the entry in `ALLOWLIST_GLOBS` carries why.
    - `src/agent-src/templates/agents/agent-project-settings.example.yml` and
      its regenerated `dist/agent-src/` twin — the project-settings template
      pin, kept in lockstep with `package.json.version`

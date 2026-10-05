@@ -144,39 +144,26 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
     });
 
     it('the allowlist admits the path the census writer actually produces', () => {
-        // The producer/consumer link. Both halves of the filename come from the
-        // writer: `defaultReportPath` for directory, prefix and extension, and
-        // `censusDateStamp` for the day — the same call `buildCensus` makes. No
-        // part of the name is spelled a second time here, which is the point:
-        // every other assertion in this file does spell it out, so a change on
-        // the writing side would keep them green and red only during a live
-        // `task release`, which is exactly how 16.3.0 broke. Two earlier passes
-        // claimed this coupling was complete while the day was still re-derived
-        // locally; a pinned date below guards the shape itself.
+        // Directory, prefix and extension come from the writer's own builder,
+        // and the day from the writer's own stamping, so a change to any of
+        // them moves this assertion too.
         expect(shape._matches(defaultReportPath(censusDateStamp()))).toBe(true);
         expect(shape._matches(defaultReportPath('2026-10-01'))).toBe(true);
     });
 
     it('the census date stamp has the shape the allowlist glob was cut for', () => {
-        // The date is the one part `defaultReportPath` takes as a parameter, so
-        // the link above cannot pin it on its own. A shape change — a time
-        // component, `YYYYMMDD` — reds on either assertion.
-        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5, 23, 30)))).toBe('2026-10-05');
+        // The day is a parameter of `defaultReportPath`, so the link above does
+        // not pin its shape. A time component or `YYYYMMDD` reds here.
+        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))).toBe('2026-10-05');
         expect(shape._matches(defaultReportPath(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))))).toBe(true);
     });
 
     it('the census date stamp is UTC on both sides of a day boundary', () => {
-        // Two instants straddling midnight UTC, and the pair is what carries
-        // this: a local-time implementation reds on the first under any
-        // positive offset and on the second under any negative one. The TZ is
-        // not pinned in vitest.config.ts, so neither assertion alone is
-        // sensitive on an arbitrary runner — measured: +02:00 reds the first
-        // and passes the second, -04:00 does the reverse.
-        //
-        // Under TZ=UTC both pass for a local-time implementation, and that is
-        // not a gap in the test: at offset 0 the two implementations agree, so
-        // there is no difference to detect. Said plainly because claiming
-        // otherwise is the mistake this branch has now made four times.
+        // Measured against a local-time implementation: +02:00 reds the first
+        // assertion, -04:00 the second, TZ=UTC neither — at offset 0 the two
+        // implementations agree, so there is nothing to detect. An offset
+        // smaller than 30 minutes is not covered either. The TZ is not pinned
+        // in vitest.config.ts.
         expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5, 23, 30)))).toBe('2026-10-05');
         expect(censusDateStamp(new Date(Date.UTC(2026, 9, 6, 0, 30)))).toBe('2026-10-06');
     });
