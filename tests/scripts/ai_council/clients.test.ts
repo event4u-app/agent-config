@@ -72,6 +72,7 @@ import {
     load_anthropic_key,
     load_openai_key,
     CLI_CONSUMER_COUNCIL,
+    CLI_CONSUMER_SELF_REVIEW,
     CLI_CONSUMER_TEAM,
     QUOTA_SOURCE_LOCAL_BUDGET,
     QUOTA_SOURCE_PROVIDER,
@@ -1378,6 +1379,91 @@ describe('clients — quota gate + cli-calls counter', () => {
             reset_cli_call_counts(null, p);
             expect(load_cli_call_counts(p)).toEqual({});
             expect(load_cli_call_attribution(p)).toEqual({});
+        });
+
+        // THE GAP THIS CLOSES. Every other assertion in this block calls
+        // `record_cli_call` directly, so all five of them were green while the
+        // only path a real call takes — ctor → `ask()` → booking — dropped the
+        // consumer on the floor. Measured 2026-10-05 on the operator's live
+        // sidecar: `{"anthropic":{"unknown":2},"openai":{"unknown":2}}` after a
+        // council round that passes `CLI_CONSUMER_COUNCIL` at its construction
+        // site. The subclass constructors forwarded six option fields to
+        // `super()` and not the seventh, so `unknown` — documented as a FINDING
+        // when it appears — was the only value the sidecar could ever hold.
+        //
+        // Hence the shape: this goes through the REAL subclass constructor for
+        // every CLI client, because the defect lived in the constructor and
+        // nowhere the recorder could see. A sixth client added without the
+        // forward reds here.
+        //
+        // Thunks rather than an array of classes, for the reason given at the
+        // five-member table above: sibling protected members collapse a bare
+        // array to one concrete type.
+        it('every CLI subclass forwards its construction-site consumer to the booking', () => {
+            const members: { name: string; run: (p: string) => ReturnType<typeof stubCli> }[] = [
+                {
+                    name: 'anthropic',
+                    run: (p): ReturnType<typeof stubCli> =>
+                        stubCli(AnthropicCliClient, { returncode: 0, stdout: '{}', stderr: '' }, {
+                            cli_calls_path: p,
+                            consumer: CLI_CONSUMER_COUNCIL,
+                        }),
+                },
+                {
+                    name: 'openai',
+                    run: (p): ReturnType<typeof stubCli> =>
+                        stubCli(OpenAICliClient, { returncode: 0, stdout: '{}', stderr: '' }, {
+                            cli_calls_path: p,
+                            consumer: CLI_CONSUMER_COUNCIL,
+                        }),
+                },
+                {
+                    name: 'gemini',
+                    run: (p): ReturnType<typeof stubCli> =>
+                        stubCli(GeminiCliClient, { returncode: 0, stdout: '{}', stderr: '' }, {
+                            cli_calls_path: p,
+                            consumer: CLI_CONSUMER_COUNCIL,
+                        }),
+                },
+                {
+                    name: 'xai',
+                    run: (p): ReturnType<typeof stubCli> =>
+                        stubCli(XAICliClient, { returncode: 0, stdout: '{}', stderr: '' }, {
+                            cli_calls_path: p,
+                            consumer: CLI_CONSUMER_COUNCIL,
+                        }),
+                },
+                {
+                    name: 'perplexity',
+                    run: (p): ReturnType<typeof stubCli> =>
+                        stubCli(PerplexityCliClient, { returncode: 0, stdout: '{}', stderr: '' }, {
+                            cli_calls_path: p,
+                            consumer: CLI_CONSUMER_COUNCIL,
+                        }),
+                },
+            ];
+            for (const m of members) {
+                const statePath = path.join(mkTmp(), 'cli-calls.json');
+                m.run(statePath).client.ask('s', 'u', 1);
+                expect(load_cli_call_attribution(statePath), `${m.name} attribution`).toEqual({
+                    [m.name]: { [CLI_CONSUMER_COUNCIL]: 1 },
+                });
+            }
+        });
+
+        // The other direction, and it is not redundant: without it the
+        // assertion above is satisfied by a constructor that hardcodes
+        // `council` instead of forwarding. A second identity is the only thing
+        // that can tell forwarding apart from a constant.
+        it('a different construction-site consumer books differently', () => {
+            const statePath = path.join(mkTmp(), 'cli-calls.json');
+            stubCli(AnthropicCliClient, { returncode: 0, stdout: '{}', stderr: '' }, {
+                cli_calls_path: statePath,
+                consumer: CLI_CONSUMER_SELF_REVIEW,
+            }).client.ask('s', 'u', 1);
+            expect(load_cli_call_attribution(statePath)).toEqual({
+                anthropic: { [CLI_CONSUMER_SELF_REVIEW]: 1 },
+            });
         });
 
         it('a malformed sidecar reads empty and never blocks a booking', () => {

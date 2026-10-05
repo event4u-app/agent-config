@@ -1001,6 +1001,7 @@ export const CLI_CALLS_FILENAME = 'cli-calls.json';
 export {
     CLI_CALLS_ATTRIBUTION_SUFFIX,
     CLI_CONSUMER_COUNCIL,
+    CLI_CONSUMER_SELF_REVIEW,
     CLI_CONSUMER_TEAM,
     CLI_CONSUMER_UNKNOWN,
     QUOTA_SOURCE_LOCAL_BUDGET,
@@ -1677,6 +1678,7 @@ export class AnthropicCliClient extends CliClient {
                 max_calls_per_day: opts.max_calls_per_day,
                 warn_at: opts.warn_at,
                 cli_calls_path: opts.cli_calls_path,
+                consumer: opts.consumer,
             },
             { name: 'anthropic', default_binary: 'claude' },
         );
@@ -1814,6 +1816,7 @@ export class OpenAICliClient extends CliClient {
                 max_calls_per_day: opts.max_calls_per_day,
                 warn_at: opts.warn_at,
                 cli_calls_path: opts.cli_calls_path,
+                consumer: opts.consumer,
             },
             { name: 'openai', default_binary: 'codex' },
         );
@@ -2061,6 +2064,7 @@ export class GeminiCliClient extends CliClient {
                 max_calls_per_day: opts.max_calls_per_day,
                 warn_at: opts.warn_at,
                 cli_calls_path: opts.cli_calls_path,
+                consumer: opts.consumer,
             },
             { name: 'gemini', default_binary: 'gemini' },
         );
@@ -2214,6 +2218,7 @@ export class XAICliClient extends CliClient {
                 max_calls_per_day: opts.max_calls_per_day,
                 warn_at: opts.warn_at,
                 cli_calls_path: opts.cli_calls_path,
+                consumer: opts.consumer,
             },
             { name: 'xai', default_binary: 'grok' },
         );
@@ -2286,6 +2291,7 @@ export class PerplexityCliClient extends CliClient {
                 max_calls_per_day: opts.max_calls_per_day,
                 warn_at: opts.warn_at,
                 cli_calls_path: opts.cli_calls_path,
+                consumer: opts.consumer,
             },
             { name: 'perplexity', default_binary: 'perplexity' },
         );
