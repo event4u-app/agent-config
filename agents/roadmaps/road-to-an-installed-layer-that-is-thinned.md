@@ -64,24 +64,34 @@ Reproduced on 2026-10-01:
 
 ## Phase 1 — An opt-in thinned install
 
-- [ ] **1.1 The installer applies the projector's predicate when asked.** With
+- [x] **1.1 The installer applies the projector's predicate when asked.** With
       `lean_projection.mode: delivery` set on a layer other than the shipped
       template, the global install step for `claude-code` writes the stub form —
       stub plus law for the consequence class, pointer stub for the rest;
       kernel, trigger-less and path-only rules stay full as `build_thin`
       decides. The body pointer is absolute. Ownership keys survive.
       verify: `npx vitest run tests/scripts/install_thin_layer.test.ts` -> 0
-- [ ] **1.2 One rollback.** `lean_projection.mode: eager-all` plus a reinstall
+- [x] **1.2 One rollback.** `lean_projection.mode: eager-all` plus a reinstall
       writes today's full layer again.
       verify: `npx vitest run tests/scripts/install_thin_layer.test.ts -t rollback` -> 0
-- [ ] **1.3 Upgrades converge.** An upgrade from a 16.2.0-shaped `HOME` ends at
+- [x] **1.3 Upgrades converge.** An upgrade from a 16.2.0-shaped `HOME` ends at
       the thinned layer when opted in; user-modified rule files are preserved
       and reported, never overwritten; the receipt prints both standing totals.
       verify: `npx vitest run tests/scripts/install_thin_layer.test.ts -t upgrade` -> 0
-- [ ] **1.4 A combined-total warning.** At install, the receipt reports
+- [x] **1.4 A combined-total warning.** At install, the receipt reports
       package-owned and foreign instruction characters against the host's
       published limit, and warns when the combined total crosses 80 % of it.
       verify: `npx vitest run tests/scripts/installed_layer_report.test.ts -t combined` -> 0
+
+> **Closed 2026-10-05.** A second obstacle sat under the stated one and is
+> repaired in the same branch: `lean_projection.*` was absent from
+> `MERGEABLE_KEYS`, so `load_agent_settings` read the user-global layer and threw
+> the value away. On an ADR-020 global-only install that layer is the ONLY one
+> that can carry the opt-in, so 1.1 was unsatisfiable on exactly the install
+> shape it is about. Measured both directions on an isolated probe before and
+> after the whitelist row. The stub body pointer is absolute now
+> (`absoluteBodyLinkPrefix`); the shipped relative prefix resolved from an
+> installed layer never, not merely imprecisely.
 
 ## Phase 2 — Records from opted-in machines
 
@@ -92,7 +102,7 @@ Reproduced on 2026-10-01:
       `Write` that creates the file and a Bash-first edit; every matched
       delivery under the 8,000 budget and none replaced by a preview.
       verify: `grep -c 'host version' agents/evidence/analysis/installed-arrival-*.md` -> /^[1-9]/
-- [ ] **2.2 A standing-only fixture.** With the carrier disabled, the loaded
+- [x] **2.2 A standing-only fixture.** With the carrier disabled, the loaded
       text of an opted-in install contains every consequence-class law
       byte-equal to its source section.
       verify: `npx vitest run tests/scripts/install_thin_layer.test.ts -t standing-only` -> 0
@@ -107,6 +117,11 @@ Reproduced on 2026-10-01:
       exposure state beside `src/config/host-injection-effect.json:8` without
       changing that file's verdict, which `road-to-delivery-on-hook-hosts` owns.
       verify: `grep -c 'thinned' agents/evidence/analysis/installed-arrival-*.md` -> /^[1-9]/
+
+> **2.1, 2.3 and 2.4 need a real opted-in machine**, which this branch cannot
+> produce: each one's verify greps an `agents/evidence/analysis/` record written
+> from a live session after an install has actually been opted in. 2.2 is the
+> exception and is closed — it is a fixture, not a session record.
 
 ## Phase 3 — The default, decided
 
@@ -130,6 +145,12 @@ Reproduced on 2026-10-01:
 - [ ] **3.5 No other host worse.** `check_host_tree_parity` is unchanged, and
       the installed-layer report adds one row per host with a published limit.
       verify: `./scripts-run src/scripts/check_host_tree_parity` -> 0
+      > Both limbs already hold as of 2026-10-05 — `check_host_tree_parity`
+      > exits 0 (`2 non-delivery host tree(s) byte-identical to eager-all`) and
+      > the report carries one row per host with its limit. Left OPEN anyway:
+      > the step asks whether the FLIP made another host worse, and there has
+      > been no flip, so closing it now would assert a guarantee about a state
+      > that does not exist. It closes with 3.1, on a re-run, not on this note.
 
 ## What this roadmap deliberately does not do
 
