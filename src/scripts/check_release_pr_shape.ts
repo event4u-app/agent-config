@@ -51,11 +51,10 @@ const ALLOWLIST_GLOBS = [
     // matches any character: `????-??-??` would still require ten characters
     // with separators at offsets 4 and 7, so it admits not every sibling but
     // any whose name happens to carry that shape. Narrower than it reads, and
-    // still wider than a date. Two reports can appear in one release PR:
-    // `--resume` re-runs release-prepare, so a release carried across UTC
-    // midnight writes a second census. Its delta section is empty, because
-    // `--since latest` then resolves the baseline to the first census of the
-    // same release rather than to the previous release.
+    // still wider than a date. Two reports can appear in one release PR, and
+    // both are in shape: `--resume` re-runs release-prepare, so a release
+    // carried across UTC midnight writes a second census. What that one
+    // contains is the census's business, not this gate's.
     'agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md', // code-comment-allow provenance-comment -- the glob IS this gate's operand, not where the code came from
     // Project-settings template pin — bumped by release.ts set_template_pin and
     // its regenerated dist twin (kept in lockstep with package.json.version).
@@ -100,10 +99,11 @@ function _fnmatchToRegExp(pat: string): RegExp {
             } else {
                 let stuff = pat.slice(i, j);
                 // Python's `fnmatch.translate` branches on a `-` inside the
-                // class; this port never needed to, and the two arms it carried
-                // were byte-identical. They read as an implemented divergence
-                // that does not exist, and their comment claimed no allowlist
-                // entry used a range — false since the census glob's `[0-9]`.
+                // class and this port does not; the two arms it carried were
+                // byte-identical, so the branch implemented no divergence. The
+                // ranges differ in hyphen escaping, not in output for `[0-9]`,
+                // and an invalid range throws in both languages — measured:
+                // `[z-a]` raises in `re.compile` and in `new RegExp` alike.
                 stuff = stuff.replace(/\\/g, '\\\\');
                 i = j + 1;
                 if (stuff.startsWith('!')) {

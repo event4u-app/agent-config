@@ -40,12 +40,13 @@ keep-beta-reason: >-
 > paths the code had already renamed. The file-set claim was verified against PR #238 (3.3.0) and the
 > allowlist has grown since, so what carries the argument is what the release
 > flow WRITES into those paths: version fields, changelog prose, generated
-> manifests and two report artifacts. Stated precisely, because the categorical
-> version — "no entry is install or runtime code" — is false of its own first two
-> entries, and `check_release_pr_shape` matches paths and never reads content:
-> nothing here stops a release PR from editing `bin`, `files`, `dependencies` or
-> `engines` in `package.json` with the install matrix skipped. That residual gap
-> is held by review, not by a gate.
+> manifests and two report artifacts. Stated that way because the categorical
+> version — "no entry is install or runtime code" — is false of several of them:
+> the npm manifests carry `bin`, `files`, `dependencies` and `engines`, and the
+> plugin and marketplace manifests ship in the tarball. `check_release_pr_shape`
+> matches paths and never reads content, so nothing here stops a release PR from
+> editing any of those fields with the install matrix skipped. That residual gap
+> is held by review, not by a gate, and it is wider than one file.
 
 ## Release-PR shape
 
