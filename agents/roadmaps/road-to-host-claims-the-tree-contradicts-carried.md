@@ -98,9 +98,7 @@ left to read as finished.
       deferred on turned out to be false. The step read as though the observation
       had to be *created*; it had already *happened* and was sitting in the host's
       transcript store, uncounted.
-      verify: `grep -c "claude: { tool: 'AskUserQuestion'" src/scripts/_lib/structured_ask.ts`
-      returns 1, and `npx vitest run tests/scripts/_lib_host_capability.test.ts`
-      is green
+      verify: `grep -c "claude: { tool: 'AskUserQuestion'" src/scripts/_lib/structured_ask.ts` -> /^1$/
 
       **Evidence (2026-10-05).** 1257 `.jsonl` transcripts under the host's store
       were parsed per line; **48** blocks of `type: "tool_use"` carry a `name`
