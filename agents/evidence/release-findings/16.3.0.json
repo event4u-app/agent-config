@@ -1,0 +1,2799 @@
+{
+  "schema_version": 1,
+  "release": "16.3.0",
+  "findings": [
+    {
+      "finding_id": "d93c6c8cf2e1",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Stack-composition tally contradicts its own table",
+      "detail": "The page states '30 rows: 12 compose, 12 adapt, 6 create'. Counting the verdicts in the table gives 13 compose (test-case-discovery 3, testing-anti-patterns 3, judge-test-coverage 3, quality-tools/typescript 1, sql-writing 3), 11 adapt (tdd 3, api-testing 3, test-performance 3, quality-tools python and go 2) and 6 create. The page says Phase 2 is bounded by this table, so the headline split is wrong in a published evidence record.",
+      "file": "agents/evidence/analysis/stack-composition-2026-Q4.md"
+    },
+    {
+      "finding_id": "f718974ff579",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "README publishes two different command counts",
+      "detail": "The badge was bumped to Commands-205, matching CAPABILITIES commands_total 205. The adjacent 'How these are counted' footnote still says 'Commands 202'. It was already stale against the old badge of 203 and the diff leaves it. The footnote exists specifically to explain the counter, so the contradiction sits in the one place that claims one canonical count.",
+      "file": "README.md"
+    },
+    {
+      "finding_id": "bfe1d6e6d8ca",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "'Carried by a gate that can refuse' over-credits rules whose obligation is model-carried",
+      "detail": "The 16-rule 'gate' class is defined as 'a validator, hook or test blocks the forbidden outcome', but classification follows the presence of an enforced_by entry, not what it blocks. git-history-discipline is counted as gated, yet its own text says the guard only blocks --no-verify/hooksPath overrides, and only on claude. Unsolicited rebase, squash and amend are not blocked. language-and-tone (a markdown-language validator) and secret-vcs-guard (a CI scan, not the agent-side write gate) have the same problem. The 16/10/15/80 split therefore overstates mechanical coverage, and the report itself warns against exactly this inflation.",
+      "file": "agents/evidence/analysis/obligation-mechanism-audit-2026-10.md"
+    },
+    {
+      "finding_id": "27ed7df17579",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Per-spawn multiplier counts every Agent call and applies today's layer size to history",
+      "detail": "The 647 spawns are all distinct Agent tool_use ids, with no filter on subagent type. The page's own premise is that only non-built-in subagents receive the hierarchy. The 351,894 figure is this machine's current installed layer, multiplied across 741 historical transcripts. The conclusion 'spawning roughly doubles the standing bill' and the '≈228 million characters' figure therefore have an unmeasured upper-bias. The same section also mixes units: it says arithmetic uses bytes, then labels the 351,894 byte figure 'characters' in the before/after table.",
+      "file": "agents/evidence/analysis/per-spawn-standing-2026-10.md"
+    },
+    {
+      "finding_id": "9cba89c889a9",
+      "severity": "medium",
+      "kind": "security",
+      "title": "Release-PR skip is keyed on the PR author's branch name, with package.json content unchecked",
+      "detail": "The Tests, Node Tests and smoke-install jobs are skipped when head_ref starts with 'release/'. The updated comment concedes that package.json is admitted on a release PR, and that 'no gate reads package.json CONTENT, so a bin/files/dependencies edit would ride a release PR with this matrix skipped'. A skipped job reports as success to a required check. A scripts, bin or dependency change under a release/* branch name (including a fork branch) bypasses the install and test matrix. The only stated mitigation is the contract's allowlist, and this diff only rewrites the comments, not the condition.",
+      "file": ".github/workflows/smoke-public-install.yml"
+    },
+    {
+      "finding_id": "f733a2f9e542",
+      "severity": "low",
+      "kind": "security",
+      "title": "Workflow-security audit is now wired in CI but non-blocking",
+      "detail": "lint_workflow_security runs without --strict, so a HIGH finding (pull_request_target on fork PRs, write-all permissions, secrets reaching an agent prompt) is printed and does not fail the job. The step buys visibility and an emptied-directory floor, but not a refusal on the CI-agent-injection class. The step comment points to a recorded unresolved decision for promoting it.",
+      "file": ".github/workflows/consistency.yml"
+    },
+    {
+      "finding_id": "541a64c5b619",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Governance ratification rests on council seats that read an author-written description, not the diff",
+      "detail": "The verdict artefact for the widened ratification gate and deny set was produced by two council seats shown only a description written by the author of the change. Its 'Facts you may rely on' block contains unverifiable assertions ('No existing refusal becomes a non-refusal'), and the representation prompt carried the author's own recommendation. The file admits the reviewers 'could only reason from' those facts. This is the pattern evaluator-independence calls out. The ratification is admissible only with the prompt recorded, which it is, but it is not evidence that the diff itself was reviewed.",
+      "file": "agents/evidence/analysis/blocking-severities-ratification-prompt.md"
+    },
+    {
+      "finding_id": "4507566202f6",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Body-signal figures quoted in the ranker report match neither committed verdict",
+      "detail": "The report cites the independent body-signal verdict as '406 positives and 404 negatives', recall +5.91 pp and false activation +8.17 pp. The routing-body-signal-verdict.json before this diff reads 396/398, +5.556 and +7.789. After it, the file reads 434/427, +4.608 and +6.557 (measured_at 2026-10-04). The figures match neither state, and the verdict file moved again in this same release.",
+      "file": "agents/evidence/analysis/skill-ranker-confusion-2026-10-01.md"
+    },
+    {
+      "finding_id": "aee552b96cc0",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Pack-boundary delta attributes all twelve cleared violations to this change",
+      "detail": "215 (baseline era, corrected rule) → 203 is a net of 12, and the page says 'twelve pre-existing ones were cleared as a side effect' of the de-links. The page's own multiset diff shows 13 links cleared since the baseline, 10 of them non-meta, so those cleared before this change. Only 2 of the 12 are attributable to the de-links.",
+      "file": "agents/evidence/analysis/pack-boundary-delta-2026-10-01.md"
+    },
+    {
+      "finding_id": "3e2c791209c4",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Hook-bundle saving quoted as both 6.04 % and 6.14 %",
+      "detail": "The table gives −94,473 bytes (−6.04 %) for the hardened build. The closing section says the bundle 'is 6.14 % smaller', which is the pre-hardening 1,468,237-byte reading. The component deltas given for the hardening (+648 yaml, +205 src) sum to 853 against the stated 1,501-byte difference, leaving 648 bytes unexplained.",
+      "file": "agents/evidence/analysis/hook-bundle-composition-2026-10-01.md"
+    },
+    {
+      "finding_id": "237f203916c5",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Known-stale prose measurement record ships unrepaired beside re-run JSON",
+      "detail": "The holdout page records that delivery-set-result-2026-08-31.md is stale by two corpora and is 'NOT repaired' in this change, while delivery-set-measurement-2026-08-31.json was re-run (recall 62.903, 861 cases). The JSON filename still carries the 2026-08-31 date. A reader following the prose record gets figures the JSON contradicts, and the page presents this as an acknowledged residue rather than fixing it.",
+      "file": "agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md"
+    },
+    {
+      "finding_id": "4f8cc59e53f3",
+      "severity": "low",
+      "kind": "claim",
+      "title": "structured_ask free_text recorded as an observed true from a negation-derived upper bound",
+      "detail": "The page says free_text is 'derived by negation': 10 payloads carried no offered label, and a cancelled ask also produces such a payload. Likewise max_questions=1 and max_options=4 are sample maxima, not host limits. All are written into the capability registry as the shape fields of an 'observed present' row. The caveats are in the evidence page but not in the registry value.",
+      "file": "agents/evidence/analysis/structured-ask-host-observation-2026-10.md"
+    },
+    {
+      "finding_id": "a86eac3043de",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Breaking-change cell carries an unsourced statistic",
+      "detail": "The 13.0.0 row states 'session_tier was non-null in 0 of 327 orchestration records' with no command, artefact or commit reference for the count. Every other cell cites a commit or archive section.",
+      "file": "BREAKING_CHANGES.md"
+    },
+    {
+      "finding_id": "384127f24e57",
+      "severity": "low",
+      "kind": "style",
+      "title": "Release-highlight categories mislabel non-security changes",
+      "detail": "'Security and correctness' lists the roadmap-archival change (#2167) and the pack-boundary gate fix (#2155). Neither is a security change, so the bucket overstates the release's security content. 'Behaviour changes' also lists the archival change.",
+      "file": "CHANGELOG.md"
+    },
+    {
+      "finding_id": "21900086c1a0",
+      "severity": "medium",
+      "kind": "security",
+      "title": "The refusal-policy module sits outside the kernel-edit ratification gate",
+      "detail": "The ratification for the step 3.3 branch says `_resolve_execution_failure` now lives in `src/scripts/hooks/concern_failure_policy.ts`. It also says `check_kernel_edit_ratified`'s regex names only `dispatch_hook.ts` and `*-dispatcher.sh` under `hooks/`. The gate therefore no longer watches the function that decides whether a crashed blocking concern refuses or allows. The record says it was verified by running the gate: three surfaces were reported and the new module was not among them. It was deliberately left unfixed because widening the pattern is itself a gated edit. This 16.3.0 range therefore ships an unratified edit path to blocking-hook failure semantics. The file is in the changed list and the gap is disclosed but still open.",
+      "file": "agents/evidence/ratifications/drain-kernel-plumbing-3-3-severity.md"
+    },
+    {
+      "finding_id": "2c9959f7262d",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Recorded verdict `ratified` while one seat's final verdict was non-convergent",
+      "detail": "The recorder ratification's frontmatter says `verdict: ratified`. Its own table shows pass 3 as anthropic `non-convergent` and openai `ratified`, and the earlier openai verdicts were `non-convergent`. The text says openly that the review did not converge, and that three requirements remain unmet: the cowork policy, the retained suffix fallback, and selective routing within the slot. The sibling blocking-severities record argues that `non-convergent` blocks a change, so recording `ratified` over an unresolved dissent is inconsistent with that reasoning. Listing both providers in the frontmatter implies a two-provider agreement that the final pass does not show.",
+      "file": "agents/evidence/ratifications/drain-failed-command-recorder.md"
+    },
+    {
+      "finding_id": "13568e8fe68a",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Dependabot ratification lists two providers but the closing verdict came from one seat",
+      "detail": "The record lists `providers: [anthropic, openai]` and `verdict: confirmed-non-expanding`. It also states that the run was degraded: the quorum line reads `1/2 present` after the final round, and the closing verdict is one seat's, written against the other's objections. The frontmatter therefore overstates provider diversity for the verdict actually recorded. The ratification policy expects two distinct providers. The degraded quorum is disclosed in the body but not reflected in the machine-read header.",
+      "file": "agents/evidence/ratifications/fix-dependabot-prs-can-reach-their-required-check.md"
+    },
+    {
+      "finding_id": "eff3d4ed3fee",
+      "severity": "medium",
+      "kind": "security",
+      "title": "16.3.0 ships `doctor --json` network egress by default with open findings and no migration note",
+      "detail": "The 16.2.0 findings ledger now marks three findings `still_open`: c6367568cb1a, 77e3912664b9 and 8605e9fc59cd. `doctor --json`, including `--check <id>`, still spawns `git` and several `gh` calls unconditionally. It can block for up to 15 s, and there is no CLI opt-out flag. The only escape is an environment variable. `docs/MIGRATION.md` is not among the changed files and carries no entry naming `doctor`. Consumers who scripted `doctor` as an offline diagnostic silently inherit network and credential dependence. The ledger itself says the closing action is known and cheap.",
+      "file": "agents/evidence/release-findings/16.2.0.json"
+    },
+    {
+      "finding_id": "de29dcc6b5d8",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Roadmap close-out quotes review-round counts that disagree with the review artefacts in the range",
+      "detail": "The roadmap says 'Seven completion-review rounds produced 71 findings; 61 are fixed and 10 are accepted-risk'. It also says 'Nothing in eight review rounds found an adoption path' and that figures were re-measured at each round. The range contains findings artefacts `behavior-vocabulary-close-round2` through `round21`, and the supplied round-10 prompt covers a head commit later than the figures. The close-out totals and the '97 tests green' figure therefore cannot be current. The roadmap's own step 2.2 argues that derived volatile figures should not be quoted in completion evidence at all, yet it quotes several.",
+      "file": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md"
+    },
+    {
+      "finding_id": "ee95ff4aca5f",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Turnaround reading records two gated-direction regressions and leaves them standing",
+      "detail": "The probe's gate exits 1. Blocking share rose from 0.6202 to 0.8908, and max first-call context floor rose from 230,705 to 244,518 (about +6%). The reading deliberately re-bases neither baseline. A standing-context regression ships in a release that also reworks rule delivery and thinning. The blocking-share hypothesis, parallel drain runs waiting on CI settles, is explicitly unverified. No owner or follow-up roadmap is named for either regression, so the same refusal will repeat on the next reading.",
+      "file": "agents/evidence/analysis/turnaround-reading-2026-10-01.md"
+    },
+    {
+      "finding_id": "2bc152181f76",
+      "severity": "low",
+      "kind": "claim",
+      "title": "AC-1 closed as met on trigger rows the corpus itself expects to fail a live pass",
+      "detail": "The `_eval_note` in `triggers.json` says the new behaviour-contract exemplars are expected to fail a live `skill_trigger_eval` pass. The production `description` carries none of the vocabulary and `last_eval` was not bumped. The roadmap nevertheless marks AC-1 `[x]` on file presence plus a `--dry` `description_route_check`, which it admits cannot confirm production routing. This is disclosed, but the closed checkbox reads stronger than the evidence.",
+      "file": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md"
+    },
+    {
+      "finding_id": "a2f0c4b87ade",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Dated measurement file regenerated in place with weaker recall and an unmet ceiling",
+      "detail": "`delivery-set-measurement-2026-08-31.json` is rewritten with a larger corpus: 810 cases, up from 794. Recall at k fell from 64.141 to 62.808, recall loss rose to 37.192 pp, and `ceiling_met` is false. The filename still dates it to 2026-08-31. Any doc quoting the earlier figures would now disagree with the file, and the diff carries no explanation of the regeneration.",
+      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json"
+    },
+    {
+      "finding_id": "4a7127f47609",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Recorder-owned evaluator-measurements file edited by hand for the 25→26 tool-count move",
+      "detail": "The file header says 'Do not hand-edit — refresh it from a real run'. The `conditions` text says the 26 count was re-measured three times locally on darwin/arm64 outside the umbrella container, and the `git_sha` and `recorded_at` were updated by hand. The metric is tree-derived and container-independent, so this is probably correct. It still bypasses the recorder path, the same shape as the earlier 20→25 move. It is the second consecutive release where the budget move landed only after the release gate blocked.",
+      "file": "agents/evidence/metrics/evaluator-measurements.json",
+      "status": "false_positive",
+      "rationale": "The file was not hand-edited. It was refreshed by running `src/scripts/record_evaluator_measurements.mjs`, the writer its own `_comment` names, after `npm run build:mcp-bundle`; `mcp_public_tool_count` was re-measured three times (26/26/26) via the pinned method and the name set differs from the 25-tool set by exactly `graph_node`, which shipped in #2159 without moving the budget. The reviewer sees a diff and cannot see which command produced it — this is the class of finding that is correct about the artefact and wrong about the act."
+    },
+    {
+      "finding_id": "636654f532ad",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Known-wrong behavior-axis output ships under accepted-risk, justified by a line-count ceiling",
+      "detail": "Round 11 findings #2 and #8 are accepted-risk, not fixed. (#2) A root solution beside workspace packages folds every package's .csproj into the root scope. Two packages on different .NET runners then get a FALSE `unknown` refusal row for scope_root '.', next to the correct per-package rows. (#8) A multi-line flow sequence `packages: [` in pnpm-workspace.yaml silently drops the whole workspace declaration. Both produce wrong rows, and the module's own doctrine says a false positive on this axis deletes the one correct answer. The stated blocker is that runner.ts sits at exactly 1,500 lines, which is the file-length lint. The remedies are small (about 10 and 8 lines), so a style ceiling is deciding whether a correctness defect gets fixed. Under fix-what-you-see, 'cannot fix now' requires a tracked follow-up roadmap in the same change. A `revisit-if` in a findings table is not one. Confirm the archived 'carried' roadmap actually carries both items with an owner.",
+      "file": "agents/evidence/reviews/behavior-vocabulary-close-round11.findings.md"
+    },
+    {
+      "finding_id": "357ec50dedd8",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Roadmap closing narrative states review counts that the evidence tree contradicts",
+      "detail": "The embedded roadmap snapshot says 'Seven completion-review rounds produced 71 findings; 61 are fixed and 10 are accepted-risk'. Its Risk Register says 'Nothing in eight review rounds'. The review artefacts in this range run through round 21 (rounds 2 to 21 are listed under CHANGED BY THIS RANGE), and round 11 alone adds 10 findings with 2 accepted-risk. The roadmap contradicts itself (seven vs eight) and the tree. The same file says stale self-description is the dominant defect class of this change, and here it recurs. Before release, re-derive these counts in the archived copy (archive/road-to-behavior-vocabulary-and-runner-truth*.md) or remove the figures. A closure claim should not quote a derived, volatile number.",
+      "file": "agents/roadmaps/road-to-behavior-vocabulary-and-runner-truth.md"
+    },
+    {
+      "finding_id": "efd9cb3e1bf6",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Delivery-set measurement regenerated with regressed recall; headline consumers not shown updated",
+      "detail": "delivery-set-measurement-2026-08-31.json changed in this change set: recall_at_k 64.141 to 62.808, recall_loss_pp 35.859 to 37.192, recall@1/3/5/10/20 all lower, precision slightly lower. The corpus grew from 794 to 810 cases, and `ceiling_met` stays false. This is a measured regression in a release PR, and the cause is an unrelated corpus change. Any headline number in docs/CLAIMS.md, docs/proof.md, README or CHANGELOG that quotes the old recall or precision figures must be updated in the same release. The diff does not show whether they were. Also state in the CHANGELOG that the figures moved because the corpus changed, not because routing changed.",
+      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json"
+    },
+    {
+      "finding_id": "e35624528060",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Round 12 TOCTOU fix to _stat_mtime ships with no test and an unverified argument",
+      "detail": "Round 12 finding #1 (an unguarded statSync that can throw out of resolve_toolchain and break the 'never raises' contract) is marked fixed. The disposition says no deterministic test can produce the race, so no red-then-green probe exists. That is an honest statement, but the contract now rests on sibling-helper analogy alone. A fault-injection test would close it: stub fs.statSync to throw for one path and assert latest_manifest_mtime still returns a number. Without one, the guard can be removed silently.",
+      "file": "agents/evidence/reviews/behavior-vocabulary-close-round12.findings.md",
+      "contradicted": "the range deletes nothing matching `agents/evidence/reviews/behavior-vocabulary-close-round12.findings.md`, and `agents/evidence/reviews/behavior-vocabulary-close-round12.findings.md` is present in the tree — checked against `git diff --name-status base...HEAD` and the working tree, not against the review chunk."
+    },
+    {
+      "finding_id": "7efdf81cb478",
+      "severity": "low",
+      "kind": "security",
+      "title": "Workspace literal scope entries follow symlinks out of the project root",
+      "detail": "In the reviewed runner.ts, _behavior_scopes rejects `..`, absolute paths and `!` globs. For a literal workspace entry it uses fs.statSync(...).isDirectory(), which follows symlinks. A workspace entry naming an in-repo symlink to a directory outside the root is accepted as a scope. Detection then reads composer.json, package.json and similar files outside the repository. The glob branch uses Dirent.isDirectory(), which does not follow symlinks, so the two branches are inconsistent. Impact is limited to detection output in a local resolver, but the module's own comments claim path confinement. Use lstatSync, or realpath-confine the result.",
+      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts"
+    },
+    {
+      "finding_id": "1b661735687e",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Completion reviews ran with roadmap: none and an empty acceptance-criteria file",
+      "detail": "Round 11 and round 12 context manifests record `roadmap: none` and `ac_hash: none`, and acceptance-criteria.md is the empty blob. The roadmap road-to-behavior-vocabulary-and-runner-truth.md is itself in the changed set and carries AC-1 to AC-6. The reviewers could therefore not check any acceptance claim, and the findings are code-and-prose only. Both rounds are also single-member, single-pass and provisional. Do not cite these rounds as gate evidence that the ACs were reviewed. The AC verification in the roadmap is the implementer's own.",
+      "file": "agents/evidence/reviews/behavior-vocabulary-close-round11.review-input/acceptance-criteria.md"
+    },
+    {
+      "finding_id": "6a0b6bcea5af",
+      "severity": "low",
+      "kind": "style",
+      "title": "Evidence tree carries multi-thousand-line duplicated patch snapshots per review round",
+      "detail": "Each review round commits a full diff.patch (round 11's is about 4,200 lines), mostly re-embedding source already in the tree. About 20 rounds across several review slugs add large, near-duplicate files to a published package's repo. Check that these paths are excluded from the npm tarball and the plugin manifests, and that the .path-leak-allow additions do not widen the leak allowlist beyond these artefacts.",
+      "file": "agents/evidence/reviews/behavior-vocabulary-close-round11.review-input/diff.patch"
+    },
+    {
+      "finding_id": "41aabf237a10",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Roadmap completion record quotes review-round and finding counts that the release range contradicts",
+      "detail": "The embedded roadmap text states 'Eleven completion-review rounds produced 100 findings; 74 are fixed and 26 are accepted-risk'. The range facts list behavior-vocabulary-close review artefacts up to round21, and the round13 findings file shows later rounds still raising high-severity findings. The same document says derived, volatile figures should not be quoted in completion evidence, then quotes this one. It also quotes 'ls src/skills | wc -l is 299' and 'AC-3 ... 97 tests green'. It admits the 97 is stale at AC-3 sign-off, so a proof-affecting AC reads as a current count when it is not. The CHANGELOG or release notes must not repeat these figures.",
+      "file": "agents/evidence/reviews/behavior-vocabulary-close-round12.review-input/diff.patch"
+    },
+    {
+      "finding_id": "2ce05ad49c18",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Published routing/delivery metrics moved because of corpus seeding, with no provenance in the artefact",
+      "detail": "delivery-set-measurement-2026-08-31.json changes recall_at_k from 64.141 to 62.808, recall_loss_pp from 35.859 to 37.192, and benefit_unconditional likewise. Cases go from 794 to 810 and prompts from 783 to 799. The cause is 16 new test-case-discovery trigger rows, which the corpus's own _eval_note says are expected to fail a live pass. A reader diffing the numbers sees a routing regression that is really aspirational rows entering the denominator. Round13 finding 3 accepts the risk and says 'the commit ... states it' and 'the roadmap residue now carries it'. The round12 roadmap snapshot in this diff does not carry that link. Neither JSON carries a note field. Any headline that cites these recall figures needs the corpus-growth caveat, or the link must be verified in the final tree.",
+      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json"
+    },
+    {
+      "finding_id": "313657324778",
+      "severity": "high",
+      "kind": "correctness",
+      "title": "Round12 snapshot emits an unrunnable `dotnet test` into `selected` on a marker-only layout (fix is asserted only in a later findings file)",
+      "detail": "In the diffed runner.ts, _dotnet_basis emits a dotnet-test row when global.json or Directory.Build.props sits beside a project found below the root, using the root-relative command `dotnet test`. dotnet test does not recurse and fails MSB1003 without a root project or solution. _apply_guard never reads confidence, so the row reaches selected. The two fixtures assert only confidence. Round13 finding 1 marks this fixed and says it reversed round 11 finding 9. The fix code is not in the visible diff, so the final tree must be checked for the root-listing-only gate. The roadmap text in this snapshot still presents Risk 2 and the marker gate as closed, and the contract-table claim of HIGH on the solution-less layout is wrong for this snapshot.",
+      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts"
+    },
+    {
+      "finding_id": "d0b371a1476f",
+      "severity": "medium",
+      "kind": "correctness",
+      "title": "Ruby marker-only rspec row emits `bundle exec rspec` with no Gemfile",
+      "detail": "_ruby_runners drops the Gemfile precondition, so .rspec or spec/spec_helper.rb alone yields `bundle exec rspec` at HIGH. bundle exec aborts with 'Could not locate Gemfile'. The row goes into selected, and no fixture covers the Gemfile-less path. Round13 finding 2 claims a fix (bare `rspec` without a Gemfile) that this diff does not show. Verify it landed together with a red-first fixture.",
+      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts"
+    },
+    {
+      "finding_id": "1137e5be15cf",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "pnpm-workspace parser drops all scopes on CRLF files",
+      "detail": "_pnpm_packages splits on '\\n' and its key regex has no m flag, so a '\\r' before end of line prevents every key match. The result is [] and the workspace silently collapses to the root scope. latest_manifest_mtime then loses per-package invalidation, which is the stale-cache failure the widening was meant to prevent. Round13 finding 5 claims a /\\r?\\n/ fix. Confirm it is in the final tree.",
+      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts"
+    },
+    {
+      "finding_id": "de7e020a458f",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "Shipped command bodies embed a package-internal shell probe and a self-contradicting bolded claim",
+      "detail": "The tests/create and tests/execute command bodies (src and dist projections) tell consumers to run `ls src/skills | grep -iE 'jest|vitest|pytest|rspec|junit'` as justification. src/skills does not exist in a consumer repo, and the claim is a volatile derived fact. The bold line 'skills: deliberately names none' sits below frontmatter listing `skills: [test-case-discovery, quality-tools]`. Round13 findings 6 and 7 mark both fixed. Confirm that src and dist copies are regenerated with the fix.",
+      "file": "src/domains/engineering-base/tests/create/command.md"
+    },
+    {
+      "finding_id": "49c1459b49e9",
+      "severity": "low",
+      "kind": "claim",
+      "title": "toolchain-resolver contract page narrates its own review history and a vanished budget instead of stating the contract",
+      "detail": "The Size budget paragraph drops the page's self-imposed ceiling and then recounts three fitted values (6,000, 7,500, 8,500), a '66 characters' claim, and commentary about the trap. Elsewhere the same page states per-scope cost figures ('bounded at 200 scopes'). The page says narration and per-round history do not belong in it, yet this paragraph is exactly that. Treat the cost and budget statements as unverified prose, not as proof. The tripwire alone should stay.",
+      "file": "src/agent-src/contexts/execution/toolchain-resolver.md"
+    },
+    {
+      "finding_id": "28e4739a5e3b",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Published routing/delivery-set headline numbers moved because of eval rows the file itself says are expected to fail",
+      "detail": "The delivery-set measurement drops recall_at_k from 64.141 to 62.808, raises recall_loss_pp from 35.859 to 37.192, and raises routing-body false-activation from +7.79pp to +8.17pp. The regeneration follows the new 'should-trigger' rows in test-case-discovery/evals/triggers.json. That file's _eval_note says no live skill_trigger_eval pass was run, last_eval is deliberately not bumped, and the rows 'ARE EXPECTED TO FAIL A LIVE PASS TODAY'. Specification rows known to be red are now part of the train corpus that produces the measured headline figures. Any doc that cites the old figures (docs/proof.md, docs/CLAIMS.md, README) must be regenerated, or it quotes numbers the corpus no longer produces. Conversely, the new figures read as a routing regression when the routing did not change.",
+      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json"
+    },
+    {
+      "finding_id": "1b44a71a5dd3",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Roadmap close-out quotes review-round and finding counts that the same range outgrows",
+      "detail": "The embedded roadmap residue states 'Twelve completion-review rounds produced 109 findings; 82 are fixed and 27 are accepted-risk. Nothing is open.' This range also contains round13 and round14 review artifacts, and round14 adds six findings with fixed and accepted-risk dispositions. If the archived roadmap still carries the 12/109/82/27 figures, it contradicts the review artifacts shipped alongside it. This is the stale-derived-figure defect class the roadmap's own step 2.2 says not to quote. Fix by naming the command or artifact that holds the count, or by re-deriving it at the release commit.",
+      "file": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md"
+    },
+    {
+      "finding_id": "a78536c88317",
+      "severity": "low",
+      "kind": "security",
+      "title": "Workspace scope expansion follows symlinks for literal entries and reads files outside the project root",
+      "detail": "_behavior_scopes accepts a literal workspace entry after fs.statSync(path.join(project_root, g)).isDirectory(). statSync follows symlinks, so a literal entry that is a symlink to a directory outside the repository becomes a scope. Detection then reads composer.json, package.json, requirements.txt, Gemfile and .NET project files there. The '..' and leading-'/' guards do not cover a symlink inside the tree. The glob branch uses Dirent.isDirectory(), which does not follow symlinks, so the two branches disagree. Impact is low: the code only pattern-matches the content, and basis strings echo file names, not content. Still, an untrusted repository can steer the resolver to read arbitrary local manifests. Use lstat or a realpath containment check for the literal branch.",
+      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts"
+    },
+    {
+      "finding_id": "84e495bee3c5",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "Review manifest declares a read-only tool set, but the findings cite executed commands",
+      "detail": "behavior-vocabulary-close-round15.findings.md declares `tools: [git-diff-branch-scoped, file-read-branch-paths]` and `excluded: [..., agents/runtime, ...]`. The prompt template allows only branch-scoped `git diff` and reads of branch-touched files, with no repo-wide grep. The findings table and the 'Verified and NOT findings' block report results that need more than that: `vitest` reporting 119 passed, `lint_roadmap_complexity` exiting 1, `grep -rn 'stack-adaptive' src/ | wc -l` returning 8, a `sha256` of the corpus file, `wc -w` on SKILL.md, and a read of `src/config/canonical-terms.yml`, which is not branch-touched. Either the manifest understates what the reviewer did, or those verifications were not produced by the declared tools. In both cases the recorded provenance of the gate evidence is wrong. The review also records `roadmap: none` and `ac_hash: none`, yet it certifies roadmap and acceptance-criteria claims. Disposition: must-fix. Correct the manifest to the tools actually used, or drop the claims that cannot be reproduced under the stated allowlist.",
+      "file": "agents/evidence/reviews/behavior-vocabulary-close-round15.findings.md"
+    },
+    {
+      "finding_id": "703a0aacd48e",
+      "severity": "medium",
+      "kind": "claim",
+      "title": "AC-3 asserts '97 tests green' while the suite reports 119 (later 121)",
+      "detail": "The roadmap's AC-3 evidence line in the committed diff says `97 tests green in stack_runner.test.ts`. Round-15 finding 2 measures 119 passed, and its disposition cites 121. The line is a falsifiable test-count claim shipped in a release. The justification is that the Acceptance-Criteria body cannot be edited because of gate R1 and the same-day stamp. The same diff rewrites that whole AC body relative to main, so the justification is weak. The roadmap's own step 2.2 says not to quote derived, volatile figures in completion evidence, and this line breaks that rule. Disposition: deferred. It was recorded as accepted-risk with a revisit-if of the next-day risk-review stamp. Replace the number with the command (`npx vitest run tests/scripts/work_engine/stack_runner.test.ts`) at the first opportunity.",
+      "file": "agents/roadmaps/road-to-behavior-vocabulary-and-runner-truth.md"
+    },
+    {
+      "finding_id": "8ab7e0deb605",
+      "severity": "low",
+      "kind": "claim",
+      "title": "Published routing metrics moved because of rows that are expected to fail, with no provenance in the artifacts",
+      "detail": "delivery-set-measurement-2026-08-31.json and routing-body-signal-verdict.json were regenerated after the trigger corpus grew. `recall_at_k` fell from 64.141 to 62.808, `recall_loss_pp` rose from 35.859 to 37.192, `ceiling_met` stays false, and the body-signal false-activation delta moved from +7.79 to +8.17 pp. The cause is exemplar rows that assert routing the untouched `description` cannot deliver; the corpus's own `_eval_note` says so. Neither generated file has a field recording this, so a reader diffing the numbers sees a routing regression. The only explanation is in roadmap residue prose. Any release note or headline that quotes these metrics should say they are corpus-seeded, not a behaviour change. Disposition: deferred, because neither generator has a provenance field. Revisit if a third consumer reads these files without the surrounding change.",
+      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json"
+    },
+    {
+      "finding_id": "4398cd4de275",
+      "severity": "low",
+      "kind": "correctness",
+      "title": "runner.ts sits at exactly its per-file line cap, which blocks three deferred fixes",
+      "detail": "Round-15 finding 5 measures the module at 1500 lines, equal to `check_source_size_budget`'s per-file cap, so the next added line turns the aggregate ratchet red. The roadmap residue defers three fixes on this ceiling without saying the headroom is zero. These are the false root-scope `unknown` row when a root `.sln` sits beside workspace packages, the multi-line flow-sequence drop in `_pnpm_packages`, and the single-`readdirSync` consolidation. The false refusal row is a correctness defect in a detection axis, so it will persist until the behavior axis is split into its own leaf module. Disposition: deferred (accepted-risk), with the unblocking move being that module split.",
+      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts"
+    },
+    {
+      "finding_id": "78520e9a6a33",
+      "severity": "low",
+      "kind": "style",
+      "title": "Whole 4.7k-line source patch committed as review-input evidence",
+      "detail": "`behavior-vocabulary-close-round14.review-input/diff.patch` duplicates the full source, test and generated diff, including both `src/` and `dist/` copies of every file, into the evidence tree. A stale snapshot of code that has since changed (round-15 fixes for `bundle exec` presence, the literal-workspace exclusion and the complexity retag) then sits in the repo and shows up in greps and diffs as if it were current. Disposition: deferred. Acceptable as an immutable audit record, but a short README or header marking it 'frozen at round 14, superseded by later commits' would stop it being read as live code.",
+      "file": "agents/evidence/reviews/behavior-vocabulary-close-round14.review-input/diff.patch"
+    }
+  ],
+  "review_independence": "single-member",
+  "context_relation": "unknown",
+  "acceptance_status": "provisional",
+  "assurance": "single-pass",
+  "reviewers": [
+    "anthropic"
+  ],
+  "coverage": {
+    "chunks": 6,
+    "filesReviewed": 81,
+    "filesTotal": 684,
+    "unreviewed": [
+      {
+        "path": "agents/evidence/reviews/lane-installed-layer-thinned.review-input/diff.patch",
+        "reason": "single-file diff of 452437 chars exceeds the 388616-char request budget; not split, because a diff cut mid-hunk yields findings about code that does not exist"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round15.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round15.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round16.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round16.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round16.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round16.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round17.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round17.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round17.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round17.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round18.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round18.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round18.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round18.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round19.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round19.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round19.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round19.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round2.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round2.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round2.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round2.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round2.review-input/roadmap.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round20.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round20.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round20.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round20.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round21.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round21.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round21.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round21.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round3.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round3.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round3.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round3.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round3.review-input/roadmap.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round4.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round4.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round4.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round4.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round4.review-input/roadmap.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round5.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round5.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round5.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round5.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round5.review-input/roadmap.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round6.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round6.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round6.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round6.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round6.review-input/roadmap.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round7.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round7.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round7.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round7.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round7.review-input/roadmap.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round8.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round8.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round8.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round8.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round8.review-input/roadmap.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round9.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round9.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round9.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round9.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close-round9.review-input/roadmap.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/behavior-vocabulary-close.review-input/roadmap.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-decision-closure-recheck.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-graph-feeds-the-gate-20261001.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-graph-feeds-the-gate-20261001.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-graph-feeds-the-gate-20261001.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-graph-feeds-the-gate-20261001.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-graph-feeds-the-gate-20261001.review-input/roadmap.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round2.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round2.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round2.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round2.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round3.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round3.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round3.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round3.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round4.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round4.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round4.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round4.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round5.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round5.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round5.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round5.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round6.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round6.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round6.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round6.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round7.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round7.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round7.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes-round7.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/drain-ranker-that-routes.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round1.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round10.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round11.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round12.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round13.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round14.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round15.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round16.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round17.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round18.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round19.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round2.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round20.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round21.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round22.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round23.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round24.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round25.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round3.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round4.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round5.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round6.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round7.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round8.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/fix-release-shape-allows-its-own-census.round9.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/lane-installed-layer-thinned.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/lane-installed-layer-thinned.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/lane-installed-layer-thinned.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/lane-installed-layer-thinned.review-input/roadmap.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/leading-every-row.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/roadmap-claims-shape.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/roadmap-claims-shape.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/roadmap-claims-shape.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/roadmap-claims-shape.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/roadmap-draft-dispositions-2026-10-05.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/rule-carrier-phase1b.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/rule-links-repo-tree.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/rule-links-repo-tree.review-input",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/rule-triggers-and-links.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/rule-triggers-and-links.review-input/acceptance-criteria.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/rule-triggers-and-links.review-input/diff.patch",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/rule-triggers-and-links.review-input/prompt.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/tree-keeps-neighbours.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/evidence/reviews/typed-grants-measured-state-2026-10-05.findings.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/index.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/memory/intake/README.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/reports/originality.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/reports/originality.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/reports/skill-overlap.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-a-failed-command-the-recorder-sees.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-a-hook-bundle-with-one-yaml-reader.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-a-kernel-that-guards-its-plumbing.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-a-ranker-that-routes.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-a-release-record-that-says-what-it-reviewed.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-a-stop-that-holds.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-a-tree-that-keeps-its-neighbours.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-a-trunk-whose-own-gates-are-green.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-a-ui-coverage-ledger-that-can-fail.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-an-evidence-tree-with-a-cold-half.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-an-obligation-row-that-names-its-writer.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth-carried.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-blocking-severities-where-a-refusal-can-land.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-drain-commands.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-host-claims-the-tree-contradicts.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-learning-you-can-see.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-roadmap-claims-with-a-shape.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-rule-laws-that-can-stand.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/archive/road-to-upstream-advisory-bump.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/later/README.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/later/road-to-a-release-record-that-says-what-it-reviewed-carried.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/later/road-to-a-stop-that-holds-carried.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/later/road-to-a-trunk-whose-own-gates-are-green-carried.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/later/road-to-an-obligation-row-that-names-its-writer-carried.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/later/road-to-federation-behind-adr-278.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/later/road-to-mixed-trigger-activation-cost.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/later/road-to-release-finding-ordering.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/later/road-to-release-holds-that-refuse.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-a-menu-whose-precision-is-measured.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-a-rule-carrier-that-works-outside-the-repo.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-adversarial-verification-and-long-runs.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-an-installed-layer-that-is-thinned.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-behavior-vocabulary-and-runner-truth.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-corpus-refresh-cadence-shape.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-decision-closure.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-host-claims-the-tree-contradicts-carried.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-leading-every-row.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-learning-you-can-see-carried.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-neighbours-that-pull-their-weight.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-rule-triggers-and-links-that-hold.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-stacks-beyond-php.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-touched-files-that-pass-their-own-tools.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-trigger-eval-freshness-has-no-writer.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/road-to-typed-grants-that-persist.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/stubs/road-to-a-path-route-under-delivery.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/stubs/road-to-adr-134-expiry.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/stubs/road-to-assurance-benchmark.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/stubs/road-to-code-graph-benchmark-rerun.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/stubs/road-to-instructions-loaded-observer.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/stubs/road-to-mcp-fingerprint-slot-binding.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/stubs/road-to-opencode-runtime-probe.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/stubs/road-to-runtime-orchestration-substrate.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/stubs/road-to-standing-rule-delivery-per-machine.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/stubs/road-to-subagent-return-gate.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "agents/roadmaps/stubs/the-macos-test-timeout-class.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "deploy/telemetry-worker/package-lock.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "deploy/telemetry-worker/package.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/claudePathsPlan.js",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/claudePathsPlan.js.map",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/claudeRuleRewrite.js",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/claudeRuleRewrite.js.map",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/globalRuleScope.js",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/globalRuleScope.js.map",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/host_rule_ownership.js",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/host_rule_ownership.js.map",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/install.mjs",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/installThinLayer.js",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/installThinLayer.js.map",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/installedRuleLinks.js",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/installedRuleLinks.js.map",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/wizard-plan.js",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "dist/install/wizard-plan.js.map",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/CLAIMS.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/SKILL_CENSUS.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/architecture.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/archive/CHANGELOG-pre-16.3.0.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/catalog.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/command-flows.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/contracts/agents-layout.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/contracts/command-clusters.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/contracts/hook-architecture-v1.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/contracts/mcp-tool-inventory.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/contracts/release-pr-gating.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/contracts/rule-router.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/contracts/settings-classes.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/decisions/ADR-228-global-install-does-not-emit-paths.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/decisions/ADR-278-the-user-global-layer-may-carry-the-thinning-opt-in.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/decisions/INDEX.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/enforcement-by-host.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/featured-skills.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/getting-started-by-role.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/getting-started.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "docs/proof.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "hooks/hooks.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "internal/bench/reports/token-baseline.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "package.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "site/package-lock.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "site/package.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/contexts/authority/decision-revisit-gate-enforcement.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/contexts/communication/rules-auto/design-fidelity-enforcement.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/contexts/execution/auto-dispatch-classification.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/contexts/execution/roadmap-process-loop.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/contexts/execution/session-canary-enforcement-history.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/contexts/execution/toolchain-resolver.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/scripts/archive_completed_roadmaps.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/scripts/deferral_carry.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/scripts/update_roadmap_progress.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/templates/agents/agent-project-settings.example.yml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/templates/scripts/work_engine/directives/ui/apply.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/agent-src/templates/scripts/work_engine/stack/runner.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/cli/registry.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/agent-settings.template.yml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/continuity-surface.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/evaluator-budgets.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/gate-coverage.yml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/gate-violation-baselines.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/hook-bundle-budget.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/hook-token-budget.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/host-instruction-limits.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/routing-coverage-seed.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/rule-activation-census.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/rule-consequence-class.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/config/rule-law-ceilings.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/ai-video/pack.yaml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/analysis-workbench/analyze/inbox/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/analysis-workbench/analyze/roadmap-repos/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/engineering-base/bug/fix/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/engineering-base/feature/plan/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/engineering-base/feature/roadmap/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/engineering-base/fix/ci/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/engineering-base/implement-ticket/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/engineering-base/pack.yaml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/engineering-base/tests/create/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/engineering-base/tests/execute/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/legal-review-prep/pack.yaml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/meta/README.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/meta/pack.yaml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/product-basic/jira-ticket/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/product-basic/roadmap/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/product-basic/roadmap/create/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/product-basic/roadmap/materialize/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/product-basic/roadmap/process-full/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/product-basic/roadmap/resolve-blockers/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/product-basic/roadmap/resolve-blockers/evals/triggers.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/product-basic/roadmap/triage-parked/command.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/domains/product-basic/roadmap/triage-parked/evals/triggers.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/flows/surface-map.yaml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/install/claudePathsPlan.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/install/claudeRuleRewrite.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/install/emit_host_rules_cli.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/install/globalRuleScope.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/install/host_rule_ownership.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/install/installThinLayer.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/install/installedRuleLinks.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/install/wizard-plan.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/packs/ai-image/pack.yaml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/packs/finance-advanced/pack.yaml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/packs/finance-basic/pack.yaml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/packs/founder-strategy/pack.yaml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/active-remediation.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/autonomous-execution.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/broken-access-control.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/command-suggestion-policy.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/context-hygiene.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/decision-revisit-gate.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/design-fidelity.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/doc-screenshot-hygiene.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/domain-safety-disclaimer.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/domain-safety-pii.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/domain-safety-retention.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/engineering-safety-floor.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/evaluator-independence.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/fast-path-marker-visibility.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/finance-safety-floor.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/git-history-discipline.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/image-likeness-and-rights.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/legal-safety-floor.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/lethal-trifecta-guard.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/low-impact-corpus-privacy-floor.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/media-governance-routing.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/persona-governance.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/provider-lifecycle-discipline.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/question-not-instruction.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/roadmap-progress-sync.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/runtime-safety.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/secret-vcs-guard.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/security-sensitive-stop.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/session-canary.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/settings-ask-protocol.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/source-confidentiality.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/strategy-safety-floor.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/tool-safety.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/untrusted-input-defense.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/rules/user-interrupt-priority.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_cli/cmd_doctor.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_cli/cmd_doctor_neighbours.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_dispatch.bash",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/agent_settings.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/claude_settings_hooks.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/estate_offsets.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/exemption_shape.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/fnv.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/foreign_scan.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/gitignore_block.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/global_deploy_inventory.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/graph_feeder_record.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/hook_settings.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/host_capability.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/host_hook_merge.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/installed_layer.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/json_merge.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/json_pointers.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/lean_projection_mode.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/machine_wake.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/neighbour_census.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/neighbour_scan.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/neighbour_tool_use.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/prompt_shape.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/release_migration_gate.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/reserved_name_sweep.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/review_coverage.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/rule_consequence_class.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/rule_injection.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/rule_law_section.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/rule_layer_overlap.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/skill_origin.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/structured_ask.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/thin_rules.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/touched_file_quality.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/turn_end_refusals.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/_lib/windsurf_render.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/ai_council/clients.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/ai_council/config.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/ai_council/vendor_defaults.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/audit_skill_overlap.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/before_complete_hook.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/bench_touched_file_quality.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_enforcement_matrix.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_estate_count.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_finding_dispositions.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_hook_bundle_composition.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_kernel_edit_ratified.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_memory.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_release_highlights.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_release_pr_shape.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_standing_rule_delivery.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/check_verify_expectation_delta.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/detect.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/foreign.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/query.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/types.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/validate.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/code_graph/verbs.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/compile_hook_manifest.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/condense.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/estate_exemption_shape.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/generate_host_cost_table.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hook_manifest.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hook_manifest.yaml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/block_config_weakening.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/block_plumbing_writes.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/code_graph_context_hook.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/concern_failure_policy.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/dispatch_hook.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/exit_codes.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/host_lowering.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/host_lowering.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/one_question_per_ask_hook.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/payload_stub.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/rule_inject_hook.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/table_fingerprint.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/telemetry_usage_hook.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks/turn_end_gate_hook.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/hooks_status.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/injection_scan_hook.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/install.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/installed_layer_report.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/language_mirror_hook.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/learning_sidecar.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/lint_hook_manifest.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/lint_major_migration_sections.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/lint_pack_boundaries.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/lint_rule_law_section.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/lint_workflow_security.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/mcp_server/consumer_tool_catalog.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/mcp_server/graph_tools.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/measure_routing_signal.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/measure_skill_ranker_baseline.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/memory_learn_hook.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/model_rule_injection.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/project_thin_rules.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/report_evidence_temperature.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/report_installed_rule_links.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/report_label_agreement.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/report_obligation_mechanism.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/report_single_token_triggers.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/report_skill_ranker_confusion.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/report_standing_payload_by_host.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/report_verification_record_coverage.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/rule_activation_census.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/rule_trigger_eval.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/schemas/review-findings.schema.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/schemas/rule.schema.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/skill_tools/score_skill_relevance.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/sweep_skill_ranker_signals.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/sync_gitignore.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/scripts/trigger_eval_grandfather.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/server/schemas/settings.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/shared/skillRanking.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/api-design/data/manifest.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/api-design/evals/triggers.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/api-testing/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/api-testing/evals/triggers.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/code-intelligence/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/design-system-capture/evals/triggers.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/design-system-capture/references/import-procedure.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/existing-ui-audit/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/fe-design/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/iconography/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/js-library-packaging/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/monorepo-workspace/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/quality-tools/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/quality-tools/evals/triggers.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/quality-tools/references/go-tools.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/quality-tools/references/python-tools.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/review-routing/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/review-routing/evals/triggers.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/skill-improvement-pipeline/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/skill-improvement-pipeline/evals/triggers.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/storybook-workshop/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/tailwind-engineer/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/tailwind-engineer/evals/triggers.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/test-case-discovery/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/test-case-discovery/evals/triggers.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/test-driven-development/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/test-driven-development/evals/triggers.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/test-performance/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/test-performance/evals/triggers.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "src/skills/ui-component-architect/SKILL.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "taskfiles/ci-fast.yml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "taskfiles/content.yml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "taskfiles/dev.yml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/design-artifacts/fixtures/ui-port-losses/README.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/eval/routing-matrix/second-seat-2026-10-01.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/hook-envelopes/README.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/hook-envelopes/claude-bash-failure.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/installer-e2e/run-scenarios.sh",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/stack/README.md",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/stack/go/go.mod",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/stack/laravel/artisan",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/stack/laravel/composer.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/stack/python/pyproject.toml",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/stack/typescript/package.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/fixtures/stack/typescript/tsconfig.json",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/before_complete_failure_envelope.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/concern_severity.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/fixtures/concern_exits_3.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/fixtures/concern_self_signals.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/fixtures/concern_throws.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/hook_manifest_compiled.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/host_lowering_compiled.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/injection_budget_dispatch.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/surface_envelope.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/hooks/telemetry_usage_hook.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/install/gitignore_block_no_ui.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/install/host_rule_ownership.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/lib/agent_settings.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/lib/host_hook_merge.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/lib/json_pointers.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/_lib_host_capability.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/ai_council/vendor_defaults.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/archive_deferral_resolution.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/ask_surface.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/before_complete_touched_quality.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/build_proof.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_cluster_patterns.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_enforcement_matrix.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_estate_count.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_finding_dispositions.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_kernel_edit_ratified.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_memory.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_release_pr_shape.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_standing_rule_delivery.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/check_verify_expectation_delta.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/code_graph.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/code_graph_context_hook.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/code_graph_foreign.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/code_graph_gate_verbs.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/condense_glob_emit.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/deferral_carry.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/generate_host_cost_table.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/git_authorization.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/graph_feeder_record.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/hook_bundle_composition.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/hooks/block_config_weakening.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/hooks/block_plumbing_writes.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/hooks/dispatch_continuation_on_failure_envelope.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/hooks/dispatch_hook.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/hooks/payload_optin.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/hooks_status.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/install_rule_links.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/install_thin_layer.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/installed_layer_report.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/language_mirror_hook.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lean_projection_mode_parity.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/learning_sidecar.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_agent_security.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_budget_ownership.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_hook_manifest.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_major_migration_sections.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_pack_boundaries.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/lint_rule_law_section.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/mcp_graph_tools.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/mcp_lite_tools.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/mcp_server_tools.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/measure_skill_ranker_baseline.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/memory_learn_hook.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/model_rule_injection.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/neighbour_census.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/neighbour_mcp_use.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/neighbour_route_origin.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/project_thin_rules.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/release.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/release_findings_ingest.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/report_evidence_temperature.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/report_obligation_carriers.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/report_standing_payload_by_host.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/report_verification_record_coverage.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/review_coverage.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/routing_signal_measurement.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/rule_consequence_class.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/rule_inject_foreign_matrix.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/rule_inject_hook.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/score_skill_relevance.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/skill_ranker_reports.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/touched_file_quality.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/turn_end_refusals.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/update_roadmap_progress.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/work_engine/stack_binding_sites.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/work_engine/stack_runner.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "tests/scripts/work_engine/ui_port_losses.test.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      },
+      {
+        "path": "vitest.config.ts",
+        "reason": "the span needs 39 requests at this budget and the per-run ceiling is 6; this file's chunk was not sent"
+      }
+    ]
+  },
+  "fact_claims": {
+    "asserting_removal": 1,
+    "disproved_by_tree": 1
+  }
+}
