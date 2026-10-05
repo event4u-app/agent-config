@@ -67,6 +67,9 @@ export const REPORT_DIR = 'agents/evidence/analysis';
 /** Reports of this family are excluded from the reference index — see `isSelfReport`. */
 const REPORT_PREFIX = 'evidence-temperature-';
 
+/** Extension of a census report. Shared by the writer and by `--since latest`. */
+const REPORT_EXT = '.md';
+
 /**
  * The day a census is stamped with. UTC, so a run either side of local midnight
  * names the same report.
@@ -76,16 +79,16 @@ export function censusDateStamp(now: Date = new Date()): string {
 }
 
 /**
- * The path `--write` composes for a census taken on `generatedAt`. The one place
- * the name is spelled; `main` and the release-PR shape gate's test both go
- * through it, and through `censusDateStamp` for the day, so a change to the
- * directory, the prefix, the date shape or the extension moves both sides at
- * once. Writer and gate holding independent spellings of this name is what broke
- * `task release` for 16.3.0 — and splitting the day out is what makes that
- * sentence true of the whole filename rather than of three of its four parts.
+ * The path `--write` composes for a census taken on `generatedAt`. Every part of
+ * the name comes from a constant this module shares — `REPORT_DIR`,
+ * `REPORT_PREFIX`, `REPORT_EXT` — or from `censusDateStamp`, and
+ * `latestReportBefore` filters on the same two, so discovery and writing cannot
+ * drift apart. The release-PR shape gate's test goes through this builder too.
+ * Writer and gate holding independent spellings of this name is what broke
+ * `task release` for 16.3.0.
  */
 export function defaultReportPath(generatedAt: string): string {
-    return path.posix.join(REPORT_DIR, `${REPORT_PREFIX}${generatedAt}.md`);
+    return path.posix.join(REPORT_DIR, `${REPORT_PREFIX}${generatedAt}${REPORT_EXT}`);
 }
 
 /** File extensions a path token may end in. Anything else is not a path to us. */
@@ -410,7 +413,7 @@ function mib(bytes: number): string {
  */
 export function latestReportBefore(names: readonly string[], exclude: string): string | null {
     const candidates = names
-        .filter((n) => n.startsWith(REPORT_PREFIX) && n.endsWith('.md') && n !== exclude)
+        .filter((n) => n.startsWith(REPORT_PREFIX) && n.endsWith(REPORT_EXT) && n !== exclude)
         .sort();
     return candidates.at(-1) ?? null;
 }

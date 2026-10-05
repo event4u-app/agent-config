@@ -162,13 +162,25 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
     });
 
     it('the census date stamp is UTC on both sides of a day boundary', () => {
-        // Measured against a local-time implementation: +02:00 reds the first
-        // assertion, -04:00 the second, TZ=UTC neither — at offset 0 the two
-        // implementations agree, so there is nothing to detect. An offset
-        // smaller than 30 minutes is not covered either. The TZ is not pinned
-        // in vitest.config.ts.
-        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5, 23, 30)))).toBe('2026-10-05');
-        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 6, 0, 30)))).toBe('2026-10-06');
+        // The runner's own TZ is not pinned, and at offset 0 a local-time
+        // implementation is indistinguishable from this one — so the test sets
+        // the offset itself rather than depending on whatever the machine has.
+        // Node applies a TZ change at runtime (verified on v26), and each half
+        // of the pair is the one a local-time implementation fails under that
+        // sign.
+        const tz = process.env['TZ'];
+        try {
+            process.env['TZ'] = 'Europe/Berlin';
+            expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5, 23, 30)))).toBe('2026-10-05');
+            process.env['TZ'] = 'America/New_York';
+            expect(censusDateStamp(new Date(Date.UTC(2026, 9, 6, 0, 30)))).toBe('2026-10-06');
+        } finally {
+            if (tz === undefined) {
+                delete process.env['TZ'];
+            } else {
+                process.env['TZ'] = tz;
+            }
+        }
     });
 });
 

@@ -62,8 +62,12 @@ const ALLOWLIST_GLOBS = [
 ] as const;
 
 /**
- * Translate a Python `fnmatch` shell pattern to a RegExp, mirroring
- * `fnmatch.translate`. fnmatch is case-sensitive on POSIX (fnmatchcase
+ * Translate a Python `fnmatch` shell pattern to a RegExp, following
+ * `fnmatch.translate` for the constructs this allowlist uses — `*`, `?` and
+ * `[0-9]`. Bracket handling beyond that one class is unverified against
+ * CPython; see the note at the bracket branch.
+ *
+ * fnmatch is case-sensitive on POSIX (fnmatchcase
  * semantics on the normalized path); `*` and `?` do NOT cross path
  * separators is NOT a property of fnmatch — `*` matches everything
  * including `/`. The allowlist relies on that (e.g. nested-file rejection
