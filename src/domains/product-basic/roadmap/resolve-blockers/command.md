@@ -307,7 +307,7 @@ its decidability baseline as loose, lower it in the same change. A roadmap whose
 it has no open step is now archivable — name it in the output;
 `./agent-config roadmap:progress` without the flag sweeps it. A decision whose
 **implementation** touches governance surfaces (`src/config/gate-coverage.yml`,
-workflows, kernel rules) needs its ratification artefact in that later change;
+workflows, kernel rules) needs its ratification artifact in that later change;
 deciding it here does not. A run that **adds** a blocker (splitting
 one, or recording a newly found external wait) grows it and needs an
 `estate_growth_exempt: <reason>` line added to that roadmap's frontmatter in the
