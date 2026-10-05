@@ -163,7 +163,11 @@ Skipped via `if: !startsWith(github.head_ref, 'release/')` guards on the heavy
 install/test jobs. The guard is on the BRANCH, not on paths — so the column
 below is the argument for why that is safe, not a condition the workflow
 evaluates. The argument rests on the allowlist in § Release-PR shape: it admits
-no install script, no test source, and no executable code.
+no install script, no test source, and no file these jobs execute. It is NOT the
+stronger claim the opening blockquote withdraws — `package.json` is admitted and
+carries `bin`, `files`, `dependencies` and `engines`, whose content no gate
+reads. That residue is the blockquote's, not this section's, and the `smoke` row
+below points back at it.
 
 It does admit six paths under `src/` and `dist/`: pack and domain metadata
 (`pack.yaml` ×2), their READMEs (×2), and the project-settings template pin with
@@ -208,7 +212,7 @@ the feature-PR floor by adding:
 
 `release-validation.yml`'s fourth job, `release-install-e2e`
 (`tests/test_release_install_e2e.sh`), closes a gap the cut surface above
-does not cover: that the allowlist admits no executable code is a claim
+does not cover: that the allowlist admits no file these jobs execute is a claim
 about the **source diff**, not about whether the **packed tarball**
 actually installs, upgrades, and boots as a real npm global package. Every release PR now proves, against the real tarball:
 
@@ -233,7 +237,7 @@ the source diff couldn't see was missing) cannot recur silently.
 
 ## Consumer-matrix exemption — the tarball window
 
-The cut surface above rests on the allowlist admitting no executable code.
+The cut surface above rests on the allowlist admitting no file those jobs execute.
 That argument covers the **source diff** — it is blind to the **published
 tarball**, and, as the opening blockquote records, to the content of an
 admitted manifest. Every historical

@@ -224,11 +224,14 @@ describe('censusDateStamp', () => {
         const lateOnThe5th = new Date(Date.UTC(2026, 9, 5, 23, 30));
         const earlyOnThe6th = new Date(Date.UTC(2026, 9, 6, 0, 30));
         try {
-            // Each probe below asserts TWO preconditions at once: that the
-            // runtime honoured the TZ assignment, and that the zone resolved to
-            // real tzdata rather than silently falling back to UTC. Both stamp
-            // assertions go through `toISOString` and are offset-invariant, so
-            // without the probes this test would pass while measuring nothing.
+            // The two probes below assert, as a PAIR, that the runtime honoured
+            // the assignments and resolved real tzdata. Neither alone does: on a
+            // host already at UTC+1/+2 the first is green without any assignment
+            // taking effect, and on a negative-offset host the second is. Only
+            // both together are sensitive to a no-op, because no single ambient
+            // zone satisfies them at once. The stamp assertions themselves go
+            // through `toISOString` and are offset-invariant, so without the
+            // probes this test would pass while measuring nothing.
             //
             // Those are environment properties, so a leg lacking tzdata would
             // red this while the implementation is fine. Measured rather than

@@ -83,8 +83,18 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         // using digit classes. Pinned here so the property is visible rather
         // than discovered, and so narrowing these globs later is a deliberate
         // edit to this assertion rather than a silent behaviour change.
+        //
+        // ALL SIX `*` entries, not a sample: a reader checking whether a given
+        // row is narrow should find its answer here rather than infer it from
+        // a neighbour.
         expect(shape._matches('src/packs/core/installer/pack.yaml')).toBe(true);
+        expect(shape._matches('src/packs/core/installer/README.md')).toBe(true);
+        expect(shape._matches('src/domains/a/b/pack.yaml')).toBe(true);
+        expect(shape._matches('src/domains/a/b/README.md')).toBe(true);
         expect(shape._matches('agents/evidence/release-findings/a/b/c.json')).toBe(true);
+        // The widest of the six: the `*` sits before the extension, not before
+        // a separator, so it swallows a whole path segment plus a filename.
+        expect(shape._matches('docs/archive/CHANGELOG-pre-x/evil.md')).toBe(true);
     });
 
     it('marketplace metadata only passes', () => {
@@ -216,6 +226,20 @@ describe('check_release_pr_shape — contract/code allowlist parity', () => {
             .map((line) => /^ {3}- `([^`]+)`/.exec(line)?.[1])
             .filter((g): g is string => g !== undefined);
     }
+
+    it('release-prepare lets the writer choose the path it writes', () => {
+        // The last layer of the binding. `main` prefers `--out` over
+        // `defaultReportPath`, so a pipeline passing one would write a name no
+        // test pins — the same drift class that broke 16.3.0, one step further
+        // out. Asserted against the real invocation rather than assumed.
+        const taskfile = fs.readFileSync(path.join(REPO_ROOT, 'taskfiles/content.yml'), 'utf8');
+        const invocations = taskfile
+            .split('\n')
+            .filter((line) => line.includes('report_evidence_temperature'));
+        expect(invocations).toHaveLength(1);
+        expect(invocations[0]).toContain('--write');
+        expect(invocations[0]).not.toContain('--out');
+    });
 
     it('the contract enumerates exactly the globs the gate compiles', () => {
         // Set equality AND order: the two read as one list, so a reader
