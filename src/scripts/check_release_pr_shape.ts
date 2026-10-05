@@ -63,15 +63,19 @@ const ALLOWLIST_GLOBS = [
 
 /**
  * Translate a Python `fnmatch` shell pattern to a RegExp, following
- * `fnmatch.translate` for the constructs this allowlist uses — `*`, `?` and
- * `[0-9]`. Bracket handling beyond that one class is unverified against
- * CPython; see the note at the bracket branch.
+ * `fnmatch.translate` for the constructs the allowlist actually uses: `*` and
+ * `[0-9]`. No entry uses `?`, and bracket handling beyond that one class is
+ * unverified against CPython — see the note at the bracket branch.
  *
- * fnmatch is case-sensitive on POSIX (fnmatchcase
- * semantics on the normalized path); `*` and `?` do NOT cross path
- * separators is NOT a property of fnmatch — `*` matches everything
- * including `/`. The allowlist relies on that (e.g. nested-file rejection
- * in the test works because none of the globs end with the file).
+ * Matching is case-sensitive, as `fnmatchcase` on a normalized path.
+ *
+ * THE PROPERTY EVERY ENTRY TURNS ON: in fnmatch, `*` and `?` DO cross path
+ * separators — `*` becomes `.*` and `?` becomes `.`, both under the `s` flag,
+ * so each matches `/` like any other character. Glob syntax elsewhere (shells,
+ * .gitignore) stops `*` at a segment boundary; this does not. So the pack entry
+ * admits any depth beneath `src/packs/`, and the census entry uses digit classes
+ * precisely because they cannot match a separator. Both sides are pinned in
+ * `check_release_pr_shape.test.ts`.
  */
 function _fnmatchToRegExp(pat: string): RegExp {
     // Mirror Python fnmatch.translate: `*` → `.*`, `?` → `.`, `[seq]` kept,

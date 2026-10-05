@@ -9,6 +9,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+    censusDateStamp,
     citationKeys,
     classify,
     coldPathsIn,
@@ -206,5 +207,41 @@ describe('latestReportBefore — what `--since latest` resolves to', () => {
         // it as an error would make the release pipeline refuse, which is the
         // one thing a report-only census must never do.
         expect(latestReportBefore(['other-analysis.md'], 'evidence-temperature-1970-01-02.md')).toBeNull();
+    });
+});
+
+describe('censusDateStamp', () => {
+    it('is UTC on both sides of a day boundary', () => {
+        // Lives here, not in the release-gate test file: this exercises the
+        // census writer, and the gate only consumes its output.
+        //
+        // The runner's TZ is not pinned, and at offset 0 a local-time
+        // implementation is indistinguishable from this one — so the test sets
+        // the offset itself. Node applies a TZ change at runtime (verified on
+        // v26), and each half of the pair is the one a local-time stamping
+        // fails under that sign.
+        const tz = process.env['TZ'];
+        const lateOnThe5th = new Date(Date.UTC(2026, 9, 5, 23, 30));
+        const earlyOnThe6th = new Date(Date.UTC(2026, 9, 6, 0, 30));
+        try {
+            // Each probe below asserts TWO preconditions at once: that the
+            // runtime honoured the TZ assignment, and that the zone resolved to
+            // real tzdata rather than silently falling back to UTC. Both stamp
+            // assertions go through `toISOString` and are offset-invariant, so
+            // without the probes this test would pass while measuring nothing.
+            process.env['TZ'] = 'Europe/Berlin';
+            expect(lateOnThe5th.getDate()).toBe(6);
+            expect(censusDateStamp(lateOnThe5th)).toBe('2026-10-05');
+
+            process.env['TZ'] = 'America/New_York';
+            expect(earlyOnThe6th.getDate()).toBe(5);
+            expect(censusDateStamp(earlyOnThe6th)).toBe('2026-10-06');
+        } finally {
+            if (tz === undefined) {
+                delete process.env['TZ'];
+            } else {
+                process.env['TZ'] = tz;
+            }
+        }
     });
 });

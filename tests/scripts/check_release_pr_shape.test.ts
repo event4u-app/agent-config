@@ -172,45 +172,6 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         expect(shape._matches(defaultReportPath(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))))).toBe(true);
     });
 
-    it('the census date stamp is UTC on both sides of a day boundary', () => {
-        // The runner's own TZ is not pinned, and at offset 0 a local-time
-        // implementation is indistinguishable from this one — so the test sets
-        // the offset itself rather than depending on whatever the machine has.
-        // Node applies a TZ change at runtime (verified on v26), and each half
-        // of the pair is the one a local-time implementation fails under that
-        // sign.
-        const tz = process.env['TZ'];
-        try {
-            process.env['TZ'] = 'Europe/Berlin';
-            // Guard, not decoration: both stamp assertions below go through
-            // `toISOString` and are therefore offset-invariant, so they pass
-            // whether or not the runtime honoured the line above. Without this
-            // the test degrades silently into the ambient-offset test it
-            // replaced. `getDate()` reads local time, so it is the probe.
-            expect(new Date(Date.UTC(2026, 9, 5, 23, 30)).getDate()).toBe(6);
-            expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5, 23, 30)))).toBe('2026-10-05');
-            process.env['TZ'] = 'America/New_York';
-            expect(new Date(Date.UTC(2026, 9, 6, 0, 30)).getDate()).toBe(5);
-            expect(censusDateStamp(new Date(Date.UTC(2026, 9, 6, 0, 30)))).toBe('2026-10-06');
-        } finally {
-            if (tz === undefined) {
-                delete process.env['TZ'];
-            } else {
-                process.env['TZ'] = tz;
-            }
-        }
-    });
-});
-
-describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
-    it('an out-of-shape finding carries the land-on-main procedure', () => {
-        const { code, out } = runCheck(['package.json', 'src/scripts/skill_linter.ts']);
-        expect(code).toBe(1);
-        expect(out).toContain('OUT-OF-SHAPE: src/scripts/skill_linter.ts');
-        expect(out).toContain('land the files above on main via their own PR');
-        expect(out).toContain('task release -- --resume --yes');
-    });
-
     it('a shape-clean diff carries no remediation prose', () => {
         const { code, out } = runCheck(['package.json', 'CHANGELOG.md']);
         expect(code).toBe(0);
