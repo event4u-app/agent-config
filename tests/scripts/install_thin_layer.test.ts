@@ -312,6 +312,36 @@ describe('template-is-not-consent — the gate the owner decision sits behind', 
         );
     });
 
+    it('holds for the shape install.ts actually calls — packageRoot only, from a cwd that disagrees', () => {
+        // Every other case here pins `projectRoot` or `settingsPath`, so none of
+        // them exercises the production call. `install.ts` passes `packageRoot`
+        // and nothing else, which means `process.cwd()` is what the resolver
+        // would otherwise reach for — so the cwd is made to say the opposite of
+        // the user-global layer in both directions.
+        const project = path.join(tmp, 'cwd-checkout');
+        fs.mkdirSync(project, { recursive: true });
+        fs.writeFileSync(
+            path.join(project, '.agent-settings.yml'),
+            'lean_projection:\n  mode: eager-all\n',
+            'utf-8',
+        );
+        const saved = process.cwd();
+        try {
+            process.chdir(project);
+
+            writeUserGlobalSettings(null);
+            expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
+
+            writeUserGlobalSettings('lean_projection:\n  mode: delivery\n');
+            expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(true);
+
+            writeUserGlobalSettings('lean_projection:\n  mode: eager-all\n');
+            expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
+        } finally {
+            process.chdir(saved);
+        }
+    });
+
     it('still honours an explicit settingsPath — a caller may pin one', () => {
         const pinned = path.join(tmp, 'pinned.yml');
         fs.writeFileSync(pinned, 'lean_projection:\n  mode: delivery\n', 'utf-8');
