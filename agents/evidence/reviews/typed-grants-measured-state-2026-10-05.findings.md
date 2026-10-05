@@ -1,6 +1,6 @@
 # Completion review — typed-grants measured state, 2026-10-05
 
-**Skipped:** no code surface for this completion — two roadmap files, one acceptance-criterion closure and one withdrawn claim about a guard; the validator reports 0 code path(s) of 2 changed file(s), scope 4fffe8b1180173ce06fb6dc2b95cb3a6222538ba4aac01ebf7a60dd584f8f908, declared 2026-10-05
+**Skipped:** no code surface for this completion — two roadmap files, one acceptance-criterion closure and one withdrawn claim about a guard; the validator reports 0 code path(s) of 2 changed file(s), scope 0c02866c4affcb78e8a0cf527c2e6cde8ddc17ac167e4e59ded8b9626e9d3faf, declared 2026-10-05
 
 ## What this change is, and why R2 has nothing to bind to
 
