@@ -42,6 +42,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import {
     GLOBAL_RULE_DIRS,
@@ -131,7 +132,9 @@ export interface HostLimitReading {
     /** `chars / limit`, or `null` when there is no limit to be a fraction of. */
     readonly fraction: number | null;
     /**
-     * True only when a limit EXISTS and the combined total crosses it.
+     * True only when a limit EXISTS and the combined total reaches
+     * {@link LIMIT_WARN_FRACTION} of it — 80 %, not 100 %. The field is an
+     * early warning, which is the whole point of a fraction below 1.
      *
      * An absent limit never warns. That is the conservative direction and it is
      * deliberate: a warning derived from a limit nobody recorded would be a
@@ -279,10 +282,20 @@ interface RawHostLimit {
  * `_lib/` sits two directories under the package root, the same derivation
  * `agent_settings.default_template_path()` uses and for the same reason: a
  * caller inside a bundle has no repository to walk up from.
+ *
+ * `fileURLToPath`, NOT `new URL(...).pathname` — the claimed parity with
+ * `default_template_path()` was only half true until 2026-10-05. A `pathname`
+ * percent-encodes, so a package under a directory with a space resolved to
+ * `/Users/x/My%20Projects/...`, and on Windows it yields a leading-slash drive
+ * path. Either way the read fails, `loadHostInstructionLimits` swallows it and
+ * returns an empty map, and EVERY host then reads `unpublished` with `warn`
+ * false — the budget measurement degrading to "not measured" with no signal,
+ * which is the one failure mode this file's own limit table was written to
+ * avoid.
  */
 export function defaultHostLimitsPath(): string {
     return path.join(
-        path.dirname(new URL(import.meta.url).pathname),
+        path.dirname(fileURLToPath(import.meta.url)),
         '..',
         '..',
         'config',

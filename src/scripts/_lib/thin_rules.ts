@@ -480,7 +480,7 @@ export function build_thin(
      * when the caller is NOT this repository's own projector.
      *
      * Every default below is derived from {@link REPO_ROOT}, which is
-     * `import.meta.url` three directories up. That is correct for a module read
+     * `import.meta.url` four directories up. That is correct for a module read
      * from `<pkg>/src/scripts/`, and wrong inside a bundled CLI, where the same
      * arithmetic lands on the PARENT of the package — so a caller that knows the
      * real package root hands it over instead of letting the module guess.

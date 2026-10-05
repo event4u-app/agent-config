@@ -238,11 +238,17 @@ describe('the installer applies the projector predicate when asked', () => {
     });
 
     it('is idempotent — a second pass over a thinned layer changes no byte', () => {
-        thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
+        const first = thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
         const after_one = read('routed');
+        expect(first.rewritten).toBe(2);
+
         const res = thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
         expect(read('routed')).toBe(after_one);
         expect(res.thinned).toBe(2);
+        // and the receipt does not claim work it did not do
+        expect(res.rewritten).toBe(0);
+        expect(describeThinInstalledLayer(res)[0]).toContain('already thinned');
+        expect(describeThinInstalledLayer(res)[0]).not.toContain('thinned 2 rule(s) to stubs');
     });
 
     it('reports a rule the layer does not carry rather than creating it', () => {
@@ -273,6 +279,79 @@ describe('template-is-not-consent — the gate the owner decision sits behind', 
         writeUserGlobalSettings('lean_projection:\n  mode: delivery\n  hosts:\n    - cursor\n');
         expect(installerThinsHost('claude-code', { packageRoot: pkg, projectRoot: tmp })).toBe(false);
         expect(installerThinsHost('cursor', { packageRoot: pkg, projectRoot: tmp })).toBe(true);
+    });
+
+    it('ignores a PROJECT layer in both directions — the layer it thins is the machine\'s', () => {
+        // The gate decides whether to rewrite `~/.claude/rules`, which every
+        // checkout on this machine reads. A per-project value deciding that
+        // would thin for everyone from one repo, or suppress a user-global
+        // opt-in from another — and the project cascade merges LAST, so it
+        // would win. Both directions are asserted because only one of them
+        // looks like a bug from the inside.
+        const project = path.join(tmp, 'a-checkout');
+        fs.mkdirSync(project, { recursive: true });
+
+        writeUserGlobalSettings(null);
+        fs.writeFileSync(
+            path.join(project, '.agent-settings.yml'),
+            'lean_projection:\n  mode: delivery\n',
+            'utf-8',
+        );
+        expect(installerThinsHost('claude-code', { packageRoot: pkg, projectRoot: project })).toBe(
+            false,
+        );
+
+        writeUserGlobalSettings('lean_projection:\n  mode: delivery\n');
+        fs.writeFileSync(
+            path.join(project, '.agent-settings.yml'),
+            'lean_projection:\n  mode: eager-all\n',
+            'utf-8',
+        );
+        expect(installerThinsHost('claude-code', { packageRoot: pkg, projectRoot: project })).toBe(
+            true,
+        );
+    });
+
+    it('still honours an explicit settingsPath — a caller may pin one', () => {
+        const pinned = path.join(tmp, 'pinned.yml');
+        fs.writeFileSync(pinned, 'lean_projection:\n  mode: delivery\n', 'utf-8');
+        writeUserGlobalSettings(null);
+        expect(installerThinsHost('claude-code', { packageRoot: pkg, settingsPath: pinned })).toBe(
+            true,
+        );
+    });
+});
+
+describe('a file this pass must not corrupt', () => {
+    it('leaves a rule whose frontmatter block never closes exactly as found', () => {
+        // `split_frontmatter` answers `['', text]` for an unterminated block, so
+        // a naive `frontmatter + stub` would write the stub with NO frontmatter
+        // — deleting the `package:` line the orphan reaper calls its only
+        // ownership evidence. The failure is silent and permanent, which is why
+        // it is asserted on the bytes rather than on a count.
+        const target = path.join(rulesDir, 'routed.md');
+        const broken = '---\npackage: event4u/agent-config\nsource_path: x.md\n';
+        fs.writeFileSync(target, broken, 'utf-8');
+
+        const res = thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
+
+        expect(fs.readFileSync(target, 'utf-8')).toBe(broken);
+        expect(res.failed.map((f) => f.rule)).toContain('routed.md');
+        expect(res.thinned).toBe(1);
+    });
+
+    it('calls an unreadable rule a failure, not an absence', () => {
+        // `absent` means "the copy's rule scope did not place this here". A
+        // directory where a file belongs is a failure wearing that word, and the
+        // receipt prints failures and not absences — so sharing the bucket would
+        // make a real breakage invisible.
+        fs.rmSync(path.join(rulesDir, 'routed.md'));
+        fs.mkdirSync(path.join(rulesDir, 'routed.md'));
+
+        const res = thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
+
+        expect(res.absent).not.toContain('routed.md');
+        expect(res.failed.map((f) => f.rule)).toContain('routed.md');
     });
 });
 

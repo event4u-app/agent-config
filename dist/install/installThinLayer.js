@@ -69,6 +69,7 @@ export function thinInstalledRuleLayer(opts) {
     // names that is not on disk is simply out of scope and is reported as such.
     const stubs = build_thin(bodySourceDir, null, null, null, { packageRoot, bodyLinkPrefix });
     let thinned = 0;
+    let rewritten = 0;
     let kept = 0;
     let charsBefore = 0;
     let charsAfter = 0;
@@ -81,8 +82,16 @@ export function thinInstalledRuleLayer(opts) {
         try {
             installed = fs.readFileSync(target, 'utf-8');
         }
-        catch {
-            absent.push(name);
+        catch (e) {
+            // ENOENT is the documented meaning of `absent` — the copy's rule
+            // scope did not place this rule here. Anything else (EACCES, EISDIR,
+            // EIO) is a FAILURE wearing a scoping outcome's clothes, and the
+            // receipt prints failures and does not print absences, so the two
+            // must not share a bucket.
+            if (e.code === 'ENOENT')
+                absent.push(name);
+            else
+                failed.push({ rule: name, reason: String(e) });
             continue;
         }
         if (!is_thin_entry(stubText)) {
@@ -102,11 +111,29 @@ export function thinInstalledRuleLayer(opts) {
             continue;
         }
         const [frontmatter] = split_frontmatter(installed);
-        const next = `${frontmatter}${stubText}`;
         charsBefore += installed.length;
+        // `split_frontmatter` answers `['', text]` for a file that OPENS a
+        // frontmatter block and never closes it — a truncated write, a file
+        // ending exactly on the closing fence with no trailing newline, CRLF.
+        // Writing `'' + stub` there would delete the `package:` line this
+        // module's header calls the reaper's only evidence, which is the one
+        // corruption this pass could cause. A file that claims a block it does
+        // not have is left exactly as found and reported.
+        if (frontmatter === '' && installed.startsWith('---')) {
+            failed.push({
+                rule: name,
+                reason: 'opens a frontmatter block that never closes — left untouched so its ' +
+                    'ownership keys survive',
+            });
+            charsAfter += installed.length;
+            continue;
+        }
+        const next = `${frontmatter}${stubText}`;
         try {
-            if (next !== installed)
+            if (next !== installed) {
                 fs.writeFileSync(target, next, 'utf-8');
+                rewritten += 1;
+            }
             thinned += 1;
             charsAfter += next.length;
         }
@@ -117,6 +144,7 @@ export function thinInstalledRuleLayer(opts) {
     }
     return {
         thinned,
+        rewritten,
         kept,
         preserved: preservedHits,
         absent,
@@ -134,9 +162,13 @@ export function thinInstalledRuleLayer(opts) {
  */
 export function describeThinInstalledLayer(res) {
     const out = [];
-    out.push(`  claude-code: thinned ${String(res.thinned)} rule(s) to stubs, ` +
-        `${String(res.kept)} kept full-bodied; ` +
-        `${String(res.charsBefore)} -> ${String(res.charsAfter)} chars`);
+    out.push(res.rewritten === 0 && res.thinned > 0
+        ? `  claude-code: ${String(res.thinned)} rule(s) already thinned, ` +
+            `${String(res.kept)} kept full-bodied; ` +
+            `${String(res.charsAfter)} chars — nothing to rewrite`
+        : `  claude-code: thinned ${String(res.rewritten)} rule(s) to stubs, ` +
+            `${String(res.kept)} kept full-bodied; ` +
+            `${String(res.charsBefore)} -> ${String(res.charsAfter)} chars`);
     if (res.preserved.length > 0) {
         out.push(`  claude-code: ${String(res.preserved.length)} rule(s) left full — you edited them ` +
             `and they are preserved, never overwritten (${res.preserved.join(', ')})`);

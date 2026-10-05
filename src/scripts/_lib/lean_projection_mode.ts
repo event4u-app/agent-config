@@ -270,7 +270,8 @@ export interface ResolveOptions {
  * Tolerant like everything else on a hook path: `load_agent_settings` answers
  * with defaults on an unreadable or malformed file and never throws, and the
  * normalisers above turn anything unrecognised into the safe value. A caller
- * on a hot path pays one cascade read per prompt.
+ * on a hot path pays two cascade reads per prompt — one for the value and one,
+ * template-isolated, for `modeExplicit`'s provenance.
  */
 export function resolveLeanProjection(opts: ResolveOptions = {}): ResolvedLeanProjection {
     // The LEGACY root path, deliberately, and not `project_settings_path`'s
@@ -382,12 +383,46 @@ export function leanProjectionModeChosen(
  * 3. **This host is in scope.** The same `hosts:` list the projector honours, so
  *    installer and projector cannot disagree about which trees are thinned.
  *
- * ONE cascade read, which is why this is not two {@link leanProjectionModeChosen}
- * calls: that one answers "is the chosen mode exactly X" and knows nothing about
- * `hosts`, so a caller combining it with a host check by hand would re-create the
- * fold this function exists to own.
+ * ONE `resolveLeanProjection` call, which is why this is not two
+ * {@link leanProjectionModeChosen} calls: that one answers "is the chosen mode
+ * exactly X" and knows nothing about `hosts`, so a caller combining it with a
+ * host check by hand would re-create the fold this function exists to own.
+ *
+ * That is one CALL and two cascade READS, because `resolveLeanProjection`
+ * computes `modeExplicit` through a second, template-isolated load. Stated
+ * rather than rounded down: the installer runs once per deploy and does not care,
+ * but the delivery concern on `user_prompt_submit` pays it per prompt, and a
+ * docstring claiming one read would hide that from whoever profiles it next.
  */
 export function installerThinsHost(hostId: string, opts: ResolveOptions = {}): boolean {
-    const { mode, hosts, modeExplicit } = resolveLeanProjection(opts);
+    const { mode, hosts, modeExplicit } = resolveLeanProjection({
+        ...opts,
+        settingsPath: opts.settingsPath ?? NO_PROJECT_LAYER,
+    });
     return modeExplicit && thinsHost(mode, hosts.hosts, hostId);
 }
+
+/**
+ * A path no tree contains, so the PROJECT cascade contributes nothing.
+ *
+ * The same device {@link NO_TEMPLATE_LAYER} uses, pointed at the other end of
+ * the cascade, and the reason is scope rather than isolation: the thing
+ * {@link installerThinsHost} gates is a mutation of `~/.claude/rules`, which
+ * belongs to the MACHINE. A per-checkout value must not decide it, in either
+ * direction — a project saying `delivery` would thin the layer every other
+ * project on that machine reads, and a project saying `eager-all` would
+ * suppress an opt-in the user wrote user-globally, because the project cascade
+ * merges last and wins.
+ *
+ * `load_agent_settings` reads `user_global_settings_paths()` regardless of what
+ * `project_path` it is given, so pointing the project layer at nothing leaves
+ * exactly the machine-global layers — which is the scope the installer's
+ * sibling `_resolve_global_rule_scope` already resolves for the same deploy.
+ * A caller may still pass an explicit `settingsPath` (tests pin one).
+ */
+const NO_PROJECT_LAYER = path.join(
+    path.sep,
+    'dev',
+    'null',
+    'agent-config-absent-project-settings.yml',
+);

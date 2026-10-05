@@ -313,7 +313,7 @@ describe('installed-layer report — the combined total against a published limi
         const cfg = mkTmp('ilr-combined-cfg-');
         // Derived from LIMIT, never written as a literal: the two cases are
         // "the smallest total that warns" and "the largest that does not".
-        const atThreshold = Math.ceil(LIMIT * 0.8);
+        const atThreshold = Math.ceil(LIMIT * LIMIT_WARN_FRACTION);
         const justUnder = atThreshold - 1;
 
         const warnHome = mkTmp('ilr-combined-warn-');

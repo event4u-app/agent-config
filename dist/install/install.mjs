@@ -12708,6 +12708,7 @@ function thinInstalledRuleLayer(opts) {
   const preserved = opts.preserved ?? /* @__PURE__ */ new Set();
   const stubs = build_thin(bodySourceDir, null, null, null, { packageRoot, bodyLinkPrefix });
   let thinned = 0;
+  let rewritten = 0;
   let kept = 0;
   let charsBefore = 0;
   let charsAfter = 0;
@@ -12719,8 +12720,9 @@ function thinInstalledRuleLayer(opts) {
     let installed;
     try {
       installed = fs27.readFileSync(target, "utf-8");
-    } catch {
-      absent.push(name);
+    } catch (e) {
+      if (e.code === "ENOENT") absent.push(name);
+      else failed.push({ rule: name, reason: String(e) });
       continue;
     }
     if (!is_thin_entry(stubText)) {
@@ -12736,10 +12738,21 @@ function thinInstalledRuleLayer(opts) {
       continue;
     }
     const [frontmatter] = split_frontmatter(installed);
-    const next = `${frontmatter}${stubText}`;
     charsBefore += installed.length;
+    if (frontmatter === "" && installed.startsWith("---")) {
+      failed.push({
+        rule: name,
+        reason: "opens a frontmatter block that never closes \u2014 left untouched so its ownership keys survive"
+      });
+      charsAfter += installed.length;
+      continue;
+    }
+    const next = `${frontmatter}${stubText}`;
     try {
-      if (next !== installed) fs27.writeFileSync(target, next, "utf-8");
+      if (next !== installed) {
+        fs27.writeFileSync(target, next, "utf-8");
+        rewritten += 1;
+      }
       thinned += 1;
       charsAfter += next.length;
     } catch (e) {
@@ -12749,6 +12762,7 @@ function thinInstalledRuleLayer(opts) {
   }
   return {
     thinned,
+    rewritten,
     kept,
     preserved: preservedHits,
     absent,
@@ -12761,7 +12775,7 @@ function thinInstalledRuleLayer(opts) {
 function describeThinInstalledLayer(res) {
   const out = [];
   out.push(
-    `  claude-code: thinned ${String(res.thinned)} rule(s) to stubs, ${String(res.kept)} kept full-bodied; ${String(res.charsBefore)} -> ${String(res.charsAfter)} chars`
+    res.rewritten === 0 && res.thinned > 0 ? `  claude-code: ${String(res.thinned)} rule(s) already thinned, ${String(res.kept)} kept full-bodied; ${String(res.charsAfter)} chars \u2014 nothing to rewrite` : `  claude-code: thinned ${String(res.rewritten)} rule(s) to stubs, ${String(res.kept)} kept full-bodied; ${String(res.charsBefore)} -> ${String(res.charsAfter)} chars`
   );
   if (res.preserved.length > 0) {
     out.push(
@@ -12894,9 +12908,18 @@ function rawExplicitLeanProjectionMode(opts = {}) {
   return typeof m === "string" ? m.trim() : "";
 }
 function installerThinsHost(hostId, opts = {}) {
-  const { mode, hosts, modeExplicit } = resolveLeanProjection(opts);
+  const { mode, hosts, modeExplicit } = resolveLeanProjection({
+    ...opts,
+    settingsPath: opts.settingsPath ?? NO_PROJECT_LAYER
+  });
   return modeExplicit && thinsHost(mode, hosts.hosts, hostId);
 }
+var NO_PROJECT_LAYER = path26.join(
+  path26.sep,
+  "dev",
+  "null",
+  "agent-config-absent-project-settings.yml"
+);
 
 // src/install/wizard-plan.ts
 var CLAUDE_SKILL_BUNDLE = [
