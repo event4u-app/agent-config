@@ -1,0 +1,33 @@
+{
+  "_comment": "Per-host PUBLISHED instruction-budget limit, against which the installed-layer report measures what a consumer actually loads. road-to-an-installed-layer-that-is-thinned steps 1.4 and 3.5. Loader and the 80 % warning fraction: src/scripts/_lib/installed_layer.ts. A host with no limit this tree can cite carries `limit: null`, which renders as `no published limit` and fires NO warning — an absent limit is an absent measurement, never a pass. NOTHING HERE MAY BE INVENTED: every non-null `limit` carries a `source` naming where the figure is recorded, and `kind` says what sort of record that is. `vendor-published` means a figure this tree read from the host's own published material; `reported` means a figure recorded in this repository from an observation, which is weaker and is marked so a later reader does not promote it by mistake.",
+  "claude-code": {
+    "limit": 150000,
+    "kind": "reported",
+    "source": "agents/roadmaps/road-to-an-installed-layer-that-is-thinned.md:7 (`estate_offset_exempt`), and the same figure in the `Source:` header of that file and of road-to-a-rule-carrier-that-works-outside-the-repo and road-to-rule-triggers-and-links-that-hold. All three cite round `inbox-2026-10-c`, which reproduced the host's notice on a fresh install at 102 unconditional files / 338,225 characters.",
+    "note": "MARKED `reported`, NOT `vendor-published`, DELIBERATELY. The round that carries the primary record lived under `agents/tmp.old/inbox-2026-10-c/` and has since been pruned, so what this tree can still show is three roadmap headers citing it and not the notice itself. That is enough to record the figure and not enough to call it read from the host. Checked 2026-10-05: `ls agents/tmp.old/inbox-2026-10-c/` reports no such directory. Promote to `vendor-published` only against the host's own published material, never against another copy of this entry."
+  },
+  "cursor": {
+    "limit": null,
+    "kind": "unpublished",
+    "source": null,
+    "note": "No instruction-budget limit for this host is recorded anywhere in this tree. `null` is the honest reading and is NOT a statement that the host has no limit — only that this repository has never written one down."
+  },
+  "augment": {
+    "limit": null,
+    "kind": "unpublished",
+    "source": null,
+    "note": "No instruction-budget limit for this host is recorded anywhere in this tree."
+  },
+  "windsurf": {
+    "limit": null,
+    "kind": "unpublished",
+    "source": null,
+    "note": "No instruction-budget limit for this host is recorded anywhere in this tree."
+  },
+  "cline": {
+    "limit": null,
+    "kind": "unpublished",
+    "source": null,
+    "note": "No instruction-budget limit for this host is recorded anywhere in this tree."
+  }
+}
