@@ -47,11 +47,10 @@ const ALLOWLIST_GLOBS = [
     'agents/evidence/release-findings/*.json',
     // Evidence-temperature census — `taskfiles/content.yml` § release-prepare
     // writes one per release, so without this entry the pipeline generates a
-    // file its own shape step refuses. Digit classes rather than `?`, which
-    // matches any character: `????-??-??` would still require ten characters
-    // with separators at offsets 4 and 7, so it admits not every sibling but
-    // any whose name happens to carry that shape. Narrower than it reads, and
-    // still wider than a date. Two reports can appear in one release PR, and
+    // file its own shape step refuses. Digit classes rather than `?`: fnmatch
+    // `?` compiles to `.` under the `s` flag, so it matches any character AND
+    // crosses `/` — `????-??-??` admits `evidence-temperature-x/yz-ab-cd.md`,
+    // which `[0-9]` cannot. Two reports can appear in one release PR, and
     // both are in shape: `--resume` re-runs release-prepare, so a release
     // carried across UTC midnight writes a second census. What that one
     // contains is the census's business, not this gate's.
@@ -98,12 +97,12 @@ function _fnmatchToRegExp(pat: string): RegExp {
                 res += '\\[';
             } else {
                 let stuff = pat.slice(i, j);
-                // Python's `fnmatch.translate` branches on a `-` inside the
-                // class and this port does not; the two arms it carried were
-                // byte-identical, so the branch implemented no divergence. The
-                // ranges differ in hyphen escaping, not in output for `[0-9]`,
-                // and an invalid range throws in both languages — measured:
-                // `[z-a]` raises in `re.compile` and in `new RegExp` alike.
+                // The two arms this replaces were byte-identical, so the branch
+                // implemented nothing. Bracket handling here is checked against
+                // `[0-9]`, the only class the allowlist uses; anything else is
+                // untested against CPython, whose behaviour also varies by
+                // version. Add a bracket glob and verify it rather than assuming
+                // this mirrors `fnmatch.translate` beyond that one case.
                 stuff = stuff.replace(/\\/g, '\\\\');
                 i = j + 1;
                 if (stuff.startsWith('!')) {

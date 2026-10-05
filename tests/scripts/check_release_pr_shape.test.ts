@@ -141,6 +141,9 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         // green under `????-??-??`, so they prove the stem, never the digits.
         expect(shape._matches('agents/evidence/analysis/evidence-temperature-aaaa-bb-cc.md')).toBe(false);
         expect(shape._matches('agents/evidence/analysis/evidence-temperature-20z6-10-05.md')).toBe(false);
+        // fnmatch `?` compiles to `.` under the `s` flag and so crosses `/`;
+        // a digit class cannot. This path is the difference.
+        expect(shape._matches('agents/evidence/analysis/evidence-temperature-x/yz-ab-cd.md')).toBe(false);
     });
 
     it('the allowlist admits the path the census writer actually produces', () => {
