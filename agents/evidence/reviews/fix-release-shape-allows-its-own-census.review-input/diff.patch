@@ -1,5 +1,5 @@
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..ec5d284e883566033074ca894d66c9178e75c412 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..5aa7173170acdf5e246bfb4d3a76c09c49225a34 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
 @@ -35,10 +35,25 @@ keep-beta-reason: >-
@@ -32,17 +32,20 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..ec5d284e883566033074ca894d66c917
  
  ## Release-PR shape
  
-@@ -53,12 +68,50 @@ hold:
+@@ -53,12 +68,57 @@ hold:
       `release.ts` § `set_lockfile_version`
     - `CHANGELOG.md`
     - `.claude-plugin/marketplace.json`
 -   - `packages/*/pack.yaml`
 -   - `packages/*/README.md`
-+   - `.augment-plugin/plugin.json`, `.augment-plugin/marketplace.json` —
-+     version-synced by `release.ts` § `set_augment_manifest_version`; both
-+     ship in the tarball, so a release PR must carry them
-+   - `src/packs/*/pack.yaml`, `src/packs/*/README.md`
-+   - `src/domains/*/pack.yaml`, `src/domains/*/README.md`
++   - `.augment-plugin/plugin.json`
++   - `.augment-plugin/marketplace.json` — both version-synced by `release.ts`
++     § `set_augment_manifest_version`; both ship in the tarball, so a release
++     PR must carry them
++   - `src/packs/*/pack.yaml`
++   - `src/packs/*/README.md`
++   - `src/domains/*/pack.yaml`
++   - `src/domains/*/README.md`
     - `docs/archive/CHANGELOG-pre-*.md` — emitted by `release.ts`'s
       automatic CHANGELOG era split (see `docs/contracts/CHANGELOG-conventions.md`
       § Era splits) when the current era crosses its line cap on an
@@ -50,14 +53,15 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..ec5d284e883566033074ca894d66c917
 +   - `agents/evidence/release-findings/*.json` — the finding-disposition
 +     ledger; the `finding-dispositions` gate is red until a release's own
 +     blocking self-review findings are recorded there
-+   - `agents/evidence/analysis/evidence-temperature-YYYY-MM-DD.md` — the
-+     per-release evidence-temperature census written by
++   - `agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md`
++     — the per-release evidence-temperature census written by
 +     `taskfiles/content.yml` § `release-prepare`, step 2 of `task release`.
-+     Pinned to the ISO date shape with fnmatch digit classes rather than `?`;
-+     the entry in `ALLOWLIST_GLOBS` carries why.
-+   - `src/agent-src/templates/agents/agent-project-settings.example.yml` and
-+     its regenerated `dist/agent-src/` twin — the project-settings template
-+     pin, kept in lockstep with `package.json.version`
++     The ISO date shape in fnmatch digit classes rather than `?`; the entry in
++     `ALLOWLIST_GLOBS` carries why.
++   - `src/agent-src/templates/agents/agent-project-settings.example.yml`
++   - `dist/agent-src/templates/agents/agent-project-settings.example.yml` —
++     the project-settings template pin and its regenerated twin, kept in
++     lockstep with `package.json.version`
 +
 +   **`*` and `?` both cross `/` here.** These are fnmatch patterns, not shell or
 +   `.gitignore` globs: `*` becomes `.*` and `?` becomes `.`, both under the `s`
@@ -69,22 +73,89 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..ec5d284e883566033074ca894d66c917
 +   separator at all. A reader predicting the gate from this list needs both
 +   halves; each is pinned in `tests/scripts/check_release_pr_shape.test.ts`.
 +
-+   This list and `ALLOWLIST_GLOBS` are one decision recorded twice, so they
-+   drift: the entry a release-flow step needs is added where that step broke
-+   and not here. A change to either edits both — and that instruction is a weak
-+   mechanism, which is why the blockquote above now carries no copy at all
-+   rather than a third one to keep in sync.
++   This list and `ALLOWLIST_GLOBS` are one decision recorded twice, and they
++   drifted for months — the contract named `packages/*/pack.yaml` long after
++   the code said `src/packs/*`. An instruction to edit both was the only thing
++   binding them, and it failed.
 +
-+   This list survives where that one did not because the two are not the same
-+   thing. The blockquote's copy existed to support an argument the paths were
-+   not needed for; this enumeration IS the contract — a reader must be able to
-+   predict the gate without reading TypeScript. Nothing mechanical binds them:
-+   a parity check between this list and `ALLOWLIST_GLOBS` would, and does not
-+   exist. Until it does, the drift this very change had to repair is held by an
-+   instruction and by review.
++   **A test binds them now**: `the contract enumerates exactly the globs the
++   gate compiles` in `tests/scripts/check_release_pr_shape.test.ts` parses the
++   bullets above and asserts set-and-order equality against `ALLOWLIST_GLOBS`.
++   That is why every entry is one bullet carrying one backticked glob verbatim,
++   rather than a readable paraphrase: the list a reader predicts the gate from
++   and the list the gate compiles are now the same strings, checked.
++
++   The blockquote above carries no copy at all, because its copy supported an
++   argument the paths were not needed for. This enumeration stays, because it
++   IS the contract — a reader must be able to predict the gate without reading
++   TypeScript.
  
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
+@@ -93,19 +153,25 @@ procedure under its `OUT-OF-SHAPE` findings, and `release.ts` §
+ 
+ ## Cut surface — heavy jobs that skip on release PRs
+ 
+-Skipped via `if: !startsWith(github.head_ref, 'release/')` guards on the
+-heavy install/test jobs. These are the jobs that release PRs cannot regress
+-by construction (no install scripts, no runtime code, no test source in the
+-release-PR allowlist):
++Skipped via `if: !startsWith(github.head_ref, 'release/')` guards on the heavy
++install/test jobs. The guard is on the BRANCH, not on paths — so the column
++below is the argument for why that is safe, not a condition the workflow
++evaluates. The argument rests on the allowlist in § Release-PR shape: it admits
++no install script, no test source, and no executable code.
++
++It does admit five `src/**` paths and two under `templates/` — pack and domain
++metadata, their READMEs, and the project-settings template pin with its `dist/`
++twin. None is code any job below exercises, which is the claim; "the diff has no
++`src/**`" would be the stronger claim, and it is false.
+ 
+-| Workflow | Job | Why it cuts |
++| Workflow | Job | Why skipping it is safe on a release PR |
+ |---|---|---|
+-| `tests.yml` | `install-tests` | release-PR diff has no `install.sh` / `scripts/install.py` / `tests/test_install.sh` |
++| `tests.yml` | `install-tests` | the allowlist has no `install.sh` / `scripts/install.py` / `tests/test_install.sh` |
+ | `tests.yml` | `install-aux-tests` | same — orchestrator, key contracts, one-liner smoke all untouched |
+-| `tests.yml` | `python-tests` | release-PR diff has no `scripts/**` or `tests/**` (other than CHANGELOG via path filter — see below) |
+-| `tests.yml` | `node-tests` | release-PR diff has no `src/**`, `tests/{cli,server,ui}/**`, `packages/core/installer/**` |
+-| `tests.yml` | `windows-lockfile-export` | release-PR diff has no `scripts/install_global*.py`, `scripts/cmd_export.py`, lockfile test surface |
+-| `smoke-public-install.yml` | `smoke` | release-PR diff has no `scripts/install*`, `setup.sh`, `templates/**`, `package.json` runtime behaviour |
++| `tests.yml` | `python-tests` | no `scripts/**` or `tests/**` (other than CHANGELOG via path filter — see below) |
++| `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
++| `tests.yml` | `windows-lockfile-export` | no `scripts/install_global*.py`, `scripts/cmd_export.py`, lockfile test surface |
++| `smoke-public-install.yml` | `smoke` | no `scripts/install*`, `setup.sh`; the two admitted `templates/` files are a version-pinned example settings file, not installer input |
+ 
+ `push:` to `main` and the weekly cron on `smoke-public-install.yml` stay
+ **unconditional** — those catch drift the PR matrix can't see.
+@@ -134,10 +200,9 @@ the feature-PR floor by adding:
+ 
+ `release-validation.yml`'s fourth job, `release-install-e2e`
+ (`tests/test_release_install_e2e.sh`), closes a gap the cut surface above
+-does not cover: "release PRs cannot regress install or runtime behaviour"
+-is a claim about the **source diff**, not about whether the **packed
+-tarball** actually installs, upgrades, and boots as a real npm global
+-package. Every release PR now proves, against the real tarball:
++does not cover: that the allowlist admits no executable code is a claim
++about the **source diff**, not about whether the **packed tarball**
++actually installs, upgrades, and boots as a real npm global package. Every release PR now proves, against the real tarball:
+ 
+ - a fresh `npm install -g` into an isolated npm prefix resolves the
+   `agent-config` binary and ships no silent postinstall/GUI side effect;
+@@ -160,9 +225,10 @@ the source diff couldn't see was missing) cannot recur silently.
+ 
+ ## Consumer-matrix exemption — the tarball window
+ 
+-The cut surface above rests on "release PRs cannot regress install or
+-runtime behaviour by construction". That argument covers the **source
+-diff** — it is blind to the **published tarball**. Every historical
++The cut surface above rests on the allowlist admitting no executable code.
++That argument covers the **source diff** — it is blind to the **published
++tarball**, and, as the opening blockquote records, to the content of an
++admitted manifest. Every historical
+ packaging incident (tarball missing `src/install/` across two minors,
+ `tsx` absent from the package, npm-pin drift, the MCP worker deploy red
+ across five releases) entered `main` on ordinary PRs and manifested only
 diff --git a/src/scripts/check_release_pr_shape.ts b/src/scripts/check_release_pr_shape.ts
 index ef101165f052ad6ca03020e4deb7189b01917e36..336ba0cfade803878fbff8ef1f2846b06f11e486 100644
 --- a/src/scripts/check_release_pr_shape.ts
@@ -246,18 +317,25 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..7e202ab039809071bc35fbec58bebd20
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..ddbb7112bbee1ba2a42eba49cdac7bc162b7babc 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..de8ce203c6291b566af329420252089f0658f84d 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
-@@ -2,6 +2,7 @@
+@@ -1,7 +1,14 @@
+ 
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
  import { describe, expect, it } from 'vitest';
  
  import * as shape from '../../src/scripts/check_release_pr_shape.js';
 +import { censusDateStamp, defaultReportPath } from '../../src/scripts/report_evidence_temperature.js';
++
++const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
  
  function runCheck(files: readonly string[]): { code: number; out: string } {
      const out: string[] = [];
-@@ -69,6 +70,17 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -69,6 +76,17 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(out).toContain('OUT-OF-SHAPE: src/packs/core/installer/foo.ts');
      });
  
@@ -275,7 +353,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..ddbb7112bbee1ba2a42eba49cdac7bc1
      it('marketplace metadata only passes', () => {
          expect(runCheck(['.claude-plugin/marketplace.json']).code).toBe(0);
      });
-@@ -113,6 +125,52 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -113,6 +131,52 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(shape._matches('src/packs/core/README.md')).toBe(true);
          expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
      });
@@ -328,6 +406,39 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..ddbb7112bbee1ba2a42eba49cdac7bc1
  });
  
  describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
+@@ -130,3 +194,32 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
+         expect(out).not.toContain('land the files above on main');
+     });
+ });
++
++describe('check_release_pr_shape — contract/code allowlist parity', () => {
++    // The drift this asserts against has now been repaired by hand three times
++    // on this branch alone: the contract named `packages/*/pack.yaml` where the
++    // code says `src/packs/*`, omitted six entries, and kept a third copy in a
++    // blockquote. Each was found by review, which is why the contract's own text
++    // called that binding a weak mechanism. This is the mechanism.
++    const CONTRACT = path.join(REPO_ROOT, 'docs/contracts/release-pr-gating.md');
++
++    /** The backticked globs of § Release-PR shape's enumeration, in order. */
++    function enumeratedGlobs(): string[] {
++        const doc = fs.readFileSync(CONTRACT, 'utf8');
++        const start = doc.indexOf('2. **Diff file set is a subset of the version-bump allowlist:**');
++        expect(start).toBeGreaterThan(-1);
++        const end = doc.indexOf('\n\n   **`*` and `?` both cross', start);
++        expect(end).toBeGreaterThan(start);
++        return doc
++            .slice(start, end)
++            .split('\n')
++            .map((line) => /^ {3}- `([^`]+)`/.exec(line)?.[1])
++            .filter((g): g is string => g !== undefined);
++    }
++
++    it('the contract enumerates exactly the globs the gate compiles', () => {
++        // Set equality AND order: the two read as one list, so a reader
++        // comparing them line by line should not have to re-sort either.
++        expect(enumeratedGlobs()).toEqual([...shape.ALLOWLIST_GLOBS]);
++    });
++});
 diff --git a/tests/scripts/report_evidence_temperature.test.ts b/tests/scripts/report_evidence_temperature.test.ts
 index 0a3a3f22b1324ae864c351888d25603a6034e64a..9d2604496ca0590d643a583fa96c98490902157a 100644
 --- a/tests/scripts/report_evidence_temperature.test.ts
