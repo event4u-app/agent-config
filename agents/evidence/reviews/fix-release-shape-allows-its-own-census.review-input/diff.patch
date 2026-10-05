@@ -1,5 +1,5 @@
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..8a25cedf8d5ca4bb8a35092d2673664c716fe7b2 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..d4473b5e91a5c466bb067d3a5642edc042dad830 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
 @@ -35,10 +35,25 @@ keep-beta-reason: >-
@@ -98,7 +98,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..8a25cedf8d5ca4bb8a35092d2673664c
  
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
-@@ -93,19 +159,27 @@ procedure under its `OUT-OF-SHAPE` findings, and `release.ts` §
+@@ -93,19 +159,31 @@ procedure under its `OUT-OF-SHAPE` findings, and `release.ts` §
  
  ## Cut surface — heavy jobs that skip on release PRs
  
@@ -106,11 +106,17 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..8a25cedf8d5ca4bb8a35092d2673664c
 -heavy install/test jobs. These are the jobs that release PRs cannot regress
 -by construction (no install scripts, no runtime code, no test source in the
 -release-PR allowlist):
+-
+-| Workflow | Job | Why it cuts |
 +Skipped via `if: !startsWith(github.head_ref, 'release/')` guards on the heavy
 +install/test jobs. The guard is on the BRANCH, not on paths — so the column
 +below is the argument for why that is safe, not a condition the workflow
 +evaluates. The argument rests on the allowlist in § Release-PR shape: it admits
-+no install script, no test source, and no executable code.
++no install script, no test source, and no file these jobs execute. It is NOT the
++stronger claim the opening blockquote withdraws — `package.json` is admitted and
++carries `bin`, `files`, `dependencies` and `engines`, whose content no gate
++reads. That residue is the blockquote's, not this section's, and the `smoke` row
++below points back at it.
 +
 +It does admit six paths under `src/` and `dist/`: pack and domain metadata
 +(`pack.yaml` ×2), their READMEs (×2), and the project-settings template pin with
@@ -118,8 +124,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..8a25cedf8d5ca4bb8a35092d2673664c
 +the sets overlap rather than add. None is code any job below exercises, which is
 +the claim; "the diff has no `src/**`" would be the stronger claim, and it is
 +false.
- 
--| Workflow | Job | Why it cuts |
++
 +| Workflow | Job | Why skipping it is safe on a release PR |
  |---|---|---|
 -| `tests.yml` | `install-tests` | release-PR diff has no `install.sh` / `scripts/install.py` / `tests/test_install.sh` |
@@ -136,7 +141,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..8a25cedf8d5ca4bb8a35092d2673664c
  
  `push:` to `main` and the weekly cron on `smoke-public-install.yml` stay
  **unconditional** — those catch drift the PR matrix can't see.
-@@ -134,10 +208,9 @@ the feature-PR floor by adding:
+@@ -134,10 +212,9 @@ the feature-PR floor by adding:
  
  `release-validation.yml`'s fourth job, `release-install-e2e`
  (`tests/test_release_install_e2e.sh`), closes a gap the cut surface above
@@ -144,20 +149,20 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..8a25cedf8d5ca4bb8a35092d2673664c
 -is a claim about the **source diff**, not about whether the **packed
 -tarball** actually installs, upgrades, and boots as a real npm global
 -package. Every release PR now proves, against the real tarball:
-+does not cover: that the allowlist admits no executable code is a claim
++does not cover: that the allowlist admits no file these jobs execute is a claim
 +about the **source diff**, not about whether the **packed tarball**
 +actually installs, upgrades, and boots as a real npm global package. Every release PR now proves, against the real tarball:
  
  - a fresh `npm install -g` into an isolated npm prefix resolves the
    `agent-config` binary and ships no silent postinstall/GUI side effect;
-@@ -160,9 +233,10 @@ the source diff couldn't see was missing) cannot recur silently.
+@@ -160,9 +237,10 @@ the source diff couldn't see was missing) cannot recur silently.
  
  ## Consumer-matrix exemption — the tarball window
  
 -The cut surface above rests on "release PRs cannot regress install or
 -runtime behaviour by construction". That argument covers the **source
 -diff** — it is blind to the **published tarball**. Every historical
-+The cut surface above rests on the allowlist admitting no executable code.
++The cut surface above rests on the allowlist admitting no file those jobs execute.
 +That argument covers the **source diff** — it is blind to the **published
 +tarball**, and, as the opening blockquote records, to the content of an
 +admitted manifest. Every historical
@@ -325,7 +330,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..7e202ab039809071bc35fbec58bebd20
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..de8ce203c6291b566af329420252089f0658f84d 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..1e8bda26e414bda3283e0a02e3d8c4f349ecfce5 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -1,7 +1,14 @@
@@ -343,7 +348,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..de8ce203c6291b566af329420252089f
  
  function runCheck(files: readonly string[]): { code: number; out: string } {
      const out: string[] = [];
-@@ -69,6 +76,17 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -69,6 +76,27 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(out).toContain('OUT-OF-SHAPE: src/packs/core/installer/foo.ts');
      });
  
@@ -354,14 +359,24 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..de8ce203c6291b566af329420252089f
 +        // using digit classes. Pinned here so the property is visible rather
 +        // than discovered, and so narrowing these globs later is a deliberate
 +        // edit to this assertion rather than a silent behaviour change.
++        //
++        // ALL SIX `*` entries, not a sample: a reader checking whether a given
++        // row is narrow should find its answer here rather than infer it from
++        // a neighbour.
 +        expect(shape._matches('src/packs/core/installer/pack.yaml')).toBe(true);
++        expect(shape._matches('src/packs/core/installer/README.md')).toBe(true);
++        expect(shape._matches('src/domains/a/b/pack.yaml')).toBe(true);
++        expect(shape._matches('src/domains/a/b/README.md')).toBe(true);
 +        expect(shape._matches('agents/evidence/release-findings/a/b/c.json')).toBe(true);
++        // The widest of the six: the `*` sits before the extension, not before
++        // a separator, so it swallows a whole path segment plus a filename.
++        expect(shape._matches('docs/archive/CHANGELOG-pre-x/evil.md')).toBe(true);
 +    });
 +
      it('marketplace metadata only passes', () => {
          expect(runCheck(['.claude-plugin/marketplace.json']).code).toBe(0);
      });
-@@ -113,6 +131,52 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -113,6 +141,52 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(shape._matches('src/packs/core/README.md')).toBe(true);
          expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
      });
@@ -414,7 +429,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..de8ce203c6291b566af329420252089f
  });
  
  describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
-@@ -130,3 +194,32 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
+@@ -130,3 +204,46 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
          expect(out).not.toContain('land the files above on main');
      });
  });
@@ -441,6 +456,20 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..de8ce203c6291b566af329420252089f
 +            .filter((g): g is string => g !== undefined);
 +    }
 +
++    it('release-prepare lets the writer choose the path it writes', () => {
++        // The last layer of the binding. `main` prefers `--out` over
++        // `defaultReportPath`, so a pipeline passing one would write a name no
++        // test pins — the same drift class that broke 16.3.0, one step further
++        // out. Asserted against the real invocation rather than assumed.
++        const taskfile = fs.readFileSync(path.join(REPO_ROOT, 'taskfiles/content.yml'), 'utf8');
++        const invocations = taskfile
++            .split('\n')
++            .filter((line) => line.includes('report_evidence_temperature'));
++        expect(invocations).toHaveLength(1);
++        expect(invocations[0]).toContain('--write');
++        expect(invocations[0]).not.toContain('--out');
++    });
++
 +    it('the contract enumerates exactly the globs the gate compiles', () => {
 +        // Set equality AND order: the two read as one list, so a reader
 +        // comparing them line by line should not have to re-sort either.
@@ -448,7 +477,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..de8ce203c6291b566af329420252089f
 +    });
 +});
 diff --git a/tests/scripts/report_evidence_temperature.test.ts b/tests/scripts/report_evidence_temperature.test.ts
-index 0a3a3f22b1324ae864c351888d25603a6034e64a..6d2b96a21ec783303788e7a90770b83371b6d8ca 100644
+index 0a3a3f22b1324ae864c351888d25603a6034e64a..3fe7d062f3f2db4bcfb8ff8160bf90baeab630ac 100644
 --- a/tests/scripts/report_evidence_temperature.test.ts
 +++ b/tests/scripts/report_evidence_temperature.test.ts
 @@ -9,6 +9,7 @@
@@ -459,7 +488,7 @@ index 0a3a3f22b1324ae864c351888d25603a6034e64a..6d2b96a21ec783303788e7a90770b833
      citationKeys,
      classify,
      coldPathsIn,
-@@ -208,3 +209,47 @@ describe('latestReportBefore — what `--since latest` resolves to', () => {
+@@ -208,3 +209,50 @@ describe('latestReportBefore — what `--since latest` resolves to', () => {
          expect(latestReportBefore(['other-analysis.md'], 'evidence-temperature-1970-01-02.md')).toBeNull();
      });
  });
@@ -478,11 +507,14 @@ index 0a3a3f22b1324ae864c351888d25603a6034e64a..6d2b96a21ec783303788e7a90770b833
 +        const lateOnThe5th = new Date(Date.UTC(2026, 9, 5, 23, 30));
 +        const earlyOnThe6th = new Date(Date.UTC(2026, 9, 6, 0, 30));
 +        try {
-+            // Each probe below asserts TWO preconditions at once: that the
-+            // runtime honoured the TZ assignment, and that the zone resolved to
-+            // real tzdata rather than silently falling back to UTC. Both stamp
-+            // assertions go through `toISOString` and are offset-invariant, so
-+            // without the probes this test would pass while measuring nothing.
++            // The two probes below assert, as a PAIR, that the runtime honoured
++            // the assignments and resolved real tzdata. Neither alone does: on a
++            // host already at UTC+1/+2 the first is green without any assignment
++            // taking effect, and on a negative-offset host the second is. Only
++            // both together are sensitive to a no-op, because no single ambient
++            // zone satisfies them at once. The stamp assertions themselves go
++            // through `toISOString` and are offset-invariant, so without the
++            // probes this test would pass while measuring nothing.
 +            //
 +            // Those are environment properties, so a leg lacking tzdata would
 +            // red this while the implementation is fine. Measured rather than
