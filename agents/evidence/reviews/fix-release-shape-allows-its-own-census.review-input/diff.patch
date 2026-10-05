@@ -1,8 +1,8 @@
 diff --git a/.github/workflows/smoke-public-install.yml b/.github/workflows/smoke-public-install.yml
-index 7ac9311c56c076cbb71cd6681222c75be4d3d9fc..4b3a55ef456762e5e5ed8c66883e0affd4241c92 100644
+index 7ac9311c56c076cbb71cd6681222c75be4d3d9fc..8da171c5e0c66f85d3b2dfca3f048c303935fd6a 100644
 --- a/.github/workflows/smoke-public-install.yml
 +++ b/.github/workflows/smoke-public-install.yml
-@@ -63,11 +63,14 @@ concurrency:
+@@ -63,11 +63,16 @@ concurrency:
  
  jobs:
    smoke:
@@ -14,10 +14,12 @@ index 7ac9311c56c076cbb71cd6681222c75be4d3d9fc..4b3a55ef456762e5e5ed8c66883e0aff
 +    # Release-PR skip per docs/contracts/release-pr-gating.md § Cut surface —
 +    # a release PR touches only that contract's allowlist, which admits no
 +    # install script and no file this matrix executes. The list lives there,
-+    # not here. Note the residue the contract records: `package.json` IS
-+    # admitted and IS this workflow's trigger, and no gate reads its content,
-+    # so a `bin` / `files` / `dependencies` edit would ride a release PR with
-+    # this matrix skipped. push: main + the weekly cron + workflow_dispatch
++    # not here. TWO admitted paths are also triggers of this workflow —
++    # `package.json` and the settings template under `src/agent-src/templates/`.
++    # The contract's § Cut surface row says what covers each; the residue it
++    # records is that no gate reads `package.json` CONTENT, so a `bin` /
++    # `files` / `dependencies` edit would ride a release PR with this matrix
++    # skipped. push: main + the weekly cron + workflow_dispatch
 +    # stay unconditional so drift the PR matrix can't see still surfaces.
      if: ${{ github.event_name != 'pull_request' || !startsWith(github.head_ref, 'release/') }}
      name: ${{ matrix.os }} · node ${{ matrix.node }}
@@ -59,10 +61,10 @@ index 8f74f194fcdee655bfcc94154db4e5ad6764be32..2fd1a5c6e1816060f3a65b72bff2f447
      strategy:
        fail-fast: false
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..c637ea35aa30be6e2281b73a10adf3bfa6a38780 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..615a79e260287abbb0ad718b8059b32694bb6544 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
-@@ -35,10 +35,25 @@ keep-beta-reason: >-
+@@ -35,10 +35,26 @@ keep-beta-reason: >-
  > older one is matrix-level. Current per-job numbers live in
  > [`ci-cost-budget.md`](ci-cost-budget.md); the skip argument below is
  > unaffected either way. Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
@@ -72,11 +74,12 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..c637ea35aa30be6e2281b73a10adf3bf
 -> (3.3.0). They cannot regress install or runtime behaviour by construction.
 +> only touch the allowlist enumerated under § Release-PR shape below. The paths
 +> are NOT listed here: a second copy of that list went stale for months and named
-+> paths the code had already renamed. The file-set claim was verified against PR #238 (3.3.0) and the
-+> allowlist has grown since, so what carries the argument is what the release
-+> flow WRITES into those paths: version fields, changelog prose, generated
-+> manifests and two report artifacts. Stated that way because the categorical
-+> version — "no entry is install or runtime code" — is false of several of them:
++> paths the code had already renamed. The file-set claim was verified against
++> PR #238 (3.3.0) and the allowlist has grown since, so what carries the
++> argument is what the release flow WRITES into those paths: version fields,
++> changelog prose, generated manifests and two report artifacts. Stated that
++> way because the categorical version — "no entry is install or runtime code" —
++> is false of several of them:
 +> the npm manifests carry `bin`, `files`, `dependencies` and `engines`, and the
 +> plugin and marketplace manifests ship in the tarball. `check_release_pr_shape`
 +> matches paths and never reads content, so nothing here stops a release PR from
@@ -92,7 +95,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..c637ea35aa30be6e2281b73a10adf3bf
  
  ## Release-PR shape
  
-@@ -53,12 +68,63 @@ hold:
+@@ -53,12 +69,63 @@ hold:
       `release.ts` § `set_lockfile_version`
     - `CHANGELOG.md`
     - `.claude-plugin/marketplace.json`
@@ -158,7 +161,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..c637ea35aa30be6e2281b73a10adf3bf
  
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
-@@ -93,19 +159,38 @@ procedure under its `OUT-OF-SHAPE` findings, and `release.ts` §
+@@ -93,19 +160,38 @@ procedure under its `OUT-OF-SHAPE` findings, and `release.ts` §
  
  ## Cut surface — heavy jobs that skip on release PRs
  
@@ -200,7 +203,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..c637ea35aa30be6e2281b73a10adf3bf
 -| `tests.yml` | `windows-lockfile-export` | release-PR diff has no `scripts/install_global*.py`, `scripts/cmd_export.py`, lockfile test surface |
 -| `smoke-public-install.yml` | `smoke` | release-PR diff has no `scripts/install*`, `setup.sh`, `templates/**`, `package.json` runtime behaviour |
 +| `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
-+| `tests.yml` | `static-checks` | its source-reading steps (ESLint, `tsc`, MCP-catalog drift, test-delta, build freshness, hook-latency) have no admitted input. Every manifest-reading step has a release-path twin: `npm audit` → `release-validation.yml` § `audit-gate`, `prepack-check` → `consumer-matrix.yml`, and `publint` → `evaluator-umbrella.yml`, which carries no head-ref guard and whose `paths:` filter leads with `package.json`, so it runs on every release PR by construction |
++| `tests.yml` | `static-checks` | its source-reading steps have no admitted input — the allowlist carries no TypeScript, no test file and no generated tree. Its MANIFEST-reading steps each have a release-path twin: `npm audit` → `release-validation.yml` § `audit-gate`, `prepack-check` → `consumer-matrix.yml`, `publint` → `evaluator-umbrella.yml` (no head-ref guard, `paths:` leads with `package.json`, so it runs on every release PR by construction), and `npm ci` runs in every one of those jobs. This cell is prose over a step list nothing parses — read the job if the list matters |
 +| `tests.yml` | `golden-tests` | golden corpora live under `tests/` and `internal/`, neither admitted |
 +| `tests.yml` | `collector-lifecycle` | exercises collector scripts under `src/scripts/`, none admitted |
 +| `tests.yml` | `workspace-tests` | exercises workspace wiring under `src/` and `tests/`; the admitted pack and domain files are metadata those tests do not read |
@@ -208,7 +211,7 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..c637ea35aa30be6e2281b73a10adf3bf
  
  `push:` to `main` and the weekly cron on `smoke-public-install.yml` stay
  **unconditional** — those catch drift the PR matrix can't see.
-@@ -118,6 +203,7 @@ the feature-PR floor by adding:
+@@ -118,12 +204,13 @@ the feature-PR floor by adding:
  | Workflow | Job | Proves |
  |---|---|---|
  | `consistency.yml` | (existing) | `task consistency` — source-of-truth integrity |
@@ -216,7 +219,14 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..c637ea35aa30be6e2281b73a10adf3bf
  | `smoke.yml` | `smoke-contracts` | Contract self-checks (kernel, router, hashes) |
  | `release-guard.yml` | `assert-version-matches-tag` | already gates `npm publish`; remains tag-trigger |
  | `migration-dry-run.yml` | (existing) | Migration plan dry-runs |
-@@ -134,10 +220,9 @@ the feature-PR floor by adding:
+ | `release-validation.yml` (Phase B) | `release-shape` | shape detector — fails closed if diff exits the allowlist |
+ | `release-validation.yml` (Phase B) | `changelog-entry` | CHANGELOG carries an entry matching the head-branch version |
+-| `release-validation.yml` (Phase B) | `version-consistency` | `package.json` / `marketplace.json` agree on the version (pack manifests carry no version field) |
++| `release-validation.yml` (Phase B) | `version-consistency` | `package.json` / `marketplace.json` agree on the version (pack manifests carry no version field), and `check_template_pin_drift` holds the settings-template pin to it — the check § Cut surface's `smoke` row forward-references |
+ | `release-validation.yml` (release-truth) | `surface-equality` | PR body equals the CHANGELOG entry (whitespace-normalized) — release.ts derives all four surfaces (PR body, changelog, GitHub release notes, annotated tag message) from the changelog section at the relevant head |
+ | `release-validation.yml` (release-truth) | `highlight-plausibility` | curated head cannot claim `_none_` against a populated span-derived category (security commits, behaviour/default changes, honest nulls, removed public surface). **Prose polish is not gated** — an un-rewritten generator-derived head line warns and exits 0, because curating the head is retro-curation and not a merge precondition; the decision and its rejected branch are recorded in [`CHANGELOG-conventions.md` § Curated-head cadence](CHANGELOG-conventions.md#curated-head-cadence--retro-curation-not-a-merge-precondition) |
+ | `release-validation.yml` (release-truth) | `finding-dispositions` | every blocking/high self-review finding carries a committed disposition in `agents/evidence/release-findings/<version>.json` — ingest via `check_finding_dispositions --ingest`; the ledger (never the PR comment) is the record |
+@@ -134,10 +221,10 @@ the feature-PR floor by adding:
  
  `release-validation.yml`'s fourth job, `release-install-e2e`
  (`tests/test_release_install_e2e.sh`), closes a gap the cut surface above
@@ -226,11 +236,12 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..c637ea35aa30be6e2281b73a10adf3bf
 -package. Every release PR now proves, against the real tarball:
 +does not cover: that the allowlist admits no file these jobs execute is a claim
 +about the **source diff**, not about whether the **packed tarball**
-+actually installs, upgrades, and boots as a real npm global package. Every release PR now proves, against the real tarball:
++actually installs, upgrades, and boots as a real npm global package. Every
++release PR now proves, against the real tarball:
  
  - a fresh `npm install -g` into an isolated npm prefix resolves the
    `agent-config` binary and ships no silent postinstall/GUI side effect;
-@@ -160,9 +245,10 @@ the source diff couldn't see was missing) cannot recur silently.
+@@ -160,9 +247,10 @@ the source diff couldn't see was missing) cannot recur silently.
  
  ## Consumer-matrix exemption — the tarball window
  
@@ -405,7 +416,7 @@ index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..7e202ab039809071bc35fbec58bebd20
      let previousCold: Set<string> | null = null;
      if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..2820aeb3055adb5de8240f9498f3b7b5d7cac7b1 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..c622c4b28e8f4ed15c2780012fd9520a49ef6cd3 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -1,7 +1,14 @@
@@ -508,7 +519,7 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..2820aeb3055adb5de8240f9498f3b7b5
  });
  
  describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
-@@ -130,3 +208,110 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
+@@ -130,3 +208,113 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
          expect(out).not.toContain('land the files above on main');
      });
  });
@@ -559,11 +570,14 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..2820aeb3055adb5de8240f9498f3b7b5
 +            .flatMap((rel) => walk(path.join(REPO_ROOT, rel), true))
 +            .filter((f) => !f.endsWith('report_evidence_temperature.ts'))
 +            .flatMap((f) => fs.readFileSync(f, 'utf8').split('\n'))
-+            // An INVOCATION, not a mention: the line must run the script. Prose
-+            // naming the module in a comment is not a caller, and counting it
-+            // as one would red this test on an edit that changes nothing.
-+            .filter((line) => /scripts-run\s+src\/scripts\/report_evidence_temperature/.test(line))
-+            .filter((line) => !/^\s*(\/\/|#|\*)/.test(line));
++            // An INVOCATION, not a mention: a comment naming the module is not
++            // a caller. Matches any execution spelling — `scripts-run`, `tsx`,
++            // `node`, a bare path in an npm script — rather than the one form
++            // in use today, because a caller added under a different spelling
++            // is exactly what a single-literal filter would miss.
++            .filter((line) => /report_evidence_temperature(\.ts)?\b/.test(line))
++            .filter((line) => !/^\s*(\/\/|#|\*)/.test(line))
++            .filter((line) => !/^\s*["']?[\w.-]+["']?\s*:\s*$/.test(line));
 +        expect(invocations).toHaveLength(1);
 +        expect(invocations[0]).toContain('--write');
 +        expect(invocations[0]).not.toContain('--out');
