@@ -50,7 +50,12 @@
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { absoluteBodyLinkPrefix, build_thin, is_thin_entry, split_frontmatter, } from '../scripts/_lib/thin_rules.js';
+import * as os from 'node:os';
+import { buildHostLimitRows, loadHostInstructionLimits, readLayer, renderHostLimitRows, } from '../scripts/_lib/installed_layer.js';
+import { GLOBAL_RULE_DIRS, globalRuleLayerPath } from './globalRuleLayers.js';
+import { manifest_path } from '../scripts/_lib/installed_tools.js';
+import { NO_RECORDED_HASHES, readRecordedHashes } from './recordedOwnership.js';
+import { absoluteBodyLinkPrefix, build_thin, split_frontmatter, } from '../scripts/_lib/thin_rules.js';
 /**
  * Replace the body of every thinnable rule in `rulesDir` with its stub.
  *
@@ -94,7 +99,23 @@ export function thinInstalledRuleLayer(opts) {
                 failed.push({ rule: name, reason: String(e) });
             continue;
         }
-        if (!is_thin_entry(stubText)) {
+        // KEPT-VS-THINNED IS DECIDED BY IDENTITY, NOT BY A CONTENT SNIFF.
+        // `build_thin` returns either a stub or the SOURCE TEXT VERBATIM, so
+        // the full-bodied branch is exactly "the map value equals the source
+        // file". Testing `is_thin_entry(stubText)` instead would misread a
+        // source rule whose own body happened to contain the marker — and that
+        // rule would then be written as `installedFrontmatter + fullSourceText`,
+        // duplicating the frontmatter block. Zero such rules ship today, which
+        // makes it latent rather than live, and `THIN_ENTRY_MARKER`'s own
+        // docstring argues against exactly this kind of inferred detection.
+        let sourceText;
+        try {
+            sourceText = fs.readFileSync(path.join(bodySourceDir, name), 'utf-8');
+        }
+        catch {
+            sourceText = null;
+        }
+        if (stubText === sourceText) {
             // Kept full-bodied by `build_thin`'s own predicate — kernel,
             // trigger-less, path-only, or a declared `no_stub` member. The
             // installed copy is already the right shape; touching it would be
@@ -119,7 +140,12 @@ export function thinInstalledRuleLayer(opts) {
         // module's header calls the reaper's only evidence, which is the one
         // corruption this pass could cause. A file that claims a block it does
         // not have is left exactly as found and reported.
-        if (frontmatter === '' && installed.startsWith('---')) {
+        //
+        // The test is a REGEX rather than `startsWith('---')` because the
+        // claim can be preceded by a BOM or by leading whitespace, and either
+        // one took the prefix check's "no block here" branch straight into the
+        // write it exists to prevent.
+        if (frontmatter === '' && /^\uFEFF?[\s]*---/.test(installed)) {
             failed.push({
                 rule: name,
                 reason: 'opens a frontmatter block that never closes — left untouched so its ' +
@@ -141,6 +167,18 @@ export function thinInstalledRuleLayer(opts) {
             failed.push({ rule: name, reason: String(e) });
             charsAfter += installed.length;
         }
+    }
+    if (stubs.size === 0) {
+        // A ZERO-STUB MAP AND A ZERO-THINNABLE LAYER PRINT THE SAME RECEIPT, so
+        // the one that is a failure has to say so. `_globSortedMd` swallows an
+        // unreadable directory and answers `[]`, which is what a wrongly
+        // resolved package root produces — the hazard `ThinRoots` exists for.
+        // Without this the feature would be silently not applied behind a
+        // success-shaped line, and the installer's try/catch sees only throws.
+        failed.push({
+            rule: bodySourceDir,
+            reason: 'no rule bodies found to build stubs from — the layer was left full-bodied',
+        });
     }
     return {
         thinned,
@@ -177,5 +215,47 @@ export function describeThinInstalledLayer(res) {
         out.push(`  claude-code: ${f.rule}: could not write stub — ${f.reason}`);
     }
     return out;
+}
+/**
+ * The install receipt's instruction-budget block — step 1.4's "at install".
+ *
+ * The step asks for the limit, the split and the 80 % warning AT INSTALL, and
+ * the measurement existed only behind the standalone `installed_layer_report`
+ * CLI: `buildHostLimitRows`'s own docstring named "the install receipt" as the
+ * caller it was exported for, and that caller did not exist. A consumer whose
+ * layer is over budget learned it from the host, which is the notice the
+ * roadmap exists to remove.
+ *
+ * Global layers only, deliberately. The install writes `~/.claude/rules` and
+ * its siblings; a project layer is not what this run just changed, and folding
+ * one in would make the receipt's number disagree with the thing it is a
+ * receipt FOR.
+ *
+ * Never throws. A receipt that cannot be measured is silent rather than fatal —
+ * the deploy it describes has already happened correctly.
+ */
+export function installReceiptBudgetLines(packageRoot, home = os.homedir()) {
+    try {
+        const recorded = (() => {
+            try {
+                return readRecordedHashes(manifest_path(packageRoot), packageRoot);
+            }
+            catch {
+                return NO_RECORDED_HASHES;
+            }
+        })();
+        const layers = [];
+        for (const host of Object.keys(GLOBAL_RULE_DIRS).sort()) {
+            const dir = globalRuleLayerPath(host, home);
+            if (dir === null)
+                continue;
+            layers.push(readLayer(host, 'global', dir, recorded));
+        }
+        const rows = buildHostLimitRows(layers, loadHostInstructionLimits());
+        return rows.length === 0 ? [] : renderHostLimitRows(rows).map((l) => `  ${l}`);
+    }
+    catch {
+        return [];
+    }
 }
 //# sourceMappingURL=installThinLayer.js.map

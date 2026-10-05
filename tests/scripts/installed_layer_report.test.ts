@@ -29,6 +29,7 @@ import {
 } from '../../src/scripts/_lib/installed_layer.js';
 import { parseArgs } from '../../src/scripts/installed_layer_report.js';
 import { GLOBAL_RULE_DIRS } from '../../src/install/globalRuleLayers.js';
+import { installReceiptBudgetLines } from '../../src/install/installThinLayer.js';
 
 const made: string[] = [];
 
@@ -306,6 +307,25 @@ describe('installed-layer report — the combined total against a published limi
         expect(layer.foreign_chars).toBe(100);
         // The split is exhaustive: nothing in the directory is in neither column.
         expect(layer.package_owned_chars + layer.foreign_chars).toBe(layer.chars);
+    });
+
+    it('is produced by the INSTALL RECEIPT too, not only by the report CLI', () => {
+        // Step 1.4 says "at install, the receipt reports … and warns", and this
+        // suite's own verify command is what the step is closed against — so a
+        // case that exercises only the report module would let the step go green
+        // against a surface no consumer runs. `installReceiptBudgetLines` is the
+        // installer-side producer; it renders through the same
+        // `renderHostLimitRows` the report uses, which is why the two cannot
+        // drift into disagreeing about a number they both measured.
+        const home = mkTmp('ilr-combined-receipt-');
+        stageGlobal(home, { 'a.md': rule(900), 'b.md': rule(100) });
+
+        const lines = installReceiptBudgetLines(mkTmp('ilr-combined-receipt-pkg-'), home);
+
+        expect(lines.length).toBeGreaterThan(0);
+        expect(lines.join('\n')).toContain('host instruction budgets');
+        expect(lines.some((l) => l.includes('claude-code'))).toBe(true);
+        expect(lines.some((l) => l.includes('package-owned'))).toBe(true);
     });
 
     it('warns when the combined total crosses 80 % of the limit, and not one character before', () => {

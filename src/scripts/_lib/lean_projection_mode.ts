@@ -270,8 +270,9 @@ export interface ResolveOptions {
  * Tolerant like everything else on a hook path: `load_agent_settings` answers
  * with defaults on an unreadable or malformed file and never throws, and the
  * normalisers above turn anything unrecognised into the safe value. A caller
- * on a hot path pays two cascade reads per prompt — one for the value and one,
- * template-isolated, for `modeExplicit`'s provenance.
+ * on a hot path pays ONE cascade read per prompt; `modeExplicit` is a lazy
+ * getter, so the second, template-isolated read happens only for a caller that
+ * actually reads provenance — which today is the installer and nothing else.
  */
 export function resolveLeanProjection(opts: ResolveOptions = {}): ResolvedLeanProjection {
     // The LEGACY root path, deliberately, and not `project_settings_path`'s
@@ -301,7 +302,16 @@ export function resolveLeanProjection(opts: ResolveOptions = {}): ResolvedLeanPr
     return {
         mode: normalizeLeanProjectionMode(o['mode'] ?? ''),
         hosts: resolveLeanProjectionHosts(o['hosts']),
-        modeExplicit: rawExplicitLeanProjectionMode(opts) !== '',
+        // LAZY, and the hot path is the reason. Provenance needs a SECOND,
+        // template-isolated cascade, and only the installer reads it — the
+        // delivery concern on `user_prompt_submit` destructures `{ mode, hosts }`
+        // and discards this field, so computing it eagerly doubled the per-prompt
+        // settings read for an answer nobody asked for. A getter keeps the
+        // field's shape (`readonly modeExplicit: boolean`) and charges only the
+        // caller that touches it.
+        get modeExplicit(): boolean {
+            return rawExplicitLeanProjectionMode(opts) !== '';
+        },
     };
 }
 
@@ -388,11 +398,11 @@ export function leanProjectionModeChosen(
  * exactly X" and knows nothing about `hosts`, so a caller combining it with a
  * host check by hand would re-create the fold this function exists to own.
  *
- * That is one CALL and two cascade READS, because `resolveLeanProjection`
- * computes `modeExplicit` through a second, template-isolated load. Stated
- * rather than rounded down: the installer runs once per deploy and does not care,
- * but the delivery concern on `user_prompt_submit` pays it per prompt, and a
- * docstring claiming one read would hide that from whoever profiles it next.
+ * That is one CALL and two cascade READS here, because reading `modeExplicit`
+ * triggers its lazy getter and a second, template-isolated load. The installer
+ * runs once per deploy and does not care; the cost is named rather than rounded
+ * down because the same resolver serves the per-prompt delivery concern, which
+ * does NOT read provenance and therefore does not pay it.
  */
 export function installerThinsHost(hostId: string, opts: ResolveOptions = {}): boolean {
     const { mode, hosts, modeExplicit } = resolveLeanProjection({
@@ -418,7 +428,11 @@ export function installerThinsHost(hostId: string, opts: ResolveOptions = {}): b
  * `project_path` it is given, so pointing the project layer at nothing leaves
  * exactly the machine-global layers — which is the scope the installer's
  * sibling `_resolve_global_rule_scope` already resolves for the same deploy.
- * A caller may still pass an explicit `settingsPath` (tests pin one).
+ * A caller may still pass an explicit `settingsPath` (tests pin one). A
+ * `projectRoot` handed to {@link installerThinsHost} is DISCARDED — the `??`
+ * chain terminates at `settingsPath` before `projectRoot` is consulted — which
+ * is the intended behaviour and is stated here because a caller passing it and
+ * expecting it honoured would otherwise get no signal.
  */
 const NO_PROJECT_LAYER = path.join(
     path.sep,

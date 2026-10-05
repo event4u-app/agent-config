@@ -279,9 +279,10 @@ interface RawHostLimit {
 /**
  * Where the limits live, derived from this module rather than from `cwd`.
  *
- * `_lib/` sits two directories under the package root, the same derivation
- * `agent_settings.default_template_path()` uses and for the same reason: a
- * caller inside a bundle has no repository to walk up from.
+ * The two `..` hops climb from `src/scripts/_lib` to `src/`, which is where
+ * `config/` lives — NOT to the package root, though the comment said so until
+ * 2026-10-05. The result is correct and the arithmetic stated for it was not,
+ * which is the half a future reader would trust when changing the hops.
  *
  * `fileURLToPath`, NOT `new URL(...).pathname` — the claimed parity with
  * `default_template_path()` was only half true until 2026-10-05. A `pathname`
@@ -365,6 +366,14 @@ export function buildHostLimitRows(
     // layer is absent reads 0 against its limit, which is a real answer and the
     // one step 3.5 asks for ("one row per host with a published limit").
     for (const l of layers) if (!byHost.has(l.host)) byHost.set(l.host, { chars: 0, owned: 0, foreign: 0 });
+    // AND every host the LIMITS table knows, whether or not a layer reached it.
+    // Rows were layer-driven while the requirement is limit-driven, so a limit
+    // recorded for a host the layer map does not list disappeared silently —
+    // the two sources agree today, which means they can only diverge in the
+    // direction the code did not cover.
+    for (const [host, e] of limits) if (e.limit !== null && !byHost.has(host)) {
+        byHost.set(host, { chars: 0, owned: 0, foreign: 0 });
+    }
     const rows: HostLimitReading[] = [];
     for (const host of [...byHost.keys()].sort()) {
         const a = byHost.get(host) as { chars: number; owned: number; foreign: number };
@@ -489,12 +498,27 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
         `  TOTAL — ${String(t.files)} files, ${String(t.unconditional)} unconditional, ` +
             `${String(t.chars)} chars, ${String(t.package_owned)} package-owned / ${String(t.foreign)} foreign`,
     );
-    // ONE ROW PER HOST, against its published limit — step 3.5. The combined
-    // figure is what the row is about: a consumer's own instruction files sit
-    // in the same budget as this package's, so a package-owned number alone
-    // would understate what the host is actually holding.
-    out.push('host instruction budgets — package-owned + foreign against the published limit');
-    for (const r of report.limits) {
+    out.push(...renderHostLimitRows(report.limits));
+    return out;
+}
+
+/**
+ * The budget block — one row per host, against its published limit.
+ *
+ * Extracted so the REPORT and the INSTALL RECEIPT print the same bytes. They
+ * answer the same question at two moments, and a consumer comparing a receipt
+ * against a later report must not have to decide whether a wording difference
+ * means a measurement difference.
+ */
+export function renderHostLimitRows(rows: readonly HostLimitReading[]): string[] {
+    // ONE ROW PER HOST, against its published limit — steps 1.4 and 3.5. The
+    // combined figure is what the row is about: a consumer's own instruction
+    // files sit in the same budget as this package's, so a package-owned number
+    // alone would understate what the host is actually holding.
+    const out: string[] = [
+        'host instruction budgets — package-owned + foreign against the published limit',
+    ];
+    for (const r of rows) {
         const split =
             `${String(r.package_owned_chars)} package-owned + ` +
             `${String(r.foreign_chars)} foreign = ${String(r.chars)} chars`;

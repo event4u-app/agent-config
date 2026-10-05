@@ -18,11 +18,10 @@
  * target dir of your choosing — it never overwrites the live `.claude/` /
  * `.augment/` projections.
  *
- * NOTE (faithful literal): the thin-entry pointer keeps the verbatim
- * `Body: [`{rule_id}`](../../dist/agent-src/rules/{rule_id}.md)`
- * Markdown link from the retired Python implementation. The same-basename `.py` twin
- * carries that literal, so the ADR-051 legacy-path guard exempts this `.ts`
- * file by twin-parity.
+ * NOTE: the thin-entry pointer literal moved with the mechanism — it is
+ * `BODY_LINK_PREFIX` in `_lib/thin_rules.ts` now, so the twin-parity argument
+ * that exempted it from the ADR-051 legacy-path guard belongs to THAT file and
+ * no longer describes this one, which holds the string nowhere.
  *
  * Historical quirks are preserved deliberately — tests and downstream consumers pin the exact behaviour.
  *

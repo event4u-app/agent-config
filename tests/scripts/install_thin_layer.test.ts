@@ -25,11 +25,16 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     describeThinInstalledLayer,
+    installReceiptBudgetLines,
     thinInstalledRuleLayer,
 } from '../../src/install/installThinLayer.js';
 import { decideDeployWrite } from '../../src/install/preserve.js';
 import { installerThinsHost } from '../../src/scripts/_lib/lean_projection_mode.js';
-import { is_thin_entry, THIN_ENTRY_MARKER } from '../../src/scripts/_lib/thin_rules.js';
+import {
+    is_thin_entry,
+    STUB_LAW_OPEN,
+    THIN_ENTRY_MARKER,
+} from '../../src/scripts/_lib/thin_rules.js';
 import { lawText, ruleBody } from '../../src/scripts/_lib/rule_law_section.js';
 
 let tmp: string;
@@ -262,23 +267,23 @@ describe('the installer applies the projector predicate when asked', () => {
 describe('template-is-not-consent — the gate the owner decision sits behind', () => {
     it('does NOT thin when the only layer carrying the mode is the shipped template', () => {
         writeUserGlobalSettings(null);
-        expect(installerThinsHost('claude-code', { packageRoot: pkg, projectRoot: tmp })).toBe(false);
+        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
     });
 
     it('thins when a user-controlled layer sets delivery', () => {
         writeUserGlobalSettings('lean_projection:\n  mode: delivery\n');
-        expect(installerThinsHost('claude-code', { packageRoot: pkg, projectRoot: tmp })).toBe(true);
+        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(true);
     });
 
     it('does NOT thin a consumer who explicitly chose eager-all', () => {
         writeUserGlobalSettings('lean_projection:\n  mode: eager-all\n');
-        expect(installerThinsHost('claude-code', { packageRoot: pkg, projectRoot: tmp })).toBe(false);
+        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
     });
 
     it('does NOT thin a host the chosen hosts list leaves out', () => {
         writeUserGlobalSettings('lean_projection:\n  mode: delivery\n  hosts:\n    - cursor\n');
-        expect(installerThinsHost('claude-code', { packageRoot: pkg, projectRoot: tmp })).toBe(false);
-        expect(installerThinsHost('cursor', { packageRoot: pkg, projectRoot: tmp })).toBe(true);
+        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
+        expect(installerThinsHost('cursor', { packageRoot: pkg })).toBe(true);
     });
 
     it('ignores a PROJECT layer in both directions — the layer it thins is the machine\'s', () => {
@@ -297,9 +302,7 @@ describe('template-is-not-consent — the gate the owner decision sits behind', 
             'lean_projection:\n  mode: delivery\n',
             'utf-8',
         );
-        expect(installerThinsHost('claude-code', { packageRoot: pkg, projectRoot: project })).toBe(
-            false,
-        );
+        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(false);
 
         writeUserGlobalSettings('lean_projection:\n  mode: delivery\n');
         fs.writeFileSync(
@@ -307,9 +310,7 @@ describe('template-is-not-consent — the gate the owner decision sits behind', 
             'lean_projection:\n  mode: eager-all\n',
             'utf-8',
         );
-        expect(installerThinsHost('claude-code', { packageRoot: pkg, projectRoot: project })).toBe(
-            true,
-        );
+        expect(installerThinsHost('claude-code', { packageRoot: pkg })).toBe(true);
     });
 
     it('holds for the shape install.ts actually calls — packageRoot only, from a cwd that disagrees', () => {
@@ -389,35 +390,67 @@ describe('rollback', () => {
     it('leaves the layer untouched once the mode is back to eager-all', () => {
         writeUserGlobalSettings('lean_projection:\n  mode: eager-all\n');
         const before = read('routed');
-        if (installerThinsHost('claude-code', { packageRoot: pkg, projectRoot: tmp })) {
+        if (installerThinsHost('claude-code', { packageRoot: pkg })) {
             thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
         }
         expect(read('routed')).toBe(before);
         expect(is_thin_entry(read('routed'))).toBe(false);
     });
 
-    it('lets the next copy overwrite a thinned file — the manifest records the bytes this pass left', () => {
-        // The ordering IS the rollback: the manifest digest is taken from disk
-        // AFTER the thin pass, so the stub is `recorded-unchanged` and the
-        // verbatim copy may replace it. A digest taken BEFORE would read
-        // `recorded-modified` and preserve the stub forever, which is the failure
-        // this case exists to catch.
+    it('the manifest digest must be taken AFTER the thin pass, or the stub is preserved forever', () => {
+        // The ORDERING is the rollback, so the case has to be able to fail on
+        // the ordering. Passing one digest as both `recorded` and `onDisk`
+        // cannot: equal digests return `write` by definition, whichever order
+        // produced them. So both digests are taken, the early one and the late
+        // one, and each is run through the real decision.
+        const target = path.join(rulesDir, 'routed.md');
+        const digest = (): string =>
+            createHash('sha256').update(fs.readFileSync(target)).digest('hex');
+
+        const beforePass = digest();
         thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
-        const recorded = createHash('sha256')
-            .update(fs.readFileSync(path.join(rulesDir, 'routed.md')))
-            .digest('hex');
+        const afterPass = digest();
+        expect(afterPass).not.toBe(beforePass);
+
+        // Recorded too early: the installer reads its OWN stub as a user
+        // modification and preserves it, so no later copy can ever undo it.
         expect(
             decideDeployWrite({
                 exists: true,
-                recordedSha256: recorded,
-                onDiskSha256: recorded,
+                recordedSha256: beforePass,
+                onDiskSha256: afterPass,
+                force: false,
+            }),
+        ).toBe('preserve');
+
+        // Recorded after, which is what `record_deploy` does: the stub is ours,
+        // unchanged since we wrote it, and the next verbatim copy may replace it.
+        expect(
+            decideDeployWrite({
+                exists: true,
+                recordedSha256: afterPass,
+                onDiskSha256: afterPass,
                 force: false,
             }),
         ).toBe('write');
 
-        // And the copy that follows restores the full body.
-        fs.copyFileSync(path.join(sourceRules, 'routed.md'), path.join(rulesDir, 'routed.md'));
+        fs.copyFileSync(path.join(sourceRules, 'routed.md'), target);
         expect(is_thin_entry(read('routed'))).toBe(false);
+    });
+
+    it('the installer really does thin BEFORE it records the manifest', () => {
+        // The consequence is pinned above; this pins the fact it rests on, by
+        // index rather than by line number so it survives an edit elsewhere.
+        // Asserted on the source because no fixture can run a whole deploy.
+        const installer = fs.readFileSync(
+            path.join(__dirname, '..', '..', 'src', 'scripts', 'install.ts'),
+            'utf-8',
+        );
+        const thinAt = installer.indexOf('thinInstalledRuleLayer({');
+        const recordAt = installer.indexOf('global_deploy_inventory.record_deploy(');
+        expect(thinAt).toBeGreaterThan(-1);
+        expect(recordAt).toBeGreaterThan(-1);
+        expect(thinAt).toBeLessThan(recordAt);
     });
 });
 
@@ -456,6 +489,77 @@ describe('upgrade', () => {
     });
 });
 
+describe('the receipt step 1.4 asks for', () => {
+    it('reports the split against the published limit AT INSTALL, not only from the report CLI', () => {
+        // The step says "at install, the receipt reports … and warns". The
+        // measurement lived only behind the standalone report CLI, so the step
+        // could be green against a surface a consumer never runs. This asserts
+        // the installer-side producer directly.
+        const lines = installReceiptBudgetLines(pkg, home);
+        expect(lines.length).toBeGreaterThan(0);
+        expect(lines.join('\n')).toContain('host instruction budgets');
+        expect(lines.join('\n')).toContain('package-owned');
+        expect(lines.some((l) => l.includes('claude-code'))).toBe(true);
+    });
+
+    it('never throws, whatever it is pointed at — a receipt is not worth a failed install', () => {
+        expect(() => installReceiptBudgetLines(path.join(tmp, 'nope'), path.join(tmp, 'nope'))).not.toThrow();
+    });
+});
+
+describe('a silent no-op is a failure, not a success', () => {
+    it('says so when there are no rule bodies to build stubs from', () => {
+        // `_globSortedMd` swallows an unreadable directory and answers `[]`, so
+        // a wrongly resolved package root produces zero stubs — and zero stubs
+        // and zero thinnable rules print the same counters. The failure entry is
+        // what tells the two apart.
+        const emptyPkg = path.join(tmp, 'empty-pkg');
+        fs.mkdirSync(path.join(emptyPkg, 'dist', 'agent-src', 'rules'), { recursive: true });
+        fs.mkdirSync(path.join(emptyPkg, 'src', 'config'), { recursive: true });
+        fs.copyFileSync(
+            path.join(pkg, 'dist', 'router.json'),
+            path.join(emptyPkg, 'dist', 'router.json'),
+        );
+        fs.copyFileSync(
+            path.join(pkg, 'src', 'config', 'rule-consequence-class.json'),
+            path.join(emptyPkg, 'src', 'config', 'rule-consequence-class.json'),
+        );
+
+        const res = thinInstalledRuleLayer({ rulesDir, packageRoot: emptyPkg });
+
+        expect(res.thinned).toBe(0);
+        expect(res.failed.length).toBe(1);
+        expect(describeThinInstalledLayer(res).join('\n')).toContain('no rule bodies found');
+    });
+
+    it('classifies kept-vs-thinned by identity, so a marker in a source body cannot corrupt it', () => {
+        // `build_thin` returns the SOURCE TEXT for a full-bodied rule, so the
+        // branch is "map value equals source file". A content sniff would read
+        // a kernel rule whose body happens to contain the marker as thinnable
+        // and write `installedFrontmatter + fullSourceText` — two frontmatter
+        // blocks in one file.
+        const poisoned = sourceRule('kern', `${THIN_ENTRY_MARKER}\n\n${padBody('Kernel body.')}`);
+        fs.writeFileSync(path.join(sourceRules, 'kern.md'), poisoned, 'utf-8');
+        fs.writeFileSync(path.join(rulesDir, 'kern.md'), installedRule('kern', 'Kernel body.'), 'utf-8');
+
+        const res = thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
+
+        expect(res.kept).toBe(3);
+        expect(read('kern')).toBe(installedRule('kern', 'Kernel body.'));
+    });
+
+    it('refuses a frontmatter claim behind a BOM or leading whitespace', () => {
+        const target = path.join(rulesDir, 'routed.md');
+        const broken = '\uFEFF  ---\npackage: event4u/agent-config\n';
+        fs.writeFileSync(target, broken, 'utf-8');
+
+        const res = thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
+
+        expect(fs.readFileSync(target, 'utf-8')).toBe(broken);
+        expect(res.failed.map((f) => f.rule)).toContain('routed.md');
+    });
+});
+
 describe('standing-only', () => {
     it('carries every consequence-class law byte-equal to its source section', () => {
         thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
@@ -466,7 +570,7 @@ describe('standing-only', () => {
 
     it('does not put a law into a stub for a rule that is not in the class', () => {
         thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
-        expect(read('routed')).not.toContain('<!-- law: byte-copied');
+        expect(read('routed')).not.toContain(STUB_LAW_OPEN);
     });
 });
 

@@ -112,6 +112,7 @@ import { isExclusivelyPackageOnly, stampHostLayerFingerprint } from '../install/
 import * as claude_rule_rewrite from '../install/claudeRuleRewrite.js';
 import {
     describeThinInstalledLayer,
+    installReceiptBudgetLines,
     thinInstalledRuleLayer,
 } from '../install/installThinLayer.js';
 import { resolveGlobalRuleScope } from '../install/globalRuleScope.js';
@@ -3017,11 +3018,8 @@ function _deploy_global_content(
                 res,
                 preserved_now,
             );
-            // Step 1.1 of road-to-an-installed-layer-that-is-thinned. Gated on
-            // `installerThinsHost`, which is false when the only layer carrying
-            // `lean_projection.mode` is the shipped template — that value is
-            // not a consent, and reading it as one would flip every consumer's
-            // default as a side effect of wiring this call.
+            // Steps 1.1 and 1.4 of road-to-an-installed-layer-that-is-thinned;
+            // both modules' headers carry the reasoning.
             if (installerThinsHost(tool_id, { packageRoot: package_root })) {
                 try {
                     const thin = thinInstalledRuleLayer({
@@ -3031,12 +3029,10 @@ function _deploy_global_content(
                     });
                     if (!state.QUIET) for (const l of describeThinInstalledLayer(thin)) info(l);
                 } catch (e) {
-                    // A thinning failure must never sink a deploy that already
-                    // wrote a correct, full-bodied layer: the fallback state is
-                    // today's behaviour, which is over-delivery, not breakage.
                     warn(`claude-code: thinned rule layer not written — ${String(e)}`);
                 }
             }
+            if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root)) info(l);
         }
 
         const missing_targets = _verify_deploy_targets(anchor, plan);
