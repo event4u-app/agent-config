@@ -1,8 +1,8 @@
 diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
-index 6dec89bffea486d397670f86b71703004a7b9b56..610e21f196b631b025ddb32c68f0a0cfe76d4cc2 100644
+index 6dec89bffea486d397670f86b71703004a7b9b56..3363553d3a1772758fa209a2a8da8eb6b44e5632 100644
 --- a/docs/contracts/release-pr-gating.md
 +++ b/docs/contracts/release-pr-gating.md
-@@ -35,10 +35,12 @@ keep-beta-reason: >-
+@@ -35,10 +35,15 @@ keep-beta-reason: >-
  > older one is matrix-level. Current per-job numbers live in
  > [`ci-cost-budget.md`](ci-cost-budget.md); the skip argument below is
  > unaffected either way. Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
@@ -11,15 +11,18 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..610e21f196b631b025ddb32c68f0a0cf
 -> archive `docs/archive/CHANGELOG-pre-*.md` — verified against PR #238
 -> (3.3.0). They cannot regress install or runtime behaviour by construction.
 +> only touch the allowlist enumerated under § Release-PR shape below — version
-+> manifests, the changelog and its era archive, pack metadata, and the two
-+> generated release artifacts (findings ledger, evidence-temperature census).
-+> The list is NOT restated here: a second prose copy went stale for months and
-+> named paths the code had already renamed. They cannot regress install or
-+> runtime behaviour by construction — verified against PR #238 (3.3.0).
++> manifests, the changelog and its era archive, pack metadata, the project-settings
++> template pin with its generated `dist/` twin, and the two release artifacts the
++> flow itself writes (findings ledger, evidence-temperature census). That set is a
++> summary and the enumeration below is the list; it is NOT restated here, because a
++> second prose copy went stale for months and named paths the code had already
++> renamed. The file-set claim was verified against PR #238 (3.3.0) and the
++> allowlist has grown since, so what carries the argument now is the enumeration,
++> not that observation: none of its entries is install or runtime code.
  
  ## Release-PR shape
  
-@@ -53,12 +55,30 @@ hold:
+@@ -53,12 +58,32 @@ hold:
       `release.ts` § `set_lockfile_version`
     - `CHANGELOG.md`
     - `.claude-plugin/marketplace.json`
@@ -40,8 +43,10 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..610e21f196b631b025ddb32c68f0a0cf
 +   - `agents/evidence/analysis/evidence-temperature-YYYY-MM-DD.md` — the
 +     per-release evidence-temperature census written by
 +     `taskfiles/content.yml` § `release-prepare`, step 2 of `task release`.
-+     Pinned to the ISO date shape with fnmatch digit classes, because `?`
-+     matches any character and would admit every sibling report.
++     Pinned to the ISO date shape with fnmatch digit classes rather than `?`,
++     which matches any character: `????-??-??` would still require ten
++     characters with separators at offsets 4 and 7, so it admits not every
++     sibling report but any whose name carries that shape.
 +   - `src/agent-src/templates/agents/agent-project-settings.example.yml` and
 +     its regenerated `dist/agent-src/` twin — the project-settings template
 +     pin, kept in lockstep with `package.json.version`
@@ -53,23 +58,25 @@ index 6dec89bffea486d397670f86b71703004a7b9b56..610e21f196b631b025ddb32c68f0a0cf
  Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
  The script exits 0 when both hold; non-zero with a per-file diff naming any
 diff --git a/src/scripts/check_release_pr_shape.ts b/src/scripts/check_release_pr_shape.ts
-index ef101165f052ad6ca03020e4deb7189b01917e36..a6e51213d9c603e72cccf96270806d726e86af48 100644
+index ef101165f052ad6ca03020e4deb7189b01917e36..6748d527e746aa4465a809312a24672c8e596b58 100644
 --- a/src/scripts/check_release_pr_shape.ts
 +++ b/src/scripts/check_release_pr_shape.ts
-@@ -45,6 +45,12 @@ const ALLOWLIST_GLOBS = [
+@@ -45,6 +45,14 @@ const ALLOWLIST_GLOBS = [
      // be able to carry the dispositions of its own self-review findings; the
      // finding-dispositions gate is red until blocking ones are recorded here.
      'agents/evidence/release-findings/*.json',
 +    // Evidence-temperature census — `taskfiles/content.yml` § release-prepare
 +    // writes one per release, so without this entry the pipeline generates a
-+    // file its own shape step refuses. Digit classes, never `?`: fnmatch's `?`
-+    // matches ANY character, so a `????-??-??` spelling would admit every
-+    // sibling report. A second report here is a decision, not a glob effect.
++    // file its own shape step refuses. Digit classes rather than `?`, which
++    // matches any character: `????-??-??` would still require ten characters
++    // with separators at offsets 4 and 7, so it admits not every sibling but
++    // any whose name happens to carry that shape. Narrower than it reads, and
++    // still wider than a date. A second report here is a decision.
 +    'agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md', // code-comment-allow provenance-comment -- the glob IS this gate's operand, not where the code came from
      // Project-settings template pin — bumped by release.ts set_template_pin and
      // its regenerated dist twin (kept in lockstep with package.json.version).
      'src/agent-src/templates/agents/agent-project-settings.example.yml',
-@@ -87,12 +93,12 @@ function _fnmatchToRegExp(pat: string): RegExp {
+@@ -87,12 +95,12 @@ function _fnmatchToRegExp(pat: string): RegExp {
                  res += '\\[';
              } else {
                  let stuff = pat.slice(i, j);
@@ -89,38 +96,50 @@ index ef101165f052ad6ca03020e4deb7189b01917e36..a6e51213d9c603e72cccf96270806d72
                  if (stuff.startsWith('!')) {
                      stuff = '^' + stuff.slice(1);
 diff --git a/src/scripts/report_evidence_temperature.ts b/src/scripts/report_evidence_temperature.ts
-index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..cc096064ff5850e1290189cdb971fd5b23ea4db8 100644
+index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..b3f8b541b796bd49db86350f54dfe1cf08db4bb8 100644
 --- a/src/scripts/report_evidence_temperature.ts
 +++ b/src/scripts/report_evidence_temperature.ts
-@@ -64,8 +64,13 @@ export const EVIDENCE_ROOT = 'agents/evidence';
- /** Where `--write` puts the report, relative to the repository root. */
- export const REPORT_DIR = 'agents/evidence/analysis';
+@@ -67,6 +67,18 @@ export const REPORT_DIR = 'agents/evidence/analysis';
+ /** Reports of this family are excluded from the reference index — see `isSelfReport`. */
+ const REPORT_PREFIX = 'evidence-temperature-';
  
--/** Reports of this family are excluded from the reference index — see `isSelfReport`. */
--const REPORT_PREFIX = 'evidence-temperature-';
 +/**
-+ * Reports of this family are excluded from the reference index — see `isSelfReport`.
-+ * Exported so the release-PR shape gate's allowlist can be tested against the
-+ * name this writer actually produces, rather than against a second spelling of
-+ * it. The two drifting apart is what broke `task release` for 16.3.0.
++ * The path `--write` composes for a census taken on `generatedAt` (an ISO
++ * `YYYY-MM-DD` day, as `buildCensus` stamps it). The one place the name is
++ * spelled; `main` and the release-PR shape gate's test both go through it, so a
++ * change to the directory, the prefix, the date shape or the extension moves
++ * both sides at once. Writer and gate holding two independent spellings of this
++ * name is what broke `task release` for 16.3.0.
 + */
-+export const REPORT_PREFIX = 'evidence-temperature-';
- 
++export function defaultReportPath(generatedAt: string): string {
++    return path.posix.join(REPORT_DIR, `${REPORT_PREFIX}${generatedAt}.md`);
++}
++
  /** File extensions a path token may end in. Anything else is not a path to us. */
  const PATH_EXTENSIONS = [
+     'md',
+@@ -583,7 +595,7 @@ export function main(argv: readonly string[]): number {
+         return 0;
+     }
+ 
+-    const dest = out ?? path.join(REPORT_DIR, `${REPORT_PREFIX}${census.generatedAt}.md`);
++    const dest = out ?? defaultReportPath(census.generatedAt);
+ 
+     let previousCold: Set<string> | null = null;
+     if (since === 'latest') {
 diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
-index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..a24e30f3c66b52e9db38e38b0fe65f544ec80220 100644
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..8c50277951bec6de6e2ad323f9ebc125c4f66477 100644
 --- a/tests/scripts/check_release_pr_shape.test.ts
 +++ b/tests/scripts/check_release_pr_shape.test.ts
 @@ -2,6 +2,7 @@
  import { describe, expect, it } from 'vitest';
  
  import * as shape from '../../src/scripts/check_release_pr_shape.js';
-+import { REPORT_DIR, REPORT_PREFIX } from '../../src/scripts/report_evidence_temperature.js';
++import { defaultReportPath } from '../../src/scripts/report_evidence_temperature.js';
  
  function runCheck(files: readonly string[]): { code: number; out: string } {
      const out: string[] = [];
-@@ -113,6 +114,45 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+@@ -113,6 +114,47 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
          expect(shape._matches('src/packs/core/README.md')).toBe(true);
          expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
      });
@@ -154,14 +173,16 @@ index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..a24e30f3c66b52e9db38e38b0fe65f54
 +    });
 +
 +    it('the allowlist admits the path the census writer actually produces', () => {
-+        // The producer/consumer link. Every other assertion in this file spells
-+        // the path out a second time, so a rename on the writing side would keep
-+        // them all green and red only during a live `task release` — which is
-+        // exactly how 16.3.0 broke. These two read the writer's own constants
-+        // and today's date the same way `report_evidence_temperature` does.
++        // The producer/consumer link, and it goes through the writer's own path
++        // builder rather than re-spelling any part of the name. Every other
++        // assertion in this file writes the path out a second time, so a change
++        // on the writing side would keep them all green and red only during a
++        // live `task release` — which is exactly how 16.3.0 broke. Re-deriving
++        // only the directory and prefix here would leave the date shape and the
++        // extension un-pinned, which is two thirds of a coupling.
 +        const today = new Date().toISOString().slice(0, 10);
-+        expect(shape._matches(`${REPORT_DIR}/${REPORT_PREFIX}${today}.md`)).toBe(true);
-+        expect(shape._matches(`${REPORT_DIR}/${REPORT_PREFIX}2026-10-01.md`)).toBe(true);
++        expect(shape._matches(defaultReportPath(today))).toBe(true);
++        expect(shape._matches(defaultReportPath('2026-10-01'))).toBe(true);
 +    });
  });
  
