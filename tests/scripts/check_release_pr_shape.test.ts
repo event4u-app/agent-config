@@ -1,7 +1,15 @@
 
+import { execFileSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { describe, expect, it } from 'vitest';
 
 import * as shape from '../../src/scripts/check_release_pr_shape.js';
+import { censusDateStamp, defaultReportPath } from '../../src/scripts/report_evidence_temperature.js';
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
 function runCheck(files: readonly string[]): { code: number; out: string } {
     const out: string[] = [];
@@ -69,6 +77,31 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         expect(out).toContain('OUT-OF-SHAPE: src/packs/core/installer/foo.ts');
     });
 
+    it('the `*` entries admit any depth — recorded, not endorsed', () => {
+        // The denial above holds on the EXTENSION, not on the nesting: `foo.ts`
+        // matches no glob at any depth. fnmatch `*` crosses `/`, so the `*`
+        // entries do admit arbitrary depth, which the census entry avoids by
+        // using digit classes. Pinned here so the property is visible rather
+        // than discovered, and so narrowing these globs later is a deliberate
+        // edit to this assertion rather than a silent behaviour change.
+        //
+        // EVERY `*` entry, not a sample: a reader checking whether a given row
+        // is narrow should find its answer here rather than infer it from a
+        // neighbour. The count is derived below rather than written down, so
+        // adding a seventh wildcard row reds this instead of aging a comment.
+        const wildcards = shape.ALLOWLIST_GLOBS.filter((g) => g.includes('*'));
+        expect(wildcards).toHaveLength(6);
+        expect(shape._matches('src/packs/core/installer/pack.yaml')).toBe(true);
+        expect(shape._matches('src/packs/core/installer/README.md')).toBe(true);
+        expect(shape._matches('src/domains/a/b/pack.yaml')).toBe(true);
+        expect(shape._matches('src/domains/a/b/README.md')).toBe(true);
+        expect(shape._matches('agents/evidence/release-findings/a/b/c.json')).toBe(true);
+        // Here the `*` sits before the extension rather than before a
+        // separator, so it swallows a segment plus a filename. Same shape as
+        // the findings-ledger row above; neither is a superset of the other.
+        expect(shape._matches('docs/archive/CHANGELOG-pre-x/evil.md')).toBe(true);
+    });
+
     it('marketplace metadata only passes', () => {
         expect(runCheck(['.claude-plugin/marketplace.json']).code).toBe(0);
     });
@@ -113,6 +146,52 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
         expect(shape._matches('src/packs/core/README.md')).toBe(true);
         expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
     });
+
+    it('the evidence-temperature census release-prepare writes passes', () => {
+        const { code } = runCheck([
+            'package.json',
+            'CHANGELOG.md',
+            'agents/evidence/analysis/evidence-temperature-2026-10-05.md',
+        ]);
+        expect(code).toBe(0);
+    });
+
+    it('the census glob admits the ISO date shape and nothing else under it', () => {
+        expect(shape._matches('agents/evidence/analysis/evidence-temperature-2026-10-05.md')).toBe(true);
+        // Denials the literal stem and the separators already carry — they hold
+        // under any date spelling, so they do NOT measure the digit classes.
+        expect(shape._matches('agents/evidence/analysis/evidence-temperature-anything.md')).toBe(false);
+        expect(shape._matches('agents/evidence/analysis/evidence-temperature-2026-1-5.md')).toBe(false);
+        expect(shape._matches('agents/evidence/analysis/some-other-report.md')).toBe(false);
+        expect(shape._matches('agents/evidence/analysis/nested/evidence-temperature-2026-10-05.md')).toBe(false);
+    });
+
+    it('the census glob denies a non-digit date — the digit classes, measured', () => {
+        // These are the ONLY assertions in this file that go red if `[0-9]` is
+        // relaxed to `?`: a 4-2-2 shape with the right separators and the wrong
+        // character class. Measured, not assumed — the four denials above stay
+        // green under `????-??-??`, so they prove the stem, never the digits.
+        expect(shape._matches('agents/evidence/analysis/evidence-temperature-aaaa-bb-cc.md')).toBe(false);
+        expect(shape._matches('agents/evidence/analysis/evidence-temperature-20z6-10-05.md')).toBe(false);
+        // fnmatch `?` compiles to `.` under the `s` flag and so crosses `/`;
+        // a digit class cannot. This path is the difference.
+        expect(shape._matches('agents/evidence/analysis/evidence-temperature-x/yz-ab-cd.md')).toBe(false);
+    });
+
+    it('the allowlist admits the path the census writer actually produces', () => {
+        // Directory, prefix and extension come from the writer's own builder,
+        // and the day from the writer's own stamping, so a change to any of
+        // them moves this assertion too.
+        expect(shape._matches(defaultReportPath(censusDateStamp()))).toBe(true);
+        expect(shape._matches(defaultReportPath('2026-10-01'))).toBe(true);
+    });
+
+    it('the census date stamp has the shape the allowlist glob was cut for', () => {
+        // The day is a parameter of `defaultReportPath`, so the link above does
+        // not pin its shape. A time component or `YYYYMMDD` reds here.
+        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))).toBe('2026-10-05');
+        expect(shape._matches(defaultReportPath(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))))).toBe(true);
+    });
 });
 
 describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
@@ -128,5 +207,133 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
         const { code, out } = runCheck(['package.json', 'CHANGELOG.md']);
         expect(code).toBe(0);
         expect(out).not.toContain('land the files above on main');
+    });
+});
+
+describe('check_release_pr_shape — contract/code allowlist parity', () => {
+    // The drift this asserts against has now been repaired by hand three times
+    // on this branch alone: the contract named `packages/*/pack.yaml` where the
+    // code says `src/packs/*`, omitted six entries, and kept a third copy in a
+    // blockquote. Each was found by review, which is why the contract's own text
+    // called that binding a weak mechanism. This is the mechanism.
+    const CONTRACT = path.join(REPO_ROOT, 'docs/contracts/release-pr-gating.md');
+
+    /** The backticked globs of § Release-PR shape's enumeration, in order. */
+    function enumeratedGlobs(): string[] {
+        const doc = fs.readFileSync(CONTRACT, 'utf8');
+        const start = doc.indexOf('2. **Diff file set is a subset of the version-bump allowlist:**');
+        expect(start).toBeGreaterThan(-1);
+        const end = doc.indexOf('\n\n   **`*` and `?` both cross', start);
+        expect(end).toBeGreaterThan(start);
+        return doc
+            .slice(start, end)
+            .split('\n')
+            .map((line) => /^ {3}- `([^`]+)`/.exec(line)?.[1])
+            .filter((g): g is string => g !== undefined);
+    }
+
+    it('the cut-surface table names exactly the jobs that skip', () => {
+        // The table is the only written justification for a branch-wide CI
+        // skip, and nothing parsed it — so it drifted: it named two jobs that
+        // had been removed and omitted four that do skip. Same remedy as the
+        // allowlist parity above, applied to the other list in the same file.
+        //
+        // BOTH guarded workflows, not just the one with most rows: a guard
+        // added in the other file would otherwise age the table with this test
+        // green. Comment lines are excluded — this contract and several
+        // workflows quote the guard expression in prose, and a quotation is
+        // not a guard.
+        // Derived, not listed: a hardcoded pair would be a third unparsed copy
+        // of a list — the decay this test exists to stop, one level up. Every
+        // workflow is scanned, so a guard added to a sixth file is caught.
+        const wfDir = path.join(REPO_ROOT, '.github/workflows');
+        const WORKFLOWS = fs.readdirSync(wfDir).filter((n) => n.endsWith('.yml') || n.endsWith('.yaml'));
+        expect(WORKFLOWS.length).toBeGreaterThan(0);
+        const guarded: string[] = [];
+        for (const wf of WORKFLOWS) {
+            const text = fs.readFileSync(path.join(wfDir, wf), 'utf8');
+            let job = '';
+            for (const line of text.split('\n')) {
+                // Any YAML key at job indentation, not just kebab-case: a job
+                // id this misses would attribute its guard to the PREVIOUS job.
+                const header = /^ {2}([A-Za-z_][\w-]*):\s*$/.exec(line);
+                if (header) job = header[1] as string;
+                if (line.trimStart().startsWith('#')) continue;
+                if (line.includes("!startsWith(github.head_ref, 'release/')") && job !== '') {
+                    guarded.push(`${wf}:${job}`);
+                }
+            }
+        }
+        // Scoped to § Cut surface: the file holds a second workflow/job table
+        // (§ Kept surface) listing jobs that deliberately still run, and a
+        // document-wide match would demand the two be equal.
+        const doc = fs.readFileSync(CONTRACT, 'utf8');
+        const from = doc.indexOf('## Cut surface');
+        expect(from).toBeGreaterThan(-1);
+        // Ends at the next H2, which is structure rather than a sentence that
+        // could be reworded. -1 means § Cut surface is last: slice to the end.
+        const next = doc.indexOf('\n## ', from + 1);
+        const section = doc.slice(from, next === -1 ? undefined : next);
+        const tabled = [...section.matchAll(/^\| `([a-z-]+\.ya?ml)` \| `([^`]+)` \|/gm)].map((m) => `${m[1]}:${m[2]}`);
+        expect([...tabled].sort()).toEqual([...guarded].sort());
+    });
+
+    it('the contract enumerates exactly the globs the gate compiles', () => {
+        // Set equality AND order: the two read as one list, so a reader
+        // comparing them line by line should not have to re-sort either.
+        expect(enumeratedGlobs()).toEqual([...shape.ALLOWLIST_GLOBS]);
+    });
+});
+
+describe('check_release_pr_shape — the census writer/pipeline binding', () => {
+    it('every caller lets the writer choose the path it writes', () => {
+        // `main` prefers `--out` over `defaultReportPath`, so a caller passing
+        // one writes a name no test pins — the 16.3.0 drift class, one step
+        // further out.
+        //
+        // Scans EVERY tracked file. Earlier versions scanned a root list, and
+        // each round found another hole in it: a missing root skipped silently,
+        // extensionless files dropped, top-level files discarded, a parent
+        // marked scanned because one child was a root. A reach claim needs
+        // either a check or no reach claim; `git ls-files` removes the question.
+        const BINARY = /\.(mp4|mov|png|jpg|jpeg|gif|webp|pdf|zip|gz|tgz|ico|woff2?|ttf|mp3|wav)$/i;
+        // `git grep -l` narrows to the files that mention the module before any
+        // read: the tracked tree is ~3.4k files and ~160 MB, and reading all of
+        // it to find one line is cost with no coverage behind it. Still every
+        // tracked file — grep is the index, not a root list. `|| true` because
+        // grep exits 1 on no match, which is a legitimate answer here.
+        const files = execFileSync(
+            'sh',
+            ['-c', "git grep -l 'report_evidence_temperature' -- . || true"],
+            { cwd: REPO_ROOT, encoding: 'utf8' },
+        )
+            .split('\n')
+            .filter((f) => f !== '' && !BINARY.test(f))
+            // Markdown is prose, never an invocation; the module's own file and
+            // the suites that import it name it by definition.
+            .filter((f) => !f.endsWith('.md'))
+            .filter((f) => f !== 'src/scripts/report_evidence_temperature.ts')
+            .filter((f) => !f.startsWith('tests/'))
+            // Review artifacts hold committed diffs of this very file.
+            .filter((f) => !f.startsWith('agents/evidence/'));
+        // grep found the module somewhere, so an empty set after filtering means
+        // the filters ate everything — which must not read as "no caller".
+        expect(files.length).toBeGreaterThan(0);
+        // Continuations are joined before matching: a shell or YAML call can
+        // carry `--write` on the matched line and `--out` on the next, which a
+        // line-scoped assertion would pass — the drift this test exists to catch.
+        const joinContinuations = (text: string): string[] =>
+            text.replace(/\\\n\s*/g, ' ').split('\n');
+        const invocations = files
+            .filter((f) => fs.existsSync(path.join(REPO_ROOT, f)))
+            .flatMap((f) => joinContinuations(fs.readFileSync(path.join(REPO_ROOT, f), 'utf8')))
+            // Strips a trailing comment before testing, so `foo() // …report…`
+            // and `/* …report… */` are not counted as callers.
+            .map((line) => line.replace(/\/\*.*?\*\//g, '').replace(/(\s|^)(\/\/|#).*$/, '$1'))
+            .filter((line) => /report_evidence_temperature(\.ts)?\b/.test(line))
+            .filter((line) => !/^\s*["']?[\w.-]+["']?\s*:\s*$/.test(line));
+        expect(invocations).toHaveLength(1);
+        expect(invocations[0]).toContain('--write');
+        expect(invocations[0]).not.toContain('--out');
     });
 });

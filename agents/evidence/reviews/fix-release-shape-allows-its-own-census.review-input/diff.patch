@@ -1,0 +1,707 @@
+diff --git a/.github/workflows/smoke-public-install.yml b/.github/workflows/smoke-public-install.yml
+index 7ac9311c56c076cbb71cd6681222c75be4d3d9fc..8da171c5e0c66f85d3b2dfca3f048c303935fd6a 100644
+--- a/.github/workflows/smoke-public-install.yml
++++ b/.github/workflows/smoke-public-install.yml
+@@ -63,11 +63,16 @@ concurrency:
+ 
+ jobs:
+   smoke:
+-    # Release-PR skip per docs/contracts/release-pr-gating.md — release
+-    # PRs only touch package.json / CHANGELOG / marketplace / pack
+-    # manifests and cannot regress the install paths this matrix
+-    # exercises. push: main + the weekly cron + workflow_dispatch stay
+-    # unconditional so drift the PR matrix can't see still surfaces.
++    # Release-PR skip per docs/contracts/release-pr-gating.md § Cut surface —
++    # a release PR touches only that contract's allowlist, which admits no
++    # install script and no file this matrix executes. The list lives there,
++    # not here. TWO admitted paths are also triggers of this workflow —
++    # `package.json` and the settings template under `src/agent-src/templates/`.
++    # The contract's § Cut surface row says what covers each; the residue it
++    # records is that no gate reads `package.json` CONTENT, so a `bin` /
++    # `files` / `dependencies` edit would ride a release PR with this matrix
++    # skipped. push: main + the weekly cron + workflow_dispatch
++    # stay unconditional so drift the PR matrix can't see still surfaces.
+     if: ${{ github.event_name != 'pull_request' || !startsWith(github.head_ref, 'release/') }}
+     name: ${{ matrix.os }} · node ${{ matrix.node }}
+     runs-on: ${{ matrix.os }}
+diff --git a/.github/workflows/tests.yml b/.github/workflows/tests.yml
+index 8f74f194fcdee655bfcc94154db4e5ad6764be32..4e9aaa214b723179d5bdc16d14d762eb3a7fe7c8 100644
+--- a/.github/workflows/tests.yml
++++ b/.github/workflows/tests.yml
+@@ -56,10 +56,13 @@ jobs:
+     # 9 tests/shard the fs contention that hurt at the un-sharded
+     # -P 8 setting is no longer a concern.
+     #
+-    # Release-PR skip: docs/contracts/release-pr-gating.md — release
+-    # PRs (head branch `release/X.Y.Z`) only touch package.json /
+-    # CHANGELOG / marketplace / pack manifests and cannot regress the
+-    # install script paths this job exercises. release-validation.yml
++    # Release-PR skip: docs/contracts/release-pr-gating.md § Cut surface —
++    # a release PR (head branch `release/X.Y.Z`) touches only that
++    # contract's allowlist, which admits no install script and no test
++    # source. It does admit the npm manifests, which every job consumes —
++    # the contract's § Cut surface row says what covers them on the release
++    # path. The list lives there, not here: a copy of it in this comment
++    # went stale once already. release-validation.yml
+     # is the kept surface for release PRs; push: main + workflow_dispatch
+     # stay unconditional.
+     if: ${{ !startsWith(github.head_ref, 'release/') }}
+@@ -184,9 +187,12 @@ jobs:
+     # collapsed to a single build invocation.
+     name: Node Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
+     runs-on: ${{ matrix.os }}
+-    # Release-PR skip per docs/contracts/release-pr-gating.md — release
+-    # PRs don't touch src/** or tests/**; ESLint, tsc, vitest,
+-    # prepack-check have nothing new to prove.
++    # Release-PR skip per docs/contracts/release-pr-gating.md § Cut surface.
++    # The allowlist DOES admit five paths under src/ — pack and domain
++    # metadata, their READMEs, the settings-template pin — but no TypeScript
++    # and no test source, so ESLint, tsc, vitest and prepack-check have
++    # nothing new to prove. The contract's enumeration is the list; it is
++    # deliberately not copied here.
+     if: ${{ !startsWith(github.head_ref, 'release/') }}
+     strategy:
+       fail-fast: false
+diff --git a/docs/contracts/release-pr-gating.md b/docs/contracts/release-pr-gating.md
+index 6dec89bffea486d397670f86b71703004a7b9b56..01721fcc68e3f8f77ebb851972c27ee4f3f1a40c 100644
+--- a/docs/contracts/release-pr-gating.md
++++ b/docs/contracts/release-pr-gating.md
+@@ -35,10 +35,26 @@ keep-beta-reason: >-
+ > older one is matrix-level. Current per-job numbers live in
+ > [`ci-cost-budget.md`](ci-cost-budget.md); the skip argument below is
+ > unaffected either way. Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
+-> only touch `package.json`, `CHANGELOG.md`, `marketplace.json`,
+-> `packages/*/pack.yaml`, `packages/*/README.md`, and the CHANGELOG era
+-> archive `docs/archive/CHANGELOG-pre-*.md` — verified against PR #238
+-> (3.3.0). They cannot regress install or runtime behaviour by construction.
++> only touch the allowlist enumerated under § Release-PR shape below. The paths
++> are NOT listed here: a second copy of that list went stale for months and named
++> paths the code had already renamed. The file-set claim was verified against
++> PR #238 (3.3.0) and the allowlist has grown since, so what carries the
++> argument is what the release flow WRITES into those paths: version fields,
++> changelog prose, generated manifests and two report artifacts. Stated that
++> way because the categorical version — "no entry is install or runtime code" —
++> is false of several of them:
++> the npm manifests carry `bin`, `files`, `dependencies` and `engines`, and the
++> plugin and marketplace manifests ship in the tarball. `check_release_pr_shape`
++> matches paths and never reads content, so nothing here stops a release PR from
++> editing any of those fields with the install matrix skipped.
++>
++> That gap is in the WHICH-PATHS gate's blind spot by construction and is not new
++> here — the checker has never opened a file. It does not contradict § Mid-release
++> fixes below: "no escape hatch" is about the path set, which is closed and has no
++> override, while this is about content inside an admitted path, which no gate
++> reads. Closing it needs a content check (version fields only in the npm and
++> plugin manifests) that does not exist; until one does, it is held by review, and
++> it is recorded here rather than left for a reader to infer from silence.
+ 
+ ## Release-PR shape
+ 
+@@ -53,12 +69,63 @@ hold:
+      `release.ts` § `set_lockfile_version`
+    - `CHANGELOG.md`
+    - `.claude-plugin/marketplace.json`
+-   - `packages/*/pack.yaml`
+-   - `packages/*/README.md`
++   - `.augment-plugin/plugin.json`
++   - `.augment-plugin/marketplace.json` — both version-synced by `release.ts`
++     § `set_augment_manifest_version`; both ship in the tarball, so a release
++     PR must carry them
++   - `src/packs/*/pack.yaml`
++   - `src/packs/*/README.md`
++   - `src/domains/*/pack.yaml`
++   - `src/domains/*/README.md`
+    - `docs/archive/CHANGELOG-pre-*.md` — emitted by `release.ts`'s
+      automatic CHANGELOG era split (see `docs/contracts/CHANGELOG-conventions.md`
+      § Era splits) when the current era crosses its line cap on an
+      era-boundary release.
++   - `agents/evidence/release-findings/*.json` — the finding-disposition
++     ledger; the `finding-dispositions` gate is red until a release's own
++     blocking self-review findings are recorded there
++   - `agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md`
++     — the per-release evidence-temperature census written by
++     `taskfiles/content.yml` § `release-prepare`, step 2 of `task release`.
++     The ISO date shape in fnmatch digit classes rather than `?`; the entry in
++     `ALLOWLIST_GLOBS` carries why.
++   - `src/agent-src/templates/agents/agent-project-settings.example.yml`
++   - `dist/agent-src/templates/agents/agent-project-settings.example.yml` —
++     the project-settings template pin and its regenerated twin, kept in
++     lockstep with `package.json.version`
++
++   **`*` and `?` both cross `/` here.** These are fnmatch patterns, not shell or
++   `.gitignore` globs: `*` becomes `.*` and `?` becomes `.`, both under the `s`
++   flag, so each matches a path separator like any other character. Every `*` row
++   above therefore admits arbitrary depth — `src/packs/core/installer/pack.yaml`
++   and `agents/evidence/release-findings/a/b/c.json` both pass. And the census
++   row uses digit classes rather than `?` for the same reason: `????-??-??` would
++   admit `evidence-temperature-x/yz-ab-cd.md`, while `[0-9]` cannot match a
++   separator at all. A reader predicting the gate from this list needs both
++   halves; each is pinned in `tests/scripts/check_release_pr_shape.test.ts`.
++
++   This list and `ALLOWLIST_GLOBS` are one decision recorded twice, and they
++   drifted for months — the contract named `packages/*/pack.yaml` long after
++   the code said `src/packs/*`. An instruction to edit both was the only thing
++   binding them, and it failed.
++
++   **A test binds them now**: `the contract enumerates exactly the globs the
++   gate compiles` in `tests/scripts/check_release_pr_shape.test.ts` parses the
++   bullets above and asserts set-and-order equality against `ALLOWLIST_GLOBS`.
++   That is why every entry is one bullet carrying one backticked glob verbatim,
++   rather than a readable paraphrase: the list a reader predicts the gate from
++   and the list the gate compiles are now the same strings, checked.
++
++   The blockquote above carries no copy at all, because its copy supported an
++   argument the paths were not needed for. This enumeration stays, because it
++   IS the contract — a reader must be able to predict the gate without reading
++   TypeScript.
++
++   What the test does NOT cover: the § Cut surface table below argues from the
++   allowlist in prose, and no parser reads those cells. That is why its rows now
++   argue ("no TypeScript source") instead of restating paths — a claim about the
++   allowlist's character survives an entry being added, where a copy of the list
++   would not.
+ 
+ Both predicates are enforced by `src/scripts/check_release_pr_shape.ts`.
+ The script exits 0 when both hold; non-zero with a per-file diff naming any
+@@ -93,19 +160,45 @@ procedure under its `OUT-OF-SHAPE` findings, and `release.ts` §
+ 
+ ## Cut surface — heavy jobs that skip on release PRs
+ 
+-Skipped via `if: !startsWith(github.head_ref, 'release/')` guards on the
+-heavy install/test jobs. These are the jobs that release PRs cannot regress
+-by construction (no install scripts, no runtime code, no test source in the
+-release-PR allowlist):
+-
+-| Workflow | Job | Why it cuts |
++Skipped via `if: !startsWith(github.head_ref, 'release/')` guards on the heavy
++install/test jobs. The guard is on the BRANCH, not on paths — so the column
++below is the argument for why that is safe, not a condition the workflow
++evaluates. The argument rests on the allowlist in § Release-PR shape: it admits
++no install script and no test source. It DOES admit five manifests — the two npm
++ones and three plugin/marketplace files — and the npm pair is consumed by every
++one of these jobs: `npm ci` reads the lockfile, every step is an `npm run`, the
++smoke matrix runs the tarball's `bin`. Where a job's coverage of those depends on
++a release-path twin, its row below names the twin; the rows that argue purely
++from code absence are the ones where no step reads a manifest at all. It is NOT
++the
++stronger claim the opening blockquote withdraws — `package.json` is admitted and
++carries `bin`, `files`, `dependencies` and `engines`, whose content no gate
++reads. That residue is the blockquote's, not this section's, and the `smoke` row
++below points back at it.
++
++It does admit six paths under `src/` and `dist/`: pack and domain metadata
++(`pack.yaml` ×2), their READMEs (×2), and the project-settings template pin with
++its regenerated twin. Six distinct files — the pin also sits under a
++`templates/` segment, so a count by directory NAME would double-count it. None is code any job below exercises, which is
++the claim; "the diff has no `src/**`" would be the stronger claim, and it is
++false.
++
++Every `tests.yml` job carrying the guard is listed, plus the one in
++`smoke-public-install.yml` — derived from the `if:` lines, not from memory, and
++asserted by `the cut-surface table names exactly the jobs that skip`. An earlier version of this table named two jobs
++that no longer exist and omitted four that do skip, which is how a table nothing
++parses decays.
++
++| Workflow | Job | Why skipping it is safe on a release PR |
+ |---|---|---|
+-| `tests.yml` | `install-tests` | release-PR diff has no `install.sh` / `scripts/install.py` / `tests/test_install.sh` |
++| `tests.yml` | `install-tests` | the allowlist has no `src/scripts/install.sh`, `src/scripts/install.ts` or `tests/test_install.sh` |
+ | `tests.yml` | `install-aux-tests` | same — orchestrator, key contracts, one-liner smoke all untouched |
+-| `tests.yml` | `python-tests` | release-PR diff has no `scripts/**` or `tests/**` (other than CHANGELOG via path filter — see below) |
+-| `tests.yml` | `node-tests` | release-PR diff has no `src/**`, `tests/{cli,server,ui}/**`, `packages/core/installer/**` |
+-| `tests.yml` | `windows-lockfile-export` | release-PR diff has no `scripts/install_global*.py`, `scripts/cmd_export.py`, lockfile test surface |
+-| `smoke-public-install.yml` | `smoke` | release-PR diff has no `scripts/install*`, `setup.sh`, `templates/**`, `package.json` runtime behaviour |
++| `tests.yml` | `node-tests` | no TypeScript source and no test source; the admitted `src/**` paths are YAML, Markdown and a settings template |
++| `tests.yml` | `static-checks` | its source-reading steps have no admitted input: the allowlist carries no TypeScript and no test file. It does admit one generated file — the `dist/` template twin — whose freshness `consistency.yml` gates on the kept surface. Several steps here read generated trees (`prepack-check` reads `dist/cli`, `dist/hooks`, `dist/router.json`; the MCP-drift step rebuilds and diffs the committed catalog); none of them reads that twin. Its MANIFEST-reading steps each have a release-path twin: `npm audit` → `release-validation.yml` § `audit-gate`, `prepack-check` → `consumer-matrix.yml`, `publint` → `evaluator-umbrella.yml` (no head-ref guard, `paths:` leads with `package.json`, so it runs on every release PR by construction). This cell is prose over a step list nothing parses — read the job if the list matters |
++| `tests.yml` | `golden-tests` | golden corpora live under `tests/` and `internal/`, neither admitted |
++| `tests.yml` | `collector-lifecycle` | exercises collector scripts under `src/scripts/`, none admitted |
++| `tests.yml` | `workspace-tests` | exercises workspace wiring under `src/` and `tests/`; the admitted pack and domain files are metadata those tests do not read |
++| `smoke-public-install.yml` | `smoke` | no `src/scripts/install*`, matching this job's own `paths:` filter. TWO admitted paths ARE among its triggers: `package.json`, whose content no gate reads (opening blockquote), and `src/agent-src/templates/agents/agent-project-settings.example.yml`, a version-pinned example file whose pin `check_template_pin_drift` gates on the kept surface |
+ 
+ `push:` to `main` and the weekly cron on `smoke-public-install.yml` stay
+ **unconditional** — those catch drift the PR matrix can't see.
+@@ -118,12 +211,13 @@ the feature-PR floor by adding:
+ | Workflow | Job | Proves |
+ |---|---|---|
+ | `consistency.yml` | (existing) | `task consistency` — source-of-truth integrity |
++| `evaluator-umbrella.yml` | `umbrella` | `publint` plus the evaluator budgets. No head-ref guard; its `paths:` filter leads with `package.json`, which every release bumps, so it runs on release PRs by construction rather than by exception |
+ | `smoke.yml` | `smoke-contracts` | Contract self-checks (kernel, router, hashes) |
+ | `release-guard.yml` | `assert-version-matches-tag` | already gates `npm publish`; remains tag-trigger |
+ | `migration-dry-run.yml` | (existing) | Migration plan dry-runs |
+ | `release-validation.yml` (Phase B) | `release-shape` | shape detector — fails closed if diff exits the allowlist |
+ | `release-validation.yml` (Phase B) | `changelog-entry` | CHANGELOG carries an entry matching the head-branch version |
+-| `release-validation.yml` (Phase B) | `version-consistency` | `package.json` / `marketplace.json` agree on the version (pack manifests carry no version field) |
++| `release-validation.yml` (Phase B) | `version-consistency` | `package.json` / `marketplace.json` agree on the version (pack manifests carry no version field), and `check_template_pin_drift` holds the settings-template pin to it — the check § Cut surface's `smoke` row forward-references |
+ | `release-validation.yml` (release-truth) | `surface-equality` | PR body equals the CHANGELOG entry (whitespace-normalized) — release.ts derives all four surfaces (PR body, changelog, GitHub release notes, annotated tag message) from the changelog section at the relevant head |
+ | `release-validation.yml` (release-truth) | `highlight-plausibility` | curated head cannot claim `_none_` against a populated span-derived category (security commits, behaviour/default changes, honest nulls, removed public surface). **Prose polish is not gated** — an un-rewritten generator-derived head line warns and exits 0, because curating the head is retro-curation and not a merge precondition; the decision and its rejected branch are recorded in [`CHANGELOG-conventions.md` § Curated-head cadence](CHANGELOG-conventions.md#curated-head-cadence--retro-curation-not-a-merge-precondition) |
+ | `release-validation.yml` (release-truth) | `finding-dispositions` | every blocking/high self-review finding carries a committed disposition in `agents/evidence/release-findings/<version>.json` — ingest via `check_finding_dispositions --ingest`; the ledger (never the PR comment) is the record |
+@@ -134,10 +228,11 @@ the feature-PR floor by adding:
+ 
+ `release-validation.yml`'s fourth job, `release-install-e2e`
+ (`tests/test_release_install_e2e.sh`), closes a gap the cut surface above
+-does not cover: "release PRs cannot regress install or runtime behaviour"
+-is a claim about the **source diff**, not about whether the **packed
+-tarball** actually installs, upgrades, and boots as a real npm global
+-package. Every release PR now proves, against the real tarball:
++does not cover: that the allowlist admits no install script and no test
++source is a claim
++about the **source diff**, not about whether the **packed tarball**
++actually installs, upgrades, and boots as a real npm global package. Every
++release PR now proves, against the real tarball:
+ 
+ - a fresh `npm install -g` into an isolated npm prefix resolves the
+   `agent-config` binary and ships no silent postinstall/GUI side effect;
+@@ -160,9 +255,10 @@ the source diff couldn't see was missing) cannot recur silently.
+ 
+ ## Consumer-matrix exemption — the tarball window
+ 
+-The cut surface above rests on "release PRs cannot regress install or
+-runtime behaviour by construction". That argument covers the **source
+-diff** — it is blind to the **published tarball**. Every historical
++The cut surface above rests on the allowlist admitting no file those jobs execute.
++That argument covers the **source diff** — it is blind to the **published
++tarball**, and, as the opening blockquote records, to the content of an
++admitted manifest. Every historical
+ packaging incident (tarball missing `src/install/` across two minors,
+ `tsx` absent from the package, npm-pin drift, the MCP worker deploy red
+ across five releases) entered `main` on ordinary PRs and manifested only
+diff --git a/src/scripts/check_release_pr_shape.ts b/src/scripts/check_release_pr_shape.ts
+index ef101165f052ad6ca03020e4deb7189b01917e36..336ba0cfade803878fbff8ef1f2846b06f11e486 100644
+--- a/src/scripts/check_release_pr_shape.ts
++++ b/src/scripts/check_release_pr_shape.ts
+@@ -45,6 +45,16 @@ const ALLOWLIST_GLOBS = [
+     // be able to carry the dispositions of its own self-review findings; the
+     // finding-dispositions gate is red until blocking ones are recorded here.
+     'agents/evidence/release-findings/*.json',
++    // Evidence-temperature census — `taskfiles/content.yml` § release-prepare
++    // writes one per release, so without this entry the pipeline generates a
++    // file its own shape step refuses. Digit classes rather than `?`: fnmatch
++    // `?` compiles to `.` under the `s` flag, so it matches any character AND
++    // crosses `/` — `????-??-??` admits `evidence-temperature-x/yz-ab-cd.md`,
++    // which `[0-9]` cannot. Two reports can appear in one release PR, and
++    // both are in shape: `--resume` re-runs release-prepare, so a release
++    // carried across UTC midnight writes a second census. What that one
++    // contains is the census's business, not this gate's.
++    'agents/evidence/analysis/evidence-temperature-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].md', // code-comment-allow provenance-comment -- the glob IS this gate's operand, not where the code came from
+     // Project-settings template pin — bumped by release.ts set_template_pin and
+     // its regenerated dist twin (kept in lockstep with package.json.version).
+     'src/agent-src/templates/agents/agent-project-settings.example.yml',
+@@ -52,16 +62,25 @@ const ALLOWLIST_GLOBS = [
+ ] as const;
+ 
+ /**
+- * Translate a Python `fnmatch` shell pattern to a RegExp, mirroring
+- * `fnmatch.translate`. fnmatch is case-sensitive on POSIX (fnmatchcase
+- * semantics on the normalized path); `*` and `?` do NOT cross path
+- * separators is NOT a property of fnmatch — `*` matches everything
+- * including `/`. The allowlist relies on that (e.g. nested-file rejection
+- * in the test works because none of the globs end with the file).
++ * Translate a Python `fnmatch` shell pattern to a RegExp, following
++ * `fnmatch.translate` for the constructs the allowlist actually uses: `*` and
++ * `[0-9]`. No entry uses `?`, and bracket handling beyond that one class is
++ * unverified against CPython — see the note at the bracket branch.
++ *
++ * Matching is case-sensitive, as `fnmatchcase` on a normalized path.
++ *
++ * THE PROPERTY EVERY ENTRY TURNS ON: in fnmatch, `*` and `?` DO cross path
++ * separators — `*` becomes `.*` and `?` becomes `.`, both under the `s` flag,
++ * so each matches `/` like any other character. Glob syntax elsewhere (shells,
++ * .gitignore) stops `*` at a segment boundary; this does not. So the pack entry
++ * admits any depth beneath `src/packs/`, and the census entry uses digit classes
++ * precisely because they cannot match a separator. Both sides are pinned in
++ * `check_release_pr_shape.test.ts`.
+  */
+ function _fnmatchToRegExp(pat: string): RegExp {
+-    // Mirror Python fnmatch.translate: `*` → `.*`, `?` → `.`, `[seq]` kept,
+-    // everything else escaped. The full pattern is anchored with `(?s:...)\Z`.
++    // `*` → `.*`, `?` → `.`, a bracket class kept, everything else escaped.
++    // CPython does more inside a class (hyphen and set-operator escaping, `(?!)`
++    // for an empty one) and this does not — see the bracket branch below.
+     let i = 0;
+     const n = pat.length;
+     let res = '';
+@@ -87,12 +106,13 @@ function _fnmatchToRegExp(pat: string): RegExp {
+                 res += '\\[';
+             } else {
+                 let stuff = pat.slice(i, j);
+-                if (!stuff.includes('-')) {
+-                    stuff = stuff.replace(/\\/g, '\\\\');
+-                } else {
+-                    // Rare; not used by the allowlist. Keep simple escape.
+-                    stuff = stuff.replace(/\\/g, '\\\\');
+-                }
++                // The two arms this replaces were byte-identical, so the branch
++                // implemented nothing. Bracket handling here is checked against
++                // `[0-9]`, the only class the allowlist uses; anything else is
++                // untested against CPython, whose behaviour also varies by
++                // version. Add a bracket glob and verify it rather than assuming
++                // this mirrors `fnmatch.translate` beyond that one case.
++                stuff = stuff.replace(/\\/g, '\\\\');
+                 i = j + 1;
+                 if (stuff.startsWith('!')) {
+                     stuff = '^' + stuff.slice(1);
+@@ -105,7 +125,9 @@ function _fnmatchToRegExp(pat: string): RegExp {
+             res += c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+         }
+     }
+-    // Python uses `(?s:%s)\Z` — dotAll + full match.
++    // Full match with dotAll. Python spells the same thing `(?s:%s)\Z`; in JS
++    // `$` without the `m` flag does not match before a trailing newline, so
++    // `^(?:…)$` is equivalent rather than merely similar.
+     return new RegExp(`^(?:${res})$`, 's');
+ }
+ 
+diff --git a/src/scripts/report_evidence_temperature.ts b/src/scripts/report_evidence_temperature.ts
+index fecbed4886f5e079d5ba4ac61ff3f30ac5d373ab..7e202ab039809071bc35fbec58bebd204b0d5c6b 100644
+--- a/src/scripts/report_evidence_temperature.ts
++++ b/src/scripts/report_evidence_temperature.ts
+@@ -67,6 +67,30 @@ export const REPORT_DIR = 'agents/evidence/analysis';
+ /** Reports of this family are excluded from the reference index — see `isSelfReport`. */
+ const REPORT_PREFIX = 'evidence-temperature-';
+ 
++/** Extension of a census report. Shared by the writer and by `--since latest`. */
++const REPORT_EXT = '.md';
++
++/**
++ * The day a census is stamped with. UTC, so a run either side of local midnight
++ * names the same report.
++ */
++export function censusDateStamp(now: Date = new Date()): string {
++    return now.toISOString().slice(0, 10);
++}
++
++/**
++ * The path `--write` composes for a census taken on `generatedAt`. Every part of
++ * the name comes from a constant this module shares — `REPORT_DIR`,
++ * `REPORT_PREFIX`, `REPORT_EXT` — or from `censusDateStamp`, and
++ * `latestReportBefore` filters on the same two, so discovery and writing cannot
++ * drift apart. The release-PR shape gate's test goes through this builder too.
++ * Writer and gate holding independent spellings of this name is what broke
++ * `task release` for 16.3.0.
++ */
++export function defaultReportPath(generatedAt: string): string {
++    return path.posix.join(REPORT_DIR, `${REPORT_PREFIX}${generatedAt}${REPORT_EXT}`);
++}
++
+ /** File extensions a path token may end in. Anything else is not a path to us. */
+ const PATH_EXTENSIONS = [
+     'md',
+@@ -350,7 +374,7 @@ export function buildCensus(root: string): Census {
+     } catch {
+         commit = 'unknown';
+     }
+-    return { generatedAt: new Date().toISOString().slice(0, 10), commit, files };
++    return { generatedAt: censusDateStamp(), commit, files };
+ }
+ 
+ export interface Totals {
+@@ -385,11 +409,18 @@ function mib(bytes: number): string {
+  * `--since latest` resolves through this so the release pipeline needs no date
+  * arithmetic: the names sort lexicographically because they carry an ISO date,
+  * and the file about to be written is excluded so a same-day re-run compares
+- * against the previous release rather than against itself.
++ * against an earlier report rather than against itself.
++ *
++ * It picks the newest OTHER report, not the newest report of an earlier
++ * release. A release resumed across UTC midnight writes a second census, and
++ * that one's baseline is the first census of the same release — so its delta
++ * covers minutes, not a release. The heading it renders under says "since the
++ * previous report", which is exactly that, so nothing misreports; a reader
++ * wanting a release-wide delta compares against the earlier release by hand.
+  */
+ export function latestReportBefore(names: readonly string[], exclude: string): string | null {
+     const candidates = names
+-        .filter((n) => n.startsWith(REPORT_PREFIX) && n.endsWith('.md') && n !== exclude)
++        .filter((n) => n.startsWith(REPORT_PREFIX) && n.endsWith(REPORT_EXT) && n !== exclude)
+         .sort();
+     return candidates.at(-1) ?? null;
+ }
+@@ -583,7 +614,7 @@ export function main(argv: readonly string[]): number {
+         return 0;
+     }
+ 
+-    const dest = out ?? path.join(REPORT_DIR, `${REPORT_PREFIX}${census.generatedAt}.md`);
++    const dest = out ?? defaultReportPath(census.generatedAt);
+ 
+     let previousCold: Set<string> | null = null;
+     if (since === 'latest') {
+diff --git a/tests/scripts/check_release_pr_shape.test.ts b/tests/scripts/check_release_pr_shape.test.ts
+index f4e25dac5dac96f3f13b70e2fc0f33b41f06468f..12ef0689d905945ab18e29e104cf1771e47a9636 100644
+--- a/tests/scripts/check_release_pr_shape.test.ts
++++ b/tests/scripts/check_release_pr_shape.test.ts
+@@ -1,7 +1,15 @@
+ 
++import { execFileSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath } from 'node:url';
++
+ import { describe, expect, it } from 'vitest';
+ 
+ import * as shape from '../../src/scripts/check_release_pr_shape.js';
++import { censusDateStamp, defaultReportPath } from '../../src/scripts/report_evidence_temperature.js';
++
++const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+ 
+ function runCheck(files: readonly string[]): { code: number; out: string } {
+     const out: string[] = [];
+@@ -69,6 +77,31 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+         expect(out).toContain('OUT-OF-SHAPE: src/packs/core/installer/foo.ts');
+     });
+ 
++    it('the `*` entries admit any depth — recorded, not endorsed', () => {
++        // The denial above holds on the EXTENSION, not on the nesting: `foo.ts`
++        // matches no glob at any depth. fnmatch `*` crosses `/`, so the `*`
++        // entries do admit arbitrary depth, which the census entry avoids by
++        // using digit classes. Pinned here so the property is visible rather
++        // than discovered, and so narrowing these globs later is a deliberate
++        // edit to this assertion rather than a silent behaviour change.
++        //
++        // EVERY `*` entry, not a sample: a reader checking whether a given row
++        // is narrow should find its answer here rather than infer it from a
++        // neighbour. The count is derived below rather than written down, so
++        // adding a seventh wildcard row reds this instead of aging a comment.
++        const wildcards = shape.ALLOWLIST_GLOBS.filter((g) => g.includes('*'));
++        expect(wildcards).toHaveLength(6);
++        expect(shape._matches('src/packs/core/installer/pack.yaml')).toBe(true);
++        expect(shape._matches('src/packs/core/installer/README.md')).toBe(true);
++        expect(shape._matches('src/domains/a/b/pack.yaml')).toBe(true);
++        expect(shape._matches('src/domains/a/b/README.md')).toBe(true);
++        expect(shape._matches('agents/evidence/release-findings/a/b/c.json')).toBe(true);
++        // Here the `*` sits before the extension rather than before a
++        // separator, so it swallows a segment plus a filename. Same shape as
++        // the findings-ledger row above; neither is a superset of the other.
++        expect(shape._matches('docs/archive/CHANGELOG-pre-x/evil.md')).toBe(true);
++    });
++
+     it('marketplace metadata only passes', () => {
+         expect(runCheck(['.claude-plugin/marketplace.json']).code).toBe(0);
+     });
+@@ -113,6 +146,52 @@ describe('check_release_pr_shape — check() (ported pytest)', () => {
+         expect(shape._matches('src/packs/core/README.md')).toBe(true);
+         expect(shape._matches('docs/archive/CHANGELOG-pre-5.4.0.md')).toBe(true);
+     });
++
++    it('the evidence-temperature census release-prepare writes passes', () => {
++        const { code } = runCheck([
++            'package.json',
++            'CHANGELOG.md',
++            'agents/evidence/analysis/evidence-temperature-2026-10-05.md',
++        ]);
++        expect(code).toBe(0);
++    });
++
++    it('the census glob admits the ISO date shape and nothing else under it', () => {
++        expect(shape._matches('agents/evidence/analysis/evidence-temperature-2026-10-05.md')).toBe(true);
++        // Denials the literal stem and the separators already carry — they hold
++        // under any date spelling, so they do NOT measure the digit classes.
++        expect(shape._matches('agents/evidence/analysis/evidence-temperature-anything.md')).toBe(false);
++        expect(shape._matches('agents/evidence/analysis/evidence-temperature-2026-1-5.md')).toBe(false);
++        expect(shape._matches('agents/evidence/analysis/some-other-report.md')).toBe(false);
++        expect(shape._matches('agents/evidence/analysis/nested/evidence-temperature-2026-10-05.md')).toBe(false);
++    });
++
++    it('the census glob denies a non-digit date — the digit classes, measured', () => {
++        // These are the ONLY assertions in this file that go red if `[0-9]` is
++        // relaxed to `?`: a 4-2-2 shape with the right separators and the wrong
++        // character class. Measured, not assumed — the four denials above stay
++        // green under `????-??-??`, so they prove the stem, never the digits.
++        expect(shape._matches('agents/evidence/analysis/evidence-temperature-aaaa-bb-cc.md')).toBe(false);
++        expect(shape._matches('agents/evidence/analysis/evidence-temperature-20z6-10-05.md')).toBe(false);
++        // fnmatch `?` compiles to `.` under the `s` flag and so crosses `/`;
++        // a digit class cannot. This path is the difference.
++        expect(shape._matches('agents/evidence/analysis/evidence-temperature-x/yz-ab-cd.md')).toBe(false);
++    });
++
++    it('the allowlist admits the path the census writer actually produces', () => {
++        // Directory, prefix and extension come from the writer's own builder,
++        // and the day from the writer's own stamping, so a change to any of
++        // them moves this assertion too.
++        expect(shape._matches(defaultReportPath(censusDateStamp()))).toBe(true);
++        expect(shape._matches(defaultReportPath('2026-10-01'))).toBe(true);
++    });
++
++    it('the census date stamp has the shape the allowlist glob was cut for', () => {
++        // The day is a parameter of `defaultReportPath`, so the link above does
++        // not pin its shape. A time component or `YYYYMMDD` reds here.
++        expect(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))).toBe('2026-10-05');
++        expect(shape._matches(defaultReportPath(censusDateStamp(new Date(Date.UTC(2026, 9, 5)))))).toBe(true);
++    });
+ });
+ 
+ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
+@@ -130,3 +209,110 @@ describe('check_release_pr_shape — mid-release-fix remediation hint', () => {
+         expect(out).not.toContain('land the files above on main');
+     });
+ });
++
++describe('check_release_pr_shape — contract/code allowlist parity', () => {
++    // The drift this asserts against has now been repaired by hand three times
++    // on this branch alone: the contract named `packages/*/pack.yaml` where the
++    // code says `src/packs/*`, omitted six entries, and kept a third copy in a
++    // blockquote. Each was found by review, which is why the contract's own text
++    // called that binding a weak mechanism. This is the mechanism.
++    const CONTRACT = path.join(REPO_ROOT, 'docs/contracts/release-pr-gating.md');
++
++    /** The backticked globs of § Release-PR shape's enumeration, in order. */
++    function enumeratedGlobs(): string[] {
++        const doc = fs.readFileSync(CONTRACT, 'utf8');
++        const start = doc.indexOf('2. **Diff file set is a subset of the version-bump allowlist:**');
++        expect(start).toBeGreaterThan(-1);
++        const end = doc.indexOf('\n\n   **`*` and `?` both cross', start);
++        expect(end).toBeGreaterThan(start);
++        return doc
++            .slice(start, end)
++            .split('\n')
++            .map((line) => /^ {3}- `([^`]+)`/.exec(line)?.[1])
++            .filter((g): g is string => g !== undefined);
++    }
++
++    it('every caller lets the writer choose the path it writes', () => {
++        // `main` prefers `--out` over `defaultReportPath`, so a caller passing
++        // one writes a name no test pins — the 16.3.0 drift class, one step
++        // further out.
++        //
++        // Scans EVERY tracked file. Earlier versions scanned a root list, and
++        // each round found another hole in it: a missing root skipped silently,
++        // extensionless files dropped, top-level files discarded, a parent
++        // marked scanned because one child was a root. A reach claim needs
++        // either a check or no reach claim; `git ls-files` removes the question.
++        const BINARY = /\.(mp4|mov|png|jpg|jpeg|gif|webp|pdf|zip|gz|tgz|ico|woff2?|ttf|mp3|wav)$/i;
++        const files = execFileSync('git', ['ls-files'], { cwd: REPO_ROOT, encoding: 'utf8' })
++            .split('\n')
++            .filter((f) => f !== '' && !BINARY.test(f))
++            // Markdown is prose, never an invocation; the module's own file and
++            // the suites that import it name it by definition.
++            .filter((f) => !f.endsWith('.md'))
++            .filter((f) => f !== 'src/scripts/report_evidence_temperature.ts')
++            .filter((f) => !f.startsWith('tests/'))
++            // Review artifacts hold committed diffs of this very file.
++            .filter((f) => !f.startsWith('agents/evidence/'));
++        expect(files.length).toBeGreaterThan(100);
++        const invocations = files
++            .flatMap((f) => fs.readFileSync(path.join(REPO_ROOT, f), 'utf8').split('\n'))
++            // Strips a trailing comment before testing, so `foo() // …report…`
++            // and `/* …report… */` are not counted as callers.
++            .map((line) => line.replace(/\/\*.*?\*\//g, '').replace(/(\s|^)(\/\/|#).*$/, '$1'))
++            .filter((line) => /report_evidence_temperature(\.ts)?\b/.test(line))
++            .filter((line) => !/^\s*["']?[\w.-]+["']?\s*:\s*$/.test(line));
++        expect(invocations).toHaveLength(1);
++        expect(invocations[0]).toContain('--write');
++        expect(invocations[0]).not.toContain('--out');
++    });
++
++    it('the cut-surface table names exactly the jobs that skip', () => {
++        // The table is the only written justification for a branch-wide CI
++        // skip, and nothing parsed it — so it drifted: it named two jobs that
++        // had been removed and omitted four that do skip. Same remedy as the
++        // allowlist parity above, applied to the other list in the same file.
++        //
++        // BOTH guarded workflows, not just the one with most rows: a guard
++        // added in the other file would otherwise age the table with this test
++        // green. Comment lines are excluded — this contract and several
++        // workflows quote the guard expression in prose, and a quotation is
++        // not a guard.
++        // Derived, not listed: a hardcoded pair would be a third unparsed copy
++        // of a list — the decay this test exists to stop, one level up. Every
++        // workflow is scanned, so a guard added to a sixth file is caught.
++        const wfDir = path.join(REPO_ROOT, '.github/workflows');
++        const WORKFLOWS = fs.readdirSync(wfDir).filter((n) => n.endsWith('.yml') || n.endsWith('.yaml'));
++        expect(WORKFLOWS.length).toBeGreaterThan(0);
++        const guarded: string[] = [];
++        for (const wf of WORKFLOWS) {
++            const text = fs.readFileSync(path.join(wfDir, wf), 'utf8');
++            let job = '';
++            for (const line of text.split('\n')) {
++                const header = /^ {2}([a-z][a-z0-9-]*):\s*$/.exec(line);
++                if (header) job = header[1] as string;
++                if (line.trimStart().startsWith('#')) continue;
++                if (line.includes("!startsWith(github.head_ref, 'release/')") && job !== '') {
++                    guarded.push(`${wf}:${job}`);
++                }
++            }
++        }
++        // Scoped to § Cut surface: the file holds a second workflow/job table
++        // (§ Kept surface) listing jobs that deliberately still run, and a
++        // document-wide match would demand the two be equal.
++        const doc = fs.readFileSync(CONTRACT, 'utf8');
++        const from = doc.indexOf('## Cut surface');
++        expect(from).toBeGreaterThan(-1);
++        // `indexOf` returns -1 when § Cut surface is the last section; slice to
++        // the end in that case rather than dropping a character.
++        const next = doc.indexOf('\n## ', from + 1);
++        const section = doc.slice(from, next === -1 ? undefined : next);
++        const tabled = [...section.matchAll(/^\| `([a-z-]+\.yml)` \| `([^`]+)` \|/gm)].map((m) => `${m[1]}:${m[2]}`);
++        expect([...tabled].sort()).toEqual([...guarded].sort());
++    });
++
++    it('the contract enumerates exactly the globs the gate compiles', () => {
++        // Set equality AND order: the two read as one list, so a reader
++        // comparing them line by line should not have to re-sort either.
++        expect(enumeratedGlobs()).toEqual([...shape.ALLOWLIST_GLOBS]);
++    });
++});
+diff --git a/tests/scripts/report_evidence_temperature.test.ts b/tests/scripts/report_evidence_temperature.test.ts
+index 0a3a3f22b1324ae864c351888d25603a6034e64a..67812bf486da6f82752ab88dc021178d69edb3d2 100644
+--- a/tests/scripts/report_evidence_temperature.test.ts
++++ b/tests/scripts/report_evidence_temperature.test.ts
+@@ -9,6 +9,7 @@
+ import { describe, expect, it } from 'vitest';
+ 
+ import {
++    censusDateStamp,
+     citationKeys,
+     classify,
+     coldPathsIn,
+@@ -208,3 +209,51 @@ describe('latestReportBefore — what `--since latest` resolves to', () => {
+         expect(latestReportBefore(['other-analysis.md'], 'evidence-temperature-1970-01-02.md')).toBeNull();
+     });
+ });
++
++describe('censusDateStamp', () => {
++    it('is UTC on both sides of a day boundary', () => {
++        // Lives here, not in the release-gate test file: this exercises the
++        // census writer, and the gate only consumes its output.
++        //
++        // The runner's TZ is not pinned, and at offset 0 a local-time
++        // implementation is indistinguishable from this one — so the test sets
++        // the offset itself. Node applies a TZ change at runtime; the evidence
++        // that CI's runtimes do is this test passing there, on Node 20 and 22,
++        // not a local reading. Each half of the pair is the one a local-time
++        // stamping fails under that sign.
++        const tz = process.env['TZ'];
++        const lateOnThe5th = new Date(Date.UTC(2026, 9, 5, 23, 30));
++        const earlyOnThe6th = new Date(Date.UTC(2026, 9, 6, 0, 30));
++        try {
++            // The two probes below assert, as a PAIR, that the runtime honoured
++            // the assignments and resolved real tzdata. Neither alone does: on a
++            // host already at UTC+1/+2 the first is green without any assignment
++            // taking effect, and on a negative-offset host the second is. Only
++            // both together are sensitive to a no-op, because no single ambient
++            // zone satisfies them at once. The stamp assertions themselves go
++            // through `toISOString` and are offset-invariant, so without the
++            // probes this test would pass while measuring nothing.
++            //
++            // Those are environment properties, so a leg lacking tzdata would
++            // red this while the implementation is fine. Measured rather than
++            // assumed: this file runs on `Node Tests`, whose eight legs are
++            // macos-latest and ubuntu-latest × 4 shards, all green with these
++            // probes in place. A leg added without tzdata reds here loudly,
++            // which is the right direction — a skip would restore the blindness
++            // the probes exist to remove.
++            process.env['TZ'] = 'Europe/Berlin';
++            expect(lateOnThe5th.getDate()).toBe(6);
++            expect(censusDateStamp(lateOnThe5th)).toBe('2026-10-05');
++
++            process.env['TZ'] = 'America/New_York';
++            expect(earlyOnThe6th.getDate()).toBe(5);
++            expect(censusDateStamp(earlyOnThe6th)).toBe('2026-10-06');
++        } finally {
++            if (tz === undefined) {
++                delete process.env['TZ'];
++            } else {
++                process.env['TZ'] = tz;
++            }
++        }
++    });
++});
