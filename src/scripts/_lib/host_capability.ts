@@ -184,7 +184,7 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  *
  * `contexts/execution/host-capability-manifest.md` § Observation protocol states
  * the per-field criterion and the four-part citation (host · host version ·
- * transcript or artefact reference · date). A row without all four is not
+ * transcript or artifact reference · date). A row without all four is not
  * admissible, and no row may be filled from a host's documentation.
  *
  * ## REACHABILITY, 2026-08-22 — one of eight, and the other seven are recorded
@@ -221,7 +221,7 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  *   `duration_ms` — i.e. 420 child legs whose start and stop pair, which is the
  *   criterion (a measurable child duration, not an inferred one).
  *
- * `parallel_spawn: true` — OBSERVED. Same host, session and artefact.
+ * `parallel_spawn: true` — OBSERVED. Same host, session and artifact.
  *   **6,168** of 6,388 stop records carry `concurrent_open >= 2`, with a
  *   maximum of **30** concurrently open children. Overlapping intervals at one
  *   instant, which is the criterion — not two children in sequence.
@@ -235,25 +235,46 @@ export function normalizeHostManifest(input: unknown): HostCapabilityManifest {
  * `agent_teams` — out of scope for a row by construction; see its own field
  *   doc comment and the protocol section.
  *
- * `structured_ask: false` — OBSERVED ABSENT, not never-looked, and the
- *   difference is why it is written rather than omitted. claude (Claude Code
- *   2.1.263, Opus 5 1M session, 2026-09-07). The host delivers the session's
- *   tool surface at session start; that surface carried no structured-ask tool
- *   under any name `_lib/structured_ask.ts` matches, and no per-host shape is
- *   recorded for it in `STRUCTURED_ASK_SHAPES`. Artefact:
- *   `agents/evidence/analysis/structured-ask-host-observation-2026-09.md`.  code-comment-allow provenance-comment -- the observation protocol declares a row inadmissible without its artefact citation, so this pointer is part of the contract the row satisfies, not evidence duplicated from a roadmap
- *   The observation is about the delivered surface of one session on one
- *   version; it is not a claim that the vendor ships no such tool anywhere,
- *   and a later session observing one writes the `true` row over it.
+ * `structured_ask` — OBSERVED PRESENT, and this row was `false` until
+ *   2026-10-05. claude (Claude Code, observed range 2.1.252 to 2.1.284,
+ *   2026-09-01 to 2026-10-02): 48 `AskUserQuestion` `tool_use` blocks, 47 of
+ *   them answered by a non-error `tool_result`, and the per-host shape is now
+ *   recorded in `STRUCTURED_ASK_SHAPES`. Artifact:
+ *   `agents/evidence/analysis/structured-ask-host-observation-2026-10.md`.  code-comment-allow provenance-comment -- the observation protocol declares a row inadmissible without its artifact citation, so this pointer is part of the contract the row satisfies, not evidence duplicated from a roadmap
  *
- * NO ROW ANYWHERE SETS THE STRUCTURED-ASK FIELD TRUE, and the observation
- * protocol above is the only path to the first one that does. A vendor's
- * documentation is not that path — and the phrasing here avoids the literal
- * key-value pair on purpose, because the roadmap step that ships this field
- * verifies the absence with a grep for exactly that string.
+ *   The earlier `false` (2.1.263, 2026-09-07,
+ *   `structured-ask-host-observation-2026-09.md`) is not withdrawn as a
+ *   reading. It was taken from a SUBAGENT leg, whose delivered surface carries
+ *   no picker because a subagent has no user to ask; that artifact lists the
+ *   surface it saw and it is the subagent toolset. What it could not support
+ *   was the step from there to a claim about the host. The earliest call
+ *   recorded here is on 2.1.252, before the `false` reading on 2.1.263 — the
+ *   picker was being delivered and called while the row denying it was written.
+ *
+ *   WHICH LEG THE SURFACE WAS READ FROM IS PART OF THE OBSERVATION. A row that
+ *   does not say so invites exactly this substitution, so every row here says.
+ *
+ *   The prose this block replaced avoided writing the literal field-plus-`true`
+ *   pair on purpose, because a planning step verified that string's absence by
+ *   grep. That grep is named rather than paraphrased —
+ *   `grep -c 'structured_ask: true' src/scripts/_lib/host_capability.ts` — and
+ *   re-run against this file it returns 1 where it returned 0. So the
+ *   constraint is BROKEN, not intact, and recording that is the point: a reader
+ *   who is told only that it is dead cannot tell which. The step that owned it
+ *   is archived and its address is left in the roadmap rather than copied here.
+ *
+ *   ARCHIVAL IS NOT WHY IT IS DEAD, and the distinction is load-bearing because
+ *   the archival reading implies an ACTIVE copy of the same clause would bite.
+ *   It would not. NOTHING IN THIS TREE EXECUTES A `verify:` CLAUSE'S COMMAND,
+ *   archived or active: `_lib/verify_clause.ts` is a parser, and its four
+ *   importers — `roadmap_verify_share`, `closure_scan`, `run_continuation_hook`
+ *   and `check_verify_expectation_delta` — shell out to nothing but `git`. The
+ *   step also scoped itself to its own merge ("returns 0 at merge"), which it
+ *   did. Its stated successor was to record the first observed row with its
+ *   provenance — which is what this block now is.
  */
 const HOST_CAPABILITY_REGISTRY: Readonly<Record<string, Partial<HostCapabilityManifest>>> = {
-    claude: { subagent_spawn: true, parallel_spawn: true, structured_ask: false },
+    claude: { subagent_spawn: true, parallel_spawn: true, structured_ask: true },
 };
 
 /**
