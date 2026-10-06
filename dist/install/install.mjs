@@ -12507,6 +12507,9 @@ var TOP_FILES = 20;
 var LIMIT_WARN_FRACTION = 0.8;
 function isUnconditional(text) {
   const [frontmatter] = splitFrontmatter(text);
+  if (frontmatter === "" && /^\uFEFF?[\s]*---/.test(text)) {
+    return !/^paths:/m.test(text);
+  }
   return !/^paths:/m.test(frontmatter);
 }
 function readLayer(host, scope, dir, recorded) {
@@ -13073,7 +13076,15 @@ function installReceiptBudgetLines(packageRoot, home = os10.homedir(), opts = {}
       // anchor is tilde-relative, so the two must agree or the receipt
       // measures one install and claims ownership of another.
       home,
-      inventoryPath: opts.inventoryPath,
+      // THE RECEIPT IS THE "ASKING PROCESS" CASE, so it names no home
+      // here. It runs inside the install that WROTE the inventory, and
+      // that writer resolves the path through `inventory_path()` —
+      // honouring `AGENT_CONFIG_DEPLOY_INVENTORY`, which names a FILE
+      // rather than a home, and `EVENT4U_CONFIG_HOME`. Passing `home`
+      // would take `defaultInventoryPath`'s stated-home branch and read
+      // `<home>/.event4u/...`, a file nothing wrote under either
+      // override, and the inventory evidence would be silently lost.
+      inventoryPath: opts.inventoryPath ?? inventory_path(),
       thisDeploy: opts.thisDeploy
     });
     const layers = [];

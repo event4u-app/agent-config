@@ -184,6 +184,41 @@ describe('installed layer — the when-loaded split in characters', () => {
         expect(l.unconditional_chars).toBe(0);
     });
 
+    it('a file whose frontmatter the splitter cannot parse still reads its `paths:`', () => {
+        // The blind spot that scoping to the frontmatter opens, and the reason
+        // the predicate falls back rather than trusting an empty parse.
+        // `splitFrontmatter` returns '' for anything not beginning exactly
+        // `---\n`, so a BOM, a leading blank line or CRLF would make a
+        // path-scoped rule read as standing — silently, in the figure the
+        // ceiling argument is read in. `readLayer` measures every `.md` in the
+        // directory, foreign user-authored rules included, so these shapes are
+        // not hypothetical.
+        const home = mkTmp('ilu-unparsable-');
+        const dir = path.join(home, GLOBAL_RULE_DIRS['claude-code'] as string);
+        fs.mkdirSync(dir, { recursive: true });
+        const scoped = 'paths:\n  - "**/*.php"\ntype: auto\n';
+        fs.writeFileSync(path.join(dir, 'bom.md'), `\uFEFF---\n${scoped}---\nbody\n`, 'utf-8');
+        fs.writeFileSync(path.join(dir, 'blank-first.md'), `\n---\n${scoped}---\nbody\n`, 'utf-8');
+        fs.writeFileSync(path.join(dir, 'crlf.md'), `---\r\n${scoped}---\r\nbody\r\n`, 'utf-8');
+        const l = readLayer('claude-code', 'global', dir, new Map());
+        expect(l.files).toBe(3);
+        expect(l.unconditional_chars, 'every one must read path-scoped').toBe(0);
+    });
+
+    it('a file with NO frontmatter at all is unconditional, not scoped', () => {
+        // The control for the fallback: it must not fire for a plain body, or
+        // a rule that simply has no frontmatter would be read as conditional
+        // and drop out of the standing figure.
+        const home = mkTmp('ilu-nofm-');
+        const dir = path.join(home, GLOBAL_RULE_DIRS['claude-code'] as string);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, 'plain.md'), 'just a body, no frontmatter\n', 'utf-8');
+        const l = readLayer('claude-code', 'global', dir, new Map());
+        expect(l.scoped_chars).toBe(0);
+        expect(l.unconditional_chars).toBe(l.chars);
+        expect(l.chars).toBeGreaterThan(0);
+    });
+
     it('the report PRINTS both figures beside `chars`, per layer and in the total', () => {
         const home = mkTmp('ilu-render-');
         stageGlobal(home, {

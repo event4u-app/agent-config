@@ -250,12 +250,25 @@ export function isUnconditional(text: string): boolean {
     // THE SAME FUNCTION that produces the characters being partitioned, not the
     // same arithmetic re-implemented. An earlier version scanned for
     // `'\n---'` while `ruleBody` -> `splitFrontmatter` scans for `'\n---\n'`,
-    // so a frontmatter closing at EOF without a trailing newline, or an
-    // unindented `---` inside the block, made predicate and measure disagree
-    // about where the frontmatter stops — and the second of those truncates the
-    // predicate's view early and can hide a later `paths:` key, which is the
-    // silent direction this scoping was introduced to close.
+    // so the two disagreed about where the frontmatter stops, and the
+    // predicate's early stop could hide a later `paths:` key.
     const [frontmatter] = splitFrontmatter(text);
+    // AND THE BLIND SPOT THAT SCOPING OPENS, CLOSED HERE. `splitFrontmatter`
+    // returns `''` for anything that does not begin exactly `---\n` — a BOM, a
+    // leading blank line, CRLF, a block that never closes — and scoping to `''`
+    // reads every such file as unconditional even when its frontmatter carries
+    // `paths:`. `readLayer` measures every `.md` in a host directory, foreign
+    // user-authored rules included, so that would inflate `unconditional_chars`
+    // silently, which is the figure the whole ceiling argument is read in.
+    //
+    // A file that CLAIMS a block `splitFrontmatter` could not parse falls back
+    // to the whole-text test, which is the conservative direction: it can only
+    // move characters out of the standing bucket, never into it. The claim test
+    // is the one `installThinLayer` already uses for the same blind spot, and
+    // is a regex rather than `startsWith('---')` for the reason stated there.
+    if (frontmatter === '' && /^\uFEFF?[\s]*---/.test(text)) {
+        return !/^paths:/m.test(text);
+    }
     return !/^paths:/m.test(frontmatter);
 }
 
@@ -552,6 +565,15 @@ export interface OwnershipOptions {
      * inventory on disk is still empty and the only evidence that the files are
      * ours is the set the installer is holding. Passing it is counting this
      * deploy's own file set — not a claim about any earlier one.
+     *
+     * CLOSED FOR ONE ANCHOR OF FIVE, stated rather than implied. The only
+     * production caller (`install.ts`, inside the `claude-code` branch) passes
+     * a single-entry map for that anchor, while `installReceiptBudgetLines`
+     * reads all five `GLOBAL_RULE_DIRS`. So on a genuine first install the
+     * cursor, augment, windsurf and cline global layers still read foreign in
+     * the receipt. That is narrower than "the first install is covered", which
+     * an earlier version of this paragraph said, and it is the honest scope:
+     * the receipt is printed from the one branch that has a file set to offer.
      */
     readonly thisDeploy?: ReadonlyMap<string, Iterable<string>> | null | undefined;
 }

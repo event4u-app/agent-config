@@ -54,6 +54,7 @@ import * as os from 'node:os';
 import { buildHostLimitRows, loadHostInstructionLimits, ownershipLine, readLayer, renderHostLimitRows, resolveLayerOwnership, } from '../scripts/_lib/installed_layer.js';
 import { GLOBAL_RULE_DIRS, globalRuleLayerPath } from './globalRuleLayers.js';
 import { manifest_path } from '../scripts/_lib/installed_tools.js';
+import { inventory_path } from '../scripts/_lib/global_deploy_inventory.js';
 import { absoluteBodyLinkPrefix, build_thin, split_frontmatter, } from '../scripts/_lib/thin_rules.js';
 /**
  * Replace the body of every thinnable rule in `rulesDir` with its stub.
@@ -249,7 +250,15 @@ export function installReceiptBudgetLines(packageRoot, home = os.homedir(), opts
             // anchor is tilde-relative, so the two must agree or the receipt
             // measures one install and claims ownership of another.
             home,
-            inventoryPath: opts.inventoryPath,
+            // THE RECEIPT IS THE "ASKING PROCESS" CASE, so it names no home
+            // here. It runs inside the install that WROTE the inventory, and
+            // that writer resolves the path through `inventory_path()` —
+            // honouring `AGENT_CONFIG_DEPLOY_INVENTORY`, which names a FILE
+            // rather than a home, and `EVENT4U_CONFIG_HOME`. Passing `home`
+            // would take `defaultInventoryPath`'s stated-home branch and read
+            // `<home>/.event4u/...`, a file nothing wrote under either
+            // override, and the inventory evidence would be silently lost.
+            inventoryPath: opts.inventoryPath ?? inventory_path(),
             thisDeploy: opts.thisDeploy,
         });
         const layers = [];

@@ -100,7 +100,7 @@ instead of an absence.
 ## Form — what the 89 stubs pay for their own description
 
 The 89 stubs hold 52,925 characters between them, 595 on average. **Every term
-below is computed from its own construction, and the seven sum to 52,925
+below is computed from its own construction, and the eight sum to 52,925
 exactly** — there is no residual row, which is what makes this a decomposition
 rather than six measurements and a remainder.
 
