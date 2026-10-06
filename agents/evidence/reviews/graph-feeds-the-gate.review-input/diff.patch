@@ -289,7 +289,7 @@ index d935f7d1594aacfc0a4be819eb65da16ff3016a3..25459d83d3cc87985e00ffcb2a736b6e
 +  in is the failure the pre-registration was written to prevent. It is recorded
 +  as an option for the owner in the blocker, not taken.
 diff --git a/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md b/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
-index d6a36ccfd1fa4f167b05967bb914f8f76d290df2..0303888b998a2ac4ee285d2eba53c23faa9852ca 100644
+index d6a36ccfd1fa4f167b05967bb914f8f76d290df2..dcb6a191ebe2f95cc4dfc4ee4383c68b2c3c9111 100644
 --- a/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
 +++ b/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
 @@ -3,6 +3,7 @@ complexity: lightweight
@@ -309,7 +309,7 @@ index d6a36ccfd1fa4f167b05967bb914f8f76d290df2..0303888b998a2ac4ee285d2eba53c23f
        catch rate is measured on labelled data. Label 50 stop records (25 with an untested
        production edit, 25 without) by a person or a council seat, never the hook's own
        run; report F recall, graph recall and their union with `capture_rate.wilsonInterval`
-@@ -115,6 +116,35 @@ refuses.
+@@ -115,6 +116,37 @@ refuses.
        records the state at pre-registration, and the accrual figure is what moved.
        Re-measure before flipping — this count is a reading taken on a date, not a
        standing fact, and `agents/state/` is local and gitignored, so a clone reads 0.
@@ -318,8 +318,10 @@ index d6a36ccfd1fa4f167b05967bb914f8f76d290df2..0303888b998a2ac4ee285d2eba53c23f
 +      across 5 distinct sessions, against a bar of 50. Taking the reading produced
 +      three findings, all on the evidence page. (i) The GRAPH ARM WAS VOID: the
 +      feeder handed `untested` absolute paths while the graph keys node ids on
-+      repo-relative ones, so all 19 path-carrying rows recorded `no-seeds` — none
-+      of them a fact about the code. Probed at `c58d7eae`: `check_memory.ts`
++      repo-relative ones. 19 rows carried a path; the 18 that reached the graph
++      at all recorded `no-seeds`, and the nineteenth was skipped on `behind:0`
++      and recorded `null` — so not one path-carrying row ever held a fact about
++      the code. Probed at `c58d7eae`: `check_memory.ts`
 +      resolves 60 seeds relative and 0 absolute. Repaired in this change, with
 +      regression tests written against the absolute form and seen red first; the
 +      arm's accrual restarts at zero, because no pre-repair row is admissible
@@ -345,11 +347,11 @@ index d6a36ccfd1fa4f167b05967bb914f8f76d290df2..0303888b998a2ac4ee285d2eba53c23f
  - [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3; the ADR-277 reopen is
        an owner amendment, not a step here.
  
-@@ -135,6 +165,22 @@ refuses.
+@@ -135,6 +167,22 @@ refuses.
  | D3 | reversible-technical | agent | a separate feeder record, not `ShadowRecord` | `ShadowRecord` is written only on `stop_hook_active` / `refused_turn` (`turn_end_gate_hook.ts:1332,1353`) and feeds the Q1 reading | the Q1 window closes |
  | D5 | deterministic | agent | closure pass C1 (3.3's verify listed unfalsifiable): accepted — the evidence page's existence is the oracle, the n ≥ 50 bar is in the step text and in the acceptance criteria | `closure_scan` 2026-10-01; the family is a listing, never a gate (`closure_scan.ts:41-50`) | a reviewer flips 3.3 on a page with n < 50 |
  | D4 | contested-technical | evidence | no free-text scoring in `graph_node` | `docs/CLAIMS.md:566-572` — free-text retrieval is the row the graph lost | a rerun wins a retrieval class |
-+| D6 | deterministic | evidence | the feeder relativises edit paths before the graph sees them, and stores the relativised form | probed at `c58d7eae`: `check_memory.ts` resolves 60 seeds relative, 0 absolute; all 19 path-carrying rows read `no-seeds` | the graph gains a resolver that takes absolute paths |
++| D6 | deterministic | evidence | the feeder relativises edit paths before the graph sees them, and stores the relativised form | probed at `c58d7eae`: `check_memory.ts` resolves 60 seeds relative, 0 absolute; of 19 path-carrying rows the 18 that reached the graph read `no-seeds` and the 19th was skipped on `behind:0` | the graph gains a resolver that takes absolute paths |
 +| D7 | deterministic | evidence | the pre-registration is NOT amended now that its counts are known — the 25/25 design stands and the shortfall is reported against it | the page's own clause: a threshold chosen after the counts is a threshold chosen by the counts | the owner amends it, via `b1` |
 +
 +## Blockers
@@ -369,10 +371,10 @@ index d6a36ccfd1fa4f167b05967bb914f8f76d290df2..0303888b998a2ac4ee285d2eba53c23f
  ## Risk Register
  
 diff --git a/src/scripts/_lib/graph_feeder_record.ts b/src/scripts/_lib/graph_feeder_record.ts
-index fa52d088dd9374ca71dd5e17e0f5077e996ad718..661be796b2a3c7e9e2128264b83d1291a4a249e0 100644
+index fa52d088dd9374ca71dd5e17e0f5077e996ad718..755528573e5d78bbcf5647817922bdddb3319a99 100644
 --- a/src/scripts/_lib/graph_feeder_record.ts
 +++ b/src/scripts/_lib/graph_feeder_record.ts
-@@ -22,12 +22,18 @@
+@@ -22,12 +22,19 @@
   * behind an owner amendment to ADR-277, and nothing here anticipates it.
   *
   * WHAT A ROW MAY CONTAIN. The fields are a closed set of enums, counts and
@@ -389,15 +391,16 @@ index fa52d088dd9374ca71dd5e17e0f5077e996ad718..661be796b2a3c7e9e2128264b83d1291
 + * because they are the evidence a human labeller needs in step 3.3 and because
 + * the gate's own refusal text already quotes them; they are capped so one turn
 + * cannot write an unbounded row. An edit OUTSIDE the workspace root is the one
-+ * shape that could carry an absolute prefix, and {@link buildFeederRow} DROPS it
-+ * from the row rather than store it — so the claim is true by construction and
-+ * not by convention. The earlier wording claimed "repo-relative source paths"
-+ * flatly while the recorded data did not support it; this one is narrower and
-+ * enforced.
++ * shape that could carry identifying content, and {@link buildFeederRow}
++ * REDACTS it to {@link OUTSIDE_WORKSPACE} — it does not drop it, which was tried
++ * and rejected for the reason recorded at that call site. So the claim is true
++ * by construction and not by convention. The earlier wording claimed
++ * "repo-relative source paths" flatly while the recorded data did not support
++ * it; this one is narrower and enforced.
   */
  import * as fs from 'node:fs';
  import * as path from 'node:path';
-@@ -39,6 +45,16 @@ import { untested } from '../code_graph/verbs.js';
+@@ -39,6 +46,16 @@ import { untested } from '../code_graph/verbs.js';
  /** At most this many edit paths per row. */
  const MAX_PATHS = 5;
  
@@ -414,7 +417,7 @@ index fa52d088dd9374ca71dd5e17e0f5077e996ad718..661be796b2a3c7e9e2128264b83d1291
  /**
   * At most this many rows per session file.
   *
-@@ -94,6 +110,52 @@ export function feederFile(workspaceRoot: string, sessionKey: string): string {
+@@ -94,6 +111,126 @@ export function feederFile(workspaceRoot: string, sessionKey: string): string {
      return path.join(workspaceRoot, 'agents', 'state', 'graph-feeder', `${sessionKey}.jsonl`);
  }
  
@@ -425,9 +428,10 @@ index fa52d088dd9374ca71dd5e17e0f5077e996ad718..661be796b2a3c7e9e2128264b83d1291
 + * whatever the host wrote into `file_path`, and Claude Code writes an ABSOLUTE
 + * path. The graph keys its node ids on repo-relative paths, so `seedsForFiles`
 + * resolved nothing, `untested` returned an empty seed set, and the feeder wrote
-+ * `no-seeds`. Every one of the 19 accrued rows that carried a path recorded
-+ * `no-seeds`, and none of them was a fact about the code: the graph arm was mute
-+ * for its whole accrual window. Probed at `c58d7eae` against the real index —
++ * `no-seeds`. 19 accrued rows carried a path; the 18 that reached the graph at
++ * all recorded `no-seeds`, and the nineteenth was skipped on `behind:0`. Not one
++ * of them was a fact about the code: the graph arm was mute for its whole
++ * accrual window. Probed at `c58d7eae` against the real index —
 + * `src/scripts/check_memory.ts` resolves 60 seeds relative and 0 absolute.
 + *
 + * It survived review because every fixture fed a relative path. A test never run
@@ -451,23 +455,96 @@ index fa52d088dd9374ca71dd5e17e0f5077e996ad718..661be796b2a3c7e9e2128264b83d1291
 + * platform.
 + */
 +export function toRepoRelative(root: string, paths: readonly string[]): string[] {
++    const realRoot = _resolveReal(root);
 +    return paths.map((p) => {
 +        if (!path.isAbsolute(p)) return p;
 +        let rel: string;
 +        try {
-+            rel = path.relative(root, p);
++            rel = path.relative(realRoot, _resolveReal(p));
 +        } catch {
 +            return p;
 +        }
-+        if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return p;
++        // `rel === '..'` and a leading `..` SEGMENT, not a leading `..` string:
++        // `rel.startsWith('..')` also matches an in-tree first segment that
++        // merely begins with two dots, such as `..cache/service.ts`, and would
++        // classify an in-repo edit as foreign.
++        if (rel === '' || rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) {
++            return p;
++        }
 +        return rel.split(path.sep).join('/');
 +    });
++}
++
++/**
++ * The real location of a path, for comparing one host-supplied string to
++ * another.
++ *
++ * WHY THIS IS NOT OPTIONAL. `workspace_root` and a tool call's `file_path` are
++ * two independently produced strings, and they routinely disagree about
++ * symlinks: macOS `/tmp` resolves to `/private/tmp`, and a worktree session's
++ * project dir can resolve to the parent checkout. Relativising them raw sends
++ * EVERY in-repo path down the foreign branch, which would return the graph to
++ * `no-seeds` and — now that the row redacts a foreign path — would also destroy
++ * the labelling evidence instead of merely failing to resolve it. That is
++ * strictly worse than the defect this module was repaired for, and it fails the
++ * same way: silently. A completion review found it; no fixture could, because
++ * every fixture builds its paths from the same realpathed root string.
++ *
++ * It walks up to the NEAREST EXISTING ancestor and rejoins the remainder, so a
++ * file the turn deleted — or a root that does not exist, as a pure unit test's
++ * does — still resolves through whatever part of the chain is real. The walk
++ * has to be symmetric or it introduces the very bug it fixes: resolving the root
++ * through an existing ancestor while leaving the path unresolved makes the two
++ * disagree by exactly the symlink prefix. That asymmetry was in the first
++ * version of this function and the suite's own POSIX test caught it.
++ *
++ * KNOWN REMAINING LIMIT: a case-insensitive filesystem can still present the
++ * same file under two spellings this does not reconcile. Named rather than
++ * silently assumed away.
++ */
++function _resolveReal(p: string): string {
++    const abs = path.resolve(p);
++    const tail: string[] = [];
++    let cur = abs;
++    for (;;) {
++        try {
++            const real = fs.realpathSync(cur);
++            return tail.length === 0 ? real : path.join(real, ...[...tail].reverse());
++        } catch {
++            const parent = path.dirname(cur);
++            // Reached the filesystem root with nothing resolvable — the absolute
++            // form is the best answer available, and it is still symmetric
++            // because the other side took the same walk.
++            if (parent === cur) return abs;
++            tail.push(path.basename(cur));
++            cur = parent;
++        }
++    }
++}
++
++/**
++ * Would storing this path put content from outside the workspace on the row?
++ *
++ * Broader than `path.isAbsolute` on purpose. Two shapes bypass that test while
++ * carrying exactly the identifying content the marker exists to withhold from
++ * the external labeller: an out-of-tree path already in relative form
++ * (`../other-project/x.ts`), and a foreign-platform absolute path, which POSIX
++ * `path.isAbsolute` reports as relative. Both were found by a completion review.
++ */
++function _escapesWorkspace(p: string): boolean {
++    return (
++        path.isAbsolute(p) ||
++        path.win32.isAbsolute(p) ||
++        p === '..' ||
++        p.startsWith('../') ||
++        p.startsWith(`..${path.sep}`)
++    );
 +}
 +
  /**
   * Run `untested` over the turn's edit paths.
   *
-@@ -112,6 +174,8 @@ export function graphUntestedVerdict(
+@@ -112,6 +249,8 @@ export function graphUntestedVerdict(
      // change.
      if (state !== 'fresh' && state !== 'edited') return none;
      if (paths.length === 0) return none;
@@ -476,7 +553,7 @@ index fa52d088dd9374ca71dd5e17e0f5077e996ad718..661be796b2a3c7e9e2128264b83d1291
      let picked;
      try {
          picked = pickSource(detectSources(root, path.join(root, NATIVE_CACHE_REL)));
-@@ -126,7 +190,7 @@ export function graphUntestedVerdict(
+@@ -126,7 +265,7 @@ export function graphUntestedVerdict(
          return none;
      }
      try {
@@ -485,7 +562,7 @@ index fa52d088dd9374ca71dd5e17e0f5077e996ad718..661be796b2a3c7e9e2128264b83d1291
          if (r.seeds.length === 0) return { verdict: 'no-seeds', untested: 0, tested: 0 };
          return {
              verdict: r.untested.length > 0 ? 'untested' : 'tested',
-@@ -187,8 +251,21 @@ export function readFeederRows(workspaceRoot: string, sessionKey: string): Graph
+@@ -187,8 +326,21 @@ export function readFeederRows(workspaceRoot: string, sessionKey: string): Graph
      }
  }
  
@@ -508,7 +585,7 @@ index fa52d088dd9374ca71dd5e17e0f5077e996ad718..661be796b2a3c7e9e2128264b83d1291
      turn: number;
      layer: FeederLayer;
      state: GraphState;
-@@ -208,7 +285,32 @@ export function buildFeederRow(input: {
+@@ -208,7 +360,32 @@ export function buildFeederRow(input: {
          graph: input.graph.verdict,
          graph_untested: input.graph.untested,
          graph_tested: input.graph.tested,
@@ -537,7 +614,7 @@ index fa52d088dd9374ca71dd5e17e0f5077e996ad718..661be796b2a3c7e9e2128264b83d1291
 +        // identifying. The graph's answer is unchanged either way — the probe
 +        // sees the real path and resolves no seeds for it.
 +        paths: toRepoRelative(input.root, input.paths.slice(0, MAX_PATHS)).map((p) =>
-+            path.isAbsolute(p) ? OUTSIDE_WORKSPACE : p,
++            _escapesWorkspace(p) ? OUTSIDE_WORKSPACE : p,
 +        ),
          path_count: input.paths.length,
      };
@@ -555,7 +632,7 @@ index 5c3e9e1135cd29c27cdf07a039094cc24b7bf00a..6dd702c4ef4a9d0d30a5f7a182e93978
                  layer,
                  state,
 diff --git a/tests/scripts/graph_feeder_record.test.ts b/tests/scripts/graph_feeder_record.test.ts
-index ae794a865361acbda507cd042381a36ad3a8a299..7fa3f10a2e7c808bd6f0997f0ae980172c69511e 100644
+index ae794a865361acbda507cd042381a36ad3a8a299..f5aab6d6feb880b737e89c5767f40799b7ac41a0 100644
 --- a/tests/scripts/graph_feeder_record.test.ts
 +++ b/tests/scripts/graph_feeder_record.test.ts
 @@ -25,7 +25,9 @@ import {
@@ -584,7 +661,7 @@ index ae794a865361acbda507cd042381a36ad3a8a299..7fa3f10a2e7c808bd6f0997f0ae98017
              turn: 1,
              layer: 'live',
              state: 'fresh',
-@@ -231,3 +235,128 @@ describe('buildFeederRow — the row shape', () => {
+@@ -231,3 +235,206 @@ describe('buildFeederRow — the row shape', () => {
          expect(readFeederRows(root, 'capped')).toHaveLength(MAX_ROWS_PER_SESSION);
      });
  });
@@ -596,8 +673,9 @@ index ae794a865361acbda507cd042381a36ad3a8a299..7fa3f10a2e7c808bd6f0997f0ae98017
 + * the arm looked healthy while it was mute: Claude Code writes `file_path` as an
 + * ABSOLUTE path, the graph's seed ladder resolves node ids keyed on repo-relative
 + * paths, and the two never met. Step 3.3's accrual window recorded `no-seeds` on
-+ * every row that carried a path — 19 of 19 — and a recall table built on that
-+ * would have scored a defect and called it a detector.
++ * every row that reached the graph at all — 18 of the 19 that carried a path,
++ * the nineteenth having been skipped on `behind:0` — and a recall table built on
++ * that would have scored a defect and called it a detector.
 + *
 + * Both assertions are written against the absolute shape on purpose. A fixture
 + * that keeps feeding relative paths cannot see this regression come back.
@@ -614,7 +692,7 @@ index ae794a865361acbda507cd042381a36ad3a8a299..7fa3f10a2e7c808bd6f0997f0ae98017
 +        expect(abs.tested).toBe(rel.tested);
 +    }, 120_000);
 +
-+    it('keeps an out-of-workspace path verbatim for the PROBE and drops it from the ROW', async () => {
++    it('keeps an out-of-workspace path verbatim for the PROBE and redacts it on the ROW', async () => {
 +        const { dir } = await rig(true);
 +        const outside = path.join(os.tmpdir(), 'not-this-workspace', 'elsewhere.ts');
 +        // Honest boundary: a path outside the root is not graph-addressable, so
@@ -711,5 +789,82 @@ index ae794a865361acbda507cd042381a36ad3a8a299..7fa3f10a2e7c808bd6f0997f0ae98017
 +        // No absolute prefix reaches the record, which is what the module header
 +        // claims the row cannot carry.
 +        for (const p of row?.paths ?? []) expect(path.isAbsolute(p)).toBe(false);
++    }, 120_000);
++});
++
++/**
++ * The path-comparison hazards a fixture built from one string cannot produce.
++ *
++ * Every fixture above builds its root and its paths from the SAME realpathed
++ * string, so root and path can never disagree — which is exactly the shape that
++ * breaks in the field. A completion review found all three of these; each test
++ * below was seen red against the implementation that preceded it.
++ */
++describe('3.3 — two host-supplied strings, compared honestly', () => {
++    it('resolves a symlinked workspace root instead of calling every in-repo path foreign', async () => {
++        const { dir } = await rig(false);
++        const link = path.join(os.tmpdir(), `gf-link-${String(process.pid)}-${String(Date.now())}`);
++        fs.symlinkSync(dir, link);
++        tmp_dirs.push(link);
++
++        const real = path.join(dir, 'src', 'service.ts');
++        const viaLink = path.join(link, 'src', 'service.ts');
++
++        // `workspace_root` and `file_path` are produced independently and
++        // routinely disagree about symlinks — macOS `/tmp` -> `/private/tmp`, a
++        // worktree project dir -> the parent checkout. Raw `path.relative` sends
++        // EVERY in-repo path down the foreign branch, which returns the graph to
++        // `no-seeds` AND now redacts away the labelling evidence: strictly worse
++        // than the defect this module was repaired for.
++        expect(toRepoRelative(link, [real])).toStrictEqual(['src/service.ts']);
++        expect(toRepoRelative(dir, [viaLink])).toStrictEqual(['src/service.ts']);
++
++        // And the row keeps the real path rather than redacting it away.
++        const row = buildFeederRow({
++            root: link,
++            turn: 1,
++            layer: 'live',
++            state: 'fresh',
++            fFired: false,
++            fMode: null,
++            paths: [real],
++            graph: { verdict: null, untested: 0, tested: 0 },
++            at: '2026-10-06T00:00:00.000Z',
++        });
++        expect(row.paths).toStrictEqual(['src/service.ts']);
++    }, 120_000);
++
++    it('does not call an in-tree path foreign just because its first segment starts with two dots', async () => {
++        const { dir } = await rig(false);
++        // `rel.startsWith('..')` matches `..cache/service.ts`, which is an
++        // ordinary in-repo directory. The test the intent needs is a leading
++        // `..` SEGMENT, not a leading `..` string.
++        const p = path.join(dir, '..cache', 'service.ts');
++        expect(toRepoRelative(dir, [p])).toStrictEqual(['..cache/service.ts']);
++    }, 120_000);
++
++    it('redacts every shape that carries content from outside the workspace, not just POSIX-absolute ones', async () => {
++        const { dir } = await rig(false);
++        // Two shapes bypass `path.isAbsolute` while carrying exactly the
++        // identifying content the marker exists to withhold: an out-of-tree path
++        // already in relative form, and a foreign-platform absolute path, which
++        // POSIX `path.isAbsolute` reports as relative.
++        const row = buildFeederRow({
++            root: dir,
++            turn: 1,
++            layer: 'live',
++            state: 'fresh',
++            fFired: false,
++            fMode: null,
++            paths: ['../other-project/secret.ts', 'C:\\Users\\someone\\thing.ts', 'src/service.ts'],
++            graph: { verdict: null, untested: 0, tested: 0 },
++            at: '2026-10-06T00:00:00.000Z',
++        });
++        expect(row.paths).toStrictEqual([OUTSIDE_WORKSPACE, OUTSIDE_WORKSPACE, 'src/service.ts']);
++        expect(row.paths).toHaveLength(row.path_count);
++        for (const p of row.paths) {
++            expect(p).not.toContain('other-project');
++            expect(p).not.toContain('someone');
++        }
 +    }, 120_000);
 +});
