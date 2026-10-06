@@ -335,7 +335,7 @@ function _explain_config(project_root: string, as_json: boolean): number {
     }
     // The figures that DO bound, beside the ones that do not, so the
     // difference is visible in one screen rather than inferred.
-    printConfiguredBudgets(print, project_root);
+    printConfiguredBudgets(print, settings);
     const autonomy = isPlainObject(knobs['autonomy']) ? (knobs['autonomy'] as Dict) : {};
     if (Object.keys(autonomy).length > 0) {
         print(`  autonomy:     default=${fmt(autonomy['default'])}`);
@@ -353,18 +353,20 @@ function _explain_config(project_root: string, as_json: boolean): number {
  * screen is the point of step 3.5 — a reader who sees only one of the two
  * cannot tell which kind they are looking at.
  *
+ * Takes the SAME resolved `settings` the profile/preset lines above already
+ * used (`_explain_config`'s `_load_user_settings(project_root)`), rather than
+ * an independent `load_agent_settings({ cwd: project_root })` call — tried and
+ * reverted: that second call enables the full project-root-to-cwd cascade
+ * (merged with the user-global layer), a DIFFERENT resolution view from the
+ * single project file the profile/preset lines read and from what the actual
+ * enforcing path (`scripts/cost/budget.mjs`, a plain CWD-relative single-file
+ * read with no cascade) compares spend against. Two independent reads of the
+ * same nominal setting can diverge; one shared value cannot.
+ *
  * `0` and absent both mean unbounded (ADR-279), and the line says so rather
  * than printing a bare zero that reads like a cap of nothing.
  */
-export function printConfiguredBudgets(print: (s?: string) => void, project_root: string): void {
-    let settings: unknown;
-    try {
-        settings = load_agent_settings({ cwd: project_root });
-    } catch {
-        // An unreadable or absent settings file is not an error for `explain`:
-        // the command's job is to report what it can see.
-        return;
-    }
+export function printConfiguredBudgets(print: (s?: string) => void, settings: unknown): void {
     const cost = isPlainObject(settings) && isPlainObject((settings as Dict)['cost'])
         ? ((settings as Dict)['cost'] as Dict)
         : {};
