@@ -57,13 +57,14 @@ import * as os from 'node:os';
 import {
     buildHostLimitRows,
     loadHostInstructionLimits,
+    ownershipLine,
     readLayer,
     renderHostLimitRows,
+    resolveLayerOwnership,
     type LayerReading,
 } from '../scripts/_lib/installed_layer.js';
 import { GLOBAL_RULE_DIRS, globalRuleLayerPath } from './globalRuleLayers.js';
 import { manifest_path } from '../scripts/_lib/installed_tools.js';
-import { NO_RECORDED_HASHES, readRecordedHashes } from './recordedOwnership.js';
 import {
     absoluteBodyLinkPrefix,
     build_thin,
@@ -272,6 +273,38 @@ export function describeThinInstalledLayer(res: ThinInstalledLayerResult): strin
 }
 
 /**
+ * What {@link installReceiptBudgetLines} may be told about ownership evidence.
+ *
+ * Declared ABOVE that function's own doc block on purpose. It first sat between
+ * the doc block and the function, which silently re-attached the function's
+ * contract — "step 1.4's at install", "global layers only, deliberately",
+ * "never throws" — to this interface, and interfaces erase on emit, so the
+ * contract disappeared from the shipped JS and from IDE hover on the function.
+ */
+export interface InstallReceiptOwnershipOptions {
+    /**
+     * The installed-tools manifest. `undefined` uses `manifest_path(packageRoot)`;
+     * `null` reads none.
+     *
+     * Overridable so a test can be hermetic. That lock file is gitignored, so
+     * it is absent in CI and present on any checkout where a project-scoped
+     * install has run — a case reading it implicitly turns green-in-CI,
+     * red-on-a-maintainer's-machine, for a reason unrelated to what it tests.
+     */
+    readonly manifestPath?: string | null | undefined;
+    /** `deployed-files.json`. `undefined` reads the user-global default; `null` reads none. */
+    readonly inventoryPath?: string | null | undefined;
+    /**
+     * Anchor → anchor-relative paths this run just wrote.
+     *
+     * The installer holds exactly this set at the moment it prints the receipt,
+     * and `record_deploy` has not run yet, so on a FIRST install it is the only
+     * evidence the files are ours.
+     */
+    readonly thisDeploy?: ReadonlyMap<string, Iterable<string>> | null | undefined;
+}
+
+/**
  * The install receipt's instruction-budget block — step 1.4's "at install".
  *
  * The step asks for the limit, the split and the 80 % warning AT INSTALL, and
@@ -289,15 +322,47 @@ export function describeThinInstalledLayer(res: ThinInstalledLayerResult): strin
  * Never throws. A receipt that cannot be measured is silent rather than fatal —
  * the deploy it describes has already happened correctly.
  */
-export function installReceiptBudgetLines(packageRoot: string, home: string = os.homedir()): string[] {
+export function installReceiptBudgetLines(
+    packageRoot: string,
+    home: string = os.homedir(),
+    opts: InstallReceiptOwnershipOptions = {},
+): string[] {
     try {
-        const recorded = (() => {
-            try {
-                return readRecordedHashes(manifest_path(packageRoot), packageRoot);
-            } catch {
-                return NO_RECORDED_HASHES;
-            }
-        })();
+        // ONE RESOLVER, SHARED WITH THE REPORT — step 1.2. This used to read
+        // `manifest_path(packageRoot)`, the PACKAGE root's lock, which on a
+        // global-only install names a file no global install ever writes; the
+        // receipt then printed `0 package-owned` for a layer it had itself just
+        // deployed. `resolveLayerOwnership` falls through to the inventory, and
+        // `thisDeploy` covers the first install, where the receipt prints
+        // before `record_deploy` has written anything.
+        const { recorded, sources } = resolveLayerOwnership({
+            manifestPath: opts.manifestPath === undefined ? manifest_path(packageRoot) : opts.manifestPath,
+            projectRoot: packageRoot,
+            // The same home the layers below are read from — the inventory's
+            // anchor is tilde-relative, so the two must agree or the receipt
+            // measures one install and claims ownership of another.
+            home,
+            // THE RECEIPT IS THE "ASKING PROCESS" CASE, so it names no home
+            // here. It runs inside the install that WROTE the inventory, and
+            // that writer resolves the path through `inventory_path()` —
+            // honouring `AGENT_CONFIG_DEPLOY_INVENTORY`, which names a FILE
+            // rather than a home, and `EVENT4U_CONFIG_HOME`. Passing `home`
+            // would take `defaultInventoryPath`'s stated-home branch and read
+            // `<home>/.event4u/...`, a file nothing wrote under either
+            // override, and the inventory evidence would be silently lost.
+            // UNDEFINED IS LEFT UNDEFINED so `resolveLayerOwnership` applies
+            // `defaultInventoryPath(home)` — the SAME resolution the report
+            // uses. Hardcoding `inventory_path()` here made the two readers
+            // step 1.2 exists to reconcile disagree for any home that is not
+            // the asking process's: the receipt read one install's inventory
+            // and then expanded its tilde-relative anchors against the OTHER
+            // home, which is the cross-home misattribution two docstrings in
+            // the resolver forbid. `defaultInventoryPath` already returns
+            // `inventory_path()` when the stated home IS this process's, which
+            // is the case that motivated the hardcode.
+            inventoryPath: opts.inventoryPath,
+            thisDeploy: opts.thisDeploy,
+        });
         const layers: LayerReading[] = [];
         for (const host of Object.keys(GLOBAL_RULE_DIRS).sort()) {
             const dir = globalRuleLayerPath(host, home);
@@ -305,7 +370,8 @@ export function installReceiptBudgetLines(packageRoot: string, home: string = os
             layers.push(readLayer(host, 'global', dir, recorded));
         }
         const rows = buildHostLimitRows(layers, loadHostInstructionLimits());
-        return rows.length === 0 ? [] : renderHostLimitRows(rows).map((l) => `  ${l}`);
+        if (rows.length === 0) return [];
+        return [`  ${ownershipLine(sources)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
     } catch {
         return [];
     }

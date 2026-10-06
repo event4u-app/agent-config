@@ -5,6 +5,8 @@
  */
 import { describe, expect, it } from "vitest";
 
+import { THIN_ENTRY_MARKER } from "../../src/scripts/_lib/thin_rules.js";
+
 import {
   type AnswerFn,
   type GoldenTask,
@@ -95,7 +97,8 @@ describe("load_golden + assemble_contexts (against the real repo files)", () => 
   it("the eager context is larger than the thin context (bodies vs pointers)", () => {
     const { eager, thin } = assemble_contexts();
     expect(eager.length).toBeGreaterThan(thin.length);
-    expect(thin).toContain("Routed rule"); // thin uses pointers
+    // Asked of the WRITER's constant rather than re-spelled here (step 2.1).
+    expect(thin).toContain(THIN_ENTRY_MARKER); // thin uses pointers
   });
 });
 

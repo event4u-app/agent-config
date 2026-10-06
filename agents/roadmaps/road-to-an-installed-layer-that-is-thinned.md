@@ -245,3 +245,50 @@ Reproduced on 2026-10-01:
       -> 0, both cases (byte-equal law; no law leaks into an out-of-class stub).
 - [ ] AC-4 — The default changed only through the resolved blocker, and every
       non-Claude host tree is unchanged.
+
+## Dated readings
+
+> Added 2026-10-06 by `road-to-a-thinned-layer-measured-in-one-unit` step 3.3.
+> It names the figure **AC-1** asks for and edits neither that criterion, nor
+> its blocker, nor any decision of this roadmap. It sits in its own section
+> rather than under AC-1 itself because the risk-register gate hashes the
+> Acceptance Criteria body: a note placed inside it reads as a substantial
+> change to the plan and demands a re-review that a same-day stamp cannot
+> express.
+
+**AC-1, measured 2026-10-06** — source:
+`agents/evidence/analysis/thinned-layer-composition-2026-10.md`.
+
+A real opted-in install into a fresh `HOME`, read by the installed-layer
+report, with ownership resolving through the global deploy inventory because a
+global-only install writes no project manifest:
+
+| Reading | Before the stub form change | After |
+|---|---|---|
+| package-owned, all | 111,197 | 107,058 |
+| unconditional | 97,496 | 93,357 |
+| path-scoped | 13,701 | 13,701 |
+
+Measured at a 139-character body-link prefix. Every figure moves by 89 per
+character of package-root prefix, so at a 97-character root the later reading
+is 103,320 / 89,619 / 13,701.
+
+**AC-1 does not hold today, on either reading.** The page prices every
+remaining move with who it is permitted by, and states what they add up to:
+
+- **75,000, unconditional reading** — reachable, but only with every priced row
+  taken, including one reserved to the owner (`legal-safety-floor`, whose law
+  is already over this repository's hard law ceiling) and one behind the open
+  install-layout blocker. Neither is the council's to take and neither is an
+  agent's.
+- **The headroom-adjusted 68,181** — not reachable at any realistic package-root
+  prefix; the only combination that closes needs a prefix no path can have.
+- **75,000, all-characters reading** — not reachable, by at least 6,315 even at
+  that unreachable prefix.
+
+An earlier version of this note said instead that "none of them, taken
+together, reaches the ceiling". That was the pre-correction claim a
+provider-diverse council recorded as materially false, and it was left standing
+here after the page itself was fixed — on the surface an owner actually reads.
+It is replaced rather than deleted so the correction is visible from this side
+too.

@@ -284,13 +284,86 @@ function _title(s: string): string {
  * Exported so the WRITER and every DETECTOR share one definition. A gate that
  * re-spelled this string would drift from the writer silently, and the failure
  * would be invisible in exactly the direction that matters: a stub the gate
- * fails to recognise reads as a complete rule body.
+ * fails to recognise reads as a complete rule body. Two gates had done exactly
+ * that until step 2.1 of `road-to-a-thinned-layer-measured-in-one-unit`; both
+ * import this now.
+ *
+ * SHORTENED 2026-10-06 from 47 characters to 27 (step 2.2). It is paid once per
+ * stub and there were 89 stubs on the measured layer, so the sentence cost
+ * 4,183 characters of a 97,496-character standing total; at 27 it costs 2,403,
+ * a saving of 1,780 = 20 x 89.
+ *
+ * WHAT THE SHORTENING WAS NOT ALLOWED TO DO: drop the instruction. This is the
+ * only standing text in the whole layer that says what a stub is FOR — "load
+ * the body" occurs in no kernel rule and in neither root instruction file — so
+ * a bare token like `> thin` would have saved more and left nothing that could
+ * be followed. The decision record (D2, K6) rejected that explicitly: nothing
+ * in this repository can check whether an instruction nobody states is still
+ * obeyed.
+ *
+ * WHY IT MUST STAY LONG ENOUGH TO BE UNIQUE: {@link is_thin_entry} is a
+ * substring test over the whole file, so a marker short or generic enough to
+ * occur inside ordinary rule prose would make that rule read as a stub — and
+ * nine rule files carry blockquote lines. `thin_marker_unique_in_corpus.test.ts`
+ * runs the constant against every rule body in `src/rules/` and against every
+ * entry `build_thin` emits, in both directions, which is the check that bounds
+ * any further shortening.
  */
-export const THIN_ENTRY_MARKER = '> Routed rule — load the body on trigger-match.';
+export const THIN_ENTRY_MARKER = '> Load the body on a match.';
 
 /** Is this projected entry a pointer stub rather than a rule body? */
 export function is_thin_entry(text: string): boolean {
     return text.includes(THIN_ENTRY_MARKER);
+}
+
+/**
+ * What introduces a stub's body pointer. One writer, one reader.
+ *
+ * A BARE PATH SINCE 2026-10-06 (step 2.3 of
+ * `road-to-a-thinned-layer-measured-in-one-unit`). The pointer used to be a
+ * markdown link, ``Body: [`<id>`](<prefix><id>.md)``, whose link TEXT repeated
+ * the rule id the target already ends in. That cost `6 + len(id)` per stub over
+ * the bare form — 2,359 characters across the 89 stubs of the measured layer,
+ * 534 of it pure syntax and the rest the id written a second time.
+ *
+ * Nothing followed the link as a link. Under `delivery` the hook loads the body
+ * and never reads the pointer at all; under `thin` an agent reads the path. A
+ * markdown link renders in neither case, so the syntax bought rendering nobody
+ * was doing.
+ */
+export const THIN_BODY_POINTER_PREFIX = 'Body: ';
+
+/**
+ * The pointer, as the WRITER emits it — exported so a detector cannot re-spell
+ * it, which is the same drift {@link THIN_ENTRY_MARKER} documents one screen up
+ * and which two gates had already committed there.
+ *
+ * WHAT IT CAPTURES is the whole tail of the line from `Body: ` to its end, and
+ * that is the intended semantic rather than an accident of greediness: the
+ * writer emits the pointer LAST on its line, so the tail IS the path. A review
+ * round proposed a lazy `(.+?\.md)` to stop at the first `.md`; measured, it
+ * changes nothing, because `\s*$` forces the match to reach end of line either
+ * way and a lazy quantifier simply backtracks forward to the same place. The
+ * greedy form is kept and the property is pinned by a test, so the next reader
+ * meets the measurement instead of repeating the proposal.
+ *
+ * ANCHORED TO END OF LINE, NOT `\S+`. The pointer is the last thing on its
+ * line, and a package root may contain spaces; `\S+` would silently stop at the
+ * first one and report a well-formed pointer as missing.
+ *
+ * COMPOSED FROM {@link THIN_BODY_POINTER_PREFIX} rather than re-spelling it.
+ * The constant exists so a reader cannot hold its own copy, and a pattern six
+ * lines below it holding a literal `Body: ` would have broken that invariant in
+ * the file that states it.
+ */
+export const THIN_BODY_POINTER_RE = new RegExp(
+    `${THIN_BODY_POINTER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(.+\\.md)\\s*$`,
+    'm',
+);
+
+/** Does this entry carry a body pointer the writer would recognise? */
+export function has_body_pointer(text: string): boolean {
+    return THIN_BODY_POINTER_RE.test(text);
 }
 
 /**
@@ -356,7 +429,7 @@ export function thin_entry(
     return (
         `## ${title}\n` +
         `${THIN_ENTRY_MARKER}${fires} ${desc} ` +
-        `Body: [\`${rule_id}\`](${bodyLinkPrefix}${rule_id}.md)\n`
+        `${THIN_BODY_POINTER_PREFIX}${bodyLinkPrefix}${rule_id}.md\n`
     );
 }
 
