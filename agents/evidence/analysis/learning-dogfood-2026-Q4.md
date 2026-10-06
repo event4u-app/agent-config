@@ -201,6 +201,117 @@ expect to read a ledger near 2, and should treat *that* as the finding rather
 than as a threshold failure: a window that recorded nothing has not shown a
 `preferred` count to be trivial, it has shown the window did not run.
 
+## Fifth reading — 2026-10-06
+
+Taken five days into the thirty, at `2026-10-06T02:23:32Z`. It exists because
+the reading above ended on a falsifiable prediction and the prediction did not
+hold. Every figure names the command that produced it; both inputs are
+gitignored, so this page is their only durable record.
+
+### The prediction that failed
+
+The 2026-10-04 reading closed by telling its successor to "expect to read a
+ledger near 2". It is not near 2.
+
+`wc -l < agents/runtime/state/learning-dogfood.jsonl` -> **6**. The ledger has
+tripled in two days, and the open question that reading ended on — why a session
+end in this checkout does not reach a concern that is bound, bundled and
+enabled — is now answered by measurement rather than by argument: **it does
+reach it.** Four readings landed on 2026-10-05.
+
+Per-day distribution, same file:
+
+| Day | Readings |
+|---|---|
+| 2026-10-01 | 2 |
+| 2026-10-02 to 2026-10-04 | 0 |
+| 2026-10-05 | 4 |
+| 2026-10-06, to 02:23 UTC | 0 |
+
+The generator is **bursty and tracks maintainer sessions, not the calendar**.
+That cuts both ways, which is why this reading declines to replace one
+projection with another: the 2026-10-04 figure was a projection from a
+three-day drought, and a projection from the 2026-10-05 burst would be the same
+mistake pointing the other way. At the pooled rate (6 in 5 days) the window
+clears 20 comfortably; at the 2026-10-02 to 2026-10-04 rate (0 in 3 days) it
+does not. **The line count on the wake date is undetermined, and five days is
+not enough to determine it.** What is settled is narrower and still worth
+having: a reading near 2 on 2026-10-31 is no longer the expected case.
+
+### The two thresholds are not symmetric
+
+**`session-end p95 < 2 s`.** Sorted `wall_ms` over the six lines is
+`[0, 0, 1, 1, 1, 3]`; nearest-rank p95 = **3 ms**, max 3 ms, against a 2000 ms
+budget. Three orders of magnitude of headroom at n = 6 — underpowered, and
+pointing hard in one direction.
+
+**`non-trivial preferred count`.** **0 on every line of the ledger**, and the
+reason is structural rather than statistical:
+
+- `signals_in` reads `3` on every line since the window opened, and
+  `stat -f '%Sm' agents/memory/intake/signals-2026-10.jsonl` ->
+  **2026-10-01T12:40:09**. The intake has not been written to in five days: it
+  still holds exactly the three signals seeded on day one.
+- Those three carry `origin: claude`, which is **none** of the three producers'
+  origin strings — `grep -rn -- '--origin' src/domains/` returns `bug-fix`,
+  `do-and-judge` and `propose-memory`. The window's entire input arrived by
+  hand, and the documented supply path in Supply above has emitted **nothing at
+  all** in five days.
+- The three sit on three distinct `path` values, so each forms its own group
+  with a single origin. `MIN_CORROBORATIONS` is 2 **distinct** origins, so no
+  combination of them can mint a lesson.
+
+### Controlling the zero before reporting it
+
+A zero from an aggregator nobody exercised is not a finding. Supply above argues
+*from the source* that an empty `LESSONS.md` beside a non-empty intake is the
+corroboration gate working; that argument is now executed, with a negative and a
+positive arm over the **real** intake:
+
+```
+arm=A signals_in=3 distinct_origins=1 [claude]        lessons_out=0 preferred=0
+arm=B signals_in=4 distinct_origins=2 [claude,cursor] lessons_out=1 preferred=1
+   lesson: historical-patterns @ src/scripts/learning_sidecar.ts verdict=preferred corroborations=2
+```
+
+Arm A is the maintainer intake unmodified. Arm B is those same three signals
+plus one line repeating the third signal's claim verbatim under a second origin.
+**Arm B is the control that matters:** it shows that the specific event this
+window waits for — a `preferred` lesson reaching `lessons_out` — does land once
+its precondition is met, so arm A's zero is a statement about the data and not
+about a broken instrument. A control showing merely that the ledger gets written
+at all would not have established that.
+
+Reproduce: import `readSignals` and `buildSidecarFromSignals` from
+`src/scripts/learning_sidecar.ts`, run them over two intake directories at a
+fixed `now`, and print `lessons_out` and the `preferred` count. The probe writes
+nothing into the tree.
+
+### What this means for the wake date
+
+The likely 2026-10-31 reading is **p95 passes, `preferred` reads 0** — and the
+second figure will not mean what the threshold was written to test. A
+`preferred` count of 0 reads naturally as *the learning produced nothing worth
+keeping*. Here it would record that nobody invoked `/bug:fix`, `/judge:on-diff`
+or `/memory:propose` for thirty days. On that axis the window measures
+**invocation frequency**, which What this window cannot answer already says of
+`signals_in`; this reading extends the same caution to `preferred`, where it
+matters more, because `preferred` is the figure the council's condition actually
+gates on.
+
+Put as a question for whoever holds the decision, never as a proposal: **is a
+`preferred` count drawn from an intake with one hand-seeded origin the
+measurement the condition of 2026-07-27 intended?** Both thresholds are the
+council's and neither is this page's to move — Owner-reserved below is
+unchanged. What this reading adds is that one of them is on course to return a
+number whose plain reading would be wrong.
+
+### Unchanged
+
+The elapsed-time block is untouched: `date -u +%Y-%m-%d` -> `2026-10-06`, five
+days of thirty, so step 2.3's condition stays **live-unmet**. No reading taken
+inside one run can change that.
+
 ## What this window cannot answer
 
 - **One machine is not a corpus.** p95 and counts here describe one person's
