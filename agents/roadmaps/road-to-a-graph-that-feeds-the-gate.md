@@ -197,7 +197,7 @@ refuses.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -205,3 +205,4 @@ refuses.
 | 2 | The Bash matcher makes the hook chatty and consumers turn it off | product | Every grep in a long session is a candidate line. | 2.2 caps at five per session and one per token; non-search Bash is silent. | Phase 2 — A hook that reaches the search, and a staleness that sees the edit |
 | 3 | `git status` on a pre-tool hook costs latency | implementation | 2.3 adds a git probe to a hook that now also runs on Bash. | The probe runs only after the latch passes; the hook is advisory; the existing per-concern bench gains a Bash-shaped payload before 2.3 lands. | Phase 2 — A hook that reaches the search, and a staleness that sees the edit |
 | 4 | The recall corpus is labelled by the model under test | product | Self-labels decide promotion. | 3.3 requires a person or council seat and records who labelled. | Phase 3 — One node tool, and the gate feeder in shadow |
+| 5 | A latency reading from one machine is taken as the feeder's cost everywhere | implementation | 3.5 measures the stop hook on a fixture repository on the machine that runs it. | The page names the machine and the fixture; 3.4 states the number as a precondition, not a guarantee. | Phase 3 — One node tool, and the gate feeder in shadow |

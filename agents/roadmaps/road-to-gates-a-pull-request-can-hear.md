@@ -136,6 +136,20 @@ checks agrees with the ruleset, and a report says so when it does not.
       not wired as a required check; it writes nothing.
       verify: `npx vitest run tests/scripts/report_required_checks_drift.test.ts` -> 0
 
+## Phase 6 — Links a pull request can count
+
+- [ ] **6.1 Links from every installed kind, counted.** Placed here rather than in
+      `road-to-rule-triggers-and-links-that-hold`, which owns rule links and was
+      re-reviewed the same day, so a new step there cannot be recorded. Rules are counted by
+      `report_installed_rule_links`, and skill-to-skill links by
+      `lint_skill_link_reach`; a link from an installed skill to a guideline or
+      a context, and every link from an installed command or context, is
+      counted by nothing. The report gains those kinds, prints one unresolved
+      count per kind (ADR and `docs/` targets, which are not projected, as
+      their own row), and records the counts as a baseline that may only
+      shrink. It reports; it fails nothing.
+      verify: `./scripts-run src/scripts/report_installed_rule_links --kinds all | grep -c 'kind:'` -> /^[1-9]/
+
 ## What this roadmap deliberately does not do
 
 - No write to the ruleset, no new required check, no merge-queue change — the

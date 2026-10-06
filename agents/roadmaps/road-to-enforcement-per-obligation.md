@@ -3,7 +3,7 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
-estate_offset_exempt: "The nearest owner is road-to-rule-triggers-and-links-that-hold, whose ticked step 1.5 produced the audit this roadmap corrects; it is a trigger-and-link repair roadmap with two owner-ABI blockers, and adding a schema change to how enforced_by binds would widen it past its subject and tie this work to its ABI gate. The stubs road-to-kernel-instruction-only-migration (one kernel rule's enforced_by value) and road-to-instruction-path-obligation (two prose obligations held by the per-spawn budget) each own one rule's value, not the granularity of the field. No live roadmap owns release finding bfe1d6e6d8ca."
+estate_offset_exempt: "Merging into road-to-rule-triggers-and-links-that-hold was considered and rejected, and nothing can be archived or parked to pay for this. That roadmap is the nearest owner, whose ticked step 1.5 produced the audit this roadmap corrects; it is a trigger-and-link repair roadmap with two owner-ABI blockers, and adding a schema change to how enforced_by binds would widen it past its subject and tie this work to its ABI gate. The stubs road-to-kernel-instruction-only-migration (one kernel rule's enforced_by value) and road-to-instruction-path-obligation (two prose obligations held by the per-spawn budget) each own one rule's value, not the granularity of the field. No live roadmap owns release finding bfe1d6e6d8ca."
 estate_growth_exempt: "Grows active_roadmaps by one: the owner asked on 2026-10-06 for this round's roadmaps to land as ready in one change; the over-credit finding has no owner and its fix is a structural change that needs its own council challenge."
 relates:
   - slug: road-to-rule-triggers-and-links-that-hold

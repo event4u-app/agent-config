@@ -216,17 +216,6 @@ Reproduced on 2026-10-01:
       stays empty**: the installed-layer flip has not happened, its roadmap may
       not start before the carrier roadmap's Phase 1 merges, and that phase is
       open. The report carries the commands to fill it at the flip commit.
-- [ ] **1.7 Links from every installed kind, counted.** Added 2026-10-06 from
-      round `inbox-2026-10-e`. Rules are counted by
-      `report_installed_rule_links`, and skill-to-skill links by
-      `lint_skill_link_reach`; a link from an installed skill to a guideline or
-      a context, and every link from an installed command or context, is
-      counted by nothing. The report gains those kinds, prints one unresolved
-      count per kind (ADR and `docs/` targets, which are not projected, as
-      their own row), and records the counts as a baseline that may only
-      shrink. It reports; it fails nothing.
-      verify: `./scripts-run src/scripts/report_installed_rule_links --kinds all | grep -c 'kind:'` -> /^[1-9]/
-
 ## What this roadmap deliberately does not do
 
 - No trigger rewrite from the 1.3 report. A common-word trigger can be correct;

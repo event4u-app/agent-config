@@ -214,13 +214,14 @@ Reproduced on 2026-10-01:
 | D5 | product-owned | owner | the default flips for `claude-code` under option (a): once `agents/evidence/analysis/installed-arrival-*.md` exists for the current host version and the step 2.2 fixture is green, the thinned layer becomes the default; until then it stays opt-in | owner answer 2026-10-06 to blocker `default-flip-of-the-installed-layer`; no `installed-arrival-*.md` existed that day | an arrival record shows the thinned layer losing content a consumer relies on, or the host lifts or moves its limit |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | A missed trigger leaves a pointer where a body was | product | Prompt-only reach is 305/335; after thinning a miss costs the rule's mechanics in that session. | The consequence class keeps its law standing; 2.3 counts self-served reads; the rollback stays one setting. | Phase 2 — Records from opted-in machines |
 | 2 | The upgrade overwrites a consumer's edited rule | implementation | Converging an existing install rewrites files in place. | 1.3 preserves and reports user-modified files and fails its test if one is overwritten. | Phase 1 — An opt-in thinned install |
 | 3 | The host stops honouring user-layer files the way 2.1 recorded | implementation | Host versions change load semantics without notice. | 2.1 is per host version, and 3.2's report names the host version it read. | Phase 3 — The default, decided |
+| 4 | Closing the double delivery starves a rule that only the injection carried | implementation | 2.5 stops injecting bodies that already stand; a rule installed as a stub must keep receiving its body. | 2.5's fixture asserts both directions — zero duplicated bodies on a default install, unchanged delivery on an opted-in one. | Phase 2 — Records from opted-in machines |
 
 ## Acceptance Criteria
 
