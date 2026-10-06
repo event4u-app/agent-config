@@ -219,7 +219,7 @@ At `df377ca64`:
       a stub owns, which this step does not try to fix). The new test searches
       `src/` and `docs/` for both field names and fails on any hit.
       verify: `npx vitest run tests/scripts/hooks/context_hygiene_state_shape.test.ts` -> 0
-- [ ] **1.3 The rule and its guideline stop naming a loop signal.** In
+- [x] **1.3 The rule and its guideline stop naming a loop signal.** In
       `context-hygiene.md` the header's list of what the hook maintains loses
       "loop signal"; the rule already says the every-turn obligation is
       model-carried (`:36-37`) and gains no sentence. The one paragraph of the
