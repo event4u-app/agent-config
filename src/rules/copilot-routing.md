@@ -18,5 +18,5 @@ obligation_frequency: "none"
 
 **Iron Law.** Tuning the GitHub Copilot AI assistant itself (instructions, PR-review patterns, suggestion behavior) → load the `copilot-config` skill, not `devcontainer` (which covers the dev environment Copilot runs inside).
 
-Body migrated to `skill:copilot-config`. Disambiguates the copilot-config ↔ devcontainer cluster head per [`adr-architectural-consensus-mechanism`](../../docs/contracts/adr-architectural-consensus-mechanism.md).
+Body migrated to `skill:copilot-config`. Disambiguates the copilot-config ↔ devcontainer cluster head per `docs/contracts/adr-architectural-consensus-mechanism.md`.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

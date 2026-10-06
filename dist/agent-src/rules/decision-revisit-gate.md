@@ -96,7 +96,7 @@ read 6 is the agent's, because reversibility belongs to the proposed transition
 and no tool reading one record supplies it. What each field means, and what a
 `[found]` basis ref does NOT claim, is in that script's module docstring. The
 evidence-priced burden table stays in
-[`adr-layout § The reopen record`](../docs/contracts/adr-layout.md).
+`docs/contracts/adr-layout.md` § The reopen record.
 
 ```
 A GRADE IS A MEASUREMENT, NOT A PERMISSION — IT GRANTS NOTHING.
@@ -152,7 +152,7 @@ Field on the ADR: `reopen_policy: directional | owner | unclassified`, absent �
 permitted; only execution of a reserved transition is gated. Absent is
 deliberately not `owner`: with 146 accepted ADRs that default would encode
 today's blockage into the new schema. Full contract, the reopen record and the
-precedent-creates-no-authority clause: [`adr-layout § Reopen authority`](../docs/contracts/adr-layout.md).
+precedent-creates-no-authority clause: `docs/contracts/adr-layout.md` § Reopen authority.
 
 ## See also
 
