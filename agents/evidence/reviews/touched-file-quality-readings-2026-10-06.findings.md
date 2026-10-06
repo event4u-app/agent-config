@@ -1,6 +1,6 @@
 # Completion review — touched-file quality readings, release window 16.3.0
 
-**Skipped:** no code surface for this completion — the diff is one evidence page, one roadmap's step text, one new parked roadmap and an archival rename, and the gate itself measures zero code paths of four changed files, scope f1e1c339f38920372e800d91ec4567a7aa5ee8455770b7e363886fc4c6778a49, declared 2026-10-06
+**Skipped:** no code surface for this completion — the diff is one evidence page, one roadmap's step text, one new parked roadmap and an archival rename, and the gate itself measures zero code paths of four changed files, scope 79f2e20e708cee3218b4b181240253e9982e3d6243e77242eaefeba6f380a810, declared 2026-10-06
 
 ## Why a skip rather than a review
 
@@ -51,7 +51,18 @@ honest if those were checked rather than asserted. Each was.
 Gates green on this branch: `check_estate_count` (growth authorised by the
 receiver's `estate_growth_exempt` claim), `lint_deferral_integrity` (773 dead
 roadmaps scanned, every annotated carry resolves, unannotated count unchanged at
-its 243 baseline), `lint_roadmap_later_disposition`, `build_archive_index`.
+its 243 baseline), `lint_roadmap_later_disposition`, `build_archive_index`,
+`check_verify_expectation_delta`, `check_references`, `check_md_language`,
+`lint_evidence_artifacts`.
+
+**One gate caught a real defect in this change and it is recorded rather than
+quietly fixed.** `check_verify_expectation_delta` went red on CI: the carried
+step's `verify:` clause named a `grep` and then trailed off into prose, which is
+an oracle that cannot say no — the step could have been flipped on a command that
+was never able to fail. It was replaced with the regex form the gate asks for
+when exit status decides nothing. The red was observed on CI before the fix and
+the green locally after, so the gate's sensitivity to this clause is established
+and not assumed.
 
 ## What this change does NOT claim
 
