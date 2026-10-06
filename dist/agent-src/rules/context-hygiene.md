@@ -53,9 +53,15 @@ topic · branch changed since start · ~24 hours passed.
 
 ## The 3-Failure Rule
 
-When **3 consecutive attempts** at the same task fail (code fix, test fix, config change, etc.):
+This counts **strategies (epochs), not raw attempts** — the within-strategy
+count of up to 3 consecutive attempts on one target is
+[`autonomous-execution`](autonomous-execution.md)'s own budget, and its
+3rd attempt triggers that rule's mandatory strategy shift, never a halt.
+When **3 consecutive strategies** at the same task fail (code fix, test fix,
+config change, etc.):
 
-1. **STOP** — do not attempt a 4th fix.
+1. A 4th strategy on the same task is the wrong move — pause and reassess
+   rather than attempt one.
 2. **State dump** — summarize what was tried, what failed, and what you know so far.
 3. **Recommend fresh start** — suggest a fresh session with the state dump as context, or ask for a different approach.
 
@@ -66,7 +72,7 @@ When **3 consecutive attempts** at the same task fail (code fix, test fix, confi
 - **Same failure signature twice → stop and pivot now.** Don't burn the third attempt on a near-identical retry of a fix that already failed the same way — a repeated identical signature means the hypothesis is wrong, not under-applied. Change strategy (re-read source, new hypothesis, ask).
 - **New error signature each attempt = progress.** Peeling one error to reveal a different one is forward motion; counter continues — learning, not looping.
 
-**Hard-blocker classes — skip retries, go straight to ask/surface.** On the **first** occurrence, do not count toward the 3 — stop and surface: missing credentials / unset secret · permission denied · spend / quota / rate limit reached · external-service 5xx / outage. Retrying a hard-blocker is the canonical wasted attempt; the fix is a decision or external change only the user/environment can make.
+**Hard-blocker classes — skip retries, go straight to ask/surface.** On the **first** occurrence, do not count toward the 3 — surface it and halt: missing credentials / unset secret · permission denied · spend / quota / rate limit reached · external-service 5xx / outage. Retrying a hard-blocker is the canonical wasted attempt; the fix is a decision or external change only the user/environment can make.
 
 ## Tool Loop Detection
 

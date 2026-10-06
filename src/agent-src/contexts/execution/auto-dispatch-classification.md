@@ -276,5 +276,5 @@ rung-3 degrade path, the recursive-dispatch guard and every ∅ case.
 
 - [`auto-orchestration-activation`](auto-orchestration-activation.md) — the enable/auto/manifest gate that runs before classification.
 - [`subagent-orchestration`](../../skills/subagent-orchestration/SKILL.md) — the modes this selects.
-- [`autonomous-execution`](../../rules/autonomous-execution.md) — the N=3 budget any LLM-classification v2 must respect.
+- [`autonomous-execution`](../../rules/autonomous-execution.md) — the `execution.fix_loop_max` budget any LLM-classification v2 must respect.
 - [`orchestration-telemetry`](orchestration-telemetry.md) § Registered always-on metrics — the judgment-ladder precision metric this ladder feeds.

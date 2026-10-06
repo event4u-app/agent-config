@@ -246,7 +246,7 @@ At `df377ca64`:
       verify: `cat src/config/agent-settings.template.yml src/agent-src/templates/agent-settings.md | grep -c 'Hard cap enforced by runtime'` -> /^0$/
       Positive control: the same command returns 2 at `df377ca64`.
 
-- [ ] **2.3 A cited budget is the one the rule states.** Each of the 18
+- [x] **2.3 A cited budget is the one the rule states.** Each of the 18
       lines, and the wrapped one, cites `execution.fix_loop_max` and the
       ladder instead of a figure the rule dropped. For five of them that is
       more than a citation: five commands state three as their operative
@@ -260,7 +260,7 @@ At `df377ca64`:
       tracked copies are regenerated.
       verify: `grep -rI 'N=3' src --include=*.md --include=*.ts | grep -c 'autonomous-execution'` -> /^0$/
       Positive control: the same command returns 18 at `df377ca64`.
-- [ ] **2.4 No shipped line stops or asks at three.** The six lines say what
+- [x] **2.4 No shipped line stops or asks at three.** The six lines say what
       the rule says: after three attempts the strategy changes, and a count is
       not a reason to stop or to ask; the push-settle sentence keeps its branch
       for something only the user can decide. One dated note under AC-4 of the

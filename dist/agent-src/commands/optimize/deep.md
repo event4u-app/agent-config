@@ -96,8 +96,10 @@ above that, re-invoke deliberately with fresh context.
   gain is the failure the metric exists to catch.
 - The council splits on the same question twice → STOP, escalate that
   question to the user instead of burning a third loop on it.
-- Any validation target fails 3 consecutive refinement attempts → STOP
-  (N=3 budget, `autonomous-execution`).
+- A validation target failing 3 consecutive refinement attempts triggers
+  the rule's mandatory strategy shift; exhausting the full
+  `execution.fix_loop_max` budget (default 10) on the same target → STOP
+  (`autonomous-execution`).
 
 ### Hard exclusions — never inside this command
 
