@@ -173,7 +173,7 @@ At `df377ca64`:
       and D7 below.
       verify: `grep -c 'unattended' agents/evidence/council/spend-bound-defaults-2026-10.md` -> /^[1-9]/
 
-- [ ] **1.3 On acceptance, the superseded records point to it.** ADR-230 and
+- [x] **1.3 On acceptance, the superseded records point to it.** ADR-230 and
       ADR-237 gain their reciprocal field and the index is regenerated, in the
       change that carries the accepted record.
       verify: `grep -l 'no-spend-bound-by-default' docs/decisions/ADR-230-*.md docs/decisions/ADR-237-*.md | wc -l` -> /^2$/
@@ -303,7 +303,11 @@ At `df377ca64`:
 ## Blockers
 
 ### blocker: spend-directive-reading-confirmed
-- **Status:** open — owner answered (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D9); closes when step 1.1's record lands accepted, which is agent work and no longer a question
+- **Status:** resolved — the owner answered (a) on 2026-10-06 via
+  `/roadmap:resolve-blockers` (D9), and ADR-279 landed `accepted` on
+  2026-10-06 carrying exactly that reading. The exit condition was executed,
+  not read: `grep -l 'status: accepted' docs/decisions/*no-spend-bound-by-default*`
+  prints `docs/decisions/ADR-279-no-spend-bound-by-default.md`.
 - **Owner:** owner
 - **Blocks:** 1.3, 2.2, 3.1, 3.2, 3.3, 3.4, 4.2, 4.3
 - **What to do:** pick exactly one — (a) accept the proposed record of step

@@ -1,6 +1,6 @@
 ---
 adr: 279
-status: proposed
+status: accepted
 date: 2026-10-06
 decision: no-spend-bound-by-default
 supersedes: ADR-230, ADR-237
@@ -50,10 +50,23 @@ review_trigger: >-
 
 ## Status
 
-Proposed 2026-10-06. Owner-directed. It moves to `accepted` only on the owner's
-answer to the blocker `spend-directive-reading-confirmed` in
-`agents/roadmaps/road-to-a-spend-bound-only-where-one-was-set.md`; while it is
-proposed, the records it names are not touched.
+Accepted 2026-10-06. Owner-directed, and accepted on the owner's own answer
+rather than on any agent's reading of it.
+
+It was drafted `proposed` and held there until the owner answered the blocker
+`spend-directive-reading-confirmed` in
+`agents/roadmaps/road-to-a-spend-bound-only-where-one-was-set.md`. The answer
+was **(a) — accept the record as drafted**, with the three superseded clauses
+above and the list under § What stays, by name unchanged; it is recorded as D9
+in that roadmap's `## Decisions` table, dated 2026-10-06. The alternative on
+offer, (b), was to accept it with one or more lines moved between the two
+lists — the paid-gate caps, the unattended budget, the between-round
+confirmation, the fast-path cap and the per-day call guards were named as the
+candidates. None was moved.
+
+No agent decided this. The owner chose between two drafted readings of their
+own directive, and the only agent work left after that answer was landing the
+record and the changes it authorises.
 
 ## Context
 
