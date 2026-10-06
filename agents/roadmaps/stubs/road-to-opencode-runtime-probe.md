@@ -4,11 +4,16 @@ review_by: 2026-12-24
 ---
 # Stub: the opencode runtime probe
 
-> **Arrivals:** 13 (at least) - latest `inbox-2026-10-a` (2026-10-01), a status
-> series that counts this as its thirteenth unchanged baseline and adds one fact:
+> **Arrivals:** 14 (at least) - latest `inbox-2026-10-e` (2026-10-06), the same
+> status series counting its fourteenth unchanged baseline; it notes that the
+> previous arrival line was itself quoted back, and adds no new fact and no new
+> demand. Earlier: `inbox-2026-10-a` (2026-10-01, thirteenth; added that
 > `host_lowering.yaml` carries no opencode row, so the probe would create the tenth
-> host row rather than flip a null. The count is the source's own; no new demand
-> arrived with it.
+> host row rather than flip a null).
+>
+> **Posed owner question (since arrival 14):** the one remaining step is physical —
+> a machine with a running opencode. Run the probe there, or park this stub in
+> `later/` with a dated wake condition so the series stops re-counting it?
 
 > **Stub — not active work, and a DRAIN-RUN TRANSFER** in the sense
 > [`README.md`](README.md) § The two classes defines. **Capability-gated:** the

@@ -16,7 +16,7 @@ probe: none
 > under `decision-revisit-gate`'s reserved set — an agent may neither take it
 > nor keep re-deriving it from zero every round.
 
-> **Arrivals:** 6 (at least) — corrected upward from 3 on 2026-09-11 by round
+> **Arrivals:** 7 (at least) - latest `inbox-2026-10-e` (2026-10-06): four of fifteen release reviews of 16.3.0 read the governance mix as the main risk and ask for a consumer-value budget; the published 23 vs 1 does not reproduce (`measure_release_mix --from 16.2.0 --to 16.3.0` prints 83 vs 3), no new mechanism proposed. The count before it read: 6 (at least) — corrected upward from 3 on 2026-09-11 by round
 > `inbox-2026-09-y`, which subject-matched three further prior rounds this line
 > had not counted. Latest `inbox-2026-09-y` (2026-09-11); before it
 > `inbox-2026-09-q` (2026-09-06) and `agents/tmp.old/inbox-2026-09-e/` (the round

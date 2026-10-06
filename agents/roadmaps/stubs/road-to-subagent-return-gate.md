@@ -5,7 +5,7 @@ review_by: 2026-12-24
 
 # Stub: road to a subagent return gate
 
-> **Arrivals:** 28 (at least) - latest `inbox-2026-10-b` (2026-10-01), whose programme
+> **Arrivals:** 29 (at least) - latest `inbox-2026-10-e` (2026-10-06): one release review asks to study `no_envelope`/`foreign_object`/`fail` instead of `no_message`; council D1 (2026-10-06) below already refused that option until `ok` is non-zero, so no new fact. The count before it read: 28 (at least) - latest `inbox-2026-10-b` (2026-10-01), whose programme
 > (`road-to-leading-every-row` blocker b1) recommends option 4 keyed on `no_envelope` —
 > read that day in a maintainer checkout's ledger: `no_envelope` 24,964, `absent` 4,543,
 > `foreign_object` 54, `fail` 42, `ok` 0, `no_message` 0; `inbox-2026-10-a` (2026-10-01),

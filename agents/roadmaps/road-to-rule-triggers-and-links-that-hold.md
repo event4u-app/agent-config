@@ -216,7 +216,6 @@ Reproduced on 2026-10-01:
       stays empty**: the installed-layer flip has not happened, its roadmap may
       not start before the carrier roadmap's Phase 1 merges, and that phase is
       open. The report carries the commands to fill it at the flip commit.
-
 ## What this roadmap deliberately does not do
 
 - No trigger rewrite from the 1.3 report. A common-word trigger can be correct;
