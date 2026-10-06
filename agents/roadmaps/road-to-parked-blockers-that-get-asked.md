@@ -57,21 +57,21 @@ not. A criterion that says of itself that it is not met is not ticked. A
 
 ## Phase 1 — The census
 
-- [ ] **1.1 Every open blocker in `later/`, by who it waits on.** A `report_`
+- [x] **1.1 Every open blocker in `later/`, by who it waits on.** A `report_`
       script lists each `### blocker:` with `Status:** open` under
       `agents/roadmaps/later/`, its file, `Owner:`, and whether the owner is
       the owner or an agent-reachable condition, and separately every
       blockquote that names an owner question without a blocker entry. It
       exits 0.
       verify: `npx vitest run tests/scripts/report_parked_blockers.test.ts` -> 0
-- [ ] **1.2 The reading is a page.** Its output, the command and the 40/99
+- [x] **1.2 The reading is a page.** Its output, the command and the 40/99
       count go to `agents/evidence/analysis/parked-blockers-2026-10.md` with
       `<!-- evidence-type: analysis -->`.
       verify: `grep -c 'evidence-type: analysis' agents/evidence/analysis/parked-blockers-2026-10.md` -> /^[1-9]/
 
 ## Phase 2 — Whether parked blockers are in scope
 
-- [ ] <!-- blocked-by: later-blockers-in-scope --> **2.1 The scope follows the
+- [ ] <!-- blocked-by: later-blockers-in-scope | asked: no — the council split on 2026-10-07, which escalates to the owner; put in the owner-residue list of this roadmap's PR --> **2.1 The scope follows the
       decision.** Under (a): `/roadmap:resolve-blockers` gains a `later/`
       bucket that lists only entries with `Owner:` owner and `Status:` open, and
       the lint's scope and its pinning test stay unchanged. Under (b): the lint
@@ -81,7 +81,7 @@ not. A criterion that says of itself that it is not met is not ticked. A
 
 ## Phase 3 — The prose question becomes a blocker
 
-- [ ] **3.1 Release ordering, rewritten in the contract's shape.** The
+- [x] **3.1 Release ordering, rewritten in the contract's shape.** The
       blockquote at `later/road-to-release-finding-ordering.md:28-32` becomes a
       `### blocker:` entry with the five required fields, its three options
       carried as the `What to do` choice and the date it was posed kept. The
@@ -90,20 +90,33 @@ not. A criterion that says of itself that it is not met is not ticked. A
 
 ## Phase 4 — A tick over "not met"
 
-- [ ] **4.1 A check that refuses the tick.** A lint reports any `- [x] AC-`
+- [x] **4.1 A check that refuses the tick.** A lint reports any `- [x] AC-`
       line whose own criterion text contains `NOT met`. A fixture shows it red;
       run over the tree, the archived AC-3 is reported as a hit.
       verify: `npx vitest run tests/scripts/lint_ticked_unmet_criteria.test.ts` -> 0
-- [ ] **4.2 The pressure that made the tick.** The progress check stops
+- [ ] <!-- blocked-by: ac3-carry-needs-receiver-backlink --> **4.2 The pressure that made the tick.** The progress check stops
       counting `[~]` in a file under `archive/` toward the Iron-Law-3 failure
       that `:354-359` describes, so an honest deferral can stand in an
       archived roadmap; the archived AC-3 then becomes `[~]` with a one-line
       dated note.
       verify: `npx vitest run tests/scripts/roadmap_progress_archived_deferral.test.ts` -> 0
 
+      **Measured 2026-10-07 — the progress half needed no change, the flip
+      meets a different gate.** `update_roadmap_progress` already excludes
+      `archive/` from `collect()`, so an archived `[~]` never reaches
+      `pending_iron_law_3`; the pressure `:354-359` records was real while that
+      roadmap was active. The verify test now pins it (seen red with
+      `archive` removed from the excluded set). Flipping AC-3 to `[~]` today
+      reds `lint_deferral_integrity` instead: an archived `[~]` with no
+      `deferred-resolution:` annotation is its `unannotated` class, ratcheted
+      at 243, and the flip makes 244. The honest form is a carry —
+      `carried-to=road-to-a-ratification-fence-that-follows-its-imports`,
+      whose step 4.1 is the spawn-path receiver — and a carry needs that file
+      to link back. That file belongs to another roadmap; see the blocker.
+
 ## Phase 5 — Citations a blocker can trust
 
-- [ ] **5.1 Every `path:line` in a blocker resolves.** A lint reads the
+- [x] **5.1 Every `path:line` in a blocker resolves.** A lint reads the
       `## Blockers` section of every active roadmap and stub and checks each
       `path:line` or `path:line-line`: the file exists and the last line is
       within its length. Existing misses go into a shrink-only baseline.
@@ -120,14 +133,14 @@ not. A criterion that says of itself that it is not met is not ticked. A
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — One command lists every open blocker under `later/`, split by
+- [x] AC-1 — One command lists every open blocker under `later/`, split by
       owner-wait and agent-wait.
-- [ ] AC-2 — The council's verdict on the `later/` exclusion is recorded, and
+- [ ] <!-- blocked-by: later-blockers-in-scope | asked: no — the council split on 2026-10-07, which escalates to the owner; put in the owner-residue list of this roadmap's PR --> AC-2 — The council's verdict on the `later/` exclusion is recorded, and
       the readers' scope matches it.
-- [ ] AC-3 — The release-ordering owner question is a `### blocker:` entry
+- [x] AC-3 — The release-ordering owner question is a `### blocker:` entry
       that `lint_roadmap_blockers` validates when its file is in scope.
-- [ ] AC-4 — A `[x]` criterion whose text contains `NOT met` is reported.
-- [ ] AC-5 — A blocker citing a line beyond the end of its file fails the
+- [x] AC-4 — A `[x]` criterion whose text contains `NOT met` is reported.
+- [x] AC-5 — A blocker citing a line beyond the end of its file fails the
       citation lint, and the baseline only shrinks.
 
 ## Decisions
@@ -137,17 +150,28 @@ not. A criterion that says of itself that it is not met is not ticked. A
 | D1 | reversible-technical | evidence | Census before scope | The 40 is a file count; how many wait on the owner is not yet known | — |
 | D2 | reversible-technical | agent | 3.1 edits a `later/` file in place rather than un-parking it | Un-parking is the triage command's decision, not this file's | The council picks (b) and the file is carried |
 | D3 | reversible-technical | agent | Line citations get a baseline, not a hard fail | Line numbers move with every edit above them; an existing miss is drift, not a new defect | The baseline reaches zero |
+| D4 | reversible-technical | agent | The 4.1 and 5.1 lints ship as runnable checks with tests, not wired into `task ci` or a workflow | No step asks for wiring; registering a gate touches `src/config/gate-coverage.yml` and a workflow, which needs a ratification record by a reviewer other than this session | A follow-up asks for either check to block a merge |
+| D5 | reversible-technical | evidence | 4.2's progress half needed no code change, only a pinning test | `update_roadmap_progress` excludes `archive/` from `collect()`; the live pressure on the AC-3 flip is `lint_deferral_integrity`'s unannotated ratchet | The progress check starts reading `archive/` |
 
 ## Blockers
 
 ### blocker: later-blockers-in-scope
-- **Status:** open
-- **Owner:** council
+- **Status:** open — the council ran 2026-10-07 (anthropic + openai, 2 of 2 present, $0 metered) and SPLIT: (a) rejected by both seats; anthropic for (b) on the condition the seven carried files pass the lint, which was then measured true (7 of 7, 0 hard findings); openai for keeping the exclusion unchanged with report-only observability. A split escalates to the owner. Record: `agents/evidence/analysis/parked-blockers-2026-10-council.md`.
+- **Owner:** owner — escalated from council on a split verdict
 - **Blocks:** step 2.1, AC-2
-- **What to do:** pick exactly one — (a) extend `src/domains/product-basic/roadmap/resolve-blockers/command.md` with a `later/` bucket for `Owner:` owner entries only and leave `src/scripts/lint_roadmap_blockers.ts` unchanged, or (b) widen the glob in `src/scripts/lint_roadmap_blockers.ts` to `later/*-carried.md` and flip its pinning test for that pattern.
-- **Resolved when:** a council verdict on the decision-revisit of the "history rather than debt" exclusion is recorded beside `agents/evidence/analysis/parked-blockers-2026-10.md`, naming (a) or (b).
-- **Recommendation:** (a) — it puts owner questions in front of the owner without making forty files' structure a build failure, and the census in Phase 1 says how large the bucket is first.
-- **If you do nothing:** the owner questions in `later/` stay unasked; nothing reds.
+- **What to do:** pick exactly one — (b) widen the glob in `src/scripts/lint_roadmap_blockers.ts` to `later/*-carried.md`, flip its pinning test for that pattern, and let `/roadmap:resolve-blockers` follow; (b′) widen only the lint glob and leave `/roadmap:resolve-blockers` scoped as today, so carried files are validated but nothing is put to you before their roadmap resumes; or (c) keep the exclusion unchanged and rely on `report_parked_blockers` for visibility. Option (a) is off the table: both seats rejected it.
+- **Resolved when:** the owner's choice is recorded in this entry and the readers' scope matches it, or the owner directs another council round with a stated question.
+- **Recommendation:** (b′) — it is the one reading both seats can hold: anthropic's condition for validating the carried files is met, and openai's invariant (validation does not imply activation) is kept because nothing new reaches you.
+- **If you do nothing:** the 51 owner-wait entries the census lists stay unasked, the report keeps showing them, and nothing reds.
+
+### blocker: ac3-carry-needs-receiver-backlink
+- **Status:** open
+- **Owner:** implementer
+- **Blocks:** step 4.2
+- **What to do:** add a `relates:` row naming `road-to-a-kernel-that-guards-its-plumbing` to `agents/roadmaps/road-to-a-ratification-fence-that-follows-its-imports.md` (its step 4.1 is the receiver), then flip the archived AC-3 to `[~]` with `<!-- deferred-resolution: carried-to=road-to-a-ratification-fence-that-follows-its-imports -->` and a dated one-line note.
+- **Resolved when:** the archived AC-3 reads `[~]`, `./scripts-run src/scripts/lint_deferral_integrity` exits 0 at its baseline of 243, and `./scripts-run src/scripts/lint_ticked_unmet_criteria` no longer lists it.
+- **Recommendation:** do it in the change that lands that roadmap's step 4.2, which already writes a line under the same AC-3 — one edit to the archived file instead of two racing ones.
+- **If you do nothing:** AC-3 stays ticked over its own "NOT met" and stays listed by the 4.1 lint.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
