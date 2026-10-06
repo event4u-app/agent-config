@@ -1,4 +1,4 @@
-**Skipped:** no code surface for this completion — the branch changes markdown only: a new analysis artifact under `agents/evidence/analysis/`, the carried roadmap moved into `agents/roadmaps/later/` with its blocker and decisions, and this declaration. No executable behaviour is added, changed or removed, so there is nothing a completion review could bind to, scope 37f02ea31d27a301a5a28b979c8b42c6fda47071f09ee3bd7996f3827c5c60ee, declared 2026-10-06
+**Skipped:** no code surface for this completion — the branch changes markdown only: a new analysis artifact under `agents/evidence/analysis/`, the carried roadmap moved into `agents/roadmaps/later/` with its blocker and decisions, and this declaration. No executable behaviour is added, changed or removed, so there is nothing a completion review could bind to, scope a564bdc181ce27a52537bfaedea977723e6aee8824a8c4196107a6350e50f3f6, declared 2026-10-06
 
 # host-claims-timeout — completion-review skip
 
