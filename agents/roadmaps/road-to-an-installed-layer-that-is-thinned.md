@@ -117,29 +117,6 @@ Reproduced on 2026-10-01:
       exposure state beside `src/config/host-injection-effect.json:8` without
       changing that file's verdict, which `road-to-delivery-on-hook-hosts` owns.
       verify: `grep -c 'thinned' agents/evidence/analysis/installed-arrival-*.md` -> /^[1-9]/
-- [ ] **2.5 A default install is not served twice.** Added 2026-10-06 from round
-      `inbox-2026-10-e`. `gateOpen` in `src/scripts/hooks/rule_inject_hook.ts`
-      opens on the resolved `lean_projection` pair, template base included,
-      while the installer reads only an explicit user-global `mode` as consent
-      (D3) and writes full bodies otherwise. So an install nobody opted in
-      carries every routed body AND receives its injection. One fixture over a
-      default (unthinned) install counts injected characters for rules whose
-      full body already stands; the gate then keys on the installed form of
-      each rule (stub gets the body, full body gets nothing) or on the same
-      consent predicate the installer uses; the fixture asserts zero duplicated
-      bodies on a default install and unchanged delivery on an opted-in one.
-      verify: `npx vitest run tests/scripts/rule_inject_default_install_no_double.test.ts` -> 0
-- [ ] **2.6 A source reduction shows as pending reinstall.** Added 2026-10-06
-      from the same round. `check_standing_rule_delivery` measures installed
-      directories only, so a reduction in `src/` is invisible until a
-      reinstall. The report gains one column per standing rule: installed
-      digest against the current source digest, `pending reinstall` where
-      they differ.
-      verify: `npx vitest run tests/scripts/check_standing_rule_delivery.test.ts -t 'pending reinstall'` -> 0
-
-> **2.5 and 2.6 are fixtures, not session records**, and need no opted-in
-> machine.
-
 > **2.1, 2.3 and 2.4 need a real opted-in machine**, which this branch cannot
 > produce: each one's verify greps an `agents/evidence/analysis/` record written
 > from a live session after an install has actually been opted in. 2.2 is the
@@ -256,7 +233,6 @@ Reproduced on 2026-10-01:
 | 1 | A missed trigger leaves a pointer where a body was | product | Prompt-only reach is 305/335; after thinning a miss costs the rule's mechanics in that session. | The consequence class keeps its law standing; 2.3 counts self-served reads; the rollback stays one setting. | Phase 2 — Records from opted-in machines |
 | 2 | The upgrade overwrites a consumer's edited rule | implementation | Converging an existing install rewrites files in place. | 1.3 preserves and reports user-modified files and fails its test if one is overwritten. | Phase 1 — An opt-in thinned install |
 | 3 | The host stops honouring user-layer files the way 2.1 recorded | implementation | Host versions change load semantics without notice. | 2.1 is per host version, and 3.2's report names the host version it read. | Phase 3 — The default, decided |
-| 4 | Closing the double delivery starves a rule that only the injection carried | implementation | 2.5 stops injecting bodies that already stand; a rule installed as a stub must keep receiving its body. | 2.5's fixture asserts both directions — zero duplicated bodies on a default install, unchanged delivery on an opted-in one. | Phase 2 — Records from opted-in machines |
 
 ## Acceptance Criteria
 
