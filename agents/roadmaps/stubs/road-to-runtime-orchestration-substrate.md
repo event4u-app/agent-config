@@ -8,7 +8,7 @@ blocker_opened: 2026-08-27
 
 # Road to a runtime orchestration substrate — stub
 
-> **Arrivals:** 14 (at least) - latest `inbox-2026-10-b` (2026-10-01), a two-author
+> **Arrivals:** 15 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review asks for one state envelope with atomic, expiry and privacy primitives; `_lib/fs_atomic.ts` exists and no envelope type does. The count before it read: 14 (at least) - latest `inbox-2026-10-b` (2026-10-01), a two-author
 > bundle proposing a session task envelope with leases and a join packet; killed as
 > K18 in `road-to-leading-every-row` because the typed return already exists and the
 > rest is this stub's gated tracks; `inbox-2026-10-a` (2026-10-01), where three of

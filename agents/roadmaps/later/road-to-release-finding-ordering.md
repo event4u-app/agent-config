@@ -18,7 +18,7 @@ estate_growth_exempt: "Adds one later/ roadmap to receive the release-findings O
 ---
 # Road to the release-finding ordering guarantee
 
-> **Arrivals:** 4 (at least) - latest `inbox-2026-10-a` (2026-10-01), a release review
+> **Arrivals:** 5 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review asks to close this deterministic defect; the owner question below is a blockquote, not a `### blocker:`, so `/roadmap:resolve-blockers` cannot see it - `road-to-parked-blockers-that-get-asked` step 3 rewrites it. The count before it read: 4 (at least) - latest `inbox-2026-10-a` (2026-10-01), a release review
 > asking that this leave `later/` because its `review_by` of 2026-09-20 has passed;
 > earlier: `inbox-2026-09-y` (2026-09-11). Counted as
 > distinct prior round directories under the consumed-inbox tree, which is gitignored -

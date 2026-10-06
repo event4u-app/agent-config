@@ -149,8 +149,16 @@ refuses.
       therefore BLOCKED rather than unfinished, on `b1-labelled-positives-unreachable`
       below: the remaining moves include amending a pre-registration after seeing
       its counts, which the party that saw them may not do.
-- [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3; the ADR-277 reopen is
-      an owner amendment, not a step here.
+- [ ] **3.5 The feeder's cost on the stop slot, measured.** Added 2026-10-06 from round
+      `inbox-2026-10-e`. `src/scripts/_lib/graph_feeder_record.ts:12-22` withdrew the
+      "costs nothing" claim and leaves the latency unmeasured; a stop-hook timeout
+      would discard F's refusal, so the shadow arm can weaken the gate it feeds. p50
+      and p95 of the stop hook with and without the feeder, on a fixture repository,
+      published beside the recall page; the number becomes a stated precondition of
+      3.4 in that step's text.
+      verify: `grep -c 'p95' agents/evidence/analysis/graph-feeder-latency-*.md` -> /^[1-9]/
+- [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3 and 3.5; the ADR-277
+      reopen is an owner amendment, not a step here.
 
 ## Acceptance criteria
 
@@ -189,7 +197,7 @@ refuses.
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -197,3 +205,4 @@ refuses.
 | 2 | The Bash matcher makes the hook chatty and consumers turn it off | product | Every grep in a long session is a candidate line. | 2.2 caps at five per session and one per token; non-search Bash is silent. | Phase 2 — A hook that reaches the search, and a staleness that sees the edit |
 | 3 | `git status` on a pre-tool hook costs latency | implementation | 2.3 adds a git probe to a hook that now also runs on Bash. | The probe runs only after the latch passes; the hook is advisory; the existing per-concern bench gains a Bash-shaped payload before 2.3 lands. | Phase 2 — A hook that reaches the search, and a staleness that sees the edit |
 | 4 | The recall corpus is labelled by the model under test | product | Self-labels decide promotion. | 3.3 requires a person or council seat and records who labelled. | Phase 3 — One node tool, and the gate feeder in shadow |
+| 5 | A latency reading from one machine is taken as the feeder's cost everywhere | implementation | 3.5 measures the stop hook on a fixture repository on the machine that runs it. | The page names the machine and the fixture; 3.4 states the number as a precondition, not a guarantee. | Phase 3 — One node tool, and the gate feeder in shadow |

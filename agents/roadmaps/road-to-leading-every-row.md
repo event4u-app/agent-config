@@ -48,7 +48,7 @@ relates:
 > host-config collection, a UI/UX skill bundle). Every file:line below was
 > re-read at `9bc8cd4`; the proposals were drafted at `eb2cc9ea`, 218 commits
 > earlier. Identities are in the round's encrypted intake note only.
-> **Arrivals:** 2 — latest `inbox-2026-10-b` (2026-10-01); earlier: `inbox-2026-09-ab`
+> **Arrivals:** 3 (at least) - latest `inbox-2026-10-e` (2026-10-06): an external 49-row rescore of 16.3.0 (mean 4.18 to 4.43) whose folds (a)-(g) are carried by that round's roadmaps. The count before it read: 2 — latest `inbox-2026-10-b` (2026-10-01); earlier: `inbox-2026-09-ab`
 > (topic `t06`, which carried this file's first draft and landed four of its lanes).
 
 ## Goal

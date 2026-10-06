@@ -43,6 +43,19 @@ left to read as finished.
 
 ## Phase 1 — Deferred steps carried from road-to-learning-you-can-see
 
+- [ ] **2.4 The GUI toggle says what it does.** Added 2026-10-06 from round
+      `inbox-2026-10-e`. `src/scripts/memory_learn_hook.ts` records as a KNOWN
+      GAP that it reads only the project-local settings file, while the GUI
+      writes the user-global file plus its provenance sidecar — so enabling
+      `memory.learn_on_session_end` in the GUI does nothing, and the gap's only
+      written owner was the archived parent. This step changes no behaviour:
+      the field description in `src/server/schemas/settings.ts` states that the
+      hook reads the project-local file only. Whether it should read the
+      user-global file through `consentVerdict` is part of the owner amendment
+      2.3 already carries, not a second blocker.
+      verify: `grep -A3 'learn_on_session_end' src/server/schemas/settings.ts | grep -c 'project-local'` -> /^[1-9]/
+      Positive control: the same command returns 0 at `a75bb3210`.
+
 - [ ] **2.3 Propose the default flip.** Deferred until the window has 30 days and both <!-- blocked-by: learning-window-and-owner-amendment | asked: no - non-interactive drain lane, surfaced as owner residue in the lane report -->
       thresholds hold; the proposal is an owner amendment to the council decision in
       `src/config/agent-settings.template.yml`, found by

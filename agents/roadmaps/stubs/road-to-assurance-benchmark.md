@@ -5,7 +5,7 @@ review_by: 2026-09-25
 
 # Road to an assurance benchmark — stub
 
-> **Arrivals:** 1 counted — latest `inbox-2026-10-b` (2026-10-01); earlier rounds were
+> **Arrivals:** 2 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review asks for an eager-versus-carrier outcome benchmark before any delivery flip; the parity instrument is closed by ADR-202 and the owner decided installed-layer D5 on 2026-10-06. The count before it read: 1 counted — latest `inbox-2026-10-b` (2026-10-01); earlier rounds were
 > not counted for this stub. That round's outcome-benchmark proposal folds here, as no
 > new file: (a) the corpus spans at least eight task classes; (b) where a neighbour
 > package offers a capability, the arms are native / neighbour direct / native plus

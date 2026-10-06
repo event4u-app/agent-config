@@ -5,7 +5,7 @@ review_by: 2026-12-08
 
 # Stub: road to a path-activation route under `delivery`
 
-> **Arrivals:** 2 — latest `inbox-2026-10-c` (2026-10-01), which found that `roadmap-progress-sync` was emitted WITH an exclusive `paths:` (its `command` triggers were not counted by `_has_non_path_trigger`), so the list below held 17 rules that got no `paths:` plus one that lost its command triggers. **Repaired 2026-10-02** by `road-to-rule-triggers-and-links-that-hold` step 1.1: the predicate is now a negation of the two path-shaped keys, and `rule_activation_census --json` reports `mixed: 18` against exactly the 18 ids below, so the list is uniform again. Earlier: `inbox-2026-09-ab` (2026-09-29).
+> **Arrivals:** 3 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review asks that a thin stub keep host-native routing metadata; both closure routes stay owner-reserved (`thin_rules.ts:137-144`). The count before it read: 2 — latest `inbox-2026-10-c` (2026-10-01), which found that `roadmap-progress-sync` was emitted WITH an exclusive `paths:` (its `command` triggers were not counted by `_has_non_path_trigger`), so the list below held 17 rules that got no `paths:` plus one that lost its command triggers. **Repaired 2026-10-02** by `road-to-rule-triggers-and-links-that-hold` step 1.1: the predicate is now a negation of the two path-shaped keys, and `rule_activation_census --json` reports `mixed: 18` against exactly the 18 ids below, so the list is uniform again. Earlier: `inbox-2026-09-ab` (2026-09-29).
 
 > **Stub — not active work.** Created 2026-09-08 by the owner-delegated drain run
 > holding `road-to-delivery-for-every-host`, as the receiver for R2 finding 1 on
