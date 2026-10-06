@@ -125,6 +125,29 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Added
 
+- **A team's git convention can be declared instead of measured — the new
+  `git:` settings block.** Three Class-C keys, each defaulting to the
+  behaviour every install had before, so an install that sets nothing is
+  unchanged. `git.commit_format: ticket-prefix` writes
+  `DEV-1234 feat(exporter): …` instead of `feat(DEV-1234): …` and treats a
+  ticket in the scope as a wrong subject; `/commit` and `/commit:in-chunks`
+  validate against the regex for the configured format, and the
+  conventional-commits-writing classifier gains a `ticket-conventional` family
+  so such a history is no longer misread as free-text ticket prefixes.
+  `git.branch_pattern` (`{type}`, `{ticket}`, `{slug}`) shapes the branches
+  `/worktree:create` proposes; reading a ticket back out of a branch now matches
+  any `[A-Z][A-Z0-9]+-[0-9]+` token, so `DEV-1234-device-export` yields its
+  ticket. `git.update_strategy: rebase` makes `/create-pr`, `/pr:merge`,
+  `/prepare-for-review` and `/review:changes` propose
+  `git rebase origin/<base>` plus `--force-with-lease` and never merge the base
+  into a feature branch — one git-workflow reference
+  (`references/branch-update.md`) now owns that decision. **What it does not do:** the setting picks the operation and never
+  authorises it; git-history-discipline still requires the user's request for
+  every rebase, fixup or autosquash. The keys are set per project — the
+  user-global whitelist is ADR-gated and does not carry them yet — and a
+  commit-linting config in the repository still outranks `git.commit_format`.
+  The merge method is not a key: `/pr:merge` already reads it from the forge.
+
 - **A push no longer ships a branch whose tree contradicts its own commits.**
   `check_branch_work_committed` runs first in the pre-push hook, and it exists
   because this branch produced the defect it guards: a merge-reconciled baseline
