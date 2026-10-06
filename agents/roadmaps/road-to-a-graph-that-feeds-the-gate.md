@@ -92,7 +92,7 @@ refuses.
       code is untouched; a `behind:N` or `absent` graph contributes nothing.
       `corrected-from-reproduction` — no per-stop record exists today.
       verify: fixture — an untested production edit yields F and graph verdicts on the new record and an unchanged exit code
-- [ ] **3.3 Recall on a labelled corpus, published.** ADR-277 (`:26-32`) reopens F when its
+- [ ] <!-- blocked-by: b1-labelled-positives-unreachable | asked: no — non-interactive drain run, which reports once at the end and cannot put a question; the ask is carried in the PR body and in the blocker below --> **3.3 Recall on a labelled corpus, published.** ADR-277 (`:26-32`) reopens F when its
       catch rate is measured on labelled data. Label 50 stop records (25 with an untested
       production edit, 25 without) by a person or a council seat, never the hook's own
       run; report F recall, graph recall and their union with `capture_rate.wilsonInterval`
@@ -115,6 +115,32 @@ refuses.
       records the state at pre-registration, and the accrual figure is what moved.
       Re-measure before flipping — this count is a reading taken on a date, not a
       standing fact, and `agents/state/` is local and gitignored, so a clone reads 0.
+      STATE 2026-10-06, the reading taken: **the accrual bar is MET and the step is
+      still open, for a reason the pre-registration did not anticipate.** 84 rows
+      across 5 distinct sessions, against a bar of 50. Taking the reading produced
+      three findings, all on the evidence page. (i) The GRAPH ARM WAS VOID: the
+      feeder handed `untested` absolute paths while the graph keys node ids on
+      repo-relative ones, so all 19 path-carrying rows recorded `no-seeds` — none
+      of them a fact about the code. Probed at `c58d7eae`: `check_memory.ts`
+      resolves 60 seeds relative and 0 absolute. Repaired in this change, with
+      regression tests written against the absolute form and seen red first; the
+      arm's accrual restarts at zero, because no pre-repair row is admissible
+      evidence about the graph. It survived 3.2's review because every fixture fed
+      a relative path, the one shape no host emits. (ii) The labelled corpus is
+      **16 rows, and 16 of 16 are NEGATIVE** — labelled by the AI council, seats
+      `anthropic` and `openai`, quorum 2/2, $0 billed, predictions withheld, no
+      expected outcome stated. So **recall is UNDEFINED, 0/0 — not zero, and not a
+      low score for either detector.** (iii) The one real number: F fired on 0 of
+      84 rows, a false-positive rate of 0/81 over an independently labelled
+      negative set, Wilson [0.000, 0.045] — a SPECIFICITY reading, which settles
+      the half ADR-277 already discharged and nothing about the half it left open.
+      Why waiting does not fix it: the accrual channel is this suite's own
+      governance work, whose base rate of untested production edits is at or near
+      zero, and the 16 rows are not 16 independent observations — 4 distinct files,
+      14 from one session, R14-R16 identical in every recorded field. The step is
+      therefore BLOCKED rather than unfinished, on `b1-labelled-positives-unreachable`
+      below: the remaining moves include amending a pre-registration after seeing
+      its counts, which the party that saw them may not do.
 - [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3; the ADR-277 reopen is
       an owner amendment, not a step here.
 
@@ -135,6 +161,22 @@ refuses.
 | D3 | reversible-technical | agent | a separate feeder record, not `ShadowRecord` | `ShadowRecord` is written only on `stop_hook_active` / `refused_turn` (`turn_end_gate_hook.ts:1332,1353`) and feeds the Q1 reading | the Q1 window closes |
 | D5 | deterministic | agent | closure pass C1 (3.3's verify listed unfalsifiable): accepted — the evidence page's existence is the oracle, the n ≥ 50 bar is in the step text and in the acceptance criteria | `closure_scan` 2026-10-01; the family is a listing, never a gate (`closure_scan.ts:41-50`) | a reviewer flips 3.3 on a page with n < 50 |
 | D4 | contested-technical | evidence | no free-text scoring in `graph_node` | `docs/CLAIMS.md:566-572` — free-text retrieval is the row the graph lost | a rerun wins a retrieval class |
+| D6 | deterministic | evidence | the feeder relativises edit paths before the graph sees them, and stores the relativised form | probed at `c58d7eae`: `check_memory.ts` resolves 60 seeds relative, 0 absolute; all 19 path-carrying rows read `no-seeds` | the graph gains a resolver that takes absolute paths |
+| D7 | deterministic | evidence | the pre-registration is NOT amended now that its counts are known — the 25/25 design stands and the shortfall is reported against it | the page's own clause: a threshold chosen after the counts is a threshold chosen by the counts | the owner amends it, via `b1` |
+
+## Blockers
+
+### blocker: b1-labelled-positives-unreachable
+- **Status:** open · asked: no — non-interactive drain run; carried in the PR body of the run that opened it
+- **Ownership:** product-owned
+- **Owner:** user
+- **Blocks:** step 3.3 — Recall on a labelled corpus, published
+- **Question:** The pre-registered corpus needs 25 positive stop records. This repository's accrual channel produced 0 across 84 rows and 5 sessions, because its own sessions are governance work on a suite whose gates refuse untested production edits. Where do the positives come from — or does the design change?
+- **Recommendation:** (a). The base rate of the positive class in this channel is the thing that is zero, and no amount of further accrual here moves it. A consumer repository under ordinary feature work produces the class in the ordinary course; this one does not. Note that (b) and (c) are both amendments to a pre-registration whose counts are now known, which is the one move the page forbids the party that has seen them — they are listed because they are real options for the owner, not because an agent weighed and declined them.
+- **If you do nothing:** step 3.3 stays open and ADR-277's `review_trigger` stays unfired, so detector F's recall half remains unmeasured indefinitely while its false-positive half stays discharged. The graph arm accrues post-repair rows that nobody draws. Nothing breaks and nothing is learned.
+- **What to do:** pick exactly one — (a) nominate a consumer repository whose sessions are feature work, and let the corpus accrue there until the positive stratum fills; (b) amend the pre-registration to a design the available channel can support, recording that the amendment was made with the counts in hand; (c) close step 3.3 and record that F's recall will not be measured, which leaves ADR-277's reopen condition permanently unmet and should be written into that ADR rather than only here.
+- **Resolved when:** `agents/evidence/analysis/graph-feeder-recall-2026-Q4.md` carries a `Current reading` table whose `positives in corpus` column is non-zero for at least one arm, **or** this blocker carries the owner's (b) or (c) record naming which was chosen and why.
+- **What is already done, so the owner is not asked to redo it.** The instrument is repaired (D6) and its regression is pinned against the shape a host actually emits. The accrual bar is met. The labelling machinery ran end to end — council quorum 2/2, predictions withheld, zero `cannot tell`, zero replacements — so the protocol itself is proven executable and only its input is missing. The specificity half is measured and reported. What is genuinely absent is one thing: a positive class.
 
 ## Risk Register
 
