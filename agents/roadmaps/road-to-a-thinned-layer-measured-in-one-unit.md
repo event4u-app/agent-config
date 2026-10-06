@@ -154,7 +154,7 @@ on the user-global layer.
       detectors, and fails if either misses it; a second case changes the
       constant and asserts both still find the stub.
       verify: `npx vitest run tests/scripts/thin_marker_single_spelling.test.ts` -> 0
-- [ ] **2.2 A shorter marker that still says what to do.** Shorten the
+- [x] **2.2 A shorter marker that still says what to do.** Shorten the
       constant to at most 28 characters and keep the instruction in it — that
       the body is to be loaded when the rule matches. The test asserts
       `is_thin_entry` is true for every entry `build_thin` emits as a stub and

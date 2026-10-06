@@ -284,9 +284,32 @@ function _title(s: string): string {
  * Exported so the WRITER and every DETECTOR share one definition. A gate that
  * re-spelled this string would drift from the writer silently, and the failure
  * would be invisible in exactly the direction that matters: a stub the gate
- * fails to recognise reads as a complete rule body.
+ * fails to recognise reads as a complete rule body. Two gates had done exactly
+ * that until step 2.1 of `road-to-a-thinned-layer-measured-in-one-unit`; both
+ * import this now.
+ *
+ * SHORTENED 2026-10-06 from 47 characters to 27 (step 2.2). It is paid once per
+ * stub and there were 89 stubs on the measured layer, so the sentence cost
+ * 4,183 characters of a 97,496-character standing total; at 27 it costs 2,403,
+ * a saving of 1,780 = 20 x 89.
+ *
+ * WHAT THE SHORTENING WAS NOT ALLOWED TO DO: drop the instruction. This is the
+ * only standing text in the whole layer that says what a stub is FOR — "load
+ * the body" occurs in no kernel rule and in neither root instruction file — so
+ * a bare token like `> thin` would have saved more and left nothing that could
+ * be followed. The decision record (D2, K6) rejected that explicitly: nothing
+ * in this repository can check whether an instruction nobody states is still
+ * obeyed.
+ *
+ * WHY IT MUST STAY LONG ENOUGH TO BE UNIQUE: {@link is_thin_entry} is a
+ * substring test over the whole file, so a marker short or generic enough to
+ * occur inside ordinary rule prose would make that rule read as a stub — and
+ * nine rule files carry blockquote lines. `thin_marker_unique_in_corpus.test.ts`
+ * runs the constant against every rule body in `src/rules/` and against every
+ * entry `build_thin` emits, in both directions, which is the check that bounds
+ * any further shortening.
  */
-export const THIN_ENTRY_MARKER = '> Routed rule — load the body on trigger-match.';
+export const THIN_ENTRY_MARKER = '> Load the body on a match.';
 
 /** Is this projected entry a pointer stub rather than a rule body? */
 export function is_thin_entry(text: string): boolean {

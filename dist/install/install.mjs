@@ -12853,7 +12853,7 @@ function _trigger_hint(fm) {
 function _title(s) {
   return s.replace(/[A-Za-z]+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }
-var THIN_ENTRY_MARKER = "> Routed rule \u2014 load the body on trigger-match.";
+var THIN_ENTRY_MARKER = "> Load the body on a match.";
 var BODY_LINK_PREFIX = "../../dist/agent-src/rules/";
 function absoluteBodyLinkPrefix(packageRoot) {
   return `${path26.join(path26.resolve(packageRoot), "dist", "agent-src", "rules")}${path26.sep}`;
