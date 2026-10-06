@@ -294,6 +294,55 @@ describe('ownership resolution — one function, read by both readers', () => {
         }
     });
 
+    it('the receipt honours an EXPLICIT null inventoryPath — `null` reads none', () => {
+        // The contract the field documents, and the reason `??` is wrong here:
+        // it collapses an explicit null into the default, so a caller asking
+        // for a hermetic receipt still read the real user-global inventory —
+        // whose tilde-relative entries then re-root into the fixture home and
+        // read as package-owned. That is the cross-home misattribution two
+        // docstrings in this module forbid.
+        const home = mkTmp('ilo-nullinv-');
+        stageGlobal(home, { 'a.md': rule(10) });
+        const saved = process.env['AGENT_CONFIG_DEPLOY_INVENTORY'];
+        const decoy = stageInventory(path.join(home, '.claude'), ['rules/a.md']);
+        process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] = decoy;
+        try {
+            const lines = installReceiptBudgetLines(mkTmp('ilo-nullinv-pkg-'), home, {
+                manifestPath: null,
+                inventoryPath: null,
+            }).join('\n');
+            expect(lines).toContain(ownershipLine('none'));
+            expect(lines).toContain('0 package-owned');
+        } finally {
+            if (saved === undefined) delete process.env['AGENT_CONFIG_DEPLOY_INVENTORY'];
+            else process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] = saved;
+        }
+    });
+
+    it('a report about the ASKING process own home honours the env override', () => {
+        // `ReportOptions.home` is required, so the report always states a home
+        // — including when the home it states is simply the machine it runs on.
+        // Treating that as "a different home" sent it to the hardcoded layout,
+        // found nothing under the override, and printed "every file reads
+        // foreign": the 0 package-owned reading step 1.2 exists to remove, with
+        // the report and the receipt then disagreeing about one install.
+        const home = os.homedir();
+        const dir = path.join(mkTmp('ilo-ownhome-'), 'deployed-files.json');
+        fs.writeFileSync(
+            dir,
+            JSON.stringify({ schema_version: 1, tools: {} }, null, 2),
+            'utf-8',
+        );
+        const saved = process.env['AGENT_CONFIG_DEPLOY_INVENTORY'];
+        process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] = dir;
+        try {
+            expect(defaultInventoryPath(home)).toBe(dir);
+        } finally {
+            if (saved === undefined) delete process.env['AGENT_CONFIG_DEPLOY_INVENTORY'];
+            else process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] = saved;
+        }
+    });
+
     it('the receipt prints the same ownership sentence as the report', () => {
         const home = mkTmp('ilo-receipt-home-');
         const dir = stageGlobal(home, { 'a.md': rule(10) });

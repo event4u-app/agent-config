@@ -23,6 +23,7 @@ import {
     has_body_pointer,
     THIN_BODY_POINTER_PREFIX,
     THIN_BODY_POINTER_RE,
+    THIN_ENTRY_MARKER,
     thin_entry,
 } from '../../src/scripts/_lib/thin_rules.js';
 
@@ -73,7 +74,7 @@ describe('the stub pointer is a bare path', () => {
     it('an entry with no pointer is recognised as having none', () => {
         // The control. Without it the case above would pass for a detector that
         // answered true unconditionally.
-        const noPointer = '## Some Rule\n> Load the body on a match. Fires on: kw-probe.\n';
+        const noPointer = `## Some Rule\n${THIN_ENTRY_MARKER} Fires on: kw-probe.\n`;
         expect(has_body_pointer(noPointer)).toBe(false);
         expect(
             evaluate_demotion(noPointer, { sentinel: SENTINEL, keyword: KEYWORD }).link_present,
@@ -118,7 +119,7 @@ describe('the stub pointer is a bare path', () => {
         // until it is refreshed. That is the same known case the marker change
         // carries, and the install receipt already tells the user when a layer
         // was rewritten.
-        const old = '## Some Rule\n> Load the body on a match. Body: [`x`](rules/x.md)\n';
+        const old = `## Some Rule\n${THIN_ENTRY_MARKER} Body: [\`x\`](rules/x.md)\n`;
         expect(has_body_pointer(old)).toBe(false);
     });
 });

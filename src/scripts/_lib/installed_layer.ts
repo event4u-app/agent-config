@@ -41,6 +41,7 @@
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -516,9 +517,26 @@ export type OwnershipSource = 'manifest' | 'global-inventory' | 'this-deploy' | 
  * a directory nobody writes.
  */
 export function defaultInventoryPath(home?: string | null): string {
-    // A STATED HOME WINS; `inventory_path()` answers for the ASKING process and
-    // is right only when no home was named.
+    // NO HOME STATED — the asking process is the subject, so the env-aware
+    // resolver is the right answer.
     if (home === undefined || home === null || home === '') return inventory_path();
+    // THE STATED HOME IS THE ASKING PROCESS'S OWN. `ReportOptions.home` is
+    // required, so `buildInstalledLayerReport` ALWAYS states one — including
+    // when it is simply measuring the machine it is running on. Treating that
+    // as "a different home" sent it to the hardcoded layout, found nothing
+    // under `EVENT4U_CONFIG_HOME` or `AGENT_CONFIG_DEPLOY_INVENTORY`, and
+    // printed "NO manifest and NO deploy inventory resolved" — the
+    // `0 package-owned` reading step 1.2 exists to remove, and it put the
+    // report and the receipt in disagreement about one install.
+    //
+    // The precedence argument only ever covered a home that is NOT this
+    // process's, so that is the case the branch now tests for.
+    try {
+        if (path.resolve(home) === path.resolve(os.homedir())) return inventory_path();
+    } catch {
+        // `homedir()` can throw on an exotic environment; fall through to the
+        // layout, which is the answer for a home that is not ours anyway.
+    }
     return path.join(home, DEFAULT_EVENT4U_ROOT_RELATIVE, INVENTORY_BASENAME);
 }
 
@@ -633,8 +651,12 @@ export function resolveLayerOwnership(opts: OwnershipOptions): OwnershipResoluti
         try {
             const inv = load_inventory(opts.inventoryPath ?? defaultInventoryPath(opts.home));
             for (const abs of recorded_absolute_files(inv, opts.home ?? null)) {
+                // COUNT PATHS NEWLY CONTRIBUTED, not entries read. Counting
+                // reads named a source that added nothing — and
+                // `recorded_absolute_files` emits two spellings per file, so it
+                // also double-counted.
+                if (!recorded.has(abs)) n += 1;
                 recorded.set(abs, null);
-                n += 1;
             }
         } catch {
             // Defence in depth, and NOT where the documented behaviour lives.
@@ -654,8 +676,13 @@ export function resolveLayerOwnership(opts: OwnershipOptions): OwnershipResoluti
     for (const [anchor, rels] of opts.thisDeploy ?? new Map()) {
         for (const rel of rels) {
             const abs = path.resolve(anchor, rel);
+            // Same rule as the inventory branch: a source is named only when it
+            // contributes a path nothing else had. On every install after the
+            // first, `thisDeploy`'s paths are already in the inventory, and
+            // naming it there printed "the file set this install just wrote"
+            // for a source that added nothing.
+            if (!recorded.has(abs)) fromDeploy += 1;
             recorded.set(abs, null);
-            fromDeploy += 1;
             // Both spellings, for the reason `recorded_absolute_files` states:
             // the reader compares against a lexically joined path, and a HOME
             // behind a symlink makes the two disagree.
@@ -672,8 +699,11 @@ export function resolveLayerOwnership(opts: OwnershipOptions): OwnershipResoluti
     if (manifestPath !== null && fs.existsSync(manifestPath)) {
         let n = 0;
         for (const [abs, hash] of readRecordedHashes(manifestPath, opts.projectRoot)) {
-            recorded.set(abs, hash);
+            // The manifest contributes whenever it names a path at all: it
+            // supplies the HASH even where another source already had the path,
+            // which is evidence the others cannot give.
             n += 1;
+            recorded.set(abs, hash);
         }
         if (n > 0) sources.push('manifest');
     }
@@ -819,9 +849,9 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
             continue;
         }
         out.push(
-            `  ${l.host} (${l.scope}) — ${String(l.files)} files, ` +
-                `${String(l.unconditional)} unconditional, ${String(l.chars)} chars ` +
-                `(${String(l.unconditional_chars)} unconditional + ${String(l.scoped_chars)} path-scoped), ` +
+            `  ${l.host} (${l.scope}) — ${String(l.files)} files ` +
+                `(${String(l.unconditional)} unconditional), ${String(l.chars)} chars ` +
+                `(${String(l.unconditional_chars)} standing + ${String(l.scoped_chars)} path-scoped), ` +
                 `${String(l.package_owned)} package-owned / ${String(l.foreign)} foreign`,
         );
         for (const f of l.top) {
@@ -832,9 +862,9 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
     }
     const t = report.totals;
     out.push(
-        `  TOTAL — ${String(t.files)} files, ${String(t.unconditional)} unconditional, ` +
+        `  TOTAL — ${String(t.files)} files (${String(t.unconditional)} unconditional), ` +
             `${String(t.chars)} chars ` +
-            `(${String(t.unconditional_chars)} unconditional + ${String(t.scoped_chars)} path-scoped), ` +
+            `(${String(t.unconditional_chars)} standing + ${String(t.scoped_chars)} path-scoped), ` +
             `${String(t.package_owned)} package-owned / ${String(t.foreign)} foreign`,
     );
     out.push(...renderHostLimitRows(report.limits));

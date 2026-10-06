@@ -228,9 +228,16 @@ describe('installed layer — the when-loaded split in characters', () => {
         const text = renderInstalledLayerReport(
             buildInstalledLayerReport({ home, projectRoot: mkTmp('ilu-render-proj-') }),
         ).join('\n');
-        expect(text).toContain('168 chars (123 unconditional + 45 path-scoped)');
+        // `standing`, not a second `unconditional`. The word already names a
+        // FILE count earlier on the same line, and carrying it twice in two
+        // units is the ambiguity step 1.1 exists to remove — reintroducing it
+        // in the line AC-1 quotes as its evidence would be the defect wearing
+        // the fix's clothes.
+        expect(text).toContain('168 chars (123 standing + 45 path-scoped)');
         expect(text).toContain('TOTAL');
         // Twice: once for the claude-code global layer, once for the TOTAL row.
-        expect(text.split('123 unconditional + 45 path-scoped').length - 1).toBe(2);
+        expect(text.split('123 standing + 45 path-scoped').length - 1).toBe(2);
+        // And the file count keeps the word, once, with its own unit visible.
+        expect(text).toContain('2 files (1 unconditional)');
     });
 });

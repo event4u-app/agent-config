@@ -7371,7 +7371,7 @@ var require_dist = __commonJS({
 import { spawn, spawnSync as spawnSync2 } from "node:child_process";
 import * as crypto5 from "node:crypto";
 import * as fs33 from "node:fs";
-import * as os11 from "node:os";
+import * as os12 from "node:os";
 import * as path32 from "node:path";
 import process4 from "node:process";
 import { fileURLToPath as fileURLToPath9, pathToFileURL as pathToFileURL2 } from "node:url";
@@ -12420,10 +12420,11 @@ function rewriteClaudeRules(rulesDir, preserved = /* @__PURE__ */ new Set()) {
 // src/install/installThinLayer.ts
 import * as fs28 from "node:fs";
 import * as path27 from "node:path";
-import * as os10 from "node:os";
+import * as os11 from "node:os";
 
 // src/scripts/_lib/installed_layer.ts
 import * as fs25 from "node:fs";
+import * as os10 from "node:os";
 import * as path24 from "node:path";
 import { fileURLToPath as fileURLToPath5 } from "node:url";
 
@@ -12637,6 +12638,10 @@ function buildHostLimitRows(layers, limits) {
 }
 function defaultInventoryPath(home) {
   if (home === void 0 || home === null || home === "") return inventory_path();
+  try {
+    if (path24.resolve(home) === path24.resolve(os10.homedir())) return inventory_path();
+  } catch {
+  }
   return path24.join(home, DEFAULT_EVENT4U_ROOT_RELATIVE, INVENTORY_BASENAME);
 }
 function resolveLayerOwnership(opts) {
@@ -12647,8 +12652,8 @@ function resolveLayerOwnership(opts) {
     try {
       const inv = load_inventory(opts.inventoryPath ?? defaultInventoryPath(opts.home));
       for (const abs of recorded_absolute_files(inv, opts.home ?? null)) {
+        if (!recorded.has(abs)) n += 1;
         recorded.set(abs, null);
-        n += 1;
       }
     } catch {
     }
@@ -12658,8 +12663,8 @@ function resolveLayerOwnership(opts) {
   for (const [anchor, rels] of opts.thisDeploy ?? /* @__PURE__ */ new Map()) {
     for (const rel of rels) {
       const abs = path24.resolve(anchor, rel);
+      if (!recorded.has(abs)) fromDeploy += 1;
       recorded.set(abs, null);
-      fromDeploy += 1;
       try {
         recorded.set(fs25.realpathSync(abs), null);
       } catch {
@@ -12671,8 +12676,8 @@ function resolveLayerOwnership(opts) {
   if (manifestPath !== null && fs25.existsSync(manifestPath)) {
     let n = 0;
     for (const [abs, hash] of readRecordedHashes(manifestPath, opts.projectRoot)) {
-      recorded.set(abs, hash);
       n += 1;
+      recorded.set(abs, hash);
     }
     if (n > 0) sources.push("manifest");
   }
@@ -13067,7 +13072,7 @@ function describeThinInstalledLayer(res) {
   }
   return out;
 }
-function installReceiptBudgetLines(packageRoot, home = os10.homedir(), opts = {}) {
+function installReceiptBudgetLines(packageRoot, home = os11.homedir(), opts = {}) {
   try {
     const { recorded, sources } = resolveLayerOwnership({
       manifestPath: opts.manifestPath === void 0 ? manifest_path(packageRoot) : opts.manifestPath,
@@ -13084,7 +13089,7 @@ function installReceiptBudgetLines(packageRoot, home = os10.homedir(), opts = {}
       // would take `defaultInventoryPath`'s stated-home branch and read
       // `<home>/.event4u/...`, a file nothing wrote under either
       // override, and the inventory evidence would be silently lost.
-      inventoryPath: opts.inventoryPath ?? inventory_path(),
+      inventoryPath: opts.inventoryPath === void 0 ? inventory_path() : opts.inventoryPath,
       thisDeploy: opts.thisDeploy
     });
     const layers = [];
@@ -20246,7 +20251,7 @@ var SCOPE_DETECT_AI_DIRS = [
 ];
 
 // src/install/paths.ts
-import { homedir as homedir13, tmpdir } from "node:os";
+import { homedir as homedir14, tmpdir } from "node:os";
 import { join as join33 } from "node:path";
 var INSTALL_ROOT_SUBPATH = ".event4u/agent-config";
 var INSTALL_LOG_FILENAME = "install-log.jsonl";
@@ -20254,7 +20259,7 @@ function resolveHome(home) {
   if (home && home.length > 0) {
     return home;
   }
-  const fromOs = homedir13();
+  const fromOs = homedir14();
   if (!fromOs) {
     throw new Error(
       "Cannot resolve home directory \u2014 both $HOME (POSIX) and $USERPROFILE (Windows) are unset."
@@ -20359,9 +20364,9 @@ var ArgparseExit2 = class extends Error {
   code;
 };
 function expanduser8(p) {
-  if (p === "~") return os11.homedir();
+  if (p === "~") return os12.homedir();
   if (p.startsWith("~/") || p.startsWith("~\\")) {
-    return path32.join(os11.homedir(), p.slice(2));
+    return path32.join(os12.homedir(), p.slice(2));
   }
   return p;
 }
@@ -20897,7 +20902,7 @@ function ensure_augment_bridge(project_root, force) {
     ".augment/settings.json"
   );
 }
-var AUGMENT_USER_DIR = path32.join(os11.homedir(), ".augment");
+var AUGMENT_USER_DIR = path32.join(os12.homedir(), ".augment");
 var AUGMENT_USER_HOOKS_DIR = path32.join(AUGMENT_USER_DIR, "hooks");
 var AUGMENT_DISPATCHER_TRAMPOLINE = "augment-dispatcher.sh";
 var AUGMENT_LEGACY_TRAMPOLINES = [
@@ -21000,7 +21005,7 @@ function ensure_cursor_bridge(project_root, force) {
     ".cursor/hooks.json"
   );
 }
-var CURSOR_USER_DIR = path32.join(os11.homedir(), ".cursor");
+var CURSOR_USER_DIR = path32.join(os12.homedir(), ".cursor");
 var CURSOR_USER_HOOKS_DIR = path32.join(CURSOR_USER_DIR, "hooks");
 var CURSOR_DISPATCHER_TRAMPOLINE = "cursor-dispatcher.sh";
 function ensure_cursor_user_hooks(package_root, force) {
@@ -21084,7 +21089,7 @@ function ensure_cline_bridge(project_root, force) {
     skip(".clinerules/hooks/ already up to date");
   }
 }
-var CLINE_USER_DIR = path32.join(os11.homedir(), "Documents", "Cline", "Hooks");
+var CLINE_USER_DIR = path32.join(os12.homedir(), "Documents", "Cline", "Hooks");
 var CLINE_DISPATCHER_TRAMPOLINE = "cline-dispatcher.sh";
 function ensure_cline_user_hooks(package_root, force) {
   const src = path32.join(package_root, "scripts", "hooks", CLINE_DISPATCHER_TRAMPOLINE);
@@ -21136,7 +21141,7 @@ function ensure_windsurf_bridge(project_root, force) {
     ".windsurf/hooks.json"
   );
 }
-var WINDSURF_USER_DIR = path32.join(os11.homedir(), ".codeium", "windsurf");
+var WINDSURF_USER_DIR = path32.join(os12.homedir(), ".codeium", "windsurf");
 var WINDSURF_USER_HOOKS_DIR = path32.join(WINDSURF_USER_DIR, "hooks");
 var WINDSURF_DISPATCHER_TRAMPOLINE = "windsurf-dispatcher.sh";
 function ensure_windsurf_user_hooks(package_root, force) {
@@ -21192,7 +21197,7 @@ function ensure_gemini_bridge(project_root, force) {
     ".gemini/settings.json"
   );
 }
-var GEMINI_USER_DIR = path32.join(os11.homedir(), ".gemini");
+var GEMINI_USER_DIR = path32.join(os12.homedir(), ".gemini");
 var GEMINI_USER_HOOKS_DIR = path32.join(GEMINI_USER_DIR, "hooks");
 var GEMINI_DISPATCHER_TRAMPOLINE = "gemini-dispatcher.sh";
 function ensure_gemini_user_hooks(package_root, force) {
@@ -21683,7 +21688,7 @@ To remove this marker, delete this file.
 `;
 }
 var _CLAUDE_DESKTOP_BUNDLES_SUBPATH = "claude-desktop/bundles";
-var GLOBAL_ROOT = path32.join(os11.homedir(), ".event4u", "agent-config");
+var GLOBAL_ROOT = path32.join(os12.homedir(), ".event4u", "agent-config");
 var GLOBAL_USER_SETTINGS_PATH = path32.join(GLOBAL_ROOT, ".agent-user.yml");
 var GLOBAL_AGENT_SETTINGS_PATH = path32.join(GLOBAL_ROOT, ".agent-settings.yml");
 function _bridge_marker(tool_id, scope) {
@@ -22071,7 +22076,7 @@ function _run_migrate_to_global(project_root) {
   }
 }
 function _format_global_root_for_marker(global_root) {
-  const home = resolvePath(os11.homedir());
+  const home = resolvePath(os12.homedir());
   const resolved = resolvePath(global_root);
   const rel = path32.relative(home, resolved);
   if (rel === "" || rel.startsWith("..") || path32.isAbsolute(rel)) {
@@ -23355,7 +23360,7 @@ function _wizard_cli_dist(_project_root) {
   return pathExists(cli) ? cli : null;
 }
 function _server_info_path() {
-  return path32.join(os11.homedir(), ".event4u", "agent-config", "local-server.json");
+  return path32.join(os12.homedir(), ".event4u", "agent-config", "local-server.json");
 }
 function _pid_is_agent_config(pid) {
   let res;
@@ -23451,7 +23456,7 @@ function _wizard_spawn(project_root, pass_project_root = true) {
 function _wizard_run_sync(cmd, env, cli) {
   const total = _WIZARD_TIMEOUTS.reduce((a, b) => a + b, 0);
   const log_path = path32.join(
-    os11.tmpdir(),
+    os12.tmpdir(),
     `agent-config-wizard-${process4.pid}-${Date.now()}.log`
   );
   let child;

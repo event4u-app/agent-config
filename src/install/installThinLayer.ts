@@ -351,7 +351,8 @@ export function installReceiptBudgetLines(
             // would take `defaultInventoryPath`'s stated-home branch and read
             // `<home>/.event4u/...`, a file nothing wrote under either
             // override, and the inventory evidence would be silently lost.
-            inventoryPath: opts.inventoryPath ?? inventory_path(),
+            inventoryPath:
+                opts.inventoryPath === undefined ? inventory_path() : opts.inventoryPath,
             thisDeploy: opts.thisDeploy,
         });
         const layers: LayerReading[] = [];
