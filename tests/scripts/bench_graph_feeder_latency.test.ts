@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { bench, distribution, percentile } from '../../src/scripts/bench_graph_feeder_latency.js';
+import { bench, distribution, parseArgs, percentile } from '../../src/scripts/bench_graph_feeder_latency.js';
 
 describe('bench_graph_feeder_latency — step 3.5 of road-to-a-graph-that-feeds-the-gate', () => {
     it('takes nearest-rank percentiles, so p95 of twenty samples is the nineteenth', () => {
@@ -25,7 +25,16 @@ describe('bench_graph_feeder_latency — step 3.5 of road-to-a-graph-that-feeds-
         expect(r.exitCodes.without).toStrictEqual([1]);
         // The feeder's own work is real work, not a no-op that reads as free.
         expect(r.feederOnly.p50).toBeGreaterThan(0);
+        // ...and it timed the real walk: a swallowed load failure reads `null`.
+        expect(r.feederVerdicts).toStrictEqual(['untested']);
     }, 120_000);
+
+    it('refuses flag combinations it would otherwise silently misread', () => {
+        expect(parseArgs(['--repo', '.', '--edit', 'src/a.ts'])).not.toBeNull();
+        expect(parseArgs(['--repo', '.', '--edit', 'src/a.ts', '--files', '9'])).toBeNull();
+        expect(parseArgs(['--repo', '--edit', 'src/a.ts'])).toBeNull();
+        expect(parseArgs(['--repo', '.'])).toBeNull();
+    });
 
     it('leaves an unset home variable unset, not the string "undefined"', async () => {
         const saved = process.env.USERPROFILE;

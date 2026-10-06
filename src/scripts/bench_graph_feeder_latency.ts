@@ -21,10 +21,10 @@
  *             `absent`. This is the cost a consumer who never builds a graph
  *             pays, and the baseline the feeder's increment is read against.
  *
- * Arms are INTERLEAVED, one call each per round, and the order ALTERNATES per
- * round: interleaving spreads slow drift across both arms, and alternating
- * spreads the order effects (GC after the heavier arm, cache warmth) as well. A third reading times the
- * feeder's own work (`graphState` + `graphUntestedVerdict`) in isolation on the
+ * Arms are INTERLEAVED, one call each per round, and the order ROTATES per
+ * round: interleaving spreads slow drift across the arms, and rotating spreads
+ * the order effects (GC after the heavier arm, cache warmth) as well. A third
+ * reading, inside the same rotation, times the feeder's own work (`graphState` + `graphUntestedVerdict`) in isolation on the
  * `with` tree, because the difference of two noisy totals is a weaker number
  * than a direct one.
  *
@@ -75,6 +75,12 @@ export interface LatencyReport {
     delta: { p50: number; p95: number };
     /** The feeder's own work, timed directly on the `with` tree. */
     feederOnly: Distribution;
+    /**
+     * Every verdict the timed feeder calls returned. `graphUntestedVerdict`
+     * turns any throw into `null`, so a broken graph load would otherwise be
+     * timed as if it were the real walk.
+     */
+    feederVerdicts: (string | null)[];
     node: string;
     platform: string;
     cpu: string;
@@ -200,30 +206,42 @@ export async function bench(opts: { runs?: number; files?: number }): Promise<La
         const tWithout = writeTranscript(withoutDir, home, 'without');
         const state = graphState(withDir);
 
-        // Warm both paths once so module-level initialisation is not billed to round one.
+        const edit = [path.join(withDir, 'src', 'service.ts')];
+        const feederCall = (): { ms: number; verdict: string | null } => {
+            const t0 = performance.now();
+            const v = graphUntestedVerdict(withDir, graphState(withDir), edit).verdict;
+            return { ms: performance.now() - t0, verdict: v };
+        };
+
+        // Warm every path once so module-level initialisation is not billed to round one.
         timeStop(withDir, tWith, 'warm-with');
         timeStop(withoutDir, tWithout, 'warm-without');
+        feederCall();
 
         const a: number[] = [];
         const b: number[] = [];
+        const feeder: number[] = [];
+        const feederVerdicts: (string | null)[] = [];
         const exitCodes = { with: [] as number[], without: [] as number[] };
         for (let i = 0; i < runs; i++) {
-            const withFirst = i % 2 === 0;
-            const y0 = withFirst ? null : timeStop(withoutDir, tWithout, `without-${i}`);
-            const x = timeStop(withDir, tWith, `with-${i}`);
-            const y = y0 ?? timeStop(withoutDir, tWithout, `without-${i}`);
-            a.push(x.ms);
-            b.push(y.ms);
-            if (!exitCodes.with.includes(x.rc)) exitCodes.with.push(x.rc);
-            if (!exitCodes.without.includes(y.rc)) exitCodes.without.push(y.rc);
-        }
-
-        const feeder: number[] = [];
-        const edit = [path.join(withDir, 'src', 'service.ts')];
-        for (let i = 0; i < runs; i++) {
-            const t0 = performance.now();
-            graphUntestedVerdict(withDir, graphState(withDir), edit);
-            feeder.push(performance.now() - t0);
+            const calls = [
+                (): void => {
+                    const x = timeStop(withDir, tWith, `with-${i}`);
+                    a.push(x.ms);
+                    if (!exitCodes.with.includes(x.rc)) exitCodes.with.push(x.rc);
+                },
+                (): void => {
+                    const y = timeStop(withoutDir, tWithout, `without-${i}`);
+                    b.push(y.ms);
+                    if (!exitCodes.without.includes(y.rc)) exitCodes.without.push(y.rc);
+                },
+                (): void => {
+                    const f = feederCall();
+                    feeder.push(f.ms);
+                    if (!feederVerdicts.includes(f.verdict)) feederVerdicts.push(f.verdict);
+                },
+            ];
+            for (let k = 0; k < calls.length; k++) calls[(i + k) % calls.length]?.();
         }
 
         const w = distribution(a);
@@ -238,6 +256,7 @@ export async function bench(opts: { runs?: number; files?: number }): Promise<La
             without: wo,
             delta: { p50: round(w.p50 - wo.p50), p95: round(w.p95 - wo.p95) },
             feederOnly: distribution(feeder),
+            feederVerdicts,
             node: process.version,
             platform: `${os.platform()} ${os.release()} ${os.arch()}`,
             cpu: `${os.cpus()[0]?.model ?? 'unknown'} x${os.cpus().length}`,
@@ -282,6 +301,9 @@ function renderRepo(r: RepoReport): string {
     return [
         `graph-feeder work over ${r.repo} — edit ${r.edit}, graph state ${r.graphState}, verdict ${r.verdict}`,
         `n ${d.n} · p50 ${d.p50} ms · p95 ${d.p95} ms · max ${d.max} ms`,
+        // A stop follows an edit, so the realistic state is `edited`; on a clean
+        // tree the git probes answer differently and the reading prices that.
+        ...(r.graphState === 'edited' ? [] : [`note: graph state is ${r.graphState}, not edited — a stop normally follows an uncommitted edit`]),
     ].join('\n');
 }
 
@@ -300,10 +322,11 @@ function render(r: LatencyReport): string {
         '',
         `delta: p50 ${r.delta.p50} ms, p95 ${r.delta.p95} ms`,
         `exit codes: with ${JSON.stringify(r.exitCodes.with)}, without ${JSON.stringify(r.exitCodes.without)}`,
+        `feeder verdicts: ${JSON.stringify(r.feederVerdicts)}`,
     ].join('\n');
 }
 
-interface Args {
+export interface Args {
     runs?: number;
     files?: number;
     repo?: string;
@@ -311,7 +334,7 @@ interface Args {
     format: 'text' | 'json';
 }
 
-function parseArgs(argv: readonly string[]): Args | null {
+export function parseArgs(argv: readonly string[]): Args | null {
     const out: Args = { format: 'text' };
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
@@ -322,7 +345,7 @@ function parseArgs(argv: readonly string[]): Args | null {
             if (a === '--runs') out.runs = n;
             else out.files = n;
             i++;
-        } else if ((a === '--repo' || a === '--edit') && v !== undefined && v !== '') {
+        } else if ((a === '--repo' || a === '--edit') && v !== undefined && v !== '' && !v.startsWith('--')) {
             if (a === '--repo') out.repo = v;
             else out.edit = v;
             i++;
@@ -335,6 +358,8 @@ function parseArgs(argv: readonly string[]): Args | null {
     }
     // Both or neither: a repository with no edit to price is not a reading.
     if ((out.repo === undefined) !== (out.edit === undefined)) return null;
+    // `--files` sizes the generated fixture, which `--repo` mode never builds.
+    if (out.repo !== undefined && out.files !== undefined) return null;
     return out;
 }
 
