@@ -31,7 +31,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { thin_entry } from './project_thin_rules.js';
+import { is_thin_entry, thin_entry } from './project_thin_rules.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -42,8 +42,6 @@ const CANARY = path.join(
 const CANARY_ID = 'host-compliance-canary';
 const SENTINEL = 'CANARY_BODY_SENTINEL_DO_NOT_INLINE';
 const KEYWORD = 'xyzzy-canary-probe';
-const POINTER_MARKER = 'Routed rule — load the body on trigger-match';
-
 // The supported hosts whose live thin-compliance must be falsified.
 const HOSTS = ['claude-code', 'cursor', 'augment'];
 
@@ -60,7 +58,13 @@ export function evaluate_demotion(
   thinned: string,
   opts: { sentinel: string; keyword: string } = { sentinel: SENTINEL, keyword: KEYWORD },
 ): DemotionResult {
-  const pointer_present = thinned.includes(POINTER_MARKER);
+  // ONE SPELLING, ASKED OF THE WRITER — step 2.1 of
+  // `road-to-a-thinned-layer-measured-in-one-unit`. This file carried its own
+  // substring of the marker, without the blockquote prefix and the full stop,
+  // so the writer could be shortened and this detector would keep matching the
+  // old sentence — silently, and in the direction that matters: a stub a
+  // detector fails to recognise reads as a complete rule body.
+  const pointer_present = is_thin_entry(thinned);
   const body_removed = !thinned.includes(opts.sentinel);
   const trigger_hint_preserved = thinned.includes(opts.keyword);
   const link_present = /Body: \[`[^`]+`\]\(/.test(thinned);

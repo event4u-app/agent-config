@@ -42,6 +42,7 @@ import { atomicAppendLine } from '../../install/atomic.js';
 import { readRecentEntries } from '../../install/txlog.js';
 import { detectToolPresence } from '../../install/detect.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
+import { THIN_ENTRY_MARKER } from '../_lib/thin_rules.js';
 import { routeTargetPathsPosix } from '../router_target_paths.mjs';
 import { buildFunnel, render as renderFunnel } from '../report_conformance_funnel.js';
 import {
@@ -74,8 +75,18 @@ export const CONFORMANCE_CHECK_IDS = [
     'host-manifest',
 ] as const;
 
-/** Marker emitted by `project_thin_rules.thin_entry()` — the thin-stub signature. */
-export const THIN_STUB_MARKER = 'Routed rule — load the body on trigger-match';
+/**
+ * Marker emitted by `project_thin_rules.thin_entry()` — the thin-stub signature.
+ *
+ * RE-EXPORTED, NEVER RE-SPELLED — step 2.1 of
+ * `road-to-a-thinned-layer-measured-in-one-unit`. This was its own literal, a
+ * substring of the writer's constant without the blockquote prefix and the full
+ * stop, which is exactly the drift `THIN_ENTRY_MARKER`'s own docstring warns
+ * about: shorten the writer and this detector keeps matching the old sentence,
+ * silently, in the direction where a stub it fails to recognise reads as a
+ * complete rule body. The name stays so existing callers are unchanged.
+ */
+export const THIN_STUB_MARKER = THIN_ENTRY_MARKER;
 
 /**
  * Rendering symbols for this verb's rows — doctor's table plus `unknown`.

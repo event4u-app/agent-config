@@ -148,7 +148,7 @@ on the user-global layer.
 
 ## Phase 2 — The stub says less, in one spelling
 
-- [ ] **2.1 One spelling of the marker.** `probe_host_compliance.ts` and
+- [x] **2.1 One spelling of the marker.** `probe_host_compliance.ts` and
       `_cli/cmd_conformance.ts` import `THIN_ENTRY_MARKER` instead of carrying
       the sentence. A test builds a stub with `thin_entry`, hands it to both
       detectors, and fails if either misses it; a second case changes the
