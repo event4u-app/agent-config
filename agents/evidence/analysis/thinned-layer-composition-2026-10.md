@@ -3,8 +3,10 @@
 # The thinned layer, in one unit — composition, form, and what each move is worth
 
 > Evidence for `road-to-a-thinned-layer-measured-in-one-unit`, steps 1.4, 2.4,
-> 3.1, 3.2 and 4.3. Measured on 2026-10-06 against the branch
-> `drain/thinned-layer-one-unit-20261006`, whose base is `main` @ `31e3da5ba`.
+> 3.1 and 3.2. Measured on 2026-10-06 against the branch
+> `drain/thinned-layer-one-unit-20261006`, whose base at measurement time was
+> `main` @ `31e3da5ba`. The base moved twice afterwards and the reading was
+> re-taken; see § The reading survived the base moving.
 
 ## The unit, stated before any number
 
@@ -444,6 +446,28 @@ its first paragraph (1,385) where this page prices the fence alone (696) as the
 lower bound. And the plain-stub figures here are post-form-change, so each of
 the four is 47 characters cheaper as a stub than it was when the prediction was
 written. The direction of the difference is consistent with both.
+
+## The reading survived the base moving
+
+The branch's base advanced twice after these figures were taken, and one of the
+commits edited a rule this layer carries — `context-hygiene`, three prose
+changes in its body. Re-running the whole method at the new head:
+
+| Figure | At the pin | At the current head |
+|---|---|---|
+| installed layer, report characters | 107,058 | **107,058** |
+| the installer's pre-thinning raw total | 365,283 | 365,276 |
+
+**Unchanged, and the way it is unchanged is the mechanism working.**
+`context-hygiene` projects as a stub, and a stub is built from the rule's
+frontmatter — its description and its trigger hint — not from its body. Editing
+the body moved the pre-thinning figure by 7 raw characters and moved the
+installed layer by zero.
+
+That is the property the whole thinned form rests on, observed rather than
+asserted: what a consumer stands under does not grow when a routed rule's prose
+does. It also means every figure on this page is current at the head it is
+published from, not only at the pin it was taken at.
 
 ## An adjacent defect, noted and not fixed here
 
