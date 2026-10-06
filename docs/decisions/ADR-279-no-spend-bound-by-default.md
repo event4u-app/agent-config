@@ -55,7 +55,7 @@ rather than on any agent's reading of it.
 
 It was drafted `proposed` and held there until the owner answered the blocker
 `spend-directive-reading-confirmed` in
-`agents/roadmaps/road-to-a-spend-bound-only-where-one-was-set.md`. The answer
+`agents/roadmaps/archive/road-to-a-spend-bound-only-where-one-was-set.md`. The answer
 was **(a) — accept the record as drafted**, with the three superseded clauses
 above and the list under § What stays, by name unchanged; it is recorded as D9
 in that roadmap's `## Decisions` table, dated 2026-10-06. The alternative on
@@ -249,7 +249,7 @@ owner intent and carries no strength beyond being the owner's.
 
 ## References
 
-- `agents/roadmaps/road-to-a-spend-bound-only-where-one-was-set.md` — the
+- `agents/roadmaps/archive/road-to-a-spend-bound-only-where-one-was-set.md` — the
   roadmap that carries this record and the twenty steps that implement it.
 - `docs/decisions/ADR-230-council-spend-bound-is-a-ceiling.md` — partially
   superseded; see `supersedes_scope`.

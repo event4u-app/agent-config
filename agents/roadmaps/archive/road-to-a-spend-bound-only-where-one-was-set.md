@@ -163,7 +163,7 @@ At `df377ca64`:
       the records it would supersede are not touched. Its move to `accepted`
       is the blocker's subject, not this step's.
       verify: `grep -l 'supersedes_scope' docs/decisions/*no-spend-bound-by-default* | wc -l` -> /^1$/
-- [ ] **1.2 The verdict on what is a spend bound.** One council question, with
+- [x] **1.2 The verdict on what is a spend bound.** One council question, with
       the table of shipped figures as its bundle: which are ceilings on money
       or tokens and move, which are plan-quota, fan-out or authorisation
       controls and stay. The verdict is recorded at
@@ -352,6 +352,7 @@ At `df377ca64`:
 | D6 | deterministic | evidence | The run text points at the existing `cost.budgets` windows and says the model carries it; no per-run key and no claim of enforcement on a run | Keys that were "configured, documented, surfaced and inert" were deleted for that reason (`settings-classes.md:440-449`); ADR-237: "Nothing mechanical checks any of this"; nothing on a run calls the preflight | A run-scoped check with a code reader is wanted |
 | D8 | deterministic | evidence | The preflight is repaired, because an optional limit that cannot fire is not an option | The fixture's recorded exit is 1 and the script exits 0 (`preflight.mjs:19`) | — |
 | D7 | reversible-technical | agent | An unattended run still needs a budget | `unattended_guard.ts:160-162`: an absent budget "must not read as 'unlimited'"; nobody is present to see the estimate | The council of 1.2, or the owner, reads the directive as covering it |
+| D10 | reversible-technical | council | The 13 shipped figures classify as: token ceiling (1), one USD-ceiling family at five scopes (2, 3, 5, 9, 11), count/plan-quota guards (4, 7), authorization controls (6, 8), an unattended-run safety precondition (10), an external provider refusal (12), and unenforced display figures (13). D3, D4 and D7 are confirmed, not overturned | `agents/evidence/council/spend-bound-defaults-2026-10.md` — 2026-10-06, 2/2 seats answered (anthropic/claude-sonnet-4-5, openai/codex-default), $0.0000 actual, both subscription-authed. Dissent recorded: the openai seat marks row 10's budget UNITS and finite-ness "needs discovery" and calls "requiring a budget ≠ imposing a ceiling" too categorical — accepted, and it does not change row 10's disposition | the units or enforcement of a configured unattended budget are settled, which could make that mechanism a money ceiling after all |
 | D9 | product-owned | owner | the directive's reading is (a): step 1.1's record supersedes the three clauses as drafted (ADR-230 table row 3 and its rejection of removing the ask; the fixed figure in ADR-237 § 3; absent paid-gate caps refusing) and keeps every control under "What stays, by name" unchanged | owner answer 2026-10-06 to blocker `spend-directive-reading-confirmed`, options (a) as drafted / (b) with named moves | a control kept under "What stays" is found to bound money rather than quota, fan-out or authorisation, or the owner moves one |
 
 ## Kill register
