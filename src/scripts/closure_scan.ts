@@ -130,7 +130,12 @@ export const NON_BLOCKING_KINDS: ReadonlySet<Kind> = new Set<Kind>(['unfalsifiab
  * on the CONTENT a step asserts. Anything whose exit code already tracks the
  * claim — `grep` (1 on no match), a linter, a test runner — is absent on
  * purpose: including it would turn this listing into a census of every verify
- * line in the tree, which is step 2.2's instrument, not this one.
+ * line in the tree, which is step 2.2's instrument, not this one. One case
+ * reads titles and runs nothing: a name-filtered test run
+ * (`vitest run <target> -t <name>`) whose target exists carries its own
+ * failure mode a plain exit-code read cannot see — `-t` with no matching
+ * title skips every test and still exits 0 — so that one shape is read for
+ * content, never executed, in `_nameFilterHasNoMatch` below.
  */
 const FIXED_OUTPUT_HEADS: ReadonlySet<string> = new Set(['echo', 'true', 'printf', 'cat', 'ls', 'pwd', 'date']);
 
@@ -149,6 +154,87 @@ const FIXED_OUTPUT_HEADS: ReadonlySet<string> = new Set(['echo', 'true', 'printf
  * remainder as clean, which is the same mistake as reporting a share off a
  * corpus nobody scanned.
  */
+// `vitest run <target> -t <name>` (optionally `npx`-prefixed); `<name>` may
+// be bare, single-quoted or double-quoted. The target is captured
+// non-greedily up to the first whitespace or quote.
+const VITEST_NAME_FILTER_RE = /(?:^|\s)vitest\s+run\s+(\S+)\s+-t\s+(?:'([^']+)'|"([^"]+)"|(\S+))/;
+
+// `describe(`, `it(`, `test(`, and their `.only`/`.skip`/`.each`/`.todo`
+// modifiers, each with a quoted first argument — the title vitest matches
+// `-t` against (concatenated with its ancestor `describe` titles at
+// run time; this reads each title string standalone, which is sufficient to
+// prove a filter CAN match something — the question this function asks).
+const TEST_TITLE_RE = /\b(?:describe|it|test)(?:\.\w+)?\s*\(\s*(['"`])((?:(?!\1).)*)\1/g;
+
+function _collectTestFiles(target: string): string[] {
+    let stat: fs.Stats;
+    try {
+        stat = fs.statSync(target);
+    } catch {
+        return [];
+    }
+    if (stat.isFile()) return [target];
+    if (!stat.isDirectory()) return [];
+    const out: string[] = [];
+    let entries: string[];
+    try {
+        entries = fs.readdirSync(target, { recursive: true }) as string[];
+    } catch {
+        return [];
+    }
+    for (const rel of entries) {
+        if (!/\.(?:test|spec)\.tsx?$/.test(rel)) continue;
+        out.push(path.join(target, rel));
+    }
+    return out;
+}
+
+function _extractTitles(file: string): string[] {
+    let text: string;
+    try {
+        text = fs.readFileSync(file, 'utf-8');
+    } catch {
+        return [];
+    }
+    const titles: string[] = [];
+    const re = new RegExp(TEST_TITLE_RE.source, TEST_TITLE_RE.flags);
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(text)) !== null) {
+        titles.push(m[2] ?? '');
+    }
+    return titles;
+}
+
+/**
+ * A name-filtered vitest run whose target exists but carries no test title
+ * containing the filter — the oracle exits 0 on every test skipped, which a
+ * plain exit-code read cannot distinguish from every test passing.
+ *
+ * `null` whenever the shape does not match, the target cannot be resolved
+ * (nothing to read), or no title could be extracted at all (a parse miss,
+ * not evidence of absence) — in every one of those the finding would be a
+ * guess, and this function only reports what it read.
+ */
+function _nameFilterHasNoMatch(command: string): string | null {
+    const m = VITEST_NAME_FILTER_RE.exec(command);
+    if (m === null) return null;
+    const targetRaw = m[1] as string;
+    const name = (m[2] ?? m[3] ?? m[4] ?? '').trim();
+    if (name === '') return null;
+    const target = path.resolve(process.cwd(), targetRaw);
+    const files = _collectTestFiles(target);
+    if (files.length === 0) return null;
+    let sawAnyTitle = false;
+    for (const file of files) {
+        for (const title of _extractTitles(file)) {
+            sawAnyTitle = true;
+            if (title.includes(name)) return null;
+        }
+    }
+    if (!sawAnyTitle) return null;
+    return `\`-t ${name}\` matches no test title under ${targetRaw}: the run exits 0 with every test skipped`;
+}
+
 export function unfalsifiableReason(clause: VerifyClause): string | null {
     if (clause.command === null) {
         // A MANUAL clause asserting a QUANTITY nothing produced. Narrowed to a
@@ -176,6 +262,10 @@ export function unfalsifiableReason(clause: VerifyClause): string | null {
             // An expectation that cannot compile never became one upstream.
         }
     }
+
+    const nameFilterReason = _nameFilterHasNoMatch(clause.command);
+    if (nameFilterReason !== null) return nameFilterReason;
+
     return null;
 }
 

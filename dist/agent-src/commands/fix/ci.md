@@ -107,7 +107,8 @@ branch** — that is what makes the deliverable remote. Then:
    settle the check set on the new head. Report the *remote* verdict, never the
    local one.
 
-Bounded by N=3 per failing target ([`autonomous-execution`](../../../rules/autonomous-execution.md)).
+Bounded by the `execution.fix_loop_max` budget (default 10) and its ladder,
+per failing target ([`autonomous-execution`](../../../rules/autonomous-execution.md)).
 
 ### Rules
 

@@ -1,0 +1,15 @@
+{
+  "skill": "git-workflow",
+  "last_eval": "2026-10-06",
+  "description": "4 should-trigger + 4 should-not-trigger. Should-trigger covers branch naming, commit message conventions, PR creation and the push-settle loop, including a German phrasing that never names Git. Should-not-trigger covers near-miss neighbors (rewriting already-pushed history, a destructive reset/force-push, and a merge-conflict resolution strategy question that belongs to a different command) plus one unrelated counterexample (a frontend architecture question).",
+  "queries": [
+    {"q": "push this branch and open a PR", "trigger": true, "class": "exemplar"},
+    {"q": "what commit message format does this repo use?", "trigger": true, "class": "exemplar"},
+    {"q": "merge the branch for me", "trigger": true, "class": "exemplar"},
+    {"q": "wie soll der Branch heißen und wie schreibe ich die Commit-Message?", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "rebase the last three commits and squash them into one, already pushed", "trigger": false, "class": "near-miss", "note": "rewriting published history is git-history-discipline's territory, not this skill's naming/PR-flow scope"},
+    {"q": "force-push over the remote branch to discard what's there", "trigger": false, "class": "near-miss", "note": "a destructive history operation gated by non-destructive-by-default, not a workflow-convention question"},
+    {"q": "I have a merge conflict, which approach should I take to resolve it?", "trigger": false, "class": "near-miss", "note": "conflict-resolution strategy belongs to /pr:merge's enumerated classes, not git-workflow's conventions"},
+    {"q": "what's the best way to structure a React component hierarchy?", "trigger": false, "class": "counterexample"}
+  ]
+}

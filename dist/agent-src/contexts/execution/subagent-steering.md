@@ -23,9 +23,11 @@ dispatch → monitor → status → escalate / kill
 
 ## Budget + parallel cap
 
-- The N=3 autonomous budget (`autonomous-execution`) binds **per validation
-  target**: three consecutive failed attempts on the same target halts the run
-  and surfaces the three attempts. `budgetHalt()` is the deterministic counter.
+- `budgetHalt()`'s per-target cap (`MAX_ATTEMPTS_PER_TARGET = 3`) is the
+  orchestrator's own number, not `autonomous-execution`'s
+  `execution.fix_loop_max` budget (now a default-10 ladder): three
+  consecutive failed attempts on the same target halts the run and surfaces
+  the three attempts. `budgetHalt()` is the deterministic counter.
 - `subagents.max_parallel` caps concurrent dispatch. No speculative fan-out:
   a subagent is spawned only for a classified-delegable target, never on spec.
 
@@ -175,7 +177,7 @@ requires a non-empty `emergency.orchestration_halt_justification`.
 
 ## Related
 
-- [`autonomous-execution`](../../rules/autonomous-execution.md) — the N=3 budget.
+- [`autonomous-execution`](../../rules/autonomous-execution.md) — the `execution.fix_loop_max` budget and its ladder.
 - [`auto-orchestration-activation`](auto-orchestration-activation.md) — `enabled`/`auto` keys.
 - [`orchestration-telemetry`](orchestration-telemetry.md) — the audit signals the guardrails read.
 - [`subagent-response-contract`](subagent-response-contract.md) — the structured body returned inside this 4-status envelope + the orchestrator's synthesis duties.

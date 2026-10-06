@@ -362,9 +362,9 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   roadmap-progress:hook      PostToolUse hook entry point (read JSON from stdin)
                              Regenerates roadmaps-progress.md when a tool wrote under agents/roadmaps/
   onboarding-gate:hook       Hook entry point (drains stdin)
-                             Writes .augment/state/onboarding-gate.json from .agent-settings.yml
+                             Writes agents/state/onboarding-gate.json from .agent-settings.yml
   context-hygiene:hook       PostToolUse hook entry point (read JSON from stdin)
-                             Maintains .augment/state/context-hygiene.json (turn count, loop, freshness)
+                             Maintains agents/state/context-hygiene.json (turn count, loop, freshness)
   dispatch:hook              Universal hook dispatcher (Phase 7, hook-architecture-v1.md)
                              Usage: dispatch:hook --platform <name> --event <event> [--native-event <native>]
                              Reads scripts/hook_manifest.yaml and runs the resolved concern chain.

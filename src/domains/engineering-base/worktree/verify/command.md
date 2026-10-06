@@ -66,4 +66,5 @@ whether checklist item 3 (evidence attached) now passes.
 
 - **Do NOT commit or push.** Evidence lives in the untracked scope note.
 - Red probe → report it plainly and stop; never downgrade to a weaker
-  probe to get green (N=3 budget per `autonomous-execution`).
+  probe to get green (the `execution.fix_loop_max` budget and its ladder,
+  per `autonomous-execution`).

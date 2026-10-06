@@ -10,7 +10,7 @@ Loaded by the `subagent-orchestration` skill and the `/do-and-judge`,
 |---|---|---|
 | `subagents.implementer_model` | _(empty → session model)_ | Model alias used for implementer subagents |
 | `subagents.judge_model` | _(empty → one tier up)_ | Model alias used for judge subagents |
-| `subagents.max_parallel` | `3` | Hard cap on concurrent subagent invocations |
+| `subagents.max_parallel` | `3` | Limit on concurrent subagent invocations the model reads from settings — no code counts spawns against it |
 
 ## Model tier ladder
 

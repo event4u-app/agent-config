@@ -9,7 +9,7 @@
  * error on the wrong rung, not diligence.
  *
  * Composes with — replaces nothing:
- * - the N=3 validation-loop budget (`autonomous-execution`),
+ * - the `execution.fix_loop_max` validation-loop budget (`autonomous-execution`),
  * - the ADR-109 / `subagent-response-contract` body + 4-status envelope
  *   (`subagent-steering`): the partial result rides as the body of a
  *   `BLOCKED` envelope with `budget_hit: true` as the escalation flag.

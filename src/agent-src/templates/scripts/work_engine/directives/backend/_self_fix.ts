@@ -24,10 +24,13 @@
  *
  * Two floors, neither invented here:
  *
- * - **Ceiling** — {@link SELF_FIX_CEILING} attempts per lane, which is the
- *   N=3 validation-loop budget from the `autonomous-execution` rule, applied
- *   per validation target (that rule resets its counter on a different
- *   target, so the counters below are per-lane rather than per-run).
+ * - **Ceiling** — {@link SELF_FIX_CEILING} attempts per lane. This is the
+ *   engine's own number, independent of the `autonomous-execution` rule's
+ *   `execution.fix_loop_max` budget (now a default-10 ladder) — a
+ *   deterministic, critic-free retry on an already-known verdict has no
+ *   judgement call for that ladder's escalation rungs to apply to. The
+ *   counters below are per-lane rather than per-run; each lane is its own
+ *   target.
  * - **No-progress** — two consecutive attempts producing an identical verdict
  *   signature stop the loop immediately, budget remaining or not. This is the
  *   floor the `recursive-verification` skill already stated in prose ("two
@@ -47,9 +50,10 @@ import { type Any, Outcome, StepResult, agent_directive } from '../../delivery_s
 /**
  * Attempts allowed per lane before the loop exits PARTIAL.
  *
- * Deliberately the `autonomous-execution` N=3 budget rather than a fresh
- * number: a second, differently-sized retry ceiling in the same package would
- * be a rule the tree contradicts.
+ * The engine's own number — not borrowed from `autonomous-execution`'s
+ * `execution.fix_loop_max` budget, which now defaults to 10 with a
+ * strategy-shift ladder. A deterministic, critic-free retry on an
+ * already-known verdict has no judgement call that ladder's rungs apply to.
  */
 export const SELF_FIX_CEILING = 3;
 

@@ -114,7 +114,7 @@ state is not `success` it names what would change it:
 - [`verify-before-complete`](../../rules/verify-before-complete.md) — no
   completion claim without fresh evidence; this names what to claim when the
   claim is not completion.
-- [`autonomous-execution`](../../rules/autonomous-execution.md) — the N=3
-  validation budget whose firing is `exhausted`.
+- [`autonomous-execution`](../../rules/autonomous-execution.md) — the
+  `execution.fix_loop_max` validation budget whose firing is `exhausted`.
 - [`autonomy-mechanics`](autonomy-mechanics.md) — the budget's mechanics and the
   adaptive-effort ordering this page's progress-primary section states.

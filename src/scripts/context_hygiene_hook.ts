@@ -7,20 +7,24 @@
  * module exactly (snake_case kept deliberately — fidelity over TS idiom).
  *
  * Maintains a deterministic state file the rule body cites for the
- * freshness threshold, the 3-failure stop, and tool-loop detection. The
- * agent's job shrinks from "remember three counters" to "read this file
- * before responding".
+ * freshness threshold and the 3-failure stop. The agent's job shrinks from
+ * "remember counters" to "read this file before responding".
  *
  * Output: `agents/state/context-hygiene.json`
  *   {
  *     "tool_calls": <int>,                 // running PostToolUse count
- *     "consecutive_same_tool": <int>,      // includes the latest call
- *     "last_tool": "<name>",
  *     "tool_history": [..., last 5 names],
- *     "loop_detected": <bool>,             // ≥ 3 same tool in a row
  *     "freshness_threshold": <int|null>,   // 20/40/60 milestone hit
  *     "checked_at": "<iso8601>"
  *   }
+ *
+ * No same-tool-repeat ("loop") field: a same-tool-name counter fires on
+ * ordinary, non-looping work (an enumerated sweep over distinct targets
+ * calls the same tool repeatedly by design — the rule's own text says
+ * "'similar parameters' is the load-bearing word"), reaches no model (its
+ * only emission was a verbose stderr line), and had two readers, one of
+ * which read a path nothing wrote. Removed rather than repaired —
+ * road-to-signals-that-mean-what-they-say D1.
  *
  * Exit code is always 0.
  *
@@ -33,8 +37,9 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Re-use the shared atomic-write helper so concerns honour the single
-// `agents/runtime/state/.dispatcher.lock` discipline (hook-architecture-v1.md
-// § Concurrency, Phase 7.4).
+// `agents/state/.dispatcher.lock` discipline (hook-architecture-v1.md,
+// Concurrency, Phase 7.4) — the lock sits beside THIS hook's own target, not
+// the fixed `agents/runtime/state/` path the discipline cites generally.
 import { atomic_write_json } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
 
@@ -45,7 +50,6 @@ import { readHookStdin } from "./hooks/hook_stdin.js";
 export const STATE_DIR = path.join("agents", "state");
 export const STATE_FILE = path.join(STATE_DIR, "context-hygiene.json");
 
-export const LOOP_THRESHOLD = 3; // 3+ consecutive same-tool calls
 export const HISTORY_DEPTH = 5;
 export const FRESHNESS_MILESTONES = [20, 40, 60] as const;
 
@@ -56,10 +60,7 @@ type StateDict = Record<string, unknown>;
 function _empty_state(): StateDict {
   return {
     tool_calls: 0,
-    consecutive_same_tool: 0,
-    last_tool: null,
     tool_history: [],
-    loop_detected: false,
     freshness_threshold: null,
   };
 }
@@ -134,22 +135,12 @@ function _update(state: StateDict, tool: string | null): StateDict {
   const curr_count = prev_count + 1;
   state["tool_calls"] = curr_count;
 
-  const last = state["last_tool"];
-  if (last === tool) {
-    state["consecutive_same_tool"] = _asInt(state["consecutive_same_tool"]) + 1;
-  } else {
-    state["consecutive_same_tool"] = 1;
-  }
-  state["last_tool"] = tool;
-
   let hist = state["tool_history"];
   if (!Array.isArray(hist)) {
     hist = [];
   }
   (hist as unknown[]).push(tool);
   state["tool_history"] = (hist as unknown[]).slice(-HISTORY_DEPTH);
-
-  state["loop_detected"] = _asInt(state["consecutive_same_tool"]) >= LOOP_THRESHOLD;
 
   const ms = _milestone_hit(prev_count, curr_count);
   if (ms !== null) {
@@ -211,7 +202,6 @@ export function run(
   if (verbose) {
     process.stderr.write(
       `context-hygiene-hook: tool_calls=${pyRepr(state["tool_calls"])} ` +
-        `loop=${pyRepr(state["loop_detected"])} ` +
         `threshold=${pyRepr(state["freshness_threshold"])}\n`,
     );
   }

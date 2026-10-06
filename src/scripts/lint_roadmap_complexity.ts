@@ -154,8 +154,10 @@ function _check_lightweight(text: string, line_count: number, problems: string[]
     if (line_count > LIGHTWEIGHT_LINE_CAP) {
         problems.push(
             `lightweight cap exceeded: ${line_count} lines ` +
-                `(max ${LIGHTWEIGHT_LINE_CAP}); consider tagging structural ` +
-                `or trimming`,
+                `(max ${LIGHTWEIGHT_LINE_CAP}); move dated evidence paragraphs ` +
+                `verbatim to a page under agents/evidence/analysis/, leaving a ` +
+                `one-line pointer — an agent may not retag this file structural ` +
+                `to clear the cap (roadmap-complexity-standard.md)`,
         );
     }
     const phases = _countMatches(PHASE_PAT, text);

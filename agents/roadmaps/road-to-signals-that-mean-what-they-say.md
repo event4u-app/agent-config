@@ -197,13 +197,13 @@ At `df377ca64`:
 
 ## Phase 1 — The loop flag
 
-- [ ] **1.1 The session analyser reads the hook's file.**
+- [x] **1.1 The session analyser reads the hook's file.**
       `cmd_analyze_session.ts` takes its path from the hook's exported
       `STATE_FILE` instead of spelling one, and its docstring (`:15`) and help
       text (`:256-257`) name that path; the dispatcher's help line names
       the same path.
       verify: `npx vitest run tests/scripts/analyze_session_reads_hook_state.test.ts` -> 0
-- [ ] **1.2 The two fields leave their writer and their readers in one
+- [x] **1.2 The two fields leave their writer and their readers in one
       change.** Remove `loop_detected` and `consecutive_same_tool` from the
       state the hook writes and from its verbose line, from the analyser's
       tool-activity section, and from the three places `explain_run.ts` prints
@@ -219,7 +219,7 @@ At `df377ca64`:
       a stub owns, which this step does not try to fix). The new test searches
       `src/` and `docs/` for both field names and fails on any hit.
       verify: `npx vitest run tests/scripts/hooks/context_hygiene_state_shape.test.ts` -> 0
-- [ ] **1.3 The rule and its guideline stop naming a loop signal.** In
+- [x] **1.3 The rule and its guideline stop naming a loop signal.** In
       `context-hygiene.md` the header's list of what the hook maintains loses
       "loop signal"; the rule already says the every-turn obligation is
       model-carried (`:36-37`) and gains no sentence. The one paragraph of the
@@ -232,12 +232,12 @@ At `df377ca64`:
 
 ## Phase 2 — Sentences beside the value they describe
 
-- [ ] **2.1 The lean-projection comment describes the shipped value.** The
+- [x] **2.1 The lean-projection comment describes the shipped value.** The
       block header no longer says experimental or opt-in, and no line calls a
       value other than the one below it the default.
       verify: `grep -c "today's behaviour" src/config/agent-settings.template.yml` -> /^0$/
       Positive control: the same grep returns 1 at `df377ca64`.
-- [ ] **2.2 The parallel cap says who carries it.** The two template
+- [x] **2.2 The parallel cap says who carries it.** The two template
       comments, the schema description and the context table state that the
       value is a limit the model reads from settings and that no code counts
       against it. The settings reference, the round-trip fixture that mirrors
@@ -246,7 +246,7 @@ At `df377ca64`:
       verify: `cat src/config/agent-settings.template.yml src/agent-src/templates/agent-settings.md | grep -c 'Hard cap enforced by runtime'` -> /^0$/
       Positive control: the same command returns 2 at `df377ca64`.
 
-- [ ] **2.3 A cited budget is the one the rule states.** Each of the 18
+- [x] **2.3 A cited budget is the one the rule states.** Each of the 18
       lines, and the wrapped one, cites `execution.fix_loop_max` and the
       ladder instead of a figure the rule dropped. For five of them that is
       more than a citation: five commands state three as their operative
@@ -260,7 +260,7 @@ At `df377ca64`:
       tracked copies are regenerated.
       verify: `grep -rI 'N=3' src --include=*.md --include=*.ts | grep -c 'autonomous-execution'` -> /^0$/
       Positive control: the same command returns 18 at `df377ca64`.
-- [ ] **2.4 No shipped line stops or asks at three.** The six lines say what
+- [x] **2.4 No shipped line stops or asks at three.** The six lines say what
       the rule says: after three attempts the strategy changes, and a count is
       not a reason to stop or to ask; the push-settle sentence keeps its branch
       for something only the user can decide. One dated note under AC-4 of the
@@ -282,12 +282,28 @@ At `df377ca64`:
       required fields stay where they are. No checkbox, decision, criterion or
       tag is changed.
       verify: `./scripts-run src/scripts/lint_roadmap_complexity` -> 0
-- [ ] **3.2 The lint names the remedy.** When a `lightweight` roadmap exceeds
+      **Partial (2026-10-06).** The live two over-cap files are no longer the
+      two named in Context: `road-to-a-menu-whose-precision-is-measured.md` was
+      parked to `later/` on 2026-10-05, out of this gate's scanned directory;
+      `road-to-neighbours-that-pull-their-weight.md` (656 lines) took its place,
+      landed by `7cd6563a8` the same day. `road-to-corpus-refresh-cadence-shape.md`
+      (760→468 lines) is done — four dated `**Evidence (…)**` paragraphs moved
+      verbatim to `agents/evidence/analysis/corpus-refresh-cadence-evidence-2026-10.md`,
+      one per 1.2a-1.2d, each left as a one-line pointer; the two open steps'
+      `**Hand-over**` sections (forward-looking, not backward evidence) were left
+      in place untouched, and neither inline `blocked-by` marker moved.
+      `road-to-neighbours-that-pull-their-weight.md` was deliberately left alone:
+      its own D15 names an active drain lane possibly still editing it, and a
+      concurrent-edit collision on a file this task has no context on is a cost
+      this step should not spend to close a trunk lint. `lint_roadmap_complexity`
+      therefore still exits 1 on that one file; AC-3 and AC-6 stay open for the
+      same reason.
+- [x] **3.2 The lint names the remedy.** When a `lightweight` roadmap exceeds
       the line cap, the message says that dated evidence belongs on an
       evidence page and that an agent may not retag; today it suggests
       "tagging structural or trimming" (`lint_roadmap_complexity.ts:156-158`).
       verify: `npx vitest run tests/scripts/lint_roadmap_complexity_message.test.ts` -> 0
-- [ ] **3.3 A name-filtered run that matches no test is listed.** The
+- [x] **3.3 A name-filtered run that matches no test is listed.** The
       `unfalsifiable-verify` family in `closure_scan` gains one case: a clause
       of the form `vitest run <target> -t <name>` where the target exists and
       no test title under it contains the name — a file, or every test file of
@@ -299,7 +315,7 @@ At `df377ca64`:
 
 ## Phase 4 — State that is read where it is written
 
-- [ ] **4.1 The turn marker follows the ledger.** `_ledgerStamp` takes the
+- [x] **4.1 The turn marker follows the ledger.** `_ledgerStamp` takes the
       session id and resolves the file through the writer's exported
       `ledgerFileFor`. The test runs the writer and the reader with a session
       id, as a host does, and asserts that a second user turn resets the
@@ -307,7 +323,7 @@ At `df377ca64`:
       itself still lives in one file per project, so two sessions in one
       checkout reset each other as before; that is not changed here.
       verify: `npx vitest run tests/scripts/evidence_independence_turn_marker.test.ts` -> 0
-- [ ] **4.2 What a compacted session gets back is decided once.** Two
+- [x] **4.2 What a compacted session gets back is decided once.** Two
       records disagree, so the question goes to a council with both in the
       bundle: the archived step that is ticked — "`compact` re-injects this
       session's own record" — and the resolver rule chosen later — an own
@@ -322,7 +338,7 @@ At `df377ca64`:
       `evidence-type` marker; code, comment and one fixture per case follow
       it; the archived step gains a dated note saying which reading stands.
       verify: `npx vitest run tests/scripts/handoff_context_compact_record.test.ts` -> 0
-- [ ] **4.3 One spelling of the latch path, and an inventory row that is
+- [x] **4.3 One spelling of the latch path, and an inventory row that is
       true.** The two docstrings, the two lines that place the dispatcher lock
       under the same wrong directory (`:36`, `:158`), and the dispatcher's
       help line name the path the constant holds; the inventory row for the latch anchors to the
@@ -359,19 +375,19 @@ At `df377ca64`:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A fixture of three consecutive reads of three different files
+- [x] AC-1 — A fixture of three consecutive reads of three different files
       leaves no field in the hook's state that names a loop.
-- [ ] AC-2 — `analyze-session` on a project where the hook has run prints a
+- [x] AC-2 — `analyze-session` on a project where the hook has run prints a
       tool-call count taken from the hook's file.
 - [ ] AC-3 — `./scripts-run src/scripts/lint_roadmap_complexity` exits 0 on the
       trunk with both roadmaps still tagged `lightweight`.
-- [ ] AC-4 — `closure_scan` run on the thinned-layer roadmap at `df377ca64`
+- [x] AC-4 — `closure_scan` run on the thinned-layer roadmap at `df377ca64`
       lists its three name-filtered clauses whose test does not exist.
-- [ ] AC-5 — The change adds no file under `src/scripts/`.
+- [x] AC-5 — The change adds no file under `src/scripts/`.
 - [ ] AC-6 — `task ci` passes its roadmap-complexity step.
-- [ ] AC-7 — With a session id and one session in the checkout, a self-review
+- [x] AC-7 — With a session id and one session in the checkout, a self-review
       in a second user turn is counted from zero.
-- [ ] AC-8 — What a session start with source `compact` injects and moves is
+- [x] AC-8 — What a session start with source `compact` injects and moves is
       what the council's record says, and one fixture per case pins it.
 
 ## Decisions

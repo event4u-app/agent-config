@@ -75,7 +75,7 @@ regressions are detectable. Pick the verdict commands per the project's
 |---|---|---|
 | `threshold` | all targeted checks green | numeric pass bar, **absolute** (fraction of total), not "± N tests" |
 | `allow_regressions` | `false` | a revision breaking a baseline-green check stops the loop |
-| `max_attempts` | **3** | hard cap (test feedback is more actionable than diff critique → one more than `do-and-judge`'s 2; bounded by [`autonomous-execution`](../../rules/autonomous-execution.md) N=3) |
+| `max_attempts` | **3** | hard cap, this loop's own number (test feedback is more actionable than diff critique → one more than `do-and-judge`'s 2); independent of [`autonomous-execution`](../../rules/autonomous-execution.md)'s `execution.fix_loop_max` budget, which now defaults to 10 |
 | `plateau_window` | 3 | stop if the last *window* scores sit within `tolerance` |
 | `tolerance` | small absolute fraction | flake jitter that does **not** count as improvement |
 
@@ -294,7 +294,7 @@ iter2 fixes A, breaks B, 92% → "PASS"      ✗ regression ignored
   phantom-verification check bound at step 3.4, with its fixture corpus in
   `tests/fixtures/tamper-corpus/` and its polarity proven both ways by
   `--self-test`.
-* [`autonomous-execution`](../../rules/autonomous-execution.md) — the N=3 cap.
+* [`autonomous-execution`](../../rules/autonomous-execution.md) — the `execution.fix_loop_max` cap (this loop's own `max_attempts` is a separate, smaller number).
 * [`resident-process-governance`](../../docs/contracts/resident-process-governance.md) — the
   runtime-free constraint this loop honors.
 * Optional impact pre-step (when a code-graph is present, ADR-124): run

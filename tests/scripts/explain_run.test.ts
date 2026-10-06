@@ -190,7 +190,7 @@ describe('readHygieneState', () => {
     });
 
     it('falls back to the second candidate when the first is absent', () => {
-        writeJson(p('b.json'), { tool_calls: 5, loop_detected: false });
+        writeJson(p('b.json'), { tool_calls: 5 });
         const r = readHygieneState([p('a.json'), p('b.json')]);
         expect(r.path).toBe(p('b.json'));
         expect(r.state?.['tool_calls']).toBe(5);
@@ -235,7 +235,7 @@ describe('buildReport — end to end', () => {
                 orchestration: { spawn_count: 1, dispatch_mode: 'do-and-judge', tiers: ['lite'], token_delta: -1200, first_pass_success: true, escalated: false },
             }),
         ]);
-        writeJson(p('agents', 'state', 'context-hygiene.json'), { tool_calls: 12, loop_detected: false, checked_at: '2026-07-01T00:10:00Z' });
+        writeJson(p('agents', 'state', 'context-hygiene.json'), { tool_calls: 12, checked_at: '2026-07-01T00:10:00Z' });
 
         const report = buildReport(
             baseOpts({
@@ -299,14 +299,14 @@ describe('buildReport — end to end', () => {
             }),
         ]);
         const hygienePath = p('agents', 'state', 'context-hygiene.json');
-        writeJson(hygienePath, { tool_calls: 12, loop_detected: false });
+        writeJson(hygienePath, { tool_calls: 12 });
 
         const report = buildReport(baseOpts({ task: 'TASK-1', hygiene: hygienePath }));
         const summary = report.split('## Resolved rule set')[0] ?? '';
         expect(summary).toContain('- Rules: 2 always-on (kernel), 2 available on triggers.');
         expect(summary).toContain('- Skill usage: 2 artifact(s) consulted, 1 applied across 1 task boundary(ies).');
         expect(summary).toContain('- Subagent dispatches: 1 dispatch(es), total token delta -1200.');
-        expect(summary).toContain('- Session health: 12 tool call(s) recorded, loop detected: false.');
+        expect(summary).toContain('- Session health: 12 tool call(s) recorded.');
     });
 
     it('--since filters out earlier rows', () => {
