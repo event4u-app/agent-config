@@ -87,21 +87,6 @@ function runTs(args: string[], b: Box): RunResult {
     return { status: r.status, stdout: r.stdout ?? '', stderr: r.stderr ?? '' };
 }
 
-function norm(text: string, roots: string[]): string {
-    let out = text;
-    for (const root of roots) {
-        out = out.split(root).join('<TMP>');
-        let real = root;
-        try {
-            real = fs.realpathSync(root);
-        } catch {
-            /* removed */
-        }
-        out = out.split(real).join('<TMP>');
-    }
-    return out;
-}
-
 const tmps: string[] = [];
 function freshBox(): Box {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'acup-root-'));
