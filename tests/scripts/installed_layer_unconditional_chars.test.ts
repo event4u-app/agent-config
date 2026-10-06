@@ -256,6 +256,33 @@ describe('installed layer — the when-loaded split in characters', () => {
         expect(l.scoped_chars).toBe(l.chars);
     });
 
+    it('the fallback DOES misread a CRLF rule whose prose quotes `paths:`', () => {
+        // THE COST OF THE FALLBACK, ASSERTED RATHER THAN DESCRIBED. The three
+        // unparseable-frontmatter cases above all carry a REAL `paths:` key, so
+        // they only show the fallback catching what it is for. This shows what
+        // it gets wrong: a CRLF-authored rule — the ordinary case for a rule
+        // hand-written on Windows, and `readLayer` walks foreign user-authored
+        // rules too — with NO `paths:` key, whose body quotes one, reads
+        // path-scoped and leaves the standing figure entirely.
+        //
+        // This case is the record of a known false positive, not a request for
+        // one: it pins the current behaviour so that a later change which
+        // narrows the fallback has to come here and say so. The direction is
+        // the flattering one, which is why it is written down rather than left
+        // to be rediscovered — it SHRINKS the figure the ceiling is read in.
+        const home = mkTmp('ilu-crlf-fp-');
+        const dir = path.join(home, GLOBAL_RULE_DIRS['claude-code'] as string);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'crlf-no-key.md'),
+            '---\r\ntype: auto\r\n---\r\nTo scope a rule, write:\r\npaths:\r\n  - "**/*.php"\r\n',
+            'utf-8',
+        );
+        const l = readLayer('claude-code', 'global', dir, new Map());
+        expect(l.unconditional_chars, 'known false positive, recorded').toBe(0);
+        expect(l.scoped_chars).toBe(l.chars);
+    });
+
     it('a file with NO frontmatter at all is unconditional, not scoped', () => {
         // The control for the fallback: it must not fire for a plain body, or
         // a rule that simply has no frontmatter would be read as conditional

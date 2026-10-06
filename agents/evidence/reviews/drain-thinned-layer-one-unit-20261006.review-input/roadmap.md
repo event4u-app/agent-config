@@ -273,6 +273,42 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
 > would red the gate rather than inform a reader. It lives here instead, next
 > to the criteria it corrects.
 
+**AC-1, corrected 2026-10-06 after review round 6 (finding 1).** AC-1 above
+quotes a one-line output as its closure evidence and the quote carries one wrong
+word. It reads `107058 chars (93357 unconditional + 13701 path-scoped)`;
+`renderInstalledLayerReport` writes **`standing`**, not `unconditional`, in that
+slot — `src/scripts/_lib/installed_layer.ts`, both the per-layer line and the
+TOTAL line — and `installed_layer_unconditional_chars.test.ts` asserts that
+wording and argues in its own comment against reusing `unconditional` there. The
+form, quoted from a real `installed_layer_report` run on this machine
+2026-10-06 — an ordinary maintainer install, so its CHARACTER figures are not
+the fixture's and are left exactly as they printed:
+
+```
+  claude-code (global) — 105 files (103 unconditional), 354833 chars (341080 standing + 13753 path-scoped), 105 package-owned / 0 foreign
+```
+
+Read against that, AC-1's quote is right about everything except one word. The
+file and ownership counts match the fixture's exactly (105 files, 103
+unconditional, 105 package-owned, 0 foreign); only the character figures differ,
+because this install is not thinned. Substituting the fixture's measured
+characters into the form above gives `107058 chars (93357 standing + 13701
+path-scoped)` — the figures AC-1 states, in the word the renderer uses.
+
+The word `unconditional` DOES appear on that line, against the FILE count, which
+is how the quote came to be spliced. Every number in AC-1 is correct and
+107,058 = 93,357 + 13,701 still holds; what was unverifiable was the string, and
+a criterion closed on a verbatim quote is closed on the string as much as on the
+figures.
+
+**And the first draft of this correction repeated the defect it describes.** It
+printed a TOTAL line carrying the fixture's numbers as "the line a real run
+prints" — a line assembled from the renderer's template rather than observed,
+which is what finding 1 is about. It is replaced by a quoted run plus a stated
+substitution, so a reader can see which half was measured and which was derived.
+Corrected here rather than inline for the reason stated at the top of this
+section.
+
 **AC-3, corrected 2026-10-06 after the R2 completion review (finding 10).**
 The closing line of AC-3 above describes the detector evidence more broadly
 than the suites assert. What they actually run:

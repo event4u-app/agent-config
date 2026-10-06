@@ -12893,10 +12893,10 @@ function _title(s) {
 }
 var THIN_ENTRY_MARKER = "> Load the body on a match.";
 var THIN_BODY_POINTER_PREFIX = "Body: ";
-var THIN_BODY_POINTER_RE = new RegExp(
-  `${THIN_BODY_POINTER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(.+\\.md)\\s*$`,
-  "m"
-);
+var THIN_BODY_POINTER_RE = (() => {
+  const lit = THIN_BODY_POINTER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`${lit}((?:(?!${lit}).)+\\.md)\\s*$`, "m");
+})();
 var BODY_LINK_PREFIX = "../../dist/agent-src/rules/";
 function absoluteBodyLinkPrefix(packageRoot) {
   return `${path26.join(path26.resolve(packageRoot), "dist", "agent-src", "rules")}${path26.sep}`;

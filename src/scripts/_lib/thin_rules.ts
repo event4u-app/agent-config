@@ -356,10 +356,17 @@ export const THIN_BODY_POINTER_PREFIX = 'Body: ';
  * lines below it holding a literal `Body: ` would have broken that invariant in
  * the file that states it.
  */
-export const THIN_BODY_POINTER_RE = new RegExp(
-    `${THIN_BODY_POINTER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(.+\\.md)\\s*$`,
-    'm',
-);
+export const THIN_BODY_POINTER_RE = (() => {
+    const lit = THIN_BODY_POINTER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // THE LAST PREFIX ON THE LINE, NOT THE FIRST. `thin_entry` puts the rule's
+    // own `description` on the SAME line ahead of the pointer, so a description
+    // containing the literal `Body: ` used to start the match inside the
+    // description and capture it as part of the path — `has_body_pointer` stayed
+    // true while the extraction was wrong, which is a wrong assertion rather
+    // than a visible failure. Forbidding a second prefix inside the capture
+    // makes the first viable start the last occurrence, which is the pointer.
+    return new RegExp(`${lit}((?:(?!${lit}).)+\\.md)\\s*$`, 'm');
+})();
 
 /** Does this entry carry a body pointer the writer would recognise? */
 export function has_body_pointer(text: string): boolean {
