@@ -286,6 +286,8 @@ describe('advisoryLine — 2.2', () => {
         output_head: [],
         skipped: null,
         files: ['a.ts'],
+        ignored_files: [],
+        typecheck_not_run: [],
         at: '2026-10-01T00:00:00+00:00',
         ...over,
     });
