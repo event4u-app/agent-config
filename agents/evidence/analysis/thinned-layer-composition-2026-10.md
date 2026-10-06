@@ -163,9 +163,11 @@ installed-layer report.
 | unconditional | 97,496 | 130 % |
 | all | 111,197 | 148 % |
 
-Both readings are over. **Which one the ceiling is about is not settled here** —
-it is the question step 4.1 puts to the council that set the figure, and this
-page records both rather than choosing.
+Both CANDIDATE readings — unconditional and all — are over. (The path-scoped
+row is a population, not a candidate ceiling; it is listed so the two candidates
+are decomposable, not as a third reading.) **Which candidate the ceiling is
+about is not settled here** — it is the question step 4.1 puts to the council
+that set the figure, and this page records both rather than choosing.
 
 ## The reading after the form change
 
@@ -340,6 +342,14 @@ roadmap moves nothing here.
 
 ## Whether the ceiling is reachable at all
 
+> **The unit these sums are read in is not settled.** A provider-diverse
+> council (2/2 present, 2026-10-06) returned `unresolved-as-asked`, recorded at
+> `agents/evidence/council/thinned-ceiling-unit-2026-10.md`. The record that set
+> the figure says "**standing** target ~65,000, hard 75,000"; the installed-layer
+> report that AC-1 binds itself to counted **all** characters and could not
+> express the distinction until step 1.1 of this roadmap. Both readings are
+> therefore given below, and neither is chosen here.
+
 The recorded ceiling is "hard 75,000 with ≥10 % headroom". Read as the extended
 roadmap's gate states it — **the measured total plus ten per cent, never above
 75,000** — the working figure is 68,181, and both are given below.
@@ -365,17 +375,50 @@ at the 45-character prefix the roadmap's own expectation was computed from,
 8,366 lower — which puts sum 2 at 71,619–72,495 unconditional, under 75,000 and
 still above the headroom-adjusted 68,181.
 
-**So: no. Not by these moves.** Every move this page prices, taken together,
-including the one reserved to the owner and the one the agent may not take at
-all, leaves the layer above the recorded ceiling on the reading that counts
-everything, and above the headroom-adjusted figure on every reading at every
-root. Reaching it needs something not on this list — row 5's blocker opened, or
-a decision about what the layer carries at all.
+### What the two sums DO and DO NOT include
 
-That sentence is the page's conclusion and it is stated plainly rather than left
-in the tables, because a reader who stops at the five priced rows would
-reasonably infer the opposite: five moves, each with a real number, summing to
-roughly a sixth of the layer, look like a route to a target they do not reach.
+Stated explicitly, because the first draft of this page did not and a
+provider-diverse council caught it: **sums 1 and 2 exclude row 5**, the pointer
+prefix. They subtract the four law headings and, in sum 2, `legal-safety-floor`
+— nothing else. Row 5 is excluded because it is behind an open blocker and
+cannot be taken; but a sentence claiming "every move, taken together" while the
+arithmetic omits the largest row is false, however the row is justified.
+
+So here is the third sum, with row 5 included, and it changes the conclusion.
+
+### Sum 3 — both law moves plus the pointer prefix
+
+The prefix cannot go to zero — a path has a length. Two readings: the ceiling
+of the row (12,371, the whole current prefix) and a realistic short
+installer-owned prefix such as `~/.claude/rules/` at 16 characters, which
+recovers (139 − 16) × 89 = 10,947.
+
+| Reading | Row 5 at its ceiling | Row 5 realistic | vs 75,000 | vs 68,181 |
+|---|---|---|---|---|
+| unconditional | 67,614–68,490 | 69,038–69,914 | 92–93 % | 101–103 % |
+| all | 81,315–82,191 | 82,739–83,615 | 110–111 % | 121–123 % |
+
+**The corrected conclusion, in three parts.**
+
+1. **Under 75,000 on the unconditional reading: reachable** — but only with
+   every row taken, including the one reserved to the owner and the one behind
+   an open blocker. Neither is the council's to take and neither is the
+   agent's.
+2. **Under the headroom-adjusted 68,181: not reachable** by any combination on
+   this list, on any reading, at any root.
+3. **On the all-characters reading: not reachable**, by a margin of at least
+   6,300 even with every row taken at its ceiling.
+
+The first part is a correction of what this page said before the council read
+it. The earlier text said the ceiling was not reachable by these moves, full
+stop; that was true of the sums as computed and false of the moves as
+described, because the largest move was named in the prose and missing from the
+arithmetic. The three-part statement above is what the numbers actually support.
+
+What has not changed: **no combination here reaches the ceiling the way it was
+recorded**, which is 75,000 *with ≥10 % headroom*. Reading the ceiling as a bare
+75,000 and the unit as unconditional is the only combination that closes, and
+both of those are the open questions rather than settled ones.
 
 ### Where this differs from the roadmap's own expectation, and why
 

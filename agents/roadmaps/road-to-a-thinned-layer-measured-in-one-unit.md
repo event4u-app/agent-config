@@ -232,7 +232,7 @@ that takes this phase, with the four rule files named in it; a run without
 that confirmation drafts them interactively, one prompt each. None of the
 five is a kernel rule, and no hook or gate at the pin stops the edit.
 
-- [ ] **4.1 The unit of the ceiling is asked where the ceiling was set.** One
+- [x] **4.1 The unit of the ceiling is asked where the ceiling was set.** One
       council question: is "hard 75,000" read on unconditional characters or
       on all characters of the layer, given the two readings of 1.1 and what a
       path-scoped rule costs before its path is touched. The verdict is
