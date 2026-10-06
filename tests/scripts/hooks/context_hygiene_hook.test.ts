@@ -104,6 +104,7 @@ describe('context_hygiene — tracker behaviour', () => {
         expect(s['tool_history']).toEqual(['view']);
     });
 
+
     it('payload without tool_name still writes state', () => {
         expect(run('{"foo": "bar"}', { consumer_root: tmp })).toBe(0);
         const s = state(tmp);
