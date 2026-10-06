@@ -249,7 +249,7 @@ Reproduced on 2026-10-01:
 | D6 | reversible-technical | agent | 3.2's ceiling stays a reported finding, not a hard CI gate, until the real total is reachable | `installed-layer-ceiling-measurement-2026-10-06.md`: a real opt-in install reads 111,197 chars, 48 % over the 75,000 hard target this step would enforce; a hard gate at that number would be red on `main` on landing, over a corpus (16 full-bodied kernel/path-only/trigger-less rules) this roadmap does not touch | the full-bodied set shrinks enough that 111,197 (or its current re-measurement) sits at or under 75,000 |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host (re-reviewed) -->
+<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
