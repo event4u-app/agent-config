@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 8da6bdf4941c33745455e7c042cdee91457897e2, review
-  artefacts excluded), scope hash `e58f6d41c888941fc19ca319ba7beecd17f3ed08ea9d8165203780fbc2965b19`
+- diff: `diff.patch` — the review scope (branch head e3f13d33b218e7ef3e350866545377111e377336, review
+  artefacts excluded), scope hash `7cfa800838afd997e909fd325c9efd2545f149c07eade3270dbe3e0c18b8ff6d`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -54,7 +54,7 @@ Fill the findings table in `drain-road-to-a-graph-that-feeds-the-gate-20261006c.
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope e58f6d41c888941fc19ca319ba7beecd17f3ed08ea9d8165203780fbc2965b19, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 7cfa800838afd997e909fd325c9efd2545f149c07eade3270dbe3e0c18b8ff6d, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
@@ -64,15 +64,16 @@ Final message = the return envelope and nothing else: {summary, handoff, confide
 ## Caller instructions as delivered to this reviewer (verbatim)
 
 Recorded because the review that fills the findings table ran on these
-instructions, not on the dispatcher text above alone. They name the prior round
-and ask for each of its rows to be re-verified; they state no expected outcome.
+instructions, not on the dispatcher text above alone. They name the prior round's
+artefact and ask for each of its rows to be re-verified; they state no expected
+outcome.
 
 > You are an independent reviewer in the repo event4u/agent-config. Review PR #2239 (branch `drain/road-to-a-graph-that-feeds-the-gate-20261006c`) at its current head.
 >
-> Scope: the whole diff of the PR against its merge base with origin/main (`gh pr diff 2239`, or `git diff origin/main...<head>` after fetching the branch). Report defects you find in correctness, test sensitivity, documentation claims vs. measured evidence, and repo conventions (see CLAUDE.md). For each finding: file:line, the concrete failure scenario, severity.
+> Scope: the whole diff of the PR against its merge base with origin/main. Report defects in correctness, test sensitivity, documentation claims vs. measured evidence, and repo conventions (see CLAUDE.md). For each finding: file:line, concrete failure scenario, severity.
 >
-> The branch has a completion-review artefact at `agents/evidence/reviews/drain-road-to-a-graph-that-feeds-the-gate-20261006c.findings.md`. Use the repo's own R2 tooling to record your review properly for the current head (look at `src/scripts/dispatch_r2_reviewer.ts` and the completion-review contract it references to learn the expected artefact shape and how a genuine review is recorded, including recording the review prompt). Each previous finding row: verify against the code whether the fix actually holds and set its status from your own verification. Add new findings as new rows.
+> The branch has a completion-review artefact at `agents/evidence/reviews/drain-road-to-a-graph-that-feeds-the-gate-20261006c.findings.md` with open rows from the previous round. Use the repo's own R2 tooling (`src/scripts/dispatch_r2_reviewer.ts` and the completion-review contract it references) to record a genuine review for the current head, including the review prompt, following the contract's procedure for a new round. For each previous row, verify against the code whether it is resolved and set its status from your own verification only. Add new findings as new rows.
 >
-> You may commit ONLY the review artefact changes (pathspec, Conventional Commit `docs(review): ...`, ending with `Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>`) and push to that branch. Do NOT change any code, do NOT merge.
+> You may commit ONLY the review artefact changes (pathspec, `docs(review): ...`, ending with `Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>`) and push to that branch. Do NOT change code, do NOT merge.
 >
-> Final report (English, concise): head SHA reviewed, per-finding verdicts, new findings, whether the artefact was committed and pushed.
+> Final report (English, concise): head SHA reviewed, per-row verdicts, new findings, whether committed and pushed, and the R2 gate state.

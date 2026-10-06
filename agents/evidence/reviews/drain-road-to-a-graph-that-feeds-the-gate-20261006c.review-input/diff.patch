@@ -1,20 +1,19 @@
 diff --git a/agents/evidence/analysis/graph-feeder-latency-2026-Q4.md b/agents/evidence/analysis/graph-feeder-latency-2026-Q4.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..c192a4404bae9a6853c81c3197e4dbab6b61fc01
+index 0000000000000000000000000000000000000000..3ec871e4abcd9e4b1a5e076c44c49017f1e08181
 --- /dev/null
 +++ b/agents/evidence/analysis/graph-feeder-latency-2026-Q4.md
-@@ -0,0 +1,161 @@
+@@ -0,0 +1,187 @@
 +<!-- evidence-type: analysis -->
 +
 +# Graph feeder latency — 2026 Q4
 +
-+**The feeder's cost on the stop slot, measured 2026-10-06 at `e3c30fc9d`.** On a
-+generated fixture repository the shadow arm adds **p50 ≈ 32 ms, p95 ≈ 39 ms**
-+(200 modules) and **p50 ≈ 45 ms, p95 ≈ 54 ms** (2,000 modules) to a stop hook
-+whose own work is under 1 ms. Over this repository's real graph the feeder's
-+work alone read **p95 ≈ 583 ms** on the final instrument and **p95 ≈ 1,007 ms**
-+on an earlier run the same day — two readings a factor of 1.7 apart on one
-+machine, both reported below. The generated fixture prices
++**The feeder's cost on the stop slot, measured 2026-10-06/07.** On a generated
++fixture repository the shadow arm adds **p50 ≈ 34 ms, p95 ≈ 47 ms** (200
++modules) and **p50 ≈ 52 ms, p95 ≈ 67 ms** (2,000 modules) to a stop hook whose
++own work is under 1 ms. Over this repository's real graph the feeder's work
++alone read **p95 ≈ 583 ms to ≈ 1,007 ms** across four readings on one machine,
++all reported below. The generated fixture prices
 +the walk, and the real index prices the load, which is the larger term by an
 +order of magnitude.
 +
@@ -50,70 +49,92 @@ index 0000000000000000000000000000000000000000..c192a4404bae9a6853c81c3197e4dbab
 +  totals is a weaker number than a direct one. Every verdict it returns is
 +  recorded and printed: the function turns any throw into `null`, so a broken
 +  graph load would otherwise be timed as if it were the walk.
-+- **All three readings interleaved, order rotating per round, each warmed
-+  once**, so machine drift and order effects (GC after the heavier arm, cache
-+  warmth) spread across them. The first publication of this page ran the hook
-+  arms in a fixed order and the feeder-alone loop after them, unwarmed; two R2
-+  review rounds flagged both, and every fixture figure below was re-taken on the
-+  fixed instrument.
++- **All three readings interleaved, each warmed once, the rounds cycling
++  through all six orders of the three calls**, so machine drift and order
++  effects (GC after the heavier arm, cache warmth) spread across them: over
++  every six rounds each call runs first twice and has each other call as its
++  direct predecessor twice. The first publication of this page ran the hook
++  arms in a fixed order and the feeder-alone loop after them, unwarmed; the
++  second rotated the start of one fixed cycle, which balances position but not
++  predecessor. Three R2 review rounds flagged these, and every fixture figure
++  below was re-taken on the balanced instrument with a round count that is a
++  multiple of six.
 +- **`--repo P --edit F`** takes the feeder-alone reading over an existing
-+  repository's own graph, read-only, and notes when the graph state is not
-+  `edited` — a stop normally follows an uncommitted edit, and on a clean tree
-+  the git probes answer a different question.
++  repository's own graph, read-only, records every distinct verdict across the
++  billed rounds, and notes when the graph state is not `edited` — a stop
++  normally follows an uncommitted edit, and on a clean tree the git probes
++  answer a different question.
 +
 +Machine: Apple M5 Max ×18, darwin 25.6.0 arm64, node v26.7.0. One machine; the
 +risk register's rank 5 names why that matters.
 +
 +## Readings
 +
-+### Generated fixture, 200 modules, 50 rounds
++### Generated fixture, 200 modules, 60 rounds
 +
 +| arm | n | p50 ms | p95 ms | max ms |
 +|---|---|---|---|---|
-+| stop hook, with feeder | 50 | 32.43 | 39.91 | 49.77 |
-+| stop hook, without feeder | 50 | 0.57 | 0.90 | 1.14 |
-+| feeder work alone | 50 | 32.69 | 45.95 | 50.82 |
++| stop hook, with feeder | 60 | 34.97 | 48.19 | 51.76 |
++| stop hook, without feeder | 60 | 0.64 | 0.91 | 1.60 |
++| feeder work alone | 60 | 33.96 | 43.10 | 52.02 |
 +
-+Delta: p50 31.86 ms, p95 39.01 ms. Exit codes: `[1]` in both arms. Feeder
++Delta: p50 34.33 ms, p95 47.28 ms. Exit codes: `[1]` in both arms. Feeder
 +verdicts: `["untested"]`.
 +
-+`./scripts-run src/scripts/bench_graph_feeder_latency --runs 50 --files 200`
++`./scripts-run src/scripts/bench_graph_feeder_latency --runs 60 --files 200`
 +
-+### Generated fixture, 2,000 modules, 50 rounds
++### Generated fixture, 2,000 modules, 60 rounds
 +
 +| arm | n | p50 ms | p95 ms | max ms |
 +|---|---|---|---|---|
-+| stop hook, with feeder | 50 | 45.59 | 54.60 | 59.06 |
-+| stop hook, without feeder | 50 | 0.61 | 0.98 | 1.83 |
-+| feeder work alone | 50 | 46.18 | 55.02 | 60.44 |
++| stop hook, with feeder | 60 | 52.37 | 68.05 | 83.16 |
++| stop hook, without feeder | 60 | 0.76 | 1.43 | 2.19 |
++| feeder work alone | 60 | 52.96 | 73.03 | 106.83 |
 +
-+Delta: p50 44.98 ms, p95 53.62 ms. Exit codes: `[1]` in both arms. Feeder
-+verdicts: `["untested"]`. On the rotated instrument the feeder-alone reading
-+tracks the with-minus-without delta to within 1 ms at p50 and 2 ms at p95, in
-+both sizes.
++Delta: p50 51.61 ms, p95 66.62 ms. Exit codes: `[1]` in both arms. Feeder
++verdicts: `["untested"]`.
 +
-+`./scripts-run src/scripts/bench_graph_feeder_latency --runs 50 --files 2000`
++`./scripts-run src/scripts/bench_graph_feeder_latency --runs 60 --files 2000`
++
++**How closely feeder-alone tracks the delta.** At p50 the two agree to within
++0.4 ms (200 modules) and 1.4 ms (2,000 modules). At p95 they do not: feeder-alone
++reads 4.2 ms *below* the delta at 200 modules and 6.4 ms *above* it at 2,000
++modules — where it also exceeds the whole with-feeder stop's p95 (73.03 against
++68.05 ms), a part greater than its whole. A p95 over 60 samples is the 57th
++sample, so it moves by several milliseconds between runs; the earlier 50-round
++reading on the rotated instrument showed the same pattern (p95 gaps of 6.9 and
++1.4 ms, p50 gaps of 0.8 and 1.2 ms). Feeder-alone is a good stand-in for the
++increment's median and only an approximation of its tail, accurate to several
++milliseconds in either direction.
 +
 +### This repository's own graph, 30 rounds
 +
-+Graph built in the measuring worktree at `e3c30fc9d`: 3,768 files, 46,630
-+nodes, 164,961 edges, a 59 MB native cache. Edit priced:
-+`src/scripts/check_memory.ts`, verdict `untested` in every reading.
++Edit priced: `src/scripts/check_memory.ts`. The first three rows used a graph
++built at `e3c30fc9d` (3,768 files, 46,630 nodes, 164,961 edges, a 59 MB native
++cache) and recorded only the last round's verdict, `untested` in each; the
++balanced-instrument rows used a graph built at `23ff05cde` (3,769 files, 46,638
++nodes, 165,023 edges) and record every round's verdict, `["untested"]` in both.
 +
 +| reading | state | n | p50 ms | p95 ms | max ms |
 +|---|---|---|---|---|---|
-+| final instrument, `check_memory.ts` modified (one appended newline) | `edited` | 30 | 525.38 | 583.23 | 627.14 |
-+| final instrument, clean tree | `fresh` | 30 | 541.84 | 593.13 | 640.09 |
++| rotated instrument, `check_memory.ts` modified (one appended newline) | `edited` | 30 | 525.38 | 583.23 | 627.14 |
++| rotated instrument, clean tree | `fresh` | 30 | 541.84 | 593.13 | 640.09 |
 +| first instrument, an unrelated new file uncommitted | `edited` | 30 | 884.02 | 1,007.47 | 1,051.26 |
++| balanced instrument, `check_memory.ts` modified (one appended newline) | `edited` | 30 | 595.94 | 966.04 | 1,458.38 |
++| balanced instrument, clean tree | `fresh` | 30 | 583.03 | 657.49 | 668.71 |
 +
 +`./scripts-run src/scripts/bench_graph_feeder_latency --repo . --edit src/scripts/check_memory.ts --runs 30`
 +
 +The `edited` state needs an uncommitted change to an indexed file; the first
-+row was taken with the new bench script itself uncommitted, the second by
-+appending a newline to `check_memory.ts` for the run and restoring the file
-+byte-for-byte afterwards. The first instrument had no warm-up round and ran
-+while other lanes of the same drain were loading the machine; which of those
-+two accounts for the factor of 1.7 was not isolated, so both rows stand.
++and fourth rows were taken by appending a newline to `check_memory.ts` for the
++run and restoring the file byte-for-byte afterwards, the third with the new
++bench script itself uncommitted (the second and fifth are the clean tree). The
++first instrument had no warm-up round and ran while other lanes of the same
++drain were loading the machine; which of those two accounts for its factor of
++1.7 over the first row was not isolated, so every row stands. The fourth row's
++wide tail (p50 596 ms, max 1,458 ms) is the same machine-load signature: the
++`--repo` mode times the feeder alone, so the instrument change cannot account
++for it.
 +
 +A one-off split, taken during the first reading with a scratch probe and not
 +shipped as an instrument (11 rounds, medians): `graphState` **≈ 195 ms** — the
@@ -127,8 +148,10 @@ index 0000000000000000000000000000000000000000..c192a4404bae9a6853c81c3197e4dbab
 +- **The without-feeder stop is the floor and it is under 1 ms.** Everything a
 +  stop costs above that in a repository with a graph is the feeder.
 +- **The cost scales with the index, not with the edit.** The generated readings
-+  barely move from 200 to 2,000 modules, because a small index loads fast; the
-+  real repository costs 10–20× more because its cache is 59 MB. A consumer with a
++  move little from 200 to 2,000 modules, because a small index loads fast; the
++  real repository costs roughly 10–25× more at p50 (525–884 ms against the
++  fixture's with-feeder 35–52 ms) and 9–21× at p95 (583–1,007 ms against
++  48–68 ms), because its cache is 59 MB. A consumer with a
 +  larger graph pays more again, per stop, for a verdict nothing acts on yet.
 +- **No reading comes near a kill-bound this tree controls.** The two dispatch
 +  routes differ. The in-process route — the default — has no kill-timeout: a
@@ -156,8 +179,11 @@ index 0000000000000000000000000000000000000000..c192a4404bae9a6853c81c3197e4dbab
 +real-repository readings here — p95 583–1,007 ms, the load term dominating —
 +are the baseline it is compared against.** Feeder work alone stands in for the
 +stop-slot increment because the fixture arms show the stop's own work is under
-+1 ms and, on the rotated instrument, the with-minus-without delta tracks the
-+feeder-alone reading to within 2 ms. `--repo` deliberately does not run the whole hook
++1 ms and the with-minus-without delta agrees with the feeder-alone reading to
++within 1.4 ms at p50. At p95 the two differ by up to about 7 ms in either
++direction, so the precondition's comparison rests on the median, and a p95 from
++`--repo` is the increment's tail to within several milliseconds — immaterial
++against a baseline in the hundreds. `--repo` deliberately does not run the whole hook
 +over a real repository: that would append rows to the repository's own feeder
 +record, which is the corpus `graph-feeder-recall-2026-Q4.md` labels. A promotion that
 +does not first cut the load term (a cached or incremental open) inherits half a
@@ -166,7 +192,7 @@ index 0000000000000000000000000000000000000000..c192a4404bae9a6853c81c3197e4dbab
 +This is a reading taken on a date on one machine, not a standing fact. Re-take
 +it before relying on it.
 diff --git a/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md b/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
-index 30ee500cc890322d8042ebf237dd2aa3d4502ca3..d536022ba9191def5b30ed847ef24d3af20c9540 100644
+index 30ee500cc890322d8042ebf237dd2aa3d4502ca3..5afcf4faf112a380148329fa38fc5bfda9794516 100644
 --- a/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
 +++ b/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
 @@ -149,7 +149,7 @@ refuses.
@@ -178,7 +204,7 @@ index 30ee500cc890322d8042ebf237dd2aa3d4502ca3..d536022ba9191def5b30ed847ef24d3a
        `inbox-2026-10-e`. `src/scripts/_lib/graph_feeder_record.ts:12-22` withdrew the
        "costs nothing" claim and leaves the latency unmeasured; a stop-hook timeout
        would discard F's refusal, so the shadow arm can weaken the gate it feeds. p50
-@@ -157,8 +157,20 @@ refuses.
+@@ -157,8 +157,22 @@ refuses.
        published beside the recall page; the number becomes a stated precondition of
        3.4 in that step's text.
        verify: `grep -c 'p95' agents/evidence/analysis/graph-feeder-latency-*.md` -> /^[1-9]/
@@ -193,7 +219,9 @@ index 30ee500cc890322d8042ebf237dd2aa3d4502ca3..d536022ba9191def5b30ed847ef24d3a
 +      reopen is an owner amendment, not a step here. PRECONDITION from 3.5: the
 +      promotion reports the feeder's stop-slot increment — its work alone, measured by
 +      `bench_graph_feeder_latency --repo P --edit F` on the repository in question,
-+      which tracks the fixture's with-minus-without delta — against the
++      which on the fixture agrees with the with-minus-without delta to within
++      1.4 ms at p50 but differs by up to about 7 ms either way at p95, so the
++      comparison rests on its median — against the
 +      published baseline (p95 583–1,007 ms over a 59 MB index, the cache load
 +      dominating); a promotion that does not first cut the load term inherits half a
 +      second to a second per stop on the gate's decision path.
@@ -248,10 +276,10 @@ index 7b0aa8eb1d508224ff44712102ea1d9536c54ec6..111ec312ea673fdca5696ee798d7ec85
      let picked;
 diff --git a/src/scripts/bench_graph_feeder_latency.ts b/src/scripts/bench_graph_feeder_latency.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..cc6f572910eabb6144c59ca59d17b169f0d80fd6
+index 0000000000000000000000000000000000000000..cc2b92febdaed50497a1df3bf1b91c1297bcaa1b
 --- /dev/null
 +++ b/src/scripts/bench_graph_feeder_latency.ts
-@@ -0,0 +1,395 @@
+@@ -0,0 +1,417 @@
 +#!/usr/bin/env node
 +/**
 + * What the graph feeder costs the stop slot (`road-to-a-graph-that-feeds-the-gate`
@@ -275,9 +303,11 @@ index 0000000000000000000000000000000000000000..cc6f572910eabb6144c59ca59d17b169
 + *             `absent`. This is the cost a consumer who never builds a graph
 + *             pays, and the baseline the feeder's increment is read against.
 + *
-+ * Arms are INTERLEAVED, one call each per round, and the order ROTATES per
-+ * round: interleaving spreads slow drift across the arms, and rotating spreads
-+ * the order effects (GC after the heavier arm, cache warmth) as well. A third
++ * Arms are INTERLEAVED, one call each per round, and the rounds cycle through
++ * all six ORDERS of the three calls: interleaving spreads slow drift across the
++ * arms, and the full permutation cycle balances both the position and the
++ * direct predecessor of every call (GC after the heavier arm, cache warmth) —
++ * exactly so when the round count is a multiple of six. A third
 + * reading, inside the same rotation, times the feeder's own work (`graphState` + `graphUntestedVerdict`) in isolation on the
 + * `with` tree, because the difference of two noisy totals is a weaker number
 + * than a direct one.
@@ -304,6 +334,7 @@ index 0000000000000000000000000000000000000000..cc6f572910eabb6144c59ca59d17b169
 +import { performance } from 'node:perf_hooks';
 +import { pathToFileURL } from 'node:url';
 +
++import { gitEnv } from './_lib/git_env.js';
 +import { graphUntestedVerdict } from './_lib/graph_feeder_record.js';
 +import { buildFromRepo } from './code_graph/build.js';
 +import { graphState, NATIVE_CACHE_REL } from './code_graph/detect.js';
@@ -353,16 +384,17 @@ index 0000000000000000000000000000000000000000..cc6f572910eabb6144c59ca59d17b169
 +    return { n: s.length, p50: r(percentile(s, 50)), p95: r(percentile(s, 95)), max: r(s[s.length - 1] ?? Number.NaN) };
 +}
 +
-+const GIT_ENV = {
-+    ...process.env,
-+    GIT_AUTHOR_NAME: 'bench',
-+    GIT_AUTHOR_EMAIL: 'bench@example.com',
-+    GIT_COMMITTER_NAME: 'bench',
-+    GIT_COMMITTER_EMAIL: 'bench@example.com',
-+};
-+
 +function git(dir: string, args: string[]): void {
-+    execFileSync('git', ['-C', dir, ...args], { env: GIT_ENV, stdio: 'ignore' });
++    // An inherited GIT_DIR (every git hook exports one) overrides `-C`, which
++    // would commit the fixture onto the host repository.
++    const env = {
++        ...gitEnv(),
++        GIT_AUTHOR_NAME: 'bench',
++        GIT_AUTHOR_EMAIL: 'bench@example.com',
++        GIT_COMMITTER_NAME: 'bench',
++        GIT_COMMITTER_EMAIL: 'bench@example.com',
++    };
++    execFileSync('git', ['-C', dir, ...args], { env, stdio: 'ignore' });
 +}
 +
 +/**
@@ -439,6 +471,20 @@ index 0000000000000000000000000000000000000000..cc6f572910eabb6144c59ca59d17b169
 +    }
 +}
 +
++/**
++ * Every order of the three calls. Cycling through all six puts each call first
++ * equally often AND gives every call each other call as its direct predecessor
++ * equally often; rotating the start of one fixed cycle only does the former.
++ */
++export const ORDERS: readonly (readonly number[])[] = [
++    [0, 1, 2],
++    [0, 2, 1],
++    [1, 0, 2],
++    [1, 2, 0],
++    [2, 0, 1],
++    [2, 1, 0],
++];
++
 +/** Assigning `undefined` to `process.env` stores the string "undefined"; an unset variable must be deleted. */
 +function restoreEnv(key: string, value: string | undefined): void {
 +    if (value === undefined) delete process.env[key];
@@ -497,7 +543,7 @@ index 0000000000000000000000000000000000000000..cc6f572910eabb6144c59ca59d17b169
 +                    if (!feederVerdicts.includes(f.verdict)) feederVerdicts.push(f.verdict);
 +                },
 +            ];
-+            for (let k = 0; k < calls.length; k++) calls[(i + k) % calls.length]?.();
++            for (const k of ORDERS[i % ORDERS.length] ?? []) calls[k]?.();
 +        }
 +
 +        const w = distribution(a);
@@ -530,7 +576,8 @@ index 0000000000000000000000000000000000000000..cc6f572910eabb6144c59ca59d17b169
 +    repo: string;
 +    edit: string;
 +    graphState: string;
-+    verdict: string | null;
++    /** Every distinct verdict across the billed rounds — a swallowed load failure reads `null`. */
++    verdicts: (string | null)[];
 +    feederOnly: Distribution;
 +}
 +
@@ -540,22 +587,25 @@ index 0000000000000000000000000000000000000000..cc6f572910eabb6144c59ca59d17b169
 +    const repo = path.resolve(opts.repo);
 +    const edit = [path.resolve(repo, opts.edit)];
 +    let state = graphState(repo);
-+    let verdict: string | null = null;
++    const verdicts: (string | null)[] = [];
 +    const samples: number[] = [];
 +    for (let i = 0; i <= runs; i++) {
 +        const t0 = performance.now();
 +        state = graphState(repo);
-+        verdict = graphUntestedVerdict(repo, state, edit).verdict;
++        const verdict = graphUntestedVerdict(repo, state, edit).verdict;
 +        // Round zero is the warm-up and is not billed.
-+        if (i > 0) samples.push(performance.now() - t0);
++        if (i > 0) {
++            samples.push(performance.now() - t0);
++            if (!verdicts.includes(verdict)) verdicts.push(verdict);
++        }
 +    }
-+    return { runs, repo: path.basename(repo), edit: opts.edit, graphState: state, verdict, feederOnly: distribution(samples) };
++    return { runs, repo: path.basename(repo), edit: opts.edit, graphState: state, verdicts, feederOnly: distribution(samples) };
 +}
 +
 +function renderRepo(r: RepoReport): string {
 +    const d = r.feederOnly;
 +    return [
-+        `graph-feeder work over ${r.repo} — edit ${r.edit}, graph state ${r.graphState}, verdict ${r.verdict}`,
++        `graph-feeder work over ${r.repo} — edit ${r.edit}, graph state ${r.graphState}, verdicts ${JSON.stringify(r.verdicts)}`,
 +        `n ${d.n} · p50 ${d.p50} ms · p95 ${d.p95} ms · max ${d.max} ms`,
 +        // A stop follows an edit, so the realistic state is `edited`; on a clean
 +        // tree the git probes answer differently and the reading prices that.
@@ -649,13 +699,18 @@ index 0000000000000000000000000000000000000000..cc6f572910eabb6144c59ca59d17b169
 +}
 diff --git a/tests/scripts/bench_graph_feeder_latency.test.ts b/tests/scripts/bench_graph_feeder_latency.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..816da8509b0e23b9373ee98ba2208633773e7137
+index 0000000000000000000000000000000000000000..3bff7effb64b80167fd3def027da2f4a93d6d8e3
 --- /dev/null
 +++ b/tests/scripts/bench_graph_feeder_latency.test.ts
-@@ -0,0 +1,49 @@
-+import { describe, expect, it } from 'vitest';
+@@ -0,0 +1,119 @@
++import { execFileSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
 +
-+import { bench, distribution, parseArgs, percentile } from '../../src/scripts/bench_graph_feeder_latency.js';
++import { describe, expect, it, vi } from 'vitest';
++
++import { bench, benchRepo, distribution, makeFixture, ORDERS, parseArgs, percentile } from '../../src/scripts/bench_graph_feeder_latency.js';
 +
 +describe('bench_graph_feeder_latency — step 3.5 of road-to-a-graph-that-feeds-the-gate', () => {
 +    it('takes nearest-rank percentiles, so p95 of twenty samples is the nineteenth', () => {
@@ -684,6 +739,35 @@ index 0000000000000000000000000000000000000000..816da8509b0e23b9373ee98ba2208633
 +        expect(r.feederVerdicts).toStrictEqual(['untested']);
 +    }, 120_000);
 +
++    it('cycles orders that balance every call\'s position and direct predecessor', () => {
++        const first = new Map<number, number>();
++        const pairs = new Map<string, number>();
++        for (const o of ORDERS) {
++            expect([...o].sort()).toStrictEqual([0, 1, 2]);
++            first.set(o[0] as number, (first.get(o[0] as number) ?? 0) + 1);
++            for (let k = 1; k < o.length; k++) {
++                const key = `${o[k - 1]}>${o[k]}`;
++                pairs.set(key, (pairs.get(key) ?? 0) + 1);
++            }
++        }
++        expect([...first.values()]).toStrictEqual([2, 2, 2]);
++        // Six ordered pairs of distinct calls, each a direct predecessor equally often.
++        expect(pairs.size).toBe(6);
++        expect(new Set(pairs.values())).toStrictEqual(new Set([2]));
++    });
++
++    it('records every round\'s verdict over an existing repository, not only the last', async () => {
++        const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'feeder-repo-')));
++        try {
++            const dir = await makeFixture(root, 2, true);
++            const r = benchRepo({ repo: dir, edit: 'src/service.ts', runs: 3 });
++            expect(r.feederOnly.n).toBe(3);
++            expect(r.verdicts).toStrictEqual(['untested']);
++        } finally {
++            fs.rmSync(root, { recursive: true, force: true });
++        }
++    }, 120_000);
++
 +    it('refuses flag combinations it would otherwise silently misread', () => {
 +        expect(parseArgs(['--repo', '.', '--edit', 'src/a.ts'])).not.toBeNull();
 +        expect(parseArgs(['--repo', '.', '--edit', 'src/a.ts', '--files', '9'])).toBeNull();
@@ -699,6 +783,42 @@ index 0000000000000000000000000000000000000000..816da8509b0e23b9373ee98ba2208633
 +            expect('USERPROFILE' in process.env).toBe(false);
 +        } finally {
 +            if (saved !== undefined) process.env.USERPROFILE = saved;
++        }
++    }, 120_000);
++
++    it('builds its fixture in its own repository even under an inherited GIT_DIR', async () => {
++        // A git hook exports GIT_DIR, and a child `git -C <fixture>` obeys it over
++        // `-C`: init/add/commit would then land on the HOST repository instead.
++        const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'feeder-gitdir-')));
++        const victim = path.join(root, 'victim');
++        fs.mkdirSync(victim);
++        const env: NodeJS.ProcessEnv = {
++            ...process.env,
++            GIT_AUTHOR_NAME: 't',
++            GIT_AUTHOR_EMAIL: 't@example.com',
++            GIT_COMMITTER_NAME: 't',
++            GIT_COMMITTER_EMAIL: 't@example.com',
++        };
++        for (const k of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE']) delete env[k];
++        const vgit = (...args: string[]): string =>
++            execFileSync('git', ['-C', victim, ...args], { env, encoding: 'utf8' }).trim();
++        vgit('init', '-q');
++        fs.writeFileSync(path.join(victim, 'keep.txt'), 'keep\n');
++        vgit('add', '-A');
++        vgit('commit', '-q', '-m', 'victim');
++        const head = vgit('rev-parse', 'HEAD');
++        vi.stubEnv('GIT_DIR', path.join(victim, '.git'));
++        // Re-import under the stubbed env, so a module-level env snapshot sees it too.
++        vi.resetModules();
++        try {
++            const mod = await import('../../src/scripts/bench_graph_feeder_latency.js');
++            const dir = await mod.makeFixture(root, 1, false);
++            expect(vgit('rev-parse', 'HEAD')).toBe(head);
++            expect(fs.existsSync(path.join(dir, '.git'))).toBe(true);
++        } finally {
++            vi.unstubAllEnvs();
++            vi.resetModules();
++            fs.rmSync(root, { recursive: true, force: true });
 +        }
 +    }, 120_000);
 +});

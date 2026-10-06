@@ -169,7 +169,9 @@ refuses.
       reopen is an owner amendment, not a step here. PRECONDITION from 3.5: the
       promotion reports the feeder's stop-slot increment — its work alone, measured by
       `bench_graph_feeder_latency --repo P --edit F` on the repository in question,
-      which tracks the fixture's with-minus-without delta — against the
+      which on the fixture agrees with the with-minus-without delta to within
+      1.4 ms at p50 but differs by up to about 7 ms either way at p95, so the
+      comparison rests on its median — against the
       published baseline (p95 583–1,007 ms over a 59 MB index, the cache load
       dominating); a promotion that does not first cut the load term inherits half a
       second to a second per stop on the gate's decision path.
