@@ -224,7 +224,7 @@ At `df377ca64`:
       reference follow in the same change. The keys stay, classified as they
       are.
       verify: `grep -cE '^ +max_cost_per_(run|rolling_7d)_usd: null' src/config/agent-settings.template.yml` -> /^2$/
-- [ ] **3.3 The unbounded ask is removed everywhere it is stated.** The five
+- [x] **3.3 The unbounded ask is removed everywhere it is stated.** The five
       files of the fourth Context bullet say: no ceiling set, no ask; the
       estimate is shown and the run proceeds. In the sixth, the billable
       prompt is shown as information and the stale-price-table prompt becomes
@@ -235,7 +235,7 @@ At `df377ca64`:
       Positive control: the first four patterns return 8 at `df377ca64` and
       `975d03d01`; the last two exist so the check also sees
       `cost-and-redaction.md`, which the first four do not match.
-- [ ] **3.4 The run's ceiling is whatever was configured, and the text says
+- [x] **3.4 The run's ceiling is whatever was configured, and the text says
       who carries it.** The command and the two contexts state the rule once:
       the model reads the configured `cost.budgets` windows; where its spend
       plus what it reasonably expects would cross one, the run pauses and

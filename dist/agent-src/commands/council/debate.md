@@ -67,20 +67,24 @@ this automatically when invoked via `debate`). The estimate covers
 projection. Surface the projection to the user with a clear note that
 progressive disclosure may stop the debate early.
 
-### 4. Spend bound (ask when a billable member has no ceiling)
+### 4. Spend projection (information, never a prompt)
 
-Per [`ai-council` skill § Procedure 3](../../skills/ai-council/SKILL.md)
-and ADR-230, surface the projected total spend in every case, and ask
-only when a billable member is in the fan-out AND both
-`cost_budget.max_total_usd` and `daily_limit_usd` are `0`.
+Per [`ai-council` skill § Procedure 3](../../skills/ai-council/SKILL.md),
+ADR-230 and ADR-279, surface the projected total spend in every case and
+**do not ask** because no cap is set. A cap nobody configured is not a
+bound, and its absence is not a reason to ask.
 
 A debate multiplies the per-round cost by `N`, so quote the worst case,
 not one round — that is what a ceiling has to cover. The between-rounds
 confirmation gate is unaffected: it is a separate, per-round control and
 it still fires, which is where a debate that turns out expensive gets
-stopped.
+stopped. `debate.max_cost_usd` likewise still refuses above whatever
+figure someone set; it ships at `0`, i.e. no refusal cap.
 
-Numbered options, when the ask applies:
+The round shape is still the user's choice, and it is not a spend
+question — it decides whether the between-round confirmation fires,
+which this change does not touch. Offer it regardless of whether a cap
+is set:
 
 > The debate is projected to cost **$X.XXXX** ($Y.YYYY × N rounds, worst case).
 >

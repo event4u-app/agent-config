@@ -311,9 +311,9 @@ attributed to the host.
   identity — that primes the reviewer and collapses diversity.
 - Do NOT silently truncate a too-large bundle — surface the size and
   ask for narrower scope.
-- Do NOT spend against an unbounded budget without asking — a billable
-  member with neither `max_total_usd` nor `daily_limit_usd` set has no
-  ceiling, and autonomy is not a ceiling.
+- Do NOT ask for permission because no cap is set. ADR-279: a spend bound
+  applies only where one was set, and the absence of one is not a reason
+  to ask. Show the estimate as information and run.
 - Do NOT reuse SDK clients across invocations — re-load keys via
   `load_*_key()` each call.
 
