@@ -323,7 +323,7 @@ At `df377ca64`:
       itself still lives in one file per project, so two sessions in one
       checkout reset each other as before; that is not changed here.
       verify: `npx vitest run tests/scripts/evidence_independence_turn_marker.test.ts` -> 0
-- [ ] **4.2 What a compacted session gets back is decided once.** Two
+- [x] **4.2 What a compacted session gets back is decided once.** Two
       records disagree, so the question goes to a council with both in the
       bundle: the archived step that is ticked — "`compact` re-injects this
       session's own record" — and the resolver rule chosen later — an own
@@ -375,19 +375,19 @@ At `df377ca64`:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A fixture of three consecutive reads of three different files
+- [x] AC-1 — A fixture of three consecutive reads of three different files
       leaves no field in the hook's state that names a loop.
-- [ ] AC-2 — `analyze-session` on a project where the hook has run prints a
+- [x] AC-2 — `analyze-session` on a project where the hook has run prints a
       tool-call count taken from the hook's file.
 - [ ] AC-3 — `./scripts-run src/scripts/lint_roadmap_complexity` exits 0 on the
       trunk with both roadmaps still tagged `lightweight`.
-- [ ] AC-4 — `closure_scan` run on the thinned-layer roadmap at `df377ca64`
+- [x] AC-4 — `closure_scan` run on the thinned-layer roadmap at `df377ca64`
       lists its three name-filtered clauses whose test does not exist.
-- [ ] AC-5 — The change adds no file under `src/scripts/`.
+- [x] AC-5 — The change adds no file under `src/scripts/`.
 - [ ] AC-6 — `task ci` passes its roadmap-complexity step.
-- [ ] AC-7 — With a session id and one session in the checkout, a self-review
+- [x] AC-7 — With a session id and one session in the checkout, a self-review
       in a second user turn is counted from zero.
-- [ ] AC-8 — What a session start with source `compact` injects and moves is
+- [x] AC-8 — What a session start with source `compact` injects and moves is
       what the council's record says, and one fixture per case pins it.
 
 ## Decisions
