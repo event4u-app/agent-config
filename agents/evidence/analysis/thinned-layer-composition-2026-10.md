@@ -405,10 +405,16 @@ of the row (12,371, the whole current prefix) and a realistic short
 installer-owned prefix such as `~/.claude/rules/` at 16 characters, which
 recovers (139 − 16) × 89 = 10,947.
 
-| Reading | Row 5 at its ceiling | Row 5 realistic | vs 75,000 | vs 68,181 |
+| Reading | Row 5 at its ceiling | Row 5 realistic | Realistic vs 75,000 | Realistic vs 68,181 |
 |---|---|---|---|---|
 | unconditional | 67,614–68,490 | 69,038–69,914 | 92–93 % | 101–103 % |
 | all | 81,315–82,191 | 82,739–83,615 | 110–111 % | 121–123 % |
+
+**The two percentage columns read the REALISTIC column, not the ceiling one** —
+stated rather than left to inference, because an unlabelled percentage beside
+two candidate figures is the same defect the 4.1 council found in the first
+draft of this page. At the row's ceiling the unconditional reading is
+67,614–68,490, which is 90–91 % of 75,000 and 99–100 % of 68,181.
 
 **The corrected conclusion, in three parts.**
 
