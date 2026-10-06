@@ -18,19 +18,13 @@ estate_growth_exempt: "Adds one later/ roadmap to receive the release-findings O
 ---
 # Road to the release-finding ordering guarantee
 
-> **Arrivals:** 5 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review asks to close this deterministic defect; the owner question below is a blockquote, not a `### blocker:`, so `/roadmap:resolve-blockers` cannot see it - `road-to-parked-blockers-that-get-asked` step 3 rewrites it. The count before it read: 4 (at least) - latest `inbox-2026-10-a` (2026-10-01), a release review
+> **Arrivals:** 5 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review asks to close this deterministic defect; the owner question was a blockquote, not a `### blocker:`, so `/roadmap:resolve-blockers` could not see it - `road-to-parked-blockers-that-get-asked` step 3.1 rewrote it as blocker `release-pr-demonstration-owner-call` under `## Blockers`. The count before it read: 4 (at least) - latest `inbox-2026-10-a` (2026-10-01), a release review
 > asking that this leave `later/` because its `review_by` of 2026-09-20 has passed;
 > earlier: `inbox-2026-09-y` (2026-09-11). Counted as
 > distinct prior round directories under the consumed-inbox tree, which is gitignored -
 > so the count is machine-local and the ordering is the finding, not the exact figure.
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes
 > incidental mentions, so this is the subject-matched floor.
-
-> **Owner question, posed 2026-10-01 at the fourth arrival** — `review_by` passed on
-> 2026-09-20 and AC-2 still needs a synthetic `release/*` pull request no autonomous
-> run may open. Pick one: (1) authorize one synthetic `release/*` pull request so
-> AC-2 can be demonstrated; (2) move `review_by` with a reason naming what changes
-> by then; (3) cancel AC-2 and record why the ordering guarantee is not owed.
 
 > **Parked, not abandoned.** Created 2026-09-03 from `road-to-binding-findings`,
 > on a 2/2 AI-council verdict to partition rather than either weaken the
@@ -244,6 +238,17 @@ so the disposition points somewhere rather than expiring.
       accepted rather than fixed.
       verify: the note is resolved, or the decision to leave it stands with a
       stated reason.
+
+## Blockers
+
+### blocker: release-pr-demonstration-owner-call
+- **Status:** open — posed 2026-10-01 at the fourth arrival, as a blockquote; restated in this shape 2026-10-07 with the question unchanged.
+- **Owner:** owner
+- **Blocks:** step 2.2, AC-2, and the `review_by` date that passed on 2026-09-20
+- **What to do:** pick one — (1) authorize one synthetic `release/*` pull request so AC-2 can be demonstrated; (2) move `review_by` with a reason naming what changes by then; (3) cancel AC-2 and record why the ordering guarantee is not owed.
+- **Resolved when:** the owner's choice of (1), (2) or (3) is recorded in this entry, and the step it names is either unblocked, re-dated or cancelled accordingly.
+- **Recommendation:** (1) — the defect has two measured occurrences, and the demonstration is the one step that turns the Phase 1 mechanism into a guarantee; (2) only defers the same question.
+- **If you do nothing:** the ordering guarantee stays unproven, `review_by` stays in the past, and each new release review re-raises the same finding.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-09-03 | reviewer: claude/host -->
