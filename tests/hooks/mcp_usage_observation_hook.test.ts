@@ -15,7 +15,12 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { parse } from 'yaml';
+
 import { mcpToolName, run } from '../../src/scripts/hooks/mcp_usage_observation_hook.js';
+import { _concern_body_classes, stubPayloadBodies } from '../../src/scripts/hooks/payload_stub.js';
+
+const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
 
 const roots: string[] = [];
 
@@ -137,6 +142,32 @@ describe('the store holds tool names only — the owner condition of D12', () =>
         const store = readStore(root);
         expect(Object.keys(store)).toEqual(['mcp__acme__alpha']);
         expect(Object.values(store)).toEqual([new Date().toISOString().slice(0, 10)]);
+    });
+
+    it('the dispatcher serves the shipped entry size-only stubs for both bodies', () => {
+        // End to end over the SHIPPED manifest entry, not a literal: the keep-set
+        // the dispatcher derives for this concern is empty, and the envelope it
+        // would hand the hook carries no body content at all.
+        const manifest = parse(
+            fs.readFileSync(path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'), 'utf-8'),
+        ) as { concerns: Record<string, Record<string, unknown>> };
+        const keep = _concern_body_classes(manifest.concerns['mcp-usage-observation'] as never);
+        expect([...keep]).toEqual([]);
+
+        const full = JSON.parse(
+            toolEnvelope('mcp__acme__alpha', {
+                tool_input: { query: 'SECRET-ARGUMENT-VALUE' },
+                tool_response: { content: 'SECRET-RESPONSE-BODY' },
+            }),
+        ) as never;
+        const shaped = JSON.stringify(stubPayloadBodies(full, keep, new Map()));
+        expect(shaped).toContain('mcp__acme__alpha');
+        expect(shaped).not.toContain('SECRET-ARGUMENT-VALUE');
+        expect(shaped).not.toContain('SECRET-RESPONSE-BODY');
+
+        const root = makeRoot();
+        expect(run(shaped, { consumer_root: root })).toBe(0);
+        expect(Object.keys(readStore(root))).toEqual(['mcp__acme__alpha']);
     });
 
     it('mcpToolName reads the name from the dispatcher envelope or a bare payload', () => {
