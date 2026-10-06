@@ -341,14 +341,19 @@ export function findRoadmapMentions(root: string, moduleName: string): RoadmapSt
             if (stepMatch !== null) {
                 currentGlyph = stepMatch[1] as string;
                 currentStepLine = line.trim();
-            } else if (/^(#|##|###)\s/.test(line) || line.trim() === '') {
-                // a heading or a blank line ends the current step's block for our purposes
-                // (kept conservative: a step's cited paths/notes are usually within a few
-                // indented lines of its bullet, not past the next heading).
-                if (/^(#|##|###)\s/.test(line)) {
-                    currentGlyph = null;
-                    currentStepLine = '';
-                }
+            } else if (/^#{1,6}\s/.test(line) || line.trim() === '') {
+                // A heading OR a blank line ends the current step's block for our
+                // purposes (kept conservative: a step's cited paths/notes are
+                // usually within a few indented lines of its bullet, not past
+                // the next heading). Both branches reset — an R2 review found
+                // the blank-line case was a no-op here despite this comment
+                // already claiming it reset, which let a mention several lines
+                // below a CLOSED step, separated only by a blank line, still
+                // read as evidence for that step. `#{1,6}` matches
+                // `_lib/md_section.ts`'s own ATX-heading pattern; the prior
+                // `(#|##|###)` here missed level-4+ headings.
+                currentGlyph = null;
+                currentStepLine = '';
             }
             if (nameRe.test(line)) {
                 hits.push({ roadmapRelPath: relPath, estate, glyph: currentGlyph, stepLine: currentStepLine });

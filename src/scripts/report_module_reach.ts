@@ -160,35 +160,38 @@ export function markdown(modules: readonly ModuleFact[], roadmapsAvailable: bool
 
 export function main(argv: readonly string[] = process.argv.slice(2), root = REPO): number {
     const { modules, roadmapsAvailable } = analyseModuleReach(root);
-    // Emitted AFTER the chosen format, not before: `--markdown` output is
-    // redirected straight into the evidence page (Phase 1.2), and a
-    // `scanned:` line prepended to a markdown document would land above its
-    // `<!-- evidence-type -->` marker.
-    const scan = (): void =>
-        reportScanned({
-            gate: 'report_module_reach',
-            scanned: modules.length,
-            units: 'module(s) under src/scripts/_lib',
-            roots: ['src/scripts/_lib'],
-        });
+    // One options literal, not three (a second R2 review found it triplicated
+    // across the --json, --markdown and default branches).
+    const scanOpts = {
+        gate: 'report_module_reach',
+        scanned: modules.length,
+        units: 'module(s) under src/scripts/_lib',
+        roots: ['src/scripts/_lib'],
+    };
     if (argv.includes('--json')) {
+        // No trailing `scanned:` line here — an R2 review found that
+        // `reportScanned` (which PRINTS) made this invalid as a single JSON
+        // document; `check_gate_reachability.ts`'s own `--json` branch already
+        // returns immediately after writing JSON for the same reason. The
+        // scope is still ASSERTED (never silently printed clean from an empty
+        // corpus).
+        assertScanned(scanOpts);
         process.stdout.write(`${JSON.stringify({ modules, roadmapsAvailable }, null, 2)}\n`);
-        scan();
     } else if (argv.includes('--markdown')) {
         // The page is the artifact — no trailing `scanned:` line inside it,
         // but the scope is still asserted (never silently printed clean from
-        // an empty corpus). `--json` and the default human mode also publish
-        // the count per this family's convention.
-        assertScanned({
-            gate: 'report_module_reach',
-            scanned: modules.length,
-            units: 'module(s) under src/scripts/_lib',
-            roots: ['src/scripts/_lib'],
-        });
+        // an empty corpus). The default human mode below is the only one that
+        // still publishes the count per this family's convention.
+        assertScanned(scanOpts);
         process.stdout.write(`${markdown(modules, roadmapsAvailable)}\n`);
     } else {
         process.stdout.write(`${human(modules)}\n`);
-        scan();
+        // Emitted AFTER the format, not before: `--markdown` output is
+        // redirected straight into the evidence page (Phase 1.2), and a
+        // `scanned:` line prepended to a markdown document would land above
+        // its `<!-- evidence-type -->` marker — moot here, but kept after for
+        // consistency with the other two branches.
+        reportScanned(scanOpts);
     }
     return 0;
 }
