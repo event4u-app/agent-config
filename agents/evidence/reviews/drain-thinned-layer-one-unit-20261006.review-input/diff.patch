@@ -1,9 +1,9 @@
 diff --git a/agents/evidence/analysis/thinned-layer-composition-2026-10.md b/agents/evidence/analysis/thinned-layer-composition-2026-10.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..a77ed2ed6a763e06f6d5736ec8d2ba40988965a5
+index 0000000000000000000000000000000000000000..c0f17ef9cf2e726ce8a08bb990ab98499ddd1ced
 --- /dev/null
 +++ b/agents/evidence/analysis/thinned-layer-composition-2026-10.md
-@@ -0,0 +1,582 @@
+@@ -0,0 +1,586 @@
 +<!-- evidence-type: analysis -->
 +
 +# The thinned layer, in one unit — composition, form, and what each move is worth
@@ -404,7 +404,11 @@ index 0000000000000000000000000000000000000000..a77ed2ed6a763e06f6d5736ec8d2ba40
 +roadmap's gate states it — **the measured total plus ten per cent, never above
 +75,000** — the working figure is 68,181, and both are given below.
 +
-+Two sums, from the layer as it stands after the form change.
++Three sums, from the layer as it stands after the form change. This lead
++said "two" until review round 7 and three sums followed it, which is the
++same defect the sums themselves record: the pair it named EXCLUDED the
++largest row, and Sum 3 is the one the conclusion is read off. A reader who
++stopped at the lead took the wrong pair.
 +
 +### Sum 1 — the form change plus the four law headings
 +
@@ -1126,7 +1130,7 @@ index b9daceb8a96eadae972cd4a80a61e417bbe862cb..e560463ea1817b8f1a2da95d0ca0c894
 +It is replaced rather than deleted so the correction is visible from this side
 +too.
 diff --git a/dist/install/install.mjs b/dist/install/install.mjs
-index e482965535b1eb718d2d5521c1b2c30206b52175..0a1c0a58b90a5ab365cbe7b7ad42a2590556165e 100755
+index e482965535b1eb718d2d5521c1b2c30206b52175..77c550239cb2320b75e092996821a92083cb1574 100755
 --- a/dist/install/install.mjs
 +++ b/dist/install/install.mjs
 @@ -7371,7 +7371,7 @@ var require_dist = __commonJS({
@@ -1323,10 +1327,10 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..0a1c0a58b90a5ab365cbe7b7ad42a259
 -var THIN_ENTRY_MARKER = "> Routed rule \u2014 load the body on trigger-match.";
 +var THIN_ENTRY_MARKER = "> Load the body on a match.";
 +var THIN_BODY_POINTER_PREFIX = "Body: ";
-+var THIN_BODY_POINTER_RE = new RegExp(
-+  `${THIN_BODY_POINTER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(.+\\.md)\\s*$`,
-+  "m"
-+);
++var THIN_BODY_POINTER_RE = (() => {
++  const lit = THIN_BODY_POINTER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
++  return new RegExp(`${lit}((?:(?!${lit}).)+\\.md)\\s*$`, "m");
++})();
  var BODY_LINK_PREFIX = "../../dist/agent-src/rules/";
  function absoluteBodyLinkPrefix(packageRoot) {
    return `${path26.join(path26.resolve(packageRoot), "dist", "agent-src", "rules")}${path26.sep}`;
@@ -2457,10 +2461,10 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..38bcba573cc468e3b68305d467ff0e25
      out.push(...renderHostLimitRows(report.limits));
      return out;
 diff --git a/src/scripts/_lib/thin_rules.ts b/src/scripts/_lib/thin_rules.ts
-index fe3fe1e1374692d0c645325889f5b7b2e65083d3..4f349034c3b118c35746ce815e1e3e8fd98968e0 100644
+index fe3fe1e1374692d0c645325889f5b7b2e65083d3..972b7097c9d3f80003581b1caf3f979184ebfff5 100644
 --- a/src/scripts/_lib/thin_rules.ts
 +++ b/src/scripts/_lib/thin_rules.ts
-@@ -284,15 +284,88 @@ function _title(s: string): string {
+@@ -284,15 +284,95 @@ function _title(s: string): string {
   * Exported so the WRITER and every DETECTOR share one definition. A gate that
   * re-spelled this string would drift from the writer silently, and the failure
   * would be invisible in exactly the direction that matters: a stub the gate
@@ -2538,10 +2542,17 @@ index fe3fe1e1374692d0c645325889f5b7b2e65083d3..4f349034c3b118c35746ce815e1e3e8f
 + * lines below it holding a literal `Body: ` would have broken that invariant in
 + * the file that states it.
 + */
-+export const THIN_BODY_POINTER_RE = new RegExp(
-+    `${THIN_BODY_POINTER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(.+\\.md)\\s*$`,
-+    'm',
-+);
++export const THIN_BODY_POINTER_RE = (() => {
++    const lit = THIN_BODY_POINTER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
++    // THE LAST PREFIX ON THE LINE, NOT THE FIRST. `thin_entry` puts the rule's
++    // own `description` on the SAME line ahead of the pointer, so a description
++    // containing the literal `Body: ` used to start the match inside the
++    // description and capture it as part of the path — `has_body_pointer` stayed
++    // true while the extraction was wrong, which is a wrong assertion rather
++    // than a visible failure. Forbidding a second prefix inside the capture
++    // makes the first viable start the last occurrence, which is the pointer.
++    return new RegExp(`${lit}((?:(?!${lit}).)+\\.md)\\s*$`, 'm');
++})();
 +
 +/** Does this entry carry a body pointer the writer would recognise? */
 +export function has_body_pointer(text: string): boolean {
@@ -2551,7 +2562,7 @@ index fe3fe1e1374692d0c645325889f5b7b2e65083d3..4f349034c3b118c35746ce815e1e3e8f
  /**
   * Where a stub tells a reader the body actually is.
   *
-@@ -356,7 +429,7 @@ export function thin_entry(
+@@ -356,7 +436,7 @@ export function thin_entry(
      return (
          `## ${title}\n` +
          `${THIN_ENTRY_MARKER}${fires} ${desc} ` +
@@ -2793,6 +2804,33 @@ index 0000000000000000000000000000000000000000..12a4c4d3756f6aa7e4f35841d78d0bab
 +        },
 +    );
 +});
+diff --git a/tests/scripts/_cli/cmd_conformance.test.ts b/tests/scripts/_cli/cmd_conformance.test.ts
+index ea9057fe7950ab395000b5dba9f30ec4ec6c64a6..8df7168478c2c25b67090b3c8f268578c5723093 100644
+--- a/tests/scripts/_cli/cmd_conformance.test.ts
++++ b/tests/scripts/_cli/cmd_conformance.test.ts
+@@ -443,7 +443,12 @@ describe('_check_lean_projection', () => {
+     });
+ 
+     it('is ok when thin projection carries thin stubs', () => {
+-        const { proj, pkg } = scaffold('thin', `## Routed X\n> ${THIN_STUB_MARKER}. Body: link\n`);
++        // NOT wrapped. `THIN_STUB_MARKER` became the writer's whole constant
++        // when the two spellings were unified; it already carries its own `> `
++        // and full stop, so the old `> ${…}.` wrapper emitted a doubled marker
++        // and a doubled stop. The substring check passed either way, which is
++        // exactly why the drift was invisible.
++        const { proj, pkg } = scaffold('thin', `## Routed X\n${THIN_STUB_MARKER} Body: link\n`);
+         expect(_check_lean_projection(proj, pkg)['status']).toBe('ok');
+     });
+ 
+@@ -455,7 +460,7 @@ describe('_check_lean_projection', () => {
+     });
+ 
+     it('SABOTAGE: fails when mode=eager-all but a thin stub is projected', () => {
+-        const { proj, pkg } = scaffold('eager-all', `## Routed X\n> ${THIN_STUB_MARKER}.\n`);
++        const { proj, pkg } = scaffold('eager-all', `## Routed X\n${THIN_STUB_MARKER}\n`);
+         expect(_check_lean_projection(proj, pkg)['status']).toBe('fail');
+     });
+ 
 diff --git a/tests/scripts/bench_quality_run.test.ts b/tests/scripts/bench_quality_run.test.ts
 index c4bec9cb3b7e0abffe234bacd01716010a7dc8a0..05f225ffb65806644e5ee68890f262efb95e4362 100644
 --- a/tests/scripts/bench_quality_run.test.ts
@@ -3423,10 +3461,10 @@ index 0000000000000000000000000000000000000000..2fdfe5a49cb2316fba2b6f21935c584b
 +});
 diff --git a/tests/scripts/installed_layer_unconditional_chars.test.ts b/tests/scripts/installed_layer_unconditional_chars.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..d8964b565e829318c519d735193207905c33fa41
+index 0000000000000000000000000000000000000000..1366c75b24a20f9535c583ab24e26f81262397b7
 --- /dev/null
 +++ b/tests/scripts/installed_layer_unconditional_chars.test.ts
-@@ -0,0 +1,294 @@
+@@ -0,0 +1,321 @@
 +// The when-loaded split, in CHARACTERS — step 1.1 of
 +// `road-to-a-thinned-layer-measured-in-one-unit`.
 +//
@@ -3685,6 +3723,33 @@ index 0000000000000000000000000000000000000000..d8964b565e829318c519d73519320790
 +        expect(l.scoped_chars).toBe(l.chars);
 +    });
 +
++    it('the fallback DOES misread a CRLF rule whose prose quotes `paths:`', () => {
++        // THE COST OF THE FALLBACK, ASSERTED RATHER THAN DESCRIBED. The three
++        // unparseable-frontmatter cases above all carry a REAL `paths:` key, so
++        // they only show the fallback catching what it is for. This shows what
++        // it gets wrong: a CRLF-authored rule — the ordinary case for a rule
++        // hand-written on Windows, and `readLayer` walks foreign user-authored
++        // rules too — with NO `paths:` key, whose body quotes one, reads
++        // path-scoped and leaves the standing figure entirely.
++        //
++        // This case is the record of a known false positive, not a request for
++        // one: it pins the current behaviour so that a later change which
++        // narrows the fallback has to come here and say so. The direction is
++        // the flattering one, which is why it is written down rather than left
++        // to be rediscovered — it SHRINKS the figure the ceiling is read in.
++        const home = mkTmp('ilu-crlf-fp-');
++        const dir = path.join(home, GLOBAL_RULE_DIRS['claude-code'] as string);
++        fs.mkdirSync(dir, { recursive: true });
++        fs.writeFileSync(
++            path.join(dir, 'crlf-no-key.md'),
++            '---\r\ntype: auto\r\n---\r\nTo scope a rule, write:\r\npaths:\r\n  - "**/*.php"\r\n',
++            'utf-8',
++        );
++        const l = readLayer('claude-code', 'global', dir, new Map());
++        expect(l.unconditional_chars, 'known false positive, recorded').toBe(0);
++        expect(l.scoped_chars).toBe(l.chars);
++    });
++
 +    it('a file with NO frontmatter at all is unconditional, not scoped', () => {
 +        // The control for the fallback: it must not fire for a plain body, or
 +        // a rule that simply has no frontmatter would be read as conditional
@@ -3799,10 +3864,10 @@ index bc55834bf243808329a3ea8a62aedc4d42d03556..ac66be4fa8a797458d005f257efc255d
      it('measure returns the full key set with consistent arithmetic', () => {
 diff --git a/tests/scripts/thin_entry_bare_pointer.test.ts b/tests/scripts/thin_entry_bare_pointer.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..abae630164da552c1b905115c514fe8ea295b6c7
+index 0000000000000000000000000000000000000000..8cfc58337577e7edca187dfeaa23ac783a8ad245
 --- /dev/null
 +++ b/tests/scripts/thin_entry_bare_pointer.test.ts
-@@ -0,0 +1,125 @@
+@@ -0,0 +1,143 @@
 +// The stub's pointer is a PATH, not a link that repeats the id — step 2.3 of
 +// `road-to-a-thinned-layer-measured-in-one-unit`.
 +//
@@ -3915,6 +3980,24 @@ index 0000000000000000000000000000000000000000..abae630164da552c1b905115c514fe8e
 +        expect(THIN_BODY_POINTER_RE.exec(twoOnOneLine)?.[1]).toBe(
 +            '/pkg/rules/first.md and later /pkg/rules/second.md',
 +        );
++    });
++
++    it('a description carrying the literal `Body: ` does not capture itself', () => {
++        // `thin_entry` puts the rule's own description on the SAME line ahead of
++        // the pointer, so a description containing the prefix used to start the
++        // match inside the description: `has_body_pointer` stayed true while the
++        // captured "path" was the description plus the real path. A wrong
++        // extraction read as a wrong assertion rather than a visible failure.
++        //
++        // Measured under the old `Body: (.+\.md)\s*$`, the line below captured
++        // `the shape of a reply. Body: ../../rules/b.md`. The capture now
++        // forbids a second prefix inside itself, which makes the first viable
++        // start the LAST occurrence — the pointer.
++        const line =
++            '> Load the body on a match. Body: the shape of a reply. ' +
++            'Body: ../../rules/b.md';
++        expect(has_body_pointer(line)).toBe(true);
++        expect(THIN_BODY_POINTER_RE.exec(line)?.[1]).toBe('../../rules/b.md');
 +    });
 +
 +    it('the OLD link form no longer satisfies the detector unchanged', () => {
