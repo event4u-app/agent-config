@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "Forty parked roadmaps carry open blockers that neither the blocker lint nor /roadmap:resolve-blockers will ever read, because both exclude later/ by a recorded decision; nothing can be archived or parked to make room for a question about what parking hides. Merging into the nearest owner was considered: stubs/road-to-blocker-parse-visibility owns the other half — whether the parser sees a blocker heading at all — and folding a scope decision into a parse-defect stub would bury the decision this file exists to put to the council."
-estate_growth_exempt: "Grows active_roadmaps by one: the owner asked on 2026-10-06 for this round's roadmaps to land as ready in one change; no live roadmap owns blockers that sit outside every reader's glob."
+estate_growth_exempt: "Grows active_roadmaps by one: the owner asked on 2026-10-06 for this round's roadmaps to land as ready in one change; no live roadmap owns blockers that sit outside every reader's glob. Grows open_blockers by two on 2026-10-07: the release-ordering owner question was already open as a blockquote and is now counted as the blocker it always was, and ac3-carry-needs-receiver-backlink records the one step of this file that waits on another roadmap's back-link."
 relates:
   - slug: road-to-blocker-parse-visibility
     relation: disjoint
