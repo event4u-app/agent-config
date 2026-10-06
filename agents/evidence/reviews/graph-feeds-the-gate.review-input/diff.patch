@@ -1,5 +1,5 @@
 diff --git a/agents/evidence/analysis/graph-feeder-recall-2026-Q4.md b/agents/evidence/analysis/graph-feeder-recall-2026-Q4.md
-index d935f7d1594aacfc0a4be819eb65da16ff3016a3..ad65c92bf06262be1202a06cc19080439e9e46a1 100644
+index d935f7d1594aacfc0a4be819eb65da16ff3016a3..25459d83d3cc87985e00ffcb2a736b6e084933e3 100644
 --- a/agents/evidence/analysis/graph-feeder-recall-2026-Q4.md
 +++ b/agents/evidence/analysis/graph-feeder-recall-2026-Q4.md
 @@ -2,24 +2,21 @@
@@ -40,7 +40,23 @@ index d935f7d1594aacfc0a4be819eb65da16ff3016a3..ad65c92bf06262be1202a06cc1908043
  
  ## What is being measured
  
-@@ -87,40 +84,177 @@ Wilson rather than the normal approximation for the reason that module records:
+@@ -71,6 +68,15 @@ Procedure, once n ≥ 50 rows exist:
+    one. (The paths are production-source only, per the filter above, so the
+    truncation can no longer hide a production edit behind docs and tests; it can
+    still hide the sixth production edit behind five others.)
++
++   **Truncation is the only cause of that inequality, and it is kept that way
++   on purpose.** An edit outside the workspace root is written as the literal
++   `<outside-workspace>` rather than dropped — so the lengths stay equal and
++   the exclusion rule above keeps meaning one thing. Dropping it would have
++   been a second cause wearing the first one's signal, and would have thrown
++   away a labellable in-repo path from a corpus blocked for want of rows. The
++   marker is also what a labeller needs in order to answer `cannot tell`
++   honestly instead of judging a turn whose out-of-tree half is invisible.
+ 2. For each row, the labeller answers one question: **did this turn change
+    production code that no test exercises?** Yes / no / cannot tell. A
+    `cannot tell` is dropped and replaced, and the count of drops is reported —
+@@ -87,40 +93,206 @@ Wilson rather than the normal approximation for the reason that module records:
  near a proportion of 1 the normal interval runs above 1 and understates the
  spread, which is exactly where a detector's recall is expected to sit.
  
@@ -72,11 +88,21 @@ index d935f7d1594aacfc0a4be819eb65da16ff3016a3..ad65c92bf06262be1202a06cc1908043
 +
 +## Arm 2 was not measuring anything — the whole window is void
 +
-+Every accrued row that carried a path recorded `no-seeds`: 18 of 18 at draw
-+time, 19 of 19 counting the rows later dropped as truncated. That is not the
-+graph having nothing to say about those files. It is the feeder handing
-+`untested` an **absolute** path while the graph keys its node ids on
++**19 rows carried a production path. 18 of them reached the graph at all, and
++all 18 recorded `no-seeds`.** The nineteenth never consulted the graph: its
++`graph_state` was `behind:0`, which the feeder skips by design, so it recorded
++`null`. Those are the only two values any path-carrying row has ever held.
++
++That is not the graph having nothing to say about those files. It is the feeder
++handing `untested` an **absolute** path while the graph keys its node ids on
 +**repo-relative** ones, so `seedsForFiles` resolved nothing on every call.
++
++(An earlier version of this paragraph wrote "18 of 18 at draw time, 19 of 19
++counting the rows later dropped as truncated". The second figure was wrong —
++19 minus the 3 truncated drops is 16, not 18 — and the completion review of this
++change caught it against the draw table thirteen lines above. The split is
++18 consulted / 1 skipped, and the truncation drops are a separate axis that cuts
++across both.)
 +
 +Probed against the real index at `c58d7eae`, before the repair:
 +
@@ -105,14 +131,20 @@ index d935f7d1594aacfc0a4be819eb65da16ff3016a3..ad65c92bf06262be1202a06cc1908043
 +
 +## Arm 1 — the labelled corpus, and why recall is undefined
 +
-+The 16 labellable rows, labelled 2026-10-06 by the **AI council** — seats
-+`anthropic` and `openai`, subscription transport, $0.0000 billed, quorum 2/2,
-+response at `agents/runtime/council/responses/graph-feeder-labelling-2026-10-06.md`
-+(gitignored and local; the labels are reproduced here because that file does not
-+survive a clone). The seats were given `paths` and `path_count` and the grep
-+evidence for how each file is reached from the test tree. `f`, `f_mode`,
-+`graph`, `graph_untested` and `graph_tested` were withheld, and the prompt
-+stated no expected outcome in either direction.
++The 16 labellable rows, labelled **2026-10-06 by the AI council** — seats
++`anthropic` and `openai`, quorum 2/2, subscription transport, $0.0000 billed.
++The seats were given `paths` and `path_count` and the grep evidence for how each
++file is reached from the test tree. `f`, `f_mode`, `graph`, `graph_untested` and
++`graph_tested` were withheld, and the prompt stated no expected outcome in
++either direction.
++
++The convergence is inlined below rather than cited by path, per
++`no-roadmap-references`: a council response lives under `agents/runtime/`, which
++is gitignored and auto-pruned, so a path to it is dead in every clone and would
++rot silently — `check_council_references.ts` excludes `agents/evidence/analysis`
++from its scan roots, so nothing would have failed the build over it. The labels
++and both seats' reasoning are reproduced here because here is the only place
++they survive.
 +
 +| row | session | turn | production paths | label |
 +|---|---|---|---|---|
@@ -169,14 +201,27 @@ index d935f7d1594aacfc0a4be819eb65da16ff3016a3..ad65c92bf06262be1202a06cc1908043
 -**`underpowered`** — below n = 50 this page reports the bar and the gap, never a
 -rate. A recall quoted off a handful of rows would be read as a result and reused
 -as one.
-+| Arm | False positives | negatives | rate | 95 % Wilson |
-+|---|---|---|---|---|
-+| F | **0** | 81 kept rows, all negative (16 labelled + 65 by construction) | 0.000 | [0.000, 0.045] |
++| Arm | False positives | negatives | rate | 95 % Wilson | what the denominator is |
++|---|---|---|---|---|---|
++| F | **0** | **16** labelled | 0.000 | **[0.000, 0.194]** | rows a labeller actually judged |
++| F | 0 | 81 kept | 0.000 | [0.000, 0.045] | **not quotable — see below** |
++
++**The 16-row line is the reading. The 81-row line is reported only to be
++retired**, because an earlier version of this page published it as the result
++and the completion review was right to call that overstated precision. 65 of
++those 81 rows carry **no production path at all**, and detector F cannot fire on
++a turn with no production edit under any behaviour it could have — those are
++structurally null denominators. They narrow the interval from 0.194 to 0.045
++without adding one observation that could have gone the other way.
++
++Even the 16-row interval is generous. The clustering below means those are not
++16 independent observations either, so [0.000, 0.194] is an upper bound on what
++this corpus knows, not a measurement of a detector.
 +
 +This is a **specificity** reading, not a recall one. It is consistent with
-+ADR-277's already-discharged false-positive half (0 in 335 turns) and adds an
-+independently labelled negative set to it. It settles nothing about recall,
-+which is the half ADR-277 left open and the half this page exists for.
++ADR-277's already-discharged false-positive half (0 in 335 turns) and adds 16
++independently labelled negatives to it. It settles nothing about recall, which
++is the half ADR-277 left open and the half this page exists for.
 +
 +## Why the corpus has no positives, and why that is not a corpus you can fix by waiting
 +
@@ -244,10 +289,18 @@ index d935f7d1594aacfc0a4be819eb65da16ff3016a3..ad65c92bf06262be1202a06cc1908043
 +  in is the failure the pre-registration was written to prevent. It is recorded
 +  as an option for the owner in the blocker, not taken.
 diff --git a/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md b/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
-index d6a36ccfd1fa4f167b05967bb914f8f76d290df2..807b3eb76f7ef29a7eaa7f13add54df671a07df3 100644
+index d6a36ccfd1fa4f167b05967bb914f8f76d290df2..0303888b998a2ac4ee285d2eba53c23faa9852ca 100644
 --- a/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
 +++ b/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
-@@ -92,7 +92,7 @@ refuses.
+@@ -3,6 +3,7 @@ complexity: lightweight
+ status: ready
+ execution:
+   mode: phase-checkpoints
++estate_growth_exempt: "one blocker, discovered by doing the work rather than by planning it. Step 3.3's whole content is a measurement, and taking it is what revealed that its corpus has no positive class and that one of its two arms had been recording a path-shape defect instead of a verdict. The alternative to opening b1-labelled-positives-unreachable was to flip an open box on an undefined recall, which is the condition D5 already names as its own revisit trigger. The estate is one blocker larger because the tree now knows something it did not, and the two amendment options inside that blocker are owner-reserved precisely because the party that saw the counts may not choose between them."
+ estate_offset_exempt: "lane of road-to-leading-every-row; the set's growth is declared there. later/road-to-a-graph-that-wins cannot absorb it — its Phase 3 is edge policy and new detectors, not this detector-F feeder, and its wake condition (two benchmark subject names) gates nothing here."
+ relates:
+   - slug: road-to-leading-every-row
+@@ -92,7 +93,7 @@ refuses.
        code is untouched; a `behind:N` or `absent` graph contributes nothing.
        `corrected-from-reproduction` — no per-stop record exists today.
        verify: fixture — an untested production edit yields F and graph verdicts on the new record and an unchanged exit code
@@ -256,7 +309,7 @@ index d6a36ccfd1fa4f167b05967bb914f8f76d290df2..807b3eb76f7ef29a7eaa7f13add54df6
        catch rate is measured on labelled data. Label 50 stop records (25 with an untested
        production edit, 25 without) by a person or a council seat, never the hook's own
        run; report F recall, graph recall and their union with `capture_rate.wilsonInterval`
-@@ -115,6 +115,32 @@ refuses.
+@@ -115,6 +116,35 @@ refuses.
        records the state at pre-registration, and the accrual figure is what moved.
        Re-measure before flipping — this count is a reading taken on a date, not a
        standing fact, and `agents/state/` is local and gitignored, so a clone reads 0.
@@ -276,9 +329,12 @@ index d6a36ccfd1fa4f167b05967bb914f8f76d290df2..807b3eb76f7ef29a7eaa7f13add54df6
 +      `anthropic` and `openai`, quorum 2/2, $0 billed, predictions withheld, no
 +      expected outcome stated. So **recall is UNDEFINED, 0/0 — not zero, and not a
 +      low score for either detector.** (iii) The one real number: F fired on 0 of
-+      84 rows, a false-positive rate of 0/81 over an independently labelled
-+      negative set, Wilson [0.000, 0.045] — a SPECIFICITY reading, which settles
-+      the half ADR-277 already discharged and nothing about the half it left open.
++      84 rows — a false-positive rate of **0 over the 16 LABELLED negatives,
++      Wilson [0.000, 0.194]**. The wider 0/81 denominator is NOT quotable and the
++      page retires it: 65 of those 81 rows carry no production path, so F cannot
++      fire on them under any behaviour, and they narrow the interval without
++      adding evidence. Either way it is a SPECIFICITY reading, which settles the
++      half ADR-277 already discharged and nothing about the half it left open.
 +      Why waiting does not fix it: the accrual channel is this suite's own
 +      governance work, whose base rate of untested production edits is at or near
 +      zero, and the 16 rows are not 16 independent observations — 4 distinct files,
@@ -289,7 +345,7 @@ index d6a36ccfd1fa4f167b05967bb914f8f76d290df2..807b3eb76f7ef29a7eaa7f13add54df6
  - [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3; the ADR-277 reopen is
        an owner amendment, not a step here.
  
-@@ -135,6 +161,22 @@ refuses.
+@@ -135,6 +165,22 @@ refuses.
  | D3 | reversible-technical | agent | a separate feeder record, not `ShadowRecord` | `ShadowRecord` is written only on `stop_hook_active` / `refused_turn` (`turn_end_gate_hook.ts:1332,1353`) and feeds the Q1 reading | the Q1 window closes |
  | D5 | deterministic | agent | closure pass C1 (3.3's verify listed unfalsifiable): accepted — the evidence page's existence is the oracle, the n ≥ 50 bar is in the step text and in the acceptance criteria | `closure_scan` 2026-10-01; the family is a listing, never a gate (`closure_scan.ts:41-50`) | a reviewer flips 3.3 on a page with n < 50 |
  | D4 | contested-technical | evidence | no free-text scoring in `graph_node` | `docs/CLAIMS.md:566-572` — free-text retrieval is the row the graph lost | a rerun wins a retrieval class |
@@ -313,10 +369,10 @@ index d6a36ccfd1fa4f167b05967bb914f8f76d290df2..807b3eb76f7ef29a7eaa7f13add54df6
  ## Risk Register
  
 diff --git a/src/scripts/_lib/graph_feeder_record.ts b/src/scripts/_lib/graph_feeder_record.ts
-index fa52d088dd9374ca71dd5e17e0f5077e996ad718..60f4f05d921f019d075d2c1d1f2c587573bebfd8 100644
+index fa52d088dd9374ca71dd5e17e0f5077e996ad718..661be796b2a3c7e9e2128264b83d1291a4a249e0 100644
 --- a/src/scripts/_lib/graph_feeder_record.ts
 +++ b/src/scripts/_lib/graph_feeder_record.ts
-@@ -22,12 +22,17 @@
+@@ -22,12 +22,18 @@
   * behind an owner amendment to ADR-277, and nothing here anticipates it.
   *
   * WHAT A ROW MAY CONTAIN. The fields are a closed set of enums, counts and
@@ -332,15 +388,33 @@ index fa52d088dd9374ca71dd5e17e0f5077e996ad718..60f4f05d921f019d075d2c1d1f2c5875
 + * of a log line, and the same shape `ToolCall` already has. Paths are in the set
 + * because they are the evidence a human labeller needs in step 3.3 and because
 + * the gate's own refusal text already quotes them; they are capped so one turn
-+ * cannot write an unbounded row. The one shape that can still carry an absolute
-+ * prefix is an edit OUTSIDE the workspace root, which {@link toRepoRelative}
-+ * leaves verbatim rather than rewrite into a misleading `../` — named here
-+ * because the previous wording claimed "repo-relative source paths" flatly and
-+ * the recorded data did not support it.
++ * cannot write an unbounded row. An edit OUTSIDE the workspace root is the one
++ * shape that could carry an absolute prefix, and {@link buildFeederRow} DROPS it
++ * from the row rather than store it — so the claim is true by construction and
++ * not by convention. The earlier wording claimed "repo-relative source paths"
++ * flatly while the recorded data did not support it; this one is narrower and
++ * enforced.
   */
  import * as fs from 'node:fs';
  import * as path from 'node:path';
-@@ -94,6 +99,43 @@ export function feederFile(workspaceRoot: string, sessionKey: string): string {
+@@ -39,6 +45,16 @@ import { untested } from '../code_graph/verbs.js';
+ /** At most this many edit paths per row. */
+ const MAX_PATHS = 5;
+ 
++/**
++ * What a row stores in place of an edit that lay outside the workspace root.
++ *
++ * Not a path, deliberately: it carries no directory, no user name and no
++ * project name, so it cannot be an egress surface when `paths` is handed to an
++ * external labeller. It still tells that labeller an edit happened out of tree,
++ * which is the difference between answering `cannot tell` and being misled.
++ */
++export const OUTSIDE_WORKSPACE = '<outside-workspace>';
++
+ /**
+  * At most this many rows per session file.
+  *
+@@ -94,6 +110,52 @@ export function feederFile(workspaceRoot: string, sessionKey: string): string {
      return path.join(workspaceRoot, 'agents', 'state', 'graph-feeder', `${sessionKey}.jsonl`);
  }
  
@@ -366,6 +440,15 @@ index fa52d088dd9374ca71dd5e17e0f5077e996ad718..60f4f05d921f019d075d2c1d1f2c5875
 + * A path outside the workspace root is returned unchanged: it is not addressable
 + * in the graph under any spelling, and rewriting it to `../..` would turn an
 + * honest `no-seeds` into a relative-looking string that still indexes nothing.
++ *
++ * SEPARATORS ARE NORMALISED TO POSIX, and that is not cosmetic. The indexer
++ * writes `source_file` through its own `toPosixRel`, and the store matches it by
++ * exact string, so on a host whose `path.sep` is a backslash a raw
++ * `path.relative` would emit `src\service.ts`, resolve no seeds, and record
++ * `no-seeds` — reintroducing precisely the defect above as a platform-
++ * conditional one. Found by the completion review of the commit that first fixed
++ * it; neither regression test could have seen it, because both run on one
++ * platform.
 + */
 +export function toRepoRelative(root: string, paths: readonly string[]): string[] {
 +    return paths.map((p) => {
@@ -377,14 +460,14 @@ index fa52d088dd9374ca71dd5e17e0f5077e996ad718..60f4f05d921f019d075d2c1d1f2c5875
 +            return p;
 +        }
 +        if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return p;
-+        return rel;
++        return rel.split(path.sep).join('/');
 +    });
 +}
 +
  /**
   * Run `untested` over the turn's edit paths.
   *
-@@ -112,6 +154,8 @@ export function graphUntestedVerdict(
+@@ -112,6 +174,8 @@ export function graphUntestedVerdict(
      // change.
      if (state !== 'fresh' && state !== 'edited') return none;
      if (paths.length === 0) return none;
@@ -393,7 +476,7 @@ index fa52d088dd9374ca71dd5e17e0f5077e996ad718..60f4f05d921f019d075d2c1d1f2c5875
      let picked;
      try {
          picked = pickSource(detectSources(root, path.join(root, NATIVE_CACHE_REL)));
-@@ -126,7 +170,7 @@ export function graphUntestedVerdict(
+@@ -126,7 +190,7 @@ export function graphUntestedVerdict(
          return none;
      }
      try {
@@ -402,46 +485,106 @@ index fa52d088dd9374ca71dd5e17e0f5077e996ad718..60f4f05d921f019d075d2c1d1f2c5875
          if (r.seeds.length === 0) return { verdict: 'no-seeds', untested: 0, tested: 0 };
          return {
              verdict: r.untested.length > 0 ? 'untested' : 'tested',
+@@ -187,8 +251,21 @@ export function readFeederRows(workspaceRoot: string, sessionKey: string): Graph
+     }
+ }
+ 
+-/** Build the row. Pure, so the shape can be asserted without a filesystem. */
++/**
++ * Build the row. Pure, so the shape can be asserted without a filesystem.
++ *
++ * `root` is required rather than optional, and relativising happens HERE rather
++ * than at the call site, for two reasons that point the same way. The caller is
++ * `turn_end_gate_hook.ts`, which sits against a shrink-only 1,500-line source
++ * budget it is exactly at — so the five lines this would cost there are five
++ * lines it does not have, and its own header already says such things belong in
++ * `_lib`. And a caller that can omit the root is a caller that can reintroduce
++ * the absolute-path defect {@link toRepoRelative} exists to close: the stored
++ * paths a step-3.3 labeller reads must be the paths the verdict was taken over.
++ */
+ export function buildFeederRow(input: {
++    /** The workspace root the paths are made relative to. */
++    root: string;
+     turn: number;
+     layer: FeederLayer;
+     state: GraphState;
+@@ -208,7 +285,32 @@ export function buildFeederRow(input: {
+         graph: input.graph.verdict,
+         graph_untested: input.graph.untested,
+         graph_tested: input.graph.tested,
+-        paths: input.paths.slice(0, MAX_PATHS).map((p) => p),
++        // An out-of-workspace edit is REDACTED, not dropped and not stored
++        // verbatim. After relativising, a still-absolute path is exactly one
++        // that lay outside the root.
++        //
++        // Verbatim is an egress surface: `paths` is handed to external council
++        // seats at step 3.3's labelling, and a home-rooted path names a real
++        // user and an unrelated project.
++        //
++        // Dropping it looked right and was worse, which a completion review
++        // caught before it shipped. It would have shortened `paths` below
++        // `path_count` and so reused the protocol's truncation signal for a
++        // second, different cause — two meanings on one wire, with no field
++        // separating them. Worse, a turn editing one in-repo file and one file
++        // outside the root would then be excluded from labelling altogether,
++        // losing a perfectly labellable in-repo path from a corpus that is
++        // blocked precisely for want of rows.
++        //
++        // The marker keeps the lengths equal, so truncation stays the only
++        // cause of `path_count > paths.length`; keeps the row honest that an
++        // edit happened outside the tree, so a labeller can answer
++        // `cannot tell` rather than be silently misled; and carries nothing
++        // identifying. The graph's answer is unchanged either way — the probe
++        // sees the real path and resolves no seeds for it.
++        paths: toRepoRelative(input.root, input.paths.slice(0, MAX_PATHS)).map((p) =>
++            path.isAbsolute(p) ? OUTSIDE_WORKSPACE : p,
++        ),
+         path_count: input.paths.length,
+     };
+ }
 diff --git a/src/scripts/hooks/turn_end_gate_hook.ts b/src/scripts/hooks/turn_end_gate_hook.ts
-index 5c3e9e1135cd29c27cdf07a039094cc24b7bf00a..66404ec05a0fb9110416cfae39d551c20dc35bed 100644
+index 5c3e9e1135cd29c27cdf07a039094cc24b7bf00a..6dd702c4ef4a9d0d30a5f7a182e93978ddbea857 100644
 --- a/src/scripts/hooks/turn_end_gate_hook.ts
 +++ b/src/scripts/hooks/turn_end_gate_hook.ts
-@@ -195,6 +195,7 @@ import {
-     buildFeederRow,
-     type FeederLayer,
-     graphUntestedVerdict,
-+    toRepoRelative,
- } from '../_lib/graph_feeder_record.js';
- import { type GraphState, graphState } from '../code_graph/detect.js';
- import { isVerificationCommand } from '../_lib/verification_command.js';
-@@ -1324,10 +1325,18 @@ function recordGraphFeeder(
-         // source, so the graph arm would have fired on precisely the turns F is
-         // silent for — a recall comparison between two detectors answering
-         // different questions, which is worse than no comparison.
--        const paths = inputs.toolCalls
--            .filter((c) => _EDIT_TOOLS.has(c.name) && c.path !== undefined)
--            .map((c) => c.path as string)
--            .filter(_isProductionSource);
-+        // ...and in the shape the graph indexes. `ToolCall.path` is whatever the
-+        // host wrote, which on this one is absolute; the graph keys node ids on
-+        // repo-relative paths, so the unconverted form resolved no seeds at all.
-+        // Applied to the ROW as well as to the probe, so the paths a labeller
-+        // reads in step 3.3 are the paths the verdict was taken over.
-+        const paths = toRepoRelative(
-+            inputs.workspaceRoot,
-+            inputs.toolCalls
-+                .filter((c) => _EDIT_TOOLS.has(c.name) && c.path !== undefined)
-+                .map((c) => c.path as string)
-+                .filter(_isProductionSource),
-+        );
-         const f = findings.find((x) => x.detector === 'untested');
-         appendFeederRow(
+@@ -1333,6 +1333,7 @@ function recordGraphFeeder(
              inputs.workspaceRoot,
+             inputs.sessionKey,
+             buildFeederRow({
++                root: inputs.workspaceRoot,
+                 turn: inputs.turnOrdinal,
+                 layer,
+                 state,
 diff --git a/tests/scripts/graph_feeder_record.test.ts b/tests/scripts/graph_feeder_record.test.ts
-index ae794a865361acbda507cd042381a36ad3a8a299..0335951d5c1e2110551f48054d09b098c0983b16 100644
+index ae794a865361acbda507cd042381a36ad3a8a299..7fa3f10a2e7c808bd6f0997f0ae980172c69511e 100644
 --- a/tests/scripts/graph_feeder_record.test.ts
 +++ b/tests/scripts/graph_feeder_record.test.ts
-@@ -231,3 +231,75 @@ describe('buildFeederRow — the row shape', () => {
+@@ -25,7 +25,9 @@ import {
+     buildFeederRow,
+     graphUntestedVerdict,
+     MAX_ROWS_PER_SESSION,
++    OUTSIDE_WORKSPACE,
+     readFeederRows,
++    toRepoRelative,
+ } from '../../src/scripts/_lib/graph_feeder_record.js';
+ import { deriveSessionKey } from '../../src/scripts/hooks/turn_end_gate_hook.js';
+ 
+@@ -176,6 +178,7 @@ describe('graphUntestedVerdict — the graph half, in isolation', () => {
+ describe('buildFeederRow — the row shape', () => {
+     it('caps the path list, keeps the true count, and carries no free-form field', () => {
+         const row = buildFeederRow({
++            root: '/workspace',
+             turn: 3,
+             layer: 'live',
+             state: 'edited',
+@@ -216,6 +219,7 @@ describe('buildFeederRow — the row shape', () => {
+         const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'graph-feeder-cap-')));
+         tmp_dirs.push(root);
+         const row = buildFeederRow({
++            root: '/workspace',
+             turn: 1,
+             layer: 'live',
+             state: 'fresh',
+@@ -231,3 +235,128 @@ describe('buildFeederRow — the row shape', () => {
          expect(readFeederRows(root, 'capped')).toHaveLength(MAX_ROWS_PER_SESSION);
      });
  });
@@ -471,14 +614,67 @@ index ae794a865361acbda507cd042381a36ad3a8a299..0335951d5c1e2110551f48054d09b098
 +        expect(abs.tested).toBe(rel.tested);
 +    }, 120_000);
 +
-+    it('keeps an out-of-workspace path verbatim and still answers no-seeds for it', async () => {
++    it('keeps an out-of-workspace path verbatim for the PROBE and drops it from the ROW', async () => {
 +        const { dir } = await rig(true);
 +        const outside = path.join(os.tmpdir(), 'not-this-workspace', 'elsewhere.ts');
 +        // Honest boundary: a path outside the root is not graph-addressable, so
-+        // it is left alone rather than rewritten into a `../` that would look
-+        // relative and index nothing.
++        // the probe leaves it alone rather than rewrite it into a `../` that
++        // would look relative and index nothing.
 +        expect(graphUntestedVerdict(dir, 'fresh', [outside]).verdict).toBe('no-seeds');
++        // `no-seeds` alone could not go red here — it is equally true under the
++        // `../` rewrite the docstring rules out AND under the pre-fix absolute
++        // passthrough. So assert what `toRepoRelative` actually singles out.
++        expect(toRepoRelative(dir, [outside])).toStrictEqual([outside]);
++
++        // The ROW is the egress surface — `paths` reaches external council seats
++        // at labelling — so there the out-of-workspace path is REDACTED.
++        //
++        // Redacted and not dropped, which is the assertion that matters. The
++        // lengths stay equal, so truncation remains the ONLY cause of
++        // `path_count > paths.length` and the protocol's exclusion rule keeps
++        // meaning one thing. Dropping would have excluded this row from the
++        // corpus entirely and taken a perfectly labellable in-repo path with it.
++        const row = buildFeederRow({
++            root: dir,
++            turn: 1,
++            layer: 'live',
++            state: 'fresh',
++            fFired: false,
++            fMode: null,
++            paths: [path.join(dir, 'src', 'service.ts'), outside],
++            graph: { verdict: null, untested: 0, tested: 0 },
++            at: '2026-10-06T00:00:00.000Z',
++        });
++        expect(row.paths).toStrictEqual(['src/service.ts', OUTSIDE_WORKSPACE]);
++        expect(row.path_count).toBe(2);
++        expect(row.paths).toHaveLength(row.path_count);
++        // Nothing identifying survives: no absolute prefix, and specifically not
++        // the temp-dir root the out-of-tree path was built from.
++        for (const p of row.paths) {
++            expect(path.isAbsolute(p)).toBe(false);
++            expect(p).not.toContain(os.tmpdir());
++        }
 +    }, 120_000);
++
++    it('emits POSIX separators, because the index matches source_file by exact string', () => {
++        // The indexer writes `source_file` through `toPosixRel`
++        // (`code_graph/build.ts:108`) and the store compares it literally, so a
++        // backslash spelling resolves no seeds and records `no-seeds` — the
++        // repaired defect, in platform-conditional form.
++        //
++        // HONEST LIMIT, stated rather than implied: on a POSIX host `path.sep`
++        // is already `/`, so the normalisation is a no-op and this assertion
++        // CANNOT go red here. It pins the contract; it does not guard it. The
++        // assertion that can go red on this platform is the end-to-end row test
++        // above, which asserts `graph === 'untested'` and therefore fails unless
++        // the stored spelling actually resolves seeds in a real index.
++        // `toPosixRel` is private to the builder and is deliberately not
++        // exported to be compared against — widening a surface for a test is a
++        // worse trade than naming the gap.
++        const root = path.join(os.tmpdir(), 'ws');
++        const out = toRepoRelative(root, [path.join(root, 'src', 'deep', 'service.ts')]);
++        expect(out).toStrictEqual(['src/deep/service.ts']);
++    });
 +
 +    it('stores repo-relative paths on the row when the transcript carries absolute ones', async () => {
 +        const withGraph = await rig(true);
