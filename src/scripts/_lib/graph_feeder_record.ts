@@ -28,11 +28,12 @@
  * of a log line, and the same shape `ToolCall` already has. Paths are in the set
  * because they are the evidence a human labeller needs in step 3.3 and because
  * the gate's own refusal text already quotes them; they are capped so one turn
- * cannot write an unbounded row. The one shape that can still carry an absolute
- * prefix is an edit OUTSIDE the workspace root, which {@link toRepoRelative}
- * leaves verbatim rather than rewrite into a misleading `../` — named here
- * because the previous wording claimed "repo-relative source paths" flatly and
- * the recorded data did not support it.
+ * cannot write an unbounded row. An edit OUTSIDE the workspace root is the one
+ * shape that could carry an absolute prefix, and {@link buildFeederRow} DROPS it
+ * from the row rather than store it — so the claim is true by construction and
+ * not by convention. The earlier wording claimed "repo-relative source paths"
+ * flatly while the recorded data did not support it; this one is narrower and
+ * enforced.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -43,6 +44,16 @@ import { untested } from '../code_graph/verbs.js';
 
 /** At most this many edit paths per row. */
 const MAX_PATHS = 5;
+
+/**
+ * What a row stores in place of an edit that lay outside the workspace root.
+ *
+ * Not a path, deliberately: it carries no directory, no user name and no
+ * project name, so it cannot be an egress surface when `paths` is handed to an
+ * external labeller. It still tells that labeller an edit happened out of tree,
+ * which is the difference between answering `cannot tell` and being misled.
+ */
+export const OUTSIDE_WORKSPACE = '<outside-workspace>';
 
 /**
  * At most this many rows per session file.
@@ -121,6 +132,15 @@ export function feederFile(workspaceRoot: string, sessionKey: string): string {
  * A path outside the workspace root is returned unchanged: it is not addressable
  * in the graph under any spelling, and rewriting it to `../..` would turn an
  * honest `no-seeds` into a relative-looking string that still indexes nothing.
+ *
+ * SEPARATORS ARE NORMALISED TO POSIX, and that is not cosmetic. The indexer
+ * writes `source_file` through its own `toPosixRel`, and the store matches it by
+ * exact string, so on a host whose `path.sep` is a backslash a raw
+ * `path.relative` would emit `src\service.ts`, resolve no seeds, and record
+ * `no-seeds` — reintroducing precisely the defect above as a platform-
+ * conditional one. Found by the completion review of the commit that first fixed
+ * it; neither regression test could have seen it, because both run on one
+ * platform.
  */
 export function toRepoRelative(root: string, paths: readonly string[]): string[] {
     return paths.map((p) => {
@@ -132,7 +152,7 @@ export function toRepoRelative(root: string, paths: readonly string[]): string[]
             return p;
         }
         if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return p;
-        return rel;
+        return rel.split(path.sep).join('/');
     });
 }
 
@@ -231,8 +251,21 @@ export function readFeederRows(workspaceRoot: string, sessionKey: string): Graph
     }
 }
 
-/** Build the row. Pure, so the shape can be asserted without a filesystem. */
+/**
+ * Build the row. Pure, so the shape can be asserted without a filesystem.
+ *
+ * `root` is required rather than optional, and relativising happens HERE rather
+ * than at the call site, for two reasons that point the same way. The caller is
+ * `turn_end_gate_hook.ts`, which sits against a shrink-only 1,500-line source
+ * budget it is exactly at — so the five lines this would cost there are five
+ * lines it does not have, and its own header already says such things belong in
+ * `_lib`. And a caller that can omit the root is a caller that can reintroduce
+ * the absolute-path defect {@link toRepoRelative} exists to close: the stored
+ * paths a step-3.3 labeller reads must be the paths the verdict was taken over.
+ */
 export function buildFeederRow(input: {
+    /** The workspace root the paths are made relative to. */
+    root: string;
     turn: number;
     layer: FeederLayer;
     state: GraphState;
@@ -252,7 +285,32 @@ export function buildFeederRow(input: {
         graph: input.graph.verdict,
         graph_untested: input.graph.untested,
         graph_tested: input.graph.tested,
-        paths: input.paths.slice(0, MAX_PATHS).map((p) => p),
+        // An out-of-workspace edit is REDACTED, not dropped and not stored
+        // verbatim. After relativising, a still-absolute path is exactly one
+        // that lay outside the root.
+        //
+        // Verbatim is an egress surface: `paths` is handed to external council
+        // seats at step 3.3's labelling, and a home-rooted path names a real
+        // user and an unrelated project.
+        //
+        // Dropping it looked right and was worse, which a completion review
+        // caught before it shipped. It would have shortened `paths` below
+        // `path_count` and so reused the protocol's truncation signal for a
+        // second, different cause — two meanings on one wire, with no field
+        // separating them. Worse, a turn editing one in-repo file and one file
+        // outside the root would then be excluded from labelling altogether,
+        // losing a perfectly labellable in-repo path from a corpus that is
+        // blocked precisely for want of rows.
+        //
+        // The marker keeps the lengths equal, so truncation stays the only
+        // cause of `path_count > paths.length`; keeps the row honest that an
+        // edit happened outside the tree, so a labeller can answer
+        // `cannot tell` rather than be silently misled; and carries nothing
+        // identifying. The graph's answer is unchanged either way — the probe
+        // sees the real path and resolves no seeds for it.
+        paths: toRepoRelative(input.root, input.paths.slice(0, MAX_PATHS)).map((p) =>
+            path.isAbsolute(p) ? OUTSIDE_WORKSPACE : p,
+        ),
         path_count: input.paths.length,
     };
 }

@@ -25,7 +25,9 @@ import {
     buildFeederRow,
     graphUntestedVerdict,
     MAX_ROWS_PER_SESSION,
+    OUTSIDE_WORKSPACE,
     readFeederRows,
+    toRepoRelative,
 } from '../../src/scripts/_lib/graph_feeder_record.js';
 import { deriveSessionKey } from '../../src/scripts/hooks/turn_end_gate_hook.js';
 
@@ -176,6 +178,7 @@ describe('graphUntestedVerdict — the graph half, in isolation', () => {
 describe('buildFeederRow — the row shape', () => {
     it('caps the path list, keeps the true count, and carries no free-form field', () => {
         const row = buildFeederRow({
+            root: '/workspace',
             turn: 3,
             layer: 'live',
             state: 'edited',
@@ -216,6 +219,7 @@ describe('buildFeederRow — the row shape', () => {
         const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'graph-feeder-cap-')));
         tmp_dirs.push(root);
         const row = buildFeederRow({
+            root: '/workspace',
             turn: 1,
             layer: 'live',
             state: 'fresh',
@@ -257,14 +261,67 @@ describe('3.3 — the arm reads the path shape a host emits, not the one a fixtu
         expect(abs.tested).toBe(rel.tested);
     }, 120_000);
 
-    it('keeps an out-of-workspace path verbatim and still answers no-seeds for it', async () => {
+    it('keeps an out-of-workspace path verbatim for the PROBE and drops it from the ROW', async () => {
         const { dir } = await rig(true);
         const outside = path.join(os.tmpdir(), 'not-this-workspace', 'elsewhere.ts');
         // Honest boundary: a path outside the root is not graph-addressable, so
-        // it is left alone rather than rewritten into a `../` that would look
-        // relative and index nothing.
+        // the probe leaves it alone rather than rewrite it into a `../` that
+        // would look relative and index nothing.
         expect(graphUntestedVerdict(dir, 'fresh', [outside]).verdict).toBe('no-seeds');
+        // `no-seeds` alone could not go red here — it is equally true under the
+        // `../` rewrite the docstring rules out AND under the pre-fix absolute
+        // passthrough. So assert what `toRepoRelative` actually singles out.
+        expect(toRepoRelative(dir, [outside])).toStrictEqual([outside]);
+
+        // The ROW is the egress surface — `paths` reaches external council seats
+        // at labelling — so there the out-of-workspace path is REDACTED.
+        //
+        // Redacted and not dropped, which is the assertion that matters. The
+        // lengths stay equal, so truncation remains the ONLY cause of
+        // `path_count > paths.length` and the protocol's exclusion rule keeps
+        // meaning one thing. Dropping would have excluded this row from the
+        // corpus entirely and taken a perfectly labellable in-repo path with it.
+        const row = buildFeederRow({
+            root: dir,
+            turn: 1,
+            layer: 'live',
+            state: 'fresh',
+            fFired: false,
+            fMode: null,
+            paths: [path.join(dir, 'src', 'service.ts'), outside],
+            graph: { verdict: null, untested: 0, tested: 0 },
+            at: '2026-10-06T00:00:00.000Z',
+        });
+        expect(row.paths).toStrictEqual(['src/service.ts', OUTSIDE_WORKSPACE]);
+        expect(row.path_count).toBe(2);
+        expect(row.paths).toHaveLength(row.path_count);
+        // Nothing identifying survives: no absolute prefix, and specifically not
+        // the temp-dir root the out-of-tree path was built from.
+        for (const p of row.paths) {
+            expect(path.isAbsolute(p)).toBe(false);
+            expect(p).not.toContain(os.tmpdir());
+        }
     }, 120_000);
+
+    it('emits POSIX separators, because the index matches source_file by exact string', () => {
+        // The indexer writes `source_file` through `toPosixRel`
+        // (`code_graph/build.ts:108`) and the store compares it literally, so a
+        // backslash spelling resolves no seeds and records `no-seeds` — the
+        // repaired defect, in platform-conditional form.
+        //
+        // HONEST LIMIT, stated rather than implied: on a POSIX host `path.sep`
+        // is already `/`, so the normalisation is a no-op and this assertion
+        // CANNOT go red here. It pins the contract; it does not guard it. The
+        // assertion that can go red on this platform is the end-to-end row test
+        // above, which asserts `graph === 'untested'` and therefore fails unless
+        // the stored spelling actually resolves seeds in a real index.
+        // `toPosixRel` is private to the builder and is deliberately not
+        // exported to be compared against — widening a surface for a test is a
+        // worse trade than naming the gap.
+        const root = path.join(os.tmpdir(), 'ws');
+        const out = toRepoRelative(root, [path.join(root, 'src', 'deep', 'service.ts')]);
+        expect(out).toStrictEqual(['src/deep/service.ts']);
+    });
 
     it('stores repo-relative paths on the row when the transcript carries absolute ones', async () => {
         const withGraph = await rig(true);

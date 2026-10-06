@@ -1,0 +1,519 @@
+diff --git a/agents/evidence/analysis/graph-feeder-recall-2026-Q4.md b/agents/evidence/analysis/graph-feeder-recall-2026-Q4.md
+index d935f7d1594aacfc0a4be819eb65da16ff3016a3..ad65c92bf06262be1202a06cc19080439e9e46a1 100644
+--- a/agents/evidence/analysis/graph-feeder-recall-2026-Q4.md
++++ b/agents/evidence/analysis/graph-feeder-recall-2026-Q4.md
+@@ -2,24 +2,21 @@
+ 
+ # Graph feeder recall — 2026 Q4
+ 
+-**Status: `underpowered`. Labelled n = 0 of a required n = 50.**
++**Status: `underpowered`. Labelled n = 16 of a required n = 50, and the positive
++stratum is 0 of a required 25.** Recall is **undefined**, which is a different
++statement from measuring zero, and the reason it is undefined is not that too
++few rows accrued — enough did. It is that the rows carry no positives and that
++one of the two arms was measuring nothing at all.
+ 
+-**Accrual, re-measured 2026-10-03: 8 rows across 2 distinct sessions** in
+-`agents/state/graph-feeder/` (`10a3804e…` 4 rows, `21f33898…` 4 rows). The
+-recorder has begun producing data. That is a different count from the one in the
+-status line above and the two must not be collapsed: an accrued row is a pair of
+-PREDICTIONS, and only a row a person or a council seat has labelled is EVIDENCE
+-about recall. 8 accrued is 8 toward the draw; it is 0 toward the corpus.
++**Accrual, re-measured 2026-10-06: 84 rows across 5 distinct sessions** in
++`agents/state/graph-feeder/`. The accrual bar the step set — n ≥ 50 across
++distinct sessions — is **met for the first time**. Taking the reading is what
++produced everything below, and none of it is what the bar was expecting.
+ 
+-This is the pre-registration of a measurement, written before its data exists,
+-and it is deliberately not the measurement. ADR-277 reopens detector F when its
+-catch rate is read off labelled data; `road-to-a-graph-that-feeds-the-gate` step
+-3.2 shipped the instrument that produces that data, and it shipped in the same
+-change as this page. No stop record predates the recorder, so every number below
+-is a bar rather than a result.
+-
+-Writing the bars first is the point. A recall threshold chosen after the counts
+-are in is a threshold chosen by the counts.
++The pre-registration (next two sections) is kept verbatim. It was written before
++any data existed and is not edited now that data does: a design amended by the
++party that has seen the counts is a design chosen by the counts. The result is
++added after it, not merged into it.
+ 
+ ## What is being measured
+ 
+@@ -87,40 +84,177 @@ Wilson rather than the normal approximation for the reason that module records:
+ near a proportion of 1 the normal interval runs above 1 and understates the
+ spread, which is exactly where a detector's recall is expected to sit.
+ 
++---
++
++# The 2026-10-06 reading
++
++## The draw
++
++Pinned at the moment of the draw, because `agents/state/` is live and gitignored
++and a later reader will see different numbers. Re-measure before reusing any of
++these; this is a reading taken on a date, not a standing fact. Branch
++`drain/graph-feeds-the-gate-20261006`, base `f3cc5db98`.
++
++| | count |
++|---|---|
++| rows accrued | 84 |
++| distinct sessions | 5 |
++| dropped — `path_count` exceeded `paths` length (protocol step 1) | 3 |
++| kept | 81 |
++| kept rows with **no** production path — negative by construction | 65 |
++| **rows carrying a production edit, and so labellable** | **16** |
++| distinct production files across those 16 rows | 4 |
++| rows from the single largest session | 14 of 16 |
++| turns on which detector F fired, over all 84 rows | **0** |
++| graph verdicts that were `untested` or `tested` | **0** |
++
++The last two rows are the reading. Everything else is context for them.
++
++## Arm 2 was not measuring anything — the whole window is void
++
++Every accrued row that carried a path recorded `no-seeds`: 18 of 18 at draw
++time, 19 of 19 counting the rows later dropped as truncated. That is not the
++graph having nothing to say about those files. It is the feeder handing
++`untested` an **absolute** path while the graph keys its node ids on
++**repo-relative** ones, so `seedsForFiles` resolved nothing on every call.
++
++Probed against the real index at `c58d7eae`, before the repair:
++
++| file | path form | seeds | untested | unresolved |
++|---|---|---|---|---|
++| `src/scripts/check_memory.ts` | relative | 60 | 59 | 0 |
++| `src/scripts/check_memory.ts` | absolute | 0 | 0 | 1 |
++| `src/scripts/_lib/prompt_shape.ts` | relative | 7 | 5 | 0 |
++| `src/scripts/_lib/prompt_shape.ts` | absolute | 0 | 0 | 1 |
++
++It survived step 3.2's review because **every fixture in the suite fed a
++relative path** — the one shape no host emits. Claude Code writes `file_path`
++absolute. The arm looked healthy in the only case it was ever tested on.
++
++Repaired in the same change as this reading (`toRepoRelative`, applied inside
++`graphUntestedVerdict` and to the stored row), with regression tests written
++against the absolute form and seen red first.
++
++```
++NO GRAPH-ARM ROW RECORDED BEFORE THAT REPAIR IS ADMISSIBLE EVIDENCE
++ABOUT THE GRAPH. THE ARM'S ACCRUAL RESTARTS AT ZERO.
++```
++
++The F arm's rows are unaffected: F never read the graph, and its verdict is
++taken from the transcript.
++
++## Arm 1 — the labelled corpus, and why recall is undefined
++
++The 16 labellable rows, labelled 2026-10-06 by the **AI council** — seats
++`anthropic` and `openai`, subscription transport, $0.0000 billed, quorum 2/2,
++response at `agents/runtime/council/responses/graph-feeder-labelling-2026-10-06.md`
++(gitignored and local; the labels are reproduced here because that file does not
++survive a clone). The seats were given `paths` and `path_count` and the grep
++evidence for how each file is reached from the test tree. `f`, `f_mode`,
++`graph`, `graph_untested` and `graph_tested` were withheld, and the prompt
++stated no expected outcome in either direction.
++
++| row | session | turn | production paths | label |
++|---|---|---|---|---|
++| R01 | `21f33898` | 7 | `src/scripts/_lib/prompt_shape.ts` | no |
++| R02 | `21f33898` | 29 | `src/scripts/check_memory.ts` | no |
++| R03 | `ffb1f1a5` | 2 | `check_release_pr_shape.ts` | no |
++| R04 | `ffb1f1a5` | 3 | `check_release_pr_shape.ts`, `report_evidence_temperature.ts` | no |
++| R05 | `ffb1f1a5` | 4 | both of the above | no |
++| R06 | `ffb1f1a5` | 5 | both of the above | no |
++| R07 | `ffb1f1a5` | 6 | `report_evidence_temperature.ts` | no |
++| R08 | `ffb1f1a5` | 7 | both of the above | no |
++| R09 | `ffb1f1a5` | 8 | `check_release_pr_shape.ts` | no |
++| R10 | `ffb1f1a5` | 9 | `check_release_pr_shape.ts` | no |
++| R11 | `ffb1f1a5` | 11 | `report_evidence_temperature.ts` | no |
++| R12 | `ffb1f1a5` | 12 | both of the above | no |
++| R13 | `ffb1f1a5` | 14 | `report_evidence_temperature.ts` | no |
++| R14 | `ffb1f1a5` | 15 | `check_release_pr_shape.ts` | no |
++| R15 | `ffb1f1a5` | 15 | `check_release_pr_shape.ts` | no |
++| R16 | `ffb1f1a5` | 15 | `check_release_pr_shape.ts` | no |
++
++**16 of 16 `no`. Zero `cannot tell`, so zero replacements. Both seats agreed on
++every row.** Every one of the four files is reached by a test: three by a static
++import, and `check_memory.ts` by a test that spawns it through `tsx` and asserts
++on its stdout and exit code. Both seats were asked whether subprocess execution
++counts as exercising, independently, and both said yes.
++
+ ## Current reading
+ 
+-| Arm | Positives caught | n | Recall | 95 % Wilson |
++| Arm | Positives caught | positives in corpus | Recall | 95 % Wilson |
+ |---|---|---|---|---|
+-| F | — | 0 | — | [0, 1] |
+-| graph | — | 0 | — | [0, 1] |
+-| union | — | 0 | — | [0, 1] |
++| F | — | **0** | **undefined** | [0, 1] |
++| graph | — | **0**, and the arm was void | **undefined** | [0, 1] |
++| union | — | **0** | **undefined** | [0, 1] |
+ 
+-`[0, 1]` at n = 0 is the honest interval and is not `[0, 0]`: nothing was
+-measured, which is a different statement from measuring zero. The same
+-distinction `capture_rate.ts` makes in code.
++`[0, 1]` is the honest interval for a measurement that did not happen, and it is
++not `[0, 0]` — the same distinction `capture_rate.ts` makes in code. **Recall
++with no positives in the ground truth is 0/0.** It is not a low score for the
++detectors and must never be quoted as one.
+ 
+-The `n` column is the LABELLED corpus, which is why it stays 0 while the accrual
+-figure in the header moves. Nothing in this table advances when a row is merely
+-recorded; it advances when a row is drawn, withheld from its own predictions,
+-labelled by a person or a council seat, and attributed.
++The one number the corpus *does* support, reported because it is real and
++because the protocol asks for false positives on the same footing:
+ 
+-**`underpowered`** — below n = 50 this page reports the bar and the gap, never a
+-rate. A recall quoted off a handful of rows would be read as a result and reused
+-as one.
++| Arm | False positives | negatives | rate | 95 % Wilson |
++|---|---|---|---|---|
++| F | **0** | 81 kept rows, all negative (16 labelled + 65 by construction) | 0.000 | [0.000, 0.045] |
++
++This is a **specificity** reading, not a recall one. It is consistent with
++ADR-277's already-discharged false-positive half (0 in 335 turns) and adds an
++independently labelled negative set to it. It settles nothing about recall,
++which is the half ADR-277 left open and the half this page exists for.
++
++## Why the corpus has no positives, and why that is not a corpus you can fix by waiting
++
++The four files are all well-tested infrastructure in this repository's own
++`src/scripts/`. That is not bad luck in the draw — it is what this repository's
++sessions *are*. The accrual channel is governance and maintenance work on a
++suite whose own gates refuse untested production edits, so the base rate of the
++positive class in this channel is at or near zero.
++
++Three further properties of the draw, all raised independently by both council
++seats and recorded because they bound any future reading taken here:
++
++1. **The 16 rows are not 16 independent observations.** They cover 4 distinct
++   files, and 14 of them come from one session. Treating them as independent
++   would bias any interval computed from them.
++2. **R14, R15 and R16 are identical in every recorded field** — same session,
++   same turn 15, same file, same `path_count`. Whether they are three tool-call
++   groups or one event recorded three times is not decidable from the row.
++3. **A construct gap the pre-registration did not name.** The labelling evidence
++   is *file-level reachability* — is this file imported or executed by some
++   test. The question asks about *the changed code*. A test that imports a
++   module but never calls the function the turn edited leaves the changed code
++   unexercised while the file reads as covered. Both seats flagged this; one
++   called it the strongest blind spot in the exercise. The `tests` edge the
++   graph arm walks has exactly the same granularity, so this is a property of
++   both arms and not of the labelling.
+ 
+ ## What this page does NOT authorize
+ 
+-Nothing. Step 3.4 of the owning roadmap — promoting the graph verdict into
+-detector F's live decision — stays deferred, and it is deferred behind an owner
+-amendment to ADR-277 rather than behind this page. A filled-in table here is an
+-input to that amendment, never a substitute for it, and no reading of these
+-numbers changes what the stop gate refuses.
++Nothing — unchanged, and now with a second reason. Step 3.4 of the owning
++roadmap, promoting the graph verdict into detector F's live decision, stays
++deferred behind an owner amendment to ADR-277. A filled-in table here would be
++an input to that amendment and never a substitute for it; **this table is not
++even that**, because an undefined recall is not an input to a promotion
++decision. No reading on this page changes what the stop gate refuses.
++
++Nor does anything here discharge ADR-277's `review_trigger`. That trigger asks
++for F's catch rate *on labelled data*. A labelled corpus with no positives does
++not supply a catch rate, so the trigger remains unfired and F's recall half
++remains exactly as open as it was.
+ 
+ ## What closes the gap
+ 
+-- Stop records accumulate wherever the gate runs in a repository with a built
+-  code graph. The instrument is on by default and writes nothing where no graph
+-  exists, so the corpus grows from ordinary use rather than from a campaign.
+-- At n ≥ 50 across distinct sessions, run the protocol above and replace the
+-  `Current reading` table, the status line, and this section with the result and
+-  the labeller attribution.
++The gap is no longer "wait for rows". It is a positive stratum, and the
++roadmap's `blocker: b1-labelled-positives-unreachable` carries the decision,
++because the available moves are not all ones an agent may take.
++
++- **Post-repair graph rows.** The arm restarts at zero today. Nothing can be
++  said about graph recall until rows accrue through the repaired feeder.
++- **Positives from a channel that produces them.** This repository's own
++  sessions do not. A consumer repository under ordinary feature work does.
++- **Not by amending the design here.** Lowering the positive stratum, or
++  substituting a specificity reading for the recall one, after the counts are
++  in is the failure the pre-registration was written to prevent. It is recorded
++  as an option for the owner in the blocker, not taken.
+diff --git a/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md b/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
+index d6a36ccfd1fa4f167b05967bb914f8f76d290df2..807b3eb76f7ef29a7eaa7f13add54df671a07df3 100644
+--- a/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
++++ b/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
+@@ -92,7 +92,7 @@ refuses.
+       code is untouched; a `behind:N` or `absent` graph contributes nothing.
+       `corrected-from-reproduction` — no per-stop record exists today.
+       verify: fixture — an untested production edit yields F and graph verdicts on the new record and an unchanged exit code
+-- [ ] **3.3 Recall on a labelled corpus, published.** ADR-277 (`:26-32`) reopens F when its
++- [ ] <!-- blocked-by: b1-labelled-positives-unreachable | asked: no — non-interactive drain run, which reports once at the end and cannot put a question; the ask is carried in the PR body and in the blocker below --> **3.3 Recall on a labelled corpus, published.** ADR-277 (`:26-32`) reopens F when its
+       catch rate is measured on labelled data. Label 50 stop records (25 with an untested
+       production edit, 25 without) by a person or a council seat, never the hook's own
+       run; report F recall, graph recall and their union with `capture_rate.wilsonInterval`
+@@ -115,6 +115,32 @@ refuses.
+       records the state at pre-registration, and the accrual figure is what moved.
+       Re-measure before flipping — this count is a reading taken on a date, not a
+       standing fact, and `agents/state/` is local and gitignored, so a clone reads 0.
++      STATE 2026-10-06, the reading taken: **the accrual bar is MET and the step is
++      still open, for a reason the pre-registration did not anticipate.** 84 rows
++      across 5 distinct sessions, against a bar of 50. Taking the reading produced
++      three findings, all on the evidence page. (i) The GRAPH ARM WAS VOID: the
++      feeder handed `untested` absolute paths while the graph keys node ids on
++      repo-relative ones, so all 19 path-carrying rows recorded `no-seeds` — none
++      of them a fact about the code. Probed at `c58d7eae`: `check_memory.ts`
++      resolves 60 seeds relative and 0 absolute. Repaired in this change, with
++      regression tests written against the absolute form and seen red first; the
++      arm's accrual restarts at zero, because no pre-repair row is admissible
++      evidence about the graph. It survived 3.2's review because every fixture fed
++      a relative path, the one shape no host emits. (ii) The labelled corpus is
++      **16 rows, and 16 of 16 are NEGATIVE** — labelled by the AI council, seats
++      `anthropic` and `openai`, quorum 2/2, $0 billed, predictions withheld, no
++      expected outcome stated. So **recall is UNDEFINED, 0/0 — not zero, and not a
++      low score for either detector.** (iii) The one real number: F fired on 0 of
++      84 rows, a false-positive rate of 0/81 over an independently labelled
++      negative set, Wilson [0.000, 0.045] — a SPECIFICITY reading, which settles
++      the half ADR-277 already discharged and nothing about the half it left open.
++      Why waiting does not fix it: the accrual channel is this suite's own
++      governance work, whose base rate of untested production edits is at or near
++      zero, and the 16 rows are not 16 independent observations — 4 distinct files,
++      14 from one session, R14-R16 identical in every recorded field. The step is
++      therefore BLOCKED rather than unfinished, on `b1-labelled-positives-unreachable`
++      below: the remaining moves include amending a pre-registration after seeing
++      its counts, which the party that saw them may not do.
+ - [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3; the ADR-277 reopen is
+       an owner amendment, not a step here.
+ 
+@@ -135,6 +161,22 @@ refuses.
+ | D3 | reversible-technical | agent | a separate feeder record, not `ShadowRecord` | `ShadowRecord` is written only on `stop_hook_active` / `refused_turn` (`turn_end_gate_hook.ts:1332,1353`) and feeds the Q1 reading | the Q1 window closes |
+ | D5 | deterministic | agent | closure pass C1 (3.3's verify listed unfalsifiable): accepted — the evidence page's existence is the oracle, the n ≥ 50 bar is in the step text and in the acceptance criteria | `closure_scan` 2026-10-01; the family is a listing, never a gate (`closure_scan.ts:41-50`) | a reviewer flips 3.3 on a page with n < 50 |
+ | D4 | contested-technical | evidence | no free-text scoring in `graph_node` | `docs/CLAIMS.md:566-572` — free-text retrieval is the row the graph lost | a rerun wins a retrieval class |
++| D6 | deterministic | evidence | the feeder relativises edit paths before the graph sees them, and stores the relativised form | probed at `c58d7eae`: `check_memory.ts` resolves 60 seeds relative, 0 absolute; all 19 path-carrying rows read `no-seeds` | the graph gains a resolver that takes absolute paths |
++| D7 | deterministic | evidence | the pre-registration is NOT amended now that its counts are known — the 25/25 design stands and the shortfall is reported against it | the page's own clause: a threshold chosen after the counts is a threshold chosen by the counts | the owner amends it, via `b1` |
++
++## Blockers
++
++### blocker: b1-labelled-positives-unreachable
++- **Status:** open · asked: no — non-interactive drain run; carried in the PR body of the run that opened it
++- **Ownership:** product-owned
++- **Owner:** user
++- **Blocks:** step 3.3 — Recall on a labelled corpus, published
++- **Question:** The pre-registered corpus needs 25 positive stop records. This repository's accrual channel produced 0 across 84 rows and 5 sessions, because its own sessions are governance work on a suite whose gates refuse untested production edits. Where do the positives come from — or does the design change?
++- **Recommendation:** (a). The base rate of the positive class in this channel is the thing that is zero, and no amount of further accrual here moves it. A consumer repository under ordinary feature work produces the class in the ordinary course; this one does not. Note that (b) and (c) are both amendments to a pre-registration whose counts are now known, which is the one move the page forbids the party that has seen them — they are listed because they are real options for the owner, not because an agent weighed and declined them.
++- **If you do nothing:** step 3.3 stays open and ADR-277's `review_trigger` stays unfired, so detector F's recall half remains unmeasured indefinitely while its false-positive half stays discharged. The graph arm accrues post-repair rows that nobody draws. Nothing breaks and nothing is learned.
++- **What to do:** pick exactly one — (a) nominate a consumer repository whose sessions are feature work, and let the corpus accrue there until the positive stratum fills; (b) amend the pre-registration to a design the available channel can support, recording that the amendment was made with the counts in hand; (c) close step 3.3 and record that F's recall will not be measured, which leaves ADR-277's reopen condition permanently unmet and should be written into that ADR rather than only here.
++- **Resolved when:** `agents/evidence/analysis/graph-feeder-recall-2026-Q4.md` carries a `Current reading` table whose `positives in corpus` column is non-zero for at least one arm, **or** this blocker carries the owner's (b) or (c) record naming which was chosen and why.
++- **What is already done, so the owner is not asked to redo it.** The instrument is repaired (D6) and its regression is pinned against the shape a host actually emits. The accrual bar is met. The labelling machinery ran end to end — council quorum 2/2, predictions withheld, zero `cannot tell`, zero replacements — so the protocol itself is proven executable and only its input is missing. The specificity half is measured and reported. What is genuinely absent is one thing: a positive class.
+ 
+ ## Risk Register
+ 
+diff --git a/src/scripts/_lib/graph_feeder_record.ts b/src/scripts/_lib/graph_feeder_record.ts
+index fa52d088dd9374ca71dd5e17e0f5077e996ad718..60f4f05d921f019d075d2c1d1f2c587573bebfd8 100644
+--- a/src/scripts/_lib/graph_feeder_record.ts
++++ b/src/scripts/_lib/graph_feeder_record.ts
+@@ -22,12 +22,17 @@
+  * behind an owner amendment to ADR-277, and nothing here anticipates it.
+  *
+  * WHAT A ROW MAY CONTAIN. The fields are a closed set of enums, counts and
+- * repo-relative source paths. There is no field able to hold a prompt, a file
+- * body, a reply or a command — the same PII-exclusion-by-construction discipline
+- * `domain-safety-pii` § Surface 2 asks of a log line, and the same shape
+- * `ToolCall` already has. Paths are in the set because they are the evidence a
+- * human labeller needs in step 3.3 and because the gate's own refusal text
+- * already quotes them; they are capped so one turn cannot write an unbounded row.
++ * source paths, repo-relative wherever the edit lay inside the workspace. There
++ * is no field able to hold a prompt, a file body, a reply or a command — the same
++ * PII-exclusion-by-construction discipline `domain-safety-pii` § Surface 2 asks
++ * of a log line, and the same shape `ToolCall` already has. Paths are in the set
++ * because they are the evidence a human labeller needs in step 3.3 and because
++ * the gate's own refusal text already quotes them; they are capped so one turn
++ * cannot write an unbounded row. The one shape that can still carry an absolute
++ * prefix is an edit OUTSIDE the workspace root, which {@link toRepoRelative}
++ * leaves verbatim rather than rewrite into a misleading `../` — named here
++ * because the previous wording claimed "repo-relative source paths" flatly and
++ * the recorded data did not support it.
+  */
+ import * as fs from 'node:fs';
+ import * as path from 'node:path';
+@@ -94,6 +99,43 @@ export function feederFile(workspaceRoot: string, sessionKey: string): string {
+     return path.join(workspaceRoot, 'agents', 'state', 'graph-feeder', `${sessionKey}.jsonl`);
+ }
+ 
++/**
++ * Put edit paths into the shape the graph indexes them in.
++ *
++ * THE DEFECT THIS REPAIRS, measured before it was fixed. `ToolCall.path` carries
++ * whatever the host wrote into `file_path`, and Claude Code writes an ABSOLUTE
++ * path. The graph keys its node ids on repo-relative paths, so `seedsForFiles`
++ * resolved nothing, `untested` returned an empty seed set, and the feeder wrote
++ * `no-seeds`. Every one of the 19 accrued rows that carried a path recorded
++ * `no-seeds`, and none of them was a fact about the code: the graph arm was mute
++ * for its whole accrual window. Probed at `c58d7eae` against the real index —
++ * `src/scripts/check_memory.ts` resolves 60 seeds relative and 0 absolute.
++ *
++ * It survived review because every fixture fed a relative path. A test never run
++ * against the shape the host emits cannot see this, which is why the regression
++ * test added with this fix is written against the absolute form.
++ *
++ * Repaired HERE rather than at the one call site, because `graphUntestedVerdict`
++ * is exported and a second caller would meet the same silence.
++ *
++ * A path outside the workspace root is returned unchanged: it is not addressable
++ * in the graph under any spelling, and rewriting it to `../..` would turn an
++ * honest `no-seeds` into a relative-looking string that still indexes nothing.
++ */
++export function toRepoRelative(root: string, paths: readonly string[]): string[] {
++    return paths.map((p) => {
++        if (!path.isAbsolute(p)) return p;
++        let rel: string;
++        try {
++            rel = path.relative(root, p);
++        } catch {
++            return p;
++        }
++        if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return p;
++        return rel;
++    });
++}
++
+ /**
+  * Run `untested` over the turn's edit paths.
+  *
+@@ -112,6 +154,8 @@ export function graphUntestedVerdict(
+     // change.
+     if (state !== 'fresh' && state !== 'edited') return none;
+     if (paths.length === 0) return none;
++    // The graph indexes repo-relative paths; a host hands us absolute ones.
++    const relative = toRepoRelative(root, paths);
+     let picked;
+     try {
+         picked = pickSource(detectSources(root, path.join(root, NATIVE_CACHE_REL)));
+@@ -126,7 +170,7 @@ export function graphUntestedVerdict(
+         return none;
+     }
+     try {
+-        const r = untested(g, paths, state);
++        const r = untested(g, relative, state);
+         if (r.seeds.length === 0) return { verdict: 'no-seeds', untested: 0, tested: 0 };
+         return {
+             verdict: r.untested.length > 0 ? 'untested' : 'tested',
+diff --git a/src/scripts/hooks/turn_end_gate_hook.ts b/src/scripts/hooks/turn_end_gate_hook.ts
+index 5c3e9e1135cd29c27cdf07a039094cc24b7bf00a..66404ec05a0fb9110416cfae39d551c20dc35bed 100644
+--- a/src/scripts/hooks/turn_end_gate_hook.ts
++++ b/src/scripts/hooks/turn_end_gate_hook.ts
+@@ -195,6 +195,7 @@ import {
+     buildFeederRow,
+     type FeederLayer,
+     graphUntestedVerdict,
++    toRepoRelative,
+ } from '../_lib/graph_feeder_record.js';
+ import { type GraphState, graphState } from '../code_graph/detect.js';
+ import { isVerificationCommand } from '../_lib/verification_command.js';
+@@ -1324,10 +1325,18 @@ function recordGraphFeeder(
+         // source, so the graph arm would have fired on precisely the turns F is
+         // silent for — a recall comparison between two detectors answering
+         // different questions, which is worse than no comparison.
+-        const paths = inputs.toolCalls
+-            .filter((c) => _EDIT_TOOLS.has(c.name) && c.path !== undefined)
+-            .map((c) => c.path as string)
+-            .filter(_isProductionSource);
++        // ...and in the shape the graph indexes. `ToolCall.path` is whatever the
++        // host wrote, which on this one is absolute; the graph keys node ids on
++        // repo-relative paths, so the unconverted form resolved no seeds at all.
++        // Applied to the ROW as well as to the probe, so the paths a labeller
++        // reads in step 3.3 are the paths the verdict was taken over.
++        const paths = toRepoRelative(
++            inputs.workspaceRoot,
++            inputs.toolCalls
++                .filter((c) => _EDIT_TOOLS.has(c.name) && c.path !== undefined)
++                .map((c) => c.path as string)
++                .filter(_isProductionSource),
++        );
+         const f = findings.find((x) => x.detector === 'untested');
+         appendFeederRow(
+             inputs.workspaceRoot,
+diff --git a/tests/scripts/graph_feeder_record.test.ts b/tests/scripts/graph_feeder_record.test.ts
+index ae794a865361acbda507cd042381a36ad3a8a299..0335951d5c1e2110551f48054d09b098c0983b16 100644
+--- a/tests/scripts/graph_feeder_record.test.ts
++++ b/tests/scripts/graph_feeder_record.test.ts
+@@ -231,3 +231,75 @@ describe('buildFeederRow — the row shape', () => {
+         expect(readFeederRows(root, 'capped')).toHaveLength(MAX_ROWS_PER_SESSION);
+     });
+ });
++
++/**
++ * The path shape a real host actually emits.
++ *
++ * Every fixture above hands the feeder a REPO-RELATIVE path, and that is why
++ * the arm looked healthy while it was mute: Claude Code writes `file_path` as an
++ * ABSOLUTE path, the graph's seed ladder resolves node ids keyed on repo-relative
++ * paths, and the two never met. Step 3.3's accrual window recorded `no-seeds` on
++ * every row that carried a path — 19 of 19 — and a recall table built on that
++ * would have scored a defect and called it a detector.
++ *
++ * Both assertions are written against the absolute shape on purpose. A fixture
++ * that keeps feeding relative paths cannot see this regression come back.
++ */
++describe('3.3 — the arm reads the path shape a host emits, not the one a fixture does', () => {
++    it('resolves an absolute in-workspace path to the same verdict as its relative form', async () => {
++        const { dir } = await rig(true);
++        const rel = graphUntestedVerdict(dir, 'fresh', ['src/service.ts']);
++        const abs = graphUntestedVerdict(dir, 'fresh', [path.join(dir, 'src', 'service.ts')]);
++        expect(rel.verdict).toBe('untested');
++        // The claim: the absolute form is the SAME answer, not `no-seeds`.
++        expect(abs.verdict).toBe(rel.verdict);
++        expect(abs.untested).toBe(rel.untested);
++        expect(abs.tested).toBe(rel.tested);
++    }, 120_000);
++
++    it('keeps an out-of-workspace path verbatim and still answers no-seeds for it', async () => {
++        const { dir } = await rig(true);
++        const outside = path.join(os.tmpdir(), 'not-this-workspace', 'elsewhere.ts');
++        // Honest boundary: a path outside the root is not graph-addressable, so
++        // it is left alone rather than rewritten into a `../` that would look
++        // relative and index nothing.
++        expect(graphUntestedVerdict(dir, 'fresh', [outside]).verdict).toBe('no-seeds');
++    }, 120_000);
++
++    it('stores repo-relative paths on the row when the transcript carries absolute ones', async () => {
++        const withGraph = await rig(true);
++        const file = path.join(withGraph.home, 'transcript-abs.jsonl');
++        fs.writeFileSync(
++            file,
++            [
++                { type: 'user', message: { content: 'mach das fertig' } },
++                {
++                    type: 'assistant',
++                    message: {
++                        content: [
++                            {
++                                type: 'tool_use',
++                                name: 'Edit',
++                                // The absolute form, exactly as the host writes it.
++                                input: { file_path: path.join(withGraph.dir, 'src', 'service.ts') },
++                            },
++                        ],
++                    },
++                },
++                { type: 'assistant', message: { content: [{ type: 'text', text: 'Fertig.' }] } },
++            ]
++                .map((e) => JSON.stringify(e))
++                .join('\n') + '\n',
++        );
++        runHook(withGraph.dir, withGraph.home, file);
++
++        const rows = readFeederRows(withGraph.dir, deriveSessionKey(SESSION));
++        const row = rows[rows.length - 1];
++        expect(row?.paths).toStrictEqual(['src/service.ts']);
++        // And the graph answered, instead of reporting it had no seeds.
++        expect(row?.graph).toBe('untested');
++        // No absolute prefix reaches the record, which is what the module header
++        // claims the row cannot carry.
++        for (const p of row?.paths ?? []) expect(path.isAbsolute(p)).toBe(false);
++    }, 120_000);
++});

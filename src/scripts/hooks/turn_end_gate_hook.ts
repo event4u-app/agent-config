@@ -195,7 +195,6 @@ import {
     buildFeederRow,
     type FeederLayer,
     graphUntestedVerdict,
-    toRepoRelative,
 } from '../_lib/graph_feeder_record.js';
 import { type GraphState, graphState } from '../code_graph/detect.js';
 import { isVerificationCommand } from '../_lib/verification_command.js';
@@ -1325,23 +1324,16 @@ function recordGraphFeeder(
         // source, so the graph arm would have fired on precisely the turns F is
         // silent for — a recall comparison between two detectors answering
         // different questions, which is worse than no comparison.
-        // ...and in the shape the graph indexes. `ToolCall.path` is whatever the
-        // host wrote, which on this one is absolute; the graph keys node ids on
-        // repo-relative paths, so the unconverted form resolved no seeds at all.
-        // Applied to the ROW as well as to the probe, so the paths a labeller
-        // reads in step 3.3 are the paths the verdict was taken over.
-        const paths = toRepoRelative(
-            inputs.workspaceRoot,
-            inputs.toolCalls
-                .filter((c) => _EDIT_TOOLS.has(c.name) && c.path !== undefined)
-                .map((c) => c.path as string)
-                .filter(_isProductionSource),
-        );
+        const paths = inputs.toolCalls
+            .filter((c) => _EDIT_TOOLS.has(c.name) && c.path !== undefined)
+            .map((c) => c.path as string)
+            .filter(_isProductionSource);
         const f = findings.find((x) => x.detector === 'untested');
         appendFeederRow(
             inputs.workspaceRoot,
             inputs.sessionKey,
             buildFeederRow({
+                root: inputs.workspaceRoot,
                 turn: inputs.turnOrdinal,
                 layer,
                 state,

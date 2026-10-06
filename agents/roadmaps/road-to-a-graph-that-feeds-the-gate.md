@@ -132,9 +132,12 @@ refuses.
       `anthropic` and `openai`, quorum 2/2, $0 billed, predictions withheld, no
       expected outcome stated. So **recall is UNDEFINED, 0/0 — not zero, and not a
       low score for either detector.** (iii) The one real number: F fired on 0 of
-      84 rows, a false-positive rate of 0/81 over an independently labelled
-      negative set, Wilson [0.000, 0.045] — a SPECIFICITY reading, which settles
-      the half ADR-277 already discharged and nothing about the half it left open.
+      84 rows — a false-positive rate of **0 over the 16 LABELLED negatives,
+      Wilson [0.000, 0.194]**. The wider 0/81 denominator is NOT quotable and the
+      page retires it: 65 of those 81 rows carry no production path, so F cannot
+      fire on them under any behaviour, and they narrow the interval without
+      adding evidence. Either way it is a SPECIFICITY reading, which settles the
+      half ADR-277 already discharged and nothing about the half it left open.
       Why waiting does not fix it: the accrual channel is this suite's own
       governance work, whose base rate of untested production edits is at or near
       zero, and the 16 rows are not 16 independent observations — 4 distinct files,

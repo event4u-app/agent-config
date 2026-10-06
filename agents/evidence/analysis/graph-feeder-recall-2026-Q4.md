@@ -68,6 +68,15 @@ Procedure, once n ≥ 50 rows exist:
    one. (The paths are production-source only, per the filter above, so the
    truncation can no longer hide a production edit behind docs and tests; it can
    still hide the sixth production edit behind five others.)
+
+   **Truncation is the only cause of that inequality, and it is kept that way
+   on purpose.** An edit outside the workspace root is written as the literal
+   `<outside-workspace>` rather than dropped — so the lengths stay equal and
+   the exclusion rule above keeps meaning one thing. Dropping it would have
+   been a second cause wearing the first one's signal, and would have thrown
+   away a labellable in-repo path from a corpus blocked for want of rows. The
+   marker is also what a labeller needs in order to answer `cannot tell`
+   honestly instead of judging a turn whose out-of-tree half is invisible.
 2. For each row, the labeller answers one question: **did this turn change
    production code that no test exercises?** Yes / no / cannot tell. A
    `cannot tell` is dropped and replaced, and the count of drops is reported —
@@ -112,11 +121,21 @@ The last two rows are the reading. Everything else is context for them.
 
 ## Arm 2 was not measuring anything — the whole window is void
 
-Every accrued row that carried a path recorded `no-seeds`: 18 of 18 at draw
-time, 19 of 19 counting the rows later dropped as truncated. That is not the
-graph having nothing to say about those files. It is the feeder handing
-`untested` an **absolute** path while the graph keys its node ids on
+**19 rows carried a production path. 18 of them reached the graph at all, and
+all 18 recorded `no-seeds`.** The nineteenth never consulted the graph: its
+`graph_state` was `behind:0`, which the feeder skips by design, so it recorded
+`null`. Those are the only two values any path-carrying row has ever held.
+
+That is not the graph having nothing to say about those files. It is the feeder
+handing `untested` an **absolute** path while the graph keys its node ids on
 **repo-relative** ones, so `seedsForFiles` resolved nothing on every call.
+
+(An earlier version of this paragraph wrote "18 of 18 at draw time, 19 of 19
+counting the rows later dropped as truncated". The second figure was wrong —
+19 minus the 3 truncated drops is 16, not 18 — and the completion review of this
+change caught it against the draw table thirteen lines above. The split is
+18 consulted / 1 skipped, and the truncation drops are a separate axis that cuts
+across both.)
 
 Probed against the real index at `c58d7eae`, before the repair:
 
@@ -145,14 +164,20 @@ taken from the transcript.
 
 ## Arm 1 — the labelled corpus, and why recall is undefined
 
-The 16 labellable rows, labelled 2026-10-06 by the **AI council** — seats
-`anthropic` and `openai`, subscription transport, $0.0000 billed, quorum 2/2,
-response at `agents/runtime/council/responses/graph-feeder-labelling-2026-10-06.md`
-(gitignored and local; the labels are reproduced here because that file does not
-survive a clone). The seats were given `paths` and `path_count` and the grep
-evidence for how each file is reached from the test tree. `f`, `f_mode`,
-`graph`, `graph_untested` and `graph_tested` were withheld, and the prompt
-stated no expected outcome in either direction.
+The 16 labellable rows, labelled **2026-10-06 by the AI council** — seats
+`anthropic` and `openai`, quorum 2/2, subscription transport, $0.0000 billed.
+The seats were given `paths` and `path_count` and the grep evidence for how each
+file is reached from the test tree. `f`, `f_mode`, `graph`, `graph_untested` and
+`graph_tested` were withheld, and the prompt stated no expected outcome in
+either direction.
+
+The convergence is inlined below rather than cited by path, per
+`no-roadmap-references`: a council response lives under `agents/runtime/`, which
+is gitignored and auto-pruned, so a path to it is dead in every clone and would
+rot silently — `check_council_references.ts` excludes `agents/evidence/analysis`
+from its scan roots, so nothing would have failed the build over it. The labels
+and both seats' reasoning are reproduced here because here is the only place
+they survive.
 
 | row | session | turn | production paths | label |
 |---|---|---|---|---|
@@ -195,14 +220,27 @@ detectors and must never be quoted as one.
 The one number the corpus *does* support, reported because it is real and
 because the protocol asks for false positives on the same footing:
 
-| Arm | False positives | negatives | rate | 95 % Wilson |
-|---|---|---|---|---|
-| F | **0** | 81 kept rows, all negative (16 labelled + 65 by construction) | 0.000 | [0.000, 0.045] |
+| Arm | False positives | negatives | rate | 95 % Wilson | what the denominator is |
+|---|---|---|---|---|---|
+| F | **0** | **16** labelled | 0.000 | **[0.000, 0.194]** | rows a labeller actually judged |
+| F | 0 | 81 kept | 0.000 | [0.000, 0.045] | **not quotable — see below** |
+
+**The 16-row line is the reading. The 81-row line is reported only to be
+retired**, because an earlier version of this page published it as the result
+and the completion review was right to call that overstated precision. 65 of
+those 81 rows carry **no production path at all**, and detector F cannot fire on
+a turn with no production edit under any behaviour it could have — those are
+structurally null denominators. They narrow the interval from 0.194 to 0.045
+without adding one observation that could have gone the other way.
+
+Even the 16-row interval is generous. The clustering below means those are not
+16 independent observations either, so [0.000, 0.194] is an upper bound on what
+this corpus knows, not a measurement of a detector.
 
 This is a **specificity** reading, not a recall one. It is consistent with
-ADR-277's already-discharged false-positive half (0 in 335 turns) and adds an
-independently labelled negative set to it. It settles nothing about recall,
-which is the half ADR-277 left open and the half this page exists for.
+ADR-277's already-discharged false-positive half (0 in 335 turns) and adds 16
+independently labelled negatives to it. It settles nothing about recall, which
+is the half ADR-277 left open and the half this page exists for.
 
 ## Why the corpus has no positives, and why that is not a corpus you can fix by waiting
 
