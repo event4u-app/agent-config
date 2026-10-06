@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 60b92e5f6e8d344d477f2be2fbe5396e919e0b05, review
-  artefacts excluded), scope hash `936d3f8219f096652f48fef44446304c46134e51a01c9c62c0a8bb312e4f733c`
+- diff: `diff.patch` — the review scope (branch head d5253057808b0eb0ef4c869cdf5f4a8848097294, review
+  artefacts excluded), scope hash `e58f6d41c888941fc19ca319ba7beecd17f3ed08ea9d8165203780fbc2965b19`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -30,7 +30,6 @@ Changed files:
 - agents/evidence/analysis/graph-feeder-latency-2026-Q4.md
 - agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
 - package-lock.json
-- package.json
 - src/scripts/_lib/graph_feeder_record.ts
 - src/scripts/bench_graph_feeder_latency.ts
 - tests/scripts/bench_graph_feeder_latency.test.ts
@@ -55,7 +54,7 @@ Fill the findings table in `drain-road-to-a-graph-that-feeds-the-gate-20261006c.
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 936d3f8219f096652f48fef44446304c46134e51a01c9c62c0a8bb312e4f733c, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope e58f6d41c888941fc19ca319ba7beecd17f3ed08ea9d8165203780fbc2965b19, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel

@@ -201,18 +201,9 @@ index 30ee500cc890322d8042ebf237dd2aa3d4502ca3..d536022ba9191def5b30ed847ef24d3a
  ## Acceptance criteria
  
 diff --git a/package-lock.json b/package-lock.json
-index dadd48ba31066fb98e69ea185fdd1d9bc35763ef..716cb23c8245ef199ee448d7857dda6427ec95f0 100644
+index dadd48ba31066fb98e69ea185fdd1d9bc35763ef..87d983688d7ef2748e65ffbe9486ddb0d30b0dc4 100644
 --- a/package-lock.json
 +++ b/package-lock.json
-@@ -10,7 +10,7 @@
-             "license": "MIT",
-             "dependencies": {
-                 "@fastify/static": "^10.1.2",
--                "@modelcontextprotocol/sdk": "^1.30.0",
-+                "@modelcontextprotocol/sdk": "^1.32.1",
-                 "@preact/signals": "^2.10.0",
-                 "commander": "^15.0.0",
-                 "execa": "^9.5.0",
 @@ -1764,9 +1764,9 @@
              }
          },
@@ -226,19 +217,6 @@ index dadd48ba31066fb98e69ea185fdd1d9bc35763ef..716cb23c8245ef199ee448d7857dda64
              "license": "MIT",
              "dependencies": {
                  "@hono/node-server": "^1.19.9 || ^2.0.5",
-diff --git a/package.json b/package.json
-index 0932937fac83c02bd9453ddfe9c8ae25a0f1f36c..15089238323234c950858aa67eb0dcda6c816556 100644
---- a/package.json
-+++ b/package.json
-@@ -127,7 +127,7 @@
-     },
-     "dependencies": {
-         "@fastify/static": "^10.1.2",
--        "@modelcontextprotocol/sdk": "^1.30.0",
-+        "@modelcontextprotocol/sdk": "^1.32.1",
-         "@preact/signals": "^2.10.0",
-         "commander": "^15.0.0",
-         "execa": "^9.5.0",
 diff --git a/src/scripts/_lib/graph_feeder_record.ts b/src/scripts/_lib/graph_feeder_record.ts
 index 7b0aa8eb1d508224ff44712102ea1d9536c54ec6..111ec312ea673fdca5696ee798d7ec851597d228 100644
 --- a/src/scripts/_lib/graph_feeder_record.ts
