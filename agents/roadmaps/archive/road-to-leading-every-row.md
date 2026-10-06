@@ -97,11 +97,11 @@ loop whose observer ships disabled. Named once so no later round re-derives them
 
 - [x] **1.1 This file exists at the path the two active lanes cite.** No content change
       to the citing lanes; the finding was the absence.
-      verify: `test -f agents/roadmaps/road-to-leading-every-row.md` -> 0
+      verify: `test -f agents/roadmaps/archive/road-to-leading-every-row.md` -> 0
 - [x] **1.2 Every receiver in the row table exists at the pin.** The supplied loop's
       regex `road-to-[a-z-]+` stops at the first digit and reported the parked file as
       missing on every run; the corrected pattern admits digits.
-      verify: `for s in $(grep -oE 'road-to-[a-z0-9-]+' agents/roadmaps/road-to-leading-every-row.md | sort -u); do find agents/roadmaps -name "$s.md" | grep -q . || echo MISSING $s; done` -> /^$/
+      verify: `for s in $(grep -oE 'road-to-[a-z0-9-]+' agents/roadmaps/archive/road-to-leading-every-row.md | sort -u); do find agents/roadmaps -name "$s.md" | grep -q . || echo MISSING $s; done` -> /^$/
 - [x] **1.3 Record the commit mix at this pin as the programme's baseline.** At
       `9bc8cd4` the top `feat|fix` scopes over the last 400 commits are `hooks` 11,
       `roadmap` 10, `scripts` 8, `install` 8, `gates` 6, against `skills` 1. The figure
@@ -124,10 +124,16 @@ loop whose observer ships disabled. Named once so no later round re-derives them
       carries a recommendation and the cost of no decision; a question unasked keeps its
       marker and the lanes that depend on it land their unblocked phases regardless.
       <!-- blocked-by: b4-benchmark-subject-names | asked: yes — all seven put to the owner verbatim 2026-10-01 in the PR body of the drain run that closed this phase; each blocker keeps its own Status until the owner answers it. Repointed 2026-10-06 from b1-subagent-return, which resolved that day: this step records the ASK, so its marker names a blocker the owner has still not answered rather than one that is closed -->
-      verify: `grep -c 'asked: yes' agents/roadmaps/road-to-leading-every-row.md` -> /[1-9]/
-- [ ] **3.2 Record each answer as a `## Decisions` row in the lane or stub it unblocks**,
+      verify: `grep -c 'asked: yes' agents/roadmaps/archive/road-to-leading-every-row.md` -> /[1-9]/
+- [x] **3.2 Record each answer as a `## Decisions` row in the lane or stub it unblocks**,
       not here. This file keeps questions; lanes keep decisions.
-      <!-- blocked-by: b5-skill-growth-for-stacks | asked: yes — put to the owner 2026-10-01 and unanswered at 2026-10-06; re-confirmed owner-reserved by AI council 3/4 that day. D3 of the stacks lane cannot stop reading PENDING until the owner answers b5, and D1 of the neighbours lane cannot until the owner answers the two ranks b6 still carries -->
+      <!-- closed 2026-10-06: b5 and b6 were answered by the owner in #2222; D3 of the stacks lane and D1 of the neighbours lane no longer read PENDING. Measured with the precise form below: `grep -c '^| D3 .*PENDING'` -> 0 and `grep -c '^| D1 .*PENDING'` -> 0. The bare oracle still counts the stacks lane's own quoted command (`later/road-to-stacks-beyond-php.md:127`) and was deliberately not repaired here, per the council condition recorded in the hand-over below -->
+      **Closed 2026-10-06.** The owner answered `b5` and `b6` (PR #2222); D3 of
+      `later/road-to-stacks-beyond-php.md` and D1 of
+      `road-to-neighbours-that-pull-their-weight.md` both carry the owner decision and
+      neither reads `PENDING`. The remaining `PENDING` hit is the stacks lane's quoted
+      grep command, not a row. The hand-over below is kept as the record of how the step
+      got here.
       verify: `grep -c 'PENDING' agents/roadmaps/later/road-to-stacks-beyond-php.md agents/roadmaps/road-to-neighbours-that-pull-their-weight.md` -> /:0$/
 
       **Hand-over, measured 2026-10-06 against `origin/main` `6b79d06de`.** Every blocker
@@ -356,7 +362,7 @@ K17–K22 for different items, which are renumbered K27–K32 here so one ID mea
 - **Second-order effect, surfaced rather than absorbed:** the dated code reading moves ADR-088 from `E0` to `E1` in `agents/evidence/analysis/adr-evidence-census-2026-08.md`, regenerated in the same change. The grade rose on a **measurement**, which is the legitimate path; council markers cannot raise a grade above `E0` by construction. Per `decision-revisit-gate`, a grade is a measurement and grants nothing — ADR-088 reopens no further than this note.
 
 ### blocker: b8-adr-278-federation
-- **Status:** open — owner answered (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D6); closes when the federation ADR is authored with the four answers, which is agent work and no longer a question. ADR-278 was taken on 2026-10-05 by an unrelated record, so the ADR takes the next free number and is found by its slug
+- **Status:** resolved 2026-10-06 — the owner answered (a) (D6) and the record is authored as `docs/decisions/ADR-280-capability-federation-behind-a-trust-contract.md` with the four answers exactly as D6 states them; ADR-278 was taken on 2026-10-05 by an unrelated record, so the ADR took the next free number and is found by its slug. `provenance.kind` is `human` with `decision_makers: [owner]`, the schema having no `owner` kind. The record ships no invocation — that stays the parked lane's work
 - **Owner:** user
 - **Blocks:** Phase 3 — Owner decisions, then nothing else here
 - **Question:** Does the owner author ADR-278, the ADR that ADR-088 § 3 (`:95-105`) requires before any neighbour capability is invoked, answering (a) identity, (b) generic design, (c) maintenance model, (d) trust contract?
