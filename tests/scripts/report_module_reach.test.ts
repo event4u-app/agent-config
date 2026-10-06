@@ -272,9 +272,14 @@ describe('the four groups, over the unreferenced-by-name set', () => {
         );
         const { modules } = analyseModuleReach(root);
         const m = modules.find((x) => x.name === 'past_subheading');
-        // Must NOT read as `open-or-deferred-step` evidence for the 1.1 step —
-        // a level-4 heading has to reset the tracker exactly as 1-3 do.
-        expect(m?.group).not.toBe('open-or-deferred-step');
+        // Exact value, not a negative assertion (an R2 review found the
+        // negative form here would survive a worse regression too — the
+        // mention silently dropping out of the roadmap entirely and landing
+        // in `named-in-none` also satisfies `not.toBe('open-or-deferred-step')`,
+        // which is exactly the sibling "R2 finding 1" test's own standard just
+        // above). A level-4 heading has to reset the tracker exactly as 1-3
+        // do, landing the mention as prose outside any step.
+        expect(m?.group).toBe('named-outside-open-step');
     });
 
     it('group 3 — named in a parked (later/) roadmap counts too', () => {
