@@ -3,8 +3,8 @@
 # Graph feeder latency — 2026 Q4
 
 **The feeder's cost on the stop slot, measured 2026-10-06 at `e3c30fc9d`.** On a
-generated fixture repository the shadow arm adds **p50 ≈ 36 ms, p95 ≈ 55 ms**
-(200 modules) and **p50 ≈ 49 ms, p95 ≈ 71 ms** (2,000 modules) to a stop hook
+generated fixture repository the shadow arm adds **p50 ≈ 42 ms, p95 ≈ 50 ms**
+(200 modules) and **p50 ≈ 51 ms, p95 ≈ 66 ms** (2,000 modules) to a stop hook
 whose own work is under 1 ms. Over this repository's real graph the feeder's
 work alone is **p50 ≈ 884 ms, p95 ≈ 1,007 ms** — the generated fixture prices
 the walk, and the real index prices the load, which is the larger term by an
@@ -37,7 +37,11 @@ that, because both of its runs complete.
   the edit uncommitted (`graphState` = `edited`, the full feeder path: git
   freshness probes, graph open, `untested` walk, row append). `without` is the
   identical tree with no graph cache, where the feeder stops at `absent`.
-- **Interleaved**, one call per arm per round, so machine drift lands on both.
+- **Interleaved, order alternating per round**, so machine drift and order
+  effects (GC after the heavier arm, cache warmth) land on both arms. The first
+  publication of this page ran a fixed with-then-without order; the R2 review
+  flagged the order bias and the fixture readings below were re-taken after the
+  fix.
 - **A third reading**, the feeder's own work (`graphState` +
   `graphUntestedVerdict`) timed directly, because the difference of two noisy
   totals is a weaker number than a direct one.
@@ -53,11 +57,11 @@ risk register's rank 5 names why that matters.
 
 | arm | n | p50 ms | p95 ms | max ms |
 |---|---|---|---|---|
-| stop hook, with feeder | 50 | 36.24 | 55.64 | 61.14 |
-| stop hook, without feeder | 50 | 0.56 | 1.02 | 1.43 |
-| feeder work alone | 50 | 34.89 | 42.06 | 43.24 |
+| stop hook, with feeder | 50 | 42.61 | 51.03 | 66.48 |
+| stop hook, without feeder | 50 | 0.61 | 1.00 | 2.26 |
+| feeder work alone | 50 | 40.64 | 45.35 | 46.66 |
 
-Delta: p50 35.68 ms, p95 54.62 ms. Exit codes: `[1]` in both arms.
+Delta: p50 42.00 ms, p95 50.03 ms. Exit codes: `[1]` in both arms.
 
 `./scripts-run src/scripts/bench_graph_feeder_latency --runs 50 --files 200`
 
@@ -65,11 +69,11 @@ Delta: p50 35.68 ms, p95 54.62 ms. Exit codes: `[1]` in both arms.
 
 | arm | n | p50 ms | p95 ms | max ms |
 |---|---|---|---|---|
-| stop hook, with feeder | 50 | 49.44 | 71.91 | 83.32 |
-| stop hook, without feeder | 50 | 0.59 | 0.91 | 1.23 |
-| feeder work alone | 50 | 47.80 | 66.97 | 76.06 |
+| stop hook, with feeder | 50 | 52.03 | 66.73 | 67.75 |
+| stop hook, without feeder | 50 | 0.58 | 0.88 | 2.00 |
+| feeder work alone | 50 | 57.71 | 65.03 | 68.82 |
 
-Delta: p50 48.85 ms, p95 71.00 ms. Exit codes: `[1]` in both arms.
+Delta: p50 51.45 ms, p95 65.85 ms. Exit codes: `[1]` in both arms.
 
 `./scripts-run src/scripts/bench_graph_feeder_latency --runs 50 --files 2000`
 
@@ -98,11 +102,14 @@ the 59 MB JSON cache. The `untested` walk itself is the small remainder.
   barely move from 200 to 2,000 modules, because a small index loads fast; the
   real repository costs ~20× more because its cache is 59 MB. A consumer with a
   larger graph pays more again, per stop, for a verdict nothing acts on yet.
-- **No reading comes near a kill-bound this tree controls.** The in-process
-  dispatcher route has no kill-timeout at all (`dispatch_hook.ts`: "a slow concern
-  is bounded on neither route"), and the spawn route's `SPAWN_TIMEOUT_MS` is
-  30,000 ms (`concern_failure_policy.ts`) — the real-repository p95 is about 3 % of
-  it. The installer writes no per-hook `timeout`, so a host's own default
+- **No reading comes near a kill-bound this tree controls.** The two dispatch
+  routes differ. The in-process route — the default — has no kill-timeout: a
+  kill cannot preempt synchronous in-process code. The spawn route
+  (`AGENT_CONFIG_HOOKS_ISOLATED=1`) keeps the historical kill-timeout
+  `SPAWN_TIMEOUT_MS` = 30,000 ms (`concern_failure_policy.ts`). Neither route
+  has an SLA-derived bound: the `sla_ms × 3` clause was tried and not landed,
+  which is what `dispatch_hook.ts` means by "a slow concern is bounded on
+  neither route". The real-repository p95 is about 3 % of the 30 s kill. The installer writes no per-hook `timeout`, so a host's own default
   applies; this page does not quote that number because it was not measured
   here. The risk the module header named is real in shape and, at these sizes,
   not close in magnitude.
@@ -114,10 +121,16 @@ the 59 MB JSON cache. The `untested` walk itself is the small remainder.
 
 Promoting the graph verdict into F (step 3.4) moves this cost from a shadow
 measurement onto the gate's decision path. The stated precondition, carried
-into that step's text: **the feeder's p95 on the stop slot, measured by this
-instrument on the repository in question, is reported beside the promotion, and
-the real-repository reading here — p95 ≈ 1,007 ms, of which ≈ 634 ms is
-loading the cache — is the baseline it is compared against.** A promotion that
+into that step's text: **the feeder's work alone, measured by this
+instrument's `--repo P --edit F` mode on the repository in question, is
+reported beside the promotion as its stop-slot increment, and the
+real-repository reading here — p95 ≈ 1,007 ms, of which ≈ 634 ms is loading the
+cache — is the baseline it is compared against.** Feeder work alone stands in
+for the stop-slot increment because the fixture arms show the stop's own work
+is under 1 ms and the with-minus-without delta tracks the feeder-alone reading
+within a few milliseconds. `--repo` deliberately does not run the whole hook
+over a real repository: that would append rows to the repository's own feeder
+record, which is the corpus `graph-feeder-recall-2026-Q4.md` labels. A promotion that
 does not first cut the load term (a cached or incremental open) inherits about
 a second per stop.
 
