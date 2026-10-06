@@ -540,11 +540,9 @@ export function resolveLayerOwnership(opts: OwnershipOptions): OwnershipResoluti
             // A corrupt or unreadable inventory is no evidence, never a failure.
         }
     }
-    let fromDeploy = 0;
     for (const [anchor, rels] of opts.thisDeploy ?? new Map()) {
         for (const rel of rels) {
             const abs = path.resolve(anchor, rel);
-            if (!recorded.has(abs)) fromDeploy += 1;
             recorded.set(abs, null);
             // Both spellings, for the reason `recorded_absolute_files` states:
             // the reader compares against a lexically joined path, and a HOME
@@ -558,8 +556,12 @@ export function resolveLayerOwnership(opts: OwnershipOptions): OwnershipResoluti
     }
     if (recorded.size === 0) return { recorded: NO_RECORDED_HASHES, source: 'none' };
     // Named for what actually supplied the evidence, so a reader can tell a
-    // first install (nothing recorded yet) from a later one.
-    return { recorded, source: fromInventory > 0 || fromDeploy === 0 ? 'global-inventory' : 'this-deploy' };
+    // FIRST install — where the inventory on disk is still empty and the
+    // installer's own file set is the only evidence there is — from a later
+    // one. The inventory wins the label whenever it contributed anything,
+    // because past this line `recorded` is non-empty: if the inventory gave
+    // nothing, every path in it came from this deploy.
+    return { recorded, source: fromInventory > 0 ? 'global-inventory' : 'this-deploy' };
 }
 
 export interface ReportOptions {

@@ -12655,11 +12655,9 @@ function resolveLayerOwnership(opts) {
     } catch {
     }
   }
-  let fromDeploy = 0;
   for (const [anchor, rels] of opts.thisDeploy ?? /* @__PURE__ */ new Map()) {
     for (const rel of rels) {
       const abs = path24.resolve(anchor, rel);
-      if (!recorded.has(abs)) fromDeploy += 1;
       recorded.set(abs, null);
       try {
         recorded.set(fs25.realpathSync(abs), null);
@@ -12668,7 +12666,7 @@ function resolveLayerOwnership(opts) {
     }
   }
   if (recorded.size === 0) return { recorded: NO_RECORDED_HASHES, source: "none" };
-  return { recorded, source: fromInventory > 0 || fromDeploy === 0 ? "global-inventory" : "this-deploy" };
+  return { recorded, source: fromInventory > 0 ? "global-inventory" : "this-deploy" };
 }
 function ownershipLine(source) {
   switch (source) {
