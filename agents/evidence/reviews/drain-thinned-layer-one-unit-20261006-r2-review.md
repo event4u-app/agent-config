@@ -1,7 +1,13 @@
-# Findings: drain-thinned-layer-one-unit-20261006
+# Findings: drain-thinned-layer-one-unit-20261006 — ROUND 2 (superseded)
+
+> Archived 2026-10-06. Reviewed scope `34677233…` at head `485f3512e`. Every
+> row carries a terminal disposition and a reason; finding 10 is
+> `accepted-risk` with the measurement that shows its proposed remedy is a
+> no-op. Acting on these findings changed reviewed content, which forces a
+> re-review by contract 2.1, so round 3 binds to the resulting head.
 <!-- completion-review: v1 | reviewed: 2026-10-06 | scope: 34677233165368a76549b5f19cea7ef6354eda8027449117279ca3f572e20878 | diff: 485f3512eccdb69cf39856ab3eedc41d4ae2d107 | reviewer: r2-fresh-subagent-drain-thinned-layer-one-unit-20261006 | prompt_hash: f2056de57da85904804730b461fb35a603793359a1353e0acce651f712ee2a41 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-thinned-layer-one-unit-20261006"]}} -->
-<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-06 -->
+<!-- evidence-type: v1 | type: original-review | declared: 2026-10-06 -->
 
 <!-- context-manifest: v1
 inputs:
