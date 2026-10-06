@@ -332,14 +332,29 @@ describe('4.1 census — the estate figures the roadmap pinned', () => {
         expect(levelOf('agents/roadmaps/later/road-to-z.md')).toBe('later');
     });
 
+    // Re-derived 2026-10-06 against `a75bb3210`. The pin moved because #2222
+    // retained two source links the sanctioned way - as `ENC1:` tokens in a
+    // Provenance block - inside an ACTIVE roadmap
+    // (`road-to-a-graph-that-feeds-the-gate.md`). That is what
+    // `source-confidentiality` asks an anonymized harvest roadmap to do, so the
+    // estate changed legitimately and the pin follows it. One file, two tokens,
+    // and every figure below moves by exactly that: +2 occurrences, +2 unique,
+    // +1 file, and `active` 0 -> 1.
+    //
+    // `active: 0` was a measured fact at pin time, never a policy that an active
+    // roadmap may carry no token - the script's whole job is to find `ENC1:`
+    // tokens, and the estate's convention puts them in tracked, active files.
+    // Updating this block costs no sensitivity: per the header above, the census
+    // is NOT the sensitive test of the extraction bound; the fixtures are, and
+    // none of them is touched here.
     it('reproduces the hand-derived census over the real estate', () => {
         const c = census(discover(REPO));
-        expect(c.occurrences).toBe(149);
-        expect(c.uniqueTokens).toBe(117);
-        expect(c.files).toBe(63);
+        expect(c.occurrences).toBe(151);
+        expect(c.uniqueTokens).toBe(119);
+        expect(c.files).toBe(64);
         expect(c.byLevel.archive).toBe(57);
         expect(c.byLevel.later).toBe(6);
-        expect(c.byLevel.active).toBe(0);
+        expect(c.byLevel.active).toBe(1);
     });
 });
 
