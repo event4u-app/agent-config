@@ -1,0 +1,15 @@
+{
+  "skill": "merge-conflicts",
+  "last_eval": "2026-10-06",
+  "description": "4 should-trigger + 4 should-not-trigger. Should-trigger covers resolving conflict markers, conflicts during a rebase, choosing a side safely, and a German phrasing. Should-not-trigger covers near-miss neighbours (bringing a branch up to date without a conflict, squashing pushed history, merging a PR into main) plus one unrelated counterexample.",
+  "queries": [
+    {"q": "resolve the merge conflict in src/exporter.ts", "trigger": true, "class": "exemplar"},
+    {"q": "my rebase stopped with conflicts, how do I continue?", "trigger": true, "class": "exemplar"},
+    {"q": "which side do I keep in this <<<<<<< HEAD block?", "trigger": true, "class": "exemplar"},
+    {"q": "ich habe einen Konflikt beim Rebase, wie löse ich den?", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "update my feature branch with the latest main", "trigger": false, "class": "near-miss", "note": "choosing merge vs rebase for an update is git-workflow's branch-update reference; no conflict exists yet"},
+    {"q": "squash the last two pushed commits", "trigger": false, "class": "near-miss", "note": "history rewriting is git-history-discipline, not conflict resolution"},
+    {"q": "merge PR 42 into main", "trigger": false, "class": "near-miss", "note": "landing a PR is /pr:merge"},
+    {"q": "write a unit test for the price calculator", "trigger": false, "class": "counterexample"}
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "skill": "conventional-commits-writing",
+  "last_eval": "2026-10-06",
+  "description": "4 should-trigger + 4 should-not-trigger. Should-trigger covers writing a commit message, placing a ticket id per git.commit_format, reviewing a subject, and a German phrasing. Should-not-trigger covers near-miss neighbours (git workflow / PR creation, rewriting already-pushed history, branch naming for a worktree) plus one unrelated counterexample.",
+  "queries": [
+    {"q": "write a commit message for these staged changes", "trigger": true, "class": "exemplar"},
+    {"q": "where does the ticket id go: DEV-1234 feat(api): ... or feat(DEV-1234): ...?", "trigger": true, "class": "exemplar"},
+    {"q": "is 'fix: changes' a good commit subject?", "trigger": true, "class": "exemplar"},
+    {"q": "schreib mir eine Commit-Nachricht mit Ticketnummer vorne", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "push this branch and open a pull request", "trigger": false, "class": "near-miss", "note": "PR creation and the push flow belong to git-workflow, not to message writing"},
+    {"q": "squash my last three pushed commits into one", "trigger": false, "class": "near-miss", "note": "rewriting published history is git-history-discipline's territory"},
+    {"q": "create a worktree for the export ticket", "trigger": false, "class": "near-miss", "note": "branch and worktree creation is /worktree:create, not commit-message authoring"},
+    {"q": "how do I paginate a REST endpoint?", "trigger": false, "class": "counterexample"}
+  ]
+}

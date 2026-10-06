@@ -1,0 +1,15 @@
+{
+  "skill": "jira-integration",
+  "last_eval": "2026-10-06",
+  "description": "4 should-trigger + 4 should-not-trigger. Should-trigger covers reading and updating a Jira issue, a JQL query, and a German phrasing. Should-not-trigger covers near-miss neighbours (writing a commit subject that merely contains a ticket id, opening a GitHub PR, estimating a ticket's size) plus one unrelated counterexample.",
+  "queries": [
+    {"q": "check Jira for DEV-1234 and summarise the ticket", "trigger": true, "class": "exemplar"},
+    {"q": "run a JQL query for my open bugs this sprint", "trigger": true, "class": "exemplar"},
+    {"q": "move DEV-1234 to In Review", "trigger": true, "class": "exemplar"},
+    {"q": "leg ein Jira-Ticket für den Exportfehler an", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "write the commit message for DEV-1234", "trigger": false, "class": "near-miss", "note": "a ticket id inside a commit subject is conventional-commits-writing, not a Jira call"},
+    {"q": "open the pull request for this branch", "trigger": false, "class": "near-miss", "note": "PR creation is /create-pr and git-workflow, even when the PR links a ticket"},
+    {"q": "how big is ticket DEV-1234, should we split it?", "trigger": false, "class": "near-miss", "note": "sizing a ticket is estimate-ticket"},
+    {"q": "optimise this SQL query", "trigger": false, "class": "counterexample"}
+  ]
+}
