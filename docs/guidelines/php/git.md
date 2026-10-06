@@ -175,8 +175,8 @@ Before writing the commit message:
 
 ## Pull Requests
 
-- PR title follows commit message format: `feat(DEV-1234): short description`
-  (or `DEV-1234 feat(area): short description` under `ticket-prefix`)
+- PR title as `/create-pr:description-only` § 3 builds it — `DEV-1234: short
+  description` by default, a full commit subject under `ticket-prefix`
 - Bring the branch up to date per `git.update_strategy` — merge the base in
   (default) or rebase onto `origin/main` and push with `--force-with-lease`;
   see `git-workflow` › `references/branch-update.md`

@@ -104,7 +104,7 @@ Work complete. What would you like to do?
    verify → re-check freshness (this repo wires it as a `push-ready` task target;
    a consumer wires its own). Not optional housekeeping: see § A push closes its
    own loop. A stale push is refused, so skipping this buys the refusal.
-3. `git push -u origin <branch>`.
+3. `git push -u origin <branch>` — after a rebase of a pushed branch, `--force-with-lease` per `references/branch-update.md`.
 4. `gh pr create` using PR template.
 5. **Settle it** — the turn is not over at step 4:
    `npx tsx node_modules/@event4u/agent-config/src/scripts/ci_settle.ts <pr>`

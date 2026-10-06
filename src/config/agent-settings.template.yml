@@ -433,7 +433,7 @@ git:
 
   # Shape of a branch name the agent creates. Placeholders: {type}, {ticket},
   # {slug}. Ticket-named branches: "{ticket}-{slug}". An empty placeholder is
-  # dropped with one adjacent separator.
+  # dropped with the separator after it (before it, when last).
   branch_pattern: "{type}/{slug}"
 
   # How a feature branch is brought up to date with its base.

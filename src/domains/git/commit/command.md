@@ -61,11 +61,14 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
   `[A-Z][A-Z0-9]+-[0-9]+`, wherever it sits (`feat/DEV-1234/...`,
   `DEV-1234-device-export`, `fix/DEV-1234-quantity` → `DEV-1234`). The match
   never depends on `git.branch_pattern`, so a branch named before the pattern
-  was set still yields its ticket. A standard name that fits the shape
-  (`UTF-8`, `ISO-8601`, `SHA-256`) is not a ticket — skip it and take the next match.
-- Read `git.commit_format` (`agent-config settings:get git.commit_format`) once;
-  it decides where the ticket goes (see the conventional-commits-writing skill,
-  § Place the ticket).
+  was set still yields its ticket. A token whose prefix is `UTF`, `ISO`, `SHA`
+  or `RFC` (`UTF-8`, `ISO-8601`, `SHA-256`) is a standard name, not a ticket —
+  skip it and take the next match.
+- Establish the convention in force once, per the conventional-commits-writing
+  skill § Establish the house convention: a repository config (commitlint, a
+  `commit-msg` hook) first, then a declared `git.commit_format: ticket-prefix`,
+  then an approved measured convention. `git.commit_format` decides where the
+  ticket goes only where nothing above it applies.
 - If no ticket ID is found in the branch name, ask the user:
   ```
   > No Jira ticket found in branch name. Do you want to include one?
@@ -127,12 +130,12 @@ from `.agent-settings.yml`. Both default to `false`.
 **Terse path** — `preview_artifacts: false` AND `routine_confirmations: false`:
 
 1. Validate every generated commit message against the regex for the
-   configured `git.commit_format`:
+   convention in force (step 2); a repository config's own rule replaces these:
    - `ticket-scope` (default):
      `^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`
    - `ticket-prefix`:
-     `^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`
-     — and additionally invalid when a ticket id stands in the scope.
+     `^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(?!\([A-Z][A-Z0-9]+-[0-9]+\))(\([^)]+\))?!?: .+`
+     — the lookahead rejects a ticket id standing in the scope.
 2. **All messages valid** → skip the preview block and the confirmation
    prompt. Print one line summarising the plan and proceed to step 6:
 

@@ -77,7 +77,8 @@ git merge {parent-branch} --no-edit
   commit on a feature branch is what that setting excludes, and this command
   must not leave one behind to be pushed later. Check the target branch back
   out, report which branches are behind their parent, and finish without error
-  — the review then runs against `git merge-base HEAD <parent-branch>`, the
+  — the review then runs against `git merge-base HEAD origin/<parent-branch>`
+  (the remote ref step 4 fetched; a local branch may be missing or stale), the
   target's direct parent in the chain, so parent PRs stay out of it. Updating the
   chain is a rebase the user asks for
   ([`branch-update`](../../../skills/git-workflow/references/branch-update.md)).

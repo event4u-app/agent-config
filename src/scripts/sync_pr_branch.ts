@@ -852,10 +852,11 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
 }
 
 /**
- * `git.update_strategy` for the repository, trimmed and lower-cased. Absent or
- * unreadable reads as `merge`, the behaviour before the key existed; any other
- * present value — including a typo — is returned as-is and is NOT `merge`, so a
- * misconfiguration refuses the merge instead of silently performing it.
+ * `git.update_strategy` for the repository, trimmed and lower-cased. Absent
+ * reads as `merge`, the behaviour before the key existed, and so does a settings
+ * file the loader cannot read at all — the same default every other key falls
+ * back to. A readable value other than `merge`, a typo included, is returned
+ * as-is and refuses the merge instead of silently performing it.
  */
 export function updateStrategy(repo: string): string {
     let value: unknown;
