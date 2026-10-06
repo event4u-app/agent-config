@@ -79,7 +79,15 @@
                 "code-comment-discipline.no-restating-comments",
                 "code-comment-discipline.no-signature-mirror-docblock",
                 "code-comment-discipline.no-provenance-comments"
-            ]
+            ],
+            "bindings": {
+                "validator:src/scripts/lint_code_comments.ts": [
+                    "code-comment-discipline.no-provenance-comments"
+                ],
+                "hook:comment-discipline": [
+                    "code-comment-discipline.no-provenance-comments"
+                ]
+            }
         },
         "code-provenance": {
             "obligations": [
@@ -275,7 +283,12 @@
         "framework-neutrality-in-generic-skills": {
             "obligations": [
                 "framework-neutrality-in-generic-skills.no-framework-mandate-in-generic-artifacts"
-            ]
+            ],
+            "bindings": {
+                "validator:src/scripts/lint_framework_leakage.ts": [
+                    "framework-neutrality-in-generic-skills.no-framework-mandate-in-generic-artifacts"
+                ]
+            }
         },
         "git-history-discipline": {
             "obligations": [
@@ -283,7 +296,12 @@
                 "git-history-discipline.rewrite-pairs-with-repush",
                 "git-history-discipline.never-drop-inherited-commits",
                 "git-history-discipline.no-hook-bypass"
-            ]
+            ],
+            "bindings": {
+                "hook:block-no-verify": [
+                    "git-history-discipline.no-hook-bypass"
+                ]
+            }
         },
         "guidelines": {
             "obligations": [
@@ -345,7 +363,10 @@
         "lethal-trifecta-guard": {
             "obligations": [
                 "lethal-trifecta-guard.break-a-leg-or-gate-egress"
-            ]
+            ],
+            "bindings": {
+                "validator:src/scripts/lint_skill_frontmatter_safety.ts": []
+            }
         },
         "linked-projects-onboarding-gate": {
             "obligations": [
@@ -366,7 +387,10 @@
         "media-governance-routing": {
             "obligations": [
                 "media-governance-routing.consult-media-policies-before-prompt"
-            ]
+            ],
+            "bindings": {
+                "validator:src/scripts/lint_media_policy_linkage.ts": []
+            }
         },
         "media-sync-ground-truth": {
             "obligations": [
@@ -420,7 +444,15 @@
             "obligations": [
                 "no-roadmap-references.no-roadmap-file-links",
                 "no-roadmap-references.no-council-artefact-links"
-            ]
+            ],
+            "bindings": {
+                "validator:src/scripts/check_no_roadmap_refs.ts": [
+                    "no-roadmap-references.no-roadmap-file-links"
+                ],
+                "validator:src/scripts/check_council_references.ts": [
+                    "no-roadmap-references.no-council-artefact-links"
+                ]
+            }
         },
         "notes-first-reasoning": {
             "obligations": [
@@ -436,7 +468,12 @@
             "obligations": [
                 "output-discipline.no-placeholder-prose",
                 "output-discipline.paused-marker-on-overflow"
-            ]
+            ],
+            "bindings": {
+                "validator:src/scripts/lint_output_slop.ts": [
+                    "output-discipline.no-placeholder-prose"
+                ]
+            }
         },
         "package-ci-checks": {
             "obligations": [
@@ -449,7 +486,12 @@
                 "persona-governance.skill-citation-floor",
                 "persona-governance.deprecation-candidate-when-full",
                 "persona-governance.schema-conformance"
-            ]
+            ],
+            "bindings": {
+                "validator:src/scripts/lint_persona_governance.ts": [
+                    "persona-governance.per-domain-specialist-cap"
+                ]
+            }
         },
         "php-coding": {
             "obligations": [
@@ -476,7 +518,15 @@
                 "preservation-guard.fences-byte-for-byte",
                 "preservation-guard.no-weakening",
                 "preservation-guard.no-scope-broadening"
-            ]
+            ],
+            "bindings": {
+                "validator:src/scripts/check_condensation.ts": [
+                    "preservation-guard.every-passage-stays",
+                    "preservation-guard.iron-law-headings-verbatim",
+                    "preservation-guard.fences-byte-for-byte"
+                ],
+                "validator:src/scripts/skill_linter.ts": []
+            }
         },
         "provider-lifecycle-discipline": {
             "obligations": [
@@ -555,7 +605,12 @@
                 "secret-vcs-guard.detect-show-ask-offer",
                 "secret-vcs-guard.never-silently-strip",
                 "secret-vcs-guard.rotate-first-when-in-history"
-            ]
+            ],
+            "bindings": {
+                "validator:src/scripts/check_secret_leak.ts": [
+                    "secret-vcs-guard.no-credential-in-tracked-file"
+                ]
+            }
         },
         "security-sensitive-stop": {
             "obligations": [
@@ -609,7 +664,12 @@
         "skill-quality": {
             "obligations": [
                 "skill-quality.executable-validated-self-contained-skills"
-            ]
+            ],
+            "bindings": {
+                "validator:src/scripts/skill_linter.ts": [
+                    "skill-quality.executable-validated-self-contained-skills"
+                ]
+            }
         },
         "slash-command-routing-policy": {
             "obligations": [
@@ -621,7 +681,12 @@
                 "source-confidentiality.no-derivation-attribution",
                 "source-confidentiality.encrypted-source-links",
                 "source-confidentiality.anonymized-tracked-harvest-roadmaps"
-            ]
+            ],
+            "bindings": {
+                "validator:src/scripts/check_no_external_sources.ts": [
+                    "source-confidentiality.no-derivation-attribution"
+                ]
+            }
         },
         "source-discovery-gate": {
             "obligations": [
@@ -633,7 +698,13 @@
             "obligations": [
                 "source-of-truth.no-edits-in-projections",
                 "source-of-truth.edit-src-then-condense"
-            ]
+            ],
+            "bindings": {
+                "validator:src/scripts/check_condensation.ts": [
+                    "source-of-truth.no-edits-in-projections",
+                    "source-of-truth.edit-src-then-condense"
+                ]
+            }
         },
         "spreadsheet-source-quality": {
             "obligations": [
@@ -697,7 +768,12 @@
         "token-optimizer-maintenance": {
             "obligations": [
                 "token-optimizer-maintenance.update-optimizer-row-with-asset"
-            ]
+            ],
+            "bindings": {
+                "validator:src/scripts/check_token_optimizer_freshness.ts": [
+                    "token-optimizer-maintenance.update-optimizer-row-with-asset"
+                ]
+            }
         },
         "tool-safety": {
             "obligations": [
@@ -707,7 +783,13 @@
                 "tool-safety.no-hidden-credentials",
                 "tool-safety.no-arbitrary-execution",
                 "tool-safety.scoped-grants-over-bare-names"
-            ]
+            ],
+            "bindings": {
+                "validator:src/scripts/lint_agent_security.ts": [
+                    "tool-safety.deny-by-default-tools",
+                    "tool-safety.scoped-grants-over-bare-names"
+                ]
+            }
         },
         "ui-audit-gate": {
             "obligations": [
