@@ -943,7 +943,7 @@ export function main(argv?: readonly string[]): number {
             if (plan.exit === 0 && (plan.behind ?? 0) > 0) {
                 process.stdout.write(
                     `⚠️  sync_pr_branch: refused — the branch is behind and git.update_strategy is \`${strategy}\`; this script only merges. ` +
-                        'Rebase onto origin/<base> on request instead (git-workflow references/branch-update.md).\n',
+                        `Rebase on request instead (git-workflow references/branch-update.md). ${plan.message}\n`,
                 );
                 reportScanned({ gate: 'sync_pr_branch', scanned: plan.scanned, units: 'base ref(s)', roots: ['origin'] });
                 return 3;

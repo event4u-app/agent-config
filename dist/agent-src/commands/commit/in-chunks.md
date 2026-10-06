@@ -83,8 +83,9 @@ strip one.
 ### 4. Validate, then commit immediately
 
 Before staging anything, run the same `preview-on-error` validator as
-[`/commit`](../commit.md) step 5 — the regex for the configured
-`git.commit_format`, listed there.
+[`/commit`](../commit.md) step 5 — the rule of the convention in force
+(step 2), with the two `git.commit_format` regexes listed there as its
+fallback.
 
 - **All valid** → proceed silently.
 - **Any invalid** → stop, print the failed message(s) + the regex,

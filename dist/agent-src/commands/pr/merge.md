@@ -148,9 +148,10 @@ not rewriting their branches
 `/pr:merge` sentence authorises merging the named PRs, not rewriting their
 branches, so a PR that is behind its base is reported and left for the author
 to rebase — disposition `blocked-external` — unless the invocation itself asked
-for the rebase. On a repository that merges with `--rebase` (§ 9) a PR that is
-behind but conflict-free does not need this step at all: the forge replays its
-commits onto the current base.
+for the rebase. A PR that is behind but conflict-free does not need this step
+at all unless branch protection requires an up-to-date branch: whichever method
+§ 9 detects, the forge lands it on the current base — `--rebase` replays the
+commits, `--squash` and `--merge` build on the base as it is.
 
 ## 3. Resolve conflicts by class, never by taste
 
