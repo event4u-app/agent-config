@@ -1,16 +1,18 @@
 diff --git a/agents/evidence/analysis/thinned-layer-composition-2026-10.md b/agents/evidence/analysis/thinned-layer-composition-2026-10.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..6fc52ac5b14b3394011b792e12adfb9d66e4d04c
+index 0000000000000000000000000000000000000000..eb919a14be0dbbbf997c4baad1ec3c2840a247f1
 --- /dev/null
 +++ b/agents/evidence/analysis/thinned-layer-composition-2026-10.md
-@@ -0,0 +1,453 @@
+@@ -0,0 +1,540 @@
 +<!-- evidence-type: analysis -->
 +
 +# The thinned layer, in one unit — composition, form, and what each move is worth
 +
 +> Evidence for `road-to-a-thinned-layer-measured-in-one-unit`, steps 1.4, 2.4,
-+> 3.1, 3.2 and 4.3. Measured on 2026-10-06 against the branch
-+> `drain/thinned-layer-one-unit-20261006`, whose base is `main` @ `31e3da5ba`.
++> 3.1 and 3.2. Measured on 2026-10-06 against the branch
++> `drain/thinned-layer-one-unit-20261006`, whose base at measurement time was
++> `main` @ `31e3da5ba`. The base moved twice afterwards and the reading was
++> re-taken; see § The reading survived the base moving.
 +
 +## The unit, stated before any number
 +
@@ -103,21 +105,35 @@ index 0000000000000000000000000000000000000000..6fc52ac5b14b3394011b792e12adfb9d
 +
 +## Form — what the 89 stubs pay for their own description
 +
-+The 89 stubs hold 52,925 characters between them, 595 on average. Of that:
++The 89 stubs hold 52,925 characters between them, 595 on average. **Every term
++below is computed from its own construction, and the seven sum to 52,925
++exactly** — there is no residual row, which is what makes this a decomposition
++rather than six measurements and a remainder.
 +
 +| Term | Characters | Shape |
 +|---|---|---|
-+| heading repeating the file name | 2,181 | `## <Title>` + newline, 89 times |
-+| marker sentence | 4,183 | 47 characters, 89 times |
-+| `Fires on:` label and its full stop | 1,044 | 12 characters, 87 times |
++| pointer | 17,356 | `Body: [\`<id>\`](<prefix><id>.md)`, 89 times |
++| law text | 12,676 | byte-copied from the rule, on the 21 stubs that carry one |
++| description | 10,614 | the rule's own one-line description, 119 on average |
 +| trigger hint content | 4,808 | the triggers themselves |
-+| pointer | 17,356 | `Body: [\`<id>\`](<prefix><id>.md)` |
-+| description | 23,353 | the rule's own one-line description |
++| marker sentence | 4,183 | 47 characters, 89 times |
++| heading repeating the file name | 2,181 | `## <Title>` + newline, 89 times |
++| `Fires on:` label and its full stop | 1,044 | 12 characters, 87 times |
++| law join | 63 | 3 characters, on the 21 law stubs only |
 +| **total** | **52,925** | |
 +
 +Of the pointer's 17,356, **12,371 is the package-root prefix alone** — 139
 +characters, 89 times — and 4,985 is the link syntax plus the rule id, which the
 +pointer writes twice.
++
++**The law row is listed separately because it was invisible.** An earlier draft
++of this table had six rows and obtained `description` by subtracting the other
++five from the total, which silently folded the 21 law stubs' 12,676 characters
++of byte-copied law — and their 63 characters of join — into it. Descriptions
++then read as 23,353, 44 % of the stub form; they are 10,614, nearer 20 %, and
++the largest single term is not a description at all but the pointer. A row
++obtained by subtraction is not a measurement of the thing it is labelled; it is
++whatever the other rows did not account for.
 +
 +### The root length is in the number, so the root length is stated
 +
@@ -201,16 +217,37 @@ index 0000000000000000000000000000000000000000..6fc52ac5b14b3394011b792e12adfb9d
 +
 +| Term | Before | After |
 +|---|---|---|
-+| heading | 2,181 | 2,181 |
-+| marker | 4,183 | 2,403 |
-+| `Fires on:` label | 1,044 | 1,044 |
++| pointer | 17,356 | 14,997 |
++| law text | 12,676 | 12,676 |
++| description | 10,614 | 10,614 |
 +| trigger hint | 4,808 | 4,808 |
-+| pointer | 17,356 | 15,039 |
-+| description | 23,353 | 23,311 |
++| marker | 4,183 | 2,403 |
++| heading | 2,181 | 2,181 |
++| `Fires on:` label | 1,044 | 1,044 |
++| law join | 63 | 63 |
++| **total** | **52,925** | **48,786** |
 +
-+Of the pointer's remaining 15,039, **12,371 is still the package-root prefix** —
-+82 % of it, and untouchable from here: moving it is decision D5, behind the
++Of the pointer's remaining 14,997, **12,371 is still the package-root prefix** —
++82.5 % of it, and untouchable from here: moving it is decision D5, behind the
 +open install-layout blocker.
++
++**Six of the eight terms are byte-identical, and that is the check.** Only the
++marker and the pointer were changed, so a form change that moved anything else
++would be a measurement error rather than a saving. Both columns sum to their
++stated totals from construction alone, and the two deltas account for the
++whole difference: 4,183 − 2,403 = 1,780 and 17,356 − 14,997 = 2,359, which is
++4,139.
++
++The pointer delta reconciles term by term: 2,359 = 6 × 89 + 1,825 — the link
++syntax dropped on each of the 89 stubs, plus the 1,825 characters of rule id
++the old pointer wrote a second time.
++
++Both corrections this table has needed came from reading it rather than from
++re-running anything, and both were in the same direction — a number obtained by
++subtraction looking like a measurement. The first draft reported the pointer at
++15,039 from a pattern whose `\s*$` swallowed each stub's trailing newline, and
++parked the missing 42 characters as a description movement; the second reported
++descriptions at 23,353 because the law text had nowhere else to go.
 +
 +### The expectation this reproduces, once the root is normalised
 +
@@ -399,10 +436,16 @@ index 0000000000000000000000000000000000000000..6fc52ac5b14b3394011b792e12adfb9d
 +installer-owned prefix such as `~/.claude/rules/` at 16 characters, which
 +recovers (139 − 16) × 89 = 10,947.
 +
-+| Reading | Row 5 at its ceiling | Row 5 realistic | vs 75,000 | vs 68,181 |
++| Reading | Row 5 at its ceiling | Row 5 realistic | Realistic vs 75,000 | Realistic vs 68,181 |
 +|---|---|---|---|---|
 +| unconditional | 67,614–68,490 | 69,038–69,914 | 92–93 % | 101–103 % |
 +| all | 81,315–82,191 | 82,739–83,615 | 110–111 % | 121–123 % |
++
++**The two percentage columns read the REALISTIC column, not the ceiling one** —
++stated rather than left to inference, because an unlabelled percentage beside
++two candidate figures is the same defect the 4.1 council found in the first
++draft of this page. At the row's ceiling the unconditional reading is
++67,614–68,490, which is 90–91 % of 75,000 and 99–100 % of 68,181.
 +
 +**The corrected conclusion, in three parts.**
 +
@@ -410,16 +453,31 @@ index 0000000000000000000000000000000000000000..6fc52ac5b14b3394011b792e12adfb9d
 +   every row taken, including the one reserved to the owner and the one behind
 +   an open blocker. Neither is the council's to take and neither is the
 +   agent's.
-+2. **Under the headroom-adjusted 68,181: not reachable** by any combination on
-+   this list, on any reading, at any root.
++2. **Under the headroom-adjusted 68,181: not reachable at a realistic prefix**
++   — 69,038–69,914, which is 101–103 %. At the pointer row's unreachable
++   CEILING, where the prefix would be zero characters long, the range is
++   67,614–68,490 and its lower bound is 567 characters under 68,181. So the
++   honest statement is not "never": the only combination that closes requires a
++   prefix no path can have.
 +3. **On the all-characters reading: not reachable**, by a margin of at least
-+   6,300 even with every row taken at its ceiling.
++   6,315 even with every row taken at that same unreachable ceiling
++   (81,315 − 75,000).
 +
 +The first part is a correction of what this page said before the council read
 +it. The earlier text said the ceiling was not reachable by these moves, full
 +stop; that was true of the sums as computed and false of the moves as
 +described, because the largest move was named in the prose and missing from the
-+arithmetic. The three-part statement above is what the numbers actually support.
++arithmetic.
++
++**The second part is a correction of the correction**, recorded rather than
++quietly amended because it is the same defect twice. Its first version read
++"not reachable by any combination on this list, on any reading, at any root" —
++contradicted by the Sum 3 table a few lines above it, whose own ceiling column
++dips 567 under the figure. Conclusion 3 reads that very column, so the
++exclusion could not even be defended as treating it as hypothetical. An
++absolute quantifier is the easiest sentence to write and the hardest to hold;
++both times the way to catch it was to read the sentence against the table
++directly above it, and both times something other than the author did.
 +
 +What has not changed: **no combination here reaches the ceiling the way it was
 +recorded**, which is 75,000 *with ≥10 % headroom*. Reading the ceiling as a bare
@@ -438,8 +496,37 @@ index 0000000000000000000000000000000000000000..6fc52ac5b14b3394011b792e12adfb9d
 +`autonomous-execution`'s was priced there at the validation-loop section through
 +its first paragraph (1,385) where this page prices the fence alone (696) as the
 +lower bound. And the plain-stub figures here are post-form-change, so each of
-+the four is 47 characters cheaper as a stub than it was when the prediction was
-+written. The direction of the difference is consistent with both.
++the four is cheaper as a stub than when the prediction was written — by
++`20 + 6 + len(id)`, which is 37 for `tool-safety`, 40 for `runtime-safety`, 46
++for `autonomous-execution` and 50 for `question-not-instruction`. The direction
++of the difference is consistent with both.
++
++(An earlier draft gave 47 for all four. That is 4,139/89, the corpus mean, and
++it is the figure for none of these rules — it is also, coincidentally, the old
++marker's own length, which is how a mean comes to read like a measurement in a
++sentence that is load-bearing for a 1,100–2,200 character reconciliation.)
++
++## The reading survived the base moving
++
++The branch's base advanced twice after these figures were taken, and one of the
++commits edited a rule this layer carries — `context-hygiene`, three prose
++changes in its body. Re-running the whole method at the new head:
++
++| Figure | At the pin | At the current head |
++|---|---|---|
++| installed layer, report characters | 107,058 | **107,058** |
++| the installer's pre-thinning raw total | 365,283 | 365,276 |
++
++**Unchanged, and the way it is unchanged is the mechanism working.**
++`context-hygiene` projects as a stub, and a stub is built from the rule's
++frontmatter — its description and its trigger hint — not from its body. Editing
++the body moved the pre-thinning figure by 7 raw characters and moved the
++installed layer by zero.
++
++That is the property the whole thinned form rests on, observed rather than
++asserted: what a consumer stands under does not grow when a routed rule's prose
++does. It also means every figure on this page is current at the head it is
++published from, not only at the pin it was taken at.
 +
 +## An adjacent defect, noted and not fixed here
 +
@@ -606,7 +693,7 @@ index 0000000000000000000000000000000000000000..2c110651dcf836838679f22402ea4191
 +  agent AFTER the run, not by the council. They are checkable from the tree at
 +  the commits named and are not council output.
 diff --git a/agents/roadmaps/road-to-a-thinned-layer-measured-in-one-unit.md b/agents/roadmaps/road-to-a-thinned-layer-measured-in-one-unit.md
-index 82613978805605bad3bad1ab6ff4a8cc436199f5..9f0b3d48affad6391a61af999ade3ecdf89b4e9d 100644
+index 82613978805605bad3bad1ab6ff4a8cc436199f5..e1f86e2cb93c5e87c757d014ce8e10a59b4cc9a4 100644
 --- a/agents/roadmaps/road-to-a-thinned-layer-measured-in-one-unit.md
 +++ b/agents/roadmaps/road-to-a-thinned-layer-measured-in-one-unit.md
 @@ -4,7 +4,7 @@ status: ready
@@ -721,7 +808,7 @@ index 82613978805605bad3bad1ab6ff4a8cc436199f5..9f0b3d48affad6391a61af999ade3ecd
        `src/rules/tool-safety.md`, `src/rules/runtime-safety.md`,
        `src/rules/question-not-instruction.md` and
        `src/rules/autonomous-execution.md`, a law section is written from
-@@ -258,12 +258,58 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
+@@ -258,12 +258,88 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
        owner with that record and does not land here. A landed heading thins that rule in every
        projection that thins, not only in the measured install.
        verify: `grep -l '^verdict:' agents/evidence/council/law-heading-*.md | wc -l` -> /^4$/
@@ -732,6 +819,36 @@ index 82613978805605bad3bad1ab6ff4a8cc436199f5..9f0b3d48affad6391a61af999ade3ecd
        77,900 unconditional.
        verify: `grep -c 'after the law moves' agents/evidence/analysis/thinned-layer-composition-2026-10.md` -> /^[1-9]/
  
++## Closure-evidence corrections
++
++> Kept OUT of the Acceptance Criteria block on purpose. The risk-register gate
++> hashes that block and compares it against the version the `reviewed:` stamp
++> was set on; a same-day re-review cannot be expressed, because the stamp is a
++> date and the date has not changed. So a correction written inside the block
++> would red the gate rather than inform a reader. It lives here instead, next
++> to the criteria it corrects.
++
++**AC-3, corrected 2026-10-06 after the R2 completion review (finding 10).**
++The closing line of AC-3 above describes the detector evidence more broadly
++than the suites assert. What they actually run:
++
++- `thin_marker_single_spelling` runs ONE writer-emitted stub past all three
++  detectors, and a non-stub past all three in the false direction. It does not
++  run every stub.
++- `thin_marker_unique_in_corpus` runs EVERY emitted stub past `is_thin_entry`
++  in the true direction, every emitted full-bodied entry past it in the false
++  direction, and both rule corpora. It uses one detector, not three.
++
++So no single suite runs every stub past all three detectors; between them they
++cover each stub against the writer's predicate and one stub against all three.
++The criterion still holds on that evidence — it asks that every stub be
++recognised, which the corpus sweep establishes — but the sentence above claims
++a shape the tests do not have, and the claim is corrected here rather than
++left to a reader to discover.
++
++The marker's instruction words are asserted individually: `load` and `body`
++were, `match` was not until the same review round, and all three are now.
++
 +## Blockers
 +
 +### blocker: law-heading-authoring-not-named-in-this-contract
@@ -781,7 +898,7 @@ index 82613978805605bad3bad1ab6ff4a8cc436199f5..9f0b3d48affad6391a61af999ade3ecd
  ## What this roadmap deliberately does not do
  
  - No class member moved and no rule shortened beyond its law heading. No law
-@@ -279,20 +325,38 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
+@@ -279,20 +355,38 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
  
  ## Acceptance Criteria
  
@@ -825,7 +942,7 @@ index 82613978805605bad3bad1ab6ff4a8cc436199f5..9f0b3d48affad6391a61af999ade3ecd
  
  ## Decisions
  
-@@ -320,14 +384,16 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
+@@ -320,14 +414,16 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
  | K8 | A blocker that waits on the sibling proposal's decision record | The drafting rule's batch clause already names who decides; a second owner question for the same four changes | Same |
  
  ## Risk Register
@@ -847,10 +964,10 @@ index 82613978805605bad3bad1ab6ff4a8cc436199f5..9f0b3d48affad6391a61af999ade3ecd
 +| 8 | The 4.1 verdict is read as the council having no opinion | product | `unresolved-as-asked` looks like a non-answer. | The record states that both seats converged independently, names the two evidence paths they asked for, reports that both were followed and resolve in opposite directions, and lists the two defects the round found in the measurement page. | Phase 4 — The moves a council may permit |
 +| 9 | A layer written before the change is not recognised after it | implementation | A detector importing the new constant does not match stubs an older install wrote, until that install is refreshed. | The conformance detector acts on the marker only under `thin` and `eager-all`, not under the shipped mode; 2.1's test names the case and the install receipt already tells the user when a layer was rewritten. | Phase 2 — The stub says less, in one spelling |
 diff --git a/agents/roadmaps/road-to-an-installed-layer-that-is-thinned.md b/agents/roadmaps/road-to-an-installed-layer-that-is-thinned.md
-index b9daceb8a96eadae972cd4a80a61e417bbe862cb..beb020b3919fe063c4b5f8a55e7c822c2e9ca6aa 100644
+index b9daceb8a96eadae972cd4a80a61e417bbe862cb..e560463ea1817b8f1a2da95d0ca0c8949cea2f59 100644
 --- a/agents/roadmaps/road-to-an-installed-layer-that-is-thinned.md
 +++ b/agents/roadmaps/road-to-an-installed-layer-that-is-thinned.md
-@@ -245,3 +245,34 @@ Reproduced on 2026-10-01:
+@@ -245,3 +245,50 @@ Reproduced on 2026-10-01:
        -> 0, both cases (byte-equal law; no law leaks into an out-of-class stub).
  - [ ] AC-4 — The default changed only through the resolved blocker, and every
        non-Claude host tree is unchanged.
@@ -883,10 +1000,26 @@ index b9daceb8a96eadae972cd4a80a61e417bbe862cb..beb020b3919fe063c4b5f8a55e7c822c
 +is 103,320 / 89,619 / 13,701.
 +
 +**AC-1 does not hold today, on either reading.** The page prices every
-+remaining move with who it is permitted by, and states that none of them, taken
-+together, reaches the ceiling.
++remaining move with who it is permitted by, and states what they add up to:
++
++- **75,000, unconditional reading** — reachable, but only with every priced row
++  taken, including one reserved to the owner (`legal-safety-floor`, whose law
++  is already over this repository's hard law ceiling) and one behind the open
++  install-layout blocker. Neither is the council's to take and neither is an
++  agent's.
++- **The headroom-adjusted 68,181** — not reachable at any realistic package-root
++  prefix; the only combination that closes needs a prefix no path can have.
++- **75,000, all-characters reading** — not reachable, by at least 6,315 even at
++  that unreachable prefix.
++
++An earlier version of this note said instead that "none of them, taken
++together, reaches the ceiling". That was the pre-correction claim a
++provider-diverse council recorded as materially false, and it was left standing
++here after the page itself was fixed — on the surface an owner actually reads.
++It is replaced rather than deleted so the correction is visible from this side
++too.
 diff --git a/dist/install/install.mjs b/dist/install/install.mjs
-index e482965535b1eb718d2d5521c1b2c30206b52175..bcb02bb5e7e3c72c423389aa90c3e4a06435d01e 100755
+index e482965535b1eb718d2d5521c1b2c30206b52175..bdd6012fe9bd0c06031db1386db530c4787374f2 100755
 --- a/dist/install/install.mjs
 +++ b/dist/install/install.mjs
 @@ -9741,6 +9741,14 @@ function expanduser6(p) {
@@ -932,7 +1065,21 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..bcb02bb5e7e3c72c423389aa90c3e4a0
  function sorted_strings(items) {
    return items.filter((i) => typeof i === "string").sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
  }
-@@ -12488,6 +12517,8 @@ function readLayer(host, scope, dir, recorded) {
+@@ -12477,7 +12506,12 @@ function lawText(body) {
+ var TOP_FILES = 20;
+ var LIMIT_WARN_FRACTION = 0.8;
+ function isUnconditional(text) {
+-  return !/^paths:/m.test(text);
++  return !/^paths:/m.test(frontmatterBlock(text));
++}
++function frontmatterBlock(text) {
++  if (!text.startsWith("---\n")) return "";
++  const end = text.indexOf("\n---", 3);
++  return end === -1 ? "" : text.slice(3, end);
+ }
+ function readLayer(host, scope, dir, recorded) {
+   const empty = {
+@@ -12488,6 +12522,8 @@ function readLayer(host, scope, dir, recorded) {
      foreign: 0,
      package_owned_chars: 0,
      foreign_chars: 0,
@@ -941,7 +1088,7 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..bcb02bb5e7e3c72c423389aa90c3e4a0
      top: []
    };
    let names;
-@@ -12533,6 +12564,8 @@ function readLayer(host, scope, dir, recorded) {
+@@ -12533,6 +12569,8 @@ function readLayer(host, scope, dir, recorded) {
      foreign: readings.filter((r) => !r.package_owned).length,
      package_owned_chars: readings.reduce((n, r) => n + (r.package_owned ? r.chars : 0), 0),
      foreign_chars: readings.reduce((n, r) => n + (r.package_owned ? 0 : r.chars), 0),
@@ -950,75 +1097,95 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..bcb02bb5e7e3c72c423389aa90c3e4a0
      top
    };
  }
-@@ -12598,6 +12631,57 @@ function buildHostLimitRows(layers, limits) {
+@@ -12598,6 +12636,73 @@ function buildHostLimitRows(layers, limits) {
    }
    return rows;
  }
 +function defaultInventoryPath(home) {
++  const override = process.env[INVENTORY_ENV];
++  if (override !== void 0 && override !== "") return inventory_path();
++  const configHome = process.env[EVENT4U_HOME_ENV];
++  if (configHome !== void 0 && configHome !== "") return inventory_path();
 +  if (home === void 0 || home === null || home === "") return inventory_path();
-+  return path24.join(home, ".event4u", "agent-config", "deployed-files.json");
++  return path24.join(home, DEFAULT_EVENT4U_ROOT_RELATIVE, INVENTORY_BASENAME);
 +}
 +function resolveLayerOwnership(opts) {
-+  const manifestPath = opts.manifestPath ?? null;
-+  if (manifestPath !== null && fs25.existsSync(manifestPath)) {
-+    return {
-+      recorded: readRecordedHashes(manifestPath, opts.projectRoot),
-+      source: "manifest"
-+    };
-+  }
 +  const recorded = /* @__PURE__ */ new Map();
-+  let fromInventory = 0;
++  const sources = [];
 +  if (opts.inventoryPath !== null) {
++    let n = 0;
 +    try {
 +      const inv = load_inventory(opts.inventoryPath ?? defaultInventoryPath(opts.home));
 +      for (const abs of recorded_absolute_files(inv, opts.home ?? null)) {
 +        recorded.set(abs, null);
-+        fromInventory += 1;
++        n += 1;
 +      }
 +    } catch {
 +    }
++    if (n > 0) sources.push("global-inventory");
 +  }
 +  let fromDeploy = 0;
 +  for (const [anchor, rels] of opts.thisDeploy ?? /* @__PURE__ */ new Map()) {
 +    for (const rel of rels) {
 +      const abs = path24.resolve(anchor, rel);
-+      if (!recorded.has(abs)) fromDeploy += 1;
 +      recorded.set(abs, null);
++      fromDeploy += 1;
 +      try {
 +        recorded.set(fs25.realpathSync(abs), null);
 +      } catch {
 +      }
 +    }
 +  }
-+  if (recorded.size === 0) return { recorded: NO_RECORDED_HASHES, source: "none" };
-+  return { recorded, source: fromInventory > 0 || fromDeploy === 0 ? "global-inventory" : "this-deploy" };
-+}
-+function ownershipLine(source) {
-+  switch (source) {
-+    case "manifest":
-+      return "ownership: read from the installed-tools manifest";
-+    case "global-inventory":
-+      return "ownership: read from the global deploy inventory (deployed-files.json) \u2014 no project manifest needed";
-+    case "this-deploy":
-+      return "ownership: read from the file set this install just wrote \u2014 the inventory is recorded after the receipt";
-+    case "none":
-+      return "ownership: NO manifest and NO deploy inventory resolved \u2014 every file reads foreign, which is no evidence rather than a finding";
++  if (fromDeploy > 0) sources.push("this-deploy");
++  const manifestPath = opts.manifestPath ?? null;
++  if (manifestPath !== null && fs25.existsSync(manifestPath)) {
++    let n = 0;
++    for (const [abs, hash] of readRecordedHashes(manifestPath, opts.projectRoot)) {
++      recorded.set(abs, hash);
++      n += 1;
++    }
++    if (n > 0) sources.push("manifest");
 +  }
++  if (recorded.size === 0) {
++    return { recorded: NO_RECORDED_HASHES, sources: [], source: "none" };
++  }
++  const primary = sources.includes("manifest") ? "manifest" : sources.includes("global-inventory") ? "global-inventory" : "this-deploy";
++  return { recorded, sources, source: primary };
++}
++function ownershipLine(sources) {
++  const list = (Array.isArray(sources) ? sources : [sources]).filter(
++    (s) => s !== "none"
++  );
++  if (list.length === 0) {
++    return "ownership: NO manifest and NO deploy inventory resolved \u2014 every file reads foreign, which is no evidence rather than a finding";
++  }
++  const phrases = {
++    manifest: "the installed-tools manifest",
++    "global-inventory": "the global deploy inventory (deployed-files.json)",
++    "this-deploy": "the file set this install just wrote"
++  };
++  const named = list.map((s) => phrases[s]);
++  const joined = named.length === 1 ? named[0] : `${named.slice(0, -1).join(", ")} and ${named[named.length - 1]}`;
++  return `ownership: read from ${joined}`;
 +}
  function renderHostLimitRows(rows) {
    const out = [
      "host instruction budgets \u2014 package-owned + foreign against the published limit"
-@@ -12769,7 +12853,8 @@ function _trigger_hint(fm) {
+@@ -12769,7 +12874,12 @@ function _trigger_hint(fm) {
  function _title(s) {
    return s.replace(/[A-Za-z]+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
  }
 -var THIN_ENTRY_MARKER = "> Routed rule \u2014 load the body on trigger-match.";
 +var THIN_ENTRY_MARKER = "> Load the body on a match.";
 +var THIN_BODY_POINTER_PREFIX = "Body: ";
++var THIN_BODY_POINTER_RE = new RegExp(
++  `${THIN_BODY_POINTER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(.+\\.md)\\s*$`,
++  "m"
++);
  var BODY_LINK_PREFIX = "../../dist/agent-src/rules/";
  function absoluteBodyLinkPrefix(packageRoot) {
    return `${path26.join(path26.resolve(packageRoot), "dist", "agent-src", "rules")}${path26.sep}`;
-@@ -12781,7 +12866,7 @@ function thin_entry(rule_id, text, bodyLinkPrefix = BODY_LINK_PREFIX) {
+@@ -12781,7 +12891,7 @@ function thin_entry(rule_id, text, bodyLinkPrefix = BODY_LINK_PREFIX) {
    const title = _title(rule_id.replace(/-/g, " "));
    const fires = hint ? ` Fires on: ${hint}.` : "";
    return `## ${title}
@@ -1027,7 +1194,7 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..bcb02bb5e7e3c72c423389aa90c3e4a0
  `;
  }
  var STUB_LAW_OPEN = "<!-- law: byte-copied from the rule, sha256 ";
-@@ -12962,15 +13047,18 @@ function describeThinInstalledLayer(res) {
+@@ -12962,15 +13072,18 @@ function describeThinInstalledLayer(res) {
    }
    return out;
  }
@@ -1041,8 +1208,8 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..bcb02bb5e7e3c72c423389aa90c3e4a0
 -        return NO_RECORDED_HASHES;
 -      }
 -    })();
-+    const { recorded, source } = resolveLayerOwnership({
-+      manifestPath: manifest_path(packageRoot),
++    const { recorded, sources } = resolveLayerOwnership({
++      manifestPath: opts.manifestPath === void 0 ? manifest_path(packageRoot) : opts.manifestPath,
 +      projectRoot: packageRoot,
 +      // The same home the layers below are read from — the inventory's
 +      // anchor is tilde-relative, so the two must agree or the receipt
@@ -1054,31 +1221,27 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..bcb02bb5e7e3c72c423389aa90c3e4a0
      const layers = [];
      for (const host of Object.keys(GLOBAL_RULE_DIRS).sort()) {
        const dir = globalRuleLayerPath(host, home);
-@@ -12978,7 +13066,8 @@ function installReceiptBudgetLines(packageRoot, home = os10.homedir()) {
+@@ -12978,7 +13091,8 @@ function installReceiptBudgetLines(packageRoot, home = os10.homedir()) {
        layers.push(readLayer(host, "global", dir, recorded));
      }
      const rows = buildHostLimitRows(layers, loadHostInstructionLimits());
 -    return rows.length === 0 ? [] : renderHostLimitRows(rows).map((l) => `  ${l}`);
 +    if (rows.length === 0) return [];
-+    return [`  ${ownershipLine(source)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
++    return [`  ${ownershipLine(sources)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
    } catch {
      return [];
    }
-@@ -22332,7 +22421,11 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
+@@ -22332,7 +22446,7 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
            warn(`claude-code: thinned rule layer not written \u2014 ${String(e)}`);
          }
        }
 -      if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root)) info(l);
-+      if (!state.QUIET)
-+        for (const l of installReceiptBudgetLines(package_root, void 0, {
-+          thisDeploy: /* @__PURE__ */ new Map([[anchor, current_files]])
-+        }))
-+          info(l);
++      if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root, void 0, { thisDeploy: /* @__PURE__ */ new Map([[anchor, current_files]]) })) info(l);
      }
      const missing_targets = _verify_deploy_targets(anchor, plan);
      if (missing_targets.length > 0) {
 diff --git a/dist/install/installThinLayer.js b/dist/install/installThinLayer.js
-index 17b9573faa755f89525487c323c862abbba52b92..d6d601ff64396e851f65134d32e95e154f6b63c9 100644
+index 17b9573faa755f89525487c323c862abbba52b92..37026cc2c6c5699eef96630e880de188c3716d29 100644
 --- a/dist/install/installThinLayer.js
 +++ b/dist/install/installThinLayer.js
 @@ -51,10 +51,9 @@
@@ -1133,8 +1296,8 @@ index 17b9573faa755f89525487c323c862abbba52b92..d6d601ff64396e851f65134d32e95e15
 +        // deployed. `resolveLayerOwnership` falls through to the inventory, and
 +        // `thisDeploy` covers the first install, where the receipt prints
 +        // before `record_deploy` has written anything.
-+        const { recorded, source } = resolveLayerOwnership({
-+            manifestPath: manifest_path(packageRoot),
++        const { recorded, sources } = resolveLayerOwnership({
++            manifestPath: opts.manifestPath === undefined ? manifest_path(packageRoot) : opts.manifestPath,
 +            projectRoot: packageRoot,
 +            // The same home the layers below are read from — the inventory's
 +            // anchor is tilde-relative, so the two must agree or the receipt
@@ -1153,21 +1316,21 @@ index 17b9573faa755f89525487c323c862abbba52b92..d6d601ff64396e851f65134d32e95e15
 -        return rows.length === 0 ? [] : renderHostLimitRows(rows).map((l) => `  ${l}`);
 +        if (rows.length === 0)
 +            return [];
-+        return [`  ${ownershipLine(source)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
++        return [`  ${ownershipLine(sources)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
      }
      catch {
          return [];
 diff --git a/dist/install/installThinLayer.js.map b/dist/install/installThinLayer.js.map
-index 3dd52e839d967893dc6d357b796467879ceeb3b2..4be7388e493c047dd4ba5db5f9e39c6030a022f4 100644
+index 3dd52e839d967893dc6d357b796467879ceeb3b2..24af0f3f8adb1efabc01f143e0ed97d1d9e1a0e2 100644
 --- a/dist/install/installThinLayer.js.map
 +++ b/dist/install/installThinLayer.js.map
 @@ -1 +1 @@
 -{"version":3,"file":"installThinLayer.js","sourceRoot":"","sources":["../../src/install/installThinLayer.ts"],"names":[],"mappings":"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"}
 \ No newline at end of file
-+{"version":3,"file":"installThinLayer.js","sourceRoot":"","sources":["../../src/install/installThinLayer.ts"],"names":[],"mappings":"AAAA;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;GAiDG;AAEH,OAAO,KAAK,EAAE,MAAM,SAAS,CAAC;AAC9B,OAAO,KAAK,IAAI,MAAM,WAAW,CAAC;AAElC,OAAO,KAAK,EAAE,MAAM,SAAS,CAAC;AAE9B,OAAO,EACH,kBAAkB,EAClB,yBAAyB,EACzB,aAAa,EACb,SAAS,EACT,mBAAmB,EACnB,qBAAqB,GAExB,MAAM,oCAAoC,CAAC;AAC5C,OAAO,EAAE,gBAAgB,EAAE,mBAAmB,EAAE,MAAM,uBAAuB,CAAC;AAC9E,OAAO,EAAE,aAAa,EAAE,MAAM,oCAAoC,CAAC;AACnE,OAAO,EACH,sBAAsB,EACtB,UAAU,EACV,iBAAiB,GACpB,MAAM,+BAA+B,CAAC;AAqCvC;;;;;GAKG;AACH,MAAM,UAAU,sBAAsB,CAAC,IAA+B;IAClE,MAAM,WAAW,GAAG,IAAI,CAAC,OAAO,CAAC,IAAI,CAAC,WAAW,CAAC,CAAC;IACnD,MAAM,aAAa,GAAG,IAAI,CAAC,IAAI,CAAC,WAAW,EAAE,MAAM,EAAE,WAAW,EAAE,OAAO,CAAC,CAAC;IAC3E,MAAM,cAAc,GAAG,sBAAsB,CAAC,WAAW,CAAC,CAAC;IAC3D,MAAM,SAAS,GAAG,IAAI,CAAC,SAAS,IAAI,IAAI,GAAG,EAAU,CAAC;IAEtD,0EAA0E;IAC1E,0EAA0E;IAC1E,2EAA2E;IAC3E,0EAA0E;IAC1E,4EAA4E;IAC5E,MAAM,KAAK,GAAG,UAAU,CAAC,aAAa,EAAE,IAAI,EAAE,IAAI,EAAE,IAAI,EAAE,EAAE,WAAW,EAAE,cAAc,EAAE,CAAC,CAAC;IAE3F,IAAI,OAAO,GAAG,CAAC,CAAC;IAChB,IAAI,SAAS,GAAG,CAAC,CAAC;IAClB,IAAI,IAAI,GAAG,CAAC,CAAC;IACb,IAAI,WAAW,GAAG,CAAC,CAAC;IACpB,IAAI,UAAU,GAAG,CAAC,CAAC;IACnB,MAAM,aAAa,GAAa,EAAE,CAAC;IACnC,MAAM,MAAM,GAAa,EAAE,CAAC;IAC5B,MAAM,MAAM,GAA4C,EAAE,CAAC;IAE3D,KAAK,MAAM,CAAC,IAAI,EAAE,QAAQ,CAAC,IAAI,KAAK,EAAE,CAAC;QACnC,MAAM,MAAM,GAAG,IAAI,CAAC,IAAI,CAAC,IAAI,CAAC,QAAQ,EAAE,IAAI,CAAC,CAAC;QAC9C,IAAI,SAAiB,CAAC;QACtB,IAAI,CAAC;YACD,SAAS,GAAG,EAAE,CAAC,YAAY,CAAC,MAAM,EAAE,OAAO,CAAC,CAAC;QACjD,CAAC;QAAC,OAAO,CAAC,EAAE,CAAC;YACT,iEAAiE;YACjE,qEAAqE;YACrE,iEAAiE;YACjE,kEAAkE;YAClE,2BAA2B;YAC3B,IAAK,CAA2B,CAAC,IAAI,KAAK,QAAQ;gBAAE,MAAM,CAAC,IAAI,CAAC,IAAI,CAAC,CAAC;;gBACjE,MAAM,CAAC,IAAI,CAAC,EAAE,IAAI,EAAE,IAAI,EAAE,MAAM,EAAE,MAAM,CAAC,CAAC,CAAC,EAAE,CAAC,CAAC;YACpD,SAAS;QACb,CAAC;QACD,kEAAkE;QAClE,qEAAqE;QACrE,qEAAqE;QACrE,mEAAmE;QACnE,uEAAuE;QACvE,yEAAyE;QACzE,uEAAuE;QACvE,kEAAkE;QAClE,oEAAoE;QACpE,IAAI,UAAyB,CAAC;QAC9B,IAAI,CAAC;YACD,UAAU,GAAG,EAAE,CAAC,YAAY,CAAC,IAAI,CAAC,IAAI,CAAC,aAAa,EAAE,IAAI,CAAC,EAAE,OAAO,CAAC,CAAC;QAC1E,CAAC;QAAC,MAAM,CAAC;YACL,UAAU,GAAG,IAAI,CAAC;QACtB,CAAC;QACD,IAAI,QAAQ,KAAK,UAAU,EAAE,CAAC;YAC1B,6DAA6D;YAC7D,+DAA+D;YAC/D,kEAAkE;YAClE,6DAA6D;YAC7D,IAAI,IAAI,CAAC,CAAC;YACV,WAAW,IAAI,SAAS,CAAC,MAAM,CAAC;YAChC,UAAU,IAAI,SAAS,CAAC,MAAM,CAAC;YAC/B,SAAS;QACb,CAAC;QACD,IAAI,SAAS,CAAC,GAAG,CAAC,IAAI,CAAC,OAAO,CAAC,MAAM,CAAC,CAAC,EAAE,CAAC;YACtC,aAAa,CAAC,IAAI,CAAC,IAAI,CAAC,CAAC;YACzB,WAAW,IAAI,SAAS,CAAC,MAAM,CAAC;YAChC,UAAU,IAAI,SAAS,CAAC,MAAM,CAAC;YAC/B,SAAS;QACb,CAAC;QACD,MAAM,CAAC,WAAW,CAAC,GAAG,iBAAiB,CAAC,SAAS,CAAC,CAAC;QACnD,WAAW,IAAI,SAAS,CAAC,MAAM,CAAC;QAChC,mEAAmE;QACnE,oEAAoE;QACpE,sEAAsE;QACtE,kEAAkE;QAClE,qEAAqE;QACrE,uEAAuE;QACvE,kDAAkD;QAClD,EAAE;QACF,kEAAkE;QAClE,sEAAsE;QACtE,uEAAuE;QACvE,8BAA8B;QAC9B,IAAI,WAAW,KAAK,EAAE,IAAI,kBAAkB,CAAC,IAAI,CAAC,SAAS,CAAC,EAAE,CAAC;YAC3D,MAAM,CAAC,IAAI,CAAC;gBACR,IAAI,EAAE,IAAI;gBACV,MAAM,EAAE,sEAAsE;oBAC1E,wBAAwB;aAC/B,CAAC,CAAC;YACH,UAAU,IAAI,SAAS,CAAC,MAAM,CAAC;YAC/B,SAAS;QACb,CAAC;QACD,MAAM,IAAI,GAAG,GAAG,WAAW,GAAG,QAAQ,EAAE,CAAC;QACzC,IAAI,CAAC;YACD,IAAI,IAAI,KAAK,SAAS,EAAE,CAAC;gBACrB,EAAE,CAAC,aAAa,CAAC,MAAM,EAAE,IAAI,EAAE,OAAO,CAAC,CAAC;gBACxC,SAAS,IAAI,CAAC,CAAC;YACnB,CAAC;YACD,OAAO,IAAI,CAAC,CAAC;YACb,UAAU,IAAI,IAAI,CAAC,MAAM,CAAC;QAC9B,CAAC;QAAC,OAAO,CAAC,EAAE,CAAC;YACT,MAAM,CAAC,IAAI,CAAC,EAAE,IAAI,EAAE,IAAI,EAAE,MAAM,EAAE,MAAM,CAAC,CAAC,CAAC,EAAE,CAAC,CAAC;YAC/C,UAAU,IAAI,SAAS,CAAC,MAAM,CAAC;QACnC,CAAC;IACL,CAAC;IAED,IAAI,KAAK,CAAC,IAAI,KAAK,CAAC,EAAE,CAAC;QACnB,wEAAwE;QACxE,uEAAuE;QACvE,iEAAiE;QACjE,sEAAsE;QACtE,kEAAkE;QAClE,uEAAuE;QACvE,MAAM,CAAC,IAAI,CAAC;YACR,IAAI,EAAE,aAAa;YACnB,MAAM,EAAE,2EAA2E;SACtF,CAAC,CAAC;IACP,CAAC;IAED,OAAO;QACH,OAAO;QACP,SAAS;QACT,IAAI;QACJ,SAAS,EAAE,aAAa;QACxB,MAAM;QACN,MAAM;QACN,cAAc;QACd,WAAW;QACX,UAAU;KACb,CAAC;AACN,CAAC;AAED;;;;;GAKG;AACH,MAAM,UAAU,0BAA0B,CAAC,GAA6B;IACpE,MAAM,GAAG,GAAa,EAAE,CAAC;IACzB,GAAG,CAAC,IAAI,CACJ,GAAG,CAAC,SAAS,KAAK,CAAC,IAAI,GAAG,CAAC,OAAO,GAAG,CAAC;QAClC,CAAC,CAAC,kBAAkB,MAAM,CAAC,GAAG,CAAC,OAAO,CAAC,4BAA4B;YAC7D,GAAG,MAAM,CAAC,GAAG,CAAC,IAAI,CAAC,qBAAqB;YACxC,GAAG,MAAM,CAAC,GAAG,CAAC,UAAU,CAAC,6BAA6B;QAC5D,CAAC,CAAC,0BAA0B,MAAM,CAAC,GAAG,CAAC,SAAS,CAAC,qBAAqB;YAChE,GAAG,MAAM,CAAC,GAAG,CAAC,IAAI,CAAC,qBAAqB;YACxC,GAAG,MAAM,CAAC,GAAG,CAAC,WAAW,CAAC,OAAO,MAAM,CAAC,GAAG,CAAC,UAAU,CAAC,QAAQ,CAC5E,CAAC;IACF,IAAI,GAAG,CAAC,SAAS,CAAC,MAAM,GAAG,CAAC,EAAE,CAAC;QAC3B,GAAG,CAAC,IAAI,CACJ,kBAAkB,MAAM,CAAC,GAAG,CAAC,SAAS,CAAC,MAAM,CAAC,uCAAuC;YACjF,8CAA8C,GAAG,CAAC,SAAS,CAAC,IAAI,CAAC,IAAI,CAAC,GAAG,CAChF,CAAC;IACN,CAAC;IACD,KAAK,MAAM,CAAC,IAAI,GAAG,CAAC,MAAM,EAAE,CAAC;QACzB,GAAG,CAAC,IAAI,CAAC,kBAAkB,CAAC,CAAC,IAAI,4BAA4B,CAAC,CAAC,MAAM,EAAE,CAAC,CAAC;IAC7E,CAAC;IACD,OAAO,GAAG,CAAC;AACf,CAAC;AAiCD,MAAM,UAAU,yBAAyB,CACrC,WAAmB,EACnB,OAAe,EAAE,CAAC,OAAO,EAAE,EAC3B,OAAuC,EAAE;IAEzC,IAAI,CAAC;QACD,qEAAqE;QACrE,oEAAoE;QACpE,sEAAsE;QACtE,wEAAwE;QACxE,wEAAwE;QACxE,kEAAkE;QAClE,+CAA+C;QAC/C,MAAM,EAAE,QAAQ,EAAE,MAAM,EAAE,GAAG,qBAAqB,CAAC;YAC/C,YAAY,EAAE,aAAa,CAAC,WAAW,CAAC;YACxC,WAAW,EAAE,WAAW;YACxB,iEAAiE;YACjE,iEAAiE;YACjE,wDAAwD;YACxD,IAAI;YACJ,aAAa,EAAE,IAAI,CAAC,aAAa;YACjC,UAAU,EAAE,IAAI,CAAC,UAAU;SAC9B,CAAC,CAAC;QACH,MAAM,MAAM,GAAmB,EAAE,CAAC;QAClC,KAAK,MAAM,IAAI,IAAI,MAAM,CAAC,IAAI,CAAC,gBAAgB,CAAC,CAAC,IAAI,EAAE,EAAE,CAAC;YACtD,MAAM,GAAG,GAAG,mBAAmB,CAAC,IAAI,EAAE,IAAI,CAAC,CAAC;YAC5C,IAAI,GAAG,KAAK,IAAI;gBAAE,SAAS;YAC3B,MAAM,CAAC,IAAI,CAAC,SAAS,CAAC,IAAI,EAAE,QAAQ,EAAE,GAAG,EAAE,QAAQ,CAAC,CAAC,CAAC;QAC1D,CAAC;QACD,MAAM,IAAI,GAAG,kBAAkB,CAAC,MAAM,EAAE,yBAAyB,EAAE,CAAC,CAAC;QACrE,IAAI,IAAI,CAAC,MAAM,KAAK,CAAC;YAAE,OAAO,EAAE,CAAC;QACjC,OAAO,CAAC,KAAK,aAAa,CAAC,MAAM,CAAC,EAAE,EAAE,GAAG,mBAAmB,CAAC,IAAI,CAAC,CAAC,GAAG,CAAC,CAAC,CAAC,EAAE,EAAE,CAAC,KAAK,CAAC,EAAE,CAAC,CAAC,CAAC;IAC7F,CAAC;IAAC,MAAM,CAAC;QACL,OAAO,EAAE,CAAC;IACd,CAAC;AACL,CAAC"}
++{"version":3,"file":"installThinLayer.js","sourceRoot":"","sources":["../../src/install/installThinLayer.ts"],"names":[],"mappings":"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"}
 \ No newline at end of file
 diff --git a/src/install/installThinLayer.ts b/src/install/installThinLayer.ts
-index 24eb42dc24883995604121b5e5f9d296ed6e0da0..d1bde5fbb92ccb0bb05aefc71beb71af673fe36d 100644
+index 24eb42dc24883995604121b5e5f9d296ed6e0da0..cb404cc626eaac393c56062ad0f29a7153edaadc 100644
 --- a/src/install/installThinLayer.ts
 +++ b/src/install/installThinLayer.ts
 @@ -57,13 +57,14 @@ import * as os from 'node:os';
@@ -1186,12 +1349,22 @@ index 24eb42dc24883995604121b5e5f9d296ed6e0da0..d1bde5fbb92ccb0bb05aefc71beb71af
  import {
      absoluteBodyLinkPrefix,
      build_thin,
-@@ -289,15 +290,42 @@ export function describeThinInstalledLayer(res: ThinInstalledLayerResult): strin
+@@ -289,15 +290,52 @@ export function describeThinInstalledLayer(res: ThinInstalledLayerResult): strin
   * Never throws. A receipt that cannot be measured is silent rather than fatal —
   * the deploy it describes has already happened correctly.
   */
 -export function installReceiptBudgetLines(packageRoot: string, home: string = os.homedir()): string[] {
 +export interface InstallReceiptOwnershipOptions {
++    /**
++     * The installed-tools manifest. `undefined` uses `manifest_path(packageRoot)`;
++     * `null` reads none.
++     *
++     * Overridable so a test can be hermetic. That lock file is gitignored, so
++     * it is absent in CI and present on any checkout where a project-scoped
++     * install has run — a case reading it implicitly turns green-in-CI,
++     * red-on-a-maintainer's-machine, for a reason unrelated to what it tests.
++     */
++    readonly manifestPath?: string | null | undefined;
 +    /** `deployed-files.json`. `undefined` reads the user-global default; `null` reads none. */
 +    readonly inventoryPath?: string | null | undefined;
 +    /**
@@ -1224,8 +1397,8 @@ index 24eb42dc24883995604121b5e5f9d296ed6e0da0..d1bde5fbb92ccb0bb05aefc71beb71af
 +        // deployed. `resolveLayerOwnership` falls through to the inventory, and
 +        // `thisDeploy` covers the first install, where the receipt prints
 +        // before `record_deploy` has written anything.
-+        const { recorded, source } = resolveLayerOwnership({
-+            manifestPath: manifest_path(packageRoot),
++        const { recorded, sources } = resolveLayerOwnership({
++            manifestPath: opts.manifestPath === undefined ? manifest_path(packageRoot) : opts.manifestPath,
 +            projectRoot: packageRoot,
 +            // The same home the layers below are read from — the inventory's
 +            // anchor is tilde-relative, so the two must agree or the receipt
@@ -1237,13 +1410,13 @@ index 24eb42dc24883995604121b5e5f9d296ed6e0da0..d1bde5fbb92ccb0bb05aefc71beb71af
          const layers: LayerReading[] = [];
          for (const host of Object.keys(GLOBAL_RULE_DIRS).sort()) {
              const dir = globalRuleLayerPath(host, home);
-@@ -305,7 +333,8 @@ export function installReceiptBudgetLines(packageRoot: string, home: string = os
+@@ -305,7 +343,8 @@ export function installReceiptBudgetLines(packageRoot: string, home: string = os
              layers.push(readLayer(host, 'global', dir, recorded));
          }
          const rows = buildHostLimitRows(layers, loadHostInstructionLimits());
 -        return rows.length === 0 ? [] : renderHostLimitRows(rows).map((l) => `  ${l}`);
 +        if (rows.length === 0) return [];
-+        return [`  ${ownershipLine(source)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
++        return [`  ${ownershipLine(sources)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
      } catch {
          return [];
      }
@@ -1373,22 +1546,25 @@ index 5461b35ec9c6baf4226b73a7843b15ea43329fcb..2e146a0ea2a24f55165811b19cb8ca1c
  function sorted_strings(items: unknown[]): string[] {
    return items
 diff --git a/src/scripts/_lib/installed_layer.ts b/src/scripts/_lib/installed_layer.ts
-index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318fb65be3e 100644
+index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..30afdaabb588bd10c51daf8ccfd553231ab69225 100644
 --- a/src/scripts/_lib/installed_layer.ts
 +++ b/src/scripts/_lib/installed_layer.ts
-@@ -50,6 +50,11 @@ import {
+@@ -50,6 +50,14 @@ import {
      globalRuleLayerPath,
  } from '../../install/globalRuleLayers.js';
  import { NO_RECORDED_HASHES, readRecordedHashes } from '../../install/recordedOwnership.js';
 +import {
++    INVENTORY_BASENAME,
++    INVENTORY_ENV,
 +    inventory_path,
 +    load_inventory,
 +    recorded_absolute_files,
 +} from './global_deploy_inventory.js';
++import { DEFAULT_EVENT4U_ROOT_RELATIVE, EVENT4U_HOME_ENV } from './user_global_paths.js';
  import { ruleBody } from './rule_law_section.js';
  
  /** How many files the per-directory ranking carries. Step 0.1 fixes it at 20. */
-@@ -96,6 +101,27 @@ export interface LayerReading {
+@@ -96,6 +104,27 @@ export interface LayerReading {
       */
      readonly package_owned_chars: number;
      readonly foreign_chars: number;
@@ -1416,7 +1592,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
      /** The {@link TOP_FILES} largest, by the SAME measure as `chars`. */
      readonly top: readonly RuleFileReading[];
  }
-@@ -149,8 +175,17 @@ export interface InstalledLayerReport {
+@@ -149,8 +178,19 @@ export interface InstalledLayerReport {
      readonly project_root: string;
      /** `claude --version`, or `unknown`. Never fabricated. */
      readonly host_version: string;
@@ -1432,10 +1608,12 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
      readonly manifest_present: boolean;
 +    /** Which evidence answered ownership. `none` means no evidence, never "not ours". */
 +    readonly ownership_source: OwnershipSource;
++    /** Every contributor, because the layers span two path spaces. See {@link OwnershipResolution.sources}. */
++    readonly ownership_sources: readonly OwnershipSource[];
      readonly layers: readonly LayerReading[];
      /** One row per host, against its published limit. Step 3.5. */
      readonly limits: readonly HostLimitReading[];
-@@ -163,6 +198,9 @@ export interface InstalledLayerReport {
+@@ -163,18 +203,42 @@ export interface InstalledLayerReport {
          readonly foreign: number;
          readonly package_owned_chars: number;
          readonly foreign_chars: number;
@@ -1445,7 +1623,68 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
      };
  }
  
-@@ -211,6 +249,8 @@ export function readLayer(
+ /**
+  * Whether the host loads this file on every session rather than on a path match.
+  *
+- * `paths:` at the start of a line is the whole test, and it is the host's own
+- * convention rather than this package's: `claudeRuleRewrite.ts` states it from
+- * the emitting side — "with it a rule loads on a path match, without it the
+- * rule loads unconditionally". `rule_activation_census.projection_reading` asks
+- * the installed tree the same question with the same regex, so a file counted
+- * unconditional here is counted unconditional there.
++ * `paths:` at the start of a line IN THE FRONTMATTER is the whole test, and it
++ * is the host's own convention rather than this package's: `claudeRuleRewrite`
++ * states it from the emitting side — "with it a rule loads on a path match,
++ * without it the rule loads unconditionally".
++ *
++ * SCOPED TO THE FRONTMATTER, which it was not until 2026-10-06. The predicate
++ * tested the whole unstripped file while the characters it partitions come
++ * from `ruleBody` — predicate and measure read different strings. That was
++ * survivable while it only moved a file COUNT; since the when-loaded character
++ * split it decides which bucket a whole file's characters land in, and
++ * `unconditional_chars` is the figure the ceiling argument is read in. One body
++ * line beginning `paths:` — a YAML trigger example quoted inside a kernel or
++ * `no_stub` rule, which is ordinary prose — would have moved that rule's entire
++ * character count from standing to path-scoped, silently.
++ *
++ * Measured before the change: of the 105 files on a real opted-in install, two
++ * are path-scoped by either reading and none carries a body-only mention, so
++ * the fix moves no published figure. It is hardening against a case that does
++ * not exist yet rather than a correction of one that does, and it is worth
++ * making precisely because the failure would be silent.
++ *
++ * `check_single_delivery` already slices the frontmatter before this test, so
++ * this now AGREES with it. `rule_activation_census.projection_reading` still
++ * scans the whole file; that reader counts files rather than characters, so the
++ * divergence costs it nothing today, and changing a census's reading belongs to
++ * that census rather than here. Named so the next reader finds a known
++ * difference instead of discovering an unexplained one.
+  *
+  * SOURCE-SIDE CLASSIFICATION IS A DIFFERENT QUESTION and deliberately not used.
+  * `classify_rule` reads `alwaysApply` and `type: always` to tell `always` from
+@@ -184,7 +248,20 @@ export interface InstalledLayerReport {
+  * both load every session, which is the only property the host acts on.
+  */
+ export function isUnconditional(text: string): boolean {
+-    return !/^paths:/m.test(text);
++    return !/^paths:/m.test(frontmatterBlock(text));
++}
++
++/**
++ * The YAML frontmatter block, without its fences. Empty when there is none.
++ *
++ * Deliberately the same arithmetic `check_single_delivery` uses — `slice(3,
++ * end)` from a leading `---\n` to the next `\n---` — so the two readers cannot
++ * disagree about where a rule's frontmatter stops.
++ */
++function frontmatterBlock(text: string): string {
++    if (!text.startsWith('---\n')) return '';
++    const end = text.indexOf('\n---', 3);
++    return end === -1 ? '' : text.slice(3, end);
+ }
+ 
+ /**
+@@ -211,6 +288,8 @@ export function readLayer(
          foreign: 0,
          package_owned_chars: 0,
          foreign_chars: 0,
@@ -1454,7 +1693,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
          top: [],
      };
      let names: string[];
-@@ -266,6 +306,8 @@ export function readLayer(
+@@ -266,6 +345,8 @@ export function readLayer(
          foreign: readings.filter((r) => !r.package_owned).length,
          package_owned_chars: readings.reduce((n, r) => n + (r.package_owned ? r.chars : 0), 0),
          foreign_chars: readings.reduce((n, r) => n + (r.package_owned ? 0 : r.chars), 0),
@@ -1463,7 +1702,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
          top,
      };
  }
-@@ -393,11 +435,140 @@ export function buildHostLimitRows(
+@@ -393,11 +474,201 @@ export function buildHostLimitRows(
      return rows;
  }
  
@@ -1484,14 +1723,38 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
 + * home-less case. A caller with a specific file in mind passes it outright.
 + */
 +export function defaultInventoryPath(home?: string | null): string {
++    // THE ENV OVERRIDES COME FIRST, for every caller. An earlier shape returned
++    // the hardcoded layout whenever a home was supplied — which is every caller
++    // of `buildInstalledLayerReport`, since `ReportOptions.home` is required —
++    // so `AGENT_CONFIG_DEPLOY_INVENTORY` and `EVENT4U_CONFIG_HOME` reached this
++    // reader never rather than only in the home-less case. Finding nothing is
++    // reported as `none`, i.e. "no evidence", so that failed silently in the
++    // one direction that matters.
++    const override = process.env[INVENTORY_ENV];
++    if (override !== undefined && override !== '') return inventory_path();
++    const configHome = process.env[EVENT4U_HOME_ENV];
++    if (configHome !== undefined && configHome !== '') return inventory_path();
 +    if (home === undefined || home === null || home === '') return inventory_path();
-+    return path.join(home, '.event4u', 'agent-config', 'deployed-files.json');
++    // COMPOSED, NOT RE-SPELLED: the user-global layout and the basename are both
++    // exported by the modules that own them, so a layout change moves this
++    // reader with it instead of leaving it looking in a directory nobody writes.
++    return path.join(home, DEFAULT_EVENT4U_ROOT_RELATIVE, INVENTORY_BASENAME);
 +}
 +
 +/** The ownership evidence and the name of where it came from. */
 +export interface OwnershipResolution {
 +    /** Absolute path → recorded hash (or `null` when the source records no hash). */
 +    readonly recorded: ReadonlyMap<string, string | null>;
++    /**
++     * EVERY source that contributed at least one path, in resolution order.
++     *
++     * Plural because the sources describe disjoint path spaces — a manifest
++     * speaks for a project tree, an inventory for the user's home — so a
++     * reading that covers both layers can legitimately have two, and naming
++     * only one is wrong about the files the other accounts for.
++     */
++    readonly sources: readonly OwnershipSource[];
++    /** The most specific contributor, for a reader that wants one word. `none` when empty. */
 +    readonly source: OwnershipSource;
 +}
 +
@@ -1538,12 +1801,29 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
 + * per tool, the anchor and every file the installer maintains there —
 + * "the ownership proof that makes reaping safe". This reads it.
 + *
-+ * ORDER, AND WHY IT IS NOT A UNION. The project manifest wins outright when it
-+ * exists: it carries hashes, so it can distinguish `recorded-unchanged` from
-+ * `recorded-modified`, and folding a hashless inventory into it would silently
-+ * downgrade that. Only when no manifest resolves does the inventory answer —
-+ * and there the two hashless sources ARE unioned, because this deploy's own
-+ * file set and a previous deploy's record are the same kind of evidence.
++ * IT IS A UNION, AND THE PATH SPACES ARE WHY. An earlier shape let the project
++ * manifest win OUTRIGHT whenever its file existed, on the reasoning that it
++ * carries hashes an inventory does not. That reasoning does not survive the
++ * observation that the two sources describe DISJOINT sets of paths: the
++ * manifest records project-relative entries resolved against `projectRoot`,
++ * the inventory records paths under the user's home. Exclusivity therefore
++ * bought nothing and cost everything — any `agents/installed-tools.lock` on
++ * disk, a gitignored file a single project-scoped install creates, restored
++ * the exact `0 package-owned` reading for the global layer that step 1.2
++ * exists to fix, while the report printed "read from the installed-tools
++ * manifest" with no evidence behind it for those paths.
++ *
++ * So every source contributes, and the MANIFEST IS MERGED LAST: on the paths
++ * it names its hash overwrites a hashless entry, which preserves the
++ * `recorded-unchanged` / `recorded-modified` distinction that motivated the
++ * precedence in the first place, without discarding evidence about paths it
++ * says nothing about.
++ *
++ * {@link OwnershipResolution.sources} lists every source that contributed at
++ * least one path, because one word cannot describe two path spaces — a report
++ * reading global and project layers together may have manifest evidence for
++ * one and inventory evidence for the other, and saying only one of them is
++ * wrong about half the files it is describing.
 + *
 + * A FILE THE USER EDITED AND THE INSTALLER PRESERVED STILL COUNTS AS
 + * MAINTAINED. The inventory records what the installer MAINTAINS at a path, not
@@ -1552,32 +1832,31 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
 + * it is why this function returns `null` hashes rather than fabricating one.
 + */
 +export function resolveLayerOwnership(opts: OwnershipOptions): OwnershipResolution {
-+    const manifestPath = opts.manifestPath ?? null;
-+    if (manifestPath !== null && fs.existsSync(manifestPath)) {
-+        return {
-+            recorded: readRecordedHashes(manifestPath, opts.projectRoot),
-+            source: 'manifest',
-+        };
-+    }
 +    const recorded = new Map<string, string | null>();
-+    let fromInventory = 0;
++    const sources: OwnershipSource[] = [];
++
++    // HASHLESS SOURCES FIRST, so the manifest's hashes overwrite a `null` on
++    // any path both happen to name rather than the other way round.
 +    if (opts.inventoryPath !== null) {
++        let n = 0;
 +        try {
 +            const inv = load_inventory(opts.inventoryPath ?? defaultInventoryPath(opts.home));
 +            for (const abs of recorded_absolute_files(inv, opts.home ?? null)) {
 +                recorded.set(abs, null);
-+                fromInventory += 1;
++                n += 1;
 +            }
 +        } catch {
 +            // A corrupt or unreadable inventory is no evidence, never a failure.
 +        }
++        if (n > 0) sources.push('global-inventory');
 +    }
++
 +    let fromDeploy = 0;
 +    for (const [anchor, rels] of opts.thisDeploy ?? new Map()) {
 +        for (const rel of rels) {
 +            const abs = path.resolve(anchor, rel);
-+            if (!recorded.has(abs)) fromDeploy += 1;
 +            recorded.set(abs, null);
++            fromDeploy += 1;
 +            // Both spellings, for the reason `recorded_absolute_files` states:
 +            // the reader compares against a lexically joined path, and a HOME
 +            // behind a symlink makes the two disagree.
@@ -1588,10 +1867,31 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
 +            }
 +        }
 +    }
-+    if (recorded.size === 0) return { recorded: NO_RECORDED_HASHES, source: 'none' };
-+    // Named for what actually supplied the evidence, so a reader can tell a
-+    // first install (nothing recorded yet) from a later one.
-+    return { recorded, source: fromInventory > 0 || fromDeploy === 0 ? 'global-inventory' : 'this-deploy' };
++    if (fromDeploy > 0) sources.push('this-deploy');
++
++    const manifestPath = opts.manifestPath ?? null;
++    if (manifestPath !== null && fs.existsSync(manifestPath)) {
++        let n = 0;
++        for (const [abs, hash] of readRecordedHashes(manifestPath, opts.projectRoot)) {
++            recorded.set(abs, hash);
++            n += 1;
++        }
++        if (n > 0) sources.push('manifest');
++    }
++
++    if (recorded.size === 0) {
++        return { recorded: NO_RECORDED_HASHES, sources: [], source: 'none' };
++    }
++    // `source` keeps a single word for readers that want one. The manifest is
++    // the most specific evidence, so it leads when it contributed; otherwise
++    // the inventory, otherwise this deploy's own set.
++    const primary =
++        sources.includes('manifest')
++            ? 'manifest'
++            : sources.includes('global-inventory')
++              ? 'global-inventory'
++              : 'this-deploy';
++    return { recorded, sources, source: primary };
 +}
 +
  export interface ReportOptions {
@@ -1605,7 +1905,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
      /** Supplied rather than shelled, so a fixture is not at the mercy of a CLI being on PATH. */
      readonly hostVersion?: string;
      /**
-@@ -418,10 +589,12 @@ export interface ReportOptions {
+@@ -418,10 +689,12 @@ export interface ReportOptions {
   */
  export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerReport {
      const manifestPath = opts.manifestPath ?? null;
@@ -1613,7 +1913,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
 -        manifestPath === null
 -            ? NO_RECORDED_HASHES
 -            : readRecordedHashes(manifestPath, opts.projectRoot);
-+    const { recorded, source: ownership_source } = resolveLayerOwnership({
++    const { recorded, source: ownership_source, sources: ownership_sources } = resolveLayerOwnership({
 +        manifestPath,
 +        projectRoot: opts.projectRoot,
 +        home: opts.home,
@@ -1622,7 +1922,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
      const layers: LayerReading[] = [];
      for (const host of Object.keys(GLOBAL_RULE_DIRS).sort()) {
          const dir = globalRuleLayerPath(host, opts.home);
-@@ -441,6 +614,8 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
+@@ -441,6 +714,8 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
              foreign: acc.foreign + l.foreign,
              package_owned_chars: acc.package_owned_chars + l.package_owned_chars,
              foreign_chars: acc.foreign_chars + l.foreign_chars,
@@ -1631,7 +1931,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
          }),
          {
              files: 0,
-@@ -450,6 +625,8 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
+@@ -450,6 +725,8 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
              foreign: 0,
              package_owned_chars: 0,
              foreign_chars: 0,
@@ -1640,11 +1940,12 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
          },
      );
      const limits = buildHostLimitRows(
-@@ -461,22 +638,39 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
+@@ -461,22 +738,50 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
          project_root: opts.projectRoot,
          host_version: opts.hostVersion ?? 'unknown',
          manifest_present: manifestPath !== null && fs.existsSync(manifestPath),
 +        ownership_source,
++        ownership_sources,
          layers,
          limits,
          totals,
@@ -1658,17 +1959,27 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
 + * the same source — a consumer comparing a receipt against a later report must
 + * not have to decide whether a wording difference means a different reading.
 + */
-+export function ownershipLine(source: OwnershipSource): string {
-+    switch (source) {
-+        case 'manifest':
-+            return 'ownership: read from the installed-tools manifest';
-+        case 'global-inventory':
-+            return 'ownership: read from the global deploy inventory (deployed-files.json) — no project manifest needed';
-+        case 'this-deploy':
-+            return 'ownership: read from the file set this install just wrote — the inventory is recorded after the receipt';
-+        case 'none':
-+            return 'ownership: NO manifest and NO deploy inventory resolved — every file reads foreign, which is no evidence rather than a finding';
++export function ownershipLine(sources: OwnershipSource | readonly OwnershipSource[]): string {
++    const list = (Array.isArray(sources) ? sources : [sources as OwnershipSource]).filter(
++        (s) => s !== 'none',
++    );
++    if (list.length === 0) {
++        return 'ownership: NO manifest and NO deploy inventory resolved — every file reads foreign, which is no evidence rather than a finding';
 +    }
++    // EVERY contributor is named, never just one. The sources cover disjoint
++    // path spaces, so a line naming one of two is a true sentence about half
++    // the files and a false one about the rest.
++    const phrases: Record<Exclude<OwnershipSource, 'none'>, string> = {
++        manifest: 'the installed-tools manifest',
++        'global-inventory': 'the global deploy inventory (deployed-files.json)',
++        'this-deploy': 'the file set this install just wrote',
++    };
++    const named = list.map((s) => phrases[s as Exclude<OwnershipSource, 'none'>]);
++    const joined =
++        named.length === 1
++            ? (named[0] as string)
++            : `${named.slice(0, -1).join(', ')} and ${named[named.length - 1] as string}`;
++    return `ownership: read from ${joined}`;
 +}
 +
  /** The report as lines, for a terminal. One directory per block. */
@@ -1681,11 +1992,11 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
 -            ? 'ownership: read from the installed-tools manifest'
 -            : 'ownership: NO manifest resolved — every file reads foreign, which is no evidence rather than a finding',
 -    );
-+    out.push(ownershipLine(report.ownership_source));
++    out.push(ownershipLine(report.ownership_sources));
      for (const l of report.layers) {
          if (!l.present) {
              out.push(`  ${l.host} (${l.scope}) — absent: ${l.dir}`);
-@@ -484,7 +678,8 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
+@@ -484,7 +789,8 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
          }
          out.push(
              `  ${l.host} (${l.scope}) — ${String(l.files)} files, ` +
@@ -1695,7 +2006,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
                  `${String(l.package_owned)} package-owned / ${String(l.foreign)} foreign`,
          );
          for (const f of l.top) {
-@@ -496,7 +691,9 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
+@@ -496,7 +802,9 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
      const t = report.totals;
      out.push(
          `  TOTAL — ${String(t.files)} files, ${String(t.unconditional)} unconditional, ` +
@@ -1707,10 +2018,10 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..5d04c9c521aac2bcd79abff274244318
      out.push(...renderHostLimitRows(report.limits));
      return out;
 diff --git a/src/scripts/_lib/thin_rules.ts b/src/scripts/_lib/thin_rules.ts
-index fe3fe1e1374692d0c645325889f5b7b2e65083d3..27bc3d355b06aa27289051a5237e799a314bde08 100644
+index fe3fe1e1374692d0c645325889f5b7b2e65083d3..7bf9eef033c6b640a09eac08934978dff33c1715 100644
 --- a/src/scripts/_lib/thin_rules.ts
 +++ b/src/scripts/_lib/thin_rules.ts
-@@ -284,15 +284,71 @@ function _title(s: string): string {
+@@ -284,15 +284,79 @@ function _title(s: string): string {
   * Exported so the WRITER and every DETECTOR share one definition. A gate that
   * re-spelled this string would drift from the writer silently, and the failure
   * would be invisible in exactly the direction that matters: a stub the gate
@@ -1773,8 +2084,16 @@ index fe3fe1e1374692d0c645325889f5b7b2e65083d3..27bc3d355b06aa27289051a5237e799a
 + * ANCHORED TO END OF LINE, NOT `\S+`. The pointer is the last thing on its
 + * line, and a package root may contain spaces; `\S+` would silently stop at the
 + * first one and report a well-formed pointer as missing.
++ *
++ * COMPOSED FROM {@link THIN_BODY_POINTER_PREFIX} rather than re-spelling it.
++ * The constant exists so a reader cannot hold its own copy, and a pattern six
++ * lines below it holding a literal `Body: ` would have broken that invariant in
++ * the file that states it.
 + */
-+export const THIN_BODY_POINTER_RE = /Body: (.+\.md)\s*$/m;
++export const THIN_BODY_POINTER_RE = new RegExp(
++    `${THIN_BODY_POINTER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(.+\\.md)\\s*$`,
++    'm',
++);
 +
 +/** Does this entry carry a body pointer the writer would recognise? */
 +export function has_body_pointer(text: string): boolean {
@@ -1784,7 +2103,7 @@ index fe3fe1e1374692d0c645325889f5b7b2e65083d3..27bc3d355b06aa27289051a5237e799a
  /**
   * Where a stub tells a reader the body actually is.
   *
-@@ -356,7 +412,7 @@ export function thin_entry(
+@@ -356,7 +420,7 @@ export function thin_entry(
      return (
          `## ${title}\n` +
          `${THIN_ENTRY_MARKER}${fires} ${desc} ` +
@@ -1794,28 +2113,20 @@ index fe3fe1e1374692d0c645325889f5b7b2e65083d3..27bc3d355b06aa27289051a5237e799a
  }
  
 diff --git a/src/scripts/install.ts b/src/scripts/install.ts
-index af339edd91d7e8bd25a63308a3d8b8db9743f2f6..9033fd86cf321a0ea8f66284b0c7d62ad4e8bc7e 100644
+index af339edd91d7e8bd25a63308a3d8b8db9743f2f6..fc032932a9dd20d94e650108eee9bb55678cd777 100644
 --- a/src/scripts/install.ts
 +++ b/src/scripts/install.ts
-@@ -3032,7 +3032,15 @@ function _deploy_global_content(
+@@ -3032,7 +3032,7 @@ function _deploy_global_content(
                      warn(`claude-code: thinned rule layer not written — ${String(e)}`);
                  }
              }
 -            if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root)) info(l);
-+            // Step 1.2: the receipt prints BEFORE `record_deploy`, so on a first
-+            // install the inventory on disk is still empty. `current_files` is
-+            // the set this run just wrote, which is the evidence the receipt
-+            // would otherwise be missing.
-+            if (!state.QUIET)
-+                for (const l of installReceiptBudgetLines(package_root, undefined, {
-+                    thisDeploy: new Map([[anchor, current_files]]),
-+                }))
-+                    info(l);
++            if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root, undefined, { thisDeploy: new Map([[anchor, current_files]]) })) info(l);
          }
  
          const missing_targets = _verify_deploy_targets(anchor, plan);
 diff --git a/src/scripts/probe_host_compliance.ts b/src/scripts/probe_host_compliance.ts
-index 6ec7bae600983152d2c058f122d190e968201c14..f333dbfc22063274c090aa7a348caffca25cfdd0 100644
+index 6ec7bae600983152d2c058f122d190e968201c14..cf1eef446d102b8321af02219c03881bbacf3093 100644
 --- a/src/scripts/probe_host_compliance.ts
 +++ b/src/scripts/probe_host_compliance.ts
 @@ -31,7 +31,7 @@ import * as path from 'node:path';
@@ -1836,7 +2147,32 @@ index 6ec7bae600983152d2c058f122d190e968201c14..f333dbfc22063274c090aa7a348caffc
  // The supported hosts whose live thin-compliance must be falsified.
  const HOSTS = ['claude-code', 'cursor', 'augment'];
  
-@@ -60,10 +58,19 @@ export function evaluate_demotion(
+@@ -53,6 +51,24 @@ export interface DemotionResult {
+   body_removed: boolean;
+   trigger_hint_preserved: boolean;
+   link_present: boolean;
++  /**
++   * The stub ends in something SHAPED like a body path, tested without the
++   * writer's constants.
++   *
++   * The honest reason this field exists. Since steps 2.1 and 2.3 both
++   * `pointer_present` and `link_present` are computed from the writer's own
++   * exports, and this probe's only caller feeds them `thin_entry` output
++   * produced in the same process — so those two can no longer return false
++   * whatever the writer emits. Asking them is asking the writer to agree with
++   * itself.
++   *
++   * Re-spelling the marker to restore their power is exactly the drift step 2.1
++   * removed, so this does not do that. It asserts the STRUCTURE a stub must
++   * have for a reader to be able to follow it at all — a trailing path ending
++   * `.md` — which no constant in `thin_rules` spells and which a writer that
++   * stopped emitting a pointer would fail.
++   */
++  pointer_targets_a_path: boolean;
+ }
+ 
+ /** Assert a thinned canary is a valid pointer (body gone, still selectable). */
+@@ -60,16 +76,33 @@ export function evaluate_demotion(
    thinned: string,
    opts: { sentinel: string; keyword: string } = { sentinel: SENTINEL, keyword: KEYWORD },
  ): DemotionResult {
@@ -1855,9 +2191,34 @@ index 6ec7bae600983152d2c058f122d190e968201c14..f333dbfc22063274c090aa7a348caffc
 +  // the markdown-link form, so when the pointer became a bare path the gate
 +  // would have reported every correct stub as missing its link.
 +  const link_present = has_body_pointer(thinned);
++  // Writer-independent, for the reason `pointer_targets_a_path` documents.
++  const pointer_targets_a_path = /\S+\.md\s*$/m.test(thinned);
    return {
-     ok: pointer_present && body_removed && trigger_hint_preserved && link_present,
+-    ok: pointer_present && body_removed && trigger_hint_preserved && link_present,
++    ok:
++      pointer_present &&
++      body_removed &&
++      trigger_hint_preserved &&
++      link_present &&
++      pointer_targets_a_path,
      pointer_present,
+     body_removed,
+     trigger_hint_preserved,
+     link_present,
++    pointer_targets_a_path,
+   };
+ }
+ 
+@@ -124,7 +157,8 @@ function main(argv: string[]): number {
+   process.stdout.write(
+     `${result.ok ? '✅' : '❌'}  mechanical demotion: ` +
+       `pointer=${result.pointer_present} body-removed=${result.body_removed} ` +
+-      `hint=${result.trigger_hint_preserved} link=${result.link_present}\n`,
++      `hint=${result.trigger_hint_preserved} link=${result.link_present} ` +
++      `path=${result.pointer_targets_a_path}\n`,
+   );
+   if (!result.ok) {
+     process.stdout.write('❌  the thin projector did NOT demote the canary correctly.\n');
 diff --git a/tests/scripts/bench_quality_run.test.ts b/tests/scripts/bench_quality_run.test.ts
 index c4bec9cb3b7e0abffe234bacd01716010a7dc8a0..05f225ffb65806644e5ee68890f262efb95e4362 100644
 --- a/tests/scripts/bench_quality_run.test.ts
@@ -2112,10 +2473,10 @@ index 0000000000000000000000000000000000000000..7525fed74702f53e8ee8ce7227c315be
 +});
 diff --git a/tests/scripts/installed_layer_ownership_fixture.test.ts b/tests/scripts/installed_layer_ownership_fixture.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..9b0d0a19d190d1b63ab06671d0e0d3d257e78056
+index 0000000000000000000000000000000000000000..77cc28ea58a998a61694889ff17d6ed19df54231
 --- /dev/null
 +++ b/tests/scripts/installed_layer_ownership_fixture.test.ts
-@@ -0,0 +1,271 @@
+@@ -0,0 +1,350 @@
 +// Ownership on a GLOBAL-ONLY install — step 1.2 of
 +// `road-to-a-thinned-layer-measured-in-one-unit`.
 +//
@@ -2177,6 +2538,24 @@ index 0000000000000000000000000000000000000000..9b0d0a19d190d1b63ab06671d0e0d3d2
 +        fs.writeFileSync(path.join(dir, name), text, 'utf-8');
 +    }
 +    return dir;
++}
++
++/** An installed-tools manifest that really records the given files. */
++function writeManifest(
++    projectRoot: string,
++    files: ReadonlyArray<{ path: string; sha256: string }>,
++): string {
++    const p = path.join(projectRoot, 'agents', 'installed-tools.lock');
++    fs.mkdirSync(path.dirname(p), { recursive: true });
++    const rows = files
++        .map((f) => `      - path: "${f.path}"\n        sha256: "${f.sha256}"`)
++        .join('\n');
++    fs.writeFileSync(
++        p,
++        `schema_version: 2\ntools:\n  - id: claude-code\n    files:\n${rows}\n`,
++        'utf-8',
++    );
++    return p;
 +}
 +
 +/** A `deployed-files.json` naming `anchor` and the anchor-relative `files`. */
@@ -2248,10 +2627,63 @@ index 0000000000000000000000000000000000000000..9b0d0a19d190d1b63ab06671d0e0d3d2
 +        expect(ownershipLine('none')).toContain('no evidence');
 +    });
 +
-+    it('a project manifest still wins — it carries hashes the inventory does not', () => {
-+        const home = mkTmp('ilo-pref-home-');
++    it('a manifest ADDS to the inventory — it does not replace it', () => {
++        // THE REGRESSION THIS PINS. An earlier shape let any existing manifest
++        // file win outright and discard the inventory. The two sources describe
++        // DISJOINT path spaces — a manifest speaks for a project tree, an
++        // inventory for the user's home — so exclusivity bought nothing and
++        // restored, for the global layer, the exact `0 package-owned` reading
++        // step 1.2 exists to remove. One gitignored `installed-tools.lock`,
++        // which a single project-scoped install creates, was enough.
++        const home = mkTmp('ilo-union-home-');
 +        const dir = stageGlobal(home, { 'a.md': rule(10) });
-+        const project = mkTmp('ilo-pref-proj-');
++        const project = mkTmp('ilo-union-proj-');
++        const projectFile = path.join(project, '.claude', 'rules', 'p.md');
++        fs.mkdirSync(path.dirname(projectFile), { recursive: true });
++        fs.writeFileSync(projectFile, rule(5), 'utf-8');
++        const manifestPath = writeManifest(project, [
++            { path: projectFile, sha256: 'deadbeef' },
++        ]);
++
++        const r = resolveLayerOwnership({
++            manifestPath,
++            projectRoot: project,
++            inventoryPath: stageInventory(path.dirname(dir), ['rules/a.md']),
++        });
++
++        // Counts, not just a label — the assertion the earlier test was missing
++        // and the reason it codified the hole instead of catching it.
++        expect(r.recorded.has(path.join(dir, 'a.md'))).toBe(true);
++        expect(r.recorded.has(projectFile)).toBe(true);
++        expect([...r.sources].sort()).toEqual(['global-inventory', 'manifest']);
++        // And the line a reader sees names BOTH, because naming one would be
++        // a true sentence about half the files and a false one about the rest.
++        expect(ownershipLine(r.sources)).toContain('manifest');
++        expect(ownershipLine(r.sources)).toContain('deploy inventory');
++    });
++
++    it('the manifest still supplies the HASH on a path both sources name', () => {
++        // What the old precedence was defending, preserved by merging the
++        // manifest LAST rather than by discarding the other sources.
++        const home = mkTmp('ilo-hash-home-');
++        const dir = stageGlobal(home, { 'a.md': rule(10) });
++        const shared = path.join(dir, 'a.md');
++        const project = mkTmp('ilo-hash-proj-');
++        const manifestPath = writeManifest(project, [{ path: shared, sha256: 'cafef00d' }]);
++        const r = resolveLayerOwnership({
++            manifestPath,
++            projectRoot: project,
++            inventoryPath: stageInventory(path.dirname(dir), ['rules/a.md']),
++        });
++        expect(r.recorded.get(shared)).toBe('cafef00d');
++    });
++
++    it('a manifest that records NOTHING contributes nothing and claims nothing', () => {
++        // The shape the earlier test used as its fixture: a manifest file that
++        // exists and names no file. It must not be able to label the reading.
++        const home = mkTmp('ilo-empty-home-');
++        const dir = stageGlobal(home, { 'a.md': rule(10) });
++        const project = mkTmp('ilo-empty-proj-');
 +        const manifestPath = path.join(project, 'agents', 'installed-tools.lock');
 +        fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
 +        fs.writeFileSync(manifestPath, 'schema_version: 2\n', 'utf-8');
@@ -2260,7 +2692,8 @@ index 0000000000000000000000000000000000000000..9b0d0a19d190d1b63ab06671d0e0d3d2
 +            projectRoot: project,
 +            inventoryPath: stageInventory(path.dirname(dir), ['rules/a.md']),
 +        });
-+        expect(r.source).toBe('manifest');
++        expect(r.sources).toEqual(['global-inventory']);
++        expect(r.recorded.has(path.join(dir, 'a.md'))).toBe(true);
 +    });
 +
 +    it('a corrupt inventory is no evidence rather than a failure', () => {
@@ -2362,9 +2795,16 @@ index 0000000000000000000000000000000000000000..9b0d0a19d190d1b63ab06671d0e0d3d2
 +
 +            // The receipt, run the way the installer runs it, resolves the same
 +            // ownership — the step's "the receipt prints the same".
-+            const receipt = installReceiptBudgetLines(REPO_ROOT, home, { inventoryPath }).join(
-+                '\n',
-+            );
++            // `manifestPath: null` is what makes this case hermetic. The
++            // receipt otherwise reads `manifest_path(REPO_ROOT)`, a gitignored
++            // lock absent in CI and present on any checkout where a
++            // project-scoped install has run — so without it this 540-second
++            // case is green in CI and red on a maintainer's machine for a
++            // reason that has nothing to do with the behaviour under test.
++            const receipt = installReceiptBudgetLines(REPO_ROOT, home, {
++                inventoryPath,
++                manifestPath: null,
++            }).join('\n');
 +            expect(receipt).toContain(ownershipLine('global-inventory'));
 +            const ownedChars = claude.reduce((n, l) => n + l.package_owned_chars, 0);
 +            expect(receipt).toContain(`${String(ownedChars)} package-owned`);
@@ -2389,10 +2829,10 @@ index 0000000000000000000000000000000000000000..9b0d0a19d190d1b63ab06671d0e0d3d2
 +});
 diff --git a/tests/scripts/installed_layer_unconditional_chars.test.ts b/tests/scripts/installed_layer_unconditional_chars.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..f2cde04acac668a7ecfbc879c3e4e295bdcd2c1e
+index 0000000000000000000000000000000000000000..cfe489010f9c90cf952cf540fedffa17eaea5b2d
 --- /dev/null
 +++ b/tests/scripts/installed_layer_unconditional_chars.test.ts
-@@ -0,0 +1,168 @@
+@@ -0,0 +1,201 @@
 +// The when-loaded split, in CHARACTERS — step 1.1 of
 +// `road-to-a-thinned-layer-measured-in-one-unit`.
 +//
@@ -2544,6 +2984,39 @@ index 0000000000000000000000000000000000000000..f2cde04acac668a7ecfbc879c3e4e295
 +        expect(l.scoped_chars).toBe(30);
 +        expect(l.unconditional_chars).toBe(70);
 +        expect(l.foreign_chars).toBe(70);
++    });
++
++    it('a `paths:` line in the BODY does not move the file to path-scoped', () => {
++        // The predicate partitions characters that come from `ruleBody`, so it
++        // must read the same string the measure does. Reading the whole
++        // unstripped file meant one line of ordinary prose — a YAML trigger
++        // example quoted inside a rule — moved that rule's ENTIRE character
++        // count from standing to path-scoped, silently, in the figure the whole
++        // ceiling argument is read in.
++        const home = mkTmp('ilu-bodypaths-');
++        const dir = path.join(home, GLOBAL_RULE_DIRS['claude-code'] as string);
++        fs.mkdirSync(dir, { recursive: true });
++        const body = 'A rule whose prose quotes a trigger block:\n\npaths:\n  - "**/*.php"\n';
++        fs.writeFileSync(path.join(dir, 'quotes-paths.md'), `---\ntype: auto\n---\n${body}`, 'utf-8');
++        const l = readLayer('claude-code', 'global', dir, new Map());
++        // Asserted as the BUCKET property rather than a hand-computed length:
++        // the file's whole measured body is standing, and none of it is
++        // path-scoped. `ruleBody`'s exact trimming is a different question and
++        // pinning it here would make this case fail for the wrong reason.
++        expect(l.chars).toBeGreaterThan(0);
++        expect(l.unconditional_chars).toBe(l.chars);
++        expect(l.scoped_chars).toBe(0);
++    });
++
++    it('a `paths:` key in the FRONTMATTER still scopes the file', () => {
++        // The control for the case above: without it, a predicate that always
++        // answered "unconditional" would pass there and break everything else
++        // quietly.
++        const home = mkTmp('ilu-fmpaths-');
++        const dir = stageGlobal(home, { 'scoped.md': rule(40, { scoped: true }) });
++        const l = readLayer('claude-code', 'global', dir, new Map());
++        expect(l.scoped_chars).toBe(40);
++        expect(l.unconditional_chars).toBe(0);
 +    });
 +
 +    it('the report PRINTS both figures beside `chars`, per layer and in the total', () => {
@@ -2863,10 +3336,10 @@ index 0000000000000000000000000000000000000000..c93fcf23e9297c843ee4cf7f8fdb9d3d
 +});
 diff --git a/tests/scripts/thin_marker_unique_in_corpus.test.ts b/tests/scripts/thin_marker_unique_in_corpus.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..6cc82a792ec04843c8023fd2c8637514a5b05117
+index 0000000000000000000000000000000000000000..7724a106d1e6f53a47d457262464f06482612d3b
 --- /dev/null
 +++ b/tests/scripts/thin_marker_unique_in_corpus.test.ts
-@@ -0,0 +1,115 @@
+@@ -0,0 +1,141 @@
 +// The shortened marker still says what to do, and still says it uniquely —
 +// step 2.2 of `road-to-a-thinned-layer-measured-in-one-unit`.
 +//
@@ -2918,6 +3391,11 @@ index 0000000000000000000000000000000000000000..6cc82a792ec04843c8023fd2c8637514
 +        // the content of the constant, not decoration on it.
 +        expect(THIN_ENTRY_MARKER.toLowerCase()).toContain('load');
 +        expect(THIN_ENTRY_MARKER.toLowerCase()).toContain('body');
++        // And WHEN — without it the sentence says the body is to be loaded and
++        // never says on what, which is half the instruction. Asserted because
++        // it was not: the marker could have been shortened to drop it with
++        // every gate in this branch still green.
++        expect(THIN_ENTRY_MARKER.toLowerCase()).toContain('match');
 +    });
 +
 +    it('is true for every entry `build_thin` emits as a stub', () => {
@@ -2935,6 +3413,27 @@ index 0000000000000000000000000000000000000000..6cc82a792ec04843c8023fd2c8637514
 +        expect(stubs, 'the control: at least one entry was emitted as a stub').toBeGreaterThan(
 +            20,
 +        );
++    });
++
++    it('is FALSE for every entry `build_thin` keeps full-bodied', () => {
++        // The direction the sweep above cannot reach. It checks the false
++        // direction only against `src/rules/` and the projection, which are
++        // rule SOURCES — not what `build_thin` emits. A marker that leaked into
++        // a full-bodied EMITTED entry would pass every other case in this file,
++        // and a kept rule read as a stub is a rule the conformance verb stops
++        // asking about.
++        const emitted = build_thin();
++        const kept: string[] = [];
++        let keptSeen = 0;
++        for (const [name, text] of emitted) {
++            if (has_body_pointer(text)) continue; // a stub, covered above
++            keptSeen += 1;
++            if (is_thin_entry(text)) kept.push(name);
++        }
++        // The control: the emitter really does keep entries full-bodied, so an
++        // empty `kept` is a finding rather than an empty loop.
++        expect(keptSeen, 'the control: build_thin kept entries full-bodied').toBeGreaterThan(5);
++        expect(kept).toEqual([]);
 +    });
 +
 +    it('is false for every rule body in `src/rules/`', () => {

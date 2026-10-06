@@ -266,6 +266,36 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
       77,900 unconditional.
       verify: `grep -c 'after the law moves' agents/evidence/analysis/thinned-layer-composition-2026-10.md` -> /^[1-9]/
 
+## Closure-evidence corrections
+
+> Kept OUT of the Acceptance Criteria block on purpose. The risk-register gate
+> hashes that block and compares it against the version the `reviewed:` stamp
+> was set on; a same-day re-review cannot be expressed, because the stamp is a
+> date and the date has not changed. So a correction written inside the block
+> would red the gate rather than inform a reader. It lives here instead, next
+> to the criteria it corrects.
+
+**AC-3, corrected 2026-10-06 after the R2 completion review (finding 10).**
+The closing line of AC-3 above describes the detector evidence more broadly
+than the suites assert. What they actually run:
+
+- `thin_marker_single_spelling` runs ONE writer-emitted stub past all three
+  detectors, and a non-stub past all three in the false direction. It does not
+  run every stub.
+- `thin_marker_unique_in_corpus` runs EVERY emitted stub past `is_thin_entry`
+  in the true direction, every emitted full-bodied entry past it in the false
+  direction, and both rule corpora. It uses one detector, not three.
+
+So no single suite runs every stub past all three detectors; between them they
+cover each stub against the writer's predicate and one stub against all three.
+The criterion still holds on that evidence — it asks that every stub be
+recognised, which the corpus sweep establishes — but the sentence above claims
+a shape the tests do not have, and the claim is corrected here rather than
+left to a reader to discover.
+
+The marker's instruction words are asserted individually: `load` and `body`
+were, `match` was not until the same review round, and all three are now.
+
 ## Blockers
 
 ### blocker: law-heading-authoring-not-named-in-this-contract
