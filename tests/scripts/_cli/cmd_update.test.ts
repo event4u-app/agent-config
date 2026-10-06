@@ -33,6 +33,8 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { CONFIG_HOME_VAR } from '../../_lib/hermetic-env.js';
+
 const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
 const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_update.ts');
 const TSX_BIN = path.resolve(
@@ -62,6 +64,16 @@ function env(b: Box): Record<string, string> {
         AGENT_CONFIG_INSTALLED_LOCK: b.lock,
         AGENT_CONFIG_OFFLINE: '1',
         HOME: b.home,
+        // The subprocess inherits the parent test worker's `process.env`,
+        // which carries the hermetic setup file's ambient
+        // `EVENT4U_CONFIG_HOME` pin — and `user_global_paths.event4u_root()`
+        // honours that override BEFORE deriving from `HOME`, so without this
+        // the P2 state file (read via a module-level constant in
+        // `update_check.ts`) would be written under the worker's shared
+        // hermetic directory instead of this test's own `b.home`. Empty
+        // string, not omission: `spawnSync`'s `env` is a plain merge, it
+        // cannot un-set a key already present in `...process.env`.
+        [CONFIG_HOME_VAR]: '',
     };
 }
 

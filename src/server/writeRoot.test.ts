@@ -15,15 +15,32 @@ import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { resolveWriteRoot, isInsidePackage, globalWriteRoot } from './writeRoot.js';
+import { EVENT4U_HOME_ENV as CONFIG_HOME_VAR } from '../scripts/_lib/user_global_paths.js';
 
 describe('resolveWriteRoot', () => {
     let scratch: string;
+    let savedConfigHome: string | undefined;
 
     beforeEach(() => {
         scratch = mkdtempSync(join(tmpdir(), 'writeroot-'));
+        // This suite tests the `home`-derived default path, which is exactly
+        // the branch `EVENT4U_CONFIG_HOME` short-circuits (globalWriteRoot
+        // returns the override verbatim before ever looking at `home`). The
+        // hermetic setup (tests/_lib/hermetic-env.ts) pins that variable
+        // ambiently for every test file so a billable call never appends to a
+        // real ledger — here it must be unset for the duration of the test,
+        // the same way a locale test passes its own `LANG` explicitly instead
+        // of reading the neutralised ambient one.
+        savedConfigHome = process.env[CONFIG_HOME_VAR];
+        delete process.env[CONFIG_HOME_VAR];
     });
     afterEach(() => {
         rmSync(scratch, { recursive: true, force: true });
+        if (savedConfigHome === undefined) {
+            delete process.env[CONFIG_HOME_VAR];
+        } else {
+            process.env[CONFIG_HOME_VAR] = savedConfigHome;
+        }
     });
 
     it('returns package-sandbox mode and surfaces repo root as legacy fallback', () => {
