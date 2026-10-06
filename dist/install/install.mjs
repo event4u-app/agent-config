@@ -17677,13 +17677,21 @@ var settingsSchema = external_exports.object({
       'Optional planning horizon (weeks) the agent shows in roadmap framing ("next 4 weeks"). Set 0 to omit the horizon \u2014 most teams prefer to ship without a hardcoded window.'
     ),
     gate_budget: external_exports.object({
-      max_cost_per_run_usd: external_exports.number().min(0).default(5).describe(
-        "Per-run USD ceiling for a CLASS-1 roadmap blocker executed via `agent-config gates --execute`. A class-1 entry whose **Budget:** field states a larger figure renders its consent line instead of running. Bounds the size of an authorised spend; never supplies the authorisation \u2014 `--confirm` is still required on every class-1 run."
+      // `.min(0)` is kept deliberately, at a known cost: the settings-
+      // reference generator renders a constrained nullable number as
+      // type `unknown` rather than `number,null` (it reads `node.type`,
+      // which a constrained nullable emits as an `anyOf` instead).
+      // Eight keys already render that way. Dropping the constraint
+      // would buy a nicer doc cell by letting a negative USD ceiling
+      // into the schema, and a cap that refuses everything is a worse
+      // outcome than an uninformative table cell.
+      max_cost_per_run_usd: external_exports.number().min(0).nullable().default(null).describe(
+        "Per-run USD ceiling for a CLASS-1 roadmap blocker executed via `agent-config gates --execute`. A class-1 entry whose **Budget:** field states a larger figure renders its consent line instead of running. null (default) = no per-run ceiling, per ADR-279: a spend bound applies only where one was set, and the absence of a bound is not a refusal. Bounds the size of an authorised spend; never supplies the authorisation \u2014 `--confirm` is still required on every class-1 run, set or unset."
       ),
-      max_cost_per_rolling_7d_usd: external_exports.number().min(0).default(25).describe(
-        "Rolling 7-day USD ceiling for class-1 gate execution, summed from the append-only receipt ledger at agents/runtime/state/gate-budget-ledger.jsonl. A run whose estimate would cross it renders instead of running. A per-run cap alone bounds one mistake, not a week of them, which is why option (a) of b-gate-budget-preauth carries two numbers."
+      max_cost_per_rolling_7d_usd: external_exports.number().min(0).nullable().default(null).describe(
+        "Rolling 7-day USD ceiling for class-1 gate execution, summed from the append-only receipt ledger at agents/runtime/state/gate-budget-ledger.jsonl. A run whose estimate would cross it renders instead of running. null (default) = no rolling ceiling, per ADR-279. A per-run cap alone bounds one mistake, not a week of them, which is why option (a) of b-gate-budget-preauth carries two numbers \u2014 but each cap now bounds on its own, so setting one and leaving the other null is supported."
       )
-    }).default({ max_cost_per_run_usd: 5, max_cost_per_rolling_7d_usd: 25 })
+    }).default({ max_cost_per_run_usd: null, max_cost_per_rolling_7d_usd: null })
   }),
   planning: external_exports.object({
     closure_pass: external_exports.boolean().default(true).describe(

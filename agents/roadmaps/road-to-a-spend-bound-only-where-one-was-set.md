@@ -218,7 +218,7 @@ At `df377ca64`:
       council file a user already has is not rewritten: its figures are that
       user's until they delete them, and the release note names the lines.
       verify: `npx vitest run tests/scripts/ai_council/default_budget_is_unbounded.test.ts` -> 0
-- [ ] **3.2 The paid-gate caps ship unset.** Template and schema default both
+- [x] **3.2 The paid-gate caps ship unset.** Template and schema default both
       keys to `null` — the schema as a nullable number, as other keys there
       already are; the class table's default column and the generated settings
       reference follow in the same change. The keys stay, classified as they

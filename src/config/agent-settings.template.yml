@@ -708,14 +708,22 @@ roadmap:
   # authorisation: `gates --execute` still requires `--confirm` on every
   # class-1 run, and a class-1 entry over either cap renders its consent
   # line instead of running.
+  #
+  # BOTH SHIP UNSET (`null`), per ADR-279: a spend bound applies only where
+  # one was set. Unset is not a refusal — the gate runs on the `--confirm`
+  # above, unbounded in size. Each cap also bounds ON ITS OWN, so setting one
+  # and leaving the other `null` is a supported configuration; until
+  # 2026-10-06 both had to be numeric before either applied, which meant
+  # setting one left you bounded by neither.
   gate_budget:
     # Per-run ceiling in USD. A class-1 entry whose `Budget:` field states a
-    # larger figure renders instead of running.
-    max_cost_per_run_usd: 5
+    # larger figure renders instead of running. `null` = no per-run ceiling.
+    max_cost_per_run_usd: null
 
     # Rolling-window ceiling in USD over the last 7 days, summed from the
     # receipt ledger. A run whose estimate would cross it renders instead.
-    max_cost_per_rolling_7d_usd: 25
+    # `null` = no rolling ceiling.
+    max_cost_per_rolling_7d_usd: null
 
 # --- Plan governance gates ---
 #
