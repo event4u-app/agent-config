@@ -63,7 +63,7 @@ Run `## Procedure: Establish the house convention` from
 [`conventional-commits-writing`](../../../skills/conventional-commits-writing/SKILL.md)
 verbatim: tier-1 sources first (opened and read, never taken from a grep hit),
 then the capped-weighted consensus pass with bots, merges, reverts and release
-automation excluded. A `git.commit_format` a human set (the skill's tier 1b)
+automation excluded. A declared `git.commit_format: ticket-prefix` (the skill's tier 1b; `ticket-scope` is the template default and declares nothing)
 is the target: report it as `Declared : git.commit_format: …`, skip step 3's
 style question, and keep the other authorisations.
 
