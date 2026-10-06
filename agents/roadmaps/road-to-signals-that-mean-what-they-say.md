@@ -315,7 +315,7 @@ At `df377ca64`:
 
 ## Phase 4 — State that is read where it is written
 
-- [ ] **4.1 The turn marker follows the ledger.** `_ledgerStamp` takes the
+- [x] **4.1 The turn marker follows the ledger.** `_ledgerStamp` takes the
       session id and resolves the file through the writer's exported
       `ledgerFileFor`. The test runs the writer and the reader with a session
       id, as a host does, and asserts that a second user turn resets the
