@@ -11,7 +11,6 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 enforced_by:
   - "hook:onboarding-gate"
-# obligation: line 18
 obligation_frequency: "per-session"
 ---
 

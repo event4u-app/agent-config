@@ -15,7 +15,6 @@ validator_ignore:
 self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
-# obligation: line 30
 obligation_frequency: "per-turn"
 ---
 

@@ -18,7 +18,6 @@ install:
   removable: true
 collision_ok:
   "phpstan": "phpstan findings are the PHP pattern floor's own quality surface"
-# obligation: line 25
 obligation_frequency: "per-edit"
 ---
 

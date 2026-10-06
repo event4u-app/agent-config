@@ -78,13 +78,13 @@ council first.
 
 ## Phase 2 — Every extracted law has a stable id
 
-- [ ] **2.1 Ids in frontmatter, not in bodies.** Each non-kernel rule with a law
+- [x] **2.1 Ids in frontmatter, not in bodies.** *(Landed in the sidecar `src/config/rule-obligations.json` instead — D2 revised, reason in the row: 112 non-kernel rules, 290 ids; lint in `src/scripts/_lib/rule_obligations.ts`.)* Each non-kernel rule with a law
       section declares its obligations as `<rule>.<obligation>` ids in
       frontmatter, so no rule body grows. A lint asserts ids are unique,
       prefixed with their own rule id, and stable across a reword of the law
       text (a fixture rewords a law and keeps the id).
       verify: `npx vitest run tests/scripts/rule_obligation_ids.test.ts` -> 0
-- [ ] **2.2 The old marker is read or retired.** Where a rule carries
+- [x] **2.2 The old marker is read or retired.** *(Retired: all 107 markers removed; 34 of the 68 on law-section rules pointed outside the law. The lint refuses its return; `report_obligation_mechanism` now prints the id count.)* Where a rule carries
       `# obligation: line N`, its first id points at the same law; the marker is
       then either read by the lint or removed, never left as a second source.
       verify: `npx vitest run tests/scripts/rule_obligation_ids.test.ts` -> 0
@@ -149,7 +149,7 @@ council first.
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
 | D1 | contested-technical | council: blocker obligation-granularity | Granularity of `enforced_by` | Blocker `obligation-granularity`; the over-credit is shown in three audit rows | The council splits |
-| D2 | reversible-technical | agent | Ids live in frontmatter | Rule bodies are paid on every spawn; a frontmatter key adds no body text | A host is found reading frontmatter into context |
+| D2 | reversible-technical | agent | Ids live in frontmatter — **revised 2026-10-07: ids live in the sidecar `src/config/rule-obligations.json`** | The revisit condition fired on the first measurement: `check_preamble_payload_budget` counts every byte of every projected rule file, frontmatter included, as per-spawn payload under zero net growth, so ~290 ids in frontmatter would have been payload. The sidecar keeps every rule file at zero growth (the 107 retired markers shrink it) and is still one place per rule | A consumer needs the ids inside the rule file itself |
 | D3 | deterministic | evidence | An entry without ids keeps rule-level credit, counted as unbound | Changing every row's class in one change would make the delta unreadable | Unbound entries are still present after Phase 4 |
 
 ## Blockers

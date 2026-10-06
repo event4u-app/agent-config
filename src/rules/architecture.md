@@ -13,7 +13,6 @@ workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
 collision_ok:
   "controller": "thin-handler floor on controller work"
-# obligation: line 26
 obligation_frequency: "per-edit"
 ---
 
