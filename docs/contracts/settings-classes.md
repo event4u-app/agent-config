@@ -247,8 +247,15 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 26 |
 | B — consent | 3 |
-| C — guarded | 126 |
-| **Total** | **155** |
+| C — guarded | 129 |
+| **Total** | **158** |
+
+It rose to 158 on 2026-10-06 when the `git:` section added three C keys —
+`commit_format`, `branch_pattern`, `update_strategy` — so a team's commit
+grammar, branch naming and base-sync operation can be declared once instead of
+measured per repository. All three are `policy`: each is a fact the repository or
+the forge could carry, and each row names why that carrier does not reach every
+install. None is `derivable`, so the anti-regrowth ratchet is untouched.
 
 It rose again on 2026-09-13 when `road-to-adversarial-verification-and-long-runs`
 Phase 0 added three C keys: `quality.local_auto_run_in_mission` (`consent` — it
@@ -383,8 +390,8 @@ the template, which is the drift this contract exists to prevent.
 | derivable | 83 |
 | un-inferrable | 10 |
 | consent | 48 |
-| policy | 14 |
-| **Total** | **155** |
+| policy | 17 |
+| **Total** | **158** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -518,6 +525,9 @@ Rows follow template order, so a diff against the template reads straight down.
 | `project.upstream_repo` | C | `""` | destination of outbound improvement PRs | derivable — the installed package's own `package.json` repository field |
 | `project.improvement_pr_branch_prefix` | A | `improve/agent-` | branch-name cosmetics | derivable — the repo's own branch-naming convention, observable from `git branch -r` |
 | `project.audience` | C | `public` | C-test 4 — it governs the agent's own reasoning discipline: `self` makes the § 8-pre demand gate inert. Who a project is built for is a fact only its maintainer knows, so the agent never infers it and never asks; hand-edit or the GUI write route. The default is today's behaviour, so an install that never sets it is unchanged | policy |
+| `git.commit_format` | C | `ticket-scope` | C-test 4 — it selects the grammar every commit the agent writes is held to. The conventional-commits-writing skill forbids adopting a measured convention without the user's answer, and an agent-writable key would be that adoption with the ask removed. The default is today's behaviour | policy — a repository fact the tree can carry instead (commitlint config, a `commit-msg` hook, `CONTRIBUTING.md` § Commits); the skill already ranks those above this key. Kept because a team convention spans repositories that do not yet carry one |
+| `git.branch_pattern` | C | `{type}/{slug}` | C-test 4 — same reasoning as `git.commit_format`, for branch names | policy — NOT `derivable` from `git branch -r` as `project.improvement_pr_branch_prefix` is: a team that merges with `--delete-branch` leaves no merged branch on the remote to sample, so the observation is empty exactly where the convention is strictest |
+| `git.update_strategy` | C | `merge` | C-test 4 — `rebase` makes the proposed base sync a history rewrite plus a `--force-with-lease` push. It authorises nothing (git-history-discipline still asks per rewrite), but an agent that could set it could choose which destructive operation it proposes next. The default is today's behaviour | policy — the forge's own branch rules (a required linear history) carry the same fact; kept because the rule set is not readable from every host |
 | `github.pr_reply_method` | A | `create_review_comment` | picks between two endpoints of one operation | derivable — the `auto` value already in the enum: the routing detects the working endpoint on first use and writes it back |
 | `delivery.merge` | C | `off` | C-test 1 — it is the configuration half of merge authority, resolved by ADR-268 section 3. An agent that could write it could grant itself the capability the key gates, which is the exact shape the C fence exists to refuse. `off` is today's behavior, so an install that never sets it is unchanged | consent |
 | `delivery.wait_for_ci` | C | `true` | C-test 1 — it authorises the run to keep spending time and tokens driving CI to a verdict rather than ending at push. A standing authorisation over the agent's own consumption is not a preference | consent |

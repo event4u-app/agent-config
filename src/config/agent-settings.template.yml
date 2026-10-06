@@ -415,6 +415,33 @@ project:
   # this is not a settingsCarveOut key, so absent == an explicit `public`.
   audience: public
 
+# --- Git conventions: commit subjects, branch names, base sync ---
+#
+# Representation and workflow only. None of these keys authorises a commit,
+# a push or a history rewrite — commit-policy, scope-control and
+# git-history-discipline decide that, unchanged. A commit-linting config in the
+# repository (commitlint, a commit-msg hook) outranks git.commit_format.
+git:
+  # Where a ticket id goes in a commit subject.
+  #   ticket-scope  -> `feat(DEV-1234): add export filter` (default — the
+  #                    behaviour before this key existed)
+  #   ticket-prefix -> `DEV-1234 feat(exporter): add export filter` — the
+  #                    ticket leads, the scope names the system area, and a
+  #                    ticket is never a scope
+  commit_format: ticket-scope
+
+  # Shape of a branch name the agent creates. Placeholders: {type}, {ticket},
+  # {slug}. Ticket-named branches: "{ticket}-{slug}". An empty placeholder is
+  # dropped with the separator after it.
+  branch_pattern: "{type}/{slug}"
+
+  # How a feature branch is brought up to date with its base.
+  #   merge  -> merge origin/<base> into the branch (default)
+  #   rebase -> rebase onto origin/<base>, publish with --force-with-lease;
+  #             never a merge of the base into the branch. Still asked for
+  #             each time per git-history-discipline.
+  update_strategy: merge
+
 # --- GitHub integration ---
 github:
   # API method for replying to PR review comments

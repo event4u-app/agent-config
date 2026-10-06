@@ -52,6 +52,12 @@ explanation lives now that the file no longer carries it as comments.
 | `chat_history.text_limits.tool` | C | integer | `200` |  | Per-call character cap for tool input / output blobs in the chat-history log. The default 200 keeps history files compact while preserving enough signal to replay a session. |
 | `chat_history.text_limits.user` | C | integer | `0` |  | Per-message character cap for user inputs in the chat-history log. 0 = log verbatim (default). Raise above 0 only if your prompts contain large pasted artefacts you do not want stored. |
 
+## code_graph
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `code_graph.consumer_index_paths` | C | array | `[]` |  | Extra project-relative paths where THIS project keeps a code-graph index another tool wrote. The built-in list is deliberately vendor-neutral (graph.json, code-graph.json, .code-graph/graph.json) and names no tool, so a tool that writes its index elsewhere is named here rather than waited for. A graph found this way LOADS and answers query and explain with every edge tagged read-from-elsewhere; the gate verbs (impact, untested, dead) refuse a graph made only of such edges and say so, because an empty answer from a gate must not read as 'nothing found' when it means 'nothing trusted'. Absolute paths and paths escaping the project root are ignored. |
+
 ## code_style
 
 | Key | Class | Type | Default | Allowed values | What it does |
@@ -142,11 +148,26 @@ explanation lives now that the file no longer carries it as comments.
 | `emergency.orchestration_halt` | C | boolean | `false` |  | The one audited incident switch over the always-on orchestration stack (subagents, council, team). NOT an activation gate: false (default) = the stack runs normally. true = halted; arming requires no ceremony. Disarming (returning to false) requires orchestration_halt_justification to be a non-empty string. Both transitions emit one telemetry line. |
 | `emergency.orchestration_halt_justification` | C | string | `""` |  | Required non-empty before orchestration_halt may return to false. Ignored while arming the halt. |
 
+## execution
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `execution.escalation` | C | array | `["independent","council","team","owner_owned_check"]` |  | The escalation rungs, in order, walked when the fix-loop bound is reached: independent (another session or a provider-diverse reviewer), council, team, then owner_owned_check — which asks whether the residue is owner-owned, not whether to ask the owner now. |
+| `execution.fix_loop_max` | C | integer | `10` |  | Consecutive failed fix attempts against one validation target before the escalation ladder reaches its terminal rung. Reaching the bound triggers a strategy change, never a question. Overridable globally, per project and per prompt. |
+
 ## explain
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
 | `explain.enable_last` | A | boolean | `true` |  | Enable the `agent-config explain last` command, which prints the reasoning behind the agent's most recent decision (last tool call, last suggestion). Disable if you never use it and want a smaller CLI surface. |
+
+## git
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `git.branch_pattern` | C | string | `"{type}/{slug}"` |  | Shape of a branch name the agent creates. Placeholders: {type} (feat, fix, …), {ticket} (e.g. DEV-1234), {slug} (short kebab-case description). Default {type}/{slug}. A team that names branches after the ticket sets {ticket}-{slug}. A placeholder with no value is dropped together with the separator after it. Reading a ticket back out of an existing branch never depends on this pattern. |
+| `git.commit_format` | C | string | `"ticket-scope"` | `ticket-scope` · `ticket-prefix` | Where a ticket id goes in a commit subject. ticket-scope (default) = the ticket is the Conventional-Commits scope, `feat(DEV-1234): add export filter` — the behaviour every install had before this key existed. ticket-prefix = the ticket leads the subject and the scope names the system area, `DEV-1234 feat(exporter): add export filter`; a ticket is then never a scope. Without a ticket both shapes are plain Conventional Commits. A commit-linting config in the repository (commitlint, a commit-msg hook) outranks this key. |
+| `git.update_strategy` | C | string | `"merge"` | `merge` · `rebase` | How a feature branch is brought up to date with its base. merge (default) = merge the base into the branch, as before this key existed. rebase = rebase the branch onto origin/<base> and publish with --force-with-lease, never a merge of the base into the branch. Rebase rewrites history, so the agent still asks for it each time per the git-history-discipline rule unless the user asked for it in that turn; this key decides which operation is proposed, never whether one is authorised. |
 
 ## github
 
@@ -169,6 +190,14 @@ explanation lives now that the file no longer carries it as comments.
 | `hooks.runtime_journal.enabled` | C | boolean | `false` |  | Runtime event journal (road-to-runtime-event-journal Phase 1). Default off. When on, one durable, episode-keyed record per dispatched hook event is appended to <git-common-dir>/agent-journal/journal.sqlite — a Class-A write that opens, writes and exits. It emits nothing to the model, never warns and never blocks: a locked database, a missing node:sqlite, a malformed envelope or a full disk all degrade to silence. Off rather than on because it CREATES a storage surface (a SQLite database under your .git/) rather than appending to a directory that already exists. The record type has no field able to hold free-form content — ids, an event name, a bounded capability identifier, repo-relative locators and two 12-hex digests; no prompt, no file body, no absolute path. Retention: a 30-day TTL anchored on episode close, plus explicit, time-bounded, human-only holds that themselves expire. |
 | `hooks.suggestion_capture.enabled` | C | boolean | `false` |  | Suggestion-block capture (road-to-suggestion-block-capture Phase 2). Default off. Two slots: `stop` reads `last_assistant_message` — a payload field, so no transcript file is read — and latches that the assistant turn carried a numbered-options block; `user_prompt_submit` CONSUMES that latch and classifies the answering turn as option_n / as_is / other / stale_block. Consume-once is the correctness guard: the latch is deleted on read, so a bare "1" three turns later meets no latch and classifies `other`, and a latch past its TTL or unparseable is `stale_block` rather than a guess. Writes COUNTS ONLY to agents/runtime/state/audit/suggestion-capture.jsonl — the record type has no field able to hold a prompt, an option label or a command name, and a test asserts the written key set against src/config/suggestion-capture.json. Off by default because this is an INSTRUMENT rather than a feature: it exists so a capture rate can be measured on a maintainer workspace over a fixed soak window, and there is nothing in it for a consumer to gain. |
 | `hooks.ui_route_nudge.enabled` | C | boolean | `false` |  | PreToolUse UI-route nudge (road-to-frontend-skill-application Phase 4). Default off. When on, a Write/Edit to a UI surface with no design consultation latched this session WARNS (never blocks) naming the route — run existing-ui-audit, then the fe-design loop. A read or search touching fe-design / existing-ui-audit / design-review / design-intelligence latches consultation and silences it for the session. Anti-loop: at most 2 nudges per session. It does not read the rules: the UI-surface decision comes from _lib/ui_surface.ts and no code parses rule frontmatter, so this runs parallel to the two UI rules rather than consuming their triggers, and a test keeps the sets from drifting. It is a nudge, so their enforced_by: none stays accurate. |
+| `hooks.verify_before_complete.touched_file_quality` | C | string | `"off"` | `off` · `shadow` · `warn` | Stop-slot pass that runs the project's OWN quality commands — the ones resolve_toolchain() already reports — over the files this turn edited. Default off. `shadow` records a per-run result and emits nothing; `warn` adds ONE advisory line of at most 200 bytes. Never blocks and never counts as verification: a command recorded here never reaches _lib/verification_command.ts, so a clean eslint run cannot let a turn claim it verified anything. A writing command runs only in its check form (pint --test) or not at all, and a command with no per-file form is skipped rather than run project-wide at every stop. |
+
+## host_environment
+
+| Key | Class | Type | Default | Allowed values | What it does |
+|---|---|---|---|---|---|
+| `host_environment.request_size_caps.bash_max_output_length` | C | unknown | `null` |  | Character cap on Bash tool output the host places inline into a model request. null (default) = this package writes nothing and the host default of 30000 applies. A number is written into the host env block. Values above 150000 are capped by the host itself, so the schema refuses them here rather than writing a value the host silently changes. Bounds request SIZE, never request COUNT: lowering it suppresses no telemetry, no update check and no download. |
+| `host_environment.request_size_caps.max_mcp_output_tokens` | C | unknown | `null` |  | Token cap on a single MCP tool result the host places into a model request. null (default) = nothing written, host default 25000 applies. Same size-not-count caveat: it does not govern MCP connections, timeouts, or whether a tool runs. |
 
 ## knowledge
 
@@ -243,7 +272,6 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `planning.challenge_on_create` | — | boolean |  |  | DEPRECATED alias of planning.closure_pass, accepted for one minor so an installed settings file keeps loading. The gate it named fired at the START of planning as a seed-confidence check; the pass it now names runs at the END as a plan-closure check. A file setting only the old key resolves it as closure_pass; a file setting both takes closure_pass. |
 | `planning.closure_pass` | C | boolean | `true` |  | Gate C — plan-closure pass. true (default) = a plan-artifact ask (/roadmap:create, roadmap-writing, /feature:plan, /feature:roadmap, /roadmap:materialize, /implement-ticket, /jira-ticket, /analyze:inbox, /analyze:roadmap-repos) ends in a closure pass (/challenge-me closure): every foreseeable decision is closed at the lowest rung that owns it and written into the roadmap's "## Decisions" table, so a long run never meets a question planning could have closed. false = inert, plan asks author directly. An explicit user bypass always wins for that turn and is counted as a bypass rather than as an absent closure. |
 | `planning.completion_review` | C | boolean | `true` |  | Gate R2 — completion review at 100% roadmap completion / pre-PR. true (default) = a findings-before-fixes review by a fresh reviewer context must exist for the current diff hash (or an exact honest-null / skip declaration) before fix commits and PR creation, enforced by check_completion_review at pre-push + CI (CI authoritative; a crashed validator warns and allows). false = escape hatch, the validator skips. |
 | `planning.risk_review` | C | boolean | `true` |  | Gate R1 — plan-risk review. true (default) = every ready (non-draft) plan must carry a schema-valid "## Risk Register" section (ranked risks, mitigation + anchor per row, freshness marker, exact honest-null grammar), enforced by lint_plan_risk_register at pre-push + CI. false = escape hatch, the validator skips. |
@@ -275,7 +303,8 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `quality.local_auto_run` | C | boolean | `false` |  | Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits. Off by default — the agent never runs quality tools proactively and does not ask; the user runs them manually (e.g. /quality-fix) and remote CI is the authoritative gate. The agent only runs a quality tool on an explicit ask, a concrete CI failure, or the new-gate carve-out. Turn on to restore autonomous pipeline runs. |
+| `quality.local_auto_run` | C | boolean | `false` |  | Run quality tools (linters, type-checks, formatters) and the local test suite autonomously after edits, IN CHAT. Off by default — in a chat turn a human is present and remote CI is the authoritative gate, so a local full-pipeline run duplicates it at wall-clock cost. The agent only runs a quality tool on an explicit ask, a concrete CI failure, or the new-gate carve-out. A mission is governed by local_auto_run_in_mission instead. |
+| `quality.local_auto_run_in_mission` | C | boolean | `true` |  | Run quality tools autonomously inside a mission — an autonomous roadmap run with a claimed contract. On by default: nobody is waiting, the next action belongs to the agent itself, and a red found twenty steps later costs more than the run that would have caught it at step one. Inert outside a mission, and a mission never lowers local_auto_run: true. |
 
 ## reasoning
 
@@ -301,7 +330,7 @@ explanation lives now that the file no longer carries it as comments.
 | `roadmap.gate_budget.max_cost_per_rolling_7d_usd` | C | number | `25` |  | Rolling 7-day USD ceiling for class-1 gate execution, summed from the append-only receipt ledger at agents/runtime/state/gate-budget-ledger.jsonl. A run whose estimate would cross it renders instead of running. A per-run cap alone bounds one mistake, not a week of them, which is why option (a) of b-gate-budget-preauth carries two numbers. |
 | `roadmap.gate_budget.max_cost_per_run_usd` | C | number | `5` |  | Per-run USD ceiling for a CLASS-1 roadmap blocker executed via `agent-config gates --execute`. A class-1 entry whose **Budget:** field states a larger figure renders its consent line instead of running. Bounds the size of an authorised spend; never supplies the authorisation — `--confirm` is still required on every class-1 run. |
 | `roadmap.horizon_weeks` | C | integer | `0` |  | Optional planning horizon (weeks) the agent shows in roadmap framing ("next 4 weeks"). Set 0 to omit the horizon — most teams prefer to ship without a hardcoded window. |
-| `roadmap.quality_cadence` | C | string | `"end_of_roadmap"` | `end_of_roadmap` · `per_phase` · `per_step` | When the agent runs the full quality / test suite during /roadmap:process-* runs. end_of_roadmap = once, after the last step (fastest, default). per_phase = after each phase boundary. per_step = after every single step (slowest, highest confidence). |
+| `roadmap.quality_cadence` | C | string | `"per_phase"` | `end_of_roadmap` · `per_phase` · `per_step` | When the agent runs the full quality / test suite during /roadmap:process-* runs. per_phase = after each phase boundary (default since 2026-09-13 — end_of_roadmap lets errors compound across phases, which is expensive in a multi-phase autonomous run nobody is watching). end_of_roadmap = once, after the last step (fastest). per_step = after every single step (slowest, highest confidence). |
 | `roadmap.skip_pre_run_gate` | C | boolean | `true` |  | Skip the /roadmap:process-* pre-run confirmation gate. true (default) starts processing immediately and surfaces the resolved config inline; false shows the numbered-options gate and waits. A genuine "which roadmap?" ambiguity always prompts regardless. |
 
 ## screenshots
