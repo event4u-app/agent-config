@@ -1,6 +1,6 @@
 # Completion review — road-to-leading-every-row, round 2, 2026-10-06
 
-**Skipped:** no code surface for this completion — seven changed files, all roadmap prose, one ADR note and one regenerated census; no script, schema, config, workflow or projection is touched, scope 5f3e4eba92d36825c87fa1c87f0b906daf082888dab27e125d81833cdc7cd0cb, declared 2026-10-06
+**Skipped:** no code surface for this completion — seven changed files, all roadmap prose, one ADR note and one regenerated census; no script, schema, config, workflow or projection is touched, scope bb017d43bcee7e18fb00b7120f499ee4eaaeab6e214d5a6875f56db588b98988, declared 2026-10-06
 
 ## Why R2 has nothing to bind to
 
@@ -84,6 +84,15 @@ The first council attempt returned `0/2 present — INCONCLUSIVE` because
 `agents/runtime/state/council-probes.json` is gitignored and absent in a fresh
 worktree. It still spent quota. The fix was to copy the probe record in before
 dispatching.
+
+**8 — the change created one stale pointer and then fixed it.** Resolving `b1`
+left step 3.1's `blocked-by` marker naming a closed blocker. That marker is read
+by `run-continuation`, whose regex matches a flipped box as well as an open one,
+so a resolved id sitting there is a live wrong pointer rather than a harmless
+historical note. Repointed to `b4`, which the owner has still not answered, with
+the substitution recorded inline. `lint_roadmap_blockers` passes either way —
+the contract does not check whether a cited blocker is still open, which is
+worth knowing about that gate.
 
 ## What was verified, and with what
 
