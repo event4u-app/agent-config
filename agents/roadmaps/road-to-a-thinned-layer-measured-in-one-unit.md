@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "The thinned install's goal names a ceiling; three instruments give three numbers for the layer it is read against, and the recorded over-ceiling verdict was read off the one its own page says is not the installed layer. No active, parked or stub roadmap measures the installed form in one unit or prices what stands between it and the ceiling. Folding this file into road-to-an-installed-layer-that-is-thinned was considered and rejected: that roadmap is ready with its Phase 1 closed, and adding a measurement-and-council phase would change its accepted scope and acceptance criteria, which this file deliberately leaves unedited."
-estate_growth_exempt: "Grows active_roadmaps by one: the owner asked on 2026-10-05 for this round's roadmaps to land as ready in one change, and none of the five can be folded into a live roadmap without editing its accepted scope."
+estate_growth_exempt: "Grows active_roadmaps by one: the owner asked on 2026-10-05 for this round's roadmaps to land as ready in one change, and none of the five can be folded into a live roadmap without editing its accepted scope. Also +1 open_blockers for `law-heading-authoring-not-named-in-this-contract`, added 2026-10-06 and not a repaired undercount: D7 makes the owner's decision for the four law sections the confirmation of an execution contract that NAMES those four rule files, the run that closed Phases 1-3 and step 4.1 was dispatched under a contract that names none, and the interactive alternative D7 gives needs an owner channel a background lane does not have. Writing a law section also changes what a shipped rule obligates for every consumer, and two of the four are security-boundary rules which step 4.2 itself routes to the owner. The blocker has to exist before 4.2 can be scheduled; it is the decision, not a placeholder for one."
 relates:
   - slug: road-to-an-installed-layer-that-is-thinned
     relation: extends
@@ -239,7 +239,7 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
       recorded at `agents/evidence/council/thinned-ceiling-unit-2026-10.md`
       with its `evidence-type` marker and named beside the sums of 3.2.
       verify: `grep -c 'unconditional' agents/evidence/council/thinned-ceiling-unit-2026-10.md` -> /^[1-9]/
-- [ ] **4.2 Four law headings, each on a verdict about that heading.** In
+- [ ] **4.2 Four law headings, each on a verdict about that heading.** <!-- blocked-by: law-heading-authoring-not-named-in-this-contract | asked: no — a background drain lane has no owner channel; the decision is recorded for the next owner-facing turn --> In
       `src/rules/tool-safety.md`, `src/rules/runtime-safety.md`,
       `src/rules/question-not-instruction.md` and
       `src/rules/autonomous-execution.md`, a law section is written from
@@ -258,11 +258,57 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
       owner with that record and does not land here. A landed heading thins that rule in every
       projection that thins, not only in the measured install.
       verify: `grep -l '^verdict:' agents/evidence/council/law-heading-*.md | wc -l` -> /^4$/
-- [ ] **4.3 The reading after the moves.** Re-run the measurement and append
+- [ ] **4.3 The reading after the moves.** <!-- blocked-by: law-heading-authoring-not-named-in-this-contract | asked: no — a background drain lane has no owner channel; the decision is recorded for the next owner-facing turn --> Re-run the measurement and append
       it to the page beside the verdict of 4.1, with the number of headings
       that landed. Expected from the measured layer with all four: 75,900 to
       77,900 unconditional.
       verify: `grep -c 'after the law moves' agents/evidence/analysis/thinned-layer-composition-2026-10.md` -> /^[1-9]/
+
+## Blockers
+
+### blocker: law-heading-authoring-not-named-in-this-contract
+- **Status:** open — raised 2026-10-06 by the run that closed Phases 1-3 and step 4.1
+- **Owner:** owner
+- **Blocks:** 4.2, 4.3
+- **What to do:** pick exactly one — (a) confirm an execution contract that
+  **names the four rule files** `src/rules/tool-safety.md`,
+  `src/rules/runtime-safety.md`, `src/rules/question-not-instruction.md` and
+  `src/rules/autonomous-execution.md`, which is what D7 and the Phase 4
+  preamble make the owner's decision for this authoring; (b) run the four
+  interactively instead, one drafting prompt per rule, per
+  `artifact-drafting-protocol`'s non-batch path; or (c) strike Phase 4, which
+  D4's `revisit if` already names as an outcome.
+- **Resolved when:** an execution contract naming those four files is
+  confirmed, or the four are drafted interactively, or Phase 4 is struck —
+  whichever of (a), (b) or (c) the owner picks is recorded here with its date.
+- **Recommendation:** (a). The four are priced (9,349-10,225 characters
+  together, step 3.1), none is a kernel rule, no gate at this pin stops the
+  edit, and the per-rule council verdict 4.2 requires is reachable — the 4.1
+  round ran 2/2 provider-diverse at $0.00. What is missing is only the owner's
+  naming of the files, which is the single thing D7 reserves.
+- **If you do nothing:** the four rules keep projecting full-bodied at 13,284
+  characters of the 93,357 that stand every session, the largest single
+  reducible block this roadmap identified that is neither owner-reserved for
+  safety reasons nor behind the install-layout blocker; step 4.3 has nothing to
+  re-measure; and AC-5 cannot close.
+
+**Why this run did not take it.** D7 states that the owner's decision for these
+four changes IS the confirmation of the execution contract of the run that
+takes Phase 4, "with the four rule files named in it", and that a run without
+that confirmation "drafts them interactively, one prompt each". The contract
+this run was dispatched under authorises processing this roadmap; it names no
+rule file. The interactive path is not available to a background lane with no
+owner channel. Writing a law section also changes what a shipped rule
+obligates for every consumer — and two of the four are security-boundary rules,
+which 4.2's own text routes to the owner whenever the heading would leave a
+duty out of the standing law. Taking it on a contract that does not name it
+would be reading a general authorisation as the specific one D7 reserves.
+
+**What is already done for it.** The four are measured, not estimated: step
+3.1 gives each one's full body, its plain-stub size, its candidate law blocks
+and the saving per candidate, from the law-join constant (law + 3) verified
+across all 21 law stubs that exist. Whoever takes the blocker starts from a
+price list rather than from a survey.
 
 ## What this roadmap deliberately does not do
 
