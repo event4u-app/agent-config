@@ -33,7 +33,7 @@ capability_gap: >-
 ---
 # Road to adversarial verification and long runs
 
-> **Arrivals (auto-merge setting):** 2 (at least) - latest `inbox-2026-10-a`
+> **Arrivals (auto-merge setting):** 3 (at least) - latest `inbox-2026-10-e` (2026-10-06): two release reviews again read the live `allow_auto_merge: true` (enabled by #2114) as contrary to the standing instruction; the owner question below is still unanswered. The count before it read: 2 (at least) - latest `inbox-2026-10-a`
 > (2026-10-01), where two of sixteen release reviews read the repository's
 > `allow_auto_merge: true` — enabled by this file's 2026-09-30 run to satisfy
 > `auto_merge_available` — as contrary to a standing owner instruction that GitHub

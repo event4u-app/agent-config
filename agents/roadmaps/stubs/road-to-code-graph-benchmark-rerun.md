@@ -5,7 +5,7 @@ review_by: 2026-09-25
 
 # Stub: road to a code-graph benchmark re-run on the repaired extractor
 
-> **Arrivals:** 73 — latest `inbox-2026-10-b` (2026-10-01), counted by hand; its
+> **Arrivals:** 74 (at least) - latest `inbox-2026-10-e` (2026-10-06): two release reviews ask again for a comparator benchmark and for framework semantics; the benchmark subjects were owner-answered as blocker b4 in a75bb3210. The count before it read: 73 — latest `inbox-2026-10-b` (2026-10-01), counted by hand; its
 > programme carries the benchmark-subject question as blocker b4 of
 > `road-to-leading-every-row`. The measurement below is the 2026-09-06 reading:
 > the code-graph subject appears in **72** consumed inbox rounds
