@@ -125,7 +125,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
             "locus": "src/scripts/_cli/cmd_analyze_session.ts:15",
-            "reason": "Turn and loop counters for the context-hygiene carrier. Read within a session to decide whether to warn; never read by a successor."
+            "reason": "Tool-call count and freshness milestones for the context-hygiene carrier; never read by a successor."
         },
         {
             "id": "council-probes.json",
@@ -243,7 +243,7 @@
             "id": "onboarding-gate.json",
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
-            "locus": "src/scripts/onboarding_gate_hook.ts:13",
+            "locus": "src/scripts/onboarding_gate_hook.ts:87",
             "reason": "Onboarding latch. Same class as the disclosure latch."
         },
         {
@@ -405,7 +405,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
             "locus": "src/scripts/_lib/test_red_state.ts:2",
-            "reason": "Last test-run red state, read by the verification gates within a run."
+            "reason": "Last test-run red state. No production code currently writes or reads it — only this module's own unit test exercises the store; the registry row for this instrument (assurance-capability-registry.json, test-red-evidence) was corrected to degraded on 2026-10-06 for the same reason."
         },
         {
             "id": "tool-result-census.jsonl",

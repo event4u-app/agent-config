@@ -1,7 +1,7 @@
 /**
  * Tests for the minimality tie-break
- * (`src/scripts/_lib/minimality_tiebreak.ts`,
- * road-to-governed-harness-evolution step 4.5, decision E5).
+ * (`./minimality_tiebreak.ts`, road-to-governed-harness-evolution step 4.5,
+ * decision E5).
  *
  * Two things are pinned here that a reader cannot get from the code alone.
  * First, the ARITY: E5 rejected a fifth criterion, so a test that only checked
@@ -21,7 +21,7 @@ import {
     SCOPE_ORDER,
     type MinimalityCriterion,
     type MinimalityMetadata,
-} from '../../src/scripts/_lib/minimality_tiebreak.js';
+} from './minimality_tiebreak.js';
 
 /** A candidate that ties on everything, so each test varies exactly one field. */
 function candidate(id: string, over: Partial<MinimalityMetadata> = {}): MinimalityMetadata {

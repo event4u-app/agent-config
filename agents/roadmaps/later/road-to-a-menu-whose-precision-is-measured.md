@@ -1,0 +1,921 @@
+---
+complexity: lightweight
+status: later
+review_by: 2026-12-08
+entry_condition:
+  what: >
+    Re-run `./scripts-run src/scripts/report_host_injection_effect` against
+    current repository evidence and read the state column, never this text.
+    TWO outcomes, and they are different states rather than two names for
+    resolution. (1) RESUME FOR EXECUTION if the regenerated census admits at
+    least one row in `src/config/host-injection-effect.json` at
+    `"state": "observed-true"` with a full citation (host version, transcript
+    pointer, date) whose `reason` scopes itself to the predeclared eligible
+    obligation class of step 1.1 in `later/road-to-delivery-on-hook-hosts.md`;
+    step 3.1's emission half is then a day's work and its verify line is
+    answerable. (2) RESUME FOR TERMINAL DISPOSITION, WITHOUT TREATING AC-4 AS
+    SATISFIED, when the upstream stopping boundary is reached — 12 genuine
+    eligible opportunities, or 2026-12-08, whichever comes first. Elapse is not
+    a witness and closes nothing: that branch re-cuts or withdraws 3.1 and AC-4
+    against whatever Phase 2 of the upstream roadmap becomes, under the descope
+    already pre-authorised there (its § `Resolved when` (c), K6 five-part
+    override). A probe that fails to run, a stale census, or a hand-edited
+    `observed-true` row is a gate failure, never a result.
+  when: >
+    At the next `/roadmap:triage-parked` pass, and in any case no later than
+    2026-12-08. Measured four times with an identical reading — 2026-09-29,
+    2026-10-01, 2026-10-03, 2026-10-06, each executed rather than re-read, all
+    returning 9 hosts scanned / 1 `observed-false` / 8 `unobserved` / 0
+    `observed-true` — so a fifth reading before the upstream blocker moves adds
+    nothing. The condition is cheap and agent-checkable, so evaluate it on every
+    parked-triage pass rather than only at the date.
+  who: >
+    Any drain run or `/roadmap:triage-parked` pass may execute the probe and
+    evaluate the condition; both are agent-checkable. The terminal branch's
+    descope is already owner-authorised upstream and needs no fresh owner
+    decision. What is NOT delegated: re-cutting or withdrawing AC-4 as an
+    acceptance criterion, which is owner-reserved like any `[-]`.
+execution:
+  mode: phase-checkpoints
+estate_growth_exempt: "open_blockers rises 39 -> 40 and NOTHING WAS ADDED — the
+  census is finding a pre-existing open blocker, not the estate growing. The
+  obstacle this entry names was authored open in step 3.1 on 2026-09-29, as
+  prose under a phase heading rather than under a `## Blockers` H2, which is the
+  only place check_estate_count and lint_roadmap_blockers look. So the roadmap
+  advertised zero blockers while carrying a live one, and step 3.1 could not
+  hold the inline blocked-by marker a continuation run reads open-vs-blocked
+  from. Offsetting the +1 would mean closing a real blocker to pay for making an
+  existing one visible, which inverts what the ratchet protects."
+estate_offset_exempt: "lane 5 of road-to-leading-every-row"
+relates:
+  - slug: road-to-skill-menu-economy
+    relation: extends
+    note: "parked; its K2 (no byte-shaving budget) is honoured — this lane measures precision, it does not shave descriptions"
+  - slug: road-to-delivery-on-hook-hosts
+    relation: extends
+    note: "parked; § Phase 3 here uses the observed-true row shape its blocker at :817 defines, so there is one instrument, not two"
+  - slug: road-to-deferred-rule-retriever
+    relation: extends
+    note: "parked; ADR-272's review_trigger (a conditional-loading mechanism tested under a 2,048-byte hook surface) is that roadmap's wake, not this lane's"
+---
+# Road to a menu whose precision is measured
+
+> **Source:** ten-package code audit (2026-09-28), rows Skill routing 3,
+> Context discipline 5 against S9 at 6/7. Tree facts at `8de8a4c`: routing
+> precision is measured on **26 labelled prompts**
+> (`tests/eval/corpus-{dev,non-dev}.yaml`, `measure_skill_ranker_baseline.ts:10-13`);
+> the routing matrix (`tests/eval/routing-matrix/`) carries no expected-skill
+> labels (its Defect A); trigger corpus 101/299 (`check_routing_coverage`
+> ratchet); descriptions capped at 200 chars by `skill.schema.json:28` with
+> median 181; the skills-catalog byte bucket is already a shrink-only ceiling
+> (`check_preamble_payload_budget.ts`, `preamble-payload-budget.json:11`);
+> install already refuses global/project rule overlap
+> (`install.ts:2069-2140`, three tests); `rule-inject` cap already lowered to
+> 16,384 on 2026-09-08 with measured truncation (`hook-token-budget.json:35-42`).
+
+> **corrected-from-reproduction (2026-09-29, /analyze:inbox t06).** The supplied
+> file was reproduced against `main` read-only. Every `file:line` in its Source
+> block resolved. ONE correction applied: the Risk Register `Risk type` column
+> used values outside the enum `lint_plan_risk_register` enforces (`product` |
+> `implementation`), which `status: draft` exempts and which reds the file the
+> moment it flips to `ready`. The column is normalised; nothing else changed.
+
+## Goal
+
+Routing precision is a number with an interval on a labelled corpus large
+enough to carry one (≥ 100 prompts, ≥ 3 per pack), every skill has a trigger
+corpus, the menu census is per profile, and path-scoped rule delivery is
+tested on one consumer before anyone argues about routers or byte budgets.
+
+## Prerequisites
+
+- `measure_skill_ranker_baseline.ts`, `check_routing_coverage.ts`,
+  `report_skill_menu_census.ts`, `report_host_injection_effect.ts` exist and
+  run.
+
+## Phase 1 — A corpus that can carry a number
+
+- [x] **1.1 Label the routing matrix.** Add `expected_skills: []` to every
+      prompt in `tests/eval/routing-matrix/` (496 lines today) and add prompts
+      until every pack has ≥ 3 labelled prompts and the total is ≥ 100; labels
+      are written by a person or a fresh council seat, never by the ranker
+      under test. Record the labelling protocol in the corpus README.
+      verify: `tests/eval/routing-matrix/README.md` states the protocol;
+      `measure_skill_ranker_baseline --corpus routing-matrix` reads ≥ 100
+      labelled rows.
+
+      **DONE 2026-09-29.** The step's own figure did not reproduce and the
+      corrected one is used throughout: the matrix held **550 cases over 1,007
+      lines**, not 496 lines. Every one of the 550 gained an `expected_skills`
+      key; 38 further prompts were authored for the eleven packs the matrix did
+      not reach, giving 588 cases of which **390 carry a non-empty label**.
+
+      The pack unit is stated rather than assumed, because two definitions
+      exist and only one is satisfiable: a pack is a distinct value of the
+      `packs:` frontmatter key across `src/skills/*/SKILL.md` (**27** today).
+      The 17 directories in `src/packs/` are NOT the unit — four of them
+      (`analytics`, `core`, `memory`, `product-reasoning`) carry no skill at
+      all, so a three-prompt floor over that set could never be met.
+
+      Labels were written by six fresh seats given the skill catalogue and the
+      bare prompt text, instructed not to open the ranker's scoring and not to
+      reason about keyword overlap; the case id was withheld as a hint. A
+      seventh, blind seat relabelled 55 cases (10.0 %): exact set agreement
+      39/55 (70.9 %), agreement on whether a prompt has a skill answer at all
+      50/55 (90.9 %), and of the 30 rows both seats labelled, 29 share at least
+      one skill (96.7 %). One fully disjoint pair, left as the first seat wrote
+      it, on a genuinely ambiguous prompt. Protocol and figures:
+      `tests/eval/routing-matrix/README.md` § `expected_skills`.
+
+      ```
+      $ ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus routing-matrix
+      "corpus_prompts": 390,  "verdict": "measured",  "packs_total": 27,
+      "packs_below_floor": [],
+      "matrix_coverage": { "corpus_prompts": 588, "labelled_prompts": 390,
+                           "unlabelled_prompts": 198, "missing_label_key": 0 }
+
+      $ npx vitest run tests/scripts/routing_matrix.test.ts
+      ✓ tests/scripts/routing_matrix.test.ts (209 tests)  209 passed
+      ```
+- [x] **1.2 Precision with an interval.** `measure_skill_ranker_baseline`
+      reports top-1 and top-3 hit rate with `wilsonInterval`
+      (`_lib/capture_rate.ts:90`) and refuses to print a verdict below
+      n = 100 (`underpowered`).
+      verify: report for the 26-prompt corpus prints `underpowered`; for the
+      labelled matrix prints two intervals.
+
+      **DONE 2026-09-29, and the two arms do not overlap — which is the whole
+      point of the step.** `underpowered` is a LABEL that travels with the
+      number, not a suppression: the point estimate and the interval are still
+      printed below n = 100, because replacing a wide measurement with no
+      measurement would be worse.
+
+      ```
+      $ ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus labelled
+      "corpus_prompts": 26,  "verdict": "underpowered",
+      "top1": 0.615, "top1_ci95": {"lower":0.425,"upper":0.776},
+      "top3": 0.769, "top3_ci95": {"lower":0.579,"upper":0.890}
+
+      $ ./scripts-run src/scripts/measure_skill_ranker_baseline --corpus routing-matrix
+      "corpus_prompts": 390, "verdict": "measured",
+      "top1": 0.208, "top1_ci95": {"lower":0.170,"upper":0.251},
+      "top3": 0.338, "top3_ci95": {"lower":0.293,"upper":0.387}
+      ```
+
+      The 26-prompt lower bound (0.425) sits above the 390-prompt upper bound
+      (0.251), in both columns. `0.615` may not be quoted as this ranker's
+      precision. Which of the two explanations holds — a small corpus written
+      alongside the thing it measures, or two corpora asking different
+      questions — is NOT settled here and is recorded as open in
+      `agents/evidence/analysis/skill-routing-precision-2026-09.md`.
+
+      Sensitivity probe, since a test never seen red proves nothing: flipping
+      `n >= MIN_POWERED_N` to `n >` reds exactly `flips to measured exactly AT
+      the floor`; admitting empty labels into the denominator reds exactly
+      `keeps only the NON-EMPTY rows`. Both restored from `/tmp/bak`.
+- [x] **1.3 The number lands in the scorecard.** The skill-routing row of lane
+      9's register cites the report as `evidence_uri`; evidence state
+      `exercised`.
+      verify: register row updated; `check_scorecard_register` green.
+
+      **DONE 2026-09-29, against the register and the gate that actually
+      exist.** Two names in the step resolve to nothing in this tree and are
+      mapped rather than invented: there is no `check_scorecard_register` (the
+      gate is `check_score_contract`), no `evidence_uri` field (the register
+      carries five typed evidence ARRAYS), and no `exercised` state (the status
+      enum is the six values in `check_score_contract.STATUSES`). "Lane 9's
+      register" is `agents/evidence/ac-capability-scorecard.yaml`.
+
+      The report is cited under `mechanism_evidence` on the `skill-routing`
+      row, which moves its status `missing-mechanism` → `missing-adoption` —
+      the gate FORBIDS non-empty mechanism evidence at `missing-mechanism`, so
+      the status is derived from the edit rather than chosen. `missing-adoption`
+      is the honest state: a mechanism exists, nothing yet shows a consumer
+      routing on it. The `claim` field now carries the measured numbers and
+      still declines to claim the 9.2 baseline.
+
+      ```
+      $ ./scripts-run src/scripts/check_score_contract
+      check_score_contract ledger: scanned=23 planned=23 skipped=0
+      ✅  agents/evidence/ac-capability-scorecard.yaml — 23 row(s) ·
+          missing-mechanism=22 · missing-adoption=1
+      ```
+
+## Phase 2 — Coverage to 299
+
+- [x] **2.1 Touched-skill ratchet in `check_routing_coverage`.** A PR that
+      touches a skill without `evals/triggers.json` fails; the census lists
+      the remaining 198 by pack in `docs/SKILL_CENSUS.md`.
+      verify: fixture PR touching a corpus-less skill fails; census section exists.
+
+      **DONE 2026-09-29.** 198 reproduces exactly (299 skills, 101 with a
+      corpus). A third scope `touched` joins the two ratios, and is deliberately
+      not a fourth ratio: the obligation is per skill, so one uncovered touched
+      skill is one failure whatever the estate average says.
+
+      The failure mode guarded hardest is the silent green. An unresolvable base
+      ref (shallow clone, detached build, a worktree with no remote) is NOT read
+      as "nothing touched" — the scope reports `measured: false`, the ledger
+      records `precondition_unmet`, and the run says so on stdout. The CI job
+      that invokes this gate checks out at `fetch-depth: 0` and fetches
+      `origin/main` explicitly, so the scope is measured there.
+
+      ```
+      $ ./scripts-run src/scripts/check_routing_coverage --self-test
+      ✅  TOUCHING a skill that has no evals/triggers.json is rejected (exit 1)
+      ✅  touching a skill that DOES carry a corpus is accepted (exit 0)
+      ✅  a corpus-less skill the diff did NOT touch is accepted (exit 0)
+      ✅  a NEW corpus-less skill added by the diff is rejected before its first commit (exit 1)
+      ✅  a skill edited in a COMMIT, not the working tree, is rejected — the arm CI uses (exit 1)
+      ✅  an UNDIFFABLE base still rejects a dirty uncovered skill (exit 1)
+      check_routing_coverage --self-test: 13/13 case(s) behaved (9 rejecting, floor 13)
+
+      $ ./scripts-run src/scripts/check_routing_coverage --census
+      Skills with no `evals/triggers.json`: **198 of 299**.
+      ```
+
+      **AMENDED after an independent review, and the amendment matters more
+      than the original step.** The first implementation shipped exactly the
+      silent green this step exists to refuse, and the guard's own comment
+      claimed otherwise. `baseResolvable` probed ref EXISTENCE, but the branch
+      arm needs a MERGE BASE: in a shallow clone `git rev-parse origin/main`
+      exits 0 while `git diff origin/main...HEAD` exits 128 with `no merge
+      base`, the failure was swallowed as an empty path list, and the gate
+      passed over a committed corpus-less skill with a `✅`. Reproduced by the
+      reviewer against a real shallow clone.
+
+      Three repairs, each with a test that goes red without it. The probe is
+      now the diff itself (`baseUsable`), not the ref. The local arms — working
+      tree, index, untracked — need no base and are measured even when the
+      branch arm cannot be, so an unresolvable base narrows the CLAIM rather
+      than switching the scope off. And the verdict line no longer asserts
+      "every touched skill carries a corpus" when the branch arm did not run;
+      it names what was skipped.
+
+      The review also found that every fixture in the first round left its edit
+      UNCOMMITTED, so the one arm CI actually uses had zero coverage — which is
+      why the defect survived a green suite. Two committed-fixture cases were
+      added to the self-test and four to the unit tests.
+
+      The census section is appended to `docs/SKILL_CENSUS.md` and regenerates
+      from `--census`. Sensitivity probe: dropping the `(no pack declared)`
+      bucket reds exactly `buckets a pack-less skill rather than dropping it`
+      and `every uncovered skill appears in the rendered table`; returning
+      `measured: true` for an unresolvable base reds exactly `an unresolvable
+      base is NOT read as an empty touch set`. Restored from `/tmp/bak`.
+
+      **Evidence (2026-10-03) — re-verified, and the one figure that moved is
+      this step's own mechanism working.** `--self-test` returns `13/13 case(s)
+      behaved (9 rejecting, floor 13)` unchanged. The census does not: it reads
+      **188 of 299**, where this step recorded 198 on 2026-09-29 and
+      `docs/SKILL_CENSUS.md` carried 197 from 2026-10-01.
+
+      That is honest drift in the direction the step was built to produce, and
+      the nine names are listed rather than summarised: `accessibility-auditor`,
+      `api-testing`, `quality-tools`, `tailwind-engineer`,
+      `test-driven-development`, `test-performance`, `design-system-capture`,
+      `review-routing`, `skill-improvement-pipeline`. Each was on the 2026-10-01
+      list and each now carries `src/skills/<name>/evals/triggers.json`; the
+      `frontend-design` row drops out of the table entirely. 197 − 9 = 188, and
+      the column sum is 188 independently.
+
+      The published table is regenerated in this change rather than left dated.
+      It self-declares as a snapshot and says *regenerate it rather than trusting
+      it*, so leaving a measured 188 in this roadmap beside a published 197 would
+      have created the exact internal contradiction the 2026-10-01 pass corrected
+      five instances of. No gate compares the two — that is still true, and is
+      why the correction is manual.
+
+      The step's recorded 198 is NOT rewritten: it was correct when written and
+      is dated. Only the published artefact follows the tree.
+
+## Phase 3 — Path-scoped delivery, measured once
+
+- [ ] <!-- blocked-by: e3-witness-set-is-empty-here --> **3.1 Emit `paths:` frontmatter on projected `type: auto` rules for the
+      hosts whose rule loader honours it**, behind a setting default off;
+      measure on one consumer with `report_host_injection_effect` using the
+      `observed-true` row shape `later/road-to-delivery-on-hook-hosts.md:817`
+      defines.
+      verify: one before/after report committed under
+      `agents/evidence/analysis/`; the setting flips default on only if the
+      report shows the rule absent from sessions that never touch its paths,
+      else the step is marked `[-]` with the report cited.
+
+      **LEFT OPEN 2026-09-29 — not agent-closable, and the blocker is upstream
+      of the implementation rather than in it.** The step's verify line makes
+      the measurement the deliverable, and the row shape it names is the one
+      whose own roadmap records that the measurement cannot currently be taken
+      in this environment.
+
+      **Blocker.** `later/road-to-delivery-on-hook-hosts.md` § Resolved-when,
+      amendment (d) of 2026-09-11: an exposure audit found that **106 of 106
+      `type: auto` rules already carry a byte-equivalent obligation body in the
+      same session unconditionally** — 89 in the user-global `~/.claude/rules/`
+      layer, 3 differing by one blank line, 14 inline in the system prompt. The
+      intervention therefore varies *one copy versus two*, never *absent versus
+      present*, and the council's binding terms require injection to be the sole
+      source of the tested body. That roadmap states the residual measurable set
+      in this repository after those terms is **empty**. Its stopping boundary
+      is 12 eligible opportunities or 2026-12-08, whichever comes first — an
+      elapsed observation window, not work.
+
+      **Why not `[-]`.** The verify line offers `[-]` with the report cited, but
+      there is no report to cite: `[-]` is CANCELLED and owner-reserved, and
+      using it here would record a decision nobody took. The step stays `[ ]`
+      with the blocker named, which is why this roadmap does not archive.
+
+      **What is NOT blocked, and was still not built.** The emission half —
+      `paths:` frontmatter behind a default-off setting — is buildable today.
+      It is deliberately not built: a default-off projection feature whose
+      enabling condition provably cannot be evaluated adds a surface and a
+      setting that nothing can ever flip, and the step's own verify line ties
+      the flip to a report that does not exist. Building it would convert a
+      named blocker into shipped dead code.
+
+      **Wake condition.** Re-read when the blocker in
+      `later/road-to-delivery-on-hook-hosts.md` resolves — a clean environment
+      or a rule that exists only in the delivery channel — or at its 2026-12-08
+      expiry, whichever comes first.
+
+      **Evidence (2026-10-01) — the probe was RUN, not the prose re-read, and
+      it returns unmet.** The blocker's `Resolved when` is agent-checkable by
+      construction, so this run executed it rather than trusting the `Status:`
+      line above it:
+
+      ```
+      $ ./scripts-run src/scripts/report_host_injection_effect
+      scanned: 9 host(s)
+        observed-false   1
+        unobserved       8
+
+      $ grep -c '"state": "observed-true"' src/config/host-injection-effect.json
+      0
+      ```
+
+      Zero `observed-true` rows, so the condition is **live-unmet** on this
+      branch exactly as it was on 2026-09-30 — the state is re-measured, not
+      inherited. Neither wake limb has fired either: the upstream blocker is
+      unresolved, and 2026-12-08 is 68 days out.
+
+      **One thing this run adds rather than repeats: first-hand corroboration
+      of the confound, from the session executing the step.** The council's
+      binding term of 2026-09-11 requires injection to be the SOLE source of
+      the tested body, and amendment (d) found 106 of 106 `type: auto` rules
+      already carrying a byte-equivalent body unconditionally. That was an
+      audit of the tree; it is also observable from inside this session, whose
+      own system prompt carries the user-global `~/.claude/rules/*.md` bodies
+      inline before any delivery channel fires. The confound is therefore not a
+      historical claim taken on trust — the measuring instrument reproduces it
+      on itself.
+
+      **Why `[ ]` and not `[~]`, with the mechanism the blocker's own version
+      of this argument does not name.** `lint_deferral_integrity` classes a
+      `deferred-resolution:` annotation whose receiver is deleted, skipped, or
+      archived-with-open-steps as `broken-destination` — a hard failure at
+      zero, no baseline. The only honest receiver here is the parked delivery
+      roadmap whose own blocker is this one, so `[~]` would not merely be
+      circular: it would red that gate the first time this file is archived.
+      `[ ]` plus the live `blocked-by:` marker is kept.
+
+      **Evidence (2026-10-03) — a THIRD independent reading, and the value it
+      adds is that the state is known to be current rather than inherited.** The
+      probe was executed on this branch, not re-read from the block above:
+
+      ```
+      $ ./scripts-run src/scripts/report_host_injection_effect
+      scanned: 9 host(s)
+        observed-false   1
+        unobserved       8
+
+      $ grep -c '"state": "observed-true"' src/config/host-injection-effect.json
+      0
+      ```
+
+      Same three counts as 2026-09-30 and 2026-10-01, and **0 `observed-true`**.
+      The single `observed-false` is `cowork`, dated 2026-09-07; the other eight
+      are `unobserved`. Neither wake limb has fired: the upstream blocker
+      `no-host-observed-true-injection` in
+      `later/road-to-delivery-on-hook-hosts.md:704` still reads `Status: open`,
+      and 2026-12-08 is 66 days out.
+
+      **One reading detail this run adds, because a future session will hit it.**
+      The file carries **ten** `"state"` keys but the report scans **nine** hosts,
+      and the pair is consistent rather than contradictory: `_cursor_md_tree_loaded`
+      is an underscore-prefixed annotation row, not a host, and the report excludes
+      it. A bare `grep -c '"state": "observed-true"'` is still the right probe for
+      this blocker — it answers zero either way — but a session that greps the
+      other two states and compares them with the report's totals will find 1 + 9
+      against 1 + 8 and should not read that as drift. The blocker's `Resolved
+      when` asks for a ROW; the report's census is the admissibility arm, and
+      `tests/scripts/injection_effect.test.ts` (16 tests, green on this branch) is
+      the tripwire that reds when the two disagree.
+
+      **Exact inputs a future session needs**, so the next run re-probes
+      instead of re-deriving: (1) a row in `src/config/host-injection-effect.json`
+      at `"state": "observed-true"` carrying host version, transcript pointer
+      and date, whose `reason` scopes itself to the predeclared eligible
+      obligation class of step 1.1 in the delivery roadmap; (2) that row earned
+      in an environment where the tested rule has no second copy in the system
+      prompt, the project layer, or `~/.claude/rules/` — a clean checkout or a
+      rule that exists only in the delivery channel; (3) in the SAME change,
+      `tests/scripts/injection_effect.test.ts` → `it('no shipped host is
+      admissible today')` flipped, because it asserts the admissible set is
+      empty and goes red the moment any `observed-true` lands. With those three
+      in hand, 3.1's emission half is a day's work and its verify line is
+      answerable; without (1) and (2), it is not.
+
+      **Evidence (2026-10-06) — a FOURTH independent reading, and it is the
+      last one this step takes in the active tree.** Executed on
+      `drain/menu-precision-20261006`, branched from `origin/main` `c58d7ea`:
+
+      ```
+      $ ./scripts-run src/scripts/report_host_injection_effect
+      scanned: 9 host(s)
+        observed-false   1
+        unobserved       8
+
+      $ grep -c '"state": "observed-true"' src/config/host-injection-effect.json
+      0
+      ```
+
+      Four readings on four dates — 2026-09-29, 2026-10-01, 2026-10-03,
+      2026-10-06 — now return the same three counts, none of them a re-read of
+      the one before it. Neither wake limb has fired: the upstream blocker
+      `no-host-observed-true-injection` still reads `Status: open`
+      (`later/road-to-delivery-on-hook-hosts.md`), and 2026-12-08 is 63 days
+      out.
+
+      **What the fourth reading adds is not the number — it is that the number
+      has stopped being informative, and that is itself the finding.** Three
+      readings established the state was current rather than inherited. A
+      fourth, eight days and three drain runs later, establishes something the
+      first three could not: the re-probe is no longer measuring the tree, it
+      is measuring how often a continuation run reaches this step. Each run
+      spent its read budget re-deriving a confound recorded on 2026-09-11 and
+      re-declining a step whose blocker already said it would. The blocker's
+      own § `If you do nothing` predicted exactly that loop; four data points
+      are it, observed. The disposition recorded in § Decisions D1 is the
+      response, and the probe is NOT retired by it — it moves to the surface
+      that runs it on a condition instead of on an accident.
+
+## Phase 4 — Census per profile
+
+- [x] **4.1 `report_skill_menu_census --profile minimal|balanced|full`**
+      (`install.ts:301 SUPPORTED_PROFILES`) writes `menu_bytes` per profile;
+      the existing skills-catalog ceiling stays the gate (no second ratchet).
+      verify: report prints three numbers; `check_preamble_payload_budget`
+      unchanged and green.
+
+      **DONE 2026-09-29, and the answer is that the three numbers are equal.**
+      That is a measurement, not a stub: the count is computed from each
+      preset's own file, and `SKILL_SELECTING_INI_KEYS` is empty because no
+      shipped preset declares a key that selects skills. A preset that gains one
+      changes the number instead of the prose. A menu-bytes lever therefore has
+      to move packs or the menu flags; changing profile does nothing.
+
+      ```
+      $ ./scripts-run src/scripts/report_skill_menu_census --profile all
+      menu bytes per install profile (name + description, the catalogue shape):
+        profile    skills   menu_bytes   ~tokens   declared
+        minimal       297        59076     14769      10047
+        balanced      297        59076     14769      10047
+        full          297        59076     14769      10047
+
+      $ ./scripts-run src/scripts/check_preamble_payload_budget
+      ✅  ceiling 138325 tok = base 138325 — zero net growth, design 107646.
+      ✅  per-spawn preamble payload within the ratchet.
+      ```
+
+      No second ratchet was added. One reconciliation is recorded rather than
+      smoothed over: this report reads **311 B below** a full-population sum
+      over the same tree, because two skills carry `user-invocable: false` or
+      `disable-model-invocation: true` and a MENU is what the model may pick
+      from, while the gated payload bucket sums every catalogue line the host
+      lists. A reader who finds the two equal has found a defect in one.
+
+      Sensitivity probe: removing the menu-flag exclusion reds exactly `drops a
+      skill the model may not pick`; emitting the equality note unconditionally
+      reds exactly `stays silent about equality when the numbers differ` and
+      `says nothing about equality for a single profile`. Restored from
+      `/tmp/bak`.
+
+      **AMENDED after an independent review, on two overclaims.** The first
+      version computed `selectingKeys` and then never read it, so "a preset that
+      gains such a key changes the number instead of the prose" was false — the
+      number could not move, and the prose printed regardless. The list is now
+      documented as what it is, a TRIPWIRE: it cannot change the byte count,
+      because nothing here knows what such a key would mean, but a declared key
+      is NAMED in the output and the equality note is withheld. The claim is
+      narrowed to what holds.
+
+      And `frontmatterDescription` counted `\"` as two characters, over-reporting
+      by 56 B across 13 skills — the same class of defect as the 17.1 % one its
+      own docstring cites as fixed. Escapes are decoded; the figures above are
+      the corrected ones (59,076 B, and the full-population delta is 311 B, not
+      315). Two tests were also found to assert less than their names promised
+      and now run against the shipped presets rather than a fixture.
+
+      **Evidence (2026-10-01) — the amendment above described a correction it
+      did not perform, and that is repaired here.** The code it was written
+      under was fixed on 2026-09-29; the transcript block above it was not, so
+      "the figures above are the corrected ones" pointed at `59132 / 14783` for
+      two days while the tool emitted `59076 / 14769`, and the delta sentence
+      read `315 B` where the same paragraph said `311`. Re-running the reports
+      on this branch returns the amendment's own numbers, so the block is
+      brought into line with the code rather than the reverse — the amendment
+      was right and only its subject was stale.
+
+      Both reports were re-run on this branch; the block above now carries what
+      they print. The payload line is the one figure NOT restored to its
+      2026-09-29 value, and the difference is the gate working rather than
+      drifting:
+
+      ```
+      $ ./scripts-run src/scripts/check_preamble_payload_budget
+      measured total 138321 tok (baseline 102520, +35801; ceiling 138321)
+      ✅  ceiling 138321 tok = base 138321 — zero net growth, design 107646.
+      ```
+
+      The bucket is shrink-only, so when the tree got 4 tokens smaller the
+      ceiling followed it down and cannot go back up. Re-publishing the step's
+      original `138325` would have quoted a ceiling the gate has since refused.
+      The equality the step reports is unchanged and no second ratchet exists.
+
+      **Evidence (2026-10-03) — re-verified; the equality holds and the ceiling
+      moved again, for the same reason it moved last time.** Both commands were
+      re-run on this branch:
+
+      ```
+      $ ./scripts-run src/scripts/report_skill_menu_census --profile all
+        minimal       297        59076     14769      10047
+        balanced      297        59076     14769      10047
+        full          297        59076     14769      10047
+
+      $ ./scripts-run src/scripts/check_preamble_payload_budget
+      measured total 137017 tok (baseline 102520, +34497; ceiling 137017)
+      ✅  ceiling 137017 tok = base 137017 — zero net growth, design 107646.
+      ```
+
+      The menu figures are byte-identical to 2026-10-01 — 59,076 B across all
+      three profiles, equality intact, no preset declaring a skill-selecting key.
+      The payload ceiling reads 137,017 where the block above records 138,321, a
+      fall of 1,304 tokens. This is the third consecutive pass at which that
+      number has been lower than the one published before it (138,325 →
+      138,321 → 137,017) and it is **not** drift to correct: the bucket is
+      shrink-only, so each reading is the gate following a smaller tree down and
+      refusing to let it back up. Re-publishing any earlier value would quote a
+      ceiling the gate has since declined. The block above is left as the dated
+      record of its own run; this one carries the current reading.
+
+      No second ratchet exists and the equality the step reports is unchanged.
+
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | reversible-technical | council: 2026-10-06, 2 present / 1 substantive | park this roadmap in `agents/roadmaps/later/` with a structured `entry_condition` naming BOTH wake branches, rather than leaving it in the active tree | four executed probe readings (2026-09-29, 10-01, 10-03, 10-06) returning 9 hosts / 1 `observed-false` / 8 `unobserved` / 0 `observed-true`; `roadmap-management` § Active vs. Later test; `check_estate_count.ts:63-66` sanctions parking without authorisation | an `observed-true` row lands, or 2026-12-08 passes, or the repository gains typed dependency outcomes that let this file consume the upstream predicate directly |
+
+**Why, and the counter-argument it had to beat.** The Active-vs-Later test
+asks one question — *can the agent make progress on this roadmap now,
+autonomously?* Both open items are gated on an observation this repository
+provably cannot produce, so the test returns **not active**. Against that, a
+sibling lane raised a real objection in the same drain run: `lint_roadmap_blockers`
+scans the active tree plus `stubs/` and nothing else, and
+`/roadmap:resolve-blockers` states that blockers under `later/` are history —
+so parking a blocker whose condition is decidable by a one-second probe removes
+it from both gates that would re-check it.
+
+That objection is answered by the gates' own recorded intent rather than by
+preference. `lint_roadmap_blockers.ts` § SCOPE states it in its own words:
+"`later/`, `archive/` and `skipped/` stay OUT, and the reason is not symmetry:
+those record decisions already taken (parked, closed, dropped), so a blocker
+left unresolved there is history rather than debt. A stub records a decision
+still to take." The exclusion is a **handoff, not a hole**: a parked roadmap is
+re-checked by a different enforced contract —
+`lint_roadmap_later_disposition` requires a structured `entry_condition`
+(`what`/`when`/`who`, all non-empty, ratcheted) plus `review_by`, and
+`/roadmap:triage-parked` exists to execute those conditions against the current
+tree, under the Iron Law "A PARKED ROADMAP IS A CLAIM, NOT A FACT." A prose
+"Wake condition." line satisfies none of that, which is precisely why the park
+is done with the keys the gate reads and not with the paragraph 3.1 already had.
+
+**The discriminator is the step, not the owner.** The council's correction,
+adopted here: `Owner: implementer` is not what decides this. The question is
+whether the next substantive step can be executed now. It cannot, so parking is
+right — and it would still be right if the owner field read something else.
+
+**What the council changed in the proposal.** Its verdict was *park it, but do
+not approve the contract as complete*, and the incompleteness it named is now
+Risk Register row 4: the exhausted-without-witness branch had no legal next
+state. `entry_condition.what` therefore names two outcomes, not one, and says
+in its own words that exhaustion resumes the file for terminal disposition
+**without** treating AC-4 as satisfied. Its preferred third option — make the
+upstream roadmap the sole owner of the predicate and have this file consume a
+typed outcome — is **recorded and not taken**: the repository has no typed
+dependency-outcome primitive, and inventing one for a single consumer is the
+overreach the same seat warned against. The smallest possible reference is
+duplicated instead, which is what that seat recommended as the interim.
+
+**Attendance, stated honestly.** Quorum concluded 2/2 present, but only the
+`openai/codex-default` seat returned a substantive verdict;
+`anthropic/claude-sonnet-4-5` declined on a round-2 prompt-structure objection
+and produced no analysis. So this is **one reviewed opinion plus the tree's own
+evidence**, not a two-seat convergence, and it is recorded that way rather than
+as the stronger thing the quorum line alone would suggest. Cost $0.00 — both
+seats subscription-authed.
+
+**One consequence named rather than banked.** `lint_roadmap_complexity` is red
+on the trunk with two failures, and this file (723 lines, tagged `lightweight`
+against a 600-line cap) is one of them. The gate does not walk `later/`, so
+parking drops that failure count to one **without the file getting shorter**.
+That is a side effect, not a reason, and it must not be read as a fix: the
+observation is owned by `road-to-signals-that-mean-what-they-say.md`, whose
+record of it is dated and pinned to a commit, and retagging `lightweight` →
+`structural` to answer the cap stays forbidden to the agent
+(`docs/contracts/roadmap-complexity-standard.md:71-73`).
+
+## Risk Register
+<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
+
+| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+|------|------|-----------|-------------|------------|----------------|
+| 1 | Labels written by the ranker's author encode the ranker | product | Precision looks high because labels agree with lexical matches | Labelling protocol excludes anyone who read the ranker's scoring; a 10 % blind relabel by a second seat is recorded | Phase 1 — A corpus that can carry a number |
+| 2 | Path-scoped rules hide a rule a session needed | product | A rule absent when a touched path fell outside its glob | Default off; measured once; flip only on the report | Phase 3 — Path-scoped delivery, measured once |
+| 3 | A corpus-less skill is edited under a base ref git cannot resolve | implementation | The touched-skill scope reads "nothing touched" and passes while checking nothing — a silent green, which is worse than a red | The scope reports `measured: false` rather than an empty touch set, the ledger records `precondition_unmet`, the run says so on stdout, and a test asserts the distinction; the CI job checks out at `fetch-depth: 0` and fetches `origin/main` explicitly | Phase 2 — Coverage to 299 |
+| 4 | The observation window expires without a witness and the design has no legal next state | product | `Resolved when` defines only the witness branch. The stopping boundary (12 eligible opportunities or 2026-12-08) defines when waiting ends but not what the roadmap then becomes, so an expired window returns an unexecutable file to the active tree with its two boxes still open and nothing authorised to close them. Elapse read as satisfaction would close AC-4 on no report at all | `entry_condition.what` names BOTH branches and says in its own words that exhaustion is a resume-for-terminal-disposition, never a resolution; AC-4 carries the same clause; the terminal branch itself is pre-authorised upstream (`later/road-to-delivery-on-hook-hosts.md` § `Resolved when` (c), descope under K6's five-part override), so the owner decision exists and is cited rather than re-derived here | Phase 3 — Path-scoped delivery, measured once |
+
+**Re-review, 2026-09-29, on the closure of 1.1-1.3, 2.1 and 4.1.**
+
+Risk 1 **materialised in the direction predicted, and the mitigation caught
+it.** The 26-prompt corpus reads top-1 0.615; the independently labelled
+390-prompt corpus reads 0.208, and the two intervals do not overlap. The
+mitigation was carried out as written — six seats given the catalogue and the
+bare prompt text with the ranker's scoring off limits, plus a blind 10 %
+relabel whose agreement is recorded in
+`tests/eval/routing-matrix/README.md`. What the mitigation does NOT establish
+is which of the two explanations for the gap holds (an optimistic small
+corpus, or two corpora asking different questions), and that is left open in
+`agents/evidence/analysis/skill-routing-precision-2026-09.md` rather than
+resolved by assertion. Risk stays live for any future relabel.
+
+Risk 2 is **unchanged and now blocking**: 3.1 stays open, nothing is
+default-on, and the risk cannot be retired until its measurement is possible
+at all. See 3.1's blocker.
+
+Risk 3 is **new**, added by the scope 2.1 shipped. It is the risk the
+implementation created, so it belongs here rather than in the step's prose: a
+gate whose precondition fails silently is a gate that reports green while
+measuring nothing, which is the shape this repository's gate contract exists
+to refuse.
+
+**Re-review, 2026-09-30, on making the Phase 3 blocker machine-readable.**
+Triggered by an Acceptance-Criteria edit, and the three rows are re-read rather
+than re-dated.
+
+Risk 1 is **unchanged and dormant**. Phase 1 is closed, no relabel has been
+taken since, and nothing in this change touches the corpus or the protocol. It
+stays live for any future relabel on the terms already written.
+
+Risk 2 is **unchanged in likelihood and materially better contained.** Nothing
+is default-on and 3.1 is still open, so the hazard itself has not moved. What
+moved is the containment: the reason it stays off was prose under a phase
+heading, which no gate reads, and the dashboard consequently advertised zero
+blockers for this file. It is now a parsed `## Blockers` entry with an
+agent-checkable `Resolved when`, and both open boxes carry the inline
+`blocked-by:` marker. The mitigation no longer depends on a reader noticing a
+paragraph.
+
+Risk 3 is **unchanged**. Phase 2 shipped the distinction it asks for and the
+tests that pin it; nothing here touches `check_routing_coverage`.
+
+**No fourth row is added, and that is a decision rather than an omission.** The
+defect this change repairs — a live blocker invisible to every gate that reads
+blockedness — was real, and it is now closed in the same change, so a register
+row for it would record history rather than exposure. Its residual is that a
+later run reads this file's prose instead of running the probe the blocker
+names and concludes "still blocked" without measuring. That residual is
+addressed where it can act: the `Resolved when` field leads with the command
+and says in its own words that the state column is the authority, not the
+prose around it.
+
+**Re-review, 2026-10-01, on a figure-correction and re-probe pass.** No row
+changes and no row is added. Risk 1 is **dormant** — no relabel was taken.
+Risk 2 is **unchanged**: the probe was re-run, still 0 `observed-true`, so the
+hazard is neither closer nor further and nothing went default-on. Risk 3 is
+**unchanged** — `check_routing_coverage` is untouched, and its self-test still
+reports 13/13, which is what exposed AC-3's `11/11` as the stale half of that
+pair. The corrections are to published numbers, not to mechanisms, so no new
+exposure is created. The one residual worth naming is that **five** figures in
+this file were wrong when they were written — `59132`, `14783`, `315 B`,
+`11/11`, `four of them` — and no gate noticed; two others (`138325`, `198`) are
+honest drift and are treated differently, the first because a shrink-only
+ratchet moved it, the second because the census declares itself dated.
+
+**Re-review, 2026-10-03, on a third-reading and re-verification pass.** No row
+changes and no row is added; all three are re-read against commands re-run on
+this branch rather than against the paragraphs above them.
+
+Risk 1 is **dormant**. No relabel has been taken, the corpus and protocol are
+untouched, and the two baselines reproduce to the digit — 390 labelled rows at
+top-1 0.208 (0.170–0.251), the 26-prompt corpus at 0.615 (0.425–0.776) and
+still verdict `underpowered`. The non-overlap the risk predicted is unchanged,
+and so is its disposition: which of the two explanations holds is not decided
+here and stays recorded where step 1.2 put it,
+`agents/evidence/analysis/skill-routing-precision-2026-09.md`. This pass took
+no new evidence bearing on it and therefore moves it neither way.
+
+Risk 2 is **unchanged**, for the third consecutive pass. The probe was executed,
+not re-read: 0 `observed-true`, nothing is default-on, 3.1 and AC-4 stay open.
+The hazard is neither closer nor further. What this pass adds is small and
+belongs to containment rather than to the risk: the ten-keys-versus-nine-hosts
+reading detail is now written down in 3.1, so the next session does not
+mistake an annotation row for drift in the instrument.
+
+Risk 3 is **unchanged as a hazard and better evidenced as a mitigation.**
+`check_routing_coverage` is untouched and its self-test still reports 13/13 with
+nine rejecting cases. The census it feeds has fallen 197 → 188 because nine
+skills gained a corpus, which is the touched-skill scope producing the outcome
+it was built for — observed, not asserted. A gate reporting green while
+measuring nothing would not have moved that number.
+
+**No fourth row, and the reason is the same one the 2026-09-30 pass gave.** The
+one thing this pass corrects is a published figure, not a mechanism: the census
+table was nine units stale. Stale-but-dated is the condition that artefact
+declares for itself, so it creates no exposure a register row could track, and
+the correction is made in the same change that measured it.
+
+**Re-review, 2026-10-06, on the fourth-reading and parking pass — and unlike
+the three before it, this one ADDS a row.** The three previous passes each
+concluded "no fourth row" on the same reasoning: nothing had changed except a
+published figure. That reasoning does not survive this pass, because the change
+here is to the roadmap's disposition rather than to a number, and it was an
+external review that found what the three internal passes had each walked past.
+
+Risk 1 is **dormant**, for the third consecutive pass. No relabel was taken,
+the corpus and protocol are untouched, and nothing in this change bears on
+labelling. It moves neither way.
+
+Risk 2 is **unchanged as a hazard and newly unreachable as a mitigation, which
+is a different state from the three "unchanged" readings above it.** The probe
+was executed, not re-read: 0 `observed-true`, nothing is default-on, 3.1 and
+AC-4 stay open, so the hazard — a path-scoped rule hiding a rule a session
+needed — is neither closer nor further. What has changed is the mitigation
+column. "Default off; measured once; flip only on the report" presumes a report
+can be taken; four readings establish it cannot be taken here. The mitigation is
+therefore not failing, it is **not yet live**, and the risk cannot materialise
+while nothing ships. Parking preserves that state rather than altering it: the
+row stays, anchored where it was, and becomes actionable on the same wake that
+makes its mitigation evaluable.
+
+Risk 3 is **unchanged**. `check_routing_coverage` is untouched by this change.
+
+**Row 4 is new, and it came from the council rather than from this file.** The
+AI council of 2026-10-06 (2/2 seats present, 1 substantive — see § Decisions D1
+for the honest attendance reading) found a hole that the blocker, the step
+prose and three prior re-reviews had all left open: the witness branch is fully
+specified and the **exhausted-without-witness branch is not**. `Resolved when`
+names only `observed-true`; the stopping boundary names when waiting ends but
+not what the file becomes. An expired window would therefore hand an
+unexecutable roadmap back with two open boxes and no authorised move — and the
+likelier failure is worse than deadlock: a later reader treats the elapsed date
+as the condition being met and closes AC-4 on a report that was never taken.
+That is a real exposure, it is anchored under Phase 3, and it is now a row with
+a mitigation that discharges it in this change: both branches are written into
+`entry_condition.what`, AC-4 carries the not-satisfiable-by-elapse clause, and
+the terminal branch cites the upstream pre-authorisation instead of inventing
+one. **The residual this row does NOT close** is ownership granularity — the
+council's point that `Owner: implementer` conflates evidence producer,
+condition evaluator and disposition owner. That is a repository-wide blocker
+schema question, not this roadmap's to settle, and it is named here rather than
+quietly absorbed.
+
+## Acceptance Criteria
+
+- [x] AC-1 — The routing matrix carries ≥ 100 labelled prompts with a written
+      protocol and the baseline prints top-1/top-3 with Wilson intervals.
+      390 labelled rows over 27 packs, none below the 3-prompt floor; protocol
+      and blind-relabel agreement in `tests/eval/routing-matrix/README.md`.
+- [x] AC-2 — The skill-routing register row cites the report.
+      `agents/evidence/ac-capability-scorecard.yaml`, `mechanism_evidence`;
+      `check_score_contract` green.
+- [x] AC-3 — A PR touching a corpus-less skill fails the coverage ratchet.
+      `check_routing_coverage --self-test` 13/13, six of them on the new scope.
+      **Corrected 2026-10-01:** this line read `11/11, four` and contradicted
+      step 2.1's own evidence block of the same date, which already printed
+      `13/13 case(s) behaved (9 rejecting, floor 13)`. Re-run on this branch
+      returns 13/13, and the touched-skill scope contributes six cases, not
+      four — `TOUCHING`, `touching … DOES carry`, `did NOT touch`, `a NEW
+      corpus-less skill`, `edited in a COMMIT`, `an UNDIFFABLE base`. The
+      criterion was understating the gate it certifies.
+- [ ] <!-- blocked-by: e3-witness-set-is-empty-here --> AC-4 — One path-scoping effect report exists and the setting default
+      matches its conclusion. **Open** — blocked with 3.1; see its blocker.
+      Re-probed 2026-10-01, 2026-10-03 and 2026-10-06:
+      `report_host_injection_effect` reads 9 hosts, 1 `observed-false`, 8
+      `unobserved`, 0 `observed-true` on all three dates, so the report this
+      criterion requires still cannot be taken. See 3.1 § Evidence (2026-10-06)
+      for the fourth run and § Exact inputs for the three that would unblock it.
+      **Not satisfiable by elapse.** Reaching the 2026-12-08 boundary without a
+      witness does NOT close this criterion — it resumes the roadmap for a
+      terminal disposition in which AC-4 is re-cut or withdrawn by the owner.
+      The two outcomes are different states and `entry_condition.what` names
+      both; see § Decisions D1.
+
+## Blockers
+
+### blocker: e3-witness-set-is-empty-here
+- **Status:** open
+- **Owner:** implementer
+- **Blocks:** 3.1, and AC-4
+- **What to do:** nothing is decidable here yet, and the honest move is to
+  re-probe rather than to choose. In order —
+  (a) re-run the probe named under `Resolved when`
+      (`./scripts-run src/scripts/report_host_injection_effect`) at the wake
+      condition below and read the state column, not this prose;
+  (b) if an `observed-true` row has landed, build 3.1's emission half
+      (`paths:` frontmatter behind a default-off setting) and take the
+      before/after reading the step's verify line asks for;
+  (c) if the boundary in `later/road-to-delivery-on-hook-hosts.md`
+      § `Resolved when` is reached with no witness, that roadmap's own
+      disposition escalates to descope — pre-authorised there, so it is not a
+      question this roadmap has to put — and 3.1 and AC-4 are re-cut against
+      whatever Phase 2 of that roadmap becomes.
+- **Resolved when:** at least one row in `src/config/host-injection-effect.json`
+  reads `"state": "observed-true"` with a full citation (host version,
+  transcript pointer, date), and `report_host_injection_effect` regenerates the
+  census with that row admissible. Agent-checkable, per template rule 20: the
+  probe is a command, not a person. Measured on this branch — 9 hosts scanned,
+  1 `observed-false`, 8 `unobserved`, 0 `observed-true` — so the condition is
+  live-unmet rather than assumed unmet. **Re-measured 2026-10-01** on
+  `drain/menu-precision-close`: same three counts, 0 `observed-true`. The
+  re-probe is recorded as a second independent reading rather than as a new
+  fact — the value of running it is that the state is known to be current, and
+  a run that only re-read this line would not have established that.
+  **Re-measured a third time 2026-10-03** on `drain/menu-precision-third-reading`:
+  9 hosts scanned, 1 `observed-false` (`cowork`, 2026-09-07), 8 `unobserved`, 0
+  `observed-true`. Three independent readings on three dates now agree, and none
+  of them is a re-read of the one before it. The upstream blocker
+  `no-host-observed-true-injection` is still `open`
+  (`later/road-to-delivery-on-hook-hosts.md:704`) and 2026-12-08 is 66 days out,
+  so neither wake limb has fired.
+  **Re-measured a fourth time 2026-10-06** on `drain/menu-precision-20261006`,
+  branched from `origin/main` `c58d7ea`: 9 hosts scanned, 1 `observed-false`
+  (`cowork`, 2026-09-07), 8 `unobserved`, 0 `observed-true`. Upstream blocker
+  still `open`; 2026-12-08 is 63 days out. Four readings on four dates agree.
+  **This is the reading that changed the disposition rather than the state** —
+  see § Decisions D1. The probe is unchanged and is carried verbatim into
+  `entry_condition.what`, so parking relocates who runs it and on what trigger,
+  never what it asks.
+- **Recommendation:** leave it open and re-probe at the wake condition. The
+  emission half is buildable today and is deliberately not built: its enabling
+  condition provably cannot be evaluated in this environment, so shipping it
+  would add a setting and a projection surface that nothing can ever flip —
+  a named blocker converted into dead code. That call was taken on 2026-09-29
+  in 3.1's own prose and is recorded here rather than re-derived.
+- **If you do nothing:** the roadmap reads 80 % with two open boxes and — until
+  this entry existed — advertised zero blockers, so every continuation run
+  re-engages 3.1, re-discovers the same confound, and re-declines it. The
+  marker on the two checkboxes is what stops that loop.
+  **Measured 2026-10-06: the marker did not stop it.** Four runs on four dates
+  reached this step and re-probed; the inline `blocked-by:` marker told each one
+  the step was blocked and none of them was thereby spared the read. The marker
+  makes blockedness *visible*; it does not make the file *unreachable*, and
+  reachability is what the loop runs on. That is the gap § Decisions D1 closes,
+  and it is a correction to this line rather than a restatement of it.
+
+**Why this is not the agent's to close, in one paragraph.** The obstacle is not
+that the emission is hard. It is that 3.1's verify line makes the MEASUREMENT
+the deliverable, and the measurement is invalid in this repository by a finding
+the delivery roadmap recorded on 2026-09-11: 106 of 106 `type: auto` rules
+already carry a byte-equivalent obligation body in the same session
+unconditionally — 89 in the user-global `~/.claude/rules/` layer, 3 differing by
+a single blank line, 14 inline in the system prompt. The intervention therefore
+varies *one copy versus two*, never *absent versus present*, and the council's
+binding terms of that date require injection to be the sole source of the tested
+body. The residual measurable set here is empty; a qualifying observation needs
+a clean environment or a rule that exists only in the delivery channel, neither
+of which this repository can produce. The stopping boundary is 12 eligible
+opportunities or 2026-12-08, whichever comes first — an elapsed observation
+window, not work.
+
+**Why not `[-]`.** 3.1's verify line offers `[-]` with the report cited, and
+there is no report to cite. `[-]` is CANCELLED and owner-reserved; using it here
+would record a decision nobody took. `[~]` is equally wrong: a deferral needs a
+`deferred-resolution:` receiver, and the receiver would be a parked roadmap
+whose own blocker is this one. The boxes stay `[ ]`, which is why this roadmap
+does not archive.
+
+## Provenance
+
+Source-derived (template rule 19). Pre-council draft.
+
+| Descriptor | Token | Drawn in, per defect |
+|---|---|---|
+| S7 — best-practice curation | `ENC1:<mint>` | path-scoped rules via `paths:` frontmatter (3.1) |
+| S9 — phase-loop reference | `ENC1:<mint>` | 100-char description lint noted and **not** adopted (K2 of the parked economy roadmap) |
+
+Gap-table: KEEP 1.1–1.3, 2.1, 3.1, 4.1; CUT "description byte budget"
+(schema cap 200 exists; economy K2), "menu-bytes ratchet"
+(`check_preamble_payload_budget` exists), "install single-copy check"
+(`_gate_rule_layer_overlap` exists), "lower rule-inject to 8192" (already
+lowered with measured truncation; argument inverted), "retire ADR-272
+downward" (its trigger is the deferred-rule-retriever, not a measurement).

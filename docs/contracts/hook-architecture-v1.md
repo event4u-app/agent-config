@@ -941,9 +941,12 @@ Two consequences worth stating rather than leaving to be re-derived:
 
 ## Concurrency — atomic state writes
 
-Concerns that write under `agents/runtime/state/` MUST use the pattern:
+Concerns that write a state file under `agents/` MUST use the pattern:
 
-1. Acquire `fcntl.flock(LOCK_EX)` on `agents/runtime/state/.dispatcher.lock`.
+1. Acquire `fcntl.flock(LOCK_EX)` on `<state_dir>/.dispatcher.lock` — the
+   same directory the target file lives in, never a single fixed location.
+   A concern targeting `agents/runtime/state/foo.json` locks there; one
+   targeting `agents/state/bar.json` locks in `agents/state/` instead.
 2. Write to a sibling `<dest>.tmp.<pid>` file in the same directory.
 3. `os.replace(tmp, dest)` — POSIX-atomic on the same filesystem.
 4. Release the lock.

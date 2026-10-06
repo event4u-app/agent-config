@@ -109,7 +109,7 @@ Constraint: **attack the biggest unknown first** (not breadth-first). Repeat unt
 | New evidence appears | Re-evaluate all conclusions |
 | Stuck in one skill | Broaden — switch to `universal-project-analysis` |
 | Clear pattern recognized | Narrow — go deep with the right specialist |
-| 3 failed attempts | Stop — summarize state, ask user for direction |
+| 3 failed attempts | Change approach — `autonomous-execution`'s mandatory strategy shift, never a stop |
 
 ## Learning from past analyses
 

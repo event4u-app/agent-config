@@ -22,7 +22,7 @@ import {
     formatConformanceReport,
     inlineStaticDeclarations,
     structuralCounts,
-} from '../../src/scripts/_lib/conformance_report.js';
+} from './conformance_report.js';
 
 /**
  * One artifact exercising every dimension at once: landmarks and controls,

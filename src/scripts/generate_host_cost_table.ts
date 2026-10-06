@@ -52,6 +52,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { extractSection, SectionError } from './_lib/md_section.js';
 import {
     ARTIFACT_REL,
     HOST_SURFACES,
@@ -85,9 +86,25 @@ export interface HostRow {
  * without anything saying so.
  */
 export function parseCensus(text: string): HostRow[] {
-    const start = text.indexOf('## Per host');
-    if (start === -1) return [];
-    const lines = text.slice(start).split('\n');
+    // Anchored on the LINE, never a substring — a prose mention of the same
+    // heading earlier in the artefact used to be indistinguishable from the
+    // real one under a plain `indexOf` (the measured 2026-08-20 incident
+    // `_lib/md_section.ts` documents). `extractSection` also refuses a
+    // heading that occurs more than once, which this census format never
+    // intends — exactly the silent-wrong-match failure this script's own
+    // "deliberately strict" design already asks for.
+    let section: string;
+    try {
+        section = extractSection(text, '## Per host');
+    } catch (err) {
+        // "not found" means the format moved — the pre-existing, intentional
+        // `[]` contract below. "ambiguous" (the heading occurs more than
+        // once) is NOT the same case and must stay loud: that is exactly the
+        // silently-wrong-match failure this wiring exists to stop.
+        if (err instanceof SectionError && err.message.startsWith('heading not found')) return [];
+        throw err;
+    }
+    const lines = section.split('\n');
     const rows: HostRow[] = [];
     for (const line of lines) {
         if (!line.startsWith('|')) {

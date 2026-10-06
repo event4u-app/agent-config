@@ -443,7 +443,12 @@ describe('_check_lean_projection', () => {
     });
 
     it('is ok when thin projection carries thin stubs', () => {
-        const { proj, pkg } = scaffold('thin', `## Routed X\n> ${THIN_STUB_MARKER}. Body: link\n`);
+        // NOT wrapped. `THIN_STUB_MARKER` became the writer's whole constant
+        // when the two spellings were unified; it already carries its own `> `
+        // and full stop, so the old `> ${…}.` wrapper emitted a doubled marker
+        // and a doubled stop. The substring check passed either way, which is
+        // exactly why the drift was invisible.
+        const { proj, pkg } = scaffold('thin', `## Routed X\n${THIN_STUB_MARKER} Body: link\n`);
         expect(_check_lean_projection(proj, pkg)['status']).toBe('ok');
     });
 
@@ -455,7 +460,7 @@ describe('_check_lean_projection', () => {
     });
 
     it('SABOTAGE: fails when mode=eager-all but a thin stub is projected', () => {
-        const { proj, pkg } = scaffold('eager-all', `## Routed X\n> ${THIN_STUB_MARKER}.\n`);
+        const { proj, pkg } = scaffold('eager-all', `## Routed X\n${THIN_STUB_MARKER}\n`);
         expect(_check_lean_projection(proj, pkg)['status']).toBe('fail');
     });
 

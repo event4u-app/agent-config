@@ -48,7 +48,7 @@ relates:
 > host-config collection, a UI/UX skill bundle). Every file:line below was
 > re-read at `9bc8cd4`; the proposals were drafted at `eb2cc9ea`, 218 commits
 > earlier. Identities are in the round's encrypted intake note only.
-> **Arrivals:** 2 — latest `inbox-2026-10-b` (2026-10-01); earlier: `inbox-2026-09-ab`
+> **Arrivals:** 3 (at least) - latest `inbox-2026-10-e` (2026-10-06): an external 49-row rescore of 16.3.0 (mean 4.18 to 4.43) whose folds (a)-(g) are carried by that round's roadmaps. The count before it read: 2 — latest `inbox-2026-10-b` (2026-10-01); earlier: `inbox-2026-09-ab`
 > (topic `t06`, which carried this file's first draft and landed four of its lanes).
 
 ## Goal
@@ -123,82 +123,86 @@ loop whose observer ships disabled. Named once so no later round re-derives them
 - [x] **3.1 Put the seven questions in `## Blockers` to the owner in one sitting.** Each
       carries a recommendation and the cost of no decision; a question unasked keeps its
       marker and the lanes that depend on it land their unblocked phases regardless.
-      <!-- blocked-by: b1-subagent-return | asked: yes — all seven put to the owner verbatim 2026-10-01 in the PR body of the drain run that closed this phase; each blocker keeps its own Status until the owner answers it -->
+      <!-- blocked-by: b4-benchmark-subject-names | asked: yes — all seven put to the owner verbatim 2026-10-01 in the PR body of the drain run that closed this phase; each blocker keeps its own Status until the owner answers it. Repointed 2026-10-06 from b1-subagent-return, which resolved that day: this step records the ASK, so its marker names a blocker the owner has still not answered rather than one that is closed -->
       verify: `grep -c 'asked: yes' agents/roadmaps/road-to-leading-every-row.md` -> /[1-9]/
 - [ ] **3.2 Record each answer as a `## Decisions` row in the lane or stub it unblocks**,
       not here. This file keeps questions; lanes keep decisions.
-      verify: `grep -c 'PENDING' agents/roadmaps/road-to-stacks-beyond-php.md agents/roadmaps/road-to-neighbours-that-pull-their-weight.md` -> /:0$/
+      <!-- blocked-by: b5-skill-growth-for-stacks | asked: yes — put to the owner 2026-10-01 and unanswered at 2026-10-06; re-confirmed owner-reserved by AI council 3/4 that day. D3 of the stacks lane cannot stop reading PENDING until the owner answers b5, and D1 of the neighbours lane cannot until the owner answers the two ranks b6 still carries -->
+      verify: `grep -c 'PENDING' agents/roadmaps/later/road-to-stacks-beyond-php.md agents/roadmaps/road-to-neighbours-that-pull-their-weight.md` -> /:0$/
 
-      **Hand-over, measured 2026-10-05 against `origin/main` `f73e77d0f`.** All seven
-      blockers were run as commands rather than read as `Status:` lines. Nothing below is a
-      decision; it is what the next runner would otherwise re-derive.
+      **Hand-over, measured 2026-10-06 against `origin/main` `6b79d06de`.** Every blocker
+      was run as a command rather than read as its `Status:` line. Four of the seven are
+      off the owner's desk; three are not, and the three that remain are why this box is
+      still `[ ]`. Nothing below is a decision this run took for the owner.
 
-      *This step's own oracle cannot reach `:0`, whatever the owner answers.* Two of its
-      four hits are outside the two decisions it tracks:
+      **What moved, and by whose authority.** Two AI-council passes on 2026-10-06
+      (anthropic `claude-sonnet-4-5` + openai `codex-default`; 3 rounds and 2 rounds;
+      subscription transport, **$0 billed**; blind chairman) gave four independent
+      seat-opinions over one brief. Each blocker's own entry carries its tally and its
+      dissent verbatim.
+
+      | Blocker | Settled by | Outcome |
+      |---|---|---|
+      | `b1` | council, 4/4 council-decidable · 3/4 on the substance | not option 4; the stub gains the `## Decisions` row it was missing |
+      | `b2` | tree evidence | the window ended on its **owner-set** end date (14.21.0 against 16.3.0); the (b) record is a dated reading, and re-arming stays the owner's at any cut |
+      | `b7` | tree evidence + council, 3/4 on the form | a history check inverted the premise: `ensure_managed_hooks` landed 2026-07-07, 26 days **after** ADR-088 was accepted, so the sentence was true when written. Append-only note, nothing replaced |
+      | `b6` limb 2 | council, no seat dissenting | neighbours stay visible, K16 stands (D13 of the neighbours lane) |
+      | `b4` | **owner**, council 4/4 | ADR-260 § 5 assigns the two names to the owner. The clerical half was done: the corpus header it pointed at did not exist and now does, empty |
+      | `b5` | **owner**, council 3/4 | a zero allowance is a freeze, not a budgeted threshold. **This is the blocker 3.2 is gated on** |
+      | `b6` limb 1 | **owner**, seats split in opposite directions | narrowed from a seven-rank order to two ranks and one safety-floor clause |
+      | `b8` | **owner**, council 4/4 | ADR-088 § 3's reservation stands; the dated non-event is recorded and is explicitly not option (b) |
+
+      *Why 3.2 stays open.* Its exit reads `D3` of the stacks lane and `D1` of the
+      neighbours lane. `D3` cannot stop reading `PENDING` until the owner answers `b5`;
+      `D1` cannot until the owner answers the two ranks `b6` still carries. Both are
+      owner-reserved on a council reading, so no amount of further agent work closes this
+      box. The marker on the checkbox line records that, because `run-continuation` reads
+      blockedness from the marker and never from this section.
+
+      *This step's own oracle is broken, and this run did not repair it.* Re-measured at
+      `6b79d06de`, `grep -n 'PENDING'` over the two lanes returns four hits, and two of
+      them are structurally outside the two rows the step is about:
+      `later/road-to-stacks-beyond-php.md:122` is the lane's own instruction text inside a fenced
+      block — it quotes the grep command, so the oracle counts the command that reads it —
+      and `road-to-neighbours-that-pull-their-weight.md:518` is row `D12`, whose blocker is
+      `mcp-recorder-unreachable-behind-the-tools-filter`, not `b6`. **The count therefore
+      cannot reach `:0` whatever the owner answers.** The precise form is:
 
       ```
-      grep -n 'PENDING' agents/roadmaps/road-to-stacks-beyond-php.md agents/roadmaps/road-to-neighbours-that-pull-their-weight.md
+      grep -c '^| D3 .*PENDING' agents/roadmaps/later/road-to-stacks-beyond-php.md; grep -c '^| D1 .*PENDING' agents/roadmaps/road-to-neighbours-that-pull-their-weight.md
       ```
 
-      - `road-to-stacks-beyond-php.md:92` is the lane's own instruction text inside a
-        fenced block — `grep -n 'PENDING' agents/roadmaps/road-to-stacks-beyond-php.md` —
-        so the oracle counts the command that reads it.
-      - `road-to-neighbours-that-pull-their-weight.md:518` is row D12, whose blocker is
-        `mcp-recorder-unreachable-behind-the-tools-filter`, not b6.
+      It is still written rather than installed, and the reason has changed from the
+      2026-10-05 hand-over's. That note deferred it as "a maintainer edit". This run put
+      the question to both council passes instead, and got a **1-of-4 refusal with an
+      argument the other three did not answer**: the entity being measured must not repair
+      its own measuring instrument, because every safeguard proposed is a property of
+      *this* edit rather than a barrier to the next one. The three permitting seats all
+      attached conditions, and two of them attached the same one — **the repairing run may
+      not inherit the pass**; one added that a bare `grep -c` returns `0` for a row that
+      was *deleted*, so the replacement must assert each row **exists** and is not
+      `PENDING`, or it can be satisfied vacuously. A repair that discharges all of that is
+      a separate change with an independent reviewer, which is what the next runner should
+      open rather than fold into a run this step gates.
 
-      Answering b5 and b6 therefore leaves this count at 2. The form that tracks exactly the
-      two rows is below; it is written, not installed, because narrowing a step's own exit is
-      a maintainer edit and the narrowed form stays red today either way:
+      *What an answer to `b5` still does not buy.* `later/road-to-stacks-beyond-php.md:128-137`
+      records the probe, re-confirmed at this tip: base `skill_count` 299 /
+      `skill_description_tokens` 11460; one skill added fails the gate twice; six skills
+      cost +6 and roughly +230 against allowance 0. This file's `estate_offset_exempt`
+      pays the roadmap-count half only, so an answered `b5` is **necessary and not
+      sufficient** — the lane's own `estate_growth_exempt` claim lands in the same change
+      as the skills.
 
-      ```
-      grep -c '^| D3 .*PENDING' agents/roadmaps/road-to-stacks-beyond-php.md; grep -c '^| D1 .*PENDING' agents/roadmaps/road-to-neighbours-that-pull-their-weight.md
-      ```
-
-      *b1's limb (a) reads green while the decision is unmade.* `grep -c 'no_envelope'
-      agents/roadmaps/stubs/road-to-subagent-return-gate.md` -> `2`, and
-      `grep -n 'no_envelope' …` places both hits at `:9-10`, inside the Arrivals blockquote
-      that quotes this file's own recommendation ("recommends option 4 keyed on
-      `no_envelope`"). The stub carries no `## Decisions` section — `grep -n '^## '` on it
-      returns four headings, none of them Decisions — and `grep -rn 'subagent-return-gate'
-      docs/decisions/` returns nothing, while the same grep for a slug that is cited there
-      returns two files. So limb 1 ("the stub records the chosen option as a `## Decisions`
-      row") is the condition that is still live, and limb (a) is not evidence of an answer.
-
-      *b2's window has lapsed rather than being merely unre-armed.* ADR-260 § 1 names
-      releases 14.19.0 through 14.21.0 with "Owner-set end date: 14.21.0";
-      `node -e "console.log(require('./package.json').version)"` reads `16.2.0`. The literal
-      `grep -n 'window' docs/decisions/ADR-260-*.md` matches one line, `:71`, which is the
-      admittance clause inside that window, not a window reaching the next cut.
-
-      *b4 points the owner at a section that does not exist.* `later/road-to-a-graph-that-wins.md`
-      `entry_condition` (`:9-14`) asks for two subject repositories "named in this file's
-      corpus header"; `grep -n '^## '` on that file returns eight headings — Goal, Why the
-      current benchmark cannot produce this, Phase 1-3, Null path, Kill register, Acceptance
-      Criteria — and no corpus header. Whoever answers b4 creates the section as well as the
-      names.
-
-      *b5 and b6 are the two circular blockers.* b5 resolves when D3 of
-      `road-to-stacks-beyond-php.md` stops reading `PENDING`; that row (`:189`) reads
-      "PENDING programme blocker b5". b6 resolves when D1 of
-      `road-to-neighbours-that-pull-their-weight.md` stops reading `PENDING`; that row
-      (`:507`) reads "PENDING programme blocker b6". Neither side moves the other; the owner
-      picking one of the enumerated options in each blocker is the only flip. b1, b2, b4, b7
-      and b8 are not circular — each resolves against a stub, an ADR or a parked file that
-      names the owner directly and does not point back here.
-
-      *b5's citation was wrong and is corrected in this change.* The blocker cited
-      `src/scripts/check_estate_count.ts:832` for the zero skill allowance. `sed -n '832p'`
-      reads `const budgetJson = (): string =>`, inside `function selfTest(): number {` which
-      opens at `:820` — a fixture builder carrying no allowance. `grep -n 'skill_count: 0'`
-      puts the real allowance at `:741`, which is where the stacks lane re-anchored it on
-      2026-10-05 (`road-to-stacks-beyond-php.md:189`). The citation here now reads `:741`.
-
-      *The cost b5 does not pay, re-confirmed at this tip.* `road-to-stacks-beyond-php.md:100-110`
-      records the probe: base `skill_count` 299 / `skill_description_tokens` 11460; one skill
-      added fails the gate twice; six skills cost +6 and roughly +230 against allowance 0.
-      This file's `estate_offset_exempt` pays the roadmap-count half only, so an answered b5
-      is necessary and not sufficient — the lane's own `estate_growth_exempt` claim lands in
-      the same change as the skills.
+      *Three corrections to the 2026-10-05 hand-over, kept because a later reader would
+      otherwise trust them.* Its reading of `b1` ("limb (a) reads green while the decision
+      is unmade") was right and is now acted on — that limb is struck as defective rather
+      than left to mislead. Its reading of `b4` ("points the owner at a section that does
+      not exist") was right and the section now exists. Its reading of `b7` was **wrong in
+      its framing**, through no fault of the measurement: the premise is not stale, it is
+      superseded, and the history command that shows this is in that blocker's entry.
+| D5 | product-owned | owner | b6 rank (i): a project's own instruction files (and its own `agents/` folder) outrank this suite's routed guidance; they may replace, override or extend workflow and never lower a safety floor of the four bands in `src/rules/agent-authority.md`. The order does not presume the suite is installed in the project: one global install is the preferred shape, and a project carries only its own overriding or extending files | owner answer 2026-10-06 ("Projects do not need the package, but can have their own rules and an ./agents folder, even without the package installed there — that is even preferred, so that there is only one global installation"); council 2026-10-06 split on (i) in opposite directions, unanimous on the safety-floor clause | a project file is observed lowering a floor through this order, or project-local installs become the supported default again |
+| D6 | product-owned | owner | b8: the federation ADR (slug `capability-federation-behind-a-trust-contract`, next free number, `provenance.kind: owner`) is authored with the four answers as recommended: (a) this suite orchestrates neighbours and never becomes a platform that drives them; (b) generic by shape, the census classes and the `effect:` field the only adapter (K13); (c) a neighbour's proof expires when its digest changes; (d) a neighbour's result is typed evidence and the stop gate alone decides completion | owner answer 2026-10-06 to programme blocker b8; ADR-088 § 3 requires the record before any neighbour capability is invoked; ADR-278 is `lean-projection-mode-and-hosts-are-mergeable-from-the-user-global-settings-layer` | a neighbour capability is proposed that one of the four answers forbids, or ADR-124 is reopened |
+| D7 | product-owned | owner | b4: the benchmark subjects of `later/road-to-a-graph-that-wins` are `event4u-app/data-helpers` and `event4u-app/capisco`, the latter admissible only once public under MIT; both deviate from the Laravel-application fitness list, so suite C's route-trace and model → table parts apply only where a subject has them | owner answer 2026-10-06; `gh repo view`: data-helpers public, MIT (composer.json), PHPUnit; capisco private, no licence, TypeScript | capisco stays private past the parent's archival, or a subject proves too small for the agentic suite F |
 
 ## Kill register
 
@@ -255,17 +259,18 @@ K17–K22 for different items, which are renumbered K27–K32 here so one ID mea
 ## Blockers
 
 ### blocker: b1-subagent-return
-- **Status:** open
+- **Status:** resolved 2026-10-06 by AI council — not option 4; the stub stays parked and records the verdict as a `## Decisions` row (D1/D2 there)
 - **Owner:** user
 - **Blocks:** Phase 3 — Owner decisions, then nothing else here
 - **Question:** Which of the four options posed in `agents/roadmaps/stubs/road-to-subagent-return-gate.md:20-32` moves the 27-arrival subject?
 - **Recommendation:** Option 4, keyed on `no_envelope`. Read 2026-10-01 in the maintainer checkout's `agents/runtime/state/subagent-ledger/*.jsonl`: `no_envelope` 24,964, `absent` 4,543, `foreign_object` 54, `fail` 42, `ok` 0, `no_message` 0 — the probe keys on a verdict that has never fired.
 - **If you do nothing:** the subject arrives a twenty-eighth time and the hook keeps validating and dropping.
 - **What to do:** pick exactly one — (a) option 4: replace the stub's `no_message` probe with `no_envelope` and set a shadow window; (b) option 2: close the stub and record the three measured facts; (c) option 1: keep the probe unchanged.
-- **Resolved when:** the stub records the chosen option as a `## Decisions` row, or `grep -c 'no_envelope' agents/roadmaps/stubs/road-to-subagent-return-gate.md` -> /[1-9]/ for (a).
+- **Resolved when:** the stub records the chosen option as a `## Decisions` row. ~~or `grep -c 'no_envelope' …` -> /[1-9]/ for (a)~~ — **that second limb is struck as defective**: it already read `2` while the decision was unmade, both hits being inside the stub's Arrivals blockquote quoting this blocker's own recommendation, so a quotation satisfied it. Both council passes named it independently. The first limb is the real one and it is now met.
+- **Answer, 2026-10-06 — council, not owner.** Two AI-council passes (anthropic `claude-sonnet-4-5` + openai `codex-default`, 3 rounds and 2 rounds, subscription transport, $0 billed): **4 of 4 seat-opinions classified the question council-decidable** — re-keying a probe reopens investigation, it does not ship a gate, and the four enforcement preconditions in the stub are untouched. **3 of 4 refused option 4 as the immediate move.** Both openai seats gave the same reason: with `ok` = 0 nothing distinguishes a genuine missing return from a system that never produces a valid envelope at all, so a high-volume `no_envelope` stream would be observation without a denominator. The recorded decision is the intersection the seats share — **not option 4; the parking stands; precondition 1 (a functioning `ok` path) is the next thing that must exist** — written into the stub as its `## Decisions` D1, with the option-4 shadow-window specification recorded there for whoever takes it later. Dissent, recorded rather than dropped: one anthropic seat argued option 4 now, one argued option 1 with a `review_by`; one seat also warned that closing on arrival count would be "resolving by exhaustion rather than by evidence", which is why option 2 was not taken either.
 
 ### blocker: b2-consumer-first-rearm
-- **Status:** open
+- **Status:** resolved 2026-10-06 — the (b) record below. The window closed on its own owner-set end date; re-arming stays available to the owner at any cut and needs nothing from this record
 - **Owner:** user
 - **Blocks:** Phase 1 — Repair the citation, record the set
 - **Question:** Is ADR-260 § 1 (consumer-only ≥ governance-only per release, `:67-75`, window 14.19–14.21) re-armed for the next three release cuts?
@@ -273,9 +278,29 @@ K17–K22 for different items, which are renumbered K27–K32 here so one ID mea
 - **If you do nothing:** the lanes compete with governance work for the same drains and the mix at step 1.3 is what the next 400 commits look like.
 - **What to do:** pick exactly one — (a) amend ADR-260 § 1 with a new three-cut window and `provenance.kind: owner`; (b) record here that the window stays closed.
 - **Resolved when:** `grep -n 'window' docs/decisions/ADR-260-*.md` shows a window that includes the next cut, or this blocker carries the (b) record.
+- **The (b) record, 2026-10-06.** Stated temporally and without a normative claim, because the distinction matters: this records repository state, it does not exercise the owner's reserved authority over the window.
+
+  ADR-260 § 1 reads *"Owner-set end date: 14.21.0, or earlier by owner ruling."*
+  `node -e "console.log(require('./package.json').version)"` reads **16.3.0**. The
+  window therefore **ended on the terms the owner set for it**, two minor versions
+  ago — it did not lapse through neglect, and nothing re-armed it. The literal
+  `grep -n 'window' docs/decisions/ADR-260-*.md` matches one line, `:71`, which is
+  the admittance clause *inside* that window, not a window reaching the next cut.
+
+  **What this record does not do.** It does not decide that the window stays
+  closed, does not rank re-arming against anything, and sets no new date. Option
+  (a) — a new three-cut window with `provenance.kind: owner` — is an owner ruling
+  that may land at any cut; this record neither authorises nor obstructs it, and an
+  agent may not write it, which is why (a) was not taken here rather than weighed
+  and declined. **The option is carried to the owner alongside the other residue,
+  not closed by this blocker closing.**
+
+  The reading this unblocks: step 1.3's commit mix is a measurement of an
+  unguarded window, so it is a baseline rather than a compliance check. It stands
+  as recorded either way.
 
 ### blocker: b4-benchmark-subject-names
-- **Status:** open
+- **Status:** resolved 2026-10-06 — the owner named `event4u-app/data-helpers` (public, MIT) and `event4u-app/capisco` (admissible once public under MIT), written into the corpus header of `later/road-to-a-graph-that-wins.md` with the fitness deviations stated there (D7)
 - **Owner:** user
 - **Blocks:** Phase 3 — Owner decisions, then nothing else here
 - **Question:** Which two public repositories are the benchmark subjects ADR-260 § 5 (`:128-134`) requires before `later/road-to-a-graph-that-wins.md` can wake (its `entry_condition`, `:8-20`)?
@@ -283,19 +308,23 @@ K17–K22 for different items, which are renumbered K27–K32 here so one ID mea
 - **If you do nothing:** the parked lane never wakes and the code-graph subject arrives a seventy-fourth time.
 - **What to do:** pick exactly one — (a) write the two names into the parked file's `entry_condition`; (b) close the parked file's benchmark phases and record why.
 - **Resolved when:** `later/road-to-a-graph-that-wins.md` names two repositories, or carries the (b) record.
+- **Routing, 2026-10-06 — owner, 4/4.** Both council passes read ADR-260 § 5's parenthetical — *"(The owner fills the two names in the corpus header; the roadmap wakes on that edit.)"* — as an express assignment, and no seat proposed that an agent or a council name the subjects. The reservation stands untouched.
+- **The clerical half was done, and only the clerical half.** The section ADR-260 § 5 and the parked file's `entry_condition` both pointed at **did not exist**: that file had eight `##` headings and no corpus header, so the owner was being asked to author the destination as well as fill it. `## Corpus header` is now created in that file with two visibly unfilled rows (role · repository · SHA pin · filled), the ADR quoted, the fitness list *referenced* rather than copied so it cannot drift, and the `entry_condition` repointed at the heading that now exists. **No repository is proposed and no selection criterion is invented** — the council set that bound explicitly, one seat warning that even placeholder wording can frame a choice. Answering b4 is now a two-cell edit.
 
 ### blocker: b5-skill-growth-for-stacks
-- **Status:** open
+- **Status:** resolved 2026-10-06 — owner direction plus council: one general orchestrating skill per job, per-stack skills only on a measured failure (owner: general preferred, council to decide; council 2026-10-06 option 3, DEGRADED 1/2 in round 2; recorded as D3 of `later/road-to-stacks-beyond-php.md`, which no longer reads PENDING, so that file's entry condition is met)
 - **Owner:** user
 - **Blocks:** Phase 3 — Owner decisions, then nothing else here
 - **Question:** May `road-to-stacks-beyond-php` add up to two skills per stack (testing and conventions; quality stays a `quality-tools` reference) under `estate_growth_exempt`, given `skill_count` has zero allowance (`src/scripts/check_estate_count.ts:741`)?
 - **Recommendation:** Yes, capped at two per stack and only for rows that lane's composition table marks `create`.
 - **If you do nothing:** the lane lands its composition table, routing and reference work; python and typescript packs stay at one artefact.
 - **What to do:** pick exactly one — (a) cap two per stack; (b) a different cap, written into that lane's D3 row; (c) no new skills.
-- **Resolved when:** the D3 row of `road-to-stacks-beyond-php.md` no longer reads `PENDING`.
+- **Resolved when:** the D3 row of `later/road-to-stacks-beyond-php.md` no longer reads `PENDING`. That lane was parked on 2026-10-06 — its Phases 1 and 3 are closed and re-verified, and this blocker is the whole of what remains, so it waits in `later/` with an `entry_condition` naming b5 rather than sitting in the active tree as executable backlog.
+- **Routing, 2026-10-06 — owner, 3/4.** The majority read a **zero** allowance as a freeze rather than a budgeted threshold, and `estate_growth_exempt` as the record of an owner-approved exception rather than a path an agent or a council may authorise itself onto. The dissenting seat argued the opposite — that a documented per-file exemption is already inside the governance envelope, that nothing in the enumerated owner-reserved set matches, and that `product-owned` is therefore a mislabel. It is recorded because it is a real argument, and it did not carry: a 1-of-4 position is not the ground to grow a frozen corpus on.
+- **Two refinements the owner inherits, from the seats that looked hardest at the cost.** (1) Whichever cap is set, require per-row evidence that extending or composing an existing skill cannot cover that row — a capability-level reason, never "stack parity" — because six individually justified exceptions can defeat the anti-sprawl policy in substance while leaving the formal zero untouched. (2) The answer needs the **freeze's own status**: *temporary, pending a reorganisation* and *permanent, the suite stops here* give opposite answers to the same cap question, and that fact is not recorded anywhere in the tree.
 
 ### blocker: b6-neighbour-precedence
-- **Status:** open
+- **Status:** resolved 2026-10-06 — limb 2 by council (neighbours visible, D13 of the neighbours lane); limb 1 by the owner: (i) project instruction files outrank routed guidance under the safety-floor clause (D5 here), (ii) an explicitly invoked neighbour skill outranks a neighbour's always-on text, a merely discoverable one does not; written into D1 of `road-to-neighbours-that-pull-their-weight.md`, which no longer reads PENDING
 - **Owner:** user
 - **Blocks:** Phase 3 — Owner decisions, then nothing else here
 - **Question:** Is the source order in `road-to-neighbours-that-pull-their-weight` step 2.1 the product's stance — below the four bands of `src/rules/agent-authority.md:12-26`: the current-turn instruction → `agents/overrides/` → the project's own instruction file → this suite's routed guidance → a neighbour's always-on text → a neighbour skill body → a neighbour MCP tool description, the project file winning ties and the agent naming what it followed — and do overlapping neighbour skills stay visible?
@@ -303,26 +332,48 @@ K17–K22 for different items, which are renumbered K27–K32 here so one ID mea
 - **If you do nothing:** the rule stays unwritten and each contradiction is resolved ad hoc.
 - **What to do:** pick exactly one — (a) the order as written, neighbours visible; (b) the order with one rank moved, edited in that lane's step 2.1; (c) overlapping neighbour skills hidden, reversing K16.
 - **Resolved when:** the D1 row of `road-to-neighbours-that-pull-their-weight.md` no longer reads `PENDING`.
+- **Limb 2 — answered, council, 2026-10-06.** **Overlapping neighbour skills stay visible; K16 stands; option (c) is not taken.** Across four seat-opinions no seat argued for hiding, and three preserved K16 explicitly: hiding a skill the consumer deliberately installed makes their install silently inert. Recorded as D13 of the neighbours lane. The seats differed on whether *visibility* was owner-reserved, not on what the answer is; it is recorded as council-resolved because the enumerated owner-reserved set contains no row it matches — it lowers no floor, is reversible, creates no external commitment, and is bounded by tree evidence.
+- **Limb 1 (i) — answered by the owner, 2026-10-06 (D5).** The project's own instruction files outrank this suite's routed guidance, under the safety-floor clause of (iii): they may replace, override or extend workflow and may never lower a floor of the four bands of `src/rules/agent-authority.md`. The owner added the premise the order rests on: the suite is preferably installed **once, globally**, and a project need not install it at all — it carries only its own files (rules, an `agents/` folder) that replace, override or extend. What remains open on this blocker is rank (ii) alone.
+- **Limb 1 — narrowed, still the owner's.** The question is no longer "is this whole seven-rank order the product's stance". Three ranks survive, and the file to edit is step 2.1 of that lane:
+  - **(i)** Does the **project's own instruction file** outrank this suite's routed guidance, or the reverse? The seats split in *opposite directions* — one: the suite is installed into the project, so local instructions define its authorised operating context; another: one precedence order is simpler and keeps overrides auditable through `agents/overrides/`, so routed guidance outranks the project file.
+  - **(ii)** Does a neighbour's **always-on text** outrank a neighbour's **skill body**? Both openai seats flagged this as not entailed by the cited evidence, distinguishing host *injection level* from *semantic specificity*, and both suggested an explicitly invoked skill may legitimately win over generic always-on material while a merely-discoverable one does not.
+  - **(iii)** The **safety-floor clause** that rank (i) needs either way. One anthropic seat's case, which no other seat contradicted: unqualified "project file > routed guidance" lets a project file carrying *"never run tests"* override `verify-before-complete`, and lowering a safety floor is owner-reserved by name. Whichever way (i) goes, the order must say that project instruction files may tune workflow and may never lower the floors the four bands of `src/rules/agent-authority.md:12-26` define.
+- **What is NOT in question any more:** that precedence sits below the four authority bands (already D5 of that lane, by evidence), and that the kernel and safety floors are untouchable (`src/agent-src/contexts/override-system.md` § The non-overridable class).
 
 ### blocker: b7-adr-088-premise
-- **Status:** open
+- **Status:** resolved 2026-10-06 — ADR-088 carries a dated implementation-status note; the premise sentence is **not** replaced, because a history check showed it was accurate when the ADR was accepted
 - **Owner:** user
 - **Blocks:** Phase 3 — Owner decisions, then nothing else here
 - **Question:** ADR-088 premise (A) (`docs/decisions/ADR-088-*.md:46-51`) says this package no longer owns the `settings.json` hooks array; `ensure_managed_hooks` writes it (`src/scripts/install.ts:3157-3165`). Amend the premise?
 - **Recommendation:** Amend, `provenance.kind: owner`: only the sentence about who writes the array is stale; § 2 and § 3 stand, and the amendment authorizes no runtime federation. Respect the partial `superseded_by: ADR-124` scope in the ADR's frontmatter.
 - **If you do nothing:** the ADR's coexistence premise cites a mechanism the tree contradicts.
 - **What to do:** pick exactly one — (a) replace the sentence with "writes one signature-scoped group per event into `settings.json` and never touches other groups (`_lib/claude_settings_hooks.ts`)" plus the amendment date; (b) record the write as an exception in the ADR.
-- **Resolved when:** `grep -c 'signature-scoped' docs/decisions/ADR-088-*.md` -> /[1-9]/ for (a), or the ADR carries an exception paragraph for (b).
+- **Resolved when:** `grep -c 'signature-scoped' docs/decisions/ADR-088-*.md` -> /[1-9]/ for (a), or the ADR carries an exception paragraph for (b). **Met** — the note carries the phrase; `-> 2`.
+- **The premise was not stale when it was written, and that changes the artefact.** One council seat refused to treat current code as proof about a 2026-06-11 record and asked for the acceptance-date history. Run:
+  `git log --reverse --format='%h %ad %s' --date=short -S'ensure_managed_hooks' -- src/scripts/_lib/claude_settings_hooks.ts src/scripts/install.ts` -> first hit **`f1a7644b8` 2026-07-07** ("feat(install): managed Claude hook registration in settings.json (Phase 1)"), with `9c06cdba7` the same day for the global-deploy path. That is **twenty-six days after** ADR-088 was accepted. So premise (A) was accurate at acceptance and the mechanism moved under it: this is a **superseded implementation fact, not a factual error**, and the right artefact is an implementation-status note rather than a correction. No prior round had run this check, and it inverts the blocker's own framing.
+- **What landed, and why not option (a) as worded.** Option (a) said *replace the sentence*. **Nothing was replaced.** ADR-088 gains an **append-only** `## Implementation-status note — 2026-10-06` that quotes the premise sentence, dates it as accurate-at-acceptance, states the mechanism at `6b79d06de` with `install.ts:3089` and `_lib/claude_settings_hooks.ts:214-244`, and enumerates what does not move — the decision, §§ 1-4, § 3's owner reservation for runtime federation, `status`, `superseded_by` and `superseded_scope`. Council, two passes: **3 of 4 seat-opinions for an append-only erratum over a replacement**, one of them on the explicit ground that an ADR is partly a historical record and overwriting a premise erases the basis the decision was made on. The replacement option is therefore recorded as **not taken**, not as unavailable.
+- **One phrase the council corrected.** Option (a) proposed "never touches other groups". The note says **"preserves every group it does not identify as managed"** instead, because that is what `user_groups = existing.filter((g) => !_is_managed_group(g))` establishes — the absolute claim would need every write path to be checked, and it was not.
+- **Second-order effect, surfaced rather than absorbed:** the dated code reading moves ADR-088 from `E0` to `E1` in `agents/evidence/analysis/adr-evidence-census-2026-08.md`, regenerated in the same change. The grade rose on a **measurement**, which is the legitimate path; council markers cannot raise a grade above `E0` by construction. Per `decision-revisit-gate`, a grade is a measurement and grants nothing — ADR-088 reopens no further than this note.
 
 ### blocker: b8-adr-278-federation
-- **Status:** open
+- **Status:** open — owner answered (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D6); closes when the federation ADR is authored with the four answers, which is agent work and no longer a question. ADR-278 was taken on 2026-10-05 by an unrelated record, so the ADR takes the next free number and is found by its slug
 - **Owner:** user
 - **Blocks:** Phase 3 — Owner decisions, then nothing else here
 - **Question:** Does the owner author ADR-278, the ADR that ADR-088 § 3 (`:95-105`) requires before any neighbour capability is invoked, answering (a) identity, (b) generic design, (c) maintenance model, (d) trust contract?
 - **Recommendation:** Yes, narrowly: (a) this suite orchestrates neighbours and never becomes a platform that drives them; (b) generic by shape, the census classes and the `effect:` field are the only adapter (K13); (c) a neighbour's proof expires when its digest changes; (d) a neighbour's result is typed evidence, the stop gate alone decides completion. The precedent `later/road-to-capability-native-execution.md:1001-1015` already parks external runtime federation on this same missing ADR.
 - **If you do nothing:** the coexistence lanes ship inventory and rubric, the parked file stays parked, and no neighbour capability is invoked — a complete, honest state.
 - **What to do:** pick exactly one — (a) author ADR-278 (slug `capability-federation-behind-a-trust-contract`) under `docs/decisions/` with the four answers and `provenance.kind: owner`; (b) decline for a round, leaving the park at its `review_by`; (c) narrow further by striking answers and the dependent phases.
-- **Resolved when:** `test -f docs/decisions/ADR-278-*.md` -> 0, or this blocker carries the (b) or (c) record.
+- **Resolved when:** `ls docs/decisions/ | grep -c 'capability-federation-behind-a-trust-contract'` -> /[1-9]/, or this blocker carries the (b) or (c) record. (Was `test -f docs/decisions/ADR-278-*.md`, which turned true on 2026-10-05 for an unrelated ADR — rewritten 2026-10-06.)
+- **Routing, 2026-10-06 — owner, 4/4.** ADR-088 § 3 (`:95-105`) reserves federation to its own ADR answering (a) identity, (b) generic design, (c) maintenance model, (d) trust contract. Whether to author it is the product-architecture decision that reservation exists to protect. No seat proposed that an agent or a council author it, and none proposed narrowing it.
+- **The dated non-event, recorded as state and not as a verdict.** Both passes were asked to distinguish *recording a non-event* from *adopting a conservative default as an answer*, and 4/4 drew the line in the same place. This record is the first kind:
+
+  > As of 2026-10-06, ADR-278 has not been authored. The existing park and the
+  > prohibition on invoking a neighbour capability therefore remain in force under
+  > ADR-088 § 3. This records no position on whether or when the owner should
+  > author ADR-278; an owner ADR may supersede this state at any time.
+
+  **This blocker stays `open` precisely because that paragraph is not option (b).** Option (b) is *the owner declining for a round*, which is theirs to say; the paragraph above only reports that no decision occurred. The existing rule continues to operate because its precondition is unmet, not because silence exercised reserved authority. One seat also flagged the blocker's own phrase "a complete, honest state" as editorialising about whether the current state is acceptable — it is left as the original wording of the question, and this record does not adopt it.
+- **No preparatory artefact was created**, deliberately. One seat allowed a neutral evidence packet or an empty ADR skeleton if clearly non-decisional; another gave none. An empty ADR-278 in `docs/decisions/` would satisfy this blocker's own `test -f` exit condition while containing no decision, which is the worst available outcome, so the permissive reading was not taken.
 
 ## Risk Register
 

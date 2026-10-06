@@ -31,7 +31,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { thin_entry } from './project_thin_rules.js';
+import { has_body_pointer, is_thin_entry, thin_entry } from './project_thin_rules.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -42,8 +42,6 @@ const CANARY = path.join(
 const CANARY_ID = 'host-compliance-canary';
 const SENTINEL = 'CANARY_BODY_SENTINEL_DO_NOT_INLINE';
 const KEYWORD = 'xyzzy-canary-probe';
-const POINTER_MARKER = 'Routed rule — load the body on trigger-match';
-
 // The supported hosts whose live thin-compliance must be falsified.
 const HOSTS = ['claude-code', 'cursor', 'augment'];
 
@@ -60,10 +58,40 @@ export function evaluate_demotion(
   thinned: string,
   opts: { sentinel: string; keyword: string } = { sentinel: SENTINEL, keyword: KEYWORD },
 ): DemotionResult {
-  const pointer_present = thinned.includes(POINTER_MARKER);
+  // ONE SPELLING, ASKED OF THE WRITER — step 2.1 of
+  // `road-to-a-thinned-layer-measured-in-one-unit`. This file carried its own
+  // substring of the marker, without the blockquote prefix and the full stop,
+  // so the writer could be shortened and this detector would keep matching the
+  // old sentence — silently, and in the direction that matters: a stub a
+  // detector fails to recognise reads as a complete rule body.
+  const pointer_present = is_thin_entry(thinned);
   const body_removed = !thinned.includes(opts.sentinel);
   const trigger_hint_preserved = thinned.includes(opts.keyword);
-  const link_present = /Body: \[`[^`]+`\]\(/.test(thinned);
+  // THE PATTERN COMES FROM THE WRITER — step 2.3. This was its own regex for
+  // the markdown-link form, so when the pointer became a bare path the gate
+  // would have reported every correct stub as missing its link.
+  const link_present = has_body_pointer(thinned);
+  // HONEST LIMIT OF THIS FUNCTION'S MECHANICAL HALF, stated rather than
+  // papered over. `pointer_present` and `link_present` are now computed from
+  // the writer's own exports, and this probe's only caller feeds them
+  // `thin_entry` output produced in the same process — so against writer output
+  // those two cannot return false, whatever the writer emits. They still
+  // falsify a stub from any OTHER source, which is what the live host half
+  // reads, but the mechanical half's real falsifying power is `body_removed`
+  // and `trigger_hint_preserved`.
+  //
+  // A structural check was tried here and removed: `/\S+\.md\s*$/m` adds
+  // nothing AGAINST WRITER OUTPUT, which is the only input this half ever sees.
+  // It is not implied by `link_present` in general — `Body:  .md`, a two-space
+  // stem, matches the pointer pattern and fails `\S+` — but the writer composes
+  // the pointer from a non-empty prefix and a rule id, so that string is not
+  // reachable from `thin_entry` and the conjunct could never flip `ok` here. A
+  // conjunct that cannot fail is worse than an absent one: it reads as coverage.
+  //
+  // Restoring independence needs a second spelling of the marker, which is the
+  // drift step 2.1 removed. The suite keeps the detectors honest instead:
+  // `thin_marker_single_spelling` runs a non-stub past all three in the false
+  // direction, which is the direction this cannot check.
   return {
     ok: pointer_present && body_removed && trigger_hint_preserved && link_present,
     pointer_present,

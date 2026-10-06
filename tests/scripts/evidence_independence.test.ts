@@ -215,37 +215,11 @@ describe("end to end", () => {
     );
   });
 
-  it("resets the evaluation count when a new user turn rewrites the ledger", () => {
-    // Round-2 fix: the previous version injected `turn_id: "t2"`, a field the
-    // production envelope never carries — it passed only for a shape that does
-    // not occur, while the real counter was session-scoped. The turn marker is
-    // now the authorization ledger's `detected_at`, which
-    // git_authorization_hook rewrites on every user_prompt_submit.
-    const ledger = path.join(tmp, "agents", "state", "git-authorization.json");
-    fs.mkdirSync(path.dirname(ledger), { recursive: true });
-
-    // The counter, not the exit code, is what this test is about: since the
-    // second-dispatch branch became advisory (Tier 3), every dispatch here exits
-    // 0 and the block is no longer available as a proxy for "the count reached 1".
-    const count = (): number => {
-      const p = path.join(tmp, STATE_FILE);
-      if (!fs.existsSync(p)) return 0;
-      const s = JSON.parse(fs.readFileSync(p, "utf8")) as { evaluations?: unknown[] };
-      return Array.isArray(s.evaluations) ? s.evaluations.length : 0;
-    };
-
-    fs.writeFileSync(ledger, JSON.stringify({ detected_at: "2026-08-06T10:00:00Z", authorized: [] }));
-    expect(dispatch("Review my change and report findings.")).toBe(0);
-    expect(count()).toBe(1);
-    expect(dispatch("Review my change again, wider scope.")).toBe(0);
-    expect(count()).toBe(2);
-
-    // A new user turn moves the stamp, so the counter starts over.
-    fs.writeFileSync(ledger, JSON.stringify({ detected_at: "2026-08-06T10:05:00Z", authorized: [] }));
-    expect(dispatch("Review my change and report findings.")).toBe(0);
-    expect(count()).toBe(1);
-  });
-
+  // The per-turn reset itself is covered end-to-end, writer and reader both,
+  // in evidence_independence_turn_marker.test.ts — that test writes the
+  // ledger through git_authorization_hook's own ledgerFileFor(session_id)
+  // rather than the legacy session-less path this suite used to poke by
+  // hand, which stopped moving the stamp once a session id is present.
 
   it("is a clean no-op on a malformed envelope", () => {
     expect(run("{not json", { consumer_root: tmp })).toBe(0);

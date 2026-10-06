@@ -5,7 +5,7 @@ review_by: 2026-12-24
 
 # Stub: road to a subagent return gate
 
-> **Arrivals:** 28 (at least) - latest `inbox-2026-10-b` (2026-10-01), whose programme
+> **Arrivals:** 29 (at least) - latest `inbox-2026-10-e` (2026-10-06): one release review asks to study `no_envelope`/`foreign_object`/`fail` instead of `no_message`; council D1 (2026-10-06) below already refused that option until `ok` is non-zero, so no new fact. The count before it read: 28 (at least) - latest `inbox-2026-10-b` (2026-10-01), whose programme
 > (`road-to-leading-every-row` blocker b1) recommends option 4 keyed on `no_envelope` —
 > read that day in a maintainer checkout's ledger: `no_envelope` 24,964, `absent` 4,543,
 > `foreign_object` 54, `fail` 42, `ok` 0, `no_message` 0; `inbox-2026-10-a` (2026-10-01),
@@ -129,3 +129,31 @@ The narrower reading is the one recorded, because it is the one the measurement
 supports. Whoever promotes this stub still owes a lifecycle-identity
 specification — across retries and id reuse — but must not cite 8 % as having
 already settled it.
+
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | contested-technical | council | option 4 is **not** taken; the stub stays parked and its promotion probe is NOT re-keyed onto `no_envelope` | AI council 2026-10-06, anthropic (claude-sonnet-4-5) + openai (codex-default), 2 rounds, subscription transport, $0 billed, blind-chairman. Both seats classified the question council-decidable and both refused option 4 as the immediate move. Split on what replaces it: anthropic argued option 1 (keep the probe, fix its measurement defect, add an explicit `review_by`); openai argued option 3 (make a positive `ok` control exist first, then re-read the probe), on the ground that with `ok` = 0 a `no_envelope` count cannot distinguish a genuine missing return from a system that never produces a valid envelope at all. The recorded decision is their intersection: not option 4, parking stands, precondition 1 of § Probe is the next thing that must exist. | `ok` becomes non-zero on a real instrumented path — then the probe is re-read against a verdict that can be interpreted, and option 4 is reconsidered on that reading rather than on arrival count |
+| D2 | deterministic | evidence | the arrival count is not an input to D1 | the stub already records this ("the count sets the venue, not the verdict"); the 2026-10-06 council independently reached the same reading, one seat naming closure-on-28-arrivals as "resolving by exhaustion rather than by evidence" | a measured incorrect DONE is attributed to an absent expected envelope |
+
+**What the shadow window would have to observe, if option 4 is ever taken.**
+Recorded here so the next reader inherits the specification rather than
+re-deriving it. Per invocation: whether a valid envelope was expected · whether
+the producer ran · whether invocation identity matched · whether the parent
+subsequently claimed DONE · whether independent validation found that DONE
+incorrect · recovery success, false-positive rate and added latency · separate
+counts for instrumentation failure, producer absence, identity mismatch,
+malformed/foreign envelope and genuine missing return. The success criterion is
+**an incorrect DONE attributable to an absent expected envelope**, never the
+occurrence rate of `no_envelope` on its own.
+
+**The measurement defect that prompted this, and its repair.** The programme
+blocker `b1` of `road-to-leading-every-row` carried the exit condition
+`grep -c 'no_envelope' <this file> -> /[1-9]/`. That read `2` while the decision
+was unmade, because both hits sat inside the Arrivals blockquote quoting the
+recommendation — an exit a quotation can satisfy. Both council seats named it
+independently. It is replaced at the blocker by the condition this section
+satisfies: the stub carries a `## Decisions` row recording the chosen option.
+A later `grep` for `no_envelope` on this file now matches this section too, so
+that string is not an exit condition for anything.

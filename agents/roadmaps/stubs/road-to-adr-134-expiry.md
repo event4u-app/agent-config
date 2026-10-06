@@ -5,7 +5,7 @@ review_by: 2026-12-24
 
 # Stub: ADR-134 expires 2026-09-15, and ADR-133's freeze re-arms with it
 
-> **Arrivals:** 3 (at least) - latest `inbox-2026-10-a` (2026-10-01), where two of
+> **Arrivals:** 4 (at least) - latest `inbox-2026-10-e` (2026-10-06): a release review counts the lapse three weeks after its fire date, plus the missing utilization null. The count before it read: 3 (at least) - latest `inbox-2026-10-a` (2026-10-01), where two of
 > sixteen release reviews count the lapse — one at 16 days post-fire, one at 19
 > days with the ADR series frozen at 277 — and ask for the two acknowledgements as
 > owner-reserved, dated steps. Counted as distinct prior round directories under

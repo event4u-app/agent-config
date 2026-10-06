@@ -3032,7 +3032,7 @@ function _deploy_global_content(
                     warn(`claude-code: thinned rule layer not written — ${String(e)}`);
                 }
             }
-            if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root)) info(l);
+            if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root, undefined, { thisDeploy: new Map([[anchor, current_files]]) })) info(l);
         }
 
         const missing_targets = _verify_deploy_targets(anchor, plan);

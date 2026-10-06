@@ -8,7 +8,10 @@ owner: maintainer
 entry_condition:
   what: >
     `road-to-a-graph-that-is-shipped` is archived AND ADR-260 § 5's two benchmark
-    subject repositories are named in this file's corpus header. Both are required:
+    subject repositories are named in this file's `## Corpus header` section — the
+    two rows of its table, created empty 2026-10-06 by blocker `b4` of
+    `road-to-leading-every-row` because the heading this condition named did not
+    exist until then. Both are required:
     without the parent, every measurement here scores an engine no consumer holds;
     without the named subjects, the corpus cannot be registered before the engine
     sees the repos, which is AC-1.
@@ -35,6 +38,43 @@ estate_growth_exempt: "Parked, not active: it may not start before its parent sh
 > not publish: an oracle-truth benchmark on third-party repositories with both arms' traces
 > tracked in-tree, and a counterfactual review in which the graph-fed reviewer finds
 > oracle-confirmed misses the plain reviewer did not — scored without an LLM judge.
+
+## Corpus header
+
+The destination ADR-260 § 5 names. It carried no section until 2026-10-06, so
+the `entry_condition` above and Phase 2.1 both pointed at a heading that did not
+exist; whoever answered the question would have had to author the section as well
+as fill it. The section is created empty, by `road-to-leading-every-row` blocker
+`b4`, as routing repair. **Nothing here proposes a repository.**
+
+ADR-260 § 5: *"Two public open-source repositories in the owner's stack, meeting
+the fitness list in that roadmap, are named in its corpus header with the role
+**benchmark subject** … (The owner fills the two names in the corpus header; the
+roadmap wakes on that edit.)"* The fitness list it refers to is Phase 2.1 below;
+it is not restated here, so there is one copy of it and it cannot drift.
+
+| Role | Repository | SHA pin | Filled |
+|---|---|---|---|
+| benchmark subject 1 | `event4u-app/data-helpers` (public, MIT) | pinned at registration (2.1) | 2026-10-06, owner |
+| benchmark subject 2 | `event4u-app/capisco` — **admissible only once public under MIT**; until then not cloned and no trace tracked | pinned at registration (2.1) | 2026-10-06, owner (conditional) |
+
+**Owner deviations from the fitness list, 2026-10-06** (programme blocker b4 of
+`road-to-leading-every-row`, `/roadmap:resolve-blockers`). Both subjects are the
+owner's own repositories and neither is a Laravel application: `data-helpers` is a
+framework-agnostic PHP package for Laravel and Symfony (PHPUnit tests, no routes or
+migrations), `capisco` a TypeScript runtime. So the route-trace and model → table
+parts of suite C do not apply to these subjects and are measured where a subject
+has them; callers, change impact, tests-for and the agentic suite F apply in full.
+The owner stated that `capisco` will get an MIT licence; until it is public, its
+row is a name and not a subject, because the traces of both arms are tracked in
+this public repository.
+
+A benchmark subject is a **test subject**, not an idea source: ADR-260 § 5 states
+that `source-confidentiality` governs harvest provenance and does not apply here,
+because this subject's questions, truth and traces are tracked in-tree.
+
+**This roadmap wakes when both rows are filled and its parent is archived** — the
+two halves of `entry_condition`, neither sufficient alone.
 
 ## Goal
 Register before measuring; measure on repositories in the owner's stack that this

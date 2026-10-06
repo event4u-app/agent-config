@@ -6,10 +6,14 @@
  * Python module exactly (snake_case kept deliberately — fidelity over
  * TS idiom).
  *
- * Per `docs/contracts/hook-architecture-v1.md` § Concurrency, every concern
- * that writes under `agents/runtime/state/` MUST:
+ * Per `docs/contracts/hook-architecture-v1.md`, Concurrency, every concern
+ * that writes a state file under `agents/` MUST:
  *
- * 1. Acquire an exclusive lock on `agents/runtime/state/.dispatcher.lock`.
+ * 1. Acquire an exclusive lock on `<state_dir>/.dispatcher.lock` — the SAME
+ *    directory the target file lives in, derived from the target's own
+ *    path (`path.dirname`), never a single fixed location: one concern's
+ *    target under `agents/runtime/state/` locks there, another's target
+ *    under `agents/state/` locks there instead.
  * 2. Write to a sibling `<dest>.tmp.<pid>` file in the same directory.
  * 3. Rename(2) (atomic on the same filesystem) tmp → dest.
  * 4. Release the lock.

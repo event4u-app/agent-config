@@ -58,7 +58,7 @@ describe('project_thin_rules — pure surface', () => {
         expect(entry).toContain('## My Rule\n');
         expect(entry).toContain('Fires on: foo.');
         expect(entry).toContain('A short desc');
-        expect(entry).toContain('Body: [`my-rule`](../../dist/agent-src/rules/my-rule.md)');
+        expect(entry).toContain('Body: ../../dist/agent-src/rules/my-rule.md');
         expect(entry).not.toContain('.agent-src.uncondensed');
     });
     it('thin_entry omits the Fires-on clause when no trigger hint', () => {
@@ -95,7 +95,9 @@ describe('project_thin_rules — pure surface', () => {
                 kernelFull += 1;
             } else {
                 // thinned entries are the one-line pointer
-                expect(text).toContain('Routed rule — load the body on trigger-match.');
+                // Asked of the WRITER constant rather than re-spelled here —
+                // step 2.1. A literal would pass after the marker changes.
+                expect(text).toContain(ptr.THIN_ENTRY_MARKER);
                 thinned += 1;
             }
         }
@@ -109,7 +111,7 @@ describe('project_thin_rules — pure surface', () => {
         for (const id of noTrigger) {
             const text = map.get(`${id}.md`);
             if (text === undefined) continue; // out of scope in this projection
-            expect(text).not.toContain('Routed rule — load the body on trigger-match.');
+            expect(text).not.toContain(ptr.THIN_ENTRY_MARKER);
         }
     });
     it('measure returns the full key set with consistent arithmetic', () => {

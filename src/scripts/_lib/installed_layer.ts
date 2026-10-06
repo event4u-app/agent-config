@@ -41,6 +41,7 @@
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -50,7 +51,14 @@ import {
     globalRuleLayerPath,
 } from '../../install/globalRuleLayers.js';
 import { NO_RECORDED_HASHES, readRecordedHashes } from '../../install/recordedOwnership.js';
-import { ruleBody } from './rule_law_section.js';
+import {
+    INVENTORY_BASENAME,
+    inventory_path,
+    load_inventory,
+    recorded_absolute_files,
+} from './global_deploy_inventory.js';
+import { DEFAULT_EVENT4U_ROOT_RELATIVE } from './user_global_paths.js';
+import { ruleBody, splitFrontmatter } from './rule_law_section.js';
 
 /** How many files the per-directory ranking carries. Step 0.1 fixes it at 20. */
 export const TOP_FILES = 20;
@@ -96,6 +104,27 @@ export interface LayerReading {
      */
     readonly package_owned_chars: number;
     readonly foreign_chars: number;
+    /**
+     * `chars`, split by WHEN the host loads the file — the second axis.
+     *
+     * `unconditional` already counts the FILES the host loads every session;
+     * these two count their characters, and the pair is what a ceiling can
+     * actually be read against. A layer of 100 files can be 90 % path-scoped by
+     * file count and 90 % unconditional by character count, so a ceiling stated
+     * in characters cannot be answered from the file counts at all — which is
+     * the gap step 1.1 closes.
+     *
+     * `unconditional_chars + scoped_chars === chars` holds by construction:
+     * {@link isUnconditional} is a total predicate over the same readings the
+     * total sums, so no file lands in both buckets or in neither.
+     *
+     * NOT the same split as `package_owned_chars` / `foreign_chars`. That pair
+     * answers "whose file is this"; this pair answers "when does the host load
+     * it". A file can be package-owned and path-scoped at once, and the two
+     * splits are therefore independent rather than refinements of each other.
+     */
+    readonly unconditional_chars: number;
+    readonly scoped_chars: number;
     /** The {@link TOP_FILES} largest, by the SAME measure as `chars`. */
     readonly top: readonly RuleFileReading[];
 }
@@ -149,8 +178,19 @@ export interface InstalledLayerReport {
     readonly project_root: string;
     /** `claude --version`, or `unknown`. Never fabricated. */
     readonly host_version: string;
-    /** False when no installed-tools manifest resolved — then every file reads foreign. */
+    /**
+     * False when no installed-tools MANIFEST resolved.
+     *
+     * No longer the same question as "is there ownership evidence" — read
+     * {@link ownership_source} for that. A global-only install has no manifest
+     * and full evidence; keeping this field answers the narrower question a
+     * project-scoped reader still asks.
+     */
     readonly manifest_present: boolean;
+    /** Which evidence answered ownership. `none` means no evidence, never "not ours". */
+    readonly ownership_source: OwnershipSource;
+    /** Every contributor, because the layers span two path spaces. See {@link OwnershipResolution.sources}. */
+    readonly ownership_sources: readonly OwnershipSource[];
     readonly layers: readonly LayerReading[];
     /** One row per host, against its published limit. Step 3.5. */
     readonly limits: readonly HostLimitReading[];
@@ -163,18 +203,42 @@ export interface InstalledLayerReport {
         readonly foreign: number;
         readonly package_owned_chars: number;
         readonly foreign_chars: number;
+        /** The when-loaded split, summed. See {@link LayerReading.unconditional_chars}. */
+        readonly unconditional_chars: number;
+        readonly scoped_chars: number;
     };
 }
 
 /**
  * Whether the host loads this file on every session rather than on a path match.
  *
- * `paths:` at the start of a line is the whole test, and it is the host's own
- * convention rather than this package's: `claudeRuleRewrite.ts` states it from
- * the emitting side — "with it a rule loads on a path match, without it the
- * rule loads unconditionally". `rule_activation_census.projection_reading` asks
- * the installed tree the same question with the same regex, so a file counted
- * unconditional here is counted unconditional there.
+ * `paths:` at the start of a line IN THE FRONTMATTER is the whole test, and it
+ * is the host's own convention rather than this package's: `claudeRuleRewrite`
+ * states it from the emitting side — "with it a rule loads on a path match,
+ * without it the rule loads unconditionally".
+ *
+ * SCOPED TO THE FRONTMATTER, which it was not until 2026-10-06. The predicate
+ * tested the whole unstripped file while the characters it partitions come
+ * from `ruleBody` — predicate and measure read different strings. That was
+ * survivable while it only moved a file COUNT; since the when-loaded character
+ * split it decides which bucket a whole file's characters land in, and
+ * `unconditional_chars` is the figure the ceiling argument is read in. One body
+ * line beginning `paths:` — a YAML trigger example quoted inside a kernel or
+ * `no_stub` rule, which is ordinary prose — would have moved that rule's entire
+ * character count from standing to path-scoped, silently.
+ *
+ * Measured before the change: of the 105 files on a real opted-in install, two
+ * are path-scoped by either reading and none carries a body-only mention, so
+ * the fix moves no published figure. It is hardening against a case that does
+ * not exist yet rather than a correction of one that does, and it is worth
+ * making precisely because the failure would be silent.
+ *
+ * `check_single_delivery` already slices the frontmatter before this test, so
+ * this now AGREES with it. `rule_activation_census.projection_reading` still
+ * scans the whole file; that reader counts files rather than characters, so the
+ * divergence costs it nothing today, and changing a census's reading belongs to
+ * that census rather than here. Named so the next reader finds a known
+ * difference instead of discovering an unexplained one.
  *
  * SOURCE-SIDE CLASSIFICATION IS A DIFFERENT QUESTION and deliberately not used.
  * `classify_rule` reads `alwaysApply` and `type: always` to tell `always` from
@@ -184,8 +248,50 @@ export interface InstalledLayerReport {
  * both load every session, which is the only property the host acts on.
  */
 export function isUnconditional(text: string): boolean {
-    return !/^paths:/m.test(text);
+    // THE SAME FUNCTION that produces the characters being partitioned, not the
+    // same arithmetic re-implemented. An earlier version scanned for
+    // `'\n---'` while `ruleBody` -> `splitFrontmatter` scans for `'\n---\n'`,
+    // so the two disagreed about where the frontmatter stops, and the
+    // predicate's early stop could hide a later `paths:` key.
+    const [frontmatter] = splitFrontmatter(text);
+    // AND THE BLIND SPOT THAT SCOPING OPENS, CLOSED HERE. `splitFrontmatter`
+    // returns `''` for anything that does not begin exactly `---\n` — a BOM, a
+    // leading blank line, CRLF, a block that never closes — and scoping to `''`
+    // reads every such file as unconditional even when its frontmatter carries
+    // `paths:`. `readLayer` measures every `.md` in a host directory, foreign
+    // user-authored rules included, so that would inflate `unconditional_chars`
+    // silently, which is the figure the whole ceiling argument is read in.
+    //
+    // A file that CLAIMS a block `splitFrontmatter` could not parse falls back
+    // to the whole-text test. The claim test is the one `installThinLayer`
+    // already uses for the same blind spot, and is a regex rather than
+    // `startsWith('---')` for the reason stated there.
+    //
+    // WHICH WAY THE FALLBACK ERRS, SAID PLAINLY RATHER THAN CALLED
+    // "CONSERVATIVE". It can only move characters OUT of the standing bucket,
+    // never into it. That is conservative about the claim "this rule stands
+    // every session" — it never asserts one it cannot support. It is the
+    // FLATTERING direction for the ceiling argument, which reads the standing
+    // figure against a limit: a misfire here makes the layer look smaller than
+    // it is. Both halves are true and the second is the one a reader checking
+    // the overage needs, so it is stated rather than left to the word.
+    //
+    // AND THE STATE THAT IS NOT AN UNPARSEABLE BLOCK. `splitFrontmatter`
+    // returns '' for a WELL-FORMED EMPTY block too — `---\n---\n` has no
+    // `\n---\n` after index 4, so its own parse fails — and such a file has no
+    // `paths:` key by construction. Without the second test it fell to the
+    // whole-text scan and a body line beginning `paths:` (a quoted trigger
+    // example, which is exactly what a rule about triggers contains) moved the
+    // file's entire character count out of the standing figure. Measured
+    // before the exclusion: `---\n---\npaths: not a key, just prose\n` read
+    // path-scoped.
+    const emptyBlock = /^---\n---(\n|$)/.test(text);
+    if (frontmatter === '' && !emptyBlock && /^\uFEFF?[\s]*---/.test(text)) {
+        return !/^paths:/m.test(text);
+    }
+    return !/^paths:/m.test(frontmatter);
 }
+
 
 /**
  * Measure one directory.
@@ -211,6 +317,8 @@ export function readLayer(
         foreign: 0,
         package_owned_chars: 0,
         foreign_chars: 0,
+        unconditional_chars: 0,
+        scoped_chars: 0,
         top: [],
     };
     let names: string[];
@@ -266,6 +374,8 @@ export function readLayer(
         foreign: readings.filter((r) => !r.package_owned).length,
         package_owned_chars: readings.reduce((n, r) => n + (r.package_owned ? r.chars : 0), 0),
         foreign_chars: readings.reduce((n, r) => n + (r.package_owned ? 0 : r.chars), 0),
+        unconditional_chars: readings.reduce((n, r) => n + (r.unconditional ? r.chars : 0), 0),
+        scoped_chars: readings.reduce((n, r) => n + (r.unconditional ? 0 : r.chars), 0),
         top,
     };
 }
@@ -393,11 +503,289 @@ export function buildHostLimitRows(
     return rows;
 }
 
+/** Which evidence answered "is this file ours". Never a guess — see {@link resolveLayerOwnership}. */
+export type OwnershipSource = 'manifest' | 'global-inventory' | 'this-deploy' | 'none';
+
+/**
+ * Where `deployed-files.json` lives FOR A STATED HOME.
+ *
+ * `global_deploy_inventory.inventory_path()` answers for the process asking,
+ * honouring `AGENT_CONFIG_DEPLOY_INVENTORY` and `EVENT4U_CONFIG_HOME`. That is
+ * right for the installer, which is running the install it is recording, and
+ * WRONG for a reader measuring some other home: a report about a staged install
+ * under a temporary HOME would read the maintainer's own inventory and claim
+ * ownership of files that install never wrote.
+ *
+ * SO AN EXPLICITLY SUPPLIED HOME WINS, AND THE ENV OVERRIDES DECIDE ONLY THE
+ * HOME-LESS CASE. A caller that says which home it is measuring has already
+ * answered the question those variables would answer for it, and letting the
+ * asking process's environment override that is exactly the hazard named above.
+ * An intermediate draft of this function had the precedence the other way round
+ * while this paragraph said what it says now; the code is what changed.
+ *
+ * THE CONSEQUENCE, STATED RATHER THAN IMPLIED: `ReportOptions.home` is
+ * REQUIRED, so every caller of {@link buildInstalledLayerReport} supplies one
+ * and neither env override reaches this reader through that path. That is
+ * correct — those variables describe the asking process's own install, which is
+ * not what a report about another home is measuring — but it means "honours the
+ * env override" is not a true sentence about the report, and saying so here is
+ * cheaper than leaving the next reader to discover it.
+ *
+ * The layout is COMPOSED from the modules that own it rather than re-spelled,
+ * so a layout change moves this reader with it instead of leaving it looking in
+ * a directory nobody writes.
+ */
+export function defaultInventoryPath(home?: string | null): string {
+    // NO HOME STATED — the asking process is the subject, so the env-aware
+    // resolver is the right answer.
+    if (home === undefined || home === null || home === '') return inventory_path();
+    // THE STATED HOME IS THE ASKING PROCESS'S OWN. `ReportOptions.home` is
+    // required, so `buildInstalledLayerReport` ALWAYS states one — including
+    // when it is simply measuring the machine it is running on. Treating that
+    // as "a different home" sent it to the hardcoded layout, found nothing
+    // under `EVENT4U_CONFIG_HOME` or `AGENT_CONFIG_DEPLOY_INVENTORY`, and
+    // printed "NO manifest and NO deploy inventory resolved" — the
+    // `0 package-owned` reading step 1.2 exists to remove, and it put the
+    // report and the receipt in disagreement about one install.
+    //
+    // The precedence argument only ever covered a home that is NOT this
+    // process's, so that is the case the branch now tests for.
+    try {
+        // BOTH SPELLINGS, for the reason `recorded_absolute_files` states at
+        // length: a lexical compare alone calls a symlinked or alternate
+        // spelling of the SAME home "a different home", takes the hardcoded
+        // layout, and reproduces the 0 package-owned reading this branch
+        // exists to prevent. macOS `/var` -> `/private/var` is the standing
+        // example.
+        const real = (q: string): string => {
+            try {
+                return fs.realpathSync(q);
+            } catch {
+                return path.resolve(q);
+            }
+        };
+        const mine = os.homedir();
+        if (path.resolve(home) === path.resolve(mine) || real(home) === real(mine)) {
+            return inventory_path();
+        }
+    } catch {
+        // `homedir()` can throw on an exotic environment; fall through to the
+        // layout, which is the answer for a home that is not ours anyway.
+    }
+    return path.join(home, DEFAULT_EVENT4U_ROOT_RELATIVE, INVENTORY_BASENAME);
+}
+
+
+/** The ownership evidence and the name of where it came from. */
+export interface OwnershipResolution {
+    /** Absolute path → recorded hash (or `null` when the source records no hash). */
+    readonly recorded: ReadonlyMap<string, string | null>;
+    /**
+     * EVERY source that contributed at least one path, in resolution order.
+     *
+     * Plural because the sources describe disjoint path spaces — a manifest
+     * speaks for a project tree, an inventory for the user's home — so a
+     * reading that covers both layers can legitimately have two, and naming
+     * only one is wrong about the files the other accounts for.
+     */
+    readonly sources: readonly OwnershipSource[];
+    /** The most specific contributor, for a reader that wants one word. `none` when empty. */
+    readonly source: OwnershipSource;
+}
+
+/** What {@link resolveLayerOwnership} may read. Every input is a parameter. */
+export interface OwnershipOptions {
+    /** Where the project manifest would be. Absent file → fall through, never an error. */
+    readonly manifestPath?: string | null;
+    /** Needed only to resolve the manifest's relative entries. */
+    readonly projectRoot: string;
+    /**
+     * The home the install being measured lives under.
+     *
+     * The inventory records its anchor tilde-relative (`~/.claude/`), so a
+     * reader measuring a staged install under a temporary HOME must say which
+     * home, or the recorded paths resolve against the asking process's own and
+     * claim nothing. Omitted → `os.homedir()`.
+     */
+    readonly home?: string | null | undefined;
+    /** `deployed-files.json`. `undefined` reads the user-global default; `null` reads none. */
+    readonly inventoryPath?: string | null | undefined;
+    /**
+     * Anchor → anchor-relative paths THIS run just wrote.
+     *
+     * The first-install case, and the reason it needs its own input: the
+     * install receipt prints before `record_deploy`, so on a first install the
+     * inventory on disk is still empty and the only evidence that the files are
+     * ours is the set the installer is holding. Passing it is counting this
+     * deploy's own file set — not a claim about any earlier one.
+     *
+     * CLOSED FOR ONE ANCHOR OF FIVE, stated rather than implied. The only
+     * production caller (`install.ts`, inside the `claude-code` branch) passes
+     * a single-entry map for that anchor, while `installReceiptBudgetLines`
+     * reads all five `GLOBAL_RULE_DIRS`. So on a genuine first install the
+     * cursor, augment, windsurf and cline global layers still read foreign in
+     * the receipt. That is narrower than "the first install is covered", which
+     * an earlier version of this paragraph said, and it is the honest scope:
+     * the receipt is printed from the one branch that has a file set to offer.
+     */
+    readonly thisDeploy?: ReadonlyMap<string, Iterable<string>> | null | undefined;
+}
+
+/**
+ * The ONE place that answers "which of these installed files are ours".
+ *
+ * Two readers ask it — the installed-layer report and the install receipt's
+ * budget lines — and until step 1.2 they asked different things. Both called
+ * `manifest_path(...)` and read a project-scoped `agents/installed-tools.lock`.
+ * A global-only install writes nothing into a project, so on exactly the
+ * install shape the thinned-layer roadmap's AC-1 is about, both reported
+ * `0 package-owned / N foreign` and AC-1's figure could not be produced at all.
+ *
+ * The global install DOES record what it wrote: `deployed-files.json` lists,
+ * per tool, the anchor and every file the installer maintains there —
+ * "the ownership proof that makes reaping safe". This reads it.
+ *
+ * IT IS A UNION, AND THE PATH SPACES ARE WHY. An earlier shape let the project
+ * manifest win OUTRIGHT whenever its file existed, on the reasoning that it
+ * carries hashes an inventory does not. That reasoning does not survive the
+ * observation that the two sources describe DISJOINT sets of paths: the
+ * manifest records project-relative entries resolved against `projectRoot`,
+ * the inventory records paths under the user's home. Exclusivity therefore
+ * bought nothing and cost everything — any `agents/installed-tools.lock` on
+ * disk, a gitignored file a single project-scoped install creates, restored
+ * the exact `0 package-owned` reading for the global layer that step 1.2
+ * exists to fix, while the report printed "read from the installed-tools
+ * manifest" with no evidence behind it for those paths.
+ *
+ * So every source contributes, and the MANIFEST IS MERGED LAST: on the paths
+ * it names its hash overwrites a hashless entry, which preserves the
+ * `recorded-unchanged` / `recorded-modified` distinction that motivated the
+ * precedence in the first place, without discarding evidence about paths it
+ * says nothing about.
+ *
+ * {@link OwnershipResolution.sources} lists every source that contributed at
+ * least one path, because one word cannot describe two path spaces — a report
+ * reading global and project layers together may have manifest evidence for
+ * one and inventory evidence for the other, and saying only one of them is
+ * wrong about half the files it is describing.
+ *
+ * A FILE THE USER EDITED AND THE INSTALLER PRESERVED STILL COUNTS AS
+ * MAINTAINED. The inventory records what the installer MAINTAINS at a path, not
+ * what the bytes currently are, so a preserved rule stays package-owned. That
+ * is the correct reading — the package is still responsible for the path — and
+ * it is why this function returns `null` hashes rather than fabricating one.
+ */
+export function resolveLayerOwnership(opts: OwnershipOptions): OwnershipResolution {
+    const recorded = new Map<string, string | null>();
+    const sources: OwnershipSource[] = [];
+
+    // HASHLESS SOURCES FIRST, so the manifest's hashes overwrite a `null` on
+    // any path both happen to name rather than the other way round.
+    if (opts.inventoryPath !== null) {
+        let n = 0;
+        try {
+            const inv = load_inventory(opts.inventoryPath ?? defaultInventoryPath(opts.home));
+            for (const abs of recorded_absolute_files(inv, opts.home ?? null)) {
+                // COUNT PATHS NEWLY CONTRIBUTED, not entries read, so a
+                // source that added nothing is not named as evidence.
+                //
+                // WHAT THIS GUARD DOES NOT DO, since an earlier comment here
+                // claimed it did: it does not collapse the two spellings
+                // `recorded_absolute_files` emits per file. The lexical and the
+                // realpath spelling are distinct Map keys, so wherever they
+                // differ — every path under macOS `/var` — each is newly
+                // contributed and `n` still rises twice for one file. Harmless
+                // only because `n` is read as `> 0` and never as a count; a
+                // future reader wanting a count must not take it from here.
+                if (!recorded.has(abs)) n += 1;
+                recorded.set(abs, null);
+            }
+        } catch {
+            // Defence in depth, and NOT where the documented behaviour lives.
+            // "A corrupt inventory is no evidence, never a failure" is real but
+            // is carried one module down: `load_inventory` swallows its own
+            // read and parse failures and returns an empty shell, and
+            // `recorded_absolute_files` type-guards every field. So this catch
+            // is unreachable for that reason and the fixture case named for it
+            // exercises `load_inventory`, not this guard. Kept because a future
+            // change to either could make it reachable; labelled so it is not
+            // mistaken for tested coverage.
+        }
+        if (n > 0) sources.push('global-inventory');
+    }
+
+    let fromDeploy = 0;
+    for (const [anchor, rels] of opts.thisDeploy ?? new Map()) {
+        for (const rel of rels) {
+            const abs = path.resolve(anchor, rel);
+            // Same rule as the inventory branch: a source is named only when it
+            // contributes a path nothing else had. On every install after the
+            // first, `thisDeploy`'s paths are already in the inventory, and
+            // naming it there printed "the file set this install just wrote"
+            // for a source that added nothing.
+            if (!recorded.has(abs)) fromDeploy += 1;
+            recorded.set(abs, null);
+            // Both spellings, for the reason `recorded_absolute_files` states:
+            // the reader compares against a lexically joined path, and a HOME
+            // behind a symlink makes the two disagree.
+            try {
+                recorded.set(fs.realpathSync(abs), null);
+            } catch {
+                // Not on disk — the lexical spelling is all there is.
+            }
+        }
+    }
+    if (fromDeploy > 0) sources.push('this-deploy');
+
+    const manifestPath = opts.manifestPath ?? null;
+    if (manifestPath !== null && fs.existsSync(manifestPath)) {
+        let n = 0;
+        // DEGRADE LIKE THE INVENTORY BRANCH, which this function documents
+        // twice. The code this replaced wrapped exactly this call, so a corrupt
+        // `installed-tools.lock` used to read as "no manifest evidence" and the
+        // budget block still printed. Unguarded it threw into the receipt's
+        // outer catch and suppressed the WHOLE block — ownership line, per-host
+        // rows and the 80 % warning — and out of `buildInstalledLayerReport`,
+        // which has no outer catch at all. An unreadable manifest is no
+        // evidence, never a failure; the asymmetry was undeclared.
+        let recordedHashes: ReadonlyMap<string, string | null>;
+        try {
+            recordedHashes = readRecordedHashes(manifestPath, opts.projectRoot);
+        } catch {
+            recordedHashes = NO_RECORDED_HASHES;
+        }
+        for (const [abs, hash] of recordedHashes) {
+            // The manifest contributes whenever it names a path at all: it
+            // supplies the HASH even where another source already had the path,
+            // which is evidence the others cannot give.
+            n += 1;
+            recorded.set(abs, hash);
+        }
+        if (n > 0) sources.push('manifest');
+    }
+
+    if (recorded.size === 0) {
+        return { recorded: NO_RECORDED_HASHES, sources: [], source: 'none' };
+    }
+    // `source` keeps a single word for readers that want one. The manifest is
+    // the most specific evidence, so it leads when it contributed; otherwise
+    // the inventory, otherwise this deploy's own set.
+    const primary =
+        sources.includes('manifest')
+            ? 'manifest'
+            : sources.includes('global-inventory')
+              ? 'global-inventory'
+              : 'this-deploy';
+    return { recorded, sources, source: primary };
+}
+
 export interface ReportOptions {
     readonly home: string;
     readonly projectRoot: string;
-    /** The installed-tools manifest. Absent or unreadable means no ownership evidence. */
+    /** The installed-tools manifest. Absent or unreadable falls through to the global inventory. */
     readonly manifestPath?: string | null;
+    /** `deployed-files.json`. `undefined` reads the user-global default; `null` reads none. */
+    readonly inventoryPath?: string | null | undefined;
     /** Supplied rather than shelled, so a fixture is not at the mercy of a CLI being on PATH. */
     readonly hostVersion?: string;
     /**
@@ -418,10 +806,12 @@ export interface ReportOptions {
  */
 export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerReport {
     const manifestPath = opts.manifestPath ?? null;
-    const recorded =
-        manifestPath === null
-            ? NO_RECORDED_HASHES
-            : readRecordedHashes(manifestPath, opts.projectRoot);
+    const { recorded, source: ownership_source, sources: ownership_sources } = resolveLayerOwnership({
+        manifestPath,
+        projectRoot: opts.projectRoot,
+        home: opts.home,
+        inventoryPath: opts.inventoryPath,
+    });
     const layers: LayerReading[] = [];
     for (const host of Object.keys(GLOBAL_RULE_DIRS).sort()) {
         const dir = globalRuleLayerPath(host, opts.home);
@@ -441,6 +831,8 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
             foreign: acc.foreign + l.foreign,
             package_owned_chars: acc.package_owned_chars + l.package_owned_chars,
             foreign_chars: acc.foreign_chars + l.foreign_chars,
+            unconditional_chars: acc.unconditional_chars + l.unconditional_chars,
+            scoped_chars: acc.scoped_chars + l.scoped_chars,
         }),
         {
             files: 0,
@@ -450,6 +842,8 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
             foreign: 0,
             package_owned_chars: 0,
             foreign_chars: 0,
+            unconditional_chars: 0,
+            scoped_chars: 0,
         },
     );
     const limits = buildHostLimitRows(
@@ -461,10 +855,42 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
         project_root: opts.projectRoot,
         host_version: opts.hostVersion ?? 'unknown',
         manifest_present: manifestPath !== null && fs.existsSync(manifestPath),
+        ownership_source,
+        ownership_sources,
         layers,
         limits,
         totals,
     };
+}
+
+/**
+ * One line naming WHICH evidence answered ownership.
+ *
+ * Exported so the report and the install receipt say the same sentence about
+ * the same source — a consumer comparing a receipt against a later report must
+ * not have to decide whether a wording difference means a different reading.
+ */
+export function ownershipLine(sources: OwnershipSource | readonly OwnershipSource[]): string {
+    const list = (Array.isArray(sources) ? sources : [sources as OwnershipSource]).filter(
+        (s) => s !== 'none',
+    );
+    if (list.length === 0) {
+        return 'ownership: NO manifest and NO deploy inventory resolved — every file reads foreign, which is no evidence rather than a finding';
+    }
+    // EVERY contributor is named, never just one. The sources cover disjoint
+    // path spaces, so a line naming one of two is a true sentence about half
+    // the files and a false one about the rest.
+    const phrases: Record<Exclude<OwnershipSource, 'none'>, string> = {
+        manifest: 'the installed-tools manifest',
+        'global-inventory': 'the global deploy inventory (deployed-files.json)',
+        'this-deploy': 'the file set this install just wrote',
+    };
+    const named = list.map((s) => phrases[s as Exclude<OwnershipSource, 'none'>]);
+    const joined =
+        named.length === 1
+            ? (named[0] as string)
+            : `${named.slice(0, -1).join(', ')} and ${named[named.length - 1] as string}`;
+    return `ownership: read from ${joined}`;
 }
 
 /** The report as lines, for a terminal. One directory per block. */
@@ -472,19 +898,16 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
     const out: string[] = [];
     out.push(`installed layer — host ${report.host_version}, HOME ${report.home}`);
     out.push(`project ${report.project_root}`);
-    out.push(
-        report.manifest_present
-            ? 'ownership: read from the installed-tools manifest'
-            : 'ownership: NO manifest resolved — every file reads foreign, which is no evidence rather than a finding',
-    );
+    out.push(ownershipLine(report.ownership_sources));
     for (const l of report.layers) {
         if (!l.present) {
             out.push(`  ${l.host} (${l.scope}) — absent: ${l.dir}`);
             continue;
         }
         out.push(
-            `  ${l.host} (${l.scope}) — ${String(l.files)} files, ` +
-                `${String(l.unconditional)} unconditional, ${String(l.chars)} chars, ` +
+            `  ${l.host} (${l.scope}) — ${String(l.files)} files ` +
+                `(${String(l.unconditional)} unconditional), ${String(l.chars)} chars ` +
+                `(${String(l.unconditional_chars)} standing + ${String(l.scoped_chars)} path-scoped), ` +
                 `${String(l.package_owned)} package-owned / ${String(l.foreign)} foreign`,
         );
         for (const f of l.top) {
@@ -495,8 +918,10 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
     }
     const t = report.totals;
     out.push(
-        `  TOTAL — ${String(t.files)} files, ${String(t.unconditional)} unconditional, ` +
-            `${String(t.chars)} chars, ${String(t.package_owned)} package-owned / ${String(t.foreign)} foreign`,
+        `  TOTAL — ${String(t.files)} files (${String(t.unconditional)} unconditional), ` +
+            `${String(t.chars)} chars ` +
+            `(${String(t.unconditional_chars)} standing + ${String(t.scoped_chars)} path-scoped), ` +
+            `${String(t.package_owned)} package-owned / ${String(t.foreign)} foreign`,
     );
     out.push(...renderHostLimitRows(report.limits));
     return out;

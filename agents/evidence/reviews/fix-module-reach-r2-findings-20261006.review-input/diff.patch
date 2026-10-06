@@ -1,0 +1,147 @@
+diff --git a/src/scripts/_lib/module_reach.ts b/src/scripts/_lib/module_reach.ts
+index cd159bd860633b32c24309330334cfcd31767bc1..4c6d6d33866f23c3f2ae45ce2523459eec342373 100644
+--- a/src/scripts/_lib/module_reach.ts
++++ b/src/scripts/_lib/module_reach.ts
+@@ -341,14 +341,19 @@ export function findRoadmapMentions(root: string, moduleName: string): RoadmapSt
+             if (stepMatch !== null) {
+                 currentGlyph = stepMatch[1] as string;
+                 currentStepLine = line.trim();
+-            } else if (/^(#|##|###)\s/.test(line) || line.trim() === '') {
+-                // a heading or a blank line ends the current step's block for our purposes
+-                // (kept conservative: a step's cited paths/notes are usually within a few
+-                // indented lines of its bullet, not past the next heading).
+-                if (/^(#|##|###)\s/.test(line)) {
+-                    currentGlyph = null;
+-                    currentStepLine = '';
+-                }
++            } else if (/^#{1,6}\s/.test(line) || line.trim() === '') {
++                // A heading OR a blank line ends the current step's block for our
++                // purposes (kept conservative: a step's cited paths/notes are
++                // usually within a few indented lines of its bullet, not past
++                // the next heading). Both branches reset — an R2 review found
++                // the blank-line case was a no-op here despite this comment
++                // already claiming it reset, which let a mention several lines
++                // below a CLOSED step, separated only by a blank line, still
++                // read as evidence for that step. `#{1,6}` matches
++                // `_lib/md_section.ts`'s own ATX-heading pattern; the prior
++                // `(#|##|###)` here missed level-4+ headings.
++                currentGlyph = null;
++                currentStepLine = '';
+             }
+             if (nameRe.test(line)) {
+                 hits.push({ roadmapRelPath: relPath, estate, glyph: currentGlyph, stepLine: currentStepLine });
+diff --git a/src/scripts/report_module_reach.ts b/src/scripts/report_module_reach.ts
+index fe9da84c3eff55413348c527ece6ad990703802a..98fba863e54c64ae284e22630ee1eec7ab22acb4 100644
+--- a/src/scripts/report_module_reach.ts
++++ b/src/scripts/report_module_reach.ts
+@@ -172,13 +172,23 @@ export function main(argv: readonly string[] = process.argv.slice(2), root = REP
+             roots: ['src/scripts/_lib'],
+         });
+     if (argv.includes('--json')) {
++        // No trailing `scanned:` line here either — an R2 review found that
++        // `scan()` (which PRINTS) made this invalid as a single JSON document;
++        // `check_gate_reachability.ts`'s own `--json` branch already returns
++        // immediately after writing JSON for the same reason. The scope is
++        // still ASSERTED (never silently printed clean from an empty corpus).
++        assertScanned({
++            gate: 'report_module_reach',
++            scanned: modules.length,
++            units: 'module(s) under src/scripts/_lib',
++            roots: ['src/scripts/_lib'],
++        });
+         process.stdout.write(`${JSON.stringify({ modules, roadmapsAvailable }, null, 2)}\n`);
+-        scan();
+     } else if (argv.includes('--markdown')) {
+         // The page is the artifact — no trailing `scanned:` line inside it,
+         // but the scope is still asserted (never silently printed clean from
+-        // an empty corpus). `--json` and the default human mode also publish
+-        // the count per this family's convention.
++        // an empty corpus). The default human mode is the only one that still
++        // publishes the count per this family's convention.
+         assertScanned({
+             gate: 'report_module_reach',
+             scanned: modules.length,
+diff --git a/tests/scripts/report_module_reach.test.ts b/tests/scripts/report_module_reach.test.ts
+index 7e853b38d8fa5c6ba6712ca0235f1e1b26867d24..5bee88123cc90878e7cc11eae75be5c7250bfd48 100644
+--- a/tests/scripts/report_module_reach.test.ts
++++ b/tests/scripts/report_module_reach.test.ts
+@@ -61,6 +61,24 @@ describe('on the real tree', () => {
+         expect(main(['--json'], REPO)).toBe(0);
+         expect(main(['--markdown'], REPO)).toBe(0);
+     });
++
++    it('--json output is a single parseable JSON document (R2 finding 3)', () => {
++        // A trailing `scanned:` line after the closing `}` made this throw —
++        // the same shape check-gate_reachability's own --json branch already
++        // avoids by returning immediately after writing JSON.
++        const chunks: string[] = [];
++        const orig = process.stdout.write.bind(process.stdout);
++        process.stdout.write = ((c: string) => {
++            chunks.push(c);
++            return true;
++        }) as typeof process.stdout.write;
++        try {
++            expect(main(['--json'], REPO)).toBe(0);
++        } finally {
++            process.stdout.write = orig;
++        }
++        expect(() => JSON.parse(chunks.join(''))).not.toThrow();
++    });
+ });
+ 
+ describe('import-graph reach — direct, transitive, and the unreached-importing-unreached case', () => {
+@@ -207,6 +225,54 @@ describe('the four groups, over the unreferenced-by-name set', () => {
+         expect(m?.group).toBe('named-outside-open-step');
+     });
+ 
++    it('a mention past a BLANK LINE after a closed step is never attributed to that step (R2 finding 1)', () => {
++        const root = fixtureRoot();
++        unreferencedFixture(root, 'unrelated_mention');
++        write(
++            root,
++            'agents/roadmaps/road-to-blank-line.md',
++            [
++                '# Road to blank line',
++                '',
++                '## Phase 1',
++                '',
++                '- [x] **1.1 Shipped something else entirely.** Nothing to do with the module below.',
++                '',
++                'Unrelated prose, several lines later, mentions `unrelated_mention` here.',
++            ].join('\n'),
++        );
++        const { modules } = analyseModuleReach(root);
++        const m = modules.find((x) => x.name === 'unrelated_mention');
++        // The blank line after the closed step must end its block — the mention
++        // is prose outside any step, never evidence FOR the closed step above it.
++        expect(m?.group).toBe('named-outside-open-step');
++        expect(m?.groupEvidence).not.toContain('Shipped something else entirely');
++    });
++
++    it('a level-4+ heading resets the step-block tracker too (R2 finding 2)', () => {
++        const root = fixtureRoot();
++        unreferencedFixture(root, 'past_subheading');
++        write(
++            root,
++            'agents/roadmaps/road-to-level-four.md',
++            [
++                '# Road to level four',
++                '',
++                '## Phase 1',
++                '',
++                '- [ ] **1.1 An open step, unrelated.**',
++                '#### A level-4 subsection',
++                '',
++                'Prose here mentions `past_subheading`, but a level-4 heading already ended the step above.',
++            ].join('\n'),
++        );
++        const { modules } = analyseModuleReach(root);
++        const m = modules.find((x) => x.name === 'past_subheading');
++        // Must NOT read as `open-or-deferred-step` evidence for the 1.1 step —
++        // a level-4 heading has to reset the tracker exactly as 1-3 do.
++        expect(m?.group).not.toBe('open-or-deferred-step');
++    });
++
+     it('group 3 — named in a parked (later/) roadmap counts too', () => {
+         const root = fixtureRoot();
+         unreferencedFixture(root, 'parked_mention');

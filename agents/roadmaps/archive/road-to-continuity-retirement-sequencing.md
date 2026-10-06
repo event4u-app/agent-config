@@ -168,6 +168,21 @@ was incomplete. The finding is recorded rather than quietly dropped.
       `src/scripts/handoff_context_hook.ts`, with seven cases in
       `tests/scripts/handoff_context_hook.test.ts` — `startup`, `clear`,
       `compact`, an absent source, `resume`, `fork` and an unrecognised one.
+      **Reopened and corrected 2026-10-06 — the `compact` claim above did not
+      hold.** The cited seven cases exercise only the PROSE handoff
+      (`handoff-context.md`); none routes through `resolveContinuityRecord`,
+      so none could have caught the 2026-09-09 council's resolver rule
+      ("own record. NEVER read") contradicting this step's claim that
+      `compact` "re-injects this session's own record." A 2/2 council
+      (`agents/evidence/council/compact-resume-2026-10.md`) resolved the
+      contradiction: `compact` injects NOTHING for the recycle-envelope
+      record — neither the reader's own nor an arbitrary foreign one — until
+      a real predecessor-identity signal exists; a non-own session id proves
+      only difference, not lineage. The claim stands unedited above as the
+      historical record of what this step believed; the behaviour it
+      describes for `compact` and the recycle-envelope record is superseded.
+      The prose-handoff half of this step (and of `sourceGate`) is unaffected
+      and still correct.
       The gate runs BEFORE either consumer, and that placement is the part
       worth reviewing rather than the table of sources: both consumers move
       their file aside on every non-absent outcome, so a gate placed inside one

@@ -14,7 +14,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 import { SHADOW_LOG } from '../../src/scripts/hooks/source_first_gate_hook.js';
 import { SHIPPED_TOLERANCE, reconcileValue } from '../../src/scripts/_lib/design_tolerance.js';
-import { buildConformanceReport } from '../../src/scripts/_lib/conformance_report.js';
+import { buildConformanceReport } from './conformance_report.js';
 import {
     CANDIDATE_COLOR_THRESHOLDS,
     CANDIDATE_LENGTH_THRESHOLDS,

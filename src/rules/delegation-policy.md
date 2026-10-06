@@ -69,7 +69,7 @@ primitive → run in-session (clean no-op).
    `subagents.model_ceiling` caps the tier and the slice does not fit, the worker
    **escalates and never silently delivers the degraded result**; the
    orchestrator never raises the ceiling itself, and absent is *uncapped*.
-   [`subagent-boundary § The model ceiling`](../docs/contracts/subagent-boundary.md).
+   `docs/contracts/subagent-boundary.md` § The model ceiling.
 3. **Dispatch** via the form gate + matching `subagent-orchestration` mode
    (independent → do-in-parallel; ordered → do-in-steps; risk/correctness →
    + judge; UI-heavy → live-app judge, efficacy-gated).
@@ -116,6 +116,6 @@ on hosts without hook slots. Per-carrier detail and what each one verifies:
 ## See also
 
 - [`subagent-orchestration`](../skills/subagent-orchestration/SKILL.md) — the form gate + 9 modes this selects.
-- [`subagent-boundary`](../docs/contracts/subagent-boundary.md) — what a subagent owns vs never owns (task-meaning, memory, pack-surface, safety-floor bypass).
+- `docs/contracts/subagent-boundary.md` — what a subagent owns vs never owns (task-meaning, memory, pack-surface, safety-floor bypass).
 - [`auto-orchestration-activation`](../contexts/execution/auto-orchestration-activation.md) — the gate.
 - [`reasoning-orchestrator`](../skills/reasoning-orchestrator/SKILL.md) — RDP dispatch, now gated here.

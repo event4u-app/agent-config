@@ -29,15 +29,23 @@ import * as path from 'node:path';
 export const CLI_CALLS_ATTRIBUTION_SUFFIX = '.attribution.json';
 
 /**
- * Who booked a call. Enumerated because the consumer set is closed: exactly two
- * files in the tree construct a `CliClient`.
+ * Who booked a call. Enumerated because the consumer set is closed: exactly
+ * three files in the tree construct a `CliClient`.
  *
- * `unknown` is a FINDING when it appears — it means a third booking path exists
- * that this enumeration does not know about. That is how the test suite was
- * caught spending the operator's live budget.
+ * `unknown` is a FINDING when it appears — it means a booking path exists that
+ * this enumeration does not know about. That is how the test suite was caught
+ * spending the operator's live budget.
  */
 export const CLI_CONSUMER_COUNCIL = 'council';
 export const CLI_CONSUMER_TEAM = 'team';
+/**
+ * The dogfooded self-review gate. Third because `self_review_gate.ts` is
+ * CLI-first since this constant was added: the subscription transport is tried
+ * before the API one, so a local or self-hosted run books here rather than
+ * spending API credit. A hosted CI runner has no vendor CLI on PATH and falls
+ * through to the API transport, which books nothing against this counter.
+ */
+export const CLI_CONSUMER_SELF_REVIEW = 'self-review';
 export const CLI_CONSUMER_UNKNOWN = 'unknown';
 
 /**

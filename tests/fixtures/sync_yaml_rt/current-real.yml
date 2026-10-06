@@ -146,7 +146,8 @@ subagents:
   judge_model: ""
 
   # Maximum number of parallel subagent invocations
-  # Integer, default 3. Set to 1 to serialize. Hard cap enforced by runtime.
+  # Integer, default 3. Set to 1 to serialize. A limit the model reads
+  # from settings — no code counts spawns against it.
   max_parallel: 3
 
 # --- AI Council (external second-opinion network) ---

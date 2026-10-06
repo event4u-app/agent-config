@@ -206,7 +206,7 @@ Backstop grep — skip/xfail added to chase green (a hit in a diff that also "fi
 rg -n '\b(it|test|describe)\.skip\b|\.only\b|xit\(|xdescribe\(|@pytest\.mark\.(skip|xfail)|@Disabled|->markTestSkipped\(' .
 ```
 
-This is the test-surface instance of the `autonomous-execution` N=3 / allowlist-growth antipattern (bulk `skip`/`xfail` to force green counts as the tool being wrong, not the content) and the `verify-before-complete` floor (green must be *earned*, not manufactured).
+This is the test-surface instance of the `autonomous-execution` allowlist-growth antipattern (bulk `skip`/`xfail` to force green counts as the tool being wrong, not the content) and the `verify-before-complete` floor (green must be *earned*, not manufactured).
 
 ### The named smells — canonical vocabulary, and what it does NOT cover
 

@@ -33,7 +33,7 @@ capability_gap: >-
 ---
 # Road to adversarial verification and long runs
 
-> **Arrivals (auto-merge setting):** 2 (at least) - latest `inbox-2026-10-a`
+> **Arrivals (auto-merge setting):** 3 (at least) - latest `inbox-2026-10-e` (2026-10-06): two release reviews again read the live `allow_auto_merge: true` (enabled by #2114) as contrary to the standing instruction; the owner question below is still unanswered. The count before it read: 2 (at least) - latest `inbox-2026-10-a`
 > (2026-10-01), where two of sixteen release reviews read the repository's
 > `allow_auto_merge: true` — enabled by this file's 2026-09-30 run to satisfy
 > `auto_merge_available` — as contrary to a standing owner instruction that GitHub
@@ -1291,6 +1291,35 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       would weaken a safety floor to close a cosmetic three-character occurrence. The remaining
       distance is a stale string in a mechanics link label, not a live cap: the obligation this
       criterion protects is already satisfied everywhere the bound binds. -->
+      **Six shipped lines this criterion's recorded reading missed (2026-10-06,
+      `road-to-signals-that-mean-what-they-say` 2.3-2.4).** `T3`'s offender set covers
+      `src/rules`, but six lines **outside** that scope still named a literal `N=3` and
+      still stopped or asked at three, not at the rule's `execution.fix_loop_max` ladder:
+      `src/skills/git-workflow/SKILL.md:139`, `src/scripts/hooks/push_settle_hook.ts:198-200`,
+      `src/agent-src/contexts/communication/rules-auto/think-before-action-mechanics.md:86`
+      and `token-efficiency-mechanics.md:57-58`, `src/rules/context-hygiene.md`'s 3-Failure
+      Rule (54-58, which conflated the rule's within-strategy 3-attempt band with its own
+      3-failed-*strategies* trigger), and `src/skills/analysis-autonomous-mode/SKILL.md:112`.
+      All six now say what the rule says: a count triggers a strategy shift, never a stop or
+      an ask — the push-settle line kept its one legitimate branch (blocked on a user
+      decision) as the sole halt. 18 further lines plus one wrapped citation across `src/`
+      that named `autonomous-execution` alongside a stale `N=3` were corrected to cite
+      `execution.fix_loop_max` and its ladder instead.
+      **What that pass deliberately left alone** — not this criterion's scope: two contract
+      pages that attribute a *different* module's own number to the rule
+      (`docs/contracts/implement-ticket-flow.md:366` repeats the work engine's `SELF_FIX_CEILING`
+      attribution; `docs/contracts/settings-classes.md:585` gives the same attribution to
+      `ai_team.review_gate.max_consecutive_blocks`) — contract pages are not a lightweight
+      roadmap's to edit — and the other lines under `src/` that pair `N=3` with a halt word
+      without naming `autonomous-execution` on the same line (e.g.
+      `src/domains/git/pr/merge/command.md:254-261`,
+      `src/agent-src/contexts/execution/roadmap-execution-contract.md:90,248`,
+      `roadmap-process-loop.md:481`, `subagent-spawn-contract.md:61`,
+      `src/domains/product-basic/roadmap/process-full/command.md:61,269,296`,
+      `src/domains/product-basic/roadmap/next/command.md:259,323`,
+      `src/domains/gtm-marketing/humanize/command.md:104`) — a larger surface this
+      criterion's own `T3` fixture does not scope to, left for a future reading rather than
+      swept in unannounced.
       <!-- verify: grep -rln 'N=3' src/rules -->
 - [x] AC-5 — `agent-config doctor --json` reports every `forge_protection` row true on this
       repository.
@@ -1610,3 +1639,12 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       decorative. Neutralising the ladder's wall-clock branch reds this fixture's halt case
       (plus one pre-existing T7/T8 case that pins the same branch) and nothing else. -->
       <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
+
+> **2026-10-06 note (road-to-modules-that-something-calls.md Phase 2.3).** Seven
+> modules this roadmap's ticked steps or criteria name — `authority_path`,
+> `cascade_base`, `council_transport`, `delivery_ready`, `rides_along`,
+> `test_provenance`, `typed_op_watch` — carry no production caller; each was
+> landed to satisfy a closed step or criterion above, not to be run. Read
+> against the current tree in `agents/evidence/analysis/module-reach-2026-10.md`.
+> No step, criterion, or decision above is edited by that reading or by this
+> note — it is handed to this roadmap's own future work, not decided here.

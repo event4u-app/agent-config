@@ -136,7 +136,7 @@ legitimate — **ending the turn silently on one is not**.
 `ci_settle` non-zero → read only the failing part
 (`gh run view --job <id> --log-failed | grep -E '×|FAIL|Error'`), fix, push
 again; the author of the red is irrelevant (`fix-what-you-see`). Three failed
-attempts on one target → stop and surface them (`autonomous-execution` N=3).
+attempts on one target trigger `autonomous-execution`'s mandatory strategy shift.
 Exit `2` is **not** a verdict — the wait timed out or the API could not be read.
 Counts, carrier limits and the honest cost:
 [`references/push-closes-its-loop.md`](references/push-closes-its-loop.md).

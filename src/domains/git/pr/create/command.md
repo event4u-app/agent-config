@@ -500,7 +500,8 @@ turns on `gh pr checks` every minute is the tool-loop
    untracked-`dist/` cases). When local and CI disagree, CI is authoritative.
 3. **Fix, then re-verify locally** with the narrowest command that proves the
    target green.
-4. **Bounded at N=3 per failing target** ([`autonomous-execution`](../rules/autonomous-execution.md)).
+4. **Bounded by the `execution.fix_loop_max` budget (default 10) and its
+   ladder, per failing target** ([`autonomous-execution`](../rules/autonomous-execution.md)).
    Same failure signature twice → the hypothesis is wrong; change approach
    rather than spending the third attempt on a near-identical retry.
 5. **The push stays gated — and a fix-the-CI instruction IS the gate being

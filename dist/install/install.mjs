@@ -7371,7 +7371,7 @@ var require_dist = __commonJS({
 import { spawn, spawnSync as spawnSync2 } from "node:child_process";
 import * as crypto5 from "node:crypto";
 import * as fs33 from "node:fs";
-import * as os11 from "node:os";
+import * as os12 from "node:os";
 import * as path32 from "node:path";
 import process4 from "node:process";
 import { fileURLToPath as fileURLToPath9, pathToFileURL as pathToFileURL2 } from "node:url";
@@ -9741,6 +9741,14 @@ function expanduser6(p) {
   }
   return p;
 }
+function expanduser_at(p, home) {
+  if (home === void 0 || home === null || home === "") return expanduser6(p);
+  if (p === "~") return home;
+  if (p.startsWith("~/") || process.platform === "win32" && p.startsWith("~\\")) {
+    return path11.join(home, p.slice(2));
+  }
+  return p;
+}
 function resolve_path(p) {
   try {
     return fs12.realpathSync(p);
@@ -10154,6 +10162,27 @@ function recorded_rel_files(tool_id, anchor, inventory) {
     return /* @__PURE__ */ new Set();
   }
   return new Set(files.filter((f) => typeof f === "string"));
+}
+function recorded_absolute_files(inventory, home) {
+  const inv = inventory ?? load_inventory();
+  const tools = inv["tools"] ?? {};
+  const out = /* @__PURE__ */ new Set();
+  if (typeof tools !== "object" || tools === null || Array.isArray(tools)) return out;
+  for (const entry of Object.values(tools)) {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) continue;
+    const e = entry;
+    const anchor = e["anchor"];
+    const files = e["files"];
+    if (typeof anchor !== "string" || !Array.isArray(files)) continue;
+    const expanded = expanduser_at(anchor, home);
+    for (const rel of files) {
+      if (typeof rel !== "string") continue;
+      const lexical = path11.resolve(expanded, rel);
+      out.add(lexical);
+      out.add(resolve_path(lexical));
+    }
+  }
+  return out;
 }
 function sorted_strings(items) {
   return items.filter((i) => typeof i === "string").sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
@@ -12391,10 +12420,11 @@ function rewriteClaudeRules(rulesDir, preserved = /* @__PURE__ */ new Set()) {
 // src/install/installThinLayer.ts
 import * as fs28 from "node:fs";
 import * as path27 from "node:path";
-import * as os10 from "node:os";
+import * as os11 from "node:os";
 
 // src/scripts/_lib/installed_layer.ts
 import * as fs25 from "node:fs";
+import * as os10 from "node:os";
 import * as path24 from "node:path";
 import { fileURLToPath as fileURLToPath5 } from "node:url";
 
@@ -12477,7 +12507,12 @@ function lawText(body) {
 var TOP_FILES = 20;
 var LIMIT_WARN_FRACTION = 0.8;
 function isUnconditional(text) {
-  return !/^paths:/m.test(text);
+  const [frontmatter] = splitFrontmatter(text);
+  const emptyBlock = /^---\n---(\n|$)/.test(text);
+  if (frontmatter === "" && !emptyBlock && /^\uFEFF?[\s]*---/.test(text)) {
+    return !/^paths:/m.test(text);
+  }
+  return !/^paths:/m.test(frontmatter);
 }
 function readLayer(host, scope, dir, recorded) {
   const empty = {
@@ -12488,6 +12523,8 @@ function readLayer(host, scope, dir, recorded) {
     foreign: 0,
     package_owned_chars: 0,
     foreign_chars: 0,
+    unconditional_chars: 0,
+    scoped_chars: 0,
     top: []
   };
   let names;
@@ -12533,6 +12570,8 @@ function readLayer(host, scope, dir, recorded) {
     foreign: readings.filter((r) => !r.package_owned).length,
     package_owned_chars: readings.reduce((n, r) => n + (r.package_owned ? r.chars : 0), 0),
     foreign_chars: readings.reduce((n, r) => n + (r.package_owned ? 0 : r.chars), 0),
+    unconditional_chars: readings.reduce((n, r) => n + (r.unconditional ? r.chars : 0), 0),
+    scoped_chars: readings.reduce((n, r) => n + (r.unconditional ? 0 : r.chars), 0),
     top
   };
 }
@@ -12597,6 +12636,89 @@ function buildHostLimitRows(layers, limits) {
     });
   }
   return rows;
+}
+function defaultInventoryPath(home) {
+  if (home === void 0 || home === null || home === "") return inventory_path();
+  try {
+    const real = (q) => {
+      try {
+        return fs25.realpathSync(q);
+      } catch {
+        return path24.resolve(q);
+      }
+    };
+    const mine = os10.homedir();
+    if (path24.resolve(home) === path24.resolve(mine) || real(home) === real(mine)) {
+      return inventory_path();
+    }
+  } catch {
+  }
+  return path24.join(home, DEFAULT_EVENT4U_ROOT_RELATIVE, INVENTORY_BASENAME);
+}
+function resolveLayerOwnership(opts) {
+  const recorded = /* @__PURE__ */ new Map();
+  const sources = [];
+  if (opts.inventoryPath !== null) {
+    let n = 0;
+    try {
+      const inv = load_inventory(opts.inventoryPath ?? defaultInventoryPath(opts.home));
+      for (const abs of recorded_absolute_files(inv, opts.home ?? null)) {
+        if (!recorded.has(abs)) n += 1;
+        recorded.set(abs, null);
+      }
+    } catch {
+    }
+    if (n > 0) sources.push("global-inventory");
+  }
+  let fromDeploy = 0;
+  for (const [anchor, rels] of opts.thisDeploy ?? /* @__PURE__ */ new Map()) {
+    for (const rel of rels) {
+      const abs = path24.resolve(anchor, rel);
+      if (!recorded.has(abs)) fromDeploy += 1;
+      recorded.set(abs, null);
+      try {
+        recorded.set(fs25.realpathSync(abs), null);
+      } catch {
+      }
+    }
+  }
+  if (fromDeploy > 0) sources.push("this-deploy");
+  const manifestPath = opts.manifestPath ?? null;
+  if (manifestPath !== null && fs25.existsSync(manifestPath)) {
+    let n = 0;
+    let recordedHashes;
+    try {
+      recordedHashes = readRecordedHashes(manifestPath, opts.projectRoot);
+    } catch {
+      recordedHashes = NO_RECORDED_HASHES;
+    }
+    for (const [abs, hash] of recordedHashes) {
+      n += 1;
+      recorded.set(abs, hash);
+    }
+    if (n > 0) sources.push("manifest");
+  }
+  if (recorded.size === 0) {
+    return { recorded: NO_RECORDED_HASHES, sources: [], source: "none" };
+  }
+  const primary = sources.includes("manifest") ? "manifest" : sources.includes("global-inventory") ? "global-inventory" : "this-deploy";
+  return { recorded, sources, source: primary };
+}
+function ownershipLine(sources) {
+  const list = (Array.isArray(sources) ? sources : [sources]).filter(
+    (s) => s !== "none"
+  );
+  if (list.length === 0) {
+    return "ownership: NO manifest and NO deploy inventory resolved \u2014 every file reads foreign, which is no evidence rather than a finding";
+  }
+  const phrases = {
+    manifest: "the installed-tools manifest",
+    "global-inventory": "the global deploy inventory (deployed-files.json)",
+    "this-deploy": "the file set this install just wrote"
+  };
+  const named = list.map((s) => phrases[s]);
+  const joined = named.length === 1 ? named[0] : `${named.slice(0, -1).join(", ")} and ${named[named.length - 1]}`;
+  return `ownership: read from ${joined}`;
 }
 function renderHostLimitRows(rows) {
   const out = [
@@ -12769,7 +12891,12 @@ function _trigger_hint(fm) {
 function _title(s) {
   return s.replace(/[A-Za-z]+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }
-var THIN_ENTRY_MARKER = "> Routed rule \u2014 load the body on trigger-match.";
+var THIN_ENTRY_MARKER = "> Load the body on a match.";
+var THIN_BODY_POINTER_PREFIX = "Body: ";
+var THIN_BODY_POINTER_RE = (() => {
+  const lit = THIN_BODY_POINTER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`${lit}((?:(?!${lit}).)+\\.md)\\s*$`, "m");
+})();
 var BODY_LINK_PREFIX = "../../dist/agent-src/rules/";
 function absoluteBodyLinkPrefix(packageRoot) {
   return `${path26.join(path26.resolve(packageRoot), "dist", "agent-src", "rules")}${path26.sep}`;
@@ -12781,7 +12908,7 @@ function thin_entry(rule_id, text, bodyLinkPrefix = BODY_LINK_PREFIX) {
   const title = _title(rule_id.replace(/-/g, " "));
   const fires = hint ? ` Fires on: ${hint}.` : "";
   return `## ${title}
-${THIN_ENTRY_MARKER}${fires} ${desc} Body: [\`${rule_id}\`](${bodyLinkPrefix}${rule_id}.md)
+${THIN_ENTRY_MARKER}${fires} ${desc} ${THIN_BODY_POINTER_PREFIX}${bodyLinkPrefix}${rule_id}.md
 `;
 }
 var STUB_LAW_OPEN = "<!-- law: byte-copied from the rule, sha256 ";
@@ -12962,15 +13089,36 @@ function describeThinInstalledLayer(res) {
   }
   return out;
 }
-function installReceiptBudgetLines(packageRoot, home = os10.homedir()) {
+function installReceiptBudgetLines(packageRoot, home = os11.homedir(), opts = {}) {
   try {
-    const recorded = (() => {
-      try {
-        return readRecordedHashes(manifest_path(packageRoot), packageRoot);
-      } catch {
-        return NO_RECORDED_HASHES;
-      }
-    })();
+    const { recorded, sources } = resolveLayerOwnership({
+      manifestPath: opts.manifestPath === void 0 ? manifest_path(packageRoot) : opts.manifestPath,
+      projectRoot: packageRoot,
+      // The same home the layers below are read from — the inventory's
+      // anchor is tilde-relative, so the two must agree or the receipt
+      // measures one install and claims ownership of another.
+      home,
+      // THE RECEIPT IS THE "ASKING PROCESS" CASE, so it names no home
+      // here. It runs inside the install that WROTE the inventory, and
+      // that writer resolves the path through `inventory_path()` —
+      // honouring `AGENT_CONFIG_DEPLOY_INVENTORY`, which names a FILE
+      // rather than a home, and `EVENT4U_CONFIG_HOME`. Passing `home`
+      // would take `defaultInventoryPath`'s stated-home branch and read
+      // `<home>/.event4u/...`, a file nothing wrote under either
+      // override, and the inventory evidence would be silently lost.
+      // UNDEFINED IS LEFT UNDEFINED so `resolveLayerOwnership` applies
+      // `defaultInventoryPath(home)` — the SAME resolution the report
+      // uses. Hardcoding `inventory_path()` here made the two readers
+      // step 1.2 exists to reconcile disagree for any home that is not
+      // the asking process's: the receipt read one install's inventory
+      // and then expanded its tilde-relative anchors against the OTHER
+      // home, which is the cross-home misattribution two docstrings in
+      // the resolver forbid. `defaultInventoryPath` already returns
+      // `inventory_path()` when the stated home IS this process's, which
+      // is the case that motivated the hardcode.
+      inventoryPath: opts.inventoryPath,
+      thisDeploy: opts.thisDeploy
+    });
     const layers = [];
     for (const host of Object.keys(GLOBAL_RULE_DIRS).sort()) {
       const dir = globalRuleLayerPath(host, home);
@@ -12978,7 +13126,8 @@ function installReceiptBudgetLines(packageRoot, home = os10.homedir()) {
       layers.push(readLayer(host, "global", dir, recorded));
     }
     const rows = buildHostLimitRows(layers, loadHostInstructionLimits());
-    return rows.length === 0 ? [] : renderHostLimitRows(rows).map((l) => `  ${l}`);
+    if (rows.length === 0) return [];
+    return [`  ${ownershipLine(sources)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
   } catch {
     return [];
   }
@@ -17704,7 +17853,7 @@ var settingsSchema = external_exports.object({
       "Session-wide model CEILING for subagents (spend cap). Empty (default) = no ceiling. When set, suite-owned CLI spawn wrappers export CLAUDE_CODE_SUBAGENT_MODEL to the sessions they launch. Class C: a human sets it; the agent never writes or infers one."
     ),
     max_parallel: external_exports.number().int().min(1).default(3).describe(
-      "Hard cap on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. Raise for faster fan-out, lower if you hit rate limits or want lower token spend."
+      "Limit on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs \u2014 a value the model reads from settings; no code counts spawns against it. Raise for faster fan-out, lower if you hit rate limits or want lower token spend."
     ),
     adversarial_council: external_exports.enum(["off", "ask", "on"]).default("off").describe(
       "Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only \u2014 a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed."
@@ -20129,7 +20278,7 @@ var SCOPE_DETECT_AI_DIRS = [
 ];
 
 // src/install/paths.ts
-import { homedir as homedir13, tmpdir } from "node:os";
+import { homedir as homedir14, tmpdir } from "node:os";
 import { join as join33 } from "node:path";
 var INSTALL_ROOT_SUBPATH = ".event4u/agent-config";
 var INSTALL_LOG_FILENAME = "install-log.jsonl";
@@ -20137,7 +20286,7 @@ function resolveHome(home) {
   if (home && home.length > 0) {
     return home;
   }
-  const fromOs = homedir13();
+  const fromOs = homedir14();
   if (!fromOs) {
     throw new Error(
       "Cannot resolve home directory \u2014 both $HOME (POSIX) and $USERPROFILE (Windows) are unset."
@@ -20242,9 +20391,9 @@ var ArgparseExit2 = class extends Error {
   code;
 };
 function expanduser8(p) {
-  if (p === "~") return os11.homedir();
+  if (p === "~") return os12.homedir();
   if (p.startsWith("~/") || p.startsWith("~\\")) {
-    return path32.join(os11.homedir(), p.slice(2));
+    return path32.join(os12.homedir(), p.slice(2));
   }
   return p;
 }
@@ -20780,7 +20929,7 @@ function ensure_augment_bridge(project_root, force) {
     ".augment/settings.json"
   );
 }
-var AUGMENT_USER_DIR = path32.join(os11.homedir(), ".augment");
+var AUGMENT_USER_DIR = path32.join(os12.homedir(), ".augment");
 var AUGMENT_USER_HOOKS_DIR = path32.join(AUGMENT_USER_DIR, "hooks");
 var AUGMENT_DISPATCHER_TRAMPOLINE = "augment-dispatcher.sh";
 var AUGMENT_LEGACY_TRAMPOLINES = [
@@ -20883,7 +21032,7 @@ function ensure_cursor_bridge(project_root, force) {
     ".cursor/hooks.json"
   );
 }
-var CURSOR_USER_DIR = path32.join(os11.homedir(), ".cursor");
+var CURSOR_USER_DIR = path32.join(os12.homedir(), ".cursor");
 var CURSOR_USER_HOOKS_DIR = path32.join(CURSOR_USER_DIR, "hooks");
 var CURSOR_DISPATCHER_TRAMPOLINE = "cursor-dispatcher.sh";
 function ensure_cursor_user_hooks(package_root, force) {
@@ -20967,7 +21116,7 @@ function ensure_cline_bridge(project_root, force) {
     skip(".clinerules/hooks/ already up to date");
   }
 }
-var CLINE_USER_DIR = path32.join(os11.homedir(), "Documents", "Cline", "Hooks");
+var CLINE_USER_DIR = path32.join(os12.homedir(), "Documents", "Cline", "Hooks");
 var CLINE_DISPATCHER_TRAMPOLINE = "cline-dispatcher.sh";
 function ensure_cline_user_hooks(package_root, force) {
   const src = path32.join(package_root, "scripts", "hooks", CLINE_DISPATCHER_TRAMPOLINE);
@@ -21019,7 +21168,7 @@ function ensure_windsurf_bridge(project_root, force) {
     ".windsurf/hooks.json"
   );
 }
-var WINDSURF_USER_DIR = path32.join(os11.homedir(), ".codeium", "windsurf");
+var WINDSURF_USER_DIR = path32.join(os12.homedir(), ".codeium", "windsurf");
 var WINDSURF_USER_HOOKS_DIR = path32.join(WINDSURF_USER_DIR, "hooks");
 var WINDSURF_DISPATCHER_TRAMPOLINE = "windsurf-dispatcher.sh";
 function ensure_windsurf_user_hooks(package_root, force) {
@@ -21075,7 +21224,7 @@ function ensure_gemini_bridge(project_root, force) {
     ".gemini/settings.json"
   );
 }
-var GEMINI_USER_DIR = path32.join(os11.homedir(), ".gemini");
+var GEMINI_USER_DIR = path32.join(os12.homedir(), ".gemini");
 var GEMINI_USER_HOOKS_DIR = path32.join(GEMINI_USER_DIR, "hooks");
 var GEMINI_DISPATCHER_TRAMPOLINE = "gemini-dispatcher.sh";
 function ensure_gemini_user_hooks(package_root, force) {
@@ -21566,7 +21715,7 @@ To remove this marker, delete this file.
 `;
 }
 var _CLAUDE_DESKTOP_BUNDLES_SUBPATH = "claude-desktop/bundles";
-var GLOBAL_ROOT = path32.join(os11.homedir(), ".event4u", "agent-config");
+var GLOBAL_ROOT = path32.join(os12.homedir(), ".event4u", "agent-config");
 var GLOBAL_USER_SETTINGS_PATH = path32.join(GLOBAL_ROOT, ".agent-user.yml");
 var GLOBAL_AGENT_SETTINGS_PATH = path32.join(GLOBAL_ROOT, ".agent-settings.yml");
 function _bridge_marker(tool_id, scope) {
@@ -21954,7 +22103,7 @@ function _run_migrate_to_global(project_root) {
   }
 }
 function _format_global_root_for_marker(global_root) {
-  const home = resolvePath(os11.homedir());
+  const home = resolvePath(os12.homedir());
   const resolved = resolvePath(global_root);
   const rel = path32.relative(home, resolved);
   if (rel === "" || rel.startsWith("..") || path32.isAbsolute(rel)) {
@@ -22332,7 +22481,7 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
           warn(`claude-code: thinned rule layer not written \u2014 ${String(e)}`);
         }
       }
-      if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root)) info(l);
+      if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root, void 0, { thisDeploy: /* @__PURE__ */ new Map([[anchor, current_files]]) })) info(l);
     }
     const missing_targets = _verify_deploy_targets(anchor, plan);
     if (missing_targets.length > 0) {
@@ -23238,7 +23387,7 @@ function _wizard_cli_dist(_project_root) {
   return pathExists(cli) ? cli : null;
 }
 function _server_info_path() {
-  return path32.join(os11.homedir(), ".event4u", "agent-config", "local-server.json");
+  return path32.join(os12.homedir(), ".event4u", "agent-config", "local-server.json");
 }
 function _pid_is_agent_config(pid) {
   let res;
@@ -23334,7 +23483,7 @@ function _wizard_spawn(project_root, pass_project_root = true) {
 function _wizard_run_sync(cmd, env, cli) {
   const total = _WIZARD_TIMEOUTS.reduce((a, b) => a + b, 0);
   const log_path = path32.join(
-    os11.tmpdir(),
+    os12.tmpdir(),
     `agent-config-wizard-${process4.pid}-${Date.now()}.log`
   );
   let child;

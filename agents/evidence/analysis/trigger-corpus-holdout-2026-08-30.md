@@ -60,7 +60,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  afcf4824a43a3948d20ba6f913a7d72ff5910a4c1e9a6b7c2f677f829e96e03a
+SET-SHA256  64b98d14fd6192449624946825a01b6b6da9fc8fc31429cf927dd25c89f32b48
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -238,6 +238,15 @@ no count is written down here.
 > stays scoped to the 18 rows sealed on 2026-08-30, for the reason the 19th row
 > already established: a row authored today predates nothing.
 
+> **24 -> 25 on 2026-10-06** (`road-to-signals-that-mean-what-they-say`).
+> `testing-anti-patterns` gained a corpus for the touched-skill reason: the
+> lane's CI-fix pass edited that skill's placement citation and
+> `check_routing_coverage` requires every touched skill to carry one.
+> `sha256('testing-anti-patterns')[0:2]` is 0x29 = 41, below the ceiling of 51,
+> so it seals. The ordering claim stays scoped to the 18 rows sealed on
+> 2026-08-30, for the reason the 19th row already established: a row authored
+> today predates nothing.
+
 Sealed means: **no proposer, curator, or analyzer authored in Phase 5 may read
 these files, and no candidate may be selected against them.** Phase 4's cascade
 opens the sealed set for promotion candidates only — decision E7, which is still
@@ -267,6 +276,7 @@ open and which this file does not settle.
 | `skill-improvement-pipeline` | `67e8594b0bbe6427ec2ad12d46e5910345725dd8ab8436b47a1bfa078a173135` |
 | `tailwind-engineer` | `7b925bfdaca4a4f315bea04c1ae63a9a98a4e6766d7ce951a7c1c56fbd2e5014` |
 | `test-performance` | `67d425384f8507688fdbe18d18d8235fa3dcf7fd1e2d4213a8e581f27fd80152` |
+| `testing-anti-patterns` | `66240715be7873af8ae59d00c416bd048e9699672ea00d0a604957fd6b6d8762` |
 | `threat-modeling` | `6bdb1d3b44939ac8f6ba78bb6145ca3bea91adb50991cd44bd700987adf903f2` |
 | `worktree-lifecycle` | `1cdde59eaaadc1cb7dfa1cd86d9852326c352a7dcd884dbcbaa414f36d176326` |
 
@@ -286,6 +296,19 @@ open and which this file does not settle.
 > exercises the guard-beats-primary ordering, so that property was moved onto
 > chosen inputs in `routing_signal_measurement.test.ts` rather than left
 > resting on a corpus that keeps growing. No bar was edited.
+
+> **+1 on 2026-10-06** (`road-to-signals-that-mean-what-they-say`). `git-workflow`
+> gained a corpus for the touched-skill reason: the lane's CI-fix pass added a
+> one-line citation to that skill's body and `check_routing_coverage` requires
+> every touched skill to carry one. `sha256('git-workflow')[0:2]` is 0x37 = 55,
+> above the ceiling of 51, so it is **train**: no holdout row moves from this
+> addition (the sealed set moves separately, from `testing-anti-patterns`,
+> above). `SET-SHA256` moves because it is computed over ALL rows —
+> `afcf4824…` -> `64b98d14…`. Both train-side published measurements are
+> re-taken in the same change: delta-recall moved 4.608 -> 4.338 pp (still
+> below the 5.0 pp bar) and delta-false-activation moved 6.557 -> 6.729 pp
+> (still above the 2.0 pp guard). The verdict is unchanged in kind — `harmful`,
+> on the same false-activation guard it already failed. No bar was edited.
 
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|
@@ -329,6 +352,7 @@ open and which this file does not settle.
 | `forensics-report` | `ae4a0a37cd21eeb99b798839d99195e580dbd5bdb017642ace5e462db0593234` |
 | `frontend-render-security` | `a881e51be1fb62289f71f02ae53177629734e23e5fd5aa3a4a43c972fb23b7f1` |
 | `gated-reach` | `8d39468e75ff725b8e4454fc3a783c2490447ac3f8658ec91e62dbc48352c8a1` |
+| `git-workflow` | `508cdaa8fac1ca9fe1da6934db8a6e1496fc6c46b39dd19ef068b752966b271d` |
 | `history-design` | `50825f6db0683e20a9c16c6a190b52e197caa9a8f20ea85dfa1f6294e70f5145` |
 | `html-deck` | `6bad648f124ea1af4c39f9af19f3fedfb077edc595d63816a8abcf450d2be35d` |
 | `humanizer` | `76c89f2ed3146d11d0f08c97d2595b60b35c1c912ad5c8c9707c0799c52dd221` |

@@ -74,7 +74,8 @@ STATICALLY CHECKED AND SAY SO. NEVER "LOOKS GOOD" WITH NOTHING BEHIND IT.
 The verdict is gated on evidence, not on having run a skill:
 
 - **Render capability present** (Playwright MCP, Chrome DevTools, or a live
-  preview URL) → the [design-artifact verification checklist](../docs/contracts/design-artifact-verification.md#verification-checklist)
+  preview URL) → the design-artifact verification checklist
+  (`docs/contracts/design-artifact-verification.md` § Verification checklist)
   steps 1–5. A UI task does not pass without render evidence.
 - **Render capability absent** → the verdict is **scoped to the static checks
   that actually ran** and says which those were. This is not a downgrade to be
@@ -136,7 +137,7 @@ three `platforms:` rows that carry a `pre_tool_use` key — augment, claude,
 cowork (**clarified 2026-08-17**: "hosts carrying a slot" read as a host
 property and is a manifest one; three further hosts alias a native pre-tool
 event with no binding, and only claude honours a deny — see
-[`hook-architecture-v1 § Which hosts carry pre_tool_use`](../docs/contracts/hook-architecture-v1.md)).
+`docs/contracts/hook-architecture-v1.md` § Which hosts carry pre_tool_use).
 The verdict is unchanged either way: a nudge that can be ignored is not
 enforcement, so `enforced_by:` stays `none` — it moves the day a mechanism can
 refuse, not the day a reminder appears. `agent-config hooks:status` answers
