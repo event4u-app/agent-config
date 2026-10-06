@@ -1,6 +1,12 @@
 {
   "$comment": "Violation ratchet for gates whose dead scan root was repaired. A repair REVEALS pre-existing debt; it does not create it. Each entry records the count revealed at repair time — the gate fails only when its count RISES. Lowering a count is a normal commit; raising one is a defect. Entries expire: a baseline that has not dropped within 56 days of `landed` (or of `reaffirmed.date`) fails its gate, because a number that never moves is suppression with extra steps. Mechanism + rationale: src/scripts/_lib/gate_baseline.ts. Decision: AI council 2026-08-02, roadmap road-to-gates-that-can-fail blocker `dead-gate-finding-triage`.",
   "gates": {
+    "lint_blocker_citations": {
+      "count": 10,
+      "landed": "2026-10-06",
+      "falsifier": "./scripts-run src/scripts/lint_blocker_citations  # lists every miss; it fails when the count RISES above this entry",
+      "note": "Blocker citations (`path:line`) in the `## Blockers` section of active roadmaps and stubs whose file does not resolve, measured on main @ adaad0aa2 when the lint landed (road-to-parked-blockers-that-get-asked step 5.1, decision D3). All 10 are a bare basename or a partial path (`chairman.ts:71-76`, `archive/road-to-session-closeout.md:182`) that resolves neither from the repository root nor from the citing roadmap's directory; none is a line beyond the end of an existing file. A ratchet rather than a hard fail because line citations drift with every edit above them, so an existing miss is drift rather than a new defect. Each one clears by writing the citation repository-relative, or deleting it when its target is gone; the count only falls."
+    },
     "check_claims:non-inference": {
       "count": 40,
       "landed": "2026-08-26",
