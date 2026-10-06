@@ -139,7 +139,7 @@ At `df377ca64`:
   the self-repair line and whose null route is "promotion stays manual"
   (`agents/roadmaps/later/road-to-ac-deep-capabilities.md:163-192`); the
   programme's kill register parks "Causal self-improvement with automated
-  promotion" on it (`agents/roadmaps/road-to-leading-every-row.md:231`).
+  promotion" on it (`agents/roadmaps/archive/road-to-leading-every-row.md:231`).
 - **Shipped sentences say the opposite of the decision.** "Kernel rules are
   **immutable**" (`src/agent-src/templates/AGENTS.md:17`); "kernel rules are
   immutable, never propose an edit" (`docs/threat-model.md:44-45`); "no loop
