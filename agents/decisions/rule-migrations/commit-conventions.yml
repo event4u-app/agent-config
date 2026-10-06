@@ -27,8 +27,8 @@ rows:
     reason: "the ten-row type table was reshaped into the ten-item intent list under step 1, with per-type prose in the php git guideline"
   - heading: "Scope"
     disposition: carried
-    target: "src/skills/conventional-commits-writing/SKILL.md#3. Choose scope"
-    reason: "Jira-ticket-as-scope, module names and the only-if-it-helps optionality all survive verbatim in the step"
+    target: "src/skills/conventional-commits-writing/SKILL.md#3. Place the ticket, then choose the scope"
+    reason: "Jira-ticket-as-scope survives as the default git.commit_format: ticket-scope row; module names and the only-if-it-helps optionality survive in the step"
   - heading: "Breaking changes"
     disposition: carried
     target: "src/skills/conventional-commits-writing/SKILL.md#5. Check for breaking change"
