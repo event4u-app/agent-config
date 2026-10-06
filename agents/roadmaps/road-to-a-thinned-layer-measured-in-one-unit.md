@@ -133,7 +133,7 @@ on the user-global layer.
       and the installer preserved still counts as maintained; the page of 1.4
       says so. The tracked installer bundle is rebuilt.
       verify: `npx vitest run tests/scripts/installed_layer_ownership_fixture.test.ts` -> 0
-- [ ] **1.3 A root-length control.** The same fixture run from two package
+- [x] **1.3 A root-length control.** The same fixture run from two package
       roots whose path lengths differ by 60 characters records both
       unconditional totals; the test asserts they differ by exactly 60 times the
       stub count. The machine dependence becomes a number with a formula.
