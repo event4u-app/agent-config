@@ -149,7 +149,7 @@ Reproduced on 2026-10-01:
       reason for the same choice. And `.mdc` files read as zero, which is the
       blind spot every other census here has; fixing it in one reader would
       produce two counts that disagree.
-- [ ] <!-- blocked-by: instructions-loaded-binding-is-owner-owned | asked: no — a `process-full` drain lane is a non-interactive context with no owner channel; the question is put verbatim in the blocker entry and stays open --> **0.2 Bind the host's instruction-load event as an observer.** Step 3.0 of
+- [-] <!-- cancelled 2026-10-06 by owner answer (D10): moved to step 3.0 of stubs/road-to-instructions-loaded-observer.md --> **0.2 Bind the host's instruction-load event as an observer.** Step 3.0 of
       `stubs/road-to-instructions-loaded-observer.md`, non-blocking, recording
       path, scope and load reason only — never file content. Its first session
       record answers: does a user-layer rule with `paths:` load on a path match;
@@ -946,7 +946,7 @@ local build would make those 13 columns a statement about older code.
 
 ### blocker: instructions-loaded-binding-is-owner-owned
 
-- **Status:** open
+- **Status:** resolved 2026-10-06 — the owner answered **no for this roadmap's Phase 0** via `/roadmap:resolve-blockers` (D10): the binding changes what every consumer's `.claude/settings.json` receives, which a phase titled "Instruments, no behaviour change" cannot carry, and it yields no record before a later session. It travels as step 3.0 of `stubs/road-to-instructions-loaded-observer.md` with the fork 3.1 that reads its datum; step 0.2 here is cancelled by that answer
 - **Owner:** maintainer
 - **Class:** 3
 - **Ownership:** product-owned
@@ -1181,6 +1181,7 @@ local build would make those 13 columns a statement about older code.
   1,505,649 B / 1,550,000 with 1.3-1.7 landed, and the matrix is green at 13
   columns with that case rewritten to the scope assertion plus a twelfth column
   for the user layer and a thirteenth for the compaction restore.
+| D10 | product-owned | owner | step 0.2's `InstructionsLoaded` binding does not land in this roadmap's Phase 0; it travels as step 3.0 of `stubs/road-to-instructions-loaded-observer.md`, together with the fork 3.1 that reads its datum, carrying the council's non-optional kill switch when it does land | owner answer 2026-10-06 to blocker `instructions-loaded-binding-is-owner-owned`; the binding changes every consumer's `.claude/settings.json` (`build_claude_hook_matrix`, `claude_settings_hooks.ts:92`) under a phase titled "Instruments, no behaviour change", and a session cannot observe its own registration | the stub's 3.0 is promoted, or the host exposes instruction loading without a settings-file hook |
 
 ## Decisions
 
