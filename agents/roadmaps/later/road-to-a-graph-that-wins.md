@@ -55,8 +55,19 @@ it is not restated here, so there is one copy of it and it cannot drift.
 
 | Role | Repository | SHA pin | Filled |
 |---|---|---|---|
-| benchmark subject 1 | — | — | — |
-| benchmark subject 2 | — | — | — |
+| benchmark subject 1 | `event4u-app/data-helpers` (public, MIT) | pinned at registration (2.1) | 2026-10-06, owner |
+| benchmark subject 2 | `event4u-app/capisco` — **admissible only once public under MIT**; until then not cloned and no trace tracked | pinned at registration (2.1) | 2026-10-06, owner (conditional) |
+
+**Owner deviations from the fitness list, 2026-10-06** (programme blocker b4 of
+`road-to-leading-every-row`, `/roadmap:resolve-blockers`). Both subjects are the
+owner's own repositories and neither is a Laravel application: `data-helpers` is a
+framework-agnostic PHP package for Laravel and Symfony (PHPUnit tests, no routes or
+migrations), `capisco` a TypeScript runtime. So the route-trace and model → table
+parts of suite C do not apply to these subjects and are measured where a subject
+has them; callers, change impact, tests-for and the agentic suite F apply in full.
+The owner stated that `capisco` will get an MIT licence; until it is public, its
+row is a name and not a subject, because the traces of both arms are tracked in
+this public repository.
 
 A benchmark subject is a **test subject**, not an idea source: ADR-260 § 5 states
 that `source-confidentiality` governs harvest provenance and does not apply here,

@@ -364,7 +364,7 @@ At `df377ca64`:
 ## Blockers
 
 ### blocker: self-modification-directive-reading-confirmed
-- **Status:** open
+- **Status:** open — owner answered (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D10); closes when step 1.1's record lands accepted, which is agent work and no longer a question
 - **Owner:** owner
 - **Blocks:** 1.2, 1.3, 3.1, 3.2, 3.3, 3.4, 4.1, 4.2, 5.1, 5.2, 5.3, 6.1, 6.2
 - **What to do:** pick exactly one — (a) accept the proposed record of step
@@ -385,7 +385,7 @@ At `df377ca64`:
   of the three.
 
 ### blocker: owner-permission-route
-- **Status:** open
+- **Status:** open — owner chose (b) on 2026-10-06 via `/roadmap:resolve-blockers` (D11), with the ask-first condition recorded there; closes when the record of step 1.1 names it and is accepted, which is agent work and no longer a question
 - **Owner:** owner
 - **Blocks:** 5.3
 - **What to do:** pick exactly one, and have the record of step 1.1 name it —
@@ -440,6 +440,8 @@ At `df377ca64`:
 | D7 | reversible-technical | agent | The worked example goes through the five-stage guideline once; the promotion boundary stays with the parked draft | The guideline's own closing criterion was never met; Workstream C names the self-repair line as substrate and is not started | Workstream C is promoted and names a different lane |
 | D8 | product-owned | owner | A passing record permits the change to pass the gate; it does not publish or land it. The parallel proposal's reading that an ordinary council-approved change may open its own pull request without the user's keystroke is not adopted here | ADR-268 § 3: without a grant a run ends open; landing authority is the typed grant's question | The owner grants a standing landing authority for council-passed changes |
 | D9 | deterministic | evidence | The digest covers the source of a gated file only; its projection is covered because `dist/agent-src/` is asserted byte-equal to the rewritten source | ADR-201; the "Verify dist == rewrite(src)" CI step | A gated surface gains a projection that is not a byte-exact rewrite |
+| D10 | product-owned | owner | the directive's reading is (a): the council is the lowest passing rung for the gated surface and for changes the learning lanes originate, with the verdict rule and escalation conditions as drafted in step 1.1; commissioned work keeps its present speed | owner answer 2026-10-06 to blocker `self-modification-directive-reading-confirmed`, options (a) / (b) wider at 22 in 49 commits / (c) gated surface only | the review load on the gated surface or the learning lanes changes materially, or the owner widens the reading |
+| D11 | product-owned | owner | the owner's route past a recorded council non-convergence is (b), the owner's own recorded bypass on the forge — preceded by an ask: on non-convergence, or on the red check it causes, the agent tells the owner at once and asks in-session with options; a yes is then given as the forge act, never as a chat answer, because a chat answer reaches the tree only as text an agent wrote and ADR-268 § 4 forbids an agent ratifying its own increase in power. The contract's two sentences ruling a bypass out are amended for recorded non-convergence only | owner answer 2026-10-06 to blocker `owner-permission-route`: "the user should be informed beforehand or on a failed CI run and be able to instruct the agent locally when it asks — otherwise option 1, if it cannot be done differently"; option (a) needs a place only a person writes, which does not exist at the pin | a place only a person writes exists (the gate-preauth stub's answer), at which point (a) becomes the route that needs no forge act |
 
 ## Kill register
 

@@ -165,7 +165,7 @@ Reproduced on 2026-10-01:
 ## Blockers
 
 ### blocker: default-flip-of-the-installed-layer
-- **Status:** open
+- **Status:** open — owner answered (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D5); closes when the ADR of step 3.3 records (a) with the arrival record it relied on, which waits on that record and the step 2.2 fixture, not on a question
 - **Owner:** owner
 - **Blocks:** 3.1
 - **What to do:** pick exactly one — (a) flip the default for `claude-code`
@@ -189,6 +189,7 @@ Reproduced on 2026-10-01:
 | D2 | contested-technical | council:inbox-2026-10-c-standing-form | Target 65,000, hard 75,000 package-owned standing characters | Both seats; the host limit is shared with the user's own files | The host publishes a different limit or a per-file rule |
 | D3 | reversible-technical | agent | The template value is not consent to thin | The template already says `delivery`; reading it would flip every consumer as a side effect of the resolver fix | — |
 | D4 | product-owned | owner | Whether the default flips | Consumer-facing default change; blocker `default-flip-of-the-installed-layer` | — |
+| D5 | product-owned | owner | the default flips for `claude-code` under option (a): once `agents/evidence/analysis/installed-arrival-*.md` exists for the current host version and the step 2.2 fixture is green, the thinned layer becomes the default; until then it stays opt-in | owner answer 2026-10-06 to blocker `default-flip-of-the-installed-layer`; no `installed-arrival-*.md` existed that day | an arrival record shows the thinned layer losing content a consumer relies on, or the host lifts or moves its limit |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->

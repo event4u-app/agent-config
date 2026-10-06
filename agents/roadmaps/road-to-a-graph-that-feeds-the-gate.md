@@ -171,11 +171,12 @@ refuses.
 | D4 | contested-technical | evidence | no free-text scoring in `graph_node` | `docs/CLAIMS.md:566-572` — free-text retrieval is the row the graph lost | a rerun wins a retrieval class |
 | D6 | deterministic | evidence | the feeder relativises edit paths before the graph sees them, and stores the relativised form | probed at `c58d7eae`: `check_memory.ts` resolves 60 seeds relative, 0 absolute; of 19 path-carrying rows the 18 that reached the graph read `no-seeds` and the 19th was skipped on `behind:0` | the graph gains a resolver that takes absolute paths |
 | D7 | deterministic | evidence | the pre-registration is NOT amended now that its counts are known — the 25/25 design stands and the shortfall is reported against it | the page's own clause: a threshold chosen after the counts is a threshold chosen by the counts | the owner amends it, via `b1` |
+| D8 | product-owned | owner | b1: the positive stratum of the pre-registered corpus is accrued in two consumer repositories whose sessions are ordinary feature work — codenames C1 `ENC1:ldPWJChEkS3FS72jawL6YIevQ7ct3nEFcpiB+jqimF/6kCYTsaj3bHnlyruatJb2d4IpeQwQUY1bsBBHmqcoB9qsCRw05wNlSIvOiLJf0CKg61B5CpxfAWqngXJ34bzmd1JOO2/eWnBPNM3mk1HOD7o=` and C2 `ENC1:cdeCmP5q41+3aCe+e7/lSiKiKWV2Er3iK3myiDIEReGjpCdWQNPgYyZ6IhO3N+2DrgFEQg5zmeJ6e5O3gi6eTLf0uo9QZojiFixYNPMyEKL9EzxQrRjs8AbM0R6ZQHDAYbXnCB94lGhb9Aom1f/iGpI=` (encrypted per `source-confidentiality`; never written in plaintext anywhere in this repository, its commits or its PRs). The pre-registration is not amended | owner answer 2026-10-06 to blocker `b1-labelled-positives-unreachable`; this repository's channel produced 0 positives across 84 rows and 5 sessions | C1 and C2 together produce no positive within a quarter of feature work, or the owner withdraws either repository |
 
 ## Blockers
 
 ### blocker: b1-labelled-positives-unreachable
-- **Status:** open · asked: no — non-interactive drain run; carried in the PR body of the run that opened it
+- **Status:** open — owner chose (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D8): the corpus accrues in two consumer repositories under feature work, codenamed C1 and C2 and recorded only as `ENC1:` tokens in D8; closes when the positive stratum fills there, which is an accrual wait and no longer a question
 - **Ownership:** product-owned
 - **Owner:** user
 - **Blocks:** step 3.3 — Recall on a labelled corpus, published

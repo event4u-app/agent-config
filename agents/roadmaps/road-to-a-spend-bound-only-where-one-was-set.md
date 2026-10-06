@@ -303,7 +303,7 @@ At `df377ca64`:
 ## Blockers
 
 ### blocker: spend-directive-reading-confirmed
-- **Status:** open
+- **Status:** open — owner answered (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D9); closes when step 1.1's record lands accepted, which is agent work and no longer a question
 - **Owner:** owner
 - **Blocks:** 1.3, 2.2, 3.1, 3.2, 3.3, 3.4, 4.2, 4.3
 - **What to do:** pick exactly one — (a) accept the proposed record of step
@@ -348,6 +348,7 @@ At `df377ca64`:
 | D6 | deterministic | evidence | The run text points at the existing `cost.budgets` windows and says the model carries it; no per-run key and no claim of enforcement on a run | Keys that were "configured, documented, surfaced and inert" were deleted for that reason (`settings-classes.md:440-449`); ADR-237: "Nothing mechanical checks any of this"; nothing on a run calls the preflight | A run-scoped check with a code reader is wanted |
 | D8 | deterministic | evidence | The preflight is repaired, because an optional limit that cannot fire is not an option | The fixture's recorded exit is 1 and the script exits 0 (`preflight.mjs:19`) | — |
 | D7 | reversible-technical | agent | An unattended run still needs a budget | `unattended_guard.ts:160-162`: an absent budget "must not read as 'unlimited'"; nobody is present to see the estimate | The council of 1.2, or the owner, reads the directive as covering it |
+| D9 | product-owned | owner | the directive's reading is (a): step 1.1's record supersedes the three clauses as drafted (ADR-230 table row 3 and its rejection of removing the ask; the fixed figure in ADR-237 § 3; absent paid-gate caps refusing) and keeps every control under "What stays, by name" unchanged | owner answer 2026-10-06 to blocker `spend-directive-reading-confirmed`, options (a) as drafted / (b) with named moves | a control kept under "What stays" is found to bound money rather than quota, fan-out or authorisation, or the owner moves one |
 
 ## Kill register
 
