@@ -1,0 +1,1658 @@
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index 9de1d107b37290d581360676c52ff5bb0d3b9fb4..fe8e71682c6f177bb61b282f5e93105b230db18f 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -125,6 +125,31 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
+ 
+ ### Added
+ 
++- **A team's git convention can be declared instead of measured — the new
++  `git:` settings block.** Three Class-C keys, each defaulting to the
++  behaviour every install had before, so an install that sets nothing is
++  unchanged. `git.commit_format: ticket-prefix` writes
++  `DEV-1234 feat(exporter): …` instead of `feat(DEV-1234): …` and treats a
++  ticket in the scope as a wrong subject; `/commit` and `/commit:in-chunks`
++  validate against the regex for the configured format, and the
++  conventional-commits-writing classifier gains a `ticket-conventional` family
++  so such a history is no longer misread as free-text ticket prefixes.
++  `git.branch_pattern` (`{type}`, `{ticket}`, `{slug}`) shapes the branches
++  `/worktree:create` proposes; reading a ticket back out of a branch now matches
++  any `[A-Z][A-Z0-9]+-[0-9]+` token, so `DEV-1234-device-export` yields its
++  ticket. `git.update_strategy: rebase` makes `/create-pr`, `/pr:merge`,
++  `/prepare-for-review` and `/review:changes` propose
++  `git rebase origin/<base>` plus `--force-with-lease` and never merge the base
++  into a feature branch — one git-workflow reference
++  (`references/branch-update.md`) now owns that decision, and
++  `sync_pr_branch` exits `3` instead of merging when such a branch is behind
++  (a current branch still exits `0`). **What it does not do:** the setting picks the operation and never
++  authorises it; git-history-discipline still requires the user's request for
++  every rebase, fixup or autosquash. The keys are set per project — the
++  user-global whitelist is ADR-gated and does not carry them yet — and a
++  commit-linting config in the repository still outranks `git.commit_format`.
++  The merge method is not a key: `/pr:merge` already reads it from the forge.
++
+ - **A push no longer ships a branch whose tree contradicts its own commits.**
+   `check_branch_work_committed` runs first in the pre-push hook, and it exists
+   because this branch produced the defect it guards: a merge-reconciled baseline
+diff --git a/dist/agent-src/commands/commit.md b/dist/agent-src/commands/commit.md
+index e61669d12deb1645bb3192ef5709781518c5baec..48c0cd33204bf091a3016dc746bf2786471c937c 100644
+--- a/dist/agent-src/commands/commit.md
++++ b/dist/agent-src/commands/commit.md
+@@ -57,7 +57,18 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
+ 
+ ### 2. Determine the ticket number
+ 
+-- Extract the ticket ID from the current branch name (e.g. `feat/DEV-1234/...` → `DEV-1234`).
++- Extract the ticket ID from the current branch name — the first token matching
++  `[A-Z][A-Z0-9]+-[0-9]+`, wherever it sits (`feat/DEV-1234/...`,
++  `DEV-1234-device-export`, `fix/DEV-1234-quantity` → `DEV-1234`). The match
++  never depends on `git.branch_pattern`, so a branch named before the pattern
++  was set still yields its ticket. A token whose prefix is `UTF`, `ISO`, `SHA`
++  or `RFC` (`UTF-8`, `ISO-8601`, `SHA-256`) is a standard name, not a ticket —
++  skip it and take the next match.
++- Establish the convention in force once, per the conventional-commits-writing
++  skill § Establish the house convention: a repository config (commitlint, a
++  `commit-msg` hook) first, then a declared `git.commit_format: ticket-prefix`,
++  then an approved measured convention. `git.commit_format` decides where the
++  ticket goes only where nothing above it applies.
+ - If no ticket ID is found in the branch name, ask the user:
+   ```
+   > No Jira ticket found in branch name. Do you want to include one?
+@@ -65,8 +76,12 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
+   > 1. Yes — I'll provide the ticket number
+   > 2. No — skip ticket number
+   ```
+-- If the user provides a ticket number, use it as the scope in all commit messages.
+-- If skipped, omit the scope entirely — write `chore: ...` not `chore(): ...`.
++- If the user provides a ticket number, place it per `git.commit_format` in all
++  commit messages: `ticket-scope` (default) → as the scope, `feat(DEV-1234): …`;
++  `ticket-prefix` → before the type, `DEV-1234 feat(<area>): …`, and the ticket
++  is never the scope.
++- If skipped, omit the ticket entirely — under `ticket-scope` write `chore: ...`
++  not `chore(): ...`; under `ticket-prefix` keep any area scope.
+ 
+ ### 3. Analyze the changes
+ 
+@@ -114,14 +129,18 @@ from `.agent-settings.yml`. Both default to `false`.
+ 
+ **Terse path** — `preview_artifacts: false` AND `routine_confirmations: false`:
+ 
+-1. Validate every generated commit message against the
+-   conventional-commits regex
+-   `^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`.
++1. Validate every generated commit message against the regex for the
++   convention in force (step 2); a repository config's own rule replaces these:
++   - `ticket-scope` (default):
++     `^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`
++   - `ticket-prefix`:
++     `^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(?!\([A-Z][A-Z0-9]+-[0-9]+\))(\([^)]+\))?!?: .+`
++     — the lookahead rejects a ticket id standing in the scope.
+ 2. **All messages valid** → skip the preview block and the confirmation
+    prompt. Print one line summarising the plan and proceed to step 6:
+ 
+    ```
+-   → 3 commits planned: feat, test, chore (scope: DEV-1234)
++   → 3 commits planned: feat, test, chore (ticket: DEV-1234)
+    ```
+ 
+ 3. **Any message invalid** → `preview-on-error` safety net fires:
+@@ -140,7 +159,9 @@ Show the proposed commits as a numbered list, including which files go into each
+ ```
+ Proposed commits:
+ 
+-(Laravel-project example)
++(Laravel-project example, `git.commit_format: ticket-scope`; under
++`ticket-prefix` the first subject reads
++`DEV-1234 feat(working-time): add absence type filter to working time report`)
+ 1. feat(DEV-1234): add absence type filter to working time report
+    → app/Services/WorkingTimeService.php
+    → app/Http/Controllers/WorkingTimeController.php
+diff --git a/dist/agent-src/commands/commit/in-chunks.md b/dist/agent-src/commands/commit/in-chunks.md
+index 7b763ae575e8a8a1c0cfeb755d8bc320691de402..0a72f0bc051adf5588a468187cdef6b08e764264 100644
+--- a/dist/agent-src/commands/commit/in-chunks.md
++++ b/dist/agent-src/commands/commit/in-chunks.md
+@@ -43,10 +43,13 @@ If there are no uncommitted changes (staged or unstaged), report
+ 
+ ### 2. Determine the ticket number
+ 
+-- Extract the ticket ID from the current branch name (e.g. `feat/DEV-1234/...`
+-  → `DEV-1234`).
+-- If no ticket ID is found, omit the scope from the messages — write
+-  `chore: ...` not `chore(): ...`. Do **not** ask the user for one.
++- Extract the ticket ID from the current branch name exactly as
++  [`/commit`](../commit.md) step 2 does (first `[A-Z][A-Z0-9]+-[0-9]+` token),
++  and place it per the convention in force, established as in `/commit` step 2
++  (repository config, then a declared `git.commit_format`, then an approved
++  measured convention).
++- If no ticket ID is found, omit it — write `chore: ...` not `chore(): ...`.
++  Do **not** ask the user for one.
+ 
+ ### 3. Analyze and split
+ 
+@@ -80,8 +83,9 @@ strip one.
+ ### 4. Validate, then commit immediately
+ 
+ Before staging anything, run the same `preview-on-error` validator as
+-[`/commit`](../commit.md) step 5. Each generated message must match
+-`^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`.
++[`/commit`](../commit.md) step 5 — the rule of the convention in force
++(step 2), with the two `git.commit_format` regexes listed there as its
++fallback.
+ 
+ - **All valid** → proceed silently.
+ - **Any invalid** → stop, print the failed message(s) + the regex,
+diff --git a/dist/agent-src/commands/fix/ci.md b/dist/agent-src/commands/fix/ci.md
+index 6d42ff8bfceafaf6fb7469839a0b66dca04f38d4..ba44f09660c029544032a57f777f278ac1ed050a 100644
+--- a/dist/agent-src/commands/fix/ci.md
++++ b/dist/agent-src/commands/fix/ci.md
+@@ -97,7 +97,10 @@ branch** — that is what makes the deliverable remote. Then:
+    [`commit-policy`](../../../rules/commit-policy.md) — never ask how).
+ 2. Update the branch against its PR base first:
+    `./scripts-run src/scripts/sync_pr_branch`, then regenerate any derived files
+-   the merge touched (`task sync && task generate-tools`). A PR left behind its
++   the merge touched (`task sync && task generate-tools`). Under
++   `git.update_strategy: rebase` the script refuses; rebase on the user's request
++   instead ([`branch-update`](../../../../skills/git-workflow/references/branch-update.md)),
++   never merge the base in. A PR left behind its
+    base accumulates conflicts for the moment someone wants to merge it, and a
+    push against a moved base is rejected — both cost a round trip that this one
+    call prevents.
+diff --git a/dist/agent-src/commands/fix/commit-messages.md b/dist/agent-src/commands/fix/commit-messages.md
+index 1fef04fa95f8b6bc41ab823e8d7ec1ffea2df215..e542cc5a1b202921855a81fb5d14abc5417f8144 100644
+--- a/dist/agent-src/commands/fix/commit-messages.md
++++ b/dist/agent-src/commands/fix/commit-messages.md
+@@ -63,7 +63,9 @@ Run `## Procedure: Establish the house convention` from
+ [`conventional-commits-writing`](../../../skills/conventional-commits-writing/SKILL.md)
+ verbatim: tier-1 sources first (opened and read, never taken from a grep hit),
+ then the capped-weighted consensus pass with bots, merges, reverts and release
+-automation excluded.
++automation excluded. A declared `git.commit_format: ticket-prefix` (the skill's tier 1b; `ticket-scope` is the template default and declares nothing)
++is the target: report it as `Declared : git.commit_format: …`, skip step 3's
++style question, and keep the other authorisations.
+ 
+ Report what it found, in one block, before offering anything:
+ 
+diff --git a/dist/agent-src/commands/pr/create.md b/dist/agent-src/commands/pr/create.md
+index 93fcc50a5dc7aa84636b0bd2dc7e49ebce46cd47..5dd8369ccdad59258220dfec3b67eb9d086ba1b4 100644
+--- a/dist/agent-src/commands/pr/create.md
++++ b/dist/agent-src/commands/pr/create.md
+@@ -101,7 +101,7 @@ Run, in order:
+ | Gate | Overlapping open PR touches same files? | Action |
+ |---|---|---|
+ | exit `0`, prints `branch is current` | — | Proceed to Step 2 |
+-| exit `1` | No | **Merge the base in** — `git fetch origin && git merge origin/{resolved-base} --no-edit` — then run the regeneration set below, then proceed. No need to ask; state that you did it. |
++| exit `1` | No | **Bring the base in** per `git.update_strategy` ([`branch-update`](../../../../skills/git-workflow/references/branch-update.md)). `merge` (default): `git fetch origin && git merge origin/{resolved-base} --no-edit` — no need to ask; state that you did it. `rebase`: `git fetch origin && git rebase origin/{resolved-base}` — ask first unless the user asked for the update this turn, and never fall back to a merge. Then run the regeneration set below, then proceed. |
+ | exit `1` | **Yes** | STOP — surface the overlapping PR number, ask: stack on top of it / wait for it to land / proceed-anyway-and-accept-conflicts / cancel |
+ | exit `0`, prints `NOT VERIFIED` | — | The base could not be reached, so freshness is **unknown** — not confirmed. Re-run once; if it persists, say the check did not run rather than reporting a pass. A base that `ls-remote` cannot resolve (deleted or renamed after the PR opened, or a fork base) lands here too. |
+ | warns `could not ask the forge` | — | The **default** base was checked and an open PR against a different base was **not** ruled out. Say so; do not report it as a clean freshness pass. |
+@@ -137,8 +137,16 @@ a generated-file conflict never is.
+ 
+ The gate above is not creation-only. **Every subsequent push** to a branch with
+ an open PR (a CI fix, a review response, a follow-up commit) re-runs the same
+-sequence first: `check_branch_freshness` → on exit `1`, merge
+-`origin/{resolved-base}` in → regenerate the derived files → verify → push.
++sequence first: `check_branch_freshness` → on exit `1`, bring
++`origin/{resolved-base}` in per `git.update_strategy` (merge by default; under
++`rebase` a rebase that is asked for, never a merge, and `sync_pr_branch` refuses)
++→ regenerate the derived files → verify → push (after a rebase:
++`git push --force-with-lease=<branch>:<fetched-sha>`, never a plain push). A
++rebase runs only after the pre-rewrite stop in
++[`branch-update`](../../../../skills/git-workflow/references/branch-update.md):
++`git rev-list --left-right --count HEAD...@{u}` must be `0 0` after the fetch,
++so `<fetched-sha>` equals your own pre-rebase HEAD and a collaborator's push
++fails the lease instead of being overwritten.
+ A PR that sits open while its base advances goes stale silently; keeping the
+ base merged **at every touch** means it stays `mergeStateStatus: CLEAN` instead
+ of accumulating conflicts for the moment the user wants to merge. If the gate
+diff --git a/dist/agent-src/commands/pr/create/description-only.md b/dist/agent-src/commands/pr/create/description-only.md
+index 25e2b1d9f38fb7c4c3566486fa1efe8a71457310..5cab00901748e1bee26a5ddd8c9dfe36b851fb86 100644
+--- a/dist/agent-src/commands/pr/create/description-only.md
++++ b/dist/agent-src/commands/pr/create/description-only.md
+@@ -87,7 +87,9 @@ That's 6 round-trips for what should be 2.
+ 
+ ### 3. Build the PR title
+ 
+-- Format: `{TICKET-ID}: {summary}` (e.g. `DEV-4673: Fix absence working time calculation`).
++- Format: `{TICKET-ID}: {summary}` (e.g. `DEV-4673: Fix absence working time calculation`);
++  under `git.commit_format: ticket-prefix` the title is a commit subject instead,
++  `DEV-4673 fix(working-time): correct absence calculation`.
+ - Use the Jira ticket summary if available, otherwise derive from commits.
+ - If no ticket: use the most descriptive commit message or ask the user.
+ 
+diff --git a/dist/agent-src/commands/pr/merge.md b/dist/agent-src/commands/pr/merge.md
+index 8597dd0c2e3c9b4a14ad4173e3db5da4325de41a..0e932499341cff37467a83082f76a45a6d381b87 100644
+--- a/dist/agent-src/commands/pr/merge.md
++++ b/dist/agent-src/commands/pr/merge.md
+@@ -138,8 +138,20 @@ gh pr checkout <N>
+ git merge origin/<base> --no-edit
+ ```
+ 
+-Merge the base **into** the branch. Never rebase a branch that is already
+-pushed ([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
++Merge the base **into** the branch. Never rebase here unless the invocation
++itself asked for it: the `/pr:merge` authorisation covers merging the named PRs,
++not rewriting their branches
++([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
++
++**Under `git.update_strategy: rebase`** this step does not merge: a
++`Merge branch '<base>' into …` commit is what that setting excludes. The
++`/pr:merge` sentence authorises merging the named PRs, not rewriting their
++branches, so a PR that is behind its base is reported and left for the author
++to rebase — disposition `blocked-external` — unless the invocation itself asked
++for the rebase. A PR that is behind but conflict-free does not need this step
++at all unless branch protection requires an up-to-date branch: whichever method
++§ 9 detects, the forge lands it on the current base — `--rebase` replays the
++commits, `--squash` and `--merge` build on the base as it is.
+ 
+ ## 3. Resolve conflicts by class, never by taste
+ 
+diff --git a/dist/agent-src/commands/prepare-for-review.md b/dist/agent-src/commands/prepare-for-review.md
+index d28a3f1df712c1baa83f73ecf0bc8e12f61f7e7a..01ad07cf968834e583f7a0c8b3ec621cc2a54a46 100644
+--- a/dist/agent-src/commands/prepare-for-review.md
++++ b/dist/agent-src/commands/prepare-for-review.md
+@@ -73,6 +73,15 @@ git checkout {child-branch}
+ git merge {parent-branch} --no-edit
+ ```
+ 
++- **Under `git.update_strategy: rebase`** do not merge the chain: a merge
++  commit on a feature branch is what that setting excludes, and this command
++  must not leave one behind to be pushed later. Check the target branch back
++  out, report which branches are behind their parent, and finish without error
++  — the review then runs against `git merge-base HEAD origin/<parent-branch>`
++  (the remote ref step 4 fetched; a local branch may be missing or stale), the
++  target's direct parent in the chain, so parent PRs stay out of it. Updating the
++  chain is a rebase the user asks for
++  ([`branch-update`](../../../skills/git-workflow/references/branch-update.md)).
+ - If a **merge conflict** occurs at any point:
+   - Run `git merge --abort`
+   - Abort the entire process immediately
+diff --git a/dist/agent-src/commands/review/changes.md b/dist/agent-src/commands/review/changes.md
+index d1ac4e35572a6574f685f4b8e568f4bd9868be2c..5fb979dd4242c6ea05e0766e47470664399dbfee 100644
+--- a/dist/agent-src/commands/review/changes.md
++++ b/dist/agent-src/commands/review/changes.md
+@@ -39,10 +39,14 @@ to make sure the current branch is up to date with its base chain:
+   - If exactly one open PR is found → invoke `/prepare-for-review`
+     with that PR number. It will update `main`, fetch and merge the
+     full branch chain into the current branch, and leave the current
+-    branch checked out.
++    branch checked out — under `git.update_strategy: rebase` it merges
++    nothing and reports the behind branches instead.
+   - If no open PR is found → fall back to a minimal local update:
+     `git fetch origin main` and `git merge origin/main --no-edit` on
+-    the current branch. Abort on conflict and report.
++    the current branch. Abort on conflict and report. Under
++    `git.update_strategy: rebase` skip the merge: `git fetch origin main`
++    only, review the diff against `git merge-base HEAD origin/main`, and say
++    the branch is behind.
+   - If multiple PRs are found → ask the user which PR to use before
+     proceeding.
+ - If `/prepare-for-review` aborts (merge conflict, network error,
+diff --git a/dist/agent-src/commands/roadmap/next.md b/dist/agent-src/commands/roadmap/next.md
+index f56c0d2aaa9db7859c5648c71fac30f82a505bf3..89d7d81b1e9c49b7a4112bce2852fff29448d159 100644
+--- a/dist/agent-src/commands/roadmap/next.md
++++ b/dist/agent-src/commands/roadmap/next.md
+@@ -280,7 +280,9 @@ was for a conflict whose entire existence is a remote fact. That is the friction
+ this clause removes; the floor it keeps is the *unnamed* push.
+ 
+ **Before every push to the open PR**, bring the branch up to its base with
+-`./scripts-run src/scripts/sync_pr_branch` and regenerate afterwards. Measured on
++`./scripts-run src/scripts/sync_pr_branch` and regenerate afterwards (under
++`git.update_strategy: rebase` it refuses — rebase on request instead, per
++[`branch-update`](../../../../skills/git-workflow/references/branch-update.md)). Measured on
+ this run: the base moved three times, the push was rejected twice for it, and the
+ PR reached `CONFLICTING` in between. Verify the result afterwards with
+ `./scripts-run src/scripts/check_pr_ci_current` — a green local gate says nothing
+diff --git a/dist/agent-src/commands/worktree/create.md b/dist/agent-src/commands/worktree/create.md
+index 5568e48fe45b95e4df02a41d837e7e26d2942021..420b56f2abccae5429044b81ad821628e0377971 100644
+--- a/dist/agent-src/commands/worktree/create.md
++++ b/dist/agent-src/commands/worktree/create.md
+@@ -39,8 +39,9 @@ Without a primitive, the skill's plain `git worktree add` path applies.
+ 
+ ### 2. Branch naming — propose once
+ 
+-Derive ONE branch name from the task (`<type>/<short-slug>` per the
+-`commit-conventions` rule), state it, and proceed. Do not present a
++Derive ONE branch name from the task — the shape `git.branch_pattern`
++declares (default `{type}/{slug}`; a ticket-named team sets `{ticket}-{slug}`),
++per the `commit-conventions` rule — state it, and proceed. Do not present a
+ naming menu; the user can override by naming a branch in the same turn.
+ 
+ ### 3. Write the scope-lock note
+diff --git a/dist/agent-src/guidelines/php/git.md b/dist/agent-src/guidelines/php/git.md
+index 6fe6c803efae8b5edd98ffc25343a1d861cac76b..70484c37b8ed12de91d284bc963d0150bf951739 100644
+--- a/dist/agent-src/guidelines/php/git.md
++++ b/dist/agent-src/guidelines/php/git.md
+@@ -34,6 +34,10 @@ hotfix/DEV-999/critical-payment-bug
+ - Always include the Jira ticket ID when one exists
+ - Use kebab-case for the description part
+ - Keep branch names short but descriptive
++- The shape above is this guideline's convention; the agent creates branches
++  per `git.branch_pattern` (package default `{type}/{slug}`, a ticket-named team
++  sets `{ticket}-{slug}` → `DEV-1234-device-export`). Reading the ticket back out
++  of a branch never depends on the pattern.
+ 
+ ## Commit Messages
+ 
+@@ -68,9 +72,23 @@ that is not better classified as `build`, `ci`, or `docs`.
+ 
+ Use a scope when it adds clarity. Good scopes:
+ 
+-- Jira ticket ID: `DEV-1234`
++- Jira ticket ID: `DEV-1234` — only under `git.commit_format: ticket-scope`
++  (default)
+ - Module/area: `api`, `auth`, `skills`, `rules`, `ci`, `frontend`, `linter`
+ 
++Under `git.commit_format: ticket-prefix` the ticket leads the subject and is
++**never** the scope:
++
++```
++DEV-1234 feat(exporter-models): add optional classification fields
++DEV-1234 docs(dataflor-exporter): document device export filters
++DEV-1235 chore(ci): reduce deployment token permissions
++```
++
++`fix(DEV-1234): …` is a wrong subject there. Tooling that parses subjects
++(commitlint, release automation, changelog generators) must be configured for
++the prefixed form, because standard parsers expect the type first.
++
+ Do not add a scope if it adds no value. `fix(core): fix typo` → just `fix: fix typo`.
+ 
+ ### Description rules
+@@ -157,7 +175,11 @@ Before writing the commit message:
+ 
+ ## Pull Requests
+ 
+-- PR title follows commit message format: `feat(DEV-1234): short description`
++- PR title as `/create-pr:description-only` § 3 builds it — `DEV-1234: short
++  description` by default, a full commit subject under `ticket-prefix`
++- Bring the branch up to date per `git.update_strategy` — merge the base in
++  (default) or rebase onto `origin/main` and push with `--force-with-lease`;
++  see `git-workflow` › `references/branch-update.md`
+ - Fill in the PR template (checklist, description, testing notes)
+ - Link the Jira ticket in the PR description
+ - Ensure all quality gates pass before requesting review
+diff --git a/dist/agent-src/rules/commit-conventions.md b/dist/agent-src/rules/commit-conventions.md
+index 68f04ce1dc92b6105404f7017e5939ebf41116af..2077b7cc67f39a5bc590bc1da860a11e754f4cd3 100644
+--- a/dist/agent-src/rules/commit-conventions.md
++++ b/dist/agent-src/rules/commit-conventions.md
+@@ -18,7 +18,7 @@ obligation_frequency: "per-commit"
+ 
+ # Commit Conventions
+ 
+-**Iron Law.** Match the repo's configured or approved convention; else Conventional Commits (`feat:`, `fix:` …), branches `<type>/<short-slug>`; never invent one. Subjects + branch names stay emoji-free per [`no-decorative-emojis-in-git-surfaces`](no-decorative-emojis-in-git-surfaces.md); body emojis need an in-artifact legend.
++**Iron Law.** Match, in order, the repo's configured convention, a declared `git.commit_format: ticket-prefix`, or an approved measured one; else Conventional Commits (`feat:`, `fix:` …), with branches per `git.branch_pattern` (default `<type>/<short-slug>`); never invent one. Subjects + branch names stay emoji-free per [`no-decorative-emojis-in-git-surfaces`](no-decorative-emojis-in-git-surfaces.md); body emojis need an in-artifact legend.
+ 
+ Body migrated to `skill:conventional-commits-writing` (per P4 of `road-to-kernel-and-router.md`).
+ Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
+diff --git a/dist/agent-src/skills/conventional-commits-writing/SKILL.md b/dist/agent-src/skills/conventional-commits-writing/SKILL.md
+index 9d96d3cc33b9b253d118d77c3dc449ee5f497438..f17194a4306705c2afa2ed40e2b9437428bd3ecb 100644
+--- a/dist/agent-src/skills/conventional-commits-writing/SKILL.md
++++ b/dist/agent-src/skills/conventional-commits-writing/SKILL.md
+@@ -46,6 +46,7 @@ imposing the shipped default there produces commits that read as foreign in
+ | Tier | Source | Binding? |
+ |---|---|---|
+ | **1 — configured** | `commitlint.config.*` · `.gitmessage` · a `commit-msg` hook (husky / lefthook / `.git/hooks`) · `CONTRIBUTING.md` § Commits · a CI job that validates subjects · release automation that PARSES subjects (semantic-release, changesets, git-cliff, conventional-changelog) | yes — Class A, no approval needed |
++| **1b — declared** | `git.commit_format: ticket-prefix` in the project settings — `agent-config settings:get git.commit_format` names the file. Only the non-default value declares anything: `ticket-scope` is also what a copied template carries, so it proves no choice | yes — the user's own word, so no measurement and no ask |
+ | **2 — measured + approved** | the consensus pass below, after the user says yes | yes, for this repository |
+ | **3 — measured, unapproved** | the same pass before the user answers | **no — advisory**; report the mismatch, write Conventional |
+ | **4 — default** | Conventional Commits | yes |
+@@ -60,6 +61,7 @@ Check for the parser before you trust the prevalence.
+ ### 1. Look for tier 1 before measuring anything
+ 
+ ```bash
++agent-config settings:get git.commit_format   # tier 1b when a human set it
+ ls commitlint.config.* .commitlintrc* .gitmessage .czrc 2>/dev/null
+ git config --get commit.template
+ ls .husky/commit-msg .git/hooks/commit-msg 2>/dev/null
+@@ -144,8 +146,9 @@ given outside a table because a markdown cell would need the alternation pipes
+ escaped and `\|` in ERE is a literal pipe, not an alternation:
+ 
+ ```
+-conventional      ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
+-ticket-prefix     ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
++conventional          ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
++ticket-conventional   ^[A-Z][A-Z0-9]+-[0-9]+ (build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
++ticket-prefix         ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
+ gitmoji           ^:[a-z0-9_+-]+:[[:space:]]|^[^[:ascii:][:space:]]
+ imperative-plain  ^[A-Z][a-z]+[[:space:]].*[^.]$
+ other             everything else
+@@ -159,13 +162,15 @@ the classifier, not a gap to fill by guessing: a repo whose only distinction
+ from Conventional is mood will read as `imperative-plain` either way, and the
+ mood question belongs in the ask at step 6.
+ 
+-`classifier_version` in step 7 names the revision of THIS section — the five
+-patterns above plus the exclusions in step 2. It is a provenance stamp so a
+-later measurement can be compared against a like one; it does not claim an
++`classifier_version` in step 7 names the revision of THIS section — the six patterns above (`ticket-conventional` added 2026-10-06; re-measure an older card) plus the exclusions in step 2.
++It is a provenance stamp so a later measurement can be compared against a like one; it does not claim an
+ executable classifier ships anywhere in the tree.
+ 
+ Record the runner-up family too — a near-tie is itself the finding.
+ 
++`ticket-conventional` precedes `ticket-prefix`, which would otherwise swallow it as "ticket, then free text".
++A dominant `ticket-conventional` family maps to `git.commit_format: ticket-prefix` — propose that in the step-6 ask.
++
+ ### 4. Aggregate, capped per author, per half
+ 
+ Raw commit counts let one prolific author or an unfiltered bot define the house
+@@ -274,18 +279,21 @@ If yes:
+ - Suggest splitting into multiple commits
+ - Or choose the dominant net effect for squash merge title
+ 
+-### 3. Choose scope
++### 3. Place the ticket, then choose the scope
+ 
+-Add a scope only if it improves clarity:
++Ticket id: the first `[A-Z][A-Z0-9]+-[0-9]+` token in the branch name that is not a standard name (`UTF-8`, `SHA-256`), or the user; `git.commit_format` places it:
++| `git.commit_format` | With a ticket | Without a ticket |
++|---|---|---|
++| `ticket-scope` (default) | `feat(DEV-1234): add export filter` | `feat: add export filter` |
++| `ticket-prefix` | `DEV-1234 feat(exporter): add export filter` | `feat(exporter): add export filter` |
+ 
+-- Jira ticket ID: `DEV-1234`
+-- Module/area: `api`, `auth`, `skills`, `rules`, `ci`
++Under `ticket-prefix` **a ticket is never a scope**; the scope names the system area (`api/audio`, `ci`), only if it adds clarity.
+ 
+ ### 4. Write the description
+ 
+ - State the intent clearly
+ - Avoid generic filler (`update stuff`, `fix things`)
+-- Stay concise — max 72 chars total for first line
++- Stay concise — max 72 chars total for first line (the ticket prefix counts)
+ - Imperative mood: "add", "fix", "remove" — not "added", "fixed", "removed"
+ 
+ ### 5. Check for breaking change
+@@ -316,6 +324,8 @@ Or add `BREAKING CHANGE:` in the commit body/footer.
+ 
+ ## Procedure: Generate squash merge title
+ 
++Only for a squash merge — rebase-and-merge keeps every commit (`/pr:merge` § 9 reads the method from the forge).
++
+ 1. Read all commits in the PR
+ 2. Identify the **net effect** — what does the PR accomplish overall?
+ 3. Write a single Conventional Commit message summarizing the net effect
+@@ -324,8 +334,8 @@ Or add `BREAKING CHANGE:` in the commit body/footer.
+ ## Output format
+ 
+ 1. The convention in force and the tier that established it — `configured
+-   (commitlint.config.js)`, `approved (ticket-prefix, 84% of 137)`, or
+-   `default (Conventional Commits)`
++   (commitlint.config.js)`, `declared (git.commit_format: ticket-prefix)`,
++   `approved (family ticket-prefix, 84% of 137)`, or `default (Conventional Commits)`
+ 2. Recommended commit message(s)
+ 3. Brief rationale for type choice
+ 4. Split suggestion if the change should be multiple commits
+@@ -372,6 +382,7 @@ to every commit message you author.
+   advisory, and silence is not approval
+ - Do NOT let prevalence lift a `never` or `explicit-only` floor
+ - Do NOT use vague messages: `update stuff`, `fix bug`, `changes`
++- Do NOT put a ticket id in the scope when `git.commit_format` is `ticket-prefix`
+ - Do NOT use `refactor` for bug fixes
+ - Do NOT use `chore` for meaningful behavior changes
+ - Do NOT hide multiple unrelated concerns in one message
+diff --git a/dist/agent-src/skills/git-workflow/SKILL.md b/dist/agent-src/skills/git-workflow/SKILL.md
+index d415c51ddeeda00cc04a9b182ed5dfd1b1c8d296..03bf654384e4b273b6be171b46965869b9c6d764 100644
+--- a/dist/agent-src/skills/git-workflow/SKILL.md
++++ b/dist/agent-src/skills/git-workflow/SKILL.md
+@@ -56,7 +56,7 @@ gh pr view <number> --json number,state,mergeStateStatus,mergedAt,baseRefName
+   **same turn**; never merge on a status seen earlier in the conversation.
+ - **"Based on main" / "current"** → prove it with
+   `npx tsx node_modules/@event4u/agent-config/src/scripts/check_branch_freshness.ts`;
+-  exit `1` ⇒ the branch is behind and is **not** current — merge the base in,
++  exit `1` ⇒ the branch is behind and is **not** current — update it from the base per `git.update_strategy` ([`references/branch-update.md`](references/branch-update.md)),
+   regenerate the derived files, then open the PR (see
+   [`/create-pr`](../../commands/pr/create.md) § 1b). Exit `0` means only that
+   the gate did **not refuse**: read the line. `branch is current` is the pass;
+@@ -76,13 +76,13 @@ gh pr view <number> --json number,state,mergeStateStatus,mergedAt,baseRefName
+ ## Conventions
+ 
+ → See guideline `docs/guidelines/php/git.md` for branch naming, commit messages, PR conventions.
+-→ See `commit-conventions` rule for commit format, types, and scope rules.
++→ See `commit-conventions` rule for commit format, types, and scope rules; a team convention is declared in the `git:` settings (`commit_format`, `branch_pattern`, `update_strategy`).
+ → Use `conventional-commits-writing` skill for generating/reviewing commit messages.
+ 
+ ## Procedure: Before opening a PR
+ 
+ 1. Quality pipeline + tests — only when `quality.local_auto_run: true` (see [`quality-tools` § Execution policy](../quality-tools/SKILL.md)): type-checker → auto-fixer → linter → type-checker, then the project's test command (detect from manifest: `php artisan test` / `vendor/bin/phpunit` (PHP), `npm test` / `pnpm test` / `vitest` / `jest` (JS-TS), `pytest` (Python), `cargo test` (Rust), `go test ./...` (Go)). Under the default (`false` / missing) skip both — remote CI on the PR is the gate; say so instead of claiming they passed.
+-2. Rebase onto `main`.
++2. Update the branch from its base — [`references/branch-update.md`](references/branch-update.md).
+ 3. Fill in PR template completely.
+ 
+ ## Procedure: Finish a branch
+@@ -100,11 +100,11 @@ Work complete. What would you like to do?
+ ### Option 1: Push and create PR
+ 
+ 1. Run quality pipeline + tests (only when `quality.local_auto_run: true`; default `false` → skip, remote CI is the gate).
+-2. **The push-ready sequence** — fetch → integrate the base SET → regenerate →
++2. **The push-ready sequence** — fetch → integrate the base SET (per `git.update_strategy`, [`references/branch-update.md`](references/branch-update.md)) → regenerate →
+    verify → re-check freshness (this repo wires it as a `push-ready` task target;
+    a consumer wires its own). Not optional housekeeping: see § A push closes its
+    own loop. A stale push is refused, so skipping this buys the refusal.
+-3. `git push -u origin <branch>`.
++3. `git push -u origin <branch>` — after a rebase of a pushed branch, `--force-with-lease` per `references/branch-update.md`.
+ 4. `gh pr create` using PR template.
+ 5. **Settle it** — the turn is not over at step 4:
+    `npx tsx node_modules/@event4u/agent-config/src/scripts/ci_settle.ts <pr>`
+@@ -153,7 +153,7 @@ The project uses `.github/pull_request_template.md`:
+ ## Default branch
+ 
+ - `main` is default/production branch.
+-- Merge strategy: merge commits (not squash).
++- Merge method: read from the forge (`/pr:merge` § 9), never assumed; rebase-and-merge keeps every commit, so each subject must follow the convention.
+ 
+ ## Procedure: Safe squash-after-push
+ 
+diff --git a/dist/agent-src/skills/git-workflow/references/branch-update.md b/dist/agent-src/skills/git-workflow/references/branch-update.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..34d6f66683bb114e908c8bdc6ce2b1f686874c87
+--- /dev/null
++++ b/dist/agent-src/skills/git-workflow/references/branch-update.md
+@@ -0,0 +1,41 @@
++# Updating a branch from its base
++
++Detail for [`git-workflow`](../SKILL.md) § Live remote state and § Before
++opening a PR. The one place that
++decides how a feature branch takes in its base — `/create-pr` § 1b, `/pr:merge`
++§ 2, `/prepare-for-review` and `/review:changes` defer here. Read
++`agent-config settings:get git.update_strategy`:
++
++| `git.update_strategy` | Operation | Asked first? |
++|---|---|---|
++| `merge` (default) | `git fetch origin && git merge origin/<base> --no-edit` | no — a merge adds a commit and rewrites nothing |
++| `rebase` | `git fetch origin`, then on a pushed branch the pre-rewrite stop — `git rev-list --left-right --count HEAD...@{u}` must be `0 0`, otherwise a collaborator has pushed and the rebase does not start — then `git rebase origin/<base>` and `git push --force-with-lease=<branch>:<fetched-sha>` in the same turn. `<fetched-sha>` is `git rev-parse origin/<branch>` after that stop passed, i.e. your own pre-rebase HEAD — never the base's SHA | **yes**, unless [`git-history-discipline`](../../../rules/git-history-discipline.md) § When rewrite is allowed already covers it — the user asked this turn, an unrevoked standing instruction ("always rebase before pushing"), or a `pull --rebase` the user started. The setting picks the operation; it is never the authorisation |
++
++## Under `rebase`
++
++- **Never merge the base into the branch instead**, not even to avoid the ask —
++  a `Merge branch 'main' into …` commit is exactly what the setting excludes.
++  No authorisation → stop and ask with numbered options (rebase now / leave the
++  branch behind).
++- **Pushed branch** → run the pre-rewrite stop of the skill's § Two protective
++  stops first (divergent local vs origin halts the rebase), and push in the same
++  turn per its post-rewrite stop.
++- **Shared branch** — commits on it that you did not author this session → do
++  not rebase without the authors' agreement; this is the git-history-discipline
++  inherited-commits law, and the setting does not lift it.
++- **Conflicts** → resolve to the correct end state per commit, `git add`,
++  `git rebase --continue`; `git rebase --abort` returns to the pre-rebase state.
++  Re-run the relevant tests afterwards — a conflict-free tree is not a correct
++  one. Detail: [`merge-conflicts`](../../merge-conflicts/SKILL.md).
++- **`sync_pr_branch` refuses with exit 3** when the branch is behind and the
++  strategy is not `merge`; a current branch passes with exit 0, so automated
++  pre-push syncs stay green when there is nothing to do.
++- **Plain `git push --force` is never used** — only `--force-with-lease`, and
++  never against the base branch itself.
++- **Tidying WIP / fixup commits before the PR** (`git commit --fixup`,
++  `git rebase -i --autosquash origin/<base>`) stays a user-requested operation —
++  the skill's § Equivalents that are also forbidden by default lists it; a team
++  that expects curated history asks for it, and the agent offers it, never runs
++  it unasked.
++- **Published commits on the base are never rewritten**; a wrong change there is
++  undone with `git revert <sha>`, a new commit.
+diff --git a/dist/agent-src/skills/jira-integration/SKILL.md b/dist/agent-src/skills/jira-integration/SKILL.md
+index 61c3dad074df18fed8ca86eae8775cc3c076322d..c5fb621e1a42ec377969992cec93c30694a11647 100644
+--- a/dist/agent-src/skills/jira-integration/SKILL.md
++++ b/dist/agent-src/skills/jira-integration/SKILL.md
+@@ -147,8 +147,13 @@ POST /issue/DEV-1234/transitions
+ ## Linking to PRs
+ 
+ When creating PRs, include the Jira ticket in:
+-- **Branch name:** `feat/DEV-1234/description`
+-- **PR title:** `feat(DEV-1234): description`
++- **Branch name:** per `git.branch_pattern`. The default `{type}/{slug}` has no
++  ticket slot, so put the ticket in the slug (`feat/DEV-1234-description`); a
++  pattern with `{ticket}` places it, e.g. `DEV-1234-description` for
++  `{ticket}-{slug}`
++- **PR title:** as `/create-pr:description-only` § 3 builds it —
++  `DEV-1234: description` by default, a full commit subject
++  (`DEV-1234 feat(area): description`) under `git.commit_format: ticket-prefix`
+ - **PR description:** Link to the ticket
+ 
+ ## Related
+diff --git a/dist/agent-src/skills/merge-conflicts/SKILL.md b/dist/agent-src/skills/merge-conflicts/SKILL.md
+index e7aa5c7ff92b6bf66f4a466664bb0c21be4923d5..3f89452bceb9dca78880d65028e211a47b5e5eb0 100644
+--- a/dist/agent-src/skills/merge-conflicts/SKILL.md
++++ b/dist/agent-src/skills/merge-conflicts/SKILL.md
+@@ -222,10 +222,15 @@ git add .
+ 
+ | Approach | When to use |
+ |---|---|
+-| `git merge main` | Default — preserves history, safer for shared branches |
+-| `git rebase main` | Only when explicitly asked — rewrites history, cleaner log |
+-
+-**Never rebase without explicit permission** (per `no-commit` rule).
++| `git merge main` | Default (`git.update_strategy: merge`) — preserves history, safer for shared branches |
++| `git rebase origin/main` | `git.update_strategy: rebase`, or when explicitly asked — rewrites history, linear log |
++
++**Never rebase without explicit permission** (per `git-history-discipline`) —
++the setting picks the operation, the user's request this turn authorises it.
++Under `rebase`, conflicts surface per commit: resolve each to the correct end
++state, `git add`, `git rebase --continue`; `git rebase --abort` restores the
++pre-rebase branch. Full protocol:
++[`git-workflow` › branch-update](../git-workflow/references/branch-update.md).
+ 
+ ## Output format
+ 
+diff --git a/docs/contracts/settings-classes.md b/docs/contracts/settings-classes.md
+index d3f7bae62c3aed55876da9165b525eda62e1c968..59e7c8a027f22f9446e39536b92cbff68e8bbfcd 100644
+--- a/docs/contracts/settings-classes.md
++++ b/docs/contracts/settings-classes.md
+@@ -247,8 +247,15 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
+ |---|---|
+ | A — preference | 26 |
+ | B — consent | 3 |
+-| C — guarded | 126 |
+-| **Total** | **155** |
++| C — guarded | 129 |
++| **Total** | **158** |
++
++It rose to 158 on 2026-10-06 when the `git:` section added three C keys —
++`commit_format`, `branch_pattern`, `update_strategy` — so a team's commit
++grammar, branch naming and base-sync operation can be declared once instead of
++measured per repository. All three are `policy`: each is a fact the repository or
++the forge could carry, and each row names why that carrier does not reach every
++install. None is `derivable`, so the anti-regrowth ratchet is untouched.
+ 
+ It rose again on 2026-09-13 when `road-to-adversarial-verification-and-long-runs`
+ Phase 0 added three C keys: `quality.local_auto_run_in_mission` (`consent` — it
+@@ -383,8 +390,8 @@ the template, which is the drift this contract exists to prevent.
+ | derivable | 83 |
+ | un-inferrable | 10 |
+ | consent | 48 |
+-| policy | 14 |
+-| **Total** | **155** |
++| policy | 17 |
++| **Total** | **158** |
+ 
+ First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
+ un-inferrable 9 · policy 5), from the table below rather than predicted — the
+@@ -518,6 +525,9 @@ Rows follow template order, so a diff against the template reads straight down.
+ | `project.upstream_repo` | C | `""` | destination of outbound improvement PRs | derivable — the installed package's own `package.json` repository field |
+ | `project.improvement_pr_branch_prefix` | A | `improve/agent-` | branch-name cosmetics | derivable — the repo's own branch-naming convention, observable from `git branch -r` |
+ | `project.audience` | C | `public` | C-test 4 — it governs the agent's own reasoning discipline: `self` makes the § 8-pre demand gate inert. Who a project is built for is a fact only its maintainer knows, so the agent never infers it and never asks; hand-edit or the GUI write route. The default is today's behaviour, so an install that never sets it is unchanged | policy |
++| `git.commit_format` | C | `ticket-scope` | C-test 4 — it selects the grammar every commit the agent writes is held to. The conventional-commits-writing skill forbids adopting a measured convention without the user's answer, and an agent-writable key would be that adoption with the ask removed. The default is today's behaviour | policy — a repository fact the tree can carry instead (commitlint config, a `commit-msg` hook, `CONTRIBUTING.md` § Commits); the skill already ranks those above this key. Kept because a team convention spans repositories that do not yet carry one |
++| `git.branch_pattern` | C | `{type}/{slug}` | C-test 4 — same reasoning as `git.commit_format`, for branch names | policy — NOT `derivable` from `git branch -r` as `project.improvement_pr_branch_prefix` is: a team that merges with `--delete-branch` leaves no merged branch on the remote to sample, so the observation is empty exactly where the convention is strictest |
++| `git.update_strategy` | C | `merge` | C-test 4 — `rebase` makes the proposed base sync a history rewrite plus a `--force-with-lease` push. It authorises nothing (git-history-discipline still asks per rewrite), but an agent that could set it could choose which destructive operation it proposes next. The default is today's behaviour | policy — the forge's own branch rules (a required linear history) carry the same fact; kept because the rule set is not readable from every host |
+ | `github.pr_reply_method` | A | `create_review_comment` | picks between two endpoints of one operation | derivable — the `auto` value already in the enum: the routing detects the working endpoint on first use and writes it back |
+ | `delivery.merge` | C | `off` | C-test 1 — it is the configuration half of merge authority, resolved by ADR-268 section 3. An agent that could write it could grant itself the capability the key gates, which is the exact shape the C fence exists to refuse. `off` is today's behavior, so an install that never sets it is unchanged | consent |
+ | `delivery.wait_for_ci` | C | `true` | C-test 1 — it authorises the run to keep spending time and tokens driving CI to a verdict rather than ending at push. A standing authorisation over the agent's own consumption is not a preference | consent |
+diff --git a/docs/guidelines/php/git.md b/docs/guidelines/php/git.md
+index 6fe6c803efae8b5edd98ffc25343a1d861cac76b..70484c37b8ed12de91d284bc963d0150bf951739 100644
+--- a/docs/guidelines/php/git.md
++++ b/docs/guidelines/php/git.md
+@@ -34,6 +34,10 @@ hotfix/DEV-999/critical-payment-bug
+ - Always include the Jira ticket ID when one exists
+ - Use kebab-case for the description part
+ - Keep branch names short but descriptive
++- The shape above is this guideline's convention; the agent creates branches
++  per `git.branch_pattern` (package default `{type}/{slug}`, a ticket-named team
++  sets `{ticket}-{slug}` → `DEV-1234-device-export`). Reading the ticket back out
++  of a branch never depends on the pattern.
+ 
+ ## Commit Messages
+ 
+@@ -68,9 +72,23 @@ that is not better classified as `build`, `ci`, or `docs`.
+ 
+ Use a scope when it adds clarity. Good scopes:
+ 
+-- Jira ticket ID: `DEV-1234`
++- Jira ticket ID: `DEV-1234` — only under `git.commit_format: ticket-scope`
++  (default)
+ - Module/area: `api`, `auth`, `skills`, `rules`, `ci`, `frontend`, `linter`
+ 
++Under `git.commit_format: ticket-prefix` the ticket leads the subject and is
++**never** the scope:
++
++```
++DEV-1234 feat(exporter-models): add optional classification fields
++DEV-1234 docs(dataflor-exporter): document device export filters
++DEV-1235 chore(ci): reduce deployment token permissions
++```
++
++`fix(DEV-1234): …` is a wrong subject there. Tooling that parses subjects
++(commitlint, release automation, changelog generators) must be configured for
++the prefixed form, because standard parsers expect the type first.
++
+ Do not add a scope if it adds no value. `fix(core): fix typo` → just `fix: fix typo`.
+ 
+ ### Description rules
+@@ -157,7 +175,11 @@ Before writing the commit message:
+ 
+ ## Pull Requests
+ 
+-- PR title follows commit message format: `feat(DEV-1234): short description`
++- PR title as `/create-pr:description-only` § 3 builds it — `DEV-1234: short
++  description` by default, a full commit subject under `ticket-prefix`
++- Bring the branch up to date per `git.update_strategy` — merge the base in
++  (default) or rebase onto `origin/main` and push with `--force-with-lease`;
++  see `git-workflow` › `references/branch-update.md`
+ - Fill in the PR template (checklist, description, testing notes)
+ - Link the Jira ticket in the PR description
+ - Ensure all quality gates pass before requesting review
+diff --git a/docs/settings-reference.md b/docs/settings-reference.md
+index fe26966bbcbd6f5dfa9420e22df80ec1bd65fc7a..8bdbef0f1dc80b1caa9b198844d6910c0e6f4a49 100644
+--- a/docs/settings-reference.md
++++ b/docs/settings-reference.md
+@@ -161,6 +161,14 @@ explanation lives now that the file no longer carries it as comments.
+ |---|---|---|---|---|---|
+ | `explain.enable_last` | A | boolean | `true` |  | Enable the `agent-config explain last` command, which prints the reasoning behind the agent's most recent decision (last tool call, last suggestion). Disable if you never use it and want a smaller CLI surface. |
+ 
++## git
++
++| Key | Class | Type | Default | Allowed values | What it does |
++|---|---|---|---|---|---|
++| `git.branch_pattern` | C | string | `"{type}/{slug}"` |  | Shape of a branch name the agent creates. Placeholders: {type} (feat, fix, …), {ticket} (e.g. DEV-1234), {slug} (short kebab-case description). Default {type}/{slug}. A team that names branches after the ticket sets {ticket}-{slug}. A placeholder with no value is dropped together with the separator that follows it, or the one before it when it is last, so no name starts or ends with a separator ({type}/{ticket}-{slug} without a ticket gives feat/slug). Reading a ticket back out of an existing branch never depends on this pattern. |
++| `git.commit_format` | C | string | `"ticket-scope"` | `ticket-scope` · `ticket-prefix` | Where a ticket id goes in a commit subject. ticket-scope (default) = the ticket is the Conventional-Commits scope, `feat(DEV-1234): add export filter` — the behaviour every install had before this key existed. ticket-prefix = the ticket leads the subject and the scope names the system area, `DEV-1234 feat(exporter): add export filter`; a ticket is then never a scope. Without a ticket both shapes are plain Conventional Commits. A commit-linting config in the repository (commitlint, a commit-msg hook) outranks this key. |
++| `git.update_strategy` | C | string | `"merge"` | `merge` · `rebase` | How a feature branch is brought up to date with its base. merge (default) = merge the base into the branch, as before this key existed. rebase = rebase the branch onto origin/<base> and publish with --force-with-lease, never a merge of the base into the branch. Rebase rewrites history, so the agent still asks for it each time per the git-history-discipline rule unless the user asked for it in that turn; this key decides which operation is proposed, never whether one is authorised. |
++
+ ## github
+ 
+ | Key | Class | Type | Default | Allowed values | What it does |
+diff --git a/src/config/agent-settings.template.yml b/src/config/agent-settings.template.yml
+index cf2b2a6d420a24877aa6992045ab3c3837524df1..eaf29550abd2e5aa70982cb908154749e3eadffc 100644
+--- a/src/config/agent-settings.template.yml
++++ b/src/config/agent-settings.template.yml
+@@ -416,6 +416,33 @@ project:
+   # this is not a settingsCarveOut key, so absent == an explicit `public`.
+   audience: public
+ 
++# --- Git conventions: commit subjects, branch names, base sync ---
++#
++# Representation and workflow only. None of these keys authorises a commit,
++# a push or a history rewrite — commit-policy, scope-control and
++# git-history-discipline decide that, unchanged. A commit-linting config in the
++# repository (commitlint, a commit-msg hook) outranks git.commit_format.
++git:
++  # Where a ticket id goes in a commit subject.
++  #   ticket-scope  -> `feat(DEV-1234): add export filter` (default — the
++  #                    behaviour before this key existed)
++  #   ticket-prefix -> `DEV-1234 feat(exporter): add export filter` — the
++  #                    ticket leads, the scope names the system area, and a
++  #                    ticket is never a scope
++  commit_format: ticket-scope
++
++  # Shape of a branch name the agent creates. Placeholders: {type}, {ticket},
++  # {slug}. Ticket-named branches: "{ticket}-{slug}". An empty placeholder is
++  # dropped with the separator after it (before it, when last).
++  branch_pattern: "{type}/{slug}"
++
++  # How a feature branch is brought up to date with its base.
++  #   merge  -> merge origin/<base> into the branch (default)
++  #   rebase -> rebase onto origin/<base>, publish with --force-with-lease;
++  #             never a merge of the base into the branch. Still asked for
++  #             each time per git-history-discipline.
++  update_strategy: merge
++
+ # --- GitHub integration ---
+ github:
+   # API method for replying to PR review comments
+diff --git a/src/domains/engineering-base/fix/ci/command.md b/src/domains/engineering-base/fix/ci/command.md
+index 6d42ff8bfceafaf6fb7469839a0b66dca04f38d4..ba44f09660c029544032a57f777f278ac1ed050a 100644
+--- a/src/domains/engineering-base/fix/ci/command.md
++++ b/src/domains/engineering-base/fix/ci/command.md
+@@ -97,7 +97,10 @@ branch** — that is what makes the deliverable remote. Then:
+    [`commit-policy`](../../../rules/commit-policy.md) — never ask how).
+ 2. Update the branch against its PR base first:
+    `./scripts-run src/scripts/sync_pr_branch`, then regenerate any derived files
+-   the merge touched (`task sync && task generate-tools`). A PR left behind its
++   the merge touched (`task sync && task generate-tools`). Under
++   `git.update_strategy: rebase` the script refuses; rebase on the user's request
++   instead ([`branch-update`](../../../../skills/git-workflow/references/branch-update.md)),
++   never merge the base in. A PR left behind its
+    base accumulates conflicts for the moment someone wants to merge it, and a
+    push against a moved base is rejected — both cost a round trip that this one
+    call prevents.
+diff --git a/src/domains/engineering-base/fix/commit-messages/command.md b/src/domains/engineering-base/fix/commit-messages/command.md
+index 1fef04fa95f8b6bc41ab823e8d7ec1ffea2df215..e542cc5a1b202921855a81fb5d14abc5417f8144 100644
+--- a/src/domains/engineering-base/fix/commit-messages/command.md
++++ b/src/domains/engineering-base/fix/commit-messages/command.md
+@@ -63,7 +63,9 @@ Run `## Procedure: Establish the house convention` from
+ [`conventional-commits-writing`](../../../skills/conventional-commits-writing/SKILL.md)
+ verbatim: tier-1 sources first (opened and read, never taken from a grep hit),
+ then the capped-weighted consensus pass with bots, merges, reverts and release
+-automation excluded.
++automation excluded. A declared `git.commit_format: ticket-prefix` (the skill's tier 1b; `ticket-scope` is the template default and declares nothing)
++is the target: report it as `Declared : git.commit_format: …`, skip step 3's
++style question, and keep the other authorisations.
+ 
+ Report what it found, in one block, before offering anything:
+ 
+diff --git a/src/domains/engineering-base/pack.yaml b/src/domains/engineering-base/pack.yaml
+index 59e642ff3bd6b17c6612c9396962700db1fda16c..0f8a08b4cef047b21444ff62a7d2d6bbfe803ca5 100644
+--- a/src/domains/engineering-base/pack.yaml
++++ b/src/domains/engineering-base/pack.yaml
+@@ -18,6 +18,6 @@ token_passport:
+   catalog_tokens: 4829
+   commands_tokens: 1821
+   other_tokens: 0
+-  rules_tokens: 39233
+-  total_tokens: 45883
++  rules_tokens: 39262
++  total_tokens: 45912
+ trust_level_default: core
+diff --git a/src/domains/engineering-base/prepare-for-review/command.md b/src/domains/engineering-base/prepare-for-review/command.md
+index d28a3f1df712c1baa83f73ecf0bc8e12f61f7e7a..01ad07cf968834e583f7a0c8b3ec621cc2a54a46 100644
+--- a/src/domains/engineering-base/prepare-for-review/command.md
++++ b/src/domains/engineering-base/prepare-for-review/command.md
+@@ -73,6 +73,15 @@ git checkout {child-branch}
+ git merge {parent-branch} --no-edit
+ ```
+ 
++- **Under `git.update_strategy: rebase`** do not merge the chain: a merge
++  commit on a feature branch is what that setting excludes, and this command
++  must not leave one behind to be pushed later. Check the target branch back
++  out, report which branches are behind their parent, and finish without error
++  — the review then runs against `git merge-base HEAD origin/<parent-branch>`
++  (the remote ref step 4 fetched; a local branch may be missing or stale), the
++  target's direct parent in the chain, so parent PRs stay out of it. Updating the
++  chain is a rebase the user asks for
++  ([`branch-update`](../../../skills/git-workflow/references/branch-update.md)).
+ - If a **merge conflict** occurs at any point:
+   - Run `git merge --abort`
+   - Abort the entire process immediately
+diff --git a/src/domains/engineering-base/review/changes/command.md b/src/domains/engineering-base/review/changes/command.md
+index 85ec8b2610bdb2a1558525c1ea6dc45a87bf657b..adfaac8eec63ae804e4b80489d3f1366a76a871e 100644
+--- a/src/domains/engineering-base/review/changes/command.md
++++ b/src/domains/engineering-base/review/changes/command.md
+@@ -39,10 +39,14 @@ to make sure the current branch is up to date with its base chain:
+   - If exactly one open PR is found → invoke `/prepare-for-review`
+     with that PR number. It will update `main`, fetch and merge the
+     full branch chain into the current branch, and leave the current
+-    branch checked out.
++    branch checked out — under `git.update_strategy: rebase` it merges
++    nothing and reports the behind branches instead.
+   - If no open PR is found → fall back to a minimal local update:
+     `git fetch origin main` and `git merge origin/main --no-edit` on
+-    the current branch. Abort on conflict and report.
++    the current branch. Abort on conflict and report. Under
++    `git.update_strategy: rebase` skip the merge: `git fetch origin main`
++    only, review the diff against `git merge-base HEAD origin/main`, and say
++    the branch is behind.
+   - If multiple PRs are found → ask the user which PR to use before
+     proceeding.
+ - If `/prepare-for-review` aborts (merge conflict, network error,
+diff --git a/src/domains/engineering-base/worktree/create/command.md b/src/domains/engineering-base/worktree/create/command.md
+index 5568e48fe45b95e4df02a41d837e7e26d2942021..420b56f2abccae5429044b81ad821628e0377971 100644
+--- a/src/domains/engineering-base/worktree/create/command.md
++++ b/src/domains/engineering-base/worktree/create/command.md
+@@ -39,8 +39,9 @@ Without a primitive, the skill's plain `git worktree add` path applies.
+ 
+ ### 2. Branch naming — propose once
+ 
+-Derive ONE branch name from the task (`<type>/<short-slug>` per the
+-`commit-conventions` rule), state it, and proceed. Do not present a
++Derive ONE branch name from the task — the shape `git.branch_pattern`
++declares (default `{type}/{slug}`; a ticket-named team sets `{ticket}-{slug}`),
++per the `commit-conventions` rule — state it, and proceed. Do not present a
+ naming menu; the user can override by naming a branch in the same turn.
+ 
+ ### 3. Write the scope-lock note
+diff --git a/src/domains/git/commit/command.md b/src/domains/git/commit/command.md
+index e61669d12deb1645bb3192ef5709781518c5baec..48c0cd33204bf091a3016dc746bf2786471c937c 100644
+--- a/src/domains/git/commit/command.md
++++ b/src/domains/git/commit/command.md
+@@ -57,7 +57,18 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
+ 
+ ### 2. Determine the ticket number
+ 
+-- Extract the ticket ID from the current branch name (e.g. `feat/DEV-1234/...` → `DEV-1234`).
++- Extract the ticket ID from the current branch name — the first token matching
++  `[A-Z][A-Z0-9]+-[0-9]+`, wherever it sits (`feat/DEV-1234/...`,
++  `DEV-1234-device-export`, `fix/DEV-1234-quantity` → `DEV-1234`). The match
++  never depends on `git.branch_pattern`, so a branch named before the pattern
++  was set still yields its ticket. A token whose prefix is `UTF`, `ISO`, `SHA`
++  or `RFC` (`UTF-8`, `ISO-8601`, `SHA-256`) is a standard name, not a ticket —
++  skip it and take the next match.
++- Establish the convention in force once, per the conventional-commits-writing
++  skill § Establish the house convention: a repository config (commitlint, a
++  `commit-msg` hook) first, then a declared `git.commit_format: ticket-prefix`,
++  then an approved measured convention. `git.commit_format` decides where the
++  ticket goes only where nothing above it applies.
+ - If no ticket ID is found in the branch name, ask the user:
+   ```
+   > No Jira ticket found in branch name. Do you want to include one?
+@@ -65,8 +76,12 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
+   > 1. Yes — I'll provide the ticket number
+   > 2. No — skip ticket number
+   ```
+-- If the user provides a ticket number, use it as the scope in all commit messages.
+-- If skipped, omit the scope entirely — write `chore: ...` not `chore(): ...`.
++- If the user provides a ticket number, place it per `git.commit_format` in all
++  commit messages: `ticket-scope` (default) → as the scope, `feat(DEV-1234): …`;
++  `ticket-prefix` → before the type, `DEV-1234 feat(<area>): …`, and the ticket
++  is never the scope.
++- If skipped, omit the ticket entirely — under `ticket-scope` write `chore: ...`
++  not `chore(): ...`; under `ticket-prefix` keep any area scope.
+ 
+ ### 3. Analyze the changes
+ 
+@@ -114,14 +129,18 @@ from `.agent-settings.yml`. Both default to `false`.
+ 
+ **Terse path** — `preview_artifacts: false` AND `routine_confirmations: false`:
+ 
+-1. Validate every generated commit message against the
+-   conventional-commits regex
+-   `^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`.
++1. Validate every generated commit message against the regex for the
++   convention in force (step 2); a repository config's own rule replaces these:
++   - `ticket-scope` (default):
++     `^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`
++   - `ticket-prefix`:
++     `^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(?!\([A-Z][A-Z0-9]+-[0-9]+\))(\([^)]+\))?!?: .+`
++     — the lookahead rejects a ticket id standing in the scope.
+ 2. **All messages valid** → skip the preview block and the confirmation
+    prompt. Print one line summarising the plan and proceed to step 6:
+ 
+    ```
+-   → 3 commits planned: feat, test, chore (scope: DEV-1234)
++   → 3 commits planned: feat, test, chore (ticket: DEV-1234)
+    ```
+ 
+ 3. **Any message invalid** → `preview-on-error` safety net fires:
+@@ -140,7 +159,9 @@ Show the proposed commits as a numbered list, including which files go into each
+ ```
+ Proposed commits:
+ 
+-(Laravel-project example)
++(Laravel-project example, `git.commit_format: ticket-scope`; under
++`ticket-prefix` the first subject reads
++`DEV-1234 feat(working-time): add absence type filter to working time report`)
+ 1. feat(DEV-1234): add absence type filter to working time report
+    → app/Services/WorkingTimeService.php
+    → app/Http/Controllers/WorkingTimeController.php
+diff --git a/src/domains/git/commit/in-chunks/command.md b/src/domains/git/commit/in-chunks/command.md
+index 7b763ae575e8a8a1c0cfeb755d8bc320691de402..0a72f0bc051adf5588a468187cdef6b08e764264 100644
+--- a/src/domains/git/commit/in-chunks/command.md
++++ b/src/domains/git/commit/in-chunks/command.md
+@@ -43,10 +43,13 @@ If there are no uncommitted changes (staged or unstaged), report
+ 
+ ### 2. Determine the ticket number
+ 
+-- Extract the ticket ID from the current branch name (e.g. `feat/DEV-1234/...`
+-  → `DEV-1234`).
+-- If no ticket ID is found, omit the scope from the messages — write
+-  `chore: ...` not `chore(): ...`. Do **not** ask the user for one.
++- Extract the ticket ID from the current branch name exactly as
++  [`/commit`](../commit.md) step 2 does (first `[A-Z][A-Z0-9]+-[0-9]+` token),
++  and place it per the convention in force, established as in `/commit` step 2
++  (repository config, then a declared `git.commit_format`, then an approved
++  measured convention).
++- If no ticket ID is found, omit it — write `chore: ...` not `chore(): ...`.
++  Do **not** ask the user for one.
+ 
+ ### 3. Analyze and split
+ 
+@@ -80,8 +83,9 @@ strip one.
+ ### 4. Validate, then commit immediately
+ 
+ Before staging anything, run the same `preview-on-error` validator as
+-[`/commit`](../commit.md) step 5. Each generated message must match
+-`^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`.
++[`/commit`](../commit.md) step 5 — the rule of the convention in force
++(step 2), with the two `git.commit_format` regexes listed there as its
++fallback.
+ 
+ - **All valid** → proceed silently.
+ - **Any invalid** → stop, print the failed message(s) + the regex,
+diff --git a/src/domains/git/pack.yaml b/src/domains/git/pack.yaml
+index f93ebaee5cc771be62308ba09a27b9e690c1eb54..5ae3787baf382353c750495ce3e5f7ac876ffd07 100644
+--- a/src/domains/git/pack.yaml
++++ b/src/domains/git/pack.yaml
+@@ -19,8 +19,8 @@ surface_tier: core
+ token_passport:
+   basis: chars/4
+   catalog_tokens: 0
+-  commands_tokens: 19733
++  commands_tokens: 20603
+   other_tokens: 0
+   rules_tokens: 0
+-  total_tokens: 19733
++  total_tokens: 20603
+ trust_level_default: core
+diff --git a/src/domains/git/pr/create/command.md b/src/domains/git/pr/create/command.md
+index 9a9c5c16b7a4d61cfae3611048605d060dac6c2c..1e2afb8e62f104c236ed0ce998231b94a01a9c41 100644
+--- a/src/domains/git/pr/create/command.md
++++ b/src/domains/git/pr/create/command.md
+@@ -101,7 +101,7 @@ Run, in order:
+ | Gate | Overlapping open PR touches same files? | Action |
+ |---|---|---|
+ | exit `0`, prints `branch is current` | — | Proceed to Step 2 |
+-| exit `1` | No | **Merge the base in** — `git fetch origin && git merge origin/{resolved-base} --no-edit` — then run the regeneration set below, then proceed. No need to ask; state that you did it. |
++| exit `1` | No | **Bring the base in** per `git.update_strategy` ([`branch-update`](../../../../skills/git-workflow/references/branch-update.md)). `merge` (default): `git fetch origin && git merge origin/{resolved-base} --no-edit` — no need to ask; state that you did it. `rebase`: `git fetch origin && git rebase origin/{resolved-base}` — ask first unless the user asked for the update this turn, and never fall back to a merge. Then run the regeneration set below, then proceed. |
+ | exit `1` | **Yes** | STOP — surface the overlapping PR number, ask: stack on top of it / wait for it to land / proceed-anyway-and-accept-conflicts / cancel |
+ | exit `0`, prints `NOT VERIFIED` | — | The base could not be reached, so freshness is **unknown** — not confirmed. Re-run once; if it persists, say the check did not run rather than reporting a pass. A base that `ls-remote` cannot resolve (deleted or renamed after the PR opened, or a fork base) lands here too. |
+ | warns `could not ask the forge` | — | The **default** base was checked and an open PR against a different base was **not** ruled out. Say so; do not report it as a clean freshness pass. |
+@@ -137,8 +137,16 @@ a generated-file conflict never is.
+ 
+ The gate above is not creation-only. **Every subsequent push** to a branch with
+ an open PR (a CI fix, a review response, a follow-up commit) re-runs the same
+-sequence first: `check_branch_freshness` → on exit `1`, merge
+-`origin/{resolved-base}` in → regenerate the derived files → verify → push.
++sequence first: `check_branch_freshness` → on exit `1`, bring
++`origin/{resolved-base}` in per `git.update_strategy` (merge by default; under
++`rebase` a rebase that is asked for, never a merge, and `sync_pr_branch` refuses)
++→ regenerate the derived files → verify → push (after a rebase:
++`git push --force-with-lease=<branch>:<fetched-sha>`, never a plain push). A
++rebase runs only after the pre-rewrite stop in
++[`branch-update`](../../../../skills/git-workflow/references/branch-update.md):
++`git rev-list --left-right --count HEAD...@{u}` must be `0 0` after the fetch,
++so `<fetched-sha>` equals your own pre-rebase HEAD and a collaborator's push
++fails the lease instead of being overwritten.
+ A PR that sits open while its base advances goes stale silently; keeping the
+ base merged **at every touch** means it stays `mergeStateStatus: CLEAN` instead
+ of accumulating conflicts for the moment the user wants to merge. If the gate
+diff --git a/src/domains/git/pr/create/description-only/command.md b/src/domains/git/pr/create/description-only/command.md
+index 25e2b1d9f38fb7c4c3566486fa1efe8a71457310..5cab00901748e1bee26a5ddd8c9dfe36b851fb86 100644
+--- a/src/domains/git/pr/create/description-only/command.md
++++ b/src/domains/git/pr/create/description-only/command.md
+@@ -87,7 +87,9 @@ That's 6 round-trips for what should be 2.
+ 
+ ### 3. Build the PR title
+ 
+-- Format: `{TICKET-ID}: {summary}` (e.g. `DEV-4673: Fix absence working time calculation`).
++- Format: `{TICKET-ID}: {summary}` (e.g. `DEV-4673: Fix absence working time calculation`);
++  under `git.commit_format: ticket-prefix` the title is a commit subject instead,
++  `DEV-4673 fix(working-time): correct absence calculation`.
+ - Use the Jira ticket summary if available, otherwise derive from commits.
+ - If no ticket: use the most descriptive commit message or ask the user.
+ 
+diff --git a/src/domains/git/pr/merge/command.md b/src/domains/git/pr/merge/command.md
+index 7fc46d33772506abcb3a63e4cf5f5728d9c2ed12..85b24a19c3f8d0e94286e17cc9e3318be8af55bf 100644
+--- a/src/domains/git/pr/merge/command.md
++++ b/src/domains/git/pr/merge/command.md
+@@ -138,8 +138,20 @@ gh pr checkout <N>
+ git merge origin/<base> --no-edit
+ ```
+ 
+-Merge the base **into** the branch. Never rebase a branch that is already
+-pushed ([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
++Merge the base **into** the branch. Never rebase here unless the invocation
++itself asked for it: the `/pr:merge` authorisation covers merging the named PRs,
++not rewriting their branches
++([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
++
++**Under `git.update_strategy: rebase`** this step does not merge: a
++`Merge branch '<base>' into …` commit is what that setting excludes. The
++`/pr:merge` sentence authorises merging the named PRs, not rewriting their
++branches, so a PR that is behind its base is reported and left for the author
++to rebase — disposition `blocked-external` — unless the invocation itself asked
++for the rebase. A PR that is behind but conflict-free does not need this step
++at all unless branch protection requires an up-to-date branch: whichever method
++§ 9 detects, the forge lands it on the current base — `--rebase` replays the
++commits, `--squash` and `--merge` build on the base as it is.
+ 
+ ## 3. Resolve conflicts by class, never by taste
+ 
+diff --git a/src/domains/meta/pack.yaml b/src/domains/meta/pack.yaml
+index 51cccd421a5ebe4e66abfd52209850e28eb1a914..10c8d88dfb18eb31d9e6717cd60465a688687374 100644
+--- a/src/domains/meta/pack.yaml
++++ b/src/domains/meta/pack.yaml
+@@ -98,8 +98,8 @@ surface_tier: core
+ token_passport:
+   basis: chars/4
+   catalog_tokens: 3649
+-  commands_tokens: 250741
++  commands_tokens: 251161
+   other_tokens: 1298
+   rules_tokens: 64116
+-  total_tokens: 319804
++  total_tokens: 320224
+ trust_level_default: core
+diff --git a/src/domains/product-basic/roadmap/next/command.md b/src/domains/product-basic/roadmap/next/command.md
+index 301ffe5bf33da342885172273a8eaec27eac3af2..3db71b6e1c47eeba8553ef838ef2eb9c541f5136 100644
+--- a/src/domains/product-basic/roadmap/next/command.md
++++ b/src/domains/product-basic/roadmap/next/command.md
+@@ -280,7 +280,9 @@ was for a conflict whose entire existence is a remote fact. That is the friction
+ this clause removes; the floor it keeps is the *unnamed* push.
+ 
+ **Before every push to the open PR**, bring the branch up to its base with
+-`./scripts-run src/scripts/sync_pr_branch` and regenerate afterwards. Measured on
++`./scripts-run src/scripts/sync_pr_branch` and regenerate afterwards (under
++`git.update_strategy: rebase` it refuses — rebase on request instead, per
++[`branch-update`](../../../../skills/git-workflow/references/branch-update.md)). Measured on
+ this run: the base moved three times, the push was rejected twice for it, and the
+ PR reached `CONFLICTING` in between. Verify the result afterwards with
+ `./scripts-run src/scripts/check_pr_ci_current` — a green local gate says nothing
+diff --git a/src/rules/commit-conventions.md b/src/rules/commit-conventions.md
+index 68f04ce1dc92b6105404f7017e5939ebf41116af..2077b7cc67f39a5bc590bc1da860a11e754f4cd3 100644
+--- a/src/rules/commit-conventions.md
++++ b/src/rules/commit-conventions.md
+@@ -18,7 +18,7 @@ obligation_frequency: "per-commit"
+ 
+ # Commit Conventions
+ 
+-**Iron Law.** Match the repo's configured or approved convention; else Conventional Commits (`feat:`, `fix:` …), branches `<type>/<short-slug>`; never invent one. Subjects + branch names stay emoji-free per [`no-decorative-emojis-in-git-surfaces`](no-decorative-emojis-in-git-surfaces.md); body emojis need an in-artifact legend.
++**Iron Law.** Match, in order, the repo's configured convention, a declared `git.commit_format: ticket-prefix`, or an approved measured one; else Conventional Commits (`feat:`, `fix:` …), with branches per `git.branch_pattern` (default `<type>/<short-slug>`); never invent one. Subjects + branch names stay emoji-free per [`no-decorative-emojis-in-git-surfaces`](no-decorative-emojis-in-git-surfaces.md); body emojis need an in-artifact legend.
+ 
+ Body migrated to `skill:conventional-commits-writing` (per P4 of `road-to-kernel-and-router.md`).
+ Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
+diff --git a/src/scripts/schemas/agent-settings.schema.json b/src/scripts/schemas/agent-settings.schema.json
+index 982c9e8fff0b7dc8a67164d9c1fea5f36aefb4ab..6e79f10bc66073e3a71314c121958fcbc543953d 100644
+--- a/src/scripts/schemas/agent-settings.schema.json
++++ b/src/scripts/schemas/agent-settings.schema.json
+@@ -79,6 +79,26 @@
+         }
+       }
+     },
++    "git": {
++      "type": "object",
++      "additionalProperties": true,
++      "properties": {
++        "commit_format": {
++          "type": "string",
++          "enum": ["ticket-scope", "ticket-prefix"],
++          "description": "Where a ticket id goes in a commit subject. ticket-scope (default) = `feat(DEV-1234): …`; ticket-prefix = `DEV-1234 feat(area): …`, a ticket is never a scope."
++        },
++        "branch_pattern": {
++          "type": "string",
++          "description": "Shape of a branch name the agent creates. Placeholders {type}, {ticket}, {slug}. Default {type}/{slug}."
++        },
++        "update_strategy": {
++          "type": "string",
++          "enum": ["merge", "rebase"],
++          "description": "How a feature branch is brought up to date with its base. merge (default) = merge the base in; rebase = rebase onto origin/<base> and push with --force-with-lease, still asked for each time per git-history-discipline."
++        }
++      }
++    },
+     "design": {
+       "type": "object",
+       "additionalProperties": true,
+diff --git a/src/scripts/sync_pr_branch.ts b/src/scripts/sync_pr_branch.ts
+index 310d3b4e18767998113c75236b08e9abe07516e6..4f906936adcea6164f1f4dfeba6a130929702859 100644
+--- a/src/scripts/sync_pr_branch.ts
++++ b/src/scripts/sync_pr_branch.ts
+@@ -27,7 +27,9 @@
+  * 2026-08-21, both seats; roadmap road-to-merge-hotspot-drawdown).
+  *
+  * Exit codes: 0 = already current, or merged cleanly · 1 = conflict, or the base
+- * could not be resolved · 2 = internal error. `scanned:` on every path.
++ * could not be resolved · 2 = internal error · 3 = behind, and
++ * `git.update_strategy` is not `merge`, so the merge was refused. `scanned:` on
++ * every path.
+  */
+ 
+ import * as path from 'node:path';
+@@ -40,6 +42,7 @@ import {
+     loadPolicyAtSha,
+     type ShaFileReader,
+ } from './_lib/branch_convergence.js';
++import { load_agent_settings } from './_lib/agent_settings.js';
+ import { reportScanned } from './_lib/scan_scope.js';
+ 
+ const NETWORK_TIMEOUT_MS = 8_000;
+@@ -232,6 +235,8 @@ export interface Plan {
+     remeasured: string[];
+     authored: string[];
+     scanned: number;
++    /** Base refs the branch is behind — set by a dry run, so a caller can decide without parsing `message`. */
++    behind?: number;
+ }
+ 
+ /**
+@@ -785,6 +790,7 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
+             remeasured: [],
+             authored: [],
+             scanned: order.length,
++            behind: stale.length,
+         };
+     }
+ 
+@@ -845,6 +851,24 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
+     };
+ }
+ 
++/**
++ * `git.update_strategy` for the repository, trimmed and lower-cased. Absent
++ * reads as `merge`, the behaviour before the key existed, and so does a settings
++ * file the loader cannot read at all — the same default every other key falls
++ * back to. A readable value other than `merge`, a typo included, is returned
++ * as-is and refuses the merge instead of silently performing it.
++ */
++export function updateStrategy(repo: string): string {
++    let value: unknown;
++    try {
++        value = (load_agent_settings({ cwd: repo }).git as { update_strategy?: unknown } | undefined)?.update_strategy;
++    } catch {
++        return 'merge';
++    }
++    if (value === undefined || value === null) return 'merge';
++    return String(value).trim().toLowerCase();
++}
++
+ export function main(argv?: readonly string[]): number {
+     const args = argv ?? process.argv.slice(2);
+     let repo = process.cwd();
+@@ -884,6 +908,9 @@ export function main(argv?: readonly string[]): number {
+             process.stdout.write(
+                 'usage: sync_pr_branch [--repo PATH] [--base REF] [--dry-run] [--auto-resolve-generated] [--quiet]\n' +
+                     '  Merges the PR base into the current branch so the PR does not go stale.\n' +
++                    '  Under a git.update_strategy other than merge it only checks: a current\n' +
++                    '  branch exits 0, a behind one exits 3 and is never merged (--dry-run and\n' +
++                    '  --auto-resolve-generated have nothing to change there).\n' +
+                     '  Resolves the base from the open PR when there is one. A conflict is\n' +
+                     '  reported and never auto-resolved; generated and authored conflicts are\n' +
+                     '  listed separately because only the first has one correct resolution;\n' +
+@@ -903,9 +930,27 @@ export function main(argv?: readonly string[]): number {
+         }
+     }
+ 
++    // This script only merges. Under any other strategy a merge of the base is
++    // the commit the setting excludes, and a rebase needs the user's request per
++    // git-history-discipline — so the branch is only CHECKED (dry run), and a
++    // branch that is behind is refused rather than merged. A current branch
++    // passes, so an automated pre-push sync stays green when nothing is to do.
++    const strategy = updateStrategy(repo);
+     let plan: Plan;
+     try {
+-        plan = sync(repo, base, dryRun, autoResolve);
++        if (strategy !== 'merge') {
++            plan = sync(repo, base, true, false);
++            if (plan.exit === 0 && (plan.behind ?? 0) > 0) {
++                process.stdout.write(
++                    `⚠️  sync_pr_branch: refused — the branch is behind and git.update_strategy is \`${strategy}\`; this script only merges. ` +
++                        `Rebase on request instead (git-workflow references/branch-update.md). ${plan.message}\n`,
++                );
++                reportScanned({ gate: 'sync_pr_branch', scanned: plan.scanned, units: 'base ref(s)', roots: ['origin'] });
++                return 3;
++            }
++        } else {
++            plan = sync(repo, base, dryRun, autoResolve);
++        }
+     } catch (exc) {
+         reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'internal error' });
+         process.stderr.write(`❌  sync_pr_branch: internal error: ${exc instanceof Error ? exc.message : String(exc)}\n`);
+diff --git a/src/server/schemas/settings.ts b/src/server/schemas/settings.ts
+index d491b7970ffc31bfb3ac6e039641acdb31d6ea4e..18bc8f649ced9e39f273412c8824bec7df11bee2 100644
+--- a/src/server/schemas/settings.ts
++++ b/src/server/schemas/settings.ts
+@@ -38,6 +38,8 @@ const memoryCadence = z.enum(['auto', 'always', 'never']);
+ const projectAudience = z.enum(['self', 'internal', 'client', 'public']);
+ const deliveryMerge = z.enum(['off', 'on-green']);
+ const prTopology = z.enum(['single', 'stacked']);
++const gitCommitFormat = z.enum(['ticket-scope', 'ticket-prefix']);
++const gitUpdateStrategy = z.enum(['merge', 'rebase']);
+ 
+ export const settingsSchema = z.object({
+     agent_config_version: z.string().default('').describe(
+@@ -158,6 +160,17 @@ export const settingsSchema = z.object({
+             'Who this project is built for — read by the demand gate (§ 8-pre of docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md), whose L0-L4 ladder measures MARKET demand and is meaningless where no market is intended. self = a tool its maintainer builds for themselves; the gate is inert and work is classified L-self (build) instead of being deferred for lack of a user population nobody wants. internal = a team tool; only "what breaks without it?" survives. client = built for a named client, who is the requester rather than a market segment. public (default) = a product with an intended market; full three-question gate, behaviour unchanged from before this key existed.',
+         ),
+     }),
++    git: z.object({
++        commit_format: gitCommitFormat.default('ticket-scope').describe(
++            'Where a ticket id goes in a commit subject. ticket-scope (default) = the ticket is the Conventional-Commits scope, `feat(DEV-1234): add export filter` — the behaviour every install had before this key existed. ticket-prefix = the ticket leads the subject and the scope names the system area, `DEV-1234 feat(exporter): add export filter`; a ticket is then never a scope. Without a ticket both shapes are plain Conventional Commits. A commit-linting config in the repository (commitlint, a commit-msg hook) outranks this key.',
++        ),
++        branch_pattern: z.string().default('{type}/{slug}').describe(
++            'Shape of a branch name the agent creates. Placeholders: {type} (feat, fix, …), {ticket} (e.g. DEV-1234), {slug} (short kebab-case description). Default {type}/{slug}. A team that names branches after the ticket sets {ticket}-{slug}. A placeholder with no value is dropped together with the separator that follows it, or the one before it when it is last, so no name starts or ends with a separator ({type}/{ticket}-{slug} without a ticket gives feat/slug). Reading a ticket back out of an existing branch never depends on this pattern.',
++        ),
++        update_strategy: gitUpdateStrategy.default('merge').describe(
++            'How a feature branch is brought up to date with its base. merge (default) = merge the base into the branch, as before this key existed. rebase = rebase the branch onto origin/<base> and publish with --force-with-lease, never a merge of the base into the branch. Rebase rewrites history, so the agent still asks for it each time per the git-history-discipline rule unless the user asked for it in that turn; this key decides which operation is proposed, never whether one is authorised.',
++        ),
++    }).default({}),
+     github: z.object({
+         pr_reply_method: replyMethod.default('create_review_comment').describe(
+             'How the agent replies to PR review comments. create_review_comment = post a new review comment (works on every GitHub plan). replies_endpoint = thread the reply under the original comment (needs the newer REST endpoint). auto = detect at runtime, prefer threaded replies when available.',
+diff --git a/src/skills/conventional-commits-writing/SKILL.md b/src/skills/conventional-commits-writing/SKILL.md
+index 9d96d3cc33b9b253d118d77c3dc449ee5f497438..f17194a4306705c2afa2ed40e2b9437428bd3ecb 100644
+--- a/src/skills/conventional-commits-writing/SKILL.md
++++ b/src/skills/conventional-commits-writing/SKILL.md
+@@ -46,6 +46,7 @@ imposing the shipped default there produces commits that read as foreign in
+ | Tier | Source | Binding? |
+ |---|---|---|
+ | **1 — configured** | `commitlint.config.*` · `.gitmessage` · a `commit-msg` hook (husky / lefthook / `.git/hooks`) · `CONTRIBUTING.md` § Commits · a CI job that validates subjects · release automation that PARSES subjects (semantic-release, changesets, git-cliff, conventional-changelog) | yes — Class A, no approval needed |
++| **1b — declared** | `git.commit_format: ticket-prefix` in the project settings — `agent-config settings:get git.commit_format` names the file. Only the non-default value declares anything: `ticket-scope` is also what a copied template carries, so it proves no choice | yes — the user's own word, so no measurement and no ask |
+ | **2 — measured + approved** | the consensus pass below, after the user says yes | yes, for this repository |
+ | **3 — measured, unapproved** | the same pass before the user answers | **no — advisory**; report the mismatch, write Conventional |
+ | **4 — default** | Conventional Commits | yes |
+@@ -60,6 +61,7 @@ Check for the parser before you trust the prevalence.
+ ### 1. Look for tier 1 before measuring anything
+ 
+ ```bash
++agent-config settings:get git.commit_format   # tier 1b when a human set it
+ ls commitlint.config.* .commitlintrc* .gitmessage .czrc 2>/dev/null
+ git config --get commit.template
+ ls .husky/commit-msg .git/hooks/commit-msg 2>/dev/null
+@@ -144,8 +146,9 @@ given outside a table because a markdown cell would need the alternation pipes
+ escaped and `\|` in ERE is a literal pipe, not an alternation:
+ 
+ ```
+-conventional      ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
+-ticket-prefix     ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
++conventional          ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
++ticket-conventional   ^[A-Z][A-Z0-9]+-[0-9]+ (build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
++ticket-prefix         ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
+ gitmoji           ^:[a-z0-9_+-]+:[[:space:]]|^[^[:ascii:][:space:]]
+ imperative-plain  ^[A-Z][a-z]+[[:space:]].*[^.]$
+ other             everything else
+@@ -159,13 +162,15 @@ the classifier, not a gap to fill by guessing: a repo whose only distinction
+ from Conventional is mood will read as `imperative-plain` either way, and the
+ mood question belongs in the ask at step 6.
+ 
+-`classifier_version` in step 7 names the revision of THIS section — the five
+-patterns above plus the exclusions in step 2. It is a provenance stamp so a
+-later measurement can be compared against a like one; it does not claim an
++`classifier_version` in step 7 names the revision of THIS section — the six patterns above (`ticket-conventional` added 2026-10-06; re-measure an older card) plus the exclusions in step 2.
++It is a provenance stamp so a later measurement can be compared against a like one; it does not claim an
+ executable classifier ships anywhere in the tree.
+ 
+ Record the runner-up family too — a near-tie is itself the finding.
+ 
++`ticket-conventional` precedes `ticket-prefix`, which would otherwise swallow it as "ticket, then free text".
++A dominant `ticket-conventional` family maps to `git.commit_format: ticket-prefix` — propose that in the step-6 ask.
++
+ ### 4. Aggregate, capped per author, per half
+ 
+ Raw commit counts let one prolific author or an unfiltered bot define the house
+@@ -274,18 +279,21 @@ If yes:
+ - Suggest splitting into multiple commits
+ - Or choose the dominant net effect for squash merge title
+ 
+-### 3. Choose scope
++### 3. Place the ticket, then choose the scope
+ 
+-Add a scope only if it improves clarity:
++Ticket id: the first `[A-Z][A-Z0-9]+-[0-9]+` token in the branch name that is not a standard name (`UTF-8`, `SHA-256`), or the user; `git.commit_format` places it:
++| `git.commit_format` | With a ticket | Without a ticket |
++|---|---|---|
++| `ticket-scope` (default) | `feat(DEV-1234): add export filter` | `feat: add export filter` |
++| `ticket-prefix` | `DEV-1234 feat(exporter): add export filter` | `feat(exporter): add export filter` |
+ 
+-- Jira ticket ID: `DEV-1234`
+-- Module/area: `api`, `auth`, `skills`, `rules`, `ci`
++Under `ticket-prefix` **a ticket is never a scope**; the scope names the system area (`api/audio`, `ci`), only if it adds clarity.
+ 
+ ### 4. Write the description
+ 
+ - State the intent clearly
+ - Avoid generic filler (`update stuff`, `fix things`)
+-- Stay concise — max 72 chars total for first line
++- Stay concise — max 72 chars total for first line (the ticket prefix counts)
+ - Imperative mood: "add", "fix", "remove" — not "added", "fixed", "removed"
+ 
+ ### 5. Check for breaking change
+@@ -316,6 +324,8 @@ Or add `BREAKING CHANGE:` in the commit body/footer.
+ 
+ ## Procedure: Generate squash merge title
+ 
++Only for a squash merge — rebase-and-merge keeps every commit (`/pr:merge` § 9 reads the method from the forge).
++
+ 1. Read all commits in the PR
+ 2. Identify the **net effect** — what does the PR accomplish overall?
+ 3. Write a single Conventional Commit message summarizing the net effect
+@@ -324,8 +334,8 @@ Or add `BREAKING CHANGE:` in the commit body/footer.
+ ## Output format
+ 
+ 1. The convention in force and the tier that established it — `configured
+-   (commitlint.config.js)`, `approved (ticket-prefix, 84% of 137)`, or
+-   `default (Conventional Commits)`
++   (commitlint.config.js)`, `declared (git.commit_format: ticket-prefix)`,
++   `approved (family ticket-prefix, 84% of 137)`, or `default (Conventional Commits)`
+ 2. Recommended commit message(s)
+ 3. Brief rationale for type choice
+ 4. Split suggestion if the change should be multiple commits
+@@ -372,6 +382,7 @@ to every commit message you author.
+   advisory, and silence is not approval
+ - Do NOT let prevalence lift a `never` or `explicit-only` floor
+ - Do NOT use vague messages: `update stuff`, `fix bug`, `changes`
++- Do NOT put a ticket id in the scope when `git.commit_format` is `ticket-prefix`
+ - Do NOT use `refactor` for bug fixes
+ - Do NOT use `chore` for meaningful behavior changes
+ - Do NOT hide multiple unrelated concerns in one message
+diff --git a/src/skills/git-workflow/SKILL.md b/src/skills/git-workflow/SKILL.md
+index d415c51ddeeda00cc04a9b182ed5dfd1b1c8d296..03bf654384e4b273b6be171b46965869b9c6d764 100644
+--- a/src/skills/git-workflow/SKILL.md
++++ b/src/skills/git-workflow/SKILL.md
+@@ -56,7 +56,7 @@ gh pr view <number> --json number,state,mergeStateStatus,mergedAt,baseRefName
+   **same turn**; never merge on a status seen earlier in the conversation.
+ - **"Based on main" / "current"** → prove it with
+   `npx tsx node_modules/@event4u/agent-config/src/scripts/check_branch_freshness.ts`;
+-  exit `1` ⇒ the branch is behind and is **not** current — merge the base in,
++  exit `1` ⇒ the branch is behind and is **not** current — update it from the base per `git.update_strategy` ([`references/branch-update.md`](references/branch-update.md)),
+   regenerate the derived files, then open the PR (see
+   [`/create-pr`](../../commands/pr/create.md) § 1b). Exit `0` means only that
+   the gate did **not refuse**: read the line. `branch is current` is the pass;
+@@ -76,13 +76,13 @@ gh pr view <number> --json number,state,mergeStateStatus,mergedAt,baseRefName
+ ## Conventions
+ 
+ → See guideline `docs/guidelines/php/git.md` for branch naming, commit messages, PR conventions.
+-→ See `commit-conventions` rule for commit format, types, and scope rules.
++→ See `commit-conventions` rule for commit format, types, and scope rules; a team convention is declared in the `git:` settings (`commit_format`, `branch_pattern`, `update_strategy`).
+ → Use `conventional-commits-writing` skill for generating/reviewing commit messages.
+ 
+ ## Procedure: Before opening a PR
+ 
+ 1. Quality pipeline + tests — only when `quality.local_auto_run: true` (see [`quality-tools` § Execution policy](../quality-tools/SKILL.md)): type-checker → auto-fixer → linter → type-checker, then the project's test command (detect from manifest: `php artisan test` / `vendor/bin/phpunit` (PHP), `npm test` / `pnpm test` / `vitest` / `jest` (JS-TS), `pytest` (Python), `cargo test` (Rust), `go test ./...` (Go)). Under the default (`false` / missing) skip both — remote CI on the PR is the gate; say so instead of claiming they passed.
+-2. Rebase onto `main`.
++2. Update the branch from its base — [`references/branch-update.md`](references/branch-update.md).
+ 3. Fill in PR template completely.
+ 
+ ## Procedure: Finish a branch
+@@ -100,11 +100,11 @@ Work complete. What would you like to do?
+ ### Option 1: Push and create PR
+ 
+ 1. Run quality pipeline + tests (only when `quality.local_auto_run: true`; default `false` → skip, remote CI is the gate).
+-2. **The push-ready sequence** — fetch → integrate the base SET → regenerate →
++2. **The push-ready sequence** — fetch → integrate the base SET (per `git.update_strategy`, [`references/branch-update.md`](references/branch-update.md)) → regenerate →
+    verify → re-check freshness (this repo wires it as a `push-ready` task target;
+    a consumer wires its own). Not optional housekeeping: see § A push closes its
+    own loop. A stale push is refused, so skipping this buys the refusal.
+-3. `git push -u origin <branch>`.
++3. `git push -u origin <branch>` — after a rebase of a pushed branch, `--force-with-lease` per `references/branch-update.md`.
+ 4. `gh pr create` using PR template.
+ 5. **Settle it** — the turn is not over at step 4:
+    `npx tsx node_modules/@event4u/agent-config/src/scripts/ci_settle.ts <pr>`
+@@ -153,7 +153,7 @@ The project uses `.github/pull_request_template.md`:
+ ## Default branch
+ 
+ - `main` is default/production branch.
+-- Merge strategy: merge commits (not squash).
++- Merge method: read from the forge (`/pr:merge` § 9), never assumed; rebase-and-merge keeps every commit, so each subject must follow the convention.
+ 
+ ## Procedure: Safe squash-after-push
+ 
+diff --git a/src/skills/git-workflow/references/branch-update.md b/src/skills/git-workflow/references/branch-update.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..34d6f66683bb114e908c8bdc6ce2b1f686874c87
+--- /dev/null
++++ b/src/skills/git-workflow/references/branch-update.md
+@@ -0,0 +1,41 @@
++# Updating a branch from its base
++
++Detail for [`git-workflow`](../SKILL.md) § Live remote state and § Before
++opening a PR. The one place that
++decides how a feature branch takes in its base — `/create-pr` § 1b, `/pr:merge`
++§ 2, `/prepare-for-review` and `/review:changes` defer here. Read
++`agent-config settings:get git.update_strategy`:
++
++| `git.update_strategy` | Operation | Asked first? |
++|---|---|---|
++| `merge` (default) | `git fetch origin && git merge origin/<base> --no-edit` | no — a merge adds a commit and rewrites nothing |
++| `rebase` | `git fetch origin`, then on a pushed branch the pre-rewrite stop — `git rev-list --left-right --count HEAD...@{u}` must be `0 0`, otherwise a collaborator has pushed and the rebase does not start — then `git rebase origin/<base>` and `git push --force-with-lease=<branch>:<fetched-sha>` in the same turn. `<fetched-sha>` is `git rev-parse origin/<branch>` after that stop passed, i.e. your own pre-rebase HEAD — never the base's SHA | **yes**, unless [`git-history-discipline`](../../../rules/git-history-discipline.md) § When rewrite is allowed already covers it — the user asked this turn, an unrevoked standing instruction ("always rebase before pushing"), or a `pull --rebase` the user started. The setting picks the operation; it is never the authorisation |
++
++## Under `rebase`
++
++- **Never merge the base into the branch instead**, not even to avoid the ask —
++  a `Merge branch 'main' into …` commit is exactly what the setting excludes.
++  No authorisation → stop and ask with numbered options (rebase now / leave the
++  branch behind).
++- **Pushed branch** → run the pre-rewrite stop of the skill's § Two protective
++  stops first (divergent local vs origin halts the rebase), and push in the same
++  turn per its post-rewrite stop.
++- **Shared branch** — commits on it that you did not author this session → do
++  not rebase without the authors' agreement; this is the git-history-discipline
++  inherited-commits law, and the setting does not lift it.
++- **Conflicts** → resolve to the correct end state per commit, `git add`,
++  `git rebase --continue`; `git rebase --abort` returns to the pre-rebase state.
++  Re-run the relevant tests afterwards — a conflict-free tree is not a correct
++  one. Detail: [`merge-conflicts`](../../merge-conflicts/SKILL.md).
++- **`sync_pr_branch` refuses with exit 3** when the branch is behind and the
++  strategy is not `merge`; a current branch passes with exit 0, so automated
++  pre-push syncs stay green when there is nothing to do.
++- **Plain `git push --force` is never used** — only `--force-with-lease`, and
++  never against the base branch itself.
++- **Tidying WIP / fixup commits before the PR** (`git commit --fixup`,
++  `git rebase -i --autosquash origin/<base>`) stays a user-requested operation —
++  the skill's § Equivalents that are also forbidden by default lists it; a team
++  that expects curated history asks for it, and the agent offers it, never runs
++  it unasked.
++- **Published commits on the base are never rewritten**; a wrong change there is
++  undone with `git revert <sha>`, a new commit.
+diff --git a/src/skills/jira-integration/SKILL.md b/src/skills/jira-integration/SKILL.md
+index 61c3dad074df18fed8ca86eae8775cc3c076322d..c5fb621e1a42ec377969992cec93c30694a11647 100644
+--- a/src/skills/jira-integration/SKILL.md
++++ b/src/skills/jira-integration/SKILL.md
+@@ -147,8 +147,13 @@ POST /issue/DEV-1234/transitions
+ ## Linking to PRs
+ 
+ When creating PRs, include the Jira ticket in:
+-- **Branch name:** `feat/DEV-1234/description`
+-- **PR title:** `feat(DEV-1234): description`
++- **Branch name:** per `git.branch_pattern`. The default `{type}/{slug}` has no
++  ticket slot, so put the ticket in the slug (`feat/DEV-1234-description`); a
++  pattern with `{ticket}` places it, e.g. `DEV-1234-description` for
++  `{ticket}-{slug}`
++- **PR title:** as `/create-pr:description-only` § 3 builds it —
++  `DEV-1234: description` by default, a full commit subject
++  (`DEV-1234 feat(area): description`) under `git.commit_format: ticket-prefix`
+ - **PR description:** Link to the ticket
+ 
+ ## Related
+diff --git a/src/skills/merge-conflicts/SKILL.md b/src/skills/merge-conflicts/SKILL.md
+index e7aa5c7ff92b6bf66f4a466664bb0c21be4923d5..3f89452bceb9dca78880d65028e211a47b5e5eb0 100644
+--- a/src/skills/merge-conflicts/SKILL.md
++++ b/src/skills/merge-conflicts/SKILL.md
+@@ -222,10 +222,15 @@ git add .
+ 
+ | Approach | When to use |
+ |---|---|
+-| `git merge main` | Default — preserves history, safer for shared branches |
+-| `git rebase main` | Only when explicitly asked — rewrites history, cleaner log |
+-
+-**Never rebase without explicit permission** (per `no-commit` rule).
++| `git merge main` | Default (`git.update_strategy: merge`) — preserves history, safer for shared branches |
++| `git rebase origin/main` | `git.update_strategy: rebase`, or when explicitly asked — rewrites history, linear log |
++
++**Never rebase without explicit permission** (per `git-history-discipline`) —
++the setting picks the operation, the user's request this turn authorises it.
++Under `rebase`, conflicts surface per commit: resolve each to the correct end
++state, `git add`, `git rebase --continue`; `git rebase --abort` restores the
++pre-rebase branch. Full protocol:
++[`git-workflow` › branch-update](../git-workflow/references/branch-update.md).
+ 
+ ## Output format
+ 
+diff --git a/tests/scripts/sync_pr_branch.test.ts b/tests/scripts/sync_pr_branch.test.ts
+index 673aeeaea8377ef56de40caaa22a730c1b86b7df..6d714c6334bd6ffe4beeff700c4ee985e5d3aa24 100644
+--- a/tests/scripts/sync_pr_branch.test.ts
++++ b/tests/scripts/sync_pr_branch.test.ts
+@@ -12,9 +12,14 @@
+  * information that tells a reader what to do next.
+  */
+ 
+-import { describe, expect, it } from 'vitest';
++import { execFileSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
+ 
+-import { classifyConflicts, isGenerated, isRemeasured, main, renderConflictReport } from "../../src/scripts/sync_pr_branch.js";
++import { afterEach, describe, expect, it, vi } from 'vitest';
++
++import { classifyConflicts, isGenerated, isRemeasured, main, renderConflictReport, updateStrategy } from "../../src/scripts/sync_pr_branch.js";
+ 
+ describe('generated vs authored', () => {
+     it('recognises the generated artefacts a merge routinely conflicts on', () => {
+@@ -344,3 +349,93 @@ describe('sync_pr_branch — generated paths added from the conflict census', ()
+         ]);
+     });
+ });
++
++describe('git.update_strategy', () => {
++    const made: string[] = [];
++    afterEach(() => {
++        for (const dir of made.splice(0)) fs.rmSync(dir, { recursive: true, force: true });
++    });
++
++    const tmp = (): string => {
++        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-pr-branch-'));
++        made.push(dir);
++        return dir;
++    };
++
++    const git = (cwd: string, ...args: string[]): string =>
++        execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', '-c', 'commit.gpgsign=false', ...args], {
++            cwd,
++            encoding: 'utf8',
++            stdio: ['ignore', 'pipe', 'pipe'],
++        });
++
++    /** A clone on a feature branch; `behind` advances origin/main past it. */
++    const checkout = (settings: string | null, behind: boolean): string => {
++        const root = tmp();
++        const remote = path.join(root, 'remote.git');
++        git(root, 'init', '--bare', '-b', 'main', remote);
++        const seed = path.join(root, 'seed');
++        git(root, 'clone', '-q', remote, seed);
++        fs.writeFileSync(path.join(seed, 'a.txt'), 'a\n');
++        git(seed, 'add', 'a.txt');
++        git(seed, 'commit', '-q', '-m', 'seed');
++        git(seed, 'push', '-q', 'origin', 'HEAD:main');
++        const work = path.join(root, 'work');
++        git(root, 'clone', '-q', remote, work);
++        git(work, 'switch', '-q', '-c', 'feature');
++        if (settings !== null) fs.writeFileSync(path.join(work, '.agent-settings.yml'), settings);
++        if (behind) {
++            fs.writeFileSync(path.join(seed, 'b.txt'), 'b\n');
++            git(seed, 'add', 'b.txt');
++            git(seed, 'commit', '-q', '-m', 'advance');
++            git(seed, 'push', '-q', 'origin', 'HEAD:main');
++        }
++        return work;
++    };
++
++    const run = (repo: string): { code: number; out: string; head: string } => {
++        const before = git(repo, 'rev-parse', 'HEAD').trim();
++        const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
++        try {
++            const code = main(['--repo', repo, '--base', 'origin/main']);
++            return { code, out: out.mock.calls.map((c) => String(c[0])).join(''), head: before };
++        } finally {
++            out.mockRestore();
++        }
++    };
++
++    it('reads `merge` when nothing declares a strategy, and normalises a declared one', () => {
++        expect(updateStrategy(tmp())).toBe('merge');
++        const dir = tmp();
++        fs.writeFileSync(path.join(dir, '.agent-settings.yml'), 'git:\n  update_strategy: " Rebase "\n');
++        expect(updateStrategy(dir)).toBe('rebase');
++    });
++
++    it('refuses with exit 3 and leaves HEAD untouched when a rebase-strategy branch is behind', () => {
++        const repo = checkout('git:\n  update_strategy: rebase\n', true);
++        const r = run(repo);
++        expect(r.code).toBe(3);
++        expect(r.out).toContain('git.update_strategy is `rebase`');
++        expect(git(repo, 'rev-parse', 'HEAD').trim()).toBe(r.head);
++    });
++
++    it('passes a rebase-strategy branch that is already current', () => {
++        const r = run(checkout('git:\n  update_strategy: rebase\n', false));
++        expect(r.code).toBe(0);
++        expect(r.out).not.toContain('refused');
++    });
++
++    it('treats an unknown value as not-merge rather than merging', () => {
++        const repo = checkout('git:\n  update_strategy: rebsae\n', true);
++        const r = run(repo);
++        expect(r.code).toBe(3);
++        expect(git(repo, 'rev-parse', 'HEAD').trim()).toBe(r.head);
++    });
++
++    it('still merges the base in under the default strategy', () => {
++        const repo = checkout(null, true);
++        const r = run(repo);
++        expect(r.code).toBe(0);
++        expect(git(repo, 'rev-parse', 'HEAD').trim()).not.toBe(r.head);
++    });
++});
