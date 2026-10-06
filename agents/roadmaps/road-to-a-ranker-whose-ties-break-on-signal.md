@@ -77,9 +77,8 @@ elsewhere.
 ## Phase 3 — One flag
 
 - [ ] <!-- blocked-by: tie-path-reopen-before-d2 --> **3.1 A tie path behind
-      a flag.** `RankOptions` gains one flag — either an unrounded score used
-      only to order equal integer scores, or a deterministic secondary score
-      — default off. With every flag off the output is byte-identical, shown
+      a flag.** `RankOptions` gains one flag — an unrounded score used only to
+      order equal integer scores (D4) — default off. With every flag off the output is byte-identical, shown
       by the existing parity suites; a sabotage test shows the flag changes
       order on a fixture tie.
       verify: `npx vitest run tests/scripts/score_skill_relevance.test.ts tests/scripts/skill_ranking_shared.test.ts tests/scripts/skill_ranking_tie_flag.test.ts` -> 0
@@ -134,6 +133,7 @@ elsewhere.
 |---|---|---|---|---|---|
 | D2 | reversible-technical | evidence | One flag, default off, parity-pinned | `skillRanking.ts:128-134` requires one flag per signal so a configuration is a named set | — |
 | D3 | reversible-technical | evidence | The sealed slice is read exactly once | Archived D2: tuning and reading on one corpus overfits it | The corpus passes 1,000 rows and the slice is re-cut |
+| D4 | reversible-technical | agent | The tie path is the unrounded score, not a new secondary score | It changes no score, only the order inside a tie, so the parity suites hold with the flag off and nothing new has to be tuned; a secondary signal would be a fifth ranking input, which the archived roadmap's cut keeps out until measured | Ties left after the unrounded score still decide more than a tenth of tuning rows |
 
 ## Blockers
 
