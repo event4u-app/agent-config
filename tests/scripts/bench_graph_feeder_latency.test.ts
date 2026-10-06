@@ -26,4 +26,15 @@ describe('bench_graph_feeder_latency — step 3.5 of road-to-a-graph-that-feeds-
         // The feeder's own work is real work, not a no-op that reads as free.
         expect(r.feederOnly.p50).toBeGreaterThan(0);
     }, 120_000);
+
+    it('leaves an unset home variable unset, not the string "undefined"', async () => {
+        const saved = process.env.USERPROFILE;
+        delete process.env.USERPROFILE;
+        try {
+            await bench({ runs: 1, files: 1 });
+            expect('USERPROFILE' in process.env).toBe(false);
+        } finally {
+            if (saved !== undefined) process.env.USERPROFILE = saved;
+        }
+    }, 120_000);
 });

@@ -21,8 +21,9 @@
  *             `absent`. This is the cost a consumer who never builds a graph
  *             pays, and the baseline the feeder's increment is read against.
  *
- * Arms are INTERLEAVED, one call each per round, so a drift in machine load
- * lands on both rather than on whichever ran second. A third reading times the
+ * Arms are INTERLEAVED, one call each per round, and the order ALTERNATES per
+ * round: interleaving spreads slow drift across both arms, and alternating
+ * spreads the order effects (GC after the heavier arm, cache warmth) as well. A third reading times the
  * feeder's own work (`graphState` + `graphUntestedVerdict`) in isolation on the
  * `with` tree, because the difference of two noisy totals is a weaker number
  * than a direct one.
@@ -176,6 +177,12 @@ function timeStop(dir: string, transcriptPath: string, session: string): { ms: n
     }
 }
 
+/** Assigning `undefined` to `process.env` stores the string "undefined"; an unset variable must be deleted. */
+function restoreEnv(key: string, value: string | undefined): void {
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+}
+
 export async function bench(opts: { runs?: number; files?: number }): Promise<LatencyReport> {
     const runs = Math.max(1, opts.runs ?? 30);
     const files = Math.max(1, opts.files ?? 200);
@@ -201,8 +208,10 @@ export async function bench(opts: { runs?: number; files?: number }): Promise<La
         const b: number[] = [];
         const exitCodes = { with: [] as number[], without: [] as number[] };
         for (let i = 0; i < runs; i++) {
+            const withFirst = i % 2 === 0;
+            const y0 = withFirst ? null : timeStop(withoutDir, tWithout, `without-${i}`);
             const x = timeStop(withDir, tWith, `with-${i}`);
-            const y = timeStop(withoutDir, tWithout, `without-${i}`);
+            const y = y0 ?? timeStop(withoutDir, tWithout, `without-${i}`);
             a.push(x.ms);
             b.push(y.ms);
             if (!exitCodes.with.includes(x.rc)) exitCodes.with.push(x.rc);
@@ -234,10 +243,9 @@ export async function bench(opts: { runs?: number; files?: number }): Promise<La
             cpu: `${os.cpus()[0]?.model ?? 'unknown'} x${os.cpus().length}`,
         };
     } finally {
-        process.env.HOME = savedEnv.HOME;
-        process.env.USERPROFILE = savedEnv.USERPROFILE;
-        if (savedEnv.CFG === undefined) delete process.env.EVENT4U_CONFIG_HOME;
-        else process.env.EVENT4U_CONFIG_HOME = savedEnv.CFG;
+        restoreEnv('HOME', savedEnv.HOME);
+        restoreEnv('USERPROFILE', savedEnv.USERPROFILE);
+        restoreEnv('EVENT4U_CONFIG_HOME', savedEnv.CFG);
         fs.rmSync(root, { recursive: true, force: true });
     }
 }
