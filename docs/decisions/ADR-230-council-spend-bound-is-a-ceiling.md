@@ -4,7 +4,14 @@ status: accepted
 date: 2026-08-13
 decision: council-spend-bound-is-a-ceiling
 supersedes: —
-superseded_by: —
+superseded_by: ADR-279
+superseded_scope: >-
+  ADR-279 (no-spend-bound-by-default) supersedes the third row of this
+  record's § Decision table ("Billable member with no ceiling (both `0`, i.e.
+  both disabled) | Ask, as before") and the second bullet of its
+  § Alternatives considered, which rejected removing that ask. Nothing else.
+  Rows 1 and 2, the removal of the duplicate per-run confirmation where a
+  ceiling exists, and the `on_overrun` consequence stay authoritative.
 phase: —
 type: structural
 review_trigger: >-

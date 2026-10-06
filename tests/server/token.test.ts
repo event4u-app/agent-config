@@ -7,7 +7,7 @@
  *   - Constant-time compare on `tokensMatch`.
  *   - Fresh token per process; previous file overwritten.
  */
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { existsSync, statSync, readFileSync, rmSync } from 'node:fs';
 import {
     defaultTokenDir,
@@ -15,8 +15,30 @@ import {
     mintToken,
     tokensMatch,
 } from '../../src/server/token.js';
+import { CONFIG_HOME_VAR } from '../_lib/hermetic-env.js';
 
 describe('mintToken', () => {
+    // `tokenDir()`/`tokenPath()` resolve via `event4u_root()`, which honours
+    // `EVENT4U_CONFIG_HOME` ambiently. The hermetic setup file pins that
+    // variable for every test file so a billable call never appends to a
+    // real ledger, but this suite specifically asserts the real
+    // `~/.event4u/agent-config/...` default shape — so it must unset the
+    // pin for its own duration, same as a locale test that wants to exercise
+    // the real fallback passes its own value instead of reading the
+    // neutralised ambient one.
+    let savedConfigHome: string | undefined;
+    beforeEach(() => {
+        savedConfigHome = process.env[CONFIG_HOME_VAR];
+        delete process.env[CONFIG_HOME_VAR];
+    });
+    afterEach(() => {
+        if (savedConfigHome === undefined) {
+            delete process.env[CONFIG_HOME_VAR];
+        } else {
+            process.env[CONFIG_HOME_VAR] = savedConfigHome;
+        }
+    });
+
     it('returns 64 hex chars (32 bytes of entropy)', () => {
         const { token } = mintToken();
         expect(token).toMatch(/^[0-9a-f]{64}$/);

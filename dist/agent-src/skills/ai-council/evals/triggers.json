@@ -1,0 +1,41 @@
+{
+  "skill": "ai-council",
+  "last_eval": "2026-10-06",
+  "description": "3 exemplars + 2 near-misses + 1 counterexample. Authored 2026-10-06 while landing `road-to-a-spend-bound-only-where-one-was-set`, which touched SKILL.md and two reference files under this skill and tripped `check_routing_coverage`'s forward-only corpus requirement. Exemplars cover the explicit council-poll ask and the 'cross-check with another model' phrasing the description itself names. Near-misses are the two siblings the skill's own See-also section names as the nearest neighbours: `subagent-orchestration` (parallel fan-out, no external model diversity) and `/team` (one strong model with repo depth, not a breadth poll). The counterexample is an unrelated roadmap-authoring ask that shares no vocabulary with polling an outside model.",
+  "queries": [
+    {
+      "q": "poll OpenAI and Anthropic for a neutral second opinion on this roadmap before we commit to it",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "cross-check this diff with another model before I merge it",
+      "trigger": true,
+      "class": "exemplar"
+    },
+    {
+      "q": "hol dir eine zweite, neutrale Meinung von einem anderen KI-Modell zu diesem Prompt",
+      "trigger": true,
+      "class": "exemplar",
+      "language": "de"
+    },
+    {
+      "q": "spin up a few subagents to search the codebase for every caller of this function in parallel",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "in-process multi-agent fan-out with no outside model and no network spend → subagent-orchestration, not the council"
+    },
+    {
+      "q": "bring in a strong model to work through this repo with me and implement the fix collaboratively",
+      "trigger": false,
+      "class": "near-miss",
+      "note": "one model with repo access going deep on an implementation, not a breadth poll of several outside models on an artefact → /team"
+    },
+    {
+      "q": "write a roadmap for migrating the billing module to the new provider",
+      "trigger": false,
+      "class": "counterexample",
+      "note": "unrelated authoring task; shares no vocabulary with polling an outside model for a second opinion"
+    }
+  ]
+}

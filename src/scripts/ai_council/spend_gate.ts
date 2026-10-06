@@ -20,9 +20,9 @@ import type { ExternalAIClient } from './clients.js';
 import { would_exceed as _would_exceed_daily } from './budget_guard.js';
 
 export class CostBudget {
-    max_input_tokens: number;
-    max_output_tokens: number;
-    max_calls: number;
+    max_input_tokens: number; // 0 = input-token ceiling disabled
+    max_output_tokens: number; // 0 = output-token ceiling disabled
+    max_calls: number; // 0 = per-invocation call cap disabled (fan-out unbounded)
     max_total_usd: number; // 0 = USD ceiling disabled (token caps still apply)
     daily_limit_usd: number; // 0 = rolling 24h cap disabled (D3)
 
@@ -35,8 +35,11 @@ export class CostBudget {
             daily_limit_usd?: number;
         } = {},
     ) {
-        this.max_input_tokens = args.max_input_tokens ?? 50_000;
-        this.max_output_tokens = args.max_output_tokens ?? 20_000;
+        // ADR-279: the two token ceilings default to 0 = unbounded, as the two
+        // USD ceilings below already did. `max_calls` keeps its default — it
+        // bounds fan-out against a plan quota, not money.
+        this.max_input_tokens = args.max_input_tokens ?? 0;
+        this.max_output_tokens = args.max_output_tokens ?? 0;
         this.max_calls = args.max_calls ?? 10;
         this.max_total_usd = args.max_total_usd ?? 0.0;
         this.daily_limit_usd = args.daily_limit_usd ?? 0.0;
@@ -101,9 +104,17 @@ export function _breach(
     budget: CostBudget,
 ): BreachKind {
     const usd = est ? _total_usd(est) : 0.0;
+    // Zero disables a token cap, as `ai-council-config.md:84-86` has always
+    // said it does. Until 2026-10-06 these two comparisons carried no guard
+    // while the two USD comparisons below them did, so a budget with every
+    // cap at zero — the contract's "no bound at all" — breached on a
+    // ten-token estimate. The guard goes on each cap separately: a user who
+    // set one and left the other at zero is bounded by the one they set.
     if (
-        spent.input + (est ? est.input_tokens : 0) > budget.max_input_tokens ||
-        spent.output + (est ? est.output_tokens : 0) > budget.max_output_tokens
+        (budget.max_input_tokens > 0 &&
+            spent.input + (est ? est.input_tokens : 0) > budget.max_input_tokens) ||
+        (budget.max_output_tokens > 0 &&
+            spent.output + (est ? est.output_tokens : 0) > budget.max_output_tokens)
     ) {
         return 'tokens';
     }

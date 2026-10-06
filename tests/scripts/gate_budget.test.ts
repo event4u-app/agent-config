@@ -70,7 +70,7 @@ describe('parseBudgetUsd — a currency marker is required', () => {
     });
 });
 
-describe('readGateBudgetCaps — absent is not a default', () => {
+describe('readGateBudgetCaps — absent is not a default, and each cap stands alone', () => {
     it('returns both caps when both are numbers', () => {
         expect(
             readGateBudgetCaps({
@@ -79,19 +79,39 @@ describe('readGateBudgetCaps — absent is not a default', () => {
         ).toEqual({ maxCostPerRunUsd: 5, maxCostPerRolling7dUsd: 25 });
     });
 
-    it('returns null when either cap is missing or not a number', () => {
+    it('returns null only when NEITHER cap is set', () => {
         expect(readGateBudgetCaps({})).toBeNull();
         expect(readGateBudgetCaps({ roadmap: {} })).toBeNull();
+        expect(readGateBudgetCaps({ roadmap: { gate_budget: {} } })).toBeNull();
+        expect(
+            readGateBudgetCaps({
+                roadmap: {
+                    gate_budget: { max_cost_per_run_usd: null, max_cost_per_rolling_7d_usd: null },
+                },
+            }),
+        ).toBeNull();
+    });
+
+    it('returns the one cap that was set, with the other null', () => {
+        // Changed with ADR-279. This returned `null` for both of these until
+        // 2026-10-06, so a person who set ONE cap was bounded by NEITHER —
+        // the stricter-looking rule produced the laxer result.
         expect(
             readGateBudgetCaps({ roadmap: { gate_budget: { max_cost_per_run_usd: 5 } } }),
-        ).toBeNull();
+        ).toEqual({ maxCostPerRunUsd: 5, maxCostPerRolling7dUsd: null });
+        expect(
+            readGateBudgetCaps({ roadmap: { gate_budget: { max_cost_per_rolling_7d_usd: 25 } } }),
+        ).toEqual({ maxCostPerRunUsd: null, maxCostPerRolling7dUsd: 25 });
+    });
+
+    it('treats a non-numeric cap as unset rather than as a bound', () => {
         expect(
             readGateBudgetCaps({
                 roadmap: {
                     gate_budget: { max_cost_per_run_usd: '5', max_cost_per_rolling_7d_usd: 25 },
                 },
             }),
-        ).toBeNull();
+        ).toEqual({ maxCostPerRunUsd: null, maxCostPerRolling7dUsd: 25 });
     });
 });
 
@@ -139,14 +159,68 @@ describe('the ledger is append-only and tolerant of junk lines', () => {
 describe('evaluateGateBudget — every no renders, none of them runs', () => {
     const caps = { maxCostPerRunUsd: 5, maxCostPerRolling7dUsd: 25 };
 
-    it('refuses with no caps configured', () => {
+    it('runs with no caps configured', () => {
+        // Reversed with ADR-279: this asserted `{ ok: false, reason: 'no_caps' }`
+        // until 2026-10-06. The absence of a ceiling on money is not a refusal
+        // — `--confirm` is the authorisation, and the caps only ever bounded
+        // its size.
         const v = evaluateGateBudget({ caps: null, records: [], estimateUsd: 1, now: NOW });
-        expect(v).toMatchObject({ ok: false, reason: 'no_caps' });
+        expect(v).toMatchObject({ ok: true, estimateUsd: 1 });
     });
 
-    it('refuses with no USD estimate', () => {
+    it('runs with no caps AND no estimate, recording that there was nothing to record', () => {
+        const v = evaluateGateBudget({ caps: null, records: [], estimateUsd: null, now: NOW });
+        expect(v).toMatchObject({ ok: true, estimateUsd: null, rollingUsd: 0 });
+    });
+
+    it('reports rolling spend even with no cap to compare it against', () => {
+        // Recording never depended on bounding — ADR-279's first consequence.
+        const v = evaluateGateBudget({
+            caps: null,
+            records: [receipt({ estimated_usd: 3, actual_usd: null })],
+            estimateUsd: 1,
+            now: NOW,
+        });
+        expect(v).toMatchObject({ ok: true, rollingUsd: 3 });
+    });
+
+    it('refuses with no USD estimate when a cap exists to compare against', () => {
         const v = evaluateGateBudget({ caps, records: [], estimateUsd: null, now: NOW });
         expect(v).toMatchObject({ ok: false, reason: 'no_estimate' });
+    });
+
+    it('bounds on the per-run cap alone, with the rolling cap unset', () => {
+        const only = { maxCostPerRunUsd: 5, maxCostPerRolling7dUsd: null };
+        expect(
+            evaluateGateBudget({ caps: only, records: [], estimateUsd: 5.01, now: NOW }),
+        ).toMatchObject({ ok: false, reason: 'over_per_run' });
+        // A rolling total far over the OTHER cap's usual figure does not bound,
+        // because that cap was not set.
+        expect(
+            evaluateGateBudget({
+                caps: only,
+                records: [receipt({ estimated_usd: 900, actual_usd: null })],
+                estimateUsd: 5,
+                now: NOW,
+            }),
+        ).toMatchObject({ ok: true });
+    });
+
+    it('bounds on the rolling cap alone, with the per-run cap unset', () => {
+        const only = { maxCostPerRunUsd: null, maxCostPerRolling7dUsd: 25 };
+        expect(
+            evaluateGateBudget({
+                caps: only,
+                records: [receipt({ estimated_usd: 24, actual_usd: null })],
+                estimateUsd: 1.01,
+                now: NOW,
+            }),
+        ).toMatchObject({ ok: false, reason: 'over_rolling_7d' });
+        // A single-run figure far over the OTHER cap's usual value is admitted,
+        // because that cap was not set and the rolling window still fits.
+        expect(
+            evaluateGateBudget({ caps: only, records: [], estimateUsd: 20, now: NOW }),
+        ).toMatchObject({ ok: true });
     });
 
     it('refuses over the per-run cap and admits exactly at it', () => {

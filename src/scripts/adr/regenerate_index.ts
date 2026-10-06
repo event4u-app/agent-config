@@ -187,11 +187,26 @@ export function scan(d: string): [Row[], Row[], string[]] {
  * A scope with no refs renders as `—`: a qualifier on nothing is not a
  * supersession, and printing the prose alone would read as one.
  */
+/**
+ * Escape a `|` for safety inside a Markdown table cell. The free-text scope
+ * fields this feeds (`supersedes_scope` / `superseded_scope`) routinely quote
+ * a table row from the record they describe — and a quoted row has its own
+ * `|` column separators, verbatim, in the frontmatter prose. Unescaped, that
+ * splits the generated row into extra columns rather than rendering the quote
+ * (found live in ADR-230's and ADR-279's own rows, both quoting the same
+ * table cell from ADR-230 § Decision). `refs` itself is never escaped: it is
+ * always an `ADR-NNN` token list this generator produces or validates, never
+ * free text.
+ */
+function escapeCell(text: string): string {
+    return text.replaceAll('|', '\\|');
+}
+
 export function supersessionCell(refs: string | undefined, scope: string | undefined): string {
     const r = (refs ?? '').trim();
     if (r === '' || r === '—') return '—';
     const s = (scope ?? '').trim();
-    return s === '' || s === '—' ? r : `${r} (${s})`;
+    return s === '' || s === '—' ? r : `${r} (${escapeCell(s)})`;
 }
 
 /** Mirror `row(r)`. */

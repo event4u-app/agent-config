@@ -11,12 +11,23 @@
 // turn: `task cost:preflight` or `node scripts/cost/preflight.mjs`.
 
 import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
 const QUIET = process.env.PREFLIGHT_QUIET === '1';
 
+// budget.mjs is this file's SIBLING, so resolve it from here rather than from
+// the working directory. A cwd-relative 'scripts/cost/budget.mjs' resolved to
+// nothing in this tree (the scripts live under src/scripts/), spawnSync
+// returned empty stdout, and empty stdout is read below as "no budget
+// configured" — so the hard stop silently exited 0 on a spent budget from
+// every working directory. Sibling resolution also survives the consumer
+// install, where the pair lands under a different prefix together.
+const BUDGET_SCRIPT = join(dirname(fileURLToPath(import.meta.url)), 'budget.mjs');
+
 function runBudgetCheck() {
   const env = { ...process.env, BUDGET_QUIET: '1' };
-  const r = spawnSync('node', ['scripts/cost/budget.mjs', 'check'], { env, encoding: 'utf-8' });
+  const r = spawnSync('node', [BUDGET_SCRIPT, 'check'], { env, encoding: 'utf-8' });
   if (r.error) return { ok: false, fatal: true, msg: String(r.error) };
   const out = (r.stdout || '').trim();
   if (!out) return { ok: true, unbudgeted: true };

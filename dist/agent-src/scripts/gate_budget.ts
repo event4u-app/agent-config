@@ -56,9 +56,16 @@ export function gateBudgetLedgerPath(workspaceRoot: string): string {
 }
 
 /** The two caps decided by option (a). Both are USD. */
+/**
+ * The two standing caps, each independently settable.
+ *
+ * Both figures are **US dollars**. Either may be `null`, meaning that cap was
+ * not set and therefore bounds nothing; `readGateBudgetCaps` returns `null`
+ * for the whole object only when NEITHER was set.
+ */
 export interface GateBudgetCaps {
-    maxCostPerRunUsd: number;
-    maxCostPerRolling7dUsd: number;
+    maxCostPerRunUsd: number | null;
+    maxCostPerRolling7dUsd: number | null;
 }
 
 /**
@@ -105,18 +112,26 @@ function _dig(settings: unknown, keys: readonly string[]): unknown {
 /**
  * Read the caps out of an already-merged settings dict.
  *
- * Returns `null` when either cap is absent or non-numeric — deliberately NOT a
- * fallback to the template numbers. An install whose settings do not carry the
- * caps has not authorised a standing budget, and inventing one from the
- * template default would authorise spend nobody configured. The caller renders
- * the consent line instead.
+ * Each cap is returned on its own. Returns `null` only when NEITHER is set,
+ * which means no ceiling on money was configured — not that the run is
+ * unauthorised. Still deliberately NOT a fallback to the template numbers:
+ * inventing a cap from a template default would bound a run by a figure
+ * nobody chose.
+ *
+ * Until 2026-10-06 this returned `null` unless BOTH caps were numeric, with
+ * two consequences. A person who set one cap and left the other alone was
+ * bounded by NEITHER — the stricter-looking rule produced the laxer result.
+ * And absent caps were read by the caller as a refusal, so the gate would not
+ * run at all without them. ADR-279 supersedes that second reading: absence of
+ * a bound is not a bound, and `--confirm` remains the authorisation the caps
+ * only ever sized.
  */
 export function readGateBudgetCaps(settings: unknown): GateBudgetCaps | null {
     const perRun = _num(_dig(settings, ['roadmap', 'gate_budget', 'max_cost_per_run_usd']));
     const rolling = _num(
         _dig(settings, ['roadmap', 'gate_budget', 'max_cost_per_rolling_7d_usd']),
     );
-    if (perRun === null || rolling === null) {
+    if (perRun === null && rolling === null) {
         return null;
     }
     return { maxCostPerRunUsd: perRun, maxCostPerRolling7dUsd: rolling };
@@ -216,13 +231,15 @@ export function rollingSpendUsd(records: readonly GateBudgetReceipt[], now: Date
 }
 
 export type GateBudgetRefusal =
-    | 'no_caps'
+    // 'no_caps' was removed on 2026-10-06 with ADR-279: the absence of a cap
+    // is no longer a refusal, so no path can produce it and leaving it in the
+    // union would advertise a verdict nothing returns.
     | 'no_estimate'
     | 'over_per_run'
     | 'over_rolling_7d';
 
 export type GateBudgetVerdict =
-    | { ok: true; estimateUsd: number; rollingUsd: number }
+    | { ok: true; estimateUsd: number | null; rollingUsd: number }
     | { ok: false; reason: GateBudgetRefusal; detail: string };
 
 /**
@@ -230,6 +247,12 @@ export type GateBudgetVerdict =
  *
  * Every refusal path renders rather than runs — the blocker's own prescription
  * for a missing ledger, generalised to every way the budget can say no.
+ *
+ * What is NOT a refusal, per ADR-279: the absence of a cap. With no cap
+ * configured there is no ceiling on money to compare anything against, so the
+ * verdict is `ok` and the run proceeds on the authorisation `--confirm`
+ * already carries. A cap that WAS set still bounds exactly as its contract
+ * describes, and each bounds alone.
  */
 export function evaluateGateBudget(opts: {
     caps: GateBudgetCaps | null;
@@ -238,16 +261,17 @@ export function evaluateGateBudget(opts: {
     now: Date;
 }): GateBudgetVerdict {
     const { caps, records, estimateUsd, now } = opts;
-    if (caps === null) {
-        return {
-            ok: false,
-            reason: 'no_caps',
-            detail:
-                'no standing class-1 budget is configured ' +
-                '(`roadmap.gate_budget.max_cost_per_run_usd` and ' +
-                '`roadmap.gate_budget.max_cost_per_rolling_7d_usd`)',
-        };
+    const perRunCap = caps === null ? null : caps.maxCostPerRunUsd;
+    const rollingCap = caps === null ? null : caps.maxCostPerRolling7dUsd;
+    // No ceiling on money was set anywhere, so nothing here can say no.
+    // `rollingUsd` is still computed and reported — recording spend never
+    // depended on bounding it.
+    if (perRunCap === null && rollingCap === null) {
+        return { ok: true, estimateUsd, rollingUsd: rollingSpendUsd(records, now) };
     }
+    // A missing estimate refuses only because a cap exists that nothing can be
+    // compared against. With no cap there is no comparison to fail, which is
+    // why this sits BELOW the no-cap branch rather than above it.
     if (estimateUsd === null) {
         return {
             ok: false,
@@ -257,17 +281,17 @@ export function evaluateGateBudget(opts: {
                 'can be compared against it',
         };
     }
-    if (estimateUsd > caps.maxCostPerRunUsd) {
+    if (perRunCap !== null && estimateUsd > perRunCap) {
         return {
             ok: false,
             reason: 'over_per_run',
             detail:
                 `the estimate ($${estimateUsd.toFixed(2)}) exceeds the per-run cap ` +
-                `($${caps.maxCostPerRunUsd.toFixed(2)})`,
+                `($${perRunCap.toFixed(2)})`,
         };
     }
     const spent = rollingSpendUsd(records, now);
-    if (spent + estimateUsd > caps.maxCostPerRolling7dUsd) {
+    if (rollingCap !== null && spent + estimateUsd > rollingCap) {
         return {
             ok: false,
             reason: 'over_rolling_7d',
@@ -275,7 +299,7 @@ export function evaluateGateBudget(opts: {
                 `$${spent.toFixed(2)} is already receipted in the last ` +
                 `${String(ROLLING_WINDOW_DAYS)} days and this run would add ` +
                 `$${estimateUsd.toFixed(2)}, over the rolling cap ` +
-                `($${caps.maxCostPerRolling7dUsd.toFixed(2)})`,
+                `($${rollingCap.toFixed(2)})`,
         };
     }
     return { ok: true, estimateUsd, rollingUsd: spent };

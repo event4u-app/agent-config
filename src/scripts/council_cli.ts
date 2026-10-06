@@ -2127,7 +2127,7 @@ function _ljust(s: string, width: number): string {
 
 function _debate_refusal_cap(ai_cfg: Dict): number {
     const debate_block = (ai_cfg['debate'] as Dict) || {};
-    return _pyFloat(debate_block['max_cost_usd'] ?? 5.0, 5.0) || 0.0;
+    return _pyFloat(debate_block['max_cost_usd'] ?? 0.0, 0.0) || 0.0; // 0 = no cap (ADR-279)
 }
 
 function _emit_shadow_slo_banner(): void {
@@ -2560,9 +2560,9 @@ function cmd_run(
 
     const cost_cfg = (ai_cfg['cost_budget'] as Dict) || {};
     const budget = new CostBudget({
-        max_input_tokens: _pyInt(cost_cfg['max_input_tokens'] ?? 50_000, 50_000),
-        max_output_tokens: _pyInt(cost_cfg['max_output_tokens'] ?? 20_000, 20_000),
-        max_calls: _pyInt(cost_cfg['max_calls'] ?? 10, 10),
+        max_input_tokens: _pyInt(cost_cfg['max_input_tokens'] ?? 0, 0), // 0 = unbounded (ADR-279)
+        max_output_tokens: _pyInt(cost_cfg['max_output_tokens'] ?? 0, 0), // 0 = unbounded (ADR-279)
+        max_calls: _pyInt(cost_cfg['max_calls'] ?? 10, 10), // a call count, not money — kept
         max_total_usd: _pyFloat(cost_cfg['max_total_usd'] ?? 0.0, 0.0) || 0.0,
         // Rolling 24h cap. Unwired until now: the field existed on CostBudget and
         // gated the spend-ledger append, but no caller ever passed it, so the
@@ -3076,9 +3076,9 @@ function cmd_debate(
 
     const cost_cfg = (ai_cfg['cost_budget'] as Dict) || {};
     const budget = new CostBudget({
-        max_input_tokens: _pyInt(cost_cfg['max_input_tokens'] ?? 50_000, 50_000),
-        max_output_tokens: _pyInt(cost_cfg['max_output_tokens'] ?? 20_000, 20_000),
-        max_calls: _pyInt(cost_cfg['max_calls'] ?? 10, 10),
+        max_input_tokens: _pyInt(cost_cfg['max_input_tokens'] ?? 0, 0), // 0 = unbounded (ADR-279)
+        max_output_tokens: _pyInt(cost_cfg['max_output_tokens'] ?? 0, 0), // 0 = unbounded (ADR-279)
+        max_calls: _pyInt(cost_cfg['max_calls'] ?? 10, 10), // a call count, not money — kept
         max_total_usd: _pyFloat(cost_cfg['max_total_usd'] ?? 0.0, 0.0) || 0.0,
         // Rolling 24h cap. Unwired until now: the field existed on CostBudget and
         // gated the spend-ledger append, but no caller ever passed it, so the

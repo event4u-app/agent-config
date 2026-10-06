@@ -151,22 +151,23 @@ Construct each member from the resolved mode:
 - `manual` → `ManualClient` from `scripts.ai_council.clients`
   (`billable=False`, no API key, no SDK call).
 
-### 3. Spend bound — ASK when a billable member has no ceiling
+### 3. Spend estimate — information, never a prompt
 
-Council calls to billable members spend money, so a bound is mandatory.
-Per ADR-230 the bound is a **ceiling**, not a per-invocation approval —
-the same three cases the `ai-council` skill resolves in its Procedure § 3:
+Per ADR-230 the bound is a **ceiling**, not a per-invocation approval,
+and per ADR-279 a ceiling applies only where someone set one. The three
+cases the `ai-council` skill resolves in its Procedure § 3 now agree on
+the ask and differ only in what a cap does once it exists:
 
 | Situation | Behaviour |
 |---|---|
 | No billable member (all `mode: cli`, subscription auth) | No gate. Estimate is information; go to Step 4. Spend is $0. |
 | Billable member **with** `cost_budget.max_total_usd` or `daily_limit_usd` non-zero | No per-run ask. The ceiling is the authorization the user already gave; `on_overrun` still pauses per member on breach. |
-| Billable member with **both** caps `0` | **Ask.** Nothing bounds the spend, so the user must. |
+| Billable member with **both** caps `0` — the shipped default | No ask. Render the estimate and go to Step 4; no cap exists, so nothing can breach. |
 
-`personal.autonomy` neither creates nor lifts that bound — autonomy is
-not a ceiling. Consumers who want a per-invocation gate set a small
-`cost_budget.max_total_usd`; every call then breaches and `on_overrun`
-asks per member.
+`personal.autonomy` neither creates nor lifts a bound — autonomy is
+not a ceiling, and neither is its absence. Consumers who want a
+per-invocation gate set a small `cost_budget.max_total_usd`; every call
+then breaches and `on_overrun` asks per member.
 
 Run the CLI in **estimate** mode first — it bundles the artefact, runs
 redaction, and prints the per-member preview without spending:

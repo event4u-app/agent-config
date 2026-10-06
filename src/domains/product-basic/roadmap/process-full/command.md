@@ -500,17 +500,34 @@ Hard external blocker: <specific reason>
 Attempted: <what was tried>
 ```
 
-## Spend — USD 25 per run, pre-authorised
+## Spend — whatever ceiling was configured, and none when none was
 
 ```
-cost_so_far + reasonably_expected_remaining  ≤  $25  → RUN IT, ASK NOTHING
-cost_so_far + reasonably_expected_remaining  >  $25  → OWNER APPROVAL BEFORE CROSSING
+READ THE CONFIGURED cost.budgets WINDOWS (daily · weekly · monthly).
+spend_so_far + reasonably_expected_remaining  WITHIN EVERY CONFIGURED WINDOW
+    → RUN IT, ASK NOTHING
+WOULD CROSS A CONFIGURED WINDOW → PAUSE AND REPORT BEFORE CROSSING.
+NO WINDOW CONFIGURED → NONE APPLIES. RUN IT, ASK NOTHING.
 COST UNKNOWN → CONSERVATIVE ESTIMATE. UNCERTAINTY IS NOT A REASON TO ASK.
-SERVICE-ENFORCED LIMITS MAKE >$25 IMPOSSIBLE → AUTHORISED.
+SERVICE-ENFORCED LIMITS MAKE A CROSSING IMPOSSIBLE → AUTHORISED.
 EXISTING SUBSCRIPTION → MARGINAL COST $0, NOT COUNTED.
 NEVER SPLIT SPEND ACROSS SERVICES, SUBAGENTS, COUNCIL ROUNDS OR CALLS
-TO KEEP EACH ITEM UNDER THE CEILING. THE CEILING IS CUMULATIVE, PER RUN.
+TO KEEP EACH ITEM UNDER A CEILING. A CEILING IS CUMULATIVE, PER RUN.
 ```
+
+**Who carries this, stated plainly: the model, not a gate.** Nothing on a
+roadmap run reads a cumulative spend figure and compares it with anything —
+ADR-237 said so of its own ceiling ("Nothing mechanical checks any of this")
+and that has not changed. The optional `cost.enforcement: hard-stop` preflight
+is a separate, deliberately-invoked control and is not called from a run. So
+this block is an obligation the model carries, and a reader should not take it
+for an enforced limit.
+
+What used to sit here was a flat per-run USD constant that nobody configured.
+ADR-279 replaced it with the windows a person actually set, which is the only
+kind of ceiling this package now applies; that record names the old figure, and
+this file deliberately does not, so no reader mistakes a historical number for
+a live threshold. Set `cost.budgets.daily` / `weekly` / `monthly` to get one.
 
 The transport is not a governance boundary: a council invocation is the same
 authorised action whether it runs through the `council` CLI or a direct API call.

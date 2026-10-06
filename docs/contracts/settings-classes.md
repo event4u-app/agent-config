@@ -558,8 +558,8 @@ Rows follow template order, so a diff against the template reads straight down.
 | `roadmap.quality_cadence` | C | `end_of_roadmap` | governs when verification runs | derivable — `quality.local_auto_run` decides whether local verification runs, and the `verify-before-complete` evidence gate decides the moment |
 | `roadmap.dashboard_regen_cadence` | A | `every_5_steps` | beat of a derived view | derivable — the dashboard is derived: `roadmap:progress` regenerates deterministically from the roadmap files |
 | `roadmap.horizon_weeks` | C | `0` | a non-zero value relaxes a lint's plate-token ban | policy |
-| `roadmap.gate_budget.max_cost_per_run_usd` | C | `5` | per-run spend ceiling on class-1 gate execution | consent |
-| `roadmap.gate_budget.max_cost_per_rolling_7d_usd` | C | `25` | rolling spend ceiling on class-1 gate execution | consent |
+| `roadmap.gate_budget.max_cost_per_run_usd` | C | `null` | per-run spend ceiling on class-1 gate execution; `null` = none (ADR-279) | consent |
+| `roadmap.gate_budget.max_cost_per_rolling_7d_usd` | C | `null` | rolling spend ceiling on class-1 gate execution; `null` = none (ADR-279) | consent |
 | `planning.closure_pass` | C | `true` | disables the plan-closure pass | derivable — the gate's own confidence conditions; a confident plan passes straight through |
 | `planning.risk_review` | C | `true` | disables the risk-register validator | derivable — `lint_plan_risk_register`'s own scope predicate (ready, non-draft plans only) |
 | `planning.completion_review` | C | `true` | disables the completion-review validator | derivable — `check_completion_review`'s own scope predicate, bound to the current diff hash |

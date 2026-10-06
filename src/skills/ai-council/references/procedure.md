@@ -45,14 +45,20 @@ have not migrated yet).
      authorization the user already gave. Render the estimate and fan out.
      `on_overrun` still fires per member on breach (below) — that is where
      the user regains the decision.
-   - **Billable members with no ceiling at all** (`max_total_usd: 0` AND
-     `daily_limit_usd: 0`) → unbounded paid spend, so surface the estimate
-     and require an explicit `1`. Nothing bounds the call, so the user must.
+   - **Billable members with no cap set** (`max_total_usd: 0` AND
+     `daily_limit_usd: 0`, which is the shipped default) → render the
+     estimate as information and fan out. **No ask.** Per ADR-279 a spend
+     bound applies only where one was set, and the absence of one is not
+     a reason to ask.
 
-   Autonomy settings do not *create* a bound and do not lift the last case.
-   Consumers who want the old per-run gate back set a small
+   All three cases now behave the same way: the estimate is information,
+   never a prompt. What differs is only whether a cap exists for
+   `on_overrun` to fire against.
+
+   Consumers who want a per-run gate set a small
    `cost_budget.max_total_usd`: every call then breaches and `on_overrun`
-   asks, per member.
+   asks, per member. That is a bound they chose, which is the only kind
+   this procedure recognises.
 4. **Fan out.** Dispatch the bundle to each enabled council member via
    `scripts/ai_council/orchestrator.ts`. Each member receives the
    neutrality preamble from `prompts.ts` plus the artefact — nothing

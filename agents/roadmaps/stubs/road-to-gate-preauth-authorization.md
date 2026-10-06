@@ -44,6 +44,17 @@ human to sign one.
 **No bypass has been built.** The abort is byte-for-byte the abort it was before
 this run.
 
+> **What the caps' absence means changed, 2026-10-06.** Step 2.2 of
+> `road-to-a-spend-bound-only-where-one-was-set`, under ADR-279, made absent
+> caps mean *no bound* rather than *refuse to run*: `evaluateGateBudget` no
+> longer returns `no_caps` (the verdict was removed), and each cap now bounds
+> on its own instead of both being required before either applied. **Nothing
+> about `--confirm` moved** — it is still required on every class-1 run, and
+> this stub's subject is still exactly that signature. The sentence below
+> about the caps bounding SIZE rather than supplying authorisation is now more
+> literally true, not less: with no cap configured there is no size bound, and
+> the consent is the only control, as it always was.
+
 ## What moved here — the complete list
 
 1. Step 2.3 of the parent, in full. Nothing else.
