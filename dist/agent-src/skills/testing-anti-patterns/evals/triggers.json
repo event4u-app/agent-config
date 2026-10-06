@@ -1,0 +1,14 @@
+{
+  "skill": "testing-anti-patterns",
+  "last_eval": "2026-10-06",
+  "description": "4 should-trigger + 3 should-not-trigger. Should-trigger covers mocking-the-mock, production pollution (test-only methods on production classes), overfit assertions, and a German phrasing of the same concern. Should-not-trigger covers near-miss neighbors: deciding test order before any code exists (test-driven-development), detecting what slipped through after the fact (judge-test-coverage), and a plain request to add tests with no anti-pattern signal.",
+  "queries": [
+    {"q": "is it ok to mock the mock I just wrote in this test?", "trigger": true, "class": "exemplar"},
+    {"q": "should I add a test-only helper method to this production class?", "trigger": true, "class": "exemplar"},
+    {"q": "this assertion only passes for the one example I hardcoded, is that fine?", "trigger": true, "class": "exemplar"},
+    {"q": "ist es ein Problem, wenn ich eine test-spezifische Methode in die Produktionsklasse einbaue?", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "should I write the test before or after the implementation for this feature?", "trigger": false, "class": "near-miss", "note": "sequencing of test vs code is test-driven-development's scope, not a mock/pollution/overfit check"},
+    {"q": "run a coverage pass over the PR and flag any test that slipped through weak", "trigger": false, "class": "near-miss", "note": "post-hoc detection is judge-test-coverage; this skill is the prevention layer before writing"},
+    {"q": "add a few tests for this new function", "trigger": false, "class": "near-miss", "note": "a plain test-writing request with no anti-pattern signal named"}
+  ]
+}
