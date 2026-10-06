@@ -133,13 +133,15 @@ refuses.
       **16 rows, and 16 of 16 are NEGATIVE** — labelled by the AI council, seats
       `anthropic` and `openai`, quorum 2/2, $0 billed, predictions withheld, no
       expected outcome stated. So **recall is UNDEFINED, 0/0 — not zero, and not a
-      low score for either detector.** (iii) The one real number: F fired on 0 of
-      84 rows — a false-positive rate of **0 over the 16 LABELLED negatives,
-      Wilson [0.000, 0.194]**. The wider 0/81 denominator is NOT quotable and the
-      page retires it: 65 of those 81 rows carry no production path, so F cannot
-      fire on them under any behaviour, and they narrow the interval without
-      adding evidence. Either way it is a SPECIFICITY reading, which settles the
-      half ADR-277 already discharged and nothing about the half it left open.
+      low score for either detector.** (iii) The counts, reported as counts: F
+      fired on **0 of 84** accrued rows, and on **0 of the 16 labelled
+      negatives**. NO RATE AND NO INTERVAL — the pre-registration says "below
+      n = 50 this page reports the bar and the gap, never a rate", and an earlier
+      version of this reading deleted that clause and published a Wilson interval
+      anyway, which a completion review caught. The clause is restored verbatim
+      and the rate is withdrawn. It is SPECIFICITY evidence either way, which
+      settles the half ADR-277 already discharged and nothing about the half it
+      left open.
       Why waiting does not fix it: the accrual channel is this suite's own
       governance work, whose base rate of untested production edits is at or near
       zero, and the 16 rows are not 16 independent observations — 4 distinct files,

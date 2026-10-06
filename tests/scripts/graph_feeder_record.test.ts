@@ -438,3 +438,56 @@ describe('3.3 — two host-supplied strings, compared honestly', () => {
         }
     }, 120_000);
 });
+
+describe('3.3 — the two shapes the escape branch used to get wrong', () => {
+    it('does not call the workspace root itself outside the workspace', async () => {
+        const { dir } = await rig(false);
+        // `path.relative(root, root)` is the empty string, which was folded into
+        // the escape branch — so a path equal to the root came back absolute and
+        // was then recorded as `<outside-workspace>`. The root is emphatically
+        // not outside the workspace, and a row saying so tells a labeller the
+        // opposite of the truth.
+        expect(toRepoRelative(dir, [dir])).toStrictEqual(['.']);
+        const row = buildFeederRow({
+            root: dir,
+            turn: 1,
+            layer: 'live',
+            state: 'fresh',
+            fFired: false,
+            fMode: null,
+            paths: [dir],
+            graph: { verdict: null, untested: 0, tested: 0 },
+            at: '2026-10-06T00:00:00.000Z',
+        });
+        expect(row.paths).toStrictEqual(['.']);
+        expect(row.paths).not.toContain(OUTSIDE_WORKSPACE);
+    }, 120_000);
+
+    it('keeps an in-tree file in tree even when an in-repo symlink points out of it', async () => {
+        const { dir } = await rig(false);
+        const outside = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'gf-outside-')));
+        tmp_dirs.push(outside);
+        fs.writeFileSync(path.join(outside, 'service.ts'), SERVICE);
+        // An in-repo path whose TARGET leaves the workspace. Resolving
+        // unconditionally would relativise it to a `..` segment, probe it
+        // absolute, and redact it off the row — destroying labelling evidence
+        // for a path that is in the tree. The indexer keys `source_file` from a
+        // plain tree walk with no realpath, so the raw spelling is the one it
+        // agrees with, and the raw comparison is tried first for that reason.
+        const linked = path.join(dir, 'linked.ts');
+        fs.symlinkSync(path.join(outside, 'service.ts'), linked);
+        expect(toRepoRelative(dir, [linked])).toStrictEqual(['linked.ts']);
+        const row = buildFeederRow({
+            root: dir,
+            turn: 1,
+            layer: 'live',
+            state: 'fresh',
+            fFired: false,
+            fMode: null,
+            paths: [linked],
+            graph: { verdict: null, untested: 0, tested: 0 },
+            at: '2026-10-06T00:00:00.000Z',
+        });
+        expect(row.paths).toStrictEqual(['linked.ts']);
+    }, 120_000);
+});

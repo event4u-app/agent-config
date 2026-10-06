@@ -31,10 +31,19 @@
  * cannot write an unbounded row. An edit OUTSIDE the workspace root is the one
  * shape that could carry identifying content, and {@link buildFeederRow}
  * REDACTS it to {@link OUTSIDE_WORKSPACE} — it does not drop it, which was tried
- * and rejected for the reason recorded at that call site. So the claim is true
- * by construction and not by convention. The earlier wording claimed
- * "repo-relative source paths" flatly while the recorded data did not support
- * it; this one is narrower and enforced.
+ * and rejected for the reason recorded at that call site.
+ *
+ * WHERE THAT PROPERTY ACTUALLY HOLDS, stated at its real width. The redaction
+ * lives in `buildFeederRow`, so it covers every row THIS module builds, which is
+ * every row anything writes today. It is not enforced by the TYPE:
+ * `GraphFeederRow.paths` is a plain `string[]` and {@link appendFeederRow} is
+ * exported and checks nothing, so a future second writer could persist an
+ * unredacted path with no compile error and no runtime guard. A completion
+ * review pointed out that the previous wording — "true by construction" without
+ * qualification — claimed exactly the convention it was disclaiming. The
+ * field-shape half of the header IS by construction: there is no field a prompt
+ * or a file body could occupy. The path-redaction half is by call site, and the
+ * two are worth not conflating.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -145,24 +154,45 @@ export function feederFile(workspaceRoot: string, sessionKey: string): string {
  * platform.
  */
 export function toRepoRelative(root: string, paths: readonly string[]): string[] {
-    const realRoot = _resolveReal(root);
+    let realRoot: string | null = null;
     return paths.map((p) => {
         if (!path.isAbsolute(p)) return p;
-        let rel: string;
-        try {
-            rel = path.relative(realRoot, _resolveReal(p));
-        } catch {
-            return p;
-        }
-        // `rel === '..'` and a leading `..` SEGMENT, not a leading `..` string:
-        // `rel.startsWith('..')` also matches an in-tree first segment that
-        // merely begins with two dots, such as `..cache/service.ts`, and would
-        // classify an in-repo edit as foreign.
-        if (rel === '' || rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) {
-            return p;
-        }
-        return rel.split(path.sep).join('/');
+        // RAW FIRST, RESOLVED ONLY AS A FALLBACK. The indexer keys `source_file`
+        // through a plain tree walk with NO realpath, so the raw spelling is the
+        // one it agrees with. Resolving unconditionally fixes a symlinked ROOT
+        // and breaks the opposite shape: an in-tree file reached through an
+        // in-repo symlink whose target leaves the workspace would relativise to
+        // a `..` segment and be redacted off the row — destroying the labelling
+        // evidence for a path that is in the tree, which is the harm the
+        // redact-rather-than-drop argument exists to prevent. Trying the raw
+        // comparison first keeps both: the common case matches the indexer, and
+        // the resolved walk is spent only when the raw answer says foreign.
+        const raw = _relativeInside(root, p);
+        if (raw !== null) return raw;
+        realRoot ??= _resolveReal(root);
+        return _relativeInside(realRoot, _resolveReal(p)) ?? p;
     });
+}
+
+/**
+ * `from` -> `to` as a POSIX repo-relative path, or `null` when `to` is outside.
+ *
+ * `rel === ''` means `to` IS the root, which is emphatically not outside it —
+ * folding that into the escape branch made the row say the opposite of the
+ * truth. The `..` test is for a leading `..` SEGMENT, not a leading `..` string:
+ * `startsWith('..')` also matches an in-tree first segment that merely begins
+ * with two dots, such as `..cache/service.ts`.
+ */
+function _relativeInside(from: string, to: string): string | null {
+    let rel: string;
+    try {
+        rel = path.relative(from, to);
+    } catch {
+        return null;
+    }
+    if (rel === '') return '.';
+    if (rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) return null;
+    return rel.split(path.sep).join('/');
 }
 
 /**
@@ -250,7 +280,11 @@ export function graphUntestedVerdict(
     if (state !== 'fresh' && state !== 'edited') return none;
     if (paths.length === 0) return none;
     // The graph indexes repo-relative paths; a host hands us absolute ones.
-    const relative = toRepoRelative(root, paths);
+    // NOT before the early returns below. Relativising walks the filesystem once
+    // per absolute path, and this runs inside a stop hook whose latency the
+    // module header names as an unmeasured risk — a host that timed the hook out
+    // would drop the gate's refusal. Spending those syscalls only to discover
+    // there is no usable source is cost for nothing.
     let picked;
     try {
         picked = pickSource(detectSources(root, path.join(root, NATIVE_CACHE_REL)));
@@ -265,7 +299,7 @@ export function graphUntestedVerdict(
         return none;
     }
     try {
-        const r = untested(g, relative, state);
+        const r = untested(g, toRepoRelative(root, paths), state);
         if (r.seeds.length === 0) return { verdict: 'no-seeds', untested: 0, tested: 0 };
         return {
             verdict: r.untested.length > 0 ? 'untested' : 'tested',
@@ -327,7 +361,18 @@ export function readFeederRows(workspaceRoot: string, sessionKey: string): Graph
 }
 
 /**
- * Build the row. Pure, so the shape can be asserted without a filesystem.
+ * Build the row.
+ *
+ * NO LONGER PURE, and the previous line of this docstring still claimed it was.
+ * Relativising reads the filesystem — `toRepoRelative` falls back to
+ * `fs.realpathSync` when the raw comparison says foreign — so this touches disk
+ * for any absolute path outside the root, and the unit tests that pass a
+ * non-existent `/workspace` root walk real directories on the way to answering.
+ * It is still DETERMINISTIC given the tree, which is what the tests actually
+ * rely on. A completion review caught the stale claim; in a module whose header
+ * argues its guarantees hold by construction rather than by convention, a
+ * docstring that has quietly stopped being true is the same defect class as the
+ * rest of this change.
  *
  * `root` is required rather than optional, and relativising happens HERE rather
  * than at the call site, for two reasons that point the same way. The caller is

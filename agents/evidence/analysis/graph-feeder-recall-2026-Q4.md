@@ -171,6 +171,18 @@ file is reached from the test tree. `f`, `f_mode`, `graph`, `graph_untested` and
 `graph_tested` were withheld, and the prompt stated no expected outcome in
 either direction.
 
+**What left the machine, recorded because the record did not previously say.**
+Every pre-repair row stored an ABSOLUTE host path — that is finding (i) above —
+so "the seats were given `paths`" needed reconciling with it. The draw
+relativised each path against the workspace root before the corpus was
+assembled, so the strings the two external seats received were the
+repo-relative forms shown in the table below (`src/scripts/check_memory.ts` and
+the other three), and no home-rooted path was sent. The table renders exactly
+those strings, abbreviated after first mention only where the directory repeats;
+the abbreviation is presentational and the first occurrence of each of the four
+files carries its full repo-relative form. A completion review raised this as
+unrecoverable from the artefact, which it was.
+
 The convergence is inlined below rather than cited by path, per
 `no-roadmap-references`: a council response lives under `agents/runtime/`, which
 is gitignored and auto-pruned, so a path to it is dead in every clone and would
@@ -183,8 +195,8 @@ they survive.
 |---|---|---|---|---|
 | R01 | `21f33898` | 7 | `src/scripts/_lib/prompt_shape.ts` | no |
 | R02 | `21f33898` | 29 | `src/scripts/check_memory.ts` | no |
-| R03 | `ffb1f1a5` | 2 | `check_release_pr_shape.ts` | no |
-| R04 | `ffb1f1a5` | 3 | `check_release_pr_shape.ts`, `report_evidence_temperature.ts` | no |
+| R03 | `ffb1f1a5` | 2 | `src/scripts/check_release_pr_shape.ts` | no |
+| R04 | `ffb1f1a5` | 3 | `src/scripts/check_release_pr_shape.ts`, `src/scripts/report_evidence_temperature.ts` | no |
 | R05 | `ffb1f1a5` | 4 | both of the above | no |
 | R06 | `ffb1f1a5` | 5 | both of the above | no |
 | R07 | `ffb1f1a5` | 6 | `report_evidence_temperature.ts` | no |
@@ -217,30 +229,36 @@ not `[0, 0]` — the same distinction `capture_rate.ts` makes in code. **Recall
 with no positives in the ground truth is 0/0.** It is not a low score for the
 detectors and must never be quoted as one.
 
-The one number the corpus *does* support, reported because it is real and
-because the protocol asks for false positives on the same footing:
+**`underpowered`** — below n = 50 this page reports the bar and the gap, never a
+rate. A recall quoted off a handful of rows would be read as a result and reused
+as one.
 
-| Arm | False positives | negatives | rate | 95 % Wilson | what the denominator is |
-|---|---|---|---|---|---|
-| F | **0** | **16** labelled | 0.000 | **[0.000, 0.194]** | rows a labeller actually judged |
-| F | 0 | 81 kept | 0.000 | [0.000, 0.045] | **not quotable — see below** |
+That clause is the pre-registration's, restored here verbatim. **An earlier
+version of this reading deleted it and published a false-positive rate with a
+Wilson interval off 16 rows in the same change** — while the status line still
+said `underpowered` and roadmap D7 still said the pre-registration had not been
+amended. A completion review caught it. Dropping a constraint and then
+exercising the freedom it withheld is precisely the move this page exists to
+forbid, and "it was a specificity rate, not a recall rate" is a reading of the
+clause arrived at **after** seeing the counts, which is the thing the clause
+guards against. The rule says *never a rate*. So no rate is published.
 
-**The 16-row line is the reading. The 81-row line is reported only to be
-retired**, because an earlier version of this page published it as the result
-and the completion review was right to call that overstated precision. 65 of
-those 81 rows carry **no production path at all**, and detector F cannot fire on
-a turn with no production edit under any behaviour it could have — those are
-structurally null denominators. They narrow the interval from 0.194 to 0.045
-without adding one observation that could have gone the other way.
+What the corpus supports, as COUNTS, which is what the bar-and-the-gap means:
 
-Even the 16-row interval is generous. The clustering below means those are not
-16 independent observations either, so [0.000, 0.194] is an upper bound on what
-this corpus knows, not a measurement of a detector.
+| Arm | fired | opportunities | labelled negatives it fired on |
+|---|---|---|---|
+| F | **0** | 84 accrued rows | **0 of 16** |
+| graph | **0** usable verdicts | 19 path-carrying rows | — (the arm was void) |
 
-This is a **specificity** reading, not a recall one. It is consistent with
-ADR-277's already-discharged false-positive half (0 in 335 turns) and adds 16
-independently labelled negatives to it. It settles nothing about recall, which
-is the half ADR-277 left open and the half this page exists for.
+No rate, no interval, no denominator arithmetic. The counts say what happened;
+turning them into a proportion is the step the clause withholds until n ≥ 50.
+
+What this does and does not bear on: it is **specificity** evidence, not recall
+evidence. It is consistent in direction with ADR-277's already-discharged
+false-positive half (0 in 335 turns) and adds 16 independently labelled
+negatives to the pile. It settles nothing about recall, which is the half
+ADR-277 left open and the half this page exists for. And the 16 are not 16
+independent observations in any case — see the clustering below.
 
 ## Why the corpus has no positives, and why that is not a corpus you can fix by waiting
 
