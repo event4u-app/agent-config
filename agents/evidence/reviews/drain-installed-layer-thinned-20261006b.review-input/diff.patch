@@ -2758,13 +2758,13 @@ index fb746fefd48aec66eed3aad43003c65527a867f1..831b976ab2732ed3c60ef673d4472e9c
  - [ ] AC-4 — The default changed only through the resolved blocker, and every
        non-Claude host tree is unchanged.
 diff --git a/src/config/rule-law-ceilings.json b/src/config/rule-law-ceilings.json
-index a46400abf553cfef5aee52bd7768fb396bdf5089..eb0a519c18cd4909fbe7ab3c5d606f52a98f8266 100644
+index a46400abf553cfef5aee52bd7768fb396bdf5089..6f6229f8700a83863634dad1058bcea873f58fe8 100644
 --- a/src/config/rule-law-ceilings.json
 +++ b/src/config/rule-law-ceilings.json
 @@ -1,6 +1,12 @@
  {
 -    "_comment": "Per-rule law-section and body ceilings (road-to-rule-laws-that-can-stand Phase 1). SHRINK-ONLY on every axis: an id may LEAVE `missing`, never join it; a recorded exception is a ceiling the rule may fall below and never rise above. Raising one to clear a red is the config-weakening move this repo blocks by construction — `--write-baseline` refuses to raise, it only re-records the smaller of old and current. A rule at its exception is not thereby correct, only not worse. Regenerate with `lint_rule_law_section --write-baseline`; never hand-edit the counts, but DO hand-edit `owner`, `review` and `reason` — those are the review contract and the generator only seeds them.",
-+    "_comment": "Per-rule law-section and body ceilings (road-to-rule-laws-that-can-stand Phase 1) plus the trigger-presence baseline (road-to-an-installed-layer-that-is-thinned step 3.4). SHRINK-ONLY on every axis: an id may LEAVE `missing` or `no_trigger`, never join either one; a recorded exception is a ceiling the rule may fall below and never rise above. Raising one to clear a red is the config-weakening move this repo blocks by construction — `--write-baseline` refuses to raise, it only re-records the smaller of old and current. A rule at its exception is not thereby correct, only not worse. Regenerate with `lint_rule_law_section --write-baseline`; never hand-edit the counts, but DO hand-edit `owner`, `review` and `reason` — those are the review contract and the generator only seeds them.",
++    "_comment": "Per-rule law-section and body ceilings (road-to-rule-laws-that-can-stand Phase 1) plus the trigger-presence baseline (road-to-an-installed-layer-that-is-thinned step 3.4). Two different guarantees, not one: `law_exceptions` and `body_exceptions` are numeric ceilings `--write-baseline` structurally refuses to raise (it re-records the SMALLER of old and current, never the current alone) — a rule at its exception is not thereby correct, only not worse. `missing` and `no_trigger` are LIST membership: an id SHOULD only leave, never join, but that is a review convention the generator does not enforce by construction — `--write-baseline` re-records every id that currently fails presence/trigger, full stop, so a newly-broken rule is swept in exactly like a genuinely-fixed one is swept out. The `stale-baseline-entry` finding makes a fixed id visible for removal; nothing makes a newly-broken id visible for refusal except a human reading the diff. Regenerate with `lint_rule_law_section --write-baseline`; never hand-edit the counts, but DO hand-edit `owner`, `review` and `reason` — those are the review contract and the generator only seeds them.",
      "measured_at_commit": "30f7d21f6",
 +    "no_trigger": [
 +        "no-roadmap-references",
@@ -2775,8 +2775,40 @@ index a46400abf553cfef5aee52bd7768fb396bdf5089..eb0a519c18cd4909fbe7ab3c5d606f52
      "missing": [
          "architecture",
          "artifact-drafting-protocol",
+@@ -66,19 +72,19 @@
+             "reason": "Two layers (code borrows and the knowledge/harvest layer) each with its own law, plus the no-CI-detector honesty section recording a measured gate decision."
+         },
+         "context-hygiene": {
+-            "chars": 8320,
++            "chars": 8283,
+             "owner": "agent-config-maintainer",
+             "review": "2026-12-01",
+             "reason": "Carries the freshness ladder, the 3-failure rule, loop detection and the 15/25 read-loop rule, each with its own self-check. Already migrated once into context-hygiene-mechanics and re-grew."
+         },
+         "decision-revisit-gate": {
+-            "chars": 8566,
++            "chars": 8408,
+             "owner": "agent-config-maintainer",
+             "review": "2026-12-01",
+             "reason": "The largest rule in the tree. Carries the five-step gate, the two descriptive axes, the owner-reserved table and an honest-enforcement section. Phase 1.4 of road-to-rule-laws-that-can-stand names it as a first mover for the load_context split."
+         },
+         "design-fidelity": {
+-            "chars": 8777,
++            "chars": 8635,
+             "owner": "agent-config-maintainer",
+             "review": "2026-12-01",
+             "reason": "Carries the artefact-maturity axis, the fidelity-mode table and the routing matrix. Phase 1.4 names it as a first mover."
+@@ -90,7 +96,7 @@
+             "reason": "Three laws plus the deferred-item resolution procedure and the later/PR-gate dispositions. The dispositions are mechanism, not obligation, and are the load_context candidate."
+         },
+         "settings-ask-protocol": {
+-            "chars": 8099,
++            "chars": 8058,
+             "owner": "agent-config-maintainer",
+             "review": "2026-12-01",
+             "reason": "Carries the four slots, the seven keys, the non-interactive rule and the consent-verdict contract. The key inventory is reference material and is the load_context candidate."
 diff --git a/src/scripts/lint_rule_law_section.ts b/src/scripts/lint_rule_law_section.ts
-index 6b07a644bebc2e9ddc10c37234c8416b25db6cd4..48091b747648841313a747f2d194c213e2690de3 100644
+index 6b07a644bebc2e9ddc10c37234c8416b25db6cd4..01598fa6364c5c841935decdb91923b084771f63 100644
 --- a/src/scripts/lint_rule_law_section.ts
 +++ b/src/scripts/lint_rule_law_section.ts
 @@ -33,6 +33,20 @@
@@ -2920,7 +2952,7 @@ index 6b07a644bebc2e9ddc10c37234c8416b25db6cd4..48091b747648841313a747f2d194c213
      const law_exceptions: Record<string, SizeException> = {};
      const body_exceptions: Record<string, SizeException> = {};
      for (const m of measures) {
-@@ -311,16 +389,18 @@ export function writeBaseline(root = REPO_ROOT, today: string): string {
+@@ -311,16 +389,22 @@ export function writeBaseline(root = REPO_ROOT, today: string): string {
      }
      const cfg = {
          _comment:
@@ -2932,22 +2964,27 @@ index 6b07a644bebc2e9ddc10c37234c8416b25db6cd4..48091b747648841313a747f2d194c213
 -            'current. A rule at its exception is not thereby correct, only not worse. Regenerate ' +
 -            'with `lint_rule_law_section --write-baseline`; never hand-edit the counts, but DO ' +
 -            'hand-edit `owner`, `review` and `reason` — those are the review contract and the ' +
+-            'generator only seeds them.',
 +            'Per-rule law-section and body ceilings (road-to-rule-laws-that-can-stand Phase 1) plus ' +
-+            'the trigger-presence baseline (road-to-an-installed-layer-that-is-thinned step 3.4). ' +
-+            'SHRINK-ONLY on every axis: an id may LEAVE `missing` or `no_trigger`, never join either ' +
-+            'one; a recorded exception is a ceiling the rule may fall below and never rise above. ' +
-+            'Raising one to clear a red is the config-weakening move this repo blocks by ' +
-+            'construction — `--write-baseline` refuses to raise, it only re-records the smaller of ' +
-+            'old and current. A rule at its exception is not thereby correct, only not worse. ' +
-+            'Regenerate with `lint_rule_law_section --write-baseline`; never hand-edit the counts, ' +
-+            'but DO hand-edit `owner`, `review` and `reason` — those are the review contract and the ' +
-             'generator only seeds them.',
++            'the trigger-presence baseline (road-to-an-installed-layer-that-is-thinned step 3.4). Two ' +
++            'different guarantees, not one: `law_exceptions` and `body_exceptions` are numeric ' +
++            'ceilings `--write-baseline` structurally refuses to raise (it re-records the SMALLER of ' +
++            'old and current, never the current alone) — a rule at its exception is not thereby ' +
++            'correct, only not worse. `missing` and `no_trigger` are LIST membership: an id SHOULD ' +
++            'only leave, never join, but that is a review convention the generator does not enforce ' +
++            'by construction — `--write-baseline` re-records every id that currently fails ' +
++            'presence/trigger, full stop, so a newly-broken rule is swept in exactly like a ' +
++            'genuinely-fixed one is swept out. The `stale-baseline-entry` finding makes a fixed id ' +
++            'visible for removal; nothing makes a newly-broken id visible for refusal except a human ' +
++            'reading the diff. Regenerate with `lint_rule_law_section --write-baseline`; never ' +
++            'hand-edit the counts, but DO hand-edit `owner`, `review` and `reason` — those are the ' +
++            'review contract and the generator only seeds them.',
          measured_at_commit: prev.measured_at_commit ?? '',
 +        no_trigger,
          missing,
          law_exceptions,
          body_exceptions,
-@@ -339,7 +419,7 @@ interface Args {
+@@ -339,7 +423,7 @@ interface Args {
  }
  
  const USAGE =
@@ -2956,7 +2993,7 @@ index 6b07a644bebc2e9ddc10c37234c8416b25db6cd4..48091b747648841313a747f2d194c213
      '[--write-baseline] [--root DIR] [--self-test]\n';
  
  function parseArgs(argv: string[]): Args {
-@@ -381,7 +461,7 @@ function parseArgs(argv: string[]): Args {
+@@ -381,7 +465,7 @@ function parseArgs(argv: string[]): Args {
              process.exit(2);
          }
      }
@@ -2965,7 +3002,7 @@ index 6b07a644bebc2e9ddc10c37234c8416b25db6cd4..48091b747648841313a747f2d194c213
          process.stderr.write(USAGE);
          process.stderr.write(`lint_rule_law_section: error: unknown axis: ${out.axis}\n`);
          process.exit(2);
-@@ -402,23 +482,45 @@ export function selfTest(write: (s: string) => void = (s) => process.stdout.writ
+@@ -402,23 +486,45 @@ export function selfTest(write: (s: string) => void = (s) => process.stdout.writ
          fs.mkdirSync(path.join(tmp, 'dist'), { recursive: true });
          fs.writeFileSync(
              path.join(tmp, ROUTER_REL),
@@ -3014,7 +3051,7 @@ index 6b07a644bebc2e9ddc10c37234c8416b25db6cd4..48091b747648841313a747f2d194c213
              );
              return lint(tmp, 'presence');
          })();
-@@ -426,12 +528,36 @@ export function selfTest(write: (s: string) => void = (s) => process.stdout.writ
+@@ -426,12 +532,36 @@ export function selfTest(write: (s: string) => void = (s) => process.stdout.writ
              rejecting.findings.length === 1 &&
              rejecting.findings[0]?.kind === 'no-law-section' &&
              accepting.findings.length === 0;
