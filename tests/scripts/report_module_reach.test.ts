@@ -250,6 +250,12 @@ describe('the four groups, over the unreferenced-by-name set', () => {
     });
 
     it('a level-4+ heading resets the step-block tracker too (R2 finding 2)', () => {
+        // The mention sits on the line IMMEDIATELY after the heading — no
+        // blank line in between — so the already-fixed blank-line branch
+        // cannot be what resets the tracker here. An earlier version of this
+        // fixture put a blank line after the heading, which made the test
+        // pass even with the heading-regex bug still present (the blank-line
+        // reset alone was enough) — caught by a second independent review.
         const root = fixtureRoot();
         unreferencedFixture(root, 'past_subheading');
         write(
@@ -261,9 +267,7 @@ describe('the four groups, over the unreferenced-by-name set', () => {
                 '## Phase 1',
                 '',
                 '- [ ] **1.1 An open step, unrelated.**',
-                '#### A level-4 subsection',
-                '',
-                'Prose here mentions `past_subheading`, but a level-4 heading already ended the step above.',
+                '#### A level-4 subsection mentions `past_subheading` right here, no blank line before it.',
             ].join('\n'),
         );
         const { modules } = analyseModuleReach(root);
