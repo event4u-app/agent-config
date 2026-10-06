@@ -27,6 +27,8 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { reportScanned } from './_lib/scan_scope.js';
+
 interface Hit {
     file: string;
     line: number;
@@ -124,6 +126,13 @@ function main(argv: string[] = process.argv.slice(2)): number {
         }
     }
     const { hits, scanned } = scanTree(root);
+    reportScanned({
+        gate: 'lint_ticked_unmet_criteria',
+        scanned,
+        units: 'roadmap file(s)',
+        roots: ['agents/roadmaps'],
+        allowEmpty: 'EMPTY_VALID: a checkout with no roadmap has no criterion to tick',
+    });
     if (hits.length === 0) {
         process.stdout.write(`✅  lint_ticked_unmet_criteria: ${String(scanned)} roadmap file(s), no criterion ticked over "${UNMET}".\n`);
         return 0;
