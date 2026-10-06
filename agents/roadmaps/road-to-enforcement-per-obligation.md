@@ -127,7 +127,7 @@ council first.
 
 - No new hooks and no new gates.
 - No gate that fails on coverage. The obligation counts are printed.
-- No kernel rule edits. The nine `kernel_denied` rules stay rule-level.
+- No kernel rule edits. The nine rules in the `kernel_denied` class stay at rule granularity.
 - No rule-body prose. Ids live in frontmatter, so the per-spawn payload does
   not grow.
 
@@ -158,7 +158,7 @@ council first.
 - **Status:** open
 - **Owner:** council
 - **Blocks:** 2.1, 2.2, 3.1, 3.2, 4.1, 4.2, 5.1
-- **What to do:** pick exactly one — (a) stable law ids `<rule>.<obligation>` in each non-kernel rule's frontmatter under `src/rules/`, and `enforced_by` entries bind to those ids in `src/scripts/check_enforcement_coverage.ts`; or (b) keep `enforced_by` rule-level and add a partial-credit annotation per rule that `./scripts-run src/scripts/report_obligation_mechanism --table` prints, with no id scheme.
+- **What to do:** pick exactly one — (a) stable law ids `<rule>.<obligation>` in each non-kernel rule's frontmatter under `src/rules/`, and `enforced_by` entries bind to those ids in `src/scripts/check_enforcement_coverage.ts`; or (b) keep the `enforced_by` field at rule granularity and add a partial-credit annotation per rule that `./scripts-run src/scripts/report_obligation_mechanism --table` prints, with no id scheme.
 - **Resolved when:** this entry records the council's choice, its dissent and the prompt sent, and `Status` reads resolved.
 - **Recommendation:** (a). An annotation in (b) is prose a gate cannot read, so the next audit would over-credit the same way; ids make the credit checkable and let the delta in 4.2 be computed rather than written.
 - **If you do nothing:** the coverage report keeps crediting whole rules for one gated clause, the 16/120 blocking figure keeps reading higher than what is refused, and finding `bfe1d6e6d8ca` stays undispositioned.
