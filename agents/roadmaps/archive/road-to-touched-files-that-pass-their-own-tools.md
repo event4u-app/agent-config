@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: ready
+status: archived
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "lane of road-to-leading-every-row; the set's growth is declared there. No active, parked or stub roadmap plans a post-edit quality pass at stop (grep across agents/roadmaps for formatter|typecheck at stop returns only unrelated archive mentions), and it adds no hook concern."
