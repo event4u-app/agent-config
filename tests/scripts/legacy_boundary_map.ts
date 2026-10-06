@@ -30,6 +30,10 @@
  * PER PATH, NEVER PER REPOSITORY. A repository-wide verdict is the thing that
  * makes this artifact useless: the whole point is that the answer differs by
  * file, and inside a file by region.
+ *
+ * Moved beside its test: the decision-support role it was built for — telling
+ * an editor which convention governs an edit — has no caller in this tree
+ * today, so its only demonstrated value is what its own test already proves.
  */
 import * as fs from 'node:fs';
 
