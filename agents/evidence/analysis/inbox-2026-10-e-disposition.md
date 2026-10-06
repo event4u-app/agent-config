@@ -35,7 +35,7 @@ Two arrivals below the escalation line were counted too:
 
 ## What the round produced
 
-Nine roadmaps, each `status: ready`:
+Ten roadmaps, each `status: ready` (the tenth, `road-to-installed-links-of-every-kind`, is named below):
 
 | Roadmap | Carries |
 |---|---|
@@ -53,8 +53,8 @@ Steps added to existing roadmaps: `road-to-an-installed-layer-that-is-thinned`
 2.5 (a default install receives bodies twice) and 2.6 (pending reinstall);
 `road-to-a-graph-that-feeds-the-gate` 3.5 (feeder latency before 3.4);
 `later/road-to-learning-you-can-see-carried` 2.4 (the GUI toggle is inert).
-Links from every installed kind landed as Phase 6 of
-`road-to-gates-a-pull-request-can-hear`, because the roadmap that owns rule
+Links from every installed kind landed as their own roadmap,
+`road-to-installed-links-of-every-kind`, because the roadmap that owns rule
 links was re-reviewed the same day and its register cannot record a second
 review on one date. Two stubs: `road-to-host-capabilities-observed-per-leg-and-slot`,
 `road-to-review-inputs-out-of-the-hot-tree`. One fix in this change:
