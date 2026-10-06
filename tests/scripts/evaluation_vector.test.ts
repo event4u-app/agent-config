@@ -80,9 +80,12 @@ function vectorHandlingSources(): string[] {
  * discovered set above is what makes it grow on its own.
  */
 const EVALUATION_VECTOR_TS = path.join(SCRIPTS, '_lib', 'evaluation_vector.ts');
+// minimality_tiebreak moved beside its test (road-to-modules-that-something-calls.md
+// Phase 2) — it never shipped a production caller, so it now lives in
+// tests/scripts/ rather than src/scripts/_lib/.
 const CORE_MODULES: readonly string[] = [
     EVALUATION_VECTOR_TS,
-    path.join(SCRIPTS, '_lib', 'minimality_tiebreak.ts'),
+    path.join(REPO, 'tests', 'scripts', 'minimality_tiebreak.ts'),
 ];
 
 describe('4.2 — no code path computes a single scalar score', () => {

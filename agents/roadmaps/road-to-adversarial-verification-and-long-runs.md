@@ -1610,3 +1610,12 @@ with no second confirmation · `T8` no grant → open-green · `T9` a typed op �
       decorative. Neutralising the ladder's wall-clock branch reds this fixture's halt case
       (plus one pre-existing T7/T8 case that pins the same branch) and nothing else. -->
       <!-- verify: npm run test:ts -- tests/e2e/adversarial-verification-fixtures.test.ts -->
+
+> **2026-10-06 note (road-to-modules-that-something-calls.md Phase 2.3).** Seven
+> modules this roadmap's ticked steps or criteria name — `authority_path`,
+> `cascade_base`, `council_transport`, `delivery_ready`, `rides_along`,
+> `test_provenance`, `typed_op_watch` — carry no production caller; each was
+> landed to satisfy a closed step or criterion above, not to be run. Read
+> against the current tree in `agents/evidence/analysis/module-reach-2026-10.md`.
+> No step, criterion, or decision above is edited by that reading or by this
+> note — it is handed to this roadmap's own future work, not decided here.

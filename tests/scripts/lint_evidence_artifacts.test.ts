@@ -182,6 +182,38 @@ describe('checkFiles — over real files on disk', () => {
         expect(tally.failed).toBe(1);
         expect(tally.completed).toBe(1);
     });
+
+    // The contract's second axis (docs/contracts/evidence-artifact-types.md §
+    // the second axis), checked via `_lib/repeated_run.ts`'s `parseExecutionMode`
+    // — orthogonal to the `evidence-type` marker above.
+    describe('the repeated-run marker (evidence-mode)', () => {
+        it('a typed artifact with no evidence-mode marker is unaffected', () => {
+            const rel = write(
+                'agents/evidence/analysis/plain.md',
+                '<!-- evidence-type: analysis -->\n# X\n',
+            );
+            expect(checkFiles(root, [rel])).toEqual([]);
+        });
+
+        it('a well-formed repeated:N marker produces no finding', () => {
+            const rel = write(
+                'agents/evidence/analysis/repeated-ok.md',
+                '<!-- evidence-type: analysis -->\n<!-- evidence-mode: repeated:5 -->\n# X\n',
+            );
+            expect(checkFiles(root, [rel])).toEqual([]);
+        });
+
+        it('repeated:1 is rejected — a single run is not a repeat', () => {
+            const rel = write(
+                'agents/evidence/analysis/repeated-bad.md',
+                '<!-- evidence-type: analysis -->\n<!-- evidence-mode: repeated:1 -->\n',
+            );
+            const findings = checkFiles(root, [rel]);
+            expect(findings).toHaveLength(1);
+            expect(findings[0]?.reason).toContain('evidence-mode');
+            expect(findings[0]?.reason).toContain('fewer than 2 runs');
+        });
+    });
 });
 
 describe('checkFiles', () => {

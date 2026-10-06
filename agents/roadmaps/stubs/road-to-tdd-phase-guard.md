@@ -76,6 +76,10 @@ durable record of that observation, and there was none. There is now:
   4 of them red.
 - `src/config/assurance-capability-registry.json` → `test-red-evidence` moved
   from `projection: null` to naming that file, discharging its own `revisit_if`.
+  **DATED 2026-10-06:** the row read `available` on the strength of a writer
+  this stub's own "No hook concern was registered" line already says has no
+  caller; corrected to `degraded` the same day. Landing the `pre_tool_use`
+  concern below is what sets it back to `available`.
 
 **ADR-248** landed too, which is what 5.4's fixture is a fixture *for*: it records
 that a public surface version and an implementation generation are independent

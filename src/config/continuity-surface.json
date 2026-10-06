@@ -405,7 +405,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
             "locus": "src/scripts/_lib/test_red_state.ts:2",
-            "reason": "Last test-run red state, read by the verification gates within a run."
+            "reason": "Last test-run red state, read by the verification gates within a run. DATED 2026-10-06: the writer has no production caller today, so no run actually populates this file yet; the registry row for this instrument (assurance-capability-registry.json, test-red-evidence) was corrected to degraded the same day."
         },
         {
             "id": "tool-result-census.jsonl",

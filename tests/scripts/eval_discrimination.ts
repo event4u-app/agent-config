@@ -13,6 +13,11 @@
  * Pure, dependency-free, host-agnostic: the smoke computes each control's
  * `caught` from its assertion results (via `controlCaughtFromAssertions`) and
  * passes the set here. No vendor calls happen in this module.
+ *
+ * Moved beside its test (road-to-modules-that-something-calls.md, Phase 2):
+ * the one-time smoke this scores already ran, its production use was never a
+ * recurring pipeline, and its only demonstrated value is what this file's own
+ * test already proved.
  */
 
 export type ControlSeverity = 'gross' | 'subtle';

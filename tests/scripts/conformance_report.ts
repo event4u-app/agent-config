@@ -26,9 +26,19 @@
  * They do NOT catch a deviation that is only visible when rendered, and they do
  * not claim to. Where a rendered comparison is available it belongs beside this
  * report, not inside it.
+ *
+ * Moved beside its test: `design-review`'s own Fidelity-proof chapter names
+ * the need this fills without naming a script that calls it, and no such
+ * script exists. Its only demonstrated value today is what its own test —
+ * and `tolerance_shadow`'s, which imports it as a real dependency — proves.
  */
-import { type TokenCandidate, type ValueKind, type ValueRow, reconcileValue } from './design_tolerance.js';
-import { recordToleranceShadow } from './tolerance_shadow.js';
+import {
+    type TokenCandidate,
+    type ValueKind,
+    type ValueRow,
+    reconcileValue,
+} from '../../src/scripts/_lib/design_tolerance.js';
+import { recordToleranceShadow } from '../../src/scripts/_lib/tolerance_shadow.js';
 
 export type Dimension = 'structure' | 'values' | 'behaviour' | 'responsive' | 'icons' | 'carrier';
 

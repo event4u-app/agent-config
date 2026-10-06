@@ -41,6 +41,10 @@
  * but stable stabiliser that expresses no preference about the candidates and
  * is deliberately NOT a fifth criterion. A caller that needs to know whether a
  * decision was made reads {@link breakTie}, never the sort position.
+ *
+ * Moved beside its test: the candidate-selection pipeline E5 was decided for
+ * never materialized past the archived roadmap that scoped it, so its only
+ * demonstrated value today is what this file's own test already proves.
  */
 
 /** The committed order. E5, option A. Walked left to right; first difference decides. */

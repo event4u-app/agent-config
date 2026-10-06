@@ -45,9 +45,14 @@
  * that way ({@link CrossGrade.order_swapped}) and refuses the promotion when it
  * did not. That is an honest boundary: the property is asserted by the caller
  * and checked here, not observed here.
+ *
+ * Moved beside its test alongside its one real caller, `role_split.ts`: the
+ * evaluator-promotion pipeline step 4.7 scoped never materialized past the
+ * archived roadmap, so its only demonstrated value today is what its own test
+ * already proves.
  */
-import { discriminationDeficit, type PlantedItem } from './eval_publication.js';
-import { auditAssertions, type AssertionObservation } from './judge_hygiene.js';
+import { discriminationDeficit, type PlantedItem } from '../../src/scripts/_lib/eval_publication.js';
+import { auditAssertions, type AssertionObservation } from '../../src/scripts/_lib/judge_hygiene.js';
 
 /** One plant, and what each arm actually did with it. */
 export interface PlantOutcome {
