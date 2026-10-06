@@ -5,7 +5,7 @@ import * as path from 'node:path';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { bench, distribution, parseArgs, percentile } from '../../src/scripts/bench_graph_feeder_latency.js';
+import { bench, benchRepo, distribution, makeFixture, ORDERS, parseArgs, percentile } from '../../src/scripts/bench_graph_feeder_latency.js';
 
 describe('bench_graph_feeder_latency — step 3.5 of road-to-a-graph-that-feeds-the-gate', () => {
     it('takes nearest-rank percentiles, so p95 of twenty samples is the nineteenth', () => {
@@ -32,6 +32,35 @@ describe('bench_graph_feeder_latency — step 3.5 of road-to-a-graph-that-feeds-
         expect(r.feederOnly.p50).toBeGreaterThan(0);
         // ...and it timed the real walk: a swallowed load failure reads `null`.
         expect(r.feederVerdicts).toStrictEqual(['untested']);
+    }, 120_000);
+
+    it('cycles orders that balance every call\'s position and direct predecessor', () => {
+        const first = new Map<number, number>();
+        const pairs = new Map<string, number>();
+        for (const o of ORDERS) {
+            expect([...o].sort()).toStrictEqual([0, 1, 2]);
+            first.set(o[0] as number, (first.get(o[0] as number) ?? 0) + 1);
+            for (let k = 1; k < o.length; k++) {
+                const key = `${o[k - 1]}>${o[k]}`;
+                pairs.set(key, (pairs.get(key) ?? 0) + 1);
+            }
+        }
+        expect([...first.values()]).toStrictEqual([2, 2, 2]);
+        // Six ordered pairs of distinct calls, each a direct predecessor equally often.
+        expect(pairs.size).toBe(6);
+        expect(new Set(pairs.values())).toStrictEqual(new Set([2]));
+    });
+
+    it('records every round\'s verdict over an existing repository, not only the last', async () => {
+        const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'feeder-repo-')));
+        try {
+            const dir = await makeFixture(root, 2, true);
+            const r = benchRepo({ repo: dir, edit: 'src/service.ts', runs: 3 });
+            expect(r.feederOnly.n).toBe(3);
+            expect(r.verdicts).toStrictEqual(['untested']);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
     }, 120_000);
 
     it('refuses flag combinations it would otherwise silently misread', () => {

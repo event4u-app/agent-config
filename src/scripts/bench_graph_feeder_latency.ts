@@ -21,9 +21,11 @@
  *             `absent`. This is the cost a consumer who never builds a graph
  *             pays, and the baseline the feeder's increment is read against.
  *
- * Arms are INTERLEAVED, one call each per round, and the order ROTATES per
- * round: interleaving spreads slow drift across the arms, and rotating spreads
- * the order effects (GC after the heavier arm, cache warmth) as well. A third
+ * Arms are INTERLEAVED, one call each per round, and the rounds cycle through
+ * all six ORDERS of the three calls: interleaving spreads slow drift across the
+ * arms, and the full permutation cycle balances both the position and the
+ * direct predecessor of every call (GC after the heavier arm, cache warmth) —
+ * exactly so when the round count is a multiple of six. A third
  * reading, inside the same rotation, times the feeder's own work (`graphState` + `graphUntestedVerdict`) in isolation on the
  * `with` tree, because the difference of two noisy totals is a weaker number
  * than a direct one.
@@ -187,6 +189,20 @@ function timeStop(dir: string, transcriptPath: string, session: string): { ms: n
     }
 }
 
+/**
+ * Every order of the three calls. Cycling through all six puts each call first
+ * equally often AND gives every call each other call as its direct predecessor
+ * equally often; rotating the start of one fixed cycle only does the former.
+ */
+export const ORDERS: readonly (readonly number[])[] = [
+    [0, 1, 2],
+    [0, 2, 1],
+    [1, 0, 2],
+    [1, 2, 0],
+    [2, 0, 1],
+    [2, 1, 0],
+];
+
 /** Assigning `undefined` to `process.env` stores the string "undefined"; an unset variable must be deleted. */
 function restoreEnv(key: string, value: string | undefined): void {
     if (value === undefined) delete process.env[key];
@@ -245,7 +261,7 @@ export async function bench(opts: { runs?: number; files?: number }): Promise<La
                     if (!feederVerdicts.includes(f.verdict)) feederVerdicts.push(f.verdict);
                 },
             ];
-            for (let k = 0; k < calls.length; k++) calls[(i + k) % calls.length]?.();
+            for (const k of ORDERS[i % ORDERS.length] ?? []) calls[k]?.();
         }
 
         const w = distribution(a);
@@ -278,7 +294,8 @@ export interface RepoReport {
     repo: string;
     edit: string;
     graphState: string;
-    verdict: string | null;
+    /** Every distinct verdict across the billed rounds — a swallowed load failure reads `null`. */
+    verdicts: (string | null)[];
     feederOnly: Distribution;
 }
 
@@ -288,22 +305,25 @@ export function benchRepo(opts: { repo: string; edit: string; runs?: number | un
     const repo = path.resolve(opts.repo);
     const edit = [path.resolve(repo, opts.edit)];
     let state = graphState(repo);
-    let verdict: string | null = null;
+    const verdicts: (string | null)[] = [];
     const samples: number[] = [];
     for (let i = 0; i <= runs; i++) {
         const t0 = performance.now();
         state = graphState(repo);
-        verdict = graphUntestedVerdict(repo, state, edit).verdict;
+        const verdict = graphUntestedVerdict(repo, state, edit).verdict;
         // Round zero is the warm-up and is not billed.
-        if (i > 0) samples.push(performance.now() - t0);
+        if (i > 0) {
+            samples.push(performance.now() - t0);
+            if (!verdicts.includes(verdict)) verdicts.push(verdict);
+        }
     }
-    return { runs, repo: path.basename(repo), edit: opts.edit, graphState: state, verdict, feederOnly: distribution(samples) };
+    return { runs, repo: path.basename(repo), edit: opts.edit, graphState: state, verdicts, feederOnly: distribution(samples) };
 }
 
 function renderRepo(r: RepoReport): string {
     const d = r.feederOnly;
     return [
-        `graph-feeder work over ${r.repo} — edit ${r.edit}, graph state ${r.graphState}, verdict ${r.verdict}`,
+        `graph-feeder work over ${r.repo} — edit ${r.edit}, graph state ${r.graphState}, verdicts ${JSON.stringify(r.verdicts)}`,
         `n ${d.n} · p50 ${d.p50} ms · p95 ${d.p95} ms · max ${d.max} ms`,
         // A stop follows an edit, so the realistic state is `edited`; on a clean
         // tree the git probes answer differently and the reading prices that.
