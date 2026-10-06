@@ -1,6 +1,12 @@
 {
-    "_comment": "Per-rule law-section and body ceilings (road-to-rule-laws-that-can-stand Phase 1). SHRINK-ONLY on every axis: an id may LEAVE `missing`, never join it; a recorded exception is a ceiling the rule may fall below and never rise above. Raising one to clear a red is the config-weakening move this repo blocks by construction — `--write-baseline` refuses to raise, it only re-records the smaller of old and current. A rule at its exception is not thereby correct, only not worse. Regenerate with `lint_rule_law_section --write-baseline`; never hand-edit the counts, but DO hand-edit `owner`, `review` and `reason` — those are the review contract and the generator only seeds them.",
+    "_comment": "Per-rule law-section and body ceilings (road-to-rule-laws-that-can-stand Phase 1) plus the trigger-presence baseline (road-to-an-installed-layer-that-is-thinned step 3.4). SHRINK-ONLY on every axis: an id may LEAVE `missing` or `no_trigger`, never join either one; a recorded exception is a ceiling the rule may fall below and never rise above. Raising one to clear a red is the config-weakening move this repo blocks by construction — `--write-baseline` refuses to raise, it only re-records the smaller of old and current. A rule at its exception is not thereby correct, only not worse. Regenerate with `lint_rule_law_section --write-baseline`; never hand-edit the counts, but DO hand-edit `owner`, `review` and `reason` — those are the review contract and the generator only seeds them.",
     "measured_at_commit": "30f7d21f6",
+    "no_trigger": [
+        "no-roadmap-references",
+        "rule-type-governance",
+        "skill-quality",
+        "source-confidentiality"
+    ],
     "missing": [
         "architecture",
         "artifact-drafting-protocol",

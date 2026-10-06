@@ -184,6 +184,114 @@ describe('ceiling', () => {
     });
 });
 
+describe('trigger axis', () => {
+    it('is clean over the real tree', () => {
+        expect(lint(REPO_ROOT, 'trigger').findings).toEqual([]);
+    });
+
+    it('fails a routed rule with no trigger that is not baselined', () => {
+        const root = fixture({ mute: `${FM}# Mute\n\n## The Iron Law\n\nNEVER.\n` });
+        const res = lint(root, 'trigger');
+        expect(res.findings.map((f) => f.kind)).toEqual(['no-trigger']);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('accepts the same rule once it is in the shrink-only `no_trigger` baseline', () => {
+        const root = fixture(
+            { mute: `${FM}# Mute\n\n## The Iron Law\n\nNEVER.\n` },
+            { no_trigger: ['mute'] },
+        );
+        expect(lint(root, 'trigger').findings).toEqual([]);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('reports a baseline entry that has since gained a trigger, so debt paid is collected', () => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'law-fixture-'));
+        fs.mkdirSync(path.join(root, 'src', 'rules'), { recursive: true });
+        fs.mkdirSync(path.join(root, 'src', 'config'), { recursive: true });
+        fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
+        fs.writeFileSync(
+            path.join(root, 'dist', 'router.json'),
+            JSON.stringify({ kernel: [], tier_1: [{ id: 'vocal', triggers: [{ keyword: 'v' }] }], tier_2: [] }),
+        );
+        fs.writeFileSync(
+            path.join(root, 'src', 'config', 'rule-law-ceilings.json'),
+            JSON.stringify({ missing: [], no_trigger: ['vocal'], law_exceptions: {}, body_exceptions: {} }),
+        );
+        fs.writeFileSync(
+            path.join(root, 'src', 'rules', 'vocal.md'),
+            `${FM}# Vocal\n\n## The Iron Law\n\nNEVER.\n`,
+        );
+        const res = lint(root, 'trigger');
+        expect(res.findings.map((f) => f.kind)).toEqual(['stale-baseline-entry']);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('every id in the committed `no_trigger` baseline is a routed rule that really has none', () => {
+        const cfg = readConfig(REPO_ROOT);
+        const router = JSON.parse(
+            fs.readFileSync(path.join(REPO_ROOT, 'dist', 'router.json'), 'utf-8'),
+        ) as { tier_1: Array<{ id: string; triggers?: unknown[] }>; tier_2: Array<{ id: string; triggers?: unknown[] }> };
+        const triggerCounts = new Map<string, number>();
+        for (const e of [...router.tier_1, ...router.tier_2]) {
+            triggerCounts.set(e.id, Array.isArray(e.triggers) ? e.triggers.length : 0);
+        }
+        for (const id of cfg.no_trigger) {
+            expect(triggerCounts.has(id), `${id} is in \`no_trigger\` but is not a routed rule`).toBe(true);
+            expect(
+                triggerCounts.get(id),
+                `${id} is in \`no_trigger\` but now has a trigger`,
+            ).toBe(0);
+        }
+    });
+});
+
+// Step 3.4 of `road-to-an-installed-layer-that-is-thinned`: a new routed rule
+// must clear BOTH axes at once — a law section under the hard ceiling AND a
+// trigger a prompt can fire. Neither axis alone proves the combined claim: a
+// rule could pass `presence`+`ceiling` with zero triggers, or pass `trigger`
+// with no law section at all.
+describe('new-rule', () => {
+    it('a brand-new routed rule with a law section and a trigger declares its cost and passes clean', () => {
+        const root = fixture(
+            { fresh: `${FM}# Fresh\n\n## The Iron Law\n\nNEVER SHIP WITHOUT A COST.\n` },
+            {},
+        );
+        // Give it a real trigger — `fixture()` leaves tier entries trigger-less
+        // by default, which is exactly the shape step 3.4 must reject.
+        const router = JSON.parse(fs.readFileSync(path.join(root, 'dist', 'router.json'), 'utf-8')) as {
+            tier_1: Array<{ id: string; triggers?: unknown[] }>;
+        };
+        for (const e of router.tier_1) e.triggers = [{ keyword: 'fresh-word' }];
+        fs.writeFileSync(path.join(root, 'dist', 'router.json'), JSON.stringify(router));
+
+        expect(lint(root, 'all').findings).toEqual([]);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('a new routed rule with no law section and no trigger fails on BOTH axes at once', () => {
+        const root = fixture({ raw: `${FM}# Raw\n\nJust prose, no law, no trigger.\n` });
+        const res = lint(root, 'all');
+        expect(res.findings.map((f) => f.axis).sort()).toEqual(['presence', 'trigger']);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('a law section at or over the 2,000-char hard ceiling still fails even with a trigger', () => {
+        const root = fixture({
+            heavy: `${FM}# Heavy\n\n## The Iron Law\n\n${'LAW. '.repeat(LAW_HARD_CHARS / 4)}\n`,
+        });
+        const router = JSON.parse(fs.readFileSync(path.join(root, 'dist', 'router.json'), 'utf-8')) as {
+            tier_1: Array<{ id: string; triggers?: unknown[] }>;
+        };
+        for (const e of router.tier_1) e.triggers = [{ keyword: 'heavy-word' }];
+        fs.writeFileSync(path.join(root, 'dist', 'router.json'), JSON.stringify(router));
+
+        const res = lint(root, 'all');
+        expect(res.findings.map((f) => f.kind)).toEqual(['law-over-hard-ceiling']);
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+});
+
 describe('body-ceiling', () => {
     it('is clean over the real tree', () => {
         expect(lint(REPO_ROOT, 'body-ceiling').findings).toEqual([]);
