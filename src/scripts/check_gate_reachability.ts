@@ -42,6 +42,7 @@ import {
     resetSourceCache,
     type InventoryVerdict,
 } from './_lib/loop_surfaces.js';
+import { analyseModuleReach, groupCounts } from './_lib/module_reach.js';
 
 const REPO_ROOT = process.cwd();
 const TASKFILES_DIR = 'taskfiles';
@@ -312,6 +313,10 @@ function runGate(root: string): number {
         units: 'exemption row(s) + unreachable target(s) + declared loop instrument(s)',
         roots: [EXEMPTIONS_REL, INVENTORY_REL, ROOT_TASKFILE, TASKFILES_DIR],
     });
+    // Phase 3.1 of road-to-modules-that-something-calls.md: five numbers beside
+    // this gate's existing verdicts, printed whether the gate passes or fails —
+    // reported, enforcing nothing, the way the estate gate prints its draft count.
+    process.stdout.write(moduleReachLine(moduleReachSummary(root)));
     const inventoryClean = inv.shape.length === 0 && inv.reach.length === 0;
     if (v.unreasoned.length === 0 && v.stale.length === 0 && inventoryClean) {
         process.stdout.write(
@@ -506,13 +511,54 @@ function selfTest(): number {
     }
 }
 
+export interface ModuleReachSummary {
+    /** The four group counts — the roadmap's "four group counts", over the unreferenced-by-name set only. */
+    groups: Record<'contract-test' | 'open-or-deferred-step' | 'named-outside-open-step' | 'named-in-none', number>;
+    /** "the total of modules reached by nothing" (import edges + run-by-path) — the fifth number. */
+    reachedByNothing: number;
+    /**
+     * Not one of the five — the size of the unreferenced-by-name set the four
+     * groups partition. Kept on the summary because it is a free cross-check
+     * (it must equal the sum of `groups`); never printed as a sixth number.
+     */
+    unreferencedTotal: number;
+}
+
+/**
+ * The five module-reach numbers (road-to-modules-that-something-calls.md
+ * Phase 3.1) — reported beside this gate's own verdicts, the way the estate
+ * gate prints its draft-roadmap count: a number that moves in a change's own
+ * gate output, enforcing nothing.
+ */
+export function moduleReachSummary(root: string): ModuleReachSummary {
+    const { modules } = analyseModuleReach(root);
+    const unreferenced = modules.filter((m) => !m.namedByProduction);
+    return {
+        groups: groupCounts(unreferenced),
+        reachedByNothing: modules.filter((m) => !m.reachedByImportOrPath).length,
+        unreferencedTotal: unreferenced.length,
+    };
+}
+
+export function moduleReachLine(s: ModuleReachSummary): string {
+    return (
+        `module reach (reported, not gated), src/scripts/_lib: ` +
+        `contract-test ${String(s.groups['contract-test'])} · ` +
+        `open-or-deferred-step ${String(s.groups['open-or-deferred-step'])} · ` +
+        `named-outside-open-step ${String(s.groups['named-outside-open-step'])} · ` +
+        `named-in-none ${String(s.groups['named-in-none'])} · ` +
+        `REACHED-BY-NOTHING total ${String(s.reachedByNothing)}\n`
+    );
+}
+
 export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): number {
     if (argv.includes('--self-test')) return selfTest();
     if (argv.includes('--gate')) return runGate(root);
     const r = analyse(root);
     const inv = inventoryVerdict(root);
+    const moduleReach = moduleReachSummary(root);
     if (argv.includes('--json')) {
-        process.stdout.write(`${JSON.stringify({ ...r, inventory: inv }, null, 2)}\n`);
+        process.stdout.write(`${JSON.stringify({ ...r, inventory: inv, moduleReach }, null, 2)}\n`);
         return 0;
     }
     // Emitted on the DEFAULT invocation too, not only under `--gate`: the
@@ -538,6 +584,7 @@ export function main(argv: string[] = process.argv.slice(2), root = REPO_ROOT): 
             `prose-bound surfaces ${String(inv.proseBound.length)}\n`,
     );
     for (const f of inv.reach) process.stdout.write(`  · ${f.id} — ${f.detail}\n`);
+    process.stdout.write(moduleReachLine(moduleReach));
     return 0;
 }
 

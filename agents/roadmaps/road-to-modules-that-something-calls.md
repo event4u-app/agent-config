@@ -185,7 +185,7 @@ reported and counted, and nothing here moves or deletes one.
 
 ## Phase 3 — The counts are in front of every change
 
-- [ ] **3.1 Five numbers on each gate run, enforcing nothing.**
+- [x] **3.1 Five numbers on each gate run, enforcing nothing.**
       `check_gate_reachability` prints the four group counts and the total of
       modules reached by nothing, from the report's library, beside its
       existing verdicts, marked as reported and not gated, the way the estate
@@ -207,16 +207,16 @@ reported and counted, and nothing here moves or deletes one.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — One command prints, for every unreferenced module, its group and
+- [x] AC-1 — One command prints, for every unreferenced module, its group and
       the test, step or file that puts it there.
-- [ ] AC-2 — No unreferenced module is named in no live roadmap.
-- [ ] AC-3 — The gate's output carries the five counts; a fixture module with
+- [x] AC-2 — No unreferenced module is named in no live roadmap.
+- [x] AC-3 — The gate's output carries the five counts; a fixture module with
       a test and no consumer changes the fourth and the total, one that a
       comment mentions changes the total only, and neither changes the exit
       code.
-- [ ] AC-4 — The count of gate scripts, and of rows in
+- [x] AC-4 — The count of gate scripts, and of rows in
       `src/config/gate-reachability-exemptions.json`, is unchanged.
-- [ ] AC-5 — No registry row under `src/config/` states a capability as
+- [x] AC-5 — No registry row under `src/config/` states a capability as
       available whose evidence is a module no production code imports.
 
 ## Decisions
