@@ -310,18 +310,81 @@ function _explain_config(project_root: string, as_json: boolean): number {
     }
     const knobs = resolved_preset.knobs as Dict;
     const cost = isPlainObject(knobs['cost']) ? (knobs['cost'] as Dict) : {};
-    if (Object.keys(cost).length > 0) {
-        print(
-            `  cost caps:    daily $${fmt(cost['daily_max_usd'])} · ` +
-                `weekly $${fmt(cost['weekly_max_usd'])} · ` +
-                `monthly $${fmt(cost['monthly_max_usd'])}`,
-        );
+    const mcp = isPlainObject(knobs['mcp']) ? (knobs['mcp'] as Dict) : {};
+    if (Object.keys(cost).length > 0 || Object.keys(mcp).length > 0) {
+        // These are preset FIGURES, not caps. No reader compares spend with
+        // any of them: `presets.ts` maps the preset to an environment name and
+        // nothing else reads these keys. Calling them "cost caps" told a
+        // reader they bounded something, which is why the label says what they
+        // are — ADR-279 removed the ceilings nobody set, and a figure nobody
+        // enforces is the same error one layer up.
+        print('  preset cost figures (shown, NOT enforced — nothing compares spend with these):');
+        if (Object.keys(cost).length > 0) {
+            print(
+                `    preset:     daily $${fmt(cost['daily_max_usd'])} · ` +
+                    `weekly $${fmt(cost['weekly_max_usd'])} · ` +
+                    `monthly $${fmt(cost['monthly_max_usd'])}`,
+            );
+        }
+        if (Object.keys(mcp).length > 0) {
+            print(
+                `    mcp:        per-call $${fmt(mcp['per_call_max_usd'])} · ` +
+                    `per-session $${fmt(mcp['per_session_max_usd'])}`,
+            );
+        }
     }
+    // The figures that DO bound, beside the ones that do not, so the
+    // difference is visible in one screen rather than inferred.
+    printConfiguredBudgets(print, project_root);
     const autonomy = isPlainObject(knobs['autonomy']) ? (knobs['autonomy'] as Dict) : {};
     if (Object.keys(autonomy).length > 0) {
         print(`  autonomy:     default=${fmt(autonomy['default'])}`);
     }
     return 0;
+}
+
+/**
+ * Print the `cost.budgets` windows that actually bound, and their mode.
+ *
+ * Separate from the preset figures above because the two look alike and mean
+ * opposite things: a preset figure is printed and never read, while a
+ * configured budget is what `scripts/cost/budget.mjs` compares spend against
+ * and what `cost.enforcement: hard-stop` can refuse on. Printing them in one
+ * screen is the point of step 3.5 — a reader who sees only one of the two
+ * cannot tell which kind they are looking at.
+ *
+ * `0` and absent both mean unbounded (ADR-279), and the line says so rather
+ * than printing a bare zero that reads like a cap of nothing.
+ */
+export function printConfiguredBudgets(print: (s?: string) => void, project_root: string): void {
+    let settings: unknown;
+    try {
+        settings = load_agent_settings({ cwd: project_root });
+    } catch {
+        // An unreadable or absent settings file is not an error for `explain`:
+        // the command's job is to report what it can see.
+        return;
+    }
+    const cost = isPlainObject(settings) && isPlainObject((settings as Dict)['cost'])
+        ? ((settings as Dict)['cost'] as Dict)
+        : {};
+    const budgets = isPlainObject(cost['budgets']) ? (cost['budgets'] as Dict) : {};
+    const win = (k: string): string => {
+        const v = budgets[k];
+        return typeof v === 'number' && v > 0 ? `$${String(v)}` : 'unset';
+    };
+    const mode = typeof cost['enforcement'] === 'string' ? cost['enforcement'] : 'advisory';
+    const anySet = ['daily', 'weekly', 'monthly'].some((k) => win(k) !== 'unset');
+    print(
+        `  configured cost.budgets (ENFORCED by the cost preflight when mode is hard-stop):`,
+    );
+    print(
+        `    windows:    daily ${win('daily')} · weekly ${win('weekly')} · ` +
+            `monthly ${win('monthly')}  (mode: ${mode})`,
+    );
+    if (!anySet) {
+        print('    no window is set, so no ceiling on money applies (ADR-279).');
+    }
 }
 
 /** Python `dict.get(k)` → value or None; renders as `str(value)` / `None`. */

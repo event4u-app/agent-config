@@ -245,7 +245,7 @@ At `df377ca64`:
       added.
       verify: `cat src/domains/product-basic/roadmap/process-full/command.md src/agent-src/contexts/execution/roadmap-execution-contract.md src/agent-src/contexts/execution/roadmap-process-loop.md | grep -cE '(USD |[$])25'` -> /^0$/
       Positive control: the same command returns 7 at `df377ca64`.
-- [ ] **3.5 A figure nothing enforces is not printed as a cap.** `explain`
+- [x] **3.5 A figure nothing enforces is not printed as a cap.** `explain`
       prints the preset's cost values — the daily, weekly and monthly figures
       and the two `mcp.*_max_usd` figures — under a label that says they are
       shown and not enforced, beside the configured `cost.budgets` and their mode.
