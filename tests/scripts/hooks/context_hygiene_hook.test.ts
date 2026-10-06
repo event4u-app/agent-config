@@ -44,28 +44,25 @@ describe('context_hygiene — tracker behaviour', () => {
         expect(fire(tmp, 'view')).toBe(0);
         const s = state(tmp);
         expect(s['tool_calls']).toBe(1);
-        expect(s['consecutive_same_tool']).toBe(1);
-        expect(s['last_tool']).toBe('view');
         expect(s['tool_history']).toEqual(['view']);
-        expect(s['loop_detected']).toBe(false);
         expect(s['freshness_threshold']).toBe(null);
     });
 
-    it('three same tools in a row flags loop', () => {
+    it('repeated same-tool calls accumulate the call count (no loop field)', () => {
         for (let i = 0; i < 3; i += 1) fire(tmp, 'view');
         const s = state(tmp);
-        expect(s['consecutive_same_tool']).toBe(3);
-        expect(s['loop_detected']).toBe(true);
         expect(s['tool_calls']).toBe(3);
+        expect('consecutive_same_tool' in s).toBe(false);
+        expect('loop_detected' in s).toBe(false);
+        expect('last_tool' in s).toBe(false);
     });
 
-    it('different tool resets consecutive count', () => {
+    it('a different tool just extends the history, no counter to reset', () => {
         for (let i = 0; i < 3; i += 1) fire(tmp, 'view');
         fire(tmp, 'edit');
         const s = state(tmp);
-        expect(s['consecutive_same_tool']).toBe(1);
-        expect(s['loop_detected']).toBe(false);
-        expect(s['last_tool']).toBe('edit');
+        expect(s['tool_calls']).toBe(4);
+        expect(s['tool_history']).toEqual(['view', 'view', 'view', 'edit']);
     });
 
     it('tool history is capped at 5', () => {
@@ -104,7 +101,7 @@ describe('context_hygiene — tracker behaviour', () => {
         expect(fire(tmp, 'view')).toBe(0);
         const s = state(tmp);
         expect(s['tool_calls']).toBe(1);
-        expect(s['last_tool']).toBe('view');
+        expect(s['tool_history']).toEqual(['view']);
     });
 
     it('payload without tool_name still writes state', () => {
@@ -118,7 +115,7 @@ describe('context_hygiene — tracker behaviour', () => {
         expect(run('', { consumer_root: tmp })).toBe(0);
         const s = state(tmp);
         expect(s['tool_calls']).toBe(0);
-        expect(s['last_tool']).toBe(null);
+        expect(s['tool_history']).toEqual([]);
     });
 
     it('invalid json payload does not crash', () => {
@@ -154,15 +151,8 @@ describe('context_hygiene — tracker behaviour', () => {
         expect(res.status).toBe(0);
         const s = state(tmp);
         expect(s['tool_calls']).toBe(1);
-        expect(s['last_tool']).toBe('view');
+        expect(s['tool_history']).toEqual(['view']);
         // sanity: the in-process entry point is also exported.
         expect(typeof main).toBe('function');
     });
 });
-
-interface RunResult {
-    status: number | null;
-    stdout: string;
-    stderr: string;
-    state: Record<string, unknown> | null;
-}

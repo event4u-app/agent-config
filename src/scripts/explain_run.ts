@@ -27,7 +27,7 @@
  *      honest "no telemetry record" line, never a fabricated estimate.
  *      Sources: `_lib/judgment_ladder.ts::explainLadder` + the same
  *      audit-log-v1 files as §4.
- *   5. Hook / loop / freshness state snapshot. Source:
+ *   5. Hook / freshness state snapshot. Source:
  *      `agents/state/context-hygiene.json` (the code path the hook
  *      actually writes — see `context_hygiene_hook.ts::STATE_FILE`) or
  *      the doc-referenced `agents/runtime/state/context-hygiene.json`.
@@ -477,7 +477,7 @@ function renderSummarySection(
         out.push('- Session health: no state recorded.');
     } else {
         const s = hygiene.state;
-        out.push(`- Session health: ${String(s['tool_calls'] ?? '(unset)')} tool call(s) recorded, loop detected: ${String(s['loop_detected'] ?? '(unset)')}.`);
+        out.push(`- Session health: ${String(s['tool_calls'] ?? '(unset)')} tool call(s) recorded.`);
     }
     return out;
 }
@@ -686,7 +686,7 @@ function renderDecisionSection(
 
 function renderHygieneSection(hygiene: HygieneReadResult): string[] {
     const out: string[] = [];
-    out.push('## Hook / loop state (context-hygiene)');
+    out.push('## Hook state (context-hygiene)');
     out.push(`_Source: tried ${hygiene.checkedPaths.map((p) => `\`${p}\``).join(', then ')}_`);
     out.push('');
     if (hygiene.state === null) {
@@ -697,9 +697,6 @@ function renderHygieneSection(hygiene: HygieneReadResult): string[] {
     out.push(`Found at \`${hygiene.path}\`.`);
     out.push('');
     out.push(`- tool_calls: ${String(s['tool_calls'] ?? '(unset)')}`);
-    out.push(`- consecutive_same_tool: ${String(s['consecutive_same_tool'] ?? '(unset)')}`);
-    out.push(`- last_tool: ${String(s['last_tool'] ?? '(unset)')}`);
-    out.push(`- loop_detected: ${String(s['loop_detected'] ?? '(unset)')}`);
     out.push(`- freshness_threshold: ${String(s['freshness_threshold'] ?? '(unset)')}`);
     out.push(`- checked_at: ${String(s['checked_at'] ?? '(unset)')}`);
     return out;

@@ -203,7 +203,7 @@ At `df377ca64`:
       text (`:256-257`) name that path; the dispatcher's help line names
       the same path.
       verify: `npx vitest run tests/scripts/analyze_session_reads_hook_state.test.ts` -> 0
-- [ ] **1.2 The two fields leave their writer and their readers in one
+- [x] **1.2 The two fields leave their writer and their readers in one
       change.** Remove `loop_detected` and `consecutive_same_tool` from the
       state the hook writes and from its verbose line, from the analyser's
       tool-activity section, and from the three places `explain_run.ts` prints

@@ -39,8 +39,6 @@ const WORK_STATE = {
 
 const HYGIENE = {
     tool_calls: 17,
-    consecutive_same_tool: 2,
-    loop_detected: false,
     tool_history: ['view', 'edit', 'view'],
     checked_at: '2026-06-25T00:00:00Z',
 };
@@ -59,7 +57,7 @@ describe('render_report — deterministic output', () => {
         expect(out).toContain('## Halts (0)');
         // Tool activity from context-hygiene.
         expect(out).toContain('Tool calls: 17');
-        expect(out).toContain('Loop detected: no');
+        expect(out).not.toContain('Loop detected');
         // Honest token/cost note — no fabricated numbers.
         expect(out).toContain('Token/cost: not tracked (no per-session source).');
     });

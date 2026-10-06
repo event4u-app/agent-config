@@ -16,8 +16,6 @@
  *      `context_hygiene_hook.ts` rather than spelled here — two independent
  *      spellings of this path drifted apart before). Fields read:
  *        - `tool_calls`           (int)
- *        - `consecutive_same_tool`(int)
- *        - `loop_detected`        (bool)
  *
  * There is NO general token/cost data source in this package (only
  * video-specific telemetry), so the report deliberately does NOT report
@@ -196,11 +194,7 @@ export function render_report(state: Dict, hygiene: Dict | null): string {
         lines.push('_Context-hygiene snapshot not available._');
     } else {
         const toolCalls = intOrUnknown(hygiene['tool_calls']);
-        const consecutive = intOrUnknown(hygiene['consecutive_same_tool']);
-        const loop = hygiene['loop_detected'] === true;
         lines.push(`- Tool calls: ${toolCalls}`);
-        lines.push(`- Consecutive same-tool calls: ${consecutive}`);
-        lines.push(`- Loop detected: ${loop ? 'yes' : 'no'}`);
     }
     lines.push('');
 
@@ -254,7 +248,7 @@ Sources read:
     · outcomes — per-directive success / blocked
     · halts    — recorded halts
   agents/state/context-hygiene.json
-    · tool_calls · consecutive_same_tool · loop_detected
+    · tool_calls
 
 Token/cost is NOT reported — this package has no per-session token
 source (only video-specific telemetry).
