@@ -165,12 +165,12 @@ on the user-global layer.
       `tests/scripts/bench_quality_run.test.ts`), and the tracked installer
       bundle is rebuilt.
       verify: `npx vitest run tests/scripts/thin_marker_unique_in_corpus.test.ts` -> 0
-- [ ] **2.3 The pointer is a path, not a link that repeats the id.** The stub
+- [x] **2.3 The pointer is a path, not a link that repeats the id.** The stub
       ends in the bare body path, and the second form detector follows:
       `probe_host_compliance.ts:66` tests for the link syntax and takes its
       pattern from the writer instead. Measured saving: 2,359.
       verify: `npx vitest run tests/scripts/thin_entry_bare_pointer.test.ts` -> 0
-- [ ] **2.4 The reading after the form change.** Re-run the 1.4 measurement
+- [x] **2.4 The reading after the form change.** Re-run the 1.4 measurement
       and append it to the page. Expected from the measured layer: 84,991
       unconditional, 98,744 in all.
       verify: `grep -c 'after the form change' agents/evidence/analysis/thinned-layer-composition-2026-10.md` -> /^[1-9]/

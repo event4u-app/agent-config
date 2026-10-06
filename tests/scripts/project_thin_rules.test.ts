@@ -58,7 +58,7 @@ describe('project_thin_rules — pure surface', () => {
         expect(entry).toContain('## My Rule\n');
         expect(entry).toContain('Fires on: foo.');
         expect(entry).toContain('A short desc');
-        expect(entry).toContain('Body: [`my-rule`](../../dist/agent-src/rules/my-rule.md)');
+        expect(entry).toContain('Body: ../../dist/agent-src/rules/my-rule.md');
         expect(entry).not.toContain('.agent-src.uncondensed');
     });
     it('thin_entry omits the Fires-on clause when no trigger hint', () => {

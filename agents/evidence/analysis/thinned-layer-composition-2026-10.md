@@ -167,6 +167,75 @@ Both readings are over. **Which one the ceiling is about is not settled here** �
 it is the question step 4.1 puts to the council that set the figure, and this
 page records both rather than choosing.
 
+## The reading after the form change
+
+Steps 2.2 and 2.3 changed what a stub writes about itself, and nothing else.
+The marker went from 47 characters to 27, keeping the instruction; the pointer
+went from a markdown link whose text repeated the rule id to the bare path the
+link already ended in. Re-measured the same way, from the same package root, on
+the same tree:
+
+| Figure | Before | After | Delta |
+|---|---|---|---|
+| total | 111,197 | 107,058 | −4,139 |
+| unconditional | 97,496 | 93,357 | −4,139 |
+| path-scoped | 13,701 | 13,701 | 0 |
+| files | 105 | 105 | 0 |
+
+The saving is 1,780 from the marker (20 × 89) plus 2,359 from the pointer
+(534 of link syntax plus the rule id written a second time, 1,825 characters
+across the 89 ids). It lands entirely on the stubs, which is the check that it
+is a form change: `law_stub` 22,656 → 21,655 and `plain_stub` 30,269 → 27,131,
+while kernel (25,704), `no_stub` (18,867) and both path-scoped rules are
+byte-for-byte unchanged.
+
+Form terms after the change, within the stubs' 48,786 characters:
+
+| Term | Before | After |
+|---|---|---|
+| heading | 2,181 | 2,181 |
+| marker | 4,183 | 2,403 |
+| `Fires on:` label | 1,044 | 1,044 |
+| trigger hint | 4,808 | 4,808 |
+| pointer | 17,356 | 15,039 |
+| description | 23,353 | 23,311 |
+
+Of the pointer's remaining 15,039, **12,371 is still the package-root prefix** —
+82 % of it, and untouchable from here: moving it is decision D5, behind the
+open install-layout blocker.
+
+### The expectation this reproduces, once the root is normalised
+
+Step 2.4 predicted 84,991 unconditional and 98,744 in all. Those were computed
+at a 45-character body-link prefix; this measurement is from a 139-character
+one. Step 1.3's formula moves between them at 89 characters per character of
+root, so 94 × 89 = 8,366:
+
+- 93,357 − 8,366 = **84,991 unconditional** — the predicted figure exactly.
+- 107,058 − 8,366 = 98,692 against the predicted 98,744, a 52-character
+  difference which is entirely in the two path-scoped rules (13,701 here
+  against the 13,753 recorded at the pin). Their bodies changed on the trunk
+  between the two readings; no stub differs.
+
+The agreement is worth stating because it is the only independent check this
+page has that the formula is a formula and not a fitted constant: the
+prediction was written before the change and measured from a different root.
+
+## Against the recorded ceiling, after the form change
+
+| Reading | Characters | Against 75,000 |
+|---|---|---|
+| unconditional | 93,357 | 124 % |
+| all | 107,058 | 143 % |
+
+At the 97-character prefix of an ordinary checkout: 89,619 unconditional and
+103,320 in all — 119 % and 138 %.
+
+**The form change is about four per cent of the layer and does not approach the
+ceiling.** That is stated here rather than left to be inferred, because 4,139
+characters is a real saving and a page that reported it without this line would
+read as progress toward a target it does not move.
+
 ## An adjacent defect, noted and not fixed here
 
 The install receipt's budget block prints `no published limit recorded — not

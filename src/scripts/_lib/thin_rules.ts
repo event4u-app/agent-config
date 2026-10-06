@@ -317,6 +317,39 @@ export function is_thin_entry(text: string): boolean {
 }
 
 /**
+ * What introduces a stub's body pointer. One writer, one reader.
+ *
+ * A BARE PATH SINCE 2026-10-06 (step 2.3 of
+ * `road-to-a-thinned-layer-measured-in-one-unit`). The pointer used to be a
+ * markdown link, ``Body: [`<id>`](<prefix><id>.md)``, whose link TEXT repeated
+ * the rule id the target already ends in. That cost `6 + len(id)` per stub over
+ * the bare form — 2,359 characters across the 89 stubs of the measured layer,
+ * 534 of it pure syntax and the rest the id written a second time.
+ *
+ * Nothing followed the link as a link. Under `delivery` the hook loads the body
+ * and never reads the pointer at all; under `thin` an agent reads the path. A
+ * markdown link renders in neither case, so the syntax bought rendering nobody
+ * was doing.
+ */
+export const THIN_BODY_POINTER_PREFIX = 'Body: ';
+
+/**
+ * The pointer, as the WRITER emits it — exported so a detector cannot re-spell
+ * it, which is the same drift {@link THIN_ENTRY_MARKER} documents one screen up
+ * and which two gates had already committed there.
+ *
+ * ANCHORED TO END OF LINE, NOT `\S+`. The pointer is the last thing on its
+ * line, and a package root may contain spaces; `\S+` would silently stop at the
+ * first one and report a well-formed pointer as missing.
+ */
+export const THIN_BODY_POINTER_RE = /Body: (.+\.md)\s*$/m;
+
+/** Does this entry carry a body pointer the writer would recognise? */
+export function has_body_pointer(text: string): boolean {
+    return THIN_BODY_POINTER_RE.test(text);
+}
+
+/**
  * Where a stub tells a reader the body actually is.
  *
  * FIXED 2026-09-07: this pointed into the uncondensed source tree ADR-051
@@ -379,7 +412,7 @@ export function thin_entry(
     return (
         `## ${title}\n` +
         `${THIN_ENTRY_MARKER}${fires} ${desc} ` +
-        `Body: [\`${rule_id}\`](${bodyLinkPrefix}${rule_id}.md)\n`
+        `${THIN_BODY_POINTER_PREFIX}${bodyLinkPrefix}${rule_id}.md\n`
     );
 }
 

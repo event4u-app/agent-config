@@ -14,7 +14,7 @@ const opts = { sentinel: "BODY_SENTINEL", keyword: "kw-probe" };
 // the drift the single-spelling work exists to stop.
 const GOOD_POINTER =
   `## Canary\n${THIN_ENTRY_MARKER} Fires on: kw-probe. desc ` +
-  "Body: [`host-compliance-canary`](../../.agent-src.uncondensed/rules/host-compliance-canary.md)\n";
+  "Body: ../../dist/agent-src/rules/host-compliance-canary.md\n";
 
 describe("evaluate_demotion", () => {
   it("passes a well-formed pointer (body gone, hint + link present)", () => {
@@ -35,7 +35,7 @@ describe("evaluate_demotion", () => {
   });
 
   it("fails without the routed-rule pointer marker", () => {
-    const r = evaluate_demotion("## Canary\nFires on: kw-probe. Body: [`x`](y)\n", opts);
+    const r = evaluate_demotion("## Canary\nFires on: kw-probe. Body: rules/x.md\n", opts);
     expect(r.pointer_present).toBe(false);
     expect(r.ok).toBe(false);
   });
@@ -47,7 +47,7 @@ describe("evaluate_demotion", () => {
     expect(r.ok).toBe(false);
   });
 
-  it("fails without a Body: [`id`](link) pointer link", () => {
+  it("fails without a `Body: <path>` pointer", () => {
     const noLink = `## Canary\n${THIN_ENTRY_MARKER} Fires on: kw-probe.\n`;
     const r = evaluate_demotion(noLink, opts);
     expect(r.link_present).toBe(false);

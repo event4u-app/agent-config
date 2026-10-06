@@ -12854,6 +12854,7 @@ function _title(s) {
   return s.replace(/[A-Za-z]+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 }
 var THIN_ENTRY_MARKER = "> Load the body on a match.";
+var THIN_BODY_POINTER_PREFIX = "Body: ";
 var BODY_LINK_PREFIX = "../../dist/agent-src/rules/";
 function absoluteBodyLinkPrefix(packageRoot) {
   return `${path26.join(path26.resolve(packageRoot), "dist", "agent-src", "rules")}${path26.sep}`;
@@ -12865,7 +12866,7 @@ function thin_entry(rule_id, text, bodyLinkPrefix = BODY_LINK_PREFIX) {
   const title = _title(rule_id.replace(/-/g, " "));
   const fires = hint ? ` Fires on: ${hint}.` : "";
   return `## ${title}
-${THIN_ENTRY_MARKER}${fires} ${desc} Body: [\`${rule_id}\`](${bodyLinkPrefix}${rule_id}.md)
+${THIN_ENTRY_MARKER}${fires} ${desc} ${THIN_BODY_POINTER_PREFIX}${bodyLinkPrefix}${rule_id}.md
 `;
 }
 var STUB_LAW_OPEN = "<!-- law: byte-copied from the rule, sha256 ";

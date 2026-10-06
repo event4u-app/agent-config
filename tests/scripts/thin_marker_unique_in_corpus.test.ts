@@ -22,6 +22,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     build_thin,
+    has_body_pointer,
     is_thin_entry,
     THIN_ENTRY_MARKER,
 } from '../../src/scripts/_lib/thin_rules.js';
@@ -56,7 +57,9 @@ describe('the stub marker is short, instructive, and unique to a stub', () => {
         expect(emitted.size, 'the control: build_thin emitted entries').toBeGreaterThan(50);
         let stubs = 0;
         for (const [name, text] of emitted) {
-            if (!text.includes('Body: [')) continue; // kept full-bodied, not a stub
+            // Asked of the writer's own pointer predicate rather than a literal
+            // — the same discipline step 2.1 applied to the marker.
+            if (!has_body_pointer(text)) continue; // kept full-bodied, not a stub
             stubs += 1;
             expect(is_thin_entry(text), `${name} is a stub the detector missed`).toBe(true);
         }

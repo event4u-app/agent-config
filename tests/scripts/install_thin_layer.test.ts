@@ -33,6 +33,7 @@ import { installerThinsHost } from '../../src/scripts/_lib/lean_projection_mode.
 import {
     is_thin_entry,
     STUB_LAW_OPEN,
+    THIN_BODY_POINTER_RE,
     THIN_ENTRY_MARKER,
 } from '../../src/scripts/_lib/thin_rules.js';
 import { lawText, ruleBody } from '../../src/scripts/_lib/rule_law_section.js';
@@ -216,7 +217,10 @@ describe('the installer applies the projector predicate when asked', () => {
 
     it('writes an ABSOLUTE body pointer — the project-relative one resolves from no installed layer', () => {
         thinInstalledRuleLayer({ rulesDir, packageRoot: pkg });
-        const link = /\]\((.+?)\)/.exec(read('routed'));
+        // The pattern comes from the WRITER (step 2.3). It held its own regex
+        // for the markdown-link form, so the day the pointer became a bare path
+        // this case failed with no defect behind it.
+        const link = THIN_BODY_POINTER_RE.exec(read('routed'));
         expect(link).not.toBeNull();
         const target = (link as RegExpExecArray)[1] as string;
 

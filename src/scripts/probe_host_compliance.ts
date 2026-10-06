@@ -31,7 +31,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { is_thin_entry, thin_entry } from './project_thin_rules.js';
+import { has_body_pointer, is_thin_entry, thin_entry } from './project_thin_rules.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
@@ -67,7 +67,10 @@ export function evaluate_demotion(
   const pointer_present = is_thin_entry(thinned);
   const body_removed = !thinned.includes(opts.sentinel);
   const trigger_hint_preserved = thinned.includes(opts.keyword);
-  const link_present = /Body: \[`[^`]+`\]\(/.test(thinned);
+  // THE PATTERN COMES FROM THE WRITER — step 2.3. This was its own regex for
+  // the markdown-link form, so when the pointer became a bare path the gate
+  // would have reported every correct stub as missing its link.
+  const link_present = has_body_pointer(thinned);
   return {
     ok: pointer_present && body_removed && trigger_hint_preserved && link_present,
     pointer_present,
