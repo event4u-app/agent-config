@@ -135,7 +135,7 @@ not. A criterion that says of itself that it is not met is not ticked. A
 
 - [x] AC-1 — One command lists every open blocker under `later/`, split by
       owner-wait and agent-wait.
-- [ ] <!-- blocked-by: later-blockers-in-scope | asked: no — the council split on 2026-10-07, which escalates to the owner; put in the owner-residue list of this roadmap's PR --> AC-2 — The council's verdict on the `later/` exclusion is recorded, and
+- [ ] AC-2 — The council's verdict on the `later/` exclusion is recorded, and
       the readers' scope matches it.
 - [x] AC-3 — The release-ordering owner question is a `### blocker:` entry
       that `lint_roadmap_blockers` validates when its file is in scope.
