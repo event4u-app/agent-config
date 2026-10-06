@@ -149,8 +149,16 @@ refuses.
       therefore BLOCKED rather than unfinished, on `b1-labelled-positives-unreachable`
       below: the remaining moves include amending a pre-registration after seeing
       its counts, which the party that saw them may not do.
-- [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3; the ADR-277 reopen is
-      an owner amendment, not a step here.
+- [ ] **3.5 The feeder's cost on the stop slot, measured.** Added 2026-10-06 from round
+      `inbox-2026-10-e`. `src/scripts/_lib/graph_feeder_record.ts:12-22` withdrew the
+      "costs nothing" claim and leaves the latency unmeasured; a stop-hook timeout
+      would discard F's refusal, so the shadow arm can weaken the gate it feeds. p50
+      and p95 of the stop hook with and without the feeder, on a fixture repository,
+      published beside the recall page; the number becomes a stated precondition of
+      3.4 in that step's text.
+      verify: `grep -c 'p95' agents/evidence/analysis/graph-feeder-latency-*.md` -> /^[1-9]/
+- [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3 and 3.5; the ADR-277
+      reopen is an owner amendment, not a step here.
 
 ## Acceptance criteria
 
