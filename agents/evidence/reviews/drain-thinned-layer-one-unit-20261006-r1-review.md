@@ -1,7 +1,14 @@
-# Findings: drain-thinned-layer-one-unit-20261006
+# Findings: drain-thinned-layer-one-unit-20261006 — ROUND 1 (superseded)
+
+> Archived 2026-10-06. This round reviewed scope `78ad8fbf…` at head
+> `af409d634`, three commits behind the merge candidate at the time — its own
+> finding 11. Every row carries a terminal disposition and a reason. The
+> CURRENT binding is `drain-thinned-layer-one-unit-20261006.findings.md`,
+> bound to the final head. Typed `original-review` rather than
+> `current-binding`, which is what it was while it was live.
 <!-- completion-review: v1 | reviewed: 2026-10-06 | scope: 78ad8fbf815a555b48fb831fab6e47416d25f576fe039a24bec282983db520ec | diff: af409d6348494800c4e576eb1abeab01a6f15b0a | reviewer: r2-fresh-subagent-drain-thinned-layer-one-unit-20261006 | prompt_hash: f01855342b3085f76eb7d5b3a1a7057e3efcc0b0eb37856c2b9db1dac3f2a48f -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-thinned-layer-one-unit-20261006"]}} -->
-<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-06 -->
+<!-- evidence-type: v1 | type: original-review | declared: 2026-10-06 -->
 
 <!-- context-manifest: v1
 inputs:
