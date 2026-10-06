@@ -1083,9 +1083,18 @@ index b9daceb8a96eadae972cd4a80a61e417bbe862cb..e560463ea1817b8f1a2da95d0ca0c894
 +It is replaced rather than deleted so the correction is visible from this side
 +too.
 diff --git a/dist/install/install.mjs b/dist/install/install.mjs
-index e482965535b1eb718d2d5521c1b2c30206b52175..fcd27790c738eb4bed915b6f96b05eb3b53237d1 100755
+index e482965535b1eb718d2d5521c1b2c30206b52175..68a360279daca7ccd553194d5712ae802a628c3f 100755
 --- a/dist/install/install.mjs
 +++ b/dist/install/install.mjs
+@@ -7371,7 +7371,7 @@ var require_dist = __commonJS({
+ import { spawn, spawnSync as spawnSync2 } from "node:child_process";
+ import * as crypto5 from "node:crypto";
+ import * as fs33 from "node:fs";
+-import * as os11 from "node:os";
++import * as os12 from "node:os";
+ import * as path32 from "node:path";
+ import process4 from "node:process";
+ import { fileURLToPath as fileURLToPath9, pathToFileURL as pathToFileURL2 } from "node:url";
 @@ -9741,6 +9741,14 @@ function expanduser6(p) {
    }
    return p;
@@ -1129,7 +1138,20 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..fcd27790c738eb4bed915b6f96b05eb3
  function sorted_strings(items) {
    return items.filter((i) => typeof i === "string").sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
  }
-@@ -12477,7 +12506,11 @@ function lawText(body) {
+@@ -12391,10 +12420,11 @@ function rewriteClaudeRules(rulesDir, preserved = /* @__PURE__ */ new Set()) {
+ // src/install/installThinLayer.ts
+ import * as fs28 from "node:fs";
+ import * as path27 from "node:path";
+-import * as os10 from "node:os";
++import * as os11 from "node:os";
+ 
+ // src/scripts/_lib/installed_layer.ts
+ import * as fs25 from "node:fs";
++import * as os10 from "node:os";
+ import * as path24 from "node:path";
+ import { fileURLToPath as fileURLToPath5 } from "node:url";
+ 
+@@ -12477,7 +12507,11 @@ function lawText(body) {
  var TOP_FILES = 20;
  var LIMIT_WARN_FRACTION = 0.8;
  function isUnconditional(text) {
@@ -1142,7 +1164,7 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..fcd27790c738eb4bed915b6f96b05eb3
  }
  function readLayer(host, scope, dir, recorded) {
    const empty = {
-@@ -12488,6 +12521,8 @@ function readLayer(host, scope, dir, recorded) {
+@@ -12488,6 +12522,8 @@ function readLayer(host, scope, dir, recorded) {
      foreign: 0,
      package_owned_chars: 0,
      foreign_chars: 0,
@@ -1151,7 +1173,7 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..fcd27790c738eb4bed915b6f96b05eb3
      top: []
    };
    let names;
-@@ -12533,6 +12568,8 @@ function readLayer(host, scope, dir, recorded) {
+@@ -12533,6 +12569,8 @@ function readLayer(host, scope, dir, recorded) {
      foreign: readings.filter((r) => !r.package_owned).length,
      package_owned_chars: readings.reduce((n, r) => n + (r.package_owned ? r.chars : 0), 0),
      foreign_chars: readings.reduce((n, r) => n + (r.package_owned ? 0 : r.chars), 0),
@@ -1160,12 +1182,16 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..fcd27790c738eb4bed915b6f96b05eb3
      top
    };
  }
-@@ -12598,6 +12635,69 @@ function buildHostLimitRows(layers, limits) {
+@@ -12598,6 +12636,73 @@ function buildHostLimitRows(layers, limits) {
    }
    return rows;
  }
 +function defaultInventoryPath(home) {
 +  if (home === void 0 || home === null || home === "") return inventory_path();
++  try {
++    if (path24.resolve(home) === path24.resolve(os10.homedir())) return inventory_path();
++  } catch {
++  }
 +  return path24.join(home, DEFAULT_EVENT4U_ROOT_RELATIVE, INVENTORY_BASENAME);
 +}
 +function resolveLayerOwnership(opts) {
@@ -1176,8 +1202,8 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..fcd27790c738eb4bed915b6f96b05eb3
 +    try {
 +      const inv = load_inventory(opts.inventoryPath ?? defaultInventoryPath(opts.home));
 +      for (const abs of recorded_absolute_files(inv, opts.home ?? null)) {
++        if (!recorded.has(abs)) n += 1;
 +        recorded.set(abs, null);
-+        n += 1;
 +      }
 +    } catch {
 +    }
@@ -1187,8 +1213,8 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..fcd27790c738eb4bed915b6f96b05eb3
 +  for (const [anchor, rels] of opts.thisDeploy ?? /* @__PURE__ */ new Map()) {
 +    for (const rel of rels) {
 +      const abs = path24.resolve(anchor, rel);
++      if (!recorded.has(abs)) fromDeploy += 1;
 +      recorded.set(abs, null);
-+      fromDeploy += 1;
 +      try {
 +        recorded.set(fs25.realpathSync(abs), null);
 +      } catch {
@@ -1200,8 +1226,8 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..fcd27790c738eb4bed915b6f96b05eb3
 +  if (manifestPath !== null && fs25.existsSync(manifestPath)) {
 +    let n = 0;
 +    for (const [abs, hash] of readRecordedHashes(manifestPath, opts.projectRoot)) {
-+      recorded.set(abs, hash);
 +      n += 1;
++      recorded.set(abs, hash);
 +    }
 +    if (n > 0) sources.push("manifest");
 +  }
@@ -1230,7 +1256,7 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..fcd27790c738eb4bed915b6f96b05eb3
  function renderHostLimitRows(rows) {
    const out = [
      "host instruction budgets \u2014 package-owned + foreign against the published limit"
-@@ -12769,7 +12869,12 @@ function _trigger_hint(fm) {
+@@ -12769,7 +12874,12 @@ function _trigger_hint(fm) {
  function _title(s) {
    return s.replace(/[A-Za-z]+/g, (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
  }
@@ -1244,7 +1270,7 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..fcd27790c738eb4bed915b6f96b05eb3
  var BODY_LINK_PREFIX = "../../dist/agent-src/rules/";
  function absoluteBodyLinkPrefix(packageRoot) {
    return `${path26.join(path26.resolve(packageRoot), "dist", "agent-src", "rules")}${path26.sep}`;
-@@ -12781,7 +12886,7 @@ function thin_entry(rule_id, text, bodyLinkPrefix = BODY_LINK_PREFIX) {
+@@ -12781,7 +12891,7 @@ function thin_entry(rule_id, text, bodyLinkPrefix = BODY_LINK_PREFIX) {
    const title = _title(rule_id.replace(/-/g, " "));
    const fires = hint ? ` Fires on: ${hint}.` : "";
    return `## ${title}
@@ -1253,12 +1279,12 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..fcd27790c738eb4bed915b6f96b05eb3
  `;
  }
  var STUB_LAW_OPEN = "<!-- law: byte-copied from the rule, sha256 ";
-@@ -12962,15 +13067,26 @@ function describeThinInstalledLayer(res) {
+@@ -12962,15 +13072,26 @@ function describeThinInstalledLayer(res) {
    }
    return out;
  }
 -function installReceiptBudgetLines(packageRoot, home = os10.homedir()) {
-+function installReceiptBudgetLines(packageRoot, home = os10.homedir(), opts = {}) {
++function installReceiptBudgetLines(packageRoot, home = os11.homedir(), opts = {}) {
    try {
 -    const recorded = (() => {
 -      try {
@@ -1282,13 +1308,13 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..fcd27790c738eb4bed915b6f96b05eb3
 +      // would take `defaultInventoryPath`'s stated-home branch and read
 +      // `<home>/.event4u/...`, a file nothing wrote under either
 +      // override, and the inventory evidence would be silently lost.
-+      inventoryPath: opts.inventoryPath ?? inventory_path(),
++      inventoryPath: opts.inventoryPath === void 0 ? inventory_path() : opts.inventoryPath,
 +      thisDeploy: opts.thisDeploy
 +    });
      const layers = [];
      for (const host of Object.keys(GLOBAL_RULE_DIRS).sort()) {
        const dir = globalRuleLayerPath(host, home);
-@@ -12978,7 +13094,8 @@ function installReceiptBudgetLines(packageRoot, home = os10.homedir()) {
+@@ -12978,7 +13099,8 @@ function installReceiptBudgetLines(packageRoot, home = os10.homedir()) {
        layers.push(readLayer(host, "global", dir, recorded));
      }
      const rows = buildHostLimitRows(layers, loadHostInstructionLimits());
@@ -1298,7 +1324,100 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..fcd27790c738eb4bed915b6f96b05eb3
    } catch {
      return [];
    }
-@@ -22332,7 +22449,7 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
+@@ -20129,7 +20251,7 @@ var SCOPE_DETECT_AI_DIRS = [
+ ];
+ 
+ // src/install/paths.ts
+-import { homedir as homedir13, tmpdir } from "node:os";
++import { homedir as homedir14, tmpdir } from "node:os";
+ import { join as join33 } from "node:path";
+ var INSTALL_ROOT_SUBPATH = ".event4u/agent-config";
+ var INSTALL_LOG_FILENAME = "install-log.jsonl";
+@@ -20137,7 +20259,7 @@ function resolveHome(home) {
+   if (home && home.length > 0) {
+     return home;
+   }
+-  const fromOs = homedir13();
++  const fromOs = homedir14();
+   if (!fromOs) {
+     throw new Error(
+       "Cannot resolve home directory \u2014 both $HOME (POSIX) and $USERPROFILE (Windows) are unset."
+@@ -20242,9 +20364,9 @@ var ArgparseExit2 = class extends Error {
+   code;
+ };
+ function expanduser8(p) {
+-  if (p === "~") return os11.homedir();
++  if (p === "~") return os12.homedir();
+   if (p.startsWith("~/") || p.startsWith("~\\")) {
+-    return path32.join(os11.homedir(), p.slice(2));
++    return path32.join(os12.homedir(), p.slice(2));
+   }
+   return p;
+ }
+@@ -20780,7 +20902,7 @@ function ensure_augment_bridge(project_root, force) {
+     ".augment/settings.json"
+   );
+ }
+-var AUGMENT_USER_DIR = path32.join(os11.homedir(), ".augment");
++var AUGMENT_USER_DIR = path32.join(os12.homedir(), ".augment");
+ var AUGMENT_USER_HOOKS_DIR = path32.join(AUGMENT_USER_DIR, "hooks");
+ var AUGMENT_DISPATCHER_TRAMPOLINE = "augment-dispatcher.sh";
+ var AUGMENT_LEGACY_TRAMPOLINES = [
+@@ -20883,7 +21005,7 @@ function ensure_cursor_bridge(project_root, force) {
+     ".cursor/hooks.json"
+   );
+ }
+-var CURSOR_USER_DIR = path32.join(os11.homedir(), ".cursor");
++var CURSOR_USER_DIR = path32.join(os12.homedir(), ".cursor");
+ var CURSOR_USER_HOOKS_DIR = path32.join(CURSOR_USER_DIR, "hooks");
+ var CURSOR_DISPATCHER_TRAMPOLINE = "cursor-dispatcher.sh";
+ function ensure_cursor_user_hooks(package_root, force) {
+@@ -20967,7 +21089,7 @@ function ensure_cline_bridge(project_root, force) {
+     skip(".clinerules/hooks/ already up to date");
+   }
+ }
+-var CLINE_USER_DIR = path32.join(os11.homedir(), "Documents", "Cline", "Hooks");
++var CLINE_USER_DIR = path32.join(os12.homedir(), "Documents", "Cline", "Hooks");
+ var CLINE_DISPATCHER_TRAMPOLINE = "cline-dispatcher.sh";
+ function ensure_cline_user_hooks(package_root, force) {
+   const src = path32.join(package_root, "scripts", "hooks", CLINE_DISPATCHER_TRAMPOLINE);
+@@ -21019,7 +21141,7 @@ function ensure_windsurf_bridge(project_root, force) {
+     ".windsurf/hooks.json"
+   );
+ }
+-var WINDSURF_USER_DIR = path32.join(os11.homedir(), ".codeium", "windsurf");
++var WINDSURF_USER_DIR = path32.join(os12.homedir(), ".codeium", "windsurf");
+ var WINDSURF_USER_HOOKS_DIR = path32.join(WINDSURF_USER_DIR, "hooks");
+ var WINDSURF_DISPATCHER_TRAMPOLINE = "windsurf-dispatcher.sh";
+ function ensure_windsurf_user_hooks(package_root, force) {
+@@ -21075,7 +21197,7 @@ function ensure_gemini_bridge(project_root, force) {
+     ".gemini/settings.json"
+   );
+ }
+-var GEMINI_USER_DIR = path32.join(os11.homedir(), ".gemini");
++var GEMINI_USER_DIR = path32.join(os12.homedir(), ".gemini");
+ var GEMINI_USER_HOOKS_DIR = path32.join(GEMINI_USER_DIR, "hooks");
+ var GEMINI_DISPATCHER_TRAMPOLINE = "gemini-dispatcher.sh";
+ function ensure_gemini_user_hooks(package_root, force) {
+@@ -21566,7 +21688,7 @@ To remove this marker, delete this file.
+ `;
+ }
+ var _CLAUDE_DESKTOP_BUNDLES_SUBPATH = "claude-desktop/bundles";
+-var GLOBAL_ROOT = path32.join(os11.homedir(), ".event4u", "agent-config");
++var GLOBAL_ROOT = path32.join(os12.homedir(), ".event4u", "agent-config");
+ var GLOBAL_USER_SETTINGS_PATH = path32.join(GLOBAL_ROOT, ".agent-user.yml");
+ var GLOBAL_AGENT_SETTINGS_PATH = path32.join(GLOBAL_ROOT, ".agent-settings.yml");
+ function _bridge_marker(tool_id, scope) {
+@@ -21954,7 +22076,7 @@ function _run_migrate_to_global(project_root) {
+   }
+ }
+ function _format_global_root_for_marker(global_root) {
+-  const home = resolvePath(os11.homedir());
++  const home = resolvePath(os12.homedir());
+   const resolved = resolvePath(global_root);
+   const rel = path32.relative(home, resolved);
+   if (rel === "" || rel.startsWith("..") || path32.isAbsolute(rel)) {
+@@ -22332,7 +22454,7 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
            warn(`claude-code: thinned rule layer not written \u2014 ${String(e)}`);
          }
        }
@@ -1307,8 +1426,26 @@ index e482965535b1eb718d2d5521c1b2c30206b52175..fcd27790c738eb4bed915b6f96b05eb3
      }
      const missing_targets = _verify_deploy_targets(anchor, plan);
      if (missing_targets.length > 0) {
+@@ -23238,7 +23360,7 @@ function _wizard_cli_dist(_project_root) {
+   return pathExists(cli) ? cli : null;
+ }
+ function _server_info_path() {
+-  return path32.join(os11.homedir(), ".event4u", "agent-config", "local-server.json");
++  return path32.join(os12.homedir(), ".event4u", "agent-config", "local-server.json");
+ }
+ function _pid_is_agent_config(pid) {
+   let res;
+@@ -23334,7 +23456,7 @@ function _wizard_spawn(project_root, pass_project_root = true) {
+ function _wizard_run_sync(cmd, env, cli) {
+   const total = _WIZARD_TIMEOUTS.reduce((a, b) => a + b, 0);
+   const log_path = path32.join(
+-    os11.tmpdir(),
++    os12.tmpdir(),
+     `agent-config-wizard-${process4.pid}-${Date.now()}.log`
+   );
+   let child;
 diff --git a/dist/install/installThinLayer.js b/dist/install/installThinLayer.js
-index 17b9573faa755f89525487c323c862abbba52b92..40e478594aa8016582ef76d80bd266746c469db9 100644
+index 17b9573faa755f89525487c323c862abbba52b92..0512ab1349282ec67bab8355fea62c8c734b80f0 100644
 --- a/dist/install/installThinLayer.js
 +++ b/dist/install/installThinLayer.js
 @@ -51,10 +51,10 @@
@@ -1361,7 +1498,7 @@ index 17b9573faa755f89525487c323c862abbba52b92..40e478594aa8016582ef76d80bd26674
 +            // would take `defaultInventoryPath`'s stated-home branch and read
 +            // `<home>/.event4u/...`, a file nothing wrote under either
 +            // override, and the inventory evidence would be silently lost.
-+            inventoryPath: opts.inventoryPath ?? inventory_path(),
++            inventoryPath: opts.inventoryPath === undefined ? inventory_path() : opts.inventoryPath,
 +            thisDeploy: opts.thisDeploy,
 +        });
          const layers = [];
@@ -1379,16 +1516,16 @@ index 17b9573faa755f89525487c323c862abbba52b92..40e478594aa8016582ef76d80bd26674
      catch {
          return [];
 diff --git a/dist/install/installThinLayer.js.map b/dist/install/installThinLayer.js.map
-index 3dd52e839d967893dc6d357b796467879ceeb3b2..15effbe6763ad5819b1b48c5bb7e76ab6495a00f 100644
+index 3dd52e839d967893dc6d357b796467879ceeb3b2..d18dd15bdec5716736ff2fc64852600bfac443e3 100644
 --- a/dist/install/installThinLayer.js.map
 +++ b/dist/install/installThinLayer.js.map
 @@ -1 +1 @@
 -{"version":3,"file":"installThinLayer.js","sourceRoot":"","sources":["../../src/install/installThinLayer.ts"],"names":[],"mappings":"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"}
 \ No newline at end of file
-+{"version":3,"file":"installThinLayer.js","sourceRoot":"","sources":["../../src/install/installThinLayer.ts"],"names":[],"mappings":"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"}
++{"version":3,"file":"installThinLayer.js","sourceRoot":"","sources":["../../src/install/installThinLayer.ts"],"names":[],"mappings":"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"}
 \ No newline at end of file
 diff --git a/src/install/installThinLayer.ts b/src/install/installThinLayer.ts
-index 24eb42dc24883995604121b5e5f9d296ed6e0da0..9987f89b765217dec2e0961a993ca1743a073557 100644
+index 24eb42dc24883995604121b5e5f9d296ed6e0da0..18e3f517adf4077f12fef74e4408af16528c321c 100644
 --- a/src/install/installThinLayer.ts
 +++ b/src/install/installThinLayer.ts
 @@ -57,13 +57,15 @@ import * as os from 'node:os';
@@ -1447,7 +1584,7 @@ index 24eb42dc24883995604121b5e5f9d296ed6e0da0..9987f89b765217dec2e0961a993ca174
  /**
   * The install receipt's instruction-budget block — step 1.4's "at install".
   *
-@@ -289,15 +323,37 @@ export function describeThinInstalledLayer(res: ThinInstalledLayerResult): strin
+@@ -289,15 +323,38 @@ export function describeThinInstalledLayer(res: ThinInstalledLayerResult): strin
   * Never throws. A receipt that cannot be measured is silent rather than fatal —
   * the deploy it describes has already happened correctly.
   */
@@ -1487,13 +1624,14 @@ index 24eb42dc24883995604121b5e5f9d296ed6e0da0..9987f89b765217dec2e0961a993ca174
 +            // would take `defaultInventoryPath`'s stated-home branch and read
 +            // `<home>/.event4u/...`, a file nothing wrote under either
 +            // override, and the inventory evidence would be silently lost.
-+            inventoryPath: opts.inventoryPath ?? inventory_path(),
++            inventoryPath:
++                opts.inventoryPath === undefined ? inventory_path() : opts.inventoryPath,
 +            thisDeploy: opts.thisDeploy,
 +        });
          const layers: LayerReading[] = [];
          for (const host of Object.keys(GLOBAL_RULE_DIRS).sort()) {
              const dir = globalRuleLayerPath(host, home);
-@@ -305,7 +361,8 @@ export function installReceiptBudgetLines(packageRoot: string, home: string = os
+@@ -305,7 +362,8 @@ export function installReceiptBudgetLines(packageRoot: string, home: string = os
              layers.push(readLayer(host, 'global', dir, recorded));
          }
          const rows = buildHostLimitRows(layers, loadHostInstructionLimits());
@@ -1629,10 +1767,18 @@ index 5461b35ec9c6baf4226b73a7843b15ea43329fcb..2e146a0ea2a24f55165811b19cb8ca1c
  function sorted_strings(items: unknown[]): string[] {
    return items
 diff --git a/src/scripts/_lib/installed_layer.ts b/src/scripts/_lib/installed_layer.ts
-index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e0a18d9fb 100644
+index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..bd259c5f00cffaea4048dcc77490e402eb5548bf 100644
 --- a/src/scripts/_lib/installed_layer.ts
 +++ b/src/scripts/_lib/installed_layer.ts
-@@ -50,7 +50,14 @@ import {
+@@ -41,6 +41,7 @@
+  */
+ 
+ import * as fs from 'node:fs';
++import * as os from 'node:os';
+ import * as path from 'node:path';
+ import { fileURLToPath } from 'node:url';
+ 
+@@ -50,7 +51,14 @@ import {
      globalRuleLayerPath,
  } from '../../install/globalRuleLayers.js';
  import { NO_RECORDED_HASHES, readRecordedHashes } from '../../install/recordedOwnership.js';
@@ -1648,7 +1794,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
  
  /** How many files the per-directory ranking carries. Step 0.1 fixes it at 20. */
  export const TOP_FILES = 20;
-@@ -96,6 +103,27 @@ export interface LayerReading {
+@@ -96,6 +104,27 @@ export interface LayerReading {
       */
      readonly package_owned_chars: number;
      readonly foreign_chars: number;
@@ -1676,7 +1822,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
      /** The {@link TOP_FILES} largest, by the SAME measure as `chars`. */
      readonly top: readonly RuleFileReading[];
  }
-@@ -149,8 +177,19 @@ export interface InstalledLayerReport {
+@@ -149,8 +178,19 @@ export interface InstalledLayerReport {
      readonly project_root: string;
      /** `claude --version`, or `unknown`. Never fabricated. */
      readonly host_version: string;
@@ -1697,7 +1843,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
      readonly layers: readonly LayerReading[];
      /** One row per host, against its published limit. Step 3.5. */
      readonly limits: readonly HostLimitReading[];
-@@ -163,18 +202,42 @@ export interface InstalledLayerReport {
+@@ -163,18 +203,42 @@ export interface InstalledLayerReport {
          readonly foreign: number;
          readonly package_owned_chars: number;
          readonly foreign_chars: number;
@@ -1746,7 +1892,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
   *
   * SOURCE-SIDE CLASSIFICATION IS A DIFFERENT QUESTION and deliberately not used.
   * `classify_rule` reads `alwaysApply` and `type: always` to tell `always` from
-@@ -184,9 +247,32 @@ export interface InstalledLayerReport {
+@@ -184,9 +248,32 @@ export interface InstalledLayerReport {
   * both load every session, which is the only property the host acts on.
   */
  export function isUnconditional(text: string): boolean {
@@ -1780,7 +1926,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
  /**
   * Measure one directory.
   *
-@@ -211,6 +297,8 @@ export function readLayer(
+@@ -211,6 +298,8 @@ export function readLayer(
          foreign: 0,
          package_owned_chars: 0,
          foreign_chars: 0,
@@ -1789,7 +1935,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
          top: [],
      };
      let names: string[];
-@@ -266,6 +354,8 @@ export function readLayer(
+@@ -266,6 +355,8 @@ export function readLayer(
          foreign: readings.filter((r) => !r.package_owned).length,
          package_owned_chars: readings.reduce((n, r) => n + (r.package_owned ? r.chars : 0), 0),
          foreign_chars: readings.reduce((n, r) => n + (r.package_owned ? 0 : r.chars), 0),
@@ -1798,7 +1944,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
          top,
      };
  }
-@@ -393,11 +483,223 @@ export function buildHostLimitRows(
+@@ -393,11 +484,252 @@ export function buildHostLimitRows(
      return rows;
  }
  
@@ -1835,9 +1981,26 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
 + * a directory nobody writes.
 + */
 +export function defaultInventoryPath(home?: string | null): string {
-+    // A STATED HOME WINS; `inventory_path()` answers for the ASKING process and
-+    // is right only when no home was named.
++    // NO HOME STATED — the asking process is the subject, so the env-aware
++    // resolver is the right answer.
 +    if (home === undefined || home === null || home === '') return inventory_path();
++    // THE STATED HOME IS THE ASKING PROCESS'S OWN. `ReportOptions.home` is
++    // required, so `buildInstalledLayerReport` ALWAYS states one — including
++    // when it is simply measuring the machine it is running on. Treating that
++    // as "a different home" sent it to the hardcoded layout, found nothing
++    // under `EVENT4U_CONFIG_HOME` or `AGENT_CONFIG_DEPLOY_INVENTORY`, and
++    // printed "NO manifest and NO deploy inventory resolved" — the
++    // `0 package-owned` reading step 1.2 exists to remove, and it put the
++    // report and the receipt in disagreement about one install.
++    //
++    // The precedence argument only ever covered a home that is NOT this
++    // process's, so that is the case the branch now tests for.
++    try {
++        if (path.resolve(home) === path.resolve(os.homedir())) return inventory_path();
++    } catch {
++        // `homedir()` can throw on an exotic environment; fall through to the
++        // layout, which is the answer for a home that is not ours anyway.
++    }
 +    return path.join(home, DEFAULT_EVENT4U_ROOT_RELATIVE, INVENTORY_BASENAME);
 +}
 +
@@ -1952,8 +2115,12 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
 +        try {
 +            const inv = load_inventory(opts.inventoryPath ?? defaultInventoryPath(opts.home));
 +            for (const abs of recorded_absolute_files(inv, opts.home ?? null)) {
++                // COUNT PATHS NEWLY CONTRIBUTED, not entries read. Counting
++                // reads named a source that added nothing — and
++                // `recorded_absolute_files` emits two spellings per file, so it
++                // also double-counted.
++                if (!recorded.has(abs)) n += 1;
 +                recorded.set(abs, null);
-+                n += 1;
 +            }
 +        } catch {
 +            // Defence in depth, and NOT where the documented behaviour lives.
@@ -1973,8 +2140,13 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
 +    for (const [anchor, rels] of opts.thisDeploy ?? new Map()) {
 +        for (const rel of rels) {
 +            const abs = path.resolve(anchor, rel);
++            // Same rule as the inventory branch: a source is named only when it
++            // contributes a path nothing else had. On every install after the
++            // first, `thisDeploy`'s paths are already in the inventory, and
++            // naming it there printed "the file set this install just wrote"
++            // for a source that added nothing.
++            if (!recorded.has(abs)) fromDeploy += 1;
 +            recorded.set(abs, null);
-+            fromDeploy += 1;
 +            // Both spellings, for the reason `recorded_absolute_files` states:
 +            // the reader compares against a lexically joined path, and a HOME
 +            // behind a symlink makes the two disagree.
@@ -1991,8 +2163,11 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
 +    if (manifestPath !== null && fs.existsSync(manifestPath)) {
 +        let n = 0;
 +        for (const [abs, hash] of readRecordedHashes(manifestPath, opts.projectRoot)) {
-+            recorded.set(abs, hash);
++            // The manifest contributes whenever it names a path at all: it
++            // supplies the HASH even where another source already had the path,
++            // which is evidence the others cannot give.
 +            n += 1;
++            recorded.set(abs, hash);
 +        }
 +        if (n > 0) sources.push('manifest');
 +    }
@@ -2023,7 +2198,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
      /** Supplied rather than shelled, so a fixture is not at the mercy of a CLI being on PATH. */
      readonly hostVersion?: string;
      /**
-@@ -418,10 +720,12 @@ export interface ReportOptions {
+@@ -418,10 +750,12 @@ export interface ReportOptions {
   */
  export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerReport {
      const manifestPath = opts.manifestPath ?? null;
@@ -2040,7 +2215,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
      const layers: LayerReading[] = [];
      for (const host of Object.keys(GLOBAL_RULE_DIRS).sort()) {
          const dir = globalRuleLayerPath(host, opts.home);
-@@ -441,6 +745,8 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
+@@ -441,6 +775,8 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
              foreign: acc.foreign + l.foreign,
              package_owned_chars: acc.package_owned_chars + l.package_owned_chars,
              foreign_chars: acc.foreign_chars + l.foreign_chars,
@@ -2049,7 +2224,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
          }),
          {
              files: 0,
-@@ -450,6 +756,8 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
+@@ -450,6 +786,8 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
              foreign: 0,
              package_owned_chars: 0,
              foreign_chars: 0,
@@ -2058,7 +2233,7 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
          },
      );
      const limits = buildHostLimitRows(
-@@ -461,22 +769,50 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
+@@ -461,30 +799,59 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
          project_root: opts.projectRoot,
          host_version: opts.hostVersion ?? 'unknown',
          manifest_present: manifestPath !== null && fs.existsSync(manifestPath),
@@ -2114,23 +2289,26 @@ index e0627d3ae8972a2841bc83ef3fe29b8712b67b68..b37498442061351b20c23d8a72d3126e
      for (const l of report.layers) {
          if (!l.present) {
              out.push(`  ${l.host} (${l.scope}) — absent: ${l.dir}`);
-@@ -484,7 +820,8 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
+             continue;
          }
          out.push(
-             `  ${l.host} (${l.scope}) — ${String(l.files)} files, ` +
+-            `  ${l.host} (${l.scope}) — ${String(l.files)} files, ` +
 -                `${String(l.unconditional)} unconditional, ${String(l.chars)} chars, ` +
-+                `${String(l.unconditional)} unconditional, ${String(l.chars)} chars ` +
-+                `(${String(l.unconditional_chars)} unconditional + ${String(l.scoped_chars)} path-scoped), ` +
++            `  ${l.host} (${l.scope}) — ${String(l.files)} files ` +
++                `(${String(l.unconditional)} unconditional), ${String(l.chars)} chars ` +
++                `(${String(l.unconditional_chars)} standing + ${String(l.scoped_chars)} path-scoped), ` +
                  `${String(l.package_owned)} package-owned / ${String(l.foreign)} foreign`,
          );
          for (const f of l.top) {
-@@ -496,7 +833,9 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
+@@ -495,8 +862,10 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
+     }
      const t = report.totals;
      out.push(
-         `  TOTAL — ${String(t.files)} files, ${String(t.unconditional)} unconditional, ` +
+-        `  TOTAL — ${String(t.files)} files, ${String(t.unconditional)} unconditional, ` +
 -            `${String(t.chars)} chars, ${String(t.package_owned)} package-owned / ${String(t.foreign)} foreign`,
++        `  TOTAL — ${String(t.files)} files (${String(t.unconditional)} unconditional), ` +
 +            `${String(t.chars)} chars ` +
-+            `(${String(t.unconditional_chars)} unconditional + ${String(t.scoped_chars)} path-scoped), ` +
++            `(${String(t.unconditional_chars)} standing + ${String(t.scoped_chars)} path-scoped), ` +
 +            `${String(t.package_owned)} package-owned / ${String(t.foreign)} foreign`,
      );
      out.push(...renderHostLimitRows(report.limits));
@@ -2715,10 +2893,10 @@ index 0000000000000000000000000000000000000000..7525fed74702f53e8ee8ce7227c315be
 +});
 diff --git a/tests/scripts/installed_layer_ownership_fixture.test.ts b/tests/scripts/installed_layer_ownership_fixture.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..512156cee6ba0b6f00d1e093a01ecb0fb0d24111
+index 0000000000000000000000000000000000000000..a10efc8c7ab78bcc1591f962823a6ad8ff70fe44
 --- /dev/null
 +++ b/tests/scripts/installed_layer_ownership_fixture.test.ts
-@@ -0,0 +1,308 @@
+@@ -0,0 +1,357 @@
 +// Ownership on a GLOBAL-ONLY install — step 1.2 of
 +// `road-to-a-thinned-layer-measured-in-one-unit`.
 +//
@@ -3015,6 +3193,55 @@ index 0000000000000000000000000000000000000000..512156cee6ba0b6f00d1e093a01ecb0f
 +        }
 +    });
 +
++    it('the receipt honours an EXPLICIT null inventoryPath — `null` reads none', () => {
++        // The contract the field documents, and the reason `??` is wrong here:
++        // it collapses an explicit null into the default, so a caller asking
++        // for a hermetic receipt still read the real user-global inventory —
++        // whose tilde-relative entries then re-root into the fixture home and
++        // read as package-owned. That is the cross-home misattribution two
++        // docstrings in this module forbid.
++        const home = mkTmp('ilo-nullinv-');
++        stageGlobal(home, { 'a.md': rule(10) });
++        const saved = process.env['AGENT_CONFIG_DEPLOY_INVENTORY'];
++        const decoy = stageInventory(path.join(home, '.claude'), ['rules/a.md']);
++        process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] = decoy;
++        try {
++            const lines = installReceiptBudgetLines(mkTmp('ilo-nullinv-pkg-'), home, {
++                manifestPath: null,
++                inventoryPath: null,
++            }).join('\n');
++            expect(lines).toContain(ownershipLine('none'));
++            expect(lines).toContain('0 package-owned');
++        } finally {
++            if (saved === undefined) delete process.env['AGENT_CONFIG_DEPLOY_INVENTORY'];
++            else process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] = saved;
++        }
++    });
++
++    it('a report about the ASKING process own home honours the env override', () => {
++        // `ReportOptions.home` is required, so the report always states a home
++        // — including when the home it states is simply the machine it runs on.
++        // Treating that as "a different home" sent it to the hardcoded layout,
++        // found nothing under the override, and printed "every file reads
++        // foreign": the 0 package-owned reading step 1.2 exists to remove, with
++        // the report and the receipt then disagreeing about one install.
++        const home = os.homedir();
++        const dir = path.join(mkTmp('ilo-ownhome-'), 'deployed-files.json');
++        fs.writeFileSync(
++            dir,
++            JSON.stringify({ schema_version: 1, tools: {} }, null, 2),
++            'utf-8',
++        );
++        const saved = process.env['AGENT_CONFIG_DEPLOY_INVENTORY'];
++        process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] = dir;
++        try {
++            expect(defaultInventoryPath(home)).toBe(dir);
++        } finally {
++            if (saved === undefined) delete process.env['AGENT_CONFIG_DEPLOY_INVENTORY'];
++            else process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] = saved;
++        }
++    });
++
 +    it('the receipt prints the same ownership sentence as the report', () => {
 +        const home = mkTmp('ilo-receipt-home-');
 +        const dir = stageGlobal(home, { 'a.md': rule(10) });
@@ -3029,10 +3256,10 @@ index 0000000000000000000000000000000000000000..512156cee6ba0b6f00d1e093a01ecb0f
 +});
 diff --git a/tests/scripts/installed_layer_unconditional_chars.test.ts b/tests/scripts/installed_layer_unconditional_chars.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..730729bf8c1bfc7861b784af5b9114213d8a6ed6
+index 0000000000000000000000000000000000000000..e6c0e96c41c1476d834ebf8b8007166713d87694
 --- /dev/null
 +++ b/tests/scripts/installed_layer_unconditional_chars.test.ts
-@@ -0,0 +1,236 @@
+@@ -0,0 +1,243 @@
 +// The when-loaded split, in CHARACTERS — step 1.1 of
 +// `road-to-a-thinned-layer-measured-in-one-unit`.
 +//
@@ -3263,10 +3490,17 @@ index 0000000000000000000000000000000000000000..730729bf8c1bfc7861b784af5b911421
 +        const text = renderInstalledLayerReport(
 +            buildInstalledLayerReport({ home, projectRoot: mkTmp('ilu-render-proj-') }),
 +        ).join('\n');
-+        expect(text).toContain('168 chars (123 unconditional + 45 path-scoped)');
++        // `standing`, not a second `unconditional`. The word already names a
++        // FILE count earlier on the same line, and carrying it twice in two
++        // units is the ambiguity step 1.1 exists to remove — reintroducing it
++        // in the line AC-1 quotes as its evidence would be the defect wearing
++        // the fix's clothes.
++        expect(text).toContain('168 chars (123 standing + 45 path-scoped)');
 +        expect(text).toContain('TOTAL');
 +        // Twice: once for the claude-code global layer, once for the TOTAL row.
-+        expect(text.split('123 unconditional + 45 path-scoped').length - 1).toBe(2);
++        expect(text.split('123 standing + 45 path-scoped').length - 1).toBe(2);
++        // And the file count keeps the word, once, with its own unit visible.
++        expect(text).toContain('2 files (1 unconditional)');
 +    });
 +});
 diff --git a/tests/scripts/probe_host_compliance.test.ts b/tests/scripts/probe_host_compliance.test.ts
@@ -3347,10 +3581,10 @@ index bc55834bf243808329a3ea8a62aedc4d42d03556..ac66be4fa8a797458d005f257efc255d
      it('measure returns the full key set with consistent arithmetic', () => {
 diff --git a/tests/scripts/thin_entry_bare_pointer.test.ts b/tests/scripts/thin_entry_bare_pointer.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..4978062942f1b4a524d74d31574e155d42022648
+index 0000000000000000000000000000000000000000..abae630164da552c1b905115c514fe8ea295b6c7
 --- /dev/null
 +++ b/tests/scripts/thin_entry_bare_pointer.test.ts
-@@ -0,0 +1,124 @@
+@@ -0,0 +1,125 @@
 +// The stub's pointer is a PATH, not a link that repeats the id — step 2.3 of
 +// `road-to-a-thinned-layer-measured-in-one-unit`.
 +//
@@ -3376,6 +3610,7 @@ index 0000000000000000000000000000000000000000..4978062942f1b4a524d74d31574e155d
 +    has_body_pointer,
 +    THIN_BODY_POINTER_PREFIX,
 +    THIN_BODY_POINTER_RE,
++    THIN_ENTRY_MARKER,
 +    thin_entry,
 +} from '../../src/scripts/_lib/thin_rules.js';
 +
@@ -3426,7 +3661,7 @@ index 0000000000000000000000000000000000000000..4978062942f1b4a524d74d31574e155d
 +    it('an entry with no pointer is recognised as having none', () => {
 +        // The control. Without it the case above would pass for a detector that
 +        // answered true unconditionally.
-+        const noPointer = '## Some Rule\n> Load the body on a match. Fires on: kw-probe.\n';
++        const noPointer = `## Some Rule\n${THIN_ENTRY_MARKER} Fires on: kw-probe.\n`;
 +        expect(has_body_pointer(noPointer)).toBe(false);
 +        expect(
 +            evaluate_demotion(noPointer, { sentinel: SENTINEL, keyword: KEYWORD }).link_present,
@@ -3471,7 +3706,7 @@ index 0000000000000000000000000000000000000000..4978062942f1b4a524d74d31574e155d
 +        // until it is refreshed. That is the same known case the marker change
 +        // carries, and the install receipt already tells the user when a layer
 +        // was rewritten.
-+        const old = '## Some Rule\n> Load the body on a match. Body: [`x`](rules/x.md)\n';
++        const old = `## Some Rule\n${THIN_ENTRY_MARKER} Body: [\`x\`](rules/x.md)\n`;
 +        expect(has_body_pointer(old)).toBe(false);
 +    });
 +});
