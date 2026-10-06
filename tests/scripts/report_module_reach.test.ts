@@ -64,7 +64,7 @@ describe('on the real tree', () => {
 
     it('--json output is a single parseable JSON document (R2 finding 3)', () => {
         // A trailing `scanned:` line after the closing `}` made this throw —
-        // the same shape check-gate_reachability's own --json branch already
+        // the same shape check_gate_reachability's own --json branch already
         // avoids by returning immediately after writing JSON.
         const chunks: string[] = [];
         const orig = process.stdout.write.bind(process.stdout);
@@ -250,12 +250,13 @@ describe('the four groups, over the unreferenced-by-name set', () => {
     });
 
     it('a level-4+ heading resets the step-block tracker too (R2 finding 2)', () => {
-        // The mention sits on the line IMMEDIATELY after the heading — no
-        // blank line in between — so the already-fixed blank-line branch
-        // cannot be what resets the tracker here. An earlier version of this
-        // fixture put a blank line after the heading, which made the test
-        // pass even with the heading-regex bug still present (the blank-line
-        // reset alone was enough) — caught by a second independent review.
+        // The mention sits on the SAME line as the heading — no blank line
+        // between the open step and the heading/mention — so the
+        // already-fixed blank-line branch cannot be what resets the tracker
+        // here. An earlier version of this fixture put a blank line after the
+        // heading, which made the test pass even with the heading-regex bug
+        // still present (the blank-line reset alone was enough) — caught by
+        // a second independent review.
         const root = fixtureRoot();
         unreferencedFixture(root, 'past_subheading');
         write(
@@ -272,9 +273,14 @@ describe('the four groups, over the unreferenced-by-name set', () => {
         );
         const { modules } = analyseModuleReach(root);
         const m = modules.find((x) => x.name === 'past_subheading');
-        // Must NOT read as `open-or-deferred-step` evidence for the 1.1 step —
-        // a level-4 heading has to reset the tracker exactly as 1-3 do.
-        expect(m?.group).not.toBe('open-or-deferred-step');
+        // Exact value, not a negative assertion (an R2 review found the
+        // negative form here would survive a worse regression too — the
+        // mention silently dropping out of the roadmap entirely and landing
+        // in `named-in-none` also satisfies `not.toBe('open-or-deferred-step')`,
+        // which is exactly the sibling "R2 finding 1" test's own standard just
+        // above). A level-4 heading has to reset the tracker exactly as 1-3
+        // do, landing the mention as prose outside any step.
+        expect(m?.group).toBe('named-outside-open-step');
     });
 
     it('group 3 — named in a parked (later/) roadmap counts too', () => {
