@@ -60,7 +60,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  4db427fba9c9e99abadd0caf82caee9b84c2527fddb1cefe67112570184dd3d0
+SET-SHA256  777fddd79cd0eff3c2fe8fe9fa55140d6c02c6cce1c316c44594dcb35a157247
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -247,6 +247,18 @@ no count is written down here.
 > 2026-08-30, for the reason the 19th row already established: a row authored
 > today predates nothing.
 
+> **25 -> 27 on 2026-10-06** (third growth of the day — `feat/git-convention-settings`,
+> which adds the `git.*` convention settings). Three skills gained a corpus for
+> the touched-skill reason: the branch edited `conventional-commits-writing`,
+> `jira-integration` and `merge-conflicts`, and `check_routing_coverage`
+> requires every touched skill to carry one. Two hash below the ceiling of 51
+> and seal — `conventional-commits-writing` at 0x2f = 47 and `merge-conflicts`
+> at 0x25 = 37. The third, `jira-integration` (0x93 = 147), is train, so BOTH
+> train-side published measurements are re-taken in the same change. The
+> ordering claim stays scoped to the 18 rows sealed on 2026-08-30, for the
+> reason the 19th row already established: a row authored today predates
+> nothing.
+
 Sealed means: **no proposer, curator, or analyzer authored in Phase 5 may read
 these files, and no candidate may be selected against them.** Phase 4's cascade
 opens the sealed set for promotion candidates only — decision E7, which is still
@@ -260,6 +272,7 @@ open and which this file does not settle.
 | `brand` | `43abaf7937a73ea8b041e18d977ce6a080b2226f6c0f49bb55cf59bc4545df36` |
 | `canvas-design` | `63229b3cfc336241f96140baf7c41c695a0f4fdbe8c30c9f1f787cd84ddfe02b` |
 | `code-intelligence` | `350a6d29f264800744fe9b1a4fcc48e9f7acba25cdd325f33df5b3a0aa1aaac2` |
+| `conventional-commits-writing` | `dc33e3a5c2b87ef7b95a4a588c0d12266f023c80e1adca73cbd147a6a59b25e4` |
 | `decision-record` | `5003c69b353baf1a6cd25b679d029f1988a83482cf2664f316d7c451d7a906d1` |
 | `fe-design` | `bfc10d1fce9264a9b9e6a542354b1f679dec12331a605c97c4615795a804cc3e` |
 | `image-generation` | `0ed76f9ddca3cd10b73aad8e00dbe643da9c3f0dc44e7e170dbd5e7304235381` |
@@ -267,6 +280,7 @@ open and which this file does not settle.
 | `judge-spec-compliance` | `6d7e5525d88e4c4b26c963103f43f7e95d997337ff3d624fea31a757363f653e` |
 | `license-compliance-borrow-check` | `2c23f14c168f6de1f99689e420e29b2b86bbd27e0fdfff68dcdf80b483aa2d0f` |
 | `logo-generation` | `fcf30c295c85f8b24f0ee6cb374229c39dbe87959469d7b04b19660e727e9a08` |
+| `merge-conflicts` | `61fbce06e0429a65e76532d51f3bafa3d27341b4c42943cc952cbc4dbc304189` |
 | `overbuild-review-lens` | `32ef2f64da160c5cbc5fef3b4e3d38d83e8f39b918ba4574e43e2f9256ae69f2` |
 | `php-coder` | `25950ef2e90e4055ba30de21b32204727dd953275a681f99ac60c5a59592be83` |
 | `playbook-authoring` | `e615f614da3c14439fca70f3477272a8323e579ac4961ce2ce83c3c0f099949b` |
@@ -325,6 +339,17 @@ open and which this file does not settle.
 > (still above the 2.0 pp guard). The verdict is unchanged in kind — `harmful`,
 > on the same false-activation guard it already failed. No bar was edited.
 
+> **+1 on 2026-10-06** (third growth of the day — `feat/git-convention-settings`).
+> `jira-integration` gained a corpus for the touched-skill reason, alongside the
+> two sealed above. `sha256('jira-integration')[0:2]` is 0x93 = 147, above the
+> ceiling of 51, so it is **train**. `SET-SHA256` moves because it is computed
+> over ALL rows — `4db427f…` -> `777fddd7…`. Both train-side published
+> measurements are re-taken in the same change: delta-recall moved
+> 4.082 -> 4.045 pp (still below the 5.0 pp bar) and delta-false-activation
+> moved 6.912 -> 6.849 pp (still above the 2.0 pp guard). The verdict is
+> unchanged in kind — `harmful`, on the same false-activation guard it already
+> failed. No bar was edited.
+
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|
 | `adr-create` | `18995bba7bbdc905296f545a25c90cd94fa306909d78af8fc79e3d5621f313f6` |
@@ -378,6 +403,7 @@ open and which this file does not settle.
 | `image-editing` | `2b3fe1109fb8be12a9e42bcfb9ff587f07a37ad3fb926dc538b335f5c8fbf3b8` |
 | `image-provider-routing` | `b55853630843300a0e6c8911b5a70069158c28c701af8060646012411945083c` |
 | `incident-commander` | `7e9371f328c7b1751c083688f77a34af2db2b901befc78eed7c8400ae5b2019e` |
+| `jira-integration` | `fe9ba2d101335b5446f7efb6fcc22e8db93edf21be00e4cd23774789a01ec28d` |
 | `js-library-packaging` | `8b64d0222ee1228950056004a752b4dc168f8f571e037ec38791258ec305bacd` |
 | `judge-artifact-completeness` | `4b1d517726313827781746169d30009b2b0655bbc0392740ebcd6e712c58cd50` |
 | `judge-synthesis` | `378e0eec013fbf2a96cda58a6ba318884fc141fc0f722fae23a488a8a7ca6155` |
