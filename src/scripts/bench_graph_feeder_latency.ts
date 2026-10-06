@@ -23,9 +23,12 @@
  *
  * Arms are INTERLEAVED, one call each per round, and the rounds cycle through
  * all six ORDERS of the three calls: interleaving spreads slow drift across the
- * arms, and the full permutation cycle balances both the position and the
- * direct predecessor of every call (GC after the heavier arm, cache warmth) —
- * exactly so when the round count is a multiple of six. A third
+ * arms, and the full permutation cycle balances the position of every call and
+ * its direct predecessor WITHIN a round (GC after the heavier arm, cache
+ * warmth) — exactly so when the round count is a multiple of six. Across a round
+ * boundary it does not: the first call of a round follows the previous round's
+ * last call, and those six transitions are unbalanced (two are a call following
+ * itself). A third
  * reading, inside the same rotation, times the feeder's own work (`graphState` + `graphUntestedVerdict`) in isolation on the
  * `with` tree, because the difference of two noisy totals is a weaker number
  * than a direct one.
@@ -191,8 +194,9 @@ function timeStop(dir: string, transcriptPath: string, session: string): { ms: n
 
 /**
  * Every order of the three calls. Cycling through all six puts each call first
- * equally often AND gives every call each other call as its direct predecessor
- * equally often; rotating the start of one fixed cycle only does the former.
+ * equally often AND, within a round, gives every call each other call as its
+ * direct predecessor equally often; rotating the start of one fixed cycle only
+ * does the former. The round-boundary transitions are not balanced.
  */
 export const ORDERS: readonly (readonly number[])[] = [
     [0, 1, 2],

@@ -51,6 +51,19 @@ describe('bench_graph_feeder_latency — step 3.5 of road-to-a-graph-that-feeds-
         expect(new Set(pairs.values())).toStrictEqual(new Set([2]));
     });
 
+    it('does not balance the predecessor across a round boundary, which is why the claim is within-round', () => {
+        const boundary = new Map<string, number>();
+        ORDERS.forEach((o, i) => {
+            const next = ORDERS[(i + 1) % ORDERS.length] as readonly number[];
+            const key = `${o[o.length - 1]}>${next[0]}`;
+            boundary.set(key, (boundary.get(key) ?? 0) + 1);
+        });
+        // Six transitions: two are a call following itself, and the rest do not
+        // cover the six distinct ordered pairs once each.
+        expect([...boundary.keys()].filter((k) => k.split('>')[0] === k.split('>')[1])).toHaveLength(2);
+        expect([...boundary.keys()].filter((k) => k.split('>')[0] !== k.split('>')[1]).length).toBeLessThan(6);
+    });
+
     it('records every round\'s verdict over an existing repository, not only the last', async () => {
         const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'feeder-repo-')));
         try {
