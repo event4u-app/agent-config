@@ -60,7 +60,7 @@
  * what this file's own test already proves.
  */
 import { CURATOR_OPS } from '../../src/scripts/_lib/curator_ops.js';
-import { assertEvaluatorPromotable, type EvaluatorChange } from '../../src/scripts/_lib/evaluator_promotion.js';
+import { assertEvaluatorPromotable, type EvaluatorChange } from './evaluator_promotion.js';
 import { classifyOverfit } from '../../src/scripts/_lib/judge_hygiene.js';
 
 /** The three roles. The judge is deliberately NOT one of them — it is optional. */

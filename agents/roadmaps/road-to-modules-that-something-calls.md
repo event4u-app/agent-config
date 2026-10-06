@@ -155,7 +155,7 @@ reported and counted, and nothing here moves or deletes one.
       code whose only caller is its own unit test. Each line begins with the
       word `reading:` and the module's name.
       verify: `grep -c '^reading:' agents/evidence/analysis/module-reach-2026-10.md` -> /^[1-9]/
-- [ ] **2.2 The reading is acted on, one module per commit.** A test-carried
+- [x] **2.2 The reading is acted on, one module per commit.** A test-carried
       check moves under `tests/` with the suite that uses it. A helper with a
       real use gains its consumer. Code whose only caller is its own unit test
       is deleted with that test. After the step, the report's fourth group is
