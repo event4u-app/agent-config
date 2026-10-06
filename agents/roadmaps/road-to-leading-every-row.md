@@ -123,7 +123,7 @@ loop whose observer ships disabled. Named once so no later round re-derives them
 - [x] **3.1 Put the seven questions in `## Blockers` to the owner in one sitting.** Each
       carries a recommendation and the cost of no decision; a question unasked keeps its
       marker and the lanes that depend on it land their unblocked phases regardless.
-      <!-- blocked-by: b1-subagent-return | asked: yes — all seven put to the owner verbatim 2026-10-01 in the PR body of the drain run that closed this phase; each blocker keeps its own Status until the owner answers it -->
+      <!-- blocked-by: b4-benchmark-subject-names | asked: yes — all seven put to the owner verbatim 2026-10-01 in the PR body of the drain run that closed this phase; each blocker keeps its own Status until the owner answers it. Repointed 2026-10-06 from b1-subagent-return, which resolved that day: this step records the ASK, so its marker names a blocker the owner has still not answered rather than one that is closed -->
       verify: `grep -c 'asked: yes' agents/roadmaps/road-to-leading-every-row.md` -> /[1-9]/
 - [ ] **3.2 Record each answer as a `## Decisions` row in the lane or stub it unblocks**,
       not here. This file keeps questions; lanes keep decisions.
