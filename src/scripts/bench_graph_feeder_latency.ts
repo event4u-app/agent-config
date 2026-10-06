@@ -50,6 +50,7 @@ import * as path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { pathToFileURL } from 'node:url';
 
+import { gitEnv } from './_lib/git_env.js';
 import { graphUntestedVerdict } from './_lib/graph_feeder_record.js';
 import { buildFromRepo } from './code_graph/build.js';
 import { graphState, NATIVE_CACHE_REL } from './code_graph/detect.js';
@@ -99,16 +100,17 @@ export function distribution(samples: readonly number[]): Distribution {
     return { n: s.length, p50: r(percentile(s, 50)), p95: r(percentile(s, 95)), max: r(s[s.length - 1] ?? Number.NaN) };
 }
 
-const GIT_ENV = {
-    ...process.env,
-    GIT_AUTHOR_NAME: 'bench',
-    GIT_AUTHOR_EMAIL: 'bench@example.com',
-    GIT_COMMITTER_NAME: 'bench',
-    GIT_COMMITTER_EMAIL: 'bench@example.com',
-};
-
 function git(dir: string, args: string[]): void {
-    execFileSync('git', ['-C', dir, ...args], { env: GIT_ENV, stdio: 'ignore' });
+    // An inherited GIT_DIR (every git hook exports one) overrides `-C`, which
+    // would commit the fixture onto the host repository.
+    const env = {
+        ...gitEnv(),
+        GIT_AUTHOR_NAME: 'bench',
+        GIT_AUTHOR_EMAIL: 'bench@example.com',
+        GIT_COMMITTER_NAME: 'bench',
+        GIT_COMMITTER_EMAIL: 'bench@example.com',
+    };
+    execFileSync('git', ['-C', dir, ...args], { env, stdio: 'ignore' });
 }
 
 /**

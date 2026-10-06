@@ -1,4 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { execFileSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
+import { describe, expect, it, vi } from 'vitest';
 
 import { bench, distribution, parseArgs, percentile } from '../../src/scripts/bench_graph_feeder_latency.js';
 
@@ -44,6 +49,42 @@ describe('bench_graph_feeder_latency — step 3.5 of road-to-a-graph-that-feeds-
             expect('USERPROFILE' in process.env).toBe(false);
         } finally {
             if (saved !== undefined) process.env.USERPROFILE = saved;
+        }
+    }, 120_000);
+
+    it('builds its fixture in its own repository even under an inherited GIT_DIR', async () => {
+        // A git hook exports GIT_DIR, and a child `git -C <fixture>` obeys it over
+        // `-C`: init/add/commit would then land on the HOST repository instead.
+        const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'feeder-gitdir-')));
+        const victim = path.join(root, 'victim');
+        fs.mkdirSync(victim);
+        const env: NodeJS.ProcessEnv = {
+            ...process.env,
+            GIT_AUTHOR_NAME: 't',
+            GIT_AUTHOR_EMAIL: 't@example.com',
+            GIT_COMMITTER_NAME: 't',
+            GIT_COMMITTER_EMAIL: 't@example.com',
+        };
+        for (const k of ['GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE']) delete env[k];
+        const vgit = (...args: string[]): string =>
+            execFileSync('git', ['-C', victim, ...args], { env, encoding: 'utf8' }).trim();
+        vgit('init', '-q');
+        fs.writeFileSync(path.join(victim, 'keep.txt'), 'keep\n');
+        vgit('add', '-A');
+        vgit('commit', '-q', '-m', 'victim');
+        const head = vgit('rev-parse', 'HEAD');
+        vi.stubEnv('GIT_DIR', path.join(victim, '.git'));
+        // Re-import under the stubbed env, so a module-level env snapshot sees it too.
+        vi.resetModules();
+        try {
+            const mod = await import('../../src/scripts/bench_graph_feeder_latency.js');
+            const dir = await mod.makeFixture(root, 1, false);
+            expect(vgit('rev-parse', 'HEAD')).toBe(head);
+            expect(fs.existsSync(path.join(dir, '.git'))).toBe(true);
+        } finally {
+            vi.unstubAllEnvs();
+            vi.resetModules();
+            fs.rmSync(root, { recursive: true, force: true });
         }
     }, 120_000);
 });
