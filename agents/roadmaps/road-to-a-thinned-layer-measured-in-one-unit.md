@@ -177,7 +177,7 @@ on the user-global layer.
 
 ## Phase 3 — The remaining distance, priced
 
-- [ ] **3.1 A price on each move, before any is taken.** Append to the
+- [x] **3.1 A price on each move, before any is taken.** Append to the
       page, per move: who may permit it, where that is recorded, and what it is worth
       on the measured layer. At `df377ca64` the rows are — four `no_stub` rules
       gaining a law heading: between about 7,100 and 9,100, depending on
@@ -196,7 +196,7 @@ on the user-global layer.
       per character of prefix, behind blocker
       `rule-link-targets-change-the-frozen-install-abi`.
       verify: `grep -c 'permitted by' agents/evidence/analysis/thinned-layer-composition-2026-10.md` -> /^[1-9]/
-- [ ] **3.2 Whether the ceiling is reachable at all, stated once.** The page
+- [x] **3.2 Whether the ceiling is reachable at all, stated once.** The page
       closes with two sums — the form change plus both law moves — in
       unconditional characters and in all characters, each beside 75,000 and
       beside the rule the extended roadmap gives its ceiling gate: the
@@ -204,7 +204,7 @@ on the user-global layer.
       layer: 75,900 to 77,900 unconditional with the four headings, 72,600 to
       74,600 with the fifth as well, and 13,753 more in all characters.
       verify: `grep -c 'both law moves' agents/evidence/analysis/thinned-layer-composition-2026-10.md` -> /^[1-9]/
-- [ ] **3.3 The reading stands beside the criterion it answers.** One dated
+- [x] **3.3 The reading stands beside the criterion it answers.** One dated
       note under AC-1 of the thinned-layer roadmap names the page and the
       measured figures, package-owned, unconditional and in all. The criterion, its blocker and its decisions are not
       edited.

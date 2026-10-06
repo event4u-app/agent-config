@@ -236,6 +236,162 @@ ceiling.** That is stated here rather than left to be inferred, because 4,139
 characters is a real saving and a page that reported it without this line would
 read as progress toward a target it does not move.
 
+## Every remaining move, with its owner and its price
+
+Each row names a move that could lower the standing layer, states who it is
+permitted by and where that is recorded, and gives what it is worth **on the
+layer as measured after the form change**, at a 139-character body-link
+prefix. The rows are a price list, not a
+plan: nothing here is a recommendation, and three of the five are not the
+council's or the agent's to take at all.
+
+### The arithmetic the law-heading rows use
+
+A stub that carries a law is, on all 21 that exist today, exactly:
+
+```
+plain stub  +  the law text  +  3
+```
+
+The 3 is the join; the `<!-- law: … -->` markers are HTML comments and the
+report's unit strips them. Measured across all 21 law stubs the figure is 3
+with no variance, so the saving for a rule that gains a law heading is
+
+```
+saving = its full body  −  its plain stub  −  its law  −  3
+```
+
+and the only unknown in it is **which block becomes the law** — which is the
+question step 4.2 puts to a council, one rule at a time. Each row below is
+therefore a range across the blocks the rule already states, never a single
+number.
+
+### Row 1 — the four `no_stub` rules gain a law heading
+
+| Rule | Full body | Plain stub | Candidate law | Saving |
+|---|---|---|---|---|
+| `tool-safety` | 3,572 | 336 | `## Core principle` 566 … `## Constraints` 774 | 2,459–2,667 |
+| `runtime-safety` | 1,131 | 361 | `## Constraints` 554 | 213 |
+| `question-not-instruction` | 2,435 | 443 | the opening fence 273 … `## The trap` 392 | 1,597–1,716 |
+| `autonomous-execution` | 6,146 | 367 | a single fence 147 … the validation-loop fence 696 | 5,080–5,629 |
+| **together** | | | | **9,349–10,225** |
+
+**Permitted by** — and the row is not actionable by anyone else: a council, one verdict per rule, per decision D4 and step 4.2;
+recorded at `agents/evidence/council/law-heading-<rule>.md`. The class file
+states the reason itself — promoting a block to a law heading "is authoring a
+law, which is a change to what the rule obligates", and the rule stays
+full-bodied "until a law section is written deliberately"
+(`src/config/rule-consequence-class.json`). The archived decision that put that
+authoring under `artifact-drafting-protocol` is named in the roadmap.
+
+Every candidate above is under the 1,200-character law target and far under the
+2,000 hard ceiling (`lint_rule_law_section`), so none of them needs the law
+shortened to fit.
+
+### Row 2 — `legal-safety-floor`
+
+| Full body | Plain stub | Its law today | Law stub would be | Saving |
+|---|---|---|---|---|
+| 5,583 | 410 | 2,023 | 2,436 | 3,147 |
+
+**Permitted by the owner, and by nobody else.** Its law is already 2,023
+characters — 23 over the hard ceiling, carried as a recorded exception whose
+own `reason` field says the review is "about whether the STOP block belongs in
+the law or beside it". So this row cannot be taken the way the four above can:
+fitting the ceiling means shortening the law, and shortening a law is lowering
+what stands. "Lowers or removes a recorded security / privacy / safety /
+data-handling floor" is an owner-reserved row of `decision-revisit-gate`, which
+is decision D6. **Priced here and deliberately not touched.**
+
+### Row 3 — counting unconditional characters only
+
+**Worth 13,701** — the two path-scoped rules, `design-review-after-ui-write`
+(7,588) and `ui-audit-gate` (6,113).
+
+This is not a change to anything. It is a reading of the ceiling: whether "hard
+75,000" was set against what the host loads every session or against everything
+the install writes. **Permitted by the council that set the figure**, which is
+exactly what step 4.1 asks. Nothing in this roadmap chooses it.
+
+### Row 4 — narrowing the consequence class
+
+**Worth each moved rule's own law plus 3.** Across the corpus as it stands, a
+law stub averages 1,031 characters and a plain stub 399, so a rule moved from
+the first arm to the second is worth **632 on average** — but the mean is a
+description of today's 21, not a price for any particular rule, and the honest
+per-rule figure is its law.
+
+**Permitted by a council**, on the same grounds as row 1 and in the same
+direction: deciding a rule's law need not stand is the same kind of decision as
+deciding it must, and the class file's criterion is where it is recorded.
+
+### Row 5 — a pointer into a directory the installer owns
+
+**Worth 89 characters per character of prefix** — step 1.3's formula, with the
+stub count as the multiplier. The current prefix is 139 characters, of which
+**12,371 is in the layer**. It is the single largest remaining form term, 82 %
+of what the pointer costs and 13 % of the whole standing layer.
+
+**Permitted by the owner**, behind the open blocker
+`rule-link-targets-change-the-frozen-install-abi`. Decision D5: the pointer
+directory and any change to what an install deploys stay with the install-layout
+blocker, and `docs/contracts/install-layout.md` is where that is recorded. This
+roadmap moves nothing here.
+
+## Whether the ceiling is reachable at all
+
+The recorded ceiling is "hard 75,000 with ≥10 % headroom". Read as the extended
+roadmap's gate states it — **the measured total plus ten per cent, never above
+75,000** — the working figure is 68,181, and both are given below.
+
+Two sums, from the layer as it stands after the form change.
+
+### Sum 1 — the form change plus the four law headings
+
+| Reading | Characters | vs 75,000 | vs 68,181 |
+|---|---|---|---|
+| unconditional | 83,132–84,008 | 111–112 % | 122–123 % |
+| all | 96,833–97,709 | 129–130 % | 142–143 % |
+
+### Sum 2 — the form change plus both law moves, the fifth included
+
+| Reading | Characters | vs 75,000 | vs 68,181 |
+|---|---|---|---|
+| unconditional | 79,985–80,861 | 107–108 % | 117–119 % |
+| all | 93,686–94,562 | 125–126 % | 137–139 % |
+
+At the 97-character prefix of an ordinary checkout each figure is 3,738 lower;
+at the 45-character prefix the roadmap's own expectation was computed from,
+8,366 lower — which puts sum 2 at 71,619–72,495 unconditional, under 75,000 and
+still above the headroom-adjusted 68,181.
+
+**So: no. Not by these moves.** Every move this page prices, taken together,
+including the one reserved to the owner and the one the agent may not take at
+all, leaves the layer above the recorded ceiling on the reading that counts
+everything, and above the headroom-adjusted figure on every reading at every
+root. Reaching it needs something not on this list — row 5's blocker opened, or
+a decision about what the layer carries at all.
+
+That sentence is the page's conclusion and it is stated plainly rather than left
+in the tables, because a reader who stops at the five priced rows would
+reasonably infer the opposite: five moves, each with a real number, summing to
+roughly a sixth of the layer, look like a route to a target they do not reach.
+
+### Where this differs from the roadmap's own expectation, and why
+
+Step 3.2 predicted 75,900–77,900 unconditional with the four headings and
+72,600–74,600 with the fifth. Normalised to the 45-character prefix those
+predictions are for, this page reads 74,766–75,642 and 71,619–72,495 — about
+1,100–2,200 lower in each case.
+
+Two causes, both nameable. The candidate law blocks here are measured from the
+rules as they stand today and are not the same blocks the prediction assumed —
+`autonomous-execution`'s was priced there at the validation-loop section through
+its first paragraph (1,385) where this page prices the fence alone (696) as the
+lower bound. And the plain-stub figures here are post-form-change, so each of
+the four is 47 characters cheaper as a stub than it was when the prediction was
+written. The direction of the difference is consistent with both.
+
 ## An adjacent defect, noted and not fixed here
 
 The install receipt's budget block prints `no published limit recorded — not
