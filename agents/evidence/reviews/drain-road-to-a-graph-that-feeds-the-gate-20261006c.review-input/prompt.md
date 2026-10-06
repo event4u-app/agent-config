@@ -21,7 +21,7 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head d5253057808b0eb0ef4c869cdf5f4a8848097294, review
+- diff: `diff.patch` — the review scope (branch head 8da6bdf4941c33745455e7c042cdee91457897e2, review
   artefacts excluded), scope hash `e58f6d41c888941fc19ca319ba7beecd17f3ed08ea9d8165203780fbc2965b19`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
@@ -60,3 +60,19 @@ Fill the findings table in `drain-road-to-a-graph-that-feeds-the-gate-20261006c.
 ## Return channel
 
 Final message = the return envelope and nothing else: {summary, handoff, confidence, findings, risks}. Shape + the write-to-disk-first rule: contexts/execution/subagent-response-contract.md. The findings table stays a file.
+
+## Caller instructions as delivered to this reviewer (verbatim)
+
+Recorded because the review that fills the findings table ran on these
+instructions, not on the dispatcher text above alone. They name the prior round
+and ask for each of its rows to be re-verified; they state no expected outcome.
+
+> You are an independent reviewer in the repo event4u/agent-config. Review PR #2239 (branch `drain/road-to-a-graph-that-feeds-the-gate-20261006c`) at its current head.
+>
+> Scope: the whole diff of the PR against its merge base with origin/main (`gh pr diff 2239`, or `git diff origin/main...<head>` after fetching the branch). Report defects you find in correctness, test sensitivity, documentation claims vs. measured evidence, and repo conventions (see CLAUDE.md). For each finding: file:line, the concrete failure scenario, severity.
+>
+> The branch has a completion-review artefact at `agents/evidence/reviews/drain-road-to-a-graph-that-feeds-the-gate-20261006c.findings.md`. Use the repo's own R2 tooling to record your review properly for the current head (look at `src/scripts/dispatch_r2_reviewer.ts` and the completion-review contract it references to learn the expected artefact shape and how a genuine review is recorded, including recording the review prompt). Each previous finding row: verify against the code whether the fix actually holds and set its status from your own verification. Add new findings as new rows.
+>
+> You may commit ONLY the review artefact changes (pathspec, Conventional Commit `docs(review): ...`, ending with `Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>`) and push to that branch. Do NOT change any code, do NOT merge.
+>
+> Final report (English, concise): head SHA reviewed, per-finding verdicts, new findings, whether the artefact was committed and pushed.
