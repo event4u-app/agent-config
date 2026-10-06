@@ -61,7 +61,22 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-/** The variable `user_global_paths.event4u_root()` honours first. */
+/**
+ * The variable `user_global_paths.event4u_root()` honours first.
+ *
+ * Deliberately a literal, NOT an import of `user_global_paths.ts` (tried and
+ * reverted): this file is a vitest `setupFiles` entry, loaded once per worker
+ * before any test file's own `vi.mock('node:os', ...)` factory is wired up.
+ * `user_global_paths.ts` imports `node:os` at module scope, so pulling it in
+ * here pre-caches that module graph with the REAL `os.homedir()` — and a test
+ * file that mocks `node:os` to assert HOME-derived resolution (e.g.
+ * `tests/server/serverInfo.test.ts`) then silently reads the real homedir
+ * instead of its own mock, because the already-evaluated module keeps its
+ * live binding to the real implementation. `tests/scripts/hermetic_env.test.ts`
+ * guards the drift this literal risks instead: it asserts this string equals
+ * `user_global_paths.EVENT4U_HOME_ENV` from an ordinary (non-setup) test file,
+ * where importing that module has no such side effect.
+ */
 export const CONFIG_HOME_VAR = 'EVENT4U_CONFIG_HOME';
 
 /**
