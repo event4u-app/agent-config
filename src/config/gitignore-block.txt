@@ -171,3 +171,22 @@
 # Written by POST /api/v1/wizard/state between step transitions, deleted
 # on POST /api/v1/wizard/finish. Local-only crash-recovery aid.
 /.agent-config/wizard-state.json
+
+# Agent config — neighbour-census caches, written by `agent-config doctor
+# neighbours` into the otherwise-TRACKED `agents/reports/` directory. Named
+# here because that placement is what makes them a leak rather than a nuisance:
+# every other file in that directory is a committed report, so a broad staging
+# of the directory is the normal thing to do and would publish
+#
+#   · each neighbour skill's ABSOLUTE source path, which is rooted at the
+#     consumer's home directory and therefore carries their account name
+#     (`/Users/<name>/.claude/skills/...`), and
+#   · the consumer's full installed-skill inventory with per-file digests.
+#
+# Both are derived and disposable: rollback is `rm`, and the next
+# `doctor neighbours` run rebuilds them from the census digest. Neither has
+# ever been tracked in this repository or shipped in a release, so this entry
+# ignores them going forward and unstages nothing — see this file's header on
+# why an entry here is never a tracked -> untracked transition.
+/agents/reports/neighbour-overlap.json
+/agents/reports/neighbour-scan.json

@@ -87,6 +87,31 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       overlap. Cached in `agents/reports/neighbour-overlap.json`, keyed by a
       digest over both sides' file bytes — risk-register row 3, closed as that row
       proposes.
+
+      **The cache was written into a TRACKED directory, and that was fixed in
+      this lane's branch rather than left.** Found 2026-10-06 while verifying
+      this step against the tree: one `agent-config doctor neighbours` run left
+      `agents/reports/neighbour-overlap.json` and `neighbour-scan.json` as
+      untracked additions beside sixteen committed reports, covered by no
+      ignore rule. The overlap cache carries each neighbour skill's ABSOLUTE
+      path under the running user's home directory — so their account name —
+      and the scan cache carries that user's whole installed-skill inventory
+      with per-file digests. Both now ship in `src/config/gitignore-block.txt`
+      and in this repository's own `.gitignore`, because the leak reproduces in
+      any consumer tree that runs the command; neither file has ever been
+      tracked here or in a release, so the entry ignores forward and unstages
+      nothing.
+
+      **The shape this did NOT take, recorded so it is owned rather than
+      lost.** Decision D9 of this same lane puts step 3.3's sibling store under
+      gitignored `agents/runtime/`, which is the tree's stated home for
+      local-only machine state; these two caches should live there too, and the
+      ignore entry is the containment, not the design. The move was not made
+      because `SCAN_CACHE_RELATIVE` in `_lib/skill_origin.ts` is read on the
+      hook path and is bundled, so changing it is a `check_hook_bundle_composition`
+      question plus a cache-invalidation one — outside the bounded-remediation
+      size for a defect found while verifying a closed step. Revisit-if: this
+      lane reopens for any reason that already touches `skill_origin.ts`.
 - [x] **1.3 Scan before inject.** A neighbour skill body passes `security_lint`'s shape
       checks before its body may be injected; a failing body ranks by name with
       `unscanned: <finding-kind>`; a changed digest rescans first.
@@ -153,6 +178,32 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 > `❌ per-spawn preamble payload grew past the ratchet: 137020 > 137017 tok`.
 > The probe file was removed with `rm`.
 >
+> **Re-measured 2026-10-06 at `0ea82b2b8`, this lane's base after syncing
+> `origin/main`. The lock holds in kind and is wrong in every digit.** The
+> block above is kept rather than overwritten, per risk-register row 8: an
+> owner needs to see which tree each reading belongs to.
+>
+> ```
+> ./scripts-run src/scripts/check_preamble_payload_budget --as-of 2026-10-06T00:00:00Z
+>   project-scope rules                      121236 tok      (was 121426)
+>   measured total                           136827 tok (baseline 102520, +34307; ceiling 136827)
+>   ceiling 136827 tok = base 136827 — zero net growth, design 107646
+> ```
+>
+> The ceiling fell 190 tok because the base ref did; headroom is still exactly
+> zero. The hard edge was **re-run rather than quoted**: ten bytes written into
+> `dist/agent-src/rules/` moved the bucket to `121239` and the gate to
+> `❌ per-spawn preamble payload grew past the ratchet: 136830 > 136827 tok`,
+> whose rejection record names `attempted_delta: 3`. The probe file was removed
+> with `rm`, and the working tree was confirmed clean afterwards.
+>
+> **The practical consequence is that no figure here may be carried forward.**
+> The obligation is unchanged as an ORDER — a four-figure token charge against
+> zero headroom — but the ceiling is a property of the base ref, and three
+> drain lanes merged into `main` between the two readings above. Whoever pays
+> it re-reads the gate on the day, and treats a quoted number as stale by
+> construction.
+>
 > The gate prints its own two exits and neither is a ceiling edit — *"The ceiling
 > may NOT be widened to fit it — it is MEASURED at the base ref, so there is no
 > number to edit"*. The two it does sanction:
@@ -185,6 +236,30 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       suite's completion, which stays with the stop gate's detectors.
       <!-- blocked-by: b6-neighbour-precedence | asked: no — programme blocker, inbox round authored without the owner present -->
       verify: `./scripts-run src/scripts/compile_router` -> 0 and `grep -c 'neighbour-precedence' dist/router.json` -> /[1-9]/
+
+      **The `blocked-by` marker on this step is invisible to its own gate, and
+      making it visible would red the file. Measured 2026-10-06, both
+      directions, with the probe removed afterwards.** `BLOCKED_BY_LINE_RE` in
+      `src/scripts/lint_roadmap_blockers.ts` is anchored to the checkbox line
+      itself, and this step's marker sits on a continuation line below it — so
+      the linter parses no marker here and prints a clean verdict for the whole
+      file. Control for that negative: a scratch copy carrying the identical
+      marker moved onto the checkbox line yields
+      `line 177: blocked-by references unknown blocker id 'b6-neighbour-precedence'
+      (no matching '### blocker: b6-neighbour-precedence' in this file)` — the
+      checker resolves ids within ONE file, and b6 is declared in
+      `road-to-leading-every-row.md` by design, because it is a programme
+      blocker holding three lanes.
+
+      So the only two states reachable today are *invisible* and *illegal*, and
+      this run took neither. Moving the marker would trade a silent gap for a
+      red gate over a cross-file reference the estate uses on purpose; leaving
+      it is the lesser failure and is now a recorded one rather than a silent
+      one. Logged as an instance under
+      `agents/roadmaps/stubs/road-to-blocker-parse-visibility.md`, which already
+      owns the sibling shape (a bare `### <id>` heading without the `blocker:`
+      prefix) and reaches the same "a gate that scans nothing exits green"
+      conclusion.
 - [ ] **2.2 Contradiction review on demand, council-seated, report-only.**
       `doctor neighbours --contradictions` forms candidate pairs only from strong signals —
       a shared subject noun with opposite modality, or a name collision from 1.2 — and
@@ -243,6 +318,19 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       definition source, and the observation this slot CAN make is 3.3's name
       recorder. Revisit-if: a reader of third-party MCP tool descriptors exists in
       `src/scripts/`.
+
+      **The revisit-if was EXECUTED 2026-10-06, not read, and it does not
+      fire.** `grep -rn 'descriptor\|inputSchema\|description' src/scripts/*.ts
+      src/scripts/_lib/*.ts | grep -i mcp` returns hits in exactly three
+      modules, and every one of them reads THIS package's own surface:
+      `build_mcp_catalog.ts` and `build_mcp_registry_manifest.ts` write the
+      catalog from our own tool definitions, and `audit_initial_context.ts`
+      prices `tools/list` triples read out of `MCP_CATALOG` — our file, loaded
+      at `:418` and returning `{}` when absent. The grep is a real instrument
+      rather than a zero: it returns 20 lines, three distinct modules and the
+      literal `inputSchema`, so a reader of a THIRD party's descriptors would
+      have been in its output had one existed. D2 therefore stands unchanged
+      and this step stays deferred on the same ground it was deferred on.
 - [~] **3.3 Foreign MCP servers counted by use.** `telemetry_usage_hook.ts` returns early
       for every non-`Skill` tool (`:250`), so a small recorder of foreign `mcp__*` tool
       names is new; the census gains distinct tools used per server in 30 days.
@@ -436,6 +524,13 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
      therefore no longer the discriminator between these three shapes, and an
      owner choosing on the 170 B figure would be choosing on a tree that no
      longer exists.
+     **Re-measured again 2026-10-06 at `0ea82b2b8` after `npm run build:hooks`:
+     `hook bundle: 1515638 B / 1550000 B ceiling, 287 modules`, i.e. **34,362 B
+     of headroom** — the third distinct figure in five days and the second
+     correction to this one line. The conclusion is unchanged and is the only
+     part worth carrying: bundle bytes do not discriminate between these three
+     options at any of 170 B, 41,013 B or 34,362 B. The digits are kept only so
+     a reader can see that each belongs to a different tree.**
   3. **A separately named concern** (e.g. `mcp-usage-observation`) with its own
      default-on local-observation semantics, receiving a dispatcher-reduced
      payload carrying only the tool name, and its own retention statement.
@@ -499,6 +594,29 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
   flips when this closes — AND a ratification artifact under
   `agents/evidence/ratifications/` records a non-split verdict for the manifest
   edit that does it.
+- **Both halves executed again 2026-10-06 at `0ea82b2b8`; neither has moved,
+  and this is the eighth reading.** Run, not quoted:
+  `npx vitest run tests/scripts/neighbour_mcp_use.test.ts` -> **15 passed**,
+  the passing set still including `the shipped telemetry-usage entry still
+  filters the recorder out`, which is the assertion that FLIPS on closure. The
+  manifest half was read directly as well: `telemetry-usage` in
+  `src/scripts/hook_manifest.yaml` still carries `tools: [Skill]`. Ratification
+  half: `grep -rl 'mcp-recorder-unreachable' agents/evidence/ratifications/`
+  -> **0 files**, with the control `grep -rl 'tree-keeps-neighbours'` on the
+  same directory returning `drain-tree-keeps-neighbours.md`, so the directory
+  and the search both work and the zero is a finding rather than a broken
+  instrument. `concern_count` was re-read for option 3 and is unchanged:
+  `./scripts-run src/scripts/check_estate_count` -> `concern_count 62 (floor 62
+  at origin/main, +0)`.
+- **No second council pass was opened on option 3, deliberately.** The
+  fifth-exit paragraph above records why — option 3 is one of three options
+  this blocker hands the owner by name, and an agent choosing among an owner's
+  enumerated set is the owner-reserved dimension of the same ADR-268 § 4
+  ladder. That reasoning was not re-derived here; re-running the council on a
+  question a prior run routed to the owner would be verdict-shopping under
+  `evaluator-independence`, and the re-pricing above is the only thing this run
+  had standing to change. The blocker is handed on unchanged in substance and
+  corrected in its numbers.
 
 ## Decisions
 
@@ -517,11 +635,13 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 | D10 | reversible-technical | agent | a server is matched on its SANITISED segment, both sides, not on the raw `.mcp.json` key | hosts rewrite the key before embedding it — `claude.ai Claude Docs` arrives as `mcp__claude_ai_Claude_Docs__…`. An exact-key match reports `0` for every server whose name carries a dot or a space, and a reader cannot tell that zero from "never used" | a host is observed embedding a key under a different transformation than `[^A-Za-z0-9_-] -> _` |
 | D12 | product-owned | owner | option 3: a separately named, default-on local-observation concern (`mcp-usage-observation`) receives a dispatcher-reduced payload carrying the tool name only; its own text states that it bypasses the telemetry opt-in, a test proves the store holds tool names only (no arguments, responses or session id), and the diff that adds it carries an `estate_growth_exempt` claim for `concern_count` and a ratification artifact for the manifest edit | owner answer 2026-10-06 to blocker `mcp-recorder-unreachable-behind-the-tools-filter`; council 2026-10-02 (anthropic + openai) split on option 1 and named option 3 the right shape; re-priced 2026-10-05: 41,013 B bundle headroom, `concern_count` allowance 0 | the concern's store is found to hold more than tool names, or a host starts exposing MCP usage itself |
 | D13 | contested-technical | council:leading-every-row-blockers-2026-10-06 | **overlapping neighbour skills stay visible — K16 stands.** This half of programme blocker b6 is answered; the rank order is the other half and stays at D1 | Two AI-council passes 2026-10-06 (anthropic `claude-sonnet-4-5` + openai `codex-default`, 3 and 2 rounds, subscription transport, $0 billed): no seat across the four opinions argued for hiding, and three argued to preserve K16 explicitly — hiding a skill the consumer deliberately installed makes their install silently inert, which is the ground K16 already recorded. Option (c) of b6 (reverse K16) is therefore not taken. The seats differed on whether *visibility* was owner-reserved, not on what the answer is; it is recorded as council-resolved because the enumerated owner-reserved set contains no row it matches — it lowers no floor, is reversible, creates no external commitment, and is bounded by evidence already in the tree | a consumer-facing measurement shows a visible overlapping neighbour skill degrades routing, at which point the cost is a number rather than a prediction |
+| D14 | reversible-technical | agent | the two neighbour-census caches are IGNORED where they are written, not relocated to `agents/runtime/` where D9 puts the sibling store | `doctor neighbours` writes `neighbour-overlap.json` and `neighbour-scan.json` into TRACKED `agents/reports/`; the overlap cache carries each neighbour skill's absolute path under the user's home directory and the scan cache their whole installed-skill inventory, and no ignore rule covered either. Relocating is the shape D9 implies, but `SCAN_CACHE_RELATIVE` in `_lib/skill_origin.ts` is bundled on the hook path, so a path change is a bundle-ceiling plus cache-invalidation question rather than a bounded fix. Measured both directions: `git check-ignore` exit 1 before and 0 after, with `agents/reports/README.md` still exit 1 so the fix is not over-broad; `check_gitignore_freshness` reds naming the exact path when one block line is deleted | this lane reopens for a reason that already edits `skill_origin.ts` |
+| D15 | reversible-technical | agent | the roadmap stays ACTIVE rather than moving to `later/`, although 100 % of its open work is owner-gated | the `later/` contract requires migrating inbound refs to the new path, and two LIVE `verify:` clauses in `road-to-leading-every-row.md` (`:131`, `:172`) grep this file at its active path, in a roadmap another lane of this same drain is editing concurrently — so the move would break a sibling's exit conditions and collide with a run under way. b6 was also narrowed on 2026-10-06, the same day, which is the opposite of a question that has gone quiet. The cost of staying active is that `/roadmap:process-*` keeps picking a file with nothing agent-doable in it, and that cost is paid by this record rather than hidden | b6 limb 1 is still unanswered at the next drain AND `road-to-leading-every-row` has landed, at which point the inbound refs are stable and the park is cheap |
 | D11 | reversible-technical | agent | `telemetry_usage_hook.ts`'s bundle guard moves from the top of `_isCliEntry` to its call site | measured: inside the function esbuild folds the define to `if (true) return false` and still emits the nine unreachable lines after it — 475 B of dead code in a bundle `check_hook_bundle_composition` caps at 1,550,000. At the call site the statement folds to `if (false)`, which is dropped, and the unreferenced function with it. Behavior outside the bundle is identical: `__AGENT_CONFIG_BUNDLE__` is undeclared there, the first operand short-circuits, and `!__AGENT_CONFIG_BUNDLE__` is never evaluated | esbuild starts eliminating the dead tail on its own, at which point the guard can move back and ~45 other hook files become the same saving |
 
 ## Risk Register
 
-<!-- risk-review: v1 | reviewed: 2026-10-05 | reviewer: claude/lane-neighbours-pull-weight-repriced -->
+<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/lane-neighbours-pull-weight-20261006 -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -533,3 +653,4 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 | 6 | A hook is bound to a slot that cannot supply its input | implementation | Observed, not hypothesised: 3.2's council chose `post_tool_use` without checking that the envelope carries a tool definition, and it does not. A recorder bound there would publish coverage and record nothing. | Decision D2 records the finding and what the slot can carry instead; the step is deferred with its revisit-if rather than bound to a slot that cannot feed it. | Phase 3 — The gate and the fingerprint know a neighbour acted |
 | 7 | A step reads as one answer away from landing when a second, unrelated gate would stop it | implementation | Measured 2026-10-05: an answer to `b6-neighbour-precedence` unblocks 2.1's content and leaves `check_preamble_payload_budget` at exactly its ceiling, where a ten-byte rule file reds the gate. A reader of the `blocked-by` marker alone would plan for one lock. | The phase-level note above Phase 2 prices the second lock with the probe that measured it and names the gate's own two sanctioned exits; the same pattern is applied to option 3 of the blocker, where `concern_count` has a zero allowance. | Phase 2 — One stated order, no detector |
 | 8 | A cost figure in a blocker goes stale and an owner decides on a tree that no longer exists | product | The blocker priced three options against a hook bundle with 170 B of headroom; three days later the measured figure was 41,013 B, which removes bundle bytes as the discriminator entirely. | Both figures are carried in place with the command that produced each, struck rather than overwritten, so the next reader can see which tree each belongs to; the re-run note on 3.3 restates every blocking condition as an executed command with a control. | Phase 3 — The gate and the fingerprint know a neighbour acted |
+| 9 | A lane's own local cache is written into a tracked directory and leaks the consumer's home path | implementation | Observed, not hypothesised: Phase 1 cached `neighbour-overlap.json` and `neighbour-scan.json` under `agents/reports/`, where every other file is a committed report — so the normal act of staging that directory publishes each neighbour skill's absolute path under the user's home directory. The lane's own D9 had already chosen gitignored `agents/runtime/` for the sibling store, so the inconsistency was internal to one lane's output. | Both paths ship in `src/config/gitignore-block.txt` and in the repository `.gitignore`; `check_gitignore_freshness` is the backstop and its sensitivity to exactly these two lines was measured. D14 records why the containment is an ignore entry rather than the relocation D9 implies. | Phase 1 — A route line that says where the skill came from |

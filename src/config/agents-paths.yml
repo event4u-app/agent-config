@@ -267,3 +267,19 @@
   policy: ignored
   writer: Fastify wizard server (POST /api/v1/wizard/state)
   rationale: Step-transition crash-recovery; deleted on wizard finish; local-only
+
+# ---------------------------------------------------------------------------
+# Neighbour census caches
+# ---------------------------------------------------------------------------
+
+- path: /agents/reports/neighbour-overlap.json
+  scope: both
+  policy: ignored
+  writer: agent-config doctor neighbours (audit_skill_overlap cross-root mode)
+  rationale: Cross-root overlap pairs; carries each neighbour skill's ABSOLUTE path under the consumer's home directory
+
+- path: /agents/reports/neighbour-scan.json
+  scope: both
+  policy: ignored
+  writer: agent-config doctor neighbours (skill_origin shape-scan verdicts)
+  rationale: Shape-scan verdicts keyed by the consumer's own installed-skill inventory and per-file digests

@@ -72,6 +72,65 @@ are outside a `## Blockers` section and are not instances.
   distinction the estate gate has no way to express today, so it needs a stated
   reason in whatever change lands it.
 
+## A second mechanism, same failure, found 2026-10-06
+
+The sections above are about a blocker **heading** the parser cannot see. The
+same "a gate that scans nothing exits green" shape arrives through a second
+door, and it is a different regex, so repairing one does nothing for the other.
+
+`lint_roadmap_blockers.ts` resolves inline markers with
+
+```
+BLOCKED_BY_LINE_RE =
+    /^-[ \t]*\[[ xX~-]\].*<!--[ \t]*blocked-by:[ \t]*([a-z0-9-]+)[ \t]*.../i
+```
+
+anchored to the **checkbox line**. A marker written on a continuation line of
+the same step is never matched, and the checker then has nothing to validate
+for that step — the file passes.
+
+Measured instance at `0ea82b2b8`:
+`agents/roadmaps/road-to-neighbours-that-pull-their-weight.md` step 2.1 carries
+`<!-- blocked-by: b6-neighbour-precedence | asked: no — ... -->` on a
+continuation line. `lint_roadmap_blockers` prints a clean verdict for the file
+while three of its steps are held by that blocker.
+
+**The repair is not available in that file, and this is the part worth
+recording.** A scratch copy with the identical marker moved onto the checkbox
+line yields
+
+```
+line 177: blocked-by references unknown blocker id 'b6-neighbour-precedence'
+          (no matching '### blocker: b6-neighbour-precedence' in this file)
+```
+
+because ids resolve **within one file** and `b6-neighbour-precedence` is
+declared in `road-to-leading-every-row.md` — deliberately, since it is a
+programme blocker holding three lanes at once. So for a cross-file blocker the
+two reachable states are *invisible* and *illegal*, and no edit inside the
+affected roadmap reaches a third.
+
+Counting instances of this second mechanism:
+`grep -rEc '^-[ \t]*\[[ xX~-]\].*<!--[ \t]*blocked-by:' agents/roadmaps/*.md
+agents/roadmaps/later/*.md` shows the estate's prevailing convention is the
+marker **before** the bold step title on the checkbox line — which is exactly
+the shape that cannot carry a cross-file id.
+
+### What would close this half
+
+- Decide whether a `blocked-by` id may name a blocker declared in another
+  roadmap. Today the checker says no and the estate's own programme/lane split
+  says yes, and those two cannot both be right. That is a contract question,
+  not a regex one.
+- Until it is decided, make the silent half reportable: a step whose text
+  contains `blocked-by:` outside the matched checkbox line is a finding. That
+  turns the current state from invisible into visible-and-explained without
+  pre-judging the contract question above.
+- Do **not** widen `BLOCKED_BY_LINE_RE` to scan the whole step body first. On a
+  tree where cross-file ids are still rejected, that converts every such marker
+  from a silent gap into a red gate, which is a harder failure than the one it
+  replaces and lands on roadmaps whose owners never chose it.
+
 ## What this stub deliberately does not do
 
 Propose loosening the regex to accept a bare `### <id>`. Every `###` heading

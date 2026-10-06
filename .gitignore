@@ -126,6 +126,21 @@ src/scripts/external_sources_denylist.private.json
 /agents/roadmaps/archive/INDEX.md
 /agents/roadmaps/archive/index.json
 
+# Neighbour-census caches, written by `agent-config doctor neighbours` into the
+# otherwise-TRACKED agents/reports/ directory. neighbour-overlap.json carries
+# each neighbour skill's ABSOLUTE path under the running user's home directory
+# (so, their account name); neighbour-scan.json carries that user's full
+# installed-skill inventory with per-file digests. Every other file in
+# agents/reports/ is a committed report, which is exactly what makes these two
+# easy to stage by accident.
+#
+# Unlike the two entries above this is NOT repository-local: the same two files
+# appear in any consumer tree that runs the command, so the entry also ships in
+# `src/config/gitignore-block.txt`. Neither file has ever been tracked here or
+# in a release, so this ignores them going forward and unstages nothing.
+/agents/reports/neighbour-overlap.json
+/agents/reports/neighbour-scan.json
+
 # Generated Augment Code projection of dist/agent-src/ (rebuilt by `task sync`)
 /.augment/
 
