@@ -252,7 +252,7 @@ export interface RepoReport {
 }
 
 /** The feeder's work alone over an existing repository's graph. Writes nothing. */
-export function benchRepo(opts: { repo: string; edit: string; runs?: number }): RepoReport {
+export function benchRepo(opts: { repo: string; edit: string; runs?: number | undefined }): RepoReport {
     const runs = Math.max(1, opts.runs ?? 30);
     const repo = path.resolve(opts.repo);
     const edit = [path.resolve(repo, opts.edit)];
