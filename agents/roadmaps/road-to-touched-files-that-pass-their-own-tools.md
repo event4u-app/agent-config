@@ -77,21 +77,31 @@ as verification.
 
 ## Phase 2 — Decide from the readings
 
-- [ ] **2.1 One release of shadow readings, published.** Stops with edits, stops with at
+- [x] **2.1 One release of shadow readings, published.** Stops with edits, stops with at
       least one `quality_runs` entry, stops with a non-zero tool verdict, median wall time;
       `skipped:*` entries are counted separately and never as verdicts.
-      BLOCKED on a release carrying the instrumentation — no consumer can have run in
-      `shadow` before it ships, so the three stop-counters are necessarily zero. The page
-      exists with its counters defined and the measured latency median
-      (`agents/evidence/analysis/touched-file-quality-readings-2026-Q4.md`), and states
-      plainly that zero means not-yet-observed rather than observed-to-be-zero. Closing
-      this box needs the window, not another page. Re-read 2026-10-05: the block is now a
-      command rather than a sentence — `git tag --contains d4760bb4f` (the one commit
-      carrying the whole pass) prints nothing, while the same check on `9bc8cd4f` prints
-      `16.2.0`, so the silence is a negative and not a broken command. The newest release
-      is tagged at `9bc8cd4`, which is also this plan's base ref, so it predates the
-      instrumentation outright. Run that command rather than re-deriving this paragraph;
-      the day it names a tag is the day the window opens.
+      The gate command this step named has flipped: `git tag --contains d4760bb4f` prints
+      `16.3.0` (tagged 2026-10-06 00:28 +0200), with `9bc8cd4f` → `16.2.0, 16.3.0` still
+      serving as the control. The window is open and the readings are published at
+      `agents/evidence/analysis/touched-file-quality-readings-2026-Q4.md`.
+      `corrected-from-reproduction` — the oracle was unbuildable as written, and the
+      reading is unflattering in three ways, all published rather than summarised away.
+      (a) The three stop-counters cannot be recovered from the record store in ANY mode:
+      `quality_runs` is written at stop (`before_complete_hook.ts:906`) and deleted at the
+      next turn boundary (`:703-704`) by the very design 1.2 adopted, so the per-session
+      file is an overwritten state record and not an append-only event log. No window
+      length fixes that. (b) The field reading is `0` — 22 session records on this install,
+      3 inside the window, none carrying the key — because the shipped default is `off`
+      and no install opted in; an opt-in feature collects nothing from non-adopters, which
+      makes 2.3 the thing that would unblock the reading 2.3 was waiting for. (c) A replay
+      over 30 real merged commits supplied the decision input instead: 12/30 produced any
+      verdict, 0/30 produced a red (a LOWER bound — merged commits are post-CI-green),
+      `tsc --noEmit` was `unscoped` on all 30, and the median wall time when the pass
+      executes is 3,546 ms against the 243–322 ms the 1.4 bench published for its synthetic
+      fixture — an ~11x gap on the bench's own nearest consumer. Two soundness findings
+      came out of the controls: an eslint-ignored file records `exit_code: 0`, shaped
+      exactly like a pass, with no skip reason covering it; and a real type error records
+      `exit_code: 0` because the only command that catches it is permanently `unscoped`.
       verify: `grep -c 'median' agents/evidence/analysis/touched-file-quality-readings-2026-Q4.md` -> /[1-9]/
 - [x] **2.2 `warn` emits one advisory line naming the command and the file**, capped at
       200 bytes, never a block.
