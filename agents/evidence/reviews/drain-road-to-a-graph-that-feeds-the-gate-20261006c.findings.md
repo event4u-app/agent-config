@@ -1,18 +1,18 @@
 # Findings: drain-road-to-a-graph-that-feeds-the-gate-20261006c
-<!-- completion-review: v1 | reviewed: 2026-10-06 | scope: b95b9b65d0155247ec3617b766b54bbb431a3d4502046313c9805b11abec3d1a | diff: 1ca768b21c266f329a94b847399ce0903d06ba6a | reviewer: r2-fresh-subagent-drain-road-to-a-graph-that-feeds-the-gate-20261006c | prompt_hash: 97eb6e52275518bd1b795b3d6de34e74090fcc24ec317cb907e7f74538568a24 -->
+<!-- completion-review: v1 | reviewed: 2026-10-06 | scope: 936d3f8219f096652f48fef44446304c46134e51a01c9c62c0a8bb312e4f733c | diff: 60b92e5f6e8d344d477f2be2fbe5396e919e0b05 | reviewer: r2-fresh-subagent-drain-road-to-a-graph-that-feeds-the-gate-20261006c | prompt_hash: 002b4e52676e2411d481a67792c4a8c64181c1a9618edd0a03f411903b8f4d21 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-road-to-a-graph-that-feeds-the-gate-20261006c"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-06 -->
 
 <!-- context-manifest: v1
 inputs:
-  diff_sha: 1ca768b21c266f329a94b847399ce0903d06ba6a
-  scope_hash: b95b9b65d0155247ec3617b766b54bbb431a3d4502046313c9805b11abec3d1a
+  diff_sha: 60b92e5f6e8d344d477f2be2fbe5396e919e0b05
+  scope_hash: 936d3f8219f096652f48fef44446304c46134e51a01c9c62c0a8bb312e4f733c
   roadmap: agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
   roadmap_hash: 74c2f0dfd6fe66ad00d933e303d4a7d39ad60261b0f660e95c7829cf00b55ea5
   ac_hash: 416225dbcfd411c82d6adcce236de5dd8e2cc1c28f2c2527109a7786afb65d5f
 excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
-dispatched: 2026-10-06T21:09:47Z
+dispatched: 2026-10-06T21:40:27Z
 -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
