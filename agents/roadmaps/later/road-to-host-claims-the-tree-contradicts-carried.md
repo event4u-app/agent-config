@@ -19,6 +19,14 @@ entry_condition:
     The owner, for the permission grant that makes the channel question
     answerable. Nobody, for the organic witness — it is waited for, not assigned.
 review_by: 2027-01-06
+estate_growth_exempt: >-
+  `open_blockers` rises by one because step 2.4's hold was discovered while
+  doing the work and is now written down instead of left implicit in prose. The
+  alternative to the entry is not a smaller estate, it is the same hold recorded
+  nowhere a gate can count — which is the laundering this carried file exists to
+  prevent. Nothing was archived to offset it because nothing in this change
+  finished; the roadmap moves from the active tree into `later/`, so
+  `active_roadmaps` falls by one in the same diff.
 ---
 # Road to host claims the tree contradicts — carried
 
