@@ -145,8 +145,14 @@ export function markdown(modules: readonly ModuleFact[], roadmapsAvailable: bool
     );
     lines.push('');
 
-    for (const m of unreferenced) {
-        lines.push(`reading: ${m.relPath}`);
+    // Phase 2.1: one `reading:` line per fourth-group module — never the
+    // whole unreferenced set, which also holds groups 1-3 that Phase 2
+    // explicitly leaves untouched. The content here is a placeholder; the
+    // real verdict (test-carried / helper-never-connected / only-caller-is-
+    // its-own-test) is a judgement call a re-run of this script cannot make,
+    // and is filled in by hand after reading each module and its test.
+    for (const m of byGroup('named-in-none')) {
+        lines.push(`reading: ${m.relPath} — TODO: read the module and its test, then state the verdict`);
     }
 
     return lines.join('\n');

@@ -50,6 +50,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
 import { resolveBaseRef } from './_lib/ratchet_base_ref.js';
+import { parseExecutionMode } from './_lib/repeated_run.js';
 import { reportScanned } from './_lib/scan_scope.js';
 import { parseHonestNull, parseMarkerLine, parseSkipDeclaration } from './check_completion_review.js';
 
@@ -255,6 +256,14 @@ export function checkFiles(root: string, files: readonly string[], ledger?: Gate
                     'no evidence type declared — add `<!-- evidence-type: analysis -->` ' +
                     '(or the type that fits) per docs/contracts/evidence-artifact-types.md',
             });
+            continue;
+        }
+        // The contract's second axis (repeated-run / flaky), orthogonal to the
+        // type marker above — any artifact may declare it.
+        const mode = parseExecutionMode(contents);
+        if (mode.kind === 'invalid') {
+            ledger?.fail(rel, `invalid evidence-mode: ${mode.reason}`);
+            findings.push({ file: rel, reason: `evidence-mode: ${mode.reason}` });
             continue;
         }
         ledger?.complete(rel);

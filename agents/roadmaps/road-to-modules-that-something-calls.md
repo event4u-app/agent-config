@@ -148,7 +148,7 @@ This phase acts on the 25 that no production file names, and within them on
 the fourth group — ten modules at the pin. The other 32 of the wider set are
 reported and counted, and nothing here moves or deletes one.
 
-- [ ] **2.1 Each one is read before anything is removed.** For every module in
+- [x] **2.1 Each one is read before anything is removed.** For every module in
       the fourth group, the page gains one line stating what a reading of the
       module and of its tests found: a test-carried check that belongs beside
       its test; a helper with a production use that was never connected; or

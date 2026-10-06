@@ -1,7 +1,7 @@
 <!-- evidence-type: analysis -->
 # Module reach — 2026-10
 
-Command: `npx tsx src/scripts/report_module_reach.ts --markdown`. 352 module(s) directly under `src/scripts/_lib/`, 25 named in no file outside themselves and their own tests, 57 reached by nothing via import edges or run-by-path.
+Command: `npx tsx src/scripts/report_module_reach.ts --markdown`. 352 module(s) directly under `src/scripts/_lib/`, 23 named in no file outside themselves and their own tests, 55 reached by nothing via import edges or run-by-path.
 
 ## Group 1 — imported by a contract test
 
@@ -42,10 +42,8 @@ Command: `npx tsx src/scripts/report_module_reach.ts --markdown`. 352 module(s) 
 | src/scripts/_lib/eval_discrimination.ts | 96 | 1 |
 | src/scripts/_lib/file_slicer.ts | 118 | 1 |
 | src/scripts/_lib/legacy_boundary_map.ts | 229 | 1 |
-| src/scripts/_lib/md_section.ts | 130 | 1 |
 | src/scripts/_lib/minimality_tiebreak.ts | 169 | 2 |
 | src/scripts/_lib/overbuild_lens_contract.ts | 197 | 2 |
-| src/scripts/_lib/repeated_run.ts | 78 | 1 |
 | src/scripts/_lib/role_split.ts | 339 | 1 |
 
 ## Every module under `_lib` — full facts
@@ -237,7 +235,7 @@ Command: `npx tsx src/scripts/report_module_reach.ts --markdown`. 352 module(s) 
 | src/scripts/_lib/mcp_bridge.ts | 412 | 4 | yes | no | src/config/continuity-surface.json | yes |
 | src/scripts/_lib/mcp_consent_residual.ts | 174 | 1 | yes | no | — | yes |
 | src/scripts/_lib/md_prose_lines.ts | 178 | 0 | yes | no | — | yes |
-| src/scripts/_lib/md_section.ts | 130 | 1 | no | no | — | no |
+| src/scripts/_lib/md_section.ts | 130 | 2 | yes | no | — | yes |
 | src/scripts/_lib/md_table.ts | 28 | 1 | yes | no | — | yes |
 | src/scripts/_lib/measured_payload_ceiling.ts | 425 | 1 | yes | no | src/config/preamble-payload-budget.json, src/config/preamble-payload-exceptions.json | yes |
 | src/scripts/_lib/measured_render.ts | 98 | 1 | yes | no | — | yes |
@@ -295,7 +293,7 @@ Command: `npx tsx src/scripts/report_module_reach.ts --markdown`. 352 module(s) 
 | src/scripts/_lib/release_scope.ts | 208 | 1 | yes | no | — | yes |
 | src/scripts/_lib/release_tag_dispatch.ts | 64 | 0 | yes | no | src/config/gate-violation-baselines.json | yes |
 | src/scripts/_lib/repeated_failure.ts | 123 | 1 | yes | no | src/config/metric-registry.yml | no |
-| src/scripts/_lib/repeated_run.ts | 78 | 1 | no | no | — | no |
+| src/scripts/_lib/repeated_run.ts | 78 | 2 | yes | no | — | yes |
 | src/scripts/_lib/repo_root.ts | 112 | 6 | yes | no | — | yes |
 | src/scripts/_lib/reserved_name_sweep.ts | 74 | 1 | yes | no | — | yes |
 | src/scripts/_lib/retired_status.ts | 75 | 1 | yes | no | — | yes |
@@ -340,7 +338,7 @@ Command: `npx tsx src/scripts/report_module_reach.ts --markdown`. 352 module(s) 
 | src/scripts/_lib/skill_catalogue.ts | 1317 | 3 | yes | yes | src/config/estate-count-budget.json | yes |
 | src/scripts/_lib/skill_catalogue_series.ts | 503 | 0 | yes | no | — | yes |
 | src/scripts/_lib/skill_estate.ts | 116 | 1 | yes | no | src/config/estate-count-budget.json | yes |
-| src/scripts/_lib/skill_origin.ts | 255 | 1 | yes | no | — | yes |
+| src/scripts/_lib/skill_origin.ts | 255 | 1 | yes | no | src/config/agents-paths.yml | yes |
 | src/scripts/_lib/source_digest.ts | 201 | 1 | yes | yes | — | yes |
 | src/scripts/_lib/source_redact.ts | 261 | 1 | yes | no | — | yes |
 | src/scripts/_lib/source_shape.ts | 503 | 5 | yes | no | — | yes |
@@ -405,28 +403,67 @@ Command: `npx tsx src/scripts/report_module_reach.ts --markdown`. 352 module(s) 
 | src/scripts/_lib/worker_budget.ts | 143 | 3 | yes | no | — | no |
 | src/scripts/_lib/zip_min.ts | 176 | 2 | yes | no | — | yes |
 
-reading: src/scripts/_lib/adherence_detectors.ts
-reading: src/scripts/_lib/authority_path.ts
-reading: src/scripts/_lib/candidate_pair_delta.ts
-reading: src/scripts/_lib/cascade_base.ts
-reading: src/scripts/_lib/catalogue_layer_parity.ts
-reading: src/scripts/_lib/config_chain.ts
-reading: src/scripts/_lib/conformance_report.ts
-reading: src/scripts/_lib/council_transport.ts
-reading: src/scripts/_lib/delivery_ready.ts
-reading: src/scripts/_lib/eval_discrimination.ts
-reading: src/scripts/_lib/experience_card.ts
-reading: src/scripts/_lib/experience_report.ts
-reading: src/scripts/_lib/file_slicer.ts
-reading: src/scripts/_lib/legacy_boundary_map.ts
-reading: src/scripts/_lib/md_section.ts
-reading: src/scripts/_lib/minimality_tiebreak.ts
-reading: src/scripts/_lib/overbuild_lens_contract.ts
-reading: src/scripts/_lib/repeated_run.ts
-reading: src/scripts/_lib/rides_along.ts
-reading: src/scripts/_lib/role_split.ts
-reading: src/scripts/_lib/self_repair_class_b.ts
-reading: src/scripts/_lib/test_provenance.ts
-reading: src/scripts/_lib/trigger_shift.ts
-reading: src/scripts/_lib/typed_op_grant.ts
-reading: src/scripts/_lib/typed_op_watch.ts
+reading: config_chain — a helper with a real intended use (`standards-from-config`
+resolves a project's `extends`/`includes` chain through it), but no script exists
+yet that invokes it; the skill that needs it is prose-only, and a knowledge-ingest
+sibling pipeline (`src/cli/python/knowledge_ingest.ts`) that could plausibly
+have grown into its caller instead built its own, unrelated chunking function —
+no half-built consumer to finish, only a documented need with nothing reaching
+for it. Checked for a real call site before deciding this; found none. Its only
+demonstrated value today is what its own test proves.
+
+reading: conformance_report — a design-fidelity dimension scorer (structure /
+values / behaviour / responsive / icons / carrier) used correctly by
+`tolerance_shadow.test.ts` as a real dependency, but never invoked by a live
+design-review script; `design-review`'s own Fidelity-proof chapter names the
+need this fills without naming a script that calls it, and no `judge-on-diff`
+or bench script reaches for it either. Its only demonstrated value today is
+what its own test (plus its legitimate second consumer, `tolerance_shadow`'s
+test) proves.
+
+reading: eval_discrimination — pure, dependency-free scoring of an eval's own
+negative controls (gross/subtle), built for the archived
+`road-to-operator-runtime-harvest` T-003/T-006 one-time parity smoke. That
+smoke already ran and its result is captured in
+`agents/evidence/cross-model-baseline.md`; there is no recurring pipeline left
+to call this again. Its only demonstrated, current value is what its own test
+proves — code whose only caller is its own unit test, in substance even though
+a second file (the smoke's evidence capture) once read its output by hand.
+
+reading: file_slicer — a deterministic, invariant-checked document slicer
+built for `road-to-retrieval-substrate-hardening` B8 (archived). The one live
+ingest pipeline in the tree, `src/cli/python/knowledge_ingest.ts`, chunks
+documents through its own `chunk_text` instead — a different pipeline than the
+one this module was built for, so there is no existing call to extend, only a
+parallel implementation already doing the job this one never got to do. Its
+only demonstrated value today is what its own test proves.
+
+reading: legacy_boundary_map — a per-path, per-region legacy/modern convention
+classifier built for `road-to-consumer-repo-reality` Phase 4 step 4.1
+(archived). No script or skill currently calls `classifyPath`/`conventionAt`;
+the decision-support role it was built for (telling an editor which convention
+governs an edit) has no caller today. Its only demonstrated value today is
+what its own test proves.
+
+reading: minimality_tiebreak — the four-criterion tie-break from decision E5
+(`road-to-governed-harness-evolution` Phase 4 step 4.5, archived), referenced
+by path (not imported) from `tests/scripts/evaluation_vector.test.ts`. The
+candidate-selection pipeline E5 was decided for does not exist as runnable
+code. Its only demonstrated value today is what its own test proves — the
+order is pinned, the arity is pinned, nothing calls it.
+
+reading: overbuild_lens_contract — a dependency-free output-contract parser
+and scorer for `overbuild-review-lens`'s own stated grammar; its sibling
+fixture directory (`tests/fixtures/overbuild-lens/README.md`) explicitly
+documents the split between what this checks mechanically and what still
+needs "a scored eval run" the tree does not yet have. This is eval-grading
+machinery proven by its own test, not a production runtime component — a
+test-carried check that belongs beside its test.
+
+reading: role_split — the analyzer/curator/proposer prompt-builder and
+outcome-blind judge contract from `road-to-governed-harness-evolution` Phase 5
+step 5.3 (archived). It imports three live `_lib` siblings
+(`curator_ops.ts` — reached; `evaluator_promotion.ts`, `judge_hygiene.ts` — not
+reached either), but no orchestration script assembling the three-role
+pipeline exists in the current tree. Its only demonstrated value today is what
+its own test proves.

@@ -272,12 +272,16 @@ describe('the human and markdown renderers', () => {
         expect(out).toContain('named in no live roadmap');
     });
 
-    it('markdown() carries the evidence-type marker and a reading: line per unreferenced module', () => {
+    it('markdown() carries the evidence-type marker and a reading: line per FOURTH-GROUP module only', () => {
+        // Phase 2.1 reads only the fourth group (named in no live roadmap) —
+        // groups 1-3 are reported and counted but left untouched (Phase 2's
+        // own scope note), so a reading: line per group 1-3 module would
+        // overstate what this phase acted on.
         const { modules, roadmapsAvailable } = analyseModuleReach(REPO);
         const out = markdown(modules, roadmapsAvailable);
         expect(out).toContain('<!-- evidence-type: analysis -->');
-        const unreferencedCount = modules.filter((m) => !m.namedByProduction).length;
+        const fourthGroupCount = modules.filter((m) => m.group === 'named-in-none').length;
         const readingLines = out.split('\n').filter((l) => l.startsWith('reading:'));
-        expect(readingLines.length).toBe(unreferencedCount);
+        expect(readingLines.length).toBe(fourthGroupCount);
     });
 });
