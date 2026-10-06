@@ -168,7 +168,7 @@ reported and counted, and nothing here moves or deletes one.
       of that roadmap is edited.
       verify: `grep -c 'module-reach-2026-10' agents/roadmaps/road-to-adversarial-verification-and-long-runs.md` -> /^[1-9]/
 
-- [ ] **2.4 A registry row does not rest on a module nothing calls.** The
+- [x] **2.4 A registry row does not rest on a module nothing calls.** The
       report lists every row of a capability or assurance registry under
       `src/config/` whose evidence names an unreached module. At `df377ca64`
       that is one row. `test-red-evidence` becomes `degraded`, with a

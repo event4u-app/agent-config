@@ -46,6 +46,16 @@ Command: `npx tsx src/scripts/report_module_reach.ts --markdown`. 352 module(s) 
 | src/scripts/_lib/overbuild_lens_contract.ts | 197 | 2 |
 | src/scripts/_lib/role_split.ts | 339 | 1 |
 
+## Registry rows resting on an unreached module
+
+One row under `src/config/` declared a capability `available` on the strength
+of a module nothing calls: `assurance-capability-registry.json`'s
+`test-red-evidence`, evidenced by `src/scripts/_lib/test_red_state.ts` (not
+one of the ten above — it is `named by production` via the registry and the
+claims ledger, so name occurrence alone would have missed it; the gap is that
+its production CALLER, not its name, does not exist). Corrected to `degraded`
+2026-10-06, with the limitation and the stub that owns the caller.
+
 ## Every module under `_lib` — full facts
 
 | module | lines | importing tests | named by production | has entry point | registry | reached |
