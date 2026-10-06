@@ -1,6 +1,6 @@
 /**
  * Tests for evaluator promotion
- * (`src/scripts/_lib/evaluator_promotion.ts`,
+ * (`./evaluator_promotion.ts`,
  * road-to-governed-harness-evolution step 4.7).
  *
  * The step's verify clause has two conjuncts and both are refusals, so both are
@@ -19,7 +19,7 @@ import {
     type CrossGrade,
     type EvaluatorChange,
     type PlantOutcome,
-} from '../../src/scripts/_lib/evaluator_promotion.js';
+} from './evaluator_promotion.js';
 
 const FROZEN = { id: 'frozen-set-2026-08-31', candidate_ids: ['c1', 'c2', 'c3'] };
 

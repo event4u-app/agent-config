@@ -405,7 +405,7 @@
             "axis": "persistent_continuity_artefacts",
             "disposition": "excluded",
             "locus": "src/scripts/_lib/test_red_state.ts:2",
-            "reason": "Last test-run red state. No production code currently writes or reads it — only this module's own unit test exercises the store; the caller that would wire it is tracked separately."
+            "reason": "Last test-run red state. No production code currently writes or reads it — only this module's own unit test exercises the store; the registry row for this instrument (assurance-capability-registry.json, test-red-evidence) was corrected to degraded on 2026-10-06 for the same reason."
         },
         {
             "id": "tool-result-census.jsonl",

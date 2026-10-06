@@ -54,10 +54,14 @@
  * `evaluator_promotion.assertEvaluatorPromotable`, so a judge-contract change
  * inherits the cross-grade and discrimination-plant requirements step 4.7
  * already built rather than getting a second, weaker gate of its own.
+ *
+ * Moved beside its test: no orchestration script assembling the three-role
+ * pipeline exists in the current tree, so its only demonstrated value today is
+ * what this file's own test already proves.
  */
-import { CURATOR_OPS } from './curator_ops.js';
+import { CURATOR_OPS } from '../../src/scripts/_lib/curator_ops.js';
 import { assertEvaluatorPromotable, type EvaluatorChange } from './evaluator_promotion.js';
-import { classifyOverfit } from './judge_hygiene.js';
+import { classifyOverfit } from '../../src/scripts/_lib/judge_hygiene.js';
 
 /** The three roles. The judge is deliberately NOT one of them — it is optional. */
 export const ROLES = ['analyzer', 'curator', 'proposer'] as const;

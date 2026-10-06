@@ -74,6 +74,15 @@ describe('census parsing is strict, because a silently shorter table is a false 
             'cowork',
         ]);
     });
+
+    it('refuses rather than silently picking the first match when the heading repeats', () => {
+        // The measured failure `_lib/md_section.ts` exists to stop: an EARLIER
+        // occurrence of the same heading line used to be indistinguishable
+        // from the real one under a plain `indexOf`, which always takes the
+        // first match.
+        const duplicated = `## Per host\n\n(an earlier, unrelated section with the same title)\n\n${CENSUS}`;
+        expect(() => parseCensus(duplicated)).toThrow(/ambiguous/);
+    });
 });
 
 describe('the pin, without which the census is not evidence', () => {

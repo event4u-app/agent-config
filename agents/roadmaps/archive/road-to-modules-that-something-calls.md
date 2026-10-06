@@ -123,7 +123,7 @@ At `df377ca64`:
 
 ## Phase 1 — The census, in four groups
 
-- [ ] **1.1 A report, not a gate.** A `report_` script lists every module
+- [x] **1.1 A report, not a gate.** A `report_` script lists every module
       directly under `_lib` that no non-test code imports and no task,
       workflow or dispatcher runs by path — `src/scripts/_dispatch.bash`
       included, without which the count is 58 instead of 57. Per module it prints the line
@@ -136,7 +136,7 @@ At `df377ca64`:
       it there. It skips the roadmap groups when `agents/roadmaps/` is absent,
       as it is in the published package. It exits 0.
       verify: `npx vitest run tests/scripts/report_module_reach.test.ts` -> 0
-- [ ] **1.2 The reading is a page.** Run it and write the four tables and the
+- [x] **1.2 The reading is a page.** Run it and write the four tables and the
       list of the wider set with its marks, with the command, to
       `agents/evidence/analysis/module-reach-2026-10.md`, carrying its
       `evidence-type` marker.
@@ -148,27 +148,27 @@ This phase acts on the 25 that no production file names, and within them on
 the fourth group — ten modules at the pin. The other 32 of the wider set are
 reported and counted, and nothing here moves or deletes one.
 
-- [ ] **2.1 Each one is read before anything is removed.** For every module in
+- [x] **2.1 Each one is read before anything is removed.** For every module in
       the fourth group, the page gains one line stating what a reading of the
       module and of its tests found: a test-carried check that belongs beside
       its test; a helper with a production use that was never connected; or
       code whose only caller is its own unit test. Each line begins with the
       word `reading:` and the module's name.
       verify: `grep -c '^reading:' agents/evidence/analysis/module-reach-2026-10.md` -> /^[1-9]/
-- [ ] **2.2 The reading is acted on, one module per commit.** A test-carried
+- [x] **2.2 The reading is acted on, one module per commit.** A test-carried
       check moves under `tests/` with the suite that uses it. A helper with a
       real use gains its consumer. Code whose only caller is its own unit test
       is deleted with that test. After the step, the report's fourth group is
       empty.
       verify: `npx vitest run tests/scripts/module_reach_fourth_group_empty.test.ts` -> 0
-- [ ] **2.3 The third group is handed to its owner, not decided.** The page
+- [x] **2.3 The third group is handed to its owner, not decided.** The page
       lists, for each module named outside any open step, the ticked step that
       landed it. One dated note under the acceptance criteria of the roadmap
       that names seven of them names the page. No step, criterion or decision
       of that roadmap is edited.
       verify: `grep -c 'module-reach-2026-10' agents/roadmaps/road-to-adversarial-verification-and-long-runs.md` -> /^[1-9]/
 
-- [ ] **2.4 A registry row does not rest on a module nothing calls.** The
+- [x] **2.4 A registry row does not rest on a module nothing calls.** The
       report lists every row of a capability or assurance registry under
       `src/config/` whose evidence names an unreached module. At `df377ca64`
       that is one row. `test-red-evidence` becomes `degraded`, with a
@@ -185,7 +185,7 @@ reported and counted, and nothing here moves or deletes one.
 
 ## Phase 3 — The counts are in front of every change
 
-- [ ] **3.1 Five numbers on each gate run, enforcing nothing.**
+- [x] **3.1 Five numbers on each gate run, enforcing nothing.**
       `check_gate_reachability` prints the four group counts and the total of
       modules reached by nothing, from the report's library, beside its
       existing verdicts, marked as reported and not gated, the way the estate
@@ -207,16 +207,16 @@ reported and counted, and nothing here moves or deletes one.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — One command prints, for every unreferenced module, its group and
+- [x] AC-1 — One command prints, for every unreferenced module, its group and
       the test, step or file that puts it there.
-- [ ] AC-2 — No unreferenced module is named in no live roadmap.
-- [ ] AC-3 — The gate's output carries the five counts; a fixture module with
+- [x] AC-2 — No unreferenced module is named in no live roadmap.
+- [x] AC-3 — The gate's output carries the five counts; a fixture module with
       a test and no consumer changes the fourth and the total, one that a
       comment mentions changes the total only, and neither changes the exit
       code.
-- [ ] AC-4 — The count of gate scripts, and of rows in
+- [x] AC-4 — The count of gate scripts, and of rows in
       `src/config/gate-reachability-exemptions.json`, is unchanged.
-- [ ] AC-5 — No registry row under `src/config/` states a capability as
+- [x] AC-5 — No registry row under `src/config/` states a capability as
       available whose evidence is a module no production code imports.
 
 ## Decisions

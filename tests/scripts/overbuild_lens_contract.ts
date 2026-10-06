@@ -10,6 +10,11 @@
  *
  * Deliberately dependency-free and side-effect-free: parse a string, return a
  * verdict. Nothing reads the filesystem or the network.
+ *
+ * Moved beside its test and its fixture directory: this is eval-grading
+ * machinery, not a production runtime component, and its own header already
+ * says the live-model half it does not cover needs a harness this tree does
+ * not yet have.
  */
 
 /** The six tags the lens may emit. Anything else is a contract violation. */

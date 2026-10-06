@@ -4,7 +4,7 @@ import {
     computeDiscrimination,
     controlCaughtFromAssertions,
     type NegativeControl,
-} from '../../src/scripts/_lib/eval_discrimination.js';
+} from './eval_discrimination.js';
 
 describe('controlCaughtFromAssertions', () => {
     it('caught when any assertion explicitly failed', () => {

@@ -10,6 +10,11 @@
  * This module is that emission, so the registry entry moves in the same change
  * rather than being left describing a gap that closed.
  *
+ * DATED 2026-10-06. The emission exists and is tested, but nothing calls it:
+ * this writer has no production caller, so the registry row was corrected back
+ * to `degraded` the same day. The caller belongs to the stub that owns it —
+ * whoever lands it sets the row back to `available`.
+ *
  * WHAT IT IS NOT. It is not a test runner, and it does not decide whether a
  * failure is a legitimate RED. The failure CLASSES belong to the TDD skill
  * (`src/skills/test-driven-development/SKILL.md`, Test-Red row) and this module

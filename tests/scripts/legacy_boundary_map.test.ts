@@ -1,4 +1,4 @@
-// Tests for src/scripts/_lib/legacy_boundary_map.ts —
+// Tests for ./legacy_boundary_map.ts —
 // road-to-consumer-repo-reality Phase 4 (4.1).
 //
 // The step's verify has three clauses and each is a test below: every path gets
@@ -8,7 +8,7 @@
 // verdict that says only 'mixed' leaves the caller exactly where it started."
 import { describe, expect, it } from 'vitest';
 
-import { classifyText, conventionAt } from '../../src/scripts/_lib/legacy_boundary_map.js';
+import { classifyText, conventionAt } from './legacy_boundary_map.js';
 
 const MODERN = `<?php
 

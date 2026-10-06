@@ -24,7 +24,7 @@ import {
     parseLensOutput,
     scoreAgainstExpected,
     type ExpectedLabels,
-} from '../../src/scripts/_lib/overbuild_lens_contract.js';
+} from './overbuild_lens_contract.js';
 
 const _HERE = fileURLToPath(import.meta.url);
 const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');

@@ -14,6 +14,12 @@
  *      its `[startLine, endLine)` range, so a chunk can point home.
  *
  * Deterministic: identical input + budget → identical slices.
+ *
+ * Moved beside its test: the ingest pipeline it was built for never
+ * materialized past the archived roadmap that scoped it, and the one live
+ * ingest path in the tree (`src/cli/python/knowledge_ingest.ts`) built its own
+ * chunking instead. Its only demonstrated value today is what its own test
+ * already proves.
  */
 
 export interface Slice {
