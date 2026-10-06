@@ -253,17 +253,17 @@ At `df377ca64`:
 
 ## Phase 4 — Spend is recorded with or without a ceiling
 
-- [ ] **4.1 The suite stops writing to the real ledger.** The suite's setup
+- [x] **4.1 The suite stops writing to the real ledger.** The suite's setup
       file points the user-global configuration home, which the ledger path
       already follows, at a temporary directory before anything imports it,
       and one test fails if a run under test appends outside it. No line is
       added to the orchestrator. This lands before 4.2.
       verify: `npx vitest run tests/scripts/ai_council/ledger_is_hermetic.test.ts` -> 0
-- [ ] **4.2 The ledger does not wait for a limit.** The orchestrator appends
+- [x] **4.2 The ledger does not wait for a limit.** The orchestrator appends
       each billable response whether or not a daily limit is set; the limit
       decides only whether the total is compared.
       verify: `npx vitest run tests/scripts/ai_council/ledger_without_limit.test.ts` -> 0
-- [ ] **4.3 A default ceiling cannot come back unnoticed.** One test builds
+- [x] **4.3 A default ceiling cannot come back unnoticed.** One test builds
       the budget the way the command does for a council file with no
       `cost_budget` block and asserts: no breach for a large estimate, an `ok`
       gate verdict with no caps, a ledger line after a billable response, and
@@ -327,17 +327,17 @@ At `df377ca64`:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — With a council file that has no `cost_budget` block, a run with a
+- [x] AC-1 — With a council file that has no `cost_budget` block, a run with a
       billable seat proceeds without a question and without a breach, and its
       spend is in the ledger afterwards.
-- [ ] AC-2 — Each documented cap, set alone, produces the breach its contract
+- [x] AC-2 — Each documented cap, set alone, produces the breach its contract
       describes; set to zero, it produces none.
-- [ ] AC-3 — No shipped command, skill or context file states a USD figure as
+- [x] AC-3 — No shipped command, skill or context file states a USD figure as
       an approval threshold.
-- [ ] AC-4 — The decision record is accepted, names the clauses it supersedes
+- [x] AC-4 — The decision record is accepted, names the clauses it supersedes
       and the controls that stay, and the superseded records point to it.
-- [ ] AC-5 — No test run appends to a ledger outside a temporary directory.
-- [ ] AC-6 — With a budget configured and `hard-stop` set, the preflight
+- [x] AC-5 — No test run appends to a ledger outside a temporary directory.
+- [x] AC-6 — With a budget configured and `hard-stop` set, the preflight
       exits non-zero when the budget is spent, from any working directory.
 
 ## Decisions

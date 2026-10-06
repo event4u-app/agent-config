@@ -44,3 +44,35 @@ export const NEUTRALISED_LOCALE_VARS = ['LC_ALL', 'LC_MESSAGES', 'LANG', 'LANGUA
 for (const name of NEUTRALISED_LOCALE_VARS) {
     delete process.env[name];
 }
+
+// Same shape as the locale problem above, different variable. The council
+// spend ledger resolves its path from the user-global configuration home ONCE,
+// at import time (`budget_guard.ts`'s `LEDGER_PATH` is a module constant), and
+// nothing pinned that home — so a test exercising a billable seat appended to
+// the developer's REAL ledger, recording test traffic as spend.
+//
+// Pinned here rather than in a `beforeEach`: this file is a `setupFiles`
+// entry, which is the only window that precedes a module-level constant.
+//
+// Set rather than deleted — deleting it falls back to `~/.event4u/
+// agent-config/`, the real home this exists to avoid. One directory per worker
+// process, so parallel shards never share a ledger.
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
+/** The variable `user_global_paths.event4u_root()` honours first. */
+export const CONFIG_HOME_VAR = 'EVENT4U_CONFIG_HOME';
+
+/**
+ * The temporary configuration home this process is pinned to.
+ *
+ * Exported so a test can assert that a write landed INSIDE it — the only way
+ * to tell "the ledger was not written" from "the ledger was written somewhere
+ * else".
+ */
+export const HERMETIC_CONFIG_HOME: string = fs.mkdtempSync(
+    path.join(fs.realpathSync(os.tmpdir()), `agent-config-home-${String(process.pid)}-`),
+);
+
+process.env[CONFIG_HOME_VAR] = HERMETIC_CONFIG_HOME;

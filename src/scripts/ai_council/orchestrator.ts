@@ -802,9 +802,9 @@ function _run_round(
             );
             actual_usd = _total_usd(actual);
             spent.usd += _total_usd(actual);
-            // Persist to the rolling 24h ledger when the daily cap is
-            // active. Errors are swallowed inside record_spend.
-            if (budget.daily_limit_usd > 0 && !response.error) {
+            // Ledger every billable response, bounded or not (ADR-279): a cap
+            // decides whether the total is compared, never whether it is kept.
+            if (!response.error) {
                 _record_daily_spend(_total_usd(actual), effective.name, effective.model, {
                     cache_read_input_tokens: response.cache_read_input_tokens,
                     cache_creation_input_tokens: response.cache_creation_input_tokens,

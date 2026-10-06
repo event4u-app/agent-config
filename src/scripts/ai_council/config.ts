@@ -291,8 +291,8 @@ export interface CostBudgetConfig {
     readonly max_output_tokens: number;
     readonly max_calls: number;
     readonly max_total_usd: number;
-    /** Rolling 24h cap. 0 disables it — and disabling it also disables the spend
-     * ledger, since the orchestrator only appends an entry while a cap is live. */
+    /** Rolling 24h cap. 0 disables it. The spend ledger is written either way
+     * (ADR-279); this value decides only whether the total is compared. */
     readonly daily_limit_usd: number;
 }
 

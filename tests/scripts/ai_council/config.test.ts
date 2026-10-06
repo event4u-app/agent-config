@@ -645,12 +645,16 @@ lenses:
       enabled: false
 `;
 
-describe('cost_budget.daily_limit_usd — the rolling 24h cap (and the ledger switch)', () => {
+describe('cost_budget.daily_limit_usd — the rolling 24h cap', () => {
     // The field existed on CostBudget and gated the spend-ledger append, but no
     // caller ever passed it and the typed parse dropped the key — so the ledger
     // could not be written at all while an archived acceptance criterion claimed
     // otherwise. These pin the whole chain: raw YAML -> typed config -> validation.
-    it('defaults to 0, which keeps both the cap and the ledger off', () => {
+    //
+    // It is no longer "the ledger switch": ADR-279 made the orchestrator append
+    // for every billable response, bounded or not, so this value decides only
+    // whether the recorded total is COMPARED.
+    it('defaults to 0, which disables the cap', () => {
         const tmp = make_tmp();
         const c = cfg.load_council_config(write_yaml(tmp, MINIMAL_VALID));
         expect(c.cost_budget.daily_limit_usd).toBe(0);
