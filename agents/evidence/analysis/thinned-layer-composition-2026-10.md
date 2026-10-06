@@ -199,12 +199,22 @@ Form terms after the change, within the stubs' 48,786 characters:
 | marker | 4,183 | 2,403 |
 | `Fires on:` label | 1,044 | 1,044 |
 | trigger hint | 4,808 | 4,808 |
-| pointer | 17,356 | 15,039 |
-| description | 23,353 | 23,311 |
+| pointer | 17,356 | 14,997 |
+| description | 23,353 | 23,353 |
 
-Of the pointer's remaining 15,039, **12,371 is still the package-root prefix** —
-82 % of it, and untouchable from here: moving it is decision D5, behind the
+Of the pointer's remaining 14,997, **12,371 is still the package-root prefix** —
+82.5 % of it, and untouchable from here: moving it is decision D5, behind the
 open install-layout blocker.
+
+**The description column is byte-identical, and that is the check.** No
+description was edited, so a form change that moved it would be a measurement
+error rather than a saving. The first draft of this table reported it moving by
+42 characters, from a probe whose pointer pattern ended in `\s*$` and therefore
+swallowed the trailing newline on each of the 89 stubs. The figures above are
+from the construction instead — `Body: ` + prefix + id + `.md` — which
+reconciles exactly: 17,356 − 14,997 = 2,359 = 6 × 89 + 1,825, the link syntax
+plus the 89 rule ids the old pointer wrote a second time, and the six remaining
+terms then sum to 48,786 with the description unchanged.
 
 ### The expectation this reproduces, once the root is normalised
 
