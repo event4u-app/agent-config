@@ -18,7 +18,7 @@ re-deriving one.
 
 | # | Held object | Arrivals | Question already posed there |
 |---|---|---|---|
-| 1 | `stubs/road-to-opencode-runtime-probe.md` | 14 | Run the probe on a machine with a running opencode, or park the stub in `later/` with a dated wake? |
+| 1 | `later/road-to-opencode-runtime-probe.md` (was `stubs/`) | 14 | Answered 2026-10-06: parked in `later/` with a wake on 2026-12-24 or the day a machine with opencode exists. |
 | 2 | `road-to-adversarial-verification-and-long-runs.md` (auto-merge) | 3 | Keep `allow_auto_merge: true` per ADR-268 § 3, or set it `false` and amend § 3? |
 | 3 | `stubs/road-to-consumer-capability-share.md` | 7 | The consumer-value budget question; the published 16.3.0 mix (23 vs 1) does not reproduce (83 vs 3). |
 | 4 | `later/road-to-release-finding-ordering.md` | 5 | Authorise one synthetic `release/*` PR, move `review_by`, or cancel AC-2. |
@@ -49,8 +49,11 @@ Ten roadmaps, each `status: ready` (the tenth, `road-to-installed-links-of-every
 | `road-to-blocking-time-by-cause` | Blocking share 0.62 to 0.89 with no cause per long call. |
 | `road-to-enforcement-per-obligation` | `enforced_by` is rule-level and over-credits rules with one gated clause. Council-first. |
 
-Steps added to existing roadmaps: `road-to-an-installed-layer-that-is-thinned`
-2.5 (a default install receives bodies twice) and 2.6 (pending reinstall);
+Steps added to existing roadmaps: two installed-layer steps (a default install
+receives bodies twice; pending reinstall) first landed as 2.5 and 2.6 of
+`road-to-an-installed-layer-that-is-thinned` and moved the same day to
+`road-to-a-default-install-served-once`, because that file's same-day review
+stamp could not carry them;
 `road-to-a-graph-that-feeds-the-gate` 3.5 (feeder latency before 3.4);
 `later/road-to-learning-you-can-see-carried` 2.4 (the GUI toggle is inert).
 Links from every installed kind landed as their own roadmap,
