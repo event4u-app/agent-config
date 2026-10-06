@@ -529,6 +529,34 @@ asserted: what a consumer stands under does not grow when a routed rule's prose
 does. It also means every figure on this page is current at the head it is
 published from, not only at the pin it was taken at.
 
+## The old spellings, swept for tree-wide
+
+Changing the marker and the pointer invalidates any literal of the old
+spellings anywhere in the tree, and a stale literal fails in the direction the
+marker's own docstring calls dangerous: a detector that no longer matches reads
+a stub as a complete rule body. AC-2 greps `src/`; this is the rest of the
+tree, run with a positive control first so an empty result is a finding rather
+than a broken search.
+
+| Literal | Control finds | Live detectors outside `src/` |
+|---|---|---|
+| the old marker sentence | yes — the new one resolves in 4 files | **none** |
+| the old `Body: [\`id\`](path)` link | yes — the bare form resolves in 3 files | **none** |
+
+The old marker survives in eight files: six frozen `*.review-input/diff.patch`
+archives, one recorded bench report, and this roadmap's own Context section,
+which quotes it as the state at the pin. The old link form survives in two:
+a docstring explaining what the pointer used to be, and a negative-case fixture
+asserting that form is NOT recognised any more. Every one of those is a
+description of the old spelling rather than a reader of it.
+
+**What that does and does not establish.** It establishes that no gate, fixture
+or script outside `src/` tests for the old spellings today. It does not
+establish anything about a consumer's already-installed layer — but nothing
+needs to: `thinInstalledRuleLayer` rebuilds every stub from `build_thin` rather
+than from the file on disk, so an older layer converges on the next install
+rather than being read with the new detectors and found wanting.
+
 ## An adjacent defect, noted and not fixed here
 
 The install receipt's budget block prints `no published limit recorded — not
