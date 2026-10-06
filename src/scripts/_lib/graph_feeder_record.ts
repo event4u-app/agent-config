@@ -14,10 +14,11 @@
  * the result, so no in-process path can move an exit code. It is NOT a claim
  * about latency, and an earlier version of this paragraph said "costs the turn
  * nothing", which a review correctly read as one: a stop in a repository with a
- * graph pays a `git status` spawn, a graph open and an `untested` walk. Nothing
- * measures that, and a host that timed a stop hook out would drop the gate's
- * refusal — a failure the comparative exit-code test cannot see, because both of
- * its runs complete. Named rather than implied away. Step 3.4 — promoting the
+ * graph pays a `git status` spawn, a graph open and an `untested` walk.
+ * `bench_graph_feeder_latency.ts` measures it, and over a large index the graph
+ * open dominates. A host that timed a stop
+ * hook out would drop the gate's refusal — a failure the comparative exit-code
+ * test cannot see, because both of its runs complete. Step 3.4 — promoting the
  * graph verdict into F — is DEFERRED behind step 3.3's recall measurement and
  * behind an owner amendment to ADR-277, and nothing here anticipates it.
  *
@@ -282,7 +283,7 @@ export function graphUntestedVerdict(
     // The graph indexes repo-relative paths; a host hands us absolute ones.
     // NOT before the early returns below. Relativising walks the filesystem once
     // per absolute path, and this runs inside a stop hook whose latency the
-    // module header names as an unmeasured risk — a host that timed the hook out
+    // module header names as a risk — a host that timed the hook out
     // would drop the gate's refusal. Spending those syscalls only to discover
     // there is no usable source is cost for nothing.
     let picked;
