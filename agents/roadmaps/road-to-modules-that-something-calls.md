@@ -161,7 +161,7 @@ reported and counted, and nothing here moves or deletes one.
       is deleted with that test. After the step, the report's fourth group is
       empty.
       verify: `npx vitest run tests/scripts/module_reach_fourth_group_empty.test.ts` -> 0
-- [ ] **2.3 The third group is handed to its owner, not decided.** The page
+- [x] **2.3 The third group is handed to its owner, not decided.** The page
       lists, for each module named outside any open step, the ticked step that
       landed it. One dated note under the acceptance criteria of the roadmap
       that names seven of them names the page. No step, criterion or decision
