@@ -57,13 +57,14 @@ import * as os from 'node:os';
 import {
     buildHostLimitRows,
     loadHostInstructionLimits,
+    ownershipLine,
     readLayer,
     renderHostLimitRows,
+    resolveLayerOwnership,
     type LayerReading,
 } from '../scripts/_lib/installed_layer.js';
 import { GLOBAL_RULE_DIRS, globalRuleLayerPath } from './globalRuleLayers.js';
 import { manifest_path } from '../scripts/_lib/installed_tools.js';
-import { NO_RECORDED_HASHES, readRecordedHashes } from './recordedOwnership.js';
 import {
     absoluteBodyLinkPrefix,
     build_thin,
@@ -289,15 +290,42 @@ export function describeThinInstalledLayer(res: ThinInstalledLayerResult): strin
  * Never throws. A receipt that cannot be measured is silent rather than fatal —
  * the deploy it describes has already happened correctly.
  */
-export function installReceiptBudgetLines(packageRoot: string, home: string = os.homedir()): string[] {
+export interface InstallReceiptOwnershipOptions {
+    /** `deployed-files.json`. `undefined` reads the user-global default; `null` reads none. */
+    readonly inventoryPath?: string | null | undefined;
+    /**
+     * Anchor → anchor-relative paths this run just wrote.
+     *
+     * The installer holds exactly this set at the moment it prints the receipt,
+     * and `record_deploy` has not run yet, so on a FIRST install it is the only
+     * evidence the files are ours.
+     */
+    readonly thisDeploy?: ReadonlyMap<string, Iterable<string>> | null | undefined;
+}
+
+export function installReceiptBudgetLines(
+    packageRoot: string,
+    home: string = os.homedir(),
+    opts: InstallReceiptOwnershipOptions = {},
+): string[] {
     try {
-        const recorded = (() => {
-            try {
-                return readRecordedHashes(manifest_path(packageRoot), packageRoot);
-            } catch {
-                return NO_RECORDED_HASHES;
-            }
-        })();
+        // ONE RESOLVER, SHARED WITH THE REPORT — step 1.2. This used to read
+        // `manifest_path(packageRoot)`, the PACKAGE root's lock, which on a
+        // global-only install names a file no global install ever writes; the
+        // receipt then printed `0 package-owned` for a layer it had itself just
+        // deployed. `resolveLayerOwnership` falls through to the inventory, and
+        // `thisDeploy` covers the first install, where the receipt prints
+        // before `record_deploy` has written anything.
+        const { recorded, source } = resolveLayerOwnership({
+            manifestPath: manifest_path(packageRoot),
+            projectRoot: packageRoot,
+            // The same home the layers below are read from — the inventory's
+            // anchor is tilde-relative, so the two must agree or the receipt
+            // measures one install and claims ownership of another.
+            home,
+            inventoryPath: opts.inventoryPath,
+            thisDeploy: opts.thisDeploy,
+        });
         const layers: LayerReading[] = [];
         for (const host of Object.keys(GLOBAL_RULE_DIRS).sort()) {
             const dir = globalRuleLayerPath(host, home);
@@ -305,7 +333,8 @@ export function installReceiptBudgetLines(packageRoot: string, home: string = os
             layers.push(readLayer(host, 'global', dir, recorded));
         }
         const rows = buildHostLimitRows(layers, loadHostInstructionLimits());
-        return rows.length === 0 ? [] : renderHostLimitRows(rows).map((l) => `  ${l}`);
+        if (rows.length === 0) return [];
+        return [`  ${ownershipLine(source)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
     } catch {
         return [];
     }

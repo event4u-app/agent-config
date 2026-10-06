@@ -51,10 +51,9 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
-import { buildHostLimitRows, loadHostInstructionLimits, readLayer, renderHostLimitRows, } from '../scripts/_lib/installed_layer.js';
+import { buildHostLimitRows, loadHostInstructionLimits, ownershipLine, readLayer, renderHostLimitRows, resolveLayerOwnership, } from '../scripts/_lib/installed_layer.js';
 import { GLOBAL_RULE_DIRS, globalRuleLayerPath } from './globalRuleLayers.js';
 import { manifest_path } from '../scripts/_lib/installed_tools.js';
-import { NO_RECORDED_HASHES, readRecordedHashes } from './recordedOwnership.js';
 import { absoluteBodyLinkPrefix, build_thin, split_frontmatter, } from '../scripts/_lib/thin_rules.js';
 /**
  * Replace the body of every thinnable rule in `rulesDir` with its stub.
@@ -216,34 +215,25 @@ export function describeThinInstalledLayer(res) {
     }
     return out;
 }
-/**
- * The install receipt's instruction-budget block — step 1.4's "at install".
- *
- * The step asks for the limit, the split and the 80 % warning AT INSTALL, and
- * the measurement existed only behind the standalone `installed_layer_report`
- * CLI: `buildHostLimitRows`'s own docstring named "the install receipt" as the
- * caller it was exported for, and that caller did not exist. A consumer whose
- * layer is over budget learned it from the host, which is the notice the
- * roadmap exists to remove.
- *
- * Global layers only, deliberately. The install writes `~/.claude/rules` and
- * its siblings; a project layer is not what this run just changed, and folding
- * one in would make the receipt's number disagree with the thing it is a
- * receipt FOR.
- *
- * Never throws. A receipt that cannot be measured is silent rather than fatal —
- * the deploy it describes has already happened correctly.
- */
-export function installReceiptBudgetLines(packageRoot, home = os.homedir()) {
+export function installReceiptBudgetLines(packageRoot, home = os.homedir(), opts = {}) {
     try {
-        const recorded = (() => {
-            try {
-                return readRecordedHashes(manifest_path(packageRoot), packageRoot);
-            }
-            catch {
-                return NO_RECORDED_HASHES;
-            }
-        })();
+        // ONE RESOLVER, SHARED WITH THE REPORT — step 1.2. This used to read
+        // `manifest_path(packageRoot)`, the PACKAGE root's lock, which on a
+        // global-only install names a file no global install ever writes; the
+        // receipt then printed `0 package-owned` for a layer it had itself just
+        // deployed. `resolveLayerOwnership` falls through to the inventory, and
+        // `thisDeploy` covers the first install, where the receipt prints
+        // before `record_deploy` has written anything.
+        const { recorded, source } = resolveLayerOwnership({
+            manifestPath: manifest_path(packageRoot),
+            projectRoot: packageRoot,
+            // The same home the layers below are read from — the inventory's
+            // anchor is tilde-relative, so the two must agree or the receipt
+            // measures one install and claims ownership of another.
+            home,
+            inventoryPath: opts.inventoryPath,
+            thisDeploy: opts.thisDeploy,
+        });
         const layers = [];
         for (const host of Object.keys(GLOBAL_RULE_DIRS).sort()) {
             const dir = globalRuleLayerPath(host, home);
@@ -252,7 +242,9 @@ export function installReceiptBudgetLines(packageRoot, home = os.homedir()) {
             layers.push(readLayer(host, 'global', dir, recorded));
         }
         const rows = buildHostLimitRows(layers, loadHostInstructionLimits());
-        return rows.length === 0 ? [] : renderHostLimitRows(rows).map((l) => `  ${l}`);
+        if (rows.length === 0)
+            return [];
+        return [`  ${ownershipLine(source)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
     }
     catch {
         return [];

@@ -50,6 +50,11 @@ import {
     globalRuleLayerPath,
 } from '../../install/globalRuleLayers.js';
 import { NO_RECORDED_HASHES, readRecordedHashes } from '../../install/recordedOwnership.js';
+import {
+    inventory_path,
+    load_inventory,
+    recorded_absolute_files,
+} from './global_deploy_inventory.js';
 import { ruleBody } from './rule_law_section.js';
 
 /** How many files the per-directory ranking carries. Step 0.1 fixes it at 20. */
@@ -170,8 +175,17 @@ export interface InstalledLayerReport {
     readonly project_root: string;
     /** `claude --version`, or `unknown`. Never fabricated. */
     readonly host_version: string;
-    /** False when no installed-tools manifest resolved — then every file reads foreign. */
+    /**
+     * False when no installed-tools MANIFEST resolved.
+     *
+     * No longer the same question as "is there ownership evidence" — read
+     * {@link ownership_source} for that. A global-only install has no manifest
+     * and full evidence; keeping this field answers the narrower question a
+     * project-scoped reader still asks.
+     */
     readonly manifest_present: boolean;
+    /** Which evidence answered ownership. `none` means no evidence, never "not ours". */
+    readonly ownership_source: OwnershipSource;
     readonly layers: readonly LayerReading[];
     /** One row per host, against its published limit. Step 3.5. */
     readonly limits: readonly HostLimitReading[];
@@ -421,11 +435,140 @@ export function buildHostLimitRows(
     return rows;
 }
 
+/** Which evidence answered "is this file ours". Never a guess — see {@link resolveLayerOwnership}. */
+export type OwnershipSource = 'manifest' | 'global-inventory' | 'this-deploy' | 'none';
+
+/**
+ * Where `deployed-files.json` lives FOR A STATED HOME.
+ *
+ * `global_deploy_inventory.inventory_path()` answers for the process asking,
+ * honouring `AGENT_CONFIG_DEPLOY_INVENTORY` and `EVENT4U_CONFIG_HOME`. That is
+ * right for the installer, which is running the install it is recording, and
+ * WRONG for a reader measuring some other home: a report about a staged install
+ * under a temporary HOME would read the maintainer's own inventory and claim
+ * ownership of files that install never wrote.
+ *
+ * So the home is followed first and the env override only decides the default
+ * home-less case. A caller with a specific file in mind passes it outright.
+ */
+export function defaultInventoryPath(home?: string | null): string {
+    if (home === undefined || home === null || home === '') return inventory_path();
+    return path.join(home, '.event4u', 'agent-config', 'deployed-files.json');
+}
+
+/** The ownership evidence and the name of where it came from. */
+export interface OwnershipResolution {
+    /** Absolute path → recorded hash (or `null` when the source records no hash). */
+    readonly recorded: ReadonlyMap<string, string | null>;
+    readonly source: OwnershipSource;
+}
+
+/** What {@link resolveLayerOwnership} may read. Every input is a parameter. */
+export interface OwnershipOptions {
+    /** Where the project manifest would be. Absent file → fall through, never an error. */
+    readonly manifestPath?: string | null;
+    /** Needed only to resolve the manifest's relative entries. */
+    readonly projectRoot: string;
+    /**
+     * The home the install being measured lives under.
+     *
+     * The inventory records its anchor tilde-relative (`~/.claude/`), so a
+     * reader measuring a staged install under a temporary HOME must say which
+     * home, or the recorded paths resolve against the asking process's own and
+     * claim nothing. Omitted → `os.homedir()`.
+     */
+    readonly home?: string | null | undefined;
+    /** `deployed-files.json`. `undefined` reads the user-global default; `null` reads none. */
+    readonly inventoryPath?: string | null | undefined;
+    /**
+     * Anchor → anchor-relative paths THIS run just wrote.
+     *
+     * The first-install case, and the reason it needs its own input: the
+     * install receipt prints before `record_deploy`, so on a first install the
+     * inventory on disk is still empty and the only evidence that the files are
+     * ours is the set the installer is holding. Passing it is counting this
+     * deploy's own file set — not a claim about any earlier one.
+     */
+    readonly thisDeploy?: ReadonlyMap<string, Iterable<string>> | null | undefined;
+}
+
+/**
+ * The ONE place that answers "which of these installed files are ours".
+ *
+ * Two readers ask it — the installed-layer report and the install receipt's
+ * budget lines — and until step 1.2 they asked different things. Both called
+ * `manifest_path(...)` and read a project-scoped `agents/installed-tools.lock`.
+ * A global-only install writes nothing into a project, so on exactly the
+ * install shape the thinned-layer roadmap's AC-1 is about, both reported
+ * `0 package-owned / N foreign` and AC-1's figure could not be produced at all.
+ *
+ * The global install DOES record what it wrote: `deployed-files.json` lists,
+ * per tool, the anchor and every file the installer maintains there —
+ * "the ownership proof that makes reaping safe". This reads it.
+ *
+ * ORDER, AND WHY IT IS NOT A UNION. The project manifest wins outright when it
+ * exists: it carries hashes, so it can distinguish `recorded-unchanged` from
+ * `recorded-modified`, and folding a hashless inventory into it would silently
+ * downgrade that. Only when no manifest resolves does the inventory answer —
+ * and there the two hashless sources ARE unioned, because this deploy's own
+ * file set and a previous deploy's record are the same kind of evidence.
+ *
+ * A FILE THE USER EDITED AND THE INSTALLER PRESERVED STILL COUNTS AS
+ * MAINTAINED. The inventory records what the installer MAINTAINS at a path, not
+ * what the bytes currently are, so a preserved rule stays package-owned. That
+ * is the correct reading — the package is still responsible for the path — and
+ * it is why this function returns `null` hashes rather than fabricating one.
+ */
+export function resolveLayerOwnership(opts: OwnershipOptions): OwnershipResolution {
+    const manifestPath = opts.manifestPath ?? null;
+    if (manifestPath !== null && fs.existsSync(manifestPath)) {
+        return {
+            recorded: readRecordedHashes(manifestPath, opts.projectRoot),
+            source: 'manifest',
+        };
+    }
+    const recorded = new Map<string, string | null>();
+    let fromInventory = 0;
+    if (opts.inventoryPath !== null) {
+        try {
+            const inv = load_inventory(opts.inventoryPath ?? defaultInventoryPath(opts.home));
+            for (const abs of recorded_absolute_files(inv, opts.home ?? null)) {
+                recorded.set(abs, null);
+                fromInventory += 1;
+            }
+        } catch {
+            // A corrupt or unreadable inventory is no evidence, never a failure.
+        }
+    }
+    let fromDeploy = 0;
+    for (const [anchor, rels] of opts.thisDeploy ?? new Map()) {
+        for (const rel of rels) {
+            const abs = path.resolve(anchor, rel);
+            if (!recorded.has(abs)) fromDeploy += 1;
+            recorded.set(abs, null);
+            // Both spellings, for the reason `recorded_absolute_files` states:
+            // the reader compares against a lexically joined path, and a HOME
+            // behind a symlink makes the two disagree.
+            try {
+                recorded.set(fs.realpathSync(abs), null);
+            } catch {
+                // Not on disk — the lexical spelling is all there is.
+            }
+        }
+    }
+    if (recorded.size === 0) return { recorded: NO_RECORDED_HASHES, source: 'none' };
+    // Named for what actually supplied the evidence, so a reader can tell a
+    // first install (nothing recorded yet) from a later one.
+    return { recorded, source: fromInventory > 0 || fromDeploy === 0 ? 'global-inventory' : 'this-deploy' };
+}
+
 export interface ReportOptions {
     readonly home: string;
     readonly projectRoot: string;
-    /** The installed-tools manifest. Absent or unreadable means no ownership evidence. */
+    /** The installed-tools manifest. Absent or unreadable falls through to the global inventory. */
     readonly manifestPath?: string | null;
+    /** `deployed-files.json`. `undefined` reads the user-global default; `null` reads none. */
+    readonly inventoryPath?: string | null | undefined;
     /** Supplied rather than shelled, so a fixture is not at the mercy of a CLI being on PATH. */
     readonly hostVersion?: string;
     /**
@@ -446,10 +589,12 @@ export interface ReportOptions {
  */
 export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerReport {
     const manifestPath = opts.manifestPath ?? null;
-    const recorded =
-        manifestPath === null
-            ? NO_RECORDED_HASHES
-            : readRecordedHashes(manifestPath, opts.projectRoot);
+    const { recorded, source: ownership_source } = resolveLayerOwnership({
+        manifestPath,
+        projectRoot: opts.projectRoot,
+        home: opts.home,
+        inventoryPath: opts.inventoryPath,
+    });
     const layers: LayerReading[] = [];
     for (const host of Object.keys(GLOBAL_RULE_DIRS).sort()) {
         const dir = globalRuleLayerPath(host, opts.home);
@@ -493,10 +638,31 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
         project_root: opts.projectRoot,
         host_version: opts.hostVersion ?? 'unknown',
         manifest_present: manifestPath !== null && fs.existsSync(manifestPath),
+        ownership_source,
         layers,
         limits,
         totals,
     };
+}
+
+/**
+ * One line naming WHICH evidence answered ownership.
+ *
+ * Exported so the report and the install receipt say the same sentence about
+ * the same source — a consumer comparing a receipt against a later report must
+ * not have to decide whether a wording difference means a different reading.
+ */
+export function ownershipLine(source: OwnershipSource): string {
+    switch (source) {
+        case 'manifest':
+            return 'ownership: read from the installed-tools manifest';
+        case 'global-inventory':
+            return 'ownership: read from the global deploy inventory (deployed-files.json) — no project manifest needed';
+        case 'this-deploy':
+            return 'ownership: read from the file set this install just wrote — the inventory is recorded after the receipt';
+        case 'none':
+            return 'ownership: NO manifest and NO deploy inventory resolved — every file reads foreign, which is no evidence rather than a finding';
+    }
 }
 
 /** The report as lines, for a terminal. One directory per block. */
@@ -504,11 +670,7 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
     const out: string[] = [];
     out.push(`installed layer — host ${report.host_version}, HOME ${report.home}`);
     out.push(`project ${report.project_root}`);
-    out.push(
-        report.manifest_present
-            ? 'ownership: read from the installed-tools manifest'
-            : 'ownership: NO manifest resolved — every file reads foreign, which is no evidence rather than a finding',
-    );
+    out.push(ownershipLine(report.ownership_source));
     for (const l of report.layers) {
         if (!l.present) {
             out.push(`  ${l.host} (${l.scope}) — absent: ${l.dir}`);

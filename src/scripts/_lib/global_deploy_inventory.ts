@@ -72,6 +72,21 @@ function expanduser(p: string): string {
 }
 
 /**
+ * `expanduser`, against a STATED home rather than the process's own.
+ *
+ * `home` omitted or empty falls back to {@link expanduser}, so every existing
+ * caller is unchanged.
+ */
+function expanduser_at(p: string, home?: string | null): string {
+  if (home === undefined || home === null || home === "") return expanduser(p);
+  if (p === "~") return home;
+  if (p.startsWith("~/") || (process.platform === "win32" && p.startsWith("~\\"))) {
+    return path.join(home, p.slice(2));
+  }
+  return p;
+}
+
+/**
  * Resolve a path the way `Path.resolve()` does: expand-free `realpath`-style
  * resolution that follows existing symlinks and normalises `..`, but does not
  * fail when the path does not exist (the trailing non-existent components are
@@ -688,6 +703,65 @@ export function recorded_rel_files(
     return new Set<string>();
   }
   return new Set(files.filter((f): f is string => typeof f === "string"));
+}
+
+/**
+ * Every file a previous deploy recorded, as ABSOLUTE paths, across all tools.
+ *
+ * `recorded_rel_files` answers "did this package write that file" for one tool
+ * whose anchor the caller already knows. This answers the ownership question a
+ * READER has — the installed-layer report and the install receipt both walk
+ * host rule directories and hold absolute paths, with no tool id and no anchor
+ * in hand — so asking the inventory per tool would mean the reader guessing
+ * anchors it never recorded.
+ *
+ * `home` IS A PARAMETER, AND NOT A CONVENIENCE. The installer records the
+ * anchor TILDE-RELATIVE — the real inventory reads `"anchor": "~/.claude/"` —
+ * so the recorded path is only meaningful against a stated home. Expanding it
+ * against `os.homedir()` makes the answer depend on which process is asking,
+ * which is exactly how a reader measuring a staged install under a temporary
+ * HOME gets back a set naming the maintainer's own machine and claims nothing.
+ * Omitted, it falls back to `os.homedir()`, which is right for a caller asking
+ * about the install it is itself running under.
+ *
+ * BOTH SPELLINGS OF EVERY PATH ARE EMITTED — the symlink-resolved one and the
+ * merely-normalised one. Callers compare by set membership against a path they
+ * built with `path.join(dir, name)` while walking a directory, which is
+ * lexical; the inventory's anchor is resolved with `realpath` the way
+ * `recorded_rel_files` resolves its anchor comparison. On macOS those two
+ * differ for anything under `/var`, which realpaths to `/private/var`, and a
+ * one-spelling set silently claimed nothing there — the reader asked about
+ * `/var/...`, the set held `/private/var/...`, and every file read foreign.
+ * Emitting both is the cheap direction: a set is a membership test, so a second
+ * spelling can only make a true answer reachable, never a false one.
+ *
+ * A malformed tool entry contributes nothing rather than throwing: a corrupt
+ * inventory is "no evidence", never a finding, which is the same discipline
+ * `reap_stale` applies before it deletes anything.
+ */
+export function recorded_absolute_files(
+  inventory?: Inventory | null,
+  home?: string | null,
+): ReadonlySet<string> {
+  const inv = inventory ?? load_inventory();
+  const tools = (inv["tools"] as Record<string, unknown> | undefined) ?? {};
+  const out = new Set<string>();
+  if (typeof tools !== "object" || tools === null || Array.isArray(tools)) return out;
+  for (const entry of Object.values(tools)) {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) continue;
+    const e = entry as Record<string, unknown>;
+    const anchor = e["anchor"];
+    const files = e["files"];
+    if (typeof anchor !== "string" || !Array.isArray(files)) continue;
+    const expanded = expanduser_at(anchor, home);
+    for (const rel of files) {
+      if (typeof rel !== "string") continue;
+      const lexical = path.resolve(expanded, rel);
+      out.add(lexical);
+      out.add(resolve_path(lexical));
+    }
+  }
+  return out;
 }
 
 /** Sort string members ascending by codepoint (non-strings filtered out). */

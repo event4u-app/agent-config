@@ -116,7 +116,7 @@ on the user-global layer.
       `unconditional_chars` and `scoped_chars` to the layer reading and the
       totals in `installed_layer.ts`; the report prints both beside `chars`.
       verify: `npx vitest run tests/scripts/installed_layer_unconditional_chars.test.ts` -> 0
-- [ ] **1.2 Ownership resolves on a global-only install, in both places
+- [x] **1.2 Ownership resolves on a global-only install, in both places
       that state it.** When no project manifest exists, the installed-layer
       report and the install receipt's budget lines
       (`src/install/installThinLayer.ts:292-305`, which today read

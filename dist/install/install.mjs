@@ -9741,6 +9741,14 @@ function expanduser6(p) {
   }
   return p;
 }
+function expanduser_at(p, home) {
+  if (home === void 0 || home === null || home === "") return expanduser6(p);
+  if (p === "~") return home;
+  if (p.startsWith("~/") || process.platform === "win32" && p.startsWith("~\\")) {
+    return path11.join(home, p.slice(2));
+  }
+  return p;
+}
 function resolve_path(p) {
   try {
     return fs12.realpathSync(p);
@@ -10154,6 +10162,27 @@ function recorded_rel_files(tool_id, anchor, inventory) {
     return /* @__PURE__ */ new Set();
   }
   return new Set(files.filter((f) => typeof f === "string"));
+}
+function recorded_absolute_files(inventory, home) {
+  const inv = inventory ?? load_inventory();
+  const tools = inv["tools"] ?? {};
+  const out = /* @__PURE__ */ new Set();
+  if (typeof tools !== "object" || tools === null || Array.isArray(tools)) return out;
+  for (const entry of Object.values(tools)) {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) continue;
+    const e = entry;
+    const anchor = e["anchor"];
+    const files = e["files"];
+    if (typeof anchor !== "string" || !Array.isArray(files)) continue;
+    const expanded = expanduser_at(anchor, home);
+    for (const rel of files) {
+      if (typeof rel !== "string") continue;
+      const lexical = path11.resolve(expanded, rel);
+      out.add(lexical);
+      out.add(resolve_path(lexical));
+    }
+  }
+  return out;
 }
 function sorted_strings(items) {
   return items.filter((i) => typeof i === "string").sort((a, b) => a < b ? -1 : a > b ? 1 : 0);
@@ -12602,6 +12631,57 @@ function buildHostLimitRows(layers, limits) {
   }
   return rows;
 }
+function defaultInventoryPath(home) {
+  if (home === void 0 || home === null || home === "") return inventory_path();
+  return path24.join(home, ".event4u", "agent-config", "deployed-files.json");
+}
+function resolveLayerOwnership(opts) {
+  const manifestPath = opts.manifestPath ?? null;
+  if (manifestPath !== null && fs25.existsSync(manifestPath)) {
+    return {
+      recorded: readRecordedHashes(manifestPath, opts.projectRoot),
+      source: "manifest"
+    };
+  }
+  const recorded = /* @__PURE__ */ new Map();
+  let fromInventory = 0;
+  if (opts.inventoryPath !== null) {
+    try {
+      const inv = load_inventory(opts.inventoryPath ?? defaultInventoryPath(opts.home));
+      for (const abs of recorded_absolute_files(inv, opts.home ?? null)) {
+        recorded.set(abs, null);
+        fromInventory += 1;
+      }
+    } catch {
+    }
+  }
+  let fromDeploy = 0;
+  for (const [anchor, rels] of opts.thisDeploy ?? /* @__PURE__ */ new Map()) {
+    for (const rel of rels) {
+      const abs = path24.resolve(anchor, rel);
+      if (!recorded.has(abs)) fromDeploy += 1;
+      recorded.set(abs, null);
+      try {
+        recorded.set(fs25.realpathSync(abs), null);
+      } catch {
+      }
+    }
+  }
+  if (recorded.size === 0) return { recorded: NO_RECORDED_HASHES, source: "none" };
+  return { recorded, source: fromInventory > 0 || fromDeploy === 0 ? "global-inventory" : "this-deploy" };
+}
+function ownershipLine(source) {
+  switch (source) {
+    case "manifest":
+      return "ownership: read from the installed-tools manifest";
+    case "global-inventory":
+      return "ownership: read from the global deploy inventory (deployed-files.json) \u2014 no project manifest needed";
+    case "this-deploy":
+      return "ownership: read from the file set this install just wrote \u2014 the inventory is recorded after the receipt";
+    case "none":
+      return "ownership: NO manifest and NO deploy inventory resolved \u2014 every file reads foreign, which is no evidence rather than a finding";
+  }
+}
 function renderHostLimitRows(rows) {
   const out = [
     "host instruction budgets \u2014 package-owned + foreign against the published limit"
@@ -12966,15 +13046,18 @@ function describeThinInstalledLayer(res) {
   }
   return out;
 }
-function installReceiptBudgetLines(packageRoot, home = os10.homedir()) {
+function installReceiptBudgetLines(packageRoot, home = os10.homedir(), opts = {}) {
   try {
-    const recorded = (() => {
-      try {
-        return readRecordedHashes(manifest_path(packageRoot), packageRoot);
-      } catch {
-        return NO_RECORDED_HASHES;
-      }
-    })();
+    const { recorded, source } = resolveLayerOwnership({
+      manifestPath: manifest_path(packageRoot),
+      projectRoot: packageRoot,
+      // The same home the layers below are read from — the inventory's
+      // anchor is tilde-relative, so the two must agree or the receipt
+      // measures one install and claims ownership of another.
+      home,
+      inventoryPath: opts.inventoryPath,
+      thisDeploy: opts.thisDeploy
+    });
     const layers = [];
     for (const host of Object.keys(GLOBAL_RULE_DIRS).sort()) {
       const dir = globalRuleLayerPath(host, home);
@@ -12982,7 +13065,8 @@ function installReceiptBudgetLines(packageRoot, home = os10.homedir()) {
       layers.push(readLayer(host, "global", dir, recorded));
     }
     const rows = buildHostLimitRows(layers, loadHostInstructionLimits());
-    return rows.length === 0 ? [] : renderHostLimitRows(rows).map((l) => `  ${l}`);
+    if (rows.length === 0) return [];
+    return [`  ${ownershipLine(source)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
   } catch {
     return [];
   }
@@ -22336,7 +22420,11 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
           warn(`claude-code: thinned rule layer not written \u2014 ${String(e)}`);
         }
       }
-      if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root)) info(l);
+      if (!state.QUIET)
+        for (const l of installReceiptBudgetLines(package_root, void 0, {
+          thisDeploy: /* @__PURE__ */ new Map([[anchor, current_files]])
+        }))
+          info(l);
     }
     const missing_targets = _verify_deploy_targets(anchor, plan);
     if (missing_targets.length > 0) {
