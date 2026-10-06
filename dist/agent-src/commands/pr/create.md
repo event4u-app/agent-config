@@ -141,7 +141,8 @@ sequence first: `check_branch_freshness` → on exit `1`, bring
 `origin/{resolved-base}` in per `git.update_strategy` (merge by default; under
 `rebase` a rebase that is asked for, never a merge, and `sync_pr_branch` refuses)
 → regenerate the derived files → verify → push (after a rebase:
-`git push --force-with-lease=<branch>:<fetched-sha>`, never a plain push).
+`git push --force-with-lease=<branch>:<fetched-sha>` with `<fetched-sha>` =
+`git rev-parse origin/<branch>` taken before the rebase, never a plain push).
 A PR that sits open while its base advances goes stale silently; keeping the
 base merged **at every touch** means it stays `mergeStateStatus: CLEAN` instead
 of accumulating conflicts for the moment the user wants to merge. If the gate

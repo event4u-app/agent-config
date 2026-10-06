@@ -235,6 +235,8 @@ export interface Plan {
     remeasured: string[];
     authored: string[];
     scanned: number;
+    /** Base refs the branch is behind — set by a dry run, so a caller can decide without parsing `message`. */
+    behind?: number;
 }
 
 /**
@@ -788,6 +790,7 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
             remeasured: [],
             authored: [],
             scanned: order.length,
+            behind: stale.length,
         };
     }
 
@@ -904,6 +907,9 @@ export function main(argv?: readonly string[]): number {
             process.stdout.write(
                 'usage: sync_pr_branch [--repo PATH] [--base REF] [--dry-run] [--auto-resolve-generated] [--quiet]\n' +
                     '  Merges the PR base into the current branch so the PR does not go stale.\n' +
+                    '  Under a git.update_strategy other than merge it only checks: a current\n' +
+                    '  branch exits 0, a behind one exits 3 and is never merged (--dry-run and\n' +
+                    '  --auto-resolve-generated have nothing to change there).\n' +
                     '  Resolves the base from the open PR when there is one. A conflict is\n' +
                     '  reported and never auto-resolved; generated and authored conflicts are\n' +
                     '  listed separately because only the first has one correct resolution;\n' +
@@ -933,7 +939,7 @@ export function main(argv?: readonly string[]): number {
     try {
         if (strategy !== 'merge') {
             plan = sync(repo, base, true, false);
-            if (plan.exit === 0 && plan.message.includes('Behind:')) {
+            if (plan.exit === 0 && (plan.behind ?? 0) > 0) {
                 process.stdout.write(
                     `⚠️  sync_pr_branch: refused — the branch is behind and git.update_strategy is \`${strategy}\`; this script only merges. ` +
                         'Rebase onto origin/<base> on request instead (git-workflow references/branch-update.md).\n',

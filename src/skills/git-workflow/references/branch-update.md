@@ -9,7 +9,7 @@ decides how a feature branch takes in its base — `/create-pr` § 1b, `/pr:merg
 | `git.update_strategy` | Operation | Asked first? |
 |---|---|---|
 | `merge` (default) | `git fetch origin && git merge origin/<base> --no-edit` | no — a merge adds a commit and rewrites nothing |
-| `rebase` | `git fetch origin && git rebase origin/<base>`, then on a pushed branch `git push --force-with-lease=<branch>:<fetched-sha>` in the same turn | **yes**, unless [`git-history-discipline`](../../../rules/git-history-discipline.md) § When rewrite is allowed already covers it — the user asked this turn, an unrevoked standing instruction ("always rebase before pushing"), or a `pull --rebase` the user started. The setting picks the operation; it is never the authorisation |
+| `rebase` | `git fetch origin && git rebase origin/<base>`, then on a pushed branch `git push --force-with-lease=<branch>:<fetched-sha>` in the same turn — `<fetched-sha>` is `git rev-parse origin/<branch>` taken right after the fetch and before the rebase, never the base's SHA | **yes**, unless [`git-history-discipline`](../../../rules/git-history-discipline.md) § When rewrite is allowed already covers it — the user asked this turn, an unrevoked standing instruction ("always rebase before pushing"), or a `pull --rebase` the user started. The setting picks the operation; it is never the authorisation |
 
 ## Under `rebase`
 

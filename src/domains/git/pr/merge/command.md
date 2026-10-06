@@ -138,8 +138,9 @@ gh pr checkout <N>
 git merge origin/<base> --no-edit
 ```
 
-Merge the base **into** the branch. Never rebase here: the `/pr:merge`
-authorisation covers merging the named PRs, not rewriting their branches
+Merge the base **into** the branch. Never rebase here unless the invocation
+itself asked for it: the `/pr:merge` authorisation covers merging the named PRs,
+not rewriting their branches
 ([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
 
 **Under `git.update_strategy: rebase`** this step does not merge: a

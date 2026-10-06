@@ -281,7 +281,7 @@ If yes:
 
 ### 3. Place the ticket, then choose the scope
 
-Ticket id: any `[A-Z][A-Z0-9]+-[0-9]+` token in the branch name, or the user; `git.commit_format` places it:
+Ticket id: the first `[A-Z][A-Z0-9]+-[0-9]+` token in the branch name that is not a standard name (`UTF-8`, `SHA-256`), or the user; `git.commit_format` places it:
 | `git.commit_format` | With a ticket | Without a ticket |
 |---|---|---|
 | `ticket-scope` (default) | `feat(DEV-1234): add export filter` | `feat: add export filter` |
