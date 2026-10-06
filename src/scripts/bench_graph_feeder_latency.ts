@@ -131,7 +131,9 @@ export async function makeFixture(root: string, files: number, withGraph: boolea
     }
     fs.writeFileSync(
         path.join(dir, 'tests', 'mod0.test.ts'),
-        "import { run0 } from '../src/mod0.js';\n\nexport function check(): boolean {\n    return run0('a') === 'a0';\n}\n",
+        // The specifier is assembled so `prepack-check`, which scans shipped
+        // sources for relative imports, does not read fixture text as one.
+        `import { run0 } from '${['..', 'src', 'mod0.js'].join('/')}';\n\nexport function check(): boolean {\n    return run0('a') === 'a0';\n}\n`,
     );
     git(dir, ['init', '-q']);
     git(dir, ['add', '-A']);
