@@ -282,12 +282,28 @@ At `df377ca64`:
       required fields stay where they are. No checkbox, decision, criterion or
       tag is changed.
       verify: `./scripts-run src/scripts/lint_roadmap_complexity` -> 0
-- [ ] **3.2 The lint names the remedy.** When a `lightweight` roadmap exceeds
+      **Partial (2026-10-06).** The live two over-cap files are no longer the
+      two named in Context: `road-to-a-menu-whose-precision-is-measured.md` was
+      parked to `later/` on 2026-10-05, out of this gate's scanned directory;
+      `road-to-neighbours-that-pull-their-weight.md` (656 lines) took its place,
+      landed by `7cd6563a8` the same day. `road-to-corpus-refresh-cadence-shape.md`
+      (760→468 lines) is done — four dated `**Evidence (…)**` paragraphs moved
+      verbatim to `agents/evidence/analysis/corpus-refresh-cadence-evidence-2026-10.md`,
+      one per 1.2a-1.2d, each left as a one-line pointer; the two open steps'
+      `**Hand-over**` sections (forward-looking, not backward evidence) were left
+      in place untouched, and neither inline `blocked-by` marker moved.
+      `road-to-neighbours-that-pull-their-weight.md` was deliberately left alone:
+      its own D15 names an active drain lane possibly still editing it, and a
+      concurrent-edit collision on a file this task has no context on is a cost
+      this step should not spend to close a trunk lint. `lint_roadmap_complexity`
+      therefore still exits 1 on that one file; AC-3 and AC-6 stay open for the
+      same reason.
+- [x] **3.2 The lint names the remedy.** When a `lightweight` roadmap exceeds
       the line cap, the message says that dated evidence belongs on an
       evidence page and that an agent may not retag; today it suggests
       "tagging structural or trimming" (`lint_roadmap_complexity.ts:156-158`).
       verify: `npx vitest run tests/scripts/lint_roadmap_complexity_message.test.ts` -> 0
-- [ ] **3.3 A name-filtered run that matches no test is listed.** The
+- [x] **3.3 A name-filtered run that matches no test is listed.** The
       `unfalsifiable-verify` family in `closure_scan` gains one case: a clause
       of the form `vitest run <target> -t <name>` where the target exists and
       no test title under it contains the name — a file, or every test file of
