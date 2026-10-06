@@ -1,7 +1,15 @@
-# Findings: drain-thinned-layer-one-unit-20261006
+# Findings: drain-thinned-layer-one-unit-20261006 — ROUND 3 (superseded)
+
+> Archived 2026-10-06. Reviewed scope `5f2de31f…`. Six rows fixed, two
+> accepted-risk with reasons. Its two medium code findings were REGRESSIONS
+> introduced by acting on round 2 — the frontmatter blind spot and the
+> writer/reader inventory split — which is the clearest argument in this
+> branch for running the rounds to convergence rather than stopping at one.
+> Acting on these changed reviewed content again, so round 4 binds to the
+> resulting head.
 <!-- completion-review: v1 | reviewed: 2026-10-06 | scope: 5f2de31f68de36a54b7b2c7ff728838ce37f1d6e2be01b3adcc6f2edb44fe8d0 | diff: 467f96888a28a99ae70f6b458720b3b3698b353b | reviewer: r2-fresh-subagent-drain-thinned-layer-one-unit-20261006 | prompt_hash: 60c2c491e1e2aedd4e9c9aeaa8c786e1abe3815548082ba101e10cb29b4d8e79 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-thinned-layer-one-unit-20261006"]}} -->
-<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-06 -->
+<!-- evidence-type: v1 | type: original-review | declared: 2026-10-06 -->
 
 <!-- context-manifest: v1
 inputs:
