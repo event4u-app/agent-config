@@ -1,5 +1,5 @@
 {
-    "_comment": "Per-rule law-section and body ceilings (road-to-rule-laws-that-can-stand Phase 1) plus the trigger-presence baseline (road-to-an-installed-layer-that-is-thinned step 3.4). SHRINK-ONLY on every axis: an id may LEAVE `missing` or `no_trigger`, never join either one; a recorded exception is a ceiling the rule may fall below and never rise above. Raising one to clear a red is the config-weakening move this repo blocks by construction — `--write-baseline` refuses to raise, it only re-records the smaller of old and current. A rule at its exception is not thereby correct, only not worse. Regenerate with `lint_rule_law_section --write-baseline`; never hand-edit the counts, but DO hand-edit `owner`, `review` and `reason` — those are the review contract and the generator only seeds them.",
+    "_comment": "Per-rule law-section and body ceilings (road-to-rule-laws-that-can-stand Phase 1) plus the trigger-presence baseline (road-to-an-installed-layer-that-is-thinned step 3.4). Two different guarantees, not one: `law_exceptions` and `body_exceptions` are numeric ceilings `--write-baseline` structurally refuses to raise (it re-records the SMALLER of old and current, never the current alone) — a rule at its exception is not thereby correct, only not worse. `missing` and `no_trigger` are LIST membership: an id SHOULD only leave, never join, but that is a review convention the generator does not enforce by construction — `--write-baseline` re-records every id that currently fails presence/trigger, full stop, so a newly-broken rule is swept in exactly like a genuinely-fixed one is swept out. The `stale-baseline-entry` finding makes a fixed id visible for removal; nothing makes a newly-broken id visible for refusal except a human reading the diff. Regenerate with `lint_rule_law_section --write-baseline`; never hand-edit the counts, but DO hand-edit `owner`, `review` and `reason` — those are the review contract and the generator only seeds them.",
     "measured_at_commit": "30f7d21f6",
     "no_trigger": [
         "no-roadmap-references",
@@ -72,19 +72,19 @@
             "reason": "Two layers (code borrows and the knowledge/harvest layer) each with its own law, plus the no-CI-detector honesty section recording a measured gate decision."
         },
         "context-hygiene": {
-            "chars": 8320,
+            "chars": 8283,
             "owner": "agent-config-maintainer",
             "review": "2026-12-01",
             "reason": "Carries the freshness ladder, the 3-failure rule, loop detection and the 15/25 read-loop rule, each with its own self-check. Already migrated once into context-hygiene-mechanics and re-grew."
         },
         "decision-revisit-gate": {
-            "chars": 8566,
+            "chars": 8408,
             "owner": "agent-config-maintainer",
             "review": "2026-12-01",
             "reason": "The largest rule in the tree. Carries the five-step gate, the two descriptive axes, the owner-reserved table and an honest-enforcement section. Phase 1.4 of road-to-rule-laws-that-can-stand names it as a first mover for the load_context split."
         },
         "design-fidelity": {
-            "chars": 8777,
+            "chars": 8635,
             "owner": "agent-config-maintainer",
             "review": "2026-12-01",
             "reason": "Carries the artefact-maturity axis, the fidelity-mode table and the routing matrix. Phase 1.4 names it as a first mover."
@@ -96,7 +96,7 @@
             "reason": "Three laws plus the deferred-item resolution procedure and the later/PR-gate dispositions. The dispositions are mechanism, not obligation, and are the load_context candidate."
         },
         "settings-ask-protocol": {
-            "chars": 8099,
+            "chars": 8058,
             "owner": "agent-config-maintainer",
             "review": "2026-12-01",
             "reason": "Carries the four slots, the seven keys, the non-interactive rule and the consent-verdict contract. The key inventory is reference material and is the load_context candidate."

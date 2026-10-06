@@ -390,15 +390,19 @@ export function writeBaseline(root = REPO_ROOT, today: string): string {
     const cfg = {
         _comment:
             'Per-rule law-section and body ceilings (road-to-rule-laws-that-can-stand Phase 1) plus ' +
-            'the trigger-presence baseline (road-to-an-installed-layer-that-is-thinned step 3.4). ' +
-            'SHRINK-ONLY on every axis: an id may LEAVE `missing` or `no_trigger`, never join either ' +
-            'one; a recorded exception is a ceiling the rule may fall below and never rise above. ' +
-            'Raising one to clear a red is the config-weakening move this repo blocks by ' +
-            'construction — `--write-baseline` refuses to raise, it only re-records the smaller of ' +
-            'old and current. A rule at its exception is not thereby correct, only not worse. ' +
-            'Regenerate with `lint_rule_law_section --write-baseline`; never hand-edit the counts, ' +
-            'but DO hand-edit `owner`, `review` and `reason` — those are the review contract and the ' +
-            'generator only seeds them.',
+            'the trigger-presence baseline (road-to-an-installed-layer-that-is-thinned step 3.4). Two ' +
+            'different guarantees, not one: `law_exceptions` and `body_exceptions` are numeric ' +
+            'ceilings `--write-baseline` structurally refuses to raise (it re-records the SMALLER of ' +
+            'old and current, never the current alone) — a rule at its exception is not thereby ' +
+            'correct, only not worse. `missing` and `no_trigger` are LIST membership: an id SHOULD ' +
+            'only leave, never join, but that is a review convention the generator does not enforce ' +
+            'by construction — `--write-baseline` re-records every id that currently fails ' +
+            'presence/trigger, full stop, so a newly-broken rule is swept in exactly like a ' +
+            'genuinely-fixed one is swept out. The `stale-baseline-entry` finding makes a fixed id ' +
+            'visible for removal; nothing makes a newly-broken id visible for refusal except a human ' +
+            'reading the diff. Regenerate with `lint_rule_law_section --write-baseline`; never ' +
+            'hand-edit the counts, but DO hand-edit `owner`, `review` and `reason` — those are the ' +
+            'review contract and the generator only seeds them.',
         measured_at_commit: prev.measured_at_commit ?? '',
         no_trigger,
         missing,
