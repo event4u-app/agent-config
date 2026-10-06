@@ -12,9 +12,13 @@
  * information that tells a reader what to do next.
  */
 
-import { describe, expect, it } from 'vitest';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 
-import { classifyConflicts, isGenerated, isRemeasured, main, renderConflictReport } from "../../src/scripts/sync_pr_branch.js";
+import { describe, expect, it, vi } from 'vitest';
+
+import { classifyConflicts, isGenerated, isRemeasured, main, renderConflictReport, updateStrategy } from "../../src/scripts/sync_pr_branch.js";
 
 describe('generated vs authored', () => {
     it('recognises the generated artefacts a merge routinely conflicts on', () => {
@@ -342,5 +346,44 @@ describe('sync_pr_branch — generated paths added from the conflict census', ()
             'docs/CLAIMS.md',
             'internal/reports/exec-evidence-feasibility.json',
         ]);
+    });
+});
+
+describe('git.update_strategy', () => {
+    const repoWith = (settings: string | null): string => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-pr-branch-'));
+        if (settings !== null) fs.writeFileSync(path.join(dir, '.agent-settings.yml'), settings);
+        return dir;
+    };
+
+    it('reads the default `merge` when nothing declares a strategy', () => {
+        expect(updateStrategy(repoWith(null))).toBe('merge');
+    });
+
+    it('reads the declared strategy from the project layer', () => {
+        expect(updateStrategy(repoWith('git:\n  update_strategy: rebase\n'))).toBe('rebase');
+        expect(updateStrategy(repoWith('git:\n  update_strategy: merge\n'))).toBe('merge');
+    });
+
+    it('refuses before touching git under `rebase`, even in a dry run', () => {
+        // sync() on a non-git directory also exits 1, so the exit code alone cannot
+        // tell the refusal from a failed merge attempt — the message can.
+        const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        try {
+            expect(main(['--repo', repoWith('git:\n  update_strategy: rebase\n'), '--dry-run', '--quiet'])).toBe(1);
+            expect(out.mock.calls.map((c) => String(c[0])).join('')).toContain('git.update_strategy is `rebase`');
+        } finally {
+            out.mockRestore();
+        }
+    });
+
+    it('does not refuse under the default `merge`', () => {
+        const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        try {
+            main(['--repo', repoWith(null), '--dry-run', '--quiet']);
+            expect(out.mock.calls.map((c) => String(c[0])).join('')).not.toContain('git.update_strategy is `rebase`');
+        } finally {
+            out.mockRestore();
+        }
     });
 });

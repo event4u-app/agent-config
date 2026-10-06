@@ -40,6 +40,7 @@ import {
     loadPolicyAtSha,
     type ShaFileReader,
 } from './_lib/branch_convergence.js';
+import { load_agent_settings } from './_lib/agent_settings.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 const NETWORK_TIMEOUT_MS = 8_000;
@@ -845,6 +846,19 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
     };
 }
 
+/**
+ * `git.update_strategy` for the repository. An unreadable settings file reads as
+ * the default `merge`, which is what this script did before the key existed.
+ */
+export function updateStrategy(repo: string): string {
+    try {
+        const git = load_agent_settings({ cwd: repo }).git as { update_strategy?: unknown } | undefined;
+        return typeof git?.update_strategy === 'string' ? git.update_strategy : 'merge';
+    } catch {
+        return 'merge';
+    }
+}
+
 export function main(argv?: readonly string[]): number {
     const args = argv ?? process.argv.slice(2);
     let repo = process.cwd();
@@ -901,6 +915,18 @@ export function main(argv?: readonly string[]): number {
             reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'argument error' });
             return 1;
         }
+    }
+
+    // This script only merges. Under `rebase` a merge of the base is the commit
+    // the setting excludes, and a rebase needs the user's request per
+    // git-history-discipline, so refusing is the only correct automatic outcome.
+    if (updateStrategy(repo) === 'rebase') {
+        process.stdout.write(
+            '⚠️  sync_pr_branch: refused — git.update_strategy is `rebase`, and this script only merges the base in. ' +
+                'Rebase onto origin/<base> on request instead (git-workflow references/branch-update.md).\n',
+        );
+        reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'refused under git.update_strategy: rebase' });
+        return 1;
     }
 
     let plan: Plan;
