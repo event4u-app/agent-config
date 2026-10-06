@@ -109,6 +109,21 @@ as verification.
 - [~] **2.3 Default `shadow` → `warn`.** Deferred: a shipped-default flip is an owner
       decision (`agents/roadmaps/stubs/road-to-discipline-default-flip.md:11-12`) and needs
       2.1's reading first.
+      <!-- deferred-resolution: carried-to=road-to-touched-files-that-pass-their-own-tools-carried -->
+      Resolved 2026-10-06 under `roadmap-progress-sync` Iron Law 3 as the
+      council-decidable disposition **carry into a named follow-up created in the SAME
+      change**. 2.1's reading landed this change, so the second leg of the deferral is
+      discharged; the first — the owner's own act on a shipped default — is owner-reserved
+      and is NOT decided here. The step is restated verbatim in
+      `agents/roadmaps/later/road-to-touched-files-that-pass-their-own-tools-carried.md`
+      with blocker `touched-file-quality-default-is-an-owner-call`, which carries the
+      reading, a recommendation (keep `off` and fix the two soundness findings first) and
+      an explicit `If you do nothing`. Parked under `later/` rather than left active
+      because its entry condition is an owner decision with no agent-side next step; the
+      receiver is estate-growth-exempt against this roadmap's archival in the same change.
+      The stub remains the authority for the RULE and was deliberately left unedited — a
+      second ledger for one item is drift, and `lint_deferral_integrity`'s `_locate` does
+      not resolve `stubs/` as a carry destination in any case.
 
 ## Acceptance criteria
 
