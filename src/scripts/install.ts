@@ -3032,15 +3032,7 @@ function _deploy_global_content(
                     warn(`claude-code: thinned rule layer not written — ${String(e)}`);
                 }
             }
-            // Step 1.2: the receipt prints BEFORE `record_deploy`, so on a first
-            // install the inventory on disk is still empty. `current_files` is
-            // the set this run just wrote, which is the evidence the receipt
-            // would otherwise be missing.
-            if (!state.QUIET)
-                for (const l of installReceiptBudgetLines(package_root, undefined, {
-                    thisDeploy: new Map([[anchor, current_files]]),
-                }))
-                    info(l);
+            if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root, undefined, { thisDeploy: new Map([[anchor, current_files]]) })) info(l);
         }
 
         const missing_targets = _verify_deploy_targets(anchor, plan);

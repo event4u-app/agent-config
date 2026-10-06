@@ -22421,11 +22421,7 @@ function _deploy_global_content(tools, force, package_root, lockfile_path2) {
           warn(`claude-code: thinned rule layer not written \u2014 ${String(e)}`);
         }
       }
-      if (!state.QUIET)
-        for (const l of installReceiptBudgetLines(package_root, void 0, {
-          thisDeploy: /* @__PURE__ */ new Map([[anchor, current_files]])
-        }))
-          info(l);
+      if (!state.QUIET) for (const l of installReceiptBudgetLines(package_root, void 0, { thisDeploy: /* @__PURE__ */ new Map([[anchor, current_files]]) })) info(l);
     }
     const missing_targets = _verify_deploy_targets(anchor, plan);
     if (missing_targets.length > 0) {
