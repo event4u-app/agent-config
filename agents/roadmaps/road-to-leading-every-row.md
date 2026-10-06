@@ -128,7 +128,7 @@ loop whose observer ships disabled. Named once so no later round re-derives them
 - [ ] **3.2 Record each answer as a `## Decisions` row in the lane or stub it unblocks**,
       not here. This file keeps questions; lanes keep decisions.
       <!-- blocked-by: b5-skill-growth-for-stacks | asked: yes — put to the owner 2026-10-01 and unanswered at 2026-10-06; re-confirmed owner-reserved by AI council 3/4 that day. D3 of the stacks lane cannot stop reading PENDING until the owner answers b5, and D1 of the neighbours lane cannot until the owner answers the two ranks b6 still carries -->
-      verify: `grep -c 'PENDING' agents/roadmaps/road-to-stacks-beyond-php.md agents/roadmaps/road-to-neighbours-that-pull-their-weight.md` -> /:0$/
+      verify: `grep -c 'PENDING' agents/roadmaps/later/road-to-stacks-beyond-php.md agents/roadmaps/road-to-neighbours-that-pull-their-weight.md` -> /:0$/
 
       **Hand-over, measured 2026-10-06 against `origin/main` `6b79d06de`.** Every blocker
       was run as a command rather than read as its `Status:` line. Four of the seven are
@@ -162,14 +162,14 @@ loop whose observer ships disabled. Named once so no later round re-derives them
       *This step's own oracle is broken, and this run did not repair it.* Re-measured at
       `6b79d06de`, `grep -n 'PENDING'` over the two lanes returns four hits, and two of
       them are structurally outside the two rows the step is about:
-      `road-to-stacks-beyond-php.md:92` is the lane's own instruction text inside a fenced
+      `later/road-to-stacks-beyond-php.md:122` is the lane's own instruction text inside a fenced
       block — it quotes the grep command, so the oracle counts the command that reads it —
       and `road-to-neighbours-that-pull-their-weight.md:518` is row `D12`, whose blocker is
       `mcp-recorder-unreachable-behind-the-tools-filter`, not `b6`. **The count therefore
       cannot reach `:0` whatever the owner answers.** The precise form is:
 
       ```
-      grep -c '^| D3 .*PENDING' agents/roadmaps/road-to-stacks-beyond-php.md; grep -c '^| D1 .*PENDING' agents/roadmaps/road-to-neighbours-that-pull-their-weight.md
+      grep -c '^| D3 .*PENDING' agents/roadmaps/later/road-to-stacks-beyond-php.md; grep -c '^| D1 .*PENDING' agents/roadmaps/road-to-neighbours-that-pull-their-weight.md
       ```
 
       It is still written rather than installed, and the reason has changed from the
@@ -185,7 +185,7 @@ loop whose observer ships disabled. Named once so no later round re-derives them
       a separate change with an independent reviewer, which is what the next runner should
       open rather than fold into a run this step gates.
 
-      *What an answer to `b5` still does not buy.* `road-to-stacks-beyond-php.md:100-110`
+      *What an answer to `b5` still does not buy.* `later/road-to-stacks-beyond-php.md:128-137`
       records the probe, re-confirmed at this tip: base `skill_count` 299 /
       `skill_description_tokens` 11460; one skill added fails the gate twice; six skills
       cost +6 and roughly +230 against allowance 0. This file's `estate_offset_exempt`
@@ -316,7 +316,7 @@ K17–K22 for different items, which are renumbered K27–K32 here so one ID mea
 - **Recommendation:** Yes, capped at two per stack and only for rows that lane's composition table marks `create`.
 - **If you do nothing:** the lane lands its composition table, routing and reference work; python and typescript packs stay at one artefact.
 - **What to do:** pick exactly one — (a) cap two per stack; (b) a different cap, written into that lane's D3 row; (c) no new skills.
-- **Resolved when:** the D3 row of `road-to-stacks-beyond-php.md` no longer reads `PENDING`.
+- **Resolved when:** the D3 row of `later/road-to-stacks-beyond-php.md` no longer reads `PENDING`. That lane was parked on 2026-10-06 — its Phases 1 and 3 are closed and re-verified, and this blocker is the whole of what remains, so it waits in `later/` with an `entry_condition` naming b5 rather than sitting in the active tree as executable backlog.
 - **Routing, 2026-10-06 — owner, 3/4.** The majority read a **zero** allowance as a freeze rather than a budgeted threshold, and `estate_growth_exempt` as the record of an owner-approved exception rather than a path an agent or a council may authorise itself onto. The dissenting seat argued the opposite — that a documented per-file exemption is already inside the governance envelope, that nothing in the enumerated owner-reserved set matches, and that `product-owned` is therefore a mislabel. It is recorded because it is a real argument, and it did not carry: a 1-of-4 position is not the ground to grow a frozen corpus on.
 - **Two refinements the owner inherits, from the seats that looked hardest at the cost.** (1) Whichever cap is set, require per-row evidence that extending or composing an existing skill cannot cover that row — a capability-level reason, never "stack parity" — because six individually justified exceptions can defeat the anti-sprawl policy in substance while leaving the formal zero untouched. (2) The answer needs the **freeze's own status**: *temporary, pending a reorganisation* and *permanent, the suite stops here* give opposite answers to the same cap question, and that fact is not recorded anywhere in the tree.
 

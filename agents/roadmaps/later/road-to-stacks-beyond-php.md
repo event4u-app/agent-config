@@ -1,8 +1,26 @@
 ---
 complexity: lightweight
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
+owner: maintainer
+entry_condition:
+  what: >
+    The owner answers blocker `b5-skill-growth-for-stacks` in `road-to-leading-every-row`
+    — the cap on new skills per stack, given `skill_count` carries zero allowance
+    (`src/scripts/check_estate_count.ts:741`). Until that answer exists the three Phase 2
+    steps may not run and the D3 row below keeps its pending marker. The literal token is
+    deliberately not repeated here: the programme's step 3.2 greps this file for it, and a
+    frontmatter copy would be a hit no owner answer could ever clear.
+  when: >
+    After the owner rules on b5. No date is meaningful because the decision is the gate:
+    the question was put 2026-10-01, is still unanswered, and was re-confirmed
+    owner-reserved by two AI-council passes on 2026-10-06 (3 of 4 seat-opinions).
+  who: >
+    The owner, for b5. Nobody else — the council declined to decide it on two passes,
+    and a zero allowance reads as a freeze rather than a budgeted threshold.
+review_by: 2026-12-31
+capability_gap: none
 estate_offset_exempt: "lane of road-to-leading-every-row; the set's growth is declared there. No active, parked or stub roadmap owns test or convention content for python, typescript or go; the quality-tooling third is deliberately routed into the stub road-to-target-project-bootstrap-enforce instead of a skill, and the two one-artefact packs cannot be archived into anything."
 relates:
   - slug: road-to-leading-every-row
@@ -79,6 +97,18 @@ adapt by the resolver's ecosystem, quality lands as `quality-tools` references, 
 
 ## Phase 2 — At most two skills per stack, behind the owner's cap
 
+**This file is parked in `later/` because this phase is all that remains of it.** Phases 1
+and 3 are closed, and each of their `verify:` clauses was re-run on 2026-10-06 against
+`origin/main` `2bb3a1a03` rather than read off a checkbox: 1.1 reads 30 classified rows,
+1.2 reads 299 skills on both sides, 1.3 and 3.1 pass their vitest cases, 1.4 reads 2
+reference files, and 3.2's catalog oracle still reads `299-14845`. Nothing here is
+unfinished work — the only open steps are the three below, and all three are gated on one
+owner question. Parking follows the disposition a sibling of the same inbox round already
+took: `later/road-to-federation-behind-adr-278.md` is held on blocker b8 of this same
+programme and names it in its own `entry_condition`. The wake condition is in this file's
+frontmatter; the hold itself stays registered once, in the programme, and is deliberately
+not duplicated here — one owner question with two records is two records that can drift.
+
 **Hand-over, measured 2026-10-05 against `origin/main` `18ac6b21e`.** All three steps share
 one blocker and one gate, so the mechanics are written once here; each step below carries
 only its own delta. Nothing in this block is a decision — it is the work that becomes
@@ -89,7 +119,7 @@ different cap written into D3, (c) no new skills — the question is
 `road-to-leading-every-row.md:223`. Run the condition, never read a `Status:` line:
 
 ```
-grep -n 'PENDING' agents/roadmaps/road-to-stacks-beyond-php.md
+grep -n 'PENDING' agents/roadmaps/later/road-to-stacks-beyond-php.md
 ```
 
 A hit on the D3 row means the question is open and no 2.x step may run. Zero hits means D3
