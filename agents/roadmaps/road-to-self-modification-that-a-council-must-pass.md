@@ -157,7 +157,7 @@ At `df377ca64`:
 
 ## Phase 1 — The directive is a decision on record
 
-- [ ] **1.1 One decision record, drafted as proposed.** A new ADR with
+- [x] **1.1 One decision record, drafted as proposed.** A new ADR with
       `status: proposed`, numbered with the next free number and carrying
       `council-confirmed-self-modification` in its file name, quotes the
       directive with its date and states three things. Self-modification is a goal, not an exception. For a change to
