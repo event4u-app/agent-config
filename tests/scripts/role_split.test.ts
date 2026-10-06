@@ -1,6 +1,6 @@
 /**
  * Tests for the analyzer / curator / proposer split and the outcome-blind judge
- * (`src/scripts/_lib/role_split.ts`,
+ * (`./role_split.ts`,
  * road-to-governed-harness-evolution step 5.3).
  *
  * The verify clause is *"the three roles are separate prompts with separate
@@ -42,10 +42,10 @@ import {
     type JudgeInput,
     type Role,
     type RoleInput,
-} from '../../src/scripts/_lib/role_split.js';
+} from './role_split.js';
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
-const ROLE_SPLIT_TS = path.join(REPO, 'src', 'scripts', '_lib', 'role_split.ts');
+const ROLE_SPLIT_TS = path.join(REPO, 'tests', 'scripts', 'role_split.ts');
 
 function input(kind: InputKind, id = `${kind}-1`): RoleInput {
     return { kind, id, text: `body of ${id}` };
