@@ -73,6 +73,13 @@ git checkout {child-branch}
 git merge {parent-branch} --no-edit
 ```
 
+- **Under `git.update_strategy: rebase`** do not merge the chain: a merge
+  commit on a feature branch is what that setting excludes, and this command
+  must not leave one behind to be pushed later. Check the target branch back
+  out, report which branches are behind their parent, and finish without error
+  — the review then runs against `git merge-base HEAD origin/main`. Updating the
+  chain is a rebase the user asks for
+  ([`branch-update`](../../../skills/git-workflow/references/branch-update.md)).
 - If a **merge conflict** occurs at any point:
   - Run `git merge --abort`
   - Abort the entire process immediately

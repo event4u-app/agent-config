@@ -63,7 +63,9 @@ Run `## Procedure: Establish the house convention` from
 [`conventional-commits-writing`](../../../skills/conventional-commits-writing/SKILL.md)
 verbatim: tier-1 sources first (opened and read, never taken from a grep hit),
 then the capped-weighted consensus pass with bots, merges, reverts and release
-automation excluded.
+automation excluded. A `git.commit_format` a human set (the skill's tier 1b)
+is the target: report it as `Declared : git.commit_format: …`, skip step 3's
+style question, and keep the other authorisations.
 
 Report what it found, in one block, before offering anything:
 

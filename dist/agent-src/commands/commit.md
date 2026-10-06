@@ -57,7 +57,15 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
 
 ### 2. Determine the ticket number
 
-- Extract the ticket ID from the current branch name (e.g. `feat/DEV-1234/...` → `DEV-1234`).
+- Extract the ticket ID from the current branch name — the first token matching
+  `[A-Z][A-Z0-9]+-[0-9]+`, wherever it sits (`feat/DEV-1234/...`,
+  `DEV-1234-device-export`, `fix/DEV-1234-quantity` → `DEV-1234`). The match
+  never depends on `git.branch_pattern`, so a branch named before the pattern
+  was set still yields its ticket. A standard name that fits the shape
+  (`UTF-8`, `ISO-8601`, `SHA-256`) is not a ticket — treat the branch as having none.
+- Read `git.commit_format` (`agent-config settings:get git.commit_format`) once;
+  it decides where the ticket goes (see the conventional-commits-writing skill,
+  § Place the ticket).
 - If no ticket ID is found in the branch name, ask the user:
   ```
   > No Jira ticket found in branch name. Do you want to include one?
@@ -65,8 +73,12 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
   > 1. Yes — I'll provide the ticket number
   > 2. No — skip ticket number
   ```
-- If the user provides a ticket number, use it as the scope in all commit messages.
-- If skipped, omit the scope entirely — write `chore: ...` not `chore(): ...`.
+- If the user provides a ticket number, place it per `git.commit_format` in all
+  commit messages: `ticket-scope` (default) → as the scope, `feat(DEV-1234): …`;
+  `ticket-prefix` → before the type, `DEV-1234 feat(<area>): …`, and the ticket
+  is never the scope.
+- If skipped, omit the ticket entirely — under `ticket-scope` write `chore: ...`
+  not `chore(): ...`; under `ticket-prefix` keep any area scope.
 
 ### 3. Analyze the changes
 
@@ -114,14 +126,18 @@ from `.agent-settings.yml`. Both default to `false`.
 
 **Terse path** — `preview_artifacts: false` AND `routine_confirmations: false`:
 
-1. Validate every generated commit message against the
-   conventional-commits regex
-   `^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`.
+1. Validate every generated commit message against the regex for the
+   configured `git.commit_format`:
+   - `ticket-scope` (default):
+     `^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`
+   - `ticket-prefix`:
+     `^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`
+     — and additionally invalid when a ticket id stands in the scope.
 2. **All messages valid** → skip the preview block and the confirmation
    prompt. Print one line summarising the plan and proceed to step 6:
 
    ```
-   → 3 commits planned: feat, test, chore (scope: DEV-1234)
+   → 3 commits planned: feat, test, chore (ticket: DEV-1234)
    ```
 
 3. **Any message invalid** → `preview-on-error` safety net fires:
@@ -140,7 +156,9 @@ Show the proposed commits as a numbered list, including which files go into each
 ```
 Proposed commits:
 
-(Laravel-project example)
+(Laravel-project example, `git.commit_format: ticket-scope`; under
+`ticket-prefix` the first subject reads
+`DEV-1234 feat(working-time): add absence type filter to working time report`)
 1. feat(DEV-1234): add absence type filter to working time report
    → app/Services/WorkingTimeService.php
    → app/Http/Controllers/WorkingTimeController.php

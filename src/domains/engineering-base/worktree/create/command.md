@@ -39,8 +39,9 @@ Without a primitive, the skill's plain `git worktree add` path applies.
 
 ### 2. Branch naming — propose once
 
-Derive ONE branch name from the task (`<type>/<short-slug>` per the
-`commit-conventions` rule), state it, and proceed. Do not present a
+Derive ONE branch name from the task — the shape `git.branch_pattern`
+declares (default `{type}/{slug}`; a ticket-named team sets `{ticket}-{slug}`),
+per the `commit-conventions` rule — state it, and proceed. Do not present a
 naming menu; the user can override by naming a branch in the same turn.
 
 ### 3. Write the scope-lock note

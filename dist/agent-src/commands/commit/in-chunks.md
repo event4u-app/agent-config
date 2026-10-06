@@ -43,10 +43,12 @@ If there are no uncommitted changes (staged or unstaged), report
 
 ### 2. Determine the ticket number
 
-- Extract the ticket ID from the current branch name (e.g. `feat/DEV-1234/...`
-  → `DEV-1234`).
-- If no ticket ID is found, omit the scope from the messages — write
-  `chore: ...` not `chore(): ...`. Do **not** ask the user for one.
+- Extract the ticket ID from the current branch name exactly as
+  [`/commit`](../commit.md) step 2 does (first `[A-Z][A-Z0-9]+-[0-9]+` token),
+  and place it per `git.commit_format` — as the scope under `ticket-scope`
+  (default), before the type under `ticket-prefix`.
+- If no ticket ID is found, omit it — write `chore: ...` not `chore(): ...`.
+  Do **not** ask the user for one.
 
 ### 3. Analyze and split
 
@@ -80,8 +82,8 @@ strip one.
 ### 4. Validate, then commit immediately
 
 Before staging anything, run the same `preview-on-error` validator as
-[`/commit`](../commit.md) step 5. Each generated message must match
-`^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`.
+[`/commit`](../commit.md) step 5 — the regex for the configured
+`git.commit_format`, listed there.
 
 - **All valid** → proceed silently.
 - **Any invalid** → stop, print the failed message(s) + the regex,

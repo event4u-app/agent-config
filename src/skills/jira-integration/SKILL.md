@@ -147,8 +147,12 @@ POST /issue/DEV-1234/transitions
 ## Linking to PRs
 
 When creating PRs, include the Jira ticket in:
-- **Branch name:** `feat/DEV-1234/description`
-- **PR title:** `feat(DEV-1234): description`
+- **Branch name:** per `git.branch_pattern`, carrying the ticket — e.g.
+  `feat/DEV-1234-description` (`{type}/{ticket}-{slug}`) or
+  `DEV-1234-description` (`{ticket}-{slug}`)
+- **PR title:** per `git.commit_format` — `feat(DEV-1234): description`
+  (`ticket-scope`, default) or `DEV-1234 feat(area): description`
+  (`ticket-prefix`)
 - **PR description:** Link to the ticket
 
 ## Related

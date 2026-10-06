@@ -97,7 +97,10 @@ branch** — that is what makes the deliverable remote. Then:
    [`commit-policy`](../../../rules/commit-policy.md) — never ask how).
 2. Update the branch against its PR base first:
    `./scripts-run src/scripts/sync_pr_branch`, then regenerate any derived files
-   the merge touched (`task sync && task generate-tools`). A PR left behind its
+   the merge touched (`task sync && task generate-tools`). Under
+   `git.update_strategy: rebase` the script refuses; rebase on the user's request
+   instead ([`branch-update`](../../../../skills/git-workflow/references/branch-update.md)),
+   never merge the base in. A PR left behind its
    base accumulates conflicts for the moment someone wants to merge it, and a
    push against a moved base is rejected — both cost a round trip that this one
    call prevents.

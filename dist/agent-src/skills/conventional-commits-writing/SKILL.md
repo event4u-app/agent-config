@@ -46,6 +46,7 @@ imposing the shipped default there produces commits that read as foreign in
 | Tier | Source | Binding? |
 |---|---|---|
 | **1 — configured** | `commitlint.config.*` · `.gitmessage` · a `commit-msg` hook (husky / lefthook / `.git/hooks`) · `CONTRIBUTING.md` § Commits · a CI job that validates subjects · release automation that PARSES subjects (semantic-release, changesets, git-cliff, conventional-changelog) | yes — Class A, no approval needed |
+| **1b — declared** | `git.commit_format` set by a human on any settings layer — `agent-config settings:get git.commit_format` names the file; a value that resolves only from the shipped template is **not** a declaration | yes — the user's own word, so no measurement and no ask |
 | **2 — measured + approved** | the consensus pass below, after the user says yes | yes, for this repository |
 | **3 — measured, unapproved** | the same pass before the user answers | **no — advisory**; report the mismatch, write Conventional |
 | **4 — default** | Conventional Commits | yes |
@@ -60,6 +61,7 @@ Check for the parser before you trust the prevalence.
 ### 1. Look for tier 1 before measuring anything
 
 ```bash
+agent-config settings:get git.commit_format   # tier 1b when a human set it
 ls commitlint.config.* .commitlintrc* .gitmessage .czrc 2>/dev/null
 git config --get commit.template
 ls .husky/commit-msg .git/hooks/commit-msg 2>/dev/null
@@ -144,8 +146,9 @@ given outside a table because a markdown cell would need the alternation pipes
 escaped and `\|` in ERE is a literal pipe, not an alternation:
 
 ```
-conventional      ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
-ticket-prefix     ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
+conventional          ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
+ticket-conventional   ^[A-Z][A-Z0-9]+-[0-9]+ (build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
+ticket-prefix         ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
 gitmoji           ^:[a-z0-9_+-]+:[[:space:]]|^[^[:ascii:][:space:]]
 imperative-plain  ^[A-Z][a-z]+[[:space:]].*[^.]$
 other             everything else
@@ -159,12 +162,14 @@ the classifier, not a gap to fill by guessing: a repo whose only distinction
 from Conventional is mood will read as `imperative-plain` either way, and the
 mood question belongs in the ask at step 6.
 
-`classifier_version` in step 7 names the revision of THIS section — the five
-patterns above plus the exclusions in step 2. It is a provenance stamp so a
-later measurement can be compared against a like one; it does not claim an
+`classifier_version` in step 7 names the revision of THIS section — the six patterns above (`ticket-conventional` added 2026-10-06; re-measure an older card) plus the exclusions in step 2.
+It is a provenance stamp so a later measurement can be compared against a like one; it does not claim an
 executable classifier ships anywhere in the tree.
 
 Record the runner-up family too — a near-tie is itself the finding.
+
+`ticket-conventional` precedes `ticket-prefix`, which would otherwise swallow it as "ticket, then free text".
+A dominant `ticket-conventional` family maps to `git.commit_format: ticket-prefix` — propose that in the step-6 ask.
 
 ### 4. Aggregate, capped per author, per half
 
@@ -274,18 +279,21 @@ If yes:
 - Suggest splitting into multiple commits
 - Or choose the dominant net effect for squash merge title
 
-### 3. Choose scope
+### 3. Place the ticket, then choose the scope
 
-Add a scope only if it improves clarity:
+Ticket id: any `[A-Z][A-Z0-9]+-[0-9]+` token in the branch name, or the user; `git.commit_format` places it:
+| `git.commit_format` | With a ticket | Without a ticket |
+|---|---|---|
+| `ticket-scope` (default) | `feat(DEV-1234): add export filter` | `feat: add export filter` |
+| `ticket-prefix` | `DEV-1234 feat(exporter): add export filter` | `feat(exporter): add export filter` |
 
-- Jira ticket ID: `DEV-1234`
-- Module/area: `api`, `auth`, `skills`, `rules`, `ci`
+Under `ticket-prefix` **a ticket is never a scope**; the scope names the system area (`api/audio`, `ci`), only if it adds clarity.
 
 ### 4. Write the description
 
 - State the intent clearly
 - Avoid generic filler (`update stuff`, `fix things`)
-- Stay concise — max 72 chars total for first line
+- Stay concise — max 72 chars total for first line (the ticket prefix counts)
 - Imperative mood: "add", "fix", "remove" — not "added", "fixed", "removed"
 
 ### 5. Check for breaking change
@@ -316,6 +324,8 @@ Or add `BREAKING CHANGE:` in the commit body/footer.
 
 ## Procedure: Generate squash merge title
 
+Only for a squash merge — rebase-and-merge keeps every commit (`/pr:merge` § 9 reads the method from the forge).
+
 1. Read all commits in the PR
 2. Identify the **net effect** — what does the PR accomplish overall?
 3. Write a single Conventional Commit message summarizing the net effect
@@ -324,8 +334,8 @@ Or add `BREAKING CHANGE:` in the commit body/footer.
 ## Output format
 
 1. The convention in force and the tier that established it — `configured
-   (commitlint.config.js)`, `approved (ticket-prefix, 84% of 137)`, or
-   `default (Conventional Commits)`
+   (commitlint.config.js)`, `declared (git.commit_format: ticket-prefix)`,
+   `approved (family ticket-prefix, 84% of 137)`, or `default (Conventional Commits)`
 2. Recommended commit message(s)
 3. Brief rationale for type choice
 4. Split suggestion if the change should be multiple commits
@@ -372,6 +382,7 @@ to every commit message you author.
   advisory, and silence is not approval
 - Do NOT let prevalence lift a `never` or `explicit-only` floor
 - Do NOT use vague messages: `update stuff`, `fix bug`, `changes`
+- Do NOT put a ticket id in the scope when `git.commit_format` is `ticket-prefix`
 - Do NOT use `refactor` for bug fixes
 - Do NOT use `chore` for meaningful behavior changes
 - Do NOT hide multiple unrelated concerns in one message

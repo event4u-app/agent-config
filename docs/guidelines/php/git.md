@@ -34,6 +34,10 @@ hotfix/DEV-999/critical-payment-bug
 - Always include the Jira ticket ID when one exists
 - Use kebab-case for the description part
 - Keep branch names short but descriptive
+- The shape above is this guideline's convention; the agent creates branches
+  per `git.branch_pattern` (package default `{type}/{slug}`, a ticket-named team
+  sets `{ticket}-{slug}` → `DEV-1234-device-export`). Reading the ticket back out
+  of a branch never depends on the pattern.
 
 ## Commit Messages
 
@@ -68,8 +72,22 @@ that is not better classified as `build`, `ci`, or `docs`.
 
 Use a scope when it adds clarity. Good scopes:
 
-- Jira ticket ID: `DEV-1234`
+- Jira ticket ID: `DEV-1234` — only under `git.commit_format: ticket-scope`
+  (default)
 - Module/area: `api`, `auth`, `skills`, `rules`, `ci`, `frontend`, `linter`
+
+Under `git.commit_format: ticket-prefix` the ticket leads the subject and is
+**never** the scope:
+
+```
+DEV-1234 feat(exporter-models): add optional classification fields
+DEV-1234 docs(dataflor-exporter): document device export filters
+DEV-1235 chore(ci): reduce deployment token permissions
+```
+
+`fix(DEV-1234): …` is a wrong subject there. Tooling that parses subjects
+(commitlint, release automation, changelog generators) must be configured for
+the prefixed form, because standard parsers expect the type first.
 
 Do not add a scope if it adds no value. `fix(core): fix typo` → just `fix: fix typo`.
 
@@ -158,6 +176,10 @@ Before writing the commit message:
 ## Pull Requests
 
 - PR title follows commit message format: `feat(DEV-1234): short description`
+  (or `DEV-1234 feat(area): short description` under `ticket-prefix`)
+- Bring the branch up to date per `git.update_strategy` — merge the base in
+  (default) or rebase onto `origin/main` and push with `--force-with-lease`;
+  see `git-workflow` › `references/branch-update.md`
 - Fill in the PR template (checklist, description, testing notes)
 - Link the Jira ticket in the PR description
 - Ensure all quality gates pass before requesting review

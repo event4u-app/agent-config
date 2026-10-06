@@ -138,8 +138,18 @@ gh pr checkout <N>
 git merge origin/<base> --no-edit
 ```
 
-Merge the base **into** the branch. Never rebase a branch that is already
-pushed ([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
+Merge the base **into** the branch. Never rebase here: the `/pr:merge`
+authorisation covers merging the named PRs, not rewriting their branches
+([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
+
+**Under `git.update_strategy: rebase`** this step does not merge: a
+`Merge branch '<base>' into …` commit is what that setting excludes. The
+`/pr:merge` sentence authorises merging the named PRs, not rewriting their
+branches, so a PR that is behind its base is reported and left for the author
+to rebase — disposition `blocked-external` — unless the invocation itself asked
+for the rebase. On a repository that merges with `--rebase` (§ 9) a PR that is
+behind but conflict-free does not need this step at all: the forge replays its
+commits onto the current base.
 
 ## 3. Resolve conflicts by class, never by taste
 

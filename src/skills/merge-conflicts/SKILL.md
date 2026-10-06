@@ -222,10 +222,15 @@ git add .
 
 | Approach | When to use |
 |---|---|
-| `git merge main` | Default — preserves history, safer for shared branches |
-| `git rebase main` | Only when explicitly asked — rewrites history, cleaner log |
+| `git merge main` | Default (`git.update_strategy: merge`) — preserves history, safer for shared branches |
+| `git rebase origin/main` | `git.update_strategy: rebase`, or when explicitly asked — rewrites history, linear log |
 
-**Never rebase without explicit permission** (per `no-commit` rule).
+**Never rebase without explicit permission** (per `git-history-discipline`) —
+the setting picks the operation, the user's request this turn authorises it.
+Under `rebase`, conflicts surface per commit: resolve each to the correct end
+state, `git add`, `git rebase --continue`; `git rebase --abort` restores the
+pre-rebase branch. Full protocol:
+[`git-workflow` › branch-update](../git-workflow/references/branch-update.md).
 
 ## Output format
 

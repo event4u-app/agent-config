@@ -101,7 +101,7 @@ Run, in order:
 | Gate | Overlapping open PR touches same files? | Action |
 |---|---|---|
 | exit `0`, prints `branch is current` | — | Proceed to Step 2 |
-| exit `1` | No | **Merge the base in** — `git fetch origin && git merge origin/{resolved-base} --no-edit` — then run the regeneration set below, then proceed. No need to ask; state that you did it. |
+| exit `1` | No | **Bring the base in** per `git.update_strategy` ([`branch-update`](../../../../skills/git-workflow/references/branch-update.md)). `merge` (default): `git fetch origin && git merge origin/{resolved-base} --no-edit` — no need to ask; state that you did it. `rebase`: `git fetch origin && git rebase origin/{resolved-base}` — ask first unless the user asked for the update this turn, and never fall back to a merge. Then run the regeneration set below, then proceed. |
 | exit `1` | **Yes** | STOP — surface the overlapping PR number, ask: stack on top of it / wait for it to land / proceed-anyway-and-accept-conflicts / cancel |
 | exit `0`, prints `NOT VERIFIED` | — | The base could not be reached, so freshness is **unknown** — not confirmed. Re-run once; if it persists, say the check did not run rather than reporting a pass. A base that `ls-remote` cannot resolve (deleted or renamed after the PR opened, or a fork base) lands here too. |
 | warns `could not ask the forge` | — | The **default** base was checked and an open PR against a different base was **not** ruled out. Say so; do not report it as a clean freshness pass. |
@@ -137,8 +137,10 @@ a generated-file conflict never is.
 
 The gate above is not creation-only. **Every subsequent push** to a branch with
 an open PR (a CI fix, a review response, a follow-up commit) re-runs the same
-sequence first: `check_branch_freshness` → on exit `1`, merge
-`origin/{resolved-base}` in → regenerate the derived files → verify → push.
+sequence first: `check_branch_freshness` → on exit `1`, bring
+`origin/{resolved-base}` in per `git.update_strategy` (merge by default; under
+`rebase` a rebase that is asked for, never a merge, and `sync_pr_branch` refuses)
+→ regenerate the derived files → verify → push.
 A PR that sits open while its base advances goes stale silently; keeping the
 base merged **at every touch** means it stays `mergeStateStatus: CLEAN` instead
 of accumulating conflicts for the moment the user wants to merge. If the gate

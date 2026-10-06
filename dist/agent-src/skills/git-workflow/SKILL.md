@@ -56,7 +56,7 @@ gh pr view <number> --json number,state,mergeStateStatus,mergedAt,baseRefName
   **same turn**; never merge on a status seen earlier in the conversation.
 - **"Based on main" / "current"** → prove it with
   `npx tsx node_modules/@event4u/agent-config/src/scripts/check_branch_freshness.ts`;
-  exit `1` ⇒ the branch is behind and is **not** current — merge the base in,
+  exit `1` ⇒ the branch is behind and is **not** current — update it from the base per `git.update_strategy` ([`references/branch-update.md`](references/branch-update.md)),
   regenerate the derived files, then open the PR (see
   [`/create-pr`](../../commands/pr/create.md) § 1b). Exit `0` means only that
   the gate did **not refuse**: read the line. `branch is current` is the pass;
@@ -76,13 +76,13 @@ gh pr view <number> --json number,state,mergeStateStatus,mergedAt,baseRefName
 ## Conventions
 
 → See guideline `docs/guidelines/php/git.md` for branch naming, commit messages, PR conventions.
-→ See `commit-conventions` rule for commit format, types, and scope rules.
+→ See `commit-conventions` rule for commit format, types, and scope rules; a team convention is declared in the `git:` settings (`commit_format`, `branch_pattern`, `update_strategy`).
 → Use `conventional-commits-writing` skill for generating/reviewing commit messages.
 
 ## Procedure: Before opening a PR
 
 1. Quality pipeline + tests — only when `quality.local_auto_run: true` (see [`quality-tools` § Execution policy](../quality-tools/SKILL.md)): type-checker → auto-fixer → linter → type-checker, then the project's test command (detect from manifest: `php artisan test` / `vendor/bin/phpunit` (PHP), `npm test` / `pnpm test` / `vitest` / `jest` (JS-TS), `pytest` (Python), `cargo test` (Rust), `go test ./...` (Go)). Under the default (`false` / missing) skip both — remote CI on the PR is the gate; say so instead of claiming they passed.
-2. Rebase onto `main`.
+2. Update the branch from its base — [`references/branch-update.md`](references/branch-update.md).
 3. Fill in PR template completely.
 
 ## Procedure: Finish a branch
@@ -100,7 +100,7 @@ Work complete. What would you like to do?
 ### Option 1: Push and create PR
 
 1. Run quality pipeline + tests (only when `quality.local_auto_run: true`; default `false` → skip, remote CI is the gate).
-2. **The push-ready sequence** — fetch → integrate the base SET → regenerate →
+2. **The push-ready sequence** — fetch → integrate the base SET (per `git.update_strategy`, [`references/branch-update.md`](references/branch-update.md)) → regenerate →
    verify → re-check freshness (this repo wires it as a `push-ready` task target;
    a consumer wires its own). Not optional housekeeping: see § A push closes its
    own loop. A stale push is refused, so skipping this buys the refusal.
@@ -153,7 +153,7 @@ The project uses `.github/pull_request_template.md`:
 ## Default branch
 
 - `main` is default/production branch.
-- Merge strategy: merge commits (not squash).
+- Merge method: read from the forge (`/pr:merge` § 9), never assumed; rebase-and-merge keeps every commit, so each subject must follow the convention.
 
 ## Procedure: Safe squash-after-push
 

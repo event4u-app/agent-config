@@ -87,7 +87,9 @@ That's 6 round-trips for what should be 2.
 
 ### 3. Build the PR title
 
-- Format: `{TICKET-ID}: {summary}` (e.g. `DEV-4673: Fix absence working time calculation`).
+- Format: `{TICKET-ID}: {summary}` (e.g. `DEV-4673: Fix absence working time calculation`);
+  under `git.commit_format: ticket-prefix` the title is a commit subject instead,
+  `DEV-4673 fix(working-time): correct absence calculation`.
 - Use the Jira ticket summary if available, otherwise derive from commits.
 - If no ticket: use the most descriptive commit message or ask the user.
 

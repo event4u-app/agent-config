@@ -37,12 +37,16 @@ to make sure the current branch is up to date with its base chain:
 - Otherwise, search for an open GitHub PR whose head is the current
   branch.
   - If exactly one open PR is found → invoke `/prepare-for-review`
-    with that PR number. It will update `main`, fetch and merge the
+    with that PR number (under `git.update_strategy: rebase` it reports
+    behind branches instead of merging). It will update `main`, fetch and merge the
     full branch chain into the current branch, and leave the current
     branch checked out.
   - If no open PR is found → fall back to a minimal local update:
     `git fetch origin main` and `git merge origin/main --no-edit` on
-    the current branch. Abort on conflict and report.
+    the current branch. Abort on conflict and report. Under
+    `git.update_strategy: rebase` skip the merge: `git fetch origin main`
+    only, review the diff against `git merge-base HEAD origin/main`, and say
+    the branch is behind.
   - If multiple PRs are found → ask the user which PR to use before
     proceeding.
 - If `/prepare-for-review` aborts (merge conflict, network error,
