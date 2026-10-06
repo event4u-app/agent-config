@@ -1,6 +1,19 @@
 ---
 complexity: lightweight
+status: later
+entry_condition:
+  what: >
+    A machine with a running opencode is available for one recorded session,
+    so the probe below can be run and its producer named. Nothing in the tree
+    can supply that environment; every other prerequisite is already met.
+  when: >
+    On or after 2026-12-24, or earlier the day such a machine exists. On the
+    wake date, if no machine is in sight, the owner re-dates it or archives it.
+  who: >
+    The owner, who decided on 2026-10-06 to park this rather than keep counting
+    it; the run itself is agent work once the machine exists.
 review_by: 2026-12-24
+estate_growth_exempt: "Grows later_roadmaps by one: the owner decided on 2026-10-06 to park this capability-gated stub in later/ with a dated wake instead of re-counting its arrivals; it moves from stubs/, so the work is not new."
 ---
 # Stub: the opencode runtime probe
 
@@ -11,12 +24,13 @@ review_by: 2026-12-24
 > `host_lowering.yaml` carries no opencode row, so the probe would create the tenth
 > host row rather than flip a null).
 >
-> **Posed owner question (since arrival 14):** the one remaining step is physical —
-> a machine with a running opencode. Run the probe there, or park this stub in
-> `later/` with a dated wake condition so the series stops re-counting it?
+> **Owner answer, 2026-10-06:** park it. Moved from `stubs/` to `later/` with the
+> wake condition in the frontmatter, so an arrival that adds no machine is not
+> counted again; the next arrival worth recording is the one that brings the
+> machine.
 
 > **Stub — not active work, and a DRAIN-RUN TRANSFER** in the sense
-> [`README.md`](README.md) § The two classes defines. **Capability-gated:** the
+> [`stubs/README.md`](../stubs/README.md) § The two classes defines. **Capability-gated:** the
 > scope decision is made, the work is wanted, and the only thing missing is an
 > environment the run did not have. Promoted by its own named probe returning
 > true, never by the shared demand-gate criteria.
