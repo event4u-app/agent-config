@@ -142,13 +142,13 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 > payload lock was paid by an offsetting reduction, D16.
 >
 > **One blocker holds all three steps, so the mechanics are written once here.**
-> `b6-neighbour-precedence` in `agents/roadmaps/road-to-leading-every-row.md:226`
+> `b6-neighbour-precedence` in `agents/roadmaps/archive/road-to-leading-every-row.md:226`
 > is unanswered. Reproduced 2026-10-05 at `e6b71933a` by
 > `grep -rn 'b6-neighbour-precedence' --include='*.md' .`, which returns exactly
 > two lines — the blocker's own heading and step 2.1's `blocked-by` marker — and
 > no answer anywhere in the tree. Control for that negative:
 > `grep -rln 'b7-adr-088-premise' --include='*.md' .` returns
-> `agents/roadmaps/road-to-leading-every-row.md`, so the search reaches the file
+> `agents/roadmaps/archive/road-to-leading-every-row.md`, so the search reaches the file
 > it is searching. 2.2 takes 2.1's rule as its rubric and 2.3's list is a section
 > of that rule, so neither has an exit independent of 2.1.
 >
