@@ -137,6 +137,10 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 
 ## Phase 2 — One stated order, no detector
 
+> **Landed 2026-10-06 — the note below is history.** `b6-neighbour-precedence` was
+> resolved the same day (D1, D13) and all three steps shipped in one change; the
+> payload lock was paid by an offsetting reduction, D16.
+>
 > **One blocker holds all three steps, so the mechanics are written once here.**
 > `b6-neighbour-precedence` in `agents/roadmaps/road-to-leading-every-row.md:226`
 > is unanswered. Reproduced 2026-10-05 at `e6b71933a` by
@@ -201,7 +205,7 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 > The payload lock above is a separate matter and IS agent-executable — which is
 > why it is priced here rather than discovered on the day b6 lands.
 
-- [ ] **2.1 A projected rule `neighbour-precedence` below the four authority bands.** It
+- [x] **2.1 A projected rule `neighbour-precedence` below the four authority bands.** It
       leaves `src/rules/agent-authority.md:12-26` untouched — those bands govern autonomy,
       and the current-turn instruction never lifts band 1 — and orders *instruction
       sources* beneath them: the current-turn instruction → `agents/overrides/` → the
@@ -210,22 +214,45 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       to the project file; the agent names which instruction it followed, once per turn.
       One paragraph: a neighbour's completion signal is a provider status, never this
       suite's completion, which stays with the stop gate's detectors.
-      <!-- blocked-by: b6-neighbour-precedence | asked: no — programme blocker, inbox round authored without the owner present -->
       verify: `./scripts-run src/scripts/compile_router` -> 0 and `grep -c 'neighbour-precedence' dist/router.json` -> /[1-9]/
 
+      **Landed in `src/rules/neighbour-precedence.md`, with D1's eight-rank order** —
+      the owner's answer to b6 split "a neighbour skill body" into an invoked one (rank
+      5, above always-on text) and a merely discoverable one (rank 7, below it), and
+      added the never-lower-a-floor clause and the one-global-install premise. `type:
+      auto`, `self_contained`, routed; `agent-authority.md` is byte-identical. The rule
+      costs ~800 tok on a zero-headroom payload; D16 records the offset that pays it.
+
       **2026-10-06 note on the `blocked-by` marker's visibility** — moved verbatim to `agents/evidence/analysis/neighbours-that-pull-their-weight-evidence-2026-10.md` § Step 2.1.
-- [ ] **2.2 Contradiction review on demand, council-seated, report-only.**
+- [x] **2.2 Contradiction review on demand, council-seated, report-only.**
       `doctor neighbours --contradictions` forms candidate pairs only from strong signals —
       a shared subject noun with opposite modality, or a name collision from 1.2 — and
       hands them to one council seat with 2.1 as the rubric. Output `pair | verdict |
       which wins by 2.1`; it never edits or gates, and prints `n/a — no council configured`
       when `council:status` says so.
       verify: fixture — "spawn agents and wait" against "never end a turn waiting" yields one pair naming the project line
-- [ ] **2.3 Non-negotiables are effects.** Every obligation this suite means to hold
+
+      **Landed in `_lib/neighbour_contradictions.ts` and `doctor neighbours
+      --contradictions`; fixture in `tests/scripts/neighbour_contradictions.test.ts`.**
+      Sources: the project's `CLAUDE.md` / `AGENTS.md` (rank 3), neighbour rule files
+      (rank 6) and neighbour skill bodies (rank 7) — only bodies the 1.3 shape scan
+      passed. Pairs form only across ranks; a name collision pairs a neighbour skill
+      with ours (rank 4). The "which wins" column is the rule's order, computed; the
+      verdict is one seat's (`council run --single`), and a pair it leaves unanswered
+      reads `unclear`. The mode calls `census()` rather than `runCensus()`, so it writes
+      neither cache — a test pins the project tree unchanged.
+- [x] **2.3 Non-negotiables are effects.** Every obligation this suite means to hold
       against a neighbour is listed with its enforcing effect (a fail-closed `permission`
       concern or the stop gate's refusal); an obligation with no such effect is listed as
       `prose-only — may be outvoted`. The list is a section of 2.1's rule.
       verify: `grep -c 'prose-only' src/rules/neighbour-precedence.md` -> /[1-9]/
+
+      **Landed as the rule's "Non-negotiables are effects" table.** Three fail-closed
+      denies (`block-no-verify`, `block-kernel-rule-writes`, `block-plumbing-writes`) and
+      `turn-end-gate`'s refusal are effects; commit, push, one-question-per-turn,
+      threat-modelling and the order itself are `prose-only — may be outvoted`. The
+      table says the stop gate lets a turn through when a neighbour set
+      `stop_hook_active`, because 3.1 records exactly that.
 
 ## Phase 3 — The gate and the fingerprint know a neighbour acted
 
@@ -274,11 +301,36 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       `src/scripts/`.
 
       **2026-10-06 execution of the revisit-if** (does not fire) — moved verbatim to `agents/evidence/analysis/neighbours-that-pull-their-weight-evidence-2026-10.md` § Step 3.2.
-- [~] **3.3 Foreign MCP servers counted by use.** `telemetry_usage_hook.ts` returns early
+
+      **Iron Law 3, surfaced 2026-10-06 — NOT archived.** Every other step closed
+      that day, so this `[~]` is now what holds the file open. Criterion: as written
+      above. Blocker: D2 — no reader of third-party tool descriptors exists. The
+      preserving dispositions are council-routed: carry into a follow-up, or merge
+      into `stubs/road-to-mcp-fingerprint-slot-binding.md`, which already owns the
+      binding. The archival sweep's automatic carry was run and reverted in this
+      lane, because it rewrites inbound `verify:` paths in `road-to-leading-every-row`
+      while another lane edits that file (D15's ground). Not resolved here; next
+      run, or the owner.
+- [x] **3.3 Foreign MCP servers counted by use.** `telemetry_usage_hook.ts` returns early
       for every non-`Skill` tool (`:250`), so a small recorder of foreign `mcp__*` tool
       names is new; the census gains distinct tools used per server in 30 days.
       Advertised counts stay `unknown` — nothing launches a server to ask.
-      verify: `agent-config doctor neighbours --json` -> /"tools_used_30d":\s*[0-9]+/
+      verify: fixture — the shipped `mcp-usage-observation` entry admits `mcp__acme__alpha` through `_concern_matches_tool` and is bound on every slot that binds `telemetry-usage` (`tests/scripts/neighbour_mcp_use.test.ts`)
+
+      **Closed 2026-10-06 by the owner's option 3 (D12).** A separate
+      `mcp-usage-observation` concern (`hooks/mcp_usage_observation_hook.ts`), no
+      `tools:` key, no `needs_payload_bodies`, on the six `post_tool_use` rows; the
+      branch left `telemetry-usage`. The verify line was rewritten as the struck
+      oracle note asked: it now asserts the positive the old block asserted the
+      negative of. Both seats' conditions ship — the header says default-on and
+      opt-in-bypassing; a test proves names only, and another derives the keep-set
+      from the shipped entry and stubs a marked envelope end to end. Ratified non-split
+      by a two-seat council (`agents/evidence/ratifications/drain-neighbours-mcp-usage-observation.md`).
+      `concern_count` 62 → 63 is claimed in the frontmatter. Three non-blocking
+      council findings (receive-vs-persist wording, a name grammar and entry cap,
+      the `effect: telemetry` qualifier) touch the manifest and the hook; applying
+      them here was refused by the host's permission classifier as
+      self-modification, so they are owner residue, recorded in the artifact.
 
       ~~**Not independent of Phase 1, which the phase split implied it was.** The
       verify line reads a `doctor neighbours` surface, and no such surface exists
@@ -376,6 +428,11 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 - [~] **3.4 Suggest `permissions.deny` for never-used foreign tools.** Deferred: writing a
       consumer's permission block is Class C and a product decision (K15).
 
+      **Iron Law 3, surfaced 2026-10-06 — NOT archived.** A product decision
+      (K15) on a Class C surface, so every disposition that drops or narrows it is
+      the owner's; carrying it is council-routed and was not taken in this lane for
+      the reason recorded under 3.2.
+
 ## Acceptance criteria
 
 - Two same-named skills both appear on the route line, the foreign one qualified; our skills are unchanged.
@@ -388,7 +445,7 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 
 ### blocker: mcp-recorder-unreachable-behind-the-tools-filter
 
-- **Status:** open — owner chose option 3 on 2026-10-06 via `/roadmap:resolve-blockers` (D12); closes when the separate concern lands with both seats' conditions and its ratification artifact, which is execution, not a question
+- **Status:** resolved 2026-10-06 — option 3 landed (D12): `mcp-usage-observation` admits `mcp__acme__alpha`, the test asserting the gap now asserts the positive, and `agents/evidence/ratifications/drain-neighbours-mcp-usage-observation.md` records a non-split `ratified` (anthropic + openai)
 - **Owner:** maintainer
 - **Class:** 3
 - **Ownership:** product-owned
@@ -508,6 +565,7 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
 | D14 | reversible-technical | agent | the two neighbour-census caches are IGNORED where they are written, not relocated to `agents/runtime/` where D9 puts the sibling store | `doctor neighbours` writes `neighbour-overlap.json` and `neighbour-scan.json` into TRACKED `agents/reports/`; the overlap cache carries each neighbour skill's absolute path under the user's home directory and the scan cache their whole installed-skill inventory, and no ignore rule covered either. Relocating is the shape D9 implies, but `SCAN_CACHE_RELATIVE` in `_lib/skill_origin.ts` is bundled on the hook path, so a path change is a bundle-ceiling plus cache-invalidation question rather than a bounded fix. Measured both directions: `git check-ignore` exit 1 before and 0 after, with `agents/reports/README.md` still exit 1 so the fix is not over-broad; `check_gitignore_freshness` reds naming the exact path when one block line is deleted | this lane reopens for a reason that already edits `skill_origin.ts` |
 | D15 | reversible-technical | agent | the roadmap stays ACTIVE rather than moving to `later/`, although 100 % of its open work is owner-gated | the `later/` contract requires migrating inbound refs to the new path, and two LIVE `verify:` clauses in `road-to-leading-every-row.md` (`:131`, `:172`) grep this file at its active path, in a roadmap another lane of this same drain is editing concurrently — so the move would break a sibling's exit conditions and collide with a run under way. b6 was also narrowed on 2026-10-06, the same day, which is the opposite of a question that has gone quiet. The cost of staying active is that `/roadmap:process-*` keeps picking a file with nothing agent-doable in it, and that cost is paid by this record rather than hidden | b6 limb 1 is still unanswered at the next drain AND `road-to-leading-every-row` has landed, at which point the inbound refs are stable and the park is cheap |
 | D11 | reversible-technical | agent | `telemetry_usage_hook.ts`'s bundle guard moves from the top of `_isCliEntry` to its call site | measured: inside the function esbuild folds the define to `if (true) return false` and still emits the nine unreachable lines after it — 475 B of dead code in a bundle `check_hook_bundle_composition` caps at 1,550,000. At the call site the statement folds to `if (false)`, which is dropped, and the unreferenced function with it. Behavior outside the bundle is identical: `__AGENT_CONFIG_BUNDLE__` is undeclared there, the first operand short-circuits, and `!__AGENT_CONFIG_BUNDLE__` is never evaluated | esbuild starts eliminating the dead tail on its own, at which point the guard can move back and ~45 other hook files become the same saving |
+| D16 | reversible-technical | agent | step 2.1's ~800 tok rule is paid by an OFFSETTING REDUCTION in the same diff, not a grant | `check_preamble_payload_budget` sat at zero headroom and a grant needs an owner-verified platform approval event. Moved verbatim, each leaving a pointer: `fix-what-you-see`'s two rationale sections → `active-remediation-mechanics`, and `token-budget-discipline`'s candidate table and size-band reasoning → `size-and-scope`; the new rule was cut to the order, the completion paragraph and the effects table. Measured 136,801 tok against a 136,826 ceiling. A third offset (`session-canary`'s enforcement prose) was refused by the host's permission classifier and not pursued | the bucket gains headroom, or a rule moved here is found to need its moved prose in the always-loaded text |
 
 ## Risk Register
 
