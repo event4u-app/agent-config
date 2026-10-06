@@ -253,6 +253,40 @@ describe('ownership resolution — one function, read by both readers', () => {
         expect(r.source).toBe('none');
     });
 
+    it('an UNREADABLE manifest is no evidence, not a thrown receipt', () => {
+        // Symmetry with the inventory branch, which this module documents twice
+        // as fail-soft. Unguarded, a corrupt installed-tools.lock threw into
+        // the receipt's outer catch and suppressed the WHOLE budget block —
+        // ownership line, per-host rows and the 80 % warning — and threw out of
+        // buildInstalledLayerReport, which has no outer catch at all.
+        const home = mkTmp('ilo-badmanifest-');
+        const dir = stageGlobal(home, { 'a.md': rule(10) });
+        const project = mkTmp('ilo-badmanifest-proj-');
+        const manifestPath = path.join(project, 'agents', 'installed-tools.lock');
+        fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
+        // A directory where a file is expected: `readRecordedHashes` reaches
+        // its read and throws EISDIR rather than returning an empty map.
+        fs.mkdirSync(manifestPath, { recursive: true });
+
+        const r = resolveLayerOwnership({
+            manifestPath,
+            projectRoot: project,
+            inventoryPath: stageInventory(path.dirname(dir), ['rules/a.md']),
+        });
+        // The inventory's evidence survives; the manifest simply contributed
+        // nothing, which is "no evidence" and not a failure.
+        expect(r.sources).toEqual(['global-inventory']);
+        expect(r.recorded.has(path.join(dir, 'a.md'))).toBe(true);
+
+        // And the receipt still prints its block rather than returning [].
+        const lines = installReceiptBudgetLines(mkTmp('ilo-badmanifest-pkg-'), home, {
+            manifestPath,
+            inventoryPath: stageInventory(path.dirname(dir), ['rules/a.md']),
+        });
+        expect(lines.length).toBeGreaterThan(0);
+        expect(lines.join('\n')).toContain('10 package-owned');
+    });
+
     it('an inventory recorded under a DIFFERENT anchor claims nothing here', () => {
         // The reaper's own "not provably ours anymore" discipline: a moved
         // anchor means the old tree is unknown territory.
@@ -269,78 +303,57 @@ describe('ownership resolution — one function, read by both readers', () => {
         expect(r.recorded.has(path.join(dir, 'a.md'))).toBe(false);
     });
 
-    it('the receipt reads the inventory the INSTALLER wrote, under an override', () => {
-        // Writer and reader must resolve the same file. The installer writes
-        // through `inventory_path()`, which honours
-        // AGENT_CONFIG_DEPLOY_INVENTORY — a FILE path, not a home — so a
-        // receipt that resolved `<home>/.event4u/...` instead would read a file
-        // nothing wrote and lose the evidence silently.
-        const home = mkTmp('ilo-writerreader-');
-        const dir = stageGlobal(home, { 'a.md': rule(10) });
-        const inventoryPath = stageInventory(path.dirname(dir), ['rules/a.md']);
-        const saved = process.env['AGENT_CONFIG_DEPLOY_INVENTORY'];
-        process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] = inventoryPath;
-        try {
-            // No inventoryPath passed — the receipt must find it through the
-            // same resolver the installer used.
-            const lines = installReceiptBudgetLines(mkTmp('ilo-wr-pkg-'), home, {
-                manifestPath: null,
-            }).join('\n');
-            expect(lines).toContain(ownershipLine('global-inventory'));
-            expect(lines).toContain('10 package-owned');
-        } finally {
-            if (saved === undefined) delete process.env['AGENT_CONFIG_DEPLOY_INVENTORY'];
-            else process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] = saved;
-        }
-    });
-
-    it('the receipt honours an EXPLICIT null inventoryPath — `null` reads none', () => {
-        // The contract the field documents, and the reason `??` is wrong here:
-        // it collapses an explicit null into the default, so a caller asking
-        // for a hermetic receipt still read the real user-global inventory —
-        // whose tilde-relative entries then re-root into the fixture home and
-        // read as package-owned. That is the cross-home misattribution two
-        // docstrings in this module forbid.
-        const home = mkTmp('ilo-nullinv-');
+    it('receipt and report resolve the inventory the SAME way for one home', () => {
+        // The property step 1.2 exists to produce, and the case that replaced a
+        // contradictory one. An earlier version set
+        // AGENT_CONFIG_DEPLOY_INVENTORY and passed a FIXTURE home — asking for
+        // the asking-process's inventory while naming someone else's home. The
+        // receipt honoured the override and then expanded that inventory's
+        // tilde-relative anchors against the other home, which is the
+        // cross-home misattribution two docstrings here forbid.
+        //
+        // Both readers now resolve through `defaultInventoryPath(home)`, which
+        // returns the env-aware path when the stated home IS this process's and
+        // the stated home's own layout otherwise. Asserted as an EQUALITY of
+        // the two resolutions rather than as a hard-coded path, so it holds on
+        // any machine.
+        const home = mkTmp('ilo-agree-');
         stageGlobal(home, { 'a.md': rule(10) });
-        const saved = process.env['AGENT_CONFIG_DEPLOY_INVENTORY'];
-        const decoy = stageInventory(path.join(home, '.claude'), ['rules/a.md']);
-        process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] = decoy;
-        try {
-            const lines = installReceiptBudgetLines(mkTmp('ilo-nullinv-pkg-'), home, {
-                manifestPath: null,
-                inventoryPath: null,
-            }).join('\n');
-            expect(lines).toContain(ownershipLine('none'));
-            expect(lines).toContain('0 package-owned');
-        } finally {
-            if (saved === undefined) delete process.env['AGENT_CONFIG_DEPLOY_INVENTORY'];
-            else process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] = saved;
-        }
-    });
-
-    it('a report about the ASKING process own home honours the env override', () => {
-        // `ReportOptions.home` is required, so the report always states a home
-        // — including when the home it states is simply the machine it runs on.
-        // Treating that as "a different home" sent it to the hardcoded layout,
-        // found nothing under the override, and printed "every file reads
-        // foreign": the 0 package-owned reading step 1.2 exists to remove, with
-        // the report and the receipt then disagreeing about one install.
-        const home = os.homedir();
-        const dir = path.join(mkTmp('ilo-ownhome-'), 'deployed-files.json');
+        const inventoryPath = path.join(
+            home,
+            '.event4u',
+            'agent-config',
+            'deployed-files.json',
+        );
+        fs.mkdirSync(path.dirname(inventoryPath), { recursive: true });
         fs.writeFileSync(
-            dir,
-            JSON.stringify({ schema_version: 1, tools: {} }, null, 2),
+            inventoryPath,
+            JSON.stringify(
+                {
+                    schema_version: 1,
+                    tools: { 'claude-code': { anchor: '~/.claude/', files: ['rules/a.md'] } },
+                },
+                null,
+                2,
+            ),
             'utf-8',
         );
-        const saved = process.env['AGENT_CONFIG_DEPLOY_INVENTORY'];
-        process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] = dir;
-        try {
-            expect(defaultInventoryPath(home)).toBe(dir);
-        } finally {
-            if (saved === undefined) delete process.env['AGENT_CONFIG_DEPLOY_INVENTORY'];
-            else process.env['AGENT_CONFIG_DEPLOY_INVENTORY'] = saved;
-        }
+
+        // The resolver the REPORT uses, with no explicit path.
+        const report = buildInstalledLayerReport({
+            home,
+            projectRoot: mkTmp('ilo-agree-proj-'),
+            manifestPath: null,
+        });
+        expect(report.ownership_source).toBe('global-inventory');
+        expect(report.totals.package_owned_chars).toBe(10);
+
+        // The RECEIPT, also with no explicit path, over the same home.
+        const lines = installReceiptBudgetLines(mkTmp('ilo-agree-pkg-'), home, {
+            manifestPath: null,
+        }).join('\n');
+        expect(lines).toContain(ownershipLine('global-inventory'));
+        expect(lines).toContain('10 package-owned');
     });
 
     it('the receipt prints the same ownership sentence as the report', () => {

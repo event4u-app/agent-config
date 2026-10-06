@@ -12639,7 +12639,17 @@ function buildHostLimitRows(layers, limits) {
 function defaultInventoryPath(home) {
   if (home === void 0 || home === null || home === "") return inventory_path();
   try {
-    if (path24.resolve(home) === path24.resolve(os10.homedir())) return inventory_path();
+    const real = (q) => {
+      try {
+        return fs25.realpathSync(q);
+      } catch {
+        return path24.resolve(q);
+      }
+    };
+    const mine = os10.homedir();
+    if (path24.resolve(home) === path24.resolve(mine) || real(home) === real(mine)) {
+      return inventory_path();
+    }
   } catch {
   }
   return path24.join(home, DEFAULT_EVENT4U_ROOT_RELATIVE, INVENTORY_BASENAME);
@@ -12675,7 +12685,13 @@ function resolveLayerOwnership(opts) {
   const manifestPath = opts.manifestPath ?? null;
   if (manifestPath !== null && fs25.existsSync(manifestPath)) {
     let n = 0;
-    for (const [abs, hash] of readRecordedHashes(manifestPath, opts.projectRoot)) {
+    let recordedHashes;
+    try {
+      recordedHashes = readRecordedHashes(manifestPath, opts.projectRoot);
+    } catch {
+      recordedHashes = NO_RECORDED_HASHES;
+    }
+    for (const [abs, hash] of recordedHashes) {
       n += 1;
       recorded.set(abs, hash);
     }
@@ -13089,7 +13105,17 @@ function installReceiptBudgetLines(packageRoot, home = os11.homedir(), opts = {}
       // would take `defaultInventoryPath`'s stated-home branch and read
       // `<home>/.event4u/...`, a file nothing wrote under either
       // override, and the inventory evidence would be silently lost.
-      inventoryPath: opts.inventoryPath === void 0 ? inventory_path() : opts.inventoryPath,
+      // UNDEFINED IS LEFT UNDEFINED so `resolveLayerOwnership` applies
+      // `defaultInventoryPath(home)` — the SAME resolution the report
+      // uses. Hardcoding `inventory_path()` here made the two readers
+      // step 1.2 exists to reconcile disagree for any home that is not
+      // the asking process's: the receipt read one install's inventory
+      // and then expanded its tilde-relative anchors against the OTHER
+      // home, which is the cross-home misattribution two docstrings in
+      // the resolver forbid. `defaultInventoryPath` already returns
+      // `inventory_path()` when the stated home IS this process's, which
+      // is the case that motivated the hardcode.
+      inventoryPath: opts.inventoryPath,
       thisDeploy: opts.thisDeploy
     });
     const layers = [];

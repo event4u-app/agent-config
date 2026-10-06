@@ -532,7 +532,23 @@ export function defaultInventoryPath(home?: string | null): string {
     // The precedence argument only ever covered a home that is NOT this
     // process's, so that is the case the branch now tests for.
     try {
-        if (path.resolve(home) === path.resolve(os.homedir())) return inventory_path();
+        // BOTH SPELLINGS, for the reason `recorded_absolute_files` states at
+        // length: a lexical compare alone calls a symlinked or alternate
+        // spelling of the SAME home "a different home", takes the hardcoded
+        // layout, and reproduces the 0 package-owned reading this branch
+        // exists to prevent. macOS `/var` -> `/private/var` is the standing
+        // example.
+        const real = (q: string): string => {
+            try {
+                return fs.realpathSync(q);
+            } catch {
+                return path.resolve(q);
+            }
+        };
+        const mine = os.homedir();
+        if (path.resolve(home) === path.resolve(mine) || real(home) === real(mine)) {
+            return inventory_path();
+        }
     } catch {
         // `homedir()` can throw on an exotic environment; fall through to the
         // layout, which is the answer for a home that is not ours anyway.
@@ -698,7 +714,21 @@ export function resolveLayerOwnership(opts: OwnershipOptions): OwnershipResoluti
     const manifestPath = opts.manifestPath ?? null;
     if (manifestPath !== null && fs.existsSync(manifestPath)) {
         let n = 0;
-        for (const [abs, hash] of readRecordedHashes(manifestPath, opts.projectRoot)) {
+        // DEGRADE LIKE THE INVENTORY BRANCH, which this function documents
+        // twice. The code this replaced wrapped exactly this call, so a corrupt
+        // `installed-tools.lock` used to read as "no manifest evidence" and the
+        // budget block still printed. Unguarded it threw into the receipt's
+        // outer catch and suppressed the WHOLE block — ownership line, per-host
+        // rows and the 80 % warning — and out of `buildInstalledLayerReport`,
+        // which has no outer catch at all. An unreadable manifest is no
+        // evidence, never a failure; the asymmetry was undeclared.
+        let recordedHashes: ReadonlyMap<string, string | null>;
+        try {
+            recordedHashes = readRecordedHashes(manifestPath, opts.projectRoot);
+        } catch {
+            recordedHashes = NO_RECORDED_HASHES;
+        }
+        for (const [abs, hash] of recordedHashes) {
             // The manifest contributes whenever it names a path at all: it
             // supplies the HASH even where another source already had the path,
             // which is evidence the others cannot give.

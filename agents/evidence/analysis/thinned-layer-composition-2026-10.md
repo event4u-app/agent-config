@@ -545,10 +545,17 @@ than a broken search.
 
 The old marker survives in eight files: six frozen `*.review-input/diff.patch`
 archives, one recorded bench report, and this roadmap's own Context section,
-which quotes it as the state at the pin. The old link form survives in two:
-a docstring explaining what the pointer used to be, and a negative-case fixture
-asserting that form is NOT recognised any more. Every one of those is a
-description of the old spelling rather than a reader of it.
+which quotes it as the state at the pin. The old link form survives in four
+live files, and the first correction this sweep needed was to itself: the two
+tables ON THIS PAGE spell the old form out, and an earlier draft of this
+paragraph said "two" because it swept the tree and forgot the page doing the
+sweeping. The other two are a docstring in `src/scripts/_lib/thin_rules.ts`
+explaining what the pointer used to be, and a negative-case fixture asserting
+that form is NOT recognised any more. A fifth arrived after this paragraph was
+written — the round-5 findings record, quoting this sentence to correct it.
+Every one of them is a description of the old spelling rather than a reader of
+it, which is the property that matters; the count is not, which is why getting
+it wrong cost nothing but is recorded rather than quietly amended.
 
 **What that does and does not establish.** It establishes that no gate, fixture
 or script outside `src/` tests for the old spellings today. It does not

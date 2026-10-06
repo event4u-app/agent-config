@@ -199,7 +199,12 @@ describe('installed layer — the when-loaded split in characters', () => {
         const scoped = 'paths:\n  - "**/*.php"\ntype: auto\n';
         fs.writeFileSync(path.join(dir, 'bom.md'), `\uFEFF---\n${scoped}---\nbody\n`, 'utf-8');
         fs.writeFileSync(path.join(dir, 'blank-first.md'), `\n---\n${scoped}---\nbody\n`, 'utf-8');
-        fs.writeFileSync(path.join(dir, 'crlf.md'), `---\r\n${scoped}---\r\nbody\r\n`, 'utf-8');
+        // EVERY line ends CRLF, the `paths:` line included. Interpolating the
+        // LF-only `scoped` here left that line LF, so the shape this case is
+        // named for was never constructed and the fallback was never asked to
+        // find a `paths:` line carrying a CR.
+        const scopedCrlf = scoped.replace(/\n/g, '\r\n');
+        fs.writeFileSync(path.join(dir, 'crlf.md'), `---\r\n${scopedCrlf}---\r\nbody\r\n`, 'utf-8');
         const l = readLayer('claude-code', 'global', dir, new Map());
         expect(l.files).toBe(3);
         expect(l.unconditional_chars, 'every one must read path-scoped').toBe(0);

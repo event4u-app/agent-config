@@ -80,11 +80,13 @@ export function evaluate_demotion(
   // reads, but the mechanical half's real falsifying power is `body_removed`
   // and `trigger_hint_preserved`.
   //
-  // A structural check was tried here and removed: `/\S+\.md\s*$/m` is
-  // implied by `link_present` — every string `Body: (.+\.md)\s*$` matches it
-  // matches too — so it could never flip `ok` while claiming in its own
-  // docstring to be the one check that survived. A conjunct that cannot fail is
-  // worse than an absent one, because it reads as coverage.
+  // A structural check was tried here and removed: `/\S+\.md\s*$/m` adds
+  // nothing AGAINST WRITER OUTPUT, which is the only input this half ever sees.
+  // It is not implied by `link_present` in general — `Body:  .md`, a two-space
+  // stem, matches the pointer pattern and fails `\S+` — but the writer composes
+  // the pointer from a non-empty prefix and a rule id, so that string is not
+  // reachable from `thin_entry` and the conjunct could never flip `ok` here. A
+  // conjunct that cannot fail is worse than an absent one: it reads as coverage.
   //
   // Restoring independence needs a second spelling of the marker, which is the
   // drift step 2.1 removed. The suite keeps the detectors honest instead:

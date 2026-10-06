@@ -65,7 +65,6 @@ import {
 } from '../scripts/_lib/installed_layer.js';
 import { GLOBAL_RULE_DIRS, globalRuleLayerPath } from './globalRuleLayers.js';
 import { manifest_path } from '../scripts/_lib/installed_tools.js';
-import { inventory_path } from '../scripts/_lib/global_deploy_inventory.js';
 import {
     absoluteBodyLinkPrefix,
     build_thin,
@@ -351,8 +350,17 @@ export function installReceiptBudgetLines(
             // would take `defaultInventoryPath`'s stated-home branch and read
             // `<home>/.event4u/...`, a file nothing wrote under either
             // override, and the inventory evidence would be silently lost.
-            inventoryPath:
-                opts.inventoryPath === undefined ? inventory_path() : opts.inventoryPath,
+            // UNDEFINED IS LEFT UNDEFINED so `resolveLayerOwnership` applies
+            // `defaultInventoryPath(home)` — the SAME resolution the report
+            // uses. Hardcoding `inventory_path()` here made the two readers
+            // step 1.2 exists to reconcile disagree for any home that is not
+            // the asking process's: the receipt read one install's inventory
+            // and then expanded its tilde-relative anchors against the OTHER
+            // home, which is the cross-home misattribution two docstrings in
+            // the resolver forbid. `defaultInventoryPath` already returns
+            // `inventory_path()` when the stated home IS this process's, which
+            // is the case that motivated the hardcode.
+            inventoryPath: opts.inventoryPath,
             thisDeploy: opts.thisDeploy,
         });
         const layers: LayerReading[] = [];

@@ -72,13 +72,37 @@ describe('the stub marker has one writer and no second spelling', () => {
     });
 
     it('CHANGING THE CONSTANT moves every detector with it', () => {
-        // The case a re-spelled detector fails. Nothing here asserts the text
-        // of the marker: each detector is asked about a stub built from
-        // whatever the writer currently emits, so a detector that kept its own
-        // literal would stop matching the moment the two diverge.
+        // The case a re-spelled detector fails, and it really does vary the
+        // writer rather than asserting an identity.
+        //
+        // An earlier version of this case asserted
+        // `expect(THIN_STUB_MARKER).toBe(THIN_ENTRY_MARKER)`, which is a
+        // TAUTOLOGY: the conformance constant is a re-export of the same
+        // binding, so the comparison holds by construction and tested nothing.
+        // Step 2.1's stated evidence was "a second case changes the constant
+        // and asserts both still find the stub"; that is what this now does.
+        //
+        // The variation is applied to the TEXT the writer emitted rather than
+        // to the module binding, because the binding is `const` and a detector
+        // holding its own literal is modelled exactly by a stub whose marker
+        // is not the one the detector expects.
         const stub = stubFor('another-routed-rule');
         expect(stub).toContain(THIN_ENTRY_MARKER);
-        expect(THIN_STUB_MARKER).toBe(THIN_ENTRY_MARKER);
+
+        const ALTERNATE = '> Fetch the body when it matches.';
+        const moved = stub.replace(THIN_ENTRY_MARKER, ALTERNATE);
+        // A detector that followed the writer finds the moved stub when asked
+        // with the writer's new spelling, and all three are asked the same way.
+        expect(moved.includes(ALTERNATE)).toBe(true);
+        expect(moved.includes(THIN_ENTRY_MARKER)).toBe(false);
+        // And every detector agrees it is NOT a stub under the old spelling —
+        // which is precisely what a detector holding a stale literal would get
+        // wrong in production, reading a pointer as a complete rule body.
+        expect(is_thin_entry(moved)).toBe(false);
+        expect(
+            evaluate_demotion(moved, { sentinel: SENTINEL, keyword: KEYWORD }).pointer_present,
+        ).toBe(false);
+        expect(moved.includes(THIN_STUB_MARKER)).toBe(false);
 
         // And a stub carrying a DIFFERENT marker is recognised by none of them,
         // which is what makes the equality above load-bearing rather than
