@@ -12,11 +12,12 @@
  * information that tells a reader what to do next.
  */
 
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { classifyConflicts, isGenerated, isRemeasured, main, renderConflictReport, updateStrategy } from "../../src/scripts/sync_pr_branch.js";
 
@@ -350,40 +351,91 @@ describe('sync_pr_branch — generated paths added from the conflict census', ()
 });
 
 describe('git.update_strategy', () => {
-    const repoWith = (settings: string | null): string => {
+    const made: string[] = [];
+    afterEach(() => {
+        for (const dir of made.splice(0)) fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    const tmp = (): string => {
         const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-pr-branch-'));
-        if (settings !== null) fs.writeFileSync(path.join(dir, '.agent-settings.yml'), settings);
+        made.push(dir);
         return dir;
     };
 
-    it('reads the default `merge` when nothing declares a strategy', () => {
-        expect(updateStrategy(repoWith(null))).toBe('merge');
-    });
+    const git = (cwd: string, ...args: string[]): string =>
+        execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', '-c', 'commit.gpgsign=false', ...args], {
+            cwd,
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'pipe'],
+        });
 
-    it('reads the declared strategy from the project layer', () => {
-        expect(updateStrategy(repoWith('git:\n  update_strategy: rebase\n'))).toBe('rebase');
-        expect(updateStrategy(repoWith('git:\n  update_strategy: merge\n'))).toBe('merge');
-    });
+    /** A clone on a feature branch; `behind` advances origin/main past it. */
+    const checkout = (settings: string | null, behind: boolean): string => {
+        const root = tmp();
+        const remote = path.join(root, 'remote.git');
+        git(root, 'init', '--bare', '-b', 'main', remote);
+        const seed = path.join(root, 'seed');
+        git(root, 'clone', '-q', remote, seed);
+        fs.writeFileSync(path.join(seed, 'a.txt'), 'a\n');
+        git(seed, 'add', 'a.txt');
+        git(seed, 'commit', '-q', '-m', 'seed');
+        git(seed, 'push', '-q', 'origin', 'HEAD:main');
+        const work = path.join(root, 'work');
+        git(root, 'clone', '-q', remote, work);
+        git(work, 'switch', '-q', '-c', 'feature');
+        if (settings !== null) fs.writeFileSync(path.join(work, '.agent-settings.yml'), settings);
+        if (behind) {
+            fs.writeFileSync(path.join(seed, 'b.txt'), 'b\n');
+            git(seed, 'add', 'b.txt');
+            git(seed, 'commit', '-q', '-m', 'advance');
+            git(seed, 'push', '-q', 'origin', 'HEAD:main');
+        }
+        return work;
+    };
 
-    it('refuses before touching git under `rebase`, even in a dry run', () => {
-        // sync() on a non-git directory also exits 1, so the exit code alone cannot
-        // tell the refusal from a failed merge attempt — the message can.
+    const run = (repo: string): { code: number; out: string; head: string } => {
+        const before = git(repo, 'rev-parse', 'HEAD').trim();
         const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
         try {
-            expect(main(['--repo', repoWith('git:\n  update_strategy: rebase\n'), '--dry-run', '--quiet'])).toBe(1);
-            expect(out.mock.calls.map((c) => String(c[0])).join('')).toContain('git.update_strategy is `rebase`');
+            const code = main(['--repo', repo, '--base', 'origin/main']);
+            return { code, out: out.mock.calls.map((c) => String(c[0])).join(''), head: before };
         } finally {
             out.mockRestore();
         }
+    };
+
+    it('reads `merge` when nothing declares a strategy, and normalises a declared one', () => {
+        expect(updateStrategy(tmp())).toBe('merge');
+        const dir = tmp();
+        fs.writeFileSync(path.join(dir, '.agent-settings.yml'), 'git:\n  update_strategy: " Rebase "\n');
+        expect(updateStrategy(dir)).toBe('rebase');
     });
 
-    it('does not refuse under the default `merge`', () => {
-        const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-        try {
-            main(['--repo', repoWith(null), '--dry-run', '--quiet']);
-            expect(out.mock.calls.map((c) => String(c[0])).join('')).not.toContain('git.update_strategy is `rebase`');
-        } finally {
-            out.mockRestore();
-        }
+    it('refuses with exit 3 and leaves HEAD untouched when a rebase-strategy branch is behind', () => {
+        const repo = checkout('git:\n  update_strategy: rebase\n', true);
+        const r = run(repo);
+        expect(r.code).toBe(3);
+        expect(r.out).toContain('git.update_strategy is `rebase`');
+        expect(git(repo, 'rev-parse', 'HEAD').trim()).toBe(r.head);
+    });
+
+    it('passes a rebase-strategy branch that is already current', () => {
+        const r = run(checkout('git:\n  update_strategy: rebase\n', false));
+        expect(r.code).toBe(0);
+        expect(r.out).not.toContain('refused');
+    });
+
+    it('treats an unknown value as not-merge rather than merging', () => {
+        const repo = checkout('git:\n  update_strategy: rebsae\n', true);
+        const r = run(repo);
+        expect(r.code).toBe(3);
+        expect(git(repo, 'rev-parse', 'HEAD').trim()).toBe(r.head);
+    });
+
+    it('still merges the base in under the default strategy', () => {
+        const repo = checkout(null, true);
+        const r = run(repo);
+        expect(r.code).toBe(0);
+        expect(git(repo, 'rev-parse', 'HEAD').trim()).not.toBe(r.head);
     });
 });

@@ -141,7 +141,9 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   `/prepare-for-review` and `/review:changes` propose
   `git rebase origin/<base>` plus `--force-with-lease` and never merge the base
   into a feature branch — one git-workflow reference
-  (`references/branch-update.md`) now owns that decision. **What it does not do:** the setting picks the operation and never
+  (`references/branch-update.md`) now owns that decision, and
+  `sync_pr_branch` exits `3` instead of merging when such a branch is behind
+  (a current branch still exits `0`). **What it does not do:** the setting picks the operation and never
   authorises it; git-history-discipline still requires the user's request for
   every rebase, fixup or autosquash. The keys are set per project — the
   user-global whitelist is ADR-gated and does not carry them yet — and a

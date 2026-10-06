@@ -62,7 +62,7 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
   `DEV-1234-device-export`, `fix/DEV-1234-quantity` → `DEV-1234`). The match
   never depends on `git.branch_pattern`, so a branch named before the pattern
   was set still yields its ticket. A standard name that fits the shape
-  (`UTF-8`, `ISO-8601`, `SHA-256`) is not a ticket — treat the branch as having none.
+  (`UTF-8`, `ISO-8601`, `SHA-256`) is not a ticket — skip it and take the next match.
 - Read `git.commit_format` (`agent-config settings:get git.commit_format`) once;
   it decides where the ticket goes (see the conventional-commits-writing skill,
   § Place the ticket).

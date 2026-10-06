@@ -27,7 +27,9 @@
  * 2026-08-21, both seats; roadmap road-to-merge-hotspot-drawdown).
  *
  * Exit codes: 0 = already current, or merged cleanly · 1 = conflict, or the base
- * could not be resolved · 2 = internal error. `scanned:` on every path.
+ * could not be resolved · 2 = internal error · 3 = behind, and
+ * `git.update_strategy` is not `merge`, so the merge was refused. `scanned:` on
+ * every path.
  */
 
 import * as path from 'node:path';
@@ -847,16 +849,20 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
 }
 
 /**
- * `git.update_strategy` for the repository. An unreadable settings file reads as
- * the default `merge`, which is what this script did before the key existed.
+ * `git.update_strategy` for the repository, trimmed and lower-cased. Absent or
+ * unreadable reads as `merge`, the behaviour before the key existed; any other
+ * present value — including a typo — is returned as-is and is NOT `merge`, so a
+ * misconfiguration refuses the merge instead of silently performing it.
  */
 export function updateStrategy(repo: string): string {
+    let value: unknown;
     try {
-        const git = load_agent_settings({ cwd: repo }).git as { update_strategy?: unknown } | undefined;
-        return typeof git?.update_strategy === 'string' ? git.update_strategy : 'merge';
+        value = (load_agent_settings({ cwd: repo }).git as { update_strategy?: unknown } | undefined)?.update_strategy;
     } catch {
         return 'merge';
     }
+    if (value === undefined || value === null) return 'merge';
+    return String(value).trim().toLowerCase();
 }
 
 export function main(argv?: readonly string[]): number {
@@ -917,21 +923,27 @@ export function main(argv?: readonly string[]): number {
         }
     }
 
-    // This script only merges. Under `rebase` a merge of the base is the commit
-    // the setting excludes, and a rebase needs the user's request per
-    // git-history-discipline, so refusing is the only correct automatic outcome.
-    if (updateStrategy(repo) === 'rebase') {
-        process.stdout.write(
-            '⚠️  sync_pr_branch: refused — git.update_strategy is `rebase`, and this script only merges the base in. ' +
-                'Rebase onto origin/<base> on request instead (git-workflow references/branch-update.md).\n',
-        );
-        reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'refused under git.update_strategy: rebase' });
-        return 1;
-    }
-
+    // This script only merges. Under any other strategy a merge of the base is
+    // the commit the setting excludes, and a rebase needs the user's request per
+    // git-history-discipline — so the branch is only CHECKED (dry run), and a
+    // branch that is behind is refused rather than merged. A current branch
+    // passes, so an automated pre-push sync stays green when nothing is to do.
+    const strategy = updateStrategy(repo);
     let plan: Plan;
     try {
-        plan = sync(repo, base, dryRun, autoResolve);
+        if (strategy !== 'merge') {
+            plan = sync(repo, base, true, false);
+            if (plan.exit === 0 && plan.message.includes('Behind:')) {
+                process.stdout.write(
+                    `⚠️  sync_pr_branch: refused — the branch is behind and git.update_strategy is \`${strategy}\`; this script only merges. ` +
+                        'Rebase onto origin/<base> on request instead (git-workflow references/branch-update.md).\n',
+                );
+                reportScanned({ gate: 'sync_pr_branch', scanned: plan.scanned, units: 'base ref(s)', roots: ['origin'] });
+                return 3;
+            }
+        } else {
+            plan = sync(repo, base, dryRun, autoResolve);
+        }
     } catch (exc) {
         reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'internal error' });
         process.stderr.write(`❌  sync_pr_branch: internal error: ${exc instanceof Error ? exc.message : String(exc)}\n`);

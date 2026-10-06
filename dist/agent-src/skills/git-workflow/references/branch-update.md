@@ -27,6 +27,9 @@ decides how a feature branch takes in its base — `/create-pr` § 1b, `/pr:merg
   `git rebase --continue`; `git rebase --abort` returns to the pre-rebase state.
   Re-run the relevant tests afterwards — a conflict-free tree is not a correct
   one. Detail: [`merge-conflicts`](../../merge-conflicts/SKILL.md).
+- **`sync_pr_branch` refuses with exit 3** when the branch is behind and the
+  strategy is not `merge`; a current branch passes with exit 0, so automated
+  pre-push syncs stay green when there is nothing to do.
 - **Plain `git push --force` is never used** — only `--force-with-lease`, and
   never against the base branch itself.
 - **Tidying WIP / fixup commits before the PR** (`git commit --fixup`,

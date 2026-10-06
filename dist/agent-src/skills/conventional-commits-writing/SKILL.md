@@ -46,7 +46,7 @@ imposing the shipped default there produces commits that read as foreign in
 | Tier | Source | Binding? |
 |---|---|---|
 | **1 — configured** | `commitlint.config.*` · `.gitmessage` · a `commit-msg` hook (husky / lefthook / `.git/hooks`) · `CONTRIBUTING.md` § Commits · a CI job that validates subjects · release automation that PARSES subjects (semantic-release, changesets, git-cliff, conventional-changelog) | yes — Class A, no approval needed |
-| **1b — declared** | `git.commit_format` set by a human on any settings layer — `agent-config settings:get git.commit_format` names the file; a value that resolves only from the shipped template is **not** a declaration | yes — the user's own word, so no measurement and no ask |
+| **1b — declared** | `git.commit_format: ticket-prefix` in the project settings — `agent-config settings:get git.commit_format` names the file. Only the non-default value declares anything: `ticket-scope` is also what a copied template carries, so it proves no choice | yes — the user's own word, so no measurement and no ask |
 | **2 — measured + approved** | the consensus pass below, after the user says yes | yes, for this repository |
 | **3 — measured, unapproved** | the same pass before the user answers | **no — advisory**; report the mismatch, write Conventional |
 | **4 — default** | Conventional Commits | yes |
