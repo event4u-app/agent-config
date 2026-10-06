@@ -127,7 +127,7 @@
     },
     "dependencies": {
         "@fastify/static": "^10.1.2",
-        "@modelcontextprotocol/sdk": "^1.30.0",
+        "@modelcontextprotocol/sdk": "^1.32.1",
         "@preact/signals": "^2.10.0",
         "commander": "^15.0.0",
         "execa": "^9.5.0",
