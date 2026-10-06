@@ -29,11 +29,12 @@
  * because they are the evidence a human labeller needs in step 3.3 and because
  * the gate's own refusal text already quotes them; they are capped so one turn
  * cannot write an unbounded row. An edit OUTSIDE the workspace root is the one
- * shape that could carry an absolute prefix, and {@link buildFeederRow} DROPS it
- * from the row rather than store it — so the claim is true by construction and
- * not by convention. The earlier wording claimed "repo-relative source paths"
- * flatly while the recorded data did not support it; this one is narrower and
- * enforced.
+ * shape that could carry identifying content, and {@link buildFeederRow}
+ * REDACTS it to {@link OUTSIDE_WORKSPACE} — it does not drop it, which was tried
+ * and rejected for the reason recorded at that call site. So the claim is true
+ * by construction and not by convention. The earlier wording claimed
+ * "repo-relative source paths" flatly while the recorded data did not support
+ * it; this one is narrower and enforced.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -117,9 +118,10 @@ export function feederFile(workspaceRoot: string, sessionKey: string): string {
  * whatever the host wrote into `file_path`, and Claude Code writes an ABSOLUTE
  * path. The graph keys its node ids on repo-relative paths, so `seedsForFiles`
  * resolved nothing, `untested` returned an empty seed set, and the feeder wrote
- * `no-seeds`. Every one of the 19 accrued rows that carried a path recorded
- * `no-seeds`, and none of them was a fact about the code: the graph arm was mute
- * for its whole accrual window. Probed at `c58d7eae` against the real index —
+ * `no-seeds`. 19 accrued rows carried a path; the 18 that reached the graph at
+ * all recorded `no-seeds`, and the nineteenth was skipped on `behind:0`. Not one
+ * of them was a fact about the code: the graph arm was mute for its whole
+ * accrual window. Probed at `c58d7eae` against the real index —
  * `src/scripts/check_memory.ts` resolves 60 seeds relative and 0 absolute.
  *
  * It survived review because every fixture fed a relative path. A test never run
@@ -143,17 +145,90 @@ export function feederFile(workspaceRoot: string, sessionKey: string): string {
  * platform.
  */
 export function toRepoRelative(root: string, paths: readonly string[]): string[] {
+    const realRoot = _resolveReal(root);
     return paths.map((p) => {
         if (!path.isAbsolute(p)) return p;
         let rel: string;
         try {
-            rel = path.relative(root, p);
+            rel = path.relative(realRoot, _resolveReal(p));
         } catch {
             return p;
         }
-        if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return p;
+        // `rel === '..'` and a leading `..` SEGMENT, not a leading `..` string:
+        // `rel.startsWith('..')` also matches an in-tree first segment that
+        // merely begins with two dots, such as `..cache/service.ts`, and would
+        // classify an in-repo edit as foreign.
+        if (rel === '' || rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) {
+            return p;
+        }
         return rel.split(path.sep).join('/');
     });
+}
+
+/**
+ * The real location of a path, for comparing one host-supplied string to
+ * another.
+ *
+ * WHY THIS IS NOT OPTIONAL. `workspace_root` and a tool call's `file_path` are
+ * two independently produced strings, and they routinely disagree about
+ * symlinks: macOS `/tmp` resolves to `/private/tmp`, and a worktree session's
+ * project dir can resolve to the parent checkout. Relativising them raw sends
+ * EVERY in-repo path down the foreign branch, which would return the graph to
+ * `no-seeds` and — now that the row redacts a foreign path — would also destroy
+ * the labelling evidence instead of merely failing to resolve it. That is
+ * strictly worse than the defect this module was repaired for, and it fails the
+ * same way: silently. A completion review found it; no fixture could, because
+ * every fixture builds its paths from the same realpathed root string.
+ *
+ * It walks up to the NEAREST EXISTING ancestor and rejoins the remainder, so a
+ * file the turn deleted — or a root that does not exist, as a pure unit test's
+ * does — still resolves through whatever part of the chain is real. The walk
+ * has to be symmetric or it introduces the very bug it fixes: resolving the root
+ * through an existing ancestor while leaving the path unresolved makes the two
+ * disagree by exactly the symlink prefix. That asymmetry was in the first
+ * version of this function and the suite's own POSIX test caught it.
+ *
+ * KNOWN REMAINING LIMIT: a case-insensitive filesystem can still present the
+ * same file under two spellings this does not reconcile. Named rather than
+ * silently assumed away.
+ */
+function _resolveReal(p: string): string {
+    const abs = path.resolve(p);
+    const tail: string[] = [];
+    let cur = abs;
+    for (;;) {
+        try {
+            const real = fs.realpathSync(cur);
+            return tail.length === 0 ? real : path.join(real, ...[...tail].reverse());
+        } catch {
+            const parent = path.dirname(cur);
+            // Reached the filesystem root with nothing resolvable — the absolute
+            // form is the best answer available, and it is still symmetric
+            // because the other side took the same walk.
+            if (parent === cur) return abs;
+            tail.push(path.basename(cur));
+            cur = parent;
+        }
+    }
+}
+
+/**
+ * Would storing this path put content from outside the workspace on the row?
+ *
+ * Broader than `path.isAbsolute` on purpose. Two shapes bypass that test while
+ * carrying exactly the identifying content the marker exists to withhold from
+ * the external labeller: an out-of-tree path already in relative form
+ * (`../other-project/x.ts`), and a foreign-platform absolute path, which POSIX
+ * `path.isAbsolute` reports as relative. Both were found by a completion review.
+ */
+function _escapesWorkspace(p: string): boolean {
+    return (
+        path.isAbsolute(p) ||
+        path.win32.isAbsolute(p) ||
+        p === '..' ||
+        p.startsWith('../') ||
+        p.startsWith(`..${path.sep}`)
+    );
 }
 
 /**
@@ -309,7 +384,7 @@ export function buildFeederRow(input: {
         // identifying. The graph's answer is unchanged either way — the probe
         // sees the real path and resolves no seeds for it.
         paths: toRepoRelative(input.root, input.paths.slice(0, MAX_PATHS)).map((p) =>
-            path.isAbsolute(p) ? OUTSIDE_WORKSPACE : p,
+            _escapesWorkspace(p) ? OUTSIDE_WORKSPACE : p,
         ),
         path_count: input.paths.length,
     };

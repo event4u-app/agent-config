@@ -121,8 +121,10 @@ refuses.
       across 5 distinct sessions, against a bar of 50. Taking the reading produced
       three findings, all on the evidence page. (i) The GRAPH ARM WAS VOID: the
       feeder handed `untested` absolute paths while the graph keys node ids on
-      repo-relative ones, so all 19 path-carrying rows recorded `no-seeds` — none
-      of them a fact about the code. Probed at `c58d7eae`: `check_memory.ts`
+      repo-relative ones. 19 rows carried a path; the 18 that reached the graph
+      at all recorded `no-seeds`, and the nineteenth was skipped on `behind:0`
+      and recorded `null` — so not one path-carrying row ever held a fact about
+      the code. Probed at `c58d7eae`: `check_memory.ts`
       resolves 60 seeds relative and 0 absolute. Repaired in this change, with
       regression tests written against the absolute form and seen red first; the
       arm's accrual restarts at zero, because no pre-repair row is admissible
@@ -165,7 +167,7 @@ refuses.
 | D3 | reversible-technical | agent | a separate feeder record, not `ShadowRecord` | `ShadowRecord` is written only on `stop_hook_active` / `refused_turn` (`turn_end_gate_hook.ts:1332,1353`) and feeds the Q1 reading | the Q1 window closes |
 | D5 | deterministic | agent | closure pass C1 (3.3's verify listed unfalsifiable): accepted — the evidence page's existence is the oracle, the n ≥ 50 bar is in the step text and in the acceptance criteria | `closure_scan` 2026-10-01; the family is a listing, never a gate (`closure_scan.ts:41-50`) | a reviewer flips 3.3 on a page with n < 50 |
 | D4 | contested-technical | evidence | no free-text scoring in `graph_node` | `docs/CLAIMS.md:566-572` — free-text retrieval is the row the graph lost | a rerun wins a retrieval class |
-| D6 | deterministic | evidence | the feeder relativises edit paths before the graph sees them, and stores the relativised form | probed at `c58d7eae`: `check_memory.ts` resolves 60 seeds relative, 0 absolute; all 19 path-carrying rows read `no-seeds` | the graph gains a resolver that takes absolute paths |
+| D6 | deterministic | evidence | the feeder relativises edit paths before the graph sees them, and stores the relativised form | probed at `c58d7eae`: `check_memory.ts` resolves 60 seeds relative, 0 absolute; of 19 path-carrying rows the 18 that reached the graph read `no-seeds` and the 19th was skipped on `behind:0` | the graph gains a resolver that takes absolute paths |
 | D7 | deterministic | evidence | the pre-registration is NOT amended now that its counts are known — the 25/25 design stands and the shortfall is reported against it | the page's own clause: a threshold chosen after the counts is a threshold chosen by the counts | the owner amends it, via `b1` |
 
 ## Blockers
