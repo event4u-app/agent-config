@@ -1333,6 +1333,7 @@ function recordGraphFeeder(
             inputs.workspaceRoot,
             inputs.sessionKey,
             buildFeederRow({
+                root: inputs.workspaceRoot,
                 turn: inputs.turnOrdinal,
                 layer,
                 state,

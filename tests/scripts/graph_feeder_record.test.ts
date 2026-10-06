@@ -25,7 +25,9 @@ import {
     buildFeederRow,
     graphUntestedVerdict,
     MAX_ROWS_PER_SESSION,
+    OUTSIDE_WORKSPACE,
     readFeederRows,
+    toRepoRelative,
 } from '../../src/scripts/_lib/graph_feeder_record.js';
 import { deriveSessionKey } from '../../src/scripts/hooks/turn_end_gate_hook.js';
 
@@ -176,6 +178,7 @@ describe('graphUntestedVerdict — the graph half, in isolation', () => {
 describe('buildFeederRow — the row shape', () => {
     it('caps the path list, keeps the true count, and carries no free-form field', () => {
         const row = buildFeederRow({
+            root: '/workspace',
             turn: 3,
             layer: 'live',
             state: 'edited',
@@ -216,6 +219,7 @@ describe('buildFeederRow — the row shape', () => {
         const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'graph-feeder-cap-')));
         tmp_dirs.push(root);
         const row = buildFeederRow({
+            root: '/workspace',
             turn: 1,
             layer: 'live',
             state: 'fresh',
@@ -230,4 +234,260 @@ describe('buildFeederRow — the row shape', () => {
         }
         expect(readFeederRows(root, 'capped')).toHaveLength(MAX_ROWS_PER_SESSION);
     });
+});
+
+/**
+ * The path shape a real host actually emits.
+ *
+ * Every fixture above hands the feeder a REPO-RELATIVE path, and that is why
+ * the arm looked healthy while it was mute: Claude Code writes `file_path` as an
+ * ABSOLUTE path, the graph's seed ladder resolves node ids keyed on repo-relative
+ * paths, and the two never met. Step 3.3's accrual window recorded `no-seeds` on
+ * every row that reached the graph at all — 18 of the 19 that carried a path,
+ * the nineteenth having been skipped on `behind:0` — and a recall table built on
+ * that would have scored a defect and called it a detector.
+ *
+ * Both assertions are written against the absolute shape on purpose. A fixture
+ * that keeps feeding relative paths cannot see this regression come back.
+ */
+describe('3.3 — the arm reads the path shape a host emits, not the one a fixture does', () => {
+    it('resolves an absolute in-workspace path to the same verdict as its relative form', async () => {
+        const { dir } = await rig(true);
+        const rel = graphUntestedVerdict(dir, 'fresh', ['src/service.ts']);
+        const abs = graphUntestedVerdict(dir, 'fresh', [path.join(dir, 'src', 'service.ts')]);
+        expect(rel.verdict).toBe('untested');
+        // The claim: the absolute form is the SAME answer, not `no-seeds`.
+        expect(abs.verdict).toBe(rel.verdict);
+        expect(abs.untested).toBe(rel.untested);
+        expect(abs.tested).toBe(rel.tested);
+    }, 120_000);
+
+    it('keeps an out-of-workspace path verbatim for the PROBE and redacts it on the ROW', async () => {
+        const { dir } = await rig(true);
+        const outside = path.join(os.tmpdir(), 'not-this-workspace', 'elsewhere.ts');
+        // Honest boundary: a path outside the root is not graph-addressable, so
+        // the probe leaves it alone rather than rewrite it into a `../` that
+        // would look relative and index nothing.
+        expect(graphUntestedVerdict(dir, 'fresh', [outside]).verdict).toBe('no-seeds');
+        // `no-seeds` alone could not go red here — it is equally true under the
+        // `../` rewrite the docstring rules out AND under the pre-fix absolute
+        // passthrough. So assert what `toRepoRelative` actually singles out.
+        expect(toRepoRelative(dir, [outside])).toStrictEqual([outside]);
+
+        // The ROW is the egress surface — `paths` reaches external council seats
+        // at labelling — so there the out-of-workspace path is REDACTED.
+        //
+        // Redacted and not dropped, which is the assertion that matters. The
+        // lengths stay equal, so truncation remains the ONLY cause of
+        // `path_count > paths.length` and the protocol's exclusion rule keeps
+        // meaning one thing. Dropping would have excluded this row from the
+        // corpus entirely and taken a perfectly labellable in-repo path with it.
+        const row = buildFeederRow({
+            root: dir,
+            turn: 1,
+            layer: 'live',
+            state: 'fresh',
+            fFired: false,
+            fMode: null,
+            paths: [path.join(dir, 'src', 'service.ts'), outside],
+            graph: { verdict: null, untested: 0, tested: 0 },
+            at: '2026-10-06T00:00:00.000Z',
+        });
+        expect(row.paths).toStrictEqual(['src/service.ts', OUTSIDE_WORKSPACE]);
+        expect(row.path_count).toBe(2);
+        expect(row.paths).toHaveLength(row.path_count);
+        // Nothing identifying survives: no absolute prefix, and specifically not
+        // the temp-dir root the out-of-tree path was built from.
+        for (const p of row.paths) {
+            expect(path.isAbsolute(p)).toBe(false);
+            expect(p).not.toContain(os.tmpdir());
+        }
+    }, 120_000);
+
+    it('emits POSIX separators, because the index matches source_file by exact string', () => {
+        // The indexer writes `source_file` through `toPosixRel`
+        // (`code_graph/build.ts:108`) and the store compares it literally, so a
+        // backslash spelling resolves no seeds and records `no-seeds` — the
+        // repaired defect, in platform-conditional form.
+        //
+        // HONEST LIMIT, stated rather than implied: on a POSIX host `path.sep`
+        // is already `/`, so the normalisation is a no-op and this assertion
+        // CANNOT go red here. It pins the contract; it does not guard it. The
+        // assertion that can go red on this platform is the end-to-end row test
+        // above, which asserts `graph === 'untested'` and therefore fails unless
+        // the stored spelling actually resolves seeds in a real index.
+        // `toPosixRel` is private to the builder and is deliberately not
+        // exported to be compared against — widening a surface for a test is a
+        // worse trade than naming the gap.
+        const root = path.join(os.tmpdir(), 'ws');
+        const out = toRepoRelative(root, [path.join(root, 'src', 'deep', 'service.ts')]);
+        expect(out).toStrictEqual(['src/deep/service.ts']);
+    });
+
+    it('stores repo-relative paths on the row when the transcript carries absolute ones', async () => {
+        const withGraph = await rig(true);
+        const file = path.join(withGraph.home, 'transcript-abs.jsonl');
+        fs.writeFileSync(
+            file,
+            [
+                { type: 'user', message: { content: 'mach das fertig' } },
+                {
+                    type: 'assistant',
+                    message: {
+                        content: [
+                            {
+                                type: 'tool_use',
+                                name: 'Edit',
+                                // The absolute form, exactly as the host writes it.
+                                input: { file_path: path.join(withGraph.dir, 'src', 'service.ts') },
+                            },
+                        ],
+                    },
+                },
+                { type: 'assistant', message: { content: [{ type: 'text', text: 'Fertig.' }] } },
+            ]
+                .map((e) => JSON.stringify(e))
+                .join('\n') + '\n',
+        );
+        runHook(withGraph.dir, withGraph.home, file);
+
+        const rows = readFeederRows(withGraph.dir, deriveSessionKey(SESSION));
+        const row = rows[rows.length - 1];
+        expect(row?.paths).toStrictEqual(['src/service.ts']);
+        // And the graph answered, instead of reporting it had no seeds.
+        expect(row?.graph).toBe('untested');
+        // No absolute prefix reaches the record, which is what the module header
+        // claims the row cannot carry.
+        for (const p of row?.paths ?? []) expect(path.isAbsolute(p)).toBe(false);
+    }, 120_000);
+});
+
+/**
+ * The path-comparison hazards a fixture built from one string cannot produce.
+ *
+ * Every fixture above builds its root and its paths from the SAME realpathed
+ * string, so root and path can never disagree — which is exactly the shape that
+ * breaks in the field. A completion review found all three of these; each test
+ * below was seen red against the implementation that preceded it.
+ */
+describe('3.3 — two host-supplied strings, compared honestly', () => {
+    it('resolves a symlinked workspace root instead of calling every in-repo path foreign', async () => {
+        const { dir } = await rig(false);
+        const link = path.join(os.tmpdir(), `gf-link-${String(process.pid)}-${String(Date.now())}`);
+        fs.symlinkSync(dir, link);
+        tmp_dirs.push(link);
+
+        const real = path.join(dir, 'src', 'service.ts');
+        const viaLink = path.join(link, 'src', 'service.ts');
+
+        // `workspace_root` and `file_path` are produced independently and
+        // routinely disagree about symlinks — macOS `/tmp` -> `/private/tmp`, a
+        // worktree project dir -> the parent checkout. Raw `path.relative` sends
+        // EVERY in-repo path down the foreign branch, which returns the graph to
+        // `no-seeds` AND now redacts away the labelling evidence: strictly worse
+        // than the defect this module was repaired for.
+        expect(toRepoRelative(link, [real])).toStrictEqual(['src/service.ts']);
+        expect(toRepoRelative(dir, [viaLink])).toStrictEqual(['src/service.ts']);
+
+        // And the row keeps the real path rather than redacting it away.
+        const row = buildFeederRow({
+            root: link,
+            turn: 1,
+            layer: 'live',
+            state: 'fresh',
+            fFired: false,
+            fMode: null,
+            paths: [real],
+            graph: { verdict: null, untested: 0, tested: 0 },
+            at: '2026-10-06T00:00:00.000Z',
+        });
+        expect(row.paths).toStrictEqual(['src/service.ts']);
+    }, 120_000);
+
+    it('does not call an in-tree path foreign just because its first segment starts with two dots', async () => {
+        const { dir } = await rig(false);
+        // `rel.startsWith('..')` matches `..cache/service.ts`, which is an
+        // ordinary in-repo directory. The test the intent needs is a leading
+        // `..` SEGMENT, not a leading `..` string.
+        const p = path.join(dir, '..cache', 'service.ts');
+        expect(toRepoRelative(dir, [p])).toStrictEqual(['..cache/service.ts']);
+    }, 120_000);
+
+    it('redacts every shape that carries content from outside the workspace, not just POSIX-absolute ones', async () => {
+        const { dir } = await rig(false);
+        // Two shapes bypass `path.isAbsolute` while carrying exactly the
+        // identifying content the marker exists to withhold: an out-of-tree path
+        // already in relative form, and a foreign-platform absolute path, which
+        // POSIX `path.isAbsolute` reports as relative.
+        const row = buildFeederRow({
+            root: dir,
+            turn: 1,
+            layer: 'live',
+            state: 'fresh',
+            fFired: false,
+            fMode: null,
+            paths: ['../other-project/secret.ts', 'C:\\Users\\someone\\thing.ts', 'src/service.ts'],
+            graph: { verdict: null, untested: 0, tested: 0 },
+            at: '2026-10-06T00:00:00.000Z',
+        });
+        expect(row.paths).toStrictEqual([OUTSIDE_WORKSPACE, OUTSIDE_WORKSPACE, 'src/service.ts']);
+        expect(row.paths).toHaveLength(row.path_count);
+        for (const p of row.paths) {
+            expect(p).not.toContain('other-project');
+            expect(p).not.toContain('someone');
+        }
+    }, 120_000);
+});
+
+describe('3.3 — the two shapes the escape branch used to get wrong', () => {
+    it('does not call the workspace root itself outside the workspace', async () => {
+        const { dir } = await rig(false);
+        // `path.relative(root, root)` is the empty string, which was folded into
+        // the escape branch — so a path equal to the root came back absolute and
+        // was then recorded as `<outside-workspace>`. The root is emphatically
+        // not outside the workspace, and a row saying so tells a labeller the
+        // opposite of the truth.
+        expect(toRepoRelative(dir, [dir])).toStrictEqual(['.']);
+        const row = buildFeederRow({
+            root: dir,
+            turn: 1,
+            layer: 'live',
+            state: 'fresh',
+            fFired: false,
+            fMode: null,
+            paths: [dir],
+            graph: { verdict: null, untested: 0, tested: 0 },
+            at: '2026-10-06T00:00:00.000Z',
+        });
+        expect(row.paths).toStrictEqual(['.']);
+        expect(row.paths).not.toContain(OUTSIDE_WORKSPACE);
+    }, 120_000);
+
+    it('keeps an in-tree file in tree even when an in-repo symlink points out of it', async () => {
+        const { dir } = await rig(false);
+        const outside = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'gf-outside-')));
+        tmp_dirs.push(outside);
+        fs.writeFileSync(path.join(outside, 'service.ts'), SERVICE);
+        // An in-repo path whose TARGET leaves the workspace. Resolving
+        // unconditionally would relativise it to a `..` segment, probe it
+        // absolute, and redact it off the row — destroying labelling evidence
+        // for a path that is in the tree. The indexer keys `source_file` from a
+        // plain tree walk with no realpath, so the raw spelling is the one it
+        // agrees with, and the raw comparison is tried first for that reason.
+        const linked = path.join(dir, 'linked.ts');
+        fs.symlinkSync(path.join(outside, 'service.ts'), linked);
+        expect(toRepoRelative(dir, [linked])).toStrictEqual(['linked.ts']);
+        const row = buildFeederRow({
+            root: dir,
+            turn: 1,
+            layer: 'live',
+            state: 'fresh',
+            fFired: false,
+            fMode: null,
+            paths: [linked],
+            graph: { verdict: null, untested: 0, tested: 0 },
+            at: '2026-10-06T00:00:00.000Z',
+        });
+        expect(row.paths).toStrictEqual(['linked.ts']);
+    }, 120_000);
 });
