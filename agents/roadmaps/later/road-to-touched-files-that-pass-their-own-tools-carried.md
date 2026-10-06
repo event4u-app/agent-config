@@ -37,7 +37,12 @@ reason, never left to read as finished.
       needed 2.1's reading first. **2.1's reading landed on 2026-10-06** —
       `agents/evidence/analysis/touched-file-quality-readings-2026-Q4.md` — so
       the second leg is discharged and only the owner's own act remains.
-      verify: `grep -n 'touched_file_quality' src/config/agent-settings.template.yml` -> the value is no longer `"off"`, or a dated decision to keep it records the second branch
+      The clause below checks the FIRST branch only — the shipped value moving off
+      `"off"`. The second branch, a dated decision to keep it `off`, is deliberately
+      not machine-checked: it is a sentence in a release record, and a clause that
+      tried to match one would pass on any file mentioning the key. The blocker's
+      `Resolved when` carries both branches; this clause is the falsifiable half.
+      verify: `grep -c 'touched_file_quality: "off"' src/config/agent-settings.template.yml` -> /^0$/
 
 ## Blockers
 
