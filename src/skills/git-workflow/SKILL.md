@@ -321,7 +321,7 @@ force-push would clobber their in-flight work regardless of your local backup.
 
 ## Two protective stops (for the protocol phase)
 
-1. **Pre-rewrite stop.** Before any squash / amend / rebase on a branch that is on origin: `git fetch && git rev-list --left-right --count HEAD...@{u}`. If **either** side is non-zero — STOP and run § Divergent-State Recovery. A blind `git pull --rebase` in this state is the documented failure mode. (§ Safe squash-after-push steps 1–2 implement this stop.)
+1. **Pre-rewrite stop.** Before any squash / amend / rebase on a branch that is on origin: `git fetch && git rev-list --left-right --count HEAD...@{u}`. Squash / amend: if **either** side is non-zero — STOP and run § Divergent-State Recovery. Rebase: only the **right** side (commits on origin you lack) must be 0 — your own unpushed commits travel with the rebase, and the lease below is `@{u}` as just fetched. A blind `git pull --rebase` in this state is the documented failure mode. (§ Safe squash-after-push steps 1–2 implement this stop.)
 
 2. **Post-rewrite stop.** After the rewrite, push in the **same turn** with `--force-with-lease=<branch>:<fetched-sha>` and verify `git rev-parse origin/<branch>` equals `git rev-parse HEAD`. If the push fails (hook, network, token budget) — fix the cause and re-push **before** ending the session, committing new work, or handing off. (§ Safe squash-after-push step 4 implements this stop.)
 

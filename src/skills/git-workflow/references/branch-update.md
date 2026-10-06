@@ -9,7 +9,7 @@ decides how a feature branch takes in its base — `/create-pr` § 1b, `/pr:merg
 | `git.update_strategy` | Operation | Asked first? |
 |---|---|---|
 | `merge` (default) | `git fetch origin && git merge origin/<base> --no-edit` | no — a merge adds a commit and rewrites nothing |
-| `rebase` | `git fetch origin`, then on a pushed branch the pre-rewrite stop — `git rev-list --left-right --count HEAD...@{u}` must be `0 0`, otherwise a collaborator has pushed and the rebase does not start — then `git rebase origin/<base>` and `git push --force-with-lease=<branch>:<fetched-sha>` in the same turn. `<fetched-sha>` is `git rev-parse origin/<branch>` after that stop passed, i.e. your own pre-rebase HEAD — never the base's SHA | **yes**, unless [`git-history-discipline`](../../../rules/git-history-discipline.md) § When rewrite is allowed already covers it — the user asked this turn, an unrevoked standing instruction ("always rebase before pushing"), or a `pull --rebase` the user started. The setting picks the operation; it is never the authorisation |
+| `rebase` | `git fetch origin`, then on a pushed branch the pre-rewrite stop in its rebase form — the right count of `git rev-list --left-right --count HEAD...@{u}` must be `0` (nothing on origin you lack; your own unpushed commits on the left travel with the rebase), otherwise a collaborator has pushed and the rebase does not start — then `git rebase origin/<base>` and `git push --force-with-lease=<branch>:<fetched-sha>` in the same turn. `<fetched-sha>` is `git rev-parse @{u}` read after that stop passed — the remote state the push replaces, never the base's SHA | **yes**, unless [`git-history-discipline`](../../../rules/git-history-discipline.md) § When rewrite is allowed already covers it — the user asked this turn, an unrevoked standing instruction ("always rebase before pushing"), or a `pull --rebase` the user started. The setting picks the operation; it is never the authorisation |
 
 ## Under `rebase`
 
@@ -17,8 +17,8 @@ decides how a feature branch takes in its base — `/create-pr` § 1b, `/pr:merg
   a `Merge branch 'main' into …` commit is exactly what the setting excludes.
   No authorisation → stop and ask with numbered options (rebase now / leave the
   branch behind).
-- **Pushed branch** → run the pre-rewrite stop of the skill's § Two protective
-  stops first (divergent local vs origin halts the rebase), and push in the same
+- **Pushed branch** → run the rebase form of the skill's § Two protective
+  stops first (commits on origin you lack halt the rebase), and push in the same
   turn per its post-rewrite stop.
 - **Shared branch** — commits on it that you did not author this session → do
   not rebase without the authors' agreement; this is the git-history-discipline

@@ -146,15 +146,16 @@ not rewriting their branches
 **Under `git.update_strategy: rebase`** this step does not merge: a
 `Merge branch '<base>' into …` commit is what that setting excludes, and the
 `/pr:merge` sentence authorises merging the named PRs, not rewriting their
-branches. A behind PR then takes exactly one of two paths, read from
-`gh pr view <N> --json mergeStateStatus`:
+branches. Check instead, on the checked-out PR:
+`./scripts-run src/scripts/sync_pr_branch --base origin/<base>`.
 
-- `BEHIND` (branch protection requires an up-to-date branch) or `DIRTY`
-  (conflicts) → reported and left for the author to rebase, disposition
-  `blocked-external` — unless the invocation itself asked for the rebase.
-- Anything mergeable → skip this step and go on: the forge lands the PR on the
-  current base with whichever method § 9 detects, and its required checks still
-  gate the merge as for every other PR.
+- exit `0` → the PR is current with its base; go on to § 3.
+- exit `3` → behind: reported and left for the author to rebase, disposition
+  `blocked-external` — unless the invocation itself asked for the rebase. A
+  behind PR is not merged without it even where the forge would accept it: its
+  checks never ran against the current base.
+- any other exit → the check could not run (base unresolvable, internal
+  error); stop on this PR and report the script's message.
 
 ## 3. Resolve conflicts by class, never by taste
 

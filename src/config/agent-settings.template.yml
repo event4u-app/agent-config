@@ -440,7 +440,7 @@ git:
   #   merge  -> merge origin/<base> into the branch (default)
   #   rebase -> rebase onto origin/<base>, publish with --force-with-lease;
   #             never a merge of the base into the branch. Still asked for
-  #             each time per git-history-discipline.
+  #             unless git-history-discipline already authorises the rewrite.
   update_strategy: merge
 
 # --- GitHub integration ---

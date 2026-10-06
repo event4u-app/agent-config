@@ -145,9 +145,11 @@ a behind branch with exit 3)
 `git push --force-with-lease=<branch>:<fetched-sha>`, never a plain push). A
 rebase runs only after the pre-rewrite stop in
 [`branch-update`](../../../../skills/git-workflow/references/branch-update.md):
-`git rev-list --left-right --count HEAD...@{u}` must be `0 0` after the fetch,
-so `<fetched-sha>` equals your own pre-rebase HEAD and a collaborator's push
-fails the lease instead of being overwritten.
+the right count of `git rev-list --left-right --count HEAD...@{u}` must be `0`
+after the fetch (your own unpushed commits are the left side and travel with
+the rebase), and `<fetched-sha>` is `git rev-parse @{u}` read then — so a
+collaborator's push lands either before the stop and halts it, or after it and
+fails the lease, and is never overwritten.
 A PR that sits open while its base advances goes stale silently; keeping the
 base merged **at every touch** means it stays `mergeStateStatus: CLEAN` instead
 of accumulating conflicts for the moment the user wants to merge. If the gate
