@@ -80,7 +80,7 @@ vocabulary at all.
 | `php-coder` | conventions | typescript | create | same |
 | `php-coder` | conventions | go | create | same |
 
-**30 rows: 12 compose, 12 adapt, 6 create.**
+**30 rows: 13 compose, 11 adapt, 6 create.** (Corrected 2026-10-06 from 12 / 12 / 6 by recounting the table; the release finding that caught it is dispositioned by `road-to-findings-that-get-a-disposition`.)
 
 ## What the verdicts commit to
 
