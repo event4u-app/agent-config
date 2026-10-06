@@ -443,7 +443,7 @@ export const settingsSchema = z.object({
             'Session-wide model CEILING for subagents (spend cap). Empty (default) = no ceiling. When set, suite-owned CLI spawn wrappers export CLAUDE_CODE_SUBAGENT_MODEL to the sessions they launch. Class C: a human sets it; the agent never writes or infers one.',
         ),
         max_parallel: z.number().int().min(1).default(3).describe(
-            'Hard cap on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs. Raise for faster fan-out, lower if you hit rate limits or want lower token spend.',
+            'Limit on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs — a value the model reads from settings; no code counts spawns against it. Raise for faster fan-out, lower if you hit rate limits or want lower token spend.',
         ),
         adversarial_council: z.enum(['off', 'ask', 'on']).default('off').describe(
             'Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only — a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed.',

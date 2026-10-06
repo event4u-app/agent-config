@@ -232,12 +232,12 @@ At `df377ca64`:
 
 ## Phase 2 — Sentences beside the value they describe
 
-- [ ] **2.1 The lean-projection comment describes the shipped value.** The
+- [x] **2.1 The lean-projection comment describes the shipped value.** The
       block header no longer says experimental or opt-in, and no line calls a
       value other than the one below it the default.
       verify: `grep -c "today's behaviour" src/config/agent-settings.template.yml` -> /^0$/
       Positive control: the same grep returns 1 at `df377ca64`.
-- [ ] **2.2 The parallel cap says who carries it.** The two template
+- [x] **2.2 The parallel cap says who carries it.** The two template
       comments, the schema description and the context table state that the
       value is a limit the model reads from settings and that no code counts
       against it. The settings reference, the round-trip fixture that mirrors
