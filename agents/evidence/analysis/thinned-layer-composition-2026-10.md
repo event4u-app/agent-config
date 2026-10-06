@@ -148,7 +148,7 @@ Any figure on this page may be moved to another root the same way. None of the
 conclusions below turn on the difference: at either root the layer is above the
 recorded ceiling by more than the whole form saving.
 
-## Three instruments, three numbers — and which answers which question
+## Four readings from three instruments — and which answers which question
 
 | Instrument | Reads | Figure | Unit |
 |---|---|---|---|
@@ -157,7 +157,14 @@ recorded ceiling by more than the whole form saving.
 | the install receipt's budget line | the installed layer | 111,197 package-owned | report characters |
 | `buildInstalledLayerReport` | the installed layer | 111,197 = 97,496 + 13,701 | report characters |
 
-The first is **not** the installed layer and never was: it measures the
+Three instruments, four rows: the install receipt appears twice because it
+prints the layer in two units, which is why the table has one more row than it
+has tools. The heading said "three numbers" over four rows until a review round
+read it; on a page whose stated discipline is that a decomposition must sum
+exactly, a count that does not match its own table is the defect it elsewhere
+treats as a finding.
+
+The first row is **not** the installed layer and never was: it measures the
 maintainer-side projection over a different file set, under a workspace filter,
 and the page that first published it says of itself that it "**does not
 establish** that 106,800 is the installed layer's standing total". The recorded

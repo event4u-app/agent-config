@@ -338,6 +338,15 @@ export const THIN_BODY_POINTER_PREFIX = 'Body: ';
  * it, which is the same drift {@link THIN_ENTRY_MARKER} documents one screen up
  * and which two gates had already committed there.
  *
+ * WHAT IT CAPTURES is the whole tail of the line from `Body: ` to its end, and
+ * that is the intended semantic rather than an accident of greediness: the
+ * writer emits the pointer LAST on its line, so the tail IS the path. A review
+ * round proposed a lazy `(.+?\.md)` to stop at the first `.md`; measured, it
+ * changes nothing, because `\s*$` forces the match to reach end of line either
+ * way and a lazy quantifier simply backtracks forward to the same place. The
+ * greedy form is kept and the property is pinned by a test, so the next reader
+ * meets the measurement instead of repeating the proposal.
+ *
  * ANCHORED TO END OF LINE, NOT `\S+`. The pointer is the last thing on its
  * line, and a package root may contain spaces; `\S+` would silently stop at the
  * first one and report a well-formed pointer as missing.

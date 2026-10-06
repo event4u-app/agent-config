@@ -90,6 +90,27 @@ describe('the stub pointer is a bare path', () => {
         expect(THIN_BODY_POINTER_RE.exec(stub)?.[1]).toBe(`${spaced}some-rule.md`);
     });
 
+    it('extraction captures the whole tail of the line, which is the path', () => {
+        // The pattern EXTRACTS — `install_thin_layer`'s suite reads
+        // `exec(...)[1]` as the body path — so what it captures is a
+        // correctness property. A review round proposed a lazy `(.+?\.md)` to
+        // stop at the first `.md`; this case is the measurement that shows it
+        // changes nothing. `\s*$` forces the match to reach end of line, so a
+        // lazy quantifier backtracks forward to exactly the same place.
+        //
+        // The behaviour is correct because the writer puts the pointer LAST on
+        // its line: the tail IS the path. A stub is never emitted with trailing
+        // prose after the pointer, which the first assertion below pins against
+        // the writer itself.
+        const stub = thin_entry('some-rule', sourceRule('some-rule'), PREFIX);
+        expect(THIN_BODY_POINTER_RE.exec(stub)?.[1]).toBe(`${PREFIX}some-rule.md`);
+
+        const twoOnOneLine = 'Body: /pkg/rules/first.md and later /pkg/rules/second.md\n';
+        expect(THIN_BODY_POINTER_RE.exec(twoOnOneLine)?.[1]).toBe(
+            '/pkg/rules/first.md and later /pkg/rules/second.md',
+        );
+    });
+
     it('the OLD link form no longer satisfies the detector unchanged', () => {
         // Stated as its own case because it is the thing a reader would assume
         // the opposite of: the pattern is not lenient enough to accept both

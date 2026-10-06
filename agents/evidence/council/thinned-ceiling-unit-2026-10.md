@@ -117,7 +117,12 @@ it. Both are real and both are now fixed:
    its inclusion set explicitly and carries a third sum with the pointer in —
    which changes the conclusion: under a bare 75,000 on the unconditional
    reading the ceiling IS reachable with every row taken, and under the
-   headroom-adjusted 68,181 it is not, on any reading.
+   headroom-adjusted 68,181 it is not at any realistic package-root prefix.
+   (That last clause first read "not, on any reading" — the same absolute the
+   page itself then had to retract, because Sum 3's ceiling column dips 567
+   characters under 68,181. Corrected here on 2026-10-06 after a second review
+   round found it surviving in this record; the analysis page's § The corrected
+   conclusion carries the full statement.)
 2. **A three-row table followed by "both readings are over 75,000"** — the
    path-scoped row is a population, not a candidate ceiling. Reworded.
 

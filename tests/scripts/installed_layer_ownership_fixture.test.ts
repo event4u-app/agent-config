@@ -22,6 +22,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import {
     buildInstalledLayerReport,
+    defaultInventoryPath,
     ownershipLine,
     resolveLayerOwnership,
 } from '../../src/scripts/_lib/installed_layer.js';
@@ -215,6 +216,33 @@ describe('ownership resolution — one function, read by both readers', () => {
         });
         expect(r.sources).toEqual(['global-inventory']);
         expect(r.recorded.has(path.join(dir, 'a.md'))).toBe(true);
+    });
+
+    it('a STATED home beats the asking process env — the report is about that home', () => {
+        // The regression this pins, and it was introduced by over-correcting a
+        // review finding rather than by the original code. With env-first
+        // precedence, `installed_layer_report --home <fixture>` run on any
+        // machine exporting EVENT4U_CONFIG_HOME resolved the ASKING process's
+        // inventory: the fixture's files read foreign and some other install's
+        // read owned. That is the cross-home misattribution the function's own
+        // docstring exists to forbid, and it decides the figure AC-1 publishes.
+        const home = mkTmp('ilo-envhome-');
+        const dir = stageGlobal(home, { 'a.md': rule(10) });
+        const elsewhere = mkTmp('ilo-envelse-');
+        const saved = process.env['EVENT4U_CONFIG_HOME'];
+        process.env['EVENT4U_CONFIG_HOME'] = path.join(elsewhere, '.event4u', 'agent-config');
+        try {
+            expect(defaultInventoryPath(home)).toBe(
+                path.join(home, '.event4u', 'agent-config', 'deployed-files.json'),
+            );
+            // And with NO home stated, the env is the right answer — that is
+            // the case it decides, and the control that keeps the line above
+            // from passing for a function that ignores the environment outright.
+            expect(defaultInventoryPath(null)).not.toBe(defaultInventoryPath(home));
+        } finally {
+            if (saved === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
+            else process.env['EVENT4U_CONFIG_HOME'] = saved;
+        }
     });
 
     it('a corrupt inventory is no evidence rather than a failure', () => {

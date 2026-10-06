@@ -215,6 +215,24 @@ export function describeThinInstalledLayer(res) {
     }
     return out;
 }
+/**
+ * The install receipt's instruction-budget block — step 1.4's "at install".
+ *
+ * The step asks for the limit, the split and the 80 % warning AT INSTALL, and
+ * the measurement existed only behind the standalone `installed_layer_report`
+ * CLI: `buildHostLimitRows`'s own docstring named "the install receipt" as the
+ * caller it was exported for, and that caller did not exist. A consumer whose
+ * layer is over budget learned it from the host, which is the notice the
+ * roadmap exists to remove.
+ *
+ * Global layers only, deliberately. The install writes `~/.claude/rules` and
+ * its siblings; a project layer is not what this run just changed, and folding
+ * one in would make the receipt's number disagree with the thing it is a
+ * receipt FOR.
+ *
+ * Never throws. A receipt that cannot be measured is silent rather than fatal —
+ * the deploy it describes has already happened correctly.
+ */
 export function installReceiptBudgetLines(packageRoot, home = os.homedir(), opts = {}) {
     try {
         // ONE RESOLVER, SHARED WITH THE REPORT — step 1.2. This used to read

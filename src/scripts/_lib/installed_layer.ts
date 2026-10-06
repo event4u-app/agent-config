@@ -52,13 +52,12 @@ import {
 import { NO_RECORDED_HASHES, readRecordedHashes } from '../../install/recordedOwnership.js';
 import {
     INVENTORY_BASENAME,
-    INVENTORY_ENV,
     inventory_path,
     load_inventory,
     recorded_absolute_files,
 } from './global_deploy_inventory.js';
-import { DEFAULT_EVENT4U_ROOT_RELATIVE, EVENT4U_HOME_ENV } from './user_global_paths.js';
-import { ruleBody } from './rule_law_section.js';
+import { DEFAULT_EVENT4U_ROOT_RELATIVE } from './user_global_paths.js';
+import { ruleBody, splitFrontmatter } from './rule_law_section.js';
 
 /** How many files the per-directory ranking carries. Step 0.1 fixes it at 20. */
 export const TOP_FILES = 20;
@@ -248,21 +247,18 @@ export interface InstalledLayerReport {
  * both load every session, which is the only property the host acts on.
  */
 export function isUnconditional(text: string): boolean {
-    return !/^paths:/m.test(frontmatterBlock(text));
+    // THE SAME FUNCTION that produces the characters being partitioned, not the
+    // same arithmetic re-implemented. An earlier version scanned for
+    // `'\n---'` while `ruleBody` -> `splitFrontmatter` scans for `'\n---\n'`,
+    // so a frontmatter closing at EOF without a trailing newline, or an
+    // unindented `---` inside the block, made predicate and measure disagree
+    // about where the frontmatter stops — and the second of those truncates the
+    // predicate's view early and can hide a later `paths:` key, which is the
+    // silent direction this scoping was introduced to close.
+    const [frontmatter] = splitFrontmatter(text);
+    return !/^paths:/m.test(frontmatter);
 }
 
-/**
- * The YAML frontmatter block, without its fences. Empty when there is none.
- *
- * Deliberately the same arithmetic `check_single_delivery` uses — `slice(3,
- * end)` from a leading `---\n` to the next `\n---` — so the two readers cannot
- * disagree about where a rule's frontmatter stops.
- */
-function frontmatterBlock(text: string): string {
-    if (!text.startsWith('---\n')) return '';
-    const end = text.indexOf('\n---', 3);
-    return end === -1 ? '' : text.slice(3, end);
-}
 
 /**
  * Measure one directory.
@@ -487,27 +483,32 @@ export type OwnershipSource = 'manifest' | 'global-inventory' | 'this-deploy' | 
  * under a temporary HOME would read the maintainer's own inventory and claim
  * ownership of files that install never wrote.
  *
- * So the home is followed first and the env override only decides the default
- * home-less case. A caller with a specific file in mind passes it outright.
+ * SO AN EXPLICITLY SUPPLIED HOME WINS, AND THE ENV OVERRIDES DECIDE ONLY THE
+ * HOME-LESS CASE. A caller that says which home it is measuring has already
+ * answered the question those variables would answer for it, and letting the
+ * asking process's environment override that is exactly the hazard named above.
+ * An intermediate draft of this function had the precedence the other way round
+ * while this paragraph said what it says now; the code is what changed.
+ *
+ * THE CONSEQUENCE, STATED RATHER THAN IMPLIED: `ReportOptions.home` is
+ * REQUIRED, so every caller of {@link buildInstalledLayerReport} supplies one
+ * and neither env override reaches this reader through that path. That is
+ * correct — those variables describe the asking process's own install, which is
+ * not what a report about another home is measuring — but it means "honours the
+ * env override" is not a true sentence about the report, and saying so here is
+ * cheaper than leaving the next reader to discover it.
+ *
+ * The layout is COMPOSED from the modules that own it rather than re-spelled,
+ * so a layout change moves this reader with it instead of leaving it looking in
+ * a directory nobody writes.
  */
 export function defaultInventoryPath(home?: string | null): string {
-    // THE ENV OVERRIDES COME FIRST, for every caller. An earlier shape returned
-    // the hardcoded layout whenever a home was supplied — which is every caller
-    // of `buildInstalledLayerReport`, since `ReportOptions.home` is required —
-    // so `AGENT_CONFIG_DEPLOY_INVENTORY` and `EVENT4U_CONFIG_HOME` reached this
-    // reader never rather than only in the home-less case. Finding nothing is
-    // reported as `none`, i.e. "no evidence", so that failed silently in the
-    // one direction that matters.
-    const override = process.env[INVENTORY_ENV];
-    if (override !== undefined && override !== '') return inventory_path();
-    const configHome = process.env[EVENT4U_HOME_ENV];
-    if (configHome !== undefined && configHome !== '') return inventory_path();
+    // A STATED HOME WINS; `inventory_path()` answers for the ASKING process and
+    // is right only when no home was named.
     if (home === undefined || home === null || home === '') return inventory_path();
-    // COMPOSED, NOT RE-SPELLED: the user-global layout and the basename are both
-    // exported by the modules that own them, so a layout change moves this
-    // reader with it instead of leaving it looking in a directory nobody writes.
     return path.join(home, DEFAULT_EVENT4U_ROOT_RELATIVE, INVENTORY_BASENAME);
 }
+
 
 /** The ownership evidence and the name of where it came from. */
 export interface OwnershipResolution {
@@ -614,7 +615,15 @@ export function resolveLayerOwnership(opts: OwnershipOptions): OwnershipResoluti
                 n += 1;
             }
         } catch {
-            // A corrupt or unreadable inventory is no evidence, never a failure.
+            // Defence in depth, and NOT where the documented behaviour lives.
+            // "A corrupt inventory is no evidence, never a failure" is real but
+            // is carried one module down: `load_inventory` swallows its own
+            // read and parse failures and returns an empty shell, and
+            // `recorded_absolute_files` type-guards every field. So this catch
+            // is unreachable for that reason and the fixture case named for it
+            // exercises `load_inventory`, not this guard. Kept because a future
+            // change to either could make it reachable; labelled so it is not
+            // mistaken for tested coverage.
         }
         if (n > 0) sources.push('global-inventory');
     }

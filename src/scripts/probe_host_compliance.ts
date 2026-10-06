@@ -51,24 +51,6 @@ export interface DemotionResult {
   body_removed: boolean;
   trigger_hint_preserved: boolean;
   link_present: boolean;
-  /**
-   * The stub ends in something SHAPED like a body path, tested without the
-   * writer's constants.
-   *
-   * The honest reason this field exists. Since steps 2.1 and 2.3 both
-   * `pointer_present` and `link_present` are computed from the writer's own
-   * exports, and this probe's only caller feeds them `thin_entry` output
-   * produced in the same process — so those two can no longer return false
-   * whatever the writer emits. Asking them is asking the writer to agree with
-   * itself.
-   *
-   * Re-spelling the marker to restore their power is exactly the drift step 2.1
-   * removed, so this does not do that. It asserts the STRUCTURE a stub must
-   * have for a reader to be able to follow it at all — a trailing path ending
-   * `.md` — which no constant in `thin_rules` spells and which a writer that
-   * stopped emitting a pointer would fail.
-   */
-  pointer_targets_a_path: boolean;
 }
 
 /** Assert a thinned canary is a valid pointer (body gone, still selectable). */
@@ -89,20 +71,31 @@ export function evaluate_demotion(
   // the markdown-link form, so when the pointer became a bare path the gate
   // would have reported every correct stub as missing its link.
   const link_present = has_body_pointer(thinned);
-  // Writer-independent, for the reason `pointer_targets_a_path` documents.
-  const pointer_targets_a_path = /\S+\.md\s*$/m.test(thinned);
+  // HONEST LIMIT OF THIS FUNCTION'S MECHANICAL HALF, stated rather than
+  // papered over. `pointer_present` and `link_present` are now computed from
+  // the writer's own exports, and this probe's only caller feeds them
+  // `thin_entry` output produced in the same process — so against writer output
+  // those two cannot return false, whatever the writer emits. They still
+  // falsify a stub from any OTHER source, which is what the live host half
+  // reads, but the mechanical half's real falsifying power is `body_removed`
+  // and `trigger_hint_preserved`.
+  //
+  // A structural check was tried here and removed: `/\S+\.md\s*$/m` is
+  // implied by `link_present` — every string `Body: (.+\.md)\s*$` matches it
+  // matches too — so it could never flip `ok` while claiming in its own
+  // docstring to be the one check that survived. A conjunct that cannot fail is
+  // worse than an absent one, because it reads as coverage.
+  //
+  // Restoring independence needs a second spelling of the marker, which is the
+  // drift step 2.1 removed. The suite keeps the detectors honest instead:
+  // `thin_marker_single_spelling` runs a non-stub past all three in the false
+  // direction, which is the direction this cannot check.
   return {
-    ok:
-      pointer_present &&
-      body_removed &&
-      trigger_hint_preserved &&
-      link_present &&
-      pointer_targets_a_path,
+    ok: pointer_present && body_removed && trigger_hint_preserved && link_present,
     pointer_present,
     body_removed,
     trigger_hint_preserved,
     link_present,
-    pointer_targets_a_path,
   };
 }
 
@@ -157,8 +150,7 @@ function main(argv: string[]): number {
   process.stdout.write(
     `${result.ok ? '✅' : '❌'}  mechanical demotion: ` +
       `pointer=${result.pointer_present} body-removed=${result.body_removed} ` +
-      `hint=${result.trigger_hint_preserved} link=${result.link_present} ` +
-      `path=${result.pointer_targets_a_path}\n`,
+      `hint=${result.trigger_hint_preserved} link=${result.link_present}\n`,
   );
   if (!result.ok) {
     process.stdout.write('❌  the thin projector did NOT demote the canary correctly.\n');

@@ -12506,12 +12506,8 @@ function lawText(body) {
 var TOP_FILES = 20;
 var LIMIT_WARN_FRACTION = 0.8;
 function isUnconditional(text) {
-  return !/^paths:/m.test(frontmatterBlock(text));
-}
-function frontmatterBlock(text) {
-  if (!text.startsWith("---\n")) return "";
-  const end = text.indexOf("\n---", 3);
-  return end === -1 ? "" : text.slice(3, end);
+  const [frontmatter] = splitFrontmatter(text);
+  return !/^paths:/m.test(frontmatter);
 }
 function readLayer(host, scope, dir, recorded) {
   const empty = {
@@ -12637,10 +12633,6 @@ function buildHostLimitRows(layers, limits) {
   return rows;
 }
 function defaultInventoryPath(home) {
-  const override = process.env[INVENTORY_ENV];
-  if (override !== void 0 && override !== "") return inventory_path();
-  const configHome = process.env[EVENT4U_HOME_ENV];
-  if (configHome !== void 0 && configHome !== "") return inventory_path();
   if (home === void 0 || home === null || home === "") return inventory_path();
   return path24.join(home, DEFAULT_EVENT4U_ROOT_RELATIVE, INVENTORY_BASENAME);
 }
