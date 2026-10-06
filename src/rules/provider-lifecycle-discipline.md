@@ -48,12 +48,12 @@ Fires whenever a `/video:* / /image:* / /audio:*` surface fires, an adapter unde
 - **Read the tier before picking** — the `<lifecycle>` element in the provider XML AND the adapter's `Lifecycle:` header comment; a mismatch is a contract violation.
 - **Refuse-and-surface on non-stable** — name the tier, emit ONE clarifying question (per [`ask-when-uncertain`](ask-when-uncertain.md)); no silent default.
 
-Body migrated to [`docs/contracts/provider-lifecycle.md § 4–4b`](../../docs/contracts/provider-lifecycle.md#-4--agent-obligations) (per P4 of `road-to-kernel-and-router.md`) — the five enforcement points' detail, agent-side failure modes, day-one state (§ 5), why-agent-in-the-loop rationale.
+Body migrated to `docs/contracts/provider-lifecycle.md` § 4–4b (per P4 of `road-to-kernel-and-router.md`) — the five enforcement points' detail, agent-side failure modes, day-one state (§ 5), why-agent-in-the-loop rationale.
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).
 
 ## See also
 
-- [`docs/contracts/provider-lifecycle.md`](../../docs/contracts/provider-lifecycle.md) — the full tier definitions, promotion / demotion criteria, day-one assignment matrix, and the migrated enforcement detail (§ 4–4b).
+- `docs/contracts/provider-lifecycle.md` — the full tier definitions, promotion / demotion criteria, day-one assignment matrix, and the migrated enforcement detail (§ 4–4b).
 - `src/scripts/media/lib/adapter-contract.md` — the four-method shell surface every adapter implements; the tier tag is read alongside this contract.
 - [`media-governance-routing`](media-governance-routing.md) — sibling tier-2a rule that surfaces the prompt-side policy layer; this rule covers the provider-side discipline.
 - [`ask-when-uncertain`](ask-when-uncertain.md) — the one-question-per-turn discipline the refuse-and-surface path uses.

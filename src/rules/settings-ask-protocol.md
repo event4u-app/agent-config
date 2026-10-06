@@ -180,7 +180,7 @@ only a badly-shaped *ask*.
 
 ## See also
 
-- [`docs/contracts/settings-classes.md`](../docs/contracts/settings-classes.md) — the A/B/C source of truth; slot 4 is read from it.
+- `docs/contracts/settings-classes.md` — the A/B/C source of truth; slot 4 is read from it.
 - [`ask-when-uncertain`](ask-when-uncertain.md) — one question per turn; this narrows it to one *settings* question per execution.
 - [`no-cheap-questions`](no-cheap-questions.md) — the floor a settings question clears before it is asked at all.
 - [`user-interaction`](user-interaction.md) — the numbered-options shape slot 3 uses.

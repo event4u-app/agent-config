@@ -88,7 +88,7 @@ does not substitute for engaging with the source.
   **markup**: a design artifact the user hands over is their own material, so
   adapting its code is not a borrow. Third-party code arriving inside that
   handover is not covered, on either side.
-- [`docs/contracts/write-engine.md`](../docs/contracts/write-engine.md) —
+- `docs/contracts/write-engine.md` —
   ghostwriter's disclosure-footer contract; this rule's quote floor
   applies to any ghostwriter draft that cites an external source.
 - [`source-confidentiality`](source-confidentiality.md) — the license-
