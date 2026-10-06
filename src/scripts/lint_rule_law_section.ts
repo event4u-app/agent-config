@@ -33,6 +33,20 @@
  *    priced in the same unit the installed-layer report uses. Today's larger
  *    rules are named in `body_exceptions`, shrink-only on the same terms.
  *
+ * 4. TRIGGER PRESENCE (`--axis trigger`). Added by step 3.4 of
+ *    `road-to-an-installed-layer-that-is-thinned`: a stub is a pointer a prompt
+ *    must be able to pull in, so a routed rule with ZERO triggers in
+ *    `dist/router.json` cannot be discovered once it ships as a stub — the
+ *    pointer sits in the installed layer forever and the law behind it never
+ *    arrives. Four rules read zero today (measured 2026-10-06) and are named in
+ *    `no_trigger`, SHRINK-ONLY on the same terms as `missing`: each is delivered
+ *    by a mechanism other than a keyword match — a path collision
+ *    (`collision_ok`) or an unconditional load with no scoping at all — which is
+ *    a deliberate routing choice recorded in the rule's own frontmatter, not an
+ *    oversight this gate should paper over. A NEW routed rule therefore cannot
+ *    be born with no trigger a prompt can fire, same as it cannot be born
+ *    lawless.
+ *
  * WHY THE TARGET IS REPORTED AND NOT ENFORCED. A rule shortened to fit a number
  * is the failure this roadmap says it will not cause. 1,200 is where the
  * distribution sits (median 511, p90 1,787) and a rule between target and hard
@@ -100,13 +114,15 @@ export interface LawConfig {
     measured_at_commit?: string;
     /** Routed rules with no law section. Shrink-only: ids may leave, never join. */
     missing: string[];
+    /** Routed rules with no trigger a prompt can fire. Shrink-only, same terms as `missing`. */
+    no_trigger: string[];
     /** Rules whose law exceeds {@link LAW_HARD_CHARS}. */
     law_exceptions: Record<string, SizeException>;
     /** Rules whose body exceeds {@link BODY_HARD_CHARS}. */
     body_exceptions: Record<string, SizeException>;
 }
 
-export type Axis = 'presence' | 'ceiling' | 'body-ceiling' | 'all';
+export type Axis = 'presence' | 'ceiling' | 'body-ceiling' | 'trigger' | 'all';
 
 export interface Finding {
     id: string;
@@ -153,6 +169,7 @@ export function readConfig(root = REPO_ROOT): LawConfig {
     const raw = JSON.parse(fs.readFileSync(p, 'utf-8')) as Partial<LawConfig>;
     return {
         missing: Array.isArray(raw.missing) ? raw.missing : [],
+        no_trigger: Array.isArray(raw.no_trigger) ? raw.no_trigger : [],
         law_exceptions: raw.law_exceptions ?? {},
         body_exceptions: raw.body_exceptions ?? {},
         measured_at_commit: raw.measured_at_commit ?? '',
@@ -170,15 +187,47 @@ export function measureRouted(root = REPO_ROOT): RuleLawMeasure[] {
     return out;
 }
 
+/** Trigger count per routed tier rule id, straight off `dist/router.json`. */
+export function routedRuleTriggerCounts(root = REPO_ROOT): Map<string, number> {
+    const data = JSON.parse(fs.readFileSync(path.join(root, ROUTER_REL), 'utf-8')) as Record<
+        string,
+        unknown
+    >;
+    const counts = new Map<string, number>();
+    for (const tier of ['tier_1', 'tier_2']) {
+        const entries = data[tier];
+        if (!Array.isArray(entries)) continue;
+        for (const e of entries) {
+            const rec = e as Record<string, unknown>;
+            const triggers = rec['triggers'];
+            counts.set(String(rec['id']), Array.isArray(triggers) ? triggers.length : 0);
+        }
+    }
+    return counts;
+}
+
 export function lint(root = REPO_ROOT, axis: Axis = 'all'): LintResult {
     const cfg = readConfig(root);
     const measures = measureRouted(root);
+    const triggerCounts = routedRuleTriggerCounts(root);
     const findings: Finding[] = [];
     const overTarget: Array<{ id: string; chars: number }> = [];
     const baselined = new Set(cfg.missing);
+    const noTriggerBaselined = new Set(cfg.no_trigger);
     const want = (a: Exclude<Axis, 'all'>): boolean => axis === 'all' || axis === a;
 
     for (const m of measures) {
+        if (want('trigger') && (triggerCounts.get(m.id) ?? 0) === 0 && !noTriggerBaselined.has(m.id)) {
+            findings.push({
+                id: m.id,
+                axis: 'trigger',
+                kind: 'no-trigger',
+                detail:
+                    'routed rule has no trigger in `dist/router.json` — a prompt can never pull it in, ' +
+                    `so it cannot ship as a stub; add a trigger, or add the id to \`no_trigger\` in ` +
+                    `${CONFIG_REL} (that list is shrink-only, so a new routed rule may not join it)`,
+            });
+        }
         if (want('presence') && m.law === null && !baselined.has(m.id)) {
             findings.push({
                 id: m.id,
@@ -270,6 +319,30 @@ export function lint(root = REPO_ROOT, axis: Axis = 'all'): LintResult {
         }
     }
 
+    // Same stale-debt check for the trigger baseline: an id that gained a
+    // trigger, or left the routed set, is debt that was paid and never
+    // collected.
+    if (want('trigger')) {
+        const routed = new Set(measures.map((m) => m.id));
+        for (const id of cfg.no_trigger) {
+            if (!routed.has(id)) {
+                findings.push({
+                    id,
+                    axis: 'trigger',
+                    kind: 'stale-baseline-entry',
+                    detail: `is not a routed rule any more — remove it from \`no_trigger\` in ${CONFIG_REL}`,
+                });
+            } else if ((triggerCounts.get(id) ?? 0) > 0) {
+                findings.push({
+                    id,
+                    axis: 'trigger',
+                    kind: 'stale-baseline-entry',
+                    detail: `now has a trigger — remove it from \`no_trigger\` in ${CONFIG_REL}`,
+                });
+            }
+        }
+    }
+
     const kernelReported = kernelRuleIds(root).map((id) => {
         const p = path.join(root, RULES_REL, `${id}.md`);
         return { id, sections: fs.existsSync(p) ? measureRuleFile(id, p).sections : 0 };
@@ -284,9 +357,14 @@ export function lint(root = REPO_ROOT, axis: Axis = 'all'): LintResult {
 export function writeBaseline(root = REPO_ROOT, today: string): string {
     const prev = fs.existsSync(path.join(root, CONFIG_REL))
         ? readConfig(root)
-        : { missing: [], law_exceptions: {}, body_exceptions: {} };
+        : { missing: [], no_trigger: [], law_exceptions: {}, body_exceptions: {} };
     const measures = measureRouted(root);
+    const triggerCounts = routedRuleTriggerCounts(root);
     const missing = measures.filter((m) => m.law === null).map((m) => m.id).sort();
+    const no_trigger = measures
+        .filter((m) => (triggerCounts.get(m.id) ?? 0) === 0)
+        .map((m) => m.id)
+        .sort();
     const law_exceptions: Record<string, SizeException> = {};
     const body_exceptions: Record<string, SizeException> = {};
     for (const m of measures) {
@@ -311,16 +389,22 @@ export function writeBaseline(root = REPO_ROOT, today: string): string {
     }
     const cfg = {
         _comment:
-            'Per-rule law-section and body ceilings (road-to-rule-laws-that-can-stand Phase 1). ' +
-            'SHRINK-ONLY on every axis: an id may LEAVE `missing`, never join it; a recorded ' +
-            'exception is a ceiling the rule may fall below and never rise above. Raising one to ' +
-            'clear a red is the config-weakening move this repo blocks by construction — ' +
-            '`--write-baseline` refuses to raise, it only re-records the smaller of old and ' +
-            'current. A rule at its exception is not thereby correct, only not worse. Regenerate ' +
-            'with `lint_rule_law_section --write-baseline`; never hand-edit the counts, but DO ' +
-            'hand-edit `owner`, `review` and `reason` — those are the review contract and the ' +
-            'generator only seeds them.',
+            'Per-rule law-section and body ceilings (road-to-rule-laws-that-can-stand Phase 1) plus ' +
+            'the trigger-presence baseline (road-to-an-installed-layer-that-is-thinned step 3.4). Two ' +
+            'different guarantees, not one: `law_exceptions` and `body_exceptions` are numeric ' +
+            'ceilings `--write-baseline` structurally refuses to raise (it re-records the SMALLER of ' +
+            'old and current, never the current alone) — a rule at its exception is not thereby ' +
+            'correct, only not worse. `missing` and `no_trigger` are LIST membership: an id SHOULD ' +
+            'only leave, never join, but that is a review convention the generator does not enforce ' +
+            'by construction — `--write-baseline` re-records every id that currently fails ' +
+            'presence/trigger, full stop, so a newly-broken rule is swept in exactly like a ' +
+            'genuinely-fixed one is swept out. The `stale-baseline-entry` finding makes a fixed id ' +
+            'visible for removal; nothing makes a newly-broken id visible for refusal except a human ' +
+            'reading the diff. Regenerate with `lint_rule_law_section --write-baseline`; never ' +
+            'hand-edit the counts, but DO hand-edit `owner`, `review` and `reason` — those are the ' +
+            'review contract and the generator only seeds them.',
         measured_at_commit: prev.measured_at_commit ?? '',
+        no_trigger,
         missing,
         law_exceptions,
         body_exceptions,
@@ -339,7 +423,7 @@ interface Args {
 }
 
 const USAGE =
-    'usage: lint_rule_law_section [--axis presence|ceiling|body-ceiling|all] [--quiet] ' +
+    'usage: lint_rule_law_section [--axis presence|ceiling|body-ceiling|trigger|all] [--quiet] ' +
     '[--write-baseline] [--root DIR] [--self-test]\n';
 
 function parseArgs(argv: string[]): Args {
@@ -381,7 +465,7 @@ function parseArgs(argv: string[]): Args {
             process.exit(2);
         }
     }
-    if (!['presence', 'ceiling', 'body-ceiling', 'all'].includes(out.axis)) {
+    if (!['presence', 'ceiling', 'body-ceiling', 'trigger', 'all'].includes(out.axis)) {
         process.stderr.write(USAGE);
         process.stderr.write(`lint_rule_law_section: error: unknown axis: ${out.axis}\n`);
         process.exit(2);
@@ -402,23 +486,45 @@ export function selfTest(write: (s: string) => void = (s) => process.stdout.writ
         fs.mkdirSync(path.join(tmp, 'dist'), { recursive: true });
         fs.writeFileSync(
             path.join(tmp, ROUTER_REL),
-            JSON.stringify({ kernel: [], tier_1: [{ id: 'lawless' }, { id: 'lawful' }], tier_2: [] }),
+            JSON.stringify({
+                kernel: [],
+                tier_1: [
+                    { id: 'lawless', triggers: [{ keyword: 'lawless-word' }] },
+                    { id: 'lawful', triggers: [{ keyword: 'lawful-word' }] },
+                    { id: 'mute', triggers: [] },
+                    { id: 'vocal', triggers: [{ keyword: 'vocal-word' }] },
+                ],
+                tier_2: [],
+            }),
         );
         fs.writeFileSync(
             path.join(tmp, CONFIG_REL),
-            JSON.stringify({ missing: [], law_exceptions: {}, body_exceptions: {} }),
+            JSON.stringify({ missing: [], no_trigger: [], law_exceptions: {}, body_exceptions: {} }),
         );
         fs.writeFileSync(path.join(tmp, 'src/rules/lawless.md'), '---\nx: 1\n---\n\n# Lawless\n\nProse.\n');
         fs.writeFileSync(
             path.join(tmp, 'src/rules/lawful.md'),
             '---\nx: 1\n---\n\n# Lawful\n\n## The Iron Law\n\nNEVER DO THE THING.\n',
         );
+        fs.writeFileSync(
+            path.join(tmp, 'src/rules/mute.md'),
+            '---\nx: 1\n---\n\n# Mute\n\n## The Iron Law\n\nNEVER DO THE THING.\n',
+        );
+        fs.writeFileSync(
+            path.join(tmp, 'src/rules/vocal.md'),
+            '---\nx: 1\n---\n\n# Vocal\n\n## The Iron Law\n\nNEVER DO THE THING.\n',
+        );
 
         const rejecting = lint(tmp, 'presence');
         const accepting = (() => {
             fs.writeFileSync(
                 path.join(tmp, CONFIG_REL),
-                JSON.stringify({ missing: ['lawless'], law_exceptions: {}, body_exceptions: {} }),
+                JSON.stringify({
+                    missing: ['lawless'],
+                    no_trigger: [],
+                    law_exceptions: {},
+                    body_exceptions: {},
+                }),
             );
             return lint(tmp, 'presence');
         })();
@@ -426,12 +532,36 @@ export function selfTest(write: (s: string) => void = (s) => process.stdout.writ
             rejecting.findings.length === 1 &&
             rejecting.findings[0]?.kind === 'no-law-section' &&
             accepting.findings.length === 0;
+
+        // Same rejecting/accepting shape for the trigger axis (step 3.4):
+        // `mute` has a law but no trigger and is unbaselined, `vocal` has both.
+        const triggerRejecting = lint(tmp, 'trigger');
+        const triggerAccepting = (() => {
+            fs.writeFileSync(
+                path.join(tmp, CONFIG_REL),
+                JSON.stringify({
+                    missing: ['lawless'],
+                    no_trigger: ['mute'],
+                    law_exceptions: {},
+                    body_exceptions: {},
+                }),
+            );
+            return lint(tmp, 'trigger');
+        })();
+        const triggerOk =
+            triggerRejecting.findings.map((f) => f.id).sort().join(',') === 'mute' &&
+            triggerRejecting.findings.every((f) => f.kind === 'no-trigger') &&
+            triggerAccepting.findings.length === 0;
+
+        const allOk = ok && triggerOk;
         write(
-            ok
-                ? '✅  self-test: 1 rejecting case, 1 accepting case — the reading decides the verdict\n'
-                : `❌  self-test FAILED: rejecting=${rejecting.findings.length} accepting=${accepting.findings.length}\n`,
+            allOk
+                ? '✅  self-test: presence + trigger axes each have a rejecting and an accepting case\n'
+                : `❌  self-test FAILED: presence rejecting=${rejecting.findings.length} ` +
+                      `accepting=${accepting.findings.length}; trigger rejecting=` +
+                      `${triggerRejecting.findings.length} accepting=${triggerAccepting.findings.length}\n`,
         );
-        return ok ? 0 : 1;
+        return allOk ? 0 : 1;
     } finally {
         fs.rmSync(tmp, { recursive: true, force: true });
     }
