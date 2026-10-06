@@ -24,8 +24,8 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 
 | Axis | Value | Records |
 |---|---|---|
-| `evidence.strength` | `E0` | 78 |
-| `evidence.strength` | `E1` | 73 |
+| `evidence.strength` | `E0` | 77 |
+| `evidence.strength` | `E1` | 74 |
 | `evidence.strength` | `E2` | 51 |
 | `evidence.strength` | `E3` | 23 |
 | `evidence.strength` | `E4` | 0 |
@@ -126,7 +126,7 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `docs/decisions/ADR-085-mcp-stdio-end-user-distribution-shape.md` | `mixed` (`agentic_mode: council`) | `E0` — markers present, none graded: owner (an owner or maintainer declaration is provenance, not evidence) | `incomplete` | owner @ ADR-085-mcp-stdio-end-user-distribution-shape.md:25, ADR-085-mcp-stdio-end-user-distribution-shape.md:58<br>council @ ADR-085-mcp-stdio-end-user-distribution-shape.md:26, ADR-085-mcp-stdio-end-user-distribution-shape.md:27, ADR-085-mcp-stdio-end-user-distribution-shape.md:164 | provenance: — · evidence: — |
 | `docs/decisions/ADR-086-read-only-cross-agent-mcp-discovery-helper.md` | `agentic` (`agentic_mode: council`) | `E0` — council / agreement markers only — consensus is not evidence | `incomplete` | council @ ADR-086-read-only-cross-agent-mcp-discovery-helper.md:21, ADR-086-read-only-cross-agent-mcp-discovery-helper.md:23, ADR-086-read-only-cross-agent-mcp-discovery-helper.md:48, ADR-086-read-only-cross-agent-mcp-discovery-helper.md:96, ADR-086-read-only-cross-agent-mcp-discovery-helper.md:164 | provenance: — · evidence: — |
 | `docs/decisions/ADR-087-installer-e2e-test-strategy.md` | `unknown` | `E1` — one dated local observation | `incomplete` | measurement @ ADR-087-installer-e2e-test-strategy.md:78 | provenance: — · evidence: — |
-| `docs/decisions/ADR-088-no-external-runtime-federation.md` | `agentic` (`agentic_mode: council`) | `E0` — council / agreement markers only — consensus is not evidence | `incomplete` | council @ ADR-088-no-external-runtime-federation.md:54, ADR-088-no-external-runtime-federation.md:66 | provenance: — · evidence: — |
+| `docs/decisions/ADR-088-no-external-runtime-federation.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-088-no-external-runtime-federation.md:54, ADR-088-no-external-runtime-federation.md:66, ADR-088-no-external-runtime-federation.md:193, ADR-088-no-external-runtime-federation.md:194<br>measurement @ ADR-088-no-external-runtime-federation.md:195 | provenance: — · evidence: — |
 | `docs/decisions/ADR-089-lean-local-plugin-install.md` | `unknown` | `E2` — measurement against a benchmark or pre-registered threshold | `incomplete` | measurement @ ADR-089-lean-local-plugin-install.md:17, ADR-089-lean-local-plugin-install.md:33, ADR-089-lean-local-plugin-install.md:43, ADR-089-lean-local-plugin-install.md:64, ADR-089-lean-local-plugin-install.md:67, ADR-089-lean-local-plugin-install.md:68<br>benchmark @ ADR-089-lean-local-plugin-install.md:38 | provenance: — · evidence: — |
 | `docs/decisions/ADR-090-visibility-command-frontmatter-field.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-090-visibility-command-frontmatter-field.md:16, ADR-090-visibility-command-frontmatter-field.md:17<br>measurement @ ADR-090-visibility-command-frontmatter-field.md:28, ADR-090-visibility-command-frontmatter-field.md:53 | provenance: — · evidence: — |
 | `docs/decisions/ADR-091-split-meta-capability-packs.md` | `agentic` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | council @ ADR-091-split-meta-capability-packs.md:16, ADR-091-split-meta-capability-packs.md:17<br>measurement @ ADR-091-split-meta-capability-packs.md:24, ADR-091-split-meta-capability-packs.md:73, ADR-091-split-meta-capability-packs.md:74, ADR-091-split-meta-capability-packs.md:91 | provenance: — · evidence: — |
