@@ -188,7 +188,7 @@ At `df377ca64`:
       non-zero cap still breaches alone. One dated note in the parked
       billing-cliff roadmap says its anchor on this function moved.
       verify: `npx vitest run tests/scripts/ai_council/spend_gate_zero_is_unbounded.test.ts` -> 0
-- [ ] **2.2 A paid gate runs without caps, and one cap bounds alone.** With
+- [x] **2.2 A paid gate runs without caps, and one cap bounds alone.** With
       no cap configured, the verdict is `ok`; a missing estimate refuses only
       when a cap exists to compare it with. The reader returns each cap on its
       own — today it returns nothing unless both are numeric

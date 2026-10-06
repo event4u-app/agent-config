@@ -219,16 +219,43 @@ describe('gates --execute — class 1 runs only inside the standing budget', () 
     // Every refusal below RENDERS. That is the blocker's own prescription for a
     // missing ledger, generalised: a budget that cannot say yes says the
     // consent line, never a degraded run.
-    it('with no caps configured it emits the consent line and spends nothing', () => {
+    it('with no caps configured it RUNS on the --confirm authorisation, and receipts the spend', () => {
+        // Reversed on 2026-10-06 by ADR-279. This asserted `rendered` plus
+        // "no standing class-1 budget is configured", on the reading that an
+        // install without caps had not authorised a standing budget. The
+        // authorisation is `--confirm`, which this change does not touch; the
+        // caps only ever bounded its SIZE, and the absence of a bound is not
+        // a bound. The entry's stated estimate is USD 50 per run — above both
+        // figures the template used to ship, and admitted precisely because
+        // neither figure is configured here.
         writeRoadmap('road-to-x.md', roadmap('paid-eval', PAID_FIELDS));
         const before = fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8');
 
         const r = execute(roadmapRoot, 'paid-eval', WHEN, { confirm: true });
-        expect(r.outcome).toBe('rendered');
+        expect(r.outcome).toBe('resolved');
         expect(r.code).toBe(0);
-        expect(r.report).toContain('CONSENT');
-        expect(r.report).toContain('no standing class-1 budget is configured');
-        expect(r.report).not.toContain('SHOULD-NOT-RUN');
+        expect(r.report).not.toContain('no standing class-1 budget is configured');
+        // The file WAS rewritten — the run happened.
+        expect(fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8')).not.toBe(before);
+        // And the spend was recorded, with no ceiling anywhere: recording never
+        // depended on bounding.
+        expect(fs.existsSync(ledger())).toBe(true);
+        expect(fs.readFileSync(ledger(), 'utf-8')).toContain('"estimated_usd":50');
+    });
+
+    it('without --confirm it still refuses, with no caps configured', () => {
+        // The twin, and the load-bearing half: removing the ceiling must not
+        // have removed the authorisation. If this ever goes green the change
+        // above turned a size bound into a blank cheque.
+        writeRoadmap('road-to-x.md', roadmap('paid-eval', PAID_FIELDS));
+        const before = fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8');
+
+        const r = execute(roadmapRoot, 'paid-eval', WHEN, {});
+        expect(r.outcome).toBe('rendered');
+        expect(r.report).toContain('--confirm');
+        // The report QUOTES the command it did not run, so its presence in the
+        // text proves nothing either way. What proves it did not run is that
+        // the file is byte-identical and no receipt exists.
         expect(fs.readFileSync(path.join(roadmapRoot, 'road-to-x.md'), 'utf-8')).toBe(before);
         expect(fs.existsSync(ledger())).toBe(false);
     });

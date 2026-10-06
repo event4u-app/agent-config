@@ -297,7 +297,12 @@ function execute(
     // generalised to every way the budget can say no. The `--confirm`
     // requirement below is untouched: the caps bound the size of an authorised
     // spend, they never supply the authorisation.
-    let budgeted: { estimateUsd: number } | null = null;
+    // `estimateUsd` is null only on the one path that reaches here without a
+    // USD figure: a class-1 entry that states no estimate AND an install with
+    // no cap set, so there was no cap for the missing estimate to fail
+    // against. A receipt needs a number, and inventing 0 would understate the
+    // ledger, so that path runs and reports that nothing was receipted.
+    let budgeted: { estimateUsd: number | null } | null = null;
     if (cls === '1') {
         const verdict = evaluateGateBudget({
             caps: readGateBudgetCaps(load_agent_settings({ cwd: repoRoot })),
@@ -388,7 +393,7 @@ function execute(
             code: 1,
         };
     }
-    if (budgeted !== null) {
+    if (budgeted !== null && budgeted.estimateUsd !== null) {
         // Written BEFORE the file rewrite: an unreceipted spend is invisible to
         // the rolling cap, and the cap failing open is the one way this
         // mechanism could become a blank cheque. `actual_usd` is null because
@@ -421,8 +426,11 @@ function execute(
             `and the status flipped to resolved ${when}.\n` +
             (budgeted === null
                 ? ''
-                : `Receipt appended to ${LEDGER_REL} ` +
-                  `($${budgeted.estimateUsd.toFixed(2)} estimated).\n`) +
+                : budgeted.estimateUsd === null
+                  ? `No receipt appended to ${LEDGER_REL}: the entry states no USD ` +
+                    'estimate and no cap is configured, so there is no figure to record.\n'
+                  : `Receipt appended to ${LEDGER_REL} ` +
+                    `($${budgeted.estimateUsd.toFixed(2)} estimated).\n`) +
             // The dashboard is derived from the file this just rewrote, so it
             // is now stale. Saying so is the same follow-up `renderResumed`
             // already prints for its own file-move suggestion.
