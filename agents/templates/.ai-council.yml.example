@@ -29,9 +29,14 @@
 # `api` rung. A vendor CLI under your subscription is preferred whenever one
 # resolves, so the common case costs nothing per token — run
 # `agent-config council status` to see the resolved transport and billing class
-# per member before invoking. The autonomy directive does NOT silently spend
-# tokens — the /council command always asks before invoking, even under
-# autonomy: on.
+# per member before invoking.
+#
+# This block used to end "the /council command always asks before invoking,
+# even under autonomy: on". That was already untrue when ADR-230 replaced the
+# unconditional ask with a three-case bound, and ADR-279 has since removed the
+# last case that asked. The command does not ask; it shows the estimate as
+# information. What bounds a billable run is a ceiling you set below — and
+# with nothing set, nothing bounds it.
 
 # Master switch (true, false). REQUIRED — the loader has no default for it,
 # so this file's value is the only value.
@@ -138,11 +143,21 @@ defaults:
 # Prices come from agents/.agent-prices.md (gitignored, refreshed weekly
 # by `python3 scripts/update_prices.py`; bootstrapped from
 # scripts/ai_council/_default_prices.py on first run).
+#
+# These ship at 0 — no ceiling on tokens or money unless you set one
+# (ADR-279). `max_calls` is NOT a ceiling on money: it bounds fan-out per
+# invocation, so it keeps its value. To get a bound back, replace a 0 with the
+# figure you want; the units are TOKENS for the first two and US DOLLARS for
+# `max_total_usd`.
+#
+# If you copied this file before 2026-10-06 it carries 500000 / 200000 / 20.0
+# explicitly. Those are YOUR figures now and nothing rewrites them — delete the
+# lines to become unbounded, or keep them to stay bounded.
 cost_budget:
-  max_input_tokens: 500000
-  max_output_tokens: 200000
+  max_input_tokens: 0
+  max_output_tokens: 0
   max_calls: 50
-  max_total_usd: 20.0
+  max_total_usd: 0.0
 
 # Phase 8 — Debate cost-visibility + hard refusal cap.
 #
@@ -150,7 +165,10 @@ cost_budget:
 # high-end estimate (expected × 1.20 over-run buffer) exceeds the cap,
 # `/council debate` refuses to start — the user must lower `--rounds`,
 # drop members, or raise the cap explicitly. No --proceed-anyway override.
-# Set to 0 to disable the cap (not recommended).
+#
+# It ships at 0 — disabled, per ADR-279. Set a USD figure to get the refusal
+# back. The between-round confirmation below is a separate control and is NOT
+# a money ceiling: it stays on whatever this is set to.
 #
 # `cost_disclosure.mode` ∈ {"always", "above_threshold", "off"}:
 #   always           — emit the disclosure block before every debate.
@@ -165,7 +183,7 @@ cost_budget:
 #         mode: above_threshold
 #         threshold_usd: 0.50
 debate:
-  max_cost_usd: 5.00
+  max_cost_usd: 0.00
   cost_disclosure:
     mode: always
     threshold_usd: 1.00

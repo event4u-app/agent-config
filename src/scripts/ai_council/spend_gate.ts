@@ -35,8 +35,11 @@ export class CostBudget {
             daily_limit_usd?: number;
         } = {},
     ) {
-        this.max_input_tokens = args.max_input_tokens ?? 50_000;
-        this.max_output_tokens = args.max_output_tokens ?? 20_000;
+        // ADR-279: the two token ceilings default to 0 = unbounded, as the two
+        // USD ceilings below already did. `max_calls` keeps its default — it
+        // bounds fan-out against a plan quota, not money.
+        this.max_input_tokens = args.max_input_tokens ?? 0;
+        this.max_output_tokens = args.max_output_tokens ?? 0;
         this.max_calls = args.max_calls ?? 10;
         this.max_total_usd = args.max_total_usd ?? 0.0;
         this.daily_limit_usd = args.daily_limit_usd ?? 0.0;

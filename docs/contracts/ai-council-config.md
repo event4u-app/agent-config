@@ -1447,6 +1447,21 @@ as comments and the loader enforces them.
 - **`cost_budget` semantics.** The orchestrator pauses before any member
   whose projected spend would breach a cap and asks the user to continue.
   Each `0` value disables that single cap; other caps still apply.
+  **Every ceiling on money or tokens here defaults to `0`, i.e. unbounded**
+  (ADR-279: a spend bound applies only where one was set). That covers
+  `max_input_tokens`, `max_output_tokens`, `max_total_usd` and
+  `daily_limit_usd` in the loader, in the command's own fallback and in the
+  `CostBudget` constructor — all three layers agree. `max_calls` is the
+  exception and keeps its default of `50` in the loader and `10` in the
+  command fallback: it bounds fan-out per invocation, not money, and a
+  subscription call has no marginal price. `debate.max_cost_usd` defaults to
+  `0` for the same reason.
+  Until 2026-10-06 `0` was documented as disabling a token cap and did not:
+  the two token comparisons in `_breach` carried no zero guard while the two
+  USD comparisons beside them did, so a budget with every cap at zero breached
+  on a ten-token estimate. Both halves — the guard and the defaults — landed
+  together, so a file written against the old defaults still behaves exactly
+  as its own figures say.
   Prices come from [`agents/runtime/.agent-prices.md`](../../agents/runtime/.agent-prices.md)
   (gitignored, refreshed weekly by `./scripts-run src/scripts/update_prices`;
   bootstrapped from `scripts/ai_council/_default_prices.py` on first run).

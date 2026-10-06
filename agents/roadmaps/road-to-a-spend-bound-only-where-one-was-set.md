@@ -209,7 +209,7 @@ At `df377ca64`:
 
 ## Phase 3 — The shipped defaults carry no money or token ceiling
 
-- [ ] **3.1 Council and debate, in all three layers.** The loader defaults,
+- [x] **3.1 Council and debate, in all three layers.** The loader defaults,
       the command's fallbacks and the constructor's defaults for the USD and
       token caps become `0`, and so do both debate defaults. `max_calls` and
       the debate round limits keep their values. The example file, its
