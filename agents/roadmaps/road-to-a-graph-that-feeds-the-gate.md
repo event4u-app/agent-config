@@ -3,6 +3,7 @@ complexity: lightweight
 status: ready
 execution:
   mode: phase-checkpoints
+estate_growth_exempt: "one blocker, discovered by doing the work rather than by planning it. Step 3.3's whole content is a measurement, and taking it is what revealed that its corpus has no positive class and that one of its two arms had been recording a path-shape defect instead of a verdict. The alternative to opening b1-labelled-positives-unreachable was to flip an open box on an undefined recall, which is the condition D5 already names as its own revisit trigger. The estate is one blocker larger because the tree now knows something it did not, and the two amendment options inside that blocker are owner-reserved precisely because the party that saw the counts may not choose between them."
 estate_offset_exempt: "lane of road-to-leading-every-row; the set's growth is declared there. later/road-to-a-graph-that-wins cannot absorb it — its Phase 3 is edge policy and new detectors, not this detector-F feeder, and its wake condition (two benchmark subject names) gates nothing here."
 relates:
   - slug: road-to-leading-every-row
