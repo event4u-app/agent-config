@@ -18,7 +18,7 @@ evidence:
   basis:
     - docs/decisions/ADR-088-no-external-runtime-federation.md
     - docs/decisions/ADR-124-embedded-engine-doctrine.md
-    - agents/roadmaps/road-to-leading-every-row.md
+    - agents/roadmaps/archive/road-to-leading-every-row.md
     - agents/roadmaps/later/road-to-federation-behind-adr-278.md
     - src/rules/agent-authority.md
 review_trigger: >-
@@ -33,7 +33,7 @@ review_trigger: >-
 ## Status
 
 Accepted 2026-10-06. Owner-directed: the owner answered blocker
-`b8-adr-278-federation` of `agents/roadmaps/road-to-leading-every-row.md` with
+`b8-adr-278-federation` of `agents/roadmaps/archive/road-to-leading-every-row.md` with
 option (a) — author the record with the four answers as recommended — recorded
 there as Decisions row D6. This file writes that answer down; it adds no answer
 the owner did not give.
@@ -118,7 +118,7 @@ lane's phases, each landing as its own reviewed change.
   "Federation is a separate, explicit decision" paragraph) names the four
   questions this record answers.
 - The owner's answer is recorded as D6 and blocker b8 of
-  `agents/roadmaps/road-to-leading-every-row.md` (2026-10-06).
+  `agents/roadmaps/archive/road-to-leading-every-row.md` (2026-10-06).
 - Two AI-council passes on 2026-10-06 (recorded in that blocker) routed the
   question to the owner 4/4 and proposed no narrowing; they did not author or
   choose the answers.
@@ -135,5 +135,5 @@ lane's phases, each landing as its own reviewed change.
 
 - ADR-088 (no external runtime federation; § 3 reservation)
 - ADR-124 (embedded engine doctrine)
-- `agents/roadmaps/road-to-leading-every-row.md` — blocker b8, Decisions D6
+- `agents/roadmaps/archive/road-to-leading-every-row.md` — blocker b8, Decisions D6
 - `agents/roadmaps/later/road-to-federation-behind-adr-278.md` — the lane this record unparks
