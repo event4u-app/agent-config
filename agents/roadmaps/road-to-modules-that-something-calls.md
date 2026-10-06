@@ -123,7 +123,7 @@ At `df377ca64`:
 
 ## Phase 1 — The census, in four groups
 
-- [ ] **1.1 A report, not a gate.** A `report_` script lists every module
+- [x] **1.1 A report, not a gate.** A `report_` script lists every module
       directly under `_lib` that no non-test code imports and no task,
       workflow or dispatcher runs by path — `src/scripts/_dispatch.bash`
       included, without which the count is 58 instead of 57. Per module it prints the line
@@ -136,7 +136,7 @@ At `df377ca64`:
       it there. It skips the roadmap groups when `agents/roadmaps/` is absent,
       as it is in the published package. It exits 0.
       verify: `npx vitest run tests/scripts/report_module_reach.test.ts` -> 0
-- [ ] **1.2 The reading is a page.** Run it and write the four tables and the
+- [x] **1.2 The reading is a page.** Run it and write the four tables and the
       list of the wider set with its marks, with the command, to
       `agents/evidence/analysis/module-reach-2026-10.md`, carrying its
       `evidence-type` marker.
