@@ -4,7 +4,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { DEFAULT_MAX_CHARS, sliceDocument, verifySlices } from '../../src/scripts/_lib/file_slicer.js';
+import { DEFAULT_MAX_CHARS, sliceDocument, verifySlices } from './file_slicer.js';
 
 const bigDoc = [
     '# Title',
