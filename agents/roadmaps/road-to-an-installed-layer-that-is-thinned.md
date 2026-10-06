@@ -134,14 +134,48 @@ Reproduced on 2026-10-01:
       above the measured thinned total plus 10 %, never above 75,000, and moves
       down only.
       verify: `npx vitest run tests/scripts/installed_layer_report.test.ts -t ceiling` -> 0
+
+      **Measured 2026-10-06, and left OPEN because of what the number says.**
+      A real opt-in install (`lean_projection.mode: delivery`) against the
+      current corpus reads **111,197 characters**, not under 75,000 — 89 thinned
+      stubs (52,925 chars) plus 16 rules `project_thin_rules` keeps full by its
+      own predicate (kernel, path-only, trigger-less; 58,272 chars). Full
+      method, per-file breakdown and a reproduce block:
+      `agents/evidence/analysis/installed-layer-ceiling-measurement-2026-10-06.md`.
+      A hard-failing CI gate at 75,000 would be red on `main` the moment it
+      merged, over a corpus this roadmap's own "What this roadmap deliberately
+      does not do" excludes (no kernel-plus-index layer; ADR-267 decision 5's
+      file set stays protected). Landing the gate here would break every
+      subsequent PR on a problem outside this file's scope; the step stays open
+      until the full-bodied set is small enough for a hard ceiling to mean
+      something.
 - [ ] **3.3 The decision record.** An ADR extends ADR-267 decision 2 from the
       projector to the installer, records why the template value is not a
       consent, and marks ADR-228's global-layer statement superseded.
       verify: `./scripts-run src/scripts/check_adr_frontmatter` -> 0
-- [ ] **3.4 A new routed rule declares its cost.** A routed rule added after
+- [x] **3.4 A new routed rule declares its cost.** A routed rule added after
       the flip fails CI without a law section under 2,000 characters and at
       least one trigger a prompt can fire.
       verify: `npx vitest run tests/scripts/lint_rule_law_section.test.ts -t new-rule` -> 0
+
+      **Closed 2026-10-06, independently of the flip.** `lint_rule_law_section`
+      already refused a lawless or over-ceiling rule (`missing` baseline,
+      `LAW_HARD_CHARS`); it had no opinion on a TRIGGERLESS one. A new `trigger`
+      axis closes that gap the same shrink-only way: a routed rule with zero
+      triggers in `dist/router.json` fails unless it is named in a new
+      `no_trigger` baseline, which — same discipline as `missing` — an id may
+      only leave, never join. The baseline seeds the four rules that read zero
+      triggers today (`no-roadmap-references`, `rule-type-governance`,
+      `skill-quality`, `source-confidentiality`), each a deliberate
+      `collision_ok`-or-unconditional delivery recorded in its own frontmatter,
+      not an oversight. `lint(root, 'all')` now refuses a rule failing on EITHER
+      axis at once, which a rule passing one axis with zero triggers (or vice
+      versa) could otherwise slip past — the `new-rule` describe block proves
+      both directions plus the ceiling still refusing with a trigger present.
+      Scoped to the gate itself: no CI runner wires it as a standalone
+      `check_`/`lint_` step today, same as before this change — its enforcement
+      is the `is clean over the real tree` vitest case, already part of
+      `task ci`.
 - [ ] **3.5 No other host worse.** `check_host_tree_parity` is unchanged, and
       the installed-layer report adds one row per host with a published limit.
       verify: `./scripts-run src/scripts/check_host_tree_parity` -> 0
@@ -190,9 +224,10 @@ Reproduced on 2026-10-01:
 | D3 | reversible-technical | agent | The template value is not consent to thin | The template already says `delivery`; reading it would flip every consumer as a side effect of the resolver fix | — |
 | D4 | product-owned | owner | Whether the default flips | Consumer-facing default change; blocker `default-flip-of-the-installed-layer` | — |
 | D5 | product-owned | owner | the default flips for `claude-code` under option (a): once `agents/evidence/analysis/installed-arrival-*.md` exists for the current host version and the step 2.2 fixture is green, the thinned layer becomes the default; until then it stays opt-in | owner answer 2026-10-06 to blocker `default-flip-of-the-installed-layer`; no `installed-arrival-*.md` existed that day | an arrival record shows the thinned layer losing content a consumer relies on, or the host lifts or moves its limit |
+| D6 | reversible-technical | agent | 3.2's ceiling stays a reported finding, not a hard CI gate, until the real total is reachable | `installed-layer-ceiling-measurement-2026-10-06.md`: a real opt-in install reads 111,197 chars, 48 % over the 75,000 hard target this step would enforce; a hard gate at that number would be red on `main` on landing, over a corpus (16 full-bodied kernel/path-only/trigger-less rules) this roadmap does not touch | the full-bodied set shrinks enough that 111,197 (or its current re-measurement) sits at or under 75,000 |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-01 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -205,7 +240,9 @@ Reproduced on 2026-10-01:
 - [ ] AC-1 — An opted-in install into an empty `HOME` stands under 75,000
       package-owned characters, read by the installed-layer report.
 - [ ] AC-2 — One committed arrival record per supported host version.
-- [ ] AC-3 — The standing-only fixture shows every consequence-class law loaded
-      with the carrier off.
+- [x] AC-3 — The standing-only fixture shows every consequence-class law loaded
+      with the carrier off. Closed by step 2.2, re-verified 2026-10-06:
+      `npx vitest run tests/scripts/install_thin_layer.test.ts -t standing-only`
+      -> 0, both cases (byte-equal law; no law leaks into an out-of-class stub).
 - [ ] AC-4 — The default changed only through the resolved blocker, and every
       non-Claude host tree is unchanged.
