@@ -292,7 +292,8 @@ subagents:
   judge_model: ""
 
   # Maximum number of parallel subagent invocations (integer, default 3)
-  # Set to 1 to serialize. Hard cap enforced by runtime.
+  # Set to 1 to serialize. A limit the model reads from settings — no
+  # code counts spawns against it.
   max_parallel: 3
 
 # --- Recursive self-verification (see skills/recursive-verification) ---

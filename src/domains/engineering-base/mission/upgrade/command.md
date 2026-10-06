@@ -170,8 +170,9 @@ them.
   [`verify-before-complete`](../../rules/verify-before-complete.md).
 - Every catalog `command:` field is restricted to the safe-prefix allowlist.
   Never run arbitrary shell commands from the catalog.
-- The N=3 retry budget from [`autonomous-execution`](../../rules/autonomous-execution.md)
-  applies per breaking-change fix step, not per mission.
+- The `execution.fix_loop_max` retry budget and its ladder from
+  [`autonomous-execution`](../../rules/autonomous-execution.md)
+  apply per breaking-change fix step, not per mission.
 - Never skip the size-tier surface step — the user must see the scope before the
   provisional branch is created.
 

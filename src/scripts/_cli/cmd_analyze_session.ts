@@ -12,10 +12,10 @@
  *        - `changes`  — files touched (array of {kind, stack, file, summary}).
  *        - `outcomes` — directive → "success" / "blocked" / … .
  *        - `halts`    — array of recorded halts.
- *   2. `agents/runtime/state/context-hygiene.json` — fields read:
+ *   2. the context-hygiene hook's state file (`STATE_FILE`, imported from
+ *      `context_hygiene_hook.ts` rather than spelled here — two independent
+ *      spellings of this path drifted apart before). Fields read:
  *        - `tool_calls`           (int)
- *        - `consecutive_same_tool`(int)
- *        - `loop_detected`        (bool)
  *
  * There is NO general token/cost data source in this package (only
  * video-specific telemetry), so the report deliberately does NOT report
@@ -33,18 +33,16 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { ProjectRootError, resolve_project_root } from '../_lib/agent_settings.js';
+import { STATE_FILE as HYGIENE_STATE_FILE } from '../context_hygiene_hook.js';
 import { StateLoadError, load_state } from './explain_last/state_loader.js';
 
 type Dict = Record<string, unknown>;
 
 const _HERE = fileURLToPath(import.meta.url);
 
-const CONTEXT_HYGIENE_RELATIVE = path.join(
-    'agents',
-    'runtime',
-    'state',
-    'context-hygiene.json',
-);
+// Imported from the hook rather than spelled here — the hook is the writer,
+// so it is the single source of truth for the path it writes to.
+const CONTEXT_HYGIENE_RELATIVE = HYGIENE_STATE_FILE;
 
 /** Python `raise SystemExit(code)` analogue — propagates an explicit code. */
 class SystemExitError extends Error {
@@ -196,11 +194,7 @@ export function render_report(state: Dict, hygiene: Dict | null): string {
         lines.push('_Context-hygiene snapshot not available._');
     } else {
         const toolCalls = intOrUnknown(hygiene['tool_calls']);
-        const consecutive = intOrUnknown(hygiene['consecutive_same_tool']);
-        const loop = hygiene['loop_detected'] === true;
         lines.push(`- Tool calls: ${toolCalls}`);
-        lines.push(`- Consecutive same-tool calls: ${consecutive}`);
-        lines.push(`- Loop detected: ${loop ? 'yes' : 'no'}`);
     }
     lines.push('');
 
@@ -253,8 +247,8 @@ Sources read:
     · changes  — files touched
     · outcomes — per-directive success / blocked
     · halts    — recorded halts
-  agents/runtime/state/context-hygiene.json
-    · tool_calls · consecutive_same_tool · loop_detected
+  agents/state/context-hygiene.json
+    · tool_calls
 
 Token/cost is NOT reported — this package has no per-session token
 source (only video-specific telemetry).

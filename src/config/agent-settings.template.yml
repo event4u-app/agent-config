@@ -180,13 +180,14 @@ discipline_profile: __DISCIPLINE_PROFILE__
 # custom   = ignore profile — every matrix value must be set explicitly.
 rule_loading_tier: __RULE_LOADING_TIER__
 
-# --- Lean projection (experimental, opt-in) ---
+# --- Lean projection ---
 #
 # How the per-tool projector emits the rule layer. See
 # docs/contracts/rule-router.md § Kill-switch.
 #
-# eager-all = every rule body inlined into every projection (DEFAULT,
-#             today's behaviour). Safe — bodies are always in context.
+# eager-all = every rule body inlined into every projection. Safe — bodies
+#             are always in context. What every host outside `hosts` below
+#             receives, regardless of `mode`.
 # thin      = kernel rules full-bodied + non-kernel rules as
 #             router-resolved pointers (the agent loads the body on
 #             trigger-match). Measured ~45k GPT-tok lighter per session
@@ -1065,7 +1066,8 @@ subagents:
   model_ceiling: ""
 
   # Maximum number of parallel subagent invocations
-  # Integer, default 3. Set to 1 to serialize. Hard cap enforced by runtime.
+  # Integer, default 3. Set to 1 to serialize. A limit the model reads
+  # from settings — no code counts spawns against it.
   max_parallel: 3
 
   # Opt-in adversarial-verification-council (subagent-orchestration Mode 9,

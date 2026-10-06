@@ -332,42 +332,65 @@ export function consume_recycle_envelope(
  * and reading the wrong record for the wrong reason is how a continuation
  * acquires a stranger's state — the failure this step exists to prevent.
  *
- *   - `startup` (and an ABSENT source) — a fresh session. Inject: this is the
- *     ordinary case and the one every existing fixture exercises.
- *   - `clear` — the operator wrote the record and cleared. Inject. This is the
- *     recycle path the record was built for, and suppressing it would defeat
- *     the mechanism. Note that hot-context DISCARDS on the same source, and the
- *     two are right for opposite reasons: hot-context is a cache of a session
- *     that was deliberately thrown away, while the record is the thing the
- *     operator wrote in order to survive throwing it away.
- *   - `compact` — the SAME session continuing past a compaction. Inject: the
- *     resolver keys on session id, so what comes back is this session's own
- *     record rather than a predecessor's. That identity is the reason this is
- *     an inject rather than a suppression.
- *   - `resume` / `fork` — the host has already restored the conversation.
- *     Inject NOTHING. On `resume` an injection would duplicate context the host
- *     just replayed; on `fork` it is worse than duplication, because the fork
- *     would consume a record belonging to a session that is still alive.
- *   - anything else — inject nothing. An unrecognised source is a host this
- *     code has not been taught, and guessing is the failure mode, not the
- *     conservative choice.
+ * TWO SEPARATE GATES, not one, since a 2/2 council verdict (2026-10-06): the
+ * prose handoff and the recycle-envelope RECORD are different artefacts with
+ * different safety properties, and coupling them under one `compact` verdict
+ * is what let a stale claim about the record go unnoticed inside a test that
+ * only ever exercised the handoff.
  *
- * SUPPRESSION MUST NOT CONSUME. The gate runs BEFORE
- * {@link consume_recycle_envelope}, never inside it, because that function
- * moves the file aside on every outcome except `absent`. Calling it and then
- * discarding the result would destroy the record without anyone reading it —
- * the operator's recycle would silently evaporate on a `resume`.
+ *   - `startup` (and an ABSENT source) — a fresh session. Both gates inject:
+ *     this is the ordinary case and the one every existing fixture exercises.
+ *   - `clear` — the operator wrote the record and cleared. Both gates inject.
+ *     This is the recycle path the record was built for, and suppressing it
+ *     would defeat the mechanism. Note that hot-context DISCARDS on the same
+ *     source, and the two are right for opposite reasons: hot-context is a
+ *     cache of a session that was deliberately thrown away, while the record
+ *     is the thing the operator wrote in order to survive throwing it away.
+ *   - `compact` — the SAME session continuing past a compaction.
+ *     {@link sourceGate} still injects the prose handoff (narrative
+ *     continuity carries no peer-isolation risk). {@link recycleEnvelopeGate}
+ *     does NOT inject the recycle-envelope record: the resolver's own Rule 1
+ *     never returns the reader's own record (a prior sentence here claimed
+ *     the opposite — that claim was never true against the resolver chosen
+ *     2026-09-09, and the council found no safe reading of the alternative
+ *     either — a non-own session id proves only difference, not lineage, so
+ *     consuming "the one other record" on `compact` can hand a session a
+ *     concurrent peer's in-progress state). Until a real predecessor-identity
+ *     signal exists, `compact` leaves every recycle-envelope record
+ *     untouched, exactly like `resume`/`fork`.
+ *   - `resume` / `fork` — the host has already restored the conversation.
+ *     Both gates inject NOTHING. On `resume` an injection would duplicate
+ *     context the host just replayed; on `fork` it is worse than
+ *     duplication, because the fork would consume a record belonging to a
+ *     session that is still alive.
+ *   - anything else — both gates inject nothing. An unrecognised source is a
+ *     host this code has not been taught, and guessing is the failure mode,
+ *     not the conservative choice.
+ *
+ * SUPPRESSION MUST NOT CONSUME. Each gate runs BEFORE its own consumer —
+ * {@link recycleEnvelopeGate} before {@link consume_recycle_envelope}, never
+ * inside it — because that function moves the file aside on every outcome
+ * except `absent`. Calling it and then discarding the result would destroy
+ * the record without anyone reading it — the operator's recycle would
+ * silently evaporate on a `resume`, and now also on a `compact`.
  */
 export const INJECTING_SOURCES: ReadonlySet<string> = new Set(['', 'startup', 'clear', 'compact']);
+
+/**
+ * The recycle-envelope RECORD's own injecting set — narrower than
+ * {@link INJECTING_SOURCES}. `compact` is deliberately absent: see the
+ * module docblock's `compact` bullet.
+ */
+export const RECYCLE_INJECTING_SOURCES: ReadonlySet<string> = new Set(['', 'startup', 'clear']);
 
 export interface SourceGate {
     inject: boolean;
     reason: string;
 }
 
-export function sourceGate(source: string): SourceGate {
+function _gate(source: string, injectingSources: ReadonlySet<string>): SourceGate {
     const s = source.trim();
-    if (INJECTING_SOURCES.has(s)) {
+    if (injectingSources.has(s)) {
         return { inject: true, reason: `source=${s === '' ? 'absent' : s}` };
     }
     if (s === 'resume' || s === 'fork') {
@@ -379,10 +402,29 @@ export function sourceGate(source: string): SourceGate {
                     : 'duplicate context the host just replayed'),
         };
     }
+    if (s === 'compact' && !injectingSources.has('compact')) {
+        return {
+            inject: false,
+            reason:
+                'source=compact — a non-own session id proves only difference, not lineage; ' +
+                'consuming the one other record on compact could hand a session a concurrent ' +
+                "peer's in-progress state (agents/evidence/council/compact-resume-2026-10.md)",
+        };
+    }
     return {
         inject: false,
         reason: `source=${s} is not a source this reader knows — injecting nothing rather than guessing`,
     };
+}
+
+/** Gate for the prose handoff ({@link consume_handoff_context}). */
+export function sourceGate(source: string): SourceGate {
+    return _gate(source, INJECTING_SOURCES);
+}
+
+/** Gate for the recycle-envelope record ({@link consume_recycle_envelope}). */
+export function recycleEnvelopeGate(source: string): SourceGate {
+    return _gate(source, RECYCLE_INJECTING_SOURCES);
 }
 
 // ---------------------------------------------------------------------
@@ -415,21 +457,28 @@ export function main(): number {
                 envelope.payload && typeof envelope.payload === 'object' && !Array.isArray(envelope.payload)
                     ? (envelope.payload as Record<string, unknown>)
                     : {};
-            // 3.3. The gate is evaluated FIRST and short-circuits, because both
-            // consumers below move their file aside on every non-absent
-            // outcome. Consuming and then dropping the result would delete the
+            // 3.3 / compact-resume-2026-10 council. Each gate is evaluated
+            // FIRST and short-circuits ITS OWN consumer, because both
+            // consumers move their file aside on every non-absent outcome.
+            // Consuming and then dropping the result would delete the
             // record a suppressed source was supposed to leave alone.
-            const gate = sourceGate(String(payload['source'] ?? envelope['source'] ?? ''));
-            if (!gate.inject) {
-                process.stderr.write(`handoff-context-hook: no injection (${gate.reason})\n`);
+            const source = String(payload['source'] ?? envelope['source'] ?? '');
+            const handoffGate = sourceGate(source);
+            const recycleGate = recycleEnvelopeGate(source);
+            if (!handoffGate.inject && !recycleGate.inject) {
+                process.stderr.write(`handoff-context-hook: no injection (${handoffGate.reason})\n`);
                 return 0;
             }
-            const handoff = consume_handoff_context(root);
-            const recycle = consume_recycle_envelope(
-                root,
-                new Date(),
-                String(envelope['session_id'] ?? '').trim() || env_session_id(),
-            );
+            const handoff: ConsumeDecision = handoffGate.inject
+                ? consume_handoff_context(root)
+                : { action: 'absent', reason: handoffGate.reason };
+            const recycle: ConsumeDecision = recycleGate.inject
+                ? consume_recycle_envelope(
+                      root,
+                      new Date(),
+                      String(envelope['session_id'] ?? '').trim() || env_session_id(),
+                  )
+                : { action: 'absent', reason: recycleGate.reason };
             const blocks: string[] = [];
             const reasons: string[] = [];
             // Recycle envelope first — it is the task-state restore the

@@ -195,9 +195,10 @@ export function buildReminder(branch: string, pr: number | null): { reason: stri
     `  2. Red? Read only the failing part:\n` +
     `     gh run view --job <id> --log-failed | grep -E '×|FAIL|Error'\n` +
     `     then fix it and push again (fix-what-you-see: the author is irrelevant).\n` +
-    `  3. Still red after 3 attempts on the same target, or blocked on something ` +
-    `only the user can decide — stop and say so, with the three attempts named ` +
-    `(autonomous-execution N=3).\n\n` +
+    `  3. 3 attempts on the same target triggers autonomous-execution's ` +
+    `execution.fix_loop_max strategy shift — change approach, never stop. ` +
+    `Blocked on something only the user can decide is the one branch that halts: ` +
+    `say so, with what was tried named.\n\n` +
     `Handing the user a red PR with its cause named and unfixed is not a delivery ` +
     `either. If you are deliberately leaving this WIP, say that in the reply — ` +
     `silence is what this hook exists to stop.`;

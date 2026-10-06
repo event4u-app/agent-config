@@ -672,13 +672,16 @@ attempt. At the third, write the row with what was observed and move on.
 
 This cap is **this phase's own**, and the divergence from
 [`autonomous-execution`](../../../../rules/autonomous-execution.md)
-§ Validation-loop budget is deliberate rather than an oversight: that rule's N=3
-governs a *validation target* it defines as "a single identifiable artefact (file
-path, lint rule ID, test name)", explicitly excluding natural-language clusters —
-and a verbatim step out of a prose file is exactly such a cluster. Its remedy is
-also different (STOP and ask the user). Borrowing the number while failing the
-definition, and then citing the rule as authority, would weaken the rule it
-claims to obey. So: same number, stated here, for a reason stated here.
+§ Validation-loop budget is deliberate rather than an oversight: that rule's
+`execution.fix_loop_max` budget (default 10, with a strategy-shift ladder)
+governs a *validation target* it defines as "a single identifiable artefact
+(file path, lint rule ID, test name)", explicitly excluding natural-language
+clusters — and a verbatim step out of a prose file is exactly such a cluster.
+This phase's own remedy is also different: STOP and ask the user, where the
+rule's remedy at the same count is a mandatory strategy shift, never a stop.
+Borrowing the number while failing the definition, and then citing the rule
+as authority, would weaken the rule it claims to obey. So: same number,
+stated here, for a reason stated here.
 
 One row per selected step:
 

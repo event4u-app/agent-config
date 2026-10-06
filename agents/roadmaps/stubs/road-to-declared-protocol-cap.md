@@ -79,10 +79,16 @@ so the discriminator cannot be lexical.
 The instrument therefore has to **mark the declaration at the moment it is
 made** and leave a counter a later pass reads: a session-scoped record written
 when a protocol is declared, in the shape `context_hygiene_hook` already uses
-for `agents/state/context-hygiene.json` (tool-call count, loop signal, freshness
+for `agents/state/context-hygiene.json` (tool-call count, freshness
 milestones). One field — declared-protocol read count for the session — turns
 this from a text-mining problem into an arithmetic one, and it is the same
 carrier the cap itself already depends on.
+
+**2026-10-06.** The loop signal this paragraph cited as a template is gone —
+removed by `road-to-signals-that-mean-what-they-say` 1.2, which found it true
+after 74 of 110 calls of ordinary, non-looping work and read by no model. The
+template is now tool-call count and the freshness milestones only; nothing
+here depended on the removed field.
 
 Building that carrier is a repository change and is **not** transferred; it is
 open work anyone may pick up. What is transferred is the **decision the counter

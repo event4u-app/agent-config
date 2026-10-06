@@ -10,7 +10,7 @@
  * deterministic state file the rule body can cite as the source of
  * truth for "do I need to prompt the user about /onboard?".
  *
- * Output is written to `agents/runtime/state/onboarding-gate.json` with:
+ * Output is written to `agents/state/onboarding-gate.json` with:
  *   {
  *     "required": <bool>,         // true → rule fires on first turn
  *     "reason":   "<string>",     // why this state was set
@@ -33,8 +33,9 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Re-use the shared atomic-write helper so concerns honour the single
-// `agents/runtime/state/.dispatcher.lock` discipline (hook-architecture-v1.md
-// § Concurrency, Phase 7.4).
+// `agents/state/.dispatcher.lock` discipline (hook-architecture-v1.md,
+// Concurrency, Phase 7.4) — the lock sits beside THIS hook's own target, not
+// the fixed `agents/runtime/state/` path the discipline cites generally.
 import { atomic_write_json } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
 
@@ -153,11 +154,11 @@ function _now_iso(): string {
 }
 
 /**
- * Write `agents/runtime/state/onboarding-gate.json` atomically.
+ * Write `agents/state/onboarding-gate.json` atomically.
  *
- * Uses the shared `agents/runtime/state/.dispatcher.lock` so concurrent
+ * Uses the shared `agents/state/.dispatcher.lock` so concurrent
  * dispatcher invocations across platforms cannot tear the file
- * (hook-architecture-v1.md § Concurrency, Phase 7.4).
+ * (hook-architecture-v1.md, Concurrency, Phase 7.4).
  */
 function _write_state(
   consumer_root: string,

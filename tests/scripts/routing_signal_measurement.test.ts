@@ -97,7 +97,11 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // bodies, check_routing_coverage requires a corpus on every touched
         // skill, and two of the four hashed below the ceiling —
         // `quality-tools` at 0x20 = 32 and `test-performance` at 0x10 = 16.
-        expect(sealed.length).toBe(24);
+        //
+        // 24 -> 25 on 2026-10-06: road-to-signals-that-mean-what-they-say
+        // touched `testing-anti-patterns`, whose name hashes to 0x29 = 41,
+        // below the ceiling, and therefore seals.
+        expect(sealed.length).toBe(25);
     });
 
     it('the loader`s partition agrees with every published holdout row', () => {
@@ -168,9 +172,17 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 51, so it lands in `train`: the holdout stays at the same 24 and the
         // train count moves 87 -> 88. The second line is what checks that
         // rather than assuming it.
+        //
+        // 112 -> 114 on 2026-10-06: road-to-signals-that-mean-what-they-say
+        // authored corpora for two touched skills, `git-workflow` and
+        // `testing-anti-patterns`, for the touched-skill reason the two
+        // entries above already give. The split was not chosen — the names
+        // hash to 0x37 = 55 and 0x29 = 41 — so `git-workflow` trains and
+        // `testing-anti-patterns` seals, moving the holdout 24 -> 25 and the
+        // train count 88 -> 89.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(112);
-        expect(all.filter((r) => r.partition === 'holdout').length).toBe(24);
+        expect(all.length).toBe(114);
+        expect(all.filter((r) => r.partition === 'holdout').length).toBe(25);
     });
 });
 
@@ -190,7 +202,11 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // `test-performance` sealed and are absent here for the same reason.
         // 87 -> 88 on 2026-10-04: `api-design`, whose name hashes above the
         // ceiling and therefore trains. See the partition note above.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(88);
+        // 88 -> 89 on 2026-10-06: `git-workflow`, the one of that day's two
+        // touched-skill corpora whose name hashes above the ceiling;
+        // `testing-anti-patterns` sealed and is absent here for the same
+        // reason. See the partition note above.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(89);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

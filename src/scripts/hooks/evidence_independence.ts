@@ -53,6 +53,7 @@ import { atomic_write_json } from "./state_io.js";
 import { readHookStdin } from "./hook_stdin.js";
 import { isCodePath, isTestPath } from "../_lib/test_delta.js";
 import { EXIT_ALLOW, EXIT_BLOCK } from './exit_codes.js';
+import { ledgerFileFor } from "../git_authorization_hook.js";
 
 // MUST equal dispatch_hook.EXIT_BLOCK. The dispatcher's internal ladder is
 // 0 allow / 1 block / 2 warn — NOT the 2-means-block shape a PreToolUse guard
@@ -198,11 +199,18 @@ interface DispatchState extends JsonObject {
   evaluations: JsonValue[];
 }
 
-/** The current user turn's stamp, or "" when no ledger exists yet. */
-function _ledgerStamp(consumer_root: string): string {
+/**
+ * The current user turn's stamp, or "" when no ledger exists yet.
+ *
+ * Reads the ledger through the writer's own `ledgerFileFor(session_id)`
+ * rather than the legacy session-less path: with a session id the writer
+ * never touches that path, so reading it unconditionally found an empty or
+ * stale file and the stamp never changed per turn.
+ */
+function _ledgerStamp(consumer_root: string, session_id: string): string {
   try {
     const raw = fs.readFileSync(
-      path.join(consumer_root, "agents", "state", "git-authorization.json"),
+      path.join(consumer_root, ledgerFileFor(session_id)),
       "utf8",
     );
     const d = JSON.parse(raw) as Record<string, unknown>;
@@ -421,7 +429,7 @@ export function run(stdin_text: string, options: { consumer_root: string }): num
   // in a session blocked every later one. The only per-user-turn stamp that
   // actually exists is `detected_at` in the authorization ledger, which
   // `git_authorization_hook` rewrites on every `user_prompt_submit`.
-  const turnMarker = `${session_id}:${_ledgerStamp(options.consumer_root)}`;
+  const turnMarker = `${session_id}:${_ledgerStamp(options.consumer_root, session_id)}`;
   if (state.session_id !== turnMarker) {
     state.session_id = turnMarker;
     state.turn_started_at = new Date().toISOString();
