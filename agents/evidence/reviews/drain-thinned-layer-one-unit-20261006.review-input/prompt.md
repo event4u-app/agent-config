@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 467f96888a28a99ae70f6b458720b3b3698b353b, review
-  artefacts excluded), scope hash `5f2de31f68de36a54b7b2c7ff728838ce37f1d6e2be01b3adcc6f2edb44fe8d0`
+- diff: `diff.patch` — the review scope (branch head fbb54b8ad202c8f8437ab3b6e6c015675b1b3ec2, review
+  artefacts excluded), scope hash `386c374c6056fb16e191da9cb33ddc93415e2a4c242fdb45930061abd6571e2a`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -41,6 +41,7 @@ Changed files:
 - src/scripts/_lib/thin_rules.ts
 - src/scripts/install.ts
 - src/scripts/probe_host_compliance.ts
+- tests/install/installed_layer_ownership_real_install.test.ts
 - tests/scripts/bench_quality_run.test.ts
 - tests/scripts/install_thin_layer.test.ts
 - tests/scripts/install_thin_layer_root_length.test.ts
@@ -72,7 +73,7 @@ Fill the findings table in `drain-thinned-layer-one-unit-20261006.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 5f2de31f68de36a54b7b2c7ff728838ce37f1d6e2be01b3adcc6f2edb44fe8d0, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 386c374c6056fb16e191da9cb33ddc93415e2a4c242fdb45930061abd6571e2a, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
