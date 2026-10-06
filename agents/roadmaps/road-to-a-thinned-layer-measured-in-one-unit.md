@@ -179,7 +179,7 @@ on the user-global layer.
 
 - [x] **3.1 A price on each move, before any is taken.** Append to the
       page, per move: who may permit it, where that is recorded, and what it is worth
-      on the measured layer. At `df377ca64` the rows are — four `no_stub` rules
+      on the measured layer. At `df377ca64` the rows are — four rules in the `no_stub` set
       gaining a law heading: between about 7,100 and 9,100, depending on
       which of the blocks each rule already states becomes its law (the
       candidate blocks measure 598 and the `## Validation-loop budget`
