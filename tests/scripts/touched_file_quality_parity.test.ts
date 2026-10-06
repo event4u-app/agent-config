@@ -16,6 +16,7 @@ import { resolve_toolchain } from '../../src/agent-src/templates/scripts/work_en
 import {
     MUTATING_COMMANDS,
     SCOPED_FORM_COMMANDS,
+    TYPE_CHECK_COMMANDS,
     UNSCOPED_ON_PURPOSE,
 } from '../../src/scripts/_lib/touched_file_quality.js';
 
@@ -38,6 +39,7 @@ const STACKS: Record<string, Record<string, string>> = {
 
 let base: string;
 const emitted = new Set<string>();
+const perStack = new Map<string, number>();
 
 beforeAll(() => {
     base = fs.mkdtempSync(path.join(os.tmpdir(), 'tfq-parity-'));
@@ -47,7 +49,9 @@ beforeAll(() => {
         for (const [name, body] of Object.entries(files)) {
             fs.writeFileSync(path.join(root, name), body);
         }
-        for (const command of resolve_toolchain(root).quality) emitted.add(command);
+        const quality = resolve_toolchain(root).quality;
+        perStack.set(stack, quality.length);
+        for (const command of quality) emitted.add(command);
     }
 });
 
@@ -58,7 +62,9 @@ afterAll(() => {
 describe('the resolver is the only authority', () => {
     it('the fixtures make the resolver emit something per stack', () => {
         // Guards the two assertions below from passing over an empty set.
-        expect(emitted.size).toBeGreaterThanOrEqual(Object.keys(STACKS).length);
+        for (const stack of Object.keys(STACKS)) {
+            expect(perStack.get(stack), `the ${stack} fixture made the resolver emit nothing`).toBeGreaterThan(0);
+        }
     });
 
     it('every table key is a command the resolver emitted', () => {
@@ -74,6 +80,10 @@ describe('the resolver is the only authority', () => {
                 command,
             );
         }
+    });
+
+    it('every type-check command is one the resolver emitted', () => {
+        for (const key of TYPE_CHECK_COMMANDS) expect(emitted).toContain(key);
     });
 
     it('no command is classified twice', () => {
