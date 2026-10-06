@@ -390,6 +390,40 @@ tested on one consumer before anyone argues about routers or byte budgets.
       in hand, 3.1's emission half is a day's work and its verify line is
       answerable; without (1) and (2), it is not.
 
+      **Evidence (2026-10-06) — a FOURTH independent reading, and it is the
+      last one this step takes in the active tree.** Executed on
+      `drain/menu-precision-20261006`, branched from `origin/main` `c58d7ea`:
+
+      ```
+      $ ./scripts-run src/scripts/report_host_injection_effect
+      scanned: 9 host(s)
+        observed-false   1
+        unobserved       8
+
+      $ grep -c '"state": "observed-true"' src/config/host-injection-effect.json
+      0
+      ```
+
+      Four readings on four dates — 2026-09-29, 2026-10-01, 2026-10-03,
+      2026-10-06 — now return the same three counts, none of them a re-read of
+      the one before it. Neither wake limb has fired: the upstream blocker
+      `no-host-observed-true-injection` still reads `Status: open`
+      (`later/road-to-delivery-on-hook-hosts.md`), and 2026-12-08 is 63 days
+      out.
+
+      **What the fourth reading adds is not the number — it is that the number
+      has stopped being informative, and that is itself the finding.** Three
+      readings established the state was current rather than inherited. A
+      fourth, eight days and three drain runs later, establishes something the
+      first three could not: the re-probe is no longer measuring the tree, it
+      is measuring how often a continuation run reaches this step. Each run
+      spent its read budget re-deriving a confound recorded on 2026-09-11 and
+      re-declining a step whose blocker already said it would. The blocker's
+      own § `If you do nothing` predicted exactly that loop; four data points
+      are it, observed. The disposition recorded in § Decisions D1 is the
+      response, and the probe is NOT retired by it — it moves to the surface
+      that runs it on a condition instead of on an accident.
+
 ## Phase 4 — Census per profile
 
 - [x] **4.1 `report_skill_menu_census --profile minimal|balanced|full`**
@@ -630,11 +664,16 @@ the correction is made in the same change that measured it.
       criterion was understating the gate it certifies.
 - [ ] <!-- blocked-by: e3-witness-set-is-empty-here --> AC-4 — One path-scoping effect report exists and the setting default
       matches its conclusion. **Open** — blocked with 3.1; see its blocker.
-      Re-probed 2026-10-01 and again 2026-10-03: `report_host_injection_effect`
-      reads 9 hosts, 1 `observed-false`, 8 `unobserved`, 0 `observed-true` on
-      both dates, so the report this criterion requires still cannot be taken.
-      See 3.1 § Evidence (2026-10-03) for the third run and § Exact inputs for
-      the three that would unblock it.
+      Re-probed 2026-10-01, 2026-10-03 and 2026-10-06:
+      `report_host_injection_effect` reads 9 hosts, 1 `observed-false`, 8
+      `unobserved`, 0 `observed-true` on all three dates, so the report this
+      criterion requires still cannot be taken. See 3.1 § Evidence (2026-10-06)
+      for the fourth run and § Exact inputs for the three that would unblock it.
+      **Not satisfiable by elapse.** Reaching the 2026-12-08 boundary without a
+      witness does NOT close this criterion — it resumes the roadmap for a
+      terminal disposition in which AC-4 is re-cut or withdrawn by the owner.
+      The two outcomes are different states and `entry_condition.what` names
+      both; see § Decisions D1.
 
 ## Blockers
 
@@ -673,6 +712,14 @@ the correction is made in the same change that measured it.
   `no-host-observed-true-injection` is still `open`
   (`later/road-to-delivery-on-hook-hosts.md:704`) and 2026-12-08 is 66 days out,
   so neither wake limb has fired.
+  **Re-measured a fourth time 2026-10-06** on `drain/menu-precision-20261006`,
+  branched from `origin/main` `c58d7ea`: 9 hosts scanned, 1 `observed-false`
+  (`cowork`, 2026-09-07), 8 `unobserved`, 0 `observed-true`. Upstream blocker
+  still `open`; 2026-12-08 is 63 days out. Four readings on four dates agree.
+  **This is the reading that changed the disposition rather than the state** —
+  see § Decisions D1. The probe is unchanged and is carried verbatim into
+  `entry_condition.what`, so parking relocates who runs it and on what trigger,
+  never what it asks.
 - **Recommendation:** leave it open and re-probe at the wake condition. The
   emission half is buildable today and is deliberately not built: its enabling
   condition provably cannot be evaluated in this environment, so shipping it
@@ -683,6 +730,12 @@ the correction is made in the same change that measured it.
   this entry existed — advertised zero blockers, so every continuation run
   re-engages 3.1, re-discovers the same confound, and re-declines it. The
   marker on the two checkboxes is what stops that loop.
+  **Measured 2026-10-06: the marker did not stop it.** Four runs on four dates
+  reached this step and re-probed; the inline `blocked-by:` marker told each one
+  the step was blocked and none of them was thereby spared the read. The marker
+  makes blockedness *visible*; it does not make the file *unreachable*, and
+  reachability is what the loop runs on. That is the gap § Decisions D1 closes,
+  and it is a correction to this line rather than a restatement of it.
 
 **Why this is not the agent's to close, in one paragraph.** The obstacle is not
 that the emission is hard. It is that 3.1's verify line makes the MEASUREMENT
