@@ -99,21 +99,35 @@ instead of an absence.
 
 ## Form — what the 89 stubs pay for their own description
 
-The 89 stubs hold 52,925 characters between them, 595 on average. Of that:
+The 89 stubs hold 52,925 characters between them, 595 on average. **Every term
+below is computed from its own construction, and the seven sum to 52,925
+exactly** — there is no residual row, which is what makes this a decomposition
+rather than six measurements and a remainder.
 
 | Term | Characters | Shape |
 |---|---|---|
-| heading repeating the file name | 2,181 | `## <Title>` + newline, 89 times |
-| marker sentence | 4,183 | 47 characters, 89 times |
-| `Fires on:` label and its full stop | 1,044 | 12 characters, 87 times |
+| pointer | 17,356 | `Body: [\`<id>\`](<prefix><id>.md)`, 89 times |
+| law text | 12,676 | byte-copied from the rule, on the 21 stubs that carry one |
+| description | 10,614 | the rule's own one-line description, 119 on average |
 | trigger hint content | 4,808 | the triggers themselves |
-| pointer | 17,356 | `Body: [\`<id>\`](<prefix><id>.md)` |
-| description | 23,353 | the rule's own one-line description |
+| marker sentence | 4,183 | 47 characters, 89 times |
+| heading repeating the file name | 2,181 | `## <Title>` + newline, 89 times |
+| `Fires on:` label and its full stop | 1,044 | 12 characters, 87 times |
+| law join | 63 | 3 characters, on the 21 law stubs only |
 | **total** | **52,925** | |
 
 Of the pointer's 17,356, **12,371 is the package-root prefix alone** — 139
 characters, 89 times — and 4,985 is the link syntax plus the rule id, which the
 pointer writes twice.
+
+**The law row is listed separately because it was invisible.** An earlier draft
+of this table had six rows and obtained `description` by subtracting the other
+five from the total, which silently folded the 21 law stubs' 12,676 characters
+of byte-copied law — and their 63 characters of join — into it. Descriptions
+then read as 23,353, 44 % of the stub form; they are 10,614, nearer 20 %, and
+the largest single term is not a description at all but the pointer. A row
+obtained by subtraction is not a measurement of the thing it is labelled; it is
+whatever the other rows did not account for.
 
 ### The root length is in the number, so the root length is stated
 
@@ -197,26 +211,37 @@ Form terms after the change, within the stubs' 48,786 characters:
 
 | Term | Before | After |
 |---|---|---|
-| heading | 2,181 | 2,181 |
-| marker | 4,183 | 2,403 |
-| `Fires on:` label | 1,044 | 1,044 |
-| trigger hint | 4,808 | 4,808 |
 | pointer | 17,356 | 14,997 |
-| description | 23,353 | 23,353 |
+| law text | 12,676 | 12,676 |
+| description | 10,614 | 10,614 |
+| trigger hint | 4,808 | 4,808 |
+| marker | 4,183 | 2,403 |
+| heading | 2,181 | 2,181 |
+| `Fires on:` label | 1,044 | 1,044 |
+| law join | 63 | 63 |
+| **total** | **52,925** | **48,786** |
 
 Of the pointer's remaining 14,997, **12,371 is still the package-root prefix** —
 82.5 % of it, and untouchable from here: moving it is decision D5, behind the
 open install-layout blocker.
 
-**The description column is byte-identical, and that is the check.** No
-description was edited, so a form change that moved it would be a measurement
-error rather than a saving. The first draft of this table reported it moving by
-42 characters, from a probe whose pointer pattern ended in `\s*$` and therefore
-swallowed the trailing newline on each of the 89 stubs. The figures above are
-from the construction instead — `Body: ` + prefix + id + `.md` — which
-reconciles exactly: 17,356 − 14,997 = 2,359 = 6 × 89 + 1,825, the link syntax
-plus the 89 rule ids the old pointer wrote a second time, and the six remaining
-terms then sum to 48,786 with the description unchanged.
+**Six of the eight terms are byte-identical, and that is the check.** Only the
+marker and the pointer were changed, so a form change that moved anything else
+would be a measurement error rather than a saving. Both columns sum to their
+stated totals from construction alone, and the two deltas account for the
+whole difference: 4,183 − 2,403 = 1,780 and 17,356 − 14,997 = 2,359, which is
+4,139.
+
+The pointer delta reconciles term by term: 2,359 = 6 × 89 + 1,825 — the link
+syntax dropped on each of the 89 stubs, plus the 1,825 characters of rule id
+the old pointer wrote a second time.
+
+Both corrections this table has needed came from reading it rather than from
+re-running anything, and both were in the same direction — a number obtained by
+subtraction looking like a measurement. The first draft reported the pointer at
+15,039 from a pattern whose `\s*$` swallowed each stub's trailing newline, and
+parked the missing 42 characters as a description movement; the second reported
+descriptions at 23,353 because the law text had nowhere else to go.
 
 ### The expectation this reproduces, once the root is normalised
 
@@ -422,16 +447,31 @@ draft of this page. At the row's ceiling the unconditional reading is
    every row taken, including the one reserved to the owner and the one behind
    an open blocker. Neither is the council's to take and neither is the
    agent's.
-2. **Under the headroom-adjusted 68,181: not reachable** by any combination on
-   this list, on any reading, at any root.
+2. **Under the headroom-adjusted 68,181: not reachable at a realistic prefix**
+   — 69,038–69,914, which is 101–103 %. At the pointer row's unreachable
+   CEILING, where the prefix would be zero characters long, the range is
+   67,614–68,490 and its lower bound is 567 characters under 68,181. So the
+   honest statement is not "never": the only combination that closes requires a
+   prefix no path can have.
 3. **On the all-characters reading: not reachable**, by a margin of at least
-   6,300 even with every row taken at its ceiling.
+   6,315 even with every row taken at that same unreachable ceiling
+   (81,315 − 75,000).
 
 The first part is a correction of what this page said before the council read
 it. The earlier text said the ceiling was not reachable by these moves, full
 stop; that was true of the sums as computed and false of the moves as
 described, because the largest move was named in the prose and missing from the
-arithmetic. The three-part statement above is what the numbers actually support.
+arithmetic.
+
+**The second part is a correction of the correction**, recorded rather than
+quietly amended because it is the same defect twice. Its first version read
+"not reachable by any combination on this list, on any reading, at any root" —
+contradicted by the Sum 3 table a few lines above it, whose own ceiling column
+dips 567 under the figure. Conclusion 3 reads that very column, so the
+exclusion could not even be defended as treating it as hypothetical. An
+absolute quantifier is the easiest sentence to write and the hardest to hold;
+both times the way to catch it was to read the sentence against the table
+directly above it, and both times something other than the author did.
 
 What has not changed: **no combination here reaches the ceiling the way it was
 recorded**, which is 75,000 *with ≥10 % headroom*. Reading the ceiling as a bare
@@ -450,8 +490,15 @@ rules as they stand today and are not the same blocks the prediction assumed —
 `autonomous-execution`'s was priced there at the validation-loop section through
 its first paragraph (1,385) where this page prices the fence alone (696) as the
 lower bound. And the plain-stub figures here are post-form-change, so each of
-the four is 47 characters cheaper as a stub than it was when the prediction was
-written. The direction of the difference is consistent with both.
+the four is cheaper as a stub than when the prediction was written — by
+`20 + 6 + len(id)`, which is 37 for `tool-safety`, 40 for `runtime-safety`, 46
+for `autonomous-execution` and 50 for `question-not-instruction`. The direction
+of the difference is consistent with both.
+
+(An earlier draft gave 47 for all four. That is 4,139/89, the corpus mean, and
+it is the figure for none of these rules — it is also, coincidentally, the old
+marker's own length, which is how a mean comes to read like a measurement in a
+sentence that is load-bearing for a 1,100–2,200 character reconciliation.)
 
 ## The reading survived the base moving
 

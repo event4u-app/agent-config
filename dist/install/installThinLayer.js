@@ -224,8 +224,8 @@ export function installReceiptBudgetLines(packageRoot, home = os.homedir(), opts
         // deployed. `resolveLayerOwnership` falls through to the inventory, and
         // `thisDeploy` covers the first install, where the receipt prints
         // before `record_deploy` has written anything.
-        const { recorded, source } = resolveLayerOwnership({
-            manifestPath: manifest_path(packageRoot),
+        const { recorded, sources } = resolveLayerOwnership({
+            manifestPath: opts.manifestPath === undefined ? manifest_path(packageRoot) : opts.manifestPath,
             projectRoot: packageRoot,
             // The same home the layers below are read from — the inventory's
             // anchor is tilde-relative, so the two must agree or the receipt
@@ -244,7 +244,7 @@ export function installReceiptBudgetLines(packageRoot, home = os.homedir(), opts
         const rows = buildHostLimitRows(layers, loadHostInstructionLimits());
         if (rows.length === 0)
             return [];
-        return [`  ${ownershipLine(source)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
+        return [`  ${ownershipLine(sources)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
     }
     catch {
         return [];

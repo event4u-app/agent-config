@@ -51,6 +51,24 @@ export interface DemotionResult {
   body_removed: boolean;
   trigger_hint_preserved: boolean;
   link_present: boolean;
+  /**
+   * The stub ends in something SHAPED like a body path, tested without the
+   * writer's constants.
+   *
+   * The honest reason this field exists. Since steps 2.1 and 2.3 both
+   * `pointer_present` and `link_present` are computed from the writer's own
+   * exports, and this probe's only caller feeds them `thin_entry` output
+   * produced in the same process — so those two can no longer return false
+   * whatever the writer emits. Asking them is asking the writer to agree with
+   * itself.
+   *
+   * Re-spelling the marker to restore their power is exactly the drift step 2.1
+   * removed, so this does not do that. It asserts the STRUCTURE a stub must
+   * have for a reader to be able to follow it at all — a trailing path ending
+   * `.md` — which no constant in `thin_rules` spells and which a writer that
+   * stopped emitting a pointer would fail.
+   */
+  pointer_targets_a_path: boolean;
 }
 
 /** Assert a thinned canary is a valid pointer (body gone, still selectable). */
@@ -71,12 +89,20 @@ export function evaluate_demotion(
   // the markdown-link form, so when the pointer became a bare path the gate
   // would have reported every correct stub as missing its link.
   const link_present = has_body_pointer(thinned);
+  // Writer-independent, for the reason `pointer_targets_a_path` documents.
+  const pointer_targets_a_path = /\S+\.md\s*$/m.test(thinned);
   return {
-    ok: pointer_present && body_removed && trigger_hint_preserved && link_present,
+    ok:
+      pointer_present &&
+      body_removed &&
+      trigger_hint_preserved &&
+      link_present &&
+      pointer_targets_a_path,
     pointer_present,
     body_removed,
     trigger_hint_preserved,
     link_present,
+    pointer_targets_a_path,
   };
 }
 
@@ -131,7 +157,8 @@ function main(argv: string[]): number {
   process.stdout.write(
     `${result.ok ? '✅' : '❌'}  mechanical demotion: ` +
       `pointer=${result.pointer_present} body-removed=${result.body_removed} ` +
-      `hint=${result.trigger_hint_preserved} link=${result.link_present}\n`,
+      `hint=${result.trigger_hint_preserved} link=${result.link_present} ` +
+      `path=${result.pointer_targets_a_path}\n`,
   );
   if (!result.ok) {
     process.stdout.write('❌  the thin projector did NOT demote the canary correctly.\n');

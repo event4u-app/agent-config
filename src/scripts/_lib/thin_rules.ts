@@ -341,8 +341,16 @@ export const THIN_BODY_POINTER_PREFIX = 'Body: ';
  * ANCHORED TO END OF LINE, NOT `\S+`. The pointer is the last thing on its
  * line, and a package root may contain spaces; `\S+` would silently stop at the
  * first one and report a well-formed pointer as missing.
+ *
+ * COMPOSED FROM {@link THIN_BODY_POINTER_PREFIX} rather than re-spelling it.
+ * The constant exists so a reader cannot hold its own copy, and a pattern six
+ * lines below it holding a literal `Body: ` would have broken that invariant in
+ * the file that states it.
  */
-export const THIN_BODY_POINTER_RE = /Body: (.+\.md)\s*$/m;
+export const THIN_BODY_POINTER_RE = new RegExp(
+    `${THIN_BODY_POINTER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(.+\\.md)\\s*$`,
+    'm',
+);
 
 /** Does this entry carry a body pointer the writer would recognise? */
 export function has_body_pointer(text: string): boolean {

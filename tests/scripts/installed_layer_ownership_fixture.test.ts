@@ -61,6 +61,24 @@ function stageGlobal(home: string, files: Record<string, string>): string {
     return dir;
 }
 
+/** An installed-tools manifest that really records the given files. */
+function writeManifest(
+    projectRoot: string,
+    files: ReadonlyArray<{ path: string; sha256: string }>,
+): string {
+    const p = path.join(projectRoot, 'agents', 'installed-tools.lock');
+    fs.mkdirSync(path.dirname(p), { recursive: true });
+    const rows = files
+        .map((f) => `      - path: "${f.path}"\n        sha256: "${f.sha256}"`)
+        .join('\n');
+    fs.writeFileSync(
+        p,
+        `schema_version: 2\ntools:\n  - id: claude-code\n    files:\n${rows}\n`,
+        'utf-8',
+    );
+    return p;
+}
+
 /** A `deployed-files.json` naming `anchor` and the anchor-relative `files`. */
 function stageInventory(anchor: string, files: readonly string[]): string {
     const p = path.join(mkTmp('ilo-inv-'), 'deployed-files.json');
@@ -130,10 +148,63 @@ describe('ownership resolution — one function, read by both readers', () => {
         expect(ownershipLine('none')).toContain('no evidence');
     });
 
-    it('a project manifest still wins — it carries hashes the inventory does not', () => {
-        const home = mkTmp('ilo-pref-home-');
+    it('a manifest ADDS to the inventory — it does not replace it', () => {
+        // THE REGRESSION THIS PINS. An earlier shape let any existing manifest
+        // file win outright and discard the inventory. The two sources describe
+        // DISJOINT path spaces — a manifest speaks for a project tree, an
+        // inventory for the user's home — so exclusivity bought nothing and
+        // restored, for the global layer, the exact `0 package-owned` reading
+        // step 1.2 exists to remove. One gitignored `installed-tools.lock`,
+        // which a single project-scoped install creates, was enough.
+        const home = mkTmp('ilo-union-home-');
         const dir = stageGlobal(home, { 'a.md': rule(10) });
-        const project = mkTmp('ilo-pref-proj-');
+        const project = mkTmp('ilo-union-proj-');
+        const projectFile = path.join(project, '.claude', 'rules', 'p.md');
+        fs.mkdirSync(path.dirname(projectFile), { recursive: true });
+        fs.writeFileSync(projectFile, rule(5), 'utf-8');
+        const manifestPath = writeManifest(project, [
+            { path: projectFile, sha256: 'deadbeef' },
+        ]);
+
+        const r = resolveLayerOwnership({
+            manifestPath,
+            projectRoot: project,
+            inventoryPath: stageInventory(path.dirname(dir), ['rules/a.md']),
+        });
+
+        // Counts, not just a label — the assertion the earlier test was missing
+        // and the reason it codified the hole instead of catching it.
+        expect(r.recorded.has(path.join(dir, 'a.md'))).toBe(true);
+        expect(r.recorded.has(projectFile)).toBe(true);
+        expect([...r.sources].sort()).toEqual(['global-inventory', 'manifest']);
+        // And the line a reader sees names BOTH, because naming one would be
+        // a true sentence about half the files and a false one about the rest.
+        expect(ownershipLine(r.sources)).toContain('manifest');
+        expect(ownershipLine(r.sources)).toContain('deploy inventory');
+    });
+
+    it('the manifest still supplies the HASH on a path both sources name', () => {
+        // What the old precedence was defending, preserved by merging the
+        // manifest LAST rather than by discarding the other sources.
+        const home = mkTmp('ilo-hash-home-');
+        const dir = stageGlobal(home, { 'a.md': rule(10) });
+        const shared = path.join(dir, 'a.md');
+        const project = mkTmp('ilo-hash-proj-');
+        const manifestPath = writeManifest(project, [{ path: shared, sha256: 'cafef00d' }]);
+        const r = resolveLayerOwnership({
+            manifestPath,
+            projectRoot: project,
+            inventoryPath: stageInventory(path.dirname(dir), ['rules/a.md']),
+        });
+        expect(r.recorded.get(shared)).toBe('cafef00d');
+    });
+
+    it('a manifest that records NOTHING contributes nothing and claims nothing', () => {
+        // The shape the earlier test used as its fixture: a manifest file that
+        // exists and names no file. It must not be able to label the reading.
+        const home = mkTmp('ilo-empty-home-');
+        const dir = stageGlobal(home, { 'a.md': rule(10) });
+        const project = mkTmp('ilo-empty-proj-');
         const manifestPath = path.join(project, 'agents', 'installed-tools.lock');
         fs.mkdirSync(path.dirname(manifestPath), { recursive: true });
         fs.writeFileSync(manifestPath, 'schema_version: 2\n', 'utf-8');
@@ -142,7 +213,8 @@ describe('ownership resolution — one function, read by both readers', () => {
             projectRoot: project,
             inventoryPath: stageInventory(path.dirname(dir), ['rules/a.md']),
         });
-        expect(r.source).toBe('manifest');
+        expect(r.sources).toEqual(['global-inventory']);
+        expect(r.recorded.has(path.join(dir, 'a.md'))).toBe(true);
     });
 
     it('a corrupt inventory is no evidence rather than a failure', () => {
@@ -244,9 +316,16 @@ describe('ownership resolution — a real first install into an empty HOME', () 
 
             // The receipt, run the way the installer runs it, resolves the same
             // ownership — the step's "the receipt prints the same".
-            const receipt = installReceiptBudgetLines(REPO_ROOT, home, { inventoryPath }).join(
-                '\n',
-            );
+            // `manifestPath: null` is what makes this case hermetic. The
+            // receipt otherwise reads `manifest_path(REPO_ROOT)`, a gitignored
+            // lock absent in CI and present on any checkout where a
+            // project-scoped install has run — so without it this 540-second
+            // case is green in CI and red on a maintainer's machine for a
+            // reason that has nothing to do with the behaviour under test.
+            const receipt = installReceiptBudgetLines(REPO_ROOT, home, {
+                inventoryPath,
+                manifestPath: null,
+            }).join('\n');
             expect(receipt).toContain(ownershipLine('global-inventory'));
             const ownedChars = claude.reduce((n, l) => n + l.package_owned_chars, 0);
             expect(receipt).toContain(`${String(ownedChars)} package-owned`);

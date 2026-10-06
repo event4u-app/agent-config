@@ -51,10 +51,13 @@ import {
 } from '../../install/globalRuleLayers.js';
 import { NO_RECORDED_HASHES, readRecordedHashes } from '../../install/recordedOwnership.js';
 import {
+    INVENTORY_BASENAME,
+    INVENTORY_ENV,
     inventory_path,
     load_inventory,
     recorded_absolute_files,
 } from './global_deploy_inventory.js';
+import { DEFAULT_EVENT4U_ROOT_RELATIVE, EVENT4U_HOME_ENV } from './user_global_paths.js';
 import { ruleBody } from './rule_law_section.js';
 
 /** How many files the per-directory ranking carries. Step 0.1 fixes it at 20. */
@@ -186,6 +189,8 @@ export interface InstalledLayerReport {
     readonly manifest_present: boolean;
     /** Which evidence answered ownership. `none` means no evidence, never "not ours". */
     readonly ownership_source: OwnershipSource;
+    /** Every contributor, because the layers span two path spaces. See {@link OwnershipResolution.sources}. */
+    readonly ownership_sources: readonly OwnershipSource[];
     readonly layers: readonly LayerReading[];
     /** One row per host, against its published limit. Step 3.5. */
     readonly limits: readonly HostLimitReading[];
@@ -207,12 +212,33 @@ export interface InstalledLayerReport {
 /**
  * Whether the host loads this file on every session rather than on a path match.
  *
- * `paths:` at the start of a line is the whole test, and it is the host's own
- * convention rather than this package's: `claudeRuleRewrite.ts` states it from
- * the emitting side — "with it a rule loads on a path match, without it the
- * rule loads unconditionally". `rule_activation_census.projection_reading` asks
- * the installed tree the same question with the same regex, so a file counted
- * unconditional here is counted unconditional there.
+ * `paths:` at the start of a line IN THE FRONTMATTER is the whole test, and it
+ * is the host's own convention rather than this package's: `claudeRuleRewrite`
+ * states it from the emitting side — "with it a rule loads on a path match,
+ * without it the rule loads unconditionally".
+ *
+ * SCOPED TO THE FRONTMATTER, which it was not until 2026-10-06. The predicate
+ * tested the whole unstripped file while the characters it partitions come
+ * from `ruleBody` — predicate and measure read different strings. That was
+ * survivable while it only moved a file COUNT; since the when-loaded character
+ * split it decides which bucket a whole file's characters land in, and
+ * `unconditional_chars` is the figure the ceiling argument is read in. One body
+ * line beginning `paths:` — a YAML trigger example quoted inside a kernel or
+ * `no_stub` rule, which is ordinary prose — would have moved that rule's entire
+ * character count from standing to path-scoped, silently.
+ *
+ * Measured before the change: of the 105 files on a real opted-in install, two
+ * are path-scoped by either reading and none carries a body-only mention, so
+ * the fix moves no published figure. It is hardening against a case that does
+ * not exist yet rather than a correction of one that does, and it is worth
+ * making precisely because the failure would be silent.
+ *
+ * `check_single_delivery` already slices the frontmatter before this test, so
+ * this now AGREES with it. `rule_activation_census.projection_reading` still
+ * scans the whole file; that reader counts files rather than characters, so the
+ * divergence costs it nothing today, and changing a census's reading belongs to
+ * that census rather than here. Named so the next reader finds a known
+ * difference instead of discovering an unexplained one.
  *
  * SOURCE-SIDE CLASSIFICATION IS A DIFFERENT QUESTION and deliberately not used.
  * `classify_rule` reads `alwaysApply` and `type: always` to tell `always` from
@@ -222,7 +248,20 @@ export interface InstalledLayerReport {
  * both load every session, which is the only property the host acts on.
  */
 export function isUnconditional(text: string): boolean {
-    return !/^paths:/m.test(text);
+    return !/^paths:/m.test(frontmatterBlock(text));
+}
+
+/**
+ * The YAML frontmatter block, without its fences. Empty when there is none.
+ *
+ * Deliberately the same arithmetic `check_single_delivery` uses — `slice(3,
+ * end)` from a leading `---\n` to the next `\n---` — so the two readers cannot
+ * disagree about where a rule's frontmatter stops.
+ */
+function frontmatterBlock(text: string): string {
+    if (!text.startsWith('---\n')) return '';
+    const end = text.indexOf('\n---', 3);
+    return end === -1 ? '' : text.slice(3, end);
 }
 
 /**
@@ -452,14 +491,38 @@ export type OwnershipSource = 'manifest' | 'global-inventory' | 'this-deploy' | 
  * home-less case. A caller with a specific file in mind passes it outright.
  */
 export function defaultInventoryPath(home?: string | null): string {
+    // THE ENV OVERRIDES COME FIRST, for every caller. An earlier shape returned
+    // the hardcoded layout whenever a home was supplied — which is every caller
+    // of `buildInstalledLayerReport`, since `ReportOptions.home` is required —
+    // so `AGENT_CONFIG_DEPLOY_INVENTORY` and `EVENT4U_CONFIG_HOME` reached this
+    // reader never rather than only in the home-less case. Finding nothing is
+    // reported as `none`, i.e. "no evidence", so that failed silently in the
+    // one direction that matters.
+    const override = process.env[INVENTORY_ENV];
+    if (override !== undefined && override !== '') return inventory_path();
+    const configHome = process.env[EVENT4U_HOME_ENV];
+    if (configHome !== undefined && configHome !== '') return inventory_path();
     if (home === undefined || home === null || home === '') return inventory_path();
-    return path.join(home, '.event4u', 'agent-config', 'deployed-files.json');
+    // COMPOSED, NOT RE-SPELLED: the user-global layout and the basename are both
+    // exported by the modules that own them, so a layout change moves this
+    // reader with it instead of leaving it looking in a directory nobody writes.
+    return path.join(home, DEFAULT_EVENT4U_ROOT_RELATIVE, INVENTORY_BASENAME);
 }
 
 /** The ownership evidence and the name of where it came from. */
 export interface OwnershipResolution {
     /** Absolute path → recorded hash (or `null` when the source records no hash). */
     readonly recorded: ReadonlyMap<string, string | null>;
+    /**
+     * EVERY source that contributed at least one path, in resolution order.
+     *
+     * Plural because the sources describe disjoint path spaces — a manifest
+     * speaks for a project tree, an inventory for the user's home — so a
+     * reading that covers both layers can legitimately have two, and naming
+     * only one is wrong about the files the other accounts for.
+     */
+    readonly sources: readonly OwnershipSource[];
+    /** The most specific contributor, for a reader that wants one word. `none` when empty. */
     readonly source: OwnershipSource;
 }
 
@@ -506,12 +569,29 @@ export interface OwnershipOptions {
  * per tool, the anchor and every file the installer maintains there —
  * "the ownership proof that makes reaping safe". This reads it.
  *
- * ORDER, AND WHY IT IS NOT A UNION. The project manifest wins outright when it
- * exists: it carries hashes, so it can distinguish `recorded-unchanged` from
- * `recorded-modified`, and folding a hashless inventory into it would silently
- * downgrade that. Only when no manifest resolves does the inventory answer —
- * and there the two hashless sources ARE unioned, because this deploy's own
- * file set and a previous deploy's record are the same kind of evidence.
+ * IT IS A UNION, AND THE PATH SPACES ARE WHY. An earlier shape let the project
+ * manifest win OUTRIGHT whenever its file existed, on the reasoning that it
+ * carries hashes an inventory does not. That reasoning does not survive the
+ * observation that the two sources describe DISJOINT sets of paths: the
+ * manifest records project-relative entries resolved against `projectRoot`,
+ * the inventory records paths under the user's home. Exclusivity therefore
+ * bought nothing and cost everything — any `agents/installed-tools.lock` on
+ * disk, a gitignored file a single project-scoped install creates, restored
+ * the exact `0 package-owned` reading for the global layer that step 1.2
+ * exists to fix, while the report printed "read from the installed-tools
+ * manifest" with no evidence behind it for those paths.
+ *
+ * So every source contributes, and the MANIFEST IS MERGED LAST: on the paths
+ * it names its hash overwrites a hashless entry, which preserves the
+ * `recorded-unchanged` / `recorded-modified` distinction that motivated the
+ * precedence in the first place, without discarding evidence about paths it
+ * says nothing about.
+ *
+ * {@link OwnershipResolution.sources} lists every source that contributed at
+ * least one path, because one word cannot describe two path spaces — a report
+ * reading global and project layers together may have manifest evidence for
+ * one and inventory evidence for the other, and saying only one of them is
+ * wrong about half the files it is describing.
  *
  * A FILE THE USER EDITED AND THE INSTALLER PRESERVED STILL COUNTS AS
  * MAINTAINED. The inventory records what the installer MAINTAINS at a path, not
@@ -520,30 +600,31 @@ export interface OwnershipOptions {
  * it is why this function returns `null` hashes rather than fabricating one.
  */
 export function resolveLayerOwnership(opts: OwnershipOptions): OwnershipResolution {
-    const manifestPath = opts.manifestPath ?? null;
-    if (manifestPath !== null && fs.existsSync(manifestPath)) {
-        return {
-            recorded: readRecordedHashes(manifestPath, opts.projectRoot),
-            source: 'manifest',
-        };
-    }
     const recorded = new Map<string, string | null>();
-    let fromInventory = 0;
+    const sources: OwnershipSource[] = [];
+
+    // HASHLESS SOURCES FIRST, so the manifest's hashes overwrite a `null` on
+    // any path both happen to name rather than the other way round.
     if (opts.inventoryPath !== null) {
+        let n = 0;
         try {
             const inv = load_inventory(opts.inventoryPath ?? defaultInventoryPath(opts.home));
             for (const abs of recorded_absolute_files(inv, opts.home ?? null)) {
                 recorded.set(abs, null);
-                fromInventory += 1;
+                n += 1;
             }
         } catch {
             // A corrupt or unreadable inventory is no evidence, never a failure.
         }
+        if (n > 0) sources.push('global-inventory');
     }
+
+    let fromDeploy = 0;
     for (const [anchor, rels] of opts.thisDeploy ?? new Map()) {
         for (const rel of rels) {
             const abs = path.resolve(anchor, rel);
             recorded.set(abs, null);
+            fromDeploy += 1;
             // Both spellings, for the reason `recorded_absolute_files` states:
             // the reader compares against a lexically joined path, and a HOME
             // behind a symlink makes the two disagree.
@@ -554,14 +635,31 @@ export function resolveLayerOwnership(opts: OwnershipOptions): OwnershipResoluti
             }
         }
     }
-    if (recorded.size === 0) return { recorded: NO_RECORDED_HASHES, source: 'none' };
-    // Named for what actually supplied the evidence, so a reader can tell a
-    // FIRST install — where the inventory on disk is still empty and the
-    // installer's own file set is the only evidence there is — from a later
-    // one. The inventory wins the label whenever it contributed anything,
-    // because past this line `recorded` is non-empty: if the inventory gave
-    // nothing, every path in it came from this deploy.
-    return { recorded, source: fromInventory > 0 ? 'global-inventory' : 'this-deploy' };
+    if (fromDeploy > 0) sources.push('this-deploy');
+
+    const manifestPath = opts.manifestPath ?? null;
+    if (manifestPath !== null && fs.existsSync(manifestPath)) {
+        let n = 0;
+        for (const [abs, hash] of readRecordedHashes(manifestPath, opts.projectRoot)) {
+            recorded.set(abs, hash);
+            n += 1;
+        }
+        if (n > 0) sources.push('manifest');
+    }
+
+    if (recorded.size === 0) {
+        return { recorded: NO_RECORDED_HASHES, sources: [], source: 'none' };
+    }
+    // `source` keeps a single word for readers that want one. The manifest is
+    // the most specific evidence, so it leads when it contributed; otherwise
+    // the inventory, otherwise this deploy's own set.
+    const primary =
+        sources.includes('manifest')
+            ? 'manifest'
+            : sources.includes('global-inventory')
+              ? 'global-inventory'
+              : 'this-deploy';
+    return { recorded, sources, source: primary };
 }
 
 export interface ReportOptions {
@@ -591,7 +689,7 @@ export interface ReportOptions {
  */
 export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerReport {
     const manifestPath = opts.manifestPath ?? null;
-    const { recorded, source: ownership_source } = resolveLayerOwnership({
+    const { recorded, source: ownership_source, sources: ownership_sources } = resolveLayerOwnership({
         manifestPath,
         projectRoot: opts.projectRoot,
         home: opts.home,
@@ -641,6 +739,7 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
         host_version: opts.hostVersion ?? 'unknown',
         manifest_present: manifestPath !== null && fs.existsSync(manifestPath),
         ownership_source,
+        ownership_sources,
         layers,
         limits,
         totals,
@@ -654,17 +753,27 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
  * the same source — a consumer comparing a receipt against a later report must
  * not have to decide whether a wording difference means a different reading.
  */
-export function ownershipLine(source: OwnershipSource): string {
-    switch (source) {
-        case 'manifest':
-            return 'ownership: read from the installed-tools manifest';
-        case 'global-inventory':
-            return 'ownership: read from the global deploy inventory (deployed-files.json) — no project manifest needed';
-        case 'this-deploy':
-            return 'ownership: read from the file set this install just wrote — the inventory is recorded after the receipt';
-        case 'none':
-            return 'ownership: NO manifest and NO deploy inventory resolved — every file reads foreign, which is no evidence rather than a finding';
+export function ownershipLine(sources: OwnershipSource | readonly OwnershipSource[]): string {
+    const list = (Array.isArray(sources) ? sources : [sources as OwnershipSource]).filter(
+        (s) => s !== 'none',
+    );
+    if (list.length === 0) {
+        return 'ownership: NO manifest and NO deploy inventory resolved — every file reads foreign, which is no evidence rather than a finding';
     }
+    // EVERY contributor is named, never just one. The sources cover disjoint
+    // path spaces, so a line naming one of two is a true sentence about half
+    // the files and a false one about the rest.
+    const phrases: Record<Exclude<OwnershipSource, 'none'>, string> = {
+        manifest: 'the installed-tools manifest',
+        'global-inventory': 'the global deploy inventory (deployed-files.json)',
+        'this-deploy': 'the file set this install just wrote',
+    };
+    const named = list.map((s) => phrases[s as Exclude<OwnershipSource, 'none'>]);
+    const joined =
+        named.length === 1
+            ? (named[0] as string)
+            : `${named.slice(0, -1).join(', ')} and ${named[named.length - 1] as string}`;
+    return `ownership: read from ${joined}`;
 }
 
 /** The report as lines, for a terminal. One directory per block. */
@@ -672,7 +781,7 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
     const out: string[] = [];
     out.push(`installed layer — host ${report.host_version}, HOME ${report.home}`);
     out.push(`project ${report.project_root}`);
-    out.push(ownershipLine(report.ownership_source));
+    out.push(ownershipLine(report.ownership_sources));
     for (const l of report.layers) {
         if (!l.present) {
             out.push(`  ${l.host} (${l.scope}) — absent: ${l.dir}`);

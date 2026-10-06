@@ -274,5 +274,21 @@ character of package-root prefix, so at a 97-character root the later reading
 is 103,320 / 89,619 / 13,701.
 
 **AC-1 does not hold today, on either reading.** The page prices every
-remaining move with who it is permitted by, and states that none of them, taken
-together, reaches the ceiling.
+remaining move with who it is permitted by, and states what they add up to:
+
+- **75,000, unconditional reading** — reachable, but only with every priced row
+  taken, including one reserved to the owner (`legal-safety-floor`, whose law
+  is already over this repository's hard law ceiling) and one behind the open
+  install-layout blocker. Neither is the council's to take and neither is an
+  agent's.
+- **The headroom-adjusted 68,181** — not reachable at any realistic package-root
+  prefix; the only combination that closes needs a prefix no path can have.
+- **75,000, all-characters reading** — not reachable, by at least 6,315 even at
+  that unreachable prefix.
+
+An earlier version of this note said instead that "none of them, taken
+together, reaches the ceiling". That was the pre-correction claim a
+provider-diverse council recorded as materially false, and it was left standing
+here after the page itself was fixed — on the surface an owner actually reads.
+It is replaced rather than deleted so the correction is visible from this side
+too.

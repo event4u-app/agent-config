@@ -12506,7 +12506,12 @@ function lawText(body) {
 var TOP_FILES = 20;
 var LIMIT_WARN_FRACTION = 0.8;
 function isUnconditional(text) {
-  return !/^paths:/m.test(text);
+  return !/^paths:/m.test(frontmatterBlock(text));
+}
+function frontmatterBlock(text) {
+  if (!text.startsWith("---\n")) return "";
+  const end = text.indexOf("\n---", 3);
+  return end === -1 ? "" : text.slice(3, end);
 }
 function readLayer(host, scope, dir, recorded) {
   const empty = {
@@ -12632,53 +12637,71 @@ function buildHostLimitRows(layers, limits) {
   return rows;
 }
 function defaultInventoryPath(home) {
+  const override = process.env[INVENTORY_ENV];
+  if (override !== void 0 && override !== "") return inventory_path();
+  const configHome = process.env[EVENT4U_HOME_ENV];
+  if (configHome !== void 0 && configHome !== "") return inventory_path();
   if (home === void 0 || home === null || home === "") return inventory_path();
-  return path24.join(home, ".event4u", "agent-config", "deployed-files.json");
+  return path24.join(home, DEFAULT_EVENT4U_ROOT_RELATIVE, INVENTORY_BASENAME);
 }
 function resolveLayerOwnership(opts) {
-  const manifestPath = opts.manifestPath ?? null;
-  if (manifestPath !== null && fs25.existsSync(manifestPath)) {
-    return {
-      recorded: readRecordedHashes(manifestPath, opts.projectRoot),
-      source: "manifest"
-    };
-  }
   const recorded = /* @__PURE__ */ new Map();
-  let fromInventory = 0;
+  const sources = [];
   if (opts.inventoryPath !== null) {
+    let n = 0;
     try {
       const inv = load_inventory(opts.inventoryPath ?? defaultInventoryPath(opts.home));
       for (const abs of recorded_absolute_files(inv, opts.home ?? null)) {
         recorded.set(abs, null);
-        fromInventory += 1;
+        n += 1;
       }
     } catch {
     }
+    if (n > 0) sources.push("global-inventory");
   }
+  let fromDeploy = 0;
   for (const [anchor, rels] of opts.thisDeploy ?? /* @__PURE__ */ new Map()) {
     for (const rel of rels) {
       const abs = path24.resolve(anchor, rel);
       recorded.set(abs, null);
+      fromDeploy += 1;
       try {
         recorded.set(fs25.realpathSync(abs), null);
       } catch {
       }
     }
   }
-  if (recorded.size === 0) return { recorded: NO_RECORDED_HASHES, source: "none" };
-  return { recorded, source: fromInventory > 0 ? "global-inventory" : "this-deploy" };
-}
-function ownershipLine(source) {
-  switch (source) {
-    case "manifest":
-      return "ownership: read from the installed-tools manifest";
-    case "global-inventory":
-      return "ownership: read from the global deploy inventory (deployed-files.json) \u2014 no project manifest needed";
-    case "this-deploy":
-      return "ownership: read from the file set this install just wrote \u2014 the inventory is recorded after the receipt";
-    case "none":
-      return "ownership: NO manifest and NO deploy inventory resolved \u2014 every file reads foreign, which is no evidence rather than a finding";
+  if (fromDeploy > 0) sources.push("this-deploy");
+  const manifestPath = opts.manifestPath ?? null;
+  if (manifestPath !== null && fs25.existsSync(manifestPath)) {
+    let n = 0;
+    for (const [abs, hash] of readRecordedHashes(manifestPath, opts.projectRoot)) {
+      recorded.set(abs, hash);
+      n += 1;
+    }
+    if (n > 0) sources.push("manifest");
   }
+  if (recorded.size === 0) {
+    return { recorded: NO_RECORDED_HASHES, sources: [], source: "none" };
+  }
+  const primary = sources.includes("manifest") ? "manifest" : sources.includes("global-inventory") ? "global-inventory" : "this-deploy";
+  return { recorded, sources, source: primary };
+}
+function ownershipLine(sources) {
+  const list = (Array.isArray(sources) ? sources : [sources]).filter(
+    (s) => s !== "none"
+  );
+  if (list.length === 0) {
+    return "ownership: NO manifest and NO deploy inventory resolved \u2014 every file reads foreign, which is no evidence rather than a finding";
+  }
+  const phrases = {
+    manifest: "the installed-tools manifest",
+    "global-inventory": "the global deploy inventory (deployed-files.json)",
+    "this-deploy": "the file set this install just wrote"
+  };
+  const named = list.map((s) => phrases[s]);
+  const joined = named.length === 1 ? named[0] : `${named.slice(0, -1).join(", ")} and ${named[named.length - 1]}`;
+  return `ownership: read from ${joined}`;
 }
 function renderHostLimitRows(rows) {
   const out = [
@@ -12853,6 +12876,10 @@ function _title(s) {
 }
 var THIN_ENTRY_MARKER = "> Load the body on a match.";
 var THIN_BODY_POINTER_PREFIX = "Body: ";
+var THIN_BODY_POINTER_RE = new RegExp(
+  `${THIN_BODY_POINTER_PREFIX.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(.+\\.md)\\s*$`,
+  "m"
+);
 var BODY_LINK_PREFIX = "../../dist/agent-src/rules/";
 function absoluteBodyLinkPrefix(packageRoot) {
   return `${path26.join(path26.resolve(packageRoot), "dist", "agent-src", "rules")}${path26.sep}`;
@@ -13047,8 +13074,8 @@ function describeThinInstalledLayer(res) {
 }
 function installReceiptBudgetLines(packageRoot, home = os10.homedir(), opts = {}) {
   try {
-    const { recorded, source } = resolveLayerOwnership({
-      manifestPath: manifest_path(packageRoot),
+    const { recorded, sources } = resolveLayerOwnership({
+      manifestPath: opts.manifestPath === void 0 ? manifest_path(packageRoot) : opts.manifestPath,
       projectRoot: packageRoot,
       // The same home the layers below are read from — the inventory's
       // anchor is tilde-relative, so the two must agree or the receipt
@@ -13065,7 +13092,7 @@ function installReceiptBudgetLines(packageRoot, home = os10.homedir(), opts = {}
     }
     const rows = buildHostLimitRows(layers, loadHostInstructionLimits());
     if (rows.length === 0) return [];
-    return [`  ${ownershipLine(source)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
+    return [`  ${ownershipLine(sources)}`, ...renderHostLimitRows(rows).map((l) => `  ${l}`)];
   } catch {
     return [];
   }

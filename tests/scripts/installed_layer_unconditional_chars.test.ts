@@ -151,6 +151,39 @@ describe('installed layer — the when-loaded split in characters', () => {
         expect(l.foreign_chars).toBe(70);
     });
 
+    it('a `paths:` line in the BODY does not move the file to path-scoped', () => {
+        // The predicate partitions characters that come from `ruleBody`, so it
+        // must read the same string the measure does. Reading the whole
+        // unstripped file meant one line of ordinary prose — a YAML trigger
+        // example quoted inside a rule — moved that rule's ENTIRE character
+        // count from standing to path-scoped, silently, in the figure the whole
+        // ceiling argument is read in.
+        const home = mkTmp('ilu-bodypaths-');
+        const dir = path.join(home, GLOBAL_RULE_DIRS['claude-code'] as string);
+        fs.mkdirSync(dir, { recursive: true });
+        const body = 'A rule whose prose quotes a trigger block:\n\npaths:\n  - "**/*.php"\n';
+        fs.writeFileSync(path.join(dir, 'quotes-paths.md'), `---\ntype: auto\n---\n${body}`, 'utf-8');
+        const l = readLayer('claude-code', 'global', dir, new Map());
+        // Asserted as the BUCKET property rather than a hand-computed length:
+        // the file's whole measured body is standing, and none of it is
+        // path-scoped. `ruleBody`'s exact trimming is a different question and
+        // pinning it here would make this case fail for the wrong reason.
+        expect(l.chars).toBeGreaterThan(0);
+        expect(l.unconditional_chars).toBe(l.chars);
+        expect(l.scoped_chars).toBe(0);
+    });
+
+    it('a `paths:` key in the FRONTMATTER still scopes the file', () => {
+        // The control for the case above: without it, a predicate that always
+        // answered "unconditional" would pass there and break everything else
+        // quietly.
+        const home = mkTmp('ilu-fmpaths-');
+        const dir = stageGlobal(home, { 'scoped.md': rule(40, { scoped: true }) });
+        const l = readLayer('claude-code', 'global', dir, new Map());
+        expect(l.scoped_chars).toBe(40);
+        expect(l.unconditional_chars).toBe(0);
+    });
+
     it('the report PRINTS both figures beside `chars`, per layer and in the total', () => {
         const home = mkTmp('ilu-render-');
         stageGlobal(home, {

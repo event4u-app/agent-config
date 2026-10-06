@@ -49,6 +49,11 @@ describe('the stub marker is short, instructive, and unique to a stub', () => {
         // the content of the constant, not decoration on it.
         expect(THIN_ENTRY_MARKER.toLowerCase()).toContain('load');
         expect(THIN_ENTRY_MARKER.toLowerCase()).toContain('body');
+        // And WHEN — without it the sentence says the body is to be loaded and
+        // never says on what, which is half the instruction. Asserted because
+        // it was not: the marker could have been shortened to drop it with
+        // every gate in this branch still green.
+        expect(THIN_ENTRY_MARKER.toLowerCase()).toContain('match');
     });
 
     it('is true for every entry `build_thin` emits as a stub', () => {
@@ -66,6 +71,27 @@ describe('the stub marker is short, instructive, and unique to a stub', () => {
         expect(stubs, 'the control: at least one entry was emitted as a stub').toBeGreaterThan(
             20,
         );
+    });
+
+    it('is FALSE for every entry `build_thin` keeps full-bodied', () => {
+        // The direction the sweep above cannot reach. It checks the false
+        // direction only against `src/rules/` and the projection, which are
+        // rule SOURCES — not what `build_thin` emits. A marker that leaked into
+        // a full-bodied EMITTED entry would pass every other case in this file,
+        // and a kept rule read as a stub is a rule the conformance verb stops
+        // asking about.
+        const emitted = build_thin();
+        const kept: string[] = [];
+        let keptSeen = 0;
+        for (const [name, text] of emitted) {
+            if (has_body_pointer(text)) continue; // a stub, covered above
+            keptSeen += 1;
+            if (is_thin_entry(text)) kept.push(name);
+        }
+        // The control: the emitter really does keep entries full-bodied, so an
+        // empty `kept` is a finding rather than an empty loop.
+        expect(keptSeen, 'the control: build_thin kept entries full-bodied').toBeGreaterThan(5);
+        expect(kept).toEqual([]);
     });
 
     it('is false for every rule body in `src/rules/`', () => {
