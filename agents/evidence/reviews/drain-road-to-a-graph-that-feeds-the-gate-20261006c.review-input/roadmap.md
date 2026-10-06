@@ -161,14 +161,15 @@ refuses.
       verify: `grep -c 'p95' agents/evidence/analysis/graph-feeder-latency-*.md` -> /^[1-9]/
       STATE 2026-10-06: measured by `src/scripts/bench_graph_feeder_latency.ts` and
       published at `agents/evidence/analysis/graph-feeder-latency-2026-Q4.md`. On a
-      generated fixture the feeder adds p50 ≈ 36 ms / p95 ≈ 55 ms (200 modules) to a
+      generated fixture the feeder adds p50 ≈ 42 ms / p95 ≈ 50 ms (200 modules) to a
       stop whose own work is under 1 ms; over this repository's real 59 MB index the
       feeder's work alone is p50 ≈ 884 ms / p95 ≈ 1,007 ms, ≈ 634 ms of it the graph
       open. Exit codes identical in both arms.
 - [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3 and 3.5; the ADR-277
       reopen is an owner amendment, not a step here. PRECONDITION from 3.5: the
-      promotion reports the feeder's stop-slot p95, measured by
-      `bench_graph_feeder_latency` on the repository in question, against the
+      promotion reports the feeder's stop-slot increment — its work alone, measured by
+      `bench_graph_feeder_latency --repo P --edit F` on the repository in question,
+      which tracks the fixture's with-minus-without delta — against the
       published baseline (p95 ≈ 1,007 ms over a 59 MB index, ≈ 634 ms of it loading
       the cache); a promotion that does not first cut the load term inherits about a
       second per stop on the gate's decision path.

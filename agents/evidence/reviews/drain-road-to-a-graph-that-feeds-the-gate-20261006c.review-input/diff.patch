@@ -1,16 +1,16 @@
 diff --git a/agents/evidence/analysis/graph-feeder-latency-2026-Q4.md b/agents/evidence/analysis/graph-feeder-latency-2026-Q4.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..f33ad2d37fb53d09bc8d44bf056f122dcc7acf26
+index 0000000000000000000000000000000000000000..7e1beb41ce11f857ac91084f91d6357d20836070
 --- /dev/null
 +++ b/agents/evidence/analysis/graph-feeder-latency-2026-Q4.md
-@@ -0,0 +1,125 @@
+@@ -0,0 +1,138 @@
 +<!-- evidence-type: analysis -->
 +
 +# Graph feeder latency — 2026 Q4
 +
 +**The feeder's cost on the stop slot, measured 2026-10-06 at `e3c30fc9d`.** On a
-+generated fixture repository the shadow arm adds **p50 ≈ 36 ms, p95 ≈ 55 ms**
-+(200 modules) and **p50 ≈ 49 ms, p95 ≈ 71 ms** (2,000 modules) to a stop hook
++generated fixture repository the shadow arm adds **p50 ≈ 42 ms, p95 ≈ 50 ms**
++(200 modules) and **p50 ≈ 51 ms, p95 ≈ 66 ms** (2,000 modules) to a stop hook
 +whose own work is under 1 ms. Over this repository's real graph the feeder's
 +work alone is **p50 ≈ 884 ms, p95 ≈ 1,007 ms** — the generated fixture prices
 +the walk, and the real index prices the load, which is the larger term by an
@@ -43,7 +43,11 @@ index 0000000000000000000000000000000000000000..f33ad2d37fb53d09bc8d44bf056f122d
 +  the edit uncommitted (`graphState` = `edited`, the full feeder path: git
 +  freshness probes, graph open, `untested` walk, row append). `without` is the
 +  identical tree with no graph cache, where the feeder stops at `absent`.
-+- **Interleaved**, one call per arm per round, so machine drift lands on both.
++- **Interleaved, order alternating per round**, so machine drift and order
++  effects (GC after the heavier arm, cache warmth) land on both arms. The first
++  publication of this page ran a fixed with-then-without order; the R2 review
++  flagged the order bias and the fixture readings below were re-taken after the
++  fix.
 +- **A third reading**, the feeder's own work (`graphState` +
 +  `graphUntestedVerdict`) timed directly, because the difference of two noisy
 +  totals is a weaker number than a direct one.
@@ -59,11 +63,11 @@ index 0000000000000000000000000000000000000000..f33ad2d37fb53d09bc8d44bf056f122d
 +
 +| arm | n | p50 ms | p95 ms | max ms |
 +|---|---|---|---|---|
-+| stop hook, with feeder | 50 | 36.24 | 55.64 | 61.14 |
-+| stop hook, without feeder | 50 | 0.56 | 1.02 | 1.43 |
-+| feeder work alone | 50 | 34.89 | 42.06 | 43.24 |
++| stop hook, with feeder | 50 | 42.61 | 51.03 | 66.48 |
++| stop hook, without feeder | 50 | 0.61 | 1.00 | 2.26 |
++| feeder work alone | 50 | 40.64 | 45.35 | 46.66 |
 +
-+Delta: p50 35.68 ms, p95 54.62 ms. Exit codes: `[1]` in both arms.
++Delta: p50 42.00 ms, p95 50.03 ms. Exit codes: `[1]` in both arms.
 +
 +`./scripts-run src/scripts/bench_graph_feeder_latency --runs 50 --files 200`
 +
@@ -71,11 +75,11 @@ index 0000000000000000000000000000000000000000..f33ad2d37fb53d09bc8d44bf056f122d
 +
 +| arm | n | p50 ms | p95 ms | max ms |
 +|---|---|---|---|---|
-+| stop hook, with feeder | 50 | 49.44 | 71.91 | 83.32 |
-+| stop hook, without feeder | 50 | 0.59 | 0.91 | 1.23 |
-+| feeder work alone | 50 | 47.80 | 66.97 | 76.06 |
++| stop hook, with feeder | 50 | 52.03 | 66.73 | 67.75 |
++| stop hook, without feeder | 50 | 0.58 | 0.88 | 2.00 |
++| feeder work alone | 50 | 57.71 | 65.03 | 68.82 |
 +
-+Delta: p50 48.85 ms, p95 71.00 ms. Exit codes: `[1]` in both arms.
++Delta: p50 51.45 ms, p95 65.85 ms. Exit codes: `[1]` in both arms.
 +
 +`./scripts-run src/scripts/bench_graph_feeder_latency --runs 50 --files 2000`
 +
@@ -104,11 +108,14 @@ index 0000000000000000000000000000000000000000..f33ad2d37fb53d09bc8d44bf056f122d
 +  barely move from 200 to 2,000 modules, because a small index loads fast; the
 +  real repository costs ~20× more because its cache is 59 MB. A consumer with a
 +  larger graph pays more again, per stop, for a verdict nothing acts on yet.
-+- **No reading comes near a kill-bound this tree controls.** The in-process
-+  dispatcher route has no kill-timeout at all (`dispatch_hook.ts`: "a slow concern
-+  is bounded on neither route"), and the spawn route's `SPAWN_TIMEOUT_MS` is
-+  30,000 ms (`concern_failure_policy.ts`) — the real-repository p95 is about 3 % of
-+  it. The installer writes no per-hook `timeout`, so a host's own default
++- **No reading comes near a kill-bound this tree controls.** The two dispatch
++  routes differ. The in-process route — the default — has no kill-timeout: a
++  kill cannot preempt synchronous in-process code. The spawn route
++  (`AGENT_CONFIG_HOOKS_ISOLATED=1`) keeps the historical kill-timeout
++  `SPAWN_TIMEOUT_MS` = 30,000 ms (`concern_failure_policy.ts`). Neither route
++  has an SLA-derived bound: the `sla_ms × 3` clause was tried and not landed,
++  which is what `dispatch_hook.ts` means by "a slow concern is bounded on
++  neither route". The real-repository p95 is about 3 % of the 30 s kill. The installer writes no per-hook `timeout`, so a host's own default
 +  applies; this page does not quote that number because it was not measured
 +  here. The risk the module header named is real in shape and, at these sizes,
 +  not close in magnitude.
@@ -120,17 +127,23 @@ index 0000000000000000000000000000000000000000..f33ad2d37fb53d09bc8d44bf056f122d
 +
 +Promoting the graph verdict into F (step 3.4) moves this cost from a shadow
 +measurement onto the gate's decision path. The stated precondition, carried
-+into that step's text: **the feeder's p95 on the stop slot, measured by this
-+instrument on the repository in question, is reported beside the promotion, and
-+the real-repository reading here — p95 ≈ 1,007 ms, of which ≈ 634 ms is
-+loading the cache — is the baseline it is compared against.** A promotion that
++into that step's text: **the feeder's work alone, measured by this
++instrument's `--repo P --edit F` mode on the repository in question, is
++reported beside the promotion as its stop-slot increment, and the
++real-repository reading here — p95 ≈ 1,007 ms, of which ≈ 634 ms is loading the
++cache — is the baseline it is compared against.** Feeder work alone stands in
++for the stop-slot increment because the fixture arms show the stop's own work
++is under 1 ms and the with-minus-without delta tracks the feeder-alone reading
++within a few milliseconds. `--repo` deliberately does not run the whole hook
++over a real repository: that would append rows to the repository's own feeder
++record, which is the corpus `graph-feeder-recall-2026-Q4.md` labels. A promotion that
 +does not first cut the load term (a cached or incremental open) inherits about
 +a second per stop.
 +
 +This is a reading taken on a date on one machine, not a standing fact. Re-take
 +it before relying on it.
 diff --git a/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md b/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
-index 30ee500cc890322d8042ebf237dd2aa3d4502ca3..539f521e28911181f7a459ef299018226c9a7b00 100644
+index 30ee500cc890322d8042ebf237dd2aa3d4502ca3..31f9d60d72861118b76c84d50cef139ca7ee8dde 100644
 --- a/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
 +++ b/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
 @@ -149,7 +149,7 @@ refuses.
@@ -142,21 +155,22 @@ index 30ee500cc890322d8042ebf237dd2aa3d4502ca3..539f521e28911181f7a459ef29901822
        `inbox-2026-10-e`. `src/scripts/_lib/graph_feeder_record.ts:12-22` withdrew the
        "costs nothing" claim and leaves the latency unmeasured; a stop-hook timeout
        would discard F's refusal, so the shadow arm can weaken the gate it feeds. p50
-@@ -157,8 +157,19 @@ refuses.
+@@ -157,8 +157,20 @@ refuses.
        published beside the recall page; the number becomes a stated precondition of
        3.4 in that step's text.
        verify: `grep -c 'p95' agents/evidence/analysis/graph-feeder-latency-*.md` -> /^[1-9]/
 +      STATE 2026-10-06: measured by `src/scripts/bench_graph_feeder_latency.ts` and
 +      published at `agents/evidence/analysis/graph-feeder-latency-2026-Q4.md`. On a
-+      generated fixture the feeder adds p50 ≈ 36 ms / p95 ≈ 55 ms (200 modules) to a
++      generated fixture the feeder adds p50 ≈ 42 ms / p95 ≈ 50 ms (200 modules) to a
 +      stop whose own work is under 1 ms; over this repository's real 59 MB index the
 +      feeder's work alone is p50 ≈ 884 ms / p95 ≈ 1,007 ms, ≈ 634 ms of it the graph
 +      open. Exit codes identical in both arms.
  - [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3 and 3.5; the ADR-277
 -      reopen is an owner amendment, not a step here.
 +      reopen is an owner amendment, not a step here. PRECONDITION from 3.5: the
-+      promotion reports the feeder's stop-slot p95, measured by
-+      `bench_graph_feeder_latency` on the repository in question, against the
++      promotion reports the feeder's stop-slot increment — its work alone, measured by
++      `bench_graph_feeder_latency --repo P --edit F` on the repository in question,
++      which tracks the fixture's with-minus-without delta — against the
 +      published baseline (p95 ≈ 1,007 ms over a 59 MB index, ≈ 634 ms of it loading
 +      the cache); a promotion that does not first cut the load term inherits about a
 +      second per stop on the gate's decision path.
@@ -194,10 +208,10 @@ index 7b0aa8eb1d508224ff44712102ea1d9536c54ec6..111ec312ea673fdca5696ee798d7ec85
      let picked;
 diff --git a/src/scripts/bench_graph_feeder_latency.ts b/src/scripts/bench_graph_feeder_latency.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..662aecd056a9add2708b119bf74e5deaecc86665
+index 0000000000000000000000000000000000000000..2a75f4841f277e5918e1a4fedfea22a93e3bc0e2
 --- /dev/null
 +++ b/src/scripts/bench_graph_feeder_latency.ts
-@@ -0,0 +1,360 @@
+@@ -0,0 +1,368 @@
 +#!/usr/bin/env node
 +/**
 + * What the graph feeder costs the stop slot (`road-to-a-graph-that-feeds-the-gate`
@@ -221,8 +235,9 @@ index 0000000000000000000000000000000000000000..662aecd056a9add2708b119bf74e5dea
 + *             `absent`. This is the cost a consumer who never builds a graph
 + *             pays, and the baseline the feeder's increment is read against.
 + *
-+ * Arms are INTERLEAVED, one call each per round, so a drift in machine load
-+ * lands on both rather than on whichever ran second. A third reading times the
++ * Arms are INTERLEAVED, one call each per round, and the order ALTERNATES per
++ * round: interleaving spreads slow drift across both arms, and alternating
++ * spreads the order effects (GC after the heavier arm, cache warmth) as well. A third reading times the
 + * feeder's own work (`graphState` + `graphUntestedVerdict`) in isolation on the
 + * `with` tree, because the difference of two noisy totals is a weaker number
 + * than a direct one.
@@ -376,6 +391,12 @@ index 0000000000000000000000000000000000000000..662aecd056a9add2708b119bf74e5dea
 +    }
 +}
 +
++/** Assigning `undefined` to `process.env` stores the string "undefined"; an unset variable must be deleted. */
++function restoreEnv(key: string, value: string | undefined): void {
++    if (value === undefined) delete process.env[key];
++    else process.env[key] = value;
++}
++
 +export async function bench(opts: { runs?: number; files?: number }): Promise<LatencyReport> {
 +    const runs = Math.max(1, opts.runs ?? 30);
 +    const files = Math.max(1, opts.files ?? 200);
@@ -401,8 +422,10 @@ index 0000000000000000000000000000000000000000..662aecd056a9add2708b119bf74e5dea
 +        const b: number[] = [];
 +        const exitCodes = { with: [] as number[], without: [] as number[] };
 +        for (let i = 0; i < runs; i++) {
++            const withFirst = i % 2 === 0;
++            const y0 = withFirst ? null : timeStop(withoutDir, tWithout, `without-${i}`);
 +            const x = timeStop(withDir, tWith, `with-${i}`);
-+            const y = timeStop(withoutDir, tWithout, `without-${i}`);
++            const y = y0 ?? timeStop(withoutDir, tWithout, `without-${i}`);
 +            a.push(x.ms);
 +            b.push(y.ms);
 +            if (!exitCodes.with.includes(x.rc)) exitCodes.with.push(x.rc);
@@ -434,10 +457,9 @@ index 0000000000000000000000000000000000000000..662aecd056a9add2708b119bf74e5dea
 +            cpu: `${os.cpus()[0]?.model ?? 'unknown'} x${os.cpus().length}`,
 +        };
 +    } finally {
-+        process.env.HOME = savedEnv.HOME;
-+        process.env.USERPROFILE = savedEnv.USERPROFILE;
-+        if (savedEnv.CFG === undefined) delete process.env.EVENT4U_CONFIG_HOME;
-+        else process.env.EVENT4U_CONFIG_HOME = savedEnv.CFG;
++        restoreEnv('HOME', savedEnv.HOME);
++        restoreEnv('USERPROFILE', savedEnv.USERPROFILE);
++        restoreEnv('EVENT4U_CONFIG_HOME', savedEnv.CFG);
 +        fs.rmSync(root, { recursive: true, force: true });
 +    }
 +}
@@ -560,10 +582,10 @@ index 0000000000000000000000000000000000000000..662aecd056a9add2708b119bf74e5dea
 +}
 diff --git a/tests/scripts/bench_graph_feeder_latency.test.ts b/tests/scripts/bench_graph_feeder_latency.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..fd55f2819fc76b53ce284c11e1d51cd468f32e46
+index 0000000000000000000000000000000000000000..4255b9cbddf6326965a179d26412acfe5a393e3c
 --- /dev/null
 +++ b/tests/scripts/bench_graph_feeder_latency.test.ts
-@@ -0,0 +1,29 @@
+@@ -0,0 +1,40 @@
 +import { describe, expect, it } from 'vitest';
 +
 +import { bench, distribution, percentile } from '../../src/scripts/bench_graph_feeder_latency.js';
@@ -591,5 +613,16 @@ index 0000000000000000000000000000000000000000..fd55f2819fc76b53ce284c11e1d51cd4
 +        expect(r.exitCodes.without).toStrictEqual([1]);
 +        // The feeder's own work is real work, not a no-op that reads as free.
 +        expect(r.feederOnly.p50).toBeGreaterThan(0);
++    }, 120_000);
++
++    it('leaves an unset home variable unset, not the string "undefined"', async () => {
++        const saved = process.env.USERPROFILE;
++        delete process.env.USERPROFILE;
++        try {
++            await bench({ runs: 1, files: 1 });
++            expect('USERPROFILE' in process.env).toBe(false);
++        } finally {
++            if (saved !== undefined) process.env.USERPROFILE = saved;
++        }
 +    }, 120_000);
 +});
