@@ -334,7 +334,8 @@ report.
    run: branches, chunked commits, pushing that branch, opening and updating the
    PR, reversible repository/branch settings, CI runs and re-runs, merge-base
    updates, conflict resolution, project-local dependencies, and paid calls
-   inside the cumulative USD 25 ceiling. If yes → **run it**.
+   inside whatever `cost.budgets` windows are configured — none configured,
+   none applies (ADR-279). If yes → **run it**.
 3. **Is it on the EXCLUDED list?** Merging to a production trunk, deploying,
    production data / secrets / IAM / DNS, bulk deletion outside the roadmap's
    scope, an irreversible external action beyond the PR itself. Those keep their
@@ -1004,9 +1005,11 @@ a violation of the command and the user's will:
   opened" / "a GitHub setting must change" / "CI must be re-run" / "the merge
   base needs updating" / "there are conflicts" / "tests fail"** — every one is
   remediation work the invocation authorised (ADR-237 § 1). Do it.
-- **"a paid service is needed"** — authorised up to a cumulative USD 25 per run
-  (§ Spend in the wrapper). Uncertainty about the exact cost is explicitly NOT a
-  reason to ask.
+- **"a paid service is needed"** — authorised inside the configured
+  `cost.budgets` windows, and with none configured there is no ceiling to be
+  outside of (§ Spend in the wrapper). A crossing of a configured window pauses
+  and reports; it does not ask. Uncertainty about the exact cost is explicitly
+  NOT a reason to ask.
 - **"a maintainer should do this"** when the agent can perform the same action
   through git, `gh`, an API or a CLI. **Capability before role**: the role of the
   person who conventionally does a thing is not a property of the thing.

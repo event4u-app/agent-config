@@ -215,7 +215,7 @@ the PR has to be able to reach one:
 | Reversible repository / branch settings the agent can change (branch protection included) | Only settings this run needs to reach a reviewable PR, and only reversible ones; a setting the agent changes it also restores if the run's need ends |
 | Start, re-run and fix CI; update the merge base; resolve conflicts | Standard git and CI operations on the run's own branch |
 | Install project-local dependencies | Inside the repo; never a global or system package manager without its own confirmation |
-| Any tool, CLI, API, model, council or external service the work needs | Cumulative **USD 25** per run of variable spend; over that, the owner is asked BEFORE crossing. Uncertainty is not a reason to ask. Marginal cost of an existing subscription is $0. Splitting spend across services, subagents or rounds to keep each item under the ceiling is a violation |
+| Any tool, CLI, API, model, council or external service the work needs | Bounded by the **configured `cost.budgets` windows** and by nothing when none is configured (ADR-279). Where the run's spend plus what it reasonably expects would cross a configured window, it **pauses and reports** before crossing rather than asking. Uncertainty is not a reason to ask. Marginal cost of an existing subscription is $0. Splitting spend across services, subagents or rounds to keep each item under a ceiling is a violation. Model-carried: nothing on a run compares a cumulative figure with anything |
 
 These grants satisfy [`scope-control`](../../rules/scope-control.md)'s
 "standing instruction" clause for the run — see

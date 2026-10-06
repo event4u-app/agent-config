@@ -44,3 +44,50 @@ export const NEUTRALISED_LOCALE_VARS = ['LC_ALL', 'LC_MESSAGES', 'LANG', 'LANGUA
 for (const name of NEUTRALISED_LOCALE_VARS) {
     delete process.env[name];
 }
+
+// Same shape as the locale problem above, different variable. The council
+// spend ledger resolves its path from the user-global configuration home ONCE,
+// at import time (`budget_guard.ts`'s `LEDGER_PATH` is a module constant), and
+// nothing pinned that home — so a test exercising a billable seat appended to
+// the developer's REAL ledger, recording test traffic as spend.
+//
+// Pinned here rather than in a `beforeEach`: this file is a `setupFiles`
+// entry, which is the only window that precedes a module-level constant.
+//
+// Set rather than deleted — deleting it falls back to `~/.event4u/
+// agent-config/`, the real home this exists to avoid. One directory per worker
+// process, so parallel shards never share a ledger.
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+
+/**
+ * The variable `user_global_paths.event4u_root()` honours first.
+ *
+ * Deliberately a literal, NOT an import of `user_global_paths.ts` (tried and
+ * reverted): this file is a vitest `setupFiles` entry, loaded once per worker
+ * before any test file's own `vi.mock('node:os', ...)` factory is wired up.
+ * `user_global_paths.ts` imports `node:os` at module scope, so pulling it in
+ * here pre-caches that module graph with the REAL `os.homedir()` — and a test
+ * file that mocks `node:os` to assert HOME-derived resolution (e.g.
+ * `tests/server/serverInfo.test.ts`) then silently reads the real homedir
+ * instead of its own mock, because the already-evaluated module keeps its
+ * live binding to the real implementation. `tests/scripts/hermetic_env.test.ts`
+ * guards the drift this literal risks instead: it asserts this string equals
+ * `user_global_paths.EVENT4U_HOME_ENV` from an ordinary (non-setup) test file,
+ * where importing that module has no such side effect.
+ */
+export const CONFIG_HOME_VAR = 'EVENT4U_CONFIG_HOME';
+
+/**
+ * The temporary configuration home this process is pinned to.
+ *
+ * Exported so a test can assert that a write landed INSIDE it — the only way
+ * to tell "the ledger was not written" from "the ledger was written somewhere
+ * else".
+ */
+export const HERMETIC_CONFIG_HOME: string = fs.mkdtempSync(
+    path.join(fs.realpathSync(os.tmpdir()), `agent-config-home-${String(process.pid)}-`),
+);
+
+process.env[CONFIG_HOME_VAR] = HERMETIC_CONFIG_HOME;

@@ -32,6 +32,40 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Changed
 
+- **No spend bound applies unless you set one.** Owner directive, 2026-10-05,
+  recorded as **ADR-279** and accepted on the owner's own answer (option (a))
+  on 2026-10-06. With nothing configured, no USD or token ceiling this package
+  defines stops a council run, a debate or a paid gate, and none of them asks —
+  because no ceiling exists to ask about. Every ceiling remains settable and
+  behaves exactly as its contract describes once set.
+  **Your own council file is not rewritten.** If you copied
+  `agents/templates/.ai-council.yml.example` before this release it carries
+  these lines explicitly, and they are your figures now:
+  `cost_budget.max_input_tokens: 500000`, `cost_budget.max_output_tokens:
+  200000`, `cost_budget.max_total_usd: 20.0` and `debate.max_cost_usd: 5.00`.
+  Delete them to become unbounded; keep them to stay bounded. The shipped
+  defaults behind an absent key moved to `0` in all three layers — the loader,
+  the command's own fallback for a file with no `cost_budget` block, and the
+  `CostBudget` constructor.
+  **`max_calls` and the debate round limits did not move**: they bound call
+  count per invocation, not money. Nor did any of the controls listed under
+  § What stays in ADR-279 — provider refusals, the per-day plan-quota guards,
+  the `--confirm` a class-1 gate asks for, the debate's between-round
+  confirmation, or the budget an unattended run must still be given.
+  **Two defects were repaired in the same change, and both could bite a
+  configured install.** `0` was documented as disabling a token cap and did
+  not — the two token comparisons carried no zero guard while the two USD
+  comparisons beside them did, so a budget with every cap at zero breached on
+  a ten-token estimate. And the class-1 gate's two caps had to BOTH be set
+  before EITHER applied, so setting one left you bounded by neither. Each cap
+  now bounds alone.
+  **One optional hard stop now works for the first time.** With
+  `cost.enforcement: hard-stop` and a budget configured, the cost preflight
+  resolved its budget script relative to the working directory, read the
+  resulting empty output as "no budget configured", and exited `0` on a spent
+  budget from every working directory. It now resolves the script from its own
+  location and exits non-zero as its contract always said it would.
+
 - **`agent-config init` no longer overwrites a managed file you have edited.**
   Owner ruling, 2026-09-21, taken after an AI council split 1/1 on it. Until
   now the installer's `_resolve_file_conflict` returned `write` for every

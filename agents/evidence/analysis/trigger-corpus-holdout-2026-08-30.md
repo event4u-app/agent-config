@@ -60,7 +60,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  64b98d14fd6192449624946825a01b6b6da9fc8fc31429cf927dd25c89f32b48
+SET-SHA256  4db427fba9c9e99abadd0caf82caee9b84c2527fddb1cefe67112570184dd3d0
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -310,12 +310,28 @@ open and which this file does not settle.
 > (still above the 2.0 pp guard). The verdict is unchanged in kind — `harmful`,
 > on the same false-activation guard it already failed. No bar was edited.
 
+> **+1 on 2026-10-06** (second growth of the day — a CI-fix pass completing
+> `road-to-a-spend-bound-only-where-one-was-set`, drain lane
+> `drain/spend-bound-where-set-20261006`). `ai-council` gained a corpus for the
+> touched-skill reason: the lane edited that skill's `SKILL.md` and two
+> reference bodies while removing the standing default spend ceiling, and
+> `check_routing_coverage` requires every touched skill to carry one.
+> `sha256('ai-council')[0:2]` is 0x53 = 83, above the ceiling of 51, so it is
+> **train**: no holdout row moves, the sealed set is the same 25, and the
+> ordering claim is untouched. `SET-SHA256` moves because it is computed over
+> ALL rows — `64b98d14…` -> `4db427f…`. Both train-side published measurements
+> are re-taken in the same change: delta-recall moved 4.338 -> 4.082 pp (still
+> below the 5.0 pp bar) and delta-false-activation moved 6.729 -> 6.912 pp
+> (still above the 2.0 pp guard). The verdict is unchanged in kind — `harmful`,
+> on the same false-activation guard it already failed. No bar was edited.
+
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|
 | `adr-create` | `18995bba7bbdc905296f545a25c90cd94fa306909d78af8fc79e3d5621f313f6` |
 | `adversarial-review` | `4656cdc7fd9bc9517d7a2a27cb48c1dfa863c93bf87531292e46bdc85b6dc7d4` |
 | `agent-security-review` | `8c87aad7d61400da983130cef3415fb9e146d088ff30f47215481c5f692a4d1f` |
 | `ai-code-blindspots` | `27a9e87dabf2d158b5f646739c69222b534b3ea2420a099a67bf85c00ea3ba23` |
+| `ai-council` | `708b7033a71f6f4297883ff95464c7efb04c1bf559b3ef62e5a9cdbbc1d20231` |
 | `alerting-doctrine` | `bded213edcbeeee6e3bf078e478ab4fdaa553855bdafda147813cf6198d8b8ba` |
 | `analysis-skill-router` | `df90b10374f26c8c267ff0bdecc5039d9cfb58e501ed000f02a70d4b3b8269fd` |
 | `api-design` | `c31fca74eb9330bf63341858f51b46a23fd56e48253eda0a12165892cac576c3` |

@@ -154,6 +154,18 @@ Conditional on Phase 1 producing a gate-grade signal. Unstarted on a null.
       `plan_included` field produces byte-identical decisions to the current
       gate.
 
+      > **Anchor moved, 2026-10-06.** "Byte-identical decisions to the current
+      > gate" no longer means the gate as it stood when this step was written.
+      > Step 2.1 of `road-to-a-spend-bound-only-where-one-was-set` added a zero
+      > guard to the two token comparisons in `_breach`
+      > (`src/scripts/ai_council/spend_gate.ts`), so a cap of `0` now disables
+      > that comparison instead of breaching on any volume at all — which is
+      > what `docs/contracts/ai-council-config.md:84-86` always documented. The
+      > same guard went on the two `max_calls` comparisons in
+      > `orchestrator.ts`. Re-read the gate before writing the comparison
+      > fixture; "current" means the tree when this step runs, and the baseline
+      > this sentence was written against is gone.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-08-22 | reviewer: claude/host -->
 

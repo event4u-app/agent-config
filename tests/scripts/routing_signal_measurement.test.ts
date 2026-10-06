@@ -180,8 +180,17 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // hash to 0x37 = 55 and 0x29 = 41 — so `git-workflow` trains and
         // `testing-anti-patterns` seals, moving the holdout 24 -> 25 and the
         // train count 88 -> 89.
+        //
+        // 114 -> 115 on 2026-10-06 (second growth of the day): `ai-council`
+        // gained a corpus for the touched-skill reason — a CI-fix pass on
+        // road-to-a-spend-bound-only-where-one-was-set edited that skill's
+        // `SKILL.md` and reference bodies, and `check_routing_coverage`
+        // requires every touched skill to carry one. `sha256('ai-council')
+        // [0:2]` is 0x53 = 83, above the ceiling of 51, so it lands in
+        // `train`: the holdout is unchanged at 25 and the train count moves
+        // 89 -> 90.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(114);
+        expect(all.length).toBe(115);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(25);
     });
 });
@@ -206,7 +215,10 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // touched-skill corpora whose name hashes above the ceiling;
         // `testing-anti-patterns` sealed and is absent here for the same
         // reason. See the partition note above.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(89);
+        // 89 -> 90 on 2026-10-06 (second growth of the day): `ai-council`,
+        // whose name hashes above the ceiling and therefore trains. See the
+        // partition note above.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(90);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

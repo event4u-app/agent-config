@@ -412,7 +412,7 @@ export function consult(
         return [];
     }
     const resolvedBudget = budget ?? new CostBudget();
-    if (members.length > resolvedBudget.max_calls) {
+    if (resolvedBudget.max_calls > 0 && members.length > resolvedBudget.max_calls) {
         throw new Error(
             `Council has ${members.length} members but budget caps at ` +
                 `${resolvedBudget.max_calls} calls.`,
@@ -802,9 +802,9 @@ function _run_round(
             );
             actual_usd = _total_usd(actual);
             spent.usd += _total_usd(actual);
-            // Persist to the rolling 24h ledger when the daily cap is
-            // active. Errors are swallowed inside record_spend.
-            if (budget.daily_limit_usd > 0 && !response.error) {
+            // Ledger every billable response, bounded or not (ADR-279): a cap
+            // decides whether the total is compared, never whether it is kept.
+            if (!response.error) {
                 _record_daily_spend(_total_usd(actual), effective.name, effective.model, {
                     cache_read_input_tokens: response.cache_read_input_tokens,
                     cache_creation_input_tokens: response.cache_creation_input_tokens,
@@ -1246,7 +1246,7 @@ export function run_debate(
         return [];
     }
     const budget = budget0 ?? new CostBudget();
-    if (members.length > budget.max_calls) {
+    if (budget.max_calls > 0 && members.length > budget.max_calls) {
         throw new Error(
             `Debate has ${members.length} members but budget caps at ` +
                 `${budget.max_calls} calls.`,

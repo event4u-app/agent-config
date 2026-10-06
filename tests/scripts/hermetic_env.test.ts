@@ -18,8 +18,9 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { NEUTRALISED_LOCALE_VARS } from '../_lib/hermetic-env.js';
+import { CONFIG_HOME_VAR, HERMETIC_CONFIG_HOME, NEUTRALISED_LOCALE_VARS } from '../_lib/hermetic-env.js';
 import { systemLocaleVerdict } from '../../src/scripts/language_mirror_hook.js';
+import { EVENT4U_HOME_ENV } from '../../src/scripts/_lib/user_global_paths.js';
 
 describe('ambient locale is neutralised for every test file', () => {
     it('the setup file actually ran — no locale variable survives', () => {
@@ -65,5 +66,27 @@ describe('ambient locale is neutralised for every test file', () => {
                 ).toContain(name);
             }
         }
+    });
+});
+
+describe('the config-home pin names the same variable the production resolver reads', () => {
+    // `hermetic-env.ts`'s CONFIG_HOME_VAR is a literal, deliberately NOT an
+    // import of `user_global_paths.ts` (that was tried and reverted: a
+    // setup-file import of a module that pulls in `node:os` at module scope
+    // pre-caches it before any test file's own `vi.mock('node:os', ...)`
+    // factory is wired up, so a test asserting HOME-derived resolution — e.g.
+    // `tests/server/serverInfo.test.ts` — silently reads the REAL homedir
+    // instead of its mock). This test is the drift guard the literal owes:
+    // it runs as an ordinary test file, where importing `user_global_paths.ts`
+    // has no such side effect, and fails loudly the moment the two names
+    // diverge rather than letting the setup file silently stop pinning what
+    // it claims to pin.
+    it('CONFIG_HOME_VAR equals user_global_paths.EVENT4U_HOME_ENV', () => {
+        expect(CONFIG_HOME_VAR).toBe(EVENT4U_HOME_ENV);
+    });
+
+    it('the pin actually took effect, under a real temp directory', () => {
+        expect(process.env[CONFIG_HOME_VAR]).toBe(HERMETIC_CONFIG_HOME);
+        expect(HERMETIC_CONFIG_HOME.length).toBeGreaterThan(0);
     });
 });

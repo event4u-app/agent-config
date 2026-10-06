@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: ready
@@ -18,7 +20,7 @@ relates:
 ---
 # Road to a spend bound only where one was set
 
-> **Source:** an owner directive given on 2026-10-05 during an external
+> **Source:** [REDACTED:src-conf]
 > comparison round against an autonomous-runtime tree (opaque id S1), whose
 > spend tracker ships hourly and daily caps as constants. The directive, in the
 > owner's words: by default no spend limit is wanted; it is fine for limits to
@@ -147,7 +149,7 @@ At `df377ca64`:
 
 ## Phase 1 — The directive is a decision on record
 
-- [ ] **1.1 One decision record, drafted as proposed.** A new ADR with
+- [x] **1.1 One decision record, drafted as proposed.** A new ADR with
       `status: proposed`, numbered with the next free number and carrying
       `no-spend-bound-by-default` in its file name, quotes the directive with
       its date and states: no USD or token
@@ -163,7 +165,7 @@ At `df377ca64`:
       the records it would supersede are not touched. Its move to `accepted`
       is the blocker's subject, not this step's.
       verify: `grep -l 'supersedes_scope' docs/decisions/*no-spend-bound-by-default* | wc -l` -> /^1$/
-- [ ] **1.2 The verdict on what is a spend bound.** One council question, with
+- [x] **1.2 The verdict on what is a spend bound.** One council question, with
       the table of shipped figures as its bundle: which are ceilings on money
       or tokens and move, which are plan-quota, fan-out or authorisation
       controls and stay. The verdict is recorded at
@@ -173,14 +175,14 @@ At `df377ca64`:
       and D7 below.
       verify: `grep -c 'unattended' agents/evidence/council/spend-bound-defaults-2026-10.md` -> /^[1-9]/
 
-- [ ] **1.3 On acceptance, the superseded records point to it.** ADR-230 and
+- [x] **1.3 On acceptance, the superseded records point to it.** ADR-230 and
       ADR-237 gain their reciprocal field and the index is regenerated, in the
       change that carries the accepted record.
       verify: `grep -l 'no-spend-bound-by-default' docs/decisions/ADR-230-*.md docs/decisions/ADR-237-*.md | wc -l` -> /^2$/
 
 ## Phase 2 — "No bound" can be said on every ceiling
 
-- [ ] **2.1 Zero means what the contract says.** `_breach` skips a token
+- [x] **2.1 Zero means what the contract says.** `_breach` skips a token
       comparison whose cap is zero, and the two call-cap checks in the
       orchestrator (`orchestrator.ts:415`, `:1249`) do the same, with no line
       added to that file. The test asserts that a budget with every cap at
@@ -188,7 +190,7 @@ At `df377ca64`:
       non-zero cap still breaches alone. One dated note in the parked
       billing-cliff roadmap says its anchor on this function moved.
       verify: `npx vitest run tests/scripts/ai_council/spend_gate_zero_is_unbounded.test.ts` -> 0
-- [ ] **2.2 A paid gate runs without caps, and one cap bounds alone.** With
+- [x] **2.2 A paid gate runs without caps, and one cap bounds alone.** With
       no cap configured, the verdict is `ok`; a missing estimate refuses only
       when a cap exists to compare it with. The reader returns each cap on its
       own — today it returns nothing unless both are numeric
@@ -198,7 +200,7 @@ At `df377ca64`:
       the `no_caps` refusal change with the function
       (`tests/scripts/gate_budget.test.ts`, `tests/scripts/gate_execute.test.ts`).
       verify: `npx vitest run tests/scripts/gate_budget_absent_caps_run.test.ts` -> 0
-- [ ] **2.3 The optional hard stop fires, and its own suite says so.** The
+- [x] **2.3 The optional hard stop fires, and its own suite says so.** The
       preflight resolves the budget script from its own location, and so do
       the two spawns of the fixture runner that already exists for it
       (`tests/cost/budget-fixtures.mjs:29`, `:43`; task `test-cost-budget`).
@@ -209,7 +211,7 @@ At `df377ca64`:
 
 ## Phase 3 — The shipped defaults carry no money or token ceiling
 
-- [ ] **3.1 Council and debate, in all three layers.** The loader defaults,
+- [x] **3.1 Council and debate, in all three layers.** The loader defaults,
       the command's fallbacks and the constructor's defaults for the USD and
       token caps become `0`, and so do both debate defaults. `max_calls` and
       the debate round limits keep their values. The example file, its
@@ -218,13 +220,13 @@ At `df377ca64`:
       council file a user already has is not rewritten: its figures are that
       user's until they delete them, and the release note names the lines.
       verify: `npx vitest run tests/scripts/ai_council/default_budget_is_unbounded.test.ts` -> 0
-- [ ] **3.2 The paid-gate caps ship unset.** Template and schema default both
+- [x] **3.2 The paid-gate caps ship unset.** Template and schema default both
       keys to `null` — the schema as a nullable number, as other keys there
       already are; the class table's default column and the generated settings
       reference follow in the same change. The keys stay, classified as they
       are.
       verify: `grep -cE '^ +max_cost_per_(run|rolling_7d)_usd: null' src/config/agent-settings.template.yml` -> /^2$/
-- [ ] **3.3 The unbounded ask is removed everywhere it is stated.** The five
+- [x] **3.3 The unbounded ask is removed everywhere it is stated.** The five
       files of the fourth Context bullet say: no ceiling set, no ask; the
       estimate is shown and the run proceeds. In the sixth, the billable
       prompt is shown as information and the stale-price-table prompt becomes
@@ -235,7 +237,7 @@ At `df377ca64`:
       Positive control: the first four patterns return 8 at `df377ca64` and
       `975d03d01`; the last two exist so the check also sees
       `cost-and-redaction.md`, which the first four do not match.
-- [ ] **3.4 The run's ceiling is whatever was configured, and the text says
+- [x] **3.4 The run's ceiling is whatever was configured, and the text says
       who carries it.** The command and the two contexts state the rule once:
       the model reads the configured `cost.budgets` windows; where its spend
       plus what it reasonably expects would cross one, the run pauses and
@@ -245,7 +247,7 @@ At `df377ca64`:
       added.
       verify: `cat src/domains/product-basic/roadmap/process-full/command.md src/agent-src/contexts/execution/roadmap-execution-contract.md src/agent-src/contexts/execution/roadmap-process-loop.md | grep -cE '(USD |[$])25'` -> /^0$/
       Positive control: the same command returns 7 at `df377ca64`.
-- [ ] **3.5 A figure nothing enforces is not printed as a cap.** `explain`
+- [x] **3.5 A figure nothing enforces is not printed as a cap.** `explain`
       prints the preset's cost values — the daily, weekly and monthly figures
       and the two `mcp.*_max_usd` figures — under a label that says they are
       shown and not enforced, beside the configured `cost.budgets` and their mode.
@@ -253,17 +255,17 @@ At `df377ca64`:
 
 ## Phase 4 — Spend is recorded with or without a ceiling
 
-- [ ] **4.1 The suite stops writing to the real ledger.** The suite's setup
+- [x] **4.1 The suite stops writing to the real ledger.** The suite's setup
       file points the user-global configuration home, which the ledger path
       already follows, at a temporary directory before anything imports it,
       and one test fails if a run under test appends outside it. No line is
       added to the orchestrator. This lands before 4.2.
       verify: `npx vitest run tests/scripts/ai_council/ledger_is_hermetic.test.ts` -> 0
-- [ ] **4.2 The ledger does not wait for a limit.** The orchestrator appends
+- [x] **4.2 The ledger does not wait for a limit.** The orchestrator appends
       each billable response whether or not a daily limit is set; the limit
       decides only whether the total is compared.
       verify: `npx vitest run tests/scripts/ai_council/ledger_without_limit.test.ts` -> 0
-- [ ] **4.3 A default ceiling cannot come back unnoticed.** One test builds
+- [x] **4.3 A default ceiling cannot come back unnoticed.** One test builds
       the budget the way the command does for a council file with no
       `cost_budget` block and asserts: no breach for a large estimate, an `ok`
       gate verdict with no caps, a ledger line after a billable response, and
@@ -303,7 +305,11 @@ At `df377ca64`:
 ## Blockers
 
 ### blocker: spend-directive-reading-confirmed
-- **Status:** open — owner answered (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D9); closes when step 1.1's record lands accepted, which is agent work and no longer a question
+- **Status:** resolved — the owner answered (a) on 2026-10-06 via
+  `/roadmap:resolve-blockers` (D9), and ADR-279 landed `accepted` on
+  2026-10-06 carrying exactly that reading. The exit condition was executed,
+  not read: `grep -l 'status: accepted' docs/decisions/*no-spend-bound-by-default*`
+  prints `docs/decisions/ADR-279-no-spend-bound-by-default.md`.
 - **Owner:** owner
 - **Blocks:** 1.3, 2.2, 3.1, 3.2, 3.3, 3.4, 4.2, 4.3
 - **What to do:** pick exactly one — (a) accept the proposed record of step
@@ -323,17 +329,17 @@ At `df377ca64`:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — With a council file that has no `cost_budget` block, a run with a
+- [x] AC-1 — With a council file that has no `cost_budget` block, a run with a
       billable seat proceeds without a question and without a breach, and its
       spend is in the ledger afterwards.
-- [ ] AC-2 — Each documented cap, set alone, produces the breach its contract
+- [x] AC-2 — Each documented cap, set alone, produces the breach its contract
       describes; set to zero, it produces none.
-- [ ] AC-3 — No shipped command, skill or context file states a USD figure as
+- [x] AC-3 — No shipped command, skill or context file states a USD figure as
       an approval threshold.
-- [ ] AC-4 — The decision record is accepted, names the clauses it supersedes
+- [x] AC-4 — The decision record is accepted, names the clauses it supersedes
       and the controls that stay, and the superseded records point to it.
-- [ ] AC-5 — No test run appends to a ledger outside a temporary directory.
-- [ ] AC-6 — With a budget configured and `hard-stop` set, the preflight
+- [x] AC-5 — No test run appends to a ledger outside a temporary directory.
+- [x] AC-6 — With a budget configured and `hard-stop` set, the preflight
       exits non-zero when the budget is spent, from any working directory.
 
 ## Decisions
@@ -348,6 +354,7 @@ At `df377ca64`:
 | D6 | deterministic | evidence | The run text points at the existing `cost.budgets` windows and says the model carries it; no per-run key and no claim of enforcement on a run | Keys that were "configured, documented, surfaced and inert" were deleted for that reason (`settings-classes.md:440-449`); ADR-237: "Nothing mechanical checks any of this"; nothing on a run calls the preflight | A run-scoped check with a code reader is wanted |
 | D8 | deterministic | evidence | The preflight is repaired, because an optional limit that cannot fire is not an option | The fixture's recorded exit is 1 and the script exits 0 (`preflight.mjs:19`) | — |
 | D7 | reversible-technical | agent | An unattended run still needs a budget | `unattended_guard.ts:160-162`: an absent budget "must not read as 'unlimited'"; nobody is present to see the estimate | The council of 1.2, or the owner, reads the directive as covering it |
+| D10 | reversible-technical | council | The 13 shipped figures classify as: token ceiling (1), one USD-ceiling family at five scopes (2, 3, 5, 9, 11), count/plan-quota guards (4, 7), authorization controls (6, 8), an unattended-run safety precondition (10), an external provider refusal (12), and unenforced display figures (13). D3, D4 and D7 are confirmed, not overturned | `agents/evidence/council/spend-bound-defaults-2026-10.md` — 2026-10-06, 2/2 seats answered (anthropic/claude-sonnet-4-5, openai/codex-default), $0.0000 actual, both subscription-authed. Dissent recorded: the openai seat marks row 10's budget UNITS and finite-ness "needs discovery" and calls "requiring a budget ≠ imposing a ceiling" too categorical — accepted, and it does not change row 10's disposition | the units or enforcement of a configured unattended budget are settled, which could make that mechanism a money ceiling after all |
 | D9 | product-owned | owner | the directive's reading is (a): step 1.1's record supersedes the three clauses as drafted (ADR-230 table row 3 and its rejection of removing the ask; the fixed figure in ADR-237 § 3; absent paid-gate caps refusing) and keeps every control under "What stays, by name" unchanged | owner answer 2026-10-06 to blocker `spend-directive-reading-confirmed`, options (a) as drafted / (b) with named moves | a control kept under "What stays" is found to bound money rather than quota, fan-out or authorisation, or the owner moves one |
 
 ## Kill register

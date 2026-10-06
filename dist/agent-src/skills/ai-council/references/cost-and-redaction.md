@@ -47,6 +47,10 @@ table)` and render a per-member table. Heuristic: `len(text) / 4` for
 input, member's `max_tokens` ceiling for output (actual spend is
 usually lower).
 
+This block is **information shown before the run**, not a prompt. Per
+ADR-279 the absence of a cap is not a reason to ask, so there are no
+numbered options here and nothing waits for an answer.
+
 > External council call — billable
 >
 > Mode: roadmap · Target: `agents/roadmaps/<name>.md` (~3 KB after redaction)
@@ -57,21 +61,27 @@ usually lower).
 > | openai / gpt-4o                 |      ~750 / 1024     |  $0.0121 |
 > | **total**                       |                      | **$0.0297** |
 >
-> Budget: 50k in / 20k out tokens · USD ceiling: $0.50
->
-> 1. Run the consultation
-> 2. Cancel
+> Budget: no cap set — token and USD ceilings are `0`.
 
-### Stale price-table gate
+The `Budget:` line states whatever the user configured. With nothing
+configured it says so plainly, as above; with a cap set it names the
+figure and its unit (`50k in / 20k out tokens · USD ceiling: $0.50`).
+A cap that exists is what `on_overrun` fires against, below.
 
-If `pricing.is_stale(table)` returns true, ask before proceeding:
+### Stale price table — stated, not asked
 
-> Price table is stale (last_updated: YYYY-MM-DD)
-> 1. Refresh now (`./scripts-run src/scripts/update_prices`)
-> 2. Continue with the stale table
-> 3. Cancel
+If `pricing.is_stale(table)` returns true, say so in the same block and
+proceed. ADR-237 § 3 already requires that a cost which cannot be
+determined exactly is estimated conservatively and asked nothing about,
+and a stale table is exactly that case:
 
-Do not silently auto-refresh — the user keeps control.
+> Note: price table last updated YYYY-MM-DD and may be stale, so the
+> figures above are an estimate. Refresh with
+> `./scripts-run src/scripts/update_prices`.
+
+Do not silently auto-refresh — the user keeps control of when prices
+change. Stating the staleness is what keeps that control without
+turning it into a question.
 
 ### Mid-flow overrun callback (`on_overrun`)
 

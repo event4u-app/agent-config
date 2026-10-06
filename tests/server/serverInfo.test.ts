@@ -10,6 +10,7 @@ import { mkdtempSync, rmSync, existsSync, writeFileSync, mkdirSync } from 'node:
 import { tmpdir, homedir } from 'node:os';
 import { join } from 'node:path';
 import { writeServerInfo, readServerInfo, clearServerInfo, serverInfoPath } from '../../src/server/serverInfo.js';
+import { CONFIG_HOME_VAR } from '../_lib/hermetic-env.js';
 import type * as NodeOs from 'node:os';
 
 vi.mock('node:os', async (importOriginal) => {
@@ -19,13 +20,26 @@ vi.mock('node:os', async (importOriginal) => {
 
 describe('serverInfo record', () => {
     let home: string;
+    let savedConfigHome: string | undefined;
 
     beforeEach(() => {
         home = mkdtempSync(join(tmpdir(), 'agent-config-home-'));
         vi.mocked(homedir).mockReturnValue(home);
+        // `event4u_root()` (which `infoDir()` calls) honours `EVENT4U_CONFIG_HOME`
+        // BEFORE the mocked `homedir()`, so the ambient pin the hermetic setup
+        // file applies to every test file would otherwise short-circuit this
+        // mock entirely. Unset it for the duration, same as a locale test
+        // passing its own `LANG` instead of reading the neutralised ambient one.
+        savedConfigHome = process.env[CONFIG_HOME_VAR];
+        delete process.env[CONFIG_HOME_VAR];
     });
     afterEach(() => {
         rmSync(home, { recursive: true, force: true });
+        if (savedConfigHome === undefined) {
+            delete process.env[CONFIG_HOME_VAR];
+        } else {
+            process.env[CONFIG_HOME_VAR] = savedConfigHome;
+        }
     });
 
     it('writes, reads back, and clears the record under HOME', () => {

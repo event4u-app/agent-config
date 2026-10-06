@@ -291,8 +291,8 @@ export interface CostBudgetConfig {
     readonly max_output_tokens: number;
     readonly max_calls: number;
     readonly max_total_usd: number;
-    /** Rolling 24h cap. 0 disables it — and disabling it also disables the spend
-     * ledger, since the orchestrator only appends an entry while a cap is live. */
+    /** Rolling 24h cap. 0 disables it. The spend ledger is written either way
+     * (ADR-279); this value decides only whether the total is compared. */
     readonly daily_limit_usd: number;
 }
 
@@ -1020,7 +1020,7 @@ function _build_debate(d: Dict): DebateConfig {
     if (!_isDict(d)) {
         throw new CouncilConfigError('`debate` must be a mapping.');
     }
-    const cap = _pyFloat(_get(d, 'max_cost_usd', 5.0));
+    const cap = _pyFloat(_get(d, 'max_cost_usd', 0.0)); // 0 = no refusal cap (ADR-279)
     if (cap < 0) {
         throw new CouncilConfigError(
             `debate.max_cost_usd must be >= 0 (got ${_pyRepr(_f(cap))}; ` +
@@ -1671,10 +1671,10 @@ function _build_cost_budget(d: Dict): CostBudgetConfig {
         throw new CouncilConfigError('`cost_budget` must be a mapping.');
     }
     const cb: CostBudgetConfig = {
-        max_input_tokens: _pyInt(_get(d, 'max_input_tokens', 500_000)),
-        max_output_tokens: _pyInt(_get(d, 'max_output_tokens', 200_000)),
-        max_calls: _pyInt(_get(d, 'max_calls', 50)),
-        max_total_usd: _pyFloat(_get(d, 'max_total_usd', 20.0)),
+        max_input_tokens: _pyInt(_get(d, 'max_input_tokens', 0)), // 0 = unbounded (ADR-279)
+        max_output_tokens: _pyInt(_get(d, 'max_output_tokens', 0)), // 0 = unbounded (ADR-279)
+        max_calls: _pyInt(_get(d, 'max_calls', 50)), // fan-out, not money — kept
+        max_total_usd: _pyFloat(_get(d, 'max_total_usd', 0.0)), // 0 = unbounded (ADR-279)
         daily_limit_usd: _pyFloat(_get(d, 'daily_limit_usd', 0.0)),
     };
     const fields: Array<[keyof CostBudgetConfig, boolean]> = [
