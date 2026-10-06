@@ -22,12 +22,17 @@
  * behind an owner amendment to ADR-277, and nothing here anticipates it.
  *
  * WHAT A ROW MAY CONTAIN. The fields are a closed set of enums, counts and
- * repo-relative source paths. There is no field able to hold a prompt, a file
- * body, a reply or a command — the same PII-exclusion-by-construction discipline
- * `domain-safety-pii` § Surface 2 asks of a log line, and the same shape
- * `ToolCall` already has. Paths are in the set because they are the evidence a
- * human labeller needs in step 3.3 and because the gate's own refusal text
- * already quotes them; they are capped so one turn cannot write an unbounded row.
+ * source paths, repo-relative wherever the edit lay inside the workspace. There
+ * is no field able to hold a prompt, a file body, a reply or a command — the same
+ * PII-exclusion-by-construction discipline `domain-safety-pii` § Surface 2 asks
+ * of a log line, and the same shape `ToolCall` already has. Paths are in the set
+ * because they are the evidence a human labeller needs in step 3.3 and because
+ * the gate's own refusal text already quotes them; they are capped so one turn
+ * cannot write an unbounded row. The one shape that can still carry an absolute
+ * prefix is an edit OUTSIDE the workspace root, which {@link toRepoRelative}
+ * leaves verbatim rather than rewrite into a misleading `../` — named here
+ * because the previous wording claimed "repo-relative source paths" flatly and
+ * the recorded data did not support it.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -95,6 +100,43 @@ export function feederFile(workspaceRoot: string, sessionKey: string): string {
 }
 
 /**
+ * Put edit paths into the shape the graph indexes them in.
+ *
+ * THE DEFECT THIS REPAIRS, measured before it was fixed. `ToolCall.path` carries
+ * whatever the host wrote into `file_path`, and Claude Code writes an ABSOLUTE
+ * path. The graph keys its node ids on repo-relative paths, so `seedsForFiles`
+ * resolved nothing, `untested` returned an empty seed set, and the feeder wrote
+ * `no-seeds`. Every one of the 19 accrued rows that carried a path recorded
+ * `no-seeds`, and none of them was a fact about the code: the graph arm was mute
+ * for its whole accrual window. Probed at `c58d7eae` against the real index —
+ * `src/scripts/check_memory.ts` resolves 60 seeds relative and 0 absolute.
+ *
+ * It survived review because every fixture fed a relative path. A test never run
+ * against the shape the host emits cannot see this, which is why the regression
+ * test added with this fix is written against the absolute form.
+ *
+ * Repaired HERE rather than at the one call site, because `graphUntestedVerdict`
+ * is exported and a second caller would meet the same silence.
+ *
+ * A path outside the workspace root is returned unchanged: it is not addressable
+ * in the graph under any spelling, and rewriting it to `../..` would turn an
+ * honest `no-seeds` into a relative-looking string that still indexes nothing.
+ */
+export function toRepoRelative(root: string, paths: readonly string[]): string[] {
+    return paths.map((p) => {
+        if (!path.isAbsolute(p)) return p;
+        let rel: string;
+        try {
+            rel = path.relative(root, p);
+        } catch {
+            return p;
+        }
+        if (rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) return p;
+        return rel;
+    });
+}
+
+/**
  * Run `untested` over the turn's edit paths.
  *
  * Returns `null` — the graph contributed nothing — for every reason there is:
@@ -112,6 +154,8 @@ export function graphUntestedVerdict(
     // change.
     if (state !== 'fresh' && state !== 'edited') return none;
     if (paths.length === 0) return none;
+    // The graph indexes repo-relative paths; a host hands us absolute ones.
+    const relative = toRepoRelative(root, paths);
     let picked;
     try {
         picked = pickSource(detectSources(root, path.join(root, NATIVE_CACHE_REL)));
@@ -126,7 +170,7 @@ export function graphUntestedVerdict(
         return none;
     }
     try {
-        const r = untested(g, paths, state);
+        const r = untested(g, relative, state);
         if (r.seeds.length === 0) return { verdict: 'no-seeds', untested: 0, tested: 0 };
         return {
             verdict: r.untested.length > 0 ? 'untested' : 'tested',

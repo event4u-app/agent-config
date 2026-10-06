@@ -231,3 +231,75 @@ describe('buildFeederRow — the row shape', () => {
         expect(readFeederRows(root, 'capped')).toHaveLength(MAX_ROWS_PER_SESSION);
     });
 });
+
+/**
+ * The path shape a real host actually emits.
+ *
+ * Every fixture above hands the feeder a REPO-RELATIVE path, and that is why
+ * the arm looked healthy while it was mute: Claude Code writes `file_path` as an
+ * ABSOLUTE path, the graph's seed ladder resolves node ids keyed on repo-relative
+ * paths, and the two never met. Step 3.3's accrual window recorded `no-seeds` on
+ * every row that carried a path — 19 of 19 — and a recall table built on that
+ * would have scored a defect and called it a detector.
+ *
+ * Both assertions are written against the absolute shape on purpose. A fixture
+ * that keeps feeding relative paths cannot see this regression come back.
+ */
+describe('3.3 — the arm reads the path shape a host emits, not the one a fixture does', () => {
+    it('resolves an absolute in-workspace path to the same verdict as its relative form', async () => {
+        const { dir } = await rig(true);
+        const rel = graphUntestedVerdict(dir, 'fresh', ['src/service.ts']);
+        const abs = graphUntestedVerdict(dir, 'fresh', [path.join(dir, 'src', 'service.ts')]);
+        expect(rel.verdict).toBe('untested');
+        // The claim: the absolute form is the SAME answer, not `no-seeds`.
+        expect(abs.verdict).toBe(rel.verdict);
+        expect(abs.untested).toBe(rel.untested);
+        expect(abs.tested).toBe(rel.tested);
+    }, 120_000);
+
+    it('keeps an out-of-workspace path verbatim and still answers no-seeds for it', async () => {
+        const { dir } = await rig(true);
+        const outside = path.join(os.tmpdir(), 'not-this-workspace', 'elsewhere.ts');
+        // Honest boundary: a path outside the root is not graph-addressable, so
+        // it is left alone rather than rewritten into a `../` that would look
+        // relative and index nothing.
+        expect(graphUntestedVerdict(dir, 'fresh', [outside]).verdict).toBe('no-seeds');
+    }, 120_000);
+
+    it('stores repo-relative paths on the row when the transcript carries absolute ones', async () => {
+        const withGraph = await rig(true);
+        const file = path.join(withGraph.home, 'transcript-abs.jsonl');
+        fs.writeFileSync(
+            file,
+            [
+                { type: 'user', message: { content: 'mach das fertig' } },
+                {
+                    type: 'assistant',
+                    message: {
+                        content: [
+                            {
+                                type: 'tool_use',
+                                name: 'Edit',
+                                // The absolute form, exactly as the host writes it.
+                                input: { file_path: path.join(withGraph.dir, 'src', 'service.ts') },
+                            },
+                        ],
+                    },
+                },
+                { type: 'assistant', message: { content: [{ type: 'text', text: 'Fertig.' }] } },
+            ]
+                .map((e) => JSON.stringify(e))
+                .join('\n') + '\n',
+        );
+        runHook(withGraph.dir, withGraph.home, file);
+
+        const rows = readFeederRows(withGraph.dir, deriveSessionKey(SESSION));
+        const row = rows[rows.length - 1];
+        expect(row?.paths).toStrictEqual(['src/service.ts']);
+        // And the graph answered, instead of reporting it had no seeds.
+        expect(row?.graph).toBe('untested');
+        // No absolute prefix reaches the record, which is what the module header
+        // claims the row cannot carry.
+        for (const p of row?.paths ?? []) expect(path.isAbsolute(p)).toBe(false);
+    }, 120_000);
+});
