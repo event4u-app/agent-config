@@ -138,7 +138,7 @@ on the user-global layer.
       unconditional totals; the test asserts they differ by exactly 60 times the
       stub count. The machine dependence becomes a number with a formula.
       verify: `npx vitest run tests/scripts/install_thin_layer_root_length.test.ts` -> 0
-- [ ] **1.4 The composition is a page.** Write the five-bucket table, the form
+- [x] **1.4 The composition is a page.** Write the five-bucket table, the form
       terms and the three instruments' readings, with the commands that
       produced them, to
       `agents/evidence/analysis/thinned-layer-composition-2026-10.md`.
