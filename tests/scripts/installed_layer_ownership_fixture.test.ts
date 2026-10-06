@@ -227,7 +227,7 @@ describe('ownership resolution — one function, read by both readers', () => {
         // read owned. That is the cross-home misattribution the function's own
         // docstring exists to forbid, and it decides the figure AC-1 publishes.
         const home = mkTmp('ilo-envhome-');
-        const dir = stageGlobal(home, { 'a.md': rule(10) });
+        stageGlobal(home, { 'a.md': rule(10) });
         const elsewhere = mkTmp('ilo-envelse-');
         const saved = process.env['EVENT4U_CONFIG_HOME'];
         process.env['EVENT4U_CONFIG_HOME'] = path.join(elsewhere, '.event4u', 'agent-config');
