@@ -1,7 +1,14 @@
-# Findings: drain-thinned-layer-one-unit-20261006
+# Findings: drain-thinned-layer-one-unit-20261006 — ROUND 4 (superseded)
+
+> Archived 2026-10-06. Five fixed, one accepted-risk. Like round 3, both of its
+> medium findings were regressions introduced by acting on the round before —
+> which is why these rounds were run to convergence rather than stopped at one.
+> The series is 17 -> 10 -> 8 -> 6 findings and 4 -> 1 -> 0 -> 0 high. Round 4
+> also independently re-derived every published figure on the evidence page and
+> found no error in any. Round 5 binds to the head acting on these produced.
 <!-- completion-review: v1 | reviewed: 2026-10-06 | scope: 386c374c6056fb16e191da9cb33ddc93415e2a4c242fdb45930061abd6571e2a | diff: fbb54b8ad202c8f8437ab3b6e6c015675b1b3ec2 | reviewer: r2-fresh-subagent-drain-thinned-layer-one-unit-20261006 | prompt_hash: 2991dc3d5598a95899cd769ea2d127e74fa87c1e58a48ad5b452ca6b8543d457 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-drain-thinned-layer-one-unit-20261006"]}} -->
-<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-06 -->
+<!-- evidence-type: v1 | type: original-review | declared: 2026-10-06 -->
 
 <!-- context-manifest: v1
 inputs:
