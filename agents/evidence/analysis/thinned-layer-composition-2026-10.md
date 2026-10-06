@@ -398,7 +398,11 @@ The recorded ceiling is "hard 75,000 with ≥10 % headroom". Read as the extende
 roadmap's gate states it — **the measured total plus ten per cent, never above
 75,000** — the working figure is 68,181, and both are given below.
 
-Two sums, from the layer as it stands after the form change.
+Three sums, from the layer as it stands after the form change. This lead
+said "two" until review round 7 and three sums followed it, which is the
+same defect the sums themselves record: the pair it named EXCLUDED the
+largest row, and Sum 3 is the one the conclusion is read off. A reader who
+stopped at the lead took the wrong pair.
 
 ### Sum 1 — the form change plus the four law headings
 

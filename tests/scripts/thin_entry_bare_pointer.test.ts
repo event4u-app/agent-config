@@ -112,6 +112,24 @@ describe('the stub pointer is a bare path', () => {
         );
     });
 
+    it('a description carrying the literal `Body: ` does not capture itself', () => {
+        // `thin_entry` puts the rule's own description on the SAME line ahead of
+        // the pointer, so a description containing the prefix used to start the
+        // match inside the description: `has_body_pointer` stayed true while the
+        // captured "path" was the description plus the real path. A wrong
+        // extraction read as a wrong assertion rather than a visible failure.
+        //
+        // Measured under the old `Body: (.+\.md)\s*$`, the line below captured
+        // `the shape of a reply. Body: ../../rules/b.md`. The capture now
+        // forbids a second prefix inside itself, which makes the first viable
+        // start the LAST occurrence — the pointer.
+        const line =
+            '> Load the body on a match. Body: the shape of a reply. ' +
+            'Body: ../../rules/b.md';
+        expect(has_body_pointer(line)).toBe(true);
+        expect(THIN_BODY_POINTER_RE.exec(line)?.[1]).toBe('../../rules/b.md');
+    });
+
     it('the OLD link form no longer satisfies the detector unchanged', () => {
         // Stated as its own case because it is the thing a reader would assume
         // the opposite of: the pattern is not lenient enough to accept both

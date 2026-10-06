@@ -64,6 +64,15 @@ describe('ownership resolution — a real first install into an empty HOME', () 
                         ...process.env,
                         HOME: home,
                         EVENT4U_CONFIG_HOME: path.join(home, '.event4u', 'agent-config'),
+                        // PIN THE SIBLING OF THE TWO ABOVE. This names a
+                        // FILE and is honoured by `inventory_path()`, so a
+                        // maintainer who exports it sends the install's
+                        // inventory write elsewhere and this case fails at the
+                        // existence assertion after 540 seconds for a reason
+                        // unrelated to what it measures — the same
+                        // green-in-CI / red-on-a-maintainer's-machine hazard
+                        // `manifestPath: null` removes for the manifest.
+                        AGENT_CONFIG_DEPLOY_INVENTORY: undefined,
                         AGENT_CONFIG_NO_UI: '1',
                         CI: '1',
                     },

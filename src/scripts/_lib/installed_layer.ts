@@ -263,11 +263,30 @@ export function isUnconditional(text: string): boolean {
     // silently, which is the figure the whole ceiling argument is read in.
     //
     // A file that CLAIMS a block `splitFrontmatter` could not parse falls back
-    // to the whole-text test, which is the conservative direction: it can only
-    // move characters out of the standing bucket, never into it. The claim test
-    // is the one `installThinLayer` already uses for the same blind spot, and
-    // is a regex rather than `startsWith('---')` for the reason stated there.
-    if (frontmatter === '' && /^\uFEFF?[\s]*---/.test(text)) {
+    // to the whole-text test. The claim test is the one `installThinLayer`
+    // already uses for the same blind spot, and is a regex rather than
+    // `startsWith('---')` for the reason stated there.
+    //
+    // WHICH WAY THE FALLBACK ERRS, SAID PLAINLY RATHER THAN CALLED
+    // "CONSERVATIVE". It can only move characters OUT of the standing bucket,
+    // never into it. That is conservative about the claim "this rule stands
+    // every session" — it never asserts one it cannot support. It is the
+    // FLATTERING direction for the ceiling argument, which reads the standing
+    // figure against a limit: a misfire here makes the layer look smaller than
+    // it is. Both halves are true and the second is the one a reader checking
+    // the overage needs, so it is stated rather than left to the word.
+    //
+    // AND THE STATE THAT IS NOT AN UNPARSEABLE BLOCK. `splitFrontmatter`
+    // returns '' for a WELL-FORMED EMPTY block too — `---\n---\n` has no
+    // `\n---\n` after index 4, so its own parse fails — and such a file has no
+    // `paths:` key by construction. Without the second test it fell to the
+    // whole-text scan and a body line beginning `paths:` (a quoted trigger
+    // example, which is exactly what a rule about triggers contains) moved the
+    // file's entire character count out of the standing figure. Measured
+    // before the exclusion: `---\n---\npaths: not a key, just prose\n` read
+    // path-scoped.
+    const emptyBlock = /^---\n---(\n|$)/.test(text);
+    if (frontmatter === '' && !emptyBlock && /^\uFEFF?[\s]*---/.test(text)) {
         return !/^paths:/m.test(text);
     }
     return !/^paths:/m.test(frontmatter);
@@ -667,10 +686,17 @@ export function resolveLayerOwnership(opts: OwnershipOptions): OwnershipResoluti
         try {
             const inv = load_inventory(opts.inventoryPath ?? defaultInventoryPath(opts.home));
             for (const abs of recorded_absolute_files(inv, opts.home ?? null)) {
-                // COUNT PATHS NEWLY CONTRIBUTED, not entries read. Counting
-                // reads named a source that added nothing — and
-                // `recorded_absolute_files` emits two spellings per file, so it
-                // also double-counted.
+                // COUNT PATHS NEWLY CONTRIBUTED, not entries read, so a
+                // source that added nothing is not named as evidence.
+                //
+                // WHAT THIS GUARD DOES NOT DO, since an earlier comment here
+                // claimed it did: it does not collapse the two spellings
+                // `recorded_absolute_files` emits per file. The lexical and the
+                // realpath spelling are distinct Map keys, so wherever they
+                // differ — every path under macOS `/var` — each is newly
+                // contributed and `n` still rises twice for one file. Harmless
+                // only because `n` is read as `> 0` and never as a count; a
+                // future reader wanting a count must not take it from here.
                 if (!recorded.has(abs)) n += 1;
                 recorded.set(abs, null);
             }

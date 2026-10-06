@@ -71,9 +71,19 @@ describe('the stub marker has one writer and no second spelling', () => {
         expect(body.includes(THIN_STUB_MARKER)).toBe(false);
     });
 
-    it('CHANGING THE CONSTANT moves every detector with it', () => {
-        // The case a re-spelled detector fails, and it really does vary the
-        // writer rather than asserting an identity.
+    it('every detector answers in LOCKSTEP when the writer\'s marker moves', () => {
+        // WHAT THIS ESTABLISHES, AND WHAT IT DOES NOT. It varies the writer's
+        // emitted text rather than asserting an identity, which is the repair
+        // the round before made. It does NOT discriminate a detector holding a
+        // stale literal: with the marker replaced, every detector answers
+        // false — the correct one because the new spelling is absent, a stale
+        // one because its own literal is absent too. Lockstep-false is the
+        // property named above and is all this case carries.
+        //
+        // The discriminating evidence is elsewhere and is named rather than
+        // implied: `thin_entry_bare_pointer` holds the old pointer form as a
+        // negative fixture, where a detector still keyed on that form answers
+        // true and a correct one answers false.
         //
         // An earlier version of this case asserted
         // `expect(THIN_STUB_MARKER).toBe(THIN_ENTRY_MARKER)`, which is a
