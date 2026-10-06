@@ -12488,6 +12488,8 @@ function readLayer(host, scope, dir, recorded) {
     foreign: 0,
     package_owned_chars: 0,
     foreign_chars: 0,
+    unconditional_chars: 0,
+    scoped_chars: 0,
     top: []
   };
   let names;
@@ -12533,6 +12535,8 @@ function readLayer(host, scope, dir, recorded) {
     foreign: readings.filter((r) => !r.package_owned).length,
     package_owned_chars: readings.reduce((n, r) => n + (r.package_owned ? r.chars : 0), 0),
     foreign_chars: readings.reduce((n, r) => n + (r.package_owned ? 0 : r.chars), 0),
+    unconditional_chars: readings.reduce((n, r) => n + (r.unconditional ? r.chars : 0), 0),
+    scoped_chars: readings.reduce((n, r) => n + (r.unconditional ? 0 : r.chars), 0),
     top
   };
 }

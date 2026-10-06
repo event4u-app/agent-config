@@ -96,6 +96,27 @@ export interface LayerReading {
      */
     readonly package_owned_chars: number;
     readonly foreign_chars: number;
+    /**
+     * `chars`, split by WHEN the host loads the file — the second axis.
+     *
+     * `unconditional` already counts the FILES the host loads every session;
+     * these two count their characters, and the pair is what a ceiling can
+     * actually be read against. A layer of 100 files can be 90 % path-scoped by
+     * file count and 90 % unconditional by character count, so a ceiling stated
+     * in characters cannot be answered from the file counts at all — which is
+     * the gap step 1.1 closes.
+     *
+     * `unconditional_chars + scoped_chars === chars` holds by construction:
+     * {@link isUnconditional} is a total predicate over the same readings the
+     * total sums, so no file lands in both buckets or in neither.
+     *
+     * NOT the same split as `package_owned_chars` / `foreign_chars`. That pair
+     * answers "whose file is this"; this pair answers "when does the host load
+     * it". A file can be package-owned and path-scoped at once, and the two
+     * splits are therefore independent rather than refinements of each other.
+     */
+    readonly unconditional_chars: number;
+    readonly scoped_chars: number;
     /** The {@link TOP_FILES} largest, by the SAME measure as `chars`. */
     readonly top: readonly RuleFileReading[];
 }
@@ -163,6 +184,9 @@ export interface InstalledLayerReport {
         readonly foreign: number;
         readonly package_owned_chars: number;
         readonly foreign_chars: number;
+        /** The when-loaded split, summed. See {@link LayerReading.unconditional_chars}. */
+        readonly unconditional_chars: number;
+        readonly scoped_chars: number;
     };
 }
 
@@ -211,6 +235,8 @@ export function readLayer(
         foreign: 0,
         package_owned_chars: 0,
         foreign_chars: 0,
+        unconditional_chars: 0,
+        scoped_chars: 0,
         top: [],
     };
     let names: string[];
@@ -266,6 +292,8 @@ export function readLayer(
         foreign: readings.filter((r) => !r.package_owned).length,
         package_owned_chars: readings.reduce((n, r) => n + (r.package_owned ? r.chars : 0), 0),
         foreign_chars: readings.reduce((n, r) => n + (r.package_owned ? 0 : r.chars), 0),
+        unconditional_chars: readings.reduce((n, r) => n + (r.unconditional ? r.chars : 0), 0),
+        scoped_chars: readings.reduce((n, r) => n + (r.unconditional ? 0 : r.chars), 0),
         top,
     };
 }
@@ -441,6 +469,8 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
             foreign: acc.foreign + l.foreign,
             package_owned_chars: acc.package_owned_chars + l.package_owned_chars,
             foreign_chars: acc.foreign_chars + l.foreign_chars,
+            unconditional_chars: acc.unconditional_chars + l.unconditional_chars,
+            scoped_chars: acc.scoped_chars + l.scoped_chars,
         }),
         {
             files: 0,
@@ -450,6 +480,8 @@ export function buildInstalledLayerReport(opts: ReportOptions): InstalledLayerRe
             foreign: 0,
             package_owned_chars: 0,
             foreign_chars: 0,
+            unconditional_chars: 0,
+            scoped_chars: 0,
         },
     );
     const limits = buildHostLimitRows(
@@ -484,7 +516,8 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
         }
         out.push(
             `  ${l.host} (${l.scope}) — ${String(l.files)} files, ` +
-                `${String(l.unconditional)} unconditional, ${String(l.chars)} chars, ` +
+                `${String(l.unconditional)} unconditional, ${String(l.chars)} chars ` +
+                `(${String(l.unconditional_chars)} unconditional + ${String(l.scoped_chars)} path-scoped), ` +
                 `${String(l.package_owned)} package-owned / ${String(l.foreign)} foreign`,
         );
         for (const f of l.top) {
@@ -496,7 +529,9 @@ export function renderInstalledLayerReport(report: InstalledLayerReport): string
     const t = report.totals;
     out.push(
         `  TOTAL — ${String(t.files)} files, ${String(t.unconditional)} unconditional, ` +
-            `${String(t.chars)} chars, ${String(t.package_owned)} package-owned / ${String(t.foreign)} foreign`,
+            `${String(t.chars)} chars ` +
+            `(${String(t.unconditional_chars)} unconditional + ${String(t.scoped_chars)} path-scoped), ` +
+            `${String(t.package_owned)} package-owned / ${String(t.foreign)} foreign`,
     );
     out.push(...renderHostLimitRows(report.limits));
     return out;

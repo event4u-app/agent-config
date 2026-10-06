@@ -112,7 +112,7 @@ on the user-global layer.
 
 ## Phase 1 — One unit, one number
 
-- [ ] **1.1 The library reports what stands and what waits, separately.** Add
+- [x] **1.1 The library reports what stands and what waits, separately.** Add
       `unconditional_chars` and `scoped_chars` to the layer reading and the
       totals in `installed_layer.ts`; the report prints both beside `chars`.
       verify: `npx vitest run tests/scripts/installed_layer_unconditional_chars.test.ts` -> 0
