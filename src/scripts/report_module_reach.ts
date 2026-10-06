@@ -185,13 +185,14 @@ export function main(argv: readonly string[] = process.argv.slice(2), root = REP
         assertScanned(scanOpts);
         process.stdout.write(`${markdown(modules, roadmapsAvailable)}\n`);
     } else {
-        process.stdout.write(`${human(modules)}\n`);
-        // Emitted AFTER the format, not before: `--markdown` output is
-        // redirected straight into the evidence page (Phase 1.2), and a
-        // `scanned:` line prepended to a markdown document would land above
-        // its `<!-- evidence-type -->` marker — moot here, but kept after for
-        // consistency with the other two branches.
+        // Asserted BEFORE writing, matching the other two branches (an R2
+        // review found the prior "assert after" order here was the one case
+        // that would have printed a human report before a DeadScopeError on
+        // an empty corpus, while --json/--markdown print nothing in that
+        // case) — then printed, since the default mode is the one that still
+        // publishes the count per this family's convention.
         reportScanned(scanOpts);
+        process.stdout.write(`${human(modules)}\n`);
     }
     return 0;
 }

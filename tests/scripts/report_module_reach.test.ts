@@ -64,7 +64,7 @@ describe('on the real tree', () => {
 
     it('--json output is a single parseable JSON document (R2 finding 3)', () => {
         // A trailing `scanned:` line after the closing `}` made this throw —
-        // the same shape check-gate_reachability's own --json branch already
+        // the same shape check_gate_reachability's own --json branch already
         // avoids by returning immediately after writing JSON.
         const chunks: string[] = [];
         const orig = process.stdout.write.bind(process.stdout);
@@ -250,8 +250,8 @@ describe('the four groups, over the unreferenced-by-name set', () => {
     });
 
     it('a level-4+ heading resets the step-block tracker too (R2 finding 2)', () => {
-        // The mention sits on the line IMMEDIATELY after the heading — no
-        // blank line in between — so the already-fixed blank-line branch
+        // The mention sits on the SAME line as the heading — no blank line
+        // anywhere in the fixture — so the already-fixed blank-line branch
         // cannot be what resets the tracker here. An earlier version of this
         // fixture put a blank line after the heading, which made the test
         // pass even with the heading-regex bug still present (the blank-line
