@@ -1,6 +1,40 @@
 ---
 complexity: lightweight
-status: ready
+status: later
+review_by: 2026-12-08
+entry_condition:
+  what: >
+    Re-run `./scripts-run src/scripts/report_host_injection_effect` against
+    current repository evidence and read the state column, never this text.
+    TWO outcomes, and they are different states rather than two names for
+    resolution. (1) RESUME FOR EXECUTION if the regenerated census admits at
+    least one row in `src/config/host-injection-effect.json` at
+    `"state": "observed-true"` with a full citation (host version, transcript
+    pointer, date) whose `reason` scopes itself to the predeclared eligible
+    obligation class of step 1.1 in `later/road-to-delivery-on-hook-hosts.md`;
+    step 3.1's emission half is then a day's work and its verify line is
+    answerable. (2) RESUME FOR TERMINAL DISPOSITION, WITHOUT TREATING AC-4 AS
+    SATISFIED, when the upstream stopping boundary is reached — 12 genuine
+    eligible opportunities, or 2026-12-08, whichever comes first. Elapse is not
+    a witness and closes nothing: that branch re-cuts or withdraws 3.1 and AC-4
+    against whatever Phase 2 of the upstream roadmap becomes, under the descope
+    already pre-authorised there (its § `Resolved when` (c), K6 five-part
+    override). A probe that fails to run, a stale census, or a hand-edited
+    `observed-true` row is a gate failure, never a result.
+  when: >
+    At the next `/roadmap:triage-parked` pass, and in any case no later than
+    2026-12-08. Measured four times with an identical reading — 2026-09-29,
+    2026-10-01, 2026-10-03, 2026-10-06, each executed rather than re-read, all
+    returning 9 hosts scanned / 1 `observed-false` / 8 `unobserved` / 0
+    `observed-true` — so a fifth reading before the upstream blocker moves adds
+    nothing. The condition is cheap and agent-checkable, so evaluate it on every
+    parked-triage pass rather than only at the date.
+  who: >
+    Any drain run or `/roadmap:triage-parked` pass may execute the probe and
+    evaluate the condition; both are agent-checkable. The terminal branch's
+    descope is already owner-authorised upstream and needs no fresh owner
+    decision. What is NOT delegated: re-cutting or withdrawing AC-4 as an
+    acceptance criterion, which is owner-reserved like any `[-]`.
 execution:
   mode: phase-checkpoints
 estate_growth_exempt: "open_blockers rises 39 -> 40 and NOTHING WAS ADDED — the
@@ -535,14 +569,80 @@ tested on one consumer before anyone argues about routers or byte budgets.
 
       No second ratchet exists and the equality the step reports is unchanged.
 
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | reversible-technical | council: 2026-10-06, 2 present / 1 substantive | park this roadmap in `agents/roadmaps/later/` with a structured `entry_condition` naming BOTH wake branches, rather than leaving it in the active tree | four executed probe readings (2026-09-29, 10-01, 10-03, 10-06) returning 9 hosts / 1 `observed-false` / 8 `unobserved` / 0 `observed-true`; `roadmap-management` § Active vs. Later test; `check_estate_count.ts:63-66` sanctions parking without authorisation | an `observed-true` row lands, or 2026-12-08 passes, or the repository gains typed dependency outcomes that let this file consume the upstream predicate directly |
+
+**Why, and the counter-argument it had to beat.** The Active-vs-Later test
+asks one question — *can the agent make progress on this roadmap now,
+autonomously?* Both open items are gated on an observation this repository
+provably cannot produce, so the test returns **not active**. Against that, a
+sibling lane raised a real objection in the same drain run: `lint_roadmap_blockers`
+scans the active tree plus `stubs/` and nothing else, and
+`/roadmap:resolve-blockers` states that blockers under `later/` are history —
+so parking a blocker whose condition is decidable by a one-second probe removes
+it from both gates that would re-check it.
+
+That objection is answered by the gates' own recorded intent rather than by
+preference. `lint_roadmap_blockers.ts` § SCOPE states it in its own words:
+"`later/`, `archive/` and `skipped/` stay OUT, and the reason is not symmetry:
+those record decisions already taken (parked, closed, dropped), so a blocker
+left unresolved there is history rather than debt. A stub records a decision
+still to take." The exclusion is a **handoff, not a hole**: a parked roadmap is
+re-checked by a different enforced contract —
+`lint_roadmap_later_disposition` requires a structured `entry_condition`
+(`what`/`when`/`who`, all non-empty, ratcheted) plus `review_by`, and
+`/roadmap:triage-parked` exists to execute those conditions against the current
+tree, under the Iron Law "A PARKED ROADMAP IS A CLAIM, NOT A FACT." A prose
+"Wake condition." line satisfies none of that, which is precisely why the park
+is done with the keys the gate reads and not with the paragraph 3.1 already had.
+
+**The discriminator is the step, not the owner.** The council's correction,
+adopted here: `Owner: implementer` is not what decides this. The question is
+whether the next substantive step can be executed now. It cannot, so parking is
+right — and it would still be right if the owner field read something else.
+
+**What the council changed in the proposal.** Its verdict was *park it, but do
+not approve the contract as complete*, and the incompleteness it named is now
+Risk Register row 4: the exhausted-without-witness branch had no legal next
+state. `entry_condition.what` therefore names two outcomes, not one, and says
+in its own words that exhaustion resumes the file for terminal disposition
+**without** treating AC-4 as satisfied. Its preferred third option — make the
+upstream roadmap the sole owner of the predicate and have this file consume a
+typed outcome — is **recorded and not taken**: the repository has no typed
+dependency-outcome primitive, and inventing one for a single consumer is the
+overreach the same seat warned against. The smallest possible reference is
+duplicated instead, which is what that seat recommended as the interim.
+
+**Attendance, stated honestly.** Quorum concluded 2/2 present, but only the
+`openai/codex-default` seat returned a substantive verdict;
+`anthropic/claude-sonnet-4-5` declined on a round-2 prompt-structure objection
+and produced no analysis. So this is **one reviewed opinion plus the tree's own
+evidence**, not a two-seat convergence, and it is recorded that way rather than
+as the stronger thing the quorum line alone would suggest. Cost $0.00 — both
+seats subscription-authed.
+
+**One consequence named rather than banked.** `lint_roadmap_complexity` is red
+on the trunk with two failures, and this file (723 lines, tagged `lightweight`
+against a 600-line cap) is one of them. The gate does not walk `later/`, so
+parking drops that failure count to one **without the file getting shorter**.
+That is a side effect, not a reason, and it must not be read as a fix: the
+observation is owned by `road-to-signals-that-mean-what-they-say.md`, whose
+record of it is dated and pinned to a commit, and retagging `lightweight` →
+`structural` to answer the cap stays forbidden to the agent
+(`docs/contracts/roadmap-complexity-standard.md:71-73`).
+
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-03 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Labels written by the ranker's author encode the ranker | product | Precision looks high because labels agree with lexical matches | Labelling protocol excludes anyone who read the ranker's scoring; a 10 % blind relabel by a second seat is recorded | Phase 1 — A corpus that can carry a number |
 | 2 | Path-scoped rules hide a rule a session needed | product | A rule absent when a touched path fell outside its glob | Default off; measured once; flip only on the report | Phase 3 — Path-scoped delivery, measured once |
 | 3 | A corpus-less skill is edited under a base ref git cannot resolve | implementation | The touched-skill scope reads "nothing touched" and passes while checking nothing — a silent green, which is worse than a red | The scope reports `measured: false` rather than an empty touch set, the ledger records `precondition_unmet`, the run says so on stdout, and a test asserts the distinction; the CI job checks out at `fetch-depth: 0` and fetches `origin/main` explicitly | Phase 2 — Coverage to 299 |
+| 4 | The observation window expires without a witness and the design has no legal next state | product | `Resolved when` defines only the witness branch. The stopping boundary (12 eligible opportunities or 2026-12-08) defines when waiting ends but not what the roadmap then becomes, so an expired window returns an unexecutable file to the active tree with its two boxes still open and nothing authorised to close them. Elapse read as satisfaction would close AC-4 on no report at all | `entry_condition.what` names BOTH branches and says in its own words that exhaustion is a resume-for-terminal-disposition, never a resolution; AC-4 carries the same clause; the terminal branch itself is pre-authorised upstream (`later/road-to-delivery-on-hook-hosts.md` § `Resolved when` (c), descope under K6's five-part override), so the owner decision exists and is cited rather than re-derived here | Phase 3 — Path-scoped delivery, measured once |
 
 **Re-review, 2026-09-29, on the closure of 1.1-1.3, 2.1 and 4.1.**
 
@@ -643,6 +743,51 @@ one thing this pass corrects is a published figure, not a mechanism: the census
 table was nine units stale. Stale-but-dated is the condition that artefact
 declares for itself, so it creates no exposure a register row could track, and
 the correction is made in the same change that measured it.
+
+**Re-review, 2026-10-06, on the fourth-reading and parking pass — and unlike
+the three before it, this one ADDS a row.** The three previous passes each
+concluded "no fourth row" on the same reasoning: nothing had changed except a
+published figure. That reasoning does not survive this pass, because the change
+here is to the roadmap's disposition rather than to a number, and it was an
+external review that found what the three internal passes had each walked past.
+
+Risk 1 is **dormant**, for the third consecutive pass. No relabel was taken,
+the corpus and protocol are untouched, and nothing in this change bears on
+labelling. It moves neither way.
+
+Risk 2 is **unchanged as a hazard and newly unreachable as a mitigation, which
+is a different state from the three "unchanged" readings above it.** The probe
+was executed, not re-read: 0 `observed-true`, nothing is default-on, 3.1 and
+AC-4 stay open, so the hazard — a path-scoped rule hiding a rule a session
+needed — is neither closer nor further. What has changed is the mitigation
+column. "Default off; measured once; flip only on the report" presumes a report
+can be taken; four readings establish it cannot be taken here. The mitigation is
+therefore not failing, it is **not yet live**, and the risk cannot materialise
+while nothing ships. Parking preserves that state rather than altering it: the
+row stays, anchored where it was, and becomes actionable on the same wake that
+makes its mitigation evaluable.
+
+Risk 3 is **unchanged**. `check_routing_coverage` is untouched by this change.
+
+**Row 4 is new, and it came from the council rather than from this file.** The
+AI council of 2026-10-06 (2/2 seats present, 1 substantive — see § Decisions D1
+for the honest attendance reading) found a hole that the blocker, the step
+prose and three prior re-reviews had all left open: the witness branch is fully
+specified and the **exhausted-without-witness branch is not**. `Resolved when`
+names only `observed-true`; the stopping boundary names when waiting ends but
+not what the file becomes. An expired window would therefore hand an
+unexecutable roadmap back with two open boxes and no authorised move — and the
+likelier failure is worse than deadlock: a later reader treats the elapsed date
+as the condition being met and closes AC-4 on a report that was never taken.
+That is a real exposure, it is anchored under Phase 3, and it is now a row with
+a mitigation that discharges it in this change: both branches are written into
+`entry_condition.what`, AC-4 carries the not-satisfiable-by-elapse clause, and
+the terminal branch cites the upstream pre-authorisation instead of inventing
+one. **The residual this row does NOT close** is ownership granularity — the
+council's point that `Owner: implementer` conflates evidence producer,
+condition evaluator and disposition owner. That is a repository-wide blocker
+schema question, not this roadmap's to settle, and it is named here rather than
+quietly absorbed.
 
 ## Acceptance Criteria
 
