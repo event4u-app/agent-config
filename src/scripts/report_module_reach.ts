@@ -172,13 +172,23 @@ export function main(argv: readonly string[] = process.argv.slice(2), root = REP
             roots: ['src/scripts/_lib'],
         });
     if (argv.includes('--json')) {
+        // No trailing `scanned:` line here either — an R2 review found that
+        // `scan()` (which PRINTS) made this invalid as a single JSON document;
+        // `check_gate_reachability.ts`'s own `--json` branch already returns
+        // immediately after writing JSON for the same reason. The scope is
+        // still ASSERTED (never silently printed clean from an empty corpus).
+        assertScanned({
+            gate: 'report_module_reach',
+            scanned: modules.length,
+            units: 'module(s) under src/scripts/_lib',
+            roots: ['src/scripts/_lib'],
+        });
         process.stdout.write(`${JSON.stringify({ modules, roadmapsAvailable }, null, 2)}\n`);
-        scan();
     } else if (argv.includes('--markdown')) {
         // The page is the artifact — no trailing `scanned:` line inside it,
         // but the scope is still asserted (never silently printed clean from
-        // an empty corpus). `--json` and the default human mode also publish
-        // the count per this family's convention.
+        // an empty corpus). The default human mode is the only one that still
+        // publishes the count per this family's convention.
         assertScanned({
             gate: 'report_module_reach',
             scanned: modules.length,

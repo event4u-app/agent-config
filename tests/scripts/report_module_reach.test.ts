@@ -61,6 +61,24 @@ describe('on the real tree', () => {
         expect(main(['--json'], REPO)).toBe(0);
         expect(main(['--markdown'], REPO)).toBe(0);
     });
+
+    it('--json output is a single parseable JSON document (R2 finding 3)', () => {
+        // A trailing `scanned:` line after the closing `}` made this throw —
+        // the same shape check-gate_reachability's own --json branch already
+        // avoids by returning immediately after writing JSON.
+        const chunks: string[] = [];
+        const orig = process.stdout.write.bind(process.stdout);
+        process.stdout.write = ((c: string) => {
+            chunks.push(c);
+            return true;
+        }) as typeof process.stdout.write;
+        try {
+            expect(main(['--json'], REPO)).toBe(0);
+        } finally {
+            process.stdout.write = orig;
+        }
+        expect(() => JSON.parse(chunks.join(''))).not.toThrow();
+    });
 });
 
 describe('import-graph reach — direct, transitive, and the unreached-importing-unreached case', () => {
@@ -205,6 +223,54 @@ describe('the four groups, over the unreferenced-by-name set', () => {
         const { modules } = analyseModuleReach(root);
         const m = modules.find((x) => x.name === 'landed_unwired');
         expect(m?.group).toBe('named-outside-open-step');
+    });
+
+    it('a mention past a BLANK LINE after a closed step is never attributed to that step (R2 finding 1)', () => {
+        const root = fixtureRoot();
+        unreferencedFixture(root, 'unrelated_mention');
+        write(
+            root,
+            'agents/roadmaps/road-to-blank-line.md',
+            [
+                '# Road to blank line',
+                '',
+                '## Phase 1',
+                '',
+                '- [x] **1.1 Shipped something else entirely.** Nothing to do with the module below.',
+                '',
+                'Unrelated prose, several lines later, mentions `unrelated_mention` here.',
+            ].join('\n'),
+        );
+        const { modules } = analyseModuleReach(root);
+        const m = modules.find((x) => x.name === 'unrelated_mention');
+        // The blank line after the closed step must end its block — the mention
+        // is prose outside any step, never evidence FOR the closed step above it.
+        expect(m?.group).toBe('named-outside-open-step');
+        expect(m?.groupEvidence).not.toContain('Shipped something else entirely');
+    });
+
+    it('a level-4+ heading resets the step-block tracker too (R2 finding 2)', () => {
+        const root = fixtureRoot();
+        unreferencedFixture(root, 'past_subheading');
+        write(
+            root,
+            'agents/roadmaps/road-to-level-four.md',
+            [
+                '# Road to level four',
+                '',
+                '## Phase 1',
+                '',
+                '- [ ] **1.1 An open step, unrelated.**',
+                '#### A level-4 subsection',
+                '',
+                'Prose here mentions `past_subheading`, but a level-4 heading already ended the step above.',
+            ].join('\n'),
+        );
+        const { modules } = analyseModuleReach(root);
+        const m = modules.find((x) => x.name === 'past_subheading');
+        // Must NOT read as `open-or-deferred-step` evidence for the 1.1 step —
+        // a level-4 heading has to reset the tracker exactly as 1-3 do.
+        expect(m?.group).not.toBe('open-or-deferred-step');
     });
 
     it('group 3 — named in a parked (later/) roadmap counts too', () => {
