@@ -189,7 +189,7 @@ by anything here; `status: accepted`, `superseded_by: ADR-124` and
 authority, threshold or scope moves.
 
 **Provenance.** Raised as blocker `b7-adr-088-premise` of
-`agents/roadmaps/road-to-leading-every-row.md`. That blocker proposed replacing
+`agents/roadmaps/archive/road-to-leading-every-row.md`. That blocker proposed replacing
 the sentence. Two AI-council passes on 2026-10-06 (anthropic
 `claude-sonnet-4-5` + openai `codex-default`, 3 rounds and 2 rounds, subscription
 transport, $0 billed) returned 3 of 4 seat-opinions for an append-only dated
