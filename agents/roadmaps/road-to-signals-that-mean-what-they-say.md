@@ -338,7 +338,7 @@ At `df377ca64`:
       `evidence-type` marker; code, comment and one fixture per case follow
       it; the archived step gains a dated note saying which reading stands.
       verify: `npx vitest run tests/scripts/handoff_context_compact_record.test.ts` -> 0
-- [ ] **4.3 One spelling of the latch path, and an inventory row that is
+- [x] **4.3 One spelling of the latch path, and an inventory row that is
       true.** The two docstrings, the two lines that place the dispatcher lock
       under the same wrong directory (`:36`, `:158`), and the dispatcher's
       help line name the path the constant holds; the inventory row for the latch anchors to the

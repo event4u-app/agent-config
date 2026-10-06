@@ -37,8 +37,9 @@ import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 // Re-use the shared atomic-write helper so concerns honour the single
-// `agents/runtime/state/.dispatcher.lock` discipline (hook-architecture-v1.md
-// § Concurrency, Phase 7.4).
+// `agents/state/.dispatcher.lock` discipline (hook-architecture-v1.md,
+// Concurrency, Phase 7.4) — the lock sits beside THIS hook's own target, not
+// the fixed `agents/runtime/state/` path the discipline cites generally.
 import { atomic_write_json } from "./hooks/state_io.js";
 import { readHookStdin } from "./hooks/hook_stdin.js";
 
