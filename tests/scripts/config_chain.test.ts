@@ -1,4 +1,4 @@
-// Tests for src/scripts/_lib/config_chain.ts —
+// Tests for ./config_chain.ts —
 // road-to-consumer-repo-reality Phase 2 (2.1, 2.2).
 //
 // Every fixture is synthetic. The assertions follow the two steps' verify lines
@@ -12,7 +12,7 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { nearestConfig, resolveConfigChain } from '../../src/scripts/_lib/config_chain.js';
+import { nearestConfig, resolveConfigChain } from './config_chain.js';
 
 const tmps: string[] = [];
 

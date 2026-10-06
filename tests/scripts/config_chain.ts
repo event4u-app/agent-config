@@ -47,6 +47,10 @@
  * input domain and wrong here for the reason above: this module has to attribute
  * a parse failure to itself rather than report it as a missing config. So
  * `readConfigObject` returns a discriminated result instead of a nullable one.
+ *
+ * Moved beside its test: `standards-from-config` names the need this fills but
+ * is prose-only, and no script in the tree invokes this chain-resolution logic
+ * — its only demonstrated value today is what its own test already proves.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
