@@ -5,8 +5,9 @@
 **The feeder's cost on the stop slot, measured 2026-10-06/07.** On a generated
 fixture repository the shadow arm adds **p50 ≈ 34 ms, p95 ≈ 47 ms** (200
 modules) and **p50 ≈ 52 ms, p95 ≈ 67 ms** (2,000 modules) to a stop hook whose
-own work is under 1 ms. Over this repository's real graph the feeder's work
-alone read **p95 ≈ 583 ms to ≈ 1,007 ms** across four readings on one machine,
+own work is under 1 ms at p50 (p95 up to 1.43 ms, max 2.19 ms). Over this
+repository's real graph the feeder's work alone read **p95 ≈ 583 ms to
+≈ 1,007 ms** across five readings on one machine,
 all reported below. The generated fixture prices
 the walk, and the real index prices the load, which is the larger term by an
 order of magnitude.
@@ -46,8 +47,11 @@ that, because both of its runs complete.
 - **All three readings interleaved, each warmed once, the rounds cycling
   through all six orders of the three calls**, so machine drift and order
   effects (GC after the heavier arm, cache warmth) spread across them: over
-  every six rounds each call runs first twice and has each other call as its
-  direct predecessor twice. The first publication of this page ran the hook
+  every six rounds each call runs first twice and, within a round, has each
+  other call as its direct predecessor twice. Across a round boundary the
+  predecessor is not balanced — the first call of a round follows the previous
+  round's last call, and two of those six transitions are a call following
+  itself. The first publication of this page ran the hook
   arms in a fixed order and the feeder-alone loop after them, unwarmed; the
   second rotated the start of one fixed cycle, which balances position but not
   predecessor. Three R2 review rounds flagged these, and every fixture figure
@@ -126,9 +130,11 @@ bench script itself uncommitted (the second and fifth are the clean tree). The
 first instrument had no warm-up round and ran while other lanes of the same
 drain were loading the machine; which of those two accounts for its factor of
 1.7 over the first row was not isolated, so every row stands. The fourth row's
-wide tail (p50 596 ms, max 1,458 ms) is the same machine-load signature: the
-`--repo` mode times the feeder alone, so the instrument change cannot account
-for it.
+wide tail (p50 596 ms, max 1,458 ms) is unexplained: no load reading was taken
+during it, and it ran on a different graph build than the first row, so
+concurrent machine load and the build difference are both possible causes and
+neither was measured. The `--repo` mode times the feeder alone, so the
+hook-arm ordering change is not one of them.
 
 A one-off split, taken during the first reading with a scratch probe and not
 shipped as an instrument (11 rounds, medians): `graphState` **≈ 195 ms** — the
@@ -139,7 +145,8 @@ figures belong to the slower of the two conditions above.
 
 ## What it means
 
-- **The without-feeder stop is the floor and it is under 1 ms.** Everything a
+- **The without-feeder stop is the floor and it is under 1 ms at p50** (p95
+  0.91–1.43 ms, max up to 2.19 ms). Everything a
   stop costs above that in a repository with a graph is the feeder.
 - **The cost scales with the index, not with the edit.** The generated readings
   move little from 200 to 2,000 modules, because a small index loads fast; the
@@ -173,7 +180,7 @@ reported beside the promotion as its stop-slot increment, and the
 real-repository readings here — p95 583–1,007 ms, the load term dominating —
 are the baseline it is compared against.** Feeder work alone stands in for the
 stop-slot increment because the fixture arms show the stop's own work is under
-1 ms and the with-minus-without delta agrees with the feeder-alone reading to
+1 ms at p50 (at most 2.19 ms in any round) and the with-minus-without delta agrees with the feeder-alone reading to
 within 1.4 ms at p50. At p95 the two differ by up to about 7 ms in either
 direction, so the precondition's comparison rests on the median, and a p95 from
 `--repo` is the increment's tail to within several milliseconds — immaterial

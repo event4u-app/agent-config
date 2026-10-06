@@ -159,8 +159,8 @@ refuses.
       verify: `grep -c 'p95' agents/evidence/analysis/graph-feeder-latency-*.md` -> /^[1-9]/
       STATE 2026-10-06: measured by `src/scripts/bench_graph_feeder_latency.ts` and
       published at `agents/evidence/analysis/graph-feeder-latency-2026-Q4.md`. On a
-      generated fixture the feeder adds p50 ≈ 32 ms / p95 ≈ 39 ms (200 modules) to a
-      stop whose own work is under 1 ms; over this repository's real 59 MB index the
+      generated fixture the feeder adds p50 ≈ 34 ms / p95 ≈ 47 ms (200 modules) to a
+      stop whose own work is under 1 ms at p50 (at most 2.19 ms in any round); over this repository's real 59 MB index the
       feeder's work alone read p95 ≈ 583 ms and, on an earlier run, ≈ 1,007 ms, the
       graph open dominating. Exit codes identical in both arms.
 - [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3 and 3.5; the ADR-277
