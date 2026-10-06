@@ -79,7 +79,7 @@ preference, not a red) · already decided by the user.
 Why `active-remediation` alone was insufficient, and why this rule ships `auto`
 although it wanted `always` — so a red check seen only in tool output triggers
 nothing — are in
-[`active-remediation-mechanics § fix-what-you-see`](../guidelines/agent-infra/active-remediation-mechanics.md#fix-what-you-see--why-a-separate-rule-and-its-activation-gap).
+`guideline:agent-infra/active-remediation-mechanics` § fix-what-you-see.
 
 ## Honest enforcement — `instruction-only`
 

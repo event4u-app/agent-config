@@ -131,7 +131,7 @@ its obligation on line 300.
 
 `rich` is **2,000–3,500 tokens** (ADR-217); only the ceiling is gated, by
 `lint_token_budget_discipline.ts`. Why no floor, and the approved candidate
-list: [`size-and-scope § Rich-class size band`](../guidelines/agent-infra/size-and-scope.md#rich-class-size-band--moved-from-token-budget-discipline).
+list: `guideline:agent-infra/size-and-scope` § Rich-class size band.
 
 ## Governed by
 
