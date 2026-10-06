@@ -1,6 +1,6 @@
 # Findings: drain/learning-you-can-see-20261006
 
-**Skipped:** no code surface for this completion — docs only, scope none, declared 2026-10-06
+**Skipped:** no code surface for this completion — docs only, scope eade138c0659f228e0214529e09a154f1113e5883e1f9d9f0cffd17a910c6f4d, declared 2026-10-06
 
 The branch changes three paths and none of them is a code path: one evidence
 page under `agents/evidence/analysis/` gains a dated reading section, and one
