@@ -27,6 +27,10 @@ decides how a feature branch takes in its base — `/create-pr` § 1b, `/pr:merg
   `git rebase --continue`; `git rebase --abort` returns to the pre-rebase state.
   Re-run the relevant tests afterwards — a conflict-free tree is not a correct
   one. Detail: [`merge-conflicts`](../../merge-conflicts/SKILL.md).
+- **A base SET** (a non-default target whose branch-convergence policy also
+  carries the default branch): rebase onto the target. If `sync_pr_branch` then
+  still names the default branch as behind, the target itself is behind its
+  default — that is the target's update, not this branch's; report it.
 - **`sync_pr_branch` refuses with exit 3** when the branch is behind and the
   strategy is not `merge`; a current branch passes with exit 0, so automated
   pre-push syncs stay green when there is nothing to do.

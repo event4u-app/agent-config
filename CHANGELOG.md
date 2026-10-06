@@ -135,12 +135,13 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   conventional-commits-writing classifier gains a `ticket-conventional` family
   so such a history is no longer misread as free-text ticket prefixes.
   `git.branch_pattern` (`{type}`, `{ticket}`, `{slug}`) shapes the branches
-  `/worktree:create` proposes; reading a ticket back out of a branch now matches
-  any `[A-Z][A-Z0-9]+-[0-9]+` token, so `DEV-1234-device-export` yields its
-  ticket. `git.update_strategy: rebase` makes `/create-pr`, `/pr:merge`,
-  `/prepare-for-review` and `/review:changes` propose
-  `git rebase origin/<base>` plus `--force-with-lease` and never merge the base
-  into a feature branch — one git-workflow reference
+  `/worktree:create` proposes; reading a ticket back out of a branch now takes
+  the first `[A-Z][A-Z0-9]+-[0-9]+` token that is not a standard name (`UTF`,
+  `ISO`, `SHA`, `RFC` prefixes), so `DEV-1234-device-export` yields its ticket.
+  Under `git.update_strategy: rebase`, `/create-pr` asks for
+  `git rebase origin/<base>` plus `--force-with-lease`, and `/pr:merge`,
+  `/prepare-for-review` and `/review:changes` report a behind branch instead of
+  updating it; none of them merges the base into a feature branch — one git-workflow reference
   (`references/branch-update.md`) now owns that decision, and
   `sync_pr_branch` exits `3` instead of merging when such a branch is behind
   (a current branch still exits `0`). **What it does not do:** the setting picks the operation and never

@@ -76,8 +76,8 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
   > 1. Yes — I'll provide the ticket number
   > 2. No — skip ticket number
   ```
-- If the user provides a ticket number, place it per `git.commit_format` in all
-  commit messages: `ticket-scope` (default) → as the scope, `feat(DEV-1234): …`;
+- If the user provides a ticket number, place it per the convention in force
+  (above; where nothing outranks it, `git.commit_format`) in all commit messages: `ticket-scope` (default) → as the scope, `feat(DEV-1234): …`;
   `ticket-prefix` → before the type, `DEV-1234 feat(<area>): …`, and the ticket
   is never the scope.
 - If skipped, omit the ticket entirely — under `ticket-scope` write `chore: ...`
@@ -135,7 +135,7 @@ from `.agent-settings.yml`. Both default to `false`.
      `^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`
    - `ticket-prefix`:
      `^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(?!\([A-Z][A-Z0-9]+-[0-9]+\))(\([^)]+\))?!?: .+`
-     — the lookahead rejects a ticket id standing in the scope.
+     — JavaScript/PCRE syntax; the lookahead rejects a ticket id standing in the scope.
 2. **All messages valid** → skip the preview block and the confirmation
    prompt. Print one line summarising the plan and proceed to step 6:
 

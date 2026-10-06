@@ -61,7 +61,7 @@ Check for the parser before you trust the prevalence.
 ### 1. Look for tier 1 before measuring anything
 
 ```bash
-agent-config settings:get git.commit_format   # tier 1b when a human set it
+agent-config settings:get git.commit_format   # tier 1b only when it reads ticket-prefix
 ls commitlint.config.* .commitlintrc* .gitmessage .czrc 2>/dev/null
 git config --get commit.template
 ls .husky/commit-msg .git/hooks/commit-msg 2>/dev/null
@@ -281,7 +281,7 @@ If yes:
 
 ### 3. Place the ticket, then choose the scope
 
-Ticket id: the first `[A-Z][A-Z0-9]+-[0-9]+` token in the branch name that is not a standard name (`UTF-8`, `SHA-256`), or the user; `git.commit_format` places it:
+Ticket id: the first `[A-Z][A-Z0-9]+-[0-9]+` token in the branch name whose prefix is not `UTF`, `ISO`, `SHA` or `RFC`, or the user; `git.commit_format` places it:
 | `git.commit_format` | With a ticket | Without a ticket |
 |---|---|---|
 | `ticket-scope` (default) | `feat(DEV-1234): add export filter` | `feat: add export filter` |
@@ -328,7 +328,7 @@ Only for a squash merge — rebase-and-merge keeps every commit (`/pr:merge` § 
 
 1. Read all commits in the PR
 2. Identify the **net effect** — what does the PR accomplish overall?
-3. Write a single Conventional Commit message summarizing the net effect
+3. Write a single subject in the convention in force (ticket placed per § Place the ticket) summarizing the net effect
 4. Do not list every internal commit — summarize
 
 ## Output format

@@ -281,7 +281,7 @@ this clause removes; the floor it keeps is the *unnamed* push.
 
 **Before every push to the open PR**, bring the branch up to its base with
 `./scripts-run src/scripts/sync_pr_branch` and regenerate afterwards (under
-`git.update_strategy: rebase` it refuses — rebase on request instead, per
+`git.update_strategy: rebase` it refuses a behind branch with exit 3 — rebase on request instead, per
 [`branch-update`](../../../../skills/git-workflow/references/branch-update.md)). Measured on
 this run: the base moved three times, the push was rejected twice for it, and the
 PR reached `CONFLICTING` in between. Verify the result afterwards with

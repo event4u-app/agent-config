@@ -46,7 +46,7 @@ If there are no uncommitted changes (staged or unstaged), report
 - Extract the ticket ID from the current branch name exactly as
   [`/commit`](../commit.md) step 2 does (first `[A-Z][A-Z0-9]+-[0-9]+` token),
   and place it per the convention in force, established as in `/commit` step 2
-  (repository config, then a declared `git.commit_format`, then an approved
+  (repository config, then a declared `git.commit_format: ticket-prefix`, then an approved
   measured convention).
 - If no ticket ID is found, omit it — write `chore: ...` not `chore(): ...`.
   Do **not** ask the user for one.
