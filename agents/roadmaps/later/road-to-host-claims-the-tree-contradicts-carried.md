@@ -1,14 +1,29 @@
 ---
 complexity: lightweight
-status: ready
+status: later
 execution:
   mode: phase-checkpoints
 parent_roadmap: road-to-host-claims-the-tree-contradicts
+entry_condition:
+  what: >-
+    Either a session in which the `user_prompt_submit` budget was actually
+    reached appears in the host transcript corpus, or the channel question is
+    settled — i.e. it is established which channel, if any, records a reached
+    hook timeout, so the wake command can be known to be able to say no.
+  when: >-
+    The first is unbounded and external: it arrives when a dispatch on that slot
+    crosses 30 s in a real session, which this repository cannot cause. The
+    second is reachable as soon as a session carries permission to configure a
+    throwaway hook and read the transcript store.
+  who: >-
+    The owner, for the permission grant that makes the channel question
+    answerable. Nobody, for the organic witness — it is waited for, not assigned.
+review_by: 2027-01-06
 ---
 # Road to host claims the tree contradicts — carried
 
 > **Source:** carried by the archival sweep on 2026-10-02 from
-> [`road-to-host-claims-the-tree-contradicts`](archive/road-to-host-claims-the-tree-contradicts.md), which closed every other step.
+> [`road-to-host-claims-the-tree-contradicts`](../archive/road-to-host-claims-the-tree-contradicts.md), which closed every other step.
 > Each step below was `[~]` there and is restated verbatim as open work, so
 > archiving the parent buried nothing. Blockers the steps name moved with them.
 
@@ -20,7 +35,7 @@ left to read as finished.
 
 ## Phase 1 — Deferred steps carried from road-to-host-claims-the-tree-contradicts
 
-- [ ] **2.4 Observe a reached timeout on the slot.** Deferred, and named rather
+- [ ] <!-- blocked-by: upst-timeout-witness | asked: no — raised from a subagent drain lane with no user channel; carried to the owner as residue in the lane report and in the blocker entry below --> **2.4 Observe a reached timeout on the slot.** Deferred, and named rather
       than dropped: the fourth return condition the 2026-09-29 refusal set — a
       session in which the `user_prompt_submit` timeout is actually reached and
       its effect on the 13 concerns recorded. It is the only thing that turns
@@ -63,6 +78,41 @@ left to read as finished.
       sessions that probe it, so re-running inflates the denominator by the act
       of measuring. That weakens the control as a growth signal and not at all
       as a presence signal, which is the only thing it is used for here.
+
+      **Visited 2026-10-06 by a drain lane sent to decide producible-vs-elapsed
+      from commands rather than from this prose. The answer is neither, and the
+      step moves on that.** Full record:
+      [`upst-timeout-observability-2026-10.md`](../../evidence/analysis/upst-timeout-observability-2026-10.md).
+      Three things changed here, none of them the checkbox:
+
+      1. **The mechanism is ordinary and bounded, and unreachable from this
+         posture.** A nested host session whose `UserPromptSubmit` hook has the
+         dispatcher's shape — emit context, then exceed the budget — against a
+         throwaway directory outside this repository. Four commands, four
+         refusals from the session permission layer: writing the hook settings
+         file (`[Self-Modification]`), launching the session under it
+         (`[Auto-Bypass]`), running the wake command below over the transcript
+         store (`[PII Data Handling]`), and running that command's own control
+         (`[Auto-Bypass]`). They were not worked around.
+      2. **So the zero above was NOT re-measured at this tip**, and this lane
+         adds no newer one. The `0` / `278 -> 282` reading stays dated
+         2026-10-05. What is new is that the wake command is unrunnable under
+         this posture, so a lane sent at this step again under it will not
+         reach the reading either — that is a second, independent ground for
+         the hold, and it is the one with an owner.
+      3. **The wake command's own validity is unestablished — own analysis.**
+         Its control shows `hookError` is populated for *some* hook outcome. It
+         does not show a *timed-out* hook writes there, and row 2 of the table
+         this step feeds gives positive reason to doubt it: a reached timeout is
+         documented as cancelled with its output **discarded**, which is a
+         different path from a hook that errors. If timeouts report elsewhere or
+         nowhere, the condition is **unfalsifiable** rather than unmet, and no
+         amount of waiting fires it. The argument below that a prober is "not a
+         witness" is accepted for the ROW and does not reach this: a deliberate
+         timeout is a perfectly good witness to *where a timeout is recorded*,
+         which is a question about the host's reporting rather than about this
+         package's runtime. Settling the channel is therefore the cheaper half,
+         and it is what the blocker asks for first.
 
       **Why this one is not recoverable the way 3.3 was.** A delivered tool
       surface leaves a durable artefact in every transcript it appears in; a
@@ -128,7 +178,7 @@ left to read as finished.
       across host versions **2.1.252, 2.1.268, 2.1.269, 2.1.270, 2.1.277,
       2.1.284** between **2026-09-01** and **2026-10-02**. 47 were answered by a
       non-error `tool_result`. Four-part citation, shape, method and controls:
-      [`structured-ask-host-observation-2026-10.md`](../evidence/analysis/structured-ask-host-observation-2026-10.md).
+      [`structured-ask-host-observation-2026-10.md`](../../evidence/analysis/structured-ask-host-observation-2026-10.md).
 
       **Why it read as unobserved.** The `false` row it rested on was taken from a
       **subagent** leg, whose delivered surface carries no picker because a
@@ -181,6 +231,49 @@ left to read as finished.
       cell in the new table may be cited as evidence this package collected — the
       parent's own constraint, restated here so it travels with the step.
 
+## Blockers
+
+### blocker: upst-timeout-witness
+
+- **Status:** open
+- **Owner:** owner
+- **Blocks:** 2.4, and nothing else. AC-1 is already met — 2.4 carries a
+  recorded disposition, which is what that criterion asks for; this entry is the
+  reason `count_open` stays at 1 rather than being laundered to 0 with a
+  deferral glyph.
+- **What to do:** pick exactly one, and (a) is the cheap one —
+  (a) grant a session permission to configure a throwaway `UserPromptSubmit`
+  hook outside this repository and to read the host transcript store, so the
+  **channel question** can be settled: drive one hook on that slot past 30 s and
+  record which channel, if any, reports it. That answers whether the wake
+  command can ever fire, and it is a question about the host's reporting rather
+  than a manufactured witness to the row;
+  (b) grant only the transcript-store read, which re-enables the wake command
+  and its control but leaves the channel question open — this restores
+  measurement of a zero whose meaning stays unestablished;
+  (c) accept the hold as unbounded and leave it parked, in which case the step
+  waits on an organic session nobody can schedule and the `review_by` date is
+  the only thing that brings it back.
+- **Resolved when:** either the wake command
+  `grep -rlE '"hookError".{0,200}(timed out|timeout)' ~/.claude/projects --include='*.jsonl'`
+  returns a non-empty list and its four cells are written into the row at
+  `docs/enforcement-by-host.md` § "What the host documents", **or** the channel
+  question is settled and recorded, so a zero from that command is known to mean
+  "no timeout occurred" rather than "timeouts are not recorded there".
+
+**Recommendation:** (a). It is the only option that makes the step's own exit
+condition falsifiable, it is bounded to a single throwaway session, and it does
+not depend on an external event arriving. (b) buys back a measurement whose
+meaning is still unknown; (c) is honest but leaves a condition that may never
+fire for reasons unrelated to whether the thing being waited for happens.
+
+**If you do nothing:** the roadmap stays parked under `later/` and comes back on
+`review_by: 2027-01-06`. Nothing degrades and nothing is lost — the three
+figures the hand-over depends on re-executed green on 2026-10-06, so the row
+still has somewhere to go the moment a witness exists. The cost of doing nothing
+is that the condition may be unfalsifiable, so the wait could be indefinite
+whether or not timeouts actually occur.
+
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-02 | reviewer: archive-sweep/auto-carry -->
 
@@ -191,3 +284,11 @@ left to read as finished.
 ## Acceptance Criteria
 
 - [x] AC-1 — No step carried from `road-to-host-claims-the-tree-contradicts` is still `[ ]` without a recorded disposition.
+
+## Decisions
+
+| Decision | Alternatives | Reason | Revisit-if |
+|---|---|---|---|
+| Park the roadmap under `agents/roadmaps/later/` with `status: later`, a structured `entry_condition` and `review_by: 2027-01-06`, rather than leaving it in the active tree. | (a) Keep it active with the blocker recorded — rejected: its one open step cannot proceed from any posture a drain lane has, so it would be picked up and bounce on every sweep. (b) Flip 2.4 to `[~]` and archive — rejected outright: a deferral glyph reads as finished, and that is the laundering this carried file exists to prevent. (c) `skipped/` — rejected: the work is wanted, not declined. | The step has open work that will resume, blocked on an external trigger plus an owner-owned permission grant. That is exactly what `later/` is for, and the `entry_condition` makes the return observable instead of a hope. | The `upst-timeout-witness` blocker resolves by either branch of its `Resolved when`, or `review_by` arrives. |
+| Do not produce the timeout by configuring a hook in this session. | Build the probe anyway through another route. | Four independent refusals from the permission layer, two of them naming self-modification and auto-mode bypass. Routing around a refusal of a hook-configuration surface is circumvention, not investigation — and the grant is the owner's to give. | The owner grants option (a) or (b) in the blocker. |
+| Record the wake command's validity as unestablished instead of re-asserting the 2026-10-05 zero. | Repeat the zero as current. | The zero could not be re-measured here, and its control proves the `hookError` field is populated, never that a timed-out hook writes to it. Restating it as current would be a measurement claim with no fresh evidence. | The channel question is settled either way. |
