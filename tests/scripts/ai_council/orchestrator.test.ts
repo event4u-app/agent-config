@@ -155,6 +155,19 @@ describe('orchestrator — consult basics', () => {
         const budget = new CostBudget({ max_calls: 1 });
         expect(() => consult(members, q, budget)).toThrow(/budget caps at 1 calls/);
     });
+
+    it('max_calls: 0 disables the call cap rather than refusing every member', () => {
+        // Twin of the assertion above, and the reason it is a twin: until
+        // 2026-10-06 this comparison carried no zero guard, so `max_calls: 0`
+        // — which `ai-council-config.md:84-86` documents as disabling the cap
+        // — refused ANY member at all, since every length exceeds zero. The
+        // guard is on the cap, not on the comparison: the case above still
+        // raises.
+        const q = new CouncilQuestion({ mode: 'prompt', user_prompt: 'x' });
+        const members = [new Mock('a', 'm1'), new Mock('b', 'm2')];
+        const budget = new CostBudget({ max_calls: 0 });
+        expect(consult(members, q, budget)).toHaveLength(2);
+    });
 });
 
 // ── mid-flight cli→api fallback (transport_resolver.MidFlightFallback,
@@ -668,8 +681,19 @@ describe('orchestrator — cost gating', () => {
             seen.push(e.member_index);
             return false; // skip
         };
-        // input cap permits 1 member's projection but not two cumulatively.
-        const budget = new CostBudget({ max_input_tokens: 100000, max_output_tokens: 0 });
+        // A set-and-tiny output cap, so every member's projection breaches and
+        // `on_overrun(false)` skips each in turn — which is what the `every`
+        // assertion below measures.
+        //
+        // This used to read `max_output_tokens: 0` with a comment about the
+        // input cap permitting one member but not two. Neither half was true:
+        // the input cap of 100,000 TOKENS is far above a 40-character prompt's
+        // projection, and what actually drove the result was that a zero cap
+        // breached on any output at all. That was the defect, not the control
+        // — `ai-council-config.md:84-86` documents zero as DISABLING a cap —
+        // so the cap is now set to the smallest value that still bounds, and
+        // the test measures the skip behaviour it is named for.
+        const budget = new CostBudget({ max_input_tokens: 100_000, max_output_tokens: 1 });
         const res = consult(members, q, budget, { table, on_overrun: onOverrun });
         expect(res.every((r) => r.error === 'cost_budget_exceeded')).toBe(true);
         expect(seen.length).toBeGreaterThan(0);

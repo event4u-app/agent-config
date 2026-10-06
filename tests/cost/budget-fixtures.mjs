@@ -17,6 +17,12 @@ import { dirname, join, resolve } from 'node:path';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(HERE, '..', '..');
 const FIXTURES = resolve(ROOT, 'tests/fixtures/cost/budget');
+// The two scripts under test live under src/scripts/, not at the repository
+// root. Spawning 'scripts/cost/budget.mjs' with cwd: ROOT resolved to nothing,
+// every fixture reported `budget.mjs non-JSON:` with empty output, and all
+// five failed for a reason that had nothing to do with what they assert.
+const BUDGET_SCRIPT = resolve(ROOT, 'src/scripts/cost/budget.mjs');
+const PREFLIGHT_SCRIPT = resolve(ROOT, 'src/scripts/cost/preflight.mjs');
 
 function runBudget(fixture) {
   const env = {
@@ -26,7 +32,7 @@ function runBudget(fixture) {
     AGENT_SETTINGS: join(fixture, 'settings.yml'),
     BUDGET_CONFIG: '/dev/null',
   };
-  const r = spawnSync('node', ['scripts/cost/budget.mjs', 'check'], {
+  const r = spawnSync('node', [BUDGET_SCRIPT, 'check'], {
     cwd: ROOT, env, encoding: 'utf-8',
   });
   return { stdout: (r.stdout || '').trim(), status: r.status ?? -1 };
@@ -40,7 +46,7 @@ function runPreflight(fixture) {
     AGENT_SETTINGS: join(fixture, 'settings.yml'),
     BUDGET_CONFIG: '/dev/null',
   };
-  const r = spawnSync('node', ['scripts/cost/preflight.mjs'], {
+  const r = spawnSync('node', [PREFLIGHT_SCRIPT], {
     cwd: ROOT, env, encoding: 'utf-8',
   });
   return { status: r.status ?? -1, stdout: (r.stdout || '').trim(), stderr: (r.stderr || '').trim() };

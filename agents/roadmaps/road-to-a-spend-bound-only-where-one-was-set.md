@@ -180,7 +180,7 @@ At `df377ca64`:
 
 ## Phase 2 — "No bound" can be said on every ceiling
 
-- [ ] **2.1 Zero means what the contract says.** `_breach` skips a token
+- [x] **2.1 Zero means what the contract says.** `_breach` skips a token
       comparison whose cap is zero, and the two call-cap checks in the
       orchestrator (`orchestrator.ts:415`, `:1249`) do the same, with no line
       added to that file. The test asserts that a budget with every cap at
@@ -198,7 +198,7 @@ At `df377ca64`:
       the `no_caps` refusal change with the function
       (`tests/scripts/gate_budget.test.ts`, `tests/scripts/gate_execute.test.ts`).
       verify: `npx vitest run tests/scripts/gate_budget_absent_caps_run.test.ts` -> 0
-- [ ] **2.3 The optional hard stop fires, and its own suite says so.** The
+- [x] **2.3 The optional hard stop fires, and its own suite says so.** The
       preflight resolves the budget script from its own location, and so do
       the two spawns of the fixture runner that already exists for it
       (`tests/cost/budget-fixtures.mjs:29`, `:43`; task `test-cost-budget`).

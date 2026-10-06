@@ -412,7 +412,7 @@ export function consult(
         return [];
     }
     const resolvedBudget = budget ?? new CostBudget();
-    if (members.length > resolvedBudget.max_calls) {
+    if (resolvedBudget.max_calls > 0 && members.length > resolvedBudget.max_calls) {
         throw new Error(
             `Council has ${members.length} members but budget caps at ` +
                 `${resolvedBudget.max_calls} calls.`,
@@ -1246,7 +1246,7 @@ export function run_debate(
         return [];
     }
     const budget = budget0 ?? new CostBudget();
-    if (members.length > budget.max_calls) {
+    if (budget.max_calls > 0 && members.length > budget.max_calls) {
         throw new Error(
             `Debate has ${members.length} members but budget caps at ` +
                 `${budget.max_calls} calls.`,
