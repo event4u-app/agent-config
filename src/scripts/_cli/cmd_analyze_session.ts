@@ -12,7 +12,9 @@
  *        - `changes`  — files touched (array of {kind, stack, file, summary}).
  *        - `outcomes` — directive → "success" / "blocked" / … .
  *        - `halts`    — array of recorded halts.
- *   2. `agents/runtime/state/context-hygiene.json` — fields read:
+ *   2. the context-hygiene hook's state file (`STATE_FILE`, imported from
+ *      `context_hygiene_hook.ts` rather than spelled here — two independent
+ *      spellings of this path drifted apart before). Fields read:
  *        - `tool_calls`           (int)
  *        - `consecutive_same_tool`(int)
  *        - `loop_detected`        (bool)
@@ -33,18 +35,16 @@ import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { ProjectRootError, resolve_project_root } from '../_lib/agent_settings.js';
+import { STATE_FILE as HYGIENE_STATE_FILE } from '../context_hygiene_hook.js';
 import { StateLoadError, load_state } from './explain_last/state_loader.js';
 
 type Dict = Record<string, unknown>;
 
 const _HERE = fileURLToPath(import.meta.url);
 
-const CONTEXT_HYGIENE_RELATIVE = path.join(
-    'agents',
-    'runtime',
-    'state',
-    'context-hygiene.json',
-);
+// Imported from the hook rather than spelled here — the hook is the writer,
+// so it is the single source of truth for the path it writes to.
+const CONTEXT_HYGIENE_RELATIVE = HYGIENE_STATE_FILE;
 
 /** Python `raise SystemExit(code)` analogue — propagates an explicit code. */
 class SystemExitError extends Error {
@@ -253,7 +253,7 @@ Sources read:
     · changes  — files touched
     · outcomes — per-directive success / blocked
     · halts    — recorded halts
-  agents/runtime/state/context-hygiene.json
+  agents/state/context-hygiene.json
     · tool_calls · consecutive_same_tool · loop_detected
 
 Token/cost is NOT reported — this package has no per-session token

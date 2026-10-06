@@ -97,7 +97,9 @@ describe('_analyze_session — end-to-end against fixtures', () => {
     it('reads both fixtures and emits the report (exit 0)', () => {
         const stateFile = path.join(tmp, '.work-state.json');
         fs.writeFileSync(stateFile, JSON.stringify(WORK_STATE), 'utf-8');
-        const hygieneDir = path.join(tmp, 'agents', 'runtime', 'state');
+        // Matches the hook's actual STATE_FILE (agents/state/, not
+        // agents/runtime/state/ — the two spellings drifted apart before).
+        const hygieneDir = path.join(tmp, 'agents', 'state');
         fs.mkdirSync(hygieneDir, { recursive: true });
         fs.writeFileSync(path.join(hygieneDir, 'context-hygiene.json'), JSON.stringify(HYGIENE), 'utf-8');
 

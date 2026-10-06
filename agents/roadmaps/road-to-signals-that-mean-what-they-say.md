@@ -197,7 +197,7 @@ At `df377ca64`:
 
 ## Phase 1 — The loop flag
 
-- [ ] **1.1 The session analyser reads the hook's file.**
+- [x] **1.1 The session analyser reads the hook's file.**
       `cmd_analyze_session.ts` takes its path from the hook's exported
       `STATE_FILE` instead of spelling one, and its docstring (`:15`) and help
       text (`:256-257`) name that path; the dispatcher's help line names
