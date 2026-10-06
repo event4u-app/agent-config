@@ -149,7 +149,7 @@ refuses.
       therefore BLOCKED rather than unfinished, on `b1-labelled-positives-unreachable`
       below: the remaining moves include amending a pre-registration after seeing
       its counts, which the party that saw them may not do.
-- [ ] **3.5 The feeder's cost on the stop slot, measured.** Added 2026-10-06 from round
+- [x] **3.5 The feeder's cost on the stop slot, measured.** Added 2026-10-06 from round
       `inbox-2026-10-e`. `src/scripts/_lib/graph_feeder_record.ts:12-22` withdrew the
       "costs nothing" claim and leaves the latency unmeasured; a stop-hook timeout
       would discard F's refusal, so the shadow arm can weaken the gate it feeds. p50
@@ -157,8 +157,19 @@ refuses.
       published beside the recall page; the number becomes a stated precondition of
       3.4 in that step's text.
       verify: `grep -c 'p95' agents/evidence/analysis/graph-feeder-latency-*.md` -> /^[1-9]/
+      STATE 2026-10-06: measured by `src/scripts/bench_graph_feeder_latency.ts` and
+      published at `agents/evidence/analysis/graph-feeder-latency-2026-Q4.md`. On a
+      generated fixture the feeder adds p50 ≈ 36 ms / p95 ≈ 55 ms (200 modules) to a
+      stop whose own work is under 1 ms; over this repository's real 59 MB index the
+      feeder's work alone is p50 ≈ 884 ms / p95 ≈ 1,007 ms, ≈ 634 ms of it the graph
+      open. Exit codes identical in both arms.
 - [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3 and 3.5; the ADR-277
-      reopen is an owner amendment, not a step here.
+      reopen is an owner amendment, not a step here. PRECONDITION from 3.5: the
+      promotion reports the feeder's stop-slot p95, measured by
+      `bench_graph_feeder_latency` on the repository in question, against the
+      published baseline (p95 ≈ 1,007 ms over a 59 MB index, ≈ 634 ms of it loading
+      the cache); a promotion that does not first cut the load term inherits about a
+      second per stop on the gate's decision path.
 
 ## Acceptance criteria
 
