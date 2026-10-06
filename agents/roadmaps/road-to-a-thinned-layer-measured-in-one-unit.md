@@ -325,20 +325,38 @@ price list rather than from a survey.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — One command on a fixture install prints unconditional,
+- [x] AC-1 — One command on a fixture install prints unconditional,
       path-scoped and package-owned characters for the thinned layer.
-- [ ] AC-2 — No file under `src/` other than `thin_rules.ts` contains the
+      Closed by steps 1.1 and 1.2, verified 2026-10-06 on a real opted-in
+      install: `installed_layer_report --home <fixture>` prints
+      `107058 chars (93357 unconditional + 13701 path-scoped), 105
+      package-owned / 0 foreign` on one line, with ownership resolved from
+      the global deploy inventory.
+- [x] AC-2 — No file under `src/` other than `thin_rules.ts` contains the
       marker text, or any substring of it used as a detector, as a literal.
-- [ ] AC-3 — The opted-in fixture stands at least 4,000 unconditional
+      Verified 2026-10-06 with a positive control first (`grep -rFl` over
+      `src/` finds `thin_rules.ts`, so the search works): the full marker and
+      every detector-shaped substring of it return that file and nothing else.
+      The two gates that held their own copy import the constant since 2.1.
+- [x] AC-3 — The opted-in fixture stands at least 4,000 unconditional
       characters lower than at `df377ca64`, every stub is still recognised by
       all three detectors, and every stub still states that its body is to be
       loaded on a match.
-- [ ] AC-4 — The page states, for the recorded ceiling, the measured reading,
+      Measured 2026-10-06: 97,496 -> 93,357 unconditional on one tree and one
+      root, a drop of **4,139**. Normalised to the pin's 45-character prefix
+      the before-reading is 89,130 — the pin's own figure — so the after is
+      84,991, 4,139 under it. Detectors: `thin_marker_single_spelling` and
+      `thin_marker_unique_in_corpus` run every emitted stub past all three in
+      both directions; the marker still contains `Load`, `body` and `match`,
+      asserted as its own case.
+- [x] AC-4 — The page states, for the recorded ceiling, the measured reading,
       each remaining move with its owner and price, and both sums.
+      Closed by 3.1 and 3.2, plus a third sum added after the 4.1 council
+      found the first two excluded the largest row they claimed to include.
 - [ ] AC-5 — Each of the four rules has a council record about its law
       heading, every member that left `no_stub` did so in the change that
       record is about, and the page states the reading after those changes in
-      the unit the council named.
+      the unit the council named. <!-- blocked-by: law-heading-authoring-not-named-in-this-contract | asked: no — a background drain lane has no owner channel; the decision is recorded for the next owner-facing turn -->
 
 ## Decisions
 
@@ -366,14 +384,16 @@ price list rather than from a survey.
 | K8 | A blocker that waits on the sibling proposal's decision record | The drafting rule's batch clause already names who decides; a second owner question for the same four changes | Same |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-05 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
-| 1 | A law heading changes what a rule obligates | product | Promoting a block to a law is authoring; a careless heading drops or adds a duty. | 4.2 says so, asks the council exactly that per rule, and keeps a refused member where it is. | Phase 4 — The moves a council may permit |
+| 1 | A law heading changes what a rule obligates | product | Promoting a block to a law is authoring; a careless heading drops or adds a duty. | 4.2 says so, asks the council exactly that per rule, and keeps a refused member where it is. Since 2026-10-06 the step is also gated behind blocker `law-heading-authoring-not-named-in-this-contract`, so no run takes it on a contract that does not name the four files. | Phase 4 — The moves a council may permit |
 | 2 | The page is read as a recommendation | product | Five priced moves next to a ceiling look like a plan. | 3.1 names an owner per row; Phase 4 takes only what a council's record permits, one change per record. | Phase 3 — The remaining distance, priced |
 | 3 | A short marker occurs in a rule body | implementation | `is_thin_entry` is a substring test and nine rule files have blockquote lines. | 2.2's test runs the marker against every rule body and every emitted stub, in both directions. | Phase 2 — The stub says less, in one spelling |
 | 4 | A detector keeps its own copy after all | implementation | A third re-spelling may exist in a file the scan did not reach. | AC-2 is a literal search over `src/`; 2.1's second case changes the constant and re-runs both detectors. | Phase 2 — The stub says less, in one spelling |
 | 5 | The form saving is taken for the ceiling | product | 4,139 characters is about four per cent of the layer. | 2.4 and 3.2 print the reading beside 75,000 on the same page. | Phase 3 — The remaining distance, priced |
-| 6 | The four headings are read as reaching the ceiling | product | An earlier price of 9,300 assumed the mean law stub; the real blocks are larger. | 3.1 prices from the measured blocks and 3.2 states that the four alone end above 75,000. | Phase 3 — The remaining distance, priced |
-| 7 | A layer written before the change is not recognised after it | implementation | A detector importing the new constant does not match stubs an older install wrote, until that install is refreshed. | The conformance detector acts on the marker only under `thin` and `eager-all`, not under the shipped mode; 2.1's test names the case and the install receipt already tells the user when a layer was rewritten. | Phase 2 — The stub says less, in one spelling |
+| 6 | A sum is read as reaching the ceiling | product | **Re-scored 2026-10-06, and the direction flipped.** The first two sums left out the pointer row they claimed to include; with it in, a bare 75,000 on the unconditional reading IS reachable. So the risk is no longer that the four look sufficient — it is that sum 3 looks like a plan when it needs the owner's `legal-safety-floor` row AND an open install-layout blocker. | 3.2 states the inclusion set of every sum explicitly, gives all three, and splits the conclusion into three parts — reachable under a bare 75,000 on one reading with every row taken, not reachable under the headroom-adjusted 68,181 on any reading, not reachable on all characters. | Phase 3 — The remaining distance, priced |
+| 7 | The blocker is read as a refusal | product | A step left open with an owner-reserved blocker can read as work that was declined or found impossible. | The blocker gives three options with a recommendation, prices what is foregone (13,284 characters standing), and states that the per-rule council 4.2 needs is reachable — the 4.1 round ran 2/2 provider-diverse at $0.00. Only the naming of the four files is missing. | Phase 4 — The moves a council may permit |
+| 8 | The 4.1 verdict is read as the council having no opinion | product | `unresolved-as-asked` looks like a non-answer. | The record states that both seats converged independently, names the two evidence paths they asked for, reports that both were followed and resolve in opposite directions, and lists the two defects the round found in the measurement page. | Phase 4 — The moves a council may permit |
+| 9 | A layer written before the change is not recognised after it | implementation | A detector importing the new constant does not match stubs an older install wrote, until that install is refreshed. | The conformance detector acts on the marker only under `thin` and `eager-all`, not under the shipped mode; 2.1's test names the case and the install receipt already tells the user when a layer was rewritten. | Phase 2 — The stub says less, in one spelling |
