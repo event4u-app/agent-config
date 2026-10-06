@@ -252,6 +252,20 @@ describe('supersessionCell — the partial-supersession scope survives the field
         expect(rgi.supersessionCell('', 'engine-adoption interpretation only')).toBe('—');
     });
 
+    it('escapes a `|` inside the scope — a quoted table row must not split the generated row', () => {
+        // Found live: ADR-230's and ADR-279's own `superseded_scope` /
+        // `supersedes_scope` fields quote a table cell from ADR-230 § Decision
+        // verbatim, and that cell's own `|` column separator was emitted
+        // unescaped, splitting the INDEX.md row into extra columns.
+        expect(
+            rgi.supersessionCell('ADR-279', 'quotes a cell ("left | right") verbatim'),
+        ).toBe('ADR-279 (quotes a cell ("left \\| right") verbatim)');
+    });
+
+    it('never escapes `refs` — it is always an ADR-NNN token list, never free text', () => {
+        expect(rgi.supersessionCell('ADR-088, ADR-094', undefined)).toBe('ADR-088, ADR-094');
+    });
+
     it('row() reads BOTH scope fields, not just one', () => {
         const out = rgi.row({
             num: '124',
