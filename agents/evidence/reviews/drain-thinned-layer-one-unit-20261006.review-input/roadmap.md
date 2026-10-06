@@ -1,5 +1,3 @@
-<!-- check-refs: skip -->
-<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: structural
 status: ready
@@ -26,7 +24,7 @@ relates:
 ---
 # Road to a thinned layer measured in one unit
 
-> **Source:** [REDACTED:src-conf]
+> **Source:** an external comparison round against two harness trees (opaque
 > ids S1, S2). The second keeps its instruction weight under test with three
 > habits this file borrows as questions, not as code: measure the unit that is
 > loaded, state each contract once, and sort every cut by how often it is paid.

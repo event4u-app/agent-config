@@ -12508,7 +12508,8 @@ var TOP_FILES = 20;
 var LIMIT_WARN_FRACTION = 0.8;
 function isUnconditional(text) {
   const [frontmatter] = splitFrontmatter(text);
-  if (frontmatter === "" && /^\uFEFF?[\s]*---/.test(text)) {
+  const emptyBlock = /^---\n---(\n|$)/.test(text);
+  if (frontmatter === "" && !emptyBlock && /^\uFEFF?[\s]*---/.test(text)) {
     return !/^paths:/m.test(text);
   }
   return !/^paths:/m.test(frontmatter);
