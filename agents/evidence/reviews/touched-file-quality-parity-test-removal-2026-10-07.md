@@ -1,4 +1,4 @@
-<!-- evidence-type: review -->
+<!-- evidence-type: original-review -->
 # Test-weakening verdict — touched_file_quality parity test removal, 2026-10-07
 
 Commissioned by the implementing lane of
