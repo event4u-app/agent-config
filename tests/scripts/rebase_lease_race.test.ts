@@ -16,9 +16,8 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { collaboratorPushesDuringRebase, runBlocks, sandbox, sequenceBlock, type Sandbox } from '../_lib/rebase_sequence.js';
+import { collaboratorPushesDuringRebase, runBlocks, runSequence, sandbox, sequenceBlock, type Sandbox } from '../_lib/rebase_sequence.js';
 
-const SEQUENCE = ['resolve', 'rebase', 'equivalence', 'publish'].map((b) => sequenceBlock(b)).join('\n');
 
 interface Fixture {
     sb: Sandbox;
@@ -102,7 +101,7 @@ const collabHead = (f: Fixture): string => f.sb.git(f.collab, 'rev-parse', 'HEAD
 describe.each<Layout>(['upstream', 'pushRemote', 'pushDefault', 'fork-pr-head'])('publish target via %s', (layout) => {
     it('publishes the rebased branch when nobody else pushed', () => {
         const f = fixture(layout);
-        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        const r = runSequence(f.sb, f.me, f.env);
         expect(r.stderr).not.toContain('STOP');
         expect(r.status).toBe(0);
         expect(published(f)).toBe(f.sb.git(f.me, 'rev-parse', 'HEAD'));
@@ -112,7 +111,7 @@ describe.each<Layout>(['upstream', 'pushRemote', 'pushDefault', 'fork-pr-head'])
     it('rejects the lease when a collaborator pushes between the pin and the push', () => {
         const f = fixture(layout);
         collaboratorPushesDuringRebase(f.sb, f.me, f.collab, f.publishUrl, 'feat');
-        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        const r = runSequence(f.sb, f.me, f.env);
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('STOP: the lease was rejected');
         expect(published(f)).toBe(collabHead(f));
@@ -122,7 +121,7 @@ describe.each<Layout>(['upstream', 'pushRemote', 'pushDefault', 'fork-pr-head'])
         const f = fixture(layout);
         f.sb.git(f.collab, 'push', '-q', f.publishUrl, 'HEAD:refs/heads/feat');
         const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
-        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        const r = runSequence(f.sb, f.me, f.env);
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('has commits this branch lacks');
         expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
@@ -137,7 +136,7 @@ describe('an unresolved publish target', () => {
         f.sb.git(f.me, 'branch', '-u', 'origin/main');
         expect(f.sb.git(f.me, 'rev-parse', '--symbolic-full-name', '@{u}')).toBe('refs/remotes/origin/main');
         const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
-        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        const r = runSequence(f.sb, f.me, f.env);
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('publish target unresolved');
         expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
@@ -153,7 +152,7 @@ describe('an unresolved publish target', () => {
         f.sb.git(f.me, 'rebase', '-q', 'origin/main');
         const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
         const baseBefore = f.sb.git(f.me, 'ls-remote', 'origin', 'refs/heads/main').split('\t')[0];
-        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        const r = runSequence(f.sb, f.me, f.env);
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('is the base branch');
         expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
@@ -171,14 +170,14 @@ describe('an unresolved publish target', () => {
 
     it('refuses a pull request head that names the base branch', () => {
         const f = fixture('fork-pr-head');
-        const r = runBlocks(f.sb, f.me, SEQUENCE, { ...f.env, PR_HEAD_REF: 'main' });
+        const r = runSequence(f.sb, f.me, { ...f.env, PR_HEAD_REF: 'main' });
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('is the base branch');
     });
 
     it('stops when @{push} and the pull request head disagree', () => {
         const f = fixture('pushRemote');
-        const r = runBlocks(f.sb, f.me, SEQUENCE, { ...f.env, PR_HEAD_REPO: 'upstream/project', PR_HEAD_REF: 'feat' });
+        const r = runSequence(f.sb, f.me, { ...f.env, PR_HEAD_REPO: 'upstream/project', PR_HEAD_REF: 'feat' });
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('but the pull request head is');
     });
@@ -189,9 +188,10 @@ describe('control — the lease form is what makes the difference', () => {
         const f = fixture('upstream');
         collaboratorPushesDuringRebase(f.sb, f.me, f.collab, f.publishUrl, 'feat');
         const qualified = 'git push --force-with-lease="refs/heads/$RB:$EXPECTED" "$REMOTE" "HEAD:refs/heads/$RB"';
-        expect(SEQUENCE).toContain(qualified);
-        const bare = SEQUENCE.replace(qualified, 'git fetch -q "$REMOTE" && git push --force-with-lease "$REMOTE" "HEAD:refs/heads/$RB"');
-        const r = runBlocks(f.sb, f.me, bare, f.env);
+        const publish = sequenceBlock('publish');
+        expect(publish).toContain(qualified);
+        const bare = publish.replace(qualified, 'git fetch -q "$REMOTE" && git push --force-with-lease "$REMOTE" "HEAD:refs/heads/$RB"');
+        const r = runSequence(f.sb, f.me, f.env, bare);
         expect(r.status).toBe(0);
         expect(published(f)).not.toBe(collabHead(f));
         expect(published(f)).toBe(f.sb.git(f.me, 'rev-parse', 'HEAD'));
@@ -206,7 +206,7 @@ describe('stops before anything is rewritten', () => {
         f.sb.git(f.me, 'merge', '-q', '--no-edit', 'origin/main');
         f.sb.git(f.me, 'push', '-q', 'origin', 'feat');
         const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
-        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        const r = runSequence(f.sb, f.me, f.env);
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('carries a merge commit');
         expect(r.stderr).toContain('--rebase-merges');
@@ -221,14 +221,14 @@ describe('stops before anything is rewritten', () => {
         f.sb.git(f.me, 'commit', '-q', '--author', 'Other <other@example.com>', '-m', 'inherited');
         f.sb.git(f.me, 'push', '-q', 'origin', 'feat');
         const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
-        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        const r = runSequence(f.sb, f.me, f.env);
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('commits you did not author');
         expect(r.stderr).toContain('other@example.com');
         expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
         expect(published(f)).toBe(before);
 
-        const allowed = runBlocks(f.sb, f.me, SEQUENCE, { ...f.env, ALLOW_FOREIGN: '1' });
+        const allowed = runSequence(f.sb, f.me, { ...f.env, ALLOW_FOREIGN: '1' });
         expect(allowed.stderr).not.toContain('STOP');
         expect(allowed.status).toBe(0);
         expect(published(f)).toBe(f.sb.git(f.me, 'rev-parse', 'HEAD'));
@@ -238,7 +238,7 @@ describe('stops before anything is rewritten', () => {
         const f = fixture('upstream');
         fs.writeFileSync(path.join(f.me, 'feat.txt'), 'edited, not committed\n');
         const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
-        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        const r = runSequence(f.sb, f.me, f.env);
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('working tree is dirty');
         expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
@@ -253,7 +253,7 @@ describe('the inputs and the one shell session', () => {
         const f = fixture('upstream');
         const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
         const { BASE: _unset, ...env } = f.env;
-        const r = runBlocks(f.sb, f.me, SEQUENCE, env);
+        const r = runSequence(f.sb, f.me, env);
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('STOP: BASE is required');
         expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
@@ -266,7 +266,7 @@ describe('the inputs and the one shell session', () => {
         const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
         const r = runBlocks(f.sb, f.me, sequenceBlock(name), f.env);
         expect(r.status).not.toBe(0);
-        expect(r.stderr).toContain('STOP: run the four blocks in one shell session');
+        expect(r.stderr).toMatch(/STOP: run (steps 1–3|step 1) in (one|this) shell session/);
         expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
         expect(rewrites(f)).toBe('');
     });
@@ -284,7 +284,7 @@ describe('the inputs and the one shell session', () => {
         ].join('\n'));
         fs.chmodSync(path.join(bin, 'git'), 0o755);
         const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
-        const r = runBlocks(f.sb, f.me, SEQUENCE, { ...f.env, PATH: `${bin}:${process.env.PATH ?? ''}` });
+        const r = runSequence(f.sb, f.me, { ...f.env, PATH: `${bin}:${process.env.PATH ?? ''}` });
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('STOP: could not list the topic range');
         expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
@@ -306,7 +306,7 @@ describe('a failed fetch of the published ref', () => {
         ].join('\n'));
         fs.chmodSync(path.join(bin, 'git'), 0o755);
         const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
-        const r = runBlocks(f.sb, f.me, SEQUENCE, { ...f.env, PATH: `${bin}:${process.env.PATH ?? ''}` });
+        const r = runSequence(f.sb, f.me, { ...f.env, PATH: `${bin}:${process.env.PATH ?? ''}` });
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('STOP: could not fetch origin/feat');
         expect(r.stderr).not.toContain('has commits this branch lacks');
@@ -320,7 +320,7 @@ describe('the recovery ref', () => {
 
     it('is removed once the published ref reads back as HEAD', () => {
         const f = fixture('upstream');
-        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        const r = runSequence(f.sb, f.me, f.env);
         expect(r.status).toBe(0);
         expect(rewrites(f)).toEqual([]);
         expect(f.sb.git(f.me, 'tag', '-l')).toBe('');
@@ -330,7 +330,7 @@ describe('the recovery ref', () => {
         const f = fixture('upstream');
         const oldHead = f.sb.git(f.me, 'rev-parse', 'HEAD');
         collaboratorPushesDuringRebase(f.sb, f.me, f.collab, f.publishUrl, 'feat');
-        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        const r = runSequence(f.sb, f.me, f.env);
         expect(r.status).not.toBe(0);
         const kept = rewrites(f);
         expect(kept).toHaveLength(1);

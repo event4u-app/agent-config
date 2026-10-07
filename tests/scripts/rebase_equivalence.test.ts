@@ -13,7 +13,7 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { runBlocks, sandbox, sequenceBlock, type Sandbox } from '../_lib/rebase_sequence.js';
+import { publishHandoff, runBlocks, sandbox, sequenceBlock, type Sandbox } from '../_lib/rebase_sequence.js';
 
 const RESOLVE_AND_REBASE = ['resolve', 'rebase'].map((b) => sequenceBlock(b)).join('\n');
 const EQUIVALENCE = sequenceBlock('equivalence');
@@ -105,6 +105,49 @@ describe('the equivalence verdict', () => {
         expect(out.stdout).toContain('EQUIVALENCE: mechanically equivalent');
         expect(EQUIVALENCE).toMatch(/merge-base --is-ancestor "origin\/\$BASE" "\$SAVE"/);
         expect(EQUIVALENCE).toContain('^{tree}');
+    });
+});
+
+describe('a verdict over an empty comparison', () => {
+    it('stays "needs review" when color.ui=always would hide every patch id', () => {
+        const r = repo();
+        r.sb.git(r.me, 'config', 'color.ui', 'always');
+        r.sb.commit(r.me, 'shared.txt', 'feature\n', 'edit shared');
+        r.sb.git(r.me, 'push', '-q', '-u', 'origin', 'feat');
+        advanceBase(r, 'shared.txt', 'base moved\n');
+        const first = runBlocks(r.sb, r.me, RESOLVE_AND_REBASE, { BASE: 'main' });
+        const save = savedRef(first.stderr);
+        fs.writeFileSync(path.join(r.me, 'shared.txt'), 'base moved\nfeature\n');
+        r.sb.git(r.me, 'add', 'shared.txt');
+        runBlocks(r.sb, r.me, 'GIT_EDITOR=true git rebase --continue');
+        const out = runBlocks(r.sb, r.me, `${sequenceBlock('resolve')}\n${EQUIVALENCE}`, { BASE: 'main', SAVE: save });
+        expect(out.stdout).toContain('EQUIVALENCE: needs review');
+        expect(out.stdout).not.toContain('mechanically equivalent');
+    });
+
+    it('reads a non-empty range that yields no patch id as "needs review"', () => {
+        const r = repo();
+        r.sb.git(r.me, 'commit', '-q', '--allow-empty', '-m', 'empty');
+        r.sb.git(r.me, 'push', '-q', '-u', 'origin', 'feat');
+        advanceBase(r, 'elsewhere.txt', 'x\n');
+        const out = runBlocks(r.sb, r.me, `${RESOLVE_AND_REBASE}\n${EQUIVALENCE}`, { BASE: 'main' });
+        expect(out.stderr).not.toContain('STOP');
+        expect(out.stdout).toContain('EQUIVALENCE: needs review');
+    });
+});
+
+describe('the report stops before anything is published', () => {
+    it('leaves the published ref alone and hands SAVE and EXPECTED to the separate publish step', () => {
+        const r = repo();
+        r.sb.commit(r.me, 'a.txt', 'a\n', 'add a');
+        r.sb.git(r.me, 'push', '-q', '-u', 'origin', 'feat');
+        const pushed = r.sb.git(r.me, 'rev-parse', 'HEAD');
+        advanceBase(r, 'elsewhere.txt', 'x\n');
+        const out = runBlocks(r.sb, r.me, `${RESOLVE_AND_REBASE}\n${EQUIVALENCE}`, { BASE: 'main' });
+        expect(out.status).toBe(0);
+        expect(r.sb.git(r.me, 'ls-remote', 'origin', 'refs/heads/feat').split('\t')[0]).toBe(pushed);
+        expect(publishHandoff(out.stdout)).toEqual({ SAVE: expect.stringMatching(/^refs\/agent-config\/rewrites\//) as unknown as string, EXPECTED: pushed });
+        expect(EQUIVALENCE).not.toContain('git push');
     });
 });
 

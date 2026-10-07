@@ -150,6 +150,9 @@ head repository — never `@{u}`, and an unresolved target means no rewrite — 
 SHA is pinned once after the fetch, must already be in `HEAD`, and is the lease
 unchanged — so a collaborator's push lands either before the pin and halts the
 stop, or after it and fails the lease, and is never overwritten.
+Its steps 1–3 rebase and report, then stop: the regenerate → verify above runs
+on the rebased tree, and only then does its step 4 publish, re-running step 1
+with the `SAVE` and `EXPECTED` step 3 printed.
 A PR that sits open while its base advances goes stale silently; keeping the
 base merged **at every touch** means it stays `mergeStateStatus: CLEAN` instead
 of accumulating conflicts for the moment the user wants to merge. If the gate

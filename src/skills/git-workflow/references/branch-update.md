@@ -19,7 +19,7 @@ branch, right only for a branch that targets it; nothing asks the forge:
 | `git.update_strategy` | Operation | Asked first? |
 |---|---|---|
 | `merge` (default) | `git fetch origin && git merge origin/<base> --no-edit` | no — a merge adds a commit and rewrites nothing |
-| `rebase` | § The rebase sequence below: resolve the ref the branch publishes, pin its SHA once, stop unless that SHA is already in `HEAD`, `git rebase origin/<base>`, then push in the same turn with `git push --force-with-lease=refs/heads/<b>:<sha> <remote> HEAD:refs/heads/<b>`, the pinned SHA as the lease | **yes**, unless [`git-history-discipline`](../../../rules/git-history-discipline.md) § When rewrite is allowed already covers it — the user asked this turn, an unrevoked standing instruction ("always rebase before pushing"), or a `pull --rebase` the user started. The setting picks the operation; it is never the authorisation |
+| `rebase` | § The rebase sequence below: resolve the ref the branch publishes, pin its SHA once, stop unless that SHA is already in `HEAD`, `git rebase origin/<base>`, report equivalence, regenerate and verify, then push in the same turn with `git push --force-with-lease=refs/heads/<b>:<sha> <remote> HEAD:refs/heads/<b>`, the pinned SHA as the lease | **yes**, unless [`git-history-discipline`](../../../rules/git-history-discipline.md) § When rewrite is allowed already covers it — the user asked this turn, an unrevoked standing instruction ("always rebase before pushing"), or a `pull --rebase` the user started. The setting picks the operation; it is never the authorisation |
 
 ## Under `rebase`
 
@@ -90,12 +90,16 @@ resolved target with no remote ref is a branch that was never pushed.
 
 **Inputs, set before step 1.** `BASE` is required: the pull request's base
 branch, bare (`main`, `release/1.x`). `PR_HEAD_REPO` and `PR_HEAD_REF` are set
-only with an open pull request (step 1). **The four blocks are one script** —
-run them in order, in ONE shell session, never as separate tool calls: they
-share `REMOTE`, `RB`, `EXPECTED`, `SAVE` and the `stop` / `keep` functions the
-first block defines. Each later block opens by checking that it shares that
-session and stops otherwise, because an undefined `stop` would be a command
-that is not found and lets the block run on.
+only with an open pull request (step 1). **Steps 1–3 are one script** — run
+them in order, in ONE shell session, never as separate tool calls: they share
+`REMOTE`, `RB`, `EXPECTED`, `SAVE` and the `stop` / `keep` functions the first
+block defines. Each later block opens by checking that it shares that session
+and stops otherwise, because an undefined `stop` would be a command that is not
+found and lets the block run on. **Step 4 is a separate run**: step 3 stops
+and prints the `SAVE` and `EXPECTED` it hands on; the caller regenerates the
+derived files and runs its own verification on the rebased tree, then, in one
+shell, runs step 1 again with those two set and runs step 4. Nothing is
+published before that verification.
 
 **1. Resolve.** `@{push}` names the publish target where the push
 configuration determines one; with an open pull request, its head repository and
@@ -161,7 +165,7 @@ is printed. A kept ref is removed with `git update-ref -d <ref>`.
 ```bash
 # rebase-sequence: rebase
 declare -F keep >/dev/null && [ -n "${BASE:-}" ] && [ -n "${REMOTE:-}" ] \
-  || { echo "STOP: run the four blocks in one shell session, starting with step 1 — nothing was rewritten" >&2; exit 1; }
+  || { echo "STOP: run steps 1–3 in one shell session, starting with step 1 — nothing was rewritten" >&2; exit 1; }
 [ -z "$(git status --porcelain --untracked-files=no)" ] || stop "the working tree is dirty — nothing was rewritten"
 git fetch -q origin "$BASE" || stop "could not fetch origin $BASE — nothing was rewritten"
 MERGES=$(git rev-list --merges "origin/$BASE..HEAD") \
@@ -182,7 +186,7 @@ fi
 SAVE="refs/agent-config/rewrites/$(date -u +%Y%m%dT%H%M%SZ)-$$/before"
 git update-ref "$SAVE" HEAD
 git rebase "origin/$BASE" \
-  || keep "the rebase stopped on a conflict — resolve each commit and git rebase --continue, then in one shell run step 1, set SAVE=$SAVE EXPECTED=$EXPECTED, and run steps 3 and 4 (git rebase --abort first to give up)"
+  || keep "the rebase stopped on a conflict — resolve each commit and git rebase --continue, then in one shell run step 1, set SAVE=$SAVE EXPECTED=$EXPECTED, and run step 3 (git rebase --abort first to give up)"
 ```
 
 **3. Report equivalence from stable data.** The stable patch ids of the old
@@ -191,20 +195,25 @@ equivalent"; anything else means "needs review" and names the commits on each
 side that have no match — never a pair inferred from a subject or a position.
 Whenever the old head already contained the new base, the trees must also be
 equal. A conflict resolution changes a patch id, so a mismatch means "needs
-review", never "wrong". The verdict is a report, not a review: it binds nothing
+review", never "wrong". A non-empty range that yields no patch id at all — an
+empty commit, or diff output git could not read — is "needs review" too: an
+empty comparison is not an equal one. Colour is forced off, so a
+`color.ui=always` configuration cannot empty both sets. The verdict is a report, not a review: it binds nothing
 and approves nothing. `git range-diff` is shown to the human and never parsed —
 its manual says under OUTPUT STABILITY that the output is not for machines.
 
 ```bash
 # rebase-sequence: equivalence
 declare -F keep >/dev/null && [ -n "${SAVE:-}" ] && [ -n "${BASE:-}" ] \
-  || { echo "STOP: run the four blocks in one shell session, starting with step 1" >&2; exit 1; }
-pids() { git log -p --no-merges --format='commit %H' "$1" | git patch-id --stable | sort; }
+  || { echo "STOP: run steps 1–3 in one shell session, starting with step 1" >&2; exit 1; }
+pids() { git -c color.ui=never log -p --no-color --no-merges --format='commit %H' "$1" | git patch-id --stable | sort; }
 OLD_BASE=$(git merge-base "$SAVE" "origin/$BASE")
 OLD=$(pids "$OLD_BASE..$SAVE")
 NEW=$(pids "origin/$BASE..HEAD")
 VERDICT="mechanically equivalent"
 [ "$(cut -d' ' -f1 <<<"$OLD")" = "$(cut -d' ' -f1 <<<"$NEW")" ] || VERDICT="needs review"
+[ -n "$OLD" ] || [ "$(git rev-list --count --no-merges "$OLD_BASE..$SAVE")" = 0 ] || VERDICT="needs review"
+[ -n "$NEW" ] || [ "$(git rev-list --count --no-merges "origin/$BASE..HEAD")" = 0 ] || VERDICT="needs review"
 if git merge-base --is-ancestor "origin/$BASE" "$SAVE" \
   && [ "$(git rev-parse "$SAVE^{tree}")" != "$(git rev-parse "HEAD^{tree}")" ]; then
   VERDICT="needs review"
@@ -218,15 +227,18 @@ if [ "$VERDICT" = "needs review" ]; then
   done
 fi
 git range-diff "$OLD_BASE..$SAVE" "origin/$BASE..HEAD"   # for the human; never parsed
+echo "PUBLISH AFTER VERIFY: SAVE=$SAVE EXPECTED=$EXPECTED — regenerate and verify, then in one shell run step 1 with these two set, then step 4"
 ```
 
-**4. Push in the same turn, then read the published ref back.** An empty
-`EXPECTED` (never pushed) makes the lease require that the ref does not exist.
+**4. Push in the same turn, then read the published ref back** — after the
+caller's regenerate and verify, in a fresh shell that ran step 1 with `SAVE`
+and `EXPECTED` from step 3. An empty `EXPECTED` (never pushed) makes the lease
+require that the ref does not exist.
 
 ```bash
 # rebase-sequence: publish
-declare -F keep >/dev/null && [ -n "${SAVE:-}" ] && [ -n "${REMOTE:-}" ] && [ -n "${RB:-}" ] \
-  || { echo "STOP: run the four blocks in one shell session, starting with step 1 — nothing was pushed" >&2; exit 1; }
+declare -F keep >/dev/null && [ -n "${SAVE:-}" ] && [ "${EXPECTED+set}" = set ] && [ -n "${REMOTE:-}" ] && [ -n "${RB:-}" ] \
+  || { echo "STOP: run step 1 in this shell session, with SAVE and EXPECTED from step 3 — nothing was pushed" >&2; exit 1; }
 git push --force-with-lease="refs/heads/$RB:$EXPECTED" "$REMOTE" "HEAD:refs/heads/$RB" \
   || keep "the lease was rejected — $REMOTE/$RB moved; refetch and report, never retry without the lease"
 [ "$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)" = "$(git rev-parse HEAD)" ] \
