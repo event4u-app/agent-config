@@ -179,6 +179,15 @@ what grew. No baseline is moved.
 - **Owner:** time — a ten-session window of real sessions after the mitigation, which no run can simulate
 - **Blocks:** step 3.4 — Re-read against the targets
 - **What to do:** once ten main-loop sessions in this package's transcript store carry an mtime after the 3.3 merge, run `./scripts-run src/scripts/probe_turnaround --store ~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config --limit 10`, read the `ci-wait` waiters' last lines as the 2.1 page did, and append met / missed / underpowered per cause to `agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md` under the claim's per-cause floors.
+- **Recommendation:** wait, and re-probe at the condition rather than before it.
+  There is nothing to choose here: the owner is `time`, the window is ten real
+  main-loop sessions after the 3.3 merge, and no run can produce them. Reading
+  the page early would publish an underpowered verdict against the claim's
+  per-cause floors, which is worse than no verdict — 3.4's own contract says to
+  report `underpowered` rather than a result when the window's shape differs.
+- **If you do nothing:** step 3.4 stays open and this roadmap cannot archive.
+  Nothing breaks, and no reading goes stale — the 2.1 page keeps its first-window
+  section and simply carries no second one.
 - **Resolved when:** the 2.1 page carries a second-window section with a verdict per cause, and `grep -c -E 'met|missed|underpowered' agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md` counts it.
 
 ## Risk Register
