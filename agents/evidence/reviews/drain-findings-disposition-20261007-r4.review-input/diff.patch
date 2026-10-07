@@ -1,0 +1,833 @@
+diff --git a/agents/evidence/release-findings/16.3.0.json b/agents/evidence/release-findings/16.3.0.json
+index f64309878036448009af3792590a929db1e4a18e..45f321b9ada5f17c70d9b20572fc956750b6b5a6 100644
+--- a/agents/evidence/release-findings/16.3.0.json
++++ b/agents/evidence/release-findings/16.3.0.json
+@@ -8,6 +8,10 @@
+       "kind": "claim",
+       "title": "Stack-composition tally contradicts its own table",
+       "detail": "The page states '30 rows: 12 compose, 12 adapt, 6 create'. Counting the verdicts in the table gives 13 compose (test-case-discovery 3, testing-anti-patterns 3, judge-test-coverage 3, quality-tools/typescript 1, sql-writing 3), 11 adapt (tdd 3, api-testing 3, test-performance 3, quality-tools python and go 2) and 6 create. The page says Phase 2 is bounded by this table, so the headline split is wrong in a published evidence record.",
++      "status": "fixed",
++      "commit": "0c86ad98f",
++      "rationale": "The page's own headline now reads '30 rows: 13 compose, 11 adapt, 6 create', with a dated correction note naming this exact finding and this roadmap.",
++      "verified_by": "agents/evidence/analysis/stack-composition-2026-Q4.md:83, read at this commit",
+       "file": "agents/evidence/analysis/stack-composition-2026-Q4.md"
+     },
+     {
+@@ -16,7 +20,11 @@
+       "kind": "claim",
+       "title": "README publishes two different command counts",
+       "detail": "The badge was bumped to Commands-205, matching CAPABILITIES commands_total 205. The adjacent 'How these are counted' footnote still says 'Commands 202'. It was already stale against the old badge of 203 and the diff leaves it. The footnote exists specifically to explain the counter, so the contradiction sits in the one place that claims one canonical count.",
+-      "file": "README.md"
++      "file": "README.md",
++      "status": "fixed",
++      "commit": "fc1bdec4f",
++      "rationale": "README.md's footnote now reads 'Commands 205' and the top-level count '60', matching the badge and the current tree.",
++      "verified_by": "README.md:9, read at this commit"
+     },
+     {
+       "finding_id": "bfe1d6e6d8ca",
+@@ -36,7 +44,11 @@
+       "kind": "claim",
+       "title": "Per-spawn multiplier counts every Agent call and applies today's layer size to history",
+       "detail": "The 647 spawns are all distinct Agent tool_use ids, with no filter on subagent type. The page's own premise is that only non-built-in subagents receive the hierarchy. The 351,894 figure is this machine's current installed layer, multiplied across 741 historical transcripts. The conclusion 'spawning roughly doubles the standing bill' and the '≈228 million characters' figure therefore have an unmeasured upper-bias. The same section also mixes units: it says arithmetic uses bytes, then labels the 351,894 byte figure 'characters' in the before/after table.",
+-      "file": "agents/evidence/analysis/per-spawn-standing-2026-10.md"
++      "file": "agents/evidence/analysis/per-spawn-standing-2026-10.md",
++      "status": "fixed",
++      "commit": "fc1bdec4f",
++      "rationale": "A dated correction naming this finding states both biases (no subagent-type filter, today's layer size applied to history) and relabels the table's unit from characters to bytes.",
++      "verified_by": "agents/evidence/analysis/per-spawn-standing-2026-10.md:70-78, read at this commit"
+     },
+     {
+       "finding_id": "9cba89c889a9",
+@@ -56,7 +68,11 @@
+       "kind": "security",
+       "title": "Workflow-security audit is now wired in CI but non-blocking",
+       "detail": "lint_workflow_security runs without --strict, so a HIGH finding (pull_request_target on fork PRs, write-all permissions, secrets reaching an agent prompt) is printed and does not fail the job. The step buys visibility and an emptied-directory floor, but not a refusal on the CI-agent-injection class. The step comment points to a recorded unresolved decision for promoting it.",
+-      "file": ".github/workflows/consistency.yml"
++      "file": ".github/workflows/consistency.yml",
++      "status": "fixed",
++      "commit": "c4051c7ed",
++      "rationale": "The CI step now runs `./scripts-run src/scripts/lint_workflow_security --strict`, with a comment naming the control reading (a planted HIGH previously exited 0) that motivated the promotion.",
++      "verified_by": ".github/workflows/consistency.yml:279-292, read at this commit"
+     },
+     {
+       "finding_id": "541a64c5b619",
+@@ -75,7 +91,11 @@
+       "kind": "claim",
+       "title": "Body-signal figures quoted in the ranker report match neither committed verdict",
+       "detail": "The report cites the independent body-signal verdict as '406 positives and 404 negatives', recall +5.91 pp and false activation +8.17 pp. The routing-body-signal-verdict.json before this diff reads 396/398, +5.556 and +7.789. After it, the file reads 434/427, +4.608 and +6.557 (measured_at 2026-10-04). The figures match neither state, and the verdict file moved again in this same release.",
+-      "file": "agents/evidence/analysis/skill-ranker-confusion-2026-10-01.md"
++      "file": "agents/evidence/analysis/skill-ranker-confusion-2026-10-01.md",
++      "status": "fixed",
++      "commit": "fc1bdec4f",
++      "rationale": "A dated correction names this finding, states the verdict file is the re-measured source rather than this page, and quotes the 2026-10-06 reading (441/434, +4.08 pp, +6.91 pp) while noting the verdict label (harmful) is unchanged across every state.",
++      "verified_by": "agents/evidence/analysis/skill-ranker-confusion-2026-10-01.md:338-346, read at this commit"
+     },
+     {
+       "finding_id": "aee552b96cc0",
+@@ -83,7 +103,11 @@
+       "kind": "claim",
+       "title": "Pack-boundary delta attributes all twelve cleared violations to this change",
+       "detail": "215 (baseline era, corrected rule) → 203 is a net of 12, and the page says 'twelve pre-existing ones were cleared as a side effect' of the de-links. The page's own multiset diff shows 13 links cleared since the baseline, 10 of them non-meta, so those cleared before this change. Only 2 of the 12 are attributable to the de-links.",
+-      "file": "agents/evidence/analysis/pack-boundary-delta-2026-10-01.md"
++      "file": "agents/evidence/analysis/pack-boundary-delta-2026-10-01.md",
++      "status": "fixed",
++      "commit": "fc1bdec4f",
++      "rationale": "A dated correction names this finding and restates the attribution: only 2 of the 12 clearances come from the de-links, the rest predate this change; the 0-new-violations and 203 baseline are unaffected.",
++      "verified_by": "agents/evidence/analysis/pack-boundary-delta-2026-10-01.md:132-140, read at this commit"
+     },
+     {
+       "finding_id": "3e2c791209c4",
+@@ -91,7 +115,11 @@
+       "kind": "claim",
+       "title": "Hook-bundle saving quoted as both 6.04 % and 6.14 %",
+       "detail": "The table gives −94,473 bytes (−6.04 %) for the hardened build. The closing section says the bundle 'is 6.14 % smaller', which is the pre-hardening 1,468,237-byte reading. The component deltas given for the hardening (+648 yaml, +205 src) sum to 853 against the stated 1,501-byte difference, leaving 648 bytes unexplained.",
+-      "file": "agents/evidence/analysis/hook-bundle-composition-2026-10-01.md"
++      "file": "agents/evidence/analysis/hook-bundle-composition-2026-10-01.md",
++      "status": "fixed",
++      "commit": "fc1bdec4f",
++      "rationale": "The closing section now reads '6.04 % smaller (the hardened build in the table above; 6.14 % was the pre-hardening reading)', resolving the contradiction, and a dated correction discloses that the 648-byte component-sum gap cannot be reconstructed rather than leaving it silently unexplained.",
++      "verified_by": "agents/evidence/analysis/hook-bundle-composition-2026-10-01.md:98-106,139-141, read at this commit"
+     },
+     {
+       "finding_id": "237f203916c5",
+@@ -99,7 +127,11 @@
+       "kind": "claim",
+       "title": "Known-stale prose measurement record ships unrepaired beside re-run JSON",
+       "detail": "The holdout page records that delivery-set-result-2026-08-31.md is stale by two corpora and is 'NOT repaired' in this change, while delivery-set-measurement-2026-08-31.json was re-run (recall 62.903, 861 cases). The JSON filename still carries the 2026-08-31 date. A reader following the prose record gets figures the JSON contradicts, and the page presents this as an acknowledged residue rather than fixing it.",
+-      "file": "agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md"
++      "file": "agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md",
++      "status": "fixed",
++      "commit": "fc1bdec4f",
++      "rationale": "Both named pages now carry a dated note: the prose record (delivery-set-result-2026-08-31.md) states it is the 2026-08-31 reading, points readers at the re-run JSON as the current source, and the holdout page's own residue note names this finding and the added pointer.",
++      "verified_by": "agents/evidence/analysis/delivery-set-result-2026-08-31.md:12-19, agents/evidence/analysis/trigger-corpus-holdout-2026-08-30.md:644-649, read at this commit"
+     },
+     {
+       "finding_id": "4f8cc59e53f3",
+@@ -107,7 +139,10 @@
+       "kind": "claim",
+       "title": "structured_ask free_text recorded as an observed true from a negation-derived upper bound",
+       "detail": "The page says free_text is 'derived by negation': 10 payloads carried no offered label, and a cancelled ask also produces such a payload. Likewise max_questions=1 and max_options=4 are sample maxima, not host limits. All are written into the capability registry as the shape fields of an 'observed present' row. The caveats are in the evidence page but not in the registry value.",
+-      "file": "agents/evidence/analysis/structured-ask-host-observation-2026-10.md"
++      "file": "agents/evidence/analysis/structured-ask-host-observation-2026-10.md",
++      "status": "still_open",
++      "rationale": "Partially addressed and not closed. The evidence page's own table now states each caveat inline per field (max_questions and max_options_per_question are labelled 'observed maximum', free_text is labelled 'Derived by negation, which is weaker...'), but no committed `src/config/*` registry file carries `structured_ask`/`free_text`/`max_questions` fields to check against — the registry the finding names was not located in this tree, so whether the caveat reached a machine-read value (as opposed to the evidence page's own prose) is unverified. No active roadmap names this gap.",
++      "verified_by": "agents/evidence/analysis/structured-ask-host-observation-2026-10.md:73,82-84, read at this commit; grep for `structured_ask`/`free_text` across src/config/*.yml and *.json found no registry file"
+     },
+     {
+       "finding_id": "a86eac3043de",
+@@ -115,7 +150,11 @@
+       "kind": "claim",
+       "title": "Breaking-change cell carries an unsourced statistic",
+       "detail": "The 13.0.0 row states 'session_tier was non-null in 0 of 327 orchestration records' with no command, artefact or commit reference for the count. Every other cell cites a commit or archive section.",
+-      "file": "BREAKING_CHANGES.md"
++      "file": "BREAKING_CHANGES.md",
++      "status": "fixed",
++      "commit": "fc1bdec4f",
++      "rationale": "The 13.0.0 row now cites `docs/contracts/budget-routing.md` as the retirement record for the 327-record count, matching every other cell's citation pattern.",
++      "verified_by": "BREAKING_CHANGES.md, the 13.0.0 row, read at this commit"
+     },
+     {
+       "finding_id": "384127f24e57",
+@@ -123,6 +162,9 @@
+       "kind": "style",
+       "title": "Release-highlight categories mislabel non-security changes",
+       "detail": "'Security and correctness' lists the roadmap-archival change (#2167) and the pack-boundary gate fix (#2155). Neither is a security change, so the bucket overstates the release's security content. 'Behaviour changes' also lists the archival change.",
++      "status": "still_open",
++      "rationale": "Still true — CHANGELOG.md's 'Security and correctness' and 'Behaviour changes' sections both still list #2167 (the archival change), unchanged since this finding was written. No roadmap owns reclassifying published CHANGELOG highlight buckets; left open rather than hand-edited outside this roadmap's declared scope.",
++      "verified_by": "CHANGELOG.md:828,830, read at this commit",
+       "file": "CHANGELOG.md"
+     },
+     {
+@@ -134,8 +176,8 @@
+       "file": "agents/evidence/ratifications/drain-kernel-plumbing-3-3-severity.md",
+       "status": "fixed",
+       "commit": "8fdb48169",
+-      "verified_by": "tests/scripts/check_kernel_edit_ratified_import_closure.test.ts, tests/scripts/check_kernel_edit_ratified.test.ts",
+-      "rationale": "road-to-a-ratification-fence-that-follows-its-imports derives the watched set from dispatch_hook.ts's static import closure at run time (step 2.2, landed in 8fdb48169) instead of the hand-maintained regex, so concern_failure_policy.ts and any future verdict-deciding sibling join the fence without an edit to the gate. The residual this does not remove: a module already in the closure that later gains verdict logic under a name the 1.1 classifier does not recognise as verdict-deciding still needs the classifier's own judgement, which stays a reviewed call rather than a derived one."
++      "rationale": "road-to-a-ratification-fence-that-follows-its-imports derives the watched set from dispatch_hook.ts's static import closure at run time (step 2.2, landed in 8fdb48169) instead of the hand-maintained regex, so concern_failure_policy.ts and any future verdict-deciding sibling join the fence without an edit to the gate. The residual this does not remove: a module already in the closure that later gains verdict logic under a name the 1.1 classifier does not recognise as verdict-deciding still needs the classifier's own judgement, which stays a reviewed call rather than a derived one.",
++      "verified_by": "tests/scripts/check_kernel_edit_ratified_import_closure.test.ts, tests/scripts/check_kernel_edit_ratified.test.ts (landed on drain/ratification-fence-imports-20261007, merged via PR #2261)"
+     },
+     {
+       "finding_id": "2c9959f7262d",
+@@ -165,7 +207,11 @@
+       "kind": "security",
+       "title": "16.3.0 ships `doctor --json` network egress by default with open findings and no migration note",
+       "detail": "The 16.2.0 findings ledger now marks three findings `still_open`: c6367568cb1a, 77e3912664b9 and 8605e9fc59cd. `doctor --json`, including `--check <id>`, still spawns `git` and several `gh` calls unconditionally. It can block for up to 15 s, and there is no CLI opt-out flag. The only escape is an environment variable. `docs/MIGRATION.md` is not among the changed files and carries no entry naming `doctor`. Consumers who scripted `doctor` as an offline diagnostic silently inherit network and credential dependence. The ledger itself says the closing action is known and cheap.",
+-      "file": "agents/evidence/release-findings/16.2.0.json"
++      "file": "agents/evidence/release-findings/16.2.0.json",
++      "status": "fixed",
++      "commit": "fc1bdec4f",
++      "rationale": "The two specific gaps this finding names are closed: `--no-forge`/`--offline` is a real CLI opt-out (this roadmap's step 3.1), and docs/MIGRATION.md § 16.2.0 now names doctor, the network read, both environment switches and the new flag (step 3.2). Whether the default itself should flip is a separate, explicitly-tracked owner decision (blocker doctor-network-default, step 3.3) — not a gap in the flag or the documentation, which is what this finding described. The three sibling 16.2.0 findings (c6367568cb1a, 77e3912664b9, 8605e9fc59cd) live in a different release's ledger and are out of this roadmap's declared scope; they carry the same two now-closed gaps and the same open default question.",
++      "verified_by": "npx vitest run tests/scripts/doctor_offline_flag.test.ts -> 8 passed; grep -c 'no-forge' docs/MIGRATION.md -> 2"
+     },
+     {
+       "finding_id": "de29dcc6b5d8",
+@@ -173,7 +219,11 @@
+       "kind": "claim",
+       "title": "Roadmap close-out quotes review-round counts that disagree with the review artefacts in the range",
+       "detail": "The roadmap says 'Seven completion-review rounds produced 71 findings; 61 are fixed and 10 are accepted-risk'. It also says 'Nothing in eight review rounds found an adoption path' and that figures were re-measured at each round. The range contains findings artefacts `behavior-vocabulary-close-round2` through `round21`, and the supplied round-10 prompt covers a head commit later than the figures. The close-out totals and the '97 tests green' figure therefore cannot be current. The roadmap's own step 2.2 argues that derived volatile figures should not be quoted in completion evidence at all, yet it quotes several.",
+-      "file": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md"
++      "file": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md",
++      "status": "fixed",
++      "commit": "00612c1f2",
++      "rationale": "This finding named an intermediate commit's snapshot (round 7-8 of an eventual 21). The single commit that landed the roadmap's full close-out (00612c1f2) superseded the 'seven/eight rounds, 71 findings' text with the final tally: 'Twenty completion-review rounds produced 158 findings; 119 are fixed and 39 are accepted-risk ... Nothing is open.' The quoted 71/61/10 and seven-vs-eight figures no longer appear anywhere in the tree. The '97 tests green' residual is the separate finding 703a0aacd48e (accepted_risk).",
++      "verified_by": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md:727-729, read at this commit"
+     },
+     {
+       "finding_id": "ee95ff4aca5f",
+@@ -192,7 +242,11 @@
+       "kind": "claim",
+       "title": "AC-1 closed as met on trigger rows the corpus itself expects to fail a live pass",
+       "detail": "The `_eval_note` in `triggers.json` says the new behaviour-contract exemplars are expected to fail a live `skill_trigger_eval` pass. The production `description` carries none of the vocabulary and `last_eval` was not bumped. The roadmap nevertheless marks AC-1 `[x]` on file presence plus a `--dry` `description_route_check`, which it admits cannot confirm production routing. This is disclosed, but the closed checkbox reads stronger than the evidence.",
+-      "file": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md"
++      "file": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md",
++      "status": "fixed",
++      "commit": "00612c1f2",
++      "rationale": "The final AC-1 text (landed in the same commit that closed the roadmap) states the limit explicitly in its own body: 'Recorded because it is a limit, not a pass ... the dry backend is substring-on-unit-name, so it cannot confirm that a behaviour-driven prompt reaches this skill in production — that is the proxy gap the checker documents about itself.' The checkbox no longer reads stronger than the evidence beside it.",
++      "verified_by": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md:621-630, read at this commit"
+     },
+     {
+       "finding_id": "a2f0c4b87ade",
+@@ -200,7 +254,11 @@
+       "kind": "claim",
+       "title": "Dated measurement file regenerated in place with weaker recall and an unmet ceiling",
+       "detail": "`delivery-set-measurement-2026-08-31.json` is rewritten with a larger corpus: 810 cases, up from 794. Recall at k fell from 64.141 to 62.808, recall loss rose to 37.192 pp, and `ceiling_met` is false. The filename still dates it to 2026-08-31. Any doc quoting the earlier figures would now disagree with the file, and the diff carries no explanation of the regeneration.",
+-      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json"
++      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json",
++      "status": "fixed",
++      "commit": "fc1bdec4f",
++      "rationale": "The sibling prose page now carries the explanation: the dated filename is kept deliberately, the JSON 'is re-run whenever the train corpus moves, so it is the source' and is not copied into other pages precisely to avoid this staleness. The corpus has grown again since (now 891 cases, recall_at_k 63.029), confirming the file behaves as documented. No doc quotes the superseded 810-case/62.808 figures (checked: 0 hits in docs/CLAIMS.md, docs/proof.md, README.md, CHANGELOG.md).",
++      "verified_by": "agents/evidence/analysis/delivery-set-result-2026-08-31.md:12-19; grep for '64.141'/'62.808' across docs/CLAIMS.md docs/proof.md README.md CHANGELOG.md returns 0"
+     },
+     {
+       "finding_id": "4a7127f47609",
+@@ -218,7 +276,10 @@
+       "kind": "correctness",
+       "title": "Known-wrong behavior-axis output ships under accepted-risk, justified by a line-count ceiling",
+       "detail": "Round 11 findings #2 and #8 are accepted-risk, not fixed. (#2) A root solution beside workspace packages folds every package's .csproj into the root scope. Two packages on different .NET runners then get a FALSE `unknown` refusal row for scope_root '.', next to the correct per-package rows. (#8) A multi-line flow sequence `packages: [` in pnpm-workspace.yaml silently drops the whole workspace declaration. Both produce wrong rows, and the module's own doctrine says a false positive on this axis deletes the one correct answer. The stated blocker is that runner.ts sits at exactly 1,500 lines, which is the file-length lint. The remedies are small (about 10 and 8 lines), so a style ceiling is deciding whether a correctness defect gets fixed. Under fix-what-you-see, 'cannot fix now' requires a tracked follow-up roadmap in the same change. A `revisit-if` in a findings table is not one. Confirm the archived 'carried' roadmap actually carries both items with an owner.",
+-      "file": "agents/evidence/reviews/behavior-vocabulary-close-round11.findings.md"
++      "file": "agents/evidence/reviews/behavior-vocabulary-close-round11.findings.md",
++      "status": "accepted_risk",
++      "rationale": "Confirmed: both items are carried in the archived roadmap's own residue section, each with a cost estimate and a REVISIT-IF, not merely a findings-table note. '[Round 11] raised it and noted this section did not carry it — it does now. ... What blocks it is not the shape but the per-file line ceiling — runner.ts sits at its per-file ceiling, with ZERO headroom ... for these three items deferred now means blocked until the module is split. REVISIT-IF: that split happens, or a consumer reports the false root row.' The flow-sequence drop carries its own REVISIT-IF the same way. runner.ts measures 1,498 lines today, confirming the ceiling pressure is still live.",
++      "verified_by": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md:839-855,914-922; wc -l src/agent-src/templates/scripts/work_engine/stack/runner.ts -> 1498"
+     },
+     {
+       "finding_id": "357ec50dedd8",
+@@ -226,7 +287,11 @@
+       "kind": "claim",
+       "title": "Roadmap closing narrative states review counts that the evidence tree contradicts",
+       "detail": "The embedded roadmap snapshot says 'Seven completion-review rounds produced 71 findings; 61 are fixed and 10 are accepted-risk'. Its Risk Register says 'Nothing in eight review rounds'. The review artefacts in this range run through round 21 (rounds 2 to 21 are listed under CHANGED BY THIS RANGE), and round 11 alone adds 10 findings with 2 accepted-risk. The roadmap contradicts itself (seven vs eight) and the tree. The same file says stale self-description is the dominant defect class of this change, and here it recurs. Before release, re-derive these counts in the archived copy (archive/road-to-behavior-vocabulary-and-runner-truth*.md) or remove the figures. A closure claim should not quote a derived, volatile number.",
+-      "file": "agents/roadmaps/road-to-behavior-vocabulary-and-runner-truth.md"
++      "file": "agents/roadmaps/road-to-behavior-vocabulary-and-runner-truth.md",
++      "status": "fixed",
++      "commit": "00612c1f2",
++      "rationale": "Same intermediate snapshot as de29dcc6b5d8, superseded by the same final commit, which re-derived the count in the archived copy exactly as this finding's own remedy asked: 'Twenty completion-review rounds produced 158 findings; 119 are fixed and 39 are accepted-risk ... Nothing is open.' The seven-vs-eight self-contradiction and the 71/61/10 figures are gone from the tree.",
++      "verified_by": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md:727-729, read at this commit"
+     },
+     {
+       "finding_id": "efd9cb3e1bf6",
+@@ -234,7 +299,10 @@
+       "kind": "claim",
+       "title": "Delivery-set measurement regenerated with regressed recall; headline consumers not shown updated",
+       "detail": "delivery-set-measurement-2026-08-31.json changed in this change set: recall_at_k 64.141 to 62.808, recall_loss_pp 35.859 to 37.192, recall@1/3/5/10/20 all lower, precision slightly lower. The corpus grew from 794 to 810 cases, and `ceiling_met` stays false. This is a measured regression in a release PR, and the cause is an unrelated corpus change. Any headline number in docs/CLAIMS.md, docs/proof.md, README or CHANGELOG that quotes the old recall or precision figures must be updated in the same release. The diff does not show whether they were. Also state in the CHANGELOG that the figures moved because the corpus changed, not because routing changed.",
+-      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json"
++      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json",
++      "status": "still_open",
++      "rationale": "Half-addressed. No headline doc quotes the superseded figures (checked: 0 hits for 64.141/62.808 in docs/CLAIMS.md, docs/proof.md, README.md, CHANGELOG.md), so the update-in-the-same-release half is moot. The specific CHANGELOG ask — a line stating the figures moved because the corpus changed, not because routing changed — is not present anywhere in CHANGELOG.md. No active roadmap owns adding it.",
++      "verified_by": "grep for corpus-growth/delivery-set wording in CHANGELOG.md returns 0; grep for the superseded figures across the four headline docs returns 0"
+     },
+     {
+       "finding_id": "e35624528060",
+@@ -243,7 +311,11 @@
+       "title": "Round 12 TOCTOU fix to _stat_mtime ships with no test and an unverified argument",
+       "detail": "Round 12 finding #1 (an unguarded statSync that can throw out of resolve_toolchain and break the 'never raises' contract) is marked fixed. The disposition says no deterministic test can produce the race, so no red-then-green probe exists. That is an honest statement, but the contract now rests on sibling-helper analogy alone. A fault-injection test would close it: stub fs.statSync to throw for one path and assert latest_manifest_mtime still returns a number. Without one, the guard can be removed silently.",
+       "file": "agents/evidence/reviews/behavior-vocabulary-close-round12.findings.md",
+-      "contradicted": "the range deletes nothing matching `agents/evidence/reviews/behavior-vocabulary-close-round12.findings.md`, and `agents/evidence/reviews/behavior-vocabulary-close-round12.findings.md` is present in the tree — checked against `git diff --name-status base...HEAD` and the working tree, not against the review chunk."
++      "contradicted": "the range deletes nothing matching `agents/evidence/reviews/behavior-vocabulary-close-round12.findings.md`, and `agents/evidence/reviews/behavior-vocabulary-close-round12.findings.md` is present in the tree — checked against `git diff --name-status base...HEAD` and the working tree, not against the review chunk.",
++      "status": "fixed",
++      "commit": "fc1bdec4f",
++      "rationale": "The exact fault-injection test this finding asked for now exists: 'a manifest that vanishes between the existence check and the stat does not throw' stubs fs.statSync's bigint call to throw ENOENT and asserts latest_manifest_mtime still returns 0.0. The comment names this finding by id.",
++      "verified_by": "npx vitest run tests/scripts/work_engine/stack_runner.test.ts -t \"vanishes between\" -> 1 passed"
+     },
+     {
+       "finding_id": "7efdf81cb478",
+@@ -251,7 +323,11 @@
+       "kind": "security",
+       "title": "Workspace literal scope entries follow symlinks out of the project root",
+       "detail": "In the reviewed runner.ts, _behavior_scopes rejects `..`, absolute paths and `!` globs. For a literal workspace entry it uses fs.statSync(...).isDirectory(), which follows symlinks. A workspace entry naming an in-repo symlink to a directory outside the root is accepted as a scope. Detection then reads composer.json, package.json and similar files outside the repository. The glob branch uses Dirent.isDirectory(), which does not follow symlinks, so the two branches are inconsistent. Impact is limited to detection output in a local resolver, but the module's own comments claim path confinement. Use lstatSync, or realpath-confine the result.",
+-      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts"
++      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts",
++      "status": "fixed",
++      "commit": "00612c1f2",
++      "rationale": "runner.ts:1091-1094 now calls fs.lstatSync(...).isDirectory() for the literal-entry branch, matching the glob branch's Dirent.isDirectory() (neither follows symlinks). The inconsistency the finding names is closed.",
++      "verified_by": "src/agent-src/templates/scripts/work_engine/stack/runner.ts:1091-1094, read at this commit"
+     },
+     {
+       "finding_id": "1b661735687e",
+@@ -259,7 +335,10 @@
+       "kind": "claim",
+       "title": "Completion reviews ran with roadmap: none and an empty acceptance-criteria file",
+       "detail": "Round 11 and round 12 context manifests record `roadmap: none` and `ac_hash: none`, and acceptance-criteria.md is the empty blob. The roadmap road-to-behavior-vocabulary-and-runner-truth.md is itself in the changed set and carries AC-1 to AC-6. The reviewers could therefore not check any acceptance claim, and the findings are code-and-prose only. Both rounds are also single-member, single-pass and provisional. Do not cite these rounds as gate evidence that the ACs were reviewed. The AC verification in the roadmap is the implementer's own.",
+-      "file": "agents/evidence/reviews/behavior-vocabulary-close-round11.review-input/acceptance-criteria.md"
++      "file": "agents/evidence/reviews/behavior-vocabulary-close-round11.review-input/acceptance-criteria.md",
++      "status": "accepted_risk",
++      "rationale": "This is a limitation disclosure about two frozen, already-merged review rounds, not a defect with a fix. The finding's own instruction ('do not cite these rounds as gate evidence that the ACs were reviewed') is the mitigation, and it is honored here: this disposition does not treat round 11 or round 12 as AC-review evidence, and the roadmap's own AC verification stands on its own citations, not on these two rounds.",
++      "verified_by": "agents/evidence/reviews/behavior-vocabulary-close-round11.review-input/acceptance-criteria.md and round12's manifest, re-read: both still record roadmap:none/ac_hash:none, confirming this is a property of the frozen record, not a live gap"
+     },
+     {
+       "finding_id": "6a0b6bcea5af",
+@@ -267,7 +346,11 @@
+       "kind": "style",
+       "title": "Evidence tree carries multi-thousand-line duplicated patch snapshots per review round",
+       "detail": "Each review round commits a full diff.patch (round 11's is about 4,200 lines), mostly re-embedding source already in the tree. About 20 rounds across several review slugs add large, near-duplicate files to a published package's repo. Check that these paths are excluded from the npm tarball and the plugin manifests, and that the .path-leak-allow additions do not widen the leak allowlist beyond these artefacts.",
+-      "file": "agents/evidence/reviews/behavior-vocabulary-close-round11.review-input/diff.patch"
++      "file": "agents/evidence/reviews/behavior-vocabulary-close-round11.review-input/diff.patch",
++      "status": "fixed",
++      "commit": "0c86ad98f",
++      "rationale": "All three checks the finding asked for pass: `agents/` is not on package.json's `files` allowlist (npm packaging is allowlist-based), so review-input paths never reach the tarball; neither `.claude-plugin/` nor `.augment-plugin/` references `review-input`; and `.path-leak-allow` carries zero entries naming `review-input` or `behavior-vocabulary`, so the leak allowlist was not widened for these artefacts.",
++      "verified_by": "grep '\"files\"' package.json (no agents/ entry); grep -rl review-input .claude-plugin/ .augment-plugin/ (0 hits); grep -c 'review-input\\|behavior-vocabulary' .path-leak-allow -> 0"
+     },
+     {
+       "finding_id": "41aabf237a10",
+@@ -275,7 +358,11 @@
+       "kind": "claim",
+       "title": "Roadmap completion record quotes review-round and finding counts that the release range contradicts",
+       "detail": "The embedded roadmap text states 'Eleven completion-review rounds produced 100 findings; 74 are fixed and 26 are accepted-risk'. The range facts list behavior-vocabulary-close review artefacts up to round21, and the round13 findings file shows later rounds still raising high-severity findings. The same document says derived, volatile figures should not be quoted in completion evidence, then quotes this one. It also quotes 'ls src/skills | wc -l is 299' and 'AC-3 ... 97 tests green'. It admits the 97 is stale at AC-3 sign-off, so a proof-affecting AC reads as a current count when it is not. The CHANGELOG or release notes must not repeat these figures.",
+-      "file": "agents/evidence/reviews/behavior-vocabulary-close-round12.review-input/diff.patch"
++      "file": "agents/evidence/reviews/behavior-vocabulary-close-round12.review-input/diff.patch",
++      "status": "fixed",
++      "commit": "00612c1f2",
++      "rationale": "The round-12 diff.patch is a frozen audit snapshot and is correctly unchanged (its own class is the subject of the separate findings 6a0b6bcea5af and 78520e9a6a33). The live roadmap text it quoted converged to the final, accurate tally in the same commit that closed the roadmap ('Twenty completion-review rounds produced 158 findings; 119 are fixed and 39 are accepted-risk'); the 299-skill count is unaffected and still matches the tree. The '97 tests green' residual is the separate finding 703a0aacd48e (accepted_risk); the CHANGELOG does not repeat any of these round-level figures.",
++      "verified_by": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md:727-729; grep for '100 findings'/'Eleven completion-review' in CHANGELOG.md returns 0"
+     },
+     {
+       "finding_id": "2ce05ad49c18",
+@@ -283,7 +370,11 @@
+       "kind": "claim",
+       "title": "Published routing/delivery metrics moved because of corpus seeding, with no provenance in the artefact",
+       "detail": "delivery-set-measurement-2026-08-31.json changes recall_at_k from 64.141 to 62.808, recall_loss_pp from 35.859 to 37.192, and benefit_unconditional likewise. Cases go from 794 to 810 and prompts from 783 to 799. The cause is 16 new test-case-discovery trigger rows, which the corpus's own _eval_note says are expected to fail a live pass. A reader diffing the numbers sees a routing regression that is really aspirational rows entering the denominator. Round13 finding 3 accepts the risk and says 'the commit ... states it' and 'the roadmap residue now carries it'. The round12 roadmap snapshot in this diff does not carry that link. Neither JSON carries a note field. Any headline that cites these recall figures needs the corpus-growth caveat, or the link must be verified in the final tree.",
+-      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json"
++      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json",
++      "status": "fixed",
++      "commit": "fc1bdec4f",
++      "rationale": "No headline cites these recall figures (checked across docs/CLAIMS.md, docs/proof.md, README.md, CHANGELOG.md), so the 'needs the caveat or the link must be verified' condition is satisfied by there being no link to verify. The sibling prose page's correction note supplies the corpus-growth caveat at the one place a reader would land.",
++      "verified_by": "grep for the superseded figures across the four headline docs returns 0; agents/evidence/analysis/delivery-set-result-2026-08-31.md:12-19"
+     },
+     {
+       "finding_id": "313657324778",
+@@ -291,7 +382,11 @@
+       "kind": "correctness",
+       "title": "Round12 snapshot emits an unrunnable `dotnet test` into `selected` on a marker-only layout (fix is asserted only in a later findings file)",
+       "detail": "In the diffed runner.ts, _dotnet_basis emits a dotnet-test row when global.json or Directory.Build.props sits beside a project found below the root, using the root-relative command `dotnet test`. dotnet test does not recurse and fails MSB1003 without a root project or solution. _apply_guard never reads confidence, so the row reaches selected. The two fixtures assert only confidence. Round13 finding 1 marks this fixed and says it reversed round 11 finding 9. The fix code is not in the visible diff, so the final tree must be checked for the root-listing-only gate. The roadmap text in this snapshot still presents Risk 2 and the marker gate as closed, and the contract-table claim of HIGH on the solution-less layout is wrong for this snapshot.",
+-      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts"
++      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts",
++      "status": "fixed",
++      "commit": "00612c1f2",
++      "rationale": "_dotnet_basis now lists only root.readdirSync(root) (files, sorted) and gates the row on a root-level .NET project/solution file being present, with a comment stating the MSB1003 reasoning directly. A scope whose only evidence is a marker below the root gets no row.",
++      "verified_by": "src/agent-src/templates/scripts/work_engine/stack/runner.ts:705-731, read at this commit"
+     },
+     {
+       "finding_id": "d0b371a1476f",
+@@ -299,7 +394,11 @@
+       "kind": "correctness",
+       "title": "Ruby marker-only rspec row emits `bundle exec rspec` with no Gemfile",
+       "detail": "_ruby_runners drops the Gemfile precondition, so .rspec or spec/spec_helper.rb alone yields `bundle exec rspec` at HIGH. bundle exec aborts with 'Could not locate Gemfile'. The row goes into selected, and no fixture covers the Gemfile-less path. Round13 finding 2 claims a fix (bare `rspec` without a Gemfile) that this diff does not show. Verify it landed together with a red-first fixture.",
+-      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts"
++      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts",
++      "status": "fixed",
++      "commit": "00612c1f2",
++      "rationale": "_ruby_runners now picks `cmd = gemfile.present ? 'bundle exec rspec' : 'rspec'`, so a marker-only project (no Gemfile) emits bare `rspec` instead of a prefix that aborts.",
++      "verified_by": "src/agent-src/templates/scripts/work_engine/stack/runner.ts:622-640, read at this commit"
+     },
+     {
+       "finding_id": "1137e5be15cf",
+@@ -307,7 +406,11 @@
+       "kind": "correctness",
+       "title": "pnpm-workspace parser drops all scopes on CRLF files",
+       "detail": "_pnpm_packages splits on '\\n' and its key regex has no m flag, so a '\\r' before end of line prevents every key match. The result is [] and the workspace silently collapses to the root scope. latest_manifest_mtime then loses per-package invalidation, which is the stale-cache failure the widening was meant to prevent. Round13 finding 5 claims a /\\r?\\n/ fix. Confirm it is in the final tree.",
+-      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts"
++      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts",
++      "status": "fixed",
++      "commit": "00612c1f2",
++      "rationale": "_pnpm_packages now splits on /\\r?\\n/ with a comment naming exactly this CRLF failure mode. A CRLF pnpm-workspace.yaml no longer collapses to zero scopes.",
++      "verified_by": "src/agent-src/templates/scripts/work_engine/stack/runner.ts:990-1001, read at this commit"
+     },
+     {
+       "finding_id": "de7e020a458f",
+@@ -315,7 +418,11 @@
+       "kind": "correctness",
+       "title": "Shipped command bodies embed a package-internal shell probe and a self-contradicting bolded claim",
+       "detail": "The tests/create and tests/execute command bodies (src and dist projections) tell consumers to run `ls src/skills | grep -iE 'jest|vitest|pytest|rspec|junit'` as justification. src/skills does not exist in a consumer repo, and the claim is a volatile derived fact. The bold line 'skills: deliberately names none' sits below frontmatter listing `skills: [test-case-discovery, quality-tools]`. Round13 findings 6 and 7 mark both fixed. Confirm that src and dist copies are regenerated with the fix.",
+-      "file": "src/domains/engineering-base/tests/create/command.md"
++      "file": "src/domains/engineering-base/tests/create/command.md",
++      "status": "fixed",
++      "commit": "00612c1f2",
++      "rationale": "Neither tests/create nor tests/execute (src or dist) carries the `ls src/skills | grep ...` probe any more, and the bold claim now reads 'deliberately names no single-stack skill' — consistent with the actual frontmatter, which lists only stack-neutral skills (test-case-discovery, quality-tools), not zero skills.",
++      "verified_by": "grep over src/domains/engineering-base/tests/{create,execute}/command.md and dist/agent-src/commands/tests/{create,execute}.md: 0 hits for the shell probe, all four carry the 'no single-stack skill' wording"
+     },
+     {
+       "finding_id": "49c1459b49e9",
+@@ -323,7 +430,11 @@
+       "kind": "claim",
+       "title": "toolchain-resolver contract page narrates its own review history and a vanished budget instead of stating the contract",
+       "detail": "The Size budget paragraph drops the page's self-imposed ceiling and then recounts three fitted values (6,000, 7,500, 8,500), a '66 characters' claim, and commentary about the trap. Elsewhere the same page states per-scope cost figures ('bounded at 200 scopes'). The page says narration and per-round history do not belong in it, yet this paragraph is exactly that. Treat the cost and budget statements as unverified prose, not as proof. The tripwire alone should stay.",
+-      "file": "src/agent-src/contexts/execution/toolchain-resolver.md"
++      "file": "src/agent-src/contexts/execution/toolchain-resolver.md",
++      "status": "fixed",
++      "commit": "fc1bdec4f",
++      "rationale": "The narration paragraph (the three fitted values, the '66 characters' claim) is removed; the Size budget section now states only the enforced ceiling with its code anchor (`DEPTH_CEILING_CHARS`), and the 200-scopes figure gains its own anchor (`_MAX_BEHAVIOR_SCOPES`) instead of standing as unverified prose.",
++      "verified_by": "src/agent-src/contexts/execution/toolchain-resolver.md:14-20,54-58, read at this commit"
+     },
+     {
+       "finding_id": "28e4739a5e3b",
+@@ -331,7 +442,11 @@
+       "kind": "claim",
+       "title": "Published routing/delivery-set headline numbers moved because of eval rows the file itself says are expected to fail",
+       "detail": "The delivery-set measurement drops recall_at_k from 64.141 to 62.808, raises recall_loss_pp from 35.859 to 37.192, and raises routing-body false-activation from +7.79pp to +8.17pp. The regeneration follows the new 'should-trigger' rows in test-case-discovery/evals/triggers.json. That file's _eval_note says no live skill_trigger_eval pass was run, last_eval is deliberately not bumped, and the rows 'ARE EXPECTED TO FAIL A LIVE PASS TODAY'. Specification rows known to be red are now part of the train corpus that produces the measured headline figures. Any doc that cites the old figures (docs/proof.md, docs/CLAIMS.md, README) must be regenerated, or it quotes numbers the corpus no longer produces. Conversely, the new figures read as a routing regression when the routing did not change.",
+-      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json"
++      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json",
++      "status": "fixed",
++      "commit": "fc1bdec4f",
++      "rationale": "None of docs/proof.md, docs/CLAIMS.md or README.md cites the superseded figures, so neither branch of the finding's own either/or condition is violated. The false-activation figure this finding also names was independently corrected in the skill-ranker-confusion page (finding 4507566202f6).",
++      "verified_by": "grep for the superseded figures across docs/proof.md docs/CLAIMS.md README.md returns 0"
+     },
+     {
+       "finding_id": "1b44a71a5dd3",
+@@ -339,7 +454,11 @@
+       "kind": "claim",
+       "title": "Roadmap close-out quotes review-round and finding counts that the same range outgrows",
+       "detail": "The embedded roadmap residue states 'Twelve completion-review rounds produced 109 findings; 82 are fixed and 27 are accepted-risk. Nothing is open.' This range also contains round13 and round14 review artifacts, and round14 adds six findings with fixed and accepted-risk dispositions. If the archived roadmap still carries the 12/109/82/27 figures, it contradicts the review artifacts shipped alongside it. This is the stale-derived-figure defect class the roadmap's own step 2.2 says not to quote. Fix by naming the command or artifact that holds the count, or by re-deriving it at the release commit.",
+-      "file": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md"
++      "file": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md",
++      "status": "fixed",
++      "commit": "00612c1f2",
++      "rationale": "Same intermediate-snapshot pattern (round 12 of 21), superseded by the same final commit: the archived roadmap now reads 'Twenty completion-review rounds produced 158 findings; 119 are fixed and 39 are accepted-risk ... Nothing is open.' The 12/109/82/27 figures do not appear in the tree.",
++      "verified_by": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md:727-729, read at this commit"
+     },
+     {
+       "finding_id": "a78536c88317",
+@@ -347,7 +466,11 @@
+       "kind": "security",
+       "title": "Workspace scope expansion follows symlinks for literal entries and reads files outside the project root",
+       "detail": "_behavior_scopes accepts a literal workspace entry after fs.statSync(path.join(project_root, g)).isDirectory(). statSync follows symlinks, so a literal entry that is a symlink to a directory outside the repository becomes a scope. Detection then reads composer.json, package.json, requirements.txt, Gemfile and .NET project files there. The '..' and leading-'/' guards do not cover a symlink inside the tree. The glob branch uses Dirent.isDirectory(), which does not follow symlinks, so the two branches disagree. Impact is low: the code only pattern-matches the content, and basis strings echo file names, not content. Still, an untrusted repository can steer the resolver to read arbitrary local manifests. Use lstat or a realpath containment check for the literal branch.",
+-      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts"
++      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts",
++      "status": "fixed",
++      "commit": "00612c1f2",
++      "rationale": "Same literal-entry branch as 7efdf81cb478; runner.ts:1091-1094 now uses fs.lstatSync(...).isDirectory() instead of fs.statSync, so a symlink entry no longer resolves outside the project root.",
++      "verified_by": "src/agent-src/templates/scripts/work_engine/stack/runner.ts:1091-1094, read at this commit"
+     },
+     {
+       "finding_id": "84e495bee3c5",
+@@ -355,7 +478,10 @@
+       "kind": "claim",
+       "title": "Review manifest declares a read-only tool set, but the findings cite executed commands",
+       "detail": "behavior-vocabulary-close-round15.findings.md declares `tools: [git-diff-branch-scoped, file-read-branch-paths]` and `excluded: [..., agents/runtime, ...]`. The prompt template allows only branch-scoped `git diff` and reads of branch-touched files, with no repo-wide grep. The findings table and the 'Verified and NOT findings' block report results that need more than that: `vitest` reporting 119 passed, `lint_roadmap_complexity` exiting 1, `grep -rn 'stack-adaptive' src/ | wc -l` returning 8, a `sha256` of the corpus file, `wc -w` on SKILL.md, and a read of `src/config/canonical-terms.yml`, which is not branch-touched. Either the manifest understates what the reviewer did, or those verifications were not produced by the declared tools. In both cases the recorded provenance of the gate evidence is wrong. The review also records `roadmap: none` and `ac_hash: none`, yet it certifies roadmap and acceptance-criteria claims. Disposition: must-fix. Correct the manifest to the tools actually used, or drop the claims that cannot be reproduced under the stated allowlist.",
+-      "file": "agents/evidence/reviews/behavior-vocabulary-close-round15.findings.md"
++      "file": "agents/evidence/reviews/behavior-vocabulary-close-round15.findings.md",
++      "status": "still_open",
++      "rationale": "Confirmed still true: the file's `context-manifest` still declares `tools: [git-diff-branch-scoped, file-read-branch-paths]` while its findings table cites vitest, grep and file reads outside the declared allowlist. Not hand-corrected here: this is a dated (2026-10-01), already-merged review record, and rewriting a frozen review's own provenance fields after the fact carries the same risk this tree's deferral-carry policy names for archived roadmaps — it invents a record of what tools were used that nobody can now verify either way. No active roadmap owns correcting past review-manifest provenance.",
++      "verified_by": "agents/evidence/reviews/behavior-vocabulary-close-round15.findings.md:9, read at this commit"
+     },
+     {
+       "finding_id": "703a0aacd48e",
+@@ -363,7 +489,10 @@
+       "kind": "claim",
+       "title": "AC-3 asserts '97 tests green' while the suite reports 119 (later 121)",
+       "detail": "The roadmap's AC-3 evidence line in the committed diff says `97 tests green in stack_runner.test.ts`. Round-15 finding 2 measures 119 passed, and its disposition cites 121. The line is a falsifiable test-count claim shipped in a release. The justification is that the Acceptance-Criteria body cannot be edited because of gate R1 and the same-day stamp. The same diff rewrites that whole AC body relative to main, so the justification is weak. The roadmap's own step 2.2 says not to quote derived, volatile figures in completion evidence, and this line breaks that rule. Disposition: deferred. It was recorded as accepted-risk with a revisit-if of the next-day risk-review stamp. Replace the number with the command (`npx vitest run tests/scripts/work_engine/stack_runner.test.ts`) at the first opportunity.",
+-      "file": "agents/roadmaps/road-to-behavior-vocabulary-and-runner-truth.md"
++      "file": "agents/roadmaps/road-to-behavior-vocabulary-and-runner-truth.md",
++      "status": "accepted_risk",
++      "rationale": "Confirmed still present in the archived roadmap: 'collateral. 97 tests green in stack_runner.test.ts' (AC-3 body) stays frozen at its sign-off value by deliberate design. The file's own closing text names this explicitly: 'Two figures inside the Acceptance-Criteria body are sign-off-time values, deliberately: AC-3's 97 tests green ... The figure is corrected here, outside that body, rather than silently left to look current. REVISIT-IF: the next review of this plan on a later date, which can carry the edit, or a stamp with finer granularity.' This matches the finding's own suggested disposition verbatim.",
++      "verified_by": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md:647,369-379, read at this commit"
+     },
+     {
+       "finding_id": "8ab7e0deb605",
+@@ -371,7 +500,10 @@
+       "kind": "claim",
+       "title": "Published routing metrics moved because of rows that are expected to fail, with no provenance in the artifacts",
+       "detail": "delivery-set-measurement-2026-08-31.json and routing-body-signal-verdict.json were regenerated after the trigger corpus grew. `recall_at_k` fell from 64.141 to 62.808, `recall_loss_pp` rose from 35.859 to 37.192, `ceiling_met` stays false, and the body-signal false-activation delta moved from +7.79 to +8.17 pp. The cause is exemplar rows that assert routing the untouched `description` cannot deliver; the corpus's own `_eval_note` says so. Neither generated file has a field recording this, so a reader diffing the numbers sees a routing regression. The only explanation is in roadmap residue prose. Any release note or headline that quotes these metrics should say they are corpus-seeded, not a behaviour change. Disposition: deferred, because neither generator has a provenance field. Revisit if a third consumer reads these files without the surrounding change.",
+-      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json"
++      "file": "agents/evidence/analysis/delivery-set-measurement-2026-08-31.json",
++      "status": "still_open",
++      "rationale": "Confirmed still true and left open on the finding's own stated terms: `jq 'keys' delivery-set-measurement-2026-08-31.json` carries no note/provenance field, and routing-body-signal-verdict.json has not been checked for one either. No release note quotes these metrics today (checked), so the revisit condition ('a third consumer reads these files without the surrounding change') has not fired. No active roadmap owns adding the field.",
++      "verified_by": "jq 'keys' agents/evidence/analysis/delivery-set-measurement-2026-08-31.json — no note/provenance key"
+     },
+     {
+       "finding_id": "4398cd4de275",
+@@ -379,7 +511,10 @@
+       "kind": "correctness",
+       "title": "runner.ts sits at exactly its per-file line cap, which blocks three deferred fixes",
+       "detail": "Round-15 finding 5 measures the module at 1500 lines, equal to `check_source_size_budget`'s per-file cap, so the next added line turns the aggregate ratchet red. The roadmap residue defers three fixes on this ceiling without saying the headroom is zero. These are the false root-scope `unknown` row when a root `.sln` sits beside workspace packages, the multi-line flow-sequence drop in `_pnpm_packages`, and the single-`readdirSync` consolidation. The false refusal row is a correctness defect in a detection axis, so it will persist until the behavior axis is split into its own leaf module. Disposition: deferred (accepted-risk), with the unblocking move being that module split.",
+-      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts"
++      "file": "src/agent-src/templates/scripts/work_engine/stack/runner.ts",
++      "status": "accepted_risk",
++      "rationale": "Same residue as 636654f532ad, confirmed in the archived roadmap with explicit cost estimates and REVISIT-IF conditions for all three deferred items, naming the module split as the unblocking move. runner.ts measures 1,498 lines today (2 lines of headroom, not the zero this finding describes at its own reading — the figure moves but the ceiling pressure and the disposition are unchanged).",
++      "verified_by": "agents/roadmaps/archive/road-to-behavior-vocabulary-and-runner-truth.md:839-855,903-910,914-922; wc -l src/agent-src/templates/scripts/work_engine/stack/runner.ts -> 1498"
+     },
+     {
+       "finding_id": "78520e9a6a33",
+@@ -387,7 +522,11 @@
+       "kind": "style",
+       "title": "Whole 4.7k-line source patch committed as review-input evidence",
+       "detail": "`behavior-vocabulary-close-round14.review-input/diff.patch` duplicates the full source, test and generated diff, including both `src/` and `dist/` copies of every file, into the evidence tree. A stale snapshot of code that has since changed (round-15 fixes for `bundle exec` presence, the literal-workspace exclusion and the complexity retag) then sits in the repo and shows up in greps and diffs as if it were current. Disposition: deferred. Acceptable as an immutable audit record, but a short README or header marking it 'frozen at round 14, superseded by later commits' would stop it being read as live code.",
+-      "file": "agents/evidence/reviews/behavior-vocabulary-close-round14.review-input/diff.patch"
++      "file": "agents/evidence/reviews/behavior-vocabulary-close-round14.review-input/diff.patch",
++      "status": "fixed",
++      "commit": "2e80393ff",
++      "rationale": "Added agents/evidence/reviews/behavior-vocabulary-close-round14.review-input/README.md naming the three round-15 fixes this snapshot predates and pointing readers at the live tree, exactly the remedy this finding names. Scoped to round 14 only, the file this finding names — not swept across the ~20 other review rounds' own snapshots, which is a separate, larger decision this task does not make.",
++      "verified_by": "agents/evidence/reviews/behavior-vocabulary-close-round14.review-input/README.md, added in this change"
+     }
+   ],
+   "review_independence": "single-member",
+diff --git a/agents/roadmaps/road-to-findings-that-get-a-disposition.md b/agents/roadmaps/road-to-findings-that-get-a-disposition.md
+index ab661568dee5f9e00f2a9bda9cbfae2660a6248f..dc5dd961dd8e23e26c362dfb13cd7c8e43f371a9 100644
+--- a/agents/roadmaps/road-to-findings-that-get-a-disposition.md
++++ b/agents/roadmaps/road-to-findings-that-get-a-disposition.md
+@@ -70,38 +70,76 @@ owner, because it reverses a recorded supersession.
+ 
+ ## Phase 1 — Every 16.3.0 finding ends somewhere
+ 
+-- [ ] **1.1 The two symlink findings are closed against the fix.** Re-read
++- [x] **1.1 The two symlink findings are closed against the fix.** Re-read
+       `runner.ts:1091-1094` against each finding's text; when it covers the
+       finding, record `fixed` with commit `00612c1f2`.
+       verify: `node -e 'const j=require("./agents/evidence/release-findings/16.3.0.json");process.exit(j.findings.filter(f=>["7efdf81cb478","a78536c88317"].includes(f.finding_id)&&f.status).length===2?0:1)'` -> 0
+-- [ ] **1.2 The rest are read and dispositioned.** Each remaining row gains a
++      Done 2026-10-07: both rows record `status: fixed`, `commit: 00612c1f2`
++      — the literal-entry branch now uses `lstatSync`, matching the glob
++      branch, confirmed by reading the live line range.
++- [x] **1.2 The rest are read and dispositioned.** Each remaining row gains a
+       status and a rationale: `fixed` with commit, `false_positive`,
+       `accepted_risk` with its reason, or `still_open` naming the roadmap that
+       carries it. Rows owned by a sibling roadmap of this round are
+       `still_open` with that roadmap's slug.
+       verify: `node -e 'const j=require("./agents/evidence/release-findings/16.3.0.json");console.log(j.findings.filter(f=>!f.status).length)'` -> /^0$/
+-- [ ] **1.3 The gate agrees.**
++      Done 2026-10-07: all 44 remaining rows carry a status. 31 `fixed`
++      (several already landed on `main` by `00612c1f2`, `fc1bdec4f` and
++      `93a192bbd` before or during this roadmap's run — re-read and cited
++      rather than re-done), 4 `accepted_risk` (a deliberate, disclosed
++      design choice each, with a revisit-if), 9 `still_open` (honestly
++      left open; 2 of the 9 name an owning roadmap — `2c9959f7262d` →
++      road-to-release-evidence-that-reproduces,
++      `ee95ff4aca5f` → road-to-blocking-time-by-cause — the other 7 are
++      genuine orphans, see AC-2). Tally corrected 2026-10-07 by an
++      independent R2 completion review (findings 1 and 3,
++      `drain-findings-disposition-20261007.findings.md`): the first-pass
++      note here undercounted `fixed` and overcounted `still_open` because
++      it was written before the merge from `origin/main` that brought in
++      three more already-landed fixes.
++- [x] **1.3 The gate agrees.**
+       verify: `./scripts-run src/scripts/check_finding_dispositions --release 16.3.0` -> 0
++      Done — green: `blocking 3/3 dispositioned · non-blocking 42/42 carry a
++      terminal status`.
+ 
+ ## Phase 2 — Whether a medium security finding blocks
+ 
+-- [ ] **2.1 Implement the decision of `medium-security-is-blocking`.** Under
++- [x] **2.1 Implement the decision of `medium-security-is-blocking`.** Under
+       (a), `isBlocking` admits `security × medium`, with tests for the new
+       blocking row and for `claim × medium` staying non-blocking. Under (b),
+       the decision and its reason are recorded as a row in this file's
+       `## Decisions` table and nothing in the gate changes.
+       verify: `npx vitest run tests/scripts/check_finding_dispositions.test.ts` -> 0
++      Done 2026-10-07: council (anthropic claude-sonnet-4-5 + openai
++      codex-default, 2/2 convergent) picked (a). `classifyBlocking`
++      (`src/scripts/self_review_gate.ts`) and its mirror `isBlocking`
++      (`src/scripts/check_finding_dispositions.ts`) now admit `security ×
++      medium`; `claim × medium` is unchanged (non-blocking). Both `fixed`
++      dispositions remain required to carry a commit; `accepted_risk` and
++      `false_positive` also unblock, per the council's point that the gate
++      enforces a recorded decision, not mandatory remediation. Red-first:
++      `missing_dispositions([finding({kind:'security',severity:'medium'})])`
++      asserted `toHaveLength(1)` and failed (0 problems) before the fix,
++      passed after.
+ 
+ ## Phase 3 — A doctor that can stay offline
+ 
+-- [ ] **3.1 An offline flag, additive.** `doctor --no-forge` (alias
++- [x] **3.1 An offline flag, additive.** `doctor --no-forge` (alias
+       `--offline`) skips the forge read; `--check <id>` skips it too, since
+       no check id reads it. A test injects a runner and asserts no `gh` and
+       no `git remote` call is made on either path; the default is unchanged.
+       verify: `npx vitest run tests/scripts/doctor_offline_flag.test.ts` -> 0
+-- [ ] **3.2 The migration note.** `docs/MIGRATION.md` gains an entry naming
++      Done — already landed on `main` in `fc1bdec4f` ("feat(doctor): an
++      offline flag, and the 16.3.0 findings' doc and test fixes (partial)",
++      #2243), before this drain session started. Re-verified here: the test
++      file exists with 8 passing cases.
++- [x] **3.2 The migration note.** `docs/MIGRATION.md` gains an entry naming
+       the network read, the two environment switches and the new flag.
+       verify: `grep -c 'no-forge' docs/MIGRATION.md` -> /^[1-9]/
++      Done — landed in the same commit `fc1bdec4f`. `docs/MIGRATION.md`
++      § 16.2.0 names `--no-forge`/`--offline`, `--check <id>`, and the two
++      environment switches, and explicitly defers the default question to
++      this roadmap's `doctor-network-default` blocker.
+ - [ ] **3.3 Implement the decision of `doctor-network-default`, then close
+       the four rows.** Under (a), offline becomes the default and `--online`
+       opts in; under (b), the default stays. Either way `c6367568cb1a`,
+@@ -119,14 +157,36 @@ owner, because it reverses a recorded supersession.
+ 
+ ## Acceptance Criteria
+ 
+-- [ ] AC-1 — No row of the 16.3.0 ledger lacks a status.
++- [x] AC-1 — No row of the 16.3.0 ledger lacks a status.
++      `jq '[.findings[] | select(.status==null)] | length'` -> 0.
+ - [ ] AC-2 — Each `still_open` row names a roadmap that exists.
+-- [ ] AC-3 — The medium-security question has a recorded decision, and the
++      NOT met, stated rather than ticked over: 2 of 9 `still_open` rows
++      (`2c9959f7262d` -> road-to-release-evidence-that-reproduces,
++      `ee95ff4aca5f` -> road-to-blocking-time-by-cause) name an owning
++      roadmap; the other 7 are genuine orphans — no roadmap owns that
++      narrow residual today, and step 1.2's own instruction only asks for
++      the name where a sibling roadmap owns the row. Inventing a roadmap
++      per orphan finding is a separate, larger decision this task does not
++      make. Corrected 2026-10-07 by an independent R2 completion review
++      (finding 2): the first-pass text named `bfe1d6e6d8ca` as the second
++      roadmap-owning row, but that finding is `status: fixed` (commit
++      `93a192bbd`), landed by a parallel lane after this roadmap's own
++      first pass counted it; the real second roadmap-owning row is
++      `2c9959f7262d`.
++- [x] AC-3 — The medium-security question has a recorded decision, and the
+       gate's tests reflect it.
+-- [ ] AC-4 — A `doctor` invocation with the offline flag spawns no forge or
++      Council 2026-10-07, 2/2 convergent on (a); `tests/scripts/check_finding_dispositions.test.ts`
++      and `src/scripts/self_review_gate.test.ts` both updated and green.
++- [x] AC-4 — A `doctor` invocation with the offline flag spawns no forge or
+       remote read, shown by an injected-runner test.
++      `tests/scripts/doctor_offline_flag.test.ts`, 8 passed (landed on
++      `main` before this roadmap ran; re-verified here).
+ - [ ] AC-5 — The four forge findings carry a status consistent with the
+       recorded default.
++      NOT met — there is no recorded default yet (`doctor-network-default`
++      stays open, owner-only). `eff3d4ed3fee` (16.3.0) is `fixed` on its own
++      narrower terms (flag + doc gap, not the default question); the three
++      16.2.0 siblings are untouched and out of this roadmap's scope.
+ 
+ ## Decisions
+ 
+@@ -134,11 +194,14 @@ owner, because it reverses a recorded supersession.
+ |---|---|---|---|---|---|
+ | D1 | reversible-technical | agent | `still_open` with a named roadmap is preferred over `accepted_risk` for unfinished work | The gate's own comment warns that `accepted_risk` is the cheapest way to make a count reach zero (`check_finding_dispositions.ts:91-99`) | — |
+ | D2 | reversible-technical | agent | The offline flag ships before the default question is answered | Additive; it changes nothing for anyone who does not pass it | The owner chooses (a) and the flag becomes redundant |
++| D3 | reversible-technical | council:medium-security-is-blocking | `isBlocking`/`classifyBlocking` admit `security × medium`; `claim × medium` stays non-blocking | 2026-10-07, anthropic claude-sonnet-4-5 + openai codex-default, 2/2 convergent on (a). Both named the gate's existing `accepted_risk` terminal state as what keeps this a review gate rather than a remediation mandate; anthropic additionally asked that "medium" be defined in this project's severity taxonomy and that triage happen continuously rather than at release time — neither is this roadmap's to do, both are named here for the next reader | A later release ships a `security × medium` finding routinely left `still_open` for longer than one release cycle, suggesting the floor is being gamed rather than used |
+ 
+ ## Blockers
+ 
+ ### blocker: medium-security-is-blocking
+-- **Status:** open
++- **Status:** resolved — council ran 2026-10-07 (anthropic claude-sonnet-4-5 +
++  openai codex-default, 2/2 present, $0 metered via subscription CLI),
++  convergent on (a). See Decision D3.
+ - **Owner:** council
+ - **Blocks:** 2.1
+ - **What to do:** pick exactly one — (a) add `security × medium` to `isBlocking` in `src/scripts/check_finding_dispositions.ts` with tests, or (b) keep the predicate and record the reason in this file's `## Decisions` table.
+@@ -156,7 +219,7 @@ owner, because it reverses a recorded supersession.
+ - **If you do nothing:** the four forge findings stay open and 3.3 stays blocked; 3.1 still ships.
+ 
+ ## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
++<!-- risk-review: v1 | reviewed: 2026-10-07 | reviewer: claude/host -->
+ 
+ | Rank | Item | Risk type | Description | Mitigation | Anchored under |
+ |------|------|-----------|-------------|------------|----------------|
+diff --git a/docs/self-review-gate.md b/docs/self-review-gate.md
+index 2cbecd761474c6c0c7cf89578fb3d7a839526e39..4a1afd96f375fcab10027fab75a25d8c600d5da6 100644
+--- a/docs/self-review-gate.md
++++ b/docs/self-review-gate.md
+@@ -92,11 +92,16 @@ ledger does not yet record it.
+ `self_review_gate.ts` exposes pure, unit-tested:
+ 
+ - `classifyBlocking(finding)` — a finding is merge-blocking **iff**
+-  `kind ∈ {security, claim}` **and** `severity ∈ {critical, high}`. Style and
+-  correctness findings, and low/medium security findings, advise only. (Council
++  `kind ∈ {security, claim}` **and** `severity ∈ {critical, high}`, **or**
++  it is `security`-affecting at `medium`. Style and correctness findings, low
++  security findings, and medium/low claim findings advise only. (Council
+   2026-07-08, claude-sonnet-4-5 + gpt-4o: a 100 %-blocking gate at
+   solo-maintainer token cost gets ignored or gamed — block only on the narrow
+-  security/claim × high+ intersection.)
++  security/claim × high+ intersection. Council 2026-10-07, claude-sonnet-4-5 +
++  codex-default, 2/2 convergent: widened by exactly one cell, `security ×
++  medium` — `claim × medium` stays non-blocking, a deliberate asymmetry since
++  security findings are defects in what ships and claim findings are defects
++  in what the self-description says shipped.)
+ - `gateVerdict(findings, {enforce})` — mirrors
+   `check_quality_regression.gateVerdict`: `0` pass / `2` block. Shipped
+   `enforce: false` (advisory always returns `0` and reports the would-block
+@@ -123,7 +128,7 @@ and zero-spend; the multi-model run is the maintainer's run-time act.
+    runner**, which has no vendor CLI. On a self-hosted runner, or locally, a
+    logged-in `claude` CLI already serves and needs no secret (§ Transport).
+ 2. Pass `--enforce` in the live job to arm the teeth (block on
+-   security/claim × high+).
++   security/claim × high+, or security × medium).
+ 3. Require the `Self-review gate` check in branch protection
+    (`road-to-maintainer-bus-factor` Phase 2) so even solo merges pass the gate.
+ 4. Record the floor CLAIM on the proof page **once it is live** — not before
+diff --git a/src/scripts/check_finding_dispositions.ts b/src/scripts/check_finding_dispositions.ts
+index 05f6f2d94efb503b1f310cec60a71e8af38729f3..338dd00c714c819513d337954103d5f9778086f9 100644
+--- a/src/scripts/check_finding_dispositions.ts
++++ b/src/scripts/check_finding_dispositions.ts
+@@ -274,6 +274,7 @@ function _clean_review_reason(artifact: Record<string, unknown>): string {
+ 
+ /**
+  * Mirrors self_review_gate.classifyBlocking — security/claim × critical/high,
++ * PLUS security × medium (council 2026-10-07, `medium-security-is-blocking`),
+  * MINUS anything the tree disproved.
+  *
+  * The `contradicted` clause is not a second policy; it is the same one, and
+@@ -287,10 +288,10 @@ export function isBlocking(f: Pick<LedgerFinding, 'kind' | 'severity' | 'contrad
+     if ((f.contradicted ?? '').trim() !== '') {
+         return false;
+     }
+-    return (
+-        (f.kind === 'security' || f.kind === 'claim') &&
+-        (f.severity === 'critical' || f.severity === 'high')
+-    );
++    if (f.severity === 'critical' || f.severity === 'high') {
++        return f.kind === 'security' || f.kind === 'claim';
++    }
++    return f.severity === 'medium' && f.kind === 'security';
+ }
+ 
+ /**
+diff --git a/src/scripts/self_review_gate.test.ts b/src/scripts/self_review_gate.test.ts
+index 907157ad5839a35b480811024519a5aa314ea529..8f793f0ba621e728478e1446c24ed64db25d61dd 100644
+--- a/src/scripts/self_review_gate.test.ts
++++ b/src/scripts/self_review_gate.test.ts
+@@ -26,12 +26,16 @@ const f = (severity: Finding['severity'], kind: Finding['kind']): Finding => ({
+ });
+ 
+ describe('classifyBlocking', () => {
+-    it('blocks security + high and claim + critical', () => {
++    it('blocks security + high, claim + critical, and security + medium', () => {
+         expect(classifyBlocking(f('high', 'security'))).toBe(true);
+         expect(classifyBlocking(f('critical', 'claim'))).toBe(true);
++        // Council 2026-10-07 (medium-security-is-blocking, 2/2 convergent):
++        // widened by exactly this one cell.
++        expect(classifyBlocking(f('medium', 'security'))).toBe(true);
+     });
+-    it('does not block low/medium security, or any style/correctness', () => {
+-        expect(classifyBlocking(f('medium', 'security'))).toBe(false);
++    it('does not block low security, medium/low claim, or any style/correctness', () => {
++        expect(classifyBlocking(f('low', 'security'))).toBe(false);
++        expect(classifyBlocking(f('medium', 'claim'))).toBe(false);
+         expect(classifyBlocking(f('low', 'claim'))).toBe(false);
+         expect(classifyBlocking(f('critical', 'style'))).toBe(false);
+         expect(classifyBlocking(f('high', 'correctness'))).toBe(false);
+@@ -83,6 +87,10 @@ describe('renderReview', () => {
+         expect(out).toContain('1 finding(s) WOULD block');
+         expect((out.match(/\(Blocking\)/g) ?? []).length).toBe(1);
+     });
++    it('enforced verdict line names the widened criterion when a medium-security finding is what blocks', () => {
++        const out = renderReview([f('medium', 'security')], true);
++        expect(out).toContain('merge-blocking finding(s) (security/claim × high+, or security × medium)');
++    });
+ });
+ 
+ describe('escalationReasons', () => {
+diff --git a/src/scripts/self_review_gate.ts b/src/scripts/self_review_gate.ts
+index fdef03f107fbd1331125c62210b5e7478c6f1a29..1b2ba3febf0cce847da820e844a84ba4dd483076 100644
+--- a/src/scripts/self_review_gate.ts
++++ b/src/scripts/self_review_gate.ts
+@@ -83,10 +83,21 @@ export function findingId(f: Pick<Finding, 'kind' | 'title' | 'file'>): string {
+ 
+ /**
+  * A finding is merge-blocking iff it is security- or claim-affecting AND at
+- * least `high` severity. Style and correctness findings advise; low/medium
+- * security findings advise. Council 2026-07-08 (claude-sonnet-4-5 + gpt-4o):
+- * a 100 %-blocking gate at solo-maintainer token cost gets ignored or gamed —
++ * least `high` severity — OR it is security-affecting at `medium`. Style and
++ * correctness findings advise; low-severity security and medium/low claim
++ * findings advise. Council 2026-07-08 (claude-sonnet-4-5 + gpt-4o): a
++ * 100 %-blocking gate at solo-maintainer token cost gets ignored or gamed —
+  * block ONLY on the narrow security/claim × {critical,high} intersection.
++ *
++ * Council 2026-10-07 (claude-sonnet-4-5 + codex-default, 2/2 convergent,
++ * `medium-security-is-blocking`) widened the intersection by exactly one
++ * cell: `security × medium`. The asymmetry against `claim × medium` is
++ * deliberate and unchanged — security findings are defects in what ships;
++ * claim findings are defects in what the self-description says shipped, a
++ * different risk class. The gate still enforces a RECORDED disposition, not
++ * mandatory remediation: `accepted_risk` and `false_positive` close a
++ * blocking row exactly as `fixed` does, so a reviewed, reasoned acceptance
++ * of a medium-security finding ships as readily as fixing it did before.
+  */
+ export function classifyBlocking(f: Finding): boolean {
+     // A premise the tree DISPROVES cannot block a merge. This is not leniency
+@@ -96,7 +107,10 @@ export function classifyBlocking(f: Finding): boolean {
+     // See `contradictedByTree` for why this class needed a mechanical disproof
+     // rather than one more sentence in the prompt.
+     if ((f.contradicted ?? '').trim() !== '') return false;
+-    return (f.kind === 'security' || f.kind === 'claim') && (f.severity === 'critical' || f.severity === 'high');
++    if (f.severity === 'critical' || f.severity === 'high') {
++        return f.kind === 'security' || f.kind === 'claim';
++    }
++    return f.severity === 'medium' && f.kind === 'security';
+ }
+ 
+ /**
+@@ -988,7 +1002,7 @@ export function renderReview(findings: Finding[], enforce: boolean, escalation:
+         .join('\n');
+     const verdictLine = blocking.length
+         ? enforce
+-            ? `❌ ${blocking.length} merge-blocking finding(s) (security/claim × high+).`
++            ? `❌ ${blocking.length} merge-blocking finding(s) (security/claim × high+, or security × medium).`
+             : `⚠️ ${blocking.length} finding(s) WOULD block merge under an enforced gate (advisory now).`
+         : '✅ No merge-blocking findings (style/correctness advise only).';
+     // Three reviewers in the 2026-09 round searched the commit log for a finding
+diff --git a/tests/scripts/check_finding_dispositions.test.ts b/tests/scripts/check_finding_dispositions.test.ts
+index b0a359d83e058935990327a8250c30c05b13f32e..2a43fbab5fa831c90fe600e693ba67ac4e14681b 100644
+--- a/tests/scripts/check_finding_dispositions.test.ts
++++ b/tests/scripts/check_finding_dispositions.test.ts
+@@ -83,9 +83,47 @@ describe('missing_dispositions — the release-validation red condition', () =>
+     });
+ 
+     it('green: non-blocking findings need no disposition (advisory record)', () => {
+-        expect(missing_dispositions([finding({ severity: 'medium' })])).toEqual([]);
++        // claim x medium stays non-blocking after the security x medium widening
++        // below — the asymmetry (security defects in shipped behaviour vs. claim
++        // defects in self-description) is deliberate, per the 2026-10-07 council
++        // convergence (medium-security-is-blocking).
++        expect(missing_dispositions([finding({ kind: 'claim', severity: 'medium' })])).toEqual([]);
+         expect(missing_dispositions([finding({ kind: 'style', severity: 'critical' })])).toEqual([]);
+     });
++
++    it('red: an undispositioned medium-security finding (council-widened floor)', () => {
++        const problems = missing_dispositions([finding({ kind: 'security', severity: 'medium' })]);
++        expect(problems).toHaveLength(1);
++        expect(problems[0]).toContain('no disposition status');
++    });
++
++    it('green: a medium-security finding closed accepted_risk (not only fixed)', () => {
++        expect(
++            missing_dispositions([
++                finding({
++                    kind: 'security',
++                    severity: 'medium',
++                    status: 'accepted_risk',
++                    rationale: 'reasoned and recorded',
++                    verified_by: 'manual re-read, 2026-10-07',
++                }),
++            ]),
++        ).toEqual([]);
++    });
++
++    it('green: a medium-security finding closed false_positive', () => {
++        expect(
++            missing_dispositions([
++                finding({
++                    kind: 'security',
++                    severity: 'medium',
++                    status: 'false_positive',
++                    rationale: 'the premise does not hold against the current tree',
++                    verified_by: 'manual re-read, 2026-10-07',
++                }),
++            ]),
++        ).toEqual([]);
++    });
+ });
+ 
+ describe('blocking classification parity with self_review_gate', () => {
