@@ -93,10 +93,14 @@ describe('a target behind its own default', () => {
         expect(git(repo, 'rev-parse', 'HEAD')).toBe(head);
     });
 
-    it('still names TARGET_POLICY_STALE when the branch is also behind the target', () => {
+    it("reports the branch's own lag first when the branch is also behind the target", () => {
+        // Rebasing onto the target is actionable here; TARGET_POLICY_STALE would
+        // say "nothing to do until then" and /pr:merge would mark the PR external.
         const r = run(checkout({ targetStale: true, branchBehindTarget: true }));
         expect(r.code).toBe(3);
-        expect(r.out).toContain('TARGET_POLICY_STALE');
+        expect(r.out).not.toContain('TARGET_POLICY_STALE');
+        expect(r.out).toContain('Rebase on request instead');
+        expect(r.out).toContain('origin/release is itself 1 commit(s) behind origin/main');
     });
 
     it('keeps the ordinary message when only the branch is behind a current target', () => {

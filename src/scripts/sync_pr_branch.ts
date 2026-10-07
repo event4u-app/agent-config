@@ -29,8 +29,10 @@
  * Exit codes: 0 = already current, or merged cleanly · 1 = conflict, or the base
  * could not be resolved · 2 = internal error · 3 = behind, and
  * `git.update_strategy` is not `merge`, so the merge was refused (reason code
- * `TARGET_POLICY_STALE` when the non-default target is itself behind the
- * default branch the policy adds — the target's update, not this branch's) · 4 =
+ * `TARGET_POLICY_STALE` when the branch is current with its non-default target
+ * and that target is itself behind the default branch the policy adds — the
+ * target's update, not this branch's; a branch also behind the target gets the
+ * ordinary behind line first, naming the target's lag as a note) · 4 =
  * `git.update_strategy` cannot be read (a settings file or a committed
  * `.git-convention.yml` that does not parse, a value outside the schema, a
  * value only a user-global file carries, or a target commit that cannot be
@@ -256,10 +258,11 @@ export interface Plan {
     behind?: number;
     /**
      * Set when the policy added the default branch and the TARGET itself is
-     * behind it: updating the branch onto the target cannot make it current, so
-     * the update a reader needs is the target's, not this branch's.
+     * behind it: updating the branch onto the target cannot make it current.
+     * `branchBehind` is how far the branch is behind the target itself; only at
+     * 0 is the target's update the one a reader needs, not this branch's.
      */
-    targetStale?: { target: string; defaultRef: string; behind: number };
+    targetStale?: { target: string; defaultRef: string; behind: number; branchBehind: number };
 }
 
 /**
@@ -727,7 +730,9 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
             ? 0
             : Number(sh('git', ['rev-list', '--count', `${target}..${added.ref}`], repo).out.trim() || '0');
         return {
-            ...(targetBehind > 0 && added !== undefined ? { targetStale: { target, defaultRef: added.ref, behind: targetBehind } } : {}),
+            ...(targetBehind > 0 && added !== undefined
+                ? { targetStale: { target, defaultRef: added.ref, behind: targetBehind, branchBehind: behindEach.find((b) => b.ref === target)?.behind ?? 0 } }
+                : {}),
             exit: 0,
             message: `${summary}. Behind: ${detail} — would merge in that order. Dry run, nothing changed.`,
             generated: [],
@@ -886,8 +891,8 @@ export function main(argv?: readonly string[]): number {
     try {
         if (strategy !== 'merge') {
             plan = sync(repo, base, true, false);
-            if (plan.exit === 0 && plan.targetStale !== undefined) {
-                const t = plan.targetStale;
+            const t = plan.targetStale;
+            if (plan.exit === 0 && t !== undefined && t.branchBehind === 0) {
                 process.stdout.write(
                     `⚠️  sync_pr_branch: refused — TARGET_POLICY_STALE: the target ${t.target} is itself ${String(t.behind)} commit(s) behind ${t.defaultRef}, ` +
                         `which the branch-convergence policy requires; updating this branch onto the target cannot make it current. ` +
@@ -899,7 +904,9 @@ export function main(argv?: readonly string[]): number {
             if (plan.exit === 0 && (plan.behind ?? 0) > 0) {
                 process.stdout.write(
                     `⚠️  sync_pr_branch: refused — the branch is behind and git.update_strategy is \`${strategy}\`; this script only merges. ` +
-                        `Rebase on request instead (git-workflow references/branch-update.md). ${plan.message.replace(' — would merge in that order. Dry run, nothing changed.', '.')}\n`,
+                        `Rebase on request instead (git-workflow references/branch-update.md). ${plan.message.replace(' — would merge in that order. Dry run, nothing changed.', '.')}` +
+                        (t === undefined ? '' : ` The target ${t.target} is itself ${String(t.behind)} commit(s) behind ${t.defaultRef}; once this branch is current with it, the target needs updating too.`) +
+                        '\n',
                 );
                 reportScanned({ gate: 'sync_pr_branch', scanned: plan.scanned, units: 'base ref(s)', roots: ['origin'] });
                 return 3;

@@ -283,8 +283,8 @@ this clause removes; the floor it keeps is the *unnamed* push.
 `agent-config git:convention sync` and regenerate afterwards (under
 `git.update_strategy: rebase` it refuses a behind branch with exit 3 — rebase on request instead, per
 [`branch-update`](../../../../skills/git-workflow/references/branch-update.md); an exit 3
-reading `TARGET_POLICY_STALE` means the non-default target is itself behind its
-default branch — that is the target's update, reported, never a rebase of this
+reading `TARGET_POLICY_STALE` means the branch is current with its non-default
+target and the target is itself behind its default branch — that is the target's update, reported, never a rebase of this
 branch; on exit 4 the
 strategy could not be read, the line names the reason code and the file, nothing
 was merged, and the run stops before the push until that file is fixed). Measured on

@@ -185,9 +185,11 @@ Read its exit and its line together:
     the summary is where that stays visible.
   - **The forge requires an up-to-date branch** → disposition
     `blocked-external`, the row naming that setting as the reason.
-  - **The line reads `TARGET_POLICY_STALE`** → the PR's non-default target is
-    itself behind its default branch: `blocked-external`, reason "the target's
-    update", whatever the forge setting.
+  - **The line reads `TARGET_POLICY_STALE`** → the PR is current with its
+    non-default target and that target is itself behind its default branch:
+    `blocked-external`, reason "the target's update", whatever the forge
+    setting. A PR also behind its target gets the ordinary behind line instead,
+    with the target's lag as a note.
 - exit `4` → the strategy could not be read (the line names the reason code
   and the file); nothing was checked or merged. Stop on this PR and report it.
 - any other exit → the check could not run (internal error); stop on this PR
