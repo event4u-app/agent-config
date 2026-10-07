@@ -95,137 +95,122 @@ The tier table above calls a confirmed hit Class A. That is exact for a machine
 read by a human judgement — treat a prose source as tier 1 in **precedence** and
 as a quoted sentence in the report, so the next reader can check it.
 
-### 2. Sample the history — native source per dimension
+### 2. Measure the history — `agent-config git:convention measure`
 
-Only **commit subjects** are reliably measurable from a clone. Branch names,
-PR titles and commit granularity have different native sources, and `unknown`
-is a valid, honest result for each:
+The measurement is code. `agent-config git:convention measure [--limit N]
+[--family F] [--json]` samples the history, classifies, caps, aggregates and
+judges it, and writes nothing. The sample size, the exclusions and every
+threshold it applies are the `measure` rows of the generated block in
+[`commit-subject`](../git-workflow/references/commit-subject.md) § The grammar,
+rendered from the module the verb runs — read them there, never from memory.
+What the verb reports, and why each choice is the one it makes:
 
-| Dimension | Native source | Measurable from a clone? |
+| Dimension | Native source | What `measure` does with it |
 |---|---|---|
-| Subject grammar | `git log` | yes |
-| Branch naming | forge refs / `git branch -r` | partially — merged branches are often deleted |
-| PR title shape | forge API (`gh pr list`) | only with forge access |
-| Granularity (atomic vs batched) | per-commit diff stat | **no** where the repo squash-merges — the evidence was destroyed at merge |
+| Subject grammar | `git log` on the trunk | classifies, caps, judges — the only dimension that can be **established** |
+| Branch naming | `git for-each-ref refs/remotes`, without `HEAD` and the default branch | proposes a `branch_pattern` among the shapes the reader accepts, or `no clear pattern` — merged branches are often deleted, so the sample is thin |
+| Update style | merge subjects that bring the default branch into a topic branch | **shown, never adopted** — `update_strategy` is a team decision, not a habit to copy |
+| PR title shape, granularity | forge API · per-commit diff stat | not measured — granularity is destroyed where the repository squash-merges |
 
-Resolve the trunk explicitly. `origin/HEAD` is set by `git clone` and is absent
-in a `git init` + `git remote add` checkout, in many CI checkouts and in
-worktrees, where the sample command would die rather than return nothing:
-
-```bash
-TRUNK=$(git symbolic-ref -q --short refs/remotes/origin/HEAD)
-[ -n "$TRUNK" ] || TRUNK=$(git rev-parse -q --verify origin/main >/dev/null && echo origin/main)
-[ -n "$TRUNK" ] || TRUNK=$(git rev-parse -q --verify origin/master >/dev/null && echo origin/master)
-[ -n "$TRUNK" ] || TRUNK=HEAD          # no remote at all: this checkout is the trunk
-git log "$TRUNK" --no-merges -n 200 --since='24 months ago' \
-  --pretty=format:'%H%x09%aN%x09%aE%x09%s'
-```
+**The trunk** is `origin/HEAD`, else `origin/main`, else `origin/master`, else
+`HEAD` — `origin/HEAD` is absent in a `git init` + `git remote add` checkout,
+in many CI checkouts and in worktrees, and a chain that silently falls through
+to an empty argument would hide that the resolution failed.
 
 **`--first-parent` is deliberately absent.** On a merge-commit workflow the
-trunk's first-parent chain is merge commits, which `--no-merges` then drops —
-the two together leave only what was committed straight to the trunk, which on
-a PR-based repo is nearly nothing. The convention lives in the feature commits,
-so walk the whole reachable history and exclude merges alone.
+trunk's first-parent chain is merge commits, which `--no-merges` then drops — the
+two together leave only what was committed straight to the trunk, which on a
+PR-based repo is nearly nothing. The convention lives in the feature commits.
 
-The terminal `HEAD` matters as much as the first line: a chain that ends with an
-unset `TRUNK` hands `git log` an empty argument, which walks `HEAD` anyway —
-silently doing the right thing on a local repo while hiding that the resolution
-failed on one where it should not have.
+**Exclusions** — bot authors, automation subjects (reverts, merges, release
+chores, version bumps, bare versions) and bulk imports. The verb reads the file
+count of every sampled commit in the same `git log` call, so the bulk check costs
+no extra subprocess.
 
-`%H` leads the format because two of the exclusions below need the commit, not
-just its subject. Drop, from the sample:
-
-- **bot authors** — `[bot]`, `dependabot`, `renovate`, `github-actions`,
-  `semantic-release`, `release-please`;
-- **automation subjects** — `^Revert `, `^Merge `, `chore(release)`,
-  `^Bump `, a bare `v?\d+\.\d+\.\d+`;
-- **bulk imports** — resolve with the hash the format carries:
-  `git show --stat --oneline <sha> | tail -1` and drop anything over 500 files.
-  Check this only for the handful of subjects that read like an import; running
-  it per commit costs 200 subprocesses to remove two rows.
-
-### 3. Classify each surviving subject
-
-Match in order, first hit wins: `conventional`, `ticket-conventional`, `ticket-prefix`, `gitmoji`, `imperative-plain`, else `other`.
-The patterns are the `family` rows of the generated grammar block in [`commit-subject`](../git-workflow/references/commit-subject.md) § The grammar.
-
+**Classification** — the `family` rows of the same block, matched in order,
+first hit wins: `conventional`, `ticket-conventional`, `ticket-prefix`,
+`gitmoji`, `imperative-plain`, else `other`. `ticket-conventional` precedes
+`ticket-prefix`, which would otherwise swallow it as "ticket, then free text".
 `imperative-plain` is deliberately mechanical — capitalised first word, no
-trailing period — and does **not** test for the imperative mood. Mood needs a
+trailing period — and does **not** test for the imperative mood: mood needs a
 verb lexicon this procedure does not ship, and `Update` versus `Updated` is
-exactly the pair a lexicon-free test cannot separate. That is a stated limit of
-the classifier, not a gap to fill by guessing: a repo whose only distinction
-from Conventional is mood will read as `imperative-plain` either way, and the
-mood question belongs in the ask at step 6.
+exactly the pair a lexicon-free test cannot separate. A repo whose only
+distinction from Conventional is mood reads as `imperative-plain` either way,
+and the mood question belongs in the ask at step 3. `classifier_version` in the
+verb's output and on the card names the revision of the families and exclusions
+(`ticket-conventional` was added 2026-10-06; re-measure an older card).
 
-`classifier_version` in step 7 names the revision of THIS section — the six families above (`ticket-conventional` added 2026-10-06; re-measure an older card) plus the exclusions in step 2.
-It is a provenance stamp so a later measurement can be compared against a like one. The patterns ship
-as code: `agent-config git:convention subject --family <family>` validates against them.
+**Aggregation, capped per author, per half.** Raw counts let one prolific author
+or an unfiltered bot define the house style; one vote per author lets a drive-by
+contributor with two commits veto it. The verb splits the sample into a newer and
+an older half by position first, then caps each author within each half —
+capping the sample as a whole would let one author's newest commits fill the
+quota and empty the older half, which is exactly where the coherence check has to
+look. Shares are over the **capped** total, and the verb reports that total; a
+percentage quoted against the raw eligible count describes a statistic nobody
+computed. With fewer than three authors the cap is off and the stricter uncapped
+bar applies: there is no dominance to guard against, and a cap would put the
+minimum sample out of reach of its own denominator. Two authors take the stricter
+branch rather than falling between the two.
 
-Record the runner-up family too — a near-tie is itself the finding.
+**Temporal coherence.** The same family must lead the newer **and** the older
+half. Halves that disagree mean the repository is **migrating**: the verb names
+both families and establishes the newer half's family only if the newer half
+clears the bar on its own (`migrating` in the output).
 
-`ticket-conventional` precedes `ticket-prefix`, which would otherwise swallow it as "ticket, then free text".
-A dominant `ticket-conventional` family maps to `git.commit_format: ticket-conventional`, the value named after it — propose that in the step-6 ask.
+**Verdict.** At or above the bar the verb names the established family; below it,
+the reasons and the **two strongest** families with a grammar. Record the
+runner-up either way — a near-tie is itself the finding.
 
-### 4. Aggregate, capped per author, per half
+> The share bar is the stricter of two council positions (2026-09-04,
+> anthropic + openai, 2/2 quorum); the per-author cap is why a separate
+> author-share clause was not also adopted — it already answers the dominance
+> concern that clause existed for. These are policy heuristics, not statistically
+> derived thresholds. **Revisit-if:** a labelled corpus of repositories shows a
+> false-positive or false-negative rate that a different bar would fix.
 
-Raw commit counts let one prolific author or an unfiltered bot define the house
-style; one-vote-per-author lets a drive-by contributor with two commits veto it.
-Cap instead: split the sample into a newer and an older half by position first,
-then let **each author contribute at most 20 commits to each half**. Capping the
-sample as a whole would let one author's newest 20 fill their entire quota and
-empty the older half, which is precisely where step 5's coherence check has to
-look.
+### 3. Ask once — never adopt silently
 
-Compute the dominant family's share over the **capped** total, and report that
-total — a percentage quoted against the raw eligible count describes a statistic
-nobody computed.
+Only an **interactive** `/commit` asks, and only while `git:convention show --key commit_format`
+prints `no convention established` — no declaration and no approved card. It
+asks once, as numbered options (per `user-interaction`), naming the family, the
+share **and the capped total it was computed over**, the author count, and — if a
+tier-1 parser exists — the tooling that would stop parsing:
 
-With fewer than three authors the cap is **off**: there is no dominance to guard
-against, and a cap of 20 would put the single-maintainer bar's own `n ≥ 30`
-out of reach of its denominator.
+- **at or above the bar** — the established family (recommended) vs Conventional
+  Commits;
+- **below the bar** — the two strongest families vs Conventional Commits, with
+  the reasons the verb gave.
 
-### 5. The evidence bar
+`/commit:in-chunks` never asks: it reports the measurement in its summary and
+uses the card, or the default. Until the user answers, a measurement is tier 3 —
+advisory.
 
-A measured convention is eligible to be proposed only when **all** hold:
+### 4. Persist the answer where the next session finds it
 
-- **n ≥ 30** eligible commits after exclusions;
-- **≥ 80 %** capped-weighted share for the dominant family, over **≥ 3 human
-  authors** — or, with **one or two** authors, an uncapped **≥ 90 %** share over
-  n ≥ 30. Two authors take the stricter branch rather than falling between the
-  two: a two-person repo is a small-team repo, and leaving it unreachable by
-  both branches would make the measurement permanently advisory there;
-- **temporal coherence** — the same family is dominant in the newer half of
-  the sample *and* in the older half. If the halves disagree materially the
-  repository is **migrating**: abstain, name the change point, and use the
-  newer half's family only if it independently clears the bar.
+The answer is the approval, so `/commit` writes the card straight to
+`agents/memory/curated/conventions/approved/commit-subject.md` — **also when the
+answer is Conventional Commits**, so the question is never asked again.
+`git:convention measure --family <answer>` prints the card's content: a Class-B
+convention card carrying `dominant_family`, `observed_n`, `dominant_share`,
+`author_count`, `sample_window`, `classifier_version`, `confirm_against` and
+`ticket_keys` — aggregates only, never per-author identities. A measurement the
+agent records without an answer goes to `quarantine/` instead. `ticket_keys`
+lists the approved project keys (`ticket_keys: [DEV, OPS]`): it is filled from the
+user's answer when `/commit` meets a key not on it, and a commitlint config's
+`issuePrefixes` are offered as the proposal, never written silently. Re-measure
+and re-review when the share falls below **70 %**, when a tier-1 source appears,
+or when the newer half's family changes.
 
-> The 80 % figure is the stricter of two council positions (2026-09-04,
-> anthropic + openai, 2/2 quorum: 70 % vs 80 % + a two-thirds-of-authors
-> clause). The per-author cap is why the separate author-share clause was not
-> also adopted — it already answers the dominance concern the clause existed
-> for. These are policy heuristics, not statistically derived thresholds.
-> **Revisit-if:** a labelled corpus of repositories shows a false-positive or
-> false-negative rate that a different bar would fix.
+### 5. The team file is a human's commit
 
-### 6. Ask — never adopt silently
-
-Below the bar, or on a migrating repo: use Conventional Commits and say so
-**once**, in one line, when a commit is actually requested. Do not ask.
-
-At or above the bar, ask once, as numbered options (per `user-interaction`):
-name the family, the share **and the capped total it was computed over**, the
-author count, and — if a tier-1 parser exists — the tooling that would stop
-parsing.
-
-### 7. Persist the answer where the next session finds it
-
-Write the measurement as a Class-B convention card under
-`agents/memory/curated/conventions/quarantine/commit-subject.md`; the user's
-approval is what moves it to `approved/`. Carry `observed_n`, `dominant_family`,
-`dominant_share`, `author_count`, `sample_window`, `classifier_version`, `confirm_against`
-and `ticket_keys` — aggregates only, never per-author identities. `ticket_keys` lists the approved project keys (`ticket_keys: [DEV, OPS]`): it is filled from the user's answer when `/commit` meets a key not on it, and a commitlint config's `issuePrefixes` are offered as the proposal, never written silently. Re-measure
-and re-review when the share falls below **70 %**, when a tier-1 source
-appears, or when the newer half's family changes.
+A card is one developer's memory; `.git-convention.yml` is the team's
+declaration and outranks it (tier 1b). When the chosen family maps to a
+`git.commit_format` value (`conventional` → `ticket-scope`, `ticket-conventional`
+→ `ticket-conventional`) or a `branch_pattern` was proposed, `measure` — and
+`/commit` after the answer — prints the file's ready-to-commit content.
+`update_strategy` is never in it. The file is class C: the agent prints it and a
+human creates and commits it; the agent never writes it.
 
 ## What a measurement may never lower
 

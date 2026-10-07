@@ -73,6 +73,12 @@ Splitting rules:
 
 Generate commit messages per [`commit-conventions`](../../rules/commit-conventions.md).
 
+**No convention established — never ask.** When `agent-config git:convention
+show --key commit_format` prints `no convention established`, run
+`agent-config git:convention measure`, carry its `verdict` line into the summary,
+and generate under the convention in force (the default). Asking and writing the
+card belong to the interactive [`/commit`](../commit.md) step 3c only.
+
 ### 3b. Secret-leak pre-flight — MANDATORY, not autonomy-lifted
 
 Run `./scripts-run src/scripts/check_secret_leak`. A high-confidence hit is a
@@ -127,6 +133,10 @@ Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
   ```
 
   Include `git log --oneline -N` output for verification.
+
+At every level except `off`, a run that measured because no convention was
+established adds the verb's `verdict` line and `→ run /commit once to choose and
+record the convention`.
 
 ## Rules
 
