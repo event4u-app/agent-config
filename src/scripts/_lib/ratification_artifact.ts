@@ -96,8 +96,116 @@ export interface RatificationProblem {
         | 'no-providers'
         | 'diversity-required'
         | 'diversity-unverifiable'
-        | 'bad-effective-after';
+        | 'bad-effective-after'
+        | 'unknown-seat-verdict'
+        | 'seat-dissent'
+        | 'providers-exceed-seats';
     message: string;
+}
+
+/** A seat that closed, timed out or was absent at the last round gave no final verdict. */
+export const SEAT_NO_FINAL_VERDICT = 'no-final-verdict';
+export type SeatVerdict = RatificationVerdict | typeof SEAT_NO_FINAL_VERDICT;
+const SEAT_VERDICTS: readonly string[] = [...RATIFICATION_VERDICTS, SEAT_NO_FINAL_VERDICT];
+
+/**
+ * The `seats:` map — provider id to that seat's FINAL verdict — or `null` when
+ * the artifact records none. Source order is kept; it is the order `providers`
+ * is derived in.
+ */
+export function readSeats(fm: AdrFrontmatter): Map<string, string> | null {
+    const node = fm.nested['seats'];
+    if (node === undefined || typeof node === 'string' || Array.isArray(node)) {
+        return null;
+    }
+    const seats = new Map<string, string>();
+    for (const [provider, verdict] of Object.entries(node)) {
+        seats.set(provider.trim(), typeof verdict === 'string' ? verdict.trim() : '');
+    }
+    return seats.size > 0 ? seats : null;
+}
+
+/**
+ * The header a set of seat verdicts supports, and no more.
+ *
+ * `providers` is every seat that gave a final verdict — a closed seat is not a
+ * provider the verdict came from. Any refusing seat makes the verdict `refused`,
+ * any non-convergent one `non-convergent`; only when every final seat passed is
+ * the verdict passing, and then `ratified` if any seat said so. No final seat at
+ * all is `non-convergent`: a review that ended without a verdict did not pass.
+ */
+export function deriveRatificationHeader(
+    seats: ReadonlyMap<string, SeatVerdict> | Readonly<Record<string, SeatVerdict>>,
+): { providers: string[]; verdict: RatificationVerdict } {
+    const entries = seats instanceof Map ? [...seats.entries()] : Object.entries(seats);
+    const final = entries.filter(([, v]) => v !== SEAT_NO_FINAL_VERDICT) as [string, RatificationVerdict][];
+    const verdicts = final.map(([, v]) => v);
+    let verdict: RatificationVerdict;
+    if (verdicts.includes('refused')) {
+        verdict = 'refused';
+    } else if (final.length === 0 || verdicts.includes('non-convergent')) {
+        verdict = 'non-convergent';
+    } else {
+        verdict = verdicts.includes('ratified') ? 'ratified' : 'confirmed-non-expanding';
+    }
+    return { providers: final.map(([p]) => p), verdict };
+}
+
+/** The `providers:`, `verdict:` and `seats:` frontmatter lines, derived — never typed. */
+export function renderRatificationHeader(
+    seats: ReadonlyMap<string, SeatVerdict> | Readonly<Record<string, SeatVerdict>>,
+): string {
+    const entries = seats instanceof Map ? [...seats.entries()] : Object.entries(seats);
+    const { providers, verdict } = deriveRatificationHeader(seats);
+    return [
+        `providers: [${providers.join(', ')}]`,
+        `verdict: ${verdict}`,
+        'seats:',
+        ...entries.map(([p, v]) => `  ${p}: ${v}`),
+    ].join('\n');
+}
+
+/**
+ * The header claims the seats do not support. Empty when `seats:` is absent —
+ * an artifact written before the field existed is read as it always was.
+ */
+function seatProblems(
+    seats: ReadonlyMap<string, string> | null,
+    providers: readonly string[],
+    verdict: string | null,
+): RatificationProblem[] {
+    if (seats === null) return [];
+    const problems: RatificationProblem[] = [];
+    for (const [p, v] of seats) {
+        if (!SEAT_VERDICTS.includes(v)) {
+            problems.push({
+                code: 'unknown-seat-verdict',
+                message: `seat \`${p}\` records \`${v}\`, not one of ${SEAT_VERDICTS.join(', ')}`,
+            });
+        }
+    }
+    if (verdict !== null && PASSING_VERDICTS.has(verdict)) {
+        const dissent = [...seats].filter(([, v]) => v === 'refused' || v === 'non-convergent');
+        if (dissent.length > 0) {
+            problems.push({
+                code: 'seat-dissent',
+                message:
+                    `verdict \`${verdict}\` while ${dissent.map(([p, v]) => `${p} was \`${v}\``).join(', ')} ` +
+                    'at the final round — a header cannot say more than its seats said',
+            });
+        }
+    }
+    const finalSeats = new Set([...seats].filter(([, v]) => v !== SEAT_NO_FINAL_VERDICT).map(([p]) => p));
+    const extra = providers.filter((p) => !finalSeats.has(p));
+    if (extra.length > 0) {
+        problems.push({
+            code: 'providers-exceed-seats',
+            message:
+                `providers names ${extra.join(', ')}, which gave no final verdict ` +
+                `(${String(finalSeats.size)} seat(s) did) — diversity is counted over seats that answered`,
+        });
+    }
+    return problems;
 }
 
 export interface RatificationReading {
@@ -207,6 +315,8 @@ export function readRatification(
             }
         }
     }
+
+    problems.push(...seatProblems(readSeats(fm), providers, verdict));
 
     // Diversity, against the REQUIRED count.
     //
