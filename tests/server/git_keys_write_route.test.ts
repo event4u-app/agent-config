@@ -201,6 +201,23 @@ describe('global mode with a project layer above the user-global file', () => {
         expect(r.status, r.body).toBe(200);
     });
 
+    it('an absent user-global file is written from an empty body, never from the project file', async () => {
+        const file = join(ctx.projectRoot, 'settings', '.agent-settings.yml');
+        rmSync(file);
+        const shown = await get(ctx);
+        const { git: _withheld, ...form } = fixtureSettings();
+        const res = await ctx.app.inject({
+            method: 'PUT',
+            url: '/api/v1/settings',
+            headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json', 'if-unmodified-since': String(shown.lastModified + 5) },
+            payload: { values: form, confirmGuarded: true },
+        });
+        expect(res.statusCode, res.body).toBe(200);
+        const written = readFileSync(file, 'utf8');
+        expect(written).not.toMatch(/update_strategy/);
+        expect(written).not.toMatch(/^git:/m);
+    });
+
     it('a user-global file without a git section stays without one under a project git value', async () => {
         const file = join(ctx.projectRoot, 'settings', '.agent-settings.yml');
         writeFileSync(file, withoutGitSection(readFileSync(file, 'utf8')));

@@ -492,8 +492,9 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
             try {
                 // In global mode the scaffold may be the project file, whose
                 // git section the candidate does not overwrite; the file being
-                // written is the base, so a section it lacks stays absent.
-                const base = opts.userGlobalWrite === true ? (current.writeLayerRaw ?? current.raw) : current.raw;
+                // written is the base, so a section it lacks stays absent. An
+                // absent user-global file starts empty, never from the project.
+                const base = opts.userGlobalWrite === true ? (current.writeLayerRaw ?? '') : current.raw;
                 const merged = mergeIntoTemplate(base, candidate);
                 if (opts.dryRun === true) {
                     // No disk write, no Last-Modified bump — surface the
