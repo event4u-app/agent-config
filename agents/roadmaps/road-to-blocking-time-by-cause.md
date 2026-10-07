@@ -95,7 +95,7 @@ what grew. No baseline is moved.
 
 ## Phase 3 — Targets first, then one mitigation per cause
 
-- [ ] **3.1 Pre-register targets for the top two causes.** One claim in
+- [x] **3.1 Pre-register targets for the top two causes.** One claim in
       `docs/CLAIMS.md` names the two causes with the most blocking minutes in
       2.1, the minutes each held, the target for each over a window of the
       same shape, and what counts as a miss. Then
