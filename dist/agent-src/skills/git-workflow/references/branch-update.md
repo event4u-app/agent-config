@@ -30,6 +30,16 @@ could not be read, and it is not a strategy either:
 - **Shared branch** — commits on it that you did not author this session → do
   not rebase without the authors' agreement; this is the git-history-discipline
   inherited-commits law, and the setting does not lift it.
+- **Known descendants** → refuse. When the open pull requests' bases — the
+  chain `/prepare-for-review` already reads
+  (`gh pr list --base <branch> --json number,headRefName`) — show another branch
+  built on this one, the `rebase` row does not run: rewriting the parent leaves
+  every descendant carrying its old commits, and a later
+  `git rebase origin/<parent>` on the child replays them. Report the chain and
+  stop; restacking it is not this procedure, and an unasked `--onto` reseat
+  needs the question the skill's shared-branch protocol asks. Nothing is
+  inferred from branch names — only a pull request whose base is this branch
+  counts.
 - **Conflicts** → resolve to the correct end state per commit, `git add`,
   `git rebase --continue`; `git rebase --abort` returns to the pre-rebase state.
   Re-run the relevant tests afterwards — a conflict-free tree is not a correct

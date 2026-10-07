@@ -141,7 +141,7 @@ review, the conformance count, a merge run — is decided, not discovered.
       base. `git range-diff` output is shown to the human and never parsed.
       `merge-conflicts/SKILL.md:228-233` keeps one sentence and the link.
       verify: `test -f tests/scripts/rebase_equivalence.test.ts && npx vitest run tests/scripts/rebase_equivalence.test.ts && grep -q 'patch-id --stable' src/skills/git-workflow/references/branch-update.md` -> 0
-- [ ] **2.4 A branch with known descendants is not rebased alone.** When
+- [x] **2.4 A branch with known descendants is not rebased alone.** When
       `/prepare-for-review`'s pull-request bases show another branch built on
       this one, the `rebase` row refuses and reports the chain; restacking is
       out of scope (see below). Nothing is inferred from branch names.
