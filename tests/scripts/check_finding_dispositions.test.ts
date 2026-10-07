@@ -20,6 +20,7 @@ import {
     disposition_tally,
     empty_ledger_problem,
     isBlocking,
+    MEDIUM_SECURITY_BLOCKS_AFTER,
     localTagHit,
     merge_ingest,
     releaseStatus,
@@ -83,21 +84,103 @@ describe('missing_dispositions — the release-validation red condition', () => 
     });
 
     it('green: non-blocking findings need no disposition (advisory record)', () => {
-        expect(missing_dispositions([finding({ severity: 'medium' })])).toEqual([]);
+        expect(missing_dispositions([finding({ kind: 'claim', severity: 'medium' })])).toEqual([]);
+        expect(missing_dispositions([finding({ severity: 'low' })])).toEqual([]);
         expect(missing_dispositions([finding({ kind: 'style', severity: 'critical' })])).toEqual([]);
     });
 });
 
-describe('blocking classification parity with self_review_gate', () => {
-    it('isBlocking mirrors classifyBlocking across the full matrix', () => {
+describe('blocking classification against self_review_gate', () => {
+    // The release gate is deliberately stricter than the merge gate by exactly
+    // one cell, security × medium (council 2026-10-07). Every other cell must
+    // still agree, so a drift in either direction elsewhere reds this.
+    it('isBlocking equals classifyBlocking on every cell except security × medium', () => {
         const severities = ['critical', 'high', 'medium', 'low'] as const;
         const kinds = ['security', 'claim', 'correctness', 'style'] as const;
         for (const severity of severities) {
             for (const kind of kinds) {
                 const f: Finding = { severity, kind, title: 't', detail: 'd' };
-                expect(isBlocking({ severity, kind })).toBe(classifyBlocking(f));
+                const wider = kind === 'security' && severity === 'medium';
+                expect(isBlocking({ severity, kind })).toBe(wider ? true : classifyBlocking(f));
             }
         }
+    });
+
+    it('a medium security finding blocks the release but not the merge', () => {
+        const f: Finding = { severity: 'medium', kind: 'security', title: 't', detail: 'd' };
+        expect(isBlocking(f)).toBe(true);
+        expect(classifyBlocking(f)).toBe(false);
+    });
+
+    it('a medium claim finding blocks neither', () => {
+        const f: Finding = { severity: 'medium', kind: 'claim', title: 't', detail: 'd' };
+        expect(isBlocking(f)).toBe(false);
+        expect(classifyBlocking(f)).toBe(false);
+    });
+
+    it('a medium security finding is red undispositioned and on still_open, green on accepted_risk', () => {
+        const medium = { severity: 'medium' as const, kind: 'security' as const };
+        const { commit: _commit, ...uncommitted } = COMPLETE;
+        expect(missing_dispositions([finding(medium)])[0]).toContain('no disposition status');
+        expect(
+            missing_dispositions([finding({ ...medium, ...uncommitted, status: 'still_open' })]),
+        ).toHaveLength(1);
+        expect(
+            missing_dispositions([finding({ ...medium, ...uncommitted, status: 'accepted_risk' })]),
+        ).toEqual([]);
+    });
+
+    it('a tree-disproved medium security finding does not block', () => {
+        expect(isBlocking({ severity: 'medium', kind: 'security', contradicted: 'present at HEAD' })).toBe(false);
+    });
+
+    it('a still_open blocking row names why it fails, not an unknown status', () => {
+        const medium = { severity: 'medium' as const, kind: 'security' as const };
+        const { commit: _commit, ...uncommitted } = COMPLETE;
+        const [problem] = missing_dispositions([finding({ ...medium, ...uncommitted, status: 'still_open' })]);
+        expect(problem).toContain('still_open does not satisfy a blocking finding');
+        expect(problem).not.toContain('unknown status');
+    });
+});
+
+describe('the medium-security widening is prospective', () => {
+    const medium = { severity: 'medium' as const, kind: 'security' as const };
+    const [maj, min, pat] = MEDIUM_SECURITY_BLOCKS_AFTER.split('.').map(Number) as [number, number, number];
+    const next = `${maj}.${min + 1}.0`;
+    const nextPatch = `${maj}.${min}.${pat + 1}`;
+    const olderLine = min > 0 ? `${maj}.${min - 1}` : `${maj - 1}.99`;
+    const earlier = `${olderLine}.0`;
+
+    it('binds every release after the cutoff, and binds with no release at all', () => {
+        expect(isBlocking(medium, next)).toBe(true);
+        expect(isBlocking(medium, nextPatch)).toBe(true);
+        expect(isBlocking(medium, `${maj + 1}.0.0`)).toBe(true);
+        expect(isBlocking(medium)).toBe(true);
+    });
+
+    it('leaves the cutoff release and every earlier one as they shipped', () => {
+        expect(isBlocking(medium, MEDIUM_SECURITY_BLOCKS_AFTER)).toBe(false);
+        expect(isBlocking(medium, earlier)).toBe(false);
+        expect(missing_dispositions([finding(medium)], MEDIUM_SECURITY_BLOCKS_AFTER)).toEqual([]);
+    });
+
+    it('never touches the high/critical floor, whatever the release', () => {
+        expect(isBlocking({ severity: 'high', kind: 'security' }, earlier)).toBe(true);
+        expect(isBlocking({ severity: 'critical', kind: 'claim' }, MEDIUM_SECURITY_BLOCKS_AFTER)).toBe(true);
+    });
+
+    it('orders by version, so a later patch on an older line stays exempt', () => {
+        expect(isBlocking(medium, `${olderLine}.99`)).toBe(false);
+    });
+
+    it('an unparseable release falls to the wider rule', () => {
+        expect(isBlocking(medium, 'not-a-version')).toBe(true);
+    });
+
+    it('widens unrecorded_findings for a release after the cutoff only', () => {
+        const reported = [{ finding_id: 'abc123abc123', title: 't', ...medium }];
+        expect(unrecorded_findings(reported, [], next)).toHaveLength(1);
+        expect(unrecorded_findings(reported, [], MEDIUM_SECURITY_BLOCKS_AFTER)).toEqual([]);
     });
 });
 
@@ -314,9 +397,9 @@ function runGate(dir: string, release: string): { code: number; out: string } {
     return { code: res.status ?? 1, out: `${res.stdout ?? ''}${res.stderr ?? ''}` };
 }
 
-function ledgerDir(body: unknown): string {
+function ledgerDir(body: unknown, version = '1.0.0'): string {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cfd-empty-'));
-    fs.writeFileSync(path.join(dir, '1.0.0.json'), JSON.stringify(body, null, 2) + '\n', 'utf-8');
+    fs.writeFileSync(path.join(dir, `${version}.json`), JSON.stringify(body, null, 2) + '\n', 'utf-8');
     return dir;
 }
 
@@ -368,6 +451,27 @@ describe('exit codes — a present-but-empty ledger is not the same state as an 
         const r = runGate(dir, '1.0.0');
         expect(r.code).toBe(1);
         expect(r.out).toContain('no_findings_reason');
+    });
+
+    it('the CLI --release decides the cutoff: an open medium security row is red only after it', () => {
+        const [maj, min] = MEDIUM_SECURITY_BLOCKS_AFTER.split('.').map(Number) as [number, number];
+        const after = `${maj}.${min + 1}.0`;
+        const row = finding({ severity: 'medium', kind: 'security' });
+        const atDir = ledgerDir(
+            { schema_version: 1, release: MEDIUM_SECURITY_BLOCKS_AFTER, findings: [row] },
+            MEDIUM_SECURITY_BLOCKS_AFTER,
+        );
+        expect(runGate(atDir, MEDIUM_SECURITY_BLOCKS_AFTER).code).toBe(0);
+        const later = runGate(ledgerDir({ schema_version: 1, release: after, findings: [row] }, after), after);
+        expect(later.code).toBe(1);
+        expect(later.out).toContain('no disposition status');
+        // A ledger whose own `release` field lags the version being cut is still
+        // judged by the version being cut.
+        const stale = runGate(
+            ledgerDir({ schema_version: 1, release: MEDIUM_SECURITY_BLOCKS_AFTER, findings: [row] }, after),
+            after,
+        );
+        expect(stale.code).toBe(1);
     });
 
     it('present + dispositioned findings exits 0 and needs no reason', () => {

@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: ready
@@ -18,7 +20,7 @@ relates:
 ---
 # Road to findings that get a disposition
 
-> **Source:** an external review round (opaque id inbox-2026-10-e), round
+> **Source:** [REDACTED:src-conf]
 > `agents/tmp.old/inbox-2026-10-e/`. Every anchor below was re-read at `main` @
 > `a75bb3210` on 2026-10-06; finding counts were read from the ledger at the
 > same commit.
@@ -61,8 +63,7 @@ owner, because it reverses a recorded supersession.
   the read; only the default is still open.
   Three 16.2.0 findings remain `still_open` on this (`c6367568cb1a`,
   `77e3912664b9`, `8605e9fc59cd` in `agents/evidence/release-findings/16.2.0.json`)
-  and 16.3.0 added `eff3d4ed3fee` (no migration note), undispositioned on
-  2026-10-06; it is `still_open` now, carried by step 3.3 (D5).
+  and 16.3.0 adds `eff3d4ed3fee` (no migration note), undispositioned.
 - The network read is the outcome of a recorded supersession, reached after a
   2/2 council pass
   (`agents/roadmaps/road-to-adversarial-verification-and-long-runs.md:124-140`).

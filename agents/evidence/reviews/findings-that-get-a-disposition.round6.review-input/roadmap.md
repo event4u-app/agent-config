@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: ready
@@ -18,7 +20,7 @@ relates:
 ---
 # Road to findings that get a disposition
 
-> **Source:** an external review round (opaque id inbox-2026-10-e), round
+> **Source:** [REDACTED:src-conf]
 > `agents/tmp.old/inbox-2026-10-e/`. Every anchor below was re-read at `main` @
 > `a75bb3210` on 2026-10-06; finding counts were read from the ledger at the
 > same commit.
@@ -51,18 +53,17 @@ owner, because it reverses a recorded supersession.
   `src/agent-src/templates/scripts/work_engine/stack/runner.ts`. That file now
   uses `lstatSync` for literal entries (`:1091-1094`), landed by `00612c1f2`
   (#2144), which is contained in the 16.3.0 tag. Neither row records it.
-- As read on 2026-10-06, `doctor --json` read the forge unconditionally:
+- `doctor --json` reads the forge unconditionally (as read on 2026-10-06; since
+  fc1bdec4f, `--no-forge` / `--offline` and any `--check <id>` run skip it, and
+  only the default is still open):
   `payload['forge_protection'] = forgeProtectionJsonFor(...)`
   (`src/scripts/_cli/cmd_doctor.ts:3012`), including on a single `--check`
-  run, with an environment variable as the only opt-out
+  run; the only opt-out is an environment variable
   (`src/scripts/_lib/forge_reader.ts:103`, `AGENT_CONFIG_DOCTOR_NO_FORGE` or
   `AGENT_CONFIG_OFFLINE` set to `1`). No `--check` id reads the forge block.
-  Since fc1bdec4f, `--no-forge` / `--offline` and any `--check <id>` run skip
-  the read; only the default is still open.
   Three 16.2.0 findings remain `still_open` on this (`c6367568cb1a`,
   `77e3912664b9`, `8605e9fc59cd` in `agents/evidence/release-findings/16.2.0.json`)
-  and 16.3.0 added `eff3d4ed3fee` (no migration note), undispositioned on
-  2026-10-06; it is `still_open` now, carried by step 3.3 (D5).
+  and 16.3.0 adds `eff3d4ed3fee` (no migration note), undispositioned.
 - The network read is the outcome of a recorded supersession, reached after a
   2/2 council pass
   (`agents/roadmaps/road-to-adversarial-verification-and-long-runs.md:124-140`).
@@ -73,15 +74,14 @@ owner, because it reverses a recorded supersession.
 
 ## Phase 1 — Every 16.3.0 finding ends somewhere
 
-- [x] **1.1 The two symlink findings are read against the fix.** Re-read
+- [x] **1.1 The two symlink findings are closed against the fix.** Re-read
       `runner.ts:1091-1094` against each finding's text; when it covers the
-      finding, record `fixed` with commit `00612c1f2`, otherwise `still_open`
-      with the roadmap that carries the rest.
+      finding, record `fixed` with commit `00612c1f2`.
       Outcome (2026-10-07): it does not cover either finding. `lstatSync`
       resolves only the last segment, so a literal entry under a symlinked
       parent still leaves the root; both rows are `still_open`, carried by
       `road-to-the-16-3-0-findings-residue` item 1 (D5).
-      verify: `node -e 'const j=require("./agents/evidence/release-findings/16.3.0.json");process.exit(j.findings.filter(f=>["7efdf81cb478","a78536c88317"].includes(f.finding_id)&&f.status==="still_open"&&/road-to-the-16-3-0-findings-residue/.test(f.rationale)).length===2?0:1)'` -> 0
+      verify: `node -e 'const j=require("./agents/evidence/release-findings/16.3.0.json");process.exit(j.findings.filter(f=>["7efdf81cb478","a78536c88317"].includes(f.finding_id)&&f.status).length===2?0:1)'` -> 0
 - [x] **1.2 The rest are read and dispositioned.** Each remaining row gains a
       status and a rationale: `fixed` with commit, `false_positive`,
       `accepted_risk` with its reason, or `still_open` naming the roadmap that
