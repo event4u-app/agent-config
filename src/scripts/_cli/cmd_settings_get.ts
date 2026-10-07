@@ -204,10 +204,9 @@ export function userGlobalDrop(key: string, templateDefault?: unknown): { droppe
         const value = getSettingsLeaf(raw, key);
         if (value === undefined) continue;
         // `upgrade` inserts template defaults into the user-global file, so a
-        // dropped default is not something the user set and loses nothing.
-        if (templateDefault !== undefined && JSON.stringify(value) === JSON.stringify(templateDefault)) {
-            return { dropped: false, file };
-        }
+        // dropped default is not something the user set and loses nothing. A
+        // lower layer can still hold a value the user did set.
+        if (templateDefault !== undefined && JSON.stringify(value) === JSON.stringify(templateDefault)) continue;
         return { dropped: true, file: candidate };
     }
     return { dropped: false, file };

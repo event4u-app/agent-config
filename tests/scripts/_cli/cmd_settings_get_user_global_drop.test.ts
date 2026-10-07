@@ -111,6 +111,11 @@ describe('a dropped value that equals the template default', () => {
         expect(r.out.join('\n')).not.toContain('being discarded');
     });
 
+    it('looks past a default in the higher layer to a value set in the lower one', () => {
+        const root = userGlobalRoot({ [CANONICAL]: 'git:\n  update_strategy: merge\n', [FLAT]: 'git:\n  update_strategy: rebase\n' });
+        expect(userGlobalDrop('git.update_strategy', 'merge')).toEqual({ dropped: true, file: path.join(root, FLAT) });
+    });
+
     it('still warns for a value that differs from the default', () => {
         const root = userGlobalRoot({ [CANONICAL]: 'git:\n  update_strategy: rebase\n' });
         expect(userGlobalDrop('git.update_strategy', 'merge')).toEqual({ dropped: true, file: path.join(root, ...CANONICAL.split('/')) });
