@@ -16,6 +16,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
     makeTargetDeps,
     readCommittedConvention,
+    runGit,
     type GitRunResult,
     type GitRunner,
     type TargetDeps,
@@ -48,12 +49,19 @@ function result(over: Partial<GitRunResult>): GitRunResult {
     return { ok: false, out: '', err: '', timedOut: false, ...over };
 }
 
-/** Answers every `gh` call with `gh`, and refuses every other command. */
-function ghRunner(gh: GitRunResult): GitRunner {
-    return (cmd) => (cmd === 'gh' ? gh : result({ ok: false, err: 'not under test' }));
+const GITHUB = 'git@github.com:acme/widgets.git';
+
+/** Answers `git remote get-url origin` with `origin`, every `gh` call with `gh`, and refuses the rest. */
+function ghRunner(gh: GitRunResult, origin: string | null = GITHUB): GitRunner {
+    return (cmd, args) => {
+        if (cmd === 'gh') return gh;
+        if (args.join(' ') === 'remote get-url origin') return origin === null ? result({ err: 'error: No such remote' }) : result({ ok: true, out: `${origin}\n` });
+        return result({ ok: false, err: 'not under test' });
+    };
 }
 
-const prBase = (gh: GitRunResult): ReturnType<TargetDeps['prBase']> => makeTargetDeps('/nowhere', ghRunner(gh)).prBase('feat/x');
+const prBase = (gh: GitRunResult, origin?: string | null): ReturnType<TargetDeps['prBase']> =>
+    makeTargetDeps('/nowhere', ghRunner(gh, origin)).prBase('feat/x');
 
 describe('prBase — an answer versus no answer', () => {
     it('reads the base of the open pull request', () => {
@@ -65,7 +73,16 @@ describe('prBase — an answer versus no answer', () => {
     });
 
     it.each([
-        ['gh is not installed', result({ missing: true }), /not installed/],
+        ['an origin on another host, gh not installed', result({ missing: true }), 'https://gitlab.example.com/acme/widgets.git'],
+        ['an origin on another host, gh answering', result({ ok: true, out: '[{"baseRefName":"release"}]' }), 'ssh://git@gitlab.example.com/acme/widgets.git'],
+        ['no origin at all', result({ ok: true, out: '[{"baseRefName":"release"}]' }), null],
+        ['a GitHub origin, gh not installed', result({ missing: true }), GITHUB],
+        ['gh says the repository is not a GitHub repository', result({ err: 'none of the git remotes configured for this repository point to a known GitHub host' }), GITHUB],
+    ])('reads %s as no pull request concept — null, the default branch decides', (_name, gh, origin) => {
+        expect(prBase(gh, origin)).toBeNull();
+    });
+
+    it.each([
         ['gh is not authenticated', result({ err: 'To get started with GitHub CLI, please run:  gh auth login' }), /could not answer/],
         ['the network failed', result({ err: 'error connecting to api.github.com' }), /could not answer/],
         ['gh timed out', result({ timedOut: true }), /did not answer within/],
@@ -97,6 +114,44 @@ describe('readCommittedConvention — a forge that could not be asked', () => {
         expect(read.readings.update_strategy?.detail).toContain('the gh CLI is not installed');
         expect(read.target).toBeNull();
         expect(defaultAsked).not.toHaveBeenCalled();
+    });
+});
+
+describe('readCommittedConvention — no pull request concept versus a GitHub forge that failed', () => {
+    /** A clone whose origin main carries `update_strategy: rebase`. */
+    function clone(): string {
+        const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'pr-base-origin-')));
+        made.push(root);
+        const remote = path.join(root, 'remote.git');
+        git(root, 'init', '-q', '--bare', '-b', 'main', remote);
+        const work = path.join(root, 'work');
+        git(root, 'clone', '-q', remote, work);
+        fs.writeFileSync(path.join(work, '.git-convention.yml'), 'git:\n  update_strategy: rebase\n');
+        git(work, 'add', '.git-convention.yml');
+        git(work, 'commit', '-q', '-m', 'carrier');
+        git(work, 'push', '-q', 'origin', 'HEAD:main');
+        git(work, 'switch', '-q', '-c', 'feat/x');
+        return work;
+    }
+
+    /** Real git, with `gh` answered by `gh`. */
+    const withGh = (gh: GitRunResult): GitRunner => (cmd, args, cwd, t) => (cmd === 'gh' ? gh : runGit(cmd, args, cwd, t));
+
+    it('a non-GitHub origin with no gh resolves the default branch, valid', () => {
+        const work = clone();
+        const read = readCommittedConvention(work, { deps: makeTargetDeps(work, withGh(result({ missing: true }))), keys: ['update_strategy'] });
+        expect(read.readings.update_strategy).toMatchObject({ value: 'rebase', state: 'valid' });
+        expect(read.target).toMatchObject({ ref: 'origin/main', reason: 'repository-default-branch' });
+    });
+
+    it('a GitHub origin whose gh call fails on auth is unresolvable', () => {
+        const work = clone();
+        git(work, 'remote', 'set-url', 'origin', 'https://github.com/acme/widgets.git');
+        const auth = result({ err: 'To get started with GitHub CLI, please run:  gh auth login' });
+        const read = readCommittedConvention(work, { deps: makeTargetDeps(work, withGh(auth)), keys: ['update_strategy'] });
+        expect(read.readings.update_strategy).toMatchObject({ state: 'unresolvable' });
+        expect(read.readings.update_strategy?.detail).toContain('gh auth login');
+        expect(read.target).toBeNull();
     });
 });
 

@@ -18,8 +18,10 @@
  * developer layer including the gitignored local one (the owner's D8), and a
  * carrier that does not set a key leaves it to the developer layers read at
  * the repository root, never per subdirectory. A target commit that cannot be
- * resolved is `unresolvable`, never the default — and a forge that could not be
- * asked for the open pull request's base is that case, not "no pull request".
+ * resolved is `unresolvable`, never the default — and a GitHub remote whose
+ * forge could not be asked for the open pull request's base is that case, not
+ * "no pull request". Without a GitHub remote or without gh there is no pull
+ * request to consult, and the default branch decides.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -156,17 +158,31 @@ export function parseExactHeadSha(lsRemoteOut: string, branch: string): string |
     return null;
 }
 
+/** The host of a git remote URL (`https://h/…`, `ssh://u@h:p/…`, `u@h:…`), lower-cased, or null for a path. */
+export function remoteHost(url: string): string | null {
+    const u = url.trim();
+    const scheme = /^[a-z][a-z0-9+.-]*:\/\/(?:[^@/]*@)?([^/:]+)/i.exec(u);
+    if (scheme !== null) return u.toLowerCase().startsWith('file:') ? null : (scheme[1] as string).toLowerCase();
+    const scp = /^(?:[^@/]+@)?([^/:]+):(?!\/)/.exec(u);
+    return scp === null ? null : (scp[1] as string).toLowerCase();
+}
+
+/** gh's own answer that the checkout has no GitHub remote. */
+const NOT_GITHUB = /not a GitHub repository|none of the git remotes configured for this repository point to a known GitHub host/i;
+
 /**
- * `gh pr list` read as one of three answers, mirroring `check_branch_freshness`:
- * a base, "no open PR" (null), or could-not-ask. A failed call is never "none" —
- * read that way it sends a release-line PR to the default branch's carrier.
+ * `gh pr list` read as one of three answers: a base, "no open PR" (null), or
+ * could-not-ask. A repository with no GitHub remote, or without gh at all, has
+ * no pull request to consult, so that is null and the default branch decides.
+ * A GitHub remote whose call fails is never "none" — read that way it sends a
+ * release-line PR to the default branch's carrier.
  */
 export function parsePrBase(res: GitRunResult): string | PrBaseUnknown | null {
-    if (res.missing === true) return { unknown: 'the gh CLI is not installed' };
+    if (res.missing === true || NOT_GITHUB.test(res.err)) return null;
     if (res.timedOut) return { unknown: `gh did not answer within ${NETWORK_TIMEOUT_MS / 1000} s` };
     if (!res.ok) {
         const first = res.err.split('\n')[0]?.trim() ?? '';
-        return { unknown: `gh could not answer — not authenticated, no GitHub remote, or the network failed${first === '' ? '' : `: ${first}`}` };
+        return { unknown: `gh could not answer — not authenticated, or the network failed${first === '' ? '' : `: ${first}`}` };
     }
     let rows: unknown;
     try {
@@ -185,6 +201,8 @@ export function makeTargetDeps(repo: string, run: GitRunner = runGit): TargetDep
         currentBranch: (): string => ask('git', ['rev-parse', '--abbrev-ref', 'HEAD']).out.trim(),
         prBase: (branch: string): string | PrBaseUnknown | null => {
             if (branch === '' || branch === 'HEAD') return null;
+            const origin = ask('git', ['remote', 'get-url', 'origin']);
+            if (!origin.ok || remoteHost(origin.out) !== 'github.com') return null;
             // The forge knows the REAL base, which matters for a stacked or
             // release-line PR: measuring against the repo default would compare
             // against a branch this PR never merges into.

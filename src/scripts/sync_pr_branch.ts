@@ -870,8 +870,8 @@ export interface StrategyGate {
  * The one place that maps an unreadable `git.update_strategy` to an exit.
  *
  * A target that resolves to nothing — no pull request base, no default branch,
- * a `--base` the server does not know, a forge that could not be asked for the
- * pull request's base — is the base failure, exit 1. A target
+ * a `--base` the server does not know, a GitHub forge that could not be asked
+ * for the pull request's base — is the base failure, exit 1. A target
  * that resolves but whose carrier cannot be read, parsed or accepted is exit 4.
  * Offline the target's carrier is unread: with no developer value other than
  * `merge` that is the `unverified` warning (exit 0, nothing touched), while a
