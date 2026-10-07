@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head b6107dd95c93c32c0c349d83584f23d2c38436d4, review
-  artefacts excluded), scope hash `49a6c2fdc733f9d2ef0bc99a5897adb39ec03432f3c07ce564564afa5e78fb2f`
+- diff: `diff.patch` — the review scope (branch head 6581175f5b3a2236baa19978ea8871825003755e, review
+  artefacts excluded), scope hash `29eea20c6079fd45b14ad120676d05722123e77a90a9c89efbe5b3c628c96fe7`
 - roadmap under review: none (`acceptance-criteria.md` is empty)
 
 Changed files:
@@ -141,7 +141,7 @@ Fill the findings table in `git-convention-review-findings.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 49a6c2fdc733f9d2ef0bc99a5897adb39ec03432f3c07ce564564afa5e78fb2f, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 29eea20c6079fd45b14ad120676d05722123e77a90a9c89efbe5b3c628c96fe7, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel

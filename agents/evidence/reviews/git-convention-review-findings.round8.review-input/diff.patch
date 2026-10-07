@@ -3552,7 +3552,7 @@ index 0000000000000000000000000000000000000000..f62f4ef1005f4065d1e1346fefeb74bd
 +    };
 +}
 diff --git a/src/scripts/check_branch_freshness.ts b/src/scripts/check_branch_freshness.ts
-index 17d50c229f34359455d296de7dcf72bc04160af7..30e1b124c7225d22f08dfc1d685554b931f53409 100644
+index 17d50c229f34359455d296de7dcf72bc04160af7..7c215d3b918ad040ee2f5abab154f5c436611613 100644
 --- a/src/scripts/check_branch_freshness.ts
 +++ b/src/scripts/check_branch_freshness.ts
 @@ -46,7 +46,9 @@
@@ -3707,7 +3707,7 @@ index 17d50c229f34359455d296de7dcf72bc04160af7..30e1b124c7225d22f08dfc1d685554b9
      scanReport(0, `standing on ${base} itself — a branch cannot be behind itself`);
      return 0;
    }
-@@ -602,50 +668,79 @@ export function main(
+@@ -602,50 +668,78 @@ export function main(
    if (resolved.unverified !== undefined) {
      process.stdout.write(
        `⚠️  check_branch_freshness: could not ask the forge for this branch's PR base ` +
@@ -3791,8 +3791,7 @@ index 17d50c229f34359455d296de7dcf72bc04160af7..30e1b124c7225d22f08dfc1d685554b9
 +  // Read by the pre-push hook to print the exact BASE it refused for. Only a
 +  // checkout that defines the task gets it: a consumer runs this script from
 +  // node_modules, where the task does not exist and the line would not run.
-+  // A strategy read as something other than merge would make the task refuse, so it
-+  // is not offered then. An unread strategy keeps it: the task reads the strategy itself.
++  // Under a strategy other than merge the task would only refuse, so it is not offered.
 +  const mergeAllowed = strategy === null || (!isRefusal(strategy.state) && strategy.value === "merge");
 +  if (definesPushReady() && mergeAllowed) {
 +    console.error(`    task push-ready BASE=${remote === "origin" ? base : shown}   # integrate the base set, regenerate, verify, re-check`);
@@ -3971,7 +3970,7 @@ index df4186dafa74d80fb502bdd1d8ecfda117129574..32ea4e8c9f0aff6abfbf3922174b07b7
      if (afterText === null) return null;
  
 diff --git a/src/scripts/install-hooks.sh b/src/scripts/install-hooks.sh
-index a58f03da47cfab3e84ba6f53191b2f924f3a9623..64201ac15f9765638b2b9f0602cfabcb36b25dbb 100755
+index a58f03da47cfab3e84ba6f53191b2f924f3a9623..2fc2aacb7f3e774320d8952c6e5a8a750d1688c4 100755
 --- a/src/scripts/install-hooks.sh
 +++ b/src/scripts/install-hooks.sh
 @@ -74,8 +74,9 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
@@ -3986,7 +3985,7 @@ index a58f03da47cfab3e84ba6f53191b2f924f3a9623..64201ac15f9765638b2b9f0602cfabcb
  #
  # The base is a SET: a branch targeting a release line or a stacked parent may
  # also have to integrate the default branch, per the branch-convergence policy
-@@ -144,23 +145,47 @@ fail=0
+@@ -144,23 +145,42 @@ fail=0
  # no useful second finding to collect from a tree that is about to move.
  #
  # It never merges. `check_branch_freshness` asks the REMOTE (one `ls-remote`,
@@ -4029,11 +4028,6 @@ index a58f03da47cfab3e84ba6f53191b2f924f3a9623..64201ac15f9765638b2b9f0602cfabcb
 +        echo "     task push-ready BASE=$base         # fetch → integrate the base SET"
 +        echo "                                         # → regenerate → verify → re-check"
 +        echo "     task push-ready DRY=1 BASE=$base   # the same steps, read-only"
-+    elif printf '%s\n' "$fresh_out" | grep -q 'branch is BEHIND'; then
-+        # A strategy that does not merge gets no push-ready line; its remedy
-+        # is printed by the gate itself.
-+        echo "   Push blocked — the branch is behind its base. The remedy for this"
-+        echo "   project's update strategy is printed above."
 +    elif [ -n "$absent" ]; then
 +        echo "   Push blocked — the base $absent does not exist on the remote: a"
 +        echo "   misspelled or deleted base, not a stale branch. Name a branch the"
@@ -4046,7 +4040,7 @@ index a58f03da47cfab3e84ba6f53191b2f924f3a9623..64201ac15f9765638b2b9f0602cfabcb
      echo "   This hook refuses; it never merges. Bypass a genuine WIP push with"
      echo "   AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1."
 diff --git a/src/scripts/sync_pr_branch.ts b/src/scripts/sync_pr_branch.ts
-index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27cb59aa90a 100644
+index 44ef79eada1a586f041594471d05c4399ad1fa5a..6989ff7bb9cd628da068b22e9bc1915b5cb1105e 100644
 --- a/src/scripts/sync_pr_branch.ts
 +++ b/src/scripts/sync_pr_branch.ts
 @@ -32,8 +32,13 @@
@@ -4208,7 +4202,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
              if (!m.ok) {
                  clean = false;
                  conflicted = m.conflicted;
-@@ -604,6 +653,69 @@ export function integrateWithPinnedBase(refs: readonly string[], ops: IntegrateO
+@@ -604,6 +653,68 @@ export function integrateWithPinnedBase(refs: readonly string[], ops: IntegrateO
      };
  }
  
@@ -4234,16 +4228,15 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
 +            target = sha;
 +        }
 +    }
-+    const indexWasClean = sh('git', ['diff', '--cached', '--quiet'], repo).ok;
 +    const m = sh('git', ['merge', '--no-edit', target], repo, mergeTimeoutMs());
 +    if (!m.ok) {
 +        // A merge git refuses before it starts (local changes it would
 +        // overwrite, an untracked file in the way) leaves no unmerged path.
 +        const conflicted = sh('git', ['diff', '--name-only', '--diff-filter=U'], repo).out.split('\n').filter((p) => p.trim() !== '');
 +        if (conflicted.length > 0) return { ok: false, conflicted };
-+        // A staged difference that was not there before came from this merge —
-+        // a killed git leaves one with no MERGE_HEAD to abort. Staged work the
-+        // user had is not a half-applied merge, and resetting it would lose it.
++        // git only starts a merge from an index that matches HEAD, so a staged
++        // difference now came from this merge — a killed git leaves one with no
++        // MERGE_HEAD to abort.
 +        const how = m.killed ? `was stopped after ${String(mergeTimeoutMs() / 1000)} s` : 'did not complete';
 +        if (sh('git', ['rev-parse', '-q', '--verify', 'MERGE_HEAD'], repo).ok) {
 +            return {
@@ -4254,7 +4247,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
 +                    'finish it with `git commit` or discard it with `git merge --abort`.',
 +            };
 +        }
-+        if (indexWasClean && !sh('git', ['diff', '--cached', '--quiet'], repo).ok) {
++        if (!sh('git', ['diff', '--cached', '--quiet'], repo).ok) {
 +            return {
 +                ok: false,
 +                conflicted: [],
@@ -4278,7 +4271,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
  /** The regeneration operations Phase 3 needs, injected so no real conflict is required. */
  export interface RegenOps {
      readonly regenerate: () => { ok: boolean; err: string };
-@@ -696,7 +808,16 @@ function gitRegenOps(repo: string): RegenOps {
+@@ -696,7 +807,16 @@ function gitRegenOps(repo: string): RegenOps {
      };
  }
  
@@ -4296,7 +4289,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
      let resolved: ResolveBaseResult;
      try {
          resolved = resolveBase(repo, baseOverride, deps ?? makeGitDeps(repo));
-@@ -716,13 +837,14 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
+@@ -716,13 +836,14 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
      const summary = renderBaseSummary(resolved);
      const order = integrationOrder(resolved);
  
@@ -4314,7 +4307,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
              generated: [],
              remeasured: [],
              authored: [],
-@@ -730,10 +852,49 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
+@@ -730,10 +851,49 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
          };
      }
  
@@ -4368,7 +4361,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
      // De-duplicated by ancestry: a ref already contained in HEAD is 0 behind and
      // is not merged again, which is what keeps a target that already contains
      // the default from being merged twice.
-@@ -745,9 +906,8 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
+@@ -745,9 +905,8 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
          const detail = stale.map((b) => `${b.ref} (${String(b.behind)} behind)`).join(', ');
          const added = resolved.entries.find((e) => e.reason === 'branch-convergence-policy:include-default');
          const target = resolved.entries[0]?.ref ?? '';
@@ -4380,7 +4373,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
          return {
              ...(targetBehind > 0 && added !== undefined
                  ? { targetStale: { target, defaultRef: added.ref, behind: targetBehind, branchBehind: behindEach.find((b) => b.ref === target)?.behind ?? 0 } }
-@@ -764,18 +924,13 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
+@@ -764,18 +923,13 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
          };
      }
  
@@ -4403,7 +4396,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
          },
      );
  
-@@ -792,8 +947,8 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
+@@ -792,8 +946,8 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
          };
      }
      if (outcome.conflicted.length === 0) {
@@ -4414,7 +4407,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
          return { exit: 1, message: `${summary}. ${outcome.message}`, generated: [], remeasured: [], authored: [], scanned: order.length };
      }
  
-@@ -832,9 +987,9 @@ export function updateStrategy(repo: string, base: string | null = null, deps?:
+@@ -832,9 +986,9 @@ export function updateStrategy(repo: string, base: string | null = null, deps?:
      return readStrategy(repo, base, deps).reading;
  }
  
@@ -4426,7 +4419,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
  }
  
  export interface StrategyGate {
-@@ -842,6 +997,8 @@ export interface StrategyGate {
+@@ -842,6 +996,8 @@ export interface StrategyGate {
      exit: 0 | 1 | 4 | null;
      line: string;
      reading: GitConventionReading;
@@ -4435,7 +4428,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
  }
  
  /**
-@@ -864,8 +1021,33 @@ export function strategyExit(reading: GitConventionReading, baseResolved: boolea
+@@ -864,8 +1020,33 @@ export function strategyExit(reading: GitConventionReading, baseResolved: boolea
  }
  
  export function strategyGate(repo: string, base: string | null, targetDeps: BaseDeps): StrategyGate {
@@ -4471,7 +4464,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
  }
  
  /** `deps` answers the target questions; tests inject it, a run asks git. */
-@@ -897,6 +1079,12 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
+@@ -897,6 +1078,12 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
                  reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'argument error' });
                  return 1;
              }
@@ -4484,7 +4477,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
              base = v;
          } else if (a === '--dry-run') {
              dryRun = true;
-@@ -913,8 +1101,13 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
+@@ -913,8 +1100,13 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
                      '  --auto-resolve-generated have nothing to change there). A strategy that\n' +
                      '  cannot be read (unparsable file, typo, user-global-only) exits 4.\n' +
                      '  The base is --base; without it the default branch, so a PR into any other\n' +
@@ -4500,7 +4493,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
                      '  reported and never auto-resolved; generated and authored conflicts are\n' +
                      '  listed separately because only the first has one correct resolution;\n' +
                      '  measured ratchet baselines are a third class, re-measured not merged.\n' +
-@@ -938,7 +1131,10 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
+@@ -938,7 +1130,10 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
      // git-history-discipline — so the branch is only CHECKED (dry run), and a
      // branch that is behind is refused rather than merged. A current branch
      // passes, so an automated pre-push sync stays green when nothing is to do.
@@ -4512,7 +4505,7 @@ index 44ef79eada1a586f041594471d05c4399ad1fa5a..1ea008aa89d22235800358e3c425d27c
      let plan: Plan;
      try {
          const gate = strategyGate(repo, base, targetDeps);
-@@ -967,7 +1163,14 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
+@@ -967,7 +1162,14 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
                  return 3;
              }
          } else {
@@ -4584,52 +4577,20 @@ index b5a19359a748ff16ba86cd182575df500c81c75a..6294f3ffd42a2a709289bac206701fce
 +    return true;
 +}
 diff --git a/src/server/routes/settings.ts b/src/server/routes/settings.ts
-index d2b8f7cf36dadc105c55b6c0e44ceaf7d9372560..f002e912ea0658183c3038ee7870e8eda814a49c 100644
+index d2b8f7cf36dadc105c55b6c0e44ceaf7d9372560..e27e38d976d20ae5e7c9b11d7d9ac63e4df6f8f6 100644
 --- a/src/server/routes/settings.ts
 +++ b/src/server/routes/settings.ts
-@@ -19,16 +19,40 @@ import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
- import { promises as fs } from 'node:fs';
- import type { Stats } from 'node:fs';
- import { dirname, join } from 'node:path';
-+import { isDeepStrictEqual } from 'node:util';
+@@ -22,7 +22,8 @@ import { dirname, join } from 'node:path';
  import type { ZodIssue } from 'zod';
  import { zodToJsonSchema } from 'zod-to-json-schema';
  import { settingsSchema } from '../schemas/settings.js';
 -import { parseYaml, mergeIntoTemplate, diffValues, deepMerge, TEMPLATE_PLACEHOLDER_DEFAULTS } from '../io/yamlIO.js';
-+import { parseYaml, mergeIntoTemplate, diffValues, deepMerge, renderSparseSettings, substituteTemplatePlaceholders, TEMPLATE_PLACEHOLDER_DEFAULTS } from '../io/yamlIO.js';
++import { parseYaml, mergeIntoTemplate, diffValues, deepMerge, renderSparseSettings, TEMPLATE_PLACEHOLDER_DEFAULTS } from '../io/yamlIO.js';
 +import { sparseSettingsValues } from './wizard.js';
  import { writeAtomic } from '../io/atomicWrite.js';
  import { WITHHELD_GIT_KEYS, WITHHELD_REASON, gitDiffBase, gitKeyWriteIssues, keepWithheldGit, withholdGitKeys } from '../gitKeysGate.js';
  import { sharedWriteTarget, resolveThroughSymlinks } from '../io/sharedWriteCheck.js';
- import { PACKAGE_ROOT } from '../../cli/paths.js';
- import { buildSettingsClassIndex, guardedChangedKeys, parseSettingsClassRows, type SettingsClass } from '../../shared/settingsClasses.js';
- 
-+/**
-+ * A fresh user-global file records decisions, not the defaults: the form posts
-+ * every value, and a copy of the template's would freeze each default at today's
-+ * value. Only leaves that differ from the template are kept, over the carve-outs.
-+ */
-+async function freshUserGlobalValues(packageRoot: string, candidate: Record<string, unknown>): Promise<Record<string, unknown>> {
-+    const templateBody = await fs.readFile(join(packageRoot, 'src', 'config', 'agent-settings.template.yml'), 'utf8');
-+    const template = parseYaml(substituteTemplatePlaceholders(templateBody));
-+    const decided = (value: unknown, dflt: unknown): unknown => {
-+        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
-+            const base = dflt !== null && typeof dflt === 'object' && !Array.isArray(dflt) ? (dflt as Record<string, unknown>) : {};
-+            const kept = Object.entries(value as Record<string, unknown>)
-+                .map(([k, v]) => [k, decided(v, base[k])] as const)
-+                .filter(([, v]) => v !== undefined);
-+            return kept.length === 0 ? undefined : Object.fromEntries(kept);
-+        }
-+        return isDeepStrictEqual(value, dflt) ? undefined : value;
-+    };
-+    const own = (decided(candidate, template) ?? {}) as Record<string, unknown>;
-+    return deepMerge(sparseSettingsValues(templateBody, {}), own);
-+}
-+
- /** Sidecar written by `settings:set`, keyed by dotted path. */
- const PROVENANCE_RELATIVE = join('settings', '.agent-settings.provenance.json');
- 
-@@ -493,9 +517,15 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
+@@ -493,9 +494,18 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                  // In global mode the scaffold may be the project file, whose
                  // git section the candidate does not overwrite; the file being
                  // written is the base, so a section it lacks stays absent. An
@@ -4644,7 +4605,10 @@ index d2b8f7cf36dadc105c55b6c0e44ceaf7d9372560..f002e912ea0658183c3038ee7870e8ed
 +                    ? mergeIntoTemplate(current.raw, candidate)
 +                    : ownRaw !== null
 +                        ? mergeIntoTemplate(ownRaw, candidate)
-+                        : renderSparseSettings(await freshUserGlobalValues(packageRoot, candidate));
++                        : renderSparseSettings(sparseSettingsValues(
++                            await fs.readFile(join(packageRoot, 'src', 'config', 'agent-settings.template.yml'), 'utf8'),
++                            candidate,
++                        ));
                  if (opts.dryRun === true) {
                      // No disk write, no Last-Modified bump — surface the
                      // rendered body so the maintainer sees what a real
@@ -7372,7 +7336,7 @@ index eec60ad813bcd829bd5336ab81417d6e722b5918..133e0e720a30e65145c535cc7eda18f5
          const reason = classCVerdict(
              { old_string: 'false', new_string: 'true', replace_all: 'yes' as unknown as boolean },
 diff --git a/tests/scripts/prepush_base_freshness.test.ts b/tests/scripts/prepush_base_freshness.test.ts
-index 4f3a67c543268efb8a0c9d8061e795abc6c76f6b..d988a269446495739d659b7f79f153000e25a595 100644
+index 4f3a67c543268efb8a0c9d8061e795abc6c76f6b..c2c46715a2849b37256df0bfc289c216aa3c52ba 100644
 --- a/tests/scripts/prepush_base_freshness.test.ts
 +++ b/tests/scripts/prepush_base_freshness.test.ts
 @@ -50,12 +50,12 @@ beforeAll(() => {
@@ -7390,7 +7354,7 @@ index 4f3a67c543268efb8a0c9d8061e795abc6c76f6b..d988a269446495739d659b7f79f15300
        { mode: 0o755 },
      );
    }
-@@ -93,15 +93,45 @@ describe("pre-push — base freshness", () => {
+@@ -93,15 +93,38 @@ describe("pre-push — base freshness", () => {
      expect(body).toMatch(/^[^#\n]*check_branch_freshness/m);
    });
  
@@ -7417,13 +7381,6 @@ index 4f3a67c543268efb8a0c9d8061e795abc6c76f6b..d988a269446495739d659b7f79f15300
 +    expect(out).toContain("origin/mian does not exist on the remote");
 +    expect(out).not.toContain(BLOCKED);
 +    expect(out).not.toContain("BASE=<base>");
-+  });
-+
-+  it("a branch behind under a strategy that does not merge is reported as behind, without push-ready", () => {
-+    const out = run(1, {}, "❌  branch is BEHIND origin/main — the remote is at abc123456. (default branch)");
-+    expect(out).toContain("Push blocked — the branch is behind its base");
-+    expect(out).not.toContain("task push-ready");
-+    expect(out).not.toContain("without a verdict line");
 +  });
 +
 +  it("never claims staleness when the gate gave no verdict line", () => {
@@ -8157,10 +8114,10 @@ index 0000000000000000000000000000000000000000..2df5e0f8bf0b98a49e306627f7a9c0f0
 +});
 diff --git a/tests/scripts/sync_pr_branch_fetch_and_merge_state.test.ts b/tests/scripts/sync_pr_branch_fetch_and_merge_state.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..aca5c40f693afe465a9989ac6c7d937851bed8e8
+index 0000000000000000000000000000000000000000..66bd337e22b0fff0c79f769bdadc4e66ebd0bad9
 --- /dev/null
 +++ b/tests/scripts/sync_pr_branch_fetch_and_merge_state.test.ts
-@@ -0,0 +1,135 @@
+@@ -0,0 +1,124 @@
 +/**
 + * Two ways the sync reported a state it had not established.
 + *
@@ -8283,17 +8240,6 @@ index 0000000000000000000000000000000000000000..aca5c40f693afe465a9989ac6c7d9378
 +        expect(r.out).toContain('merge in progress');
 +        expect(r.out).toContain('git merge --abort');
 +        expect(r.out).not.toContain('nothing was merged');
-+    });
-+
-+    it('a merge git refuses over staged work is never diagnosed as half-applied', () => {
-+        const work = behindWithSlowHook(0);
-+        fs.writeFileSync(path.join(work, 'f.txt'), 'staged by the user\n');
-+        git(work, 'add', 'f.txt');
-+        const r = run(work);
-+        expect(r.code).toBe(1);
-+        expect(r.out).not.toContain('git reset --merge');
-+        expect(r.out).toContain('nothing was merged');
-+        expect(git(work, 'diff', '--cached', '--name-only')).toBe('f.txt');
 +    });
 +});
 diff --git a/tests/scripts/sync_pr_branch_fork_base.test.ts b/tests/scripts/sync_pr_branch_fork_base.test.ts
@@ -8768,21 +8714,18 @@ index 0000000000000000000000000000000000000000..419c6d4d0a97b0e99a6d08cad6838dea
 +    });
 +});
 diff --git a/tests/server/git_keys_write_route.test.ts b/tests/server/git_keys_write_route.test.ts
-index 8412072bd6f342cf6ae1d03e8a08e9e945f8291d..7bc6571dc4132aa720a2bb620638799f996f715c 100644
+index 8412072bd6f342cf6ae1d03e8a08e9e945f8291d..54305306706c620d92fca7b740142b602904f8e7 100644
 --- a/tests/server/git_keys_write_route.test.ts
 +++ b/tests/server/git_keys_write_route.test.ts
-@@ -13,7 +13,9 @@ import { join } from 'node:path';
+@@ -13,6 +13,7 @@ import { join } from 'node:path';
  
  import { afterEach, beforeEach, describe, expect, it } from 'vitest';
  
--import { TEMPLATE_PLACEHOLDER_DEFAULTS } from '../../src/server/io/yamlIO.js';
 +import { load_agent_settings } from '../../src/scripts/_lib/agent_settings.js';
-+import { TEMPLATE_PLACEHOLDER_DEFAULTS, parseYaml } from '../../src/server/io/yamlIO.js';
-+import { carveOutKeys } from '../../src/shared/settingsCarveOut.js';
+ import { TEMPLATE_PLACEHOLDER_DEFAULTS } from '../../src/server/io/yamlIO.js';
  
  import { authHeaders, bootTestApp, fixtureSettings, type TestApp } from './helpers.js';
- 
-@@ -60,6 +62,12 @@ async function put(ctx: TestApp, git: Record<string, string>): Promise<{ status:
+@@ -60,6 +61,12 @@ async function put(ctx: TestApp, git: Record<string, string>): Promise<{ status:
      return { status: res.statusCode, body: res.json() };
  }
  
@@ -8795,7 +8738,7 @@ index 8412072bd6f342cf6ae1d03e8a08e9e945f8291d..7bc6571dc4132aa720a2bb620638799f
  /** The template seeded by `bootTestApp`, without its `git:` section: a file written before the keys existed. */
  function withoutGitSection(body: string): string {
      const out = body.replace(/^git:\n[\s\S]*?\n(?=# --- GitHub)/m, '');
-@@ -201,7 +209,7 @@ describe('global mode with a project layer above the user-global file', () => {
+@@ -201,7 +208,7 @@ describe('global mode with a project layer above the user-global file', () => {
          expect(r.status, r.body).toBe(200);
      });
  
@@ -8804,14 +8747,11 @@ index 8412072bd6f342cf6ae1d03e8a08e9e945f8291d..7bc6571dc4132aa720a2bb620638799f
          const file = join(ctx.projectRoot, 'settings', '.agent-settings.yml');
          rmSync(file);
          const shown = await get(ctx);
-@@ -216,6 +224,53 @@ describe('global mode with a project layer above the user-global file', () => {
+@@ -216,6 +223,27 @@ describe('global mode with a project layer above the user-global file', () => {
          const written = readFileSync(file, 'utf8');
          expect(written).not.toMatch(/update_strategy/);
          expect(written).not.toMatch(/^git:/m);
-+        // A value equal to its default is not written; it resolves through the template.
-+        const template = join(process.cwd(), 'src', 'config', 'agent-settings.template.yml');
-+        const resolved = load_agent_settings({ user_global_path: file, project_path: join(home, 'absent.yml'), template_path: template });
-+        expect(resolved['personal']).toMatchObject({ autonomy: (form['personal'] as Record<string, unknown>)['autonomy'] });
++        expect(readBack(file)['personal']).toMatchObject({ autonomy: (form['personal'] as Record<string, unknown>)['autonomy'] });
 +    });
 +
 +    it('the first save into an absent user-global file is read back by the settings loader', async () => {
@@ -8832,29 +8772,6 @@ index 8412072bd6f342cf6ae1d03e8a08e9e945f8291d..7bc6571dc4132aa720a2bb620638799f
 +        expect(written).not.toMatch(/^git:/m);
 +        expect((readBack(file)['personal'] as Record<string, unknown>)['autonomy']).toBe('on');
 +        expect(readBack(file)['git']).toBeUndefined();
-+    });
-+
-+    it('the first save into an absent user-global file records decisions, never a copy of the defaults', async () => {
-+        const file = join(ctx.projectRoot, 'settings', '.agent-settings.yml');
-+        rmSync(file);
-+        const shown = await get(ctx);
-+        const { git: _withheld, ...rest } = shown.values;
-+        const form = { ...rest, personal: { ...(rest['personal'] as Record<string, unknown>), autonomy: 'on' } };
-+        const res = await ctx.app.inject({
-+            method: 'PUT',
-+            url: '/api/v1/settings',
-+            headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json', 'if-unmodified-since': String(shown.lastModified + 5) },
-+            payload: { values: form, confirmGuarded: true },
-+        });
-+        expect(res.statusCode, res.body).toBe(200);
-+        const leaves = (o: unknown, at = ''): string[] =>
-+            o !== null && typeof o === 'object' && !Array.isArray(o)
-+                ? Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => leaves(v, at === '' ? k : `${at}.${k}`))
-+                : [at];
-+        const allowed = new Set([...carveOutKeys(), 'personal.autonomy']);
-+        const written = leaves(parseYaml(readFileSync(file, 'utf8')));
-+        expect(written).toContain('personal.autonomy');
-+        expect(written.filter((k) => !allowed.has(k))).toEqual([]);
      });
  
      it('a user-global file without a git section stays without one under a project git value', async () => {
