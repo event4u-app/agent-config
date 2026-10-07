@@ -8,8 +8,16 @@
  *
  *   1. Every `### blocker: <id>` entry declares all five required fields
  *      (Status, Owner, Blocks, What to do, Resolved when).
- *   2. Every inline `<!-- blocked-by: <id> -->` annotation resolves to a
- *      `### blocker: <id>` entry declared in the SAME file.
+ *   2. Every inline `<!-- blocked-by: <id> -->` annotation — on the checkbox
+ *      line or a continuation line — resolves to an OPEN `### blocker: <id>`
+ *      declared in the SAME file; `<!-- blocked-by: <roadmap-stem>#<id> -->`
+ *      resolves to an open blocker in the named active roadmap or stub. A
+ *      resolved target (stale), a missing file or id, a target found only in
+ *      `later/`/`archive/`/`skipped/`, an ambiguous stem, a self-qualified
+ *      reference, an unparseable marker, and a `### ` heading under
+ *      `## Blockers` without the `blocker:` prefix are all hard findings —
+ *      each used to pass with nothing validated (AI council 2026-10-07,
+ *      authority-routing roadmap 4.1-4.3).
  *   3. An entry that declares `- **Class:**` declares a class the taxonomy
  *      knows (0-3), and a class-0 or class-1 entry says HOW it runs
  *      (`- **Run:**`). A gate that claims to be executable without naming the
@@ -109,17 +117,46 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
 const ROADMAP_GLOB = 'agents/roadmaps/*.md + agents/roadmaps/stubs/*.md';
 /** The one subdirectory inside the glob. See § SCOPE for why only this one. */
 const SCANNED_SUBDIRS: readonly string[] = ['stubs'];
+/** Roadmap directories a qualified reference may NAME but never resolve into. */
+const OUT_OF_SCOPE_SUBDIRS: readonly string[] = ['later', 'archive', 'skipped'];
 
 const FENCED_CODE_RE = /^[ \t]*```[^\n]*\n[\s\S]*?^[ \t]*```[ \t]*$/gm;
 const BLOCKERS_SECTION_RE = /^##[ \t]+Blockers[ \t]*$/im;
 const NEXT_H2_RE = /^##[ \t]+\S/m;
 const BLOCKER_HEADING_RE = /^###[ \t]+blocker:[ \t]*(.+?)[ \t]*$/gim;
-// Only a real checkbox line (`- [ ] … <!-- blocked-by: id -->`) counts — a
-// wrapped continuation line or inline-code documentation example of the
-// syntax (as this very lint script's own roadmap step describes it) must
-// not be mistaken for a live cross-reference.
+const UNPREFIXED_HEADING_RE = /^###[ \t]+(?!blocker:)\S.*$/gim;
+// Every line carrying a real HTML-comment marker counts — the checkbox line
+// AND a wrapped continuation line of the same step. Anchoring to the checkbox
+// line alone read nothing on a continuation line and still printed the file
+// clean (authority-routing council record, defect 1). Inline-code
+// documentation of the syntax is blanked before matching, so a quoted example
+// stays prose rather than a live reference.
 const BLOCKED_BY_LINE_RE =
-    /^-[ \t]*\[[ xX~-]\].*<!--[ \t]*blocked-by:[ \t]*([a-z0-9-]+)[ \t]*(?:\|[ \t]*asked:[ \t]*(yes|no)[ \t]*(?:[\u2014-][ \t]*([^>]*?))?[ \t]*)?-->/i;
+    /<!--[ \t]*blocked-by:[ \t]*([a-z0-9-]+(?:#[a-z0-9-]+)?)[ \t]*(?:\|[ \t]*asked:[ \t]*(yes|no)[ \t]*(?:[\u2014-][ \t]*([^>]*?))?[ \t]*)?-->/i;
+/** A marker opening the full grammar above failed to parse — reported, never skipped. */
+const MARKER_OPEN_RE = /<!--[ \t]*blocked-by:/i;
+
+/**
+ * Where a qualified `<roadmap-stem>#<id>` reference may resolve.
+ *
+ * The AI council, 2026-10-07, 2/2 present, both on the qualified form: only an
+ * in-scope roadmap (active or stub) is a legal target. A target found only in
+ * `later/`, `archive/` or `skipped/` is out of scope — directory placement is a
+ * different state machine from blocker status, so it is named in the error and
+ * never read as "resolved" or "still held".
+ */
+interface TargetFile {
+    rel: string;
+    declared: ReadonlySet<string>;
+    open: ReadonlySet<string>;
+    userDecision: ReadonlySet<string>;
+}
+interface TargetIndex {
+    /** Roadmap stem → every in-scope file with that stem (more than one is ambiguous). */
+    inScope: ReadonlyMap<string, readonly TargetFile[]>;
+    /** Roadmap stem → the out-of-scope directory it was found in. */
+    outOfScope: ReadonlyMap<string, string>;
+}
 
 /**
  * The owners whose blockers are the USER-DECISION class.
@@ -249,8 +286,8 @@ function _stripFencedCode(text: string): string {
     return text.replace(FENCED_CODE_RE, (m) => '\n'.repeat((m.match(/\n/g) ?? []).length));
 }
 
-function _scan(rawText: string): Violation[] {
-    return _scanBoth(rawText).hard;
+function _scan(rawText: string, ctx?: ScanContext): Violation[] {
+    return _scanBoth(rawText, ctx).hard;
 }
 
 interface ScanResult {
@@ -260,12 +297,20 @@ interface ScanResult {
     decidability: Violation[];
 }
 
-function _scanBoth(rawText: string): ScanResult {
+/** What a scan needs to resolve a qualified reference: who it is, and where it may point. */
+interface ScanContext {
+    /** The scanned file's own roadmap stem, so a self-qualified reference is caught. */
+    selfStem?: string;
+    index?: TargetIndex;
+}
+
+function _scanBoth(rawText: string, ctx: ScanContext = {}): ScanResult {
     const violations: Violation[] = [];
     const decidability: Violation[] = [];
     const text = _stripFencedCode(rawText);
     const declaredIds = new Set<string>();
     const userDecisionIds = new Set<string>();
+    const openIds = new Set<string>();
 
     const sectionMatch = BLOCKERS_SECTION_RE.exec(text);
     if (sectionMatch) {
@@ -288,9 +333,27 @@ function _scanBoth(rawText: string): ScanResult {
                 BLOCKER_HEADING_RE.lastIndex++;
             }
         }
+        // A `### <id>` heading without the `blocker:` prefix parses to no
+        // blocker at all, so the file used to pass with nothing validated.
+        for (const bare of section.matchAll(UNPREFIXED_HEADING_RE)) {
+            violations.push({
+                line: _lineAt(text, sectionStart + (bare.index ?? 0)),
+                message:
+                    `'${(bare[0] as string).trim()}' sits under ## Blockers without the ` +
+                    "'blocker:' prefix, so it declares no blocker — write '### blocker: <id>'",
+            });
+        }
         for (let i = 0; i < heads.length; i++) {
             const cur = heads[i] as { start: number; end: number; id: string };
             declaredIds.add(cur.id);
+            if (cur.id.includes('#')) {
+                violations.push({
+                    line: _lineAt(text, sectionStart + cur.start),
+                    message:
+                        `blocker id '${cur.id}' contains '#', the separator of a qualified ` +
+                        "'<roadmap-stem>#<id>' reference — rename it",
+                });
+            }
             const bodyEnd = i + 1 < heads.length ? (heads[i + 1] as { start: number }).start : section.length;
             const body = section.slice(cur.end, bodyEnd);
             if (USER_DECISION_OWNER_RE.test(body)) {
@@ -307,6 +370,7 @@ function _scanBoth(rawText: string): ScanResult {
             // made would be churn, and the ratchet would never reach zero.
             const isResolved = /^-[ \t]*\*\*Status:\*\*[ \t]*resolved/im.test(body);
             if (!isResolved) {
+                openIds.add(cur.id);
                 // The class/run contract is HARD rather than ratcheted, and it
                 // can be: `Class:` is a new opt-in field, so on the day it
                 // ships no entry in the tree declares one and the rule fires on
@@ -382,18 +446,23 @@ function _scanBoth(rawText: string): ScanResult {
         const cleaned = (lines[i] as string).replace(/`[^`\n]*`/g, (m) => ' '.repeat(m.length));
         const m = BLOCKED_BY_LINE_RE.exec(cleaned);
         if (!m) {
+            if (MARKER_OPEN_RE.test(cleaned)) {
+                violations.push({
+                    line: i + 1,
+                    message:
+                        'blocked-by marker does not parse — write ' +
+                        "'<!-- blocked-by: <id> -->' or '<!-- blocked-by: <roadmap-stem>#<id> -->'",
+                });
+            }
             continue;
         }
-        const id = m[1] as string;
-        if (!declaredIds.has(id)) {
-            violations.push({
-                line: i + 1,
-                message:
-                    `blocked-by references unknown blocker id '${id}' ` +
-                    `(no matching '### blocker: ${id}' in this file)`,
-            });
+        const ref = m[1] as string;
+        const r = _resolveRef(ref, { declaredIds, openIds, userDecisionIds }, ctx);
+        if (r.error !== null) {
+            violations.push({ line: i + 1, message: r.error });
         }
-        if (userDecisionIds.has(id)) {
+        const id = ref;
+        if (r.userDecision) {
             const asked = m[2] === undefined ? null : (m[2] as string).toLowerCase();
             const reason = ((m[3] as string | undefined) ?? '').trim();
             if (asked === null) {
@@ -418,6 +487,149 @@ function _scanBoth(rawText: string): ScanResult {
     violations.sort((a, b) => a.line - b.line);
     decidability.sort((a, b) => a.line - b.line);
     return { hard: violations, decidability };
+}
+
+interface LocalBlockers {
+    declaredIds: ReadonlySet<string>;
+    openIds: ReadonlySet<string>;
+    userDecisionIds: ReadonlySet<string>;
+}
+
+/**
+ * Resolve one marker reference to its legal state, or the error naming why not.
+ *
+ * Bare `<id>` resolves in the same file only, unchanged. Qualified
+ * `<roadmap-stem>#<id>` resolves against the in-scope target named — never
+ * estate-wide, so an unrelated roadmap adding a same-named blocker cannot change
+ * what an existing marker means. A target that is declared but resolved makes
+ * the marker STALE: `run-continuation` treats every marker as blocked, so a
+ * marker on a resolved blocker would hold a step nothing holds any more.
+ * "Superseded" is not a state — the format has no replacement pointer, so a
+ * moved blocker is a reference to update, reported here as missing.
+ */
+function _resolveRef(
+    ref: string,
+    local: LocalBlockers,
+    ctx: ScanContext,
+): { error: string | null; userDecision: boolean } {
+    const hash = ref.indexOf('#');
+    if (hash === -1) {
+        if (!local.declaredIds.has(ref)) {
+            return {
+                error:
+                    `blocked-by references unknown blocker id '${ref}' ` +
+                    `(no matching '### blocker: ${ref}' in this file; a blocker declared in ` +
+                    "another roadmap is referenced as '<roadmap-stem>#<id>')",
+                userDecision: false,
+            };
+        }
+        if (!local.openIds.has(ref)) {
+            return { error: _staleMessage(ref, 'this file'), userDecision: false };
+        }
+        return { error: null, userDecision: local.userDecisionIds.has(ref) };
+    }
+    const stem = ref.slice(0, hash);
+    const id = ref.slice(hash + 1);
+    if (ctx.selfStem !== undefined && stem === ctx.selfStem) {
+        return {
+            error: `blocked-by '${ref}' qualifies a blocker in this same file — write the bare id '${id}'`,
+            userDecision: false,
+        };
+    }
+    const hits = ctx.index?.inScope.get(stem) ?? [];
+    if (hits.length > 1) {
+        return {
+            error:
+                `blocked-by '${ref}' is ambiguous — roadmap stem '${stem}' names ` +
+                `${hits.map((h) => h.rel).join(' and ')}`,
+            userDecision: false,
+        };
+    }
+    const target = hits[0];
+    if (target === undefined) {
+        const parked = ctx.index?.outOfScope.get(stem);
+        return {
+            error:
+                parked === undefined
+                    ? `blocked-by '${ref}' names no roadmap '${stem}.md' in agents/roadmaps/ or stubs/`
+                    : `blocked-by '${ref}' names a roadmap only found in ${parked}/, which is not a ` +
+                      'resolvable target — only an active roadmap or a stub can hold a step',
+            userDecision: false,
+        };
+    }
+    if (!target.declared.has(id)) {
+        return {
+            error: `blocked-by '${ref}' names no '### blocker: ${id}' in ${target.rel}`,
+            userDecision: false,
+        };
+    }
+    if (!target.open.has(id)) {
+        return { error: _staleMessage(ref, target.rel), userDecision: false };
+    }
+    return { error: null, userDecision: target.userDecision.has(id) };
+}
+
+function _staleMessage(ref: string, where: string): string {
+    return (
+        `blocked-by '${ref}' points at a blocker resolved in ${where} — if the step can ` +
+        'proceed, remove the marker; if it is still held, reopen the blocker and say why'
+    );
+}
+
+/** Declared, open and user-decision blocker ids of one roadmap text. */
+function _blockerSets(text: string): { declared: Set<string>; open: Set<string>; userDecision: Set<string> } {
+    const declared = new Set<string>();
+    const userDecision = new Set<string>();
+    const stripped = _stripFencedCode(text);
+    const sectionMatch = BLOCKERS_SECTION_RE.exec(stripped);
+    if (sectionMatch) {
+        const sectionStart = sectionMatch.index + sectionMatch[0].length;
+        const rest = stripped.slice(sectionStart);
+        const h2 = NEXT_H2_RE.exec(rest);
+        const section = stripped.slice(sectionStart, h2 ? sectionStart + h2.index : stripped.length);
+        const heads = [...section.matchAll(BLOCKER_HEADING_RE)];
+        heads.forEach((hm, i) => {
+            const id = (hm[1] as string).trim();
+            declared.add(id);
+            const next = heads[i + 1];
+            const body = section.slice((hm.index ?? 0) + hm[0].length, next ? next.index : section.length);
+            if (USER_DECISION_OWNER_RE.test(body)) {
+                userDecision.add(id);
+            }
+        });
+    }
+    return { declared, open: _openBlockerIds(text), userDecision };
+}
+
+/** The qualified-reference target map over a roadmap tree. See {@link TargetIndex}. */
+function _targetIndex(roadmapRoot: string = path.join(REPO_ROOT, 'agents', 'roadmaps')): TargetIndex {
+    const inScope = new Map<string, TargetFile[]>();
+    for (const f of _globRoadmaps(roadmapRoot)) {
+        const stem = path.basename(f, '.md');
+        const sets = _blockerSets(fs.readFileSync(f, 'utf-8'));
+        const entry: TargetFile = {
+            rel: _relPosix(f, REPO_ROOT),
+            declared: sets.declared,
+            open: sets.open,
+            userDecision: sets.userDecision,
+        };
+        const list = inScope.get(stem);
+        if (list === undefined) {
+            inScope.set(stem, [entry]);
+        } else {
+            list.push(entry);
+        }
+    }
+    const outOfScope = new Map<string, string>();
+    for (const dir of OUT_OF_SCOPE_SUBDIRS) {
+        for (const f of _globFlat(path.join(roadmapRoot, dir))) {
+            const stem = path.basename(f, '.md');
+            if (!inScope.has(stem) && !outOfScope.has(stem)) {
+                outOfScope.set(stem, dir);
+            }
+        }
+    }
+    return { inScope, outOfScope };
 }
 
 /** Sorted `*.md` directly inside `dir` — never recursive. */
@@ -631,12 +843,13 @@ function main(): number {
         }
         return 0;
     }
+    const index = _targetIndex();
     let failed = 0;
     const undecidable: Array<{ rel: string; v: Violation }> = [];
     for (const roadmap of roadmaps) {
         const rel = _relPosix(roadmap, REPO_ROOT);
         const text = fs.readFileSync(roadmap, 'utf-8');
-        const { hard, decidability } = _scanBoth(text);
+        const { hard, decidability } = _scanBoth(text, { selfStem: path.basename(roadmap, '.md'), index });
         for (const v of decidability) {
             undecidable.push({ rel, v });
         }
@@ -763,10 +976,11 @@ export {
     _hasExecutableSubstance,
     _scan,
     _scanBoth,
+    _targetIndex,
     _globRoadmaps,
     _globArchivedRoadmaps,
     _openBlockerIds,
     _archiveOverlap,
     main,
 };
-export type { Violation, ScanResult, Overlap };
+export type { Violation, ScanResult, Overlap, ScanContext, TargetIndex };

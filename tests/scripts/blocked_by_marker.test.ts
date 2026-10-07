@@ -31,6 +31,14 @@ describe('the marker grammar', () => {
         expect(m).toEqual({ id: 'some-id', asked: null, reason: null });
     });
 
+    it('accepts a qualified cross-file reference, keeping the whole <stem>#<id> as the id', () => {
+        expect(parseBlockedByMarker('<!-- blocked-by: programme#b6 | asked: yes -->')).toEqual({
+            id: 'programme#b6',
+            asked: true,
+            reason: null,
+        });
+    });
+
     it('accepts an asked field', () => {
         expect(parseBlockedByMarker('<!-- blocked-by: some-id | asked: yes -->')).toEqual({
             id: 'some-id',

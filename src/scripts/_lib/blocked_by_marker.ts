@@ -50,7 +50,7 @@ export interface BlockedByMarker {
  * unreadable, which is a migration, not a fix.
  */
 export const BLOCKED_BY_MARKER_RE =
-    /<!--[ \t]*blocked-by:[ \t]*([a-z0-9-]+)[ \t]*(?:\|[ \t]*asked:[ \t]*(yes|no)[ \t]*(?:[—-][ \t]*([^>]*?))?[ \t]*)?-->/i;
+    /<!--[ \t]*blocked-by:[ \t]*([a-z0-9-]+(?:#[a-z0-9-]+)?)[ \t]*(?:\|[ \t]*asked:[ \t]*(yes|no)[ \t]*(?:[—-][ \t]*([^>]*?))?[ \t]*)?-->/i;
 
 /** Parse one marker, or `null` when the text carries none. */
 export function parseBlockedByMarker(text: string): BlockedByMarker | null {

@@ -335,7 +335,12 @@ that was never a judgement call.
     same reply as the checkbox flip that cleared it, per
     [`roadmap-progress-sync`](../rules/roadmap-progress-sync.md). A
     step gated by a specific blocker may cross-reference it inline:
-    `- [ ] … <!-- blocked-by: <blocker-id> -->`.
+    `- [ ] … <!-- blocked-by: <blocker-id> -->`. A bare id resolves in the
+    same file only. A blocker declared in ANOTHER active roadmap or stub is
+    named `<!-- blocked-by: <roadmap-stem>#<blocker-id> -->`; a target found
+    only in `later/`, `archive/` or `skipped/` is not resolvable. The marker
+    must name an OPEN blocker — once it resolves, remove the marker — and
+    `lint_roadmap_blockers` reads it on a continuation line too.
 
     **A blocker stops execution; a hold stops publication.** The two are not
     interchangeable and never substitute for one another. A blocker says the work
