@@ -7,7 +7,7 @@ cluster: roadmap
 sub: process-full
 skills: [agent-docs-writing, ai-council, roadmap-management]
 description: Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
-argument-hint: "[roadmap] [--all] [--worktree]"
+argument-hint: "[roadmap] [--all] [--merge] [--worktree]"
 suggestion:
   eligible: false
   rationale: "Cluster sub-command — reached via its cluster head's routing or its explicit /cluster:sub name; not independently suggested (surface-consolidation)."
@@ -149,9 +149,9 @@ On outcome `complete`, open the PR as today, then run
 base in, resolve conflicts by that command's four enumerated classes, drive the
 required checks green on the pushed head. **This is unconditional** — a bare
 `/roadmap:process-full` delivers a mergeable PR, not merely an open one, and
-waiting on that remote CI is part of the run per the Iron Law below. It is
-the whole of what this command delivers: there is no flag that carries it
-further, and § Merging below says why.
+waiting on that remote CI is part of the run per the Iron Law below. With an
+owner auto-merge instruction the call is `/pr:merge <N> --merge` instead, which
+merges through that command's danger gate — § Merging below.
 
 ### The six required layers, in order, each with the command that runs it
 
@@ -193,39 +193,31 @@ condition to test rather than assert: a PR whose required context is skipped has
 a green rollup and an unenforced gate, so a delivery-ready test that reads only
 the rollup passes exactly when it should fail.
 
-### Merging — out of scope, cancelled rather than deferred
+### `--merge` — merging, on the owner's word only (ADR-282)
 
 ```
-THIS COMMAND NEVER MERGES. THERE IS NO FLAG THAT MAKES IT MERGE.
-THE RUN ENDS AT MERGEABLE-AND-OPEN, ALWAYS, AND SAYS SO.
-A FUTURE MERGE CAPABILITY NEEDS A NEW ROADMAP AND AN OWNER RULING —
-NOT A COMMAND EDIT, AND NOT A FLAG THAT ALREADY SITS HERE INERT.
+THIS COMMAND MERGES ONLY ON AN EXPLICIT OWNER AUTO-MERGE INSTRUCTION:
+`--merge`, OR THE OWNER'S OWN WORDS IN THE SESSION THAT RUNS THE WORK.
+WITHOUT ONE, THE RUN ENDS AT MERGEABLE-AND-OPEN, AND SAYS SO.
+A `needs-council` PR MERGES ONLY ON TWO CONVERGENT CLEARING SEATS;
+DANGEROUS, SPLIT, DEGRADED OR UNAVAILABLE → THE OWNER DECIDES.
 ```
 
-A `--merge` flag was specified here and has been **removed**. The
-`merge-authority` blocker of `road-to-drain-commands` closed as *not authorized
-in this roadmap*: activating the flag would have lowered
-[`non-destructive-by-default`](../../../../rules/non-destructive-by-default.md)'s
-per-turn confirmation floor for a production-branch merge, which
-[`decision-revisit-gate`](../../../../rules/decision-revisit-gate.md)'s
-owner-reserved table reserves to the owner. No owner ruling was available to the
-run that closed the roadmap, and an AI-council pass (2/2 convergent, 2026-08-22)
-ruled that a council may cancel an unauthorized implementation but may not
-manufacture the owner decision. The policy question is therefore **undecided,
-not rejected** — see
+The owner settled the half of
 [ADR-239](../../../../../docs/decisions/ADR-239-drain-command-surface-and-merge-authority.md)
-§ Disposition.
+§ Disposition that ADR-266 left open:
+[ADR-282](../../../../../docs/decisions/ADR-282-auto-merge-authority-with-a-council-danger-gate.md).
+An explicit auto-merge instruction is the this-turn confirmation
+[`non-destructive-by-default`](../../../../rules/non-destructive-by-default.md)
+requires for the production-branch merge of a **routine** PR. Delivery runs
+`/pr:merge <N> --merge`, whose § 9a danger gate (`classify_merge_risk`) decides:
+`routine` → squash-merge bound to the observed head; `needs-council` → a neutral
+council review, merge only when both seats say *not dangerous, owner review
+unnecessary*, otherwise hand the PR back with the seats' reasons.
 
-The flag was removed rather than left inert deliberately: an archived roadmap
-must not leave latent executable authority behind a documented switch.
-
-Three independent findings stand behind the safety requirement, and any future
-attempt starts from them rather than re-deriving them: the AI council's Q1
-verdict (2026-08-21 — mergeability-only until authorization is target-bound and
-tamper-resistant), the committed `road-to-gate-preauth-authorization` stub (an
-authorization the agent can write is not an authorization), and the runtime
-guard that refused this roadmap's own attempt to edit the canonical loop
-contract.
+ADR-268 § 3's object-bound `prod_merge` grant stays a separate, unchanged path.
+A standing autonomy directive or momentum is **neither**. Deploy, release and
+every other Hard-Floor action keep their own confirmation.
 
 **Mergeability is per-PR against a recorded base, never a queue property.**
 When every PR in the estate touches the same generated files — in this

@@ -2,7 +2,7 @@
 model_tier: medium
 name: git-pr-merge
 disable-model-invocation: true
-argument-hint: "[all|<pr-number>] [--no-merge]"
+argument-hint: "[all|<pr-number>] [--merge|--no-merge]"
 pack: git
 intent: "Prepare an open PR to mergeable — sync the base in, resolve conflicts semantically, drive required checks green — then merge what the invocation named"
 routes_to: [git-workflow, github-ci]
@@ -35,6 +35,9 @@ AN EXPLICIT `/pr:merge` INVOCATION IS THE THIS-TURN CONFIRMATION, AND IT
 REACHES EXACTLY THE PRs § 1's MANIFEST SNAPSHOTTED FROM IT. IT NEVER REACHES
 A PR THAT ARRIVED LATER, A HEAD THE MANIFEST DID NOT RECORD, OR ANY OTHER
 HARD-FLOOR ACTION. `--no-merge` STILL STOPS BEFORE § 9.
+ADR-282: AN OWNER AUTO-MERGE INSTRUCTION (`--merge`, OR THE OWNER'S OWN WORDS IN
+THE SESSION) IS THE SAME CONFIRMATION FOR A `routine` PR. A `needs-council` PR
+MERGES ONLY ON TWO CONVERGENT CLEARING SEATS (§ 9a) — OTHERWISE THE OWNER DECIDES.
 ```
 
 **The invocation is the authorization, and nothing else is.** `pr-merge` is
@@ -76,7 +79,8 @@ merged (§ 5).
 | `/pr:merge <N>` | exactly PR N | yes | yes — PR N |
 | `/pr:merge` | ONE PR: green first, then infrastructure/tooling before content, then smallest diff (`changedFiles`, then additions+deletions), tiebreak ascending number | yes | yes — the one PR it selected |
 | `/pr:merge all` | the whole open-PR list, under § 6's cutoff | yes | yes — the manifest, in queue order |
-| `… --no-merge` | as above | yes | **never**, explicitly. This is the form [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) calls for its delivery loop. |
+| `… --merge` | as above | yes | yes, through § 9a's danger gate — the form [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) calls when the owner gave an auto-merge instruction (ADR-282) |
+| `… --no-merge` | as above | yes | **never**, explicitly. This is the form [`/roadmap:process-full`](../../../product-basic/roadmap/process-full/command.md) calls for its delivery loop without an auto-merge instruction. |
 
 **Bare invocation** (`/pr:merge` with no argument) is a **documented default
 flow**, not a menu: it runs the auto-selection in row 2 and says which PR it
@@ -379,11 +383,40 @@ NO ROLLBACK, ONLY COMPENSATION, AND COMPENSATION IS A SEPARATELY AUTHORIZED
 HUMAN DECISION. STOP, EMIT THE MERGE SHAs AND THE REASON, HAND OVER.
 ```
 
+## 9a. Danger gate — before every merge (ADR-282)
+
+Once required checks are green on the manifest head and the PR is mergeable:
+
+```bash
+./scripts-run src/scripts/classify_merge_risk <N>
+```
+
+The last line is the verdict; each trigger names the rule it comes from. An
+unreadable diff is `needs-council` — the gate fails closed.
+
+- **`routine`** → merge in § 9. No review step.
+- **`needs-council`** → the AI council reviews the diff with a **neutral**
+  prompt (scope, diff, the triggers, two questions: *does any of the six
+  dangerous-action predicates of the authority-routing council record
+  (`agents/evidence/council/authority-routing-20261007.md` § 4) apply?* and *is
+  an owner review unnecessary?* — never an expected answer, per
+  `evaluator-independence`). A council may resolve doubt but cannot waive
+  danger: a seat finding that a predicate applies is a "dangerous" seat. Record the prompt and both
+  verdicts under `agents/evidence/`. **Both seats: not dangerous, owner review
+  unnecessary → merge.** Dangerous, split, degraded quorum, or council
+  unavailable → do not merge; record the PR `unauthorized` and hand it to the
+  owner with the seats' reasons.
+
+A `needs-council` clearance only clears the merge. Deploy, release and every
+other Hard-Floor action keep their own confirmation.
+
 ## 9. Merge, and the summary
 
 ```bash
-gh pr merge <N> --<detected-method> --delete-branch
+gh pr merge <N> --<detected-method> --delete-branch --match-head-commit <manifest-head-sha>
 ```
+
+`--match-head-commit` makes the forge refuse a head the manifest did not record.
 
 Detect the method once, at invocation, and reuse it for the whole queue:
 

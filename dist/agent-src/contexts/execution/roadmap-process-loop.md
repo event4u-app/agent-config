@@ -502,6 +502,10 @@ so the shape is settled before the runs rather than designed under pressure:
   a branch.
 - **Delivery:** one branch and one PR per lane.
 - **Immediate removal:** a single scope-lock collision with data loss.
+- **Refusal report:** every lane report carries the fixed field
+  `classifier_refusals` (an empty list when none) — a report without it is
+  malformed, never "clean". At drain end the orchestrator batches every lane's
+  field into ONE envelope (§ Host-classifier refusals).
 
 ## 4. Resolve cadences — read once, cache for the run
 
@@ -1048,10 +1052,31 @@ execution either way.
   [`roadmap-execution-contract § 4`](roadmap-execution-contract.md)):
   all steps `[x]` · quality green per cadence · work committed in
   chunks on the run's feature branch · pushed to that branch · ONE PR
-  open (description-only flow) · archival sweep run. **Merge is out of
-  scope in every mode — always conversational.** Without a contract
+  open (description-only flow) · archival sweep run. **No mode merges by
+  itself:** a merge needs the owner's explicit auto-merge instruction and
+  runs through `/pr:merge` § 9a's danger gate (ADR-282). Without a contract
   (interactive mode), the run ends after the archival check with no
   git delivery beyond explicitly authorized commit steps.
+
+### 6-refusals. Host-classifier refusals — hand off, never route around
+
+When the host's own classifier refuses a step of an owner-directed task, the
+run never reaches the same outcome by another tool, in smaller pieces or in
+another encoding, and never records a way around it. It finishes what does not
+depend on the refused step, then — owner present — asks once in-session for an
+explicit authorization of that exact step and, on a yes, re-runs the SAME step
+ONCE so the classifier decides again with the owner's word in front of it
+(ADR-282 § Part B). Refused again, or no owner present, it writes ONE
+continuation prompt for the owner and names its path in one line:
+
+```bash
+./scripts-run src/scripts/refusal_envelope --input <envelope.json>
+```
+
+The input is task · done · refusals · remaining · the owner-directive record
+when there is one; the envelope lands at `agents/tmp/round-<hex>/prompt.md`.
+Lane refusals arrive in each lane's `classifier_refusals` field and go into the
+same single envelope (ADR-282 § Part B).
 - **If the entire roadmap reached `count_open == 0`** → run the full
   project quality pipeline. On red → stop, surface failures, do **not**
   archive. On green → run the **deferred-resolution gate** below before
