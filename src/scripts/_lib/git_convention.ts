@@ -258,9 +258,11 @@ export function readGitConvention(
     return out;
 }
 
-/** True for every state a caller must not act on. */
+/** Every state a caller must not act on; `show`, `sync` and the `/pr:merge` prose share this one set. */
+export const REFUSAL_STATES: readonly GitConventionState[] = ['malformed', 'invalid', 'discarded', 'unresolvable'];
+
 export function isRefusal(state: GitConventionState): boolean {
-    return state === 'malformed' || state === 'invalid' || state === 'discarded' || state === 'unresolvable';
+    return REFUSAL_STATES.includes(state);
 }
 
 /** One line naming the reason code, the key and the file. */

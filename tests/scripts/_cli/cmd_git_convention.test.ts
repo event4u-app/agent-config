@@ -5,7 +5,8 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { commitMessageValidator, runGitConvention, SUBCOMMANDS } from '../../../src/scripts/_cli/cmd_git_convention.js';
+import { commitMessageValidator, runGitConvention, showConvention, SUBCOMMANDS } from '../../../src/scripts/_cli/cmd_git_convention.js';
+import { REFUSAL_STATES } from '../../../src/scripts/_lib/git_convention.js';
 import { runSettingsGet, PACKAGE_ROOT } from '../../../src/scripts/_cli/cmd_settings_get.js';
 
 const made: string[] = [];
@@ -157,5 +158,32 @@ describe('git:convention subject beside a commit-msg hook', () => {
         const r = runGitConvention(['subject'], dir, 'feat: add a thing\n');
         expect(r.code, r.out.join('\n')).toBe(0);
         expect(r.out.join('\n')).toContain(`the commit-msg hook at ${path.join(dir, '.git', 'hooks', 'commit-msg')} also runs at commit`);
+    });
+});
+
+describe('git:convention show exits non-zero on every state sync refuses', () => {
+    it('on a value only the user-global file sets (discarded)', () => {
+        const home = process.env.EVENT4U_CONFIG_HOME as string;
+        fs.mkdirSync(path.join(home, 'settings'), { recursive: true });
+        fs.writeFileSync(path.join(home, 'settings', '.agent-settings.yml'), 'git:\n  update_strategy: rebase\n');
+        const dir = repo(null);
+        const r = runGitConvention(['show', '--json'], dir);
+        expect(JSON.parse(r.out.join('\n')).keys.update_strategy.state).toBe('discarded');
+        expect(r.code).toBe(1);
+    });
+
+    it('on a target commit that cannot be resolved (unresolvable)', () => {
+        const dir = repo(null);
+        const deps = { currentBranch: () => 'main', prBase: () => null, defaultBranch: () => null, remoteSha: () => null };
+        const r = showConvention(['--json'], dir, deps);
+        expect(JSON.parse(r.out.join('\n')).keys.update_strategy.state).toBe('unresolvable');
+        expect(r.code).toBe(1);
+    });
+
+    it('the /pr:merge prose lists exactly the states the code refuses', () => {
+        const text = fs.readFileSync(path.join(PACKAGE_ROOT, 'src', 'domains', 'git', 'pr', 'merge', 'command.md'), 'utf8');
+        const sentence = /A `git\.update_strategy` whose state is ([^\n]+(?:\n[^\n]+)?) is\s+not a strategy/.exec(text)?.[1] ?? '';
+        const listed = [...sentence.matchAll(/`([a-z]+)`/g)].map((m) => m[1]).sort();
+        expect(listed).toEqual([...REFUSAL_STATES].sort());
     });
 });

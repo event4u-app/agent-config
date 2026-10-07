@@ -16,8 +16,8 @@
  * it is printed as a candidate beside the value in force.
  *
  * `show` exit codes: `0` every key readable · `1` a key, or this checkout's
- * candidate for it, is `malformed` or `invalid` · `2` usage error. An
- * `unresolvable` target is reported, not an exit: `sync_pr_branch` refuses on it.
+ * candidate for it, is in a state `isRefusal` names (the set `sync` refuses
+ * with exit 4) · `2` usage error.
  *
  * `subject` reads subjects on stdin and exits `0` all valid · `1` a subject
  * fails, or the format cannot be read · `2` usage · `3` decided by a validator
@@ -116,9 +116,6 @@ export function commitMessageValidator(cwd: string): CommitMessageValidator | nu
     return null;
 }
 
-function _blocking(reading: GitConventionReading): boolean {
-    return reading.state === 'malformed' || reading.state === 'invalid';
-}
 
 function _short(sha: string | null | undefined): string {
     return sha === null || sha === undefined ? '?' : sha.slice(0, 12);
@@ -137,7 +134,7 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
     const read = readCommittedConvention(cwd, { override: base, ...(deps ? { deps } : {}) });
     const readings = read.readings as Record<(typeof GIT_CONVENTION_KEYS)[number], GitConventionReading>;
     const validator = commitMessageValidator(cwd);
-    const ok = !GIT_CONVENTION_KEYS.some((k) => _blocking(readings[k]) || (read.candidates[k] !== undefined && _blocking(read.candidates[k] as GitConventionReading)));
+    const ok = !GIT_CONVENTION_KEYS.some((k) => isRefusal(readings[k].state) || (read.candidates[k] !== undefined && isRefusal((read.candidates[k] as GitConventionReading).state)));
     const code: 0 | 1 = ok ? 0 : 1;
 
     if (json) {

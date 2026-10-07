@@ -143,9 +143,9 @@ gh pr checkout <N>
 agent-config git:convention sync --base origin/<base>
 ```
 
-A `git.update_strategy` whose state is `malformed`, `invalid` or `discarded` is
-not a strategy — the script refuses it with exit 4 — so stop on this PR and
-report the line `show` printed. Otherwise
+A `git.update_strategy` whose state is `malformed`, `invalid`, `discarded` or
+`unresolvable` is not a strategy — `show` exits `1` on it and the script
+refuses it with exit 4 — so stop on this PR and report the line `show` printed. Otherwise
 the strategy decides what the script does — under `merge` it merges the base
 set in, under `rebase` it only checks, because a
 `Merge branch '<base>' into …` commit is what that setting excludes and the
