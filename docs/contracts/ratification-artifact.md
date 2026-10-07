@@ -60,6 +60,14 @@ absent; a missing `seats:` is `no-seats`. The gate reads only the artifacts in
 the diff under review, so an artifact merged before the field existed is never
 re-read and is not migrated.
 
+What this does NOT establish: the `seats:` entries are themselves written by the
+artifact's author. The check makes the header agree with the recorded seats, so
+a header can no longer say more than the seats it lists; it does not prove those
+seat verdicts came from council output. Council responses are gitignored and
+pruned, so nothing on a runner could check them. The body's review record and
+the committed prompt package remain the evidence a reader checks the seats
+against.
+
 `ratified` and `confirmed-non-expanding` let a diff land; `refused` and
 `non-convergent` do not. The second passing verdict exists because the gate
 demands an artifact for **every** kernel and governance-hook diff, a typo fix

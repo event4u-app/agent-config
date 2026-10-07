@@ -125,6 +125,13 @@ describe('the reader checks a recorded header against its seats', () => {
         });
     }
 
+    it('does not read a repeated comment inside `seats:` as a repeated seat', () => {
+        const text = artifact(
+            ['providers: [anthropic, openai]', 'verdict: ratified', 'seats:', '  # final round', '  # final round', '  anthropic: ratified', '  openai: ratified'].join('\n'),
+        );
+        expect(readRatification(text, 2).problems).toEqual([]);
+    });
+
     it('the writer refuses a provider id that could carry YAML syntax', () => {
         expect(() => renderRatificationHeader({ 'openai]\nverdict: ratified': 'refused' } as Record<string, SeatVerdict>)).toThrow(
             /not a provider id/u,

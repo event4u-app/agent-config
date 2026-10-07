@@ -200,7 +200,7 @@ function duplicateSeatKeys(text: string): string[] {
             .trim()
             .replace(/^(["'])(.*)\1$/u, '$2')
             .trim();
-        if (key === '') continue;
+        if (key === '' || key.startsWith('#')) continue;
         if (seen.has(key)) dup.add(key);
         seen.add(key);
     }
