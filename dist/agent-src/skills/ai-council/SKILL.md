@@ -67,7 +67,10 @@ things follow, and the first is the one under pressure:
 2. **Do not bounce to the user just because the council failed.** An
    unreachable council does not upgrade a decidable question into a
    user-required one. Decide it, label it own analysis, state the reason the
-   council was unavailable, and name what would change the answer.
+   council was unavailable, and name what would change the answer. Not for a
+   modification review (a change to the gated surface or one the learning
+   lanes originate, ADR-281): there an unavailable council stops the run for
+   the user per `docs/contracts/ratification-artifact.md`.
 3. **Escalate only if it is genuinely undecidable without them** — the two
    options are close AND the cost of being wrong is high AND nothing in the tree
    separates them. Then say the council was attempted and why it failed, so the

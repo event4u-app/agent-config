@@ -45,7 +45,6 @@ collision_ok:
   "*.tsx": "one component file, two obligations: inventory before the write, review after it"
   "*.jsx": "one component file, two obligations: inventory before the write, review after it"
   "*.blade.php": "one template file, two obligations: inventory before the write, review after it"
-# obligation: line 39
 obligation_frequency: "per-edit"
 ---
 

@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "The nearest owners are archive/road-to-agent-turnaround (built the probe and the baseline) and archive/road-to-turnaround-followups (batching, authorization, paths); both are archived and closed, and reopening an archived roadmap for a new axis would make its closed acceptance criteria read open again. No active or parked roadmap owns the blocking-share regression, which release finding ee95ff4aca5f names as having no owner. Adds no gate and moves no baseline."
-estate_growth_exempt: "Grows active_roadmaps by one: the owner asked on 2026-10-06 for this round's roadmaps to land as ready in one change; the blocking-share regression and the context-floor rise have no owner anywhere in the estate."
+estate_growth_exempt: "Grows active_roadmaps by one: the owner asked on 2026-10-06 for this round's roadmaps to land as ready in one change; the blocking-share regression and the context-floor rise have no owner anywhere in the estate. Grows open_blockers by two on 2026-10-07, both discovered while doing the work: step 3.2's cause turned out to hold no avoidable minutes, which makes re-scoping it an owner decision, and step 3.4 needs a ten-session window that can only accrue after the 3.3 mitigation lands."
 relates:
   - slug: road-to-agent-turnaround
     relation: extends
@@ -61,7 +61,7 @@ what grew. No baseline is moved.
 
 ## Phase 1 — Every blocking call has a cause
 
-- [ ] **1.1 A classifier over a fixture transcript.** `probe_turnaround` keeps,
+- [x] **1.1 A classifier over a fixture transcript.** `probe_turnaround` keeps,
       for each call over `BLOCKING_SECONDS`, its tool name and a bounded
       summary of its input, and assigns exactly one cause from a closed set:
       `ci-wait`, `subagent-wait`, `test`, `build`, `network`, `sleep-poll`,
@@ -70,7 +70,7 @@ what grew. No baseline is moved.
       call per cause and one unmatched call asserts each assignment; the test
       is seen red before the classifier exists.
       verify: `npx vitest run tests/scripts/probe_turnaround_causes.test.ts` -> 0
-- [ ] **1.2 Minutes per cause, unknown always printed.** The text and `--json`
+- [x] **1.2 Minutes per cause, unknown always printed.** The text and `--json`
       outputs print blocking calls and minutes per cause beside the existing
       tail line, and the `unknown` row is printed even at zero. The existing
       four figures and the `--against-baseline` exit code are byte-identical
@@ -79,7 +79,7 @@ what grew. No baseline is moved.
 
 ## Phase 2 — The hypothesis meets a reading
 
-- [ ] **2.1 One reading, published.** Run the probe over a ten-session window
+- [x] **2.1 One reading, published.** Run the probe over a ten-session window
       and write the per-cause table, the command, the window's shape and the
       unknown share to
       `agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md`,
@@ -87,7 +87,7 @@ what grew. No baseline is moved.
       `ci-wait` plus `subagent-wait` hold the majority of blocking minutes —
       confirmed or refuted, not "consistent with".
       verify: `grep -c 'evidence-type: analysis' agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md` -> /^1$/
-- [ ] **2.2 The unknown share bounds the claim.** If `unknown` holds more
+- [x] **2.2 The unknown share bounds the claim.** If `unknown` holds more
       blocking minutes than the largest named cause, the page says the reading
       is inconclusive, 1.1's table gains rows for what the unknown calls were,
       and 2.1 is re-run before Phase 3 starts.
@@ -95,31 +95,31 @@ what grew. No baseline is moved.
 
 ## Phase 3 — Targets first, then one mitigation per cause
 
-- [ ] **3.1 Pre-register targets for the top two causes.** One claim in
+- [x] **3.1 Pre-register targets for the top two causes.** One claim in
       `docs/CLAIMS.md` names the two causes with the most blocking minutes in
       2.1, the minutes each held, the target for each over a window of the
       same shape, and what counts as a miss. Then
       `./scripts-run src/scripts/build_proof` runs in the same change.
       verify: `grep -c '^### claim: turnaround-blocking-by-cause-targets' docs/CLAIMS.md` -> /^1$/
-- [ ] **3.2 One mitigation for the first cause.** The change that addresses the
+- [ ] <!-- blocked-by: user-wait-has-no-avoidable-minutes | asked: no — non-interactive drain run, which reports once at the end and cannot put a question; the ask is carried in the PR body and in the blocker below --> **3.2 One mitigation for the first cause.** The change that addresses the
       largest cause lands with its own test, and its commit names the claim id.
       verify: `npx vitest run tests/scripts/probe_turnaround_causes.test.ts` -> 0
-- [ ] **3.3 One mitigation for the second cause.** Same shape as 3.2.
+- [x] **3.3 One mitigation for the second cause.** Same shape as 3.2.
       verify: `npx vitest run tests/scripts/probe_turnaround_causes.test.ts` -> 0
-- [ ] **3.4 Re-read against the targets.** A second window is read and the
+- [ ] <!-- blocked-by: second-window-not-yet-accrued --> **3.4 Re-read against the targets.** A second window is read and the
       result is appended to the 2.1 page as met, missed, or underpowered —
       underpowered when the window holds fewer blocking calls than 2.1 did.
       verify: `grep -c -E 'met|missed|underpowered' agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md` -> /^[1-9]/
 
 ## Phase 4 — The context floor, attributed; the finding, disposed
 
-- [ ] **4.1 What grew the floor.** The page gains a section listing, for the
+- [x] **4.1 What grew the floor.** The page gains a section listing, for the
       first call of the session that set the 244,518 maximum, the contributors
       to its input context and their size against a session near the 230,705
       baseline, from the same store. `src/config/turnaround-budget.json` is not
       edited.
       verify: `git diff --exit-code a75bb3210 -- src/config/turnaround-budget.json` -> 0
-- [ ] **4.2 Dispose of `ee95ff4aca5f`.** The finding's `status` and
+- [x] **4.2 Dispose of `ee95ff4aca5f`.** The finding's `status` and
       `rationale` fields in `agents/evidence/release-findings/16.3.0.json` —
       the shape the ledger already uses for a disposition — name this roadmap,
       the 2.1 page and the claim id.
@@ -138,16 +138,16 @@ what grew. No baseline is moved.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `probe_turnaround` prints blocking minutes per cause, including
+- [x] AC-1 — `probe_turnaround` prints blocking minutes per cause, including
       `unknown`, and its four existing figures are unchanged for a fixed corpus.
-- [ ] AC-2 — A published page states whether CI and subagent waits hold the
+- [x] AC-2 — A published page states whether CI and subagent waits hold the
       majority of blocking minutes in one window.
 - [ ] AC-3 — Targets for the top two causes are dated in `docs/CLAIMS.md`
       before either mitigation lands, and a re-read reports each as met,
       missed or underpowered.
-- [ ] AC-4 — The context-floor rise has a named list of contributors, and
+- [x] AC-4 — The context-floor rise has a named list of contributors, and
       `src/config/turnaround-budget.json` is unchanged.
-- [ ] AC-5 — Release finding `ee95ff4aca5f` carries a disposition.
+- [x] AC-5 — Release finding `ee95ff4aca5f` carries a disposition.
 
 ## Decisions
 
@@ -157,6 +157,29 @@ what grew. No baseline is moved.
 | D2 | reversible-technical | agent | Unknown is a printed row, never folded into another | A share hidden inside a named cause would confirm whatever hypothesis it was folded into | — |
 | D3 | contested-technical | evidence | No re-basing; attribution instead | The 2026-10-01 reading declined both directions on one local window (`:95-110`) | Two windows of the same shape agree on a new level |
 | D4 | reversible-technical | agent | The reviewer's 30 % figure is recorded, not adopted | No reading supports it; targets come from 2.1 | 2.1 shows 30 % is within one mitigation's reach |
+| D5 | reversible-technical | agent | 2.2 added a `user-wait` cause (question tools that return only on a human answer), read council runs as `network`, and read past `do` / `then` / `else` into a loop body | The first pass left 393 of 802 blocking minutes `unknown`, 353 of them questions to the human (`turnaround-blocking-by-cause-2026-10.md` § First pass) | A later window's `unknown` exceeds its largest named cause again |
+| D6 | contested-technical | council:2026-10-07, recorded in claim turnaround-blocking-by-cause-targets | The literal top two by minutes carry the targets; each target measures the part an agent controls — avoidable questions, and CI waits that end with no verdict — with per-cause underpowered floors | AI council 2026-10-07, two rounds, 2/2 seats both; round 1 rested on an unverified premise about where the questions were asked, so round 2 re-asked with it corrected; recorded in claim `turnaround-blocking-by-cause-targets` | Two windows show aggregate `user-wait` minutes stable and mostly avoidable |
+| D7 | reversible-technical | council:2026-10-07, recorded in claim turnaround-blocking-by-cause-targets | The ci-wait mitigation names the still-pending checks and a background next wait on the waiter's last line, rather than failing fast on the first red | 20 of 44 CI waits ended with no verdict (184 min); 3 ended red (20 min), so fail-fast reaches little and needs check-attempt identity it does not have — both seats | The second window shows foreground re-invocations after an expiry not falling |
+
+## Blockers
+
+### blocker: user-wait-has-no-avoidable-minutes
+- **Status:** open — raised 2026-10-07 by the drain run that closed 2.1, 3.1 and 3.3
+- **Ownership:** product-owned
+- **Owner:** user
+- **Blocks:** step 3.2 — One mitigation for the first cause
+- **Question:** The largest cause in the 2.1 reading is `user-wait` (353 of 802 blocking minutes, 4 calls). Read question by question, none of the four was avoidable: two asked whether to reduce review depth before a release (lowering a review floor is owner-reserved), one reported an exhausted review-service credit and stayed open 328 min while the human was away, one answered a design question the human had just raised. The pre-registered target (claim `turnaround-blocking-by-cause-targets` (2)) is therefore already met at baseline. A mitigation built for this cause would answer a failure the window does not contain. How should step 3.2 close?
+- **Recommendation:** (a). An advisory that discourages questions would push agents toward deciding owner-reserved questions themselves — the trade the risk register's rank 4 names — and the only change that would shrink this number without touching human latency is moving questions out of the question tool into plain text, which claim (5) rules out as gaming. The council (2026-10-07, round 2, 2/2 seats) agreed the aggregate `user-wait` minutes are not a controllable target; one seat proposed a decision-continuity advisory and labelled the 17-min question avoidable, and that dissent is recorded in the claim.
+- **If you do nothing:** step 3.2 stays open and the roadmap cannot archive; 3.4 still reports `user-wait` against its target when the second window exists. Nothing breaks.
+- **What to do:** pick exactly one — (a) re-scope 3.2 to "no mitigation: the cause holds no avoidable minutes", recorded against `docs/CLAIMS.md` claim `turnaround-blocking-by-cause-targets`, and close the step; (b) build the decision-continuity advisory one council seat proposed, as a warn-only extension of `src/scripts/hooks/one_question_per_ask_hook.ts` replayed against the four recorded questions; (c) take the next cause by minutes (`network`, 112 min, mostly `git push` with its pre-push hook) as 3.2's subject, which amends the pre-registration with the counts in hand.
+- **Resolved when:** this blocker carries the owner's choice of (a), (b) or (c) and step 3.2 is closed accordingly.
+
+### blocker: second-window-not-yet-accrued
+- **Status:** open — the ci-wait mitigation landed 2026-10-07; the window it is read against starts there
+- **Owner:** time — a ten-session window of real sessions after the mitigation, which no run can simulate
+- **Blocks:** step 3.4 — Re-read against the targets
+- **What to do:** once ten main-loop sessions in this package's transcript store carry an mtime after the 3.3 merge, run `./scripts-run src/scripts/probe_turnaround --store ~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config --limit 10`, read the `ci-wait` waiters' last lines as the 2.1 page did, and append met / missed / underpowered per cause to `agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md` under the claim's per-cause floors.
+- **Resolved when:** the 2.1 page carries a second-window section with a verdict per cause, and `grep -c -E 'met|missed|underpowered' agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md` counts it.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->

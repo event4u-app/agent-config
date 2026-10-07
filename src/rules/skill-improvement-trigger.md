@@ -10,7 +10,6 @@ routes_to:
   - "skill:skill-improvement-pipeline"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
-# obligation: line 17
 obligation_frequency: "per-task"
 ---
 

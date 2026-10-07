@@ -13,7 +13,6 @@ load_context:
   - "contexts/contracts/artifact-engagement-flow.md"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
-# obligation: line 22
 obligation_frequency: "per-task"
 ---
 

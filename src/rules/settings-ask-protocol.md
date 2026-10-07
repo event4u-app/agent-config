@@ -25,7 +25,6 @@ enforced_by:
   - "instruction-only: no gate counts the questions in a chat turn; settings:set fences the illegal WRITE, never the badly-shaped ask"
 collision_ok:
   "canary_name": "the nickname ask is this protocol's canonical B-class instance — session-canary owns what the NAME then does and which layers already supply it, this rule owns how it is asked for and where the answer goes"
-# obligation: line 39
 obligation_frequency: "per-task"
 # frequency-override: the per-turn phrase at line 175 is a See-also cross-reference to
 # ask-when-uncertain's rule, not this rule's own obligation, which is per command execution.

@@ -24,7 +24,6 @@ collision_ok:
   "controller": "controllers return user data — the ownership/tenant check floor"
   "endpoint": "every data-returning endpoint needs the three negative tests"
   "tenant": "cross-tenant isolation is this rule's core subject"
-# obligation: line 55
 obligation_frequency: "per-edit"
 evidence:
   source_type: external-standard

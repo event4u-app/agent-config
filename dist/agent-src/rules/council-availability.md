@@ -14,7 +14,6 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 enforced_by:
   - "instruction-only: no gate reads a chat claim about availability; check_council_config_location covers the tree side only"
-# obligation: line 27
 obligation_frequency: "per-task"
 ---
 
@@ -68,9 +67,10 @@ the user-global config into the repo to "make it work".
 
 ## If the probe really says unavailable
 
-State the resolver's own message and stop. A subagent fan-out is a legitimate
-substitute **only when named as such** — never as "the council". Same honesty
-boundary as [`evaluator-independence`](evaluator-independence.md).
+State the resolver's message and stop. A fan-out substitutes **only when named
+as such**, never as "the council"
+([`evaluator-independence`](evaluator-independence.md)), nor in a
+modification review (ADR-281).
 
 ## When NOT to fire
 

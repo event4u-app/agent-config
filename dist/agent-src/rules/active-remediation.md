@@ -20,7 +20,6 @@ enforced_by:
   - "instruction-only: the note, the ask and the user decision are all prose, so no gate can tell a discharged issue from a mentioned one"
 collision_ok:
   "refactor": "an explicit clean-up/refactor ask is the remediation ladder's own trigger"
-# obligation: line 31
 obligation_frequency: "per-edit"
 ---
 

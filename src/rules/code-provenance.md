@@ -23,7 +23,6 @@ packs: [engineering-base]
 roles: [developer, reviewer, tester, po, incident, planner]
 enforced_by:
   - "instruction-only: close-the-source-and-re-derive is a pre-write reasoning step only the model observes; CI checks the ledger, never the derivation"
-# obligation: line 40
 obligation_frequency: "per-edit"
 evidence:
   source_type: external-research

@@ -11,7 +11,6 @@ routes_to:
   - "skill:devcontainer"
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
-# obligation: line 20
 obligation_frequency: "none"
 ---
 
