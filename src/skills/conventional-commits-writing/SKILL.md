@@ -210,7 +210,10 @@ declaration and outranks it (tier 1b). When the chosen family maps to a
 → `ticket-conventional`) or a `branch_pattern` was proposed, `measure` — and
 `/commit` after the answer — prints the file's ready-to-commit content.
 `update_strategy` is never in it. The file is class C: the agent prints it and a
-human creates and commits it; the agent never writes it.
+human creates and commits it. The one exception is creation on the user's
+explicit yes this turn, through `agent-config git:convention init --yes` — once,
+never over an existing carrier, never `update_strategy`, never committed by the
+verb; the agent never writes or edits the file by hand.
 
 ## What a measurement may never lower
 

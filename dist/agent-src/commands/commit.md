@@ -129,8 +129,12 @@ no declaration, no approved card and no commitlint config; otherwise skip this s
    again; name it in the report.
 4. When the same output carries a `team file` block, show it: it is the
    ready-to-commit `.git-convention.yml` (`commit_format`, `branch_pattern`,
-   never `update_strategy`). The file is class C — a human creates and commits
-   it; never write it.
+   never `update_strategy`). Ask once whether to create it. Only on the user's
+   explicit yes this turn run `agent-config git:convention init --yes` with the
+   shown values (`--commit-format`, `--branch-pattern`); it creates the file once,
+   refuses when one exists and never commits it — name it in the report. On no,
+   print the content for a human to create and commit. Never write the file by
+   hand, and never change an existing one.
 
 Then generate every subject under the answer: `git:convention subject` reads the
 card the moment it exists.

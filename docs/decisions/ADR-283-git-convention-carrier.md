@@ -108,6 +108,25 @@ pull request's head breaks. The stated loss: a human who runs `sync` or `show`
 on a stacked or release-line pull request without `--base` is judged against
 the default branch; that usage is documented as non-pull-request only.
 
+### Creation
+
+Owner decision, 2026-10-07: the agent may **create** `.git-convention.yml` after
+the user's explicit yes this turn — create once, never change. The one path is
+`agent-config git:convention init --yes [--commit-format F] [--branch-pattern P]`,
+bounded so the class-C fence keeps its meaning:
+
+- it refuses, exit 1, when `.git-convention.yml` or `.git-convention.yaml`
+  already exists at the repository root — it never overwrites and never edits;
+- it refuses without `--yes`, which stands for the user's answer this turn;
+- it writes `git.commit_format` and `git.branch_pattern` only, each validated
+  by the reader's checks (an invalid value is exit 1, nothing written), and
+  never `git.update_strategy` — it has no flag for it;
+- an omitted value is what `measure` proposes;
+- it prints the content and says the file is created but not committed.
+
+The config-weakening guard is unchanged and still refuses every direct write
+to the carrier, so a change to an existing declaration stays a human edit.
+
 ## Consequences
 
 - A repository that commits `update_strategy: rebase` gets the same answer in

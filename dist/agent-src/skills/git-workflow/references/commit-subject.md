@@ -100,8 +100,11 @@ of the block below, otherwise names the two strongest; it proposes a
 shows the observed update style, which is never adopted. Where the chosen family
 maps to a `git.commit_format` value or a pattern was proposed, it prints the
 ready-to-commit content of `.git-convention.yml` (`commit_format`,
-`branch_pattern`, never `update_strategy`); a human creates and commits that
-file, the verb writes nothing. `/commit` asks the user once and writes the answer
+`branch_pattern`, never `update_strategy`); the verb writes nothing. A human
+creates and commits that file, or, on the user's yes this turn,
+`agent-config git:convention init --yes [--commit-format F] [--branch-pattern P]`
+creates it once — never over an existing carrier, never `update_strategy`, and
+uncommitted (ADR-283 § Creation). `/commit` asks the user once and writes the answer
 to the approved card.
 
 A repository validator — a `commit-msg` hook, a commitlint config (any of its

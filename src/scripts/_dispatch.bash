@@ -300,6 +300,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              renders a name from git.branch_pattern; measure proposes
                              a convention from the history (subject family, branch
                              pattern, observed update style) and writes nothing;
+                             init --yes creates .git-convention.yml once on the
+                             user's yes (never over one, never committed);
                              show and subject print "no convention established" when
                              no declaration, approved card or commitlint config exists; sync brings the
                              branch up to --base (else the default branch) per

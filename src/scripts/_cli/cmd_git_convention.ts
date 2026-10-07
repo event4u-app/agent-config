@@ -34,6 +34,10 @@
  * a validator accepts cannot be told without running it. `ticket` exits `0`; `branch`
  * prints the name and exits `0`, or `1` on a value it would have to rewrite.
  *
+ * `init --yes` creates `.git-convention.yml` once (ADR-283 § Creation) and exits
+ * `0` created · `1` a carrier exists, no `--yes`, an invalid value or nothing to
+ * write · `2` usage.
+ *
  * `sync` is `sync_pr_branch` run in-process, its arguments and exit codes
  * unchanged: `0` current or merged · `1` conflict or no base · `2` internal
  * error or a blank `--base` · `3` behind under a strategy other than `merge` · `4` the strategy
@@ -55,7 +59,7 @@ import {
     type GitConventionKey,
     type GitConventionReading,
 } from '../_lib/git_convention.js';
-import { CARRIER_PATH, ignoredCarrierWarning, readCommittedConvention, type TargetDeps } from '../_lib/git_convention_carrier.js';
+import { CARRIER_PATH, IGNORED_CARRIER_PATH, conventionRoot, ignoredCarrierWarning, readCommittedConvention, type TargetDeps } from '../_lib/git_convention_carrier.js';
 import {
     FAMILY_ERE,
     checkSubject,
@@ -73,6 +77,7 @@ import {
     MEASURE_LIMIT,
     MEASURE_SINCE,
     MIN_N,
+    formatForFamily,
     measureBranches,
     measureSubjects,
     measureUpdateStyle,
@@ -505,7 +510,7 @@ export function measureCommand(args: readonly string[], cwd: string): GitConvent
         `update    observed ${u.observed} (${u.baseMerges} of ${u.merges} merge(s) bring the default branch into a topic branch) — shown, never adopted`,
     ];
     if (team !== null) {
-        out.push(`team file ${chosen === undefined ? 'for the measured result' : `for --family ${chosen}`} — a human creates and commits ${CARRIER_PATH}; this verb writes nothing:`);
+        out.push(`team file ${chosen === undefined ? 'for the measured result' : `for --family ${chosen}`} — a human creates and commits ${CARRIER_PATH}, or init --yes creates it on the user's yes; this verb writes nothing:`);
         out.push(...team.trimEnd().split('\n').map((l) => `  ${l}`));
     }
     if (chosen !== undefined && card !== null) {
@@ -516,12 +521,63 @@ export function measureCommand(args: readonly string[], cwd: string): GitConvent
     return { code: 0, out, err: [] };
 }
 
+/**
+ * Create `.git-convention.yml` once, after the user's yes this turn (owner
+ * decision 2026-10-07). It never overwrites or edits a carrier under either
+ * name, never writes `update_strategy`, and never stages or commits.
+ */
+export function initCommand(args: readonly string[], cwd: string): GitConventionResult {
+    let yes = false;
+    const rest: string[] = [];
+    for (const a of args) {
+        if (a === '--yes') yes = true;
+        else rest.push(a);
+    }
+    const f = _flags(rest, ['commit-format', 'branch-pattern']);
+    if (f.bad !== null || f.positional.length > 0) return { code: 2, out: [], err: [`unknown argument: ${f.bad ?? f.positional[0]}`, USAGE] };
+    const { root, git } = conventionRoot(cwd);
+    if (!git) return { code: 1, out: [], err: ['not a git repository — the carrier lives at a repository root'] };
+    const existing = [CARRIER_PATH, IGNORED_CARRIER_PATH].find((name) => fs.existsSync(path.join(root, name)));
+    if (existing !== undefined) return { code: 1, out: [], err: [`${existing} already exists at ${root} — init creates the file once and never changes it; nothing was written`] };
+    if (!yes) return { code: 1, out: [], err: ['init writes only on the user\'s explicit yes this turn — pass --yes; nothing was written'] };
+
+    let format = f.values['commit-format'] ?? null;
+    let pattern = f.values['branch-pattern'] ?? null;
+    if (format === null || pattern === null) {
+        const history = readHistory(cwd);
+        if (history !== null && !('unresolved' in history)) {
+            const family = measureSubjects(history.commits).established;
+            if (format === null && family !== null) format = formatForFamily(family);
+            if (pattern === null) pattern = measureBranches(history.branches).pattern;
+        }
+    }
+    for (const [key, value] of [['commit_format', format], ['branch_pattern', pattern]] as const) {
+        const why = value === null ? null : invalidReason(key, value);
+        if (why !== null) return { code: 1, out: [], err: [`git.${key}: ${why}; nothing was written`] };
+    }
+    if (format === null && pattern === null) {
+        return { code: 1, out: [], err: ['nothing to write — measure proposes neither a commit_format nor a branch_pattern; pass --commit-format or --branch-pattern'] };
+    }
+    const content = ['git:', ...(format === null ? [] : [`  commit_format: ${format}`]), ...(pattern === null ? [] : [`  branch_pattern: "${pattern}"`]), ''].join('\n');
+    try {
+        fs.writeFileSync(path.join(root, CARRIER_PATH), content, { flag: 'wx' });
+    } catch {
+        return { code: 1, out: [], err: [`${CARRIER_PATH} could not be created at ${root} (it may have appeared meanwhile); nothing was written`] };
+    }
+    return {
+        code: 0,
+        out: [`created ${CARRIER_PATH} at ${root} — NOT committed; review and commit it:`, ...content.trimEnd().split('\n')],
+        err: [],
+    };
+}
+
 export const SUBCOMMANDS: Readonly<Record<string, (args: readonly string[], cwd: string, stdin?: string) => GitConventionResult>> = {
     show: (args, cwd) => showConvention(args, cwd),
     subject: (args, cwd, stdin) => subjectCommand(args, cwd, stdin),
     ticket: (args, cwd) => ticketCommand(args, cwd),
     branch: (args, cwd) => branchCommand(args, cwd),
     measure: (args, cwd) => measureCommand(args, cwd),
+    init: (args, cwd) => initCommand(args, cwd),
     // Prints as it runs; a later `--repo` in `args` overrides the directory.
     sync: (args, cwd) => ({ code: syncPrBranch(['--repo', cwd, ...args]) as GitConventionResult['code'], out: [], err: [] }),
 };
@@ -532,6 +588,7 @@ const USAGE = [
     '       agent-config git:convention ticket [BRANCH] [--keys "DEV, OPS"] [--json]',
     '       agent-config git:convention branch --slug S [--type T] [--ticket K] [--pattern P] [--json]',
     '       agent-config git:convention measure [--limit N] [--family F] [--json]   (proposes a convention from the history; writes nothing)',
+    '       agent-config git:convention init --yes [--commit-format F] [--branch-pattern P]   (creates .git-convention.yml once, on the user\'s yes; never overwrites, never commits)',
     '       agent-config git:convention sync [--base REF] [--dry-run] [--auto-resolve-generated] [--quiet]   (without --base: the default branch)',
 ].join('\n');
 
