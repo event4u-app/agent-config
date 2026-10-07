@@ -72,4 +72,21 @@ describe('git:convention from the bundled delegate layout', () => {
         expect(r.stdout.trim()).toBe('feat/export');
         expect(r.status).toBe(0);
     }, 90_000);
+
+    it('lets an approved card win over a developer file holding only the template default', () => {
+        const dir = repo();
+        fs.writeFileSync(path.join(dir, '.agent-settings.yml'), 'git:\n  commit_format: ticket-scope\n');
+        const card = path.join(dir, 'agents', 'memory', 'curated', 'conventions', 'approved');
+        fs.mkdirSync(card, { recursive: true });
+        fs.writeFileSync(path.join(card, 'commit-subject.md'), '---\ndominant_family: ticket-prefix\n---\n');
+        const r = spawnSync('node', [bundle, 'subject'], {
+            cwd: dir,
+            input: '[DEV-1] add x\n',
+            encoding: 'utf-8',
+            env: { ...process.env, HOME: home, GIT_CONFIG_GLOBAL: '/dev/null' },
+            timeout: 60_000,
+        });
+        expect(r.stdout).toContain('approved family ticket-prefix');
+        expect(r.status).toBe(0);
+    }, 90_000);
 });
