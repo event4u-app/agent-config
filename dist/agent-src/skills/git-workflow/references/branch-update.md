@@ -129,7 +129,40 @@ git rebase "origin/$BASE" \
   || keep "the rebase stopped on a conflict — resolve each commit and git rebase --continue, then run steps 3 and 4 with SAVE=$SAVE (git rebase --abort first to give up)"
 ```
 
-**3. Push in the same turn, then read the published ref back.** An empty
+**3. Report equivalence from stable data.** The stable patch ids of the old
+range and the new range are compared: equal sets mean "mechanically
+equivalent"; anything else means "needs review" and names the commits on each
+side that have no match — never a pair inferred from a subject or a position.
+Whenever the old head already contained the new base, the trees must also be
+equal. A conflict resolution changes a patch id, so a mismatch means "needs
+review", never "wrong". The verdict is a report, not a review: it binds nothing
+and approves nothing. `git range-diff` is shown to the human and never parsed —
+its manual says under OUTPUT STABILITY that the output is not for machines.
+
+```bash
+# rebase-sequence: equivalence
+pids() { git log -p --no-merges --format='commit %H' "$1" | git patch-id --stable | sort; }
+OLD_BASE=$(git merge-base "$SAVE" "origin/$BASE")
+OLD=$(pids "$OLD_BASE..$SAVE")
+NEW=$(pids "origin/$BASE..HEAD")
+VERDICT="mechanically equivalent"
+[ "$(cut -d' ' -f1 <<<"$OLD")" = "$(cut -d' ' -f1 <<<"$NEW")" ] || VERDICT="needs review"
+if git merge-base --is-ancestor "origin/$BASE" "$SAVE" \
+  && [ "$(git rev-parse "$SAVE^{tree}")" != "$(git rev-parse "HEAD^{tree}")" ]; then
+  VERDICT="needs review"
+fi
+echo "EQUIVALENCE: $VERDICT"
+if [ "$VERDICT" = "needs review" ]; then
+  comm -3 <(cut -d' ' -f1 <<<"$OLD") <(cut -d' ' -f1 <<<"$NEW") | tr -d '\t' | sort -u | while read -r p; do
+    [ -n "$p" ] || continue
+    grep "^$p " <<<"$OLD" | while read -r _ c; do echo "  before: $(git log -1 --format='%h %s' "$c")"; done
+    grep "^$p " <<<"$NEW" | while read -r _ c; do echo "  after:  $(git log -1 --format='%h %s' "$c")"; done
+  done
+fi
+git range-diff "$OLD_BASE..$SAVE" "origin/$BASE..HEAD"   # for the human; never parsed
+```
+
+**4. Push in the same turn, then read the published ref back.** An empty
 `EXPECTED` (never pushed) makes the lease require that the ref does not exist.
 
 ```bash

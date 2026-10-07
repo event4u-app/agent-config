@@ -133,7 +133,7 @@ review, the conformance count, a merge run — is decided, not discovered.
       one recovery command printed, when anything fails. The squash snapshot in
       `SKILL.md:166-177` uses the same ref.
       verify: `test -z "$(git grep -l -F 'git tag ' -- src/skills/git-workflow)" && git grep -q -F 'refs/agent-config/rewrites/' -- src/skills/git-workflow/SKILL.md src/skills/git-workflow/references/branch-update.md` -> 0
-- [ ] **2.3 Equivalence is reported from stable data.** After the rebase the
+- [x] **2.3 Equivalence is reported from stable data.** After the rebase the
       reference compares the stable patch ids of the old and the new range: equal
       sets mean "mechanically equivalent"; anything else means "needs review"
       and names the commits, never inferring a pair from subject or position.

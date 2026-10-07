@@ -17,7 +17,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { collaboratorPushesDuringRebase, runBlocks, sandbox, sequenceBlock, type Sandbox } from '../_lib/rebase_sequence.js';
 
-const SEQUENCE = ['resolve', 'rebase', 'publish'].map((b) => sequenceBlock(b)).join('\n');
+const SEQUENCE = ['resolve', 'rebase', 'equivalence', 'publish'].map((b) => sequenceBlock(b)).join('\n');
 
 interface Fixture {
     sb: Sandbox;
