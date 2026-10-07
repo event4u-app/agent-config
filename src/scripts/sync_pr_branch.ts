@@ -67,6 +67,7 @@ import {
     parseSymrefDefault,
     readCommittedConvention,
     resolveTarget,
+    type ConventionTarget,
     type TargetDeps,
 } from './_lib/git_convention_carrier.js';
 import { splitResolvedRef } from './_lib/git_base_ref.js';
@@ -542,6 +543,8 @@ export interface IntegrationAttempt {
 
 export interface IntegrationOutcome {
     readonly ok: boolean;
+    /** Set when `checkPin` refused the pinned set: nothing was merged. */
+    readonly stopped?: boolean;
     readonly attempts: readonly IntegrationAttempt[];
     readonly conflicted: readonly string[];
     readonly message: string;
@@ -551,6 +554,8 @@ export interface IntegrationOutcome {
 export interface IntegrateOps {
     readonly remoteSha: (ref: string) => string | null;
     readonly merge: (ref: string) => { ok: boolean; conflicted: string[] };
+    /** Asked once per attempt with the pinned OIDs, before any merge; a message stops the run. */
+    readonly checkPin?: (pinned: readonly { ref: string; before: string | null }[]) => string | null;
 }
 
 function renderAttempts(attempts: readonly IntegrationAttempt[]): string {
@@ -573,6 +578,8 @@ export function integrateWithPinnedBase(refs: readonly string[], ops: IntegrateO
     const attempts: IntegrationAttempt[] = [];
     for (let n = 1; n <= MAX_BASE_ATTEMPTS; n++) {
         const pinned = refs.map((ref) => ({ ref, before: ops.remoteSha(ref) }));
+        const stop = ops.checkPin?.(pinned) ?? null;
+        if (stop !== null) return { ok: false, stopped: true, attempts, conflicted: [], message: stop };
         let conflicted: string[] = [];
         let clean = true;
         for (const q of pinned) {
@@ -704,7 +711,16 @@ function gitRegenOps(repo: string): RegenOps {
     };
 }
 
-export function sync(repo: string, baseOverride: string | null, dryRun: boolean, autoResolve = false, deps?: BaseDeps): Plan {
+/**
+ * What the merge path needs beyond the base set. `live` answers the last-moment
+ * pin and is never memoised — a memoised pin could not see the target move.
+ */
+export interface SyncOptions {
+    readonly live?: TargetDeps;
+    readonly checkPin?: IntegrateOps['checkPin'];
+}
+
+export function sync(repo: string, baseOverride: string | null, dryRun: boolean, autoResolve = false, deps?: BaseDeps, opts: SyncOptions = {}): Plan {
     let resolved: ResolveBaseResult;
     try {
         resolved = resolveBase(repo, baseOverride, deps ?? makeGitDeps(repo));
@@ -791,10 +807,12 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
         };
     }
 
+    const live = opts.live ?? makeGitDeps(repo);
     const outcome = integrateWithPinnedBase(
         stale.map((b) => b.ref),
         {
-            remoteSha: (ref: string): string | null => makeGitDeps(repo).remoteSha(ref),
+            remoteSha: (ref: string): string | null => live.remoteSha(ref),
+            ...(opts.checkPin === undefined ? {} : { checkPin: opts.checkPin }),
             merge: (ref: string): { ok: boolean; conflicted: string[] } => {
                 const m = sh('git', ['merge', ref, '--no-edit'], repo);
                 if (m.ok) return { ok: true, conflicted: [] };
@@ -819,8 +837,8 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
         };
     }
     if (outcome.conflicted.length === 0) {
-        // The base kept moving. No conflict to classify; the evidence IS the
-        // per-attempt OID list already in the message.
+        // The base kept moving, or moved onto a commit carrying another
+        // strategy. No conflict to classify; the message carries the OIDs.
         return { exit: 1, message: `${summary}. ${outcome.message}`, generated: [], remeasured: [], authored: [], scanned: order.length };
     }
 
@@ -859,9 +877,9 @@ export function updateStrategy(repo: string, base: string | null = null, deps?: 
     return readStrategy(repo, base, deps).reading;
 }
 
-function readStrategy(repo: string, base: string | null, deps?: TargetDeps): { reading: GitConventionReading; baseResolved: boolean } {
+function readStrategy(repo: string, base: string | null, deps?: TargetDeps): { reading: GitConventionReading; baseResolved: boolean; target: ConventionTarget | null } {
     const read = readCommittedConvention(repo, { override: base, keys: ['update_strategy'], ...(deps ? { deps } : {}) });
-    return { reading: read.readings.update_strategy as GitConventionReading, baseResolved: read.target !== null && read.target.sha !== null };
+    return { reading: read.readings.update_strategy as GitConventionReading, baseResolved: read.target !== null && read.target.sha !== null, target: read.target };
 }
 
 export interface StrategyGate {
@@ -869,6 +887,8 @@ export interface StrategyGate {
     exit: 0 | 1 | 4 | null;
     line: string;
     reading: GitConventionReading;
+    /** The ref and commit the strategy was read at, when `strategyGate` resolved one. */
+    target?: ConventionTarget | null;
 }
 
 /**
@@ -891,8 +911,33 @@ export function strategyExit(reading: GitConventionReading, baseResolved: boolea
 }
 
 export function strategyGate(repo: string, base: string | null, targetDeps: BaseDeps): StrategyGate {
-    const { reading, baseResolved } = readStrategy(repo, base, targetDeps);
-    return strategyExit(reading, baseResolved, readGitConventionKey('update_strategy', checkoutSource(conventionRoot(repo).root)));
+    const { reading, baseResolved, target } = readStrategy(repo, base, targetDeps);
+    return { ...strategyExit(reading, baseResolved, readGitConventionKey('update_strategy', checkoutSource(conventionRoot(repo).root))), target };
+}
+
+/** The strategy a reading puts in force, or its refusing state: what a plan is made with. */
+function strategyInForce(r: GitConventionReading): string {
+    return isRefusal(r.state) ? `unreadable (${r.state})` : (r.value ?? 'merge');
+}
+
+/**
+ * The stop for a target that moved between the strategy read and the pin.
+ *
+ * The commit being integrated is governed by the policy it carries, so the
+ * carrier is read again at the pinned commit through the same reader. The same
+ * strategy in force there goes on against the new commit; a different one, or
+ * one that cannot be read, stops before anything is merged — the plan was made
+ * under a policy the integrated commit no longer carries.
+ */
+export function policyMovedStop(from: string, to: string, planned: GitConventionReading, pinned: GitConventionReading): string | null {
+    const was = strategyInForce(planned);
+    const now = strategyInForce(pinned);
+    if (was === now) return null;
+    const why = isRefusal(pinned.state) ? ` (${describeRefusal(pinned)})` : '';
+    return (
+        `the target moved from ${from.slice(0, 12)} to ${to.slice(0, 12)} and its git.update_strategy changed from ${was} to ${now}${why} — ` +
+        'nothing was merged; run again so the plan is made under the strategy the new commit carries.'
+    );
 }
 
 /** `deps` answers the target questions; tests inject it, a run asks git. */
@@ -943,7 +988,9 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
                     '  base must pass --base <its base>; a branch name and refs/heads/<name> mean\n' +
                     '  origin/<name>, and <remote>/<name> is used as given.\n' +
                     '  A base that cannot be resolved or counted exits 1; one whose commit\n' +
-                    '  cannot be fetched is unverified, exit 0. A conflict is\n' +
+                    '  cannot be fetched is unverified, exit 0. A target that moves before the\n' +
+                    '  merge is read again at the new commit; another strategy there exits 1,\n' +
+                    '  nothing merged. A conflict is\n' +
                     '  reported and never auto-resolved; generated and authored conflicts are\n' +
                     '  listed separately because only the first has one correct resolution;\n' +
                     '  measured ratchet baselines are a third class, re-measured not merged.\n' +
@@ -967,7 +1014,8 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
     // git-history-discipline — so the branch is only CHECKED (dry run), and a
     // branch that is behind is refused rather than merged. A current branch
     // passes, so an automated pre-push sync stays green when nothing is to do.
-    const targetDeps = memoTargetDeps(deps ?? makeGitDeps(repo));
+    const live = deps ?? makeGitDeps(repo);
+    const targetDeps = memoTargetDeps(live);
     let plan: Plan;
     try {
         const gate = strategyGate(repo, base, targetDeps);
@@ -996,7 +1044,14 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
                 return 3;
             }
         } else {
-            plan = sync(repo, base, dryRun, autoResolve, targetDeps);
+            const read = gate.target ?? null;
+            const checkPin = (pinned: readonly { ref: string; before: string | null }[]): string | null => {
+                const now = read === null ? null : (pinned.find((p) => p.ref === read.ref)?.before ?? null);
+                if (read === null || read.sha === null || now === null || now === read.sha) return null;
+                const again = strategyGate(repo, base, { ...targetDeps, remoteSha: () => now });
+                return policyMovedStop(read.sha, now, gate.reading, again.reading);
+            };
+            plan = sync(repo, base, dryRun, autoResolve, targetDeps, { live, checkPin });
         }
     } catch (exc) {
         reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'internal error' });

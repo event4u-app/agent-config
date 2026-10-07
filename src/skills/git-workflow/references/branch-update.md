@@ -63,8 +63,9 @@ branch, right only for a branch that targets it; nothing asks the forge:
 - **`sync_pr_branch` exits** — `0` with a `✅` line: current, or under `merge`
   merged cleanly; `0` with a `⚠️` `unverified` or `BYPASSED` line: **not
   checked** (the base commit or origin not fetched, or the convergence policy
-  disabled), never read as current; `1`: a conflict, or the base could not be
-  resolved; `3`: behind under a strategy other than `merge`, refused and
+  disabled), never read as current; `1`: a conflict, the base could not be
+  resolved, or the target moved before the merge onto a commit carrying another
+  strategy — nothing merged, run again; `3`: behind under a strategy other than `merge`, refused and
   never merged; `4`: the strategy itself cannot be read — the line names the
   reason code and the file, and nothing was checked. A current branch passes
   with exit 0, so automated pre-push syncs stay green when there is nothing to do.

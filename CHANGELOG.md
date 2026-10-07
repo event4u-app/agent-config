@@ -214,7 +214,11 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   `--base` given — a pull request passes `--base origin/<its base>` — else the
   default branch; nothing asks the forge. A carrier that does not parse makes
   `sync_pr_branch` exit `4`, a target that names no commit exit `1`, and a named
-  commit that cannot be fetched is `unverified`; none of them merges. A commit-linting config
+  commit that cannot be fetched is `unverified`; none of them merges. A target
+  that moves between the strategy read and the merge is read again at the
+  commit being merged, which is governed by the strategy it carries: the same
+  strategy goes on against it, another one exits `1` before anything is
+  merged. A commit-linting config
   in the repository still outranks `git.commit_format`. In a packed consumer
   install `git:convention show` is the git surface that resolves, and the
   consumer matrix proves it with a `git-convention` leg; `sync_pr_branch` and
