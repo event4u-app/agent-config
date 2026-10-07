@@ -103,6 +103,13 @@ in `HEAD`) and, unchanged, the lease. A collaborator's push lands either before
 the pin and halts the stop, or after it and fails the lease — it is never
 overwritten.
 
+Before the rewrite the old head is kept at a private recovery ref,
+`refs/agent-config/rewrites/<tx>/before`, written with `git update-ref` —
+outside `refs/tags/`, so `git push --tags` cannot publish it, and not a tag
+push for anything that counts them. It is removed once the published ref reads
+back as `HEAD`; on any failure it is kept and the one command that restores it
+is printed. A kept ref is removed with `git update-ref -d <ref>`.
+
 ```bash
 # rebase-sequence: rebase
 stop() { echo "STOP: $*" >&2; exit 1; }
@@ -115,7 +122,11 @@ if [ -n "$EXPECTED" ]; then
   git fetch -q "$REMOTE" "refs/heads/$RB"
   git merge-base --is-ancestor "$EXPECTED" HEAD || stop "$REMOTE/$RB has commits this branch lacks"
 fi
-git rebase "origin/$BASE" || stop "the rebase stopped on a conflict — resolve each commit, then continue at step 3"
+SAVE="refs/agent-config/rewrites/$(date -u +%Y%m%dT%H%M%SZ)-$$/before"
+git update-ref "$SAVE" HEAD
+keep() { stop "$* — the old head is kept at $SAVE; restore it with: git reset --keep $SAVE"; }
+git rebase "origin/$BASE" \
+  || keep "the rebase stopped on a conflict — resolve each commit and git rebase --continue, then run steps 3 and 4 with SAVE=$SAVE (git rebase --abort first to give up)"
 ```
 
 **3. Push in the same turn, then read the published ref back.** An empty
@@ -124,9 +135,10 @@ git rebase "origin/$BASE" || stop "the rebase stopped on a conflict — resolve 
 ```bash
 # rebase-sequence: publish
 git push --force-with-lease="refs/heads/$RB:$EXPECTED" "$REMOTE" "HEAD:refs/heads/$RB" \
-  || stop "the lease was rejected — $REMOTE/$RB moved; refetch and report, never retry without the lease"
+  || keep "the lease was rejected — $REMOTE/$RB moved; refetch and report, never retry without the lease"
 [ "$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)" = "$(git rev-parse HEAD)" ] \
-  || stop "$REMOTE/$RB does not match HEAD after the push"
+  || keep "$REMOTE/$RB does not match HEAD after the push"
+git update-ref -d "$SAVE"
 ```
 
 A rejected lease is a stop: refetch, report what moved, and hand back — never a

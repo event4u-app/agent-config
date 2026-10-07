@@ -190,3 +190,34 @@ describe('stops before anything is rewritten', () => {
         expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
     });
 });
+
+describe('the recovery ref', () => {
+    const rewrites = (f: Fixture): string[] =>
+        f.sb.git(f.me, 'for-each-ref', '--format=%(refname) %(objectname)', 'refs/agent-config/rewrites/').split('\n').filter(Boolean);
+
+    it('is removed once the published ref reads back as HEAD', () => {
+        const f = fixture('upstream');
+        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        expect(r.status).toBe(0);
+        expect(rewrites(f)).toEqual([]);
+        expect(f.sb.git(f.me, 'tag', '-l')).toBe('');
+    });
+
+    it('is kept on a failure, with the one recovery command, and git push --tags does not publish it', () => {
+        const f = fixture('upstream');
+        const oldHead = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        collaboratorPushesDuringRebase(f.sb, f.me, f.collab, f.publishUrl, 'feat');
+        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        expect(r.status).not.toBe(0);
+        const kept = rewrites(f);
+        expect(kept).toHaveLength(1);
+        const [ref, sha] = kept[0].split(' ');
+        expect(ref).toMatch(/^refs\/agent-config\/rewrites\/[^/]+\/before$/);
+        expect(sha).toBe(oldHead);
+        expect(r.stderr).toContain(`git reset --keep ${ref}`);
+        expect(f.sb.git(f.me, 'tag', '-l')).toBe('');
+
+        f.sb.git(f.me, 'push', '-q', '--tags', 'origin');
+        expect(f.sb.git(f.me, 'ls-remote', f.publishUrl)).not.toContain('refs/agent-config/');
+    });
+});

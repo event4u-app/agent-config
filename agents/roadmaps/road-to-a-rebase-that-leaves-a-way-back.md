@@ -126,7 +126,7 @@ review, the conformance count, a merge run — is decided, not discovered.
       `branch-update.md:23-25` already states. `--rebase-merges` is named as a
       separate operation the user asks for, never a silent fallback.
       verify: `grep -q 'rev-list --merges' src/skills/git-workflow/references/branch-update.md` -> 0
-- [ ] **2.2 A private recovery ref replaces the tags.** Before the rewrite the
+- [x] **2.2 A private recovery ref replaces the tags.** Before the rewrite the
       old head is kept at `refs/agent-config/rewrites/<tx>/before` via
       `git update-ref`, outside `refs/tags/`, so `git push --tags` cannot publish
       it. The ref is removed after the post-push check passes and kept, with the

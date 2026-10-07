@@ -168,15 +168,15 @@ Trigger context: `git-history-discipline` rule routed here.
 `REMOTE`/`RB`: the published ref, from the `resolve` block of [`references/branch-update.md`](references/branch-update.md) § The rebase sequence — never `@{u}`; unresolved → no squash.
 
 ```bash
-BRANCH=$(git branch --show-current)
 DATE=$(date +%F)
 EXPECTED=$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)
 git fetch -q "$REMOTE" "refs/heads/$RB"
-git tag "safe-squash-pre/${BRANCH}/${DATE}" HEAD
-git tag "safe-squash-origin/${BRANCH}/${DATE}" "$EXPECTED"
+SNAP="refs/agent-config/rewrites/squash-${DATE}-$$"
+git update-ref "$SNAP/before" HEAD
+git update-ref "$SNAP/published" "$EXPECTED"
 ```
 
-Two tags = two recoveries (local tip + published tip); `git reflog` is TTL-bounded and unreliable across sessions.
+Two refs = two recoveries (local tip + published tip), private — `git push --tags` cannot publish them; `git reflog` is TTL-bounded and unreliable across sessions.
 
 ### 2. Verify aligned starting state
 
@@ -222,7 +222,7 @@ If the push fails (pre-push hook, network, token budget):
 
 Report exactly:
 - pre-squash tip SHA (from step 1)
-- pre-squash tag name (for recovery)
+- the recovery refs under `$SNAP` — removed with `git update-ref -d` once step 4 verified parity; kept, with `git reset --keep "$SNAP/before"` printed, if anything failed
 - post-squash tip SHA == origin SHA (verified in step 4)
 - PR number, if any, and confirm it picked up the new tip
 
@@ -239,12 +239,12 @@ shape — guaranteed conflict storm in derived files, possible
 double-application of the same change. This is the documented failure
 mode behind `git-history-discipline`.
 
-### 2. Tag both sides immediately
+### 2. Record both sides immediately
 
 ```bash
-TS=$(date +%FT%H%M)
-git tag "diverged-local/${TS}" HEAD
-git tag "diverged-origin/${TS}" "$EXPECTED"
+SNAP="refs/agent-config/rewrites/diverged-$(date +%Y%m%dT%H%M)"
+git update-ref "$SNAP/before" HEAD
+git update-ref "$SNAP/published" "$EXPECTED"
 ```
 
 ### 3. Diagnose: which side is the correct future?
@@ -260,7 +260,7 @@ Decision matrix:
 | Pattern | Future | Action |
 |---|---|---|
 | Local has the same logical work as origin, just reshaped (squash/rebase) | **Local** | After PR-review check (step 4), `git push --force-with-lease=refs/heads/<b>:<sha> <remote> HEAD:refs/heads/<b>` |
-| Origin has commits local does not reflect (another contributor pushed) | **Origin** | Tag any local-ahead work for cherry-pick, then `git reset --hard "$EXPECTED"` |
+| Origin has commits local does not reflect (another contributor pushed) | **Origin** | Keep any local-ahead work at the step-2 refs for cherry-pick, then `git reset --hard "$EXPECTED"` |
 | Both sides have genuine independent work | **ask user** | Never decide silently — surface the two commit lists and let the user pick |
 
 ### 4. PR review-comment check (mandatory before any force-push)
@@ -277,16 +277,16 @@ destroys live review feedback is unrecoverable from the agent side.
 
 ### 5. Recover or proceed
 
-Use the tags from step 2 to restore either side if step 4 surfaces a
+Use the refs from step 2 to restore either side if step 4 surfaces a
 problem. After resolution, verify the published ref equals `HEAD` and report both
-SHAs plus the tags created.
+SHAs plus the refs recorded.
 
 ## Hard prohibitions on a pushed branch
 
 - No `git pull --rebase` after detecting divergent state.
 - No `git push --force`, and no `--force-with-lease` without its fully qualified `refs/heads/<b>:<sha>`.
 - No squash-then-end-session — the push must complete in the same turn.
-- No reflog-only recovery — always tag the state explicitly first.
+- No reflog-only recovery — always record the state under `refs/agent-config/rewrites/` first.
 
 ## Shared-branch & inherited commits — ask-before-drop protocol
 
@@ -325,7 +325,7 @@ force-push would clobber their in-flight work regardless of your local backup.
 
 2. **Post-rewrite stop.** After the rewrite, push in the **same turn** with `git push --force-with-lease=refs/heads/<b>:<pinned-sha> <remote> HEAD:refs/heads/<b>` and verify `git ls-remote <remote> refs/heads/<b>` equals `git rev-parse HEAD`. A rejected lease is a stop — refetch and report, never a bare `--force-with-lease`, never `--force`. If the push fails (hook, network, token budget) — fix the cause and re-push **before** ending the session, committing new work, or handing off. (§ Safe squash-after-push step 4 implements this stop.)
 
-If either stop fires and resolution is not immediate → tag the state (`git tag local-rewritten-tip-<ISO-date>`) and hand control back to the user. Do not let a new session inherit a dirty divergence.
+If either stop fires and resolution is not immediate → record the state (`git update-ref refs/agent-config/rewrites/<tx>/before HEAD`) and hand control back to the user. Do not let a new session inherit a dirty divergence.
 
 ## Equivalents that are also forbidden by default
 
