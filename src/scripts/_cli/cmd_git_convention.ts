@@ -380,6 +380,9 @@ export function ticketCommand(args: readonly string[], cwd: string): GitConventi
     return { code: 0, out, err: [] };
 }
 
+/** `absent` with no template default: nothing to render from, and not a refusal either. */
+export const NO_BRANCH_PATTERN = 'no branch_pattern declared — pass --pattern or declare one';
+
 export function branchCommand(args: readonly string[], cwd: string): GitConventionResult {
     const f = _flags(args, ['type', 'ticket', 'slug', 'pattern']);
     if (f.bad !== null || f.positional.length > 0 || f.values.slug === undefined) {
@@ -388,7 +391,8 @@ export function branchCommand(args: readonly string[], cwd: string): GitConventi
     let pattern = f.values.pattern;
     if (pattern === undefined) {
         const reading = readCommittedConvention(cwd, { keys: ['branch_pattern'] }).readings.branch_pattern as GitConventionReading;
-        if (isRefusal(reading.state) || reading.value === null) return { code: 1, out: [], err: [describeRefusal(reading)] };
+        if (isRefusal(reading.state)) return { code: 1, out: [], err: [describeRefusal(reading)] };
+        if (reading.value === null) return { code: 1, out: [], err: [NO_BRANCH_PATTERN] };
         pattern = reading.value;
     } else {
         const why = invalidReason('branch_pattern', pattern);
