@@ -202,11 +202,15 @@ tasks:
       DRY=1 runs steps 1, 2 and 5 read-only and prints what 3, 4 and 6
       would do, so a stale branch can be inspected without mutating it.
 
+      BASE names the PR's base branch; without it the target is the default
+      branch, which is wrong for a PR into any other base.
+
       Usage:
-      task push-ready
-      task push-ready DRY=1
+      task push-ready BASE=main
+      task push-ready DRY=1 BASE=release/1.x
     vars:
       DRY: '{{.DRY | default ""}}'
+      BASE: '{{.BASE | default ""}}'
     cmds:
       - 'echo "── push-ready ──────────────────────────────────────────"'
       - 'echo "1 fetch"'
@@ -214,7 +218,7 @@ tasks:
       - 'echo "2 integrate the base set (default first, then target)"'
       # DRY reports the step's outcome and carries on, so all six steps are
       # visible in one pass. A real run stops on the first refusal.
-      - '{{if .DRY}}./scripts-run src/scripts/sync_pr_branch --dry-run || echo "  → refused (see above); the real run would stop here"{{else}}./scripts-run src/scripts/sync_pr_branch{{end}}'
+      - '{{if .DRY}}./scripts-run src/scripts/sync_pr_branch {{if .BASE}}--base origin/{{.BASE}} {{end}}--dry-run || echo "  → refused (see above); the real run would stop here"{{else}}./scripts-run src/scripts/sync_pr_branch{{if .BASE}} --base origin/{{.BASE}}{{end}}{{end}}'
       - 'echo "3 regenerate derived files"'
       - '{{if .DRY}}echo "  → would run: task sync && task generate-tools"{{else}}task sync && task generate-tools && echo "  → regenerated"{{end}}'
       - 'echo "4 verify (task consistency — the exact CI mirror)"'

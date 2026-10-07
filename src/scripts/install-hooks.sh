@@ -70,9 +70,12 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 # belongs here; resolution belongs to a step run with the result in front of
 # you. When this hook refuses for staleness, the thing that fixes it is
 #
-#     task push-ready          # fetch -> integrate the base SET -> regenerate
-#                              # -> verify -> re-check freshness -> push
-#     task push-ready DRY=1    # the same six steps, read-only
+#     task push-ready BASE=<base>          # fetch -> integrate the base SET -> regenerate
+#                                          # -> verify -> re-check freshness -> push
+#     task push-ready DRY=1 BASE=<base>    # the same six steps, read-only
+#
+# `<base>` is the base the refusal names. Without BASE the sync targets the
+# default branch, which is wrong for a branch whose PR merges anywhere else.
 #
 # The base is a SET: a branch targeting a release line or a stacked parent may
 # also have to integrate the default branch, per the branch-convergence policy
@@ -155,9 +158,9 @@ elif ! ./scripts-run src/scripts/check_branch_freshness --quiet; then
     echo "   Push blocked — the branch is behind its base, and the gates you just"
     echo "   passed were answered against a base that no longer exists."
     echo ""
-    echo "     task push-ready         # fetch → integrate the base SET → regenerate"
-    echo "                             # → verify → re-check freshness, then push"
-    echo "     task push-ready DRY=1   # the same steps, read-only"
+    echo "     task push-ready BASE=<base>         # <base> as named above; fetch → integrate"
+    echo "                                         # the base SET → regenerate → verify → re-check"
+    echo "     task push-ready DRY=1 BASE=<base>   # the same steps, read-only"
     echo ""
     echo "   This hook refuses; it never merges. Bypass a genuine WIP push with"
     echo "   AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1."

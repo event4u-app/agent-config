@@ -64,11 +64,13 @@ Run `## Procedure: Establish the house convention` from
 verbatim: tier-1 sources first (opened and read, never taken from a grep hit),
 then the capped-weighted consensus pass with bots, merges, reverts and release
 automation excluded. When that tier-1 search found no configured source, a
-declared `git.commit_format: ticket-prefix` (the skill's tier 1b; `ticket-scope`
+declared `git.commit_format: ticket-conventional` (the skill's tier 1b; `ticket-scope`
 is the template default and declares nothing) is the target: report it as
 `Declared : git.commit_format: …`, skip step 3's style question, and keep the
 other authorisations. A configured source always outranks it — including step
 3's tier-1 veto.
+
+Ticket reading, placement and precedence: [`commit-subject`](../../../../skills/git-workflow/references/commit-subject.md).
 
 Report what it found, in one block, before offering anything:
 
@@ -195,7 +197,7 @@ Then, in one block, state:
   for a branch a teammate already has;
 - whether the range crosses the **default branch** — rewriting merged history
   is a different order of disruption and gets its own sentence;
-- the backup ref you are about to write.
+- the recovery ref you are about to write.
 
 **Ask for the rewrite and, when the range is already pushed, the force-push in
 the same block.** [`git-history-discipline`](../../../rules/git-history-discipline.md)
@@ -212,10 +214,17 @@ Wait. Do not run anything in the turn you ask.
 
 ### 7. Rewrite
 
-**7a. Backup, and capture what the verification will compare against.**
+**7a. Pin the published ref, keep the old head, and capture what the
+verification will compare against.** When the range is already pushed, first
+run the `resolve` block of
+[`branch-update.md` § The rebase sequence](../../../../skills/git-workflow/references/branch-update.md#the-rebase-sequence)
+to set `REMOTE` and `RB` — never `@{u}`, which is the base for a branch pushed
+without `-u`. An unresolved target means no rewrite.
 
 ```bash
-git tag "backup/pre-message-fix-$(date +%Y%m%d-%H%M%S)"
+EXPECTED=$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)   # pushed range only
+SAVE="refs/agent-config/rewrites/$(date -u +%Y%m%dT%H%M%SZ)-msgfix/before"
+git update-ref "$SAVE" HEAD
 git rev-list --count HEAD > /tmp/precount.txt
 git log ${BASE:+$BASE..}HEAD --pretty=format:'%aN%x09%aE%x09%ad%x09%s' > /tmp/preplan.txt
 ```
@@ -234,17 +243,21 @@ bracketed form:
 ```bash
 git filter-repo --force --refs "${BASE:+$BASE..}HEAD" \
   --commit-callback '
-    import re
+    import json, re, subprocess
     ME = {b"me@example.com"}                  # the step-5 address set, bare, no <>
-    PAT = re.compile(rb"^\[?([A-Z][A-Z0-9]+-[0-9]+)\]?[: ]\s*(.+)$")
     if len(commit.parents) > 1:
         return
     if commit.author_email not in ME:
         return
     subject, sep, body = commit.message.partition(b"\n")
-    m = PAT.match(subject)
-    if m:
-        commit.message = b"[" + m.group(1) + b"] " + m.group(2) + sep + body
+    out = subprocess.run(["agent-config", "git:convention", "ticket", subject.decode(), "--json"],
+                         capture_output=True, text=True, check=True).stdout
+    ticket = json.loads(out)["ticket"]
+    if ticket is None:
+        return
+    lead = re.compile(rb"^\[?" + re.escape(ticket.encode()) + rb"\]?[: ]\s*")
+    if lead.match(subject):
+        commit.message = b"[" + ticket.encode() + b"] " + lead.sub(b"", subject, count=1) + sep + body
   '
 ```
 
@@ -259,10 +272,12 @@ rewriting nothing:
   cross-wire precisely because they need opposite forms.
 - **Merges are skipped in the callback too**, or the rewrite touches commits the
   step-6 table did not list.
-- **`PAT` and the replacement are the step-3 pattern**, substituted for real.
-  A callback that references a helper nothing defines is not a callback that
-  failed loudly — Python evaluates the name only if control reaches it, so a
-  wrong author filter hides the missing helper completely.
+- **The ticket comes from `agent-config git:convention ticket`**, never a regex
+  literal, so the rewrite reads tickets exactly as `/commit` does — the verb must
+  be on `PATH`, and `check=True` makes a missing one fail loudly. A callback that
+  references a helper nothing defines is not a callback that failed loudly —
+  Python evaluates the name only if control reaches it, so a wrong author filter
+  hides the missing helper completely.
 
 `--refs` implies partial mode, which is what keeps the `origin` remote that
 plain `filter-repo` strips as a safety measure; `--partial` is not needed
@@ -291,7 +306,7 @@ not exit that state.
 
 ```bash
 git rev-list --count HEAD                                  # equals /tmp/precount.txt
-git diff <backup-tag> HEAD --stat                          # MUST be empty
+git diff "$SAVE" HEAD --stat                             # MUST be empty
 git log ${BASE:+$BASE..}HEAD --pretty=format:'%aN%x09%aE%x09%ad%x09%s' > /tmp/postplan.txt
 diff /tmp/preplan.txt /tmp/postplan.txt
 ```
@@ -309,21 +324,24 @@ The authorisation was taken in step 6, together with the rewrite's. Push in this
 turn:
 
 ```bash
-git push --force-with-lease origin <branch>
-git log --oneline -3 origin/<branch>
+git push --force-with-lease="refs/heads/$RB:$EXPECTED" "$REMOTE" "HEAD:refs/heads/$RB"
+[ "$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)" = "$(git rev-parse HEAD)" ]
 ```
 
-`--force-with-lease`, never bare `--force`. Leave the backup tag in place. Tell
-the user its name, and that recovery is `git reset --hard <backup-tag>` — plus a
-force-push, since the rewrite was already pushed.
+The lease carries the SHA pinned in 7a, never a bare `--force-with-lease`, and
+never `--force`; a rejected lease is a stop — refetch and report. Leave the
+recovery ref in place: it lives outside `refs/tags/`, so `git push --tags`
+cannot publish it. Tell the user its name, that recovery is
+`git reset --keep <ref>` — plus a leased force-push, since the rewrite was
+already pushed — and that `git update-ref -d <ref>` removes it.
 
 ### 9. Report
 
 - Convention chosen, and how it was established (measured / user-supplied / tier-1).
 - Range, author scope, commits rewritten vs unchanged.
 - The `diff /tmp/preplan.txt /tmp/postplan.txt` result and the
-  `git diff <backup-tag> HEAD --stat` result, both quoted.
-- The backup tag and the one-line recovery command.
+  `git diff <recovery-ref> HEAD --stat` result, both quoted.
+- The recovery ref and the one-line recovery command.
 - Whether it was pushed, and to where.
 
 ## Do NOT
@@ -334,7 +352,7 @@ force-push, since the rewrite was already pushed.
   instruction — and never by offering it as a menu option they did not raise.
 - Do NOT compare `commit.author_email` against a bracketed address, or pass a
   bare address to `--author`.
-- Do NOT treat an empty `git diff <backup> HEAD` as proof the rewrite happened.
+- Do NOT treat an empty `git diff <recovery-ref> HEAD` as proof the rewrite happened.
 - Do NOT use `git filter-branch`, bare `git push --force`, or `--no-verify`.
 - Do NOT rewrite into a style the repo's own validator rejects.
 - Do NOT let a chosen style carry an attribution trailer, a subject emoji, or

@@ -151,6 +151,7 @@ describe('block_config_weakening — class-c', () => {
 
     it('classifies project settings files and nothing that merely shares a basename', () => {
         expect(classify_target('.agent-settings.yml')).toBe('class-c');
+        expect(classify_target('.git-convention.yml')).toBe('class-c');
         expect(classify_target('some/project/.claude/settings.json')).toBe('class-c');
         // A bare `settings.json` is a common filename; fencing it on the
         // basename alone would refuse files carrying no settings key at all.

@@ -162,7 +162,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 - **A team's git convention can be declared instead of measured — the new
   `git:` settings block.** Three Class-C keys, each defaulting to the
   behaviour every install had before, so an install that sets nothing is
-  unchanged. `git.commit_format: ticket-prefix` writes
+  unchanged. `git.commit_format: ticket-conventional` writes
   `DEV-1234 feat(exporter): …` instead of `feat(DEV-1234): …` and treats a
   ticket in the scope as a wrong subject; `/commit` and `/commit:in-chunks`
   validate against the regex for the configured format, and the
@@ -180,9 +180,28 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   `sync_pr_branch` exits `3` instead of merging when such a branch is behind
   (a current branch still exits `0`). **What it does not do:** the setting picks the operation and never
   authorises it; git-history-discipline still requires the user's request for
-  every rebase, fixup or autosquash. The keys are set per project — the
-  user-global whitelist is ADR-gated and does not carry them yet — and a
-  commit-linting config in the repository still outranks `git.commit_format`.
+  every rebase, fixup or autosquash. A team declares the keys in
+  `.git-convention.yml`, a tracked file at the repository root that overrides
+  every developer settings file and where either value is a declaration
+  (ADR-283): `git.update_strategy` is read from it at the commit a pull request
+  is judged against, so a worktree, a fresh clone and CI agree and a pull
+  request cannot change the strategy its own update is judged by;
+  `git.commit_format` and `git.branch_pattern` are read at `HEAD`. Without the
+  carrier the keys come from the project settings files as before; the
+  user-global file does not carry them, and the settings GUI no longer offers
+  them while it writes there. `agent-config git:convention show` prints the
+  value in force, the commit it was read at and a differing checkout value as
+  a candidate; `show --key` judges only the named keys. The commit is the
+  `--base` given — a pull request passes `--base origin/<its base>` — else the
+  default branch; nothing asks the forge. A carrier that does not parse makes
+  `sync_pr_branch` exit `4`, a target that names no commit exit `1`, and a named
+  commit that cannot be fetched is `unverified`; none of them merges. A commit-linting config
+  in the repository still outranks `git.commit_format`. In a packed consumer
+  install `git:convention show` is the git surface that resolves, and the
+  consumer matrix proves it with a `git-convention` leg; `sync_pr_branch` and
+  `check_branch_freshness`, which `/pr:merge`, `/create-pr`, `/fix:ci` and
+  `/roadmap:next` run through `./scripts-run`, still need a source checkout of
+  this package.
   The merge method is not a key: `/pr:merge` already reads it from the forge.
 
 - **A push no longer ships a branch whose tree contradicts its own commits.**

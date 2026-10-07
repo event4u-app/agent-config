@@ -225,11 +225,8 @@ git add .
 | `git merge main` | Default (`git.update_strategy: merge`) — preserves history, safer for shared branches |
 | `git rebase origin/main` | `git.update_strategy: rebase`, or when explicitly asked — rewrites history, linear log |
 
-**Never rebase without explicit permission** (per `git-history-discipline`) —
-the setting picks the operation, the user's request this turn authorises it.
-Under `rebase`, conflicts surface per commit: resolve each to the correct end
-state, `git add`, `git rebase --continue`; `git rebase --abort` restores the
-pre-rebase branch. Full protocol:
+Under `rebase` conflicts surface per commit, and the protocol — permission,
+stops, recovery ref, the equivalence report afterwards — is
 [`git-workflow` › branch-update](../git-workflow/references/branch-update.md).
 
 ## Output format

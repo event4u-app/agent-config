@@ -142,14 +142,14 @@ sequence first: `check_branch_freshness` → on exit `1`, bring
 `rebase` a rebase that is asked for, never a merge, and `sync_pr_branch` refuses
 a behind branch with exit 3)
 → regenerate the derived files → verify → push (after a rebase:
-`git push --force-with-lease=<branch>:<fetched-sha>`, never a plain push). A
-rebase runs only after the pre-rewrite stop in
+`git push --force-with-lease=refs/heads/<b>:<sha> <remote> HEAD:refs/heads/<b>`,
+never a plain push). A rebase runs only through § The rebase sequence in
 [`branch-update`](../../../../skills/git-workflow/references/branch-update.md):
-the right count of `git rev-list --left-right --count HEAD...@{u}` must be `0`
-after the fetch (your own unpushed commits are the left side and travel with
-the rebase), and `<fetched-sha>` is `git rev-parse @{u}` read then — so a
-collaborator's push lands either before the stop and halts it, or after it and
-fails the lease, and is never overwritten.
+the ref the branch publishes is resolved from `@{push}` or the pull request's
+head repository — never `@{u}`, and an unresolved target means no rewrite — its
+SHA is pinned once after the fetch, must already be in `HEAD`, and is the lease
+unchanged — so a collaborator's push lands either before the pin and halts the
+stop, or after it and fails the lease, and is never overwritten.
 A PR that sits open while its base advances goes stale silently; keeping the
 base merged **at every touch** means it stays `mergeStateStatus: CLEAN` instead
 of accumulating conflicts for the moment the user wants to merge. If the gate
@@ -171,9 +171,11 @@ runner; the hook never merges, because a merge inside `pre-push` rewrites the
 tree at the moment you believe your work is finished.
 
 **The resolution is executable now, not just described.**
-`./scripts-run src/scripts/sync_pr_branch` resolves the base from the open PR
-(so a stacked or release-line PR is measured against what it actually merges
-into), fetches, and merges it in when the branch is behind. The base is a
+`agent-config git:convention sync --base origin/<base>`, `<base>` being the
+PR's `baseRefName` (`gh pr view --json baseRefName`), fetches and merges that
+base in when the branch is behind, so a stacked or release-line PR is measured
+against what it actually merges into. It never asks the forge itself: without
+`--base` the target is the default branch, which is right only for a PR into it. The base is a
 **set**: when the PR targets something other than the default branch, whether
 the default branch joins the set is a per-target policy read from the *target's
 own commit*, never from this branch — see `src/scripts/_lib/branch_convergence.ts`.

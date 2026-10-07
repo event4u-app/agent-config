@@ -34,10 +34,11 @@ hotfix/DEV-999/critical-payment-bug
 - Always include the Jira ticket ID when one exists
 - Use kebab-case for the description part
 - Keep branch names short but descriptive
-- The shape above is this guideline's convention; the agent creates branches
-  per `git.branch_pattern` (package default `{type}/{slug}`, a ticket-named team
-  sets `{ticket}-{slug}` → `DEV-1234-device-export`). Reading the ticket back out
-  of a branch never depends on the pattern.
+- The shape above is this guideline's convention; the agent renders branches from `git.branch_pattern` per [`commit-subject`](../../skills/git-workflow/references/commit-subject.md).
+- A team declares `git.branch_pattern`, `git.commit_format` and
+  `git.update_strategy` in `.git-convention.yml` at the repository root, committed
+  so every checkout, worktree and CI run reads the same value; there either value
+  is a declaration. `agent-config git:convention show` prints what is in force.
 
 ## Commit Messages
 
@@ -72,22 +73,13 @@ that is not better classified as `build`, `ci`, or `docs`.
 
 Use a scope when it adds clarity. Good scopes:
 
-- Jira ticket ID: `DEV-1234` — only under `git.commit_format: ticket-scope`
-  (default)
+- Jira ticket ID: placed per [`commit-subject`](../../skills/git-workflow/references/commit-subject.md) § Placing the ticket
 - Module/area: `api`, `auth`, `skills`, `rules`, `ci`, `frontend`, `linter`
 
-Under `git.commit_format: ticket-prefix` the ticket leads the subject and is
-**never** the scope:
-
-```
-DEV-1234 feat(exporter-models): add optional classification fields
-DEV-1234 docs(dataflor-exporter): document device export filters
-DEV-1235 chore(ci): reduce deployment token permissions
-```
-
-`fix(DEV-1234): …` is a wrong subject there. Tooling that parses subjects
-(commitlint, release automation, changelog generators) must be configured for
-the prefixed form, because standard parsers expect the type first.
+Under `git.commit_format: ticket-conventional` the ticket leads the subject and is
+**never** in the scope (`DEV-1234 feat(exporter-models): …`); tooling that parses
+subjects (commitlint, release automation, changelog generators) must be
+configured for that prefixed form.
 
 Do not add a scope if it adds no value. `fix(core): fix typo` → just `fix: fix typo`.
 
@@ -175,8 +167,7 @@ Before writing the commit message:
 
 ## Pull Requests
 
-- PR title as `/create-pr:description-only` § 3 builds it — `DEV-1234: short
-  description` by default, a full commit subject under `ticket-prefix`
+- PR title per [`commit-subject`](../../skills/git-workflow/references/commit-subject.md) § A title that becomes a commit
 - Bring the branch up to date per `git.update_strategy` — merge the base in
   (default) or rebase onto `origin/main` and push with `--force-with-lease`;
   see `git-workflow` › `references/branch-update.md`

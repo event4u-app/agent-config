@@ -38,8 +38,8 @@ Before entering brainstorm mode, check whether the input looks like an
 **existing ticket** rather than a fresh idea. If any of the following
 match, surface the hint below and let the user pick:
 
-- A Jira/Linear URL is present (`https://.../browse/[A-Z]+-[0-9]+`)
-- The current branch name contains a ticket key (`[A-Z]+-[0-9]+`)
+- A Jira/Linear URL is present (`https://.../browse/<ticket key>`)
+- The current branch name contains a ticket key (`agent-config git:convention ticket` prints one)
 - The pasted text contains structured AC bullets (`- [ ]`, "Acceptance Criteria", "AC:")
 
 Prompt:
@@ -56,7 +56,7 @@ continue with Step 2.
 ### 2. Gather external context
 
 **Auto-detect ticket from branch:**
-Run `git branch --show-current` and extract ticket IDs (pattern: `[A-Z]+-[0-9]+`).
+Read the ticket ID from the current branch with `agent-config git:convention ticket` ([`commit-subject`](../../../../skills/git-workflow/references/commit-subject.md) § Reading the ticket).
 
 If a ticket ID is found:
 ```

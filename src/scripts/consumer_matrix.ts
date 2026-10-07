@@ -515,6 +515,107 @@ function legProjections(ctx: Ctx): string {
     return 'cursor + windsurf + claude projection trees present in global scope';
 }
 
+// ── git-convention leg ─────────────────────────────────────────────
+//
+// A consumer project has neither `scripts-run` nor `node_modules`, so the only
+// code an installed command can reach is the `agent-config` binary. `/pr:merge`
+// reads the update strategy through `git:convention show`; this leg runs that
+// verb from the packed install in a repository that commits a
+// `.git-convention.yml` and pushes it to an `origin`, so the strategy resolves
+// at a real target commit.
+
+const GIT_CONVENTION_CARRIER = 'git:\n  commit_format: ticket-conventional\n  update_strategy: rebase\n';
+
+/** The verdict on `git:convention show --json`; throws with the reason on any miss. */
+export function checkGitConventionShow(status: number, stdout: string, stderr = ''): string {
+    if (status !== 0) throw new Error(`git:convention show exit ${status}: ${(stdout + stderr).slice(-400)}`);
+    let parsed: { keys?: Record<string, { value?: unknown; state?: unknown; source?: unknown }> };
+    try {
+        parsed = JSON.parse(stdout) as typeof parsed;
+    } catch {
+        throw new Error(`git:convention show --json printed output that is not JSON: ${stdout.slice(0, 200)}`);
+    }
+    const expected: Record<string, string> = { commit_format: 'ticket-conventional', update_strategy: 'rebase' };
+    for (const [key, value] of Object.entries(expected)) {
+        const r = parsed.keys?.[key];
+        const fromCarrier = typeof r?.source === 'string' && r.source.includes('.git-convention.yml');
+        if (r?.value !== value || r.state !== 'valid' || !fromCarrier) {
+            throw new Error(`git.${key} did not resolve from the committed carrier: ${JSON.stringify(r ?? null)}`);
+        }
+    }
+    return 'commit_format=ticket-conventional, update_strategy=rebase, both from the committed .git-convention.yml';
+}
+
+/**
+ * The verdict on `git:convention subject` from the packed install: a valid
+ * subject resolves (exit 0), and a ticket inside a compound scope is rejected
+ * (exit 1) under the committed `ticket-conventional`.
+ */
+export function checkGitConventionSubject(
+    valid: { status: number; stdout: string; stderr?: string },
+    compound: { status: number; stdout: string; stderr?: string },
+): string {
+    if (valid.status !== 0) {
+        throw new Error(`git:convention subject rejected a valid subject, exit ${valid.status}: ${(valid.stdout + (valid.stderr ?? '')).slice(-400)}`);
+    }
+    if (compound.status !== 1 || !compound.stdout.includes('inside the scope')) {
+        throw new Error(`git:convention subject did not reject a ticket inside a compound scope, exit ${compound.status}: ${compound.stdout.slice(-400)}`);
+    }
+    return 'a valid subject resolves; a ticket inside a compound scope is rejected';
+}
+
+/**
+ * The verdict on `git:convention sync` from the packed install: the update
+ * `/pr:merge` § 2 runs. A current branch exits 0; a behind one is refused with
+ * exit 3 under the committed `rebase`, never merged.
+ */
+export function checkGitConventionSync(
+    current: { status: number; stdout: string; stderr?: string },
+    behind: { status: number; stdout: string; stderr?: string },
+): string {
+    if (current.status !== 0) {
+        throw new Error(`git:convention sync did not pass a current branch, exit ${current.status}: ${(current.stdout + (current.stderr ?? '')).slice(-400)}`);
+    }
+    if (behind.status !== 3 || !behind.stdout.includes('git.update_strategy is `rebase`')) {
+        throw new Error(`git:convention sync did not refuse a behind branch under rebase, exit ${behind.status}: ${behind.stdout.slice(-400)}`);
+    }
+    return 'sync passes a current branch and refuses a behind one with exit 3';
+}
+
+function legGitConvention(ctx: Ctx): string {
+    const env = binEnv(ctx);
+    const remote = path.join(ctx.tmpRoot, 'git-convention-origin.git');
+    const repo = path.join(ctx.tmpRoot, 'git-convention-project');
+    const git = (cwd: string, ...args: string[]): void => {
+        const r = run('git', ['-c', 'user.name=matrix', '-c', 'user.email=matrix@example.com', '-c', 'commit.gpgsign=false', ...args], {
+            cwd,
+            env,
+        });
+        if (r.status !== 0) throw new Error(`git ${args[0] ?? ''} failed: ${r.stderr.slice(-300)}`);
+    };
+    git(ctx.tmpRoot, 'init', '-q', '--bare', '-b', 'main', remote);
+    git(ctx.tmpRoot, 'init', '-q', '-b', 'main', repo);
+    fs.writeFileSync(path.join(repo, '.git-convention.yml'), GIT_CONVENTION_CARRIER);
+    git(repo, 'add', '.git-convention.yml');
+    git(repo, 'commit', '-q', '-m', 'declare the git convention');
+    git(repo, 'remote', 'add', 'origin', remote);
+    git(repo, 'push', '-q', '-u', 'origin', 'main');
+    const r = run(ctx.bin, ['git:convention', 'show', '--json', '--base', 'origin/main'], { cwd: repo, env });
+    const shown = checkGitConventionShow(r.status, r.stdout, r.stderr);
+    const subject = (line: string) => run(ctx.bin, ['git:convention', 'subject'], { cwd: repo, env, input: `${line}\n` });
+    const subjects = checkGitConventionSubject(subject('DEV-1 feat(api): add x'), subject('DEV-1 feat(api,DEV-1): add x'));
+    const sync = () => run(ctx.bin, ['git:convention', 'sync', '--base', 'origin/main'], { cwd: repo, env });
+    git(repo, 'switch', '-q', '-c', 'feature');
+    const current = sync();
+    git(repo, 'switch', '-q', 'main');
+    fs.writeFileSync(path.join(repo, 'advance.txt'), 'advance\n');
+    git(repo, 'add', 'advance.txt');
+    git(repo, 'commit', '-q', '-m', 'advance main');
+    git(repo, 'push', '-q', 'origin', 'main');
+    git(repo, 'switch', '-q', 'feature');
+    return `${shown}; ${subjects}; ${checkGitConventionSync(current, sync())}`;
+}
+
 function legUninstall(ctx: Ctx): string {
     const r = run(ctx.bin, ['uninstall', '--global', '--tools=claude-code,cursor,windsurf', '--force'], {
         cwd: ctx.projectDir,
@@ -570,6 +671,7 @@ const LEGS: Array<{ name: string; fn: (ctx: Ctx) => string | Promise<string> }> 
     { name: 'hooks', fn: legHooks },
     { name: 'hook-lifecycle', fn: legHookLifecycle },
     { name: 'projections', fn: legProjections },
+    { name: 'git-convention', fn: legGitConvention },
     { name: 'uninstall', fn: legUninstall },
     { name: 'upgrade', fn: legUpgrade },
 ];

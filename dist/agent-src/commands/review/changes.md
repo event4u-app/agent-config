@@ -358,7 +358,9 @@ Per `verbosity.routine_confirmations` (default `false`):
   quality tools hand-off
 - The new step 1 (`/prepare-for-review`) is **best-effort**: if no
   open PR exists for the current branch, it falls back to a plain
-  `git fetch && git merge origin/main`. Existing invocations that
+  `git fetch origin main` and, under the default `git.update_strategy:
+  merge`, `git merge origin/main --no-edit`; under `rebase` it merges
+  nothing and reports the branch as behind. Existing invocations that
   ran on a fully detached or pre-PR branch keep working
 
 ## Use this command when

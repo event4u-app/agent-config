@@ -57,18 +57,13 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
 
 ### 2. Determine the ticket number
 
-- Extract the ticket ID from the current branch name — the first token matching
-  `[A-Z][A-Z0-9]+-[0-9]+`, wherever it sits (`feat/DEV-1234/...`,
-  `DEV-1234-device-export`, `fix/DEV-1234-quantity` → `DEV-1234`). The match
-  never depends on `git.branch_pattern`, so a branch named before the pattern
-  was set still yields its ticket. A token whose prefix is `UTF`, `ISO`, `SHA`
-  or `RFC` (`UTF-8`, `ISO-8601`, `SHA-256`) is a standard name, not a ticket —
-  skip it and take the next match.
-- Establish the convention in force once, per the conventional-commits-writing
-  skill § Establish the house convention: a repository config (commitlint, a
-  `commit-msg` hook) first, then a declared `git.commit_format: ticket-prefix`,
-  then an approved measured convention. `git.commit_format` decides where the
-  ticket goes only where nothing above it applies.
+- Read the ticket from the current branch name:
+  `agent-config git:convention ticket --keys "<the ticket_keys line of the approved convention card>"`
+  (no card → no `--keys`). The first line is `ticket <ID>` or `ticket none`
+  (`feat/DEV-1234/...`, `fix/DEV-1234-quantity` → `DEV-1234`; `fix/CVE-2026-12345-patch` → none).
+  A candidate marked `unknown-key` → ask the user whether it is a ticket; a yes
+  adds its key to the card's `ticket_keys`. A `proposal` line → offer it for the
+  card, never write it unasked.
 - If no ticket ID is found in the branch name, ask the user:
   ```
   > No Jira ticket found in branch name. Do you want to include one?
@@ -76,12 +71,9 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
   > 1. Yes — I'll provide the ticket number
   > 2. No — skip ticket number
   ```
-- If the user provides a ticket number, place it per the convention in force
-  (above; where nothing outranks it, `git.commit_format`) in all commit messages: `ticket-scope` (default) → as the scope, `feat(DEV-1234): …`;
-  `ticket-prefix` → before the type, `DEV-1234 feat(<area>): …`, and the ticket
-  is never the scope.
-- If skipped, omit the ticket entirely — under `ticket-scope` write `chore: ...`
-  not `chore(): ...`; under `ticket-prefix` keep any area scope.
+- Place the ticket (given or read) in every message per the convention in force —
+  [`commit-subject`](../../../skills/git-workflow/references/commit-subject.md) § Placing the ticket;
+  skipped → omit it, never `chore(): …`.
 
 ### 3. Analyze the changes
 
@@ -129,13 +121,12 @@ from `.agent-settings.yml`. Both default to `false`.
 
 **Terse path** — `preview_artifacts: false` AND `routine_confirmations: false`:
 
-1. Validate every generated commit message against the regex for the
-   convention in force (step 2); a repository config's own rule replaces these:
-   - `ticket-scope` (default):
-     `^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`
-   - `ticket-prefix`:
-     `^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(?!\([A-Z][A-Z0-9]+-[0-9]+\))(\([^)]+\))?!?: .+`
-     — JavaScript/PCRE syntax; the lookahead rejects a ticket id standing in the scope.
+1. Pipe every generated subject, one per line, through
+   `agent-config git:convention subject` — it resolves the convention in force
+   and validates against it. Act on the exit code: `0` valid · `1` the output
+   lists each failure and its rule → treat as invalid. A `note:` line naming a
+   `commit-msg` hook or a commitlint config means that validator also runs at
+   commit and may be stricter; it never changes the exit.
 2. **All messages valid** → skip the preview block and the confirmation
    prompt. Print one line summarising the plan and proceed to step 6:
 
@@ -160,7 +151,7 @@ Show the proposed commits as a numbered list, including which files go into each
 Proposed commits:
 
 (Laravel-project example, `git.commit_format: ticket-scope`; under
-`ticket-prefix` the first subject reads
+`ticket-conventional` the first subject reads
 `DEV-1234 feat(working-time): add absence type filter to working time report`)
 1. feat(DEV-1234): add absence type filter to working time report
    → app/Services/WorkingTimeService.php

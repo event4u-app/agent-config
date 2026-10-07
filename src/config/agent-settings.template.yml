@@ -421,18 +421,20 @@ project:
 # Representation and workflow only. None of these keys authorises a commit,
 # a push or a history rewrite — commit-policy, scope-control and
 # git-history-discipline decide that, unchanged. A commit-linting config in the
-# repository (commitlint, a commit-msg hook) outranks git.commit_format.
+# repository (commitlint, a commit-msg hook) also runs at commit and may reject
+# what git.commit_format accepts; `git:convention subject` names it, never runs it.
 git:
   # Where a ticket id goes in a commit subject.
-  #   ticket-scope  -> `feat(DEV-1234): add export filter` (default — the
-  #                    behaviour before this key existed)
-  #   ticket-prefix -> `DEV-1234 feat(exporter): add export filter` — the
-  #                    ticket leads, the scope names the system area, and a
-  #                    ticket is never a scope
+  #   ticket-scope        -> `feat(DEV-1234): add export filter` (default —
+  #                          the behaviour before this key existed)
+  #   ticket-conventional -> `DEV-1234 feat(exporter): add export filter` —
+  #                          the ticket leads, the scope names the system
+  #                          area, and a ticket is never a scope
   commit_format: ticket-scope
 
   # Shape of a branch name the agent creates. Placeholders: {type}, {ticket},
-  # {slug}. Ticket-named branches: "{ticket}-{slug}". An empty placeholder is
+  # {slug}; {slug} is required and other characters are limited to
+  # A-Z a-z 0-9 . _ / -. Ticket-named branches: "{ticket}-{slug}". An empty placeholder is
   # dropped with the separator after it (before it, when last).
   branch_pattern: "{type}/{slug}"
 

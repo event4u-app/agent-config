@@ -28,7 +28,7 @@ packs:
 Accept the same four input paths as [`/refine-ticket`](refine-ticket.md):
 
 1. **Explicit key** — `/estimate-ticket PROJ-123`
-2. **Branch detection** — no arg → `git branch --show-current` + regex `[A-Z]+-[0-9]+`
+2. **Branch detection** — no arg → `agent-config git:convention ticket` on the current branch ([`commit-subject`](../../../skills/git-workflow/references/commit-subject.md) § Reading the ticket)
 3. **Pasted text** — markdown block under the command
 4. **URL** — `/estimate-ticket https://…/browse/PROJ-123`
 

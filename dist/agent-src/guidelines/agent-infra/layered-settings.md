@@ -27,6 +27,12 @@ on user request.
 > `.agent-settings.yml` is read as a **back-compat fallback** and is migrated
 > into the canonical location by `install` on the next run.
 
+The `git.*` keys (`commit_format`, `branch_pattern`, `update_strategy`) have a
+fourth home a team uses instead: `.git-convention.yml` at the repository root,
+committed, read over every file above (ADR-283). `update_strategy` is read from
+it at the commit a pull request is judged against, the other two at `HEAD`.
+The team file carries no `git.*` key.
+
 All three are YAML. Schemas:
 
 - Developer (project-local): [`agent-settings.md`](../../templates/agent-settings.md).
@@ -44,6 +50,12 @@ Lowest priority → highest priority:
 3. .agent-project-settings.yml                        (team file, committed)
 4. agents/settings/.agent-settings.yml                (developer file, gitignored; legacy repo-root .agent-settings.yml read as fallback — ADR-038) <!-- ref-ignore -->
 ```
+
+For the `git.*` keys, `.git-convention.yml` sits above all four layers when it
+sets a key, and either value there is a declaration; a key it does not set
+falls through to this order, read at the repository root rather than per
+directory. `agent-config git:convention show` prints the value in force and a
+differing checkout value as a candidate.
 
 Keys from higher layers win unless a lower layer marks them
 `locked` (team file only). The user-global file does **not** support

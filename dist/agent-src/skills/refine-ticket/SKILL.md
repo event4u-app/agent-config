@@ -86,8 +86,8 @@ selected language.
 Reuses the `jira-ticket` command's loader. Accepts:
 
 1. **Ticket key** — `/refine-ticket PROJ-123`
-2. **Branch detection** — `/refine-ticket` with no arg; regex
-   `[A-Z]+-[0-9]+` against `git branch --show-current`
+2. **Branch detection** — `/refine-ticket` with no arg; `agent-config git:convention ticket`
+   on the current branch ([`commit-subject`](../git-workflow/references/commit-subject.md) § Reading the ticket)
 3. **Pasted text** — `/refine-ticket` followed by a markdown block
 4. **URL** — `/refine-ticket https://acme.atlassian.net/browse/PROJ-123`
 
@@ -347,7 +347,7 @@ DoR check — not automatically on every refinement.
 - The model tends to invent risks that sound plausible but aren't anchored in the ticket text. Every risk in Top-5 must cite a phrase, AC bullet, or sub-skill finding — no hypotheticals.
 - Persona voices degrade into generic platitudes when the ticket is already tight. If a persona has nothing real to flag, write one sentence stating that — do not pad.
 - Sub-skills (`validate-feature-fit`, `threat-modeling`) cost tokens; orchestrate only when the trigger matrix actually matches, not defensively on every run.
-- Branch-detection matches the first `[A-Z]+-[0-9]+` in the branch name; chained keys (e.g. `feat/PROJ-1-and-PROJ-2`) pick the first and note the rest.
+- Branch-detection takes the first `ticket` that `git:convention ticket` prints; chained keys (e.g. `feat/PROJ-1-and-PROJ-2`) pick the first and note the rest.
 
 ## Do NOT
 

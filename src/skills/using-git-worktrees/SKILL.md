@@ -136,7 +136,7 @@ passes. For the global location, skip — path is outside the repo.
 ### 4. Create the worktree
 
 ```bash
-git worktree add .worktrees/<branch-name> -b <branch-name>
+git worktree add ".worktrees/<branch-name>" -b "<branch-name>"
 ```
 
 **Then address the worktree by flag, not by `cd`.** Every tool that matters

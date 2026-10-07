@@ -283,6 +283,29 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   settings:get               Read one setting: its value, the file it came from, its
                              class, and whether "absent" differs from the default.
                              Usage: settings:get <key> [--json]
+  git:convention             The git convention (git.commit_format, git.branch_pattern,
+                             git.update_strategy): value in force, source and state
+                             (valid|absent|malformed|invalid|discarded|unresolvable),
+                             read from a committed .git-convention.yml over the
+                             settings files; this checkout's differing value is shown
+                             as a candidate, and any repository commit-message
+                             validator that also runs at commit. Exit 1 when a key in
+                             force is malformed, invalid, discarded or unresolvable;
+                             a candidate in one of these states is a warning, exit 0.
+                             --key limits show to the named keys (repeatable).
+                             update_strategy is read at --base, else the default
+                             branch: a pull request passes --base origin/<its base>.
+                             subject checks subjects on stdin against the convention in
+                             force; ticket reads the ticket out of a branch name; branch
+                             renders a name from git.branch_pattern; sync brings the
+                             branch up to --base (else the default branch) per
+                             git.update_strategy (exit 1 base unresolved, 3 behind
+                             under rebase, 4 strategy unreadable).
+                             Usage: git:convention show [--json] [--base REF] [--key K]
+                                    git:convention subject [--format F|--family F]
+                                    git:convention ticket [BRANCH] [--keys K]
+                                    git:convention branch --slug S [--type T] [--ticket K]
+                                    git:convention sync [--base REF] [--dry-run]
   settings:set               Set one setting in the global file. Refuses every class-C
                              (guarded) key from docs/contracts/settings-classes.md, and
                              refuses everything when that contract is unreadable.
@@ -794,6 +817,10 @@ cmd_packs_active() {
 
 cmd_settings_get() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_settings_get.ts" "$@"
+}
+
+cmd_git_convention() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_git_convention.ts" "$@"
 }
 
 cmd_mcp_available() {
@@ -1561,6 +1588,7 @@ main() {
     session:recycle)         cmd_session_recycle "$@" ;;
     packs:active)            cmd_packs_active "$@" ;;
     settings:get)            cmd_settings_get "$@" ;;
+    git:convention)          cmd_git_convention "$@" ;;
     mcp:available)           cmd_mcp_available "$@" ;;
     brand:status)            cmd_brand_status "$@" ;;
     roadmap:context)         cmd_roadmap_context "$@" ;;

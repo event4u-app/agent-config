@@ -53,7 +53,7 @@ Pattern matching:
 - `fix/DEV-1234/description` → extract `DEV-1234`
 - `fix/PROJ-567-some-bug` → extract `PROJ-567`
 - `hotfix/DEV-999` → extract `DEV-999`
-- Regex: `[A-Z]+-[0-9]+`
+- Read it with `agent-config git:convention ticket` — [`commit-subject`](../git-workflow/references/commit-subject.md) § Reading the ticket
 
 If found, auto-fetch the ticket and confirm with the user.
 

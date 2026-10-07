@@ -94,6 +94,13 @@ leaf paths present in each layer FILE (not the merged tree) so the
 settings hub can badge which layer supplies a value — a `project`
 entry overrides a `global` one per the merge order above.
 
+`withheld` is present only in global mode, where the write root is the
+user-global layer: `{ "keys": ["git.commit_format", "git.branch_pattern",
+"git.update_strategy"], "reason": "…" }`. The settings loader discards those keys
+from a user-global file, so the route removes the `git` section from `values`
+and from `schema` instead of offering a field whose value would have no effect.
+A team declares them in `.git-convention.yml` at the repository root (ADR-283).
+
 `legacyHints` is an out-of-band sidecar carrying values that have moved
 out of `settingsSchema` but still live in a pre-v2 file on disk. Keys
 are omitted when empty, never `null`. Current hints:
@@ -144,7 +151,11 @@ Errors: **412 Precondition Required** when the header is absent;
 **409 `error: "guarded-keys"`** when the write changes a class-C key and
 `confirmGuarded` is not `true` (below);
 **422 Unprocessable Entity** with per-field errors on validation
-failure; **500** with `code=ATOMIC_WRITE` if the temp-rename loop fails.
+failure — including a `git.*` value that fails the check `git:convention show`
+runs (an enum value outside the schema, a branch pattern without `{slug}` or with
+a character outside `[A-Za-z0-9._/-]`), and, in global mode, a `git.*` value
+other than the template default; **500** with `code=ATOMIC_WRITE` if the
+temp-rename loop fails.
 
 #### The guarded-key gate
 

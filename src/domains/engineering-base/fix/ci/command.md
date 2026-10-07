@@ -96,11 +96,20 @@ branch** — that is what makes the deliverable remote. Then:
 1. Commit the fix (chunked, the agent picks the split per
    [`commit-policy`](../../../rules/commit-policy.md) — never ask how).
 2. Update the branch against its PR base first:
-   `./scripts-run src/scripts/sync_pr_branch`, then regenerate any derived files
+   `agent-config git:convention sync --base origin/<base>`, `<base>` being the
+   PR's `baseRefName` (`gh pr view --json baseRefName`) — without `--base` the
+   target is the default branch, wrong for any other base — then regenerate any derived files
    the merge touched (`task sync && task generate-tools`). Under
    `git.update_strategy: rebase` the script refuses a behind branch (exit 3); rebase on the user's request
    instead ([`branch-update`](../../../../skills/git-workflow/references/branch-update.md)),
-   never merge the base in. A PR left behind its
+   never merge the base in. An exit 3 whose line reads `TARGET_POLICY_STALE`
+   is not this branch's update: the branch is current with the pull request's
+   non-default target, and that target is itself behind the default branch its
+   convergence policy requires, so a rebase cannot clear it — report it as the target's update and leave the branch. On exit 4 the strategy could not be read — a
+   settings file that does not parse, a value outside the schema, or a value
+   only a user-global file sets; the line names the reason code and the file.
+   Nothing was merged: stop, report that line, and do not push until the file
+   is fixed. A PR left behind its
    base accumulates conflicts for the moment someone wants to merge it, and a
    push against a moved base is rejected — both cost a round trip that this one
    call prevents.

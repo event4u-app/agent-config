@@ -45,6 +45,10 @@ export interface BootOptions {
     initialStep?: number;
     /** Wizard entry mode — surfaces in `/api/v1/wizard/state.wizardMode`. */
     wizardMode?: 'install' | 'setup' | null;
+    /** Storage mode; `global` (the default) means the write root is the user-global layer. */
+    mode?: 'global' | 'package-sandbox';
+    /** A project settings root read as the highest layer (the wizard's legacy-read path). */
+    legacyReadRoot?: string;
 }
 
 const PACKAGE_ROOT = resolve(process.cwd());
@@ -81,6 +85,8 @@ export async function bootTestApp(opts: BootOptions): Promise<TestApp> {
         extendedSteps: opts.extendedSteps === true,
         ...(opts.initialStep !== undefined ? { initialStep: opts.initialStep } : {}),
         ...(opts.wizardMode !== undefined ? { wizardMode: opts.wizardMode } : {}),
+        ...(opts.mode !== undefined ? { mode: opts.mode } : {}),
+        ...(opts.legacyReadRoot !== undefined ? { legacyReadRoot: opts.legacyReadRoot } : {}),
     });
     await app.ready();
 
