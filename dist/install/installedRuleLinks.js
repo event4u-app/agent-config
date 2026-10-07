@@ -105,11 +105,114 @@ const EMPTY_COUNTS = () => ({
     'file-missing': 0,
 });
 /**
+ * Every `.md` file under `dir`, as POSIX paths relative to it, sorted.
+ *
+ * Recursive because skills (`<name>/SKILL.md`), commands (`<cluster>/x.md`) and
+ * contexts nest.
+ */
+function markdownFilesUnder(dir) {
+    const out = [];
+    const walk = (rel) => {
+        for (const e of fs.readdirSync(path.join(dir, rel), { withFileTypes: true })) {
+            const child = rel === '' ? e.name : `${rel}/${e.name}`;
+            if (e.isDirectory())
+                walk(child);
+            else if (e.name.endsWith('.md'))
+                out.push(child);
+        }
+    };
+    walk('');
+    return out.sort();
+}
+/**
+ * Does this link point into a tree no install ever carries — `docs/`, which
+ * holds the ADRs?
+ *
+ * Decided from where the file sits in the PACKAGE (`dist/agent-src/<kind>/…`),
+ * not from where the install puts it: an author linking `docs/` meant the
+ * repository, whatever the host does. Two shapes count — a target landing under
+ * the top-level `docs/`, and a target naming a `docs/` segment or an ADR file
+ * that resolves to nothing in the package (an author writing `../docs/x` from
+ * a rule meant the repository's `docs/`, not a sibling that does not exist).
+ * `guidelines/docs/` is a real projected directory, which is why existence
+ * decides the second shape rather than the word alone.
+ */
+export function isNonProjectedTarget(packageRoot, packageFromDir, target) {
+    const bare = withoutAnchor(target);
+    const resolved = path.posix.normalize(path.posix.join(packageFromDir, bare));
+    if (resolved === 'docs' || resolved.startsWith('docs/'))
+        return true;
+    if (!/(^|\/)(docs\/|ADR-\d)/.test(bare))
+        return false;
+    return resolved.startsWith('..') || !fs.existsSync(path.join(packageRoot, resolved));
+}
+/**
+ * Audit every link in every file of ONE installed kind.
+ *
+ * `kindSource` is the package directory the plan copies (`dist/agent-src/skills`).
+ * A file nested at `<rel>/x.md` is installed at `<dest>/<rel>/x.md`, so its links
+ * resolve from that directory — through the same {@link auditLink} the rule
+ * audit uses, because a second resolver would be the drift this count exists to
+ * catch.
+ *
+ * Returns null when the plan does not install the kind at all: "not installed"
+ * is a different answer from "installed with zero links".
+ */
+export function auditInstalledKindLinks(plan, packageRoot, kindSource) {
+    let dest;
+    for (const [d, source] of plan)
+        if (source === kindSource)
+            dest = d;
+    if (dest === undefined)
+        return null;
+    const audits = [];
+    const nonProjected = [];
+    const dir = path.join(packageRoot, kindSource);
+    if (fs.existsSync(dir)) {
+        for (const file of markdownFilesUnder(dir)) {
+            const relDir = path.posix.dirname(file);
+            const installedDir = relDir === '.' ? dest : dest === '' ? relDir : `${dest}/${relDir}`;
+            const packageDir = relDir === '.' ? kindSource : `${kindSource}/${relDir}`;
+            const id = file.replace(/\.md$/, '');
+            const body = fs.readFileSync(path.join(dir, file), 'utf8');
+            for (const target of relativeLinkTargets(body)) {
+                const audit = auditLink(id, target, installedDir, plan, packageRoot);
+                if (isNonProjectedTarget(packageRoot, packageDir, target))
+                    nonProjected.push(audit);
+                else
+                    audits.push(audit);
+            }
+        }
+    }
+    return { ...summarise(audits), non_projected: nonProjected };
+}
+function summarise(audits) {
+    const counts = EMPTY_COUNTS();
+    for (const a of audits)
+        counts[a.verdict] += 1;
+    const grouped = new Map();
+    for (const a of audits) {
+        if (a.verdict === 'resolved')
+            continue;
+        const key = a.resolved_to === null ? a.target.replace(/[^/]*$/, '') : a.resolved_to.split('/')[0];
+        const row = grouped.get(key);
+        if (row)
+            row.count += 1;
+        else
+            grouped.set(key, { count: 1, verdict: a.verdict });
+    }
+    const by_directory = [...grouped.entries()]
+        .map(([directory, v]) => ({ directory, count: v.count, verdict: v.verdict }))
+        .sort((a, b) => b.count - a.count || a.directory.localeCompare(b.directory));
+    return { audits, counts, by_directory };
+}
+/**
  * Audit every link in every rule the plan installs.
  *
  * `packageRoot` is the package checkout the installer copies FROM; the rule
  * bodies are read from the plan's own rules source, so the audit cannot drift
- * from what is shipped.
+ * from what is shipped. Non-projected targets stay IN this reading: its
+ * recorded figures predate the per-kind split.
  */
 export function auditInstalledRuleLinks(plan, packageRoot) {
     const audits = [];
@@ -132,24 +235,7 @@ export function auditInstalledRuleLinks(plan, packageRoot) {
             }
         }
     }
-    const counts = EMPTY_COUNTS();
-    for (const a of audits)
-        counts[a.verdict] += 1;
-    const grouped = new Map();
-    for (const a of audits) {
-        if (a.verdict === 'resolved')
-            continue;
-        const key = a.resolved_to === null ? a.target.replace(/[^/]*$/, '') : a.resolved_to.split('/')[0];
-        const row = grouped.get(key);
-        if (row)
-            row.count += 1;
-        else
-            grouped.set(key, { count: 1, verdict: a.verdict });
-    }
-    const by_directory = [...grouped.entries()]
-        .map(([directory, v]) => ({ directory, count: v.count, verdict: v.verdict }))
-        .sort((a, b) => b.count - a.count || a.directory.localeCompare(b.directory));
-    return { audits, counts, by_directory };
+    return summarise(audits);
 }
 /**
  * Standing-text cost of the rewrite option, in characters.

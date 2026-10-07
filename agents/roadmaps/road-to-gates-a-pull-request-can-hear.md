@@ -70,14 +70,14 @@ checks agrees with the ruleset, and a report says so when it does not.
 
 ## Phase 1 — Control readings
 
-- [ ] **1.1 An injected HIGH, read under both argvs.** A test plants a fixture
+- [x] **1.1 An injected HIGH, read under both argvs.** A test plants a fixture
       workflow carrying a `pull_request_target` untrusted checkout in a temp
       tree and runs the gate twice: under the argv
       `.github/workflows/consistency.yml` runs it exits 0 with the HIGH in its
       output; under `--strict` it exits 1. This is the reading every later
       step argues from.
       verify: `npx vitest run tests/scripts/workflow_security_argv_control.test.ts` -> 0
-- [ ] **1.2 Pack boundaries are run by no workflow, as a recorded fact.** The
+- [x] **1.2 Pack boundaries are run by no workflow, as a recorded fact.** The
       grep result and the `task ci` chain that holds the only caller are
       written to `agents/evidence/analysis/gates-a-pr-can-hear-2026-10.md`
       with its `evidence-type` marker, beside 1.1's two exit codes.
@@ -85,7 +85,7 @@ checks agrees with the ruleset, and a report says so when it does not.
 
 ## Phase 2 — The workflow-security severity
 
-- [ ] <!-- blocked-by: workflow-security-severity --> **2.1 The step follows
+- [x] **2.1 The step follows
       the decision.** Under (a): the CI step gains `--strict`, the
       gate-coverage row's `argv` becomes `["--strict"]` and its
       `no_canary_reason` is replaced by a canary recipe. Under (b): the step
@@ -95,7 +95,7 @@ checks agrees with the ruleset, and a report says so when it does not.
 
 ## Phase 3 — Pack boundaries a pull request runs
 
-- [ ] **3.1 A pull-request step with the manifest's argv.** `consistency.yml`
+- [x] **3.1 A pull-request step with the manifest's argv.** `consistency.yml`
       gains a step running `./scripts-run src/scripts/lint_pack_boundaries`
       with the argv a new gate-coverage row declares, so a new violation above
       the 203 baseline fails the PR that adds it.
@@ -108,14 +108,14 @@ checks agrees with the ruleset, and a report says so when it does not.
 
 ## Phase 4 — Reads that do not write, and a canary that runs
 
-- [ ] **4.1 The audit writes only when asked.**
+- [x] **4.1 The audit writes only when asked.**
       `audit_user_type_axis` writes `REPORT_PATH` only under `--write`; the
       `lint-user-type-axis` task keeps reading, and a regeneration task passes
       `--write`.
       A test runs it in a temp copy and asserts `git status --porcelain
       agents/reports/` is empty afterwards.
       verify: `npx vitest run tests/scripts/audit_user_type_axis_no_write.test.ts` -> 0
-- [ ] **4.2 A scheduled caller for the canary.** A scheduled workflow runs
+- [x] **4.2 A scheduled caller for the canary.** A scheduled workflow runs
       `./scripts-run src/scripts/check_gate_coverage --canary --ledger <file>`
       from `.github/workflows/gate-canary.yml`, at least as often as
       `adversarial-review-protocol` § 6 requires, and
@@ -125,11 +125,11 @@ checks agrees with the ruleset, and a report says so when it does not.
 
 ## Phase 5 — The required checks the contract names
 
-- [ ] **5.1 The contract names both contexts.**
+- [x] **5.1 The contract names both contexts.**
       `branch-protection-policy.md` and `print_required_checks.ts:132` list
       the two contexts #2169 recorded, with the date the ruleset was read.
       verify: `grep -c 'Standing payload delta + budget gate' src/scripts/print_required_checks.ts` -> /^[1-9]/
-- [ ] **5.2 A read-only comparator.** A `report_` script reads
+- [x] **5.2 A read-only comparator.** A `report_` script reads
       `gh api repos/{owner}/{repo}/rulesets`, extracts the required status
       contexts of `main protection`, compares them to the contract's list and
       exits non-zero on a mismatch. It is run by hand or on a schedule, and is
@@ -147,15 +147,15 @@ checks agrees with the ruleset, and a report says so when it does not.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A test shows, for the argv CI runs, whether an injected HIGH
+- [x] AC-1 — A test shows, for the argv CI runs, whether an injected HIGH
       fails the job, and the CI comment states the same outcome.
-- [ ] AC-2 — A pull request that adds a pack-boundary violation above the
+- [x] AC-2 — A pull request that adds a pack-boundary violation above the
       recorded baseline gets a red check from a workflow.
-- [ ] AC-3 — Running `audit_user_type_axis` without `--write` leaves the
+- [x] AC-3 — Running `audit_user_type_axis` without `--write` leaves the
       working tree clean.
-- [ ] AC-4 — The canary path has a scheduled caller whose ledger carries a
+- [x] AC-4 — The canary path has a scheduled caller whose ledger carries a
       date.
-- [ ] AC-5 — The contract's required-check list matches the ruleset, and the
+- [x] AC-5 — The contract's required-check list matches the ruleset, and the
       comparator exits non-zero on a fixture where they differ.
 
 ## Decisions
@@ -170,13 +170,14 @@ checks agrees with the ruleset, and a report says so when it does not.
 ## Blockers
 
 ### blocker: workflow-security-severity
-- **Status:** open
+- **Status:** resolved
 - **Owner:** council
 - **Blocks:** step 2.1, AC-1
 - **What to do:** pick exactly one — (a) add `--strict` to the step in `.github/workflows/consistency.yml` and set `argv: ["--strict"]` on the `lint_workflow_security` row of `src/config/gate-coverage.yml`, or (b) keep warn-only and correct every sentence that claims the audit can fail a pull request, recording the reasoning in `agents/evidence/analysis/workflow-security-net-degraded-decision.md`.
 - **Resolved when:** a council verdict with two seats is recorded in `agents/evidence/analysis/workflow-security-net-degraded-decision.md` naming (a) or (b), as a decision-revisit of the 2026-06-13 lock.
 - **Recommendation:** (a) — the decision page records that the only reason not to was that no council seat was available, and `agent-config council:status` is the check that answers whether that still holds.
 - **If you do nothing:** the audit stays a log line; a HIGH in a workflow change merges with a green check.
+- **Resolution (2026-10-07):** option (a), AI council 2/2 (anthropic + openai, one round with peer review, $0.00 metered), recorded as a decision-revisit in `agents/evidence/analysis/workflow-security-net-degraded-decision.md` § Revisited 2026-10-07. The step runs `--strict`, the gate-coverage row's `argv` is `["--strict"]` with a canary recipe in place of `no_canary_reason`; tiers unchanged.
 
 ### blocker: pack-boundary-base-narrow-edge
 - **Status:** open

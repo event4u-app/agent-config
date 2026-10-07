@@ -272,10 +272,12 @@ always means somebody actually answered for it.
 To switch the read off entirely, before any subprocess starts:
 
 ```bash
+agent-config doctor --json --no-forge                       # or --offline
 AGENT_CONFIG_DOCTOR_NO_FORGE=1 agent-config doctor --json   # or AGENT_CONFIG_OFFLINE=1
 ```
 
-Both are read as the literal `1`, which is the same contract `agent-config
+A `--check <id>` run skips the read as well, since no check id reads the block.
+The two environment variables are read as the literal `1`, which is the same contract `agent-config
 versions` and `agent-config update` already use for `AGENT_CONFIG_OFFLINE` —
 `=0` means *not* offline everywhere in the binary.
 

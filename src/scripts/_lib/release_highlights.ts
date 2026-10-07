@@ -610,6 +610,11 @@ const TEST_FOOTER_RE = /^Tests: \d+/mu;
  */
 export interface MixObligation {
     level: string;
+    /** The resolved ends the counts were read on; the rendered level names both. */
+    from_sha?: string;
+    to_sha?: string;
+    governance_only?: number;
+    consumer_only?: number;
 }
 
 /** Labels whose curated value is still the generator's unedited draft. */

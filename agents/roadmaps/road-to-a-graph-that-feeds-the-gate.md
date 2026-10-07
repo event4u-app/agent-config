@@ -149,7 +149,7 @@ refuses.
       therefore BLOCKED rather than unfinished, on `b1-labelled-positives-unreachable`
       below: the remaining moves include amending a pre-registration after seeing
       its counts, which the party that saw them may not do.
-- [ ] **3.5 The feeder's cost on the stop slot, measured.** Added 2026-10-06 from round
+- [x] **3.5 The feeder's cost on the stop slot, measured.** Added 2026-10-06 from round
       `inbox-2026-10-e`. `src/scripts/_lib/graph_feeder_record.ts:12-22` withdrew the
       "costs nothing" claim and leaves the latency unmeasured; a stop-hook timeout
       would discard F's refusal, so the shadow arm can weaken the gate it feeds. p50
@@ -157,8 +157,38 @@ refuses.
       published beside the recall page; the number becomes a stated precondition of
       3.4 in that step's text.
       verify: `grep -c 'p95' agents/evidence/analysis/graph-feeder-latency-*.md` -> /^[1-9]/
+      STATE 2026-10-06: measured by `src/scripts/bench_graph_feeder_latency.ts` and
+      published at `agents/evidence/analysis/graph-feeder-latency-2026-Q4.md`. On a
+      generated fixture the feeder adds p50 ≈ 34 ms / p95 ≈ 47 ms (200 modules) to a
+      stop whose own work is under 1 ms at p50 (at most 2.19 ms in any round); over this repository's real 59 MB index the
+      feeder's work alone read p95 ≈ 583 ms to ≈ 1,007 ms across five readings, the
+      graph open dominating: `edited` 583 ms (rotated instrument), 1,007 ms (first
+      instrument), 966 ms (balanced instrument, the newest `edited` reading); `fresh`
+      593 ms (rotated) and 657 ms (balanced). Exit codes identical in both arms.
 - [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3 and 3.5; the ADR-277
-      reopen is an owner amendment, not a step here.
+      reopen is an owner amendment, not a step here. PRECONDITION from 3.5: the
+      promotion reports the feeder's stop-slot increment — its work alone, measured by
+      `bench_graph_feeder_latency --repo P --edit F` on the repository in question,
+      which on the fixture agrees with the with-minus-without delta to within
+      1.4 ms at p50 but differs by up to about 7 ms either way at p95, so the
+      comparison rests on its median — against the
+      published baseline (p95 583–1,007 ms over a 59 MB index, the cache load
+      dominating); a promotion that does not first cut the load term inherits half a
+      second to a second per stop on the gate's decision path. The load term is not
+      the JSON parse: `bench_graph_feeder_latency --load-split` puts read and parse at
+      about a sixth of `loadGraph` (p50 67 of 425 ms), the eagerly built lexical index
+      the feeder never reads at about half (230 ms), and a failing SQLite twin write
+      at about a sixth (70 ms). Cutting it means skipping that index on the feeder's
+      path and making the twin write succeed, not adding a cache.
+      NOTE 2026-10-07 (follow-up, out of scope for this roadmap): on this repository's
+      graph `emitSqliteTwin` (`src/scripts/code_graph/sqlite_store.ts`) fails on every
+      `loadGraph` call: the graph carries 223 duplicate node ids (46,792 nodes,
+      46,569 distinct), the twin's `nodes.id PRIMARY KEY` insert raises
+      `UNIQUE constraint failed`, and the error is swallowed, so no twin is ever
+      written and every stop re-pays the attempt. No active roadmap or blocker names
+      it (searched `agents/roadmaps/` outside `archive/` for the twin and duplicate
+      node ids). It needs its own fix in the builder or the twin writer, and a
+      promotion under this step should not proceed on the load term until it lands.
 
 ## Acceptance criteria
 

@@ -98,6 +98,14 @@ unchanged.** The figures above are the hardened build; the 1,468,237 reading is
 recorded here rather than deleted, because the 1,501-byte difference IS the
 price of the correctness property and quoting the cheaper number would hide it.
 
+> **Correction, 2026-10-07 (release finding `3e2c791209c4`).** The two
+> component deltas named above sum to 853 bytes, not 1,501: 648 bytes of the
+> total difference are not attributed to either row by this page, and the
+> per-package table was not re-read at the 1,468,237-byte build, so the split
+> cannot be reconstructed from what is recorded here. The 1,501-byte total and
+> the hardened-build table stand; the per-row attribution of the difference
+> does not.
+
 The modest rise in `(src)` is the replacement import plus the three constraints
 and their reasoning. Both rows are reported rather than rounded away because
 the headline delta is their sum, and a table whose rows do not add up is the
@@ -131,7 +139,7 @@ seat's finding is the seat that found the real one.
 
 ## What this does NOT establish
 
-Nothing about dispatch LATENCY. The bundle is 6.14 % smaller; whether that is
+Nothing about dispatch LATENCY. The bundle is 6.04 % smaller (the hardened build in the table above; 6.14 % was the pre-hardening reading); whether that is
 observable at the slot budgets in `src/config/hook-latency-budget.json` is a
 separate measurement this file did not take, and the per-concern p95 rows there
 are not re-derived here. The earlier reading recorded in that file —

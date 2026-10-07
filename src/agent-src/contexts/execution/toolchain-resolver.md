@@ -14,15 +14,9 @@ tools and run the right one — instead of a per-stack command explosion.
 > commands stay PHP-locked."
 
 **Size budget: none of its own.** The enforced ceiling is
-`check_depth_budget`'s 16,000 chars, and that is the only one.
-
-This page carried a self-imposed sub-ceiling through three values — 6,000,
-then 7,500, then 8,500 — and each was set just above whatever the file
-measured that day, so the next edit of any size broke it while the same
-sentence forbade raising it. A ceiling fitted to its own artifact is not a
-constraint, it is a tripwire; and the third one was set with a sentence
-claiming "real headroom" over 66 characters, which is the trap diagnosing
-itself and walking in anyway.
+`check_depth_budget`'s 16,000 chars (`DEPTH_CEILING_CHARS`), and that is the
+only one. Do not add a page-local ceiling: one fitted to the file's current
+size breaks on the next edit and constrains nothing.
 
 What actually bounds this page is **what belongs in it**: the resolver's
 contract — the axes, the detection order, the confidence tiers, the refusal
@@ -54,7 +48,7 @@ its package count, so the cost is proportional and not negligible.
 The **cache probe is the expensive path**, with the magnitude stated, not
 implied as a SHAPE, because the arithmetic has already been published wrong
 once: `latest_manifest_mtime` stats both fixed-name lists in every scope,
-bounded at 200 scopes, each hit paying a second stat — and without
+bounded at 200 scopes (`_MAX_BEHAVIOR_SCOPES`), each hit paying a second stat — and without
 an explicit `scopes` it also expands the globs. The guard can cost more than
 the resolution it guards, so a caller holding the scope list passes it. The
 widening is still right: a root-only key cannot see a behavior runner

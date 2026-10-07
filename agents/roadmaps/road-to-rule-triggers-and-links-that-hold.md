@@ -356,6 +356,28 @@ Reproduced on 2026-10-01:
      mechanical one-line edits of the form already executed 43 times on this
      roadmap, so the kernel PR carries review risk from its process, not from
      its diff.
+     **Correction 2026-10-06 (drain lane, write path probed rather than
+     assumed): the kernel PR is NOT agent-executable.** This line, AC-2's note
+     and the recommendation below all call it "an agent-executable change gated
+     on a 24 h soak". The soak is real but it is not the gate. The
+     `block-kernel-rule-writes` `pre_tool_use` concern
+     (`src/scripts/hooks/block_kernel_rule_writes.ts`, bound in
+     `src/scripts/hook_manifest.yaml`) refuses every agent write to a kernel
+     rule in `src/rules/` and in every projection, and both `direct-answers`
+     and `ask-when-uncertain` are kernel rules
+     (`docs/contracts/kernel-membership.md`). Its only bypasses — the override
+     exception registry, or removing the manifest entry — are human acts
+     outside a session. So the two kernel links are **human-gated**, not
+     agent-gated: a maintainer makes the two one-line edits (the target form
+     is the code span already used 43 times on this roadmap), re-anchors
+     `check_kernel_prefix_stability --update-baseline` in the same PR, and
+     lowers the remainder pin from `docs 1` / one `outside-install-root` row
+     to zero. Recorded here, not in AC-2's own text, because AC-2 is hashed by
+     the risk-register freshness gate and this is a correction to the route,
+     not to the criterion. The consequence for the roadmap: every open item is
+     now behind a human act — D8's release timing for 112 links (plus the
+     `templates` row), and a maintainer's kernel edit for 2 — so no agent run
+     can move AC-2 until one of them happens.
   3. **2 one-off targets** — **1 repaired 2026-10-03, 1 reverted and OPEN,
      and the revert is the finding worth keeping.**
      `scripts/hooks/evidence_independence.ts` is in no projection, so nothing

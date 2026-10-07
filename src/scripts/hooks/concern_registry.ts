@@ -65,6 +65,7 @@ import { main as suggestionCaptureMain } from './suggestion_capture_hook.js';
 import { main as uiRouteNudgeMain } from './ui_route_nudge_hook.js';
 import { main as orchestrationRecordMain } from './orchestration_record_hook.js';
 import { main as telemetryUsageMain } from './telemetry_usage_hook.js';
+import { main as mcpUsageObservationMain } from './mcp_usage_observation_hook.js';
 import { main as telemetryFlushMain } from './telemetry_flush_hook.js';
 import { main as delegationNudgeMain } from './delegation_nudge_hook.js';
 import { main as skillRouteMain } from './skill_route_hook.js';
@@ -132,6 +133,7 @@ export const CONCERN_REGISTRY: Readonly<Record<string, ConcernMain>> = {
     'src/scripts/hooks/ui_route_nudge_hook.ts': uiRouteNudgeMain as ConcernMain,
     'src/scripts/hooks/orchestration_record_hook.ts': orchestrationRecordMain as ConcernMain,
     'src/scripts/hooks/telemetry_usage_hook.ts': telemetryUsageMain as ConcernMain,
+    'src/scripts/hooks/mcp_usage_observation_hook.ts': mcpUsageObservationMain as ConcernMain,
     'src/scripts/hooks/telemetry_flush_hook.ts': telemetryFlushMain as ConcernMain,
     'src/scripts/hooks/delegation_nudge_hook.ts': delegationNudgeMain as ConcernMain,
     'src/scripts/hooks/skill_route_hook.ts': skillRouteMain as ConcernMain,

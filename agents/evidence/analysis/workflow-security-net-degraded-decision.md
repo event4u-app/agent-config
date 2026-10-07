@@ -83,3 +83,36 @@ push steps, three sabotage probes red then green. The part that does is
 part 2, the refusal to re-tier, and it is deliberately the conservative
 direction: it leaves a detector where a blocker might belong, rather than moving
 a locked line with nobody watching.
+
+## Revisited 2026-10-07 — the CI invocation, decided with two seats
+
+The question this page carried — "whether CI should invoke `--strict`" — went to
+the AI council on 2026-10-07 as a decision-revisit of the 2026-06-13 lock.
+**Members:** anthropic (claude-sonnet-4-5) and openai (codex-default), one round
+with peer review, quorum 2/2, $0.00 metered (subscription transport).
+**Verdict: option (a), 2 of 2** — run the step in
+`.github/workflows/consistency.yml` under `--strict`, set `argv: ["--strict"]`
+on the gate's row in `src/config/gate-coverage.yml`. The tier assignment is
+untouched: MEDIUM stays advisory, and only a HIGH changes the exit code.
+
+The reasons both seats gave: a HIGH is a trust-boundary failure rather than
+hygiene; the tree reads 0 HIGH over 35 workflow files, so enforcement costs
+nothing to turn on; the 2026-06-13 lock settled what is HIGH, not whether a HIGH
+blocks, and the 2026-08-22 entry above recorded that second question as open
+rather than answered.
+
+What the seats asked to be carried, and where it stands:
+
+- **The gate runs the PR's own copy of itself** (openai). A contributor could
+  weaken the detector or its allowlist in the same pull request. True of every
+  in-tree gate here; `--strict` is a net for honest mistakes, not a boundary
+  against a hostile author. Named, not closed.
+- **The pull request that turns `--strict` on is judged by its own head's
+  workflow**, so its CI run is the first `--strict` run; the canary recipe on the
+  row and the monthly `.github/workflows/gate-canary.yml` keep proving it fails.
+- **Revisit if** HIGH false positives block legitimate workflows, if exceptions
+  become routine, or if the allowlist grows toward its cap of 20 with entries
+  that cannot be removed. The response is to refine the rule or add a bounded,
+  reasoned allowlist entry — not to return the whole audit to warn-only.
+- A correction to the question as posed: the gate scans `*.yml` **and**
+  `*.yaml`, not `*.yml` alone.
