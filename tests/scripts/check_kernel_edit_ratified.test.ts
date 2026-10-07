@@ -41,6 +41,11 @@ function writeArtifact(name: string, fields: Record<string, string>, providers: 
     for (const p of providers) {
         lines.push(`  - ${p}`);
     }
+    // Each seat records the artifact's verdict, so the header is the one the seats derive.
+    lines.push('seats:');
+    for (const p of providers) {
+        lines.push(`  ${p}: ${fields['verdict'] ?? ''}`);
+    }
     lines.push('---', '', '<!-- evidence-type: ratification -->', '', 'Review body.', '');
     fs.writeFileSync(abs, lines.join('\n'));
     return rel;
