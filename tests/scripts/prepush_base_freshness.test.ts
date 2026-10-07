@@ -50,12 +50,12 @@ beforeAll(() => {
  * a network round trip; what is under test here is the hook's reaction to its
  * verdict, so the verdict is supplied rather than provoked.
  */
-function run(verdict: 0 | 1 | "absent", env: Record<string, string> = {}): string {
+function run(verdict: 0 | 1 | "absent", env: Record<string, string> = {}, said = ""): string {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "prepush-fresh-cwd-"));
   if (verdict !== "absent") {
     fs.writeFileSync(
       path.join(cwd, "scripts-run"),
-      `#!/bin/sh\necho "stub scripts-run $*"\nexit ${verdict}\n`,
+      `#!/bin/sh\necho "stub scripts-run $*"\n${said === "" ? "" : `echo '${said}' >&2\n`}exit ${verdict}\n`,
       { mode: 0o755 },
     );
   }
@@ -98,6 +98,12 @@ describe("pre-push — base freshness", () => {
     expect(out).toContain(FRESHNESS);
     expect(out).toContain(BLOCKED);
     expect(out).toContain("task push-ready");
+  });
+
+  it("prints the exact BASE the gate checked, in the spelling push-ready accepts", () => {
+    const out = run(1, {}, "    task push-ready BASE=release/1.x   # integrate, regenerate, verify, re-check");
+    expect(out).toContain("task push-ready DRY=1 BASE=release/1.x");
+    expect(out).not.toContain("BASE=<base>");
   });
 
   it("names the fix and never performs it — this hook refuses, it never merges", () => {

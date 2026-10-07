@@ -45,6 +45,11 @@ describe('push-ready derives the pull request base once', () => {
         expect(derive('', null)).toBe('');
     });
 
+    it('accepts BASE=origin/<name> as the same base as BASE=<name>', () => {
+        expect(derive('origin/main', null)).toBe('main');
+        expect(derive('main', null)).toBe('main');
+    });
+
     it('lets an explicit BASE win without asking the forge', () => {
         expect(derive('hotfix/2', 'release/1.x')).toBe('hotfix/2');
     });
@@ -55,8 +60,10 @@ describe('push-ready derives the pull request base once', () => {
         const fresh = cmds.filter((c) => c.includes('check_branch_freshness'));
         expect(sync.length).toBeGreaterThan(0);
         expect(fresh.length).toBeGreaterThan(0);
-        for (const c of sync) expect(c).toContain('--base origin/{{.PR_BASE}}');
-        for (const c of fresh) expect(c).toContain('--base {{.PR_BASE}}');
+        for (const c of [...sync, ...fresh]) {
+            expect(c).toContain('--base {{.PR_BASE}}');
+            expect(c).not.toContain('origin/{{.PR_BASE}}');
+        }
         expect(cmds.join('\n')).not.toContain('{{.BASE}}');
     });
 

@@ -68,6 +68,7 @@ import { fileURLToPath } from "node:url";
 import { runGateCli, runSelfTest, type SelfTestCase } from "./_lib/gate_self_test.js";
 import { workspaceIdentity } from "./_lib/git_common_dir.js";
 import { describeRefusal, isRefusal, type GitConventionReading } from "./_lib/git_convention.js";
+import { parseBaseRef } from "./_lib/git_base_ref.js";
 import { makeTargetDeps, parseExactHeadSha, readCommittedConvention } from "./_lib/git_convention_carrier.js";
 import { reportScanned } from "./_lib/scan_scope.js";
 
@@ -127,6 +128,8 @@ export type BaseSource =
 export interface BaseResolution {
   readonly base: string;
   readonly source: BaseSource;
+  /** The remote `base` is a branch on; absent means origin. */
+  readonly remote?: string;
   readonly pr?: number;
   /** Present iff an open PR against a different base could not be ruled out. */
   readonly unverified?: string;
@@ -279,8 +282,11 @@ export function resolveBase(
   forge: (b: string) => ForgeAnswer = (b) => askForgeForBase(b),
 ): BaseResolution {
   const explicit = explicitBase(argv);
-  if (explicit !== null) {
-    return { base: explicit, source: "flag" };
+  const given = explicit === null ? null : parseBaseRef(explicit, configuredRemotes());
+  if (given !== null) {
+    return given.remote === "origin"
+      ? { base: given.branch, source: "flag" }
+      : { base: given.branch, source: "flag", remote: given.remote };
   }
   // There is deliberately no cheap short-circuit for "the branch looks like the
   // default". It was tried and reverted: it decided a VERDICT from
@@ -323,8 +329,25 @@ export function describeBase(r: BaseResolution): string {
 
 /** The SHA the server reports for `<base>` right now — never a tracking ref. */
 export function remoteHead(base: string, remote = "origin"): string | null {
+  const state = remoteHeadState(base, remote);
+  return state.kind === "sha" ? state.sha : null;
+}
+
+/**
+ * `absent` is a remote that answered without the branch, which is a misspelled
+ * or deleted base; only a remote that did not answer is `unreachable`.
+ */
+export type RemoteHeadState = { kind: "sha"; sha: string } | { kind: "absent" } | { kind: "unreachable" };
+
+export function remoteHeadState(base: string, remote = "origin"): RemoteHeadState {
   const out = git(["ls-remote", remote, `refs/heads/${base}`]);
-  return out === null ? null : parseExactHeadSha(out, base);
+  if (out === null) return { kind: "unreachable" };
+  const sha = parseExactHeadSha(out, base);
+  return sha === null ? { kind: "absent" } : { kind: "sha", sha };
+}
+
+function configuredRemotes(): string[] {
+  return (git(["remote"]) ?? "").split("\n").map((r) => r.trim()).filter((r) => r !== "");
 }
 
 /**
@@ -528,7 +551,7 @@ function scanReport(scanned: number, allowEmpty?: string): void {
  * `merge`: under any other strategy, or one that cannot be read, a merge of the
  * base is the commit the declaration excludes.
  */
-export function behindRemedy(base: string, strategy: GitConventionReading | null): string[] {
+export function behindRemedy(base: string, strategy: GitConventionReading | null, remote = "origin"): string[] {
   if (strategy === null) {
     return [
       "    git.update_strategy was not read — the base's commit is not in this checkout, and",
@@ -539,7 +562,7 @@ export function behindRemedy(base: string, strategy: GitConventionReading | null
   }
   if (!isRefusal(strategy.state) && strategy.value === "merge") {
     return [
-      `    git fetch origin && git merge origin/${base}`,
+      `    git fetch ${remote} && git merge ${remote}/${base}`,
       "    ./agent-config roadmap:progress   # regenerate AFTER every merge, not only on conflict",
       "    then re-run the gates before pushing.",
       "",
@@ -598,6 +621,8 @@ export function main(
   // positionally already selects the real `gh` — no branch needed here.
   const resolved = resolveBase(argv, branch, forge);
   const base = resolved.base;
+  const remote = resolved.remote ?? "origin";
+  const shown = `${remote}/${base}`;
 
   if (branch === base) {
     scanReport(0, `standing on ${base} itself — a branch cannot be behind itself`);
@@ -610,36 +635,47 @@ export function main(
   if (resolved.unverified !== undefined) {
     process.stdout.write(
       `⚠️  check_branch_freshness: could not ask the forge for this branch's PR base ` +
-        `(${resolved.unverified}) — checking origin/${base}, the ${describeBase(resolved)}. ` +
+        `(${resolved.unverified}) — checking ${shown}, the ${describeBase(resolved)}. ` +
         "If an open PR targets a different base, THAT base is NOT verified here.\n",
     );
   }
 
-  const sha = remoteHead(base);
-  if (sha === null) {
+  const head = remoteHeadState(base, remote);
+  if (head.kind === "absent") {
+    // The remote answered, so this is not the offline case: passing it as NOT
+    // VERIFIED let a misspelled base (`origin/origin/main`) skip the check.
+    scanReport(1);
+    console.error(
+      `❌  check_branch_freshness: base \`${base}\` does not exist on ${remote} — ${describeBase(resolved)}. ` +
+        "Name a branch on the remote: `--base main` and `--base origin/main` are the same branch.",
+    );
+    return 1;
+  }
+  if (head.kind === "unreachable") {
     // Loud, not silent. An offline run has not verified the invariant, and a
     // gate that passes on an invariant it never evaluated is the false green
     // this repo keeps finding.
-    scanReport(0, `origin/${base} unreachable — reported NOT VERIFIED rather than green`);
+    scanReport(0, `${shown} unreachable — reported NOT VERIFIED rather than green`);
     process.stdout.write(
-      `check_branch_freshness: could not reach origin/${base} — NOT VERIFIED (offline?). ` +
+      `check_branch_freshness: could not reach ${shown} — NOT VERIFIED (offline?). ` +
         "Re-run before pushing.\n",
     );
     return 0;
   }
 
+  const sha = head.sha;
   scanReport(1);
   if (containsCommit(sha) === true) {
     if (!quiet) {
       process.stdout.write(
-        `✅  branch is current with origin/${base} (${sha.slice(0, 9)}) — ${describeBase(resolved)}\n`,
+        `✅  branch is current with ${shown} (${sha.slice(0, 9)}) — ${describeBase(resolved)}\n`,
       );
     }
     return 0;
   }
 
   console.error(
-    `❌  branch is BEHIND origin/${base} — the remote is at ${sha.slice(0, 9)}. ` +
+    `❌  branch is BEHIND ${shown} — the remote is at ${sha.slice(0, 9)}. ` +
       `(${describeBase(resolved)})`,
   );
   console.error("");
@@ -650,18 +686,21 @@ export function main(
   // branch, so reading the strategy there would fetch inside the push budget.
   // Read it at that commit only if it is already local, else at the cached
   // remote-tracking commit; with neither, the remedy is the generic pointer.
-  const localAt = [sha, `refs/remotes/origin/${base}`]
+  // Read by the pre-push hook to print the exact BASE it refused for.
+  console.error(`    task push-ready BASE=${remote === "origin" ? base : shown}   # integrate the base set, regenerate, verify, re-check`);
+  console.error("");
+  const localAt = [sha, `refs/remotes/${remote}/${base}`]
     .map((ref) => git(["rev-parse", "--verify", "-q", `${ref}^{commit}`]))
     .find((found): found is string => found !== null && found !== "");
   const strategy = localAt === undefined
     ? null
     : (readCommittedConvention(process.cwd(), {
-        override: `origin/${base}`,
+        override: shown,
         keys: ["update_strategy"],
         fetch: false,
         deps: { ...makeTargetDeps(process.cwd()), remoteSha: () => localAt },
       }).readings.update_strategy as GitConventionReading);
-  for (const line of behindRemedy(base, strategy)) {
+  for (const line of behindRemedy(base, strategy, remote)) {
     console.error(line);
   }
   console.error("");

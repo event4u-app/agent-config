@@ -153,14 +153,22 @@ if [ "${AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS:-}" = "1" ]; then
     echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1"
 elif [ ! -x ./scripts-run ]; then
     echo "⚠️  ./scripts-run not found — skipping the freshness check for this push."
-elif ! ./scripts-run src/scripts/check_branch_freshness --quiet; then
+else
+    fresh_rc=0
+    fresh_out=$(./scripts-run src/scripts/check_branch_freshness --quiet 2>&1) || fresh_rc=$?
+    [ -z "$fresh_out" ] || printf '%s\n' "$fresh_out"
+fi
+if [ "${fresh_rc:-0}" -ne 0 ]; then
+    # The gate prints the base in the spelling `task push-ready` accepts.
+    base=$(printf '%s\n' "$fresh_out" | sed -n 's/^ *task push-ready BASE=\([^ ]*\).*/\1/p' | head -n 1)
+    [ -n "$base" ] || base="<base>"
     echo ""
     echo "   Push blocked — the branch is behind its base, and the gates you just"
     echo "   passed were answered against a base that no longer exists."
     echo ""
-    echo "     task push-ready BASE=<base>         # <base> as named above; fetch → integrate"
-    echo "                                         # the base SET → regenerate → verify → re-check"
-    echo "     task push-ready DRY=1 BASE=<base>   # the same steps, read-only"
+    echo "     task push-ready BASE=$base         # fetch → integrate the base SET"
+    echo "                                         # → regenerate → verify → re-check"
+    echo "     task push-ready DRY=1 BASE=$base   # the same steps, read-only"
     echo ""
     echo "   This hook refuses; it never merges. Bypass a genuine WIP push with"
     echo "   AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1."
