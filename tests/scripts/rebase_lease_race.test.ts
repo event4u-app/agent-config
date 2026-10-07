@@ -61,7 +61,7 @@ function fixture(layout: Layout): Fixture {
 
     const remote = publishesToFork ? 'alice' : 'origin';
     const publishUrl = publishesToFork ? fork : origin;
-    const env: Record<string, string> = { BASE: 'main', DESCENDANTS: '' };
+    const env: Record<string, string> = { BASE: 'main', DESCENDANTS: '', DESCENDANTS_STATUS: '0' };
     switch (layout) {
         case 'upstream':
             sb.git(me, 'push', '-q', '-u', 'origin', 'feat');
@@ -325,6 +325,26 @@ describe('stops before anything is rewritten', () => {
         const r = runSequence(f.sb, f.me, env);
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('DESCENDANTS is required');
+        expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
+    });
+
+    it('stops when the descendants list could not be asked for, rather than reading it as empty', () => {
+        const f = fixture('upstream');
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const r = runSequence(f.sb, f.me, { ...f.env, DESCENDANTS: '', DESCENDANTS_STATUS: '1' });
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('could not list the pull requests built on this branch');
+        expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
+        expect(published(f)).toBe(before);
+    });
+
+    it('stops when the caller did not say whether the descendants list was asked successfully', () => {
+        const f = fixture('upstream');
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const { DESCENDANTS_STATUS: _unset, ...env } = f.env;
+        const r = runSequence(f.sb, f.me, env);
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('DESCENDANTS_STATUS is required');
         expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
     });
 

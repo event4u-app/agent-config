@@ -59,7 +59,7 @@ describe('the equivalence verdict', () => {
         r.sb.commit(r.me, 'b.txt', 'b\n', 'add b');
         r.sb.git(r.me, 'push', '-q', '-u', 'origin', 'feat');
         advanceBase(r, 'elsewhere.txt', 'x\n');
-        const out = runBlocks(r.sb, r.me, `${RESOLVE_AND_REBASE}\n${EQUIVALENCE}`, { BASE: 'main', DESCENDANTS: '' });
+        const out = runBlocks(r.sb, r.me, `${RESOLVE_AND_REBASE}\n${EQUIVALENCE}`, { BASE: 'main', DESCENDANTS: '', DESCENDANTS_STATUS: '0' });
         expect(out.stderr).not.toContain('STOP');
         expect(out.stdout).toContain('EQUIVALENCE: mechanically equivalent');
         expect(out.stdout).not.toContain('needs review');
@@ -72,7 +72,7 @@ describe('the equivalence verdict', () => {
         r.sb.git(r.me, 'push', '-q', '-u', 'origin', 'feat');
         advanceBase(r, 'shared.txt', 'base moved\n');
 
-        const first = runBlocks(r.sb, r.me, RESOLVE_AND_REBASE, { BASE: 'main', DESCENDANTS: '' });
+        const first = runBlocks(r.sb, r.me, RESOLVE_AND_REBASE, { BASE: 'main', DESCENDANTS: '', DESCENDANTS_STATUS: '0' });
         expect(first.status).not.toBe(0);
         expect(first.stderr).toContain('stopped on a conflict');
         const save = savedRef(first.stderr);
@@ -101,7 +101,7 @@ describe('the equivalence verdict', () => {
         const r = repo();
         r.sb.commit(r.me, 'a.txt', 'a\n', 'add a');
         r.sb.git(r.me, 'push', '-q', '-u', 'origin', 'feat');
-        const out = runBlocks(r.sb, r.me, `${RESOLVE_AND_REBASE}\n${EQUIVALENCE}`, { BASE: 'main', DESCENDANTS: '' });
+        const out = runBlocks(r.sb, r.me, `${RESOLVE_AND_REBASE}\n${EQUIVALENCE}`, { BASE: 'main', DESCENDANTS: '', DESCENDANTS_STATUS: '0' });
         expect(out.stdout).toContain('EQUIVALENCE: mechanically equivalent');
         expect(EQUIVALENCE).toMatch(/merge-base --is-ancestor "origin\/\$BASE" "\$SAVE"/);
         expect(EQUIVALENCE).toContain('^{tree}');
@@ -115,7 +115,7 @@ describe('a verdict over an empty comparison', () => {
         r.sb.commit(r.me, 'shared.txt', 'feature\n', 'edit shared');
         r.sb.git(r.me, 'push', '-q', '-u', 'origin', 'feat');
         advanceBase(r, 'shared.txt', 'base moved\n');
-        const first = runBlocks(r.sb, r.me, RESOLVE_AND_REBASE, { BASE: 'main', DESCENDANTS: '' });
+        const first = runBlocks(r.sb, r.me, RESOLVE_AND_REBASE, { BASE: 'main', DESCENDANTS: '', DESCENDANTS_STATUS: '0' });
         const save = savedRef(first.stderr);
         fs.writeFileSync(path.join(r.me, 'shared.txt'), 'base moved\nfeature\n');
         r.sb.git(r.me, 'add', 'shared.txt');
@@ -130,7 +130,7 @@ describe('a verdict over an empty comparison', () => {
         r.sb.git(r.me, 'commit', '-q', '--allow-empty', '-m', 'empty');
         r.sb.git(r.me, 'push', '-q', '-u', 'origin', 'feat');
         advanceBase(r, 'elsewhere.txt', 'x\n');
-        const out = runBlocks(r.sb, r.me, `${RESOLVE_AND_REBASE}\n${EQUIVALENCE}`, { BASE: 'main', DESCENDANTS: '' });
+        const out = runBlocks(r.sb, r.me, `${RESOLVE_AND_REBASE}\n${EQUIVALENCE}`, { BASE: 'main', DESCENDANTS: '', DESCENDANTS_STATUS: '0' });
         expect(out.stderr).not.toContain('STOP');
         expect(out.stdout).toContain('EQUIVALENCE: needs review');
     });
@@ -143,7 +143,7 @@ describe('the report stops before anything is published', () => {
         r.sb.git(r.me, 'push', '-q', '-u', 'origin', 'feat');
         const pushed = r.sb.git(r.me, 'rev-parse', 'HEAD');
         advanceBase(r, 'elsewhere.txt', 'x\n');
-        const out = runBlocks(r.sb, r.me, `${RESOLVE_AND_REBASE}\n${EQUIVALENCE}`, { BASE: 'main', DESCENDANTS: '' });
+        const out = runBlocks(r.sb, r.me, `${RESOLVE_AND_REBASE}\n${EQUIVALENCE}`, { BASE: 'main', DESCENDANTS: '', DESCENDANTS_STATUS: '0' });
         expect(out.status).toBe(0);
         expect(r.sb.git(r.me, 'ls-remote', 'origin', 'refs/heads/feat').split('\t')[0]).toBe(pushed);
         expect(publishHandoff(out.stdout)).toEqual({ SAVE: expect.stringMatching(/^refs\/agent-config\/rewrites\//) as unknown as string, EXPECTED: pushed });

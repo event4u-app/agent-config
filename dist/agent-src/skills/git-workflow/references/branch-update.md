@@ -99,7 +99,10 @@ branch, bare (`main`, `release/1.x`). `DESCENDANTS` is required by step 2: the
 head branches of the open pull requests whose base is this branch, space
 separated — `gh pr list --base <branch> --json headRefName --jq '.[].headRefName'`
 — and set empty only when that list is empty; the sequence cannot ask the forge
-itself, so an unset value is a stop. `PR_HEAD_REPO` and `PR_HEAD_REF` are set
+itself, so an unset value is a stop. `DESCENDANTS_STATUS` is required with it:
+the exit status of that `gh pr list`
+(`DESCENDANTS=$(gh pr list …); DESCENDANTS_STATUS=$?`), because a failed call
+also prints nothing, and anything but `0` is a stop. `PR_HEAD_REPO` and `PR_HEAD_REF` are set
 only with an open pull request (step 1). **Steps 1–3 are one script** — run
 them in order, in ONE shell session, never as separate tool calls: they share
 `REMOTE`, `RB`, `EXPECTED`, `SAVE` and the `stop` / `keep` functions the first
@@ -193,6 +196,10 @@ declare -F keep >/dev/null && [ -n "${BASE:-}" ] && [ -n "${REMOTE:-}" ] \
   || { echo "STOP: run steps 1–3 in one shell session, starting with step 1 — nothing was rewritten" >&2; exit 1; }
 [ "${DESCENDANTS+set}" = set ] \
   || stop "DESCENDANTS is required — the head branches of open pull requests whose base is this branch, empty when there are none; nothing was rewritten"
+[ "${DESCENDANTS_STATUS+set}" = set ] \
+  || stop "DESCENDANTS_STATUS is required — the exit status of the gh pr list that produced DESCENDANTS; nothing was rewritten"
+[ "$DESCENDANTS_STATUS" = 0 ] \
+  || stop "could not list the pull requests built on this branch (gh exited $DESCENDANTS_STATUS) — an unanswered question is not an empty list; nothing was rewritten"
 [ -z "$DESCENDANTS" ] \
   || stop "pull requests are built on this branch ($DESCENDANTS) — rewriting it leaves them carrying its old commits; restacking is not this procedure, nothing was rewritten"
 [ -z "$(git status --porcelain --untracked-files=no)" ] || stop "the working tree is dirty — nothing was rewritten"
