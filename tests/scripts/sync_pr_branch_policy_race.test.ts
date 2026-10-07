@@ -146,3 +146,58 @@ describe('integrateWithPinnedBase — the policy is checked before the first mer
         expect(r.out).not.toContain('nothing was merged');
     });
 });
+
+/**
+ * The remote advances after the run's fetch: the pin, the policy check and the
+ * merge must all be about the same commit, and a retry must not report success
+ * for a commit HEAD does not contain.
+ */
+describe('the merge integrates the pinned commit, not the commit fetched earlier', () => {
+    it('a remote that advances between the fetch and the pin is merged at the pinned commit', () => {
+        const f = fixture(tmp);
+        commitIn(f.work, 'c.txt', 'c\n');
+        advanceMain(f);
+        const real = makeGitDeps(f.work);
+        let asked = 0;
+        let b = '';
+        let c = '';
+        const deps: BaseDeps = {
+            ...real,
+            remoteSha: (ref) => {
+                // The first answer is the strategy read, before the fetch; the second is the pin.
+                // The remote moves to b for the pin and on to c before anything else fetches.
+                if (asked++ !== 1) return real.remoteSha(ref);
+                b = advanceMain(f, { 'd.txt': 'd\n' });
+                c = advanceMain(f, { 'e.txt': 'e\n' });
+                return b;
+            },
+        };
+        const r = run(f, deps);
+        expect(r.code, r.out).toBe(0);
+        const merges = git(f.work, 'rev-list', '--merges', '--first-parent', '--reverse', 'HEAD').trim().split('\n');
+        expect(git(f.work, 'rev-parse', `${merges[0] ?? ''}^2`).trim()).toBe(b);
+        expect(contains(f.work, c)).toBe(true);
+    });
+
+    it('a base-moved retry fetches the new commit before merging again', () => {
+        const f = fixture(tmp);
+        commitIn(f.work, 'c.txt', 'c\n');
+        advanceMain(f);
+        const real = makeGitDeps(f.work);
+        let asked = 0;
+        let b = '';
+        const deps: BaseDeps = {
+            ...real,
+            remoteSha: (ref) => {
+                // Strategy read, pin, then the after-merge check of attempt 1 sees the remote move.
+                if (asked++ === 2) b = advanceMain(f, { 'd.txt': 'd\n' });
+                return real.remoteSha(ref);
+            },
+        };
+        const r = run(f, deps);
+        expect(b).not.toBe('');
+        expect(r.code, r.out).toBe(0);
+        expect(r.out).toContain('on attempt 2');
+        expect(contains(f.work, b)).toBe(true);
+    });
+});

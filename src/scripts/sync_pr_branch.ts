@@ -553,7 +553,8 @@ export interface IntegrationOutcome {
 /** The git operations the retry loop needs, injected so a moving base is testable. */
 export interface IntegrateOps {
     readonly remoteSha: (ref: string) => string | null;
-    readonly merge: (ref: string) => { ok: boolean; conflicted: string[] };
+    /** Merges `sha`, the pinned commit of `ref`; `error` is a refusal that is not a conflict. */
+    readonly merge: (ref: string, sha: string | null) => { ok: boolean; conflicted: string[]; error?: string };
     /** Asked once, before the first merge, with the pinned OIDs; a message stops the run. */
     readonly checkPin?: (pinned: readonly { ref: string; before: string | null }[]) => string | null;
 }
@@ -585,7 +586,8 @@ export function integrateWithPinnedBase(refs: readonly string[], ops: IntegrateO
         let conflicted: string[] = [];
         let clean = true;
         for (const q of pinned) {
-            const m = ops.merge(q.ref);
+            const m = ops.merge(q.ref, q.before);
+            if (!m.ok && m.error !== undefined) return { ok: false, attempts, conflicted: [], message: m.error };
             if (!m.ok) {
                 clean = false;
                 conflicted = m.conflicted;
@@ -619,6 +621,38 @@ export function integrateWithPinnedBase(refs: readonly string[], ops: IntegrateO
             `${renderAttempts(attempts)}\n` +
             '  → a base that moves this fast is a finding about landing speed, not a transient race.',
     };
+}
+
+/**
+ * Merge exactly the commit the pin and the policy check were about.
+ *
+ * The run fetched once, before the pin, so the local tracking ref may name an
+ * older commit, or a newer one when the policy re-read fetched. It is fetched
+ * again when it differs from the pin, and the pinned SHA itself is merged when
+ * the ref still names another commit. A merge that leaves HEAD without the
+ * pinned commit is a refusal, never a success.
+ */
+function mergePinned(repo: string, ref: string, sha: string | null): { ok: boolean; conflicted: string[]; error?: string } {
+    const tracking = (): string => sh('git', ['rev-parse', '--verify', '-q', `${ref}^{commit}`], repo).out.trim();
+    let target = ref;
+    if (sha !== null && tracking() !== sha) {
+        const { remote, branch } = splitResolvedRef(ref);
+        sh('git', ['fetch', remote, `+refs/heads/${branch}:refs/remotes/${remote}/${branch}`], repo);
+        if (tracking() !== sha) {
+            if (!sh('git', ['cat-file', '-e', `${sha}^{commit}`], repo).ok) {
+                return { ok: false, conflicted: [], error: `the pinned commit ${sha.slice(0, 12)} of ${ref} could not be fetched — nothing was merged for it.` };
+            }
+            target = sha;
+        }
+    }
+    const m = sh('git', ['merge', target, '--no-edit'], repo);
+    if (!m.ok) {
+        return { ok: false, conflicted: sh('git', ['diff', '--name-only', '--diff-filter=U'], repo).out.split('\n') };
+    }
+    if (sha !== null && !sh('git', ['merge-base', '--is-ancestor', sha, 'HEAD'], repo).ok) {
+        return { ok: false, conflicted: [], error: `the merge of ${ref} left HEAD without its pinned commit ${sha.slice(0, 12)}.` };
+    }
+    return { ok: true, conflicted: [] };
 }
 
 /** The regeneration operations Phase 3 needs, injected so no real conflict is required. */
@@ -815,14 +849,7 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
         {
             remoteSha: (ref: string): string | null => live.remoteSha(ref),
             ...(opts.checkPin === undefined ? {} : { checkPin: opts.checkPin }),
-            merge: (ref: string): { ok: boolean; conflicted: string[] } => {
-                const m = sh('git', ['merge', ref, '--no-edit'], repo);
-                if (m.ok) return { ok: true, conflicted: [] };
-                return {
-                    ok: false,
-                    conflicted: sh('git', ['diff', '--name-only', '--diff-filter=U'], repo).out.split('\n'),
-                };
-            },
+            merge: (ref: string, sha: string | null) => mergePinned(repo, ref, sha),
         },
     );
 
