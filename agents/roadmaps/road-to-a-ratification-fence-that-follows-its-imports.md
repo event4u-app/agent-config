@@ -9,6 +9,9 @@ relates:
   - slug: road-to-self-modification-that-a-council-must-pass
     relation: disjoint
     note: "Edits the same gate. That file owns who ratifies and how; this file only widens the set of paths that need a record, and edits none of its steps."
+  - slug: road-to-a-kernel-that-guards-its-plumbing
+    relation: extends
+    note: "Receiver of the archived AC-3's spawn-path half, carried 'as the narrowing it is'. Step 4.1 is the measurement; step 4.2 is the archive's pointer back here."
 ---
 # Road to a ratification fence that follows its imports
 
@@ -65,7 +68,7 @@ gets a step that can close it.
 
 ## Phase 1 — The import closure, read
 
-- [ ] **1.1 Enumerate and classify.** A `report_` script walks the static
+- [x] **1.1 Enumerate and classify.** A `report_` script walks the static
       import closure of `src/scripts/hooks/dispatch_hook.ts` (relative imports
       only, transitively) and prints each module with one class: decides an
       exit code or a verdict; shapes the payload a concern sees; neither. The
@@ -76,32 +79,32 @@ gets a step that can close it.
 
 ## Phase 2 — The gate watches what decides the verdict
 
-- [ ] **2.1 A red-first polarity test.** A fixture diff that touches only
+- [x] **2.1 A red-first polarity test.** A fixture diff that touches only
       `src/scripts/hooks/concern_failure_policy.ts` and carries no record
       fails the gate; the same diff with a valid record passes; a diff that
       touches only an unrelated `hooks/` concern passes without one. The
       first case is shown red against the current regex before 2.2 lands.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_import_closure.test.ts` -> 0
-- [ ] **2.2 The set is derived, not listed.** The gate unions the existing
+- [x] **2.2 The set is derived, not listed.** The gate unions the existing
       regex with the verdict-deciding class from 1.1's closure, computed at
       run time from the import graph, plus
       `src/config/hook-bundle-budget.json`. A module newly imported by
       `dispatch_hook.ts` that returns an exit code joins the set without an
       edit to the gate.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified.test.ts` -> 0
-- [ ] **2.3 The edit to the gate is ratified.** The diff that lands 2.2 carries
+- [x] **2.3 The edit to the gate is ratified.** The diff that lands 2.2 carries
       a record under `agents/evidence/ratifications/` with `verdict: ratified`,
       named providers and the prompt, because the gate watches its own file.
       verify: `ls agents/evidence/ratifications/ | grep -c 'ratification-fence-imports'` -> /^[1-9]/
 
 ## Phase 3 — The write guard and the bundle ceiling
 
-- [ ] **3.1 The write guard states the derived set or the asymmetry.**
+- [x] **3.1 The write guard states the derived set or the asymmetry.**
       `block_plumbing_writes.ts` stays outputs-only; its header's list of
       record-carrying sources is replaced by a pointer to the gate's derived
       set, so the two descriptions cannot drift apart again.
       verify: `grep -c 'import closure' src/scripts/hooks/block_plumbing_writes.ts` -> /^[1-9]/
-- [ ] **3.2 A raised ceiling needs a new log entry.**
+- [x] **3.2 A raised ceiling needs a new log entry.**
       `check_hook_bundle_composition` reads `max_bytes` at the base ref; when
       the working value is higher, it fails unless `raise_log` gained an entry
       whose `to` equals the new value. Fixtures: raise with entry passes, raise
@@ -110,7 +113,7 @@ gets a step that can close it.
 
 ## Phase 4 — What the archive left open
 
-- [ ] **4.1 A receiver for the spawn-path measurement.** A bench measures the
+- [x] **4.1 A receiver for the spawn-path measurement.** A bench measures the
       wall time of one blocking `pre_tool_use` concern through the real
       `spawnSync` path (interpreter start included), p50 and p95, on the
       runner, and writes it to
@@ -118,11 +121,15 @@ gets a step that can close it.
       timeout of `sla_ms × 3` is then tenable is stated as a reading, not
       wired.
       verify: `grep -c 'p95' agents/evidence/analysis/concern-spawn-path-2026-10.md` -> /^[1-9]/
-- [ ] **4.2 The archive points at its receiver.** One dated line under AC-3 of
+      Done 2026-10-07: measured on a darwin laptop, not the GitHub runner;
+      the page records the machine and says the runner reads slower. Warm
+      p95 ~90-100 ms against an `sla_ms × 3` of 2.8 ms, so the reading is
+      that the timeout is not tenable on the spawn path.
+- [x] **4.2 The archive points at its receiver.** One dated line under AC-3 of
       the archived plumbing roadmap names step 4.1 of this file. No other line
       of that file changes.
       verify: `grep -c 'ratification-fence-that-follows-its-imports' agents/roadmaps/archive/road-to-a-kernel-that-guards-its-plumbing.md` -> /^[1-9]/
-- [ ] **4.3 The finding gets its disposition.** `21900086c1a0` is recorded as
+- [ ] **4.3 The finding gets its disposition.** <!-- blocked-by: finding-disposition-write-refused-for-the-agent | asked: no — a background drain lane has no owner channel; recorded for the next owner-facing turn --> `21900086c1a0` is recorded as
       `fixed` with the commit that lands 2.2.
       verify: `node -e 'const j=require("./agents/evidence/release-findings/16.3.0.json");const f=j.findings.find(x=>x.finding_id==="21900086c1a0");process.exit(f.status==="fixed"&&f.commit?0:1)'` -> 0
 
@@ -136,14 +143,42 @@ gets a step that can close it.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A diff touching only `concern_failure_policy.ts` without a record
+- [x] AC-1 — A diff touching only `concern_failure_policy.ts` without a record
       fails the gate, and the test shows it red before the fix.
-- [ ] AC-2 — The watched set is computed from the dispatcher's import graph;
+- [x] AC-2 — The watched set is computed from the dispatcher's import graph;
       a new verdict-deciding import joins it with no edit to the gate.
-- [ ] AC-3 — A raised `max_bytes` without a matching `raise_log` entry fails.
-- [ ] AC-4 — The spawn-path half of the archived AC-3 has a measurement page
+- [x] AC-3 — A raised `max_bytes` without a matching `raise_log` entry fails.
+- [x] AC-4 — The spawn-path half of the archived AC-3 has a measurement page
       and the archive names it.
-- [ ] AC-5 — Finding `21900086c1a0` carries a terminal disposition.
+- [ ] AC-5 — Finding `21900086c1a0` carries a terminal disposition. <!-- blocked-by: finding-disposition-write-refused-for-the-agent | asked: no — a background drain lane has no owner channel; recorded for the next owner-facing turn -->
+
+## Blockers
+
+### blocker: finding-disposition-write-refused-for-the-agent
+- **Status:** open — raised 2026-10-07 by the drain run that closed steps 1.1-4.2
+- **Owner:** owner
+- **Blocks:** 4.3, AC-5
+- **What to do:** write the disposition into
+  `agents/evidence/release-findings/16.3.0.json` for `21900086c1a0` —
+  `status: fixed`, `commit` naming the commit that lands 2.2 on `main`, a
+  `rationale` and `verified_by` — or authorise the agent to write it. The
+  host's permission classifier refused the agent's write of that disposition
+  in this run, and the run did not route around the refusal. Material for
+  the entry: the fence change and its follow-up fix, the ratification record
+  `agents/evidence/ratifications/drain-ratification-fence-imports-20261007.md`,
+  and the polarity tests in
+  `tests/scripts/check_kernel_edit_ratified_import_closure.test.ts`, each
+  shown red with its mechanism neutralised.
+- **Resolved when:** the finding carries `status: fixed` with a `commit`, and
+  the step 4.3 verify exits 0.
+- **Recommendation:** write it after this roadmap's PR merges, naming the
+  merge commit on `main` rather than a branch commit, so the `commit` field
+  points at an object every clone has. The residual the ratification record
+  states (a module already in the closure that gains verdict logic under a
+  neutral name) belongs in the `rationale`, not in a lower status.
+- **If you do nothing:** the finding stays without a disposition, so the
+  16.3.0 ledger keeps one undisposed medium security row although the gap it
+  describes is closed in the tree.
 
 ## Decisions
 
