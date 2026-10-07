@@ -2,10 +2,11 @@
 proposed_by: claude-opus-5/git-convention-roadmaps
 implemented_by: claude-opus-5/git-convention-roadmaps
 reviewed_by: ai-council/anthropic-claude-sonnet-4-5+openai-codex-default-2026-10-07
-providers:
-  - anthropic
-  - openai
+providers: [anthropic, openai]
 verdict: confirmed-non-expanding
+seats:
+  anthropic: confirmed-non-expanding
+  openai: confirmed-non-expanding
 effective_after: merge
 ---
 
