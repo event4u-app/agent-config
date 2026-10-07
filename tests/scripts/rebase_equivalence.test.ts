@@ -85,7 +85,8 @@ describe('the equivalence verdict', () => {
         const newEdit = r.sb.git(r.me, 'rev-parse', '--short', 'HEAD');
         const untouchedNew = r.sb.git(r.me, 'rev-parse', '--short', 'HEAD~1');
 
-        const out = runBlocks(r.sb, r.me, EQUIVALENCE, { BASE: 'main', SAVE: save });
+        // The documented resume: step 1 again in the same shell, then step 3 with SAVE set.
+        const out = runBlocks(r.sb, r.me, `${sequenceBlock('resolve')}\n${EQUIVALENCE}`, { BASE: 'main', SAVE: save });
         expect(out.stdout).toContain('EQUIVALENCE: needs review');
         expect(out.stdout).not.toContain('mechanically equivalent');
         // The same subject on both sides is never taken as a pair: both commits are named.

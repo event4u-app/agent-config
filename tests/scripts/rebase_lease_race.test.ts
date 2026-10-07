@@ -10,6 +10,7 @@
  * the target through a different path.
  */
 
+import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -163,7 +164,7 @@ describe('an unresolved publish target', () => {
         const f = fixture('upstream');
         f.sb.git(f.me, 'branch', '-u', 'origin/main');
         f.sb.git(f.me, 'config', 'push.default', 'upstream');
-        const r = runBlocks(f.sb, f.me, sequenceBlock('resolve'), { BASE: '' });
+        const r = runBlocks(f.sb, f.me, sequenceBlock('resolve'), { BASE: 'not-a-branch-name' });
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('is the base branch');
     });
@@ -221,6 +222,53 @@ describe('stops before anything is rewritten', () => {
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('working tree is dirty');
         expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
+    });
+});
+
+describe('the inputs and the one shell session', () => {
+    const rewrites = (f: Fixture): string =>
+        f.sb.git(f.me, 'for-each-ref', '--format=%(refname)', 'refs/agent-config/rewrites/');
+
+    it('stops before any rewrite when BASE is unset', () => {
+        const f = fixture('upstream');
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const { BASE: _unset, ...env } = f.env;
+        const r = runBlocks(f.sb, f.me, SEQUENCE, env);
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('STOP: BASE is required');
+        expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
+        expect(rewrites(f)).toBe('');
+        expect(published(f)).toBe(before);
+    });
+
+    it.each(['rebase', 'equivalence', 'publish'])('the %s block run in a fresh shell stops before acting', (name) => {
+        const f = fixture('upstream');
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const r = runBlocks(f.sb, f.me, sequenceBlock(name), f.env);
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('STOP: run the four blocks in one shell session');
+        expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
+        expect(rewrites(f)).toBe('');
+    });
+
+    it('the merge-commit stop fails closed when the topic range cannot be listed', () => {
+        const f = fixture('upstream');
+        const bin = path.join(f.sb.root, 'bin');
+        fs.mkdirSync(bin);
+        const real = execFileSync('bash', ['-c', 'command -v git'], { encoding: 'utf8' }).trim();
+        fs.writeFileSync(path.join(bin, 'git'), [
+            '#!/bin/sh',
+            'if [ "$1" = rev-list ] && [ "$2" = --merges ]; then echo "fatal: bad revision" >&2; exit 128; fi',
+            `exec '${real}' "$@"`,
+            '',
+        ].join('\n'));
+        fs.chmodSync(path.join(bin, 'git'), 0o755);
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const r = runBlocks(f.sb, f.me, SEQUENCE, { ...f.env, PATH: `${bin}:${process.env.PATH ?? ''}` });
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('STOP: could not list the topic range');
+        expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
+        expect(rewrites(f)).toBe('');
     });
 });
 

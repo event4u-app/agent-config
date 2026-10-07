@@ -85,6 +85,15 @@ head publish elsewhere. The sequence therefore resolves the publish target,
 and an **unresolved target means no rewrite** — never "never pushed". Only a
 resolved target with no remote ref is a branch that was never pushed.
 
+**Inputs, set before step 1.** `BASE` is required: the pull request's base
+branch, bare (`main`, `release/1.x`). `PR_HEAD_REPO` and `PR_HEAD_REF` are set
+only with an open pull request (step 1). **The four blocks are one script** —
+run them in order, in ONE shell session, never as separate tool calls: they
+share `REMOTE`, `RB`, `EXPECTED`, `SAVE` and the `stop` / `keep` functions the
+first block defines. Each later block opens by checking that it shares that
+session and stops otherwise, because an undefined `stop` would be a command
+that is not found and lets the block run on.
+
 **1. Resolve.** `@{push}` names the publish target where the push
 configuration determines one; with an open pull request, its head repository and
 `headRefName` (`gh pr view --json headRefName,headRepository,headRepositoryOwner`)
@@ -98,6 +107,9 @@ and the lease is the base's own SHA.
 
 ```bash
 # rebase-sequence: resolve
+stop() { echo "STOP: $*" >&2; exit 1; }
+keep() { stop "$* — the old head is kept at $SAVE; restore it with: git reset --keep $SAVE"; }
+: "${BASE:?STOP: BASE is required — the pull request base branch, bare; nothing was rewritten}"
 REMOTE= RB=
 B=$(git branch --show-current)
 if PUSH=$(git rev-parse --symbolic-full-name '@{push}' 2>/dev/null); then
@@ -141,10 +153,13 @@ is printed. A kept ref is removed with `git update-ref -d <ref>`.
 
 ```bash
 # rebase-sequence: rebase
-stop() { echo "STOP: $*" >&2; exit 1; }
+declare -F keep >/dev/null && [ -n "${BASE:-}" ] && [ -n "${REMOTE:-}" ] \
+  || { echo "STOP: run the four blocks in one shell session, starting with step 1 — nothing was rewritten" >&2; exit 1; }
 [ -z "$(git status --porcelain --untracked-files=no)" ] || stop "the working tree is dirty — nothing was rewritten"
-git fetch -q origin "$BASE"
-[ -z "$(git rev-list --merges "origin/$BASE..HEAD")" ] \
+git fetch -q origin "$BASE" || stop "could not fetch origin $BASE — nothing was rewritten"
+MERGES=$(git rev-list --merges "origin/$BASE..HEAD") \
+  || stop "could not list the topic range origin/$BASE..HEAD — nothing was rewritten"
+[ -z "$MERGES" ] \
   || stop "the topic range carries a merge commit, which a plain rebase drops — --rebase-merges is a separate operation the user asks for"
 EXPECTED=$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)
 if [ -n "$EXPECTED" ]; then
@@ -153,9 +168,8 @@ if [ -n "$EXPECTED" ]; then
 fi
 SAVE="refs/agent-config/rewrites/$(date -u +%Y%m%dT%H%M%SZ)-$$/before"
 git update-ref "$SAVE" HEAD
-keep() { stop "$* — the old head is kept at $SAVE; restore it with: git reset --keep $SAVE"; }
 git rebase "origin/$BASE" \
-  || keep "the rebase stopped on a conflict — resolve each commit and git rebase --continue, then run steps 3 and 4 with SAVE=$SAVE (git rebase --abort first to give up)"
+  || keep "the rebase stopped on a conflict — resolve each commit and git rebase --continue, then in one shell run step 1, set SAVE=$SAVE EXPECTED=$EXPECTED, and run steps 3 and 4 (git rebase --abort first to give up)"
 ```
 
 **3. Report equivalence from stable data.** The stable patch ids of the old
@@ -170,6 +184,8 @@ its manual says under OUTPUT STABILITY that the output is not for machines.
 
 ```bash
 # rebase-sequence: equivalence
+declare -F keep >/dev/null && [ -n "${SAVE:-}" ] && [ -n "${BASE:-}" ] \
+  || { echo "STOP: run the four blocks in one shell session, starting with step 1" >&2; exit 1; }
 pids() { git log -p --no-merges --format='commit %H' "$1" | git patch-id --stable | sort; }
 OLD_BASE=$(git merge-base "$SAVE" "origin/$BASE")
 OLD=$(pids "$OLD_BASE..$SAVE")
@@ -196,11 +212,13 @@ git range-diff "$OLD_BASE..$SAVE" "origin/$BASE..HEAD"   # for the human; never 
 
 ```bash
 # rebase-sequence: publish
+declare -F keep >/dev/null && [ -n "${SAVE:-}" ] && [ -n "${REMOTE:-}" ] && [ -n "${RB:-}" ] \
+  || { echo "STOP: run the four blocks in one shell session, starting with step 1 — nothing was pushed" >&2; exit 1; }
 git push --force-with-lease="refs/heads/$RB:$EXPECTED" "$REMOTE" "HEAD:refs/heads/$RB" \
   || keep "the lease was rejected — $REMOTE/$RB moved; refetch and report, never retry without the lease"
 [ "$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)" = "$(git rev-parse HEAD)" ] \
   || keep "$REMOTE/$RB does not match HEAD after the push"
-git update-ref -d "$SAVE"
+[ -n "$SAVE" ] && git update-ref -d "$SAVE"
 ```
 
 A rejected lease is a stop: refetch, report what moved, and hand back — never a
