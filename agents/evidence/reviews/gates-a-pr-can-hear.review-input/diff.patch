@@ -45,10 +45,10 @@ index 70c9d79752e0ed50aa9b5b8e7ed6f305b51bcd13..5c5d3c7692cfc0df840328afd362a424
          run: task check-no-external-sources
 diff --git a/.github/workflows/gate-canary.yml b/.github/workflows/gate-canary.yml
 new file mode 100644
-index 0000000000000000000000000000000000000000..3b0984cc9d69f9fac8c9937479b3bd8a93a1ad05
+index 0000000000000000000000000000000000000000..04685550cf5ab0bb2bb7ec84d119b2cc29fcea45
 --- /dev/null
 +++ b/.github/workflows/gate-canary.yml
-@@ -0,0 +1,75 @@
+@@ -0,0 +1,81 @@
 +name: Gate canary (monthly + manual)
 +
 +# Step 4.2 of road-to-gates-a-pull-request-can-hear.
@@ -96,6 +96,10 @@ index 0000000000000000000000000000000000000000..3b0984cc9d69f9fac8c9937479b3bd8a
 +      - name: Checkout
 +        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 +        with:
++          # Full history: several gates resolve `origin/main` or walk history,
++          # and a shallow clone would make them exit non-zero for a reason
++          # unrelated to the plant — which the canary would record as caught.
++          fetch-depth: 0
 +          persist-credentials: false
 +
 +      - name: Setup Node
@@ -117,7 +121,9 @@ index 0000000000000000000000000000000000000000..3b0984cc9d69f9fac8c9937479b3bd8a
 +          ./scripts-run src/scripts/check_gate_coverage --canary --ledger "${ledger}"
 +
 +      - name: Upload the canary ledger
-+        if: always()
++        # Only when the canary step got far enough to name a ledger; otherwise
++        # this step would add a second, misleading failure to the real one.
++        if: always() && steps.canary.outputs.ledger != ''
 +        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
 +        with:
 +          name: gate-canary-ledger
@@ -690,7 +696,7 @@ index 51c63688d3e06d8437ea5be675c3d44d9ff41501..3b6b7497d98b26341e7236f27499bcc7
    for (const s of without) {
      process.stdout.write(`  · ${s.id}: ${s.no_canary_reason ?? '(no reason recorded)'}\n`);
 diff --git a/src/scripts/lint_pack_boundaries.ts b/src/scripts/lint_pack_boundaries.ts
-index 8063dbdac32186a8dc4f85392b7778f2e6583fc7..af89806655cb9db668658e69f53bfac441839cbf 100644
+index 8063dbdac32186a8dc4f85392b7778f2e6583fc7..8f7552afaf8f765d678b2b0d2b72e74ca1772305 100644
 --- a/src/scripts/lint_pack_boundaries.ts
 +++ b/src/scripts/lint_pack_boundaries.ts
 @@ -48,6 +48,10 @@
@@ -722,7 +728,7 @@ index 8063dbdac32186a8dc4f85392b7778f2e6583fc7..af89806655cb9db668658e69f53bfac4
  import { parse_frontmatter } from './validate_frontmatter.js';
  
  const _HERE = path.resolve(fileURLToPath(import.meta.url));
-@@ -118,6 +124,16 @@ function _set_paths_for_test(opts: { root?: string; vocab?: string }): void {
+@@ -118,6 +124,19 @@ function _set_paths_for_test(opts: { root?: string; vocab?: string }): void {
      }
  }
  
@@ -731,7 +737,10 @@ index 8063dbdac32186a8dc4f85392b7778f2e6583fc7..af89806655cb9db668658e69f53bfac4
 +// Applied through the setter rather than at the `ROOT` declaration, so a
 +// fixture run is still recognised as overridden and never judged by the
 +// repo's violation ratchet.
-+const _ENV_ROOT = process.env['LINT_PACK_BOUNDARIES_ROOT'];
++// Honoured only inside a self-test child, so an inherited value can never
++// redirect the production gate or switch its ratchet off.
++const _ENV_ROOT =
++    process.env['GATE_SELF_TEST_CHILD'] === '1' ? process.env['LINT_PACK_BOUNDARIES_ROOT'] : undefined;
 +if (_ENV_ROOT !== undefined && _ENV_ROOT !== '') {
 +    _set_paths_for_test({ root: _realpath(path.resolve(_ENV_ROOT)) });
 +}
@@ -739,7 +748,7 @@ index 8063dbdac32186a8dc4f85392b7778f2e6583fc7..af89806655cb9db668658e69f53bfac4
  // [..](target) with an optional #fragment / ?query stripped from the target.
  const LINK_RE = /\[[^\]]*\]\(([^)#?]+)(?:[#?][^)]*)?\)/g;
  
-@@ -614,7 +630,7 @@ function parse_args(argv: readonly string[]): ParsedArgs {
+@@ -614,7 +633,7 @@ function parse_args(argv: readonly string[]): ParsedArgs {
              quiet = true;
          } else if (arg === '-h' || arg === '--help') {
              process.stdout.write(
@@ -748,7 +757,7 @@ index 8063dbdac32186a8dc4f85392b7778f2e6583fc7..af89806655cb9db668658e69f53bfac4
              );
              process.exit(0);
          } else {
-@@ -629,8 +645,126 @@ function _argparse_error(message: string): never {
+@@ -629,8 +648,129 @@ function _argparse_error(message: string): never {
      process.exit(2);
  }
  
@@ -794,6 +803,9 @@ index 8063dbdac32186a8dc4f85392b7778f2e6583fc7..af89806655cb9db668658e69f53bfac4
 +        }
 +    };
 +    const twoPacks = '- id: alpha\n  requires: []\n- id: beta\n  requires: []\n';
++    // A reject case counts only on the exit it names: a crash or a dead-scope
++    // exit on a fixture that should yield a finding reads as NOT rejected.
++    const rejectsWith = (want: number, got: number): number => (got === want ? 1 : 0);
 +
 +    return runSelfTest({
 +        gate: 'lint_pack_boundaries',
@@ -801,10 +813,10 @@ index 8063dbdac32186a8dc4f85392b7778f2e6583fc7..af89806655cb9db668658e69f53bfac4
 +        minRejectCases: 3,
 +        cases: [
 +            {
-+                name: 'an undeclared cross-pack link is rejected',
++                name: 'an undeclared cross-pack link is rejected with exit 1',
 +                expect: 'reject',
 +                run: () =>
-+                    run(
++                    rejectsWith(1, run(
 +                        plant('cross', {
 +                            'packs.yml': twoPacks,
 +                            ...Object.fromEntries([
@@ -812,23 +824,23 @@ index 8063dbdac32186a8dc4f85392b7778f2e6583fc7..af89806655cb9db668658e69f53bfac4
 +                                skill('b-one', 'beta', 'leaf'),
 +                            ]),
 +                        }),
-+                    ),
++                    )),
 +            },
 +            {
-+                name: 'a SKILL.md with no packs is a finding, never a silent pass',
++                name: 'a SKILL.md with no packs is a finding (exit 1), never a silent pass',
 +                expect: 'reject',
 +                run: () =>
-+                    run(
++                    rejectsWith(1, run(
 +                        plant('nopack', {
 +                            'packs.yml': twoPacks,
 +                            'skills/nopack/SKILL.md': '---\nname: nopack\n---\n\nno packs key\n',
 +                        }),
-+                    ),
++                    )),
 +            },
 +            {
-+                name: 'an empty corpus is a dead scope, not "no cross-pack drift"',
++                name: 'an empty corpus is a dead scope (exit 2), not "no cross-pack drift"',
 +                expect: 'reject',
-+                run: () => run(plant('empty', { 'packs.yml': twoPacks })),
++                run: () => rejectsWith(2, run(plant('empty', { 'packs.yml': twoPacks }))),
 +            },
 +            {
 +                name: 'a link declared through requires passes',
@@ -876,7 +888,7 @@ index 8063dbdac32186a8dc4f85392b7778f2e6583fc7..af89806655cb9db668658e69f53bfac4
  
      const { index: artefact_pack, unassigned, scanned } = _build_artefact_index();
  
-@@ -638,12 +772,17 @@ function main(argv?: readonly string[]): number {
+@@ -638,12 +778,17 @@ function main(argv?: readonly string[]): number {
      // clean. That was this gate's shipped state until 2026-08-02 — it walked
      // the deleted `packages/` tree and skipped green forever.
      try {
@@ -901,7 +913,7 @@ index 8063dbdac32186a8dc4f85392b7778f2e6583fc7..af89806655cb9db668658e69f53bfac4
          if (!(exc instanceof DeadScopeError)) {
              throw exc;
 diff --git a/src/scripts/lint_workflow_security.ts b/src/scripts/lint_workflow_security.ts
-index f9e5f09f467798b141b0b49f322cb5f6f3ef8605..c5aba88f8ff9769ccd792c15e1b24741c90422d6 100644
+index f9e5f09f467798b141b0b49f322cb5f6f3ef8605..1bac47fe694846a00052d86a7f922baa837c7482 100644
 --- a/src/scripts/lint_workflow_security.ts
 +++ b/src/scripts/lint_workflow_security.ts
 @@ -28,6 +28,9 @@
@@ -925,6 +937,19 @@ index f9e5f09f467798b141b0b49f322cb5f6f3ef8605..c5aba88f8ff9769ccd792c15e1b24741
              );
          } else {
              process.stdout.write('  no non-allowlisted findings\n');
+@@ -813,6 +818,12 @@ export function main(argv?: string[]): number {
+     }
+ 
+     if (args.strict && high.length) {
++        if (args.quiet) {
++            // --quiet suppresses the report; a failing run still names its cause.
++            process.stderr.write(
++                `workflow-security: ${high.length} HIGH under --strict — rerun without --quiet for the findings\n`,
++            );
++        }
+         return 1;
+     }
+     return 0;
 diff --git a/src/scripts/print_required_checks.ts b/src/scripts/print_required_checks.ts
 index 50265d750ad3c3e5166ab2d1fef23c69effd2f00..71dabae3985a330c6b17afb310784125423a8450 100644
 --- a/src/scripts/print_required_checks.ts
@@ -998,10 +1023,10 @@ index 50265d750ad3c3e5166ab2d1fef23c69effd2f00..71dabae3985a330c6b17afb310784125
      is_docs_only,
 diff --git a/src/scripts/report_required_checks_drift.ts b/src/scripts/report_required_checks_drift.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..641988fa2ac1a2ff23a784fe0551c35eee39e91c
+index 0000000000000000000000000000000000000000..7270d1f32a19f0b25cf6203eb8b7fc69950a40ba
 --- /dev/null
 +++ b/src/scripts/report_required_checks_drift.ts
-@@ -0,0 +1,186 @@
+@@ -0,0 +1,196 @@
 +#!/usr/bin/env tsx
 +/**
 + * Required-check drift report — compares the live ruleset to the contract.
@@ -1056,18 +1081,24 @@ index 0000000000000000000000000000000000000000..641988fa2ac1a2ff23a784fe0551c35e
 +    if (!Array.isArray(rules)) {
 +        throw new ReadError('the ruleset object carries no `rules` array');
 +    }
-+    const rule = rules.find(
-+        (r): r is { parameters?: { required_status_checks?: unknown } } =>
-+            typeof r === 'object' && r !== null && (r as { type?: unknown }).type === 'required_status_checks',
-+    );
-+    const checks = rule?.parameters?.required_status_checks;
-+    if (!Array.isArray(checks)) {
++    const lists = rules
++        .filter(
++            (r): r is { parameters?: { required_status_checks?: unknown } } =>
++                typeof r === 'object' && r !== null && (r as { type?: unknown }).type === 'required_status_checks',
++        )
++        .map((r) => r.parameters?.required_status_checks)
++        .filter((c): c is unknown[] => Array.isArray(c));
++    if (lists.length === 0) {
 +        throw new ReadError('the ruleset has no `required_status_checks` rule');
 +    }
-+    return checks
-+        .map((c) => (c as { context?: unknown }).context)
-+        .filter((c): c is string => typeof c === 'string')
-+        .sort();
++    // Every such rule counts: a context required by any of them blocks the merge.
++    const contexts = new Set(
++        lists
++            .flat()
++            .map((c) => (c as { context?: unknown }).context)
++            .filter((c): c is string => typeof c === 'string'),
++    );
++    return [...contexts].sort();
 +}
 +
 +/** Set difference in both directions; empty both ways means agreement. */
@@ -1080,8 +1111,9 @@ index 0000000000000000000000000000000000000000..641988fa2ac1a2ff23a784fe0551c35e
 +    };
 +}
 +
-+function ghJson(endpoint: string): unknown {
-+    const r = spawnSync('gh', ['api', endpoint], { encoding: 'utf-8', maxBuffer: 16 * 1024 * 1024 });
++function ghJson(endpoint: string, paginate = false): unknown {
++    const args = paginate ? ['api', '--paginate', '--slurp', endpoint] : ['api', endpoint];
++    const r = spawnSync('gh', args, { encoding: 'utf-8', maxBuffer: 16 * 1024 * 1024 });
 +    if (r.status !== 0) {
 +        throw new ReadError(`gh api ${endpoint} failed: ${(r.stderr ?? '').trim() || `exit ${String(r.status)}`}`);
 +    }
@@ -1089,10 +1121,13 @@ index 0000000000000000000000000000000000000000..641988fa2ac1a2ff23a784fe0551c35e
 +}
 +
 +function readLiveRuleset(repo: string): unknown {
-+    const list = ghJson(`repos/${repo}/rulesets`);
-+    if (!Array.isArray(list)) {
-+        throw new ReadError('the rulesets listing is not an array');
++    // --paginate --slurp: one array per page, so a ruleset past the first page
++    // of 30 is still found.
++    const pages = ghJson(`repos/${repo}/rulesets`, true);
++    if (!Array.isArray(pages) || !pages.every((p) => Array.isArray(p))) {
++        throw new ReadError('the rulesets listing is not an array of pages');
 +    }
++    const list = (pages as unknown[][]).flat();
 +    const hit = list.find((r) => (r as { name?: unknown }).name === RULESET_NAME) as { id?: unknown } | undefined;
 +    if (hit === undefined || typeof hit.id !== 'number') {
 +        throw new ReadError(`no ruleset named "${RULESET_NAME}" on ${repo}`);
@@ -1372,10 +1407,10 @@ index c99e76512243bcb5d862079a628754bf0d05e2c6..a8e1a4a6c2245b035f72ca18af7ae43d
            }
 diff --git a/tests/scripts/report_required_checks_drift.test.ts b/tests/scripts/report_required_checks_drift.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..3724dc4f8ca1d85b9dbd662e2504af89b23cb159
+index 0000000000000000000000000000000000000000..83a601ac5b6f65b68b3fd23cbb6ed9792fe1d90b
 --- /dev/null
 +++ b/tests/scripts/report_required_checks_drift.test.ts
-@@ -0,0 +1,84 @@
+@@ -0,0 +1,97 @@
 +// The required-check comparator, driven offline through `--from-json` so the
 +// comparison itself is tested without a network read or a token.
 +import { spawnSync } from 'node:child_process';
@@ -1445,6 +1480,19 @@ index 0000000000000000000000000000000000000000..3724dc4f8ca1d85b9dbd662e2504af89
 +    it('exits 2 when the ruleset has no required-status-checks rule — never "agrees"', () => {
 +        const r = run({ id: 1, name: 'main protection', rules: [{ type: 'deletion' }] });
 +        expect(r.code).toBe(2);
++    });
++
++    it('reads every required_status_checks rule, not only the first', () => {
++        const body = {
++            id: 1,
++            name: 'main protection',
++            rules: [
++                { type: 'required_status_checks', parameters: { required_status_checks: [{ context: ENFORCED_CHECKS[0] }] } },
++                { type: 'required_status_checks', parameters: { required_status_checks: [{ context: ENFORCED_CHECKS[1] }] } },
++            ],
++        };
++        const r = run(body);
++        expect(r.code, r.out).toBe(0);
 +    });
 +
 +    it('exits 2 on an unknown argument', () => {
