@@ -134,7 +134,7 @@ loop whose observer ships disabled. Named once so no later round re-derives them
       neither reads `PENDING`. The remaining `PENDING` hit is the stacks lane's quoted
       grep command, not a row. The hand-over below is kept as the record of how the step
       got here.
-      verify: `grep -c 'PENDING' agents/roadmaps/later/road-to-stacks-beyond-php.md agents/roadmaps/road-to-neighbours-that-pull-their-weight.md` -> /:0$/
+      verify: `grep -c 'PENDING' agents/roadmaps/later/road-to-stacks-beyond-php.md agents/roadmaps/archive/road-to-neighbours-that-pull-their-weight.md` -> /:0$/
 
       **Hand-over, measured 2026-10-06 against `origin/main` `6b79d06de`.** Every blocker
       was run as a command rather than read as its `Status:` line. Four of the seven are
@@ -175,7 +175,7 @@ loop whose observer ships disabled. Named once so no later round re-derives them
       cannot reach `:0` whatever the owner answers.** The precise form is:
 
       ```
-      grep -c '^| D3 .*PENDING' agents/roadmaps/later/road-to-stacks-beyond-php.md; grep -c '^| D1 .*PENDING' agents/roadmaps/road-to-neighbours-that-pull-their-weight.md
+      grep -c '^| D3 .*PENDING' agents/roadmaps/later/road-to-stacks-beyond-php.md; grep -c '^| D1 .*PENDING' agents/roadmaps/archive/road-to-neighbours-that-pull-their-weight.md
       ```
 
       It is still written rather than installed, and the reason has changed from the

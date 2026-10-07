@@ -90,7 +90,7 @@ the same step is never matched, and the checker then has nothing to validate
 for that step — the file passes.
 
 Measured instance at `0ea82b2b8`:
-`agents/roadmaps/road-to-neighbours-that-pull-their-weight.md` step 2.1 carries
+`agents/roadmaps/archive/road-to-neighbours-that-pull-their-weight.md` step 2.1 carries
 `<!-- blocked-by: b6-neighbour-precedence | asked: no — ... -->` on a
 continuation line. `lint_roadmap_blockers` prints a clean verdict for the file
 while three of its steps are held by that blocker.
