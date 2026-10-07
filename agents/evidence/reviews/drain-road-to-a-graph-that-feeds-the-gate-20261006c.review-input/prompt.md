@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 5062a94313cbd8c56b0476fded1715e3d278144e, review
-  artefacts excluded), scope hash `9fc72f76422dcbdb91ebd2ddc2fb1b1c4b579b570fff4c9275d3e97a777c1a92`
+- diff: `diff.patch` — the review scope (branch head fbadafa4874540c0192ede8cd7580fa503eae6dd, review
+  artefacts excluded), scope hash `8e85888f051f08850eef9bc066b5e7a124933c2d4ba88cfc8b2eaa3111c91840`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -54,7 +54,7 @@ Fill the findings table in `drain-road-to-a-graph-that-feeds-the-gate-20261006c.
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 9fc72f76422dcbdb91ebd2ddc2fb1b1c4b579b570fff4c9275d3e97a777c1a92, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 8e85888f051f08850eef9bc066b5e7a124933c2d4ba88cfc8b2eaa3111c91840, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
