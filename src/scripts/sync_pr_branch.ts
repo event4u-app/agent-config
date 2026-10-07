@@ -32,9 +32,12 @@
  * branch, which is right only for a branch that targets it.
  *
  * Exit codes: 0 = already current, or merged cleanly, or `unverified` (the
- * target resolved but its commit could not be fetched; nothing was touched) ·
+ * target resolved but its commit could not be fetched, or a base ref's own
+ * fetch failed; nothing was touched) ·
  * 1 = conflict, git refusing the merge before it starts (a dirty tree, an
- * untracked file in the way — git's own line is printed), or the base could
+ * untracked file in the way — git's own line is printed), a merge that stopped
+ * part-way (MERGE_HEAD set, or the merge half-applied in the index — the line
+ * names `git merge --abort` or `git reset --merge`), or the base could
  * not be resolved (no `--base` and no default
  * branch, a `--base` the server does not know, no origin, or origin unreachable
  * at the ref lookup) · 2 = internal error · 3 = behind, and
@@ -49,6 +52,10 @@
  * code (`git-convention-malformed` / `-invalid` / `-discarded` /
  * `-unresolvable`) and the file.
  * `scanned:` on every path.
+ *
+ * The merge has its own timeout, 300 s, since it runs hooks and writes the work
+ * tree; `AGENT_CONFIG_SYNC_MERGE_TIMEOUT_MS` overrides it. Every other git call
+ * stays on the 8 s network bound.
  */
 
 import * as path from 'node:path';
@@ -79,6 +86,7 @@ import { reportScanned } from './_lib/scan_scope.js';
 export { parseSymrefDefault };
 
 const NETWORK_TIMEOUT_MS = 8_000;
+const MERGE_TIMEOUT_MS = 300_000;
 
 /** Paths that are GENERATED — a conflict here is regenerated, never hand-merged. */
 const GENERATED = [
@@ -201,14 +209,28 @@ const GENERATED_PATTERNS: readonly { readonly re: RegExp; readonly why: string }
  */
 const REMEASURED = ['src/config/gate-violation-baselines.json'];
 
-function sh(cmd: string, args: readonly string[], cwd: string): { ok: boolean; out: string; err: string } {
+function sh(
+    cmd: string,
+    args: readonly string[],
+    cwd: string,
+    timeout: number = NETWORK_TIMEOUT_MS,
+): { ok: boolean; out: string; err: string; killed: boolean } {
     const r = spawnSync(cmd, [...args], {
         cwd,
         encoding: 'utf-8',
-        timeout: NETWORK_TIMEOUT_MS,
+        timeout,
         maxBuffer: 32 * 1024 * 1024,
     });
-    return { ok: r.status === 0, out: r.stdout ?? '', err: (r.stderr ?? '').trim() };
+    return { ok: r.status === 0, out: r.stdout ?? '', err: (r.stderr ?? '').trim(), killed: r.signal !== null };
+}
+
+/**
+ * A merge runs hooks and writes the work tree, so the network timeout is the
+ * wrong bound for it: killed mid-flight it leaves MERGE_HEAD behind.
+ */
+function mergeTimeoutMs(): number {
+    const n = Number(process.env['AGENT_CONFIG_SYNC_MERGE_TIMEOUT_MS']);
+    return Number.isInteger(n) && n > 0 ? n : MERGE_TIMEOUT_MS;
 }
 
 /** True when `rel` is a generated artefact rather than an authored one. */
@@ -653,12 +675,37 @@ function mergePinned(repo: string, ref: string, sha: string | null): { ok: boole
             target = sha;
         }
     }
-    const m = sh('git', ['merge', '--no-edit', target], repo);
+    const m = sh('git', ['merge', '--no-edit', target], repo, mergeTimeoutMs());
     if (!m.ok) {
         // A merge git refuses before it starts (local changes it would
         // overwrite, an untracked file in the way) leaves no unmerged path.
         const conflicted = sh('git', ['diff', '--name-only', '--diff-filter=U'], repo).out.split('\n').filter((p) => p.trim() !== '');
         if (conflicted.length > 0) return { ok: false, conflicted };
+        // git only starts a merge from an index that matches HEAD, so a staged
+        // difference now came from this merge — a killed git leaves one with no
+        // MERGE_HEAD to abort.
+        const how = m.killed ? `was stopped after ${String(mergeTimeoutMs() / 1000)} s` : 'did not complete';
+        if (sh('git', ['rev-parse', '-q', '--verify', 'MERGE_HEAD'], repo).ok) {
+            return {
+                ok: false,
+                conflicted: [],
+                error:
+                    `the merge of ${ref} ${how} and left a merge in progress (MERGE_HEAD is set) — ` +
+                    'finish it with `git commit` or discard it with `git merge --abort`.',
+            };
+        }
+        if (!sh('git', ['diff', '--cached', '--quiet'], repo).ok) {
+            return {
+                ok: false,
+                conflicted: [],
+                error:
+                    `the merge of ${ref} ${how} and left it half-applied in the index (no MERGE_HEAD) — ` +
+                    'discard it with `git reset --merge`.',
+            };
+        }
+        if (m.killed) {
+            return { ok: false, conflicted: [], error: `the merge of ${ref} was stopped after ${String(mergeTimeoutMs() / 1000)} s before it changed anything — nothing was merged for it.` };
+        }
         const why = (m.err || m.out).trim().split('\n').join(' ');
         return { ok: false, conflicted: [], error: `git refused to merge ${ref}: ${why || 'no reason given'} — nothing was merged for it.` };
     }
@@ -807,9 +854,21 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
     // A single-branch clone's refspec never moves a base tracking ref fetched
     // once by hand, so the remote-wide fetch above can leave it stale and the
     // count below would read "already current". Each ref is fetched by name.
+    // A failed one is unverified like the remote-wide fetch: the ref still names
+    // whatever it named before, and counting it would read a stale "current".
     for (const ref of order) {
         const { remote, branch } = splitResolvedRef(ref);
-        sh('git', ['fetch', '-q', '--', remote, `+refs/heads/${branch}:refs/remotes/${remote}/${branch}`], repo);
+        const f = sh('git', ['fetch', '-q', '--', remote, `+refs/heads/${branch}:refs/remotes/${remote}/${branch}`], repo);
+        if (!f.ok) {
+            return {
+                exit: 0,
+                message: `unverified — could not fetch ${ref} (${f.err.split('\n')[0] ?? '?'}). Base freshness NOT checked.`,
+                generated: [],
+                remeasured: [],
+                authored: [],
+                scanned: 0,
+            };
+        }
     }
 
     // A count git could not take is not a count of 0: a ref this checkout never
