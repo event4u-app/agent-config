@@ -161,8 +161,10 @@ refuses.
       published at `agents/evidence/analysis/graph-feeder-latency-2026-Q4.md`. On a
       generated fixture the feeder adds p50 ≈ 34 ms / p95 ≈ 47 ms (200 modules) to a
       stop whose own work is under 1 ms at p50 (at most 2.19 ms in any round); over this repository's real 59 MB index the
-      feeder's work alone read p95 ≈ 583 ms and, on an earlier run, ≈ 1,007 ms, the
-      graph open dominating. Exit codes identical in both arms.
+      feeder's work alone read p95 ≈ 583 ms to ≈ 1,007 ms across five readings, the
+      graph open dominating: `edited` 583 ms (rotated instrument), 1,007 ms (first
+      instrument), 966 ms (balanced instrument, the newest `edited` reading); `fresh`
+      593 ms (rotated) and 657 ms (balanced). Exit codes identical in both arms.
 - [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3 and 3.5; the ADR-277
       reopen is an owner amendment, not a step here. PRECONDITION from 3.5: the
       promotion reports the feeder's stop-slot increment — its work alone, measured by
