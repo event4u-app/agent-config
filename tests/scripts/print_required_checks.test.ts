@@ -50,8 +50,9 @@ describe('print_required_checks — CLI contract', () => {
             "docs-only": "Branch: docs/x
           Base:   HEAD
           PR shape: feature  (0 file(s) in diff)
-          Checks this PR will face (16):
+          Checks this PR will face (17):
             ! Sync + Generate Tools Consistency
+            ! Standing payload delta + budget gate
             - Smoke — kernel
             - Smoke — router
             - Smoke — schema
@@ -68,14 +69,15 @@ describe('print_required_checks — CLI contract', () => {
             - no-python-in-src
             - lint commit subjects
 
-          ! = blocks merge (1 of 16); - = runs, visible, advisory
+          ! = blocks merge (2 of 17); - = runs, visible, advisory
           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
           ",
             "eq-joined": "Branch: feat/y
           Base:   HEAD
           PR shape: feature  (0 file(s) in diff)
-          Checks this PR will face (16):
+          Checks this PR will face (17):
             ! Sync + Generate Tools Consistency
+            ! Standing payload delta + budget gate
             - Smoke — kernel
             - Smoke — router
             - Smoke — schema
@@ -92,14 +94,15 @@ describe('print_required_checks — CLI contract', () => {
             - no-python-in-src
             - lint commit subjects
 
-          ! = blocks merge (1 of 16); - = runs, visible, advisory
+          ! = blocks merge (2 of 17); - = runs, visible, advisory
           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
           ",
             "feature": "Branch: feat/x
           Base:   HEAD
           PR shape: feature  (0 file(s) in diff)
-          Checks this PR will face (16):
+          Checks this PR will face (17):
             ! Sync + Generate Tools Consistency
+            ! Standing payload delta + budget gate
             - Smoke — kernel
             - Smoke — router
             - Smoke — schema
@@ -116,14 +119,15 @@ describe('print_required_checks — CLI contract', () => {
             - no-python-in-src
             - lint commit subjects
 
-          ! = blocks merge (1 of 16); - = runs, visible, advisory
+          ! = blocks merge (2 of 17); - = runs, visible, advisory
           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
           ",
             "release": "Branch: release/1.2.3
           Base:   HEAD
           PR shape: release  (0 file(s) in diff)
-          Checks this PR will face (11):
+          Checks this PR will face (12):
             ! Sync + Generate Tools Consistency
+            ! Standing payload delta + budget gate
             - Smoke — kernel
             - Smoke — router
             - Smoke — schema
@@ -135,7 +139,7 @@ describe('print_required_checks — CLI contract', () => {
             - npm audit (runtime deps, high+)
             - skill-lint-strict
 
-          ! = blocks merge (1 of 11); - = runs, visible, advisory
+          ! = blocks merge (2 of 12); - = runs, visible, advisory
           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
           ",
           }
