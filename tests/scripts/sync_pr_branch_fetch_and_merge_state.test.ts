@@ -121,4 +121,15 @@ describe('a merge that outlives its timeout', () => {
         expect(r.out).toContain('git merge --abort');
         expect(r.out).not.toContain('nothing was merged');
     });
+
+    it('a merge git refuses over staged work is never diagnosed as half-applied', () => {
+        const work = behindWithSlowHook(0);
+        fs.writeFileSync(path.join(work, 'f.txt'), 'staged by the user\n');
+        git(work, 'add', 'f.txt');
+        const r = run(work);
+        expect(r.code).toBe(1);
+        expect(r.out).not.toContain('git reset --merge');
+        expect(r.out).toContain('nothing was merged');
+        expect(git(work, 'diff', '--cached', '--name-only')).toBe('f.txt');
+    });
 });

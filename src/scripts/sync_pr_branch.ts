@@ -675,15 +675,16 @@ function mergePinned(repo: string, ref: string, sha: string | null): { ok: boole
             target = sha;
         }
     }
+    const indexWasClean = sh('git', ['diff', '--cached', '--quiet'], repo).ok;
     const m = sh('git', ['merge', '--no-edit', target], repo, mergeTimeoutMs());
     if (!m.ok) {
         // A merge git refuses before it starts (local changes it would
         // overwrite, an untracked file in the way) leaves no unmerged path.
         const conflicted = sh('git', ['diff', '--name-only', '--diff-filter=U'], repo).out.split('\n').filter((p) => p.trim() !== '');
         if (conflicted.length > 0) return { ok: false, conflicted };
-        // git only starts a merge from an index that matches HEAD, so a staged
-        // difference now came from this merge — a killed git leaves one with no
-        // MERGE_HEAD to abort.
+        // A staged difference that was not there before came from this merge —
+        // a killed git leaves one with no MERGE_HEAD to abort. Staged work the
+        // user had is not a half-applied merge, and resetting it would lose it.
         const how = m.killed ? `was stopped after ${String(mergeTimeoutMs() / 1000)} s` : 'did not complete';
         if (sh('git', ['rev-parse', '-q', '--verify', 'MERGE_HEAD'], repo).ok) {
             return {
@@ -694,7 +695,7 @@ function mergePinned(repo: string, ref: string, sha: string | null): { ok: boole
                     'finish it with `git commit` or discard it with `git merge --abort`.',
             };
         }
-        if (!sh('git', ['diff', '--cached', '--quiet'], repo).ok) {
+        if (indexWasClean && !sh('git', ['diff', '--cached', '--quiet'], repo).ok) {
             return {
                 ok: false,
                 conflicted: [],
