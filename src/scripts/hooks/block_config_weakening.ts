@@ -408,6 +408,14 @@ export function classCVerdict(
     const content = ti['content'];
     const oldStr = ti['old_string'];
     const newStr = ti['new_string'];
+    const forms = [content !== undefined, oldStr !== undefined || newStr !== undefined, ti['edits'] !== undefined];
+    if (forms.filter(Boolean).length > 1) {
+        return (
+            `${rel_path}: this edit carries more than one edit form (content, old_string/new_string, edits), ` +
+            'so the guard cannot tell which one the host will run and no key can be cleared. ' +
+            'Re-send it as one form, or write the change through `agent-config settings:set`.'
+        );
+    }
     let afterText: string | null = null;
     if (typeof content === 'string') {
         afterText = content;

@@ -310,6 +310,19 @@ describe('block_config_weakening — class-c, the reviewed defects', () => {
         );
     });
 
+    // The guard decides which edit form it models from the payload's fields. A
+    // payload carrying two forms at once — a decoy `content` or `old_string`
+    // beside `edits` — would be checked as one form while the host runs
+    // another, so an ambiguous payload is refused rather than guessed.
+    it('refuses a payload that carries more than one edit form', () => {
+        const before = 'hooks:\n  injection_scan:\n    enabled: false\n';
+        const edits = [{ old_string: '    enabled: false', new_string: '    enabled: true' }];
+        for (const decoy of [{ content: before }, { old_string: 'x', new_string: 'x' }]) {
+            const reason = classCVerdict({ ...decoy, edits }, before, '.agent-settings.yml', index);
+            expect(reason).toContain('more than one edit form');
+        }
+    });
+
     it('refuses an edits value that is not a list', () => {
         const reason = classCVerdict(
             { edits: { old_string: 'false', new_string: 'true' } } as never,
