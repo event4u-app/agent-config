@@ -267,6 +267,13 @@ function _git_convention_findings(target: string, text: string): Finding[] {
     for (const key of GIT_CONVENTION_KEYS) {
         const reading = readGitConventionKey(key, fileSource({ developer: [target] }), {});
         if (reading.state !== 'invalid' && reading.state !== 'malformed') continue;
+        // `malformed` is a fact about the whole file, so it is one finding, not one per key.
+        if (reading.state === 'malformed') {
+            if (!findings.some((f) => f.verdict === 'malformed')) {
+                findings.push({ line: null, kind: 'git.*', verdict: 'malformed', hint: reading.detail ?? reading.state });
+            }
+            continue;
+        }
         findings.push({
             line: _gitKeyLine(lines, key),
             kind: `git.${key}`,
@@ -409,13 +416,13 @@ export function main(argv: string[] | null = null, options: MainOptions = {}): n
         }
     }
 
-    // A file that does not parse already has its finding; a `malformed` git
-    // reading would only repeat it, once per key. An invalid value is reported
-    // whatever else the file holds, so one run names every finding.
-    const unparsed = findings.length > 0;
-    findings.push(..._git_convention_findings(target, text).filter((f) => !(unparsed && f.verdict === 'malformed')));
+    // A parser finding already reports a file that does not parse; a `malformed`
+    // git reading would only repeat it. A pre-scan finding is not a parse
+    // failure, so it hides nothing.
+    const unparsed = findings.some((f) => f.kind === 'parser');
+    const git = _git_convention_findings(target, text).filter((f) => !(unparsed && f.verdict === 'malformed'));
 
-    if (findings.length === 0) {
+    if (findings.length === 0 && git.length === 0) {
         if (!opts.quiet) {
             _print(
                 out,
@@ -425,12 +432,18 @@ export function main(argv: string[] | null = null, options: MainOptions = {}): n
         }
         return 0;
     }
-    _print(err, `❌  ${target}: ${findings.length} finding(s) outside the supported subset.`);
-    for (const finding of findings) {
-        _print(err, _format(finding));
+    if (findings.length > 0) {
+        _print(err, `❌  ${target}: ${findings.length} finding(s) outside the supported subset.`);
+        for (const finding of findings) _print(err, _format(finding));
+        _print(err, '');
+        _print(err, '    Contract: docs/contracts/settings-sync-yaml-subset.md');
     }
-    _print(err, '');
-    _print(err, '    Contract: docs/contracts/settings-sync-yaml-subset.md');
+    if (git.length > 0) {
+        _print(err, `❌  ${target}: ${git.length} git.* value(s) the convention refuses.`);
+        for (const finding of git) _print(err, _format(finding));
+        _print(err, '');
+        _print(err, '    Contract: docs/decisions/ADR-283-git-convention-carrier.md (the git section of agent-settings.schema.json)');
+    }
     return 1;
 }
 

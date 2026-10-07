@@ -224,12 +224,46 @@ describe('cmd_settings_check — the git convention keys', () => {
         expect(t.stderr).toContain('git.branch_pattern');
     });
 
+    it('a document that parses but is not a map is one git finding, never called a parse failure', () => {
+        const root = freshRoot();
+        writeFixture(root, '- a\n- b\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.status).toBe(1);
+        expect(t.stderr.match(/git\.\S+ +malformed/g) ?? []).toHaveLength(1);
+        expect(t.stderr).toContain('not a map');
+        expect(t.stderr).not.toContain('does not parse');
+    });
+
+    it('a pre-scan finding is not a parse failure and hides no git finding', () => {
+        const root = freshRoot();
+        writeFixture(root, 'git:\n\tupdate_strategy: rebase\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.stderr).toMatch(/line:2 +tab in indent/);
+        expect(t.stderr.match(/git\.\S+ +malformed/g) ?? []).toHaveLength(1);
+    });
+
+    it('points a git finding at the git contract, a subset finding at the subset contract', () => {
+        const root = freshRoot();
+        writeFixture(root, 'git:\n  update_strategy: rebsae\n');
+        const git = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(git.stderr).toContain('1 git.* value(s) the convention refuses');
+        expect(git.stderr).toContain('ADR-283');
+        expect(git.stderr).not.toContain('outside the supported subset');
+        expect(git.stderr).not.toContain('settings-sync-yaml-subset');
+        writeFixture(root, 'foo: &anchor 1\nbar: *anchor\ngit:\n  update_strategy: rebsae\n');
+        const both = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(both.stderr).toContain('2 finding(s) outside the supported subset');
+        expect(both.stderr).toContain('settings-sync-yaml-subset');
+        expect(both.stderr).toContain('1 git.* value(s) the convention refuses');
+    });
+
     it('reports a git finding beside a pre-scan finding, in one run', () => {
         const root = freshRoot();
         writeFixture(root, 'foo: &anchor 1\nbar: *anchor\ngit:\n  update_strategy: rebsae\n');
         const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
         expect(t.status).toBe(1);
-        expect(t.stderr).toContain("3 finding(s)");
+        expect(t.stderr).toContain("2 finding(s) outside the supported subset");
+        expect(t.stderr).toContain("1 git.* value(s) the convention refuses");
         expect(t.stderr).toMatch(/line:1 +anchor/);
         expect(t.stderr).toMatch(/line:4 +git\.update_strategy/);
     });

@@ -65,6 +65,8 @@ export interface GitConventionLayer {
     data: unknown;
     /** False for a layer whose `git.*` values the loader discards. */
     carries: boolean;
+    /** Why a `malformed` layer is unknown: it does not parse, or its document is not a map. */
+    why?: string;
 }
 
 export interface GitConventionSource {
@@ -74,31 +76,31 @@ export interface GitConventionSource {
 
 export type GitConventionDefaults = Partial<Record<GitConventionKey, string>>;
 
-function _parse(p: string): Pick<GitConventionLayer, 'parsed' | 'data'> {
+function _parse(p: string): Pick<GitConventionLayer, 'parsed' | 'data' | 'why'> {
     let text: string;
     try {
         if (!fs.statSync(p).isFile()) return { parsed: 'absent', data: null };
         text = fs.readFileSync(p, 'utf-8');
     } catch (err) {
         if ((err as NodeJS.ErrnoException).code === 'ENOENT') return { parsed: 'absent', data: null };
-        return { parsed: 'malformed', data: null };
+        return { parsed: 'malformed', data: null, why: 'the file cannot be read' };
     }
     return parseLayerText(text);
 }
 
 /** One layer's text, parsed the way the settings loader parses a file. */
-export function parseLayerText(text: string): Pick<GitConventionLayer, 'parsed' | 'data'> {
+export function parseLayerText(text: string): Pick<GitConventionLayer, 'parsed' | 'data' | 'why'> {
     let data: unknown;
     try {
         const YAML = _require('yaml') as typeof YamlModule;
         data = YAML.parse(text, { version: '1.1' });
     } catch {
-        return { parsed: 'malformed', data: null };
+        return { parsed: 'malformed', data: null, why: 'the file does not parse' };
     }
     if (data === null || data === undefined) return { parsed: 'valid', data: {} };
     // The loader ignores a document that is not a map, which is the same silent
     // fallback as a parse error.
-    if (typeof data !== 'object' || Array.isArray(data)) return { parsed: 'malformed', data: null };
+    if (typeof data !== 'object' || Array.isArray(data)) return { parsed: 'malformed', data: null, why: 'the document is not a map' };
     return { parsed: 'valid', data };
 }
 
@@ -220,7 +222,7 @@ export function readGitConventionKey(
     const fallback = defaults[key] ?? null;
     for (const layer of [...layers].reverse().filter((l) => l.carries)) {
         if (layer.parsed === 'malformed') {
-            return conventionReading(key, 'malformed', null, layer.path, 'the file does not parse, so the value it may set is unknown');
+            return conventionReading(key, 'malformed', null, layer.path, `${layer.why ?? 'the file cannot be read'}, so the value it may set is unknown`);
         }
         const found = _lookup(layer.data, key);
         if (!found.present) continue;
