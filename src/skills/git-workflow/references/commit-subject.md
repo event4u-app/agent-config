@@ -65,7 +65,12 @@ resolves the convention in this order — the first that applies decides:
    declares `ticket-conventional`, the two disagree: both are printed, neither
    is adopted, exit `3`.
 3. **A declaration** — `git.commit_format` in `.git-convention.yml` (either
-   value; ADR-282), or `ticket-conventional` in a developer settings file.
+   value; ADR-282), or a developer settings file value other than the template
+   default. The rule is one for both values: `settings:sync` writes the
+   template default into every project file, so a default there cannot be told
+   apart from an insert and never outranks an approved card, whichever value
+   the default is; today that makes `ticket-conventional` the only developer
+   value that counts.
 4. **An approved measurement** — the card's `dominant_family`.
 5. **The default** — Conventional Commits (`ticket-scope`).
 

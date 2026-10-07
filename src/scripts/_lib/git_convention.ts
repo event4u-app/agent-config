@@ -196,6 +196,11 @@ function _defaults(): GitConventionDefaults {
     return out;
 }
 
+/** The template default for a key, or null when the template sets none. */
+export function conventionDefault(key: GitConventionKey): string | null {
+    return _defaults()[key] ?? null;
+}
+
 export function conventionReading(
     key: GitConventionKey,
     state: GitConventionState,

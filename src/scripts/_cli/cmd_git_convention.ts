@@ -36,7 +36,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { GIT_CONVENTION_KEYS, describeRefusal, invalidReason, isRefusal, type GitConventionReading } from '../_lib/git_convention.js';
+import { GIT_CONVENTION_KEYS, conventionDefault, describeRefusal, invalidReason, isRefusal, type GitConventionReading } from '../_lib/git_convention.js';
 import { CARRIER_PATH, readCommittedConvention, type TargetDeps } from '../_lib/git_convention_carrier.js';
 import {
     FAMILY_ERE,
@@ -249,7 +249,9 @@ function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan 
     const reading = read.readings.commit_format as GitConventionReading;
     if (isRefusal(reading.state)) return { kind: 'stop', code: 1, lines: [describeRefusal(reading)] };
     const committed = reading.state === 'valid' && (reading.source ?? '').startsWith(CARRIER_PATH);
-    const declared = committed || (reading.state === 'valid' && reading.value === 'ticket-conventional');
+    // A developer file holding the template default may only be `settings:sync`'s
+    // insert, so only a value other than the default is a developer's choice.
+    const declared = committed || (reading.state === 'valid' && reading.value !== conventionDefault('commit_format'));
     const validator = commitMessageValidator(cwd);
     if (validator?.kind === 'commit-msg hook') {
         return { kind: 'stop', code: 0, lines: [`the commit-msg hook at ${validator.path} validates each commit; nothing is validated here`] };

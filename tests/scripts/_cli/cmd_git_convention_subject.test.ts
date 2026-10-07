@@ -81,6 +81,18 @@ describe('git:convention subject', () => {
         expect(r.out.join('\n')).toContain('approved family ticket-prefix');
     });
 
+    it('a developer-file value outranks an approved card only when it is not the template default', () => {
+        // settings:sync writes the template default into every project file, so a
+        // default value there is indistinguishable from an insert and never a choice.
+        const card = { 'agents/memory/curated/conventions/approved/commit-subject.md': '---\ndominant_family: ticket-prefix\n---\n' };
+        const asDefault = subject(repo(card, 'git:\n  commit_format: ticket-scope\n'), '[DEV-1] Fix thing\n', '--json');
+        expect(JSON.parse(asDefault.out.join('\n')).tier).toContain('approved in');
+        const chosen = subject(repo(card, 'git:\n  commit_format: ticket-conventional\n'), 'DEV-1 feat(api): add x\n', '--json');
+        expect(JSON.parse(chosen.out.join('\n')).tier).toContain('declared in');
+        const committed = subject(repo({ ...card, '.git-convention.yml': 'git:\n  commit_format: ticket-scope\n' }), 'feat: x\n', '--json');
+        expect(JSON.parse(committed.out.join('\n')).tier).toContain('declared in');
+    });
+
     it('validates nothing where a commit-msg hook is installed', () => {
         const dir = repo();
         fs.writeFileSync(path.join(dir, '.git', 'hooks', 'commit-msg'), '#!/bin/sh\n', { mode: 0o755 });
