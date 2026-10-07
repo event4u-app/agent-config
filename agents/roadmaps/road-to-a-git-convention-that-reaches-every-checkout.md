@@ -163,7 +163,7 @@ writes it into settings files and the rename becomes a migration.
       bad pattern fails there too. Prose that puts a rendered name into a
       command quotes it.
       verify: `test -f tests/scripts/_lib/git_convention_pattern.test.ts && npx vitest run tests/scripts/_lib/git_convention_pattern.test.ts tests/scripts/_cli/cmd_settings_check.test.ts` -> 0
-- [ ] **1.4 `/pr:merge` § 2 is written once.** It opens with the strategy from
+- [x] **1.4 `/pr:merge` § 2 is written once.** It opens with the strategy from
       `show` and keeps the `sync_pr_branch` call, so the convergence policy is
       still read; it maps exit 0, 3 and 4 explicitly and treats the fetch
       failure and the bypass as "not checked", which stops that pull request.

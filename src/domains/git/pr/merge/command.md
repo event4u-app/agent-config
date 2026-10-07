@@ -132,30 +132,44 @@ says what happens to it instead.
 
 ## 2. Sync with the base
 
+Read the strategy first, then let one script do the update, so the
+branch-convergence policy (the base SET a non-default target carries) is read
+on every path:
+
 ```bash
+agent-config git:convention show        # git.update_strategy: value, source, state
 git fetch origin
 gh pr checkout <N>
-git merge origin/<base> --no-edit
+./scripts-run src/scripts/sync_pr_branch --base origin/<base>
 ```
 
-Merge the base **into** the branch. Never rebase here unless the invocation
-itself asked for it: the `/pr:merge` authorisation covers merging the named PRs,
-not rewriting their branches
-([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
-
-**Under `git.update_strategy: rebase`** this step does not merge: a
-`Merge branch '<base>' into …` commit is what that setting excludes, and the
+A `git.update_strategy` whose state is `malformed`, `invalid` or `discarded` is
+not a strategy — the script refuses it with exit 4 — so stop on this PR and
+report the line `show` printed. Otherwise
+the strategy decides what the script does — under `merge` it merges the base
+set in, under `rebase` it only checks, because a
+`Merge branch '<base>' into …` commit is what that setting excludes and the
 `/pr:merge` sentence authorises merging the named PRs, not rewriting their
-branches. Check instead, on the checked-out PR:
-`./scripts-run src/scripts/sync_pr_branch --base origin/<base>`.
+branches ([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
+Read its exit and its line together:
 
-- exit `0` → the PR is current with its base; go on to § 3.
-- exit `3` → behind: reported and left for the author to rebase, disposition
-  `blocked-external` — unless the invocation itself asked for the rebase. A
-  behind PR is not merged without it even where the forge would accept it: its
-  checks never ran against the current base.
-- any other exit → the check could not run (base unresolvable, internal
-  error); stop on this PR and report the script's message.
+- exit `0` with a `✅` line → the PR is current with its base, or under `merge`
+  the base was merged in cleanly; go on to § 3.
+- exit `0` with a `⚠️` line reading `unverified` (origin could not be fetched)
+  or `BYPASSED` (the convergence policy is disabled at the target) → **not
+  checked**: nothing is known about freshness. Stop on this PR and report the
+  line; it is never read as current.
+- exit `1` → a conflict report goes to § 3; a base that could not be resolved
+  stops this PR.
+- exit `3` → behind under a strategy other than `merge`: reported and left for
+  the author, disposition `blocked-external`. A behind PR is not merged even
+  where the forge would accept it: its checks never ran against the current
+  base. The rebase is the author's, or a separate request under
+  [`branch-update`](../../../../skills/git-workflow/references/branch-update.md).
+- exit `4` → the strategy could not be read (the line names the reason code
+  and the file); nothing was checked or merged. Stop on this PR and report it.
+- any other exit → the check could not run (internal error); stop on this PR
+  and report the script's message.
 
 ## 3. Resolve conflicts by class, never by taste
 
@@ -446,7 +460,9 @@ ends this run prepared and unmerged.
   `--no-merge` is the explicit way to say stop before § 9.
 - **Never widen, patch, or rebuild-around the git guard.** Verification of the
   authorization window is read-only.
-- **Never rebase a pushed branch**; the base is merged in.
+- **The base comes in per `git.update_strategy`**: under `merge` it is merged
+  in; under `rebase` this command never rebases — a behind PR is reported
+  (exit 3) and the rewrite stays the author's, under `git-history-discipline`.
 - **Never hand-merge a generated artefact**; regenerate it.
 - **Never resolve a conflict outside the four classes**; halt instead.
 - **Never call CI green off a local run**; re-verify on the pushed head.

@@ -33,9 +33,13 @@ strategy: stop and report the line it prints, never fall back to `merge`:
   carries the default branch): rebase onto the target. If `sync_pr_branch` then
   still names the default branch as behind, the target itself is behind its
   default — that is the target's update, not this branch's; report it.
-- **`sync_pr_branch` refuses with exit 3** when the branch is behind and the
-  strategy is not `merge`; a current branch passes with exit 0, so automated
-  pre-push syncs stay green when there is nothing to do.
+- **`sync_pr_branch` exits** — `0` with a `✅` line: current, or under `merge`
+  merged cleanly; `0` with a `⚠️` `unverified` or `BYPASSED` line: **not
+  checked** (origin not fetched, or the convergence policy disabled), never
+  read as current; `3`: behind under a strategy other than `merge`, refused and
+  never merged; `4`: the strategy itself cannot be read — the line names the
+  reason code and the file, and nothing was checked. A current branch passes
+  with exit 0, so automated pre-push syncs stay green when there is nothing to do.
 - **Plain `git push --force` is never used** — only `--force-with-lease`, and
   never against the base branch itself.
 - **Tidying WIP / fixup commits before the PR** (`git commit --fixup`,
