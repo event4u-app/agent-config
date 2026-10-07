@@ -64,6 +64,7 @@ import {
 import { checkoutSource, describeRefusal, isRefusal, readGitConventionKey, type GitConventionReading } from './_lib/git_convention.js';
 import {
     conventionRoot,
+    ignoredCarrierWarning,
     makeTargetDeps,
     memoTargetDeps,
     parseSymrefDefault,
@@ -1070,6 +1071,8 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
     // git-history-discipline — so the branch is only CHECKED (dry run), and a
     // branch that is behind is refused rather than merged. A current branch
     // passes, so an automated pre-push sync stays green when nothing is to do.
+    const ignored = ignoredCarrierWarning(conventionRoot(repo).root);
+    if (ignored !== null) process.stdout.write(`⚠️  sync_pr_branch: ${ignored}\n`);
     const live = deps ?? makeGitDeps(repo);
     const targetDeps = memoTargetDeps(live);
     let plan: Plan;

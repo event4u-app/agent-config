@@ -233,6 +233,13 @@ export function carrierBlobAt(repo: string, sha: string, fetchRef: string | null
 /** A filename a carrier is sometimes given that nothing reads. */
 export const IGNORED_CARRIER_PATH = '.git-convention.yaml';
 
+/** The warning every reader prints when `root` holds a carrier under the name nothing reads, or null. */
+export function ignoredCarrierWarning(root: string): string | null {
+    return fs.existsSync(path.join(root, IGNORED_CARRIER_PATH))
+        ? `${IGNORED_CARRIER_PATH} is ignored — the team declaration is read only from ${CARRIER_PATH}; rename it to ${CARRIER_PATH}`
+        : null;
+}
+
 /**
  * The carrier holds its keys under `git:`, as the settings files do. Keys set at
  * the top level are read by nothing, and reading them as absent would apply the

@@ -55,7 +55,7 @@ import {
     type GitConventionKey,
     type GitConventionReading,
 } from '../_lib/git_convention.js';
-import { CARRIER_PATH, IGNORED_CARRIER_PATH, readCommittedConvention, type TargetDeps } from '../_lib/git_convention_carrier.js';
+import { CARRIER_PATH, ignoredCarrierWarning, readCommittedConvention, type TargetDeps } from '../_lib/git_convention_carrier.js';
 import {
     FAMILY_ERE,
     checkSubject,
@@ -193,9 +193,8 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
     const ok = !keys.some((k) => isRefusal(readings[k].state));
     const code: 0 | 1 = ok ? 0 : 1;
     const established = keys.includes('commit_format') ? _established(readings.commit_format, read.root) : null;
-    const warnings = fs.existsSync(path.join(read.root, IGNORED_CARRIER_PATH))
-        ? [`${IGNORED_CARRIER_PATH} is ignored — the team declaration is read only from ${CARRIER_PATH}; rename it to ${CARRIER_PATH}`]
-        : [];
+    const ignored = ignoredCarrierWarning(read.root);
+    const warnings = ignored === null ? [] : [ignored];
 
     if (json) {
         const entries: Record<string, unknown> = {};
@@ -314,7 +313,8 @@ function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan 
     const read = readCommittedConvention(cwd, { keys: ['commit_format'] });
     const reading = read.readings.commit_format as GitConventionReading;
     if (isRefusal(reading.state)) return { kind: 'stop', code: 1, lines: [describeRefusal(reading)] };
-    const notes = commitMessageValidators(cwd).map(_validatorNote);
+    const ignored = ignoredCarrierWarning(read.root);
+    const notes = [...(ignored === null ? [] : [`⚠️  ${ignored}`]), ...commitMessageValidators(cwd).map(_validatorNote)];
     if (_declares(reading)) return { kind: 'rule', rule: { format: reading.value as CommitFormat }, tier: `declared in ${reading.source}`, notes };
     const family = _cardFamily(read.root);
     if (family !== null) {
@@ -455,6 +455,7 @@ export function measureCommand(args: readonly string[], cwd: string): GitConvent
     const read = readCommittedConvention(cwd, { keys: ['commit_format'] });
     const established = _established(read.readings.commit_format as GitConventionReading, read.root);
     const lint = _commitlint(cwd);
+    const ignored = ignoredCarrierWarning(read.root);
     const family = (chosen as SubjectFamily | undefined) ?? m.established;
     const share = family === null ? 0 : (m.families.find((x) => x.family === family)?.share ?? 0);
     const team = teamFile(family, b.pattern);
@@ -484,6 +485,7 @@ export function measureCommand(args: readonly string[], cwd: string): GitConvent
     }
 
     const out = [
+        ...(ignored === null ? [] : [`⚠️  ${ignored}`]),
         ...(lint === null ? [] : [`commitlint: the repository has a commitlint config — the commitlint config at ${lint.path} governs the subject format; this measurement is advisory`]),
         established === true ? 'convention: already established — a declaration or an approved card is in force; this measurement is advisory'
             : established === null ? 'convention: git.commit_format cannot be read — see git:convention show' : 'convention: none established — /commit offers the result below once',
