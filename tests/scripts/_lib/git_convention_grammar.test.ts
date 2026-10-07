@@ -14,6 +14,7 @@ import {
     firstTicket,
     renderBranch,
     ticketCandidates,
+    VERSION_LIKE_KEYS,
 } from '../../../src/scripts/_lib/git_convention_grammar.js';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
@@ -54,6 +55,28 @@ describe('ticket grammar', () => {
         expect(firstTicket('feat/HTTP2-1-client')).toBe('HTTP2-1');
         expect(firstTicket('feat/HTTP2-1-DEV-4-client', ['DEV'])).toBe('DEV-4');
         expect(TICKET_TOKEN).toBe(`(?<![A-Za-z0-9])${TICKET_GRAMMAR}(?![0-9])`);
+    });
+
+    it('without a card, reads a protocol or language name with a one-digit version as no ticket', () => {
+        expect(ticketCandidates('feat/HTTP-2-support').map((c) => [c.token, c.status])).toEqual([['HTTP-2', 'version-like']]);
+        expect(firstTicket('feat/HTTP-2-support')).toBeNull();
+        expect(firstTicket('feat/PHP-8-upgrade')).toBeNull();
+        expect(firstTicket('feat/PHP-8-DEV-12-upgrade')).toBe('DEV-12');
+        // Two digits is a ticket number, not a major version.
+        expect(firstTicket('feat/PHP-12-upgrade')).toBe('PHP-12');
+        expect(VERSION_LIKE_KEYS).toContain('HTTP');
+        expect(checkSubject('feat(HTTP-2): add client', { format: 'ticket-conventional' }).ok).toBe(true);
+    });
+
+    it('lets a card that lists such a key keep it as a ticket', () => {
+        expect(firstTicket('feat/PHP-8-upgrade', ['PHP'])).toBe('PHP-8');
+    });
+
+    it('leaves a lowercase key undetected without a card, and matches a card key case-insensitively', () => {
+        expect(ticketCandidates('feat/dev-12-export')).toEqual([]);
+        expect(firstTicket('feat/dev-12-export', ['DEV'])).toBe('DEV-12');
+        expect(firstTicket('feat/Dev-12-export', ['DEV'])).toBe('DEV-12');
+        expect(ticketCandidates('feat/add-2-items', ['DEV'])).toEqual([]);
     });
 
     it('is the grammar the command suggester matches prompts with', () => {

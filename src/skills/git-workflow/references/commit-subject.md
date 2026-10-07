@@ -29,12 +29,21 @@ every candidate with its status:
 - **`standard-name`** — a key in the denylist (`UTF-8`, `ISO-8601`, `SHA-256`,
   `CVE-2026-12345`, `CWE-79`) is never a ticket, with or without a card:
   `fix/CVE-2026-12345-patch` yields none.
+- **`version-like`** — without a card, a protocol or language name followed
+  by a one-digit number (`HTTP-2`, `PHP-8`; the list is the `version-like names`
+  row below) is a major version, not a ticket: `feat/HTTP-2-support` yields
+  none. Two or more digits (`PHP-12`) read as a ticket, and a card that lists
+  the key keeps it a ticket.
+- **Case** — without a card only an upper-case key is detected, so
+  `feat/dev-12-export` yields none. With `--keys`, a key written in any case is
+  matched against the card and reported upper-cased (`dev-12` → `DEV-12`).
 - **`unknown-key`** — `--keys` takes the `ticket_keys` line of the approved
   convention card (`agents/memory/curated/conventions/approved/commit-subject.md`,
   see the [`conventional-commits-writing`](../../conventional-commits-writing/SKILL.md)
   skill § 7), as the caller reads it. A candidate whose key is not on it is
   asked about by `/commit` — a yes adds the key to the card — and omitted by
-  `/commit:in-chunks`. Without a card the grammar and the denylist decide alone.
+  `/commit:in-chunks`. Without a card the grammar, the denylist and the
+  version-like names decide alone.
 - **`proposal`** — without `--keys`, a commitlint config's `issuePrefixes` are
   printed as a proposed `ticket_keys` line. Offer it; the verb writes nothing.
 
@@ -121,6 +130,7 @@ describes a team habit; the name the agent creates follows the declared pattern.
 ticket                      [A-Z][A-Z0-9]+-[0-9]+
 ticket in text              (?<![A-Za-z0-9])[A-Z][A-Z0-9]+-[0-9]+(?![0-9])
 standard names              UTF ISO SHA RFC CVE CWE GHSA
+version-like names          HTTP HTTPS TLS SSL OAUTH PHP PYTHON JAVA JDK NODE ES HTML CSS (one-digit number, no card)
 format ticket-scope         ^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+
 format ticket-conventional  ^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+
 family conventional         ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
@@ -134,8 +144,11 @@ Formats are JavaScript / PCRE syntax; families are POSIX extended, matched in
 order, first hit wins. Under `format ticket-conventional` and `family
 ticket-conventional` a ticket anywhere inside the scope fails, and a standard
 name in the ticket position fails. A ticket is found in a branch or scope only as
-a whole token (`ticket in text`); a version-like key such as `HTTP2-1` still has
-the ticket shape, and a convention card's `ticket_keys` is what excludes it.
+a whole token (`ticket in text`). Without a card, a version-like name — one of
+the keys above with a one-digit number, such as `HTTP-2` or `PHP-8` — is not a
+ticket; `HTTP2-1` still has the ticket shape. A convention card's `ticket_keys`
+settles both, and matches a key written in lower case; without a card a
+lower-case key is never detected.
 <!-- END GENERATED: git-convention-grammar -->
 
 ## Patterns that are not this grammar

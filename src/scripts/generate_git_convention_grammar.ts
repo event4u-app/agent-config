@@ -16,7 +16,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { FAMILY_ERE, FORMAT_GRAMMAR, TICKET_DENYLIST, TICKET_GRAMMAR, TICKET_TOKEN } from './_lib/git_convention_grammar.js';
+import { FAMILY_ERE, FORMAT_GRAMMAR, TICKET_DENYLIST, TICKET_GRAMMAR, TICKET_TOKEN, VERSION_LIKE_KEYS } from './_lib/git_convention_grammar.js';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -32,6 +32,7 @@ export function renderBlock(): string {
         ['ticket', TICKET_GRAMMAR],
         ['ticket in text', TICKET_TOKEN],
         ['standard names', TICKET_DENYLIST.join(' ')],
+        ['version-like names', `${VERSION_LIKE_KEYS.join(' ')} (one-digit number, no card)`],
         ...Object.entries(FORMAT_GRAMMAR).map(([f, re]) => [`format ${f}`, re] as [string, string]),
         ...FAMILY_ERE.map(([f, ere]) => [`family ${f}`, ere] as [string, string]),
     ];
@@ -48,8 +49,11 @@ export function renderBlock(): string {
         'order, first hit wins. Under `format ticket-conventional` and `family',
         'ticket-conventional` a ticket anywhere inside the scope fails, and a standard',
         'name in the ticket position fails. A ticket is found in a branch or scope only as',
-        'a whole token (`ticket in text`); a version-like key such as `HTTP2-1` still has',
-        'the ticket shape, and a convention card\'s `ticket_keys` is what excludes it.',
+        'a whole token (`ticket in text`). Without a card, a version-like name — one of',
+        'the keys above with a one-digit number, such as `HTTP-2` or `PHP-8` — is not a',
+        'ticket; `HTTP2-1` still has the ticket shape. A convention card\'s `ticket_keys`',
+        'settles both, and matches a key written in lower case; without a card a',
+        'lower-case key is never detected.',
         END,
     ].join('\n');
 }
