@@ -39,11 +39,34 @@ import {
 /** The tracked repository-root file a team declares its git convention in. */
 export const CARRIER_PATH = '.git-convention.yml';
 
-const NETWORK_TIMEOUT_MS = 8_000;
+/** Sized for a ref lookup (`ls-remote`, `gh pr list`), which transfers no objects. */
+export const NETWORK_TIMEOUT_MS = 8_000;
+
+/**
+ * The target-commit fetch transfers objects, and the target is routinely a
+ * commit the server has advanced past the local fetch, so a large repository
+ * needs longer than a ref lookup does. Running out of time here makes the
+ * reading `unresolvable` and stops a sync, so the bound is generous.
+ */
+export const CARRIER_FETCH_TIMEOUT_MS = 60_000;
+
+export interface GitRunResult {
+    ok: boolean;
+    out: string;
+    err: string;
+    timedOut: boolean;
+}
+
+export type GitRunner = (cmd: string, args: readonly string[], cwd: string, timeoutMs: number) => GitRunResult;
+
+export const runGit: GitRunner = (cmd, args, cwd, timeoutMs) => {
+    const r = spawnSync(cmd, [...args], { cwd, encoding: 'utf-8', timeout: timeoutMs, maxBuffer: 32 * 1024 * 1024 });
+    const timedOut = (r.error as NodeJS.ErrnoException | undefined)?.code === 'ETIMEDOUT';
+    return { ok: r.status === 0, out: r.stdout ?? '', err: (r.stderr ?? '').trim(), timedOut };
+};
 
 function sh(cmd: string, args: readonly string[], cwd: string): { ok: boolean; out: string; err: string } {
-    const r = spawnSync(cmd, [...args], { cwd, encoding: 'utf-8', timeout: NETWORK_TIMEOUT_MS, maxBuffer: 32 * 1024 * 1024 });
-    return { ok: r.status === 0, out: r.stdout ?? '', err: (r.stderr ?? '').trim() };
+    return runGit(cmd, args, cwd, NETWORK_TIMEOUT_MS);
 }
 
 /** The git questions target resolution asks, injected so no network is needed in tests. */
@@ -174,24 +197,32 @@ export function memoTargetDeps<T extends TargetDeps>(deps: T): T {
     };
 }
 
-/** `absent` (the commit has no carrier) and `no-commit` (the commit itself is unknown) are different facts. */
-export type CommitBlob = { kind: 'absent' } | { kind: 'present'; text: string } | { kind: 'no-commit' };
+/**
+ * `absent` (the commit has no carrier) and `no-commit` (the commit itself is
+ * unknown) are different facts; `timedOut` marks a commit the fetch ran out of
+ * time on, which says nothing about whether it exists.
+ */
+export type CommitBlob = { kind: 'absent' } | { kind: 'present'; text: string } | { kind: 'no-commit'; timedOut?: boolean };
 
 /**
  * The carrier as one commit holds it. A commit the server reported but this
  * clone has not fetched yet is fetched by its ref once; an answer of "the file
  * does not exist" is only ever given for a commit that is present.
  */
-export function carrierBlobAt(repo: string, sha: string, fetchRef: string | null): CommitBlob {
-    const has = (): boolean => sh('git', ['cat-file', '-e', `${sha}^{commit}`], repo).ok;
+export function carrierBlobAt(repo: string, sha: string, fetchRef: string | null, run: GitRunner = runGit): CommitBlob {
+    const local = (args: readonly string[]): GitRunResult => run('git', args, repo, NETWORK_TIMEOUT_MS);
+    const has = (): boolean => local(['cat-file', '-e', `${sha}^{commit}`]).ok;
     if (!has()) {
-        if (fetchRef !== null) sh('git', ['fetch', '-q', 'origin', fetchRef.replace(/^origin\//, '')], repo);
+        const fetched = fetchRef === null
+            ? null
+            : run('git', ['fetch', '-q', 'origin', fetchRef.replace(/^origin\//, '')], repo, CARRIER_FETCH_TIMEOUT_MS);
+        if (fetched?.timedOut === true) return { kind: 'no-commit', timedOut: true };
         if (!has()) return { kind: 'no-commit' };
     }
-    const listed = sh('git', ['ls-tree', '--name-only', sha, '--', CARRIER_PATH], repo);
+    const listed = local(['ls-tree', '--name-only', sha, '--', CARRIER_PATH]);
     if (!listed.ok) return { kind: 'no-commit' };
     if (listed.out.trim() === '') return { kind: 'absent' };
-    const blob = sh('git', ['cat-file', '-p', `${sha}:${CARRIER_PATH}`], repo);
+    const blob = local(['cat-file', '-p', `${sha}:${CARRIER_PATH}`]);
     return blob.ok ? { kind: 'present', text: blob.out } : { kind: 'no-commit' };
 }
 
@@ -238,6 +269,8 @@ export interface CommittedOptions {
     readonly override?: string | null;
     readonly deps?: TargetDeps;
     readonly keys?: readonly GitConventionKey[];
+    /** Runs the git calls that read the carrier at a commit. */
+    readonly run?: GitRunner;
 }
 
 function _short(sha: string): string {
@@ -267,7 +300,7 @@ export function readCommittedConvention(cwd: string, options: CommittedOptions =
     let headLayer: GitConventionLayer | null = null;
     const atHead = (): GitConventionLayer => {
         if (headLayer !== null) return headLayer;
-        const blob: CommitBlob = headSha === '' ? { kind: 'absent' } : carrierBlobAt(root, headSha, null);
+        const blob: CommitBlob = headSha === '' ? { kind: 'absent' } : carrierBlobAt(root, headSha, null, options.run);
         headLayer = _carrierLayer(
             `${CARRIER_PATH} at ${headSha === '' ? 'HEAD' : _short(headSha)}`,
             blob.kind === 'no-commit' ? { kind: 'absent' } : blob,
@@ -298,14 +331,16 @@ export function readCommittedConvention(cwd: string, options: CommittedOptions =
             );
             continue;
         }
-        const blob = carrierBlobAt(root, sha, ref.ref);
+        const blob = carrierBlobAt(root, sha, ref.ref, options.run);
         if (blob.kind === 'no-commit') {
             readings[key] = conventionReading(
                 key,
                 'unresolvable',
                 null,
                 `${CARRIER_PATH} at ${_short(sha)}`,
-                `commit ${_short(sha)} of ${ref.ref} could not be fetched`,
+                blob.timedOut === true
+                    ? `fetching commit ${_short(sha)} of ${ref.ref} timed out after ${CARRIER_FETCH_TIMEOUT_MS / 1000} s`
+                    : `commit ${_short(sha)} of ${ref.ref} could not be fetched`,
             );
             continue;
         }
