@@ -101,67 +101,48 @@ describe('git:convention subject', () => {
         expect(r.out.join('\n')).toContain('commit-msg hook');
     });
 
-    it('prints the one command that runs a commitlint config that has no hook', () => {
+    it('validates against the convention in force beside a commitlint config, and notes it may be stricter', () => {
         const dir = repo({ 'commitlint.config.js': "module.exports = { extends: ['@commitlint/config-conventional'] };\n" });
-        const r = subject(dir, 'feat: x\n');
-        expect(r.code).toBe(3);
-        expect(r.out.join('\n')).toMatch(/commitlint/);
-        expect(r.out.filter((l) => l.startsWith('run: '))).toHaveLength(1);
+        const ok = subject(dir, 'feat: x\n');
+        expect(ok.code).toBe(0);
+        expect(ok.out.join('\n')).toContain(`note: the commitlint config at ${path.join(dir, 'commitlint.config.js')} also runs at commit time and may be stricter`);
+        const bad = subject(dir, 'wip\n');
+        expect(bad.code).toBe(1);
+        expect(bad.out.join('\n')).toContain('may be stricter');
     });
 
-    it('prints both and adopts neither when the validator and the committed declaration disagree', () => {
+    it('a committed ticket-conventional beside a conventional commitlint config is validated as declared, never second-guessed', () => {
         const dir = repo({
             '.commitlintrc.json': '{ "extends": ["@commitlint/config-conventional"] }\n',
             '.git-convention.yml': 'git:\n  commit_format: ticket-conventional\n',
         });
-        const r = subject(dir, 'DEV-1 feat: x\n');
-        expect(r.code).toBe(3);
-        const text = r.out.join('\n');
-        expect(text).toContain('.commitlintrc.json');
-        expect(text).toContain('ticket-conventional');
-        expect(text).toContain('adopts neither');
+        const r = subject(dir, 'DEV-1 feat: x\n', '--json');
+        expect(r.code).toBe(0);
+        const j = JSON.parse(r.out.join('\n')) as { rule: string; tier: string; notes: string[] };
+        expect(j.rule).toContain('ticket-conventional');
+        expect(j.tier).toContain('declared in');
+        expect(j.notes).toEqual([`note: the commitlint config at ${path.join(dir, '.commitlintrc.json')} also runs at commit time and may be stricter`]);
     });
 
-    it('reads the effective config, not its comments: a headerPattern only in a comment still disagrees', () => {
-        const dir = repo({
-            '.commitlintrc.yml': '# parserPreset:\n#   parserOpts:\n#     headerPattern: ^(\\w+-\\d+) (\\w+): (.*)$\nextends:\n  - "@commitlint/config-conventional"\n',
-            '.git-convention.yml': 'git:\n  commit_format: ticket-conventional\n',
-        });
-        const r = subject(dir, 'DEV-1 feat: x\n');
-        expect(r.code).toBe(3);
-        expect(r.out.join('\n')).toContain('adopts neither');
-    });
-
-    it('a preset named only in a comment is not an extends', () => {
-        const dir = repo({
-            '.commitlintrc.yml': '# extends: ["@commitlint/config-conventional"]\nrules: {}\n',
-            '.git-convention.yml': 'git:\n  commit_format: ticket-conventional\n',
-        });
-        const r = subject(dir, 'DEV-1 feat: x\n');
-        expect(r.code).toBe(3);
-        expect(r.out.join('\n')).not.toContain('adopts neither');
-        expect(r.out.filter((l) => l.startsWith('run: '))).toHaveLength(1);
-    });
-
-    it('reads the commitlint key of package.json', () => {
+    it('names both a commit-msg hook and a commitlint config, and the exit stays the convention verdict', () => {
         const dir = repo({
             'package.json': JSON.stringify({ name: 'x', commitlint: { extends: ['@commitlint/config-conventional'] } }),
             '.git-convention.yml': 'git:\n  commit_format: ticket-conventional\n',
         });
-        expect(subject(dir, 'DEV-1 feat: x\n').out.join('\n')).toContain('adopts neither');
+        fs.writeFileSync(path.join(dir, '.git', 'hooks', 'commit-msg'), '#!/bin/sh\nnpx commitlint --edit "$1"\n', { mode: 0o755 });
+        const r = subject(dir, 'DEV-1 feat: x\n', '--json');
+        expect(r.code).toBe(0);
+        const notes = (JSON.parse(r.out.join('\n')) as { notes: string[] }).notes;
+        expect(notes).toHaveLength(2);
+        expect(notes[0]).toContain('commit-msg hook');
+        expect(notes[1]).toContain(`commitlint config at ${path.join(dir, 'package.json')}`);
     });
 
-    it('says it cannot tell for a JS config, and prints only the neutral command', () => {
-        const dir = repo({
-            'commitlint.config.js': "module.exports = { extends: ['@commitlint/config-conventional'] };\n",
-            '.git-convention.yml': 'git:\n  commit_format: ticket-conventional\n',
-        });
-        const r = subject(dir, 'DEV-1 feat: x\n');
-        expect(r.code).toBe(3);
-        const text = r.out.join('\n');
-        expect(text).not.toContain('adopts neither');
-        expect(text).toContain('cannot tell');
-        expect(r.out.filter((l) => l.startsWith('run: '))).toHaveLength(1);
+    it('exits 1, never 3, on an approved family it has no grammar for', () => {
+        const dir = repo({ 'agents/memory/curated/conventions/approved/commit-subject.md': '---\ndominant_family: no-such-family\n---\n' });
+        const r = subject(dir, 'feat: x\n');
+        expect(r.code).toBe(1);
+        expect(r.out.join('\n')).toContain('no grammar');
     });
 
     it('exits 1 on a commit format it cannot read', () => {
@@ -180,7 +161,7 @@ describe('git:convention subject --json', () => {
         JSON.parse(r.out.join('\n')) as { ok: boolean; code: number; lines: string[] };
 
     it.each([
-        ['a commitlint config (exit 3)', () => subject(repo({ '.commitlintrc.json': '{"extends":["@commitlint/config-conventional"]}\n' }), 'feat: x\n', '--json'), 3],
+        ['a commitlint config (exit 0, with a note)', () => subject(repo({ '.commitlintrc.json': '{"extends":["@commitlint/config-conventional"]}\n' }), 'feat: x\n', '--json'), 0],
         ['an unknown format (exit 1)', () => subject(repo(), 'feat: x\n', '--json', '--format', 'nope'), 1],
         ['an unknown family (exit 1)', () => subject(repo(), 'feat: x\n', '--json', '--family', 'nope'), 1],
         ['an unreadable format (exit 1)', () => subject(repo({}, 'git:\n  commit_format: nonsense\n'), 'feat: x\n', '--json'), 1],

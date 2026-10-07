@@ -51,6 +51,11 @@ imposing the shipped default there produces commits that read as foreign in
 | **3 — measured, unapproved** | the same pass before the user answers | **no — advisory**; report the mismatch, write Conventional |
 | **4 — default** | Conventional Commits | yes |
 
+`agent-config git:convention subject` validates against tiers 1b–4 only. A
+tier-1 commitlint config or `commit-msg` hook is named in a `note:` line as also
+running at commit, possibly stricter; the verb never infers what it accepts and
+never changes its exit for it.
+
 Release automation is the trap that makes tier 1 outrank tier 2 even when the
 history disagrees: a repo whose `git log` is 85 % `[JIRA-123] Fix thing` but
 whose manifest (`package.json`, `composer.json`, `pyproject.toml`, `Cargo.toml`)

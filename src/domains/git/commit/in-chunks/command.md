@@ -86,9 +86,11 @@ strip one.
 Before staging anything, pipe every generated subject through
 `agent-config git:convention subject`, as [`/commit`](../commit.md) step 5 does.
 
-- **Exit `0`** → proceed silently.
-- **Exit `1` or `3`** → stop, print the verb's output (each failed subject and
-  its rule, or the command / disagreement it names), hand back to the user.
+- **Exit `0`** → proceed silently; a `note:` line naming a `commit-msg` hook
+  or a commitlint config is not a stop — that validator runs at commit, and a
+  rejection there stops the run like any failed commit.
+- **Exit `1`** → stop, print the verb's output (each failed subject and its
+  rule, or the format it could not read), hand back to the user.
   Do **not** auto-commit broken messages even though confirmation is
   otherwise suppressed.
 

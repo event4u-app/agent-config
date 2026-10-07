@@ -57,33 +57,31 @@ another chunk's scope.
 `agent-config git:convention subject` reads subjects on stdin, one per line, and
 resolves the convention in this order — the first that applies decides:
 
-1. **A commitlint config without a hook** — it outranks `git.commit_format`; the
-   verb prints the one command that runs it and exits `3`. Where that config
-   extends the conventional preset without a `headerPattern` of its own and
-   the committed `.git-convention.yml` declares `ticket-conventional`, the two
-   disagree: both are printed, neither is adopted, exit `3`. The config is
-   parsed (JSON, YAML, the `commitlint` key of `package.json`), so a name in a
-   comment decides nothing; a JS or TS config is code the verb does not run,
-   so it says it cannot tell and prints only the command.
-2. **A declaration** — `git.commit_format` in `.git-convention.yml` (either
+1. **A declaration** — `git.commit_format` in `.git-convention.yml` (either
    value; ADR-282), or a developer settings file value other than the template
    default. The rule is one for both values: `settings:sync` writes the
    template default into every project file, so a default there cannot be told
    apart from an insert and never outranks an approved card, whichever value
    the default is; today that makes `ticket-conventional` the only developer
    value that counts.
-3. **An approved measurement** — the card's `dominant_family`.
-4. **The default** — Conventional Commits (`ticket-scope`).
+2. **An approved measurement** — the card's `dominant_family`.
+3. **The default** — Conventional Commits (`ticket-scope`).
 
-A `commit-msg` hook does not decide. It counts only where git will run it —
-the path git resolves, so `core.hooksPath` is respected and `.husky/commit-msg`
-counts only when `core.hooksPath` points at `.husky` — and its existence says
-nothing about what it checks (a Change-Id or trailer hook checks nothing). The
-subject is still validated by the order above, and the output names the hook as
-also running at commit.
+A repository validator — a `commit-msg` hook, a commitlint config (any of its
+config files, or the `commitlint` key of `package.json`) — does not decide, and
+the verb never guesses what it accepts: a hook's existence says nothing about
+what it checks, and a config is only known by running it. Each one found adds a
+`note:` line (and a `notes` entry under `--json`) saying it also runs at commit
+time and may be stricter; the exit is the verdict of the order above alone. A
+hook counts only where git will run it — the path git resolves, so
+`core.hooksPath` is respected and `.husky/commit-msg` counts only when
+`core.hooksPath` points at `.husky`. When the validator rejects a commit the
+verb passed, the rejection is the answer: fix the subject or settle the two in
+`.git-convention.yml`.
 
-A format that cannot be read (`malformed`, `invalid`, `discarded`) exits `1`
-with the line `git:convention show` prints; it is never read as the default.
+A format that cannot be read (`malformed`, `invalid`, `discarded`), or an
+approved family with no grammar, exits `1` with the line that says why; it is
+never read as the default.
 Exit `1` also lists each failing subject with the rule it broke. Exit `2` is a
 usage error. How a family is measured and approved is the
 [`conventional-commits-writing`](../../conventional-commits-writing/SKILL.md)

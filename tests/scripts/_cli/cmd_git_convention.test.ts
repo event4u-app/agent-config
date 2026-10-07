@@ -5,7 +5,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { commitMessageValidator, runGitConvention, showConvention, SUBCOMMANDS } from '../../../src/scripts/_cli/cmd_git_convention.js';
+import { commitMessageValidator, commitMessageValidators, runGitConvention, showConvention, SUBCOMMANDS } from '../../../src/scripts/_cli/cmd_git_convention.js';
 import { REFUSAL_STATES } from '../../../src/scripts/_lib/git_convention.js';
 import { runSettingsGet, PACKAGE_ROOT } from '../../../src/scripts/_cli/cmd_settings_get.js';
 
@@ -90,11 +90,16 @@ describe('git:convention show', () => {
         expect(JSON.parse(r.out.join('\n')).keys.update_strategy.state).toBe('invalid');
     });
 
-    it('names a commit-message validator that outranks git.commit_format', () => {
+    it('names every commit-message validator as also running at commit, never as outranking the convention', () => {
         const dir = repo(null);
         fs.writeFileSync(path.join(dir, 'commitlint.config.js'), 'module.exports = {};\n');
-        expect(commitMessageValidator(dir)).toMatchObject({ path: path.join(dir, 'commitlint.config.js') });
-        expect(runGitConvention(['show'], dir).out.join('\n')).toContain('outranks git.commit_format');
+        fs.writeFileSync(path.join(dir, '.git', 'hooks', 'commit-msg'), '#!/bin/sh\n', { mode: 0o755 });
+        expect(commitMessageValidator(dir)).toMatchObject({ kind: 'commit-msg hook' });
+        expect(commitMessageValidators(dir).map((v) => v.kind)).toEqual(['commit-msg hook', 'commitlint config']);
+        const text = runGitConvention(['show'], dir).out.join('\n');
+        expect(text).toContain(`commitlint config at ${path.join(dir, 'commitlint.config.js')} — also runs at commit time and may be stricter`);
+        expect(text).toContain('commit-msg hook at');
+        expect(text).not.toContain('outranks');
     });
 
     it.each(['.commitlintrc.mjs', '.commitlintrc.ts', '.commitlintrc.cts', '.commitlintrc.mts', 'commitlint.config.cts', 'commitlint.config.mts'])(

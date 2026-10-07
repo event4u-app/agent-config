@@ -20,10 +20,10 @@
  * with exit 4) · `2` usage error.
  *
  * `subject` reads subjects on stdin and exits `0` all valid · `1` a subject
- * fails, or the format cannot be read · `2` usage · `3` decided by a validator
- * this verb does not run, or a validator and the committed declaration
- * disagree. A `commit-msg` hook does not replace the check; it is named as
- * also running at commit. `ticket` exits `0`; `branch`
+ * fails, or the format cannot be read · `2` usage. It checks only the
+ * convention in force; a `commit-msg` hook or a commitlint config is named in a
+ * note as also running at commit, and never changes the exit, because what such
+ * a validator accepts cannot be told without running it. `ticket` exits `0`; `branch`
  * prints the name and exits `0`, or `1` on a value it would have to rewrite.
  *
  * `sync` is `sync_pr_branch` run in-process, its arguments and exit codes
@@ -37,7 +37,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { GIT_CONVENTION_KEYS, conventionDefault, describeRefusal, invalidReason, isRefusal, parseLayerText, type GitConventionReading } from '../_lib/git_convention.js';
+import { GIT_CONVENTION_KEYS, conventionDefault, describeRefusal, invalidReason, isRefusal, type GitConventionReading } from '../_lib/git_convention.js';
 import { CARRIER_PATH, readCommittedConvention, type TargetDeps } from '../_lib/git_convention_carrier.js';
 import {
     FAMILY_ERE,
@@ -99,28 +99,39 @@ function _isExecutableFile(p: string): boolean {
 }
 
 /**
- * A repository-level commit-message validator, which outranks
- * `git.commit_format` because it rejects the commit the setting would shape.
+ * Every repository-level commit-message validator: the `commit-msg` hook git
+ * will run, then the commitlint config. Either may reject a commit the
+ * convention accepts, so each is named beside the verdict, never inferred.
  *
  * A hook counts only where git will run it: the path comes from git, so
  * `core.hooksPath` and worktrees resolve, and a `.husky/commit-msg` this clone
  * never pointed `core.hooksPath` at is a file in the tree, not a hook.
  */
-export function commitMessageValidator(cwd: string): CommitMessageValidator | null {
+export function commitMessageValidators(cwd: string): CommitMessageValidator[] {
+    const found: CommitMessageValidator[] = [];
     const top = _git(cwd, 'rev-parse', '--show-toplevel') ?? cwd;
     const hook = _git(cwd, 'rev-parse', '--path-format=absolute', '--git-path', 'hooks/commit-msg');
-    if (hook !== null && _isExecutableFile(hook)) return { kind: 'commit-msg hook', path: hook };
-    for (const name of COMMITLINT_FILES) {
-        const p = path.join(top, name);
-        if (fs.existsSync(p)) return { kind: 'commitlint config', path: p };
+    if (hook !== null && _isExecutableFile(hook)) found.push({ kind: 'commit-msg hook', path: hook });
+    const config = COMMITLINT_FILES.map((name) => path.join(top, name)).find((p) => fs.existsSync(p));
+    if (config !== undefined) found.push({ kind: 'commitlint config', path: config });
+    else {
+        try {
+            const pkg = JSON.parse(fs.readFileSync(path.join(top, 'package.json'), 'utf-8')) as Record<string, unknown>;
+            if (pkg.commitlint !== undefined) found.push({ kind: 'commitlint config', path: path.join(top, 'package.json') });
+        } catch {
+            // No package.json, or one that does not parse: neither declares a validator.
+        }
     }
-    try {
-        const pkg = JSON.parse(fs.readFileSync(path.join(top, 'package.json'), 'utf-8')) as Record<string, unknown>;
-        if (pkg.commitlint !== undefined) return { kind: 'commitlint config', path: path.join(top, 'package.json') };
-    } catch {
-        // No package.json, or one that does not parse: neither declares a validator.
-    }
-    return null;
+    return found;
+}
+
+/** The first of `commitMessageValidators`, or null. */
+export function commitMessageValidator(cwd: string): CommitMessageValidator | null {
+    return commitMessageValidators(cwd)[0] ?? null;
+}
+
+function _validatorNote(v: CommitMessageValidator): string {
+    return `note: the ${v.kind} at ${v.path} also runs at commit time and may be stricter`;
 }
 
 
@@ -140,7 +151,7 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
     }
     const read = readCommittedConvention(cwd, { override: base, ...(deps ? { deps } : {}) });
     const readings = read.readings as Record<(typeof GIT_CONVENTION_KEYS)[number], GitConventionReading>;
-    const validator = commitMessageValidator(cwd);
+    const validators = commitMessageValidators(cwd);
     const ok = !GIT_CONVENTION_KEYS.some((k) => isRefusal(readings[k].state) || (read.candidates[k] !== undefined && isRefusal((read.candidates[k] as GitConventionReading).state)));
     const code: 0 | 1 = ok ? 0 : 1;
 
@@ -157,7 +168,7 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
         }
         return {
             code,
-            out: [JSON.stringify({ ok, keys, target: read.target, commit_message_validator: validator }, null, 2)],
+            out: [JSON.stringify({ ok, keys, target: read.target, commit_message_validator: validators[0] ?? null, commit_message_validators: validators }, null, 2)],
             err: [],
         };
     }
@@ -184,11 +195,8 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
         }
     }
     out.push(`team declaration: ${CARRIER_PATH} at the repository root (ADR-282)`);
-    out.push(
-        validator === null
-            ? 'commit-message validator: none in this repository'
-            : `commit-message validator: ${validator.kind} at ${validator.path} — it outranks git.commit_format`,
-    );
+    if (validators.length === 0) out.push('commit-message validator: none in this repository');
+    for (const v of validators) out.push(`commit-message validator: ${v.kind} at ${v.path} — also runs at commit time and may be stricter than git.commit_format`);
     return { code, out, err: [] };
 }
 
@@ -222,44 +230,9 @@ function _cardFamily(root: string): string | null {
     return /^dominant_family:\s*["']?([a-z-]+)/m.exec(text)?.[1] ?? null;
 }
 
-function _hasKey(value: unknown, key: string): boolean {
-    if (value === null || typeof value !== 'object') return false;
-    if (Array.isArray(value)) return value.some((v) => _hasKey(v, key));
-    return Object.entries(value).some(([k, v]) => k === key || _hasKey(v, key));
-}
-
-/**
- * Whether a commitlint config rejects a subject that leads with a ticket: it
- * extends the conventional preset and sets no header grammar of its own. Read
- * from the parsed config, so a name in a comment decides nothing. A JS or TS
- * config is code; evaluating it to find out would run it, so it is `unknown`,
- * as is a config that does not parse.
- */
-function _commitlintRejectsTicketLead(configPath: string): boolean | 'unknown' {
-    const base = path.basename(configPath);
-    if (/\.[cm]?[jt]s$/.test(base)) return 'unknown';
-    let config: unknown;
-    try {
-        const text = fs.readFileSync(configPath, 'utf-8');
-        if (base === 'package.json') {
-            config = (JSON.parse(text) as { commitlint?: unknown }).commitlint;
-        } else {
-            const layer = parseLayerText(text);
-            if (layer.parsed !== 'valid') return 'unknown';
-            config = layer.data;
-        }
-    } catch {
-        return 'unknown';
-    }
-    if (config === null || typeof config !== 'object') return 'unknown';
-    const ext = (config as { extends?: unknown }).extends;
-    const presets = (Array.isArray(ext) ? ext : [ext]).filter((e): e is string => typeof e === 'string');
-    return presets.some((e) => e.includes('config-conventional')) && !_hasKey(config, 'headerPattern');
-}
-
 type SubjectPlan =
     | { kind: 'rule'; rule: SubjectRule; tier: string; notes: string[] }
-    | { kind: 'stop'; code: 0 | 1 | 3; lines: string[] };
+    | { kind: 'stop'; code: 1; lines: string[] };
 
 function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan {
     if (values.format !== undefined) {
@@ -277,39 +250,11 @@ function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan 
     // A developer file holding the template default may only be `settings:sync`'s
     // insert, so only a value other than the default is a developer's choice.
     const declared = committed || (reading.state === 'valid' && reading.value !== conventionDefault('commit_format'));
-    const validator = commitMessageValidator(cwd);
-    // A hook's existence says nothing about what it checks (a Change-Id or
-    // trailer hook checks nothing), so the subject is still checked here.
-    const notes = validator?.kind === 'commit-msg hook' ? [`note: the commit-msg hook at ${validator.path} also runs at commit`] : [];
-    if (validator?.kind === 'commitlint config') {
-        const verdict = committed && reading.value === 'ticket-conventional' ? _commitlintRejectsTicketLead(validator.path) : false;
-        if (verdict === true) {
-            return {
-                kind: 'stop',
-                code: 3,
-                lines: [
-                    `validator: ${validator.path} extends the conventional preset, which rejects a subject that leads with a ticket`,
-                    `declared:  git.commit_format: ticket-conventional in ${reading.source}`,
-                    'the two disagree; this verb adopts neither — settle one of them',
-                ],
-            };
-        }
-        return {
-            kind: 'stop',
-            code: 3,
-            lines: [
-                ...(verdict === 'unknown'
-                    ? [`cannot tell whether ${validator.path} accepts a ticket-led subject (git.commit_format: ticket-conventional in ${reading.source}); this verb does not evaluate it`]
-                    : []),
-                `the commitlint config at ${validator.path} outranks git.commit_format; no commit-msg hook runs it`,
-                `run: printf '%s\n' "<subject>" | npx --no-install commitlint`,
-            ],
-        };
-    }
+    const notes = commitMessageValidators(cwd).map(_validatorNote);
     if (declared) return { kind: 'rule', rule: { format: reading.value as CommitFormat }, tier: `declared in ${reading.source}`, notes };
     const family = _cardFamily(read.root);
     if (family !== null) {
-        if (!FAMILY_ERE.some(([f]) => f === family)) return { kind: 'stop', code: 3, lines: [`the approved family ${family} in ${APPROVED_CARD} has no grammar to validate against`] };
+        if (!FAMILY_ERE.some(([f]) => f === family)) return { kind: 'stop', code: 1, lines: [`the approved family ${family} in ${APPROVED_CARD} has no grammar to validate against`] };
         return { kind: 'rule', rule: { family: family as SubjectFamily }, tier: `approved in ${APPROVED_CARD}`, notes };
     }
     return { kind: 'rule', rule: { format: (reading.value ?? 'ticket-scope') as CommitFormat }, tier: 'default (Conventional Commits)', notes };

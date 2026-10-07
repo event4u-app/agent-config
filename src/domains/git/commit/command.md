@@ -123,10 +123,10 @@ from `.agent-settings.yml`. Both default to `false`.
 
 1. Pipe every generated subject, one per line, through
    `agent-config git:convention subject` — it resolves the convention in force
-   and validates against it. Act on the exit code: `0` valid (a `commit-msg`
-   hook git runs is named as also running at commit) · `1` the output lists each failure and its rule
-   → treat as invalid · `3` run the one printed command, or settle the printed
-   disagreement, before committing → treat as invalid.
+   and validates against it. Act on the exit code: `0` valid · `1` the output
+   lists each failure and its rule → treat as invalid. A `note:` line naming a
+   `commit-msg` hook or a commitlint config means that validator also runs at
+   commit and may be stricter; it never changes the exit.
 2. **All messages valid** → skip the preview block and the confirmation
    prompt. Print one line summarising the plan and proceed to step 6:
 
