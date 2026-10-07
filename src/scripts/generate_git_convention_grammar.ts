@@ -48,7 +48,7 @@ export function renderBlock(): string {
         ['version-like names', `${VERSION_LIKE_KEYS.join(' ')} (one-digit number, no card)`],
         ...Object.entries(FORMAT_GRAMMAR).map(([f, re]) => [`format ${f}`, re] as [string, string]),
         ...FAMILY_ERE.map(([f, ere]) => [`family ${f}`, ere] as [string, string]),
-        ['measure sample', `newest ${MEASURE_LIMIT} non-merge commits since ${MEASURE_SINCE}; bots, automation subjects, commits over ${BULK_IMPORT_FILES} files dropped`],
+        ['measure sample', `newest ${MEASURE_LIMIT} non-merge commits since ${MEASURE_SINCE}, or regardless of age when that window yields fewer than ${MIN_N}; bots, automation subjects, commits over ${BULK_IMPORT_FILES} files dropped`],
         ['measure bar', `n >= ${MIN_N}; >= ${pct(SHARE_BAR)} capped at ${AUTHOR_CAP_PER_HALF} per author per half (${MIN_CAPPED_AUTHORS}+ authors), else >= ${pct(SMALL_TEAM_SHARE_BAR)} uncapped; both halves agree`],
         ['measure branches', `>= ${MIN_BRANCHES} remote branch names, top shape >= ${pct(SHARE_BAR)}`],
     ];

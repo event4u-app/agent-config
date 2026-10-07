@@ -406,14 +406,16 @@ export function branchCommand(args: readonly string[], cwd: string): GitConventi
 }
 
 /** The convention card `/commit` writes under `approved/` once the user has answered. */
-export function cardText(m: { family: SubjectFamily; observedN: number; share: number; authors: number; trunk: string }): string {
+export function cardText(m: { family: SubjectFamily; observedN: number; share: number; authors: number; trunk: string; windowExtended?: boolean }): string {
     return [
         '---',
         `dominant_family: ${m.family}`,
         `observed_n: ${m.observedN}`,
         `dominant_share: ${m.share.toFixed(2)}`,
         `author_count: ${m.authors}`,
-        `sample_window: "${MEASURE_SINCE}, newest ${MEASURE_LIMIT} non-merge commits"`,
+        m.windowExtended === true
+            ? `sample_window: "any age (fewer than ${MIN_N} since ${MEASURE_SINCE}), newest ${MEASURE_LIMIT} non-merge commits"`
+            : `sample_window: "${MEASURE_SINCE}, newest ${MEASURE_LIMIT} non-merge commits"`,
         `classifier_version: ${CLASSIFIER_VERSION}`,
         `confirm_against: ${m.trunk}`,
         'ticket_keys: []',
@@ -448,7 +450,7 @@ export function measureCommand(args: readonly string[], cwd: string): GitConvent
     const family = (chosen as SubjectFamily | undefined) ?? m.established;
     const share = family === null ? 0 : (m.families.find((x) => x.family === family)?.share ?? 0);
     const team = teamFile(family, b.pattern);
-    const card = family === null ? null : cardText({ family, observedN: m.eligible, share, authors: m.authors, trunk: history.trunk });
+    const card = family === null ? null : cardText({ family, observedN: m.eligible, share, authors: m.authors, trunk: history.trunk, windowExtended: history.windowExtended });
 
     if (f.json) {
         return {
@@ -456,7 +458,7 @@ export function measureCommand(args: readonly string[], cwd: string): GitConvent
             out: [JSON.stringify({
                 convention_established: established,
                 classifier_version: CLASSIFIER_VERSION,
-                sample: { trunk: history.trunk, limit, since: MEASURE_SINCE, read: history.commits.length, eligible: m.eligible, excluded: m.excluded, authors: m.authors, capped: m.capped, capped_total: m.cappedTotal },
+                sample: { trunk: history.trunk, limit, since: MEASURE_SINCE, window_extended: history.windowExtended, read: history.commits.length, eligible: m.eligible, excluded: m.excluded, authors: m.authors, capped: m.capped, capped_total: m.cappedTotal },
                 bar: { min_n: MIN_N, share: m.bar },
                 families: m.families,
                 halves: { newer: m.newer, older: m.older, agree: m.halvesAgree },
@@ -474,7 +476,9 @@ export function measureCommand(args: readonly string[], cwd: string): GitConvent
     const out = [
         established === true ? 'convention: already established — a declaration or an approved card is in force; this measurement is advisory'
             : established === null ? 'convention: git.commit_format cannot be read — see git:convention show' : 'convention: none established — /commit offers the result below once',
-        `sample    ${history.commits.length} commit(s) on ${history.trunk} since ${MEASURE_SINCE} · classifier ${CLASSIFIER_VERSION}`,
+        history.windowExtended
+            ? `sample    fewer than ${MIN_N} since ${MEASURE_SINCE} — sampled the newest ${history.commits.length} regardless of age on ${history.trunk} · classifier ${CLASSIFIER_VERSION}`
+            : `sample    ${history.commits.length} commit(s) on ${history.trunk} since ${MEASURE_SINCE} · classifier ${CLASSIFIER_VERSION}`,
         `          eligible ${m.eligible} (excluded: bots ${m.excluded.bots}, automation ${m.excluded.automation}, bulk ${m.excluded.bulk}) · authors ${m.authors}`
             + (m.capped ? ` · capped per author per half → ${m.cappedTotal}` : ' · uncapped (fewer than three authors)'),
         ...m.families.map((x) => `          ${x.family.padEnd(20)} ${String(x.count).padStart(4)}  ${pct(x.share)}`),

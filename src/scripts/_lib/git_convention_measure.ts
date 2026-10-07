@@ -251,6 +251,8 @@ export interface History {
     commits: HistoryCommit[];
     branches: string[];
     mergeSubjects: string[];
+    /** True when `MEASURE_SINCE` yielded fewer than `MIN_N` commits and the newest ones were read regardless of age. */
+    windowExtended: boolean;
 }
 
 /** No default branch could be resolved, so nothing was sampled; `reason` says why. */
@@ -283,16 +285,26 @@ export function readHistory(cwd: string, limit = MEASURE_LIMIT): History | Trunk
     if (_git(cwd, ['rev-parse', '--git-dir']) === null) return null;
     const t = _trunk(cwd);
     if ('unresolved' in t) return t;
-    const log = _git(cwd, ['log', t.trunk, '--no-merges', '-n', String(limit), `--since=${MEASURE_SINCE}`, '--pretty=format:%x1e%aN%x09%aE%x09%s', '--shortstat']) ?? '';
-    const commits: HistoryCommit[] = log
-        .split('\x1e')
-        .filter((r) => r.trim() !== '')
-        .map((r) => {
-            const [head = '', ...rest] = r.split('\n');
-            const [author = '', email = '', ...subject] = head.split('\t');
-            const stat = /(\d+) files? changed/.exec(rest.join('\n'));
-            return { author, email, subject: subject.join('\t'), files: stat === null ? null : Number(stat[1]) };
-        });
+    const read = (since: readonly string[]): HistoryCommit[] =>
+        (_git(cwd, ['log', t.trunk, '--no-merges', '-n', String(limit), ...since, '--pretty=format:%x1e%aN%x09%aE%x09%s', '--shortstat']) ?? '')
+            .split('\x1e')
+            .filter((r) => r.trim() !== '')
+            .map((r) => {
+                const [head = '', ...rest] = r.split('\n');
+                const [author = '', email = '', ...subject] = head.split('\t');
+                const stat = /(\d+) files? changed/.exec(rest.join('\n'));
+                return { author, email, subject: subject.join('\t'), files: stat === null ? null : Number(stat[1]) };
+            });
+    // A quiet or archived project has its convention in older commits; a
+    // window that samples nothing would report "below the bar" for a history
+    // that states its format plainly.
+    let commits = read([`--since=${MEASURE_SINCE}`]);
+    let windowExtended = false;
+    if (commits.length < MIN_N) {
+        const all = read([]);
+        windowExtended = all.length > commits.length;
+        if (windowExtended) commits = all;
+    }
     const refs = _git(cwd, ['for-each-ref', '--format=%(refname:short)', 'refs/remotes']) ?? '';
     const branches = refs
         .split('\n')
@@ -308,5 +320,6 @@ export function readHistory(cwd: string, limit = MEASURE_LIMIT): History | Trunk
         commits,
         branches,
         mergeSubjects: merges.split('\n').filter((s) => s !== ''),
+        windowExtended,
     };
 }

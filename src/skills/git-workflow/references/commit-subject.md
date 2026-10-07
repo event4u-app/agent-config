@@ -154,7 +154,7 @@ family ticket-conventional  ^[A-Z][A-Z0-9]+-[0-9]+ (build|chore|ci|docs|feat|fix
 family ticket-prefix        ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
 family gitmoji              ^:[a-z0-9_+-]+:[[:space:]]|^[^ -~[:cntrl:][:space:]]
 family imperative-plain     ^[A-Z][a-z]+[[:space:]].*[^.]$
-measure sample              newest 200 non-merge commits since 24 months ago; bots, automation subjects, commits over 500 files dropped
+measure sample              newest 200 non-merge commits since 24 months ago, or regardless of age when that window yields fewer than 30; bots, automation subjects, commits over 500 files dropped
 measure bar                 n >= 30; >= 80 % capped at 20 per author per half (3+ authors), else >= 90 % uncapped; both halves agree
 measure branches            >= 10 remote branch names, top shape >= 80 %
 ```
