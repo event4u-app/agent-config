@@ -277,7 +277,11 @@ deletes the marker. Server boot replays orphaned markers idempotently.
 
 Response (200): `{ writtenPaths: string[], txnId: string }`.
 
-Errors: **500** with `code=TXN_PARTIAL` when the marker survives a crash
+Errors: **422** with per-field errors when a `git.*` value fails the same
+gate `PUT /api/v1/settings` applies — the `git:convention show` check in every
+scope, and, when the write lands in the user-global file (global mode, scope
+`global`), any value other than the template default; nothing is written.
+**500** with `code=TXN_PARTIAL` when the marker survives a crash
 (client should redirect the user to a "your last save is being
 recovered" screen and refetch state).
 

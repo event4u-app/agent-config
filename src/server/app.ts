@@ -305,6 +305,7 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
         dryRun,
         userGlobalReadRoot: userGlobalRead,
         extendedSteps: opts.extendedSteps === true,
+        userGlobalWrite: mode === 'global',
         ...(opts.initialStep !== undefined ? { initialStep: opts.initialStep } : {}),
         ...(opts.wizardMode !== undefined ? { wizardMode: opts.wizardMode } : {}),
     }));
