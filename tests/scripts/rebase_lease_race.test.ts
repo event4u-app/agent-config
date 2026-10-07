@@ -61,7 +61,7 @@ function fixture(layout: Layout): Fixture {
 
     const remote = publishesToFork ? 'alice' : 'origin';
     const publishUrl = publishesToFork ? fork : origin;
-    const env: Record<string, string> = { BASE: 'main' };
+    const env: Record<string, string> = { BASE: 'main', DESCENDANTS: '' };
     switch (layout) {
         case 'upstream':
             sb.git(me, 'push', '-q', '-u', 'origin', 'feat');
@@ -267,6 +267,27 @@ describe('stops before anything is rewritten', () => {
         expect(allowed.stderr).not.toContain('STOP');
         expect(allowed.status).toBe(0);
         expect(published(f)).toBe(f.sb.git(f.me, 'rev-parse', 'HEAD'));
+    });
+
+    it('refuses a branch other pull requests are built on, naming them', () => {
+        const f = fixture('upstream');
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const r = runSequence(f.sb, f.me, { ...f.env, DESCENDANTS: 'feat-child feat-grandchild' });
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('feat-child feat-grandchild');
+        expect(r.stderr).toContain('built on this branch');
+        expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
+        expect(published(f)).toBe(before);
+    });
+
+    it('stops when the caller did not supply DESCENDANTS at all', () => {
+        const f = fixture('upstream');
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const { DESCENDANTS: _unset, ...env } = f.env;
+        const r = runSequence(f.sb, f.me, env);
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('DESCENDANTS is required');
+        expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
     });
 
     it('refuses a dirty working tree', () => {

@@ -38,11 +38,12 @@ branch, right only for a branch that targets it; nothing asks the forge:
   (`gh pr list --base <branch> --json number,headRefName`) — show another branch
   built on this one, the `rebase` row does not run: rewriting the parent leaves
   every descendant carrying its old commits, and a later
-  `git rebase origin/<parent>` on the child replays them. Report the chain and
-  stop; restacking it is not this procedure, and an unasked `--onto` reseat
-  needs the question the skill's shared-branch protocol asks. Nothing is
-  inferred from branch names — only a pull request whose base is this branch
-  counts.
+  `git rebase origin/<parent>` on the child replays them. The sequence enforces
+  it: the caller supplies `DESCENDANTS` (input below) and step 2 stops on a
+  non-empty list, naming it. Restacking the chain is not this procedure, and an
+  unasked `--onto` reseat needs the question the skill's shared-branch protocol
+  asks. Nothing is inferred from branch names — only a pull request whose base
+  is this branch counts.
 - **Completion review** → rebase first, review after: the completion review
   binds after the last rebase, and one taken before a rebase is re-bound after
   it — the re-binding reviewer cites the post-rebase commits in a commit of its
@@ -91,7 +92,11 @@ remedy the stop names: set the upstream once with `git push -u <remote> <branch>
 then run the sequence again.
 
 **Inputs, set before step 1.** `BASE` is required: the pull request's base
-branch, bare (`main`, `release/1.x`). `PR_HEAD_REPO` and `PR_HEAD_REF` are set
+branch, bare (`main`, `release/1.x`). `DESCENDANTS` is required by step 2: the
+head branches of the open pull requests whose base is this branch, space
+separated — `gh pr list --base <branch> --json headRefName --jq '.[].headRefName'`
+— and set empty only when that list is empty; the sequence cannot ask the forge
+itself, so an unset value is a stop. `PR_HEAD_REPO` and `PR_HEAD_REF` are set
 only with an open pull request (step 1). **Steps 1–3 are one script** — run
 them in order, in ONE shell session, never as separate tool calls: they share
 `REMOTE`, `RB`, `EXPECTED`, `SAVE` and the `stop` / `keep` functions the first
@@ -142,8 +147,9 @@ for b in "${BASE:-}" "$DEF"; do
 done
 ```
 
-**2. Stop, pin, rebase.** Three stops come first, before anything is
-rewritten: a dirty working tree; a merge commit in the topic range
+**2. Stop, pin, rebase.** The stops come first, before anything is
+rewritten: known descendants (`DESCENDANTS` non-empty, § Under `rebase`); a
+dirty working tree; a merge commit in the topic range
 (`git rev-list --merges origin/<base>..HEAD` is non-empty) — the default
 `merge` strategy and `/prepare-for-review` put them there, so a branch switched
 to `rebase` usually carries one, and a plain rebase silently drops it. When
@@ -176,6 +182,10 @@ is printed. A kept ref is removed with `git update-ref -d <ref>`.
 # rebase-sequence: rebase
 declare -F keep >/dev/null && [ -n "${BASE:-}" ] && [ -n "${REMOTE:-}" ] \
   || { echo "STOP: run steps 1–3 in one shell session, starting with step 1 — nothing was rewritten" >&2; exit 1; }
+[ "${DESCENDANTS+set}" = set ] \
+  || stop "DESCENDANTS is required — the head branches of open pull requests whose base is this branch, empty when there are none; nothing was rewritten"
+[ -z "$DESCENDANTS" ] \
+  || stop "pull requests are built on this branch ($DESCENDANTS) — rewriting it leaves them carrying its old commits; restacking is not this procedure, nothing was rewritten"
 [ -z "$(git status --porcelain --untracked-files=no)" ] || stop "the working tree is dirty — nothing was rewritten"
 git fetch -q origin "$BASE" || stop "could not fetch origin $BASE — nothing was rewritten"
 MERGES=$(git rev-list --merges "origin/$BASE..HEAD") \
