@@ -4,7 +4,7 @@ status: accepted
 date: 2026-08-21
 decision: drain-command-surface-and-merge-authority
 supersedes: —
-superseded_by: 268 (§ 3 only)
+superseded_by: 268 (§ 3 only), 282 (§ Disposition · the process-full merge row only)
 phase: —
 type: structural
 review_trigger: >-
@@ -372,3 +372,18 @@ transfer to it. That half of the table above is still `owner` / `open`.
 there:** § Disposition's *"Its merge step stays unreachable from any autonomous
 path"* held while the step was inert. It is now reachable from exactly one
 path — an owner-typed `/pr:merge` invocation — and from no other.
+
+## Owner ruling — 2026-10-07, the process-full half settled
+
+Appended, not a rewrite. The half this record and ADR-266 left `owner` / `open`
+— whether `/roadmap:process-full` may merge — is settled by
+[`ADR-282`](ADR-282-auto-merge-authority-with-a-council-danger-gate.md): an
+explicit owner auto-merge instruction (the owner's own words in the session, or
+`--merge`) is the this-turn confirmation for a `routine` PR; a PR the
+`classify_merge_risk` danger gate marks `needs-council` merges only on two
+convergent council seats, and otherwise goes back to the owner.
+
+The 2026-09-08 sentence *"reachable from exactly one path"* is therefore stale
+too: besides an owner-typed `/pr:merge` invocation, the merge is reachable from
+an owner auto-merge instruction under ADR-282 and from ADR-268 § 3's object-bound
+grant. Without one of them a run still ends at an open, CI-green PR.
