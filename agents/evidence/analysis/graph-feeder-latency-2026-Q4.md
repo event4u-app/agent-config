@@ -58,8 +58,13 @@ that, because both of its runs complete.
   below was re-taken on the balanced instrument with a round count that is a
   multiple of six.
 - **`--repo P --edit F`** takes the feeder-alone reading over an existing
-  repository's own graph, read-only, records every distinct verdict across the
-  billed rounds, and notes when the graph state is not `edited` — a stop
+  repository's own graph. It calls no hook and writes no feeder row, but it is
+  not read-only: `loadGraph` re-emits the repository's SQLite twin
+  (`agents/runtime/state/code-graph-v1.sqlite3`) whenever no valid one exists,
+  and the unbilled warm-up round absorbs that write, so the billed rounds price
+  the path the twin left behind (on this repository the emit fails, see below,
+  so every reading here took the JSON path and nothing was written). It records
+  every distinct verdict across the billed rounds, and notes when the graph state is not `edited` — a stop
   normally follows an uncommitted edit, and on a clean tree the git probes
   answer a different question.
 
@@ -140,9 +145,55 @@ A one-off split, taken during the first-instrument reading (the third table
 row, p50 884 ms) with a scratch probe and not
 shipped as an instrument (11 rounds, medians): `graphState` **≈ 195 ms** — the
 git freshness probes over a 3,768-file tree — and source pick plus `loadGraph`
-**≈ 634 ms**, which is parsing the 59 MB JSON cache. The `untested` walk itself
-is the small remainder. The load term dominating is the finding; the absolute
-figures belong to that third row's slower conditions, not to the others.
+**≈ 634 ms**. The `untested` walk itself is the small remainder. The load term
+dominating is the finding; the absolute figures belong to that third row's
+slower conditions, not to the others. An earlier version of this page called
+that load term "parsing the 59 MB JSON cache"; that attribution was not
+measured, and the decomposition below shows it was wrong.
+
+### What the load term is made of
+
+`loadGraph` (`src/scripts/code_graph/query.ts`) on a graph with no valid SQLite
+twin does more than parse: it reads the file, parses it, validates it,
+attempts to write the twin, builds the node and edge maps, and builds a
+lexical index. The `--load-split GRAPH_JSON` mode times those stages over a
+scratch copy of the graph file, so it writes nothing to the repository, and
+times the whole `loadGraph` in the same round as the check that the stages
+account for it. Taken 2026-10-07 on the machine above, over this repository's
+cache as present that day (59,181,630 bytes, 46,792 nodes, 164,656 edges),
+12 billed rounds after one warm-up:
+
+| stage | p50 ms | p95 ms | share of p50 |
+|---|---|---|---|
+| read file | 8.87 | 11.54 | 2 % |
+| `JSON.parse` | 58.11 | 76.79 | 14 % |
+| `validateGraph` | 22.49 | 24.64 | 5 % |
+| `emitSqliteTwin` (returned `false` in 12 of 12 rounds) | 70.16 | 79.39 | 17 % |
+| node and edge maps | 26.50 | 27.84 | 6 % |
+| lexical index | 229.92 | 236.02 | 54 % |
+| whole `loadGraph` | 424.54 | 447.65 | |
+
+`./scripts-run src/scripts/bench_graph_feeder_latency --load-split agents/runtime/state/code-graph-v1.json --runs 12`
+
+The stages sum to about 416 ms at p50 against the whole call's 425 ms; the
+remainder is the twin probe and the foreign-graph check, which the split does
+not time separately. Two earlier six-round readings the same day gave the
+same shape (whole `loadGraph` p50 415 and 434 ms, before the lexical index and
+the maps were timed apart).
+
+Read and parse together are about a sixth of the load term, not the load
+term. The largest single cost is the lexical index, which `loadGraph` builds
+eagerly on the JSON path although the feeder's `untested` walk does not
+consult it (the index-backed path already builds it lazily). The second is a
+cache write that never lands: on this graph `emitSqliteTwin` fails every time,
+so every stop pays about 70 ms to attempt it and then takes the JSON path
+again. The cause, confirmed by inserting the node ids into an in-memory table
+with the same `PRIMARY KEY`: the graph carries 223 duplicate node ids (46,792
+nodes, 46,569 distinct ids), and the twin's insert fails on
+`UNIQUE constraint failed: nodes.id`; the failure is swallowed. The generated
+fixture has unique ids, so its twin is written and it prices a different load
+path from the real index. That defect is out of scope here and is recorded as
+a follow-up under step 3.4 of the roadmap.
 
 ## What it means
 
@@ -178,8 +229,8 @@ measurement onto the gate's decision path. The stated precondition, carried
 into that step's text: **the feeder's work alone, measured by this
 instrument's `--repo P --edit F` mode on the repository in question, is
 reported beside the promotion as its stop-slot increment, and the
-real-repository readings here — p95 583–1,007 ms, the load term dominating —
-are the baseline it is compared against.** Feeder work alone stands in for the
+real-repository readings here — p95 583–1,007 ms, the load term dominating,
+and that load term decomposed as above — are the baseline it is compared against.** Feeder work alone stands in for the
 stop-slot increment because the fixture arms show the stop's own work is under
 1 ms at p50 (at most 2.19 ms in any round) and the with-minus-without delta agrees with the feeder-alone reading to
 within 1.4 ms at p50. At p95 the two differ by up to about 7 ms in either
@@ -188,8 +239,13 @@ direction, so the precondition's comparison rests on the median, and a p95 from
 against a baseline in the hundreds. `--repo` deliberately does not run the whole hook
 over a real repository: that would append rows to the repository's own feeder
 record, which is the corpus `graph-feeder-recall-2026-Q4.md` labels. A promotion that
-does not first cut the load term (a cached or incremental open) inherits half a
-second to a second per stop.
+does not first cut the load term inherits half a second to a second per stop.
+"Add a cache" is not that cut: a cache (the SQLite twin) already exists and
+silently fails to write on this graph. The measured
+levers, in order of size, are not building the lexical index on a path that
+does not read it (about half the load term), making the twin write succeed so
+later stops take the index-backed path (removing the parse, validation, map
+and failed-write terms together), and only then the parse itself.
 
 This is a reading taken on a date on one machine, not a standing fact. Re-take
 it before relying on it.
