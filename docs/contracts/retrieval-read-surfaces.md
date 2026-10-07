@@ -74,6 +74,7 @@ reason `unclassified` exists and the reason this paragraph does.
 | `check_release_surface_equality.ts` | `remote-subprocess` | `stdout-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `ci_settle.ts` | `remote-subprocess` | `stdout-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `ci_status.ts` | `remote-subprocess` | `stdout-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
+| `classify_merge_risk.ts` | `remote-subprocess` | `stdout-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `memory_lookup.ts` | `ingested-corpus` | `stdout-write` | **covered** | imports the sanitize floor |
 | `rdp_gate_classify.ts` | `network-fetch` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
 | `rdp_quality_eval.ts` | `network-fetch` | `file-write` | **uncovered** | no sanitize import — fetched bytes reach the emit unfiltered |
@@ -86,7 +87,7 @@ reason `unclassified` exists and the reason this paragraph does.
 | `tools/jira_adapter.ts` | `remote-subprocess` | `undecided` | **unclassified** | inbound bytes with no recognised emit — the onward path is undecided |
 | `update_prices.ts` | `node-http-request` | `file-write` | **covered** | imports the sanitize floor |
 
-26 read surface(s): 7 covered, 16 uncovered, 3 unclassified.
+27 read surface(s): 7 covered, 17 uncovered, 3 unclassified.
 <!-- END read-surface-table -->
 ## The second layer — structural hiding in fetched markup
 
