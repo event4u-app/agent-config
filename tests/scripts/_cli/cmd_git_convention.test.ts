@@ -196,3 +196,22 @@ describe('git:convention show exits non-zero on every state sync refuses', () =>
         expect(listed).toEqual([...REFUSAL_STATES].sort());
     });
 });
+
+describe('the documented `show` exit-1 set', () => {
+    const repoRoot = PACKAGE_ROOT;
+    const listed = (text: string, marker: RegExp): string[] => {
+        const m = marker.exec(text.replace(/\s+/g, ' '));
+        expect(m, String(marker)).not.toBeNull();
+        return [...(m?.[1] ?? '').matchAll(/[a-z]+/g)].map((w) => w[0]).filter((w) => w !== 'or');
+    };
+
+    it('the CLI help names every refusal state and the candidate case', () => {
+        const help = fs.readFileSync(path.join(repoRoot, 'src/scripts/_dispatch.bash'), 'utf-8');
+        expect(listed(help, /Exit 1 when a key, or this checkout's candidate for it, is ([a-z, ]+?)\./)).toEqual([...REFUSAL_STATES]);
+    });
+
+    it('the branch-update reference names every refusal state', () => {
+        const ref = fs.readFileSync(path.join(repoRoot, 'src/skills/git-workflow/references/branch-update.md'), 'utf-8');
+        expect(listed(ref, /exits 1 when the value in force, or this checkout's candidate, is ([`a-z, ]+?) —/)).toEqual([...REFUSAL_STATES]);
+    });
+});

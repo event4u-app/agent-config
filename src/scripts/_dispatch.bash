@@ -289,7 +289,9 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              read from a committed .git-convention.yml over the
                              settings files; this checkout's differing value is shown
                              as a candidate, and any repository commit-message
-                             validator that outranks it. Exit 1 on malformed or invalid.
+                             validator that outranks it. Exit 1 when a key, or this
+                             checkout's candidate for it, is malformed, invalid,
+                             discarded or unresolvable.
                              subject checks subjects on stdin against the convention in
                              force; ticket reads the ticket out of a branch name; branch
                              renders a name from git.branch_pattern; sync brings the
