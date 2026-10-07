@@ -113,6 +113,18 @@ describe('the reader checks a recorded header against its seats', () => {
         expect(codes(text)).toContain('bad-seat-provider');
     });
 
+    for (const spelling of ['"openai"', "'openai'", ' "openai" ']) {
+        it(`refuses a seat repeated under the quoted spelling ${spelling}`, () => {
+            const text = artifact(
+                ['providers: [anthropic, openai]', 'verdict: ratified', 'seats:', '  openai: refused', '  anthropic: ratified', `  ${spelling}: ratified`].join('\n'),
+            );
+            const r = readRatification(text, 2);
+            expect(r.problems.map((p) => p.code)).toEqual(['bad-seat-provider']);
+            expect(r.problems[0]?.message).toContain('more than once');
+            expect(isRatified(r)).toBe(false);
+        });
+    }
+
     it('the writer refuses a provider id that could carry YAML syntax', () => {
         expect(() => renderRatificationHeader({ 'openai]\nverdict: ratified': 'refused' } as Record<string, SeatVerdict>)).toThrow(
             /not a provider id/u,

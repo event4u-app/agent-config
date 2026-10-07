@@ -193,7 +193,13 @@ function duplicateSeatKeys(text: string): string[] {
     const dup = new Set<string>();
     for (const line of lines.slice(start + 1)) {
         if (!/^\s/u.test(line)) break;
-        const key = line.slice(0, line.indexOf(':') === -1 ? undefined : line.indexOf(':')).trim();
+        // Compared by the identity a YAML parser would give the key, so a quoted
+        // spelling cannot hide a second entry for the same seat.
+        const key = line
+            .slice(0, line.indexOf(':') === -1 ? undefined : line.indexOf(':'))
+            .trim()
+            .replace(/^(["'])(.*)\1$/u, '$2')
+            .trim();
         if (key === '') continue;
         if (seen.has(key)) dup.add(key);
         seen.add(key);
