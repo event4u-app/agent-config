@@ -69,6 +69,7 @@ import {
     resolveTarget,
     type TargetDeps,
 } from './_lib/git_convention_carrier.js';
+import { splitResolvedRef } from './_lib/git_base_ref.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 export { parseSymrefDefault };
@@ -414,7 +415,7 @@ export function makeGitDeps(repo: string): BaseDeps {
 
 /** Strip the remote prefix so a policy key is the branch name a human writes. */
 function bareName(ref: string): string {
-    return ref.replace(/^origin\//, '');
+    return splitResolvedRef(ref).branch;
 }
 
 /**
@@ -716,13 +717,14 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
     const summary = renderBaseSummary(resolved);
     const order = integrationOrder(resolved);
 
-    const fetched = sh('git', ['fetch', 'origin', '--prune'], repo);
-    if (!fetched.ok) {
+    const remotes = [...new Set(['origin', ...order.map((ref) => splitResolvedRef(ref).remote)])];
+    const failed = remotes.map((remote) => ({ remote, ...sh('git', ['fetch', remote, '--prune'], repo) })).find((f) => !f.ok);
+    if (failed !== undefined) {
         // Unreachable remote is not "already current" — saying so is the whole
         // point, since a silent pass here reproduces the staleness this closes.
         return {
             exit: 0,
-            message: `unverified — could not fetch origin (${fetched.err.split('\n')[0] ?? '?'}). Base freshness NOT checked.`,
+            message: `unverified — could not fetch ${failed.remote} (${failed.err.split('\n')[0] ?? '?'}). Base freshness NOT checked.`,
             generated: [],
             remeasured: [],
             authored: [],
@@ -741,7 +743,7 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
         exit: 1,
         message:
             `cannot count commits behind ${ref} — it is not in this checkout (a single-branch clone fetches only its own branch). ` +
-            `Fetch it: git fetch origin +refs/heads/${bareName(ref)}:refs/remotes/origin/${bareName(ref)}`,
+            `Fetch it: git fetch ${splitResolvedRef(ref).remote} +refs/heads/${bareName(ref)}:refs/remotes/${splitResolvedRef(ref).remote}/${bareName(ref)}`,
         generated: [],
         remeasured: [],
         authored: [],
@@ -931,7 +933,8 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
                     '  --auto-resolve-generated have nothing to change there). A strategy that\n' +
                     '  cannot be read (unparsable file, typo, user-global-only) exits 4.\n' +
                     '  The base is --base; without it the default branch, so a PR into any other\n' +
-                    '  base must pass --base origin/<its base>; a bare name means origin/<name>.\n' +
+                    '  base must pass --base <its base>; a branch name means origin/<name>, and\n' +
+                    '  <remote>/<name> or refs/heads/<name> are used as given.\n' +
                     '  A base that cannot be resolved or counted exits 1; one whose commit\n' +
                     '  cannot be fetched is unverified, exit 0. A conflict is\n' +
                     '  reported and never auto-resolved; generated and authored conflicts are\n' +
