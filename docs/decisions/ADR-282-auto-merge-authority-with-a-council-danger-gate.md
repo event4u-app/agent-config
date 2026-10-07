@@ -85,10 +85,19 @@ fails closed: an unreadable diff is `needs-council`.
    `agents/evidence/owner-directives/<date>-<opaque-id>.md` (who, verbatim
    instruction, scope, date) and cites it in the PR body and ADR. It grants
    nothing; it makes the order reviewable.
-2. **Refusal hand-off envelope.** When a host classifier refusal blocks an
-   owner-directed task, the agent never retries or routes around it. It writes a
-   ready-to-paste continuation prompt with `refusal_envelope` to
-   `agents/tmp/round-<hex>/prompt.md` and names the path in one line.
+2. **Ask once in-session, then hand off.** When a host classifier refusal
+   blocks an owner-directed task, the agent never routes around it — no other
+   tool, no smaller pieces, no different encoding. It finishes what does not
+   depend on the step, then asks the owner **in the session** for an explicit
+   authorization of that exact step (the step, why it is needed, the refusal
+   reason). On an explicit yes it re-runs the **same** step **once**: the
+   classifier decides again, now with the owner's authorization in the
+   transcript it reads — the evidence the refusal asked for, not a workaround.
+   Measured 2026-10-07: `task push-ready` refused, then passed after the owner's
+   explicit in-session go. Refused again, or no owner present (a headless run)
+   → it writes a ready-to-paste continuation prompt with `refusal_envelope` to
+   `agents/tmp/round-<hex>/prompt.md` and names the path in one line. A chat yes
+   never clears a refusal by itself; only the classifier's own re-decision does.
 3. **Lanes report refusals in a fixed field** (`classifier_refusals`), and the
    orchestrator batches them into one envelope at the end of a drain.
 
@@ -138,3 +147,4 @@ output.
 - [`ADR-266`](ADR-266-explicit-pr-merge-invocation-is-the-this-turn-confirmation.md) — the invocation-is-the-confirmation argument reused here.
 - [`ADR-268`](ADR-268-mission-scoped-authority-persistence-and-ratified-self-amendment.md) § 12 — the roadmap grant.
 - [`ADR-280`](ADR-280-capability-federation-behind-a-trust-contract.md) — owner-directed provenance shape.
+- [`ADR-281`](ADR-281-council-confirmed-self-modification.md) — the council ratifies a change to the gated surface; this record decides whether a ratified or routine PR may then merge. A change ADR-281 gates still needs its ratification record first.

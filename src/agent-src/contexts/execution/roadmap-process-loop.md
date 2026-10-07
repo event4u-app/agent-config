@@ -1061,9 +1061,13 @@ execution either way.
 ### 6-refusals. Host-classifier refusals — hand off, never route around
 
 When the host's own classifier refuses a step of an owner-directed task, the
-run never retries it, never reaches the same outcome by another tool, and never
-records a way around it. It finishes what does not depend on the refused step,
-then writes ONE continuation prompt for the owner and names its path in one line:
+run never reaches the same outcome by another tool, in smaller pieces or in
+another encoding, and never records a way around it. It finishes what does not
+depend on the refused step, then — owner present — asks once in-session for an
+explicit authorization of that exact step and, on a yes, re-runs the SAME step
+ONCE so the classifier decides again with the owner's word in front of it
+(ADR-282 § Part B). Refused again, or no owner present, it writes ONE
+continuation prompt for the owner and names its path in one line:
 
 ```bash
 ./scripts-run src/scripts/refusal_envelope --input <envelope.json>

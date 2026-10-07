@@ -4,9 +4,11 @@
  * refuses a step of an owner-directed task (ADR-282 § Part B).
  *
  * The repository cannot change the host classifier, and an agent must never
- * retry a refused action or route around it. What it can do is stop costing
- * the owner a round-trip: write one ready-to-paste continuation prompt and
- * name its path in one line, so the owner never has to ask for it.
+ * route around a refused action. With the owner present it asks once for an
+ * explicit in-session authorization and re-runs the same step once; this
+ * envelope is the fallback when that is refused too or no owner is present.
+ * Write one ready-to-paste continuation prompt and name its path in one line,
+ * so the owner never has to ask for it.
  *
  * The envelope lands at `agents/tmp/<round-hex>/prompt.md`. The directory name
  * is an opaque round id because `block-speaking-inbox-dir` refuses any other
