@@ -166,15 +166,15 @@ review, the conformance count, a merge run — is decided, not discovered.
       three measured readings: pass before the rebase, `fix-before-artifact`
       after it, `unresolvable-fix-ref` in a `git clone --no-local` of it.
       verify: `test -f tests/scripts/check_completion_review_after_rebase.test.ts && npx vitest run tests/scripts/check_completion_review_after_rebase.test.ts` -> 0
-- [ ] **3.4 The council decides what a rebase does to cited commits, and it is
-      built.** The first action runs the council on three options: (a) the
+- [x] **3.4 The council decides what a rebase does to cited commits, and it is
+      built.** The council chose among three options (2026-10-07, D8): (a) the
       documented path re-points the `fixed` refs of the branch's own findings
       file through commits whose stable patch ids match, in a commit of its own;
       (b) under a strategy other than `merge` the completion review binds after
       the last rebase, stated in `docs/contracts/plan-review-gates.md` § 2.5;
       (c) only a conflict-free rebase whose patch ids all match may re-point,
       anything else re-binds. The gate's strictness is unchanged in every option.
-      The verdict becomes a Decisions row with its council record and is then
+      The verdict, (b), is a Decisions row with its council record and is
       built with a test that rebases a branch with a `fixed` row.
       verify: `test -f tests/scripts/check_completion_review_rebase_remedy.test.ts && npx vitest run tests/scripts/check_completion_review_rebase_remedy.test.ts tests/scripts/check_completion_review.test.ts` -> 0
 - [ ] **3.5 The scan's two counts are recorded and handed over.** A test fixes
@@ -218,6 +218,7 @@ review, the conformance count, a merge run — is decided, not discovered.
 | D4 | reversible-technical | agent | The recovery ref lives under `refs/agent-config/rewrites/` | Lightweight tags leak through `git push --tags` and count as a tag push | A host needs the snapshot visible to a non-git tool |
 | D5 | reversible-technical | agent | A branch with known descendants is refused, not restacked | Parent-first without `--onto` replays rewritten commits; `--onto` unasked needs a question | The tree gains an explicit parent graph with an undo |
 | D7 | product-owned | owner | Under a strategy other than `merge`, `/pr:merge` merges a green, conflict-free but behind pull request when the forge does not require an up-to-date branch, and says so in the summary | Owner answer to blocker `behind-pr-under-non-merge`, 2026-10-07; matches waiver `arr-2026-09-10-strict-status-checks` | A merge of a behind pull request breaks the base |
+| D8 | contested-technical | council:agents/evidence/council/rebase-cited-commits-2026-10.md | Option (b): under a strategy other than `merge` the completion review binds after the last rebase, and a review taken before a rebase is re-bound after it; nothing edits a review record automatically. Tooling may propose an old→new mapping from unique stable patch-id matches as a labelled draft for the re-binding reviewer, never as accepted evidence in a findings file | AI council 2026-10-07, 2/2 (`anthropic/claude-sonnet-4-5`, `openai/codex-default`); (a) rejected as evidence laundering, (c) because matching patch ids prove patch-text equivalence, not correctness against the new base, and duplicates make the mapping non-unique | A portable rewrite-provenance record exists and equivalence of the resulting reviewed state can be shown |
 | D6 | deterministic | evidence | "merge", "push" and "rebase" in this file name the procedure being specified, never an operation this roadmap authorises; every real rewrite or push during execution stays governed by `git-history-discipline` and is asked per turn | `closure_scan` classifies the word `merge` as a typed operation on every line that mentions it | — |
 
 ## Blockers

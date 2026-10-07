@@ -513,6 +513,25 @@ The findings artifact MUST be committed before the first fix commit:
   commit deliberately does not move. § 2.7's rename is the archival step for a
   round that is already **closed and superseded** — it is not an edit ban on the
   live artefact.
+- **A rebase re-binds the review; nothing edits the record for it.** Under a
+  `git.update_strategy` other than `merge`, the completion review binds after
+  the **last** rebase of the branch. A rebase rewrites both the artefact's
+  first-add commit and every cited fix, so a review taken before it fails
+  `fix-before-artifact` locally and `unresolvable-fix-ref` in a transport clone
+  — correctly: the cited commits are no longer the history being merged. Such a
+  review is re-bound after the rebase: the re-binding reviewer cites the
+  post-rebase fix commits and commits that edit on its own. Nothing in a review
+  record is edited automatically. Tooling MAY propose an old→new mapping from
+  unique stable patch-id matches (`git patch-id --stable`), as a draft labelled
+  as such for the re-binding reviewer, and MUST NOT write it into a findings
+  file as accepted evidence: patch-id correspondence is patch-text equivalence,
+  not completion evidence, and a duplicate patch id makes the mapping
+  non-unique. A pair is never inferred from a subject or a position. The gate's
+  strictness is unchanged. (AI council, 2026-10-07, 2/2 seats; rejected:
+  re-pointing matched rows automatically, and re-pointing only after a
+  conflict-free rebase whose patch ids all match. Revisit if a portable
+  rewrite-provenance record exists **and** equivalence of the resulting
+  reviewed state can be shown.)
 - Enforcement point: pre-push hook + CI, dual layer, **CI
   authoritative**; the agent-side check is advisory (warns, never blocks
   local work).

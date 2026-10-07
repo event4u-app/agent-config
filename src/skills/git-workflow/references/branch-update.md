@@ -40,6 +40,12 @@ could not be read, and it is not a strategy either:
   needs the question the skill's shared-branch protocol asks. Nothing is
   inferred from branch names — only a pull request whose base is this branch
   counts.
+- **Completion review** → rebase first, review after: the completion review
+  binds after the last rebase, and one taken before a rebase is re-bound after
+  it — the re-binding reviewer cites the post-rebase commits in a commit of its
+  own. The step 3 equivalence report is supporting data for that reviewer, never
+  the re-binding itself, and nothing edits a findings file automatically
+  ([`plan-review-gates`](../../../../docs/contracts/plan-review-gates.md) § 2.5).
 - **Conflicts** → resolve to the correct end state per commit, `git add`,
   `git rebase --continue`; `git rebase --abort` returns to the pre-rebase state.
   Re-run the relevant tests afterwards — a conflict-free tree is not a correct
