@@ -82,7 +82,7 @@ surface cites one reference instead of restating a grammar.
       parity test holds `command_suggester/match.ts:33` equal to the module's
       ticket grammar.
       verify: `test -f tests/scripts/_lib/git_convention_grammar.test.ts && npx vitest run tests/scripts/_lib/git_convention_grammar.test.ts` -> 0
-- [ ] **1.2 Three subcommands under the existing verb.**
+- [x] **1.2 Three subcommands under the existing verb.**
       `git:convention subject` reads subjects on stdin, resolves the convention
       through the reader and the skill's tiers, and exits non-zero listing each
       failure. Where a `commit-msg` hook is installed it validates nothing: the

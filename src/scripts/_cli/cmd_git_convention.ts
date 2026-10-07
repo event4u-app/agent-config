@@ -15,9 +15,15 @@
  * commit the branch is judged against. Where this checkout's own value differs,
  * it is printed as a candidate beside the value in force.
  *
- * Exit codes: `0` every key readable · `1` a key, or this checkout's candidate
- * for it, is `malformed` or `invalid` · `2` usage error. An `unresolvable`
- * target is reported, not an exit: `sync_pr_branch` refuses on it.
+ * `show` exit codes: `0` every key readable · `1` a key, or this checkout's
+ * candidate for it, is `malformed` or `invalid` · `2` usage error. An
+ * `unresolvable` target is reported, not an exit: `sync_pr_branch` refuses on it.
+ *
+ * `subject` reads subjects on stdin and exits `0` all valid, or a `commit-msg`
+ * hook validates each commit instead · `1` a subject fails, or the format cannot
+ * be read · `2` usage · `3` decided by a validator this verb does not run, or a
+ * validator and the committed declaration disagree. `ticket` exits `0`; `branch`
+ * prints the name and exits `0`, or `1` on a value it would have to rewrite.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -25,8 +31,18 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { GIT_CONVENTION_KEYS, describeRefusal, type GitConventionReading } from '../_lib/git_convention.js';
+import { GIT_CONVENTION_KEYS, describeRefusal, invalidReason, isRefusal, type GitConventionReading } from '../_lib/git_convention.js';
 import { CARRIER_PATH, readCommittedConvention, type TargetDeps } from '../_lib/git_convention_carrier.js';
+import {
+    FAMILY_ERE,
+    checkSubject,
+    renderBranch,
+    ruleName,
+    ticketCandidates,
+    type CommitFormat,
+    type SubjectFamily,
+    type SubjectRule,
+} from '../_lib/git_convention_grammar.js';
 
 export interface GitConventionResult {
     code: 0 | 1 | 2;
@@ -165,24 +181,181 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
     return { code, out, err: [] };
 }
 
-export const SUBCOMMANDS: Readonly<Record<string, (args: readonly string[], cwd: string) => GitConventionResult>> = {
+/** Where the skill's tier 2 persists an approved measurement. */
+export const APPROVED_CARD = 'agents/memory/curated/conventions/approved/commit-subject.md';
+
+function _flags(args: readonly string[], names: readonly string[]): { values: Record<string, string>; json: boolean; positional: string[]; bad: string | null } {
+    const values: Record<string, string> = {};
+    const positional: string[] = [];
+    let json = false;
+    for (let i = 0; i < args.length; i++) {
+        const a = args[i] as string;
+        if (a === '--json') json = true;
+        else if (a.startsWith('--')) {
+            const v = args[i + 1];
+            if (!names.includes(a.slice(2)) || v === undefined || v.startsWith('--')) return { values, json, positional, bad: a };
+            values[a.slice(2)] = v;
+            i++;
+        } else positional.push(a);
+    }
+    return { values, json, positional, bad: null };
+}
+
+function _cardFamily(root: string): string | null {
+    let text: string;
+    try {
+        text = fs.readFileSync(path.join(root, APPROVED_CARD), 'utf-8');
+    } catch {
+        return null;
+    }
+    return /^dominant_family:\s*["']?([a-z-]+)/m.exec(text)?.[1] ?? null;
+}
+
+/**
+ * A commitlint config that extends the conventional preset without its own
+ * header grammar rejects a subject that leads with a ticket.
+ */
+function _commitlintRejectsTicketLead(configPath: string): boolean {
+    try {
+        const text = fs.readFileSync(configPath, 'utf-8');
+        return text.includes('config-conventional') && !text.includes('headerPattern');
+    } catch {
+        return false;
+    }
+}
+
+type SubjectPlan =
+    | { kind: 'rule'; rule: SubjectRule; tier: string }
+    | { kind: 'stop'; code: 0 | 1 | 3; lines: string[] };
+
+function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan {
+    if (values.format !== undefined) {
+        if (!['ticket-scope', 'ticket-conventional'].includes(values.format)) return { kind: 'stop', code: 1, lines: [`unknown format: ${values.format}`] };
+        return { kind: 'rule', rule: { format: values.format as CommitFormat }, tier: 'passed by the caller' };
+    }
+    if (values.family !== undefined) {
+        if (!FAMILY_ERE.some(([f]) => f === values.family)) return { kind: 'stop', code: 1, lines: [`no grammar for family: ${values.family}`] };
+        return { kind: 'rule', rule: { family: values.family as SubjectFamily }, tier: 'passed by the caller' };
+    }
+    const read = readCommittedConvention(cwd, { keys: ['commit_format'] });
+    const reading = read.readings.commit_format as GitConventionReading;
+    if (isRefusal(reading.state)) return { kind: 'stop', code: 1, lines: [describeRefusal(reading)] };
+    const committed = reading.state === 'valid' && (reading.source ?? '').startsWith(CARRIER_PATH);
+    const declared = committed || (reading.state === 'valid' && reading.value === 'ticket-conventional');
+    const validator = commitMessageValidator(cwd);
+    if (validator?.kind === 'commit-msg hook') {
+        return { kind: 'stop', code: 0, lines: [`the commit-msg hook at ${validator.path} validates each commit; nothing is validated here`] };
+    }
+    if (validator?.kind === 'commitlint config') {
+        if (committed && reading.value === 'ticket-conventional' && _commitlintRejectsTicketLead(validator.path)) {
+            return {
+                kind: 'stop',
+                code: 3,
+                lines: [
+                    `validator: ${validator.path} extends the conventional preset, which rejects a subject that leads with a ticket`,
+                    `declared:  git.commit_format: ticket-conventional in ${reading.source}`,
+                    'the two disagree; this verb adopts neither — settle one of them',
+                ],
+            };
+        }
+        return {
+            kind: 'stop',
+            code: 3,
+            lines: [`the commitlint config at ${validator.path} outranks git.commit_format; no commit-msg hook runs it`, `run: printf '%s\n' "<subject>" | npx --no-install commitlint`],
+        };
+    }
+    if (declared) return { kind: 'rule', rule: { format: reading.value as CommitFormat }, tier: `declared in ${reading.source}` };
+    const family = _cardFamily(read.root);
+    if (family !== null) {
+        if (!FAMILY_ERE.some(([f]) => f === family)) return { kind: 'stop', code: 3, lines: [`the approved family ${family} in ${APPROVED_CARD} has no grammar to validate against`] };
+        return { kind: 'rule', rule: { family: family as SubjectFamily }, tier: `approved in ${APPROVED_CARD}` };
+    }
+    return { kind: 'rule', rule: { format: (reading.value ?? 'ticket-scope') as CommitFormat }, tier: 'default (Conventional Commits)' };
+}
+
+export function subjectCommand(args: readonly string[], cwd: string, stdin = ''): GitConventionResult {
+    const f = _flags(args, ['format', 'family']);
+    if (f.bad !== null || f.positional.length > 0) return { code: 2, out: [], err: [`unknown argument: ${f.bad ?? f.positional[0]}`, USAGE] };
+    const subjects = stdin.split('\n').map((l) => l.trimEnd()).filter((l) => l !== '');
+    if (subjects.length === 0) return { code: 2, out: [], err: ['no subjects on stdin', USAGE] };
+    const plan = _planSubject(f.values, cwd);
+    if (plan.kind === 'stop') return { code: plan.code, out: plan.lines, err: [] };
+    const failures = subjects.map((s) => ({ s, v: checkSubject(s, plan.rule) })).filter((x) => !x.v.ok);
+    if (f.json) {
+        const out = { ok: failures.length === 0, rule: ruleName(plan.rule), tier: plan.tier, failures: failures.map((x) => ({ subject: x.s, rule: x.v.ok ? null : x.v.rule })) };
+        return { code: failures.length === 0 ? 0 : 1, out: [JSON.stringify(out, null, 2)], err: [] };
+    }
+    if (failures.length === 0) return { code: 0, out: [`${subjects.length} subject(s) valid under ${ruleName(plan.rule)} (${plan.tier})`], err: [] };
+    return { code: 1, out: failures.map((x) => `✗ ${x.s}\n  ${x.v.ok ? '' : x.v.rule}`), err: [] };
+}
+
+export function ticketCommand(args: readonly string[], cwd: string): GitConventionResult {
+    const f = _flags(args, ['keys']);
+    if (f.bad !== null || f.positional.length > 1) return { code: 2, out: [], err: [`unknown argument: ${f.bad ?? f.positional[1]}`, USAGE] };
+    const name = f.positional[0] ?? _git(cwd, 'rev-parse', '--abbrev-ref', 'HEAD') ?? '';
+    const keys = f.values.keys === undefined ? null : f.values.keys.split(/[\s,]+/).filter((k) => k !== '');
+    const all = ticketCandidates(name, keys);
+    const ticket = all.find((c) => c.status === 'ticket')?.token ?? null;
+    if (f.json) return { code: 0, out: [JSON.stringify({ branch: name, ticket, candidates: all }, null, 2)], err: [] };
+    return { code: 0, out: [`ticket ${ticket ?? 'none'}`, ...all.map((c) => `  ${c.token.padEnd(14)} ${c.status}`)], err: [] };
+}
+
+export function branchCommand(args: readonly string[], cwd: string): GitConventionResult {
+    const f = _flags(args, ['type', 'ticket', 'slug', 'pattern']);
+    if (f.bad !== null || f.positional.length > 0 || f.values.slug === undefined) {
+        return { code: 2, out: [], err: [f.bad === null && f.positional.length === 0 ? '--slug is required' : `unknown argument: ${f.bad ?? f.positional[0]}`, USAGE] };
+    }
+    let pattern = f.values.pattern;
+    if (pattern === undefined) {
+        const reading = readCommittedConvention(cwd, { keys: ['branch_pattern'] }).readings.branch_pattern as GitConventionReading;
+        if (isRefusal(reading.state) || reading.value === null) return { code: 1, out: [], err: [describeRefusal(reading)] };
+        pattern = reading.value;
+    } else {
+        const why = invalidReason('branch_pattern', pattern);
+        if (why !== null) return { code: 1, out: [], err: [`invalid pattern: ${why}`] };
+    }
+    const r = renderBranch(pattern, { type: f.values.type ?? null, ticket: f.values.ticket ?? null, slug: f.values.slug });
+    if (!r.ok) return { code: 1, out: [], err: [r.reason] };
+    const check = spawnSync('git', ['check-ref-format', '--branch', r.name], { encoding: 'utf8' });
+    if (check.error === undefined && check.status !== 0) return { code: 1, out: [], err: [`\`${r.name}\` fails git check-ref-format --branch`] };
+    return { code: 0, out: f.json ? [JSON.stringify({ branch: r.name, pattern })] : [r.name], err: [] };
+}
+
+export const SUBCOMMANDS: Readonly<Record<string, (args: readonly string[], cwd: string, stdin?: string) => GitConventionResult>> = {
     show: (args, cwd) => showConvention(args, cwd),
+    subject: (args, cwd, stdin) => subjectCommand(args, cwd, stdin),
+    ticket: (args, cwd) => ticketCommand(args, cwd),
+    branch: (args, cwd) => branchCommand(args, cwd),
 };
 
-const USAGE = `usage: agent-config git:convention <${Object.keys(SUBCOMMANDS).join('|')}> [--json] [--base REF]`;
+const USAGE = [
+    'usage: agent-config git:convention show [--json] [--base REF]',
+    '       agent-config git:convention subject [--format F | --family F] [--json]   (subjects on stdin)',
+    '       agent-config git:convention ticket [BRANCH] [--keys "DEV, OPS"] [--json]',
+    '       agent-config git:convention branch --slug S [--type T] [--ticket K] [--pattern P] [--json]',
+].join('\n');
 
-export function runGitConvention(argv: readonly string[], cwd: string): GitConventionResult {
+export function runGitConvention(argv: readonly string[], cwd: string, stdin?: string): GitConventionResult {
     const [sub, ...rest] = argv;
     if (sub === '-h' || sub === '--help') return { code: 0, out: [USAGE], err: [] };
     const handler = sub === undefined ? undefined : SUBCOMMANDS[sub];
     if (handler === undefined) {
         return { code: 2, out: [], err: [sub === undefined ? USAGE : `unknown subcommand: ${sub}`, ...(sub === undefined ? [] : [USAGE])] };
     }
-    return handler(rest, cwd);
+    return handler(rest, cwd, stdin);
+}
+
+function _stdin(): string {
+    if (process.stdin.isTTY) return '';
+    try {
+        return fs.readFileSync(0, 'utf-8');
+    } catch {
+        return '';
+    }
 }
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
-    const result = runGitConvention(argv, process.cwd());
+    const result = runGitConvention(argv, process.cwd(), argv[0] === 'subject' ? _stdin() : undefined);
     for (const line of result.out) process.stdout.write(`${line}\n`);
     for (const line of result.err) process.stderr.write(`${line}\n`);
     return result.code;
