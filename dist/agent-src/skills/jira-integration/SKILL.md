@@ -54,7 +54,7 @@ fix/DEV-5678/null-pointer         →  DEV-5678
 hotfix/DEV-999/critical-fix       →  DEV-999
 ```
 
-Pattern: `[A-Z]+-[0-9]+` anywhere in the branch name.
+Read it with `agent-config git:convention ticket` — [`commit-subject`](../git-workflow/references/commit-subject.md) § Reading the ticket.
 
 Use `git branch --show-current` to detect, then fetch the ticket:
 

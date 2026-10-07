@@ -123,7 +123,7 @@ surface cites one reference instead of restating a grammar.
       the commit skill's § 3 keep one line and the link, and the skill's
       "no executable classifier ships" sentence is corrected.
       verify: `test -f src/skills/git-workflow/references/commit-subject.md && ./scripts-run src/scripts/check_generator_sync --quiet` -> 0
-- [ ] **2.3 One ticket grammar in prose.** The commands and skills on
+- [x] **2.3 One ticket grammar in prose.** The commands and skills on
       `[A-Z]+-[0-9]+` cite the reference. The two `trigger_context:` entries and
       `migrate_command_suggestions.ts:119` stay as they are and are listed in the
       reference as suggester metadata (D4). The reference records
