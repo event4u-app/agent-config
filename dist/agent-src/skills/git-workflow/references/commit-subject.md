@@ -59,9 +59,12 @@ resolves the convention in this order — the first that applies decides:
 
 1. **A commitlint config without a hook** — it outranks `git.commit_format`; the
    verb prints the one command that runs it and exits `3`. Where that config
-   extends the conventional preset and the committed `.git-convention.yml`
-   declares `ticket-conventional`, the two disagree: both are printed, neither
-   is adopted, exit `3`.
+   extends the conventional preset without a `headerPattern` of its own and
+   the committed `.git-convention.yml` declares `ticket-conventional`, the two
+   disagree: both are printed, neither is adopted, exit `3`. The config is
+   parsed (JSON, YAML, the `commitlint` key of `package.json`), so a name in a
+   comment decides nothing; a JS or TS config is code the verb does not run,
+   so it says it cannot tell and prints only the command.
 2. **A declaration** — `git.commit_format` in `.git-convention.yml` (either
    value; ADR-282), or a developer settings file value other than the template
    default. The rule is one for both values: `settings:sync` writes the

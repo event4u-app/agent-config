@@ -111,15 +111,57 @@ describe('git:convention subject', () => {
 
     it('prints both and adopts neither when the validator and the committed declaration disagree', () => {
         const dir = repo({
+            '.commitlintrc.json': '{ "extends": ["@commitlint/config-conventional"] }\n',
+            '.git-convention.yml': 'git:\n  commit_format: ticket-conventional\n',
+        });
+        const r = subject(dir, 'DEV-1 feat: x\n');
+        expect(r.code).toBe(3);
+        const text = r.out.join('\n');
+        expect(text).toContain('.commitlintrc.json');
+        expect(text).toContain('ticket-conventional');
+        expect(text).toContain('adopts neither');
+    });
+
+    it('reads the effective config, not its comments: a headerPattern only in a comment still disagrees', () => {
+        const dir = repo({
+            '.commitlintrc.yml': '# parserPreset:\n#   parserOpts:\n#     headerPattern: ^(\\w+-\\d+) (\\w+): (.*)$\nextends:\n  - "@commitlint/config-conventional"\n',
+            '.git-convention.yml': 'git:\n  commit_format: ticket-conventional\n',
+        });
+        const r = subject(dir, 'DEV-1 feat: x\n');
+        expect(r.code).toBe(3);
+        expect(r.out.join('\n')).toContain('adopts neither');
+    });
+
+    it('a preset named only in a comment is not an extends', () => {
+        const dir = repo({
+            '.commitlintrc.yml': '# extends: ["@commitlint/config-conventional"]\nrules: {}\n',
+            '.git-convention.yml': 'git:\n  commit_format: ticket-conventional\n',
+        });
+        const r = subject(dir, 'DEV-1 feat: x\n');
+        expect(r.code).toBe(3);
+        expect(r.out.join('\n')).not.toContain('adopts neither');
+        expect(r.out.filter((l) => l.startsWith('run: '))).toHaveLength(1);
+    });
+
+    it('reads the commitlint key of package.json', () => {
+        const dir = repo({
+            'package.json': JSON.stringify({ name: 'x', commitlint: { extends: ['@commitlint/config-conventional'] } }),
+            '.git-convention.yml': 'git:\n  commit_format: ticket-conventional\n',
+        });
+        expect(subject(dir, 'DEV-1 feat: x\n').out.join('\n')).toContain('adopts neither');
+    });
+
+    it('says it cannot tell for a JS config, and prints only the neutral command', () => {
+        const dir = repo({
             'commitlint.config.js': "module.exports = { extends: ['@commitlint/config-conventional'] };\n",
             '.git-convention.yml': 'git:\n  commit_format: ticket-conventional\n',
         });
         const r = subject(dir, 'DEV-1 feat: x\n');
         expect(r.code).toBe(3);
         const text = r.out.join('\n');
-        expect(text).toContain('commitlint.config.js');
-        expect(text).toContain('ticket-conventional');
-        expect(text).toContain('adopts neither');
+        expect(text).not.toContain('adopts neither');
+        expect(text).toContain('cannot tell');
+        expect(r.out.filter((l) => l.startsWith('run: '))).toHaveLength(1);
     });
 
     it('exits 1 on a commit format it cannot read', () => {

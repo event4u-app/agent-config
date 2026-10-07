@@ -37,7 +37,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { GIT_CONVENTION_KEYS, conventionDefault, describeRefusal, invalidReason, isRefusal, type GitConventionReading } from '../_lib/git_convention.js';
+import { GIT_CONVENTION_KEYS, conventionDefault, describeRefusal, invalidReason, isRefusal, parseLayerText, type GitConventionReading } from '../_lib/git_convention.js';
 import { CARRIER_PATH, readCommittedConvention, type TargetDeps } from '../_lib/git_convention_carrier.js';
 import {
     FAMILY_ERE,
@@ -222,17 +222,39 @@ function _cardFamily(root: string): string | null {
     return /^dominant_family:\s*["']?([a-z-]+)/m.exec(text)?.[1] ?? null;
 }
 
+function _hasKey(value: unknown, key: string): boolean {
+    if (value === null || typeof value !== 'object') return false;
+    if (Array.isArray(value)) return value.some((v) => _hasKey(v, key));
+    return Object.entries(value).some(([k, v]) => k === key || _hasKey(v, key));
+}
+
 /**
- * A commitlint config that extends the conventional preset without its own
- * header grammar rejects a subject that leads with a ticket.
+ * Whether a commitlint config rejects a subject that leads with a ticket: it
+ * extends the conventional preset and sets no header grammar of its own. Read
+ * from the parsed config, so a name in a comment decides nothing. A JS or TS
+ * config is code; evaluating it to find out would run it, so it is `unknown`,
+ * as is a config that does not parse.
  */
-function _commitlintRejectsTicketLead(configPath: string): boolean {
+function _commitlintRejectsTicketLead(configPath: string): boolean | 'unknown' {
+    const base = path.basename(configPath);
+    if (/\.[cm]?[jt]s$/.test(base)) return 'unknown';
+    let config: unknown;
     try {
         const text = fs.readFileSync(configPath, 'utf-8');
-        return text.includes('config-conventional') && !text.includes('headerPattern');
+        if (base === 'package.json') {
+            config = (JSON.parse(text) as { commitlint?: unknown }).commitlint;
+        } else {
+            const layer = parseLayerText(text);
+            if (layer.parsed !== 'valid') return 'unknown';
+            config = layer.data;
+        }
     } catch {
-        return false;
+        return 'unknown';
     }
+    if (config === null || typeof config !== 'object') return 'unknown';
+    const ext = (config as { extends?: unknown }).extends;
+    const presets = (Array.isArray(ext) ? ext : [ext]).filter((e): e is string => typeof e === 'string');
+    return presets.some((e) => e.includes('config-conventional')) && !_hasKey(config, 'headerPattern');
 }
 
 type SubjectPlan =
@@ -260,7 +282,8 @@ function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan 
     // trailer hook checks nothing), so the subject is still checked here.
     const notes = validator?.kind === 'commit-msg hook' ? [`note: the commit-msg hook at ${validator.path} also runs at commit`] : [];
     if (validator?.kind === 'commitlint config') {
-        if (committed && reading.value === 'ticket-conventional' && _commitlintRejectsTicketLead(validator.path)) {
+        const verdict = committed && reading.value === 'ticket-conventional' ? _commitlintRejectsTicketLead(validator.path) : false;
+        if (verdict === true) {
             return {
                 kind: 'stop',
                 code: 3,
@@ -274,7 +297,13 @@ function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan 
         return {
             kind: 'stop',
             code: 3,
-            lines: [`the commitlint config at ${validator.path} outranks git.commit_format; no commit-msg hook runs it`, `run: printf '%s\n' "<subject>" | npx --no-install commitlint`],
+            lines: [
+                ...(verdict === 'unknown'
+                    ? [`cannot tell whether ${validator.path} accepts a ticket-led subject (git.commit_format: ticket-conventional in ${reading.source}); this verb does not evaluate it`]
+                    : []),
+                `the commitlint config at ${validator.path} outranks git.commit_format; no commit-msg hook runs it`,
+                `run: printf '%s\n' "<subject>" | npx --no-install commitlint`,
+            ],
         };
     }
     if (declared) return { kind: 'rule', rule: { format: reading.value as CommitFormat }, tier: `declared in ${reading.source}`, notes };
