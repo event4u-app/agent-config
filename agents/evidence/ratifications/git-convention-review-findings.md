@@ -1,12 +1,12 @@
 ---
 proposed_by: claude-opus-5/git-convention-review-findings
 implemented_by: claude-opus-5/git-convention-review-findings
-reviewed_by: ai-council/anthropic-claude-sonnet-4-5+openai-codex-default+openai-gpt-4o-2026-10-07
-providers: [openai]
-verdict: confirmed-non-expanding
+reviewed_by: ai-council/anthropic-claude-sonnet-4-5+openai-codex-default-2026-10-07
+providers: [anthropic, openai]
+verdict: ratified
 seats:
-  openai: confirmed-non-expanding
-  anthropic: no-final-verdict
+  anthropic: confirmed-non-expanding
+  openai: ratified
 effective_after: merge
 ---
 
@@ -37,7 +37,7 @@ THE AGENT CAN CHANGE FEWER CLASS-C VALUES AFTER THIS CHANGE THAN BEFORE IT.
 NO PARSER CONTRACT, CEILING, FLOOR OR BASELINE MOVES. NO KERNEL RULE IS TOUCHED.
 ```
 
-## Independent review — four rounds, stated as they happened
+## Independent review — five rounds, stated as they happened
 
 1. **Round 1** (CLI seats, earlier version): `anthropic/claude-sonnet-4-5` and `openai/codex-default` both returned
    `confirmed-non-expanding`. The openai seat named three simulation gaps: literal replacement, a non-list `edits`,
@@ -51,12 +51,15 @@ NO PARSER CONTRACT, CEILING, FLOOR OR BASELINE MOVES. NO KERNEL RULE IS TOUCHED.
    exhausted (50/50 on the council's own counter), anthropic API account without credit. `openai/gpt-4o` on the
    metered rung: `confirmed-non-expanding`.
 
-The council's quota counter was not reset to obtain a second seat: it is the run's own budget control, and resetting
-it is the owner's call. A two-provider verdict on the final diff is open residue, named in the PR description.
+5. **Round 5** (final diff, both CLI seats; the owner directed council runs through the CLI and the council's local
+   quota counter was reset for that): `anthropic/claude-sonnet-4-5` `confirmed-non-expanding`; `openai/codex-default`
+   `ratified`. Its reason: replacing `new_string` literally also lets through safe literal writes that the old
+   `String.replace` simulation refused by mistake. That is a narrow widening of the accepted request set, justified
+   because it matches what the host writes, and no path newly permits a class-C weakening.
 
-The header is derived by `ratification_header` from the final verdict each seat gave **on the final diff**. That is
-why it carries one provider: anthropic's last verdict is on the round-2 diff, which lacked the refusal of ambiguous
-payloads and the check of a created file. It is recorded here and not counted.
+The header is derived by `ratification_header` from the final verdict each seat gave on the final diff. Both seats
+asked for one more regression test: a first edit that would clear a class-C value followed by a second that misses,
+where the host applies none. That test is a named follow-up candidate.
 
 A file that cannot be read for a reason other than its absence is unchanged: the guard does not check it, as on the
 pre-existing Edit path.
