@@ -24,7 +24,6 @@ workspaces: [engineering]
 packs: [engineering-base]
 enforced_by:
   - "hook:block-no-verify"
-# obligation: line 35
 obligation_frequency: "per-commit"
 ---
 

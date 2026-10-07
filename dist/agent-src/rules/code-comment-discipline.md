@@ -20,7 +20,6 @@ packs: [engineering-base]
 collision_ok:
   "refactor": "refactors churn comments — the keep/drop discipline applies"
   "implement": "fresh implementation is where over-commenting lands"
-# obligation: line 5
 obligation_frequency: "per-edit"
 enforced_by:
   - "validator:src/scripts/lint_code_comments.ts"

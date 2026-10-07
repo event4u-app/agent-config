@@ -15,7 +15,6 @@ applies_to_user_types:
 self_contained: true
 workspaces: [engineering]
 packs: [meta]
-# obligation: line 41
 enforced_by:
   - "instruction-only: nothing can observe an agent concluding that no skill exists; the skill-route concern covers only the prompts where the ranker is confident"
 obligation_frequency: "per-turn"

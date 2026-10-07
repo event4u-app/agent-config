@@ -7,7 +7,6 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 enforced_by:
   - "observer:maintainer-review"
-# obligation: line 66
 obligation_frequency: "per-turn"
 ---
 

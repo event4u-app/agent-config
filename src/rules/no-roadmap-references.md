@@ -17,7 +17,6 @@ enforced_by:
   - "validator:src/scripts/check_council_references.ts"
 collision_ok:
   "agents/roadmaps/": "roadmap edits are where transient-ref links get written"
-# obligation: line 47
 obligation_frequency: "per-edit"
 ---
 

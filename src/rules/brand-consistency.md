@@ -10,7 +10,6 @@ applies_to_user_types:
 self_contained: true
 workspaces: [engineering]
 packs: [brand]
-# obligation: line 20
 obligation_frequency: "none"
 ---
 

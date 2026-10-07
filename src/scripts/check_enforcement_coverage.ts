@@ -41,6 +41,11 @@ import { assertScanned, DeadScopeError } from './_lib/scan_scope.js';
 import { count as count_artefacts } from './update_counts.js';
 import { KERNEL_RULE_ID_SET } from './_lib/kernel_rules.js';
 import {
+    loadRuleObligations,
+    RULE_OBLIGATIONS_PATH,
+    type RuleObligationEntry,
+} from './_lib/rule_obligations.js';
+import {
     carrier_frequency_by_platform,
     covers,
     covers_any,
@@ -128,6 +133,68 @@ export interface RuleCoverage {
     frequency_verdict: FrequencyVerdict;
     /** Hook-capable platforms where no declared carrier covers the obligation. */
     gap_platforms: string[];
+    /**
+     * Obligation-level credit, beside the rule-level `effective`.
+     *
+     * A rule-level `effective` credits every obligation of the rule for what one
+     * entry refuses. This credits only the ids an entry is bound to in
+     * `src/config/rule-obligations.json`. Nothing here changes `effective` or
+     * any summary field that existed before it.
+     */
+    obligation: ObligationCredit;
+}
+
+export interface ObligationCredit {
+    /** Ids the rule declares; empty for the kernel and for a rule with no entry. */
+    ids: string[];
+    /** Ids bound to at least one entry that resolves to something that can fail a build. */
+    blocking: string[];
+    /** Ids bound only to entries that fire and never refuse. */
+    observer: string[];
+    /**
+     * Entries that resolve to blocking or observer and carry NO binding. They
+     * keep the rule-level credit they always had and are reported here so the
+     * credit is visibly unscoped. Never counted as obligation-level coverage.
+     */
+    unbound_entries: string[];
+}
+
+/**
+ * Which of a rule's obligations its `enforced_by` entries actually carry.
+ *
+ * An entry absent from `bindings` is unbound. An entry bound to `[]` is a
+ * recorded finding that it refuses none of this rule's obligations; it is not
+ * unbound and credits nothing.
+ */
+export function obligation_credit(
+    declared: readonly string[],
+    resolutions: readonly Resolution[],
+    entry: RuleObligationEntry | undefined,
+): ObligationCredit {
+    const ids = entry?.obligations ?? [];
+    const bindings = entry?.bindings ?? {};
+    const blocking = new Set<string>();
+    const observer = new Set<string>();
+    const unbound: string[] = [];
+    declared.forEach((d, i) => {
+        const res = resolutions[i];
+        if (res === undefined) return;
+        const carries = BLOCKING.has(res) || res === 'observer';
+        if (!carries) return;
+        const bound = bindings[d];
+        if (bound === undefined) {
+            unbound.push(d);
+            return;
+        }
+        for (const id of bound) {
+            if (!ids.includes(id)) continue;
+            if (BLOCKING.has(res)) blocking.add(id);
+            else observer.add(id);
+        }
+    });
+    for (const id of blocking) observer.delete(id);
+    const order = (xs: Set<string>): string[] => ids.filter((id) => xs.has(id));
+    return { ids: [...ids], blocking: order(blocking), observer: order(observer), unbound_entries: unbound };
 }
 
 /** Strength order — a rule is credited with its strongest resolving backstop. */
@@ -586,6 +653,10 @@ export function collect(): RuleCoverage[] {
     const reachable_ci = reachable_scripts(ci_corpus);
     const reachable_local = reachable_scripts(`${ci_corpus}\n${local_corpus}`);
 
+    const inventory = fs.existsSync(path.join(REPO_ROOT, RULE_OBLIGATIONS_PATH))
+        ? loadRuleObligations(REPO_ROOT).rules
+        : {};
+
     const out: RuleCoverage[] = [];
     for (const name of fs.readdirSync(RULES_DIR).sort()) {
         if (!name.endsWith('.md')) continue;
@@ -630,6 +701,7 @@ export function collect(): RuleCoverage[] {
             carrier_frequency,
             frequency_verdict: verdict,
             gap_platforms,
+            obligation: obligation_credit(declared, resolutions, inventory[id]),
         });
     }
     return out;
@@ -683,6 +755,53 @@ export interface Summary {
      * populations agree.
      */
     frames: DenominatorFrames;
+    /**
+     * The same coverage counted per obligation rather than per rule. Printed
+     * beside the rule counts, never instead of them, and no `--check` ratchet
+     * reads it: the roadmap that added it adds no failing condition.
+     */
+    obligations: ObligationSummary;
+}
+
+export interface ObligationSummary {
+    /** Ids declared across all rules. */
+    total: number;
+    /** Ids bound to an entry that can fail a build. */
+    blocking: number;
+    /** Ids bound only to an entry that fires and never refuses. */
+    observer: number;
+    /** Ids no entry is bound to: model-carried, or carried only by an unbound entry. */
+    not_bound: number;
+    /** Rules whose rule-level credit comes from at least one unbound entry. */
+    rules_with_unbound_entries: number;
+    /** Kernel rules: no ids by construction, counted at rule granularity. */
+    kernel_rules: number;
+    /** Non-kernel rules with no ids declared. */
+    rules_without_ids: number;
+}
+
+export function summarise_obligations(rows: readonly RuleCoverage[]): ObligationSummary {
+    // Rows built before the field existed (test fixtures, older JSON) count as carrying no ids.
+    const none: ObligationCredit = { ids: [], blocking: [], observer: [], unbound_entries: [] };
+    const of = (r: RuleCoverage): ObligationCredit => r.obligation ?? none;
+    let total = 0;
+    let blocking = 0;
+    let observer = 0;
+    for (const r of rows) {
+        total += of(r).ids.length;
+        blocking += of(r).blocking.length;
+        observer += of(r).observer.length;
+    }
+    return {
+        total,
+        blocking,
+        observer,
+        not_bound: total - blocking - observer,
+        rules_with_unbound_entries: rows.filter((r) => of(r).unbound_entries.length > 0).length,
+        kernel_rules: rows.filter((r) => KERNEL_RULE_ID_SET.has(r.id)).length,
+        rules_without_ids: rows.filter((r) => !KERNEL_RULE_ID_SET.has(r.id) && of(r).ids.length === 0)
+            .length,
+    };
 }
 
 export function summarise(rows: RuleCoverage[]): Summary {
@@ -710,6 +829,7 @@ export function summarise(rows: RuleCoverage[]): Summary {
                 r.declared.every((d) => d.startsWith('observer:maintainer-review')),
         ),
         frames: denominator_frames(rows.length),
+        obligations: summarise_obligations(rows),
     };
 }
 
@@ -883,6 +1003,16 @@ function main(argv: string[]): number {
     // source for that number: `check_enforcement_denominator` reds when a
     // tracked doc carries an enforcement count this resolver did not produce.
     lines.push(`  ${denominator_line(summary.frames)}`);
+    const ob = summary.obligations;
+    lines.push(
+        `  obligations: ${ob.blocking}/${ob.total} bound to a backstop that fails a CI build · ` +
+            `${ob.observer} observer · ${ob.not_bound} not bound — beside the rule counts, not instead of them`,
+    );
+    lines.push(
+        `  obligation frame: ${ob.rules_with_unbound_entries} rule(s) still credited by an unbound entry · ` +
+            `${ob.kernel_rules} kernel rule(s) at rule granularity · ${ob.rules_without_ids} rule(s) without ids ` +
+            `(${RULE_OBLIGATIONS_PATH})`,
+    );
 
     const gaps = rows.filter((r) => r.frequency_verdict === 'gap');
     if (gaps.length > 0) {
