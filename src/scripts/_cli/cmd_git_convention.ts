@@ -47,7 +47,7 @@ import {
 } from '../_lib/git_convention_grammar.js';
 
 export interface GitConventionResult {
-    code: 0 | 1 | 2;
+    code: 0 | 1 | 2 | 3;
     out: string[];
     err: string[];
 }
