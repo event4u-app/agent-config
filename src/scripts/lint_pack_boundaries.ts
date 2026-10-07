@@ -129,7 +129,10 @@ function _set_paths_for_test(opts: { root?: string; vocab?: string }): void {
 // Applied through the setter rather than at the `ROOT` declaration, so a
 // fixture run is still recognised as overridden and never judged by the
 // repo's violation ratchet.
-const _ENV_ROOT = process.env['LINT_PACK_BOUNDARIES_ROOT'];
+// Honoured only inside a self-test child, so an inherited value can never
+// redirect the production gate or switch its ratchet off.
+const _ENV_ROOT =
+    process.env['GATE_SELF_TEST_CHILD'] === '1' ? process.env['LINT_PACK_BOUNDARIES_ROOT'] : undefined;
 if (_ENV_ROOT !== undefined && _ENV_ROOT !== '') {
     _set_paths_for_test({ root: _realpath(path.resolve(_ENV_ROOT)) });
 }
@@ -687,6 +690,9 @@ function selfTest(): number {
         }
     };
     const twoPacks = '- id: alpha\n  requires: []\n- id: beta\n  requires: []\n';
+    // A reject case counts only on the exit it names: a crash or a dead-scope
+    // exit on a fixture that should yield a finding reads as NOT rejected.
+    const rejectsWith = (want: number, got: number): number => (got === want ? 1 : 0);
 
     return runSelfTest({
         gate: 'lint_pack_boundaries',
@@ -694,10 +700,10 @@ function selfTest(): number {
         minRejectCases: 3,
         cases: [
             {
-                name: 'an undeclared cross-pack link is rejected',
+                name: 'an undeclared cross-pack link is rejected with exit 1',
                 expect: 'reject',
                 run: () =>
-                    run(
+                    rejectsWith(1, run(
                         plant('cross', {
                             'packs.yml': twoPacks,
                             ...Object.fromEntries([
@@ -705,23 +711,23 @@ function selfTest(): number {
                                 skill('b-one', 'beta', 'leaf'),
                             ]),
                         }),
-                    ),
+                    )),
             },
             {
-                name: 'a SKILL.md with no packs is a finding, never a silent pass',
+                name: 'a SKILL.md with no packs is a finding (exit 1), never a silent pass',
                 expect: 'reject',
                 run: () =>
-                    run(
+                    rejectsWith(1, run(
                         plant('nopack', {
                             'packs.yml': twoPacks,
                             'skills/nopack/SKILL.md': '---\nname: nopack\n---\n\nno packs key\n',
                         }),
-                    ),
+                    )),
             },
             {
-                name: 'an empty corpus is a dead scope, not "no cross-pack drift"',
+                name: 'an empty corpus is a dead scope (exit 2), not "no cross-pack drift"',
                 expect: 'reject',
-                run: () => run(plant('empty', { 'packs.yml': twoPacks })),
+                run: () => rejectsWith(2, run(plant('empty', { 'packs.yml': twoPacks }))),
             },
             {
                 name: 'a link declared through requires passes',

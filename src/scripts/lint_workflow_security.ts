@@ -818,6 +818,12 @@ export function main(argv?: string[]): number {
     }
 
     if (args.strict && high.length) {
+        if (args.quiet) {
+            // --quiet suppresses the report; a failing run still names its cause.
+            process.stderr.write(
+                `workflow-security: ${high.length} HIGH under --strict — rerun without --quiet for the findings\n`,
+            );
+        }
         return 1;
     }
     return 0;

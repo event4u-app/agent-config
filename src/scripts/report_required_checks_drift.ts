@@ -52,18 +52,24 @@ export function requiredContexts(ruleset: unknown): string[] {
     if (!Array.isArray(rules)) {
         throw new ReadError('the ruleset object carries no `rules` array');
     }
-    const rule = rules.find(
-        (r): r is { parameters?: { required_status_checks?: unknown } } =>
-            typeof r === 'object' && r !== null && (r as { type?: unknown }).type === 'required_status_checks',
-    );
-    const checks = rule?.parameters?.required_status_checks;
-    if (!Array.isArray(checks)) {
+    const lists = rules
+        .filter(
+            (r): r is { parameters?: { required_status_checks?: unknown } } =>
+                typeof r === 'object' && r !== null && (r as { type?: unknown }).type === 'required_status_checks',
+        )
+        .map((r) => r.parameters?.required_status_checks)
+        .filter((c): c is unknown[] => Array.isArray(c));
+    if (lists.length === 0) {
         throw new ReadError('the ruleset has no `required_status_checks` rule');
     }
-    return checks
-        .map((c) => (c as { context?: unknown }).context)
-        .filter((c): c is string => typeof c === 'string')
-        .sort();
+    // Every such rule counts: a context required by any of them blocks the merge.
+    const contexts = new Set(
+        lists
+            .flat()
+            .map((c) => (c as { context?: unknown }).context)
+            .filter((c): c is string => typeof c === 'string'),
+    );
+    return [...contexts].sort();
 }
 
 /** Set difference in both directions; empty both ways means agreement. */
@@ -76,8 +82,9 @@ export function compare(live: readonly string[], contract: readonly string[]): D
     };
 }
 
-function ghJson(endpoint: string): unknown {
-    const r = spawnSync('gh', ['api', endpoint], { encoding: 'utf-8', maxBuffer: 16 * 1024 * 1024 });
+function ghJson(endpoint: string, paginate = false): unknown {
+    const args = paginate ? ['api', '--paginate', '--slurp', endpoint] : ['api', endpoint];
+    const r = spawnSync('gh', args, { encoding: 'utf-8', maxBuffer: 16 * 1024 * 1024 });
     if (r.status !== 0) {
         throw new ReadError(`gh api ${endpoint} failed: ${(r.stderr ?? '').trim() || `exit ${String(r.status)}`}`);
     }
@@ -85,10 +92,13 @@ function ghJson(endpoint: string): unknown {
 }
 
 function readLiveRuleset(repo: string): unknown {
-    const list = ghJson(`repos/${repo}/rulesets`);
-    if (!Array.isArray(list)) {
-        throw new ReadError('the rulesets listing is not an array');
+    // --paginate --slurp: one array per page, so a ruleset past the first page
+    // of 30 is still found.
+    const pages = ghJson(`repos/${repo}/rulesets`, true);
+    if (!Array.isArray(pages) || !pages.every((p) => Array.isArray(p))) {
+        throw new ReadError('the rulesets listing is not an array of pages');
     }
+    const list = (pages as unknown[][]).flat();
     const hit = list.find((r) => (r as { name?: unknown }).name === RULESET_NAME) as { id?: unknown } | undefined;
     if (hit === undefined || typeof hit.id !== 'number') {
         throw new ReadError(`no ruleset named "${RULESET_NAME}" on ${repo}`);

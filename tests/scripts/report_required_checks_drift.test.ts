@@ -69,6 +69,19 @@ describe('report_required_checks_drift', () => {
         expect(r.code).toBe(2);
     });
 
+    it('reads every required_status_checks rule, not only the first', () => {
+        const body = {
+            id: 1,
+            name: 'main protection',
+            rules: [
+                { type: 'required_status_checks', parameters: { required_status_checks: [{ context: ENFORCED_CHECKS[0] }] } },
+                { type: 'required_status_checks', parameters: { required_status_checks: [{ context: ENFORCED_CHECKS[1] }] } },
+            ],
+        };
+        const r = run(body);
+        expect(r.code, r.out).toBe(0);
+    });
+
     it('exits 2 on an unknown argument', () => {
         const r = spawnSync(TSX, [SCRIPT, '--bogus'], { cwd: REPO_ROOT, encoding: 'utf-8' });
         expect(r.status).toBe(2);
