@@ -286,6 +286,9 @@ function _subjectResult(json: boolean, code: GitConventionResult['code'], lines:
     return { code, out: [JSON.stringify({ ok: code === 0, code, lines, ...extra }, null, 2)], err };
 }
 
+/** Exit `2` here means the verb ran and received nothing — not that it cannot run. */
+export const NO_SUBJECTS = 'no subjects on stdin — the verb ran; pipe the subjects into it, one per line';
+
 export function subjectCommand(args: readonly string[], cwd: string, stdin = ''): GitConventionResult {
     const f = _flags(args, ['format', 'family']);
     if (f.bad !== null || f.positional.length > 0) {
@@ -293,7 +296,7 @@ export function subjectCommand(args: readonly string[], cwd: string, stdin = '')
         return _subjectResult(f.json, 2, f.json ? [why] : [], [why, USAGE]);
     }
     const subjects = stdin.split('\n').map((l) => l.trimEnd()).filter((l) => l !== '');
-    if (subjects.length === 0) return _subjectResult(f.json, 2, f.json ? ['no subjects on stdin'] : [], ['no subjects on stdin', USAGE]);
+    if (subjects.length === 0) return _subjectResult(f.json, 2, f.json ? [NO_SUBJECTS] : [], [NO_SUBJECTS, USAGE]);
     const plan = _planSubject(f.values, cwd);
     if (plan.kind === 'stop') return _subjectResult(f.json, plan.code, plan.lines);
     const failures = subjects.map((s) => ({ s, v: checkSubject(s, plan.rule) })).filter((x) => !x.v.ok);
@@ -384,17 +387,21 @@ export function runGitConvention(argv: readonly string[], cwd: string, stdin?: s
     return handler(rest, cwd, stdin);
 }
 
-function _stdin(): string {
+/**
+ * Every chunk to EOF, awaited. A synchronous read of fd 0 returns early on a
+ * pipe with no data yet, so a late writer or a batch past one pipe buffer read
+ * as no subjects at all. A terminal is not read: nothing was piped, and waiting
+ * on it would look like a hang.
+ */
+async function _stdin(): Promise<string> {
     if (process.stdin.isTTY) return '';
-    try {
-        return fs.readFileSync(0, 'utf-8');
-    } catch {
-        return '';
-    }
+    const chunks: Buffer[] = [];
+    for await (const chunk of process.stdin) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk)));
+    return Buffer.concat(chunks).toString('utf-8');
 }
 
-export function main(argv: readonly string[] = process.argv.slice(2)): number {
-    const result = runGitConvention(argv, process.cwd(), argv[0] === 'subject' ? _stdin() : undefined);
+export async function main(argv: readonly string[] = process.argv.slice(2)): Promise<number> {
+    const result = runGitConvention(argv, process.cwd(), argv[0] === 'subject' ? await _stdin() : undefined);
     for (const line of result.out) process.stdout.write(`${line}\n`);
     for (const line of result.err) process.stderr.write(`${line}\n`);
     return result.code;
@@ -411,5 +418,5 @@ function _isCliEntry(): boolean {
 }
 
 if (_isCliEntry()) {
-    process.exitCode = main();
+    process.exitCode = await main();
 }

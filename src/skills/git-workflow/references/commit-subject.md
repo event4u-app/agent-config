@@ -10,9 +10,11 @@ skill defer here.
 
 The rules are code: `agent-config git:convention` runs them, and the commands
 call it. This page is what a command reads **when the verb cannot run** — no
-`agent-config` on `PATH`, or exit `2`. Then apply the generated block below by
-reading, say once that the verb was unavailable, and never invent a grammar the
-block does not show.
+`agent-config` on `PATH`, or exit `2` for a usage or unknown-verb error. Then
+apply the generated block below by reading, say once that the verb was
+unavailable, and never invent a grammar the block does not show. Exit `2` with
+`no subjects on stdin — the verb ran` is not that case: the verb ran and
+received nothing, so pipe the subjects again rather than falling back.
 
 ## Reading the ticket
 
@@ -83,7 +85,7 @@ A format that cannot be read (`malformed`, `invalid`, `discarded`), or an
 approved family with no grammar, exits `1` with the line that says why; it is
 never read as the default.
 Exit `1` also lists each failing subject with the rule it broke. Exit `2` is a
-usage error. How a family is measured and approved is the
+usage error; an empty stdin is one, and says `the verb ran`. How a family is measured and approved is the
 [`conventional-commits-writing`](../../conventional-commits-writing/SKILL.md)
 skill's procedure; this page only consumes its card.
 
