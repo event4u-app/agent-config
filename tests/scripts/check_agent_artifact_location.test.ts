@@ -150,6 +150,36 @@ describe('review-input snapshot convention — exempt by declared path, not by a
     const snapshotBody = FM + '# Road to a fixture' + PHASE + STEP;
     const SNAP = 'agents/evidence/reviews/x.review-input/roadmap.md';
 
+    // Characterisation of roadmapShape and the writer, kept because both facts
+    // still hold — they just no longer decide whether a snapshot is reported.
+    it('a real review-input header is imported, two lines, both HTML comments', () => {
+        const lines = REVIEW_INPUT_ROADMAP_HEADER.split('\n').filter((l) => l.length > 0);
+        expect(lines).toHaveLength(2);
+        for (const l of lines) {
+            expect(l.startsWith('<!--')).toBe(true);
+        }
+    });
+
+    it('roadmapShape: a leading header still hides the frontmatter signal', () => {
+        const s = roadmapShape(REVIEW_INPUT_ROADMAP_HEADER + snapshotBody);
+        expect(s.isRoadmap).toBe(false);
+        expect(s.signals).not.toContain('roadmap frontmatter (`complexity:` lightweight|structural)');
+    });
+
+    it('roadmapShape: the byte-identical body without the header IS roadmap-shaped', () => {
+        const s = roadmapShape(snapshotBody);
+        expect(s.isRoadmap).toBe(true);
+        expect(s.signals).toHaveLength(3);
+    });
+
+    it('every real review-input roadmap snapshot still carries the header at offset 0', () => {
+        const files = globReviewInputRoadmaps(REPO_ROOT);
+        expect(files.length).toBeGreaterThan(0);
+        for (const f of files) {
+            expect(fs.readFileSync(f, 'utf-8').startsWith(REVIEW_INPUT_ROADMAP_HEADER)).toBe(true);
+        }
+    });
+
     it('the canonical snapshot path is exempt even WITHOUT the header', () => {
         expect(scan(tree({ [SNAP]: snapshotBody })).findings).toEqual([]);
         expect(scan(tree({ [SNAP]: REVIEW_INPUT_ROADMAP_HEADER + snapshotBody })).findings).toEqual([]);
