@@ -939,17 +939,16 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
     // branch that is behind is refused rather than merged. A current branch
     // passes, so an automated pre-push sync stays green when nothing is to do.
     const targetDeps = memoTargetDeps(deps ?? makeGitDeps(repo));
-    const gate = strategyGate(repo, base, targetDeps);
-    if (gate.exit !== null) {
-        process.stdout.write(`${gate.line}\n`);
-        const why = gate.exit === 0 ? 'remote unreachable — stated above' : gate.exit === 1 ? 'base unresolvable — stated above' : 'git.update_strategy unreadable';
-        reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: why });
-        return gate.exit;
-    }
-    const reading = gate.reading;
-    const strategy = reading.value ?? 'merge';
     let plan: Plan;
     try {
+        const gate = strategyGate(repo, base, targetDeps);
+        if (gate.exit !== null) {
+            process.stdout.write(`${gate.line}\n`);
+            const why = gate.exit === 0 ? 'remote unreachable — stated above' : gate.exit === 1 ? 'base unresolvable — stated above' : 'git.update_strategy unreadable';
+            reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: why });
+            return gate.exit;
+        }
+        const strategy = gate.reading.value ?? 'merge';
         if (strategy !== 'merge') {
             plan = sync(repo, base, true, false, targetDeps);
             const t = plan.targetStale;
