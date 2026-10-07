@@ -1037,8 +1037,8 @@ tasks:
 
   lint-workflow-security:
     silent: true
-    desc: "Warn-only audit of .github/workflows/* for high-risk patterns (pull_request_target untrusted checkout, write-all, install w/o --ignore-scripts, unpinned third-party actions) — road-to-security-hardening P2"
-    cmd: ./scripts-run src/scripts/lint_workflow_security {{.QUIET_FLAG}}
+    desc: "Audit of .github/workflows/* — a HIGH (pull_request_target untrusted checkout, write-all, install w/o --ignore-scripts) fails under --strict, as in CI; MEDIUM (mutable action pins, kept checkout credentials) stays advisory"
+    cmd: ./scripts-run src/scripts/lint_workflow_security --strict {{.QUIET_FLAG}}
 
   lint-missions:
     silent: true

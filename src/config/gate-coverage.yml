@@ -3230,33 +3230,36 @@ gates:
       actually there, which a review caught and which is why the assertion now
       exists rather than the sentence being softened.
   - id: lint_workflow_security
-    argv: []
+    argv: ["--strict"]
     min_scanned: 25
-    corpus: "workflow files under .github/workflows/ — `*.yml` then `*.yaml`, the two globs the gate scans in that order (34 today). The floor is 25 because workflows are consolidated and split routinely, so a handful leaving is normal, while a glob that stopped matching or a directory that moved reads far below it. Counting FILES and not findings is the point: this gate legitimately reports zero findings, so a floor over findings would be the false-count shape this file rejects."
+    corpus: "workflow files under .github/workflows/ — `*.yml` then `*.yaml`, the two globs the gate scans in that order (35 today). The floor is 25 because workflows are consolidated and split routinely, so a handful leaving is normal, while a glob that stopped matching or a directory that moved reads far below it. Counting FILES and not findings is the point: this gate legitimately reports zero findings, so a floor over findings would be the false-count shape this file rejects."
     status: enforced
     ci_invocation: .github/workflows/consistency.yml
-    no_canary_reason: >-
-      A create-only canary cannot change this gate's verdict. It is warn-only by
-      design — the council-locked severity model (2026-06-13) makes MEDIUM
-      advisory and only `--strict` turns a HIGH into exit 1 — and the CI
-      invocation this row pins carries no `--strict`, so a planted workflow with
-      a `pull_request_target` untrusted checkout would be REPORTED and the gate
-      would still exit 0. A canary run under a different argv would prove
-      something about an invocation CI does not make, which is the drift
-      `ci_invocation` exists to stop. Discrimination is proven by `--self-test`
-      instead (5 cases, 3 rejecting), which drives the two exits the gate really
-      has rather than the one the CI invocation cannot reach: an empty workflows
-      directory exits 2 instead of printing "0 HIGH, 0 MEDIUM" over nothing, a
-      `pull_request_target` checkout of the untrusted ref exits 1 under
-      `--strict`, and an over-cap allowlist exits 2 instead of suppressing
-      silently. The two accepting cases pin the warn-only tier from the other
-      side — a MEDIUM under `--strict` must still PASS, which is the direction a
-      future re-tiering would silently break, and a clean workflow must pass at
-      all. Seen red deliberately on 2026-10-01 by emptying `DANGEROUS_TRIGGERS`:
-      the HIGH case alone fails, 4/5, and restoring it returns 5/5. Promoting the
-      tier so a canary becomes expressible is a separate decision, recorded
-      unresolved in
-      agents/evidence/analysis/workflow-security-net-degraded-decision.md.
+    canary:
+      class: contract-violation
+      path: .github/workflows/zz-canary-workflow-security.yml
+      content: |
+        name: zz canary — planted by check_gate_coverage --canary; never ships
+        on:
+          pull_request_target:
+        jobs:
+          build:
+            runs-on: ubuntu-latest
+            steps:
+              - uses: actions/checkout@0000000000000000000000000000000000000000
+                with:
+                  persist-credentials: false
+                  ref: ${{ github.event.pull_request.head.sha }}
+    note: >-
+      road-to-gates-a-pull-request-can-hear 2.1. Until 2026-10-07 the CI
+      invocation carried no `--strict`, so a planted HIGH was reported and the
+      gate still exited 0, and this row carried a no_canary_reason saying so.
+      The AI council (anthropic + openai, 2/2, both choosing option a) decided on
+      2026-10-07 to run the step under `--strict`; the tier assignment of the
+      2026-06-13 lock is unchanged, MEDIUM stays advisory. The recipe above is a
+      `pull_request_target` workflow checking out the untrusted head ref — a HIGH
+      — and `--self-test` (5 cases, 3 rejecting) still pins the tier split from
+      the other side: a MEDIUM under `--strict` must PASS.
   - id: lint_pack_boundaries
     argv: ["--quiet"]
     min_scanned: 600

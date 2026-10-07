@@ -23,6 +23,13 @@ is in the log and the job passes. The step's name says `warn-only`, and the test
 holds the name to that outcome — adding `--strict` without renaming the step was
 run once on purpose and failed the name assertion, 1 of 4.
 
+**Superseded in the same change.** The AI council decided option (a) on
+2026-10-07 (2/2; record in
+`agents/evidence/analysis/workflow-security-net-degraded-decision.md`), so the
+step now runs `--strict` under the name `Audit workflow security (HIGH blocks)`
+and the same test, unchanged, reads exit 1 for the CI argv. The table above is
+the reading before the step changed.
+
 ## Reading 2 — pack boundaries are run by no workflow
 
 ```
