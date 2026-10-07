@@ -1,9 +1,9 @@
 diff --git a/agents/evidence/analysis/graph-feeder-latency-2026-Q4.md b/agents/evidence/analysis/graph-feeder-latency-2026-Q4.md
 new file mode 100644
-index 0000000000000000000000000000000000000000..3ec871e4abcd9e4b1a5e076c44c49017f1e08181
+index 0000000000000000000000000000000000000000..b6b6c1ea9ebd601d246a980a05a4ed72cb4d3b43
 --- /dev/null
 +++ b/agents/evidence/analysis/graph-feeder-latency-2026-Q4.md
-@@ -0,0 +1,187 @@
+@@ -0,0 +1,194 @@
 +<!-- evidence-type: analysis -->
 +
 +# Graph feeder latency — 2026 Q4
@@ -11,8 +11,9 @@ index 0000000000000000000000000000000000000000..3ec871e4abcd9e4b1a5e076c44c49017
 +**The feeder's cost on the stop slot, measured 2026-10-06/07.** On a generated
 +fixture repository the shadow arm adds **p50 ≈ 34 ms, p95 ≈ 47 ms** (200
 +modules) and **p50 ≈ 52 ms, p95 ≈ 67 ms** (2,000 modules) to a stop hook whose
-+own work is under 1 ms. Over this repository's real graph the feeder's work
-+alone read **p95 ≈ 583 ms to ≈ 1,007 ms** across four readings on one machine,
++own work is under 1 ms at p50 (p95 up to 1.43 ms, max 2.19 ms). Over this
++repository's real graph the feeder's work alone read **p95 ≈ 583 ms to
++≈ 1,007 ms** across five readings on one machine,
 +all reported below. The generated fixture prices
 +the walk, and the real index prices the load, which is the larger term by an
 +order of magnitude.
@@ -52,8 +53,11 @@ index 0000000000000000000000000000000000000000..3ec871e4abcd9e4b1a5e076c44c49017
 +- **All three readings interleaved, each warmed once, the rounds cycling
 +  through all six orders of the three calls**, so machine drift and order
 +  effects (GC after the heavier arm, cache warmth) spread across them: over
-+  every six rounds each call runs first twice and has each other call as its
-+  direct predecessor twice. The first publication of this page ran the hook
++  every six rounds each call runs first twice and, within a round, has each
++  other call as its direct predecessor twice. Across a round boundary the
++  predecessor is not balanced — the first call of a round follows the previous
++  round's last call, and two of those six transitions are a call following
++  itself. The first publication of this page ran the hook
 +  arms in a fixed order and the feeder-alone loop after them, unwarmed; the
 +  second rotated the start of one fixed cycle, which balances position but not
 +  predecessor. Three R2 review rounds flagged these, and every fixture figure
@@ -132,9 +136,11 @@ index 0000000000000000000000000000000000000000..3ec871e4abcd9e4b1a5e076c44c49017
 +first instrument had no warm-up round and ran while other lanes of the same
 +drain were loading the machine; which of those two accounts for its factor of
 +1.7 over the first row was not isolated, so every row stands. The fourth row's
-+wide tail (p50 596 ms, max 1,458 ms) is the same machine-load signature: the
-+`--repo` mode times the feeder alone, so the instrument change cannot account
-+for it.
++wide tail (p50 596 ms, max 1,458 ms) is unexplained: no load reading was taken
++during it, and it ran on a different graph build than the first row, so
++concurrent machine load and the build difference are both possible causes and
++neither was measured. The `--repo` mode times the feeder alone, so the
++hook-arm ordering change is not one of them.
 +
 +A one-off split, taken during the first reading with a scratch probe and not
 +shipped as an instrument (11 rounds, medians): `graphState` **≈ 195 ms** — the
@@ -145,7 +151,8 @@ index 0000000000000000000000000000000000000000..3ec871e4abcd9e4b1a5e076c44c49017
 +
 +## What it means
 +
-+- **The without-feeder stop is the floor and it is under 1 ms.** Everything a
++- **The without-feeder stop is the floor and it is under 1 ms at p50** (p95
++  0.91–1.43 ms, max up to 2.19 ms). Everything a
 +  stop costs above that in a repository with a graph is the feeder.
 +- **The cost scales with the index, not with the edit.** The generated readings
 +  move little from 200 to 2,000 modules, because a small index loads fast; the
@@ -179,7 +186,7 @@ index 0000000000000000000000000000000000000000..3ec871e4abcd9e4b1a5e076c44c49017
 +real-repository readings here — p95 583–1,007 ms, the load term dominating —
 +are the baseline it is compared against.** Feeder work alone stands in for the
 +stop-slot increment because the fixture arms show the stop's own work is under
-+1 ms and the with-minus-without delta agrees with the feeder-alone reading to
++1 ms at p50 (at most 2.19 ms in any round) and the with-minus-without delta agrees with the feeder-alone reading to
 +within 1.4 ms at p50. At p95 the two differ by up to about 7 ms in either
 +direction, so the precondition's comparison rests on the median, and a p95 from
 +`--repo` is the increment's tail to within several milliseconds — immaterial
@@ -192,7 +199,7 @@ index 0000000000000000000000000000000000000000..3ec871e4abcd9e4b1a5e076c44c49017
 +This is a reading taken on a date on one machine, not a standing fact. Re-take
 +it before relying on it.
 diff --git a/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md b/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
-index 30ee500cc890322d8042ebf237dd2aa3d4502ca3..5afcf4faf112a380148329fa38fc5bfda9794516 100644
+index 30ee500cc890322d8042ebf237dd2aa3d4502ca3..5021d79d1f4f59e116f976893c78e5d8c39c8ab6 100644
 --- a/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
 +++ b/agents/roadmaps/road-to-a-graph-that-feeds-the-gate.md
 @@ -149,7 +149,7 @@ refuses.
@@ -210,8 +217,8 @@ index 30ee500cc890322d8042ebf237dd2aa3d4502ca3..5afcf4faf112a380148329fa38fc5bfd
        verify: `grep -c 'p95' agents/evidence/analysis/graph-feeder-latency-*.md` -> /^[1-9]/
 +      STATE 2026-10-06: measured by `src/scripts/bench_graph_feeder_latency.ts` and
 +      published at `agents/evidence/analysis/graph-feeder-latency-2026-Q4.md`. On a
-+      generated fixture the feeder adds p50 ≈ 32 ms / p95 ≈ 39 ms (200 modules) to a
-+      stop whose own work is under 1 ms; over this repository's real 59 MB index the
++      generated fixture the feeder adds p50 ≈ 34 ms / p95 ≈ 47 ms (200 modules) to a
++      stop whose own work is under 1 ms at p50 (at most 2.19 ms in any round); over this repository's real 59 MB index the
 +      feeder's work alone read p95 ≈ 583 ms and, on an earlier run, ≈ 1,007 ms, the
 +      graph open dominating. Exit codes identical in both arms.
  - [~] **3.4 Promote the graph verdict into F.** Deferred behind 3.3 and 3.5; the ADR-277
@@ -276,10 +283,10 @@ index 7b0aa8eb1d508224ff44712102ea1d9536c54ec6..111ec312ea673fdca5696ee798d7ec85
      let picked;
 diff --git a/src/scripts/bench_graph_feeder_latency.ts b/src/scripts/bench_graph_feeder_latency.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..cc2b92febdaed50497a1df3bf1b91c1297bcaa1b
+index 0000000000000000000000000000000000000000..8ede7b66fbcfffceb79adb3dc9546a9463565cb6
 --- /dev/null
 +++ b/src/scripts/bench_graph_feeder_latency.ts
-@@ -0,0 +1,417 @@
+@@ -0,0 +1,421 @@
 +#!/usr/bin/env node
 +/**
 + * What the graph feeder costs the stop slot (`road-to-a-graph-that-feeds-the-gate`
@@ -305,9 +312,12 @@ index 0000000000000000000000000000000000000000..cc2b92febdaed50497a1df3bf1b91c12
 + *
 + * Arms are INTERLEAVED, one call each per round, and the rounds cycle through
 + * all six ORDERS of the three calls: interleaving spreads slow drift across the
-+ * arms, and the full permutation cycle balances both the position and the
-+ * direct predecessor of every call (GC after the heavier arm, cache warmth) —
-+ * exactly so when the round count is a multiple of six. A third
++ * arms, and the full permutation cycle balances the position of every call and
++ * its direct predecessor WITHIN a round (GC after the heavier arm, cache
++ * warmth) — exactly so when the round count is a multiple of six. Across a round
++ * boundary it does not: the first call of a round follows the previous round's
++ * last call, and those six transitions are unbalanced (two are a call following
++ * itself). A third
 + * reading, inside the same rotation, times the feeder's own work (`graphState` + `graphUntestedVerdict`) in isolation on the
 + * `with` tree, because the difference of two noisy totals is a weaker number
 + * than a direct one.
@@ -473,8 +483,9 @@ index 0000000000000000000000000000000000000000..cc2b92febdaed50497a1df3bf1b91c12
 +
 +/**
 + * Every order of the three calls. Cycling through all six puts each call first
-+ * equally often AND gives every call each other call as its direct predecessor
-+ * equally often; rotating the start of one fixed cycle only does the former.
++ * equally often AND, within a round, gives every call each other call as its
++ * direct predecessor equally often; rotating the start of one fixed cycle only
++ * does the former. The round-boundary transitions are not balanced.
 + */
 +export const ORDERS: readonly (readonly number[])[] = [
 +    [0, 1, 2],
@@ -699,10 +710,10 @@ index 0000000000000000000000000000000000000000..cc2b92febdaed50497a1df3bf1b91c12
 +}
 diff --git a/tests/scripts/bench_graph_feeder_latency.test.ts b/tests/scripts/bench_graph_feeder_latency.test.ts
 new file mode 100644
-index 0000000000000000000000000000000000000000..3bff7effb64b80167fd3def027da2f4a93d6d8e3
+index 0000000000000000000000000000000000000000..ab5312a3e5a1971dd8f0e912cabf4826163fd72c
 --- /dev/null
 +++ b/tests/scripts/bench_graph_feeder_latency.test.ts
-@@ -0,0 +1,119 @@
+@@ -0,0 +1,132 @@
 +import { execFileSync } from 'node:child_process';
 +import * as fs from 'node:fs';
 +import * as os from 'node:os';
@@ -754,6 +765,19 @@ index 0000000000000000000000000000000000000000..3bff7effb64b80167fd3def027da2f4a
 +        // Six ordered pairs of distinct calls, each a direct predecessor equally often.
 +        expect(pairs.size).toBe(6);
 +        expect(new Set(pairs.values())).toStrictEqual(new Set([2]));
++    });
++
++    it('does not balance the predecessor across a round boundary, which is why the claim is within-round', () => {
++        const boundary = new Map<string, number>();
++        ORDERS.forEach((o, i) => {
++            const next = ORDERS[(i + 1) % ORDERS.length] as readonly number[];
++            const key = `${o[o.length - 1]}>${next[0]}`;
++            boundary.set(key, (boundary.get(key) ?? 0) + 1);
++        });
++        // Six transitions: two are a call following itself, and the rest do not
++        // cover the six distinct ordered pairs once each.
++        expect([...boundary.keys()].filter((k) => k.split('>')[0] === k.split('>')[1])).toHaveLength(2);
++        expect([...boundary.keys()].filter((k) => k.split('>')[0] !== k.split('>')[1]).length).toBeLessThan(6);
 +    });
 +
 +    it('records every round\'s verdict over an existing repository, not only the last', async () => {

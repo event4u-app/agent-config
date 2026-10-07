@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head e3f13d33b218e7ef3e350866545377111e377336, review
-  artefacts excluded), scope hash `7cfa800838afd997e909fd325c9efd2545f149c07eade3270dbe3e0c18b8ff6d`
+- diff: `diff.patch` — the review scope (branch head 5062a94313cbd8c56b0476fded1715e3d278144e, review
+  artefacts excluded), scope hash `9fc72f76422dcbdb91ebd2ddc2fb1b1c4b579b570fff4c9275d3e97a777c1a92`
 - roadmap under review: `roadmap.md` (Acceptance Criteria extracted to `acceptance-criteria.md`)
 
 Changed files:
@@ -54,7 +54,7 @@ Fill the findings table in `drain-road-to-a-graph-that-feeds-the-gate-20261006c.
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope 7cfa800838afd997e909fd325c9efd2545f149c07eade3270dbe3e0c18b8ff6d, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 9fc72f76422dcbdb91ebd2ddc2fb1b1c4b579b570fff4c9275d3e97a777c1a92, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
@@ -65,15 +65,15 @@ Final message = the return envelope and nothing else: {summary, handoff, confide
 
 Recorded because the review that fills the findings table ran on these
 instructions, not on the dispatcher text above alone. They name the prior round's
-artefact and ask for each of its rows to be re-verified; they state no expected
-outcome.
+artefact and ask for each of its open rows to be re-verified; they state no
+expected outcome.
 
-> You are an independent reviewer in the repo event4u/agent-config. Review PR #2239 (branch `drain/road-to-a-graph-that-feeds-the-gate-20261006c`) at its current head.
+> You are an independent reviewer in the repo event4u/agent-config. Review PR #2239 (branch `drain/road-to-a-graph-that-feeds-the-gate-20261006c`) at its current head. Run `npm ci` in your worktree first (the pre-commit hook needs node_modules/.bin/tsx).
 >
 > Scope: the whole diff of the PR against its merge base with origin/main. Report defects in correctness, test sensitivity, documentation claims vs. measured evidence, and repo conventions (see CLAUDE.md). For each finding: file:line, concrete failure scenario, severity.
 >
-> The branch has a completion-review artefact at `agents/evidence/reviews/drain-road-to-a-graph-that-feeds-the-gate-20261006c.findings.md` with open rows from the previous round. Use the repo's own R2 tooling (`src/scripts/dispatch_r2_reviewer.ts` and the completion-review contract it references) to record a genuine review for the current head, including the review prompt, following the contract's procedure for a new round. For each previous row, verify against the code whether it is resolved and set its status from your own verification only. Add new findings as new rows.
+> The branch has a completion-review artefact at `agents/evidence/reviews/drain-road-to-a-graph-that-feeds-the-gate-20261006c.findings.md` with open rows from the previous round. Use the repo's own R2 tooling (`src/scripts/dispatch_r2_reviewer.ts` and the completion-review contract it references) to record a genuine review for the current head, including the review prompt, following the contract's procedure for a new round. For each previous open row, verify against the code whether it is resolved and set its status from your own verification only. Add new findings as new rows.
 >
 > You may commit ONLY the review artefact changes (pathspec, `docs(review): ...`, ending with `Co-Authored-By: Claude Opus 5.5 (1M context) <noreply@anthropic.com>`) and push to that branch. Do NOT change code, do NOT merge.
 >
-> Final report (English, concise): head SHA reviewed, per-row verdicts, new findings, whether committed and pushed, and the R2 gate state.
+> Final report (English, concise): head SHA reviewed, per-row verdicts, new findings with severity, whether committed and pushed, and the R2 gate state.
