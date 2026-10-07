@@ -49,7 +49,7 @@ function advanceBase(r: Repo, file: string, content: string): void {
 const savedRef = (stderr: string): string => {
     const m = stderr.match(/SAVE=(refs\/agent-config\/rewrites\/\S+\/before)/);
     if (!m) throw new Error(`no SAVE in: ${stderr}`);
-    return m[1];
+    return m[1] ?? '';
 };
 
 describe('the equivalence verdict', () => {

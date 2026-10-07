@@ -197,15 +197,15 @@ review, the conformance count, a merge run — is decided, not discovered.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No stop, snapshot or lease in the git surfaces resolves through
+- [x] AC-1 — No stop, snapshot or lease in the git surfaces resolves through
       `@{u}`, and the lease race passes with `pushRemote`, `remote.pushDefault`
       and a fork remote.
-- [ ] AC-2 — A topic range with a merge commit, or a dirty tree, stops the
+- [x] AC-2 — A topic range with a merge commit, or a dirty tree, stops the
       rebase before anything is rewritten.
-- [ ] AC-3 — Every rewrite leaves a recovery ref that `git push --tags` does not
+- [x] AC-3 — Every rewrite leaves a recovery ref that `git push --tags` does not
       publish, and the report says "mechanically equivalent" or "needs review"
       from patch ids, never from `range-diff` text.
-- [ ] AC-4 — What a rebase does to the review gate is a recorded decision with a
+- [x] AC-4 — What a rebase does to the review gate is a recorded decision with a
       test, and the scan's counts are a recorded measurement.
 
 ## Decisions

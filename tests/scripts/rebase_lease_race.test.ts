@@ -95,7 +95,7 @@ function fixture(layout: Layout): Fixture {
     return { sb, me, collab, publishUrl, env };
 }
 
-const published = (f: Fixture): string => f.sb.git(f.me, 'ls-remote', f.publishUrl, 'refs/heads/feat').split('\t')[0];
+const published = (f: Fixture): string => f.sb.git(f.me, 'ls-remote', f.publishUrl, 'refs/heads/feat').split('\t')[0] ?? '';
 const collabHead = (f: Fixture): string => f.sb.git(f.collab, 'rev-parse', 'HEAD');
 
 describe.each<Layout>(['upstream', 'pushRemote', 'pushDefault', 'fork-pr-head'])('publish target via %s', (layout) => {
@@ -211,7 +211,7 @@ describe('the recovery ref', () => {
         expect(r.status).not.toBe(0);
         const kept = rewrites(f);
         expect(kept).toHaveLength(1);
-        const [ref, sha] = kept[0].split(' ');
+        const [ref, sha] = (kept[0] ?? '').split(' ');
         expect(ref).toMatch(/^refs\/agent-config\/rewrites\/[^/]+\/before$/);
         expect(sha).toBe(oldHead);
         expect(r.stderr).toContain(`git reset --keep ${ref}`);

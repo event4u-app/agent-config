@@ -722,7 +722,7 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
     if (dryRun) {
         const detail = stale.map((b) => `${b.ref} (${String(b.behind)} behind)`).join(', ');
         const added = resolved.entries.find((e) => e.reason === 'branch-convergence-policy:include-default');
-        const target = resolved.entries[0].ref;
+        const target = resolved.entries[0]?.ref ?? '';
         const targetBehind = added === undefined
             ? 0
             : Number(sh('git', ['rev-list', '--count', `${target}..${added.ref}`], repo).out.trim() || '0');

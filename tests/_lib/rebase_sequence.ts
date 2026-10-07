@@ -17,7 +17,8 @@ const REFERENCE = path.resolve(HERE, '../../src/skills/git-workflow/references/b
 
 export function sequenceBlock(name: string, text = fs.readFileSync(REFERENCE, 'utf8')): string {
     for (const m of text.matchAll(/```bash\n([\s\S]*?)```/g)) {
-        if (m[1].startsWith(`# rebase-sequence: ${name}\n`)) return m[1];
+        const body = m[1] ?? '';
+        if (body.startsWith(`# rebase-sequence: ${name}\n`)) return body;
     }
     throw new Error(`no rebase-sequence block named ${name} in ${REFERENCE}`);
 }
