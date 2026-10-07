@@ -316,7 +316,7 @@ function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan 
 }
 
 /** Under `--json` every exit prints one object carrying `ok`, `code` and the human `lines`. */
-function _subjectResult(json: boolean, code: number, lines: string[], err: string[] = [], extra: Record<string, unknown> = {}): GitConventionResult {
+function _subjectResult(json: boolean, code: GitConventionResult['code'], lines: string[], err: string[] = [], extra: Record<string, unknown> = {}): GitConventionResult {
     if (!json) return { code, out: lines, err };
     return { code, out: [JSON.stringify({ ok: code === 0, code, lines, ...extra }, null, 2)], err };
 }
