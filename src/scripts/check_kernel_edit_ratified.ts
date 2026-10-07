@@ -33,8 +33,10 @@
  * hook plumbing — the YAML sources `hook_manifest.yaml` and
  * `host_lowering.yaml`, their compiled siblings `hook_manifest.json` and
  * `host_lowering.json`, the dispatcher `hooks/dispatch_hook.ts`, the
- * kernel-rule list `_lib/kernel_rules.ts`, a `*-dispatcher.sh`, either hook
- * budget file (see `PLUMBING_SOURCE_RE`) — or this gate itself, so it cannot
+ * kernel-rule list `_lib/kernel_rules.ts`, a `*-dispatcher.sh`, the token,
+ * latency and bundle budget files (see `PLUMBING_SOURCE_RE`), and every module
+ * the dispatcher imports that decides an exit code (derived at run time, see
+ * `derivedPlumbing`) — or this gate itself, so it cannot
  * be weakened without its own record. Such a diff must carry a ratification
  * artifact under the ratifications directory with `verdict: ratified`, valid
  * per the ratification-artifact contract.
@@ -73,6 +75,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
+import { verdictModules } from './_lib/dispatch_import_closure.js';
 import { is_kernel_rule } from './_lib/kernel_rules.js';
 import { reportScanned } from './_lib/scan_scope.js';
 import {
@@ -91,6 +94,13 @@ export const SELF_PATH = 'src/scripts/check_kernel_edit_ratified.ts';
 
 /** The reader this gate shares with the artifact contract, also self-watched. */
 export const READER_PATH = 'src/scripts/_lib/ratification_artifact.ts';
+
+/**
+ * The reader that derives the dispatcher's verdict-deciding imports. It decides
+ * part of this gate's reach, so narrowing it is narrowing the gate — watched as
+ * part of the mechanism for the reason `READER_PATH` is.
+ */
+export const CLOSURE_READER_PATH = 'src/scripts/_lib/dispatch_import_closure.ts';
 
 /** The in-repo quorum policy. Present on every runner; absent means refuse. */
 export const POLICY_PATH = 'src/config/ratification-policy.json';
@@ -185,7 +195,35 @@ const GOVERNANCE_HOOK_RE = /^src\/scripts\/hooks\/block_[a-z0-9_]+\.ts$/;
  * is the diff where only the JSON moves.
  */
 const PLUMBING_SOURCE_RE =
-    /^(?:src\/scripts\/hook_manifest\.(?:yaml|json)|src\/scripts\/hooks\/host_lowering\.(?:yaml|json)|src\/scripts\/hooks\/dispatch_hook\.ts|src\/scripts\/_lib\/kernel_rules\.ts|src\/scripts\/hooks\/[a-z0-9-]+-dispatcher\.sh|src\/config\/hook-(?:token|latency)-budget\.json)$/;
+    /^(?:src\/scripts\/hook_manifest\.(?:yaml|json)|src\/scripts\/hooks\/host_lowering\.(?:yaml|json)|src\/scripts\/hooks\/dispatch_hook\.ts|src\/scripts\/_lib\/kernel_rules\.ts|src\/scripts\/hooks\/[a-z0-9-]+-dispatcher\.sh|src\/config\/hook-(?:token|latency|bundle)-budget\.json)$/;
+
+/**
+ * The derived half of the plumbing set: every module in the static import
+ * closure of `dispatch_hook.ts` that decides an exit code or a refusal, read by
+ * `_lib/dispatch_import_closure.ts`.
+ *
+ * `road-to-a-ratification-fence-that-follows-its-imports` 2.2. The pattern
+ * above stayed correct until `_resolve_execution_failure` moved from the
+ * dispatcher into `concern_failure_policy.ts` — release finding `21900086c1a0`:
+ * a diff deciding whether a crashed blocking concern refuses then carried no
+ * record. A hand list fails the same way the next time a function moves, so
+ * this half is computed from the import graph at run time, and a module the
+ * dispatcher newly imports that names an exit code joins it with no edit here.
+ * Concerns stay outside: the walk stops at the concern table, and a governance
+ * concern is already gated by `GOVERNANCE_HOOK_RE`.
+ *
+ * `hook-bundle-budget.json` joins the pattern for D3: its ceiling was raised on
+ * its own registration day, and a raised ceiling is a looser budget reached one
+ * file earlier than the bundle it bounds.
+ */
+let _repoDerived: readonly string[] | null = null;
+export function derivedPlumbing(root: string = REPO): readonly string[] {
+    if (root === REPO) {
+        _repoDerived ??= verdictModules(REPO);
+        return _repoDerived;
+    }
+    return verdictModules(root);
+}
 
 /**
  * A kernel rule, in the source tree or in any projection.
@@ -212,7 +250,11 @@ export interface GatedPaths {
 }
 
 /** Partition a changed-file list into the surfaces this gate watches. */
-export function classifyPaths(files: readonly string[]): GatedPaths {
+export function classifyPaths(
+    files: readonly string[],
+    derived: readonly string[] = derivedPlumbing(),
+): GatedPaths {
+    const derivedSet = new Set(derived);
     const kernelRules: string[] = [];
     const governanceHooks: string[] = [];
     const plumbing: string[] = [];
@@ -225,6 +267,7 @@ export function classifyPaths(files: readonly string[]): GatedPaths {
         if (
             p === SELF_PATH ||
             p === READER_PATH ||
+            p === CLOSURE_READER_PATH ||
             p === POLICY_PATH ||
             p === WORKFLOW_PATH ||
             ANCHOR_PATHS.includes(p)
@@ -241,7 +284,7 @@ export function classifyPaths(files: readonly string[]): GatedPaths {
             governanceHooks.push(p);
             continue;
         }
-        if (PLUMBING_SOURCE_RE.test(p)) {
+        if (PLUMBING_SOURCE_RE.test(p) || derivedSet.has(p)) {
             plumbing.push(p);
         }
     }
@@ -319,7 +362,10 @@ export function evaluate(
     providerCount: number | null,
 ): GateResult {
     const lines: string[] = [];
-    const gated = classifyPaths(files);
+    // The union of the closure read from the tree under review and from this
+    // script's own tree: under CI the gate code is the base revision's and
+    // `root` is the head, so a module present on either side is watched.
+    const gated = classifyPaths(files, [...new Set([...derivedPlumbing(), ...derivedPlumbing(root)])]);
     const scanned = files.length;
 
     // Every changed path is a planned target: the gate's denominator is the
