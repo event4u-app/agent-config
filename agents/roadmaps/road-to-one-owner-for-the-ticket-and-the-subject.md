@@ -130,7 +130,7 @@ surface cites one reference instead of restating a grammar.
       `refine_ticket_detect.ts:74` as intentionally independent.
       verify: `test -z "$(git grep -l -F '[A-Z]+-[0-9]+' -- src/domains src/skills ':!*/estimate-ticket/*' ':!*/implement-ticket/*')"` -> 0
       Positive control: without the two exclusions the same `git grep` prints nine files at `2333b93d6`.
-- [ ] **2.4 A title that becomes a commit follows the convention.** Where the
+- [x] **2.4 A title that becomes a commit follows the convention.** Where the
       forge's merge method read in `/pr:merge` § 9 is squash,
       `/create-pr:description-only` § 3 builds the title through
       `git:convention subject`, for the default format as well as for
