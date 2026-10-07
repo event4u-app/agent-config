@@ -93,11 +93,11 @@ describe('git:convention subject', () => {
         expect(JSON.parse(committed.out.join('\n')).tier).toContain('declared in');
     });
 
-    it('validates nothing where a commit-msg hook is installed', () => {
+    it('still validates where a commit-msg hook is installed, and names the hook', () => {
         const dir = repo();
         fs.writeFileSync(path.join(dir, '.git', 'hooks', 'commit-msg'), '#!/bin/sh\n', { mode: 0o755 });
         const r = subject(dir, 'anything at all\n');
-        expect(r.code).toBe(0);
+        expect(r.code).toBe(1);
         expect(r.out.join('\n')).toContain('commit-msg hook');
     });
 
