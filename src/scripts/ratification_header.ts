@@ -22,13 +22,11 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import {
-    RATIFICATION_VERDICTS,
-    SEAT_NO_FINAL_VERDICT,
+    SEAT_PROVIDER_RE,
+    SEAT_VERDICTS,
     renderRatificationHeader,
     type SeatVerdict,
 } from './_lib/ratification_artifact.js';
-
-const ALLOWED: readonly string[] = [...RATIFICATION_VERDICTS, SEAT_NO_FINAL_VERDICT];
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     const seats = new Map<string, SeatVerdict>();
@@ -40,10 +38,13 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         const raw = argv[i + 1] ?? '';
         i += 1;
         const eq = raw.indexOf('=');
-        const provider = raw.slice(0, eq).trim();
-        const verdict = raw.slice(eq + 1).trim();
-        if (eq <= 0 || !ALLOWED.includes(verdict)) {
-            process.stderr.write(`error: --seat needs <provider>=<one of ${ALLOWED.join('|')}>, got \`${raw}\`\n`);
+        const provider = raw.slice(0, eq);
+        const verdict = raw.slice(eq + 1);
+        if (eq <= 0 || !SEAT_PROVIDER_RE.test(provider) || !SEAT_VERDICTS.includes(verdict)) {
+            process.stderr.write(
+                `error: --seat needs <provider id ${String(SEAT_PROVIDER_RE)}>=<one of ` +
+                    `${SEAT_VERDICTS.join('|')}>, got \`${raw}\`\n`,
+            );
             return 2;
         }
         if (seats.has(provider)) {

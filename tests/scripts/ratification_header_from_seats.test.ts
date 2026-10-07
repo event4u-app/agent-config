@@ -86,6 +86,39 @@ describe('the reader checks a recorded header against its seats', () => {
         expect(codes(text)).toContain('unknown-seat-verdict');
     });
 
+    it('flags a passing header that differs from the derived one', () => {
+        const text = artifact(
+            ['providers: [anthropic, openai]', 'verdict: ratified', 'seats:', '  anthropic: confirmed-non-expanding', '  openai: confirmed-non-expanding'].join('\n'),
+        );
+        expect(codes(text)).toEqual(['header-not-derived']);
+    });
+
+    it('flags a final seat left out of providers', () => {
+        const text = artifact(['providers: [anthropic]', 'verdict: ratified', 'seats:', '  anthropic: ratified', '  openai: ratified'].join('\n'));
+        expect(codes(text)).toContain('header-not-derived');
+    });
+
+    it('refuses a present but empty or non-map `seats:` rather than reading it as absent', () => {
+        expect(codes(artifact(['providers: [anthropic, openai]', 'verdict: ratified', 'seats: []'].join('\n')))).toContain('malformed-seats');
+        expect(codes(artifact(['providers: [anthropic, openai]', 'verdict: ratified', 'seats: anthropic'].join('\n')))).toContain('malformed-seats');
+    });
+
+    it('refuses a seat key that is not a provider id', () => {
+        const text = artifact(['providers: [anthropic, openai]', 'verdict: ratified', 'seats:', '  Open AI: ratified', '  anthropic: ratified'].join('\n'));
+        expect(codes(text)).toContain('bad-seat-provider');
+    });
+
+    it('refuses a seat recorded twice', () => {
+        const text = artifact(['providers: [anthropic, openai]', 'verdict: ratified', 'seats:', '  openai: refused', '  anthropic: ratified', '  openai: ratified'].join('\n'));
+        expect(codes(text)).toContain('bad-seat-provider');
+    });
+
+    it('the writer refuses a provider id that could carry YAML syntax', () => {
+        expect(() => renderRatificationHeader({ 'openai]\nverdict: ratified': 'refused' } as Record<string, SeatVerdict>)).toThrow(
+            /not a provider id/u,
+        );
+    });
+
     it('reads an artifact without `seats:` as before', () => {
         const text = artifact(['providers: [anthropic, openai]', 'verdict: ratified'].join('\n'));
         expect(readRatification(text, 2).problems).toEqual([]);
@@ -106,6 +139,8 @@ describe('ratification_header CLI', () => {
                 'providers: [anthropic, openai]\nverdict: non-convergent\nseats:\n  anthropic: non-convergent\n  openai: ratified\n',
             );
             expect(headerMain(['--seat', 'openai=approved'])).toBe(2);
+            expect(headerMain(['--seat', '   =ratified'])).toBe(2);
+            expect(headerMain(['--seat', 'open]ai=ratified'])).toBe(2);
             expect(headerMain([])).toBe(2);
         } finally {
             w.mockRestore();

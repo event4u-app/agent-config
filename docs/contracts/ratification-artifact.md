@@ -49,10 +49,14 @@ A seventh field, `seats:`, is a map from provider id to that seat's **final**
 verdict (the four above, or `no-final-verdict` for a seat that closed or was
 absent at the last round). When it is recorded, `providers` and `verdict` are
 not free-written: `./scripts-run src/scripts/ratification_header --seat
-<provider>=<verdict> …` prints all three, and the reader refuses a passing
-verdict over a refusing or non-convergent seat (`seat-dissent`) and a provider
-that gave no final verdict (`providers-exceed-seats`). An artifact without
-`seats:` is read as before.
+<provider>=<verdict> …` prints all three, and the reader requires the recorded
+`providers` (in seat order) and `verdict` to equal the derived ones. It names
+the two overclaims that motivated the field — a passing verdict over a refusing
+or non-convergent seat (`seat-dissent`), a provider that gave no final verdict
+(`providers-exceed-seats`) — and reports any other mismatch as
+`header-not-derived`. A `seats:` key that is empty, not a map, repeats a seat
+or uses a key outside `^[a-z0-9][a-z0-9._-]*$` is refused, never read as
+absent. An artifact without `seats:` is read as before.
 
 `ratified` and `confirmed-non-expanding` let a diff land; `refused` and
 `non-convergent` do not. The second passing verdict exists because the gate
