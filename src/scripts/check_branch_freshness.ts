@@ -656,7 +656,8 @@ export function main(
   const remote = resolved.remote ?? "origin";
   const shown = `${remote}/${base}`;
 
-  if (branch === base) {
+  // Remote and branch together: local `main` is not `upstream/main`, which can be ahead of it.
+  if (branch === base && remote === "origin") {
     scanReport(0, `standing on ${base} itself — a branch cannot be behind itself`);
     return 0;
   }

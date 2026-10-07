@@ -150,6 +150,21 @@ describe("check_branch_freshness", () => {
     delete process.env["CI"];
   });
 
+  it("checks another remote's main from local main — standing on main is not standing on upstream/main", () => {
+    const work = process.cwd();
+    const upstream = path.join(dir, "upstream.git");
+    fs.mkdirSync(upstream);
+    git(["init", "--bare", "-b", "main"], upstream);
+    git(["remote", "add", "upstream", upstream], work);
+    git(["push", "upstream", "main"], work);
+    const other = path.join(dir, "up-other");
+    git(["clone", upstream, other], dir);
+    commit(other, "u.txt", "upstream moved");
+    git(["push"], other);
+    expect(main(["--quiet", "--base", "upstream/main"], noPr)).toBe(1);
+    expect(main(["--quiet", "--base", "origin/main"], noPr)).toBe(0);
+  });
+
   it("does not fail closed when the remote is unreachable, but says so", () => {
     git(["checkout", "-b", "feat/z"], process.cwd());
     git(["remote", "set-url", "origin", path.join(dir, "gone.git")], process.cwd());
