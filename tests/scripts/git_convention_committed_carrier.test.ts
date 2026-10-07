@@ -12,7 +12,7 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { runGitConvention, showConvention } from '../../src/scripts/_cli/cmd_git_convention.js';
-import { CARRIER_PATH, makeTargetDeps, readCommittedConvention, type TargetDeps } from '../../src/scripts/_lib/git_convention_carrier.js';
+import { CARRIER_PATH, makeTargetDeps, readCommittedConvention, runGit, type GitRunner, type TargetDeps } from '../../src/scripts/_lib/git_convention_carrier.js';
 import { classify_target } from '../../src/scripts/hooks/block_config_weakening.js';
 import { main as syncMain, makeGitDeps } from '../../src/scripts/sync_pr_branch.js';
 
@@ -204,6 +204,15 @@ describe('commit_format and branch_pattern are read at HEAD, at the repository r
     it('a carrier at HEAD that does not parse is malformed', () => {
         const f = fixture(tmp, { [CARRIER_PATH]: 'git: [\n' });
         expect(readCommittedConvention(f.work, { keys: ['commit_format'] }).readings.commit_format?.state).toBe('malformed');
+    });
+
+    it('a carrier at HEAD that cannot be read is unresolvable, never the developer value', () => {
+        const f = fixture(tmp, { [CARRIER_PATH]: 'git:\n  commit_format: ticket-conventional\n' });
+        const failTree: GitRunner = (cmd, args, cwd, timeoutMs) =>
+            args[0] === 'ls-tree' ? { ok: false, out: '', err: 'fatal: not a tree object', timedOut: false } : runGit(cmd, args, cwd, timeoutMs);
+        const read = readCommittedConvention(f.work, { keys: ['commit_format', 'branch_pattern'], run: failTree });
+        expect(read.readings.commit_format).toMatchObject({ state: 'unresolvable', value: null });
+        expect(read.readings.branch_pattern).toMatchObject({ state: 'unresolvable', value: null });
     });
 });
 

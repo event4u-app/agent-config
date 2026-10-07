@@ -297,20 +297,19 @@ export function readCommittedConvention(cwd: string, options: CommittedOptions =
     }
 
     const headSha = sh('git', ['rev-parse', '--verify', '-q', 'HEAD'], root).out.trim();
-    let headLayer: GitConventionLayer | null = null;
-    const atHead = (): GitConventionLayer => {
-        if (headLayer !== null) return headLayer;
-        const blob: CommitBlob = headSha === '' ? { kind: 'absent' } : carrierBlobAt(root, headSha, null, options.run);
-        headLayer = _carrierLayer(
-            `${CARRIER_PATH} at ${headSha === '' ? 'HEAD' : _short(headSha)}`,
-            blob.kind === 'no-commit' ? { kind: 'absent' } : blob,
-        );
-        return headLayer;
+    const headLabel = `${CARRIER_PATH} at ${headSha === '' ? 'HEAD' : _short(headSha)}`;
+    let headBlob: CommitBlob | null = null;
+    const atHead = (): CommitBlob => {
+        if (headBlob === null) headBlob = headSha === '' ? { kind: 'absent' } : carrierBlobAt(root, headSha, null, options.run);
+        return headBlob;
     };
 
     for (const key of keys) {
         if (key !== 'update_strategy') {
-            readings[key] = readGitConventionKey(key, { layers: () => [...developer, atHead()] });
+            const blob = atHead();
+            readings[key] = blob.kind === 'no-commit'
+                ? conventionReading(key, 'unresolvable', null, headLabel, `the carrier at HEAD (${_short(headSha)}) could not be read`)
+                : readGitConventionKey(key, { layers: () => [...developer, _carrierLayer(headLabel, blob)] });
             readAt[key] = headSha === '' ? null : headSha;
             continue;
         }
