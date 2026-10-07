@@ -1,7 +1,6 @@
 /**
- * An unexpected throw while the strategy is read — including the offline probe
- * `strategyGate` runs — is the documented exit 2 with an `internal error` line
- * and a `scanned:` record, never an uncaught exception.
+ * An unexpected throw while the strategy is read is the documented exit 2 with
+ * an `internal error` line and a `scanned:` record, never an uncaught exception.
  */
 
 import { execFileSync } from 'node:child_process';
@@ -27,11 +26,9 @@ function repo(): string {
 
 function throwingDeps(): BaseDeps {
     return {
-        currentBranch: () => 'feature',
-        prBase: () => null,
         defaultBranch: () => 'origin/main',
         remoteSha: () => {
-            throw new Error('forge exploded');
+            throw new Error('ref lookup exploded');
         },
         readAtSha: () => null,
     };
@@ -54,7 +51,7 @@ describe('sync_pr_branch — a throw while the strategy is read', () => {
             err.mockRestore();
         }
         expect(code).toBe(2);
-        expect(stderr).toContain('internal error: forge exploded');
+        expect(stderr).toContain('internal error: ref lookup exploded');
         expect(stdout).toContain('scanned: 0');
     });
 });

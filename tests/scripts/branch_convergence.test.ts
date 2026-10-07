@@ -39,6 +39,9 @@ const TARGET_SHA = 'a'.repeat(40);
 const HEAD_SHA = 'b'.repeat(40);
 const DEFAULT_SHA = 'c'.repeat(40);
 
+/** The base a pull-request caller passes as `--base`; nothing infers it. */
+const TARGET = 'origin/release/1.x';
+
 const POLICY_EXCLUDE = `branchConvergence:\n  enabled: true\n  targets:\n    release/1.x:\n      defaultBranch: exclude\n`;
 const POLICY_INCLUDE = `branchConvergence:\n  enabled: true\n  targets:\n    release/1.x:\n      defaultBranch: include\n`;
 const POLICY_DISABLED = `branchConvergence:\n  enabled: false\n  targets:\n    release/1.x:\n      defaultBranch: include\n`;
@@ -53,8 +56,6 @@ const POLICY_DISABLED = `branchConvergence:\n  enabled: false\n  targets:\n    r
 function deps(over: Partial<BaseDeps> & { readonly atSha?: Record<string, string> } = {}): BaseDeps {
     const atSha = over.atSha ?? {};
     return {
-        currentBranch: over.currentBranch ?? ((): string => 'feat/x'),
-        prBase: over.prBase ?? ((): string | null => 'release/1.x'),
         defaultBranch: over.defaultBranch ?? ((): string | null => 'origin/main'),
         remoteSha:
             over.remoteSha ??
@@ -69,23 +70,23 @@ describe('branch-convergence — the twelve council fixtures', () => {
         const r = resolveBase(
             '/nowhere',
             null,
-            deps({ prBase: (): string | null => 'main', remoteSha: (ref: string): string | null => (ref === 'origin/main' ? DEFAULT_SHA : null) }),
+            deps({ remoteSha: (ref: string): string | null => (ref === 'origin/main' ? DEFAULT_SHA : null) }),
         );
-        expect(r.entries).toEqual([{ ref: 'origin/main', reason: 'pull-request-target' }]);
+        expect(r.entries).toEqual([{ ref: 'origin/main', reason: 'repository-default-branch' }]);
         expect(r.policyStatus).toBe('not-required');
     });
 
     it('F2 — a non-default target with no entry throws the typed error, not a partial set', () => {
         // No policy file at the target SHA at all.
-        expect(() => resolveBase('/nowhere', null, deps({ atSha: {} }))).toThrow(MissingBranchConvergencePolicy);
+        expect(() => resolveBase('/nowhere', TARGET, deps({ atSha: {} }))).toThrow(MissingBranchConvergencePolicy);
         // A policy that exists but names a different target is the same answer:
         // an absent entry must not manufacture repository intent.
         const other = `branchConvergence:\n  enabled: true\n  targets:\n    release/2.x:\n      defaultBranch: include\n`;
-        expect(() => resolveBase('/nowhere', null, deps({ atSha: { [TARGET_SHA]: other } }))).toThrow(
+        expect(() => resolveBase('/nowhere', TARGET, deps({ atSha: { [TARGET_SHA]: other } }))).toThrow(
             MissingBranchConvergencePolicy,
         );
         try {
-            resolveBase('/nowhere', null, deps({ atSha: {} }));
+            resolveBase('/nowhere', TARGET, deps({ atSha: {} }));
         } catch (e) {
             expect((e as MissingBranchConvergencePolicy).target).toBe('release/1.x');
             expect(String(e)).toContain('MissingBranchConvergencePolicy(target="release/1.x")');
@@ -95,8 +96,8 @@ describe('branch-convergence — the twelve council fixtures', () => {
     it('F3 / F9 — exclude returns ONLY the target, and fails if legacy logic adds the default', () => {
         // SENSITIVITY (F9): append the default ref unconditionally in
         // `resolveBase`'s non-default branch — this assertion must go red.
-        const r = resolveBase('/nowhere', null, deps({ atSha: { [TARGET_SHA]: POLICY_EXCLUDE } }));
-        expect(r.entries).toEqual([{ ref: 'origin/release/1.x', reason: 'pull-request-target' }]);
+        const r = resolveBase('/nowhere', TARGET, deps({ atSha: { [TARGET_SHA]: POLICY_EXCLUDE } }));
+        expect(r.entries).toEqual([{ ref: 'origin/release/1.x', reason: 'explicit-base-override' }]);
         expect(r.entries).toHaveLength(1);
         expect(r.entries.map((e) => e.ref)).not.toContain('origin/main');
         expect(r.policyStatus).toBe('applied');
@@ -105,9 +106,9 @@ describe('branch-convergence — the twelve council fixtures', () => {
     it('F4 / F8 — include returns target then default, and fails if the default is omitted', () => {
         // SENSITIVITY (F8): delete the `include` push of the default entry —
         // both the length and the reason-code assertion must go red.
-        const r = resolveBase('/nowhere', null, deps({ atSha: { [TARGET_SHA]: POLICY_INCLUDE } }));
+        const r = resolveBase('/nowhere', TARGET, deps({ atSha: { [TARGET_SHA]: POLICY_INCLUDE } }));
         expect(r.entries).toEqual([
-            { ref: 'origin/release/1.x', reason: 'pull-request-target' },
+            { ref: 'origin/release/1.x', reason: 'explicit-base-override' },
             { ref: 'origin/main', reason: 'branch-convergence-policy:include-default' },
         ]);
         expect(r.entries).toHaveLength(2);
@@ -115,8 +116,8 @@ describe('branch-convergence — the twelve council fixtures', () => {
     });
 
     it('F5 — the kill switch returns the target only, policyStatus disabled', () => {
-        const r = resolveBase('/nowhere', null, deps({ atSha: { [TARGET_SHA]: POLICY_DISABLED } }));
-        expect(r.entries).toEqual([{ ref: 'origin/release/1.x', reason: 'pull-request-target' }]);
+        const r = resolveBase('/nowhere', TARGET, deps({ atSha: { [TARGET_SHA]: POLICY_DISABLED } }));
+        expect(r.entries).toEqual([{ ref: 'origin/release/1.x', reason: 'explicit-base-override' }]);
         expect(r.policyStatus).toBe('disabled');
     });
 
@@ -124,14 +125,14 @@ describe('branch-convergence — the twelve council fixtures', () => {
         // stderr is discarded by callers, so the word has to be in the verdict
         // the gate prints on stdout.
         const disabled = renderBaseSummary({
-            entries: [{ ref: 'origin/release/1.x', reason: 'pull-request-target' }],
+            entries: [{ ref: 'origin/release/1.x', reason: 'explicit-base-override' }],
             policyStatus: 'disabled',
         });
         expect(disabled).toContain('BYPASSED');
         expect(disabled).not.toMatch(/\bpassed\b/i);
         expect(disabled).not.toContain('✅');
         const applied = renderBaseSummary({
-            entries: [{ ref: 'origin/release/1.x', reason: 'pull-request-target' }],
+            entries: [{ ref: 'origin/release/1.x', reason: 'explicit-base-override' }],
             policyStatus: 'applied',
         });
         expect(applied).not.toContain('BYPASSED');
@@ -145,7 +146,7 @@ describe('branch-convergence — the twelve council fixtures', () => {
         // tree) instead of the resolved target SHA — this must go red.
         const r = resolveBase(
             '/nowhere',
-            null,
+            TARGET,
             deps({ atSha: { [TARGET_SHA]: POLICY_EXCLUDE, [HEAD_SHA]: POLICY_INCLUDE, [DEFAULT_SHA]: POLICY_INCLUDE } }),
         );
         expect(r.entries).toHaveLength(1);
@@ -155,7 +156,7 @@ describe('branch-convergence — the twelve council fixtures', () => {
         const asked: string[] = [];
         resolveBase(
             '/nowhere',
-            null,
+            TARGET,
             deps({
                 atSha: {},
                 readAtSha: (sha: string, p: string): string | null => {
@@ -191,11 +192,11 @@ describe('branch-convergence — the twelve council fixtures', () => {
 
     it('F11 — an unresolvable target SHA fails closed', () => {
         expect(() =>
-            resolveBase('/nowhere', null, deps({ atSha: {}, remoteSha: (): string | null => null })),
+            resolveBase('/nowhere', TARGET, deps({ atSha: {}, remoteSha: (): string | null => null })),
         ).toThrow(UnresolvableTargetSha);
         // Fails closed means it does NOT silently degrade to the target alone.
         expect(() =>
-            resolveBase('/nowhere', null, deps({ atSha: { [TARGET_SHA]: POLICY_EXCLUDE }, remoteSha: (ref: string): string | null => (ref === 'origin/release/1.x' ? null : DEFAULT_SHA) })),
+            resolveBase('/nowhere', TARGET, deps({ atSha: { [TARGET_SHA]: POLICY_EXCLUDE }, remoteSha: (ref: string): string | null => (ref === 'origin/release/1.x' ? null : DEFAULT_SHA) })),
         ).toThrow(UnresolvableTargetSha);
     });
 
@@ -204,7 +205,7 @@ describe('branch-convergence — the twelve council fixtures', () => {
         // same commit as the default is one ref, not two.
         const r = resolveBase(
             '/nowhere',
-            null,
+            TARGET,
             deps({
                 atSha: { [DEFAULT_SHA]: POLICY_INCLUDE },
                 remoteSha: (): string | null => DEFAULT_SHA,
@@ -213,17 +214,17 @@ describe('branch-convergence — the twelve council fixtures', () => {
         expect(r.entries).toHaveLength(1);
         expect(r.policyStatus).toBe('not-required');
         // And by ref name, when the PR base IS the default branch name.
-        const same = resolveBase('/nowhere', null, deps({ prBase: (): string | null => 'main' }));
+        const same = resolveBase('/nowhere', 'origin/main', deps());
         expect(same.entries).toHaveLength(1);
     });
 });
 
 describe('branch-convergence — roadmap steps 1.2 and 1.3', () => {
     it('1.2 — every entry carries its own resolution reason from a closed set', () => {
-        const r = resolveBase('/nowhere', null, deps({ atSha: { [TARGET_SHA]: POLICY_INCLUDE } }));
+        const r = resolveBase('/nowhere', TARGET, deps({ atSha: { [TARGET_SHA]: POLICY_INCLUDE } }));
         for (const e of r.entries) {
             expect(typeof e.reason).toBe('string');
-            expect(['pull-request-target', 'explicit-base-override', 'repository-default-branch', 'branch-convergence-policy:include-default']).toContain(e.reason);
+            expect(['explicit-base-override', 'repository-default-branch', 'branch-convergence-policy:include-default']).toContain(e.reason);
         }
         // The two reasons differ — a set that loses its provenance is worse
         // than the scalar it replaces.
@@ -237,7 +238,7 @@ describe('branch-convergence — roadmap steps 1.2 and 1.3', () => {
         // The result type is target-first (council § 4, fixture 4); the
         // INTEGRATION order is default-first (roadmap 1.3) so the broad conflict
         // surfaces before the narrow one. Both are stated, neither is inferred.
-        const r = resolveBase('/nowhere', null, deps({ atSha: { [TARGET_SHA]: POLICY_INCLUDE } }));
+        const r = resolveBase('/nowhere', TARGET, deps({ atSha: { [TARGET_SHA]: POLICY_INCLUDE } }));
         expect(integrationOrder(r)).toEqual(['origin/main', 'origin/release/1.x']);
         const summary = renderBaseSummary(r);
         expect(summary.indexOf('origin/main')).toBeLessThan(summary.indexOf('origin/release/1.x'));
@@ -245,7 +246,7 @@ describe('branch-convergence — roadmap steps 1.2 and 1.3', () => {
 
     it('an unresolvable base is its own error, distinct from a missing policy', () => {
         expect(() =>
-            resolveBase('/nowhere', null, deps({ prBase: (): string | null => null, defaultBranch: (): string | null => null })),
+            resolveBase('/nowhere', null, deps({ defaultBranch: (): string | null => null })),
         ).toThrow(UnresolvableBase);
     });
 });
@@ -264,18 +265,18 @@ describe('branch-convergence — base resolution, carried over', () => {
     it('a blank --base is not an override', () => {
         // Otherwise `--base ""` would pin the base to the empty string and every
         // rev-list against it would read as "already current".
-        const r = resolveBase('/nowhere', '   ', deps({ prBase: (): string | null => 'main' }));
+        const r = resolveBase('/nowhere', '   ', deps());
         expect(r.entries[0]?.ref).not.toBe('   ');
         expect(r.entries[0]?.ref).toBe('origin/main');
     });
 
     it('names HOW each base was resolved, so a wrong base is visible', () => {
-        const r = resolveBase('/nowhere', null, deps({ atSha: { [TARGET_SHA]: POLICY_INCLUDE } }));
+        const r = resolveBase('/nowhere', TARGET, deps({ atSha: { [TARGET_SHA]: POLICY_INCLUDE } }));
         const summary = renderBaseSummary(r);
         for (const e of r.entries) {
             expect(summary).toContain(e.ref);
         }
-        expect(summary).toContain('the open PR base');
+        expect(summary).toContain('given by --base');
         expect(summary).toContain('branch-convergence policy');
     });
 });

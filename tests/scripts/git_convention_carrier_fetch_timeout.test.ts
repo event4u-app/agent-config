@@ -53,7 +53,7 @@ describe('the target-commit fetch', () => {
 
     it('reports a timed-out fetch as a distinct reason in the unresolvable reading', () => {
         const f = fixture(tmp);
-        const deps = { ...makeTargetDeps(f.work), prBase: () => null, remoteSha: () => UNKNOWN_SHA };
+        const deps = { ...makeTargetDeps(f.work), remoteSha: () => UNKNOWN_SHA };
         const read = readCommittedConvention(f.work, {
             override: 'origin/main',
             keys: ['update_strategy'],

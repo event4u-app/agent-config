@@ -175,6 +175,32 @@ describe('git:convention subject beside a commit-msg hook', () => {
     });
 });
 
+describe('git:convention show --key', () => {
+    it('judges only the requested keys, so a broken branch_pattern does not stop an update_strategy read', () => {
+        const dir = repo('git:\n  update_strategy: rebase\n  branch_pattern: "{nope}"\n');
+        expect(runGitConvention(['show'], dir).code).toBe(1);
+        const r = runGitConvention(['show', '--key', 'update_strategy', '--base', 'origin/main'], dir);
+        expect(r.code).toBe(0);
+        const text = r.out.join('\n');
+        expect(text).toContain('git.update_strategy = rebase');
+        expect(text).not.toContain('git.branch_pattern');
+        expect(runGitConvention(['show', '--key', 'branch_pattern'], dir).code).toBe(1);
+    });
+
+    it('is repeatable, and the JSON carries exactly the requested keys', () => {
+        const dir = repo(null);
+        const r = runGitConvention(['show', '--json', '--key', 'commit_format', '--key', 'update_strategy'], dir);
+        expect(r.code).toBe(0);
+        expect(Object.keys(JSON.parse(r.out.join('\n')).keys as object)).toEqual(['commit_format', 'update_strategy']);
+    });
+
+    it('refuses a key that is not one of the three', () => {
+        const r = runGitConvention(['show', '--key', 'nope'], repo(null));
+        expect(r.code).toBe(2);
+        expect(r.err.join('\n')).toContain('unknown key: nope');
+    });
+});
+
 describe('git:convention show exits non-zero on every state sync refuses', () => {
     it('on a value only the user-global file sets (discarded)', () => {
         const home = process.env.EVENT4U_CONFIG_HOME as string;
@@ -188,7 +214,7 @@ describe('git:convention show exits non-zero on every state sync refuses', () =>
 
     it('on a target commit that cannot be resolved (unresolvable)', () => {
         const dir = repo(null);
-        const deps = { currentBranch: () => 'main', prBase: () => null, defaultBranch: () => null, remoteSha: () => null };
+        const deps = { defaultBranch: () => null, remoteSha: () => null };
         const r = showConvention(['--json'], dir, deps);
         expect(JSON.parse(r.out.join('\n')).keys.update_strategy.state).toBe('unresolvable');
         expect(r.code).toBe(1);
@@ -221,7 +247,7 @@ describe('git:convention show exits non-zero on every state sync refuses', () =>
         const block = /## 2\. Sync with the base[\s\S]*?```bash\n([\s\S]*?)```/.exec(text)?.[1] ?? '';
         const lines = block.split('\n').map((l) => l.replace(/#.*$/, '').trim()).filter((l) => l !== '');
         const checkout = lines.indexOf('gh pr checkout <N>');
-        const show = lines.indexOf('agent-config git:convention show --base origin/<base>');
+        const show = lines.indexOf('agent-config git:convention show --key update_strategy --base origin/<base>');
         expect(checkout).toBeGreaterThanOrEqual(0);
         expect(show).toBeGreaterThan(checkout);
         expect(lines).toContain('agent-config git:convention sync --base origin/<base>');

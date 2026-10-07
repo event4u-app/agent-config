@@ -13,7 +13,7 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { runGitConvention, showConvention } from '../../src/scripts/_cli/cmd_git_convention.js';
-import { CARRIER_PATH, makeTargetDeps, readCommittedConvention, runGit, type GitRunner, type TargetDeps } from '../../src/scripts/_lib/git_convention_carrier.js';
+import { CARRIER_PATH, makeTargetDeps, parseExactHeadSha, readCommittedConvention, runGit, type GitRunner, type TargetDeps } from '../../src/scripts/_lib/git_convention_carrier.js';
 import { classify_target } from '../../src/scripts/hooks/block_config_weakening.js';
 import { main as syncMain, makeGitDeps } from '../../src/scripts/sync_pr_branch.js';
 
@@ -31,11 +31,6 @@ afterEach(() => {
 
 const REBASE = 'git:\n  update_strategy: rebase\n';
 const MERGE = 'git:\n  update_strategy: merge\n';
-
-/** Real git, but no forge: there is never an open pull request. */
-function noPr(repo: string): TargetDeps {
-    return { ...makeTargetDeps(repo), prBase: () => null };
-}
 
 describe('update_strategy is read at the target commit', () => {
     it('a worktree and a fresh clone resolve a committed rebase, and none of them merges', () => {
@@ -129,9 +124,9 @@ describe('update_strategy is read at the target commit', () => {
         expect(r.after).toBe(r.before);
     });
 
-    it('no pull request and no default branch is exit 1, the base could not be resolved', () => {
+    it('no --base and no default branch is exit 1, the base could not be resolved', () => {
         const f = fixture(tmp);
-        const deps = { ...makeGitDeps(f.work), prBase: () => null, defaultBranch: () => null };
+        const deps = { ...makeGitDeps(f.work), defaultBranch: () => null };
         const spy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
         let code: number;
         let out: string;
@@ -146,7 +141,7 @@ describe('update_strategy is read at the target commit', () => {
         expect(out).not.toContain('git-convention-unresolvable');
     });
 
-    it('a target that resolves to a commit the carrier cannot be read at is exit 4, not a base failure', () => {
+    it('a target the server names whose commit cannot be fetched is unverified, exit 0, nothing merged', () => {
         const f = fixture(tmp);
         const deps = { ...makeGitDeps(f.work), remoteSha: () => 'f'.repeat(40) };
         const spy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
@@ -158,44 +153,37 @@ describe('update_strategy is read at the target commit', () => {
         } finally {
             spy.mockRestore();
         }
-        expect(code).toBe(4);
-        expect(out).toContain('git-convention-unresolvable');
+        expect(code).toBe(0);
+        expect(out).toContain('unverified');
         expect(out).not.toContain('base could not be resolved');
     });
 
-    it('offline with nothing declared is the unverified warning, exit 0, nothing merged', () => {
+    it.each([
+        ['nothing declared', null],
+        ['a developer rebase', REBASE],
+    ])('origin unreachable at the ref lookup with %s is exit 1, nothing merged', (_name, local) => {
         const f = fixture(tmp);
         advanceMain(f);
+        if (local !== null) write(f.work, 'agents/settings/.agent-settings.local.yml', local);
         git(f.work, 'remote', 'set-url', 'origin', path.join(path.dirname(f.work), 'unreachable.git'));
         const r = runSync(f.work);
-        expect(r.code).toBe(0);
-        expect(r.out).toContain('unverified');
-        expect(r.out).not.toContain('git-convention-unresolvable');
+        expect(r.code).toBe(1);
+        expect(r.out).toContain('base could not be resolved');
         expect(r.after).toBe(r.before);
     });
 
-    it('offline with a developer rebase is exit 4: the declared strategy cannot be honoured unread', () => {
-        const f = fixture(tmp);
-        write(f.work, 'agents/settings/.agent-settings.local.yml', REBASE);
-        git(f.work, 'remote', 'set-url', 'origin', path.join(path.dirname(f.work), 'unreachable.git'));
-        const r = runSync(f.work);
-        expect(r.code).toBe(4);
-        expect(r.out).toContain('git-convention-unresolvable');
-        expect(r.after).toBe(r.before);
-    });
-
-    it('without a pull request the default branch is the target; with one, its base is', () => {
+    it('without --base the default branch is the target; with one, that base is', () => {
         const f = fixture(tmp, { [CARRIER_PATH]: MERGE });
         git(f.seed, 'switch', '-q', '-c', 'release');
         commitIn(f.seed, CARRIER_PATH, REBASE);
         git(f.seed, 'push', '-q', 'origin', 'release');
 
-        const viaDefault = readCommittedConvention(f.work, { deps: noPr(f.work), keys: ['update_strategy'] });
+        const viaDefault = readCommittedConvention(f.work, { deps: makeTargetDeps(f.work), keys: ['update_strategy'] });
         expect(viaDefault.target).toMatchObject({ ref: 'origin/main', reason: 'repository-default-branch' });
         expect(viaDefault.readings.update_strategy?.value).toBe('merge');
 
-        const viaPr = readCommittedConvention(f.work, { deps: { ...noPr(f.work), prBase: () => 'release' }, keys: ['update_strategy'] });
-        expect(viaPr.target).toMatchObject({ ref: 'origin/release', reason: 'pull-request-target' });
+        const viaPr = readCommittedConvention(f.work, { override: 'origin/release', deps: makeTargetDeps(f.work), keys: ['update_strategy'] });
+        expect(viaPr.target).toMatchObject({ ref: 'origin/release', reason: 'explicit-base-override' });
         expect(viaPr.readings.update_strategy?.value).toBe('rebase');
         expect(viaPr.readAt.update_strategy).toBe(git(f.seed, 'rev-parse', 'HEAD').trim());
     });
@@ -209,16 +197,41 @@ describe('update_strategy is read at the target commit', () => {
         expect(git(f.work, 'ls-remote', '--heads', 'origin', 'main').split('\n')[0]).toContain('refs/heads/backport/main');
 
         expect(makeTargetDeps(f.work).remoteSha('origin/main')).toBe(mainSha);
-        const read = readCommittedConvention(f.work, { deps: noPr(f.work), keys: ['update_strategy'] });
+        const read = readCommittedConvention(f.work, { deps: makeTargetDeps(f.work), keys: ['update_strategy'] });
         expect(read.readAt.update_strategy).toBe(mainSha);
         expect(read.readings.update_strategy?.value).toBe('merge');
     });
 
-    it('no pull request and no default branch is unresolvable', () => {
+    it('no --base and no default branch is unresolvable', () => {
         const f = fixture(tmp, { [CARRIER_PATH]: REBASE });
-        const deps: TargetDeps = { ...noPr(f.work), defaultBranch: () => null };
+        const deps: TargetDeps = { ...makeTargetDeps(f.work), defaultBranch: () => null };
         const read = readCommittedConvention(f.work, { deps, keys: ['update_strategy'] });
         expect(read.readings.update_strategy).toMatchObject({ state: 'unresolvable', reason: 'git-convention-unresolvable', value: null });
+    });
+});
+
+describe('a SHA-256 repository', () => {
+    it('parses a 64-hex SHA as exactly as a 40-hex one', () => {
+        const sha256 = 'a'.repeat(64);
+        expect(parseExactHeadSha(`${sha256}\trefs/heads/main\n`, 'main')).toBe(sha256);
+        expect(parseExactHeadSha(`${'b'.repeat(40)}\trefs/heads/main\n`, 'main')).toBe('b'.repeat(40));
+        expect(parseExactHeadSha(`${'c'.repeat(50)}\trefs/heads/main\n`, 'main')).toBeNull();
+    });
+
+    it('resolves the target and reads the carrier at it', () => {
+        const root = tmp.make();
+        const remote = path.join(root, 'remote.git');
+        git(root, 'init', '-q', '--bare', '--object-format=sha256', '-b', 'main', remote);
+        const work = path.join(root, 'work');
+        git(root, 'init', '-q', '--object-format=sha256', '-b', 'main', work);
+        git(work, 'remote', 'add', 'origin', remote);
+        commitIn(work, CARRIER_PATH, REBASE);
+        git(work, 'push', '-q', 'origin', 'HEAD:main');
+        const head = git(work, 'rev-parse', 'HEAD').trim();
+        expect(head).toHaveLength(64);
+        const read = readCommittedConvention(work, { override: 'origin/main', deps: makeTargetDeps(work), keys: ['update_strategy'] });
+        expect(read.readAt.update_strategy).toBe(head);
+        expect(read.readings.update_strategy).toMatchObject({ value: 'rebase', state: 'valid' });
     });
 });
 
@@ -290,14 +303,14 @@ describe('git:convention show', () => {
     it('names the value in force, the commit it was read at, and the branch-local candidate', () => {
         const f = fixture(tmp, { [CARRIER_PATH]: MERGE });
         commitIn(f.work, CARRIER_PATH, REBASE);
-        const r = showConvention(['--base', 'origin/main'], f.work, noPr(f.work));
+        const r = showConvention(['--base', 'origin/main'], f.work, makeTargetDeps(f.work));
         expect(r.code).toBe(0);
         const text = r.out.join('\n');
         expect(text).toContain('git.update_strategy = merge');
         expect(text).toMatch(/read at +[0-9a-f]{12} — origin\/main/);
         expect(text).toMatch(/candidate rebase \(valid\) from .*\.git-convention\.yml — this checkout's value; the value above is in force/);
 
-        const json = JSON.parse(showConvention(['--json', '--base', 'origin/main'], f.work, noPr(f.work)).out.join('\n')) as {
+        const json = JSON.parse(showConvention(['--json', '--base', 'origin/main'], f.work, makeTargetDeps(f.work)).out.join('\n')) as {
             keys: Record<string, { value: string; read_at: string; candidate: { value: string } | null }>;
             target: { ref: string; sha: string };
         };
@@ -308,7 +321,7 @@ describe('git:convention show', () => {
 
     it('exits non-zero when the carrier in force does not parse', () => {
         const f = fixture(tmp, { [CARRIER_PATH]: 'git:\n  update_strategy: rebase\nx: [\n' });
-        const r = showConvention(['--base', 'origin/main'], f.work, noPr(f.work));
+        const r = showConvention(['--base', 'origin/main'], f.work, makeTargetDeps(f.work));
         expect(r.code).toBe(1);
         expect(r.out.join('\n')).not.toContain('git.update_strategy = merge');
     });
@@ -319,15 +332,9 @@ describe('one run resolves its target once', () => {
         const f = fixture(tmp, { [CARRIER_PATH]: REBASE });
         advanceMain(f);
         const calls: string[] = [];
-        // A forge whose answer changes between two questions: the PR is retargeted mid-run.
-        const bases = ['main', 'release'];
         const real = makeGitDeps(f.work);
         const deps = {
             ...real,
-            prBase: (): string | null => {
-                calls.push('prBase');
-                return bases.shift() ?? null;
-            },
             defaultBranch: (): string | null => {
                 calls.push('defaultBranch');
                 return real.defaultBranch();
@@ -345,7 +352,6 @@ describe('one run resolves its target once', () => {
             spy.mockRestore();
         }
         expect(code).toBe(3);
-        expect(calls.filter((c) => c === 'prBase')).toHaveLength(1);
         expect(calls.filter((c) => c === 'remoteSha origin/main')).toHaveLength(1);
         expect(calls.filter((c) => c === 'defaultBranch').length).toBeLessThanOrEqual(1);
     });

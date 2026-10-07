@@ -26,19 +26,24 @@
  * conflict-count reduction and must not be banked as drawdown (AI council
  * 2026-08-21, both seats; roadmap road-to-merge-hotspot-drawdown).
  *
- * Exit codes: 0 = already current, or merged cleanly · 1 = conflict, or the base
- * could not be resolved (no PR base, no default branch, or a `--base` the
- * server does not know) · 2 = internal error · 3 = behind, and
+ * The base is the explicit `--base`, else the default branch. Nothing here asks
+ * a forge which pull request the branch belongs to: a caller acting on a pull
+ * request passes its base, and without `--base` the run is about the default
+ * branch, which is right only for a branch that targets it.
+ *
+ * Exit codes: 0 = already current, or merged cleanly, or `unverified` (the
+ * target resolved but its commit could not be fetched; nothing was touched) ·
+ * 1 = conflict, or the base could not be resolved (no `--base` and no default
+ * branch, a `--base` the server does not know, no origin, or origin unreachable
+ * at the ref lookup) · 2 = internal error · 3 = behind, and
  * `git.update_strategy` is not `merge`, so the merge was refused (reason code
  * `TARGET_POLICY_STALE` when the branch is current with its non-default target
  * and that target is itself behind the default branch the policy adds — the
  * target's update, not this branch's; a branch also behind the target gets the
  * ordinary behind line first, naming the target's lag as a note) · 4 =
  * `git.update_strategy` cannot be read (a settings file or a committed
- * `.git-convention.yml` that does not parse, a value outside the schema, a
- * value only a user-global file carries, a target commit whose carrier cannot
- * be fetched, or a developer `rebase` that cannot be honoured offline), so
- * nothing was checked or merged; the line carries a stable reason
+ * `.git-convention.yml` that does not parse, a value outside the schema, or a
+ * value only a user-global file carries), so nothing was checked or merged; the line carries a stable reason
  * code (`git-convention-malformed` / `-invalid` / `-discarded` /
  * `-unresolvable`) and the file.
  * `scanned:` on every path.
@@ -345,15 +350,14 @@ export function renderConflictReport(plan: Plan): string {
 /**
  * Why the base is a SET now, and what each entry means.
  *
- * The old resolution was an EXCLUSIVE chain — `--base`, then the open PR's
- * base, then `origin/HEAD` — so a PR targeting a release line or a stacked
+ * The old resolution was an EXCLUSIVE chain — `--base`, then `origin/HEAD` —
+ * so a PR targeting a release line or a stacked
  * parent was kept current with its target and arbitrarily stale against the
  * default branch. Whether the default belongs in the set is a policy question
  * decided per target and read from the TARGET's own commit; see
  * `_lib/branch_convergence.ts` for the decision and the trust boundary.
  */
 export type BaseReason =
-    | 'pull-request-target'
     | 'explicit-base-override'
     | 'repository-default-branch'
     | 'branch-convergence-policy:include-default';
@@ -375,7 +379,7 @@ export interface ResolveBaseResult {
     readonly policyStatus: 'applied' | 'not-required' | 'disabled';
 }
 
-/** Neither an open PR nor a default branch answered. Distinct from a missing policy. */
+/** Neither `--base` nor a default branch answered. Distinct from a missing policy. */
 export class UnresolvableBase extends Error {
     constructor(detail: string) {
         super(`unresolvable — ${detail}`);
@@ -383,19 +387,11 @@ export class UnresolvableBase extends Error {
     }
 }
 
-/** The forge could not be asked for the PR's base; offline this is `unverified`, not a refusal. */
-export class UnaskedPullRequestBase extends UnresolvableBase {
-    constructor(detail: string) {
-        super(detail);
-        this.name = 'UnaskedPullRequestBase';
-    }
-}
-
 /**
  * The git questions base resolution asks, as data.
  *
  * Injected rather than called inline so the twelve council fixtures can be
- * exercised without a network, a forge, or a real release line — this
+ * exercised without a network or a real release line — this
  * repository has none, so a live fixture could only ever cover the
  * default-target path.
  */
@@ -435,10 +431,7 @@ export function resolveBase(repo: string, override: string | null, deps: BaseDep
 
     const target = resolveTarget(deps, override, defaultRef);
     if (target === null) {
-        throw new UnresolvableBase('no open PR and no origin/HEAD');
-    }
-    if ('unresolvable' in target) {
-        throw new UnaskedPullRequestBase(target.unresolvable);
+        throw new UnresolvableBase('no --base and no origin/HEAD');
     }
 
     // A PR targeting the default branch needs no entry — identity by ref name,
@@ -501,8 +494,6 @@ export function describeReason(reason: BaseReason): string {
     switch (reason) {
         case 'explicit-base-override':
             return 'given by --base';
-        case 'pull-request-target':
-            return 'the open PR base';
         case 'repository-default-branch':
             return 'the repo default branch';
         case 'branch-convergence-policy:include-default':
@@ -712,20 +703,7 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
     } catch (exc) {
         // A missing policy, an unresolvable target SHA and an unresolvable base
         // are all REFUSALS carrying their own typed message. None of them
-        // degrades to "check the default branch instead". The one exception is
-        // a forge that could not be asked while origin is unreachable too: that
-        // is the offline case, which is `unverified`, never a pass.
-        const offline = exc instanceof UnaskedPullRequestBase ? sh('git', ['fetch', 'origin', '--prune'], repo) : null;
-        if (offline !== null && !offline.ok) {
-            return {
-                exit: 0,
-                message: `unverified — could not fetch origin (${offline.err.split('\n')[0] ?? '?'}), and ${exc instanceof Error ? exc.message.replace(/^unresolvable — /, '') : ''}. Base freshness NOT checked.`,
-                generated: [],
-                remeasured: [],
-                authored: [],
-                scanned: 0,
-            };
-        }
+        // degrades to "check the default branch instead".
         return {
             exit: 1,
             message: `cannot resolve a base set to update against — ${exc instanceof Error ? exc.message : String(exc)}`,
@@ -869,33 +847,28 @@ export interface StrategyGate {
 /**
  * The one place that maps an unreadable `git.update_strategy` to an exit.
  *
- * A target that resolves to nothing — no pull request base, no default branch,
- * a `--base` the server does not know, a GitHub forge that could not be asked
- * for the pull request's base — is the base failure, exit 1. A target
- * that resolves but whose carrier cannot be read, parsed or accepted is exit 4.
- * Offline the target's carrier is unread: with no developer value other than
- * `merge` that is the `unverified` warning (exit 0, nothing touched), while a
- * developer `rebase` cannot be honoured unread and stays exit 4. A developer
- * file that is itself a refusal is exit 4 whatever the target does.
+ * A developer file that is itself a refusal, and a carrier at the target that
+ * does not parse or is not accepted, are exit 4. A target that resolves to no
+ * commit — no `--base` and no default branch, a ref the server does not know,
+ * no origin, origin unreachable at the ref lookup — is the base failure, exit
+ * 1. A target the server named whose commit could not be fetched is
+ * `unverified`: exit 0 with a warning, and nothing is touched.
  */
-export function strategyGate(repo: string, base: string | null, targetDeps: BaseDeps): StrategyGate {
-    const { reading, baseResolved } = readStrategy(repo, base, targetDeps);
+export function strategyExit(reading: GitConventionReading, baseResolved: boolean, developer: GitConventionReading): StrategyGate {
     if (!isRefusal(reading.state)) return { exit: null, line: '', reading };
     const refused: StrategyGate = { exit: 4, line: `❌  sync_pr_branch: refused — ${describeRefusal(reading)}. Nothing was checked or merged.`, reading };
-    if (reading.state !== 'unresolvable') return refused;
-    const dev = readGitConventionKey('update_strategy', checkoutSource(conventionRoot(repo).root));
-    if (isRefusal(dev.state)) return refused;
-    const probe = sync(repo, base, true, false, targetDeps);
-    if (probe.message.startsWith('unverified')) {
-        return (dev.value ?? 'merge') === 'merge' ? { exit: 0, line: `⚠️  sync_pr_branch: ${probe.message}`, reading } : refused;
-    }
-    if (!baseResolved) {
-        return { exit: 1, line: `❌  sync_pr_branch: base could not be resolved — ${reading.detail ?? 'the target commit is unknown'}. Nothing was checked or merged.`, reading };
-    }
-    return refused;
+    if (reading.state !== 'unresolvable' || isRefusal(developer.state)) return refused;
+    const why = reading.detail ?? 'the target commit is unknown';
+    if (!baseResolved) return { exit: 1, line: `❌  sync_pr_branch: base could not be resolved — ${why}. Nothing was checked or merged.`, reading };
+    return { exit: 0, line: `⚠️  sync_pr_branch: unverified — ${why}. Base freshness NOT checked, nothing was merged.`, reading };
 }
 
-/** `deps` answers the target questions; tests inject it, a run asks git and the forge. */
+export function strategyGate(repo: string, base: string | null, targetDeps: BaseDeps): StrategyGate {
+    const { reading, baseResolved } = readStrategy(repo, base, targetDeps);
+    return strategyExit(reading, baseResolved, readGitConventionKey('update_strategy', checkoutSource(conventionRoot(repo).root)));
+}
+
+/** `deps` answers the target questions; tests inject it, a run asks git. */
 export function main(argv?: readonly string[], deps?: BaseDeps): number {
     const args = argv ?? process.argv.slice(2);
     let repo = process.cwd();
@@ -939,7 +912,9 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
                     '  branch exits 0, a behind one exits 3 and is never merged (--dry-run and\n' +
                     '  --auto-resolve-generated have nothing to change there). A strategy that\n' +
                     '  cannot be read (unparsable file, typo, user-global-only) exits 4.\n' +
-                    '  Resolves the base from the open PR when there is one. A conflict is\n' +
+                    '  The base is --base; without it the default branch, so a PR into any other\n' +
+                    '  base must pass --base origin/<its base>. A base that cannot be resolved\n' +
+                    '  exits 1; one whose commit cannot be fetched is unverified, exit 0. A conflict is\n' +
                     '  reported and never auto-resolved; generated and authored conflicts are\n' +
                     '  listed separately because only the first has one correct resolution;\n' +
                     '  measured ratchet baselines are a third class, re-measured not merged.\n' +
@@ -969,7 +944,7 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
         const gate = strategyGate(repo, base, targetDeps);
         if (gate.exit !== null) {
             process.stdout.write(`${gate.line}\n`);
-            const why = gate.exit === 0 ? 'remote unreachable — stated above' : gate.exit === 1 ? 'base unresolvable — stated above' : 'git.update_strategy unreadable';
+            const why = gate.exit === 0 ? 'target commit not fetched — stated above' : gate.exit === 1 ? 'base unresolvable — stated above' : 'git.update_strategy unreadable';
             reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: why });
             return gate.exit;
         }

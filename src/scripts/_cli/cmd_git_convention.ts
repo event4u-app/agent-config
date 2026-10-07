@@ -15,9 +15,15 @@
  * commit the branch is judged against. Where this checkout's own value differs,
  * it is printed as a candidate beside the value in force.
  *
- * `show` exit codes: `0` every key in force is readable · `1` a key in force
- * is in a state `isRefusal` names (the set `sync` refuses) · `2` usage error.
- * A candidate in such a state is printed as a warning: `sync` never reads it.
+ * `show` exit codes: `0` every requested key in force is readable · `1` a
+ * requested key in force is in a state `isRefusal` names (the set `sync`
+ * refuses) · `2` usage error. `--key` (repeatable) narrows the keys read and
+ * judged; without it all three are. A candidate in a refusal state is printed
+ * as a warning: `sync` never reads it.
+ *
+ * `--base` names the commit `update_strategy` is read at. Without it that is
+ * the default branch, which is the answer only for a branch that targets it: a
+ * caller acting on a pull request passes `--base origin/<its base>`.
  *
  * `subject` reads subjects on stdin and exits `0` all valid · `1` a subject
  * fails, or the format cannot be read · `2` usage. It checks only the
@@ -37,7 +43,15 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { GIT_CONVENTION_KEYS, conventionDefault, describeRefusal, invalidReason, isRefusal, type GitConventionReading } from '../_lib/git_convention.js';
+import {
+    GIT_CONVENTION_KEYS,
+    conventionDefault,
+    describeRefusal,
+    invalidReason,
+    isRefusal,
+    type GitConventionKey,
+    type GitConventionReading,
+} from '../_lib/git_convention.js';
 import { CARRIER_PATH, readCommittedConvention, type TargetDeps } from '../_lib/git_convention_carrier.js';
 import {
     FAMILY_ERE,
@@ -143,24 +157,30 @@ function _short(sha: string | null | undefined): string {
 export function showConvention(args: readonly string[], cwd: string, deps?: TargetDeps): GitConventionResult {
     let json = false;
     let base: string | null = null;
+    const asked: GitConventionKey[] = [];
     for (let i = 0; i < args.length; i++) {
         const a = args[i] as string;
+        const next = args[i + 1];
         if (a === '--json') json = true;
-        else if (a === '--base' && args[i + 1] !== undefined && !(args[i + 1] as string).startsWith('--')) base = args[++i] as string;
-        else return { code: 2, out: [], err: [`unknown argument: ${a}`, USAGE] };
+        else if (a === '--base' && next !== undefined && !next.startsWith('--')) base = args[++i] as string;
+        else if (a === '--key' && next !== undefined && (GIT_CONVENTION_KEYS as readonly string[]).includes(next)) {
+            if (!asked.includes(next as GitConventionKey)) asked.push(next as GitConventionKey);
+            i++;
+        } else return { code: 2, out: [], err: [a === '--key' ? `unknown key: ${next ?? '(none)'}` : `unknown argument: ${a}`, USAGE] };
     }
-    const read = readCommittedConvention(cwd, { override: base, ...(deps ? { deps } : {}) });
-    const readings = read.readings as Record<(typeof GIT_CONVENTION_KEYS)[number], GitConventionReading>;
+    const keys = asked.length === 0 ? GIT_CONVENTION_KEYS : GIT_CONVENTION_KEYS.filter((k) => asked.includes(k));
+    const read = readCommittedConvention(cwd, { override: base, keys, ...(deps ? { deps } : {}) });
+    const readings = read.readings as Record<GitConventionKey, GitConventionReading>;
     const validators = commitMessageValidators(cwd);
-    const ok = !GIT_CONVENTION_KEYS.some((k) => isRefusal(readings[k].state));
+    const ok = !keys.some((k) => isRefusal(readings[k].state));
     const code: 0 | 1 = ok ? 0 : 1;
 
     if (json) {
-        const keys: Record<string, unknown> = {};
-        for (const k of GIT_CONVENTION_KEYS) {
+        const entries: Record<string, unknown> = {};
+        for (const k of keys) {
             const { key: _key, ...rest } = readings[k];
             const cand = read.candidates[k];
-            keys[k] = {
+            entries[k] = {
                 ...rest,
                 read_at: read.readAt[k] ?? null,
                 candidate: cand === undefined ? null : { value: cand.value, source: cand.source, state: cand.state, reason: cand.reason },
@@ -168,13 +188,13 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
         }
         return {
             code,
-            out: [JSON.stringify({ ok, keys, target: read.target, commit_message_validator: validators[0] ?? null, commit_message_validators: validators }, null, 2)],
+            out: [JSON.stringify({ ok, keys: entries, target: read.target, commit_message_validator: validators[0] ?? null, commit_message_validators: validators }, null, 2)],
             err: [],
         };
     }
 
     const out: string[] = [];
-    for (const k of GIT_CONVENTION_KEYS) {
+    for (const k of keys) {
         const r = readings[k];
         out.push(r.value === null ? `git.${k} — unknown` : `git.${k} = ${r.value}`);
         out.push(`  state     ${r.state}`);
@@ -347,11 +367,11 @@ export const SUBCOMMANDS: Readonly<Record<string, (args: readonly string[], cwd:
 };
 
 const USAGE = [
-    'usage: agent-config git:convention show [--json] [--base REF]',
+    'usage: agent-config git:convention show [--json] [--base REF] [--key KEY]...   (a pull request passes --base origin/<its base>)',
     '       agent-config git:convention subject [--format F | --family F] [--json]   (subjects on stdin)',
     '       agent-config git:convention ticket [BRANCH] [--keys "DEV, OPS"] [--json]',
     '       agent-config git:convention branch --slug S [--type T] [--ticket K] [--pattern P] [--json]',
-    '       agent-config git:convention sync [--base REF] [--dry-run] [--auto-resolve-generated] [--quiet]',
+    '       agent-config git:convention sync [--base REF] [--dry-run] [--auto-resolve-generated] [--quiet]   (without --base: the default branch)',
 ].join('\n');
 
 export function runGitConvention(argv: readonly string[], cwd: string, stdin?: string): GitConventionResult {
