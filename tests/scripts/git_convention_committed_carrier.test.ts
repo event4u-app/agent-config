@@ -128,6 +128,27 @@ describe('update_strategy is read at the target commit', () => {
         expect(r.after).toBe(r.before);
     });
 
+    it('offline with nothing declared is the unverified warning, exit 0, nothing merged', () => {
+        const f = fixture(tmp);
+        advanceMain(f);
+        git(f.work, 'remote', 'set-url', 'origin', path.join(path.dirname(f.work), 'unreachable.git'));
+        const r = runSync(f.work);
+        expect(r.code).toBe(0);
+        expect(r.out).toContain('unverified');
+        expect(r.out).not.toContain('git-convention-unresolvable');
+        expect(r.after).toBe(r.before);
+    });
+
+    it('offline with a developer rebase is exit 4: the declared strategy cannot be honoured unread', () => {
+        const f = fixture(tmp);
+        write(f.work, 'agents/settings/.agent-settings.local.yml', REBASE);
+        git(f.work, 'remote', 'set-url', 'origin', path.join(path.dirname(f.work), 'unreachable.git'));
+        const r = runSync(f.work);
+        expect(r.code).toBe(4);
+        expect(r.out).toContain('git-convention-unresolvable');
+        expect(r.after).toBe(r.before);
+    });
+
     it('without a pull request the default branch is the target; with one, its base is', () => {
         const f = fixture(tmp, { [CARRIER_PATH]: MERGE });
         git(f.seed, 'switch', '-q', '-c', 'release');

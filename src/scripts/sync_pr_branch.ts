@@ -52,8 +52,9 @@ import {
     loadPolicyAtSha,
     type ShaFileReader,
 } from './_lib/branch_convergence.js';
-import { describeRefusal, isRefusal, type GitConventionReading } from './_lib/git_convention.js';
+import { checkoutSource, describeRefusal, isRefusal, readGitConventionKey, type GitConventionReading } from './_lib/git_convention.js';
 import {
+    conventionRoot,
     makeTargetDeps,
     memoTargetDeps,
     parseSymrefDefault,
@@ -821,12 +822,23 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
  * `.git-convention.yml` at the target commit, over the developer layers
  * (ADR-282). Absent everywhere reads as `merge`, the behaviour before the key
  * existed; a file that does not parse, a typo, a user-global-only value and a
- * target commit that cannot be resolved are refusals the caller acts on, never
- * a fallback to `merge`.
+ * target commit that cannot be resolved are refusals here. `main` narrows one
+ * of them: an unresolvable target with no developer value other than `merge`
+ * becomes the offline `unverified` warning when the remote is unreachable.
  */
 export function updateStrategy(repo: string, base: string | null = null, deps?: TargetDeps): GitConventionReading {
     const read = readCommittedConvention(repo, { override: base, keys: ['update_strategy'], ...(deps ? { deps } : {}) });
     return read.readings.update_strategy as GitConventionReading;
+}
+
+/**
+ * True when the developer layers alone read as `merge` (absent included). A
+ * developer `rebase`, or a developer file that does not parse, is a value the
+ * run cannot honour without knowing the carrier, so it keeps the refusal.
+ */
+function developerStrategyIsMerge(repo: string): boolean {
+    const dev = readGitConventionKey('update_strategy', checkoutSource(conventionRoot(repo).root));
+    return (dev.state === 'absent' || dev.state === 'valid') && (dev.value ?? 'merge') === 'merge';
 }
 
 /** `deps` answers the target questions; tests inject it, a run asks git and the forge. */
@@ -899,6 +911,19 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
     // passes, so an automated pre-push sync stays green when nothing is to do.
     const targetDeps = memoTargetDeps(deps ?? makeGitDeps(repo));
     const reading = updateStrategy(repo, base, targetDeps);
+    if (reading.state === 'unresolvable' && developerStrategyIsMerge(repo)) {
+        // Offline the target's carrier is unread, but with no developer value
+        // other than `merge` nothing could ask this run for anything but the
+        // check below. Run as a dry run: an unreachable remote ends in the
+        // `unverified` warning and touches nothing; a remote that DOES answer
+        // means the carrier was unreadable for another reason, which refuses.
+        const probe = sync(repo, base, true, false, targetDeps);
+        if (probe.message.startsWith('unverified')) {
+            process.stdout.write(`⚠️  sync_pr_branch: ${probe.message}\n`);
+            reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'remote unreachable — stated above' });
+            return 0;
+        }
+    }
     if (isRefusal(reading.state)) {
         process.stdout.write(`❌  sync_pr_branch: refused — ${describeRefusal(reading)}. Nothing was checked or merged.\n`);
         reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'git.update_strategy unreadable' });
