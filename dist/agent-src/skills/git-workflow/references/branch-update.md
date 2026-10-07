@@ -86,7 +86,9 @@ read from `@{u}` checks the base and carries the base's SHA. `origin/<branch>`
 is not it either — `branch.<name>.pushRemote`, `remote.pushDefault` and a fork
 head publish elsewhere. The sequence therefore resolves the publish target,
 and an **unresolved target means no rewrite** — never "never pushed". Only a
-resolved target with no remote ref is a branch that was never pushed.
+resolved target with no remote ref is a branch that was never pushed. The
+remedy the stop names: set the upstream once with `git push -u <remote> <branch>`,
+then run the sequence again.
 
 **Inputs, set before step 1.** `BASE` is required: the pull request's base
 branch, bare (`main`, `release/1.x`). `PR_HEAD_REPO` and `PR_HEAD_REF` are set
@@ -131,7 +133,8 @@ if [ -n "${PR_HEAD_REPO:-}" ]; then
   fi
   REMOTE=$PR_REMOTE RB=$PR_HEAD_REF
 fi
-[ -n "$REMOTE" ] && [ -n "$RB" ] || { echo "STOP: publish target unresolved — no rewrite" >&2; exit 1; }
+[ -n "$REMOTE" ] && [ -n "$RB" ] \
+  || { echo "STOP: publish target unresolved — no rewrite; set the upstream once with git push -u <remote> $B, then run the sequence again" >&2; exit 1; }
 DEF=$(git ls-remote --symref "$REMOTE" HEAD | awk '$1 == "ref:" { sub("^refs/heads/", "", $2); print $2; exit }')
 for b in "${BASE:-}" "$DEF"; do
   [ -z "$b" ] || [ "$RB" != "$b" ] \
@@ -143,8 +146,15 @@ done
 rewritten: a dirty working tree; a merge commit in the topic range
 (`git rev-list --merges origin/<base>..HEAD` is non-empty) — the default
 `merge` strategy and `/prepare-for-review` put them there, so a branch switched
-to `rebase` usually carries one, and a plain rebase silently drops it;
-`--rebase-merges` is a separate operation the user asks for, never a fallback;
+to `rebase` usually carries one, and a plain rebase silently drops it. When
+every such commit is a **base merge** — each parent after the first is
+reachable from `origin/<base>` — the stop names its remedy: a plain rebase that
+drops those merges, run only after the user confirms it this turn, which a run
+started with `DROP_BASE_MERGES=1` stands for; the recovery ref is written
+first, and conflicts resolved inside those merges may come back during the
+rebase. A merge of anything else is still refused even with
+`DROP_BASE_MERGES=1`; `--rebase-merges` is a separate operation the user asks
+for, never a fallback;
 and commits on the branch you did not author (§ Under `rebase`, shared branch)
 — any commit in `origin/<base>..HEAD` whose author email is not
 `git config user.email`. That stop lifts only for a run started with
@@ -170,8 +180,18 @@ declare -F keep >/dev/null && [ -n "${BASE:-}" ] && [ -n "${REMOTE:-}" ] \
 git fetch -q origin "$BASE" || stop "could not fetch origin $BASE — nothing was rewritten"
 MERGES=$(git rev-list --merges "origin/$BASE..HEAD") \
   || stop "could not list the topic range origin/$BASE..HEAD — nothing was rewritten"
-[ -z "$MERGES" ] \
-  || stop "the topic range carries a merge commit, which a plain rebase drops — --rebase-merges is a separate operation the user asks for"
+if [ -n "$MERGES" ]; then
+  OTHER=
+  for m in $MERGES; do
+    for p in $(git rev-parse "$m^@" | tail -n +2); do
+      git merge-base --is-ancestor "$p" "origin/$BASE" || { OTHER="$OTHER $(git rev-parse --short "$m")"; break; }
+    done
+  done
+  [ -z "$OTHER" ] \
+    || stop "the topic range carries a merge commit that is not a merge of the base ($OTHER) — a plain rebase drops it; --rebase-merges is a separate operation the user asks for"
+  [ "${DROP_BASE_MERGES:-}" = 1 ] \
+    || stop "the topic range carries a merge commit from an earlier merge of the base, which a plain rebase drops — ask the user; set DROP_BASE_MERGES=1 only on their answer this turn (conflicts resolved inside those merges may come back); keeping them is --rebase-merges, a separate operation the user asks for"
+fi
 ME=$(git config user.email) || stop "git config user.email is unset, so your commits cannot be told from inherited ones — nothing was rewritten"
 AUTHORS=$(git log --format='%h %ae' "origin/$BASE..HEAD") \
   || stop "could not list the authors of origin/$BASE..HEAD — nothing was rewritten"

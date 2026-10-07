@@ -16,7 +16,7 @@ import * as path from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { collaboratorPushesDuringRebase, runBlocks, runSequence, sandbox, sequenceBlock, type Sandbox } from '../_lib/rebase_sequence.js';
+import { collaboratorPushesDuringRebase, PREPARE_BLOCKS, runBlocks, runSequence, sandbox, sequenceBlock, type Sandbox } from '../_lib/rebase_sequence.js';
 
 
 interface Fixture {
@@ -139,6 +139,8 @@ describe('an unresolved publish target', () => {
         const r = runSequence(f.sb, f.me, f.env);
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('publish target unresolved');
+        expect(r.stderr).toContain('git push -u <remote> feat');
+        expect(r.stderr).toContain('then run the sequence again');
         expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
     });
 
@@ -209,6 +211,39 @@ describe('stops before anything is rewritten', () => {
         const r = runSequence(f.sb, f.me, f.env);
         expect(r.status).not.toBe(0);
         expect(r.stderr).toContain('carries a merge commit');
+        expect(r.stderr).toContain('DROP_BASE_MERGES=1');
+        expect(r.stderr).toContain('--rebase-merges');
+        expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
+        expect(published(f)).toBe(before);
+    });
+
+    it('drops the base-merge commits only when the user confirmed it this turn, keeping the recovery ref', () => {
+        const f = fixture('upstream');
+        f.sb.git(f.me, 'fetch', '-q', 'origin');
+        f.sb.git(f.me, 'merge', '-q', '--no-edit', 'origin/main');
+        f.sb.git(f.me, 'push', '-q', 'origin', 'feat');
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const r = runBlocks(f.sb, f.me, PREPARE_BLOCKS.map((b) => sequenceBlock(b)).join('\n'), { ...f.env, DROP_BASE_MERGES: '1' });
+        expect(r.stderr).not.toContain('STOP');
+        expect(r.status).toBe(0);
+        expect(f.sb.git(f.me, 'rev-list', '--merges', 'origin/main..HEAD')).toBe('');
+        expect(f.sb.git(f.me, 'merge-base', '--is-ancestor', 'origin/main', 'HEAD')).toBe('');
+        expect(f.sb.git(f.me, 'log', '--format=%s', 'origin/main..HEAD')).toBe('feat');
+        const kept = f.sb.git(f.me, 'for-each-ref', '--format=%(objectname)', 'refs/agent-config/rewrites/');
+        expect(kept).toBe(before);
+    });
+
+    it('still refuses a merge commit that is not a base merge, even with DROP_BASE_MERGES=1', () => {
+        const f = fixture('upstream');
+        f.sb.git(f.me, 'switch', '-q', '-c', 'side', 'feat');
+        f.sb.commit(f.me, 'side.txt', 'side\n', 'side work');
+        f.sb.git(f.me, 'switch', '-q', 'feat');
+        f.sb.git(f.me, 'merge', '-q', '--no-ff', '--no-edit', 'side');
+        f.sb.git(f.me, 'push', '-q', 'origin', 'feat');
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const r = runSequence(f.sb, f.me, { ...f.env, DROP_BASE_MERGES: '1' });
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('not a merge of the base');
         expect(r.stderr).toContain('--rebase-merges');
         expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
         expect(published(f)).toBe(before);
