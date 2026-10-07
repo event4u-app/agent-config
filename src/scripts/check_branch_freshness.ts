@@ -68,7 +68,7 @@ import { fileURLToPath } from "node:url";
 import { runGateCli, runSelfTest, type SelfTestCase } from "./_lib/gate_self_test.js";
 import { workspaceIdentity } from "./_lib/git_common_dir.js";
 import { describeRefusal, isRefusal, type GitConventionReading } from "./_lib/git_convention.js";
-import { parseExactHeadSha, readCommittedConvention } from "./_lib/git_convention_carrier.js";
+import { makeTargetDeps, parseExactHeadSha, readCommittedConvention } from "./_lib/git_convention_carrier.js";
 import { reportScanned } from "./_lib/scan_scope.js";
 
 // ledger-exempt: single remote-ref probe — the entire scope is ONE ls-remote answer (0 or 1 refs) resolved to one aggregate ancestor verdict, and every empty path already publishes its reason via reportScanned allowEmpty; there is no per-target collection to account.
@@ -638,8 +638,13 @@ export function main(
   console.error("    Pushing now opens a PR that may conflict, and worse: another branch");
   console.error("    may already have shipped what this one is implementing.");
   console.error("");
-  const strategy = readCommittedConvention(process.cwd(), { override: `origin/${base}`, keys: ["update_strategy"] }).readings
-    .update_strategy as GitConventionReading;
+  // The base and the commit this run measured, not a second lookup: the remote
+  // can move between two ls-remote calls and the strategy would be read elsewhere.
+  const strategy = readCommittedConvention(process.cwd(), {
+    override: `origin/${base}`,
+    keys: ["update_strategy"],
+    deps: { ...makeTargetDeps(process.cwd()), remoteSha: () => sha },
+  }).readings.update_strategy as GitConventionReading;
   for (const line of behindRemedy(base, strategy)) {
     console.error(line);
   }
