@@ -24,7 +24,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { settingsSchema } from '../schemas/settings.js';
 import { parseYaml, mergeIntoTemplate, diffValues, deepMerge, TEMPLATE_PLACEHOLDER_DEFAULTS } from '../io/yamlIO.js';
 import { writeAtomic } from '../io/atomicWrite.js';
-import { WITHHELD_GIT_KEYS, WITHHELD_REASON, gitKeyWriteIssues, withholdGitKeys } from '../gitKeysGate.js';
+import { WITHHELD_GIT_KEYS, WITHHELD_REASON, gitKeyWriteIssues, keepWithheldGit, withholdGitKeys } from '../gitKeysGate.js';
 import { sharedWriteTarget, resolveThroughSymlinks } from '../io/sharedWriteCheck.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
 import { buildSettingsClassIndex, guardedChangedKeys, parseSettingsClassRows, type SettingsClass } from '../../shared/settingsClasses.js';
@@ -431,7 +431,10 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 });
                 return reply;
             }
-            const changes = diffValues(current.values, parsed.data as Record<string, unknown>);
+            const candidate = opts.userGlobalWrite === true
+                ? keepWithheldGit(parsed.data as Record<string, unknown>, current.values as Record<string, unknown>)
+                : (parsed.data as Record<string, unknown>);
+            const changes = diffValues(current.values, candidate);
             return { changes };
         });
 
@@ -474,8 +477,11 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 });
                 return reply;
             }
+            const candidate = opts.userGlobalWrite === true
+                ? keepWithheldGit(parsed.data as Record<string, unknown>, current.values as Record<string, unknown>)
+                : (parsed.data as Record<string, unknown>);
             try {
-                const merged = mergeIntoTemplate(current.raw, parsed.data as Record<string, unknown>);
+                const merged = mergeIntoTemplate(current.raw, candidate);
                 if (opts.dryRun === true) {
                     // No disk write, no Last-Modified bump — surface the
                     // rendered body so the maintainer sees what a real
@@ -506,10 +512,7 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                     const classes = await readClassIndex(packageRoot);
                     const guarded = guardedChangedKeys(
                         classes,
-                        diffValues(
-                            current.values as Record<string, unknown>,
-                            parsed.data as Record<string, unknown>,
-                        ),
+                        diffValues(current.values as Record<string, unknown>, candidate),
                     );
                     if (guarded.length > 0) {
                         await reply.code(409).send({

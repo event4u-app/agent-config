@@ -75,3 +75,15 @@ export function gitKeyWriteIssues(
     }
     return issues;
 }
+
+/**
+ * The write candidate with the `git` section the file already holds. In global
+ * mode the form never showed that section, and the schema's `.default({})`
+ * fills template defaults into whatever arrives, so a value the user-global
+ * file carries would otherwise read as a change the user made: a guarded-key
+ * confirmation for a field they never saw, then a silent reset.
+ */
+export function keepWithheldGit(candidate: Record<string, unknown>, current: Record<string, unknown>): Record<string, unknown> {
+    const { git: _sent, ...rest } = candidate;
+    return 'git' in current ? { ...rest, git: current['git'] } : rest;
+}

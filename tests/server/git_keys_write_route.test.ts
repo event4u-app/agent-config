@@ -7,7 +7,7 @@
  * there and refuses a non-default value; in every mode it runs the same value
  * and pattern check `git:convention show` and `settings:check` run.
  */
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -85,6 +85,40 @@ describe('global mode — the write root is the user-global layer', () => {
 
     it('accepts the template defaults a form round-trips', async () => {
         expect((await put(ctx, {})).status).toBe(200);
+    });
+
+    it('leaves a git value already in the user-global file alone: neither guarded nor reset', async () => {
+        const file = join(ctx.projectRoot, 'settings', '.agent-settings.yml');
+        writeFileSync(file, readFileSync(file, 'utf8').replace(/^(\s+update_strategy:) merge$/m, '$1 rebase'));
+        expect(readFileSync(file, 'utf8')).toMatch(/^\s+update_strategy: rebase$/m);
+
+        const shown = await get(ctx);
+        expect(shown.values).not.toHaveProperty('git');
+        // What the form submits: every offered section, no git.
+        const { git: _withheld, ...form } = fixtureSettings();
+        const save = (values: Record<string, unknown>, confirmGuarded: boolean) =>
+            ctx.app.inject({
+                method: 'PUT',
+                url: '/api/v1/settings',
+                headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json', 'if-unmodified-since': String(shown.lastModified + 5) },
+                payload: { values, confirmGuarded },
+            });
+        const diff = await ctx.app.inject({
+            method: 'POST',
+            url: '/api/v1/settings/diff',
+            headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
+            payload: { values: form },
+        });
+        expect(diff.statusCode, diff.body).toBe(200);
+        expect(JSON.stringify(diff.json())).not.toContain('git.');
+
+        // The fixture differs from the seeded template in unrelated guarded keys;
+        // none of the confirmation it asks for may name a git key.
+        const gated = await save(form, false);
+        expect(JSON.stringify(gated.json())).not.toContain('git.');
+        const res = await save(form, true);
+        expect(res.statusCode, res.body).toBe(200);
+        expect(readFileSync(file, 'utf8')).toMatch(/^\s+update_strategy: rebase$/m);
     });
 });
 
