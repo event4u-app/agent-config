@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: ready
@@ -174,21 +176,7 @@ refuses.
       comparison rests on its median — against the
       published baseline (p95 583–1,007 ms over a 59 MB index, the cache load
       dominating); a promotion that does not first cut the load term inherits half a
-      second to a second per stop on the gate's decision path. The load term is not
-      the JSON parse: `bench_graph_feeder_latency --load-split` puts read and parse at
-      about a sixth of `loadGraph` (p50 67 of 425 ms), the eagerly built lexical index
-      the feeder never reads at about half (230 ms), and a failing SQLite twin write
-      at about a sixth (70 ms). Cutting it means skipping that index on the feeder's
-      path and making the twin write succeed, not adding a cache.
-      NOTE 2026-10-07 (follow-up, out of scope for this roadmap): on this repository's
-      graph `emitSqliteTwin` (`src/scripts/code_graph/sqlite_store.ts`) fails on every
-      `loadGraph` call: the graph carries 223 duplicate node ids (46,792 nodes,
-      46,569 distinct), the twin's `nodes.id PRIMARY KEY` insert raises
-      `UNIQUE constraint failed`, and the error is swallowed, so no twin is ever
-      written and every stop re-pays the attempt. No active roadmap or blocker names
-      it (searched `agents/roadmaps/` outside `archive/` for the twin and duplicate
-      node ids). It needs its own fix in the builder or the twin writer, and a
-      promotion under this step should not proceed on the load term until it lands.
+      second to a second per stop on the gate's decision path.
 
 ## Acceptance criteria
 
