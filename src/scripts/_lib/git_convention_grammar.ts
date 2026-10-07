@@ -141,8 +141,34 @@ export function ruleName(rule: SubjectRule): string {
     return 'format' in rule ? `git.commit_format: ${rule.format}` : `approved family ${rule.family}`;
 }
 
+/** Subjects git writes itself (`commit --fixup`, `--squash`, `--fixup=amend:`, `revert`), valid under every approved family. */
+export const GIT_OWN_SUBJECT = '^((fixup|squash|amend)! .+|Revert ".+")$';
+
+/**
+ * A family's form without its ticket, for the families whose ticket is a
+ * leading part (owner decision 2026-10-07): the ticket is optional, as under
+ * the `ticket-conventional` setting value, and when present it leads.
+ */
+export const TICKETLESS_FORM: Readonly<Partial<Record<SubjectFamily, string>>> = {
+    'ticket-prefix': '^\\S.*',
+    'ticket-conventional': FAMILY_ERE[0]?.[1] ?? '',
+};
+
 export function checkSubject(subject: string, rule: SubjectRule): SubjectVerdict {
+    if ('family' in rule && new RegExp(GIT_OWN_SUBJECT).test(subject)) return { ok: true };
     const grammar = 'format' in rule ? new RegExp(FORMAT_GRAMMAR[rule.format]) : (FAMILY_JS.find(([f]) => f === rule.family)?.[1] as RegExp);
+    const ticketless = 'family' in rule ? TICKETLESS_FORM[rule.family] : undefined;
+    if (!grammar.test(subject) && ticketless !== undefined) {
+        const family = (rule as { family: SubjectFamily }).family;
+        if (!_js(ticketless).test(subject)) {
+            return { ok: false, rule: `${ruleName(rule)} — does not match ${FAMILY_ERE.find(([f]) => f === family)?.[1] ?? ''}, nor its form without a ticket ${ticketless}` };
+        }
+        const stray = ticketCandidates(subject).find((c) => c.status === 'ticket');
+        if (stray !== undefined) {
+            return { ok: false, rule: `${ruleName(rule)} — the ticket \`${stray.token}\` stands outside the leading position; it leads the subject or is left out` };
+        }
+        return { ok: true };
+    }
     if (!grammar.test(subject)) {
         return { ok: false, rule: `${ruleName(rule)} — does not match ${'format' in rule ? FORMAT_GRAMMAR[rule.format] : (FAMILY_ERE.find(([f]) => f === rule.family)?.[1] ?? '')}` };
     }

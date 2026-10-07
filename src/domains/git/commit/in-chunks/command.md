@@ -51,6 +51,8 @@ If there are no uncommitted changes (staged or unstaged), report
   never asked about.
 - If no ticket ID is found, omit it — write `chore: ...` not `chore(): ...`.
   Do **not** ask the user for one.
+  Under an approved convention card this is never a stop: the family's form
+  without the ticket part is valid (`commit-subject` § Placing the ticket).
 
 ### 3. Analyze and split
 

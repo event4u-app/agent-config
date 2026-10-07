@@ -58,6 +58,14 @@ Under `ticket-conventional` **a ticket is never in the scope** — not as the
 scope, not inside a compound one (`feat(api,DEV-1234)` fails). The scope names
 the system area (`api/audio`, `ci`), only where it adds clarity.
 
+**Under an approved family** (the card's `dominant_family`) the ticket is
+optional, as under `ticket-conventional`: with a ticket it stands in the
+family's leading position (`[DEV-1234] Add export filter`), without one the
+subject is the family's form without the ticket part (`Add export filter`), and
+a ticket anywhere else fails. Git's own `fixup!`, `squash!`, `amend!` and
+`Revert "…"` subjects are valid under every family. A branch without a ticket is
+therefore never a stop under a card.
+
 **Area scope under `/commit:in-chunks`.** Several commits on one branch carry the
 same ticket in front of each; the scope is chosen per commit from the area that
 commit touches, and dropped where no single area fits. A chunk never inherits
@@ -143,21 +151,24 @@ describes a team habit; the name the agent creates follows the declared pattern.
 <!-- Written by `./scripts-run src/scripts/generate_git_convention_grammar` from `src/scripts/_lib/git_convention_grammar.ts` and `src/scripts/_lib/git_convention_measure.ts`; edit the modules, never this block. -->
 
 ```
-ticket                      [A-Z][A-Z0-9]+-[0-9]+
-ticket in text              (?<![A-Za-z0-9])[A-Z][A-Z0-9]+-[0-9]+(?![0-9])
-standard names              UTF ISO SHA RFC CVE CWE GHSA
-version-like names          HTTP HTTPS TLS SSL OAUTH PHP PYTHON JAVA JDK NODE ES HTML CSS (one-digit number, no card)
-format ticket-scope         ^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+
-format ticket-conventional  ^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+
-family conventional         ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
-family ticket-conventional  ^[A-Z][A-Z0-9]+-[0-9]+ (build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
-family ticket-prefix        ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
-family gitmoji              ^:[a-z0-9_+-]+:[[:space:]]|^[^ -~[:cntrl:][:space:]]
-family imperative-plain     ^[A-Z][a-z]+[[:space:]].*[^.]$
-measure sample              newest 200 non-merge commits since 24 months ago, or regardless of age when that window yields fewer than 30; bots, automation subjects, commits over 500 files dropped
-measure bar                 n >= 30; >= 80 % capped at 20 per author per half (3+ authors), else >= 90 % uncapped; both halves agree
-measure migration           the newer half, or the newest 30 commits, clearing the bar on another family than the dominant one: "migrating to <family>", and that family is proposed
-measure branches            >= 10 remote branch names, top shape >= 80 %
+ticket                                 [A-Z][A-Z0-9]+-[0-9]+
+ticket in text                         (?<![A-Za-z0-9])[A-Z][A-Z0-9]+-[0-9]+(?![0-9])
+standard names                         UTF ISO SHA RFC CVE CWE GHSA
+version-like names                     HTTP HTTPS TLS SSL OAUTH PHP PYTHON JAVA JDK NODE ES HTML CSS (one-digit number, no card)
+format ticket-scope                    ^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+
+format ticket-conventional             ^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+
+family conventional                    ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
+family ticket-conventional             ^[A-Z][A-Z0-9]+-[0-9]+ (build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
+family ticket-prefix                   ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
+family gitmoji                         ^:[a-z0-9_+-]+:[[:space:]]|^[^ -~[:cntrl:][:space:]]
+family imperative-plain                ^[A-Z][a-z]+[[:space:]].*[^.]$
+family ticket-prefix, no ticket        ^\S.* (no ticket elsewhere in the subject)
+family ticket-conventional, no ticket  ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?:  (no ticket elsewhere in the subject)
+any family                             ^((fixup|squash|amend)! .+|Revert ".+")$ (git's own subjects)
+measure sample                         newest 200 non-merge commits since 24 months ago, or regardless of age when that window yields fewer than 30; bots, automation subjects, commits over 500 files dropped
+measure bar                            n >= 30; >= 80 % capped at 20 per author per half (3+ authors), else >= 90 % uncapped; both halves agree
+measure migration                      the newer half, or the newest 30 commits, clearing the bar on another family than the dominant one: "migrating to <family>", and that family is proposed
+measure branches                       >= 10 remote branch names, top shape >= 80 %
 ```
 
 Formats are JavaScript / PCRE syntax; families are POSIX extended, matched in

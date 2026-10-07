@@ -114,7 +114,9 @@ describe('subject grammar per format', () => {
 describe('subject grammar per approved family', () => {
     it('has a validator for every measured family', () => {
         expect(checkSubject('[DEV-1] Fix thing', { family: 'ticket-prefix' }).ok).toBe(true);
-        expect(checkSubject('Fix thing', { family: 'ticket-prefix' }).ok).toBe(false);
+        // Ticketless is the family's form without the ticket (owner decision 2026-10-07); a ticket elsewhere is not.
+        expect(checkSubject('Fix thing', { family: 'ticket-prefix' }).ok).toBe(true);
+        expect(checkSubject('Fix thing for DEV-1', { family: 'ticket-prefix' }).ok).toBe(false);
         expect(checkSubject(':bug: fix thing', { family: 'gitmoji' }).ok).toBe(true);
         expect(checkSubject('Fix the thing', { family: 'imperative-plain' }).ok).toBe(true);
         expect(checkSubject('Fix the thing.', { family: 'imperative-plain' }).ok).toBe(false);
