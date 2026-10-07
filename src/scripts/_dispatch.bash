@@ -301,7 +301,7 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              a convention from the history (subject family, branch
                              pattern, observed update style) and writes nothing;
                              show and subject print "no convention established" when
-                             neither a declaration nor an approved card exists; sync brings the
+                             no declaration, approved card or commitlint config exists; sync brings the
                              branch up to --base (else the default branch) per
                              git.update_strategy (exit 1 base unresolved, 3 behind
                              under rebase, 4 strategy unreadable).

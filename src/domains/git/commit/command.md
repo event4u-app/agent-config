@@ -107,7 +107,7 @@ silently commit a secret; never silently strip one.
 Before any subject is generated, run
 `agent-config git:convention show --key commit_format`. It prints
 `no convention established — run git:convention measure` only when there is
-neither a declaration nor an approved card; otherwise skip this step.
+no declaration, no approved card and no commitlint config; otherwise skip this step.
 
 1. Run `agent-config git:convention measure`. Its `verdict` line is the input to
    the one question below; the thresholds behind it are the `measure` rows of

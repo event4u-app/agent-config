@@ -86,9 +86,11 @@ resolves the convention in this order — the first that applies decides:
 2. **An approved measurement** — the card's `dominant_family`.
 3. **The default** — Conventional Commits (`ticket-scope`).
 
-When the third case decides — no declaration and no approved card — `subject`
-and `show` add the line `no convention established — run git:convention measure`
+When the third case decides — no declaration and no approved card — and the
+repository has no commitlint config, `subject` and `show` add the line `no convention established — run git:convention measure`
 (`convention_established: false` under `--json`); the exit is unchanged.
+A commitlint config is the repository's own subject validator, so it
+establishes the convention: no such line, and `measure` says the config governs.
 `agent-config git:convention measure [--limit N] [--family F] [--json]` then reads
 the history of the default branch — the one the server names, else
 `refs/remotes/origin/HEAD`; with neither it samples nothing, exits 1 and says so

@@ -284,13 +284,18 @@ function _declares(reading: GitConventionReading): boolean {
     return (reading.source ?? '').startsWith(CARRIER_PATH) || reading.value !== conventionDefault('commit_format');
 }
 
-/** True with a declaration or an approved card, false with neither, null when the format cannot be read. */
-function _established(reading: GitConventionReading, root: string): boolean | null {
-    if (isRefusal(reading.state)) return null;
-    return _declares(reading) || _cardFamily(root) !== null;
+/** The commitlint config, which establishes the convention as the repository's own subject validator. */
+function _commitlint(cwd: string): CommitMessageValidator | null {
+    return commitMessageValidators(cwd).find((v) => v.kind === 'commitlint config') ?? null;
 }
 
-/** Printed when neither a declaration nor an approved card exists. */
+/** True with a declaration, an approved card or a commitlint config, false with none, null when the format cannot be read. */
+function _established(reading: GitConventionReading, root: string): boolean | null {
+    if (isRefusal(reading.state)) return null;
+    return _declares(reading) || _cardFamily(root) !== null || _commitlint(root) !== null;
+}
+
+/** Printed when no declaration, approved card or commitlint config exists. */
 export const NO_CONVENTION = 'no convention established — run git:convention measure';
 
 type SubjectPlan =
@@ -316,6 +321,8 @@ function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan 
         if (!FAMILY_ERE.some(([f]) => f === family)) return { kind: 'stop', code: 1, lines: [`the approved family ${family} in ${APPROVED_CARD} has no grammar to validate against`] };
         return { kind: 'rule', rule: { family: family as SubjectFamily }, tier: `approved in ${APPROVED_CARD}`, notes };
     }
+    const lint = _commitlint(cwd);
+    if (lint !== null) return { kind: 'rule', rule: { format: (reading.value ?? 'ticket-scope') as CommitFormat }, tier: `default (Conventional Commits); the commitlint config at ${lint.path} governs`, notes };
     return { kind: 'rule', rule: { format: (reading.value ?? 'ticket-scope') as CommitFormat }, tier: 'default (Conventional Commits)', notes, established: false };
 }
 
@@ -447,6 +454,7 @@ export function measureCommand(args: readonly string[], cwd: string): GitConvent
     const u = measureUpdateStyle(history.mergeSubjects, history.defaultBranch);
     const read = readCommittedConvention(cwd, { keys: ['commit_format'] });
     const established = _established(read.readings.commit_format as GitConventionReading, read.root);
+    const lint = _commitlint(cwd);
     const family = (chosen as SubjectFamily | undefined) ?? m.established;
     const share = family === null ? 0 : (m.families.find((x) => x.family === family)?.share ?? 0);
     const team = teamFile(family, b.pattern);
@@ -457,6 +465,7 @@ export function measureCommand(args: readonly string[], cwd: string): GitConvent
             code: 0,
             out: [JSON.stringify({
                 convention_established: established,
+                commitlint_config: lint?.path ?? null,
                 classifier_version: CLASSIFIER_VERSION,
                 sample: { trunk: history.trunk, limit, since: MEASURE_SINCE, window_extended: history.windowExtended, read: history.commits.length, eligible: m.eligible, excluded: m.excluded, authors: m.authors, capped: m.capped, capped_total: m.cappedTotal },
                 bar: { min_n: MIN_N, share: m.bar },
@@ -475,6 +484,7 @@ export function measureCommand(args: readonly string[], cwd: string): GitConvent
     }
 
     const out = [
+        ...(lint === null ? [] : [`commitlint: the repository has a commitlint config — the commitlint config at ${lint.path} governs the subject format; this measurement is advisory`]),
         established === true ? 'convention: already established — a declaration or an approved card is in force; this measurement is advisory'
             : established === null ? 'convention: git.commit_format cannot be read — see git:convention show' : 'convention: none established — /commit offers the result below once',
         history.windowExtended
