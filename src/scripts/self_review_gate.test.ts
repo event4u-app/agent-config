@@ -26,12 +26,16 @@ const f = (severity: Finding['severity'], kind: Finding['kind']): Finding => ({
 });
 
 describe('classifyBlocking', () => {
-    it('blocks security + high and claim + critical', () => {
+    it('blocks security + high, claim + critical, and security + medium', () => {
         expect(classifyBlocking(f('high', 'security'))).toBe(true);
         expect(classifyBlocking(f('critical', 'claim'))).toBe(true);
+        // Council 2026-10-07 (medium-security-is-blocking, 2/2 convergent):
+        // widened by exactly this one cell.
+        expect(classifyBlocking(f('medium', 'security'))).toBe(true);
     });
-    it('does not block low/medium security, or any style/correctness', () => {
-        expect(classifyBlocking(f('medium', 'security'))).toBe(false);
+    it('does not block low security, medium/low claim, or any style/correctness', () => {
+        expect(classifyBlocking(f('low', 'security'))).toBe(false);
+        expect(classifyBlocking(f('medium', 'claim'))).toBe(false);
         expect(classifyBlocking(f('low', 'claim'))).toBe(false);
         expect(classifyBlocking(f('critical', 'style'))).toBe(false);
         expect(classifyBlocking(f('high', 'correctness'))).toBe(false);

@@ -274,6 +274,7 @@ function _clean_review_reason(artifact: Record<string, unknown>): string {
 
 /**
  * Mirrors self_review_gate.classifyBlocking — security/claim × critical/high,
+ * PLUS security × medium (council 2026-10-07, `medium-security-is-blocking`),
  * MINUS anything the tree disproved.
  *
  * The `contradicted` clause is not a second policy; it is the same one, and
@@ -287,10 +288,10 @@ export function isBlocking(f: Pick<LedgerFinding, 'kind' | 'severity' | 'contrad
     if ((f.contradicted ?? '').trim() !== '') {
         return false;
     }
-    return (
-        (f.kind === 'security' || f.kind === 'claim') &&
-        (f.severity === 'critical' || f.severity === 'high')
-    );
+    if (f.severity === 'critical' || f.severity === 'high') {
+        return f.kind === 'security' || f.kind === 'claim';
+    }
+    return f.severity === 'medium' && f.kind === 'security';
 }
 
 /**

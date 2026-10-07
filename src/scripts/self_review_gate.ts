@@ -83,10 +83,21 @@ export function findingId(f: Pick<Finding, 'kind' | 'title' | 'file'>): string {
 
 /**
  * A finding is merge-blocking iff it is security- or claim-affecting AND at
- * least `high` severity. Style and correctness findings advise; low/medium
- * security findings advise. Council 2026-07-08 (claude-sonnet-4-5 + gpt-4o):
- * a 100 %-blocking gate at solo-maintainer token cost gets ignored or gamed —
+ * least `high` severity — OR it is security-affecting at `medium`. Style and
+ * correctness findings advise; low-severity security and medium/low claim
+ * findings advise. Council 2026-07-08 (claude-sonnet-4-5 + gpt-4o): a
+ * 100 %-blocking gate at solo-maintainer token cost gets ignored or gamed —
  * block ONLY on the narrow security/claim × {critical,high} intersection.
+ *
+ * Council 2026-10-07 (claude-sonnet-4-5 + codex-default, 2/2 convergent,
+ * `medium-security-is-blocking`) widened the intersection by exactly one
+ * cell: `security × medium`. The asymmetry against `claim × medium` is
+ * deliberate and unchanged — security findings are defects in what ships;
+ * claim findings are defects in what the self-description says shipped, a
+ * different risk class. The gate still enforces a RECORDED disposition, not
+ * mandatory remediation: `accepted_risk` and `false_positive` close a
+ * blocking row exactly as `fixed` does, so a reviewed, reasoned acceptance
+ * of a medium-security finding ships as readily as fixing it did before.
  */
 export function classifyBlocking(f: Finding): boolean {
     // A premise the tree DISPROVES cannot block a merge. This is not leniency
@@ -96,7 +107,10 @@ export function classifyBlocking(f: Finding): boolean {
     // See `contradictedByTree` for why this class needed a mechanical disproof
     // rather than one more sentence in the prompt.
     if ((f.contradicted ?? '').trim() !== '') return false;
-    return (f.kind === 'security' || f.kind === 'claim') && (f.severity === 'critical' || f.severity === 'high');
+    if (f.severity === 'critical' || f.severity === 'high') {
+        return f.kind === 'security' || f.kind === 'claim';
+    }
+    return f.severity === 'medium' && f.kind === 'security';
 }
 
 /**

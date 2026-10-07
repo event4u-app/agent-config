@@ -83,8 +83,46 @@ describe('missing_dispositions — the release-validation red condition', () => 
     });
 
     it('green: non-blocking findings need no disposition (advisory record)', () => {
-        expect(missing_dispositions([finding({ severity: 'medium' })])).toEqual([]);
+        // claim x medium stays non-blocking after the security x medium widening
+        // below — the asymmetry (security defects in shipped behaviour vs. claim
+        // defects in self-description) is deliberate, per the 2026-10-07 council
+        // convergence (medium-security-is-blocking).
+        expect(missing_dispositions([finding({ kind: 'claim', severity: 'medium' })])).toEqual([]);
         expect(missing_dispositions([finding({ kind: 'style', severity: 'critical' })])).toEqual([]);
+    });
+
+    it('red: an undispositioned medium-security finding (council-widened floor)', () => {
+        const problems = missing_dispositions([finding({ kind: 'security', severity: 'medium' })]);
+        expect(problems).toHaveLength(1);
+        expect(problems[0]).toContain('no disposition status');
+    });
+
+    it('green: a medium-security finding closed accepted_risk (not only fixed)', () => {
+        expect(
+            missing_dispositions([
+                finding({
+                    kind: 'security',
+                    severity: 'medium',
+                    status: 'accepted_risk',
+                    rationale: 'reasoned and recorded',
+                    verified_by: 'manual re-read, 2026-10-07',
+                }),
+            ]),
+        ).toEqual([]);
+    });
+
+    it('green: a medium-security finding closed false_positive', () => {
+        expect(
+            missing_dispositions([
+                finding({
+                    kind: 'security',
+                    severity: 'medium',
+                    status: 'false_positive',
+                    rationale: 'the premise does not hold against the current tree',
+                    verified_by: 'manual re-read, 2026-10-07',
+                }),
+            ]),
+        ).toEqual([]);
     });
 });
 
