@@ -7,7 +7,7 @@
  * there and refuses a non-default value; in every mode it runs the same value
  * and pattern check `git:convention show` and `settings:check` run.
  */
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -119,6 +119,37 @@ describe('global mode — the write root is the user-global layer', () => {
         const res = await save(form, true);
         expect(res.statusCode, res.body).toBe(200);
         expect(readFileSync(file, 'utf8')).toMatch(/^\s+update_strategy: rebase$/m);
+    });
+});
+
+describe('global mode with a project layer above the user-global file', () => {
+    let ctx: TestApp;
+    let project: string;
+    beforeEach(async () => {
+        project = mkdtempSync(join(tmpdir(), 'git-keys-project-'));
+        mkdirSync(join(project, 'settings'), { recursive: true });
+        writeFileSync(join(project, 'settings', '.agent-settings.yml'), 'git:\n  update_strategy: rebase\n');
+        ctx = await bootTestApp({ port: PORT + 2, legacyReadRoot: project });
+    });
+    afterEach(async () => {
+        await ctx.cleanup();
+        rmSync(project, { recursive: true, force: true });
+    });
+
+    it('writes only the git section the user-global file holds, never a project value', async () => {
+        const file = join(ctx.projectRoot, 'settings', '.agent-settings.yml');
+        expect(readFileSync(file, 'utf8')).toMatch(/^\s+update_strategy: merge$/m);
+        const shown = await get(ctx);
+        const { git: _withheld, ...form } = fixtureSettings();
+        const res = await ctx.app.inject({
+            method: 'PUT',
+            url: '/api/v1/settings',
+            headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json', 'if-unmodified-since': String(shown.lastModified + 5) },
+            payload: { values: form, confirmGuarded: true },
+        });
+        expect(res.statusCode, res.body).toBe(200);
+        expect(readFileSync(file, 'utf8')).toMatch(/^\s+update_strategy: merge$/m);
+        expect(readFileSync(file, 'utf8')).not.toMatch(/update_strategy: rebase/);
     });
 });
 

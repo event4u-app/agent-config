@@ -199,6 +199,8 @@ interface LayeredState {
      * which layer a value comes from (project overrides global).
      */
     sources: { global: string[]; project: string[] };
+    /** The write root's own file, unmerged; null when it does not exist. */
+    writeLayer: Record<string, unknown> | null;
 }
 
 /**
@@ -347,6 +349,7 @@ async function readLayeredSettings(
             ])],
             project: projectLayer !== null ? dottedLeafPaths(projectLayer.values) : [],
         },
+        writeLayer: globalLayer?.values ?? null,
     };
 }
 
@@ -432,7 +435,7 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 return reply;
             }
             const candidate = opts.userGlobalWrite === true
-                ? keepWithheldGit(parsed.data as Record<string, unknown>, current.values as Record<string, unknown>)
+                ? keepWithheldGit(parsed.data as Record<string, unknown>, current.writeLayer ?? {})
                 : (parsed.data as Record<string, unknown>);
             const changes = diffValues(current.values, candidate);
             return { changes };
@@ -478,7 +481,7 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 return reply;
             }
             const candidate = opts.userGlobalWrite === true
-                ? keepWithheldGit(parsed.data as Record<string, unknown>, current.values as Record<string, unknown>)
+                ? keepWithheldGit(parsed.data as Record<string, unknown>, current.writeLayer ?? {})
                 : (parsed.data as Record<string, unknown>);
             try {
                 const merged = mergeIntoTemplate(current.raw, candidate);

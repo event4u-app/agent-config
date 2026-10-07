@@ -82,8 +82,12 @@ export function gitKeyWriteIssues(
  * fills template defaults into whatever arrives, so a value the user-global
  * file carries would otherwise read as a change the user made: a guarded-key
  * confirmation for a field they never saw, then a silent reset.
+ *
+ * `fileValues` is that file alone, never the merged view: the merge carries
+ * the template defaults and any project layer, and copying a project value
+ * here would write it into the user-global file without passing the gate.
  */
-export function keepWithheldGit(candidate: Record<string, unknown>, current: Record<string, unknown>): Record<string, unknown> {
+export function keepWithheldGit(candidate: Record<string, unknown>, fileValues: Record<string, unknown>): Record<string, unknown> {
     const { git: _sent, ...rest } = candidate;
-    return 'git' in current ? { ...rest, git: current['git'] } : rest;
+    return 'git' in fileValues ? { ...rest, git: fileValues['git'] } : rest;
 }
