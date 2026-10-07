@@ -24,6 +24,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { settingsSchema } from '../schemas/settings.js';
 import { parseYaml, mergeIntoTemplate, diffValues, deepMerge, TEMPLATE_PLACEHOLDER_DEFAULTS } from '../io/yamlIO.js';
 import { writeAtomic } from '../io/atomicWrite.js';
+import { WITHHELD_GIT_KEYS, WITHHELD_REASON, gitKeyWriteIssues, withholdGitKeys } from '../gitKeysGate.js';
 import { sharedWriteTarget, resolveThroughSymlinks } from '../io/sharedWriteCheck.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
 import { buildSettingsClassIndex, guardedChangedKeys, parseSettingsClassRows, type SettingsClass } from '../../shared/settingsClasses.js';
@@ -143,6 +144,12 @@ export interface SettingsRouteOptions {
      * written; `null`/undefined → layer skipped.
      */
     userGlobalReadRoot?: string | null;
+    /**
+     * True when `writeRoot` is the user-global layer (global mode). The
+     * loader discards `git.*` keys from that file, so they are neither offered
+     * nor accepted with a non-default value.
+     */
+    userGlobalWrite?: boolean;
 }
 
 const SETTINGS_RELATIVE = join('settings', '.agent-settings.yml');
@@ -359,6 +366,10 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
         app.get('/api/v1/settings', async (_request, reply) => {
             try {
                 const state = await readLayeredSettings(packageRoot, opts.writeRoot, opts.legacyReadRoot, opts.userGlobalReadRoot);
+                const offered = opts.userGlobalWrite === true
+                    ? withholdGitKeys(state.values, SETTINGS_JSON_SCHEMA as { properties?: Record<string, unknown>; required?: string[] })
+                    : { values: state.values, schema: SETTINGS_JSON_SCHEMA };
+                const withheld = opts.userGlobalWrite === true ? { withheld: { keys: WITHHELD_GIT_KEYS, reason: WITHHELD_REASON } } : {};
                 if (!state.hasRealFile) {
                     // No on-disk file yet — the wizard creates it. Surface the
                     // template-defaults values + schema + path in the body so
@@ -367,19 +378,21 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                     // `{}` and the user's first save fails schema validation).
                     await reply.code(404).send({
                         error: { code: 'NOT_FOUND', message: 'settings file missing' },
-                        defaults: state.values,
+                        defaults: offered.values,
                         lastModified: 0,
                         path: SETTINGS_RELATIVE,
-                        schema: SETTINGS_JSON_SCHEMA,
+                        schema: offered.schema,
+                        ...withheld,
                     });
                     return reply;
                 }
                 const legacyHints = extractLegacyHints(state.values);
                 return {
-                    values: state.values,
+                    values: offered.values,
                     lastModified: state.mtimeMs,
                     path: SETTINGS_RELATIVE,
-                    schema: SETTINGS_JSON_SCHEMA,
+                    schema: offered.schema,
+                    ...withheld,
                     legacyHints,
                     // Phase 5.4 — per-layer provenance for the settings hub's
                     // "set globally / in this project" source badges.
@@ -438,6 +451,15 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 await reply.code(422).send({
                     error: { code: 'VALIDATION', message: 'invalid settings', fields: zodIssuesToFields(parsed.error.issues) },
                 });
+                return reply;
+            }
+            const gitIssues = gitKeyWriteIssues(
+                parsed.data as Record<string, unknown>,
+                await loadDefaultSettings(packageRoot),
+                opts.userGlobalWrite === true,
+            );
+            if (gitIssues.length > 0) {
+                await reply.code(422).send({ error: { code: 'VALIDATION', message: 'invalid settings', fields: gitIssues } });
                 return reply;
             }
             const current = await readLayeredSettings(packageRoot, opts.writeRoot, opts.legacyReadRoot, opts.userGlobalReadRoot);

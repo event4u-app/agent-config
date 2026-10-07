@@ -180,7 +180,7 @@ export function missionResolutionFor(
  * file the user actually edited — telling somebody their value was dropped
  * without telling them which file it was dropped from is half an answer.
  */
-export function userGlobalDrop(key: string): { dropped: boolean; file: string } {
+export function userGlobalDrop(key: string, templateDefault?: unknown): { dropped: boolean; file: string } {
     // Probe EVERY user-global layer the loader reads, not just the flat file.
     // `user_global_settings_paths()` returns the flat `agent-settings.yml` AND
     // the canonical `settings/.agent-settings.yml` the setup wizard writes, and
@@ -201,7 +201,14 @@ export function userGlobalDrop(key: string): { dropped: boolean; file: string } 
         } catch {
             continue;
         }
-        if (getSettingsLeaf(raw, key) !== undefined) return { dropped: true, file: candidate };
+        const value = getSettingsLeaf(raw, key);
+        if (value === undefined) continue;
+        // `upgrade` inserts template defaults into the user-global file, so a
+        // dropped default is not something the user set and loses nothing.
+        if (templateDefault !== undefined && JSON.stringify(value) === JSON.stringify(templateDefault)) {
+            return { dropped: false, file };
+        }
+        return { dropped: true, file: candidate };
     }
     return { dropped: false, file };
 }
@@ -235,7 +242,7 @@ export function runSettingsGet(opts: SettingsGetOptions): SettingsGetResult {
     const cls = _classFor(opts.packageRoot, opts.key);
     const fallback = templateDefault(opts.packageRoot, opts.key);
     const carveOut = carveOutFor(opts.key);
-    const drop = userGlobalDrop(opts.key);
+    const drop = userGlobalDrop(opts.key, fallback);
     const mission = missionResolutionFor(opts.key, merged);
     // The loader reads a layer that does not parse as absent, so "not set" can
     // be false; the exit code stays 0 because the read itself still answered.

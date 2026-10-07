@@ -21,7 +21,7 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { afterAll, afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { userGlobalDrop } from '../../../src/scripts/_cli/cmd_settings_get.js';
+import { PACKAGE_ROOT, runSettingsGet, userGlobalDrop } from '../../../src/scripts/_cli/cmd_settings_get.js';
 
 const tmps: string[] = [];
 let saved: string | undefined;
@@ -97,5 +97,30 @@ describe('userGlobalDrop', () => {
     it('reports no drop when no user-global file exists at all', () => {
         userGlobalRoot({});
         expect(userGlobalDrop(DROPPED_KEY).dropped).toBe(false);
+    });
+});
+
+// `upgrade` runs `settings:sync` on the user-global file, which inserts the
+// template's `git:` block with its defaults. A warning for a value that equals
+// the default would fire on every upgraded machine and say nothing the user did.
+describe('a dropped value that equals the template default', () => {
+    it('stays silent for the default `upgrade` inserts', () => {
+        userGlobalRoot({ [CANONICAL]: 'git:\n  update_strategy: merge\n' });
+        expect(userGlobalDrop('git.update_strategy', 'merge').dropped).toBe(false);
+        const r = runSettingsGet({ key: 'git.update_strategy', cwd: os.tmpdir(), packageRoot: PACKAGE_ROOT, json: false });
+        expect(r.out.join('\n')).not.toContain('being discarded');
+    });
+
+    it('still warns for a value that differs from the default', () => {
+        const root = userGlobalRoot({ [CANONICAL]: 'git:\n  update_strategy: rebase\n' });
+        expect(userGlobalDrop('git.update_strategy', 'merge')).toEqual({ dropped: true, file: path.join(root, ...CANONICAL.split('/')) });
+        const r = runSettingsGet({ key: 'git.update_strategy', cwd: os.tmpdir(), packageRoot: PACKAGE_ROOT, json: true });
+        expect(JSON.parse(r.out.join('\n')).user_global_dropped).toBe(path.join(root, ...CANONICAL.split('/')));
+    });
+
+    it('compares structurally, not by identity', () => {
+        userGlobalRoot({ [CANONICAL]: 'memory:\n  learn_on_session_end: false\n' });
+        expect(userGlobalDrop(DROPPED_KEY, false).dropped).toBe(false);
+        expect(userGlobalDrop(DROPPED_KEY).dropped).toBe(true);
     });
 });

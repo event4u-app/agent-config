@@ -223,7 +223,7 @@ writes it into settings files and the rename becomes a migration.
       (`src/scripts/hooks/block_config_weakening.ts:134`), and 2.1's assertions
       flip.
       verify: `test -f tests/scripts/git_convention_committed_carrier.test.ts && npx vitest run tests/scripts/git_convention_committed_carrier.test.ts tests/scripts/git_convention_carrier.test.ts tests/scripts/sync_pr_branch.test.ts` -> 0
-- [ ] **2.4 The write side stops promising what is dropped.** The GUI does not
+- [x] **2.4 The write side stops promising what is dropped.** The GUI does not
       offer the three keys while its write root is the user-global layer; its
       write route runs the 1.3 check. The discard warning of `settings:get`
       (`cmd_settings_get.ts:255`, `:313`) stays silent when the dropped value

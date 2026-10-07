@@ -203,7 +203,7 @@ export function conventionReading(
     source: string | null,
     detail: string | null = null,
 ): GitConventionReading {
-    const reason: GitConventionReason | null = isRefusal(state) ? `git-convention-${state}` : null;
+    const reason: GitConventionReason | null = isRefusal(state) ? (`git-convention-${state}` as GitConventionReason) : null;
     return { key, value, source, state, reason, detail };
 }
 
