@@ -1,0 +1,73 @@
+name: Gate canary (monthly + manual)
+
+# Step 4.2 of road-to-gates-a-pull-request-can-hear.
+#
+# `check_gate_coverage --canary` plants one declared violation per gate that
+# carries a recipe in src/config/gate-coverage.yml, runs the gate, records
+# red/green, and deletes the plant in a `finally`. Until this workflow it had no
+# caller — no task, no workflow, no package.json script — so "when did the
+# canary last run" had no answer anyone could look up.
+#
+# WHY SCHEDULED AND NOT PER-PR. The canary mutates the tree it runs in, which is
+# why the gate's own prose keeps it off the per-PR path. Here it mutates a
+# throwaway checkout on a runner that is discarded afterwards, and the only
+# thing kept is the ledger, uploaded as a run artifact. This is NOT a required
+# check and must not become one.
+#
+# CADENCE. Monthly. `adversarial-review-protocol` § 6 sets biannual as the
+# minimum for the gate-surface canary; running more often costs one runner hour
+# and shortens the window in which a gate can be dead without anyone knowing.
+#
+# READ-ONLY on the repository: it never commits and never pushes. The plants
+# exist only in the runner's working copy.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 05:00 UTC on the 1st of each month.
+    - cron: "0 5 1 * *"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  canary:
+    name: Plant one defect per gate and record which ones went red
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Node deps
+        run: |
+          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
+            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
+
+      - name: Run the gate canary
+        id: canary
+        run: |
+          ledger="agents/evidence/reviews/canary/gate-surface-$(date -u +%Y-%m-%d)-ci.md"
+          echo "ledger=${ledger}" >> "$GITHUB_OUTPUT"
+          ./scripts-run src/scripts/check_gate_coverage --canary --ledger "${ledger}"
+
+      - name: Upload the canary ledger
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+        with:
+          name: gate-canary-ledger
+          path: ${{ steps.canary.outputs.ledger }}
+          if-no-files-found: error
+          retention-days: 400
