@@ -14,8 +14,8 @@ review_by: 2026-12-31
 > creep; each one is named here with its evidence and what closes it, and its
 > ledger row is `still_open` with this file's slug.
 
-Every item is repository work an agent can do. Nothing here waits on the owner
-or an outside party; it is parked only because no live roadmap owns it.
+Items 1 to 6 are repository work an agent can do; they wait on nobody and are
+parked only because no live roadmap owns them. Item 7 waits on the owner.
 
 ## 1. `runner.ts` behaviour-axis residue
 

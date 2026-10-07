@@ -36,11 +36,12 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   ships.** `check_finding_dispositions` treats `security × medium` as blocking
   for every release after 16.3.0 (council 2026-10-07, 2/2). Such a row must
   carry `fixed`, `false_positive` or `accepted_risk` with a rationale, and
-  `still_open` keeps the release red with a message saying so. With `--pr`, a
-  medium security finding the self-review reported but the ledger lacks is now
-  red too. Releases up to 16.3.0 are judged as they shipped. The merge gate
-  (`self_review_gate.classifyBlocking`) is unchanged, so the finding still only
-  advises on a pull request. `claim × medium` stays advisory in both.
+  `still_open` keeps the release red with a message saying so. On a release
+  pull request (`--pr`), a medium security finding the self-review reported
+  but the ledger lacks is red too. Releases up to 16.3.0 are judged as they
+  shipped. The merge gate (`self_review_gate.classifyBlocking`) is unchanged,
+  so on every other pull request the finding only advises. `claim × medium`
+  stays advisory in both.
 - **No spend bound applies unless you set one.** Owner directive, 2026-10-05,
   recorded as **ADR-279** and accepted on the owner's own answer (option (a))
   on 2026-10-06. With nothing configured, no USD or token ceiling this package
