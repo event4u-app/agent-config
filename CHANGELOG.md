@@ -162,7 +162,10 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 - **An old project keeps its real commit format — `agent-config git:convention
   measure`.** A repository with no declared convention and no approved card is
   now measured instead of silently given Conventional Commits: the verb samples
-  the trunk's non-merge history, drops bots, automation and bulk imports, caps
+  the non-merge history of the default branch, resolved as the carrier resolves
+  it (the server's symref, then `refs/remotes/origin/HEAD`) — with no default
+  branch it says so and exits `1` rather than sampling `main`, `master` or the
+  current branch in its place — drops bots, automation and bulk imports, caps
   each author per half, and names the established subject family or — below the
   bar — the two strongest. It also proposes a `branch_pattern` from the remote
   branch names (or reports no clear pattern) and shows the observed update style,

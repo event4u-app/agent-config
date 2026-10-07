@@ -13,6 +13,7 @@
 import { spawnSync } from 'node:child_process';
 
 import { invalidReason } from './git_convention.js';
+import { makeTargetDeps } from './git_convention_carrier.js';
 import { classifySubject, COMMIT_TYPES, TICKET_GRAMMAR, type CommitFormat, type SubjectFamily } from './git_convention_grammar.js';
 
 export const MEASURE_LIMIT = 200;
@@ -246,29 +247,42 @@ function _git(cwd: string, args: readonly string[]): string | null {
 
 export interface History {
     trunk: string;
-    defaultBranch: string | null;
+    defaultBranch: string;
     commits: HistoryCommit[];
     branches: string[];
     mergeSubjects: string[];
 }
 
-function _trunk(cwd: string): { trunk: string; remote: string | null; name: string | null } {
-    const head = _git(cwd, ['symbolic-ref', '-q', '--short', 'refs/remotes/origin/HEAD'])?.trim();
-    const candidates = [head, 'origin/main', 'origin/master'].filter((c): c is string => c !== undefined && c !== '');
-    for (const c of candidates) {
-        if (_git(cwd, ['rev-parse', '-q', '--verify', `${c}^{commit}`]) !== null) {
-            const slash = c.indexOf('/');
-            return { trunk: c, remote: c.slice(0, slash), name: c.slice(slash + 1) };
-        }
-    }
-    // No remote at all: this checkout is the trunk.
-    return { trunk: 'HEAD', remote: null, name: _git(cwd, ['rev-parse', '--abbrev-ref', 'HEAD'])?.trim() ?? null };
+/** No default branch could be resolved, so nothing was sampled; `reason` says why. */
+export interface TrunkUnresolved {
+    unresolved: string;
 }
 
-/** The sample `measureSubjects`, `measureBranches` and `measureUpdateStyle` read, or null outside a git repository. */
-export function readHistory(cwd: string, limit = MEASURE_LIMIT): History | null {
+/**
+ * The default branch as the carrier resolves it, or why there is none. A
+ * branch name guessed in its place (`main`, `master`, the current `HEAD`)
+ * samples another history and proposes a convention from it.
+ */
+function _trunk(cwd: string): { trunk: string; remote: string; name: string } | TrunkUnresolved {
+    const ref = makeTargetDeps(cwd).defaultBranch();
+    if (ref === null) {
+        return { unresolved: 'no default branch could be resolved — origin names none and refs/remotes/origin/HEAD is not set' };
+    }
+    if (_git(cwd, ['rev-parse', '-q', '--verify', `${ref}^{commit}`]) === null) {
+        return { unresolved: `the default branch ${ref} is not in this checkout — fetch it first` };
+    }
+    const slash = ref.indexOf('/');
+    return { trunk: ref, remote: ref.slice(0, slash), name: ref.slice(slash + 1) };
+}
+
+/**
+ * The sample `measureSubjects`, `measureBranches` and `measureUpdateStyle` read,
+ * `TrunkUnresolved` without a default branch, or null outside a git repository.
+ */
+export function readHistory(cwd: string, limit = MEASURE_LIMIT): History | TrunkUnresolved | null {
     if (_git(cwd, ['rev-parse', '--git-dir']) === null) return null;
     const t = _trunk(cwd);
+    if ('unresolved' in t) return t;
     const log = _git(cwd, ['log', t.trunk, '--no-merges', '-n', String(limit), `--since=${MEASURE_SINCE}`, '--pretty=format:%x1e%aN%x09%aE%x09%s', '--shortstat']) ?? '';
     const commits: HistoryCommit[] = log
         .split('\x1e')
@@ -285,7 +299,7 @@ export function readHistory(cwd: string, limit = MEASURE_LIMIT): History | null 
         .map((r) => r.trim())
         .filter((r) => r !== '' && r.includes('/'))
         .map((r) => ({ remote: r.slice(0, r.indexOf('/')), name: r.slice(r.indexOf('/') + 1) }))
-        .filter((b) => b.name !== 'HEAD' && !(b.name === t.name && (t.remote === null || b.remote === t.remote)))
+        .filter((b) => b.name !== 'HEAD' && !(b.name === t.name && b.remote === t.remote))
         .map((b) => b.name);
     const merges = _git(cwd, ['log', '--all', '--merges', '-n', String(limit), `--since=${MEASURE_SINCE}`, '--pretty=format:%s']) ?? '';
     return {

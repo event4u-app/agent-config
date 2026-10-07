@@ -82,7 +82,9 @@ When the third case decides — no declaration and no approved card — `subject
 and `show` add the line `no convention established — run git:convention measure`
 (`convention_established: false` under `--json`); the exit is unchanged.
 `agent-config git:convention measure [--limit N] [--family F] [--json]` then reads
-the history: it proposes a subject family when one clears the `measure bar` row
+the history of the default branch — the one the server names, else
+`refs/remotes/origin/HEAD`; with neither it samples nothing, exits 1 and says so
+(`trunk_unresolved` under `--json`) rather than guess one. It proposes a subject family when one clears the `measure bar` row
 of the block below, otherwise names the two strongest; it proposes a
 `branch_pattern` from the remote branch names, or `no clear pattern`; and it
 shows the observed update style, which is never adopted. Where the chosen family

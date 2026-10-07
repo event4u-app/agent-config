@@ -36,6 +36,9 @@ function repo(subjects: string[], author: (i: number) => string = () => 'a'): st
     made.push(dir);
     git(dir, 'init', '-q', '-b', 'main');
     subjects.forEach((s, i) => commit(dir, s, author(i)));
+    // The default branch the carrier resolves without a server: a local origin/HEAD.
+    git(dir, 'update-ref', 'refs/remotes/origin/main', git(dir, 'rev-parse', 'HEAD').trim());
+    git(dir, 'symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main');
     return dir;
 }
 
@@ -145,5 +148,43 @@ describe('the no-convention line', () => {
         git(dir, 'add', '.git-convention.yml');
         commit(dir, 'chore: declare');
         expect(runGitConvention(['show'], dir).out).not.toContain(NO_CONVENTION);
+    });
+});
+
+describe('the trunk measure samples', () => {
+    it('is the default branch the server names when the local origin/HEAD is absent', () => {
+        const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'git-convention-measure-trunk-')));
+        made.push(root);
+        const remote = path.join(root, 'remote.git');
+        git(root, 'init', '-q', '--bare', '-b', 'trunk', remote);
+        const seed = path.join(root, 'seed');
+        git(root, 'clone', '-q', remote, seed);
+        for (let i = 0; i < 5; i++) commit(seed, `feat: trunk ${i}`);
+        git(seed, 'push', '-q', 'origin', 'HEAD:trunk');
+        const work = path.join(root, 'work');
+        git(root, 'clone', '-q', remote, work);
+        git(work, 'remote', 'set-head', 'origin', '-d');
+        git(work, 'switch', '-q', '-c', 'topic');
+        for (let i = 0; i < 3; i++) commit(work, `fix: topic ${i}`);
+        const m = JSON.parse(runGitConvention(['measure', '--json'], work).out.join('\n')) as { sample: { trunk: string; read: number } };
+        expect(m.sample.trunk).toBe('origin/trunk');
+        expect(m.sample.read).toBe(5);
+    });
+
+    it('is never guessed: with no default branch measure says so and samples nothing', () => {
+        const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'git-convention-measure-')));
+        made.push(dir);
+        git(dir, 'init', '-q', '-b', 'main');
+        for (let i = 0; i < 5; i++) commit(dir, `feat: add ${i}`);
+        const json = runGitConvention(['measure', '--json'], dir);
+        expect(json.code).toBe(1);
+        const m = JSON.parse(json.out.join('\n')) as { sample: { trunk: string | null; read: number }; trunk_unresolved: string };
+        expect(m.sample.trunk).toBeNull();
+        expect(m.sample.read).toBe(0);
+        expect(m.trunk_unresolved).toContain('no default branch');
+        const text = runGitConvention(['measure'], dir);
+        expect(text.code).toBe(1);
+        expect(text.out.join('\n')).toContain('no default branch');
+        expect(text.out.join('\n')).toContain('nothing was sampled');
     });
 });

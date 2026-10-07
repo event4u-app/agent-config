@@ -424,9 +424,15 @@ export function measureCommand(args: readonly string[], cwd: string): GitConvent
     if (chosen !== undefined && !FAMILY_ERE.some(([fam]) => fam === chosen)) return { code: 2, out: [], err: [`no grammar for family: ${chosen}`, USAGE] };
     const history = readHistory(cwd, limit);
     if (history === null) return { code: 1, out: [], err: ['not a git repository'] };
+    if ('unresolved' in history) {
+        const line = `sample    none — ${history.unresolved}; nothing was sampled and nothing is proposed. Set it with: git remote set-head origin --auto`;
+        return f.json
+            ? { code: 1, out: [JSON.stringify({ classifier_version: CLASSIFIER_VERSION, sample: { trunk: null, limit, since: MEASURE_SINCE, read: 0 }, trunk_unresolved: history.unresolved }, null, 2)], err: [] }
+            : { code: 1, out: [line], err: [] };
+    }
     const m = measureSubjects(history.commits);
     const b = measureBranches(history.branches);
-    const u = measureUpdateStyle(history.mergeSubjects, history.defaultBranch ?? 'main');
+    const u = measureUpdateStyle(history.mergeSubjects, history.defaultBranch);
     const read = readCommittedConvention(cwd, { keys: ['commit_format'] });
     const established = _established(read.readings.commit_format as GitConventionReading, read.root);
     const family = (chosen as SubjectFamily | undefined) ?? m.established;
