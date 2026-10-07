@@ -224,6 +224,16 @@ describe('cmd_settings_check — the git convention keys', () => {
         expect(t.stderr).toContain('git.branch_pattern');
     });
 
+    it('reports a git finding beside a pre-scan finding, in one run', () => {
+        const root = freshRoot();
+        writeFixture(root, 'foo: &anchor 1\nbar: *anchor\ngit:\n  update_strategy: rebsae\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.status).toBe(1);
+        expect(t.stderr).toContain("3 finding(s)");
+        expect(t.stderr).toMatch(/line:1 +anchor/);
+        expect(t.stderr).toMatch(/line:4 +git\.update_strategy/);
+    });
+
     it('passes valid git keys', () => {
         const root = freshRoot();
         writeFixture(root, 'git:\n  branch_pattern: "{ticket}-{slug}"\n  update_strategy: rebase\n');

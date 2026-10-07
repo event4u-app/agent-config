@@ -409,9 +409,11 @@ export function main(argv: string[] | null = null, options: MainOptions = {}): n
         }
     }
 
-    if (findings.length === 0) {
-        findings.push(..._git_convention_findings(target, text));
-    }
+    // A file that does not parse already has its finding; a `malformed` git
+    // reading would only repeat it, once per key. An invalid value is reported
+    // whatever else the file holds, so one run names every finding.
+    const unparsed = findings.length > 0;
+    findings.push(..._git_convention_findings(target, text).filter((f) => !(unparsed && f.verdict === 'malformed')));
 
     if (findings.length === 0) {
         if (!opts.quiet) {
