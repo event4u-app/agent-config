@@ -127,7 +127,11 @@
       "kind": "security",
       "title": "The refusal-policy module sits outside the kernel-edit ratification gate",
       "detail": "The ratification for the step 3.3 branch says `_resolve_execution_failure` now lives in `src/scripts/hooks/concern_failure_policy.ts`. It also says `check_kernel_edit_ratified`'s regex names only `dispatch_hook.ts` and `*-dispatcher.sh` under `hooks/`. The gate therefore no longer watches the function that decides whether a crashed blocking concern refuses or allows. The record says it was verified by running the gate: three surfaces were reported and the new module was not among them. It was deliberately left unfixed because widening the pattern is itself a gated edit. This 16.3.0 range therefore ships an unratified edit path to blocking-hook failure semantics. The file is in the changed list and the gap is disclosed but still open.",
-      "file": "agents/evidence/ratifications/drain-kernel-plumbing-3-3-severity.md"
+      "file": "agents/evidence/ratifications/drain-kernel-plumbing-3-3-severity.md",
+      "status": "fixed",
+      "commit": "8fdb48169",
+      "verified_by": "tests/scripts/check_kernel_edit_ratified_import_closure.test.ts, tests/scripts/check_kernel_edit_ratified.test.ts",
+      "rationale": "road-to-a-ratification-fence-that-follows-its-imports derives the watched set from dispatch_hook.ts's static import closure at run time (step 2.2, landed in 8fdb48169) instead of the hand-maintained regex, so concern_failure_policy.ts and any future verdict-deciding sibling join the fence without an edit to the gate. The residual this does not remove: a module already in the closure that later gains verdict logic under a name the 1.1 classifier does not recognise as verdict-deciding still needs the classifier's own judgement, which stays a reviewed call rather than a derived one."
     },
     {
       "finding_id": "2c9959f7262d",
