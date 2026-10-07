@@ -71,13 +71,13 @@ reads a number against it. The flip itself stays with the owner.
 
 ## Phase 1 — An ignored file is not a pass
 
-- [ ] **1.1 A red fixture first.** A test runs the eslint row over one file
+- [x] **1.1 A red fixture first.** A test runs the eslint row over one file
       under a path the fixture's own ESLint config ignores, with an injected
       spawn that returns exit 0 and the tool's ignored-file line in its output.
       It asserts the recorded row is NOT `exit_code: 0, skipped: null`. Shown
       red against the current module before 1.2 lands.
       verify: `npx vitest run tests/scripts/touched_file_quality_ignored.test.ts` -> 0
-- [ ] **1.2 The ignored-file signal is read, per tool.** For each `SCOPED_FORMS`
+- [x] **1.2 The ignored-file signal is read, per tool.** For each `SCOPED_FORMS`
       row whose tool reports ignored inputs in its output, the row's spec names
       that signal. A run whose matched files were all ignored is recorded as a
       verdict about nothing — `exit_code: null` with the ignored files listed —
@@ -86,28 +86,28 @@ reads a number against it. The flip itself stays with the owner.
       (D2): a fifth skip reason is added only if the 1.1 test cannot be made
       green without one, and the record says which was chosen and why.
       verify: `npx vitest run tests/scripts/touched_file_quality_ignored.test.ts tests/scripts/touched_file_quality.test.ts` -> 0
-- [ ] **1.3 The advisory line says it.** `advisoryLine` names ignored files
+- [x] **1.3 The advisory line says it.** `advisoryLine` names ignored files
       separately from verdicts, so a stop where every touched file was ignored
       emits no line that reads as clean.
       verify: `npx vitest run tests/scripts/touched_file_quality_ignored.test.ts` -> 0
 
 ## Phase 2 — A green row names what did not run
 
-- [ ] **2.1 The record carries the unscoped type checker.** When the resolver
+- [x] **2.1 The record carries the unscoped type checker.** When the resolver
       emits a type-check command that has no scoped form, each record of that
       turn carries one field naming it as not run on this turn, so a reader of
       any single row sees that a `0` was a lint verdict and not a type verdict.
       The fixture is a resolver list of `npx tsc --noEmit` plus `npx eslint .`
       over one `.ts` file.
       verify: `npx vitest run tests/scripts/touched_file_quality_unscoped_typecheck.test.ts` -> 0
-- [ ] **2.2 The evidence page points at the fix.** One dated line under § 5 of
+- [x] **2.2 The evidence page points at the fix.** One dated line under § 5 of
       the 2026-Q4 readings page names the two fields and the commits that added
       them. The page's findings are not rewritten.
       verify: `grep -c 'road-to-touched-file-quality-that-says-when-it-did-not-look' agents/evidence/analysis/touched-file-quality-readings-2026-Q4.md` -> /^[1-9]/
 
 ## Phase 3 — The table and the resolver cannot drift apart
 
-- [ ] **3.1 Parity, read from both sides.** The module exports the keys of
+- [x] **3.1 Parity, read from both sides.** The module exports the keys of
       `SCOPED_FORMS` and `MUTATING_WITHOUT_CHECK_FORM` and one named list of
       resolver commands that are unscoped on purpose. A test drives
       `resolve_toolchain()` over fixture roots that make it emit every command
@@ -116,7 +116,7 @@ reads a number against it. The flip itself stays with the owner.
       unscoped-on-purpose list. The hand-copied five-string list at
       `touched_file_quality.test.ts:348` is deleted.
       verify: `npx vitest run tests/scripts/touched_file_quality_parity.test.ts` -> 0
-- [ ] **3.2 Seen red in both directions.** Renaming one resolver command (for
+- [x] **3.2 Seen red in both directions.** Renaming one resolver command (for
       example `'npx eslint .'` at `runner.ts:1132`) in a scratch copy fails the
       test, and adding a resolver command with no row and no list entry fails
       it too. Both sabotages are recorded in the commit message and reverted by
@@ -125,7 +125,7 @@ reads a number against it. The flip itself stays with the owner.
 
 ## Phase 4 — The flip bar is written before it is read
 
-- [ ] **4.1 Pre-register the `shadow → warn` bar.** One claim in
+- [x] **4.1 Pre-register the `shadow → warn` bar.** One claim in
       `docs/CLAIMS.md` states, before any further reading: the corpus (live
       stops, not replayed merged commits), the minimum sample, the advisory
       rate and the latency ceiling a `warn` default must meet, and that Phases
@@ -133,7 +133,7 @@ reads a number against it. The flip itself stays with the owner.
       the flip is decided. Then `./scripts-run src/scripts/build_proof` runs in
       the same change.
       verify: `grep -c '^### claim: touched-file-quality-shadow-to-warn-bar' docs/CLAIMS.md` -> /^1$/
-- [ ] **4.2 The owner blocker is told, not answered.** One dated line under
+- [x] **4.2 The owner blocker is told, not answered.** One dated line under
       the carried roadmap's blocker names this roadmap and the claim id. Its
       `Status`, `Recommendation` and step are not edited.
       verify: `grep -c 'touched-file-quality-shadow-to-warn-bar' agents/roadmaps/later/road-to-touched-files-that-pass-their-own-tools-carried.md` -> /^[1-9]/
@@ -150,13 +150,13 @@ reads a number against it. The flip itself stays with the owner.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A file the tool ignored never produces a record with
+- [x] AC-1 — A file the tool ignored never produces a record with
       `exit_code: 0` and `skipped: null`.
-- [ ] AC-2 — Every record of a turn on which an emitted type-check command did
+- [x] AC-2 — Every record of a turn on which an emitted type-check command did
       not run names that command.
-- [ ] AC-3 — Changing a resolver command string, or adding one with no table
+- [x] AC-3 — Changing a resolver command string, or adding one with no table
       row and no unscoped-on-purpose entry, fails a test.
-- [ ] AC-4 — `docs/CLAIMS.md` carries the flip bar, dated before any reading
+- [x] AC-4 — `docs/CLAIMS.md` carries the flip bar, dated before any reading
       against it, and the shipped default is unchanged.
 
 ## Decisions
@@ -164,7 +164,7 @@ reads a number against it. The flip itself stays with the owner.
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
 | D1 | deterministic | evidence | Detect "ignored" from the tool's own output signal, per row | § 5(a) of the readings page: the tool states it in words while exiting 0 | A tool emits no ignored-file signal at all |
-| D2 | reversible-technical | agent | Prefer a field over a fifth skip reason | The module documents `no_files` as an additive fourth reason (`touched_file_quality.ts:61-68`); a reviewer constraint against taxonomy growth | 1.1 cannot go green without a new reason |
+| D2 | reversible-technical | agent | Prefer a field over a fifth skip reason. Chosen 2026-10-07: an `ignored_files` field; 1.1 went green without a fifth reason, and a skip reason cannot sit beside a partly-ignored run's real exit code | The module documents `no_files` as an additive fourth reason (`touched_file_quality.ts:61-68`); a reviewer constraint against taxonomy growth | 1.1 cannot go green without a new reason |
 | D3 | deterministic | evidence | Parity is asserted by running the resolver, not by substring | The current test checks a copied list against source text (`touched_file_quality.test.ts:348`) | The resolver becomes a static table itself |
 | D4 | product-owned | owner | The flip stays with the carried blocker; this file only pre-registers its bar | The carried blocker's own recommendation and Rule 3 it cites | The owner resolves that blocker |
 
