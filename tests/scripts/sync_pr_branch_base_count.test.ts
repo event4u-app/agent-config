@@ -4,7 +4,8 @@
  *
  * Two reproduced false greens: `--base main` counted against the local `main`,
  * a clone-time copy that never moves, and a single-branch clone counted against
- * an `origin/main` it never fetched, where the failed `rev-list` read as 0.
+ * an `origin/main` it never fetched, where the failed `rev-list` read as 0 —
+ * every base ref is now fetched by name before it is counted.
  */
 import * as path from 'node:path';
 
@@ -44,7 +45,9 @@ describe('sync_pr_branch counts against the remote base', () => {
         expect(git(f.work, 'merge-base', '--is-ancestor', git(f.seed, 'rev-parse', 'HEAD').trim(), 'HEAD')).toBe('');
     });
 
-    it('refuses rather than reporting current when the base ref was never fetched', () => {
+    it('fetches a base ref the single-branch clone never fetched, rather than reporting current', () => {
+        // Before the base refs were fetched by name this refused with "cannot
+        // count"; now the count is taken against the server's commit.
         const f = fixture(tmp);
         git(f.work, 'push', '-q', 'origin', 'feature');
         const single = path.join(path.dirname(f.work), 'single');
@@ -52,7 +55,7 @@ describe('sync_pr_branch counts against the remote base', () => {
         advanceMain(f);
         const r = runSync(single, 'origin/main');
         expect(r.out).not.toContain('already current');
-        expect(r.out).toMatch(/cannot count .*origin\/main/);
-        expect(r.code).not.toBe(0);
+        expect(r.code).toBe(0);
+        expect(git(single, 'merge-base', '--is-ancestor', git(f.seed, 'rev-parse', 'HEAD').trim(), 'HEAD')).toBe('');
     });
 });

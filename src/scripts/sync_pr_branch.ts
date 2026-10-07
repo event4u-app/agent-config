@@ -798,6 +798,14 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
         };
     }
 
+    // A single-branch clone's refspec never moves a base tracking ref fetched
+    // once by hand, so the remote-wide fetch above can leave it stale and the
+    // count below would read "already current". Each ref is fetched by name.
+    for (const ref of order) {
+        const { remote, branch } = splitResolvedRef(ref);
+        sh('git', ['fetch', '-q', '--', remote, `+refs/heads/${branch}:refs/remotes/${remote}/${branch}`], repo);
+    }
+
     // A count git could not take is not a count of 0: a ref this checkout never
     // fetched (a single-branch clone) would otherwise read as "already current".
     const countBehind = (from: string, ref: string): number | null => {
