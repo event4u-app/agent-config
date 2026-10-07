@@ -84,6 +84,8 @@ export interface TargetDeps {
     readonly remoteSha: (ref: string) => string | null;
     /** The configured remote names; without it only `origin/` marks a remote. */
     readonly remotes?: () => readonly string[];
+    /** The default branch another remote's server names (`upstream/main`), or null. */
+    readonly defaultBranchOf?: (remote: string) => string | null;
 }
 
 export type TargetReason = 'explicit-base-override' | 'repository-default-branch';
@@ -169,6 +171,11 @@ export function makeTargetDeps(repo: string, run: GitRunner = runGit): TargetDep
             const out = ask('git', ['remote']);
             return out.ok ? out.out.split('\n').map((r) => r.trim()).filter((r) => r !== '') : [];
         },
+        defaultBranchOf: (remote: string): string | null => {
+            const out = ask('git', ['ls-remote', '--symref', '--', remote, 'HEAD']);
+            const named = out.ok ? parseSymrefDefault(out.out) : null;
+            return named === null ? null : `${remote}/${named.slice('origin/'.length)}`;
+        },
     };
 }
 
@@ -189,6 +196,9 @@ export function memoTargetDeps<T extends TargetDeps>(deps: T): T {
         defaultBranch: (): string | null => once('default', () => deps.defaultBranch()),
         remoteSha: (ref: string): string | null => once(`sha ${ref}`, () => deps.remoteSha(ref)),
         ...(deps.remotes === undefined ? {} : { remotes: (): readonly string[] => once('remotes', () => (deps.remotes as () => readonly string[])()) }),
+        ...(deps.defaultBranchOf === undefined
+            ? {}
+            : { defaultBranchOf: (remote: string): string | null => once(`default ${remote}`, () => (deps.defaultBranchOf as (r: string) => string | null)(remote)) }),
     };
 }
 

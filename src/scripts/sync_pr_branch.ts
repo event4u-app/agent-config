@@ -451,7 +451,12 @@ export function resolveBase(repo: string, override: string | null, deps: BaseDep
     const targetSha = deps.remoteSha(target.ref);
     const defaultSha = defaultRef === null ? null : deps.remoteSha(defaultRef);
     const sameSha = targetSha !== null && defaultSha !== null && targetSha === defaultSha;
-    if (sameName || sameSha) {
+    // A fork layout: the pull request targets the default branch of the
+    // remote it names (`upstream/main`), not a release line of origin.
+    const targetRemote = splitResolvedRef(target.ref).remote;
+    const ownDefault = sameName || sameSha || (defaultRef !== null && splitResolvedRef(defaultRef).remote === targetRemote) ? null : (deps.defaultBranchOf?.(targetRemote) ?? null);
+    const ownName = ownDefault !== null && sameRemoteBranch(target.ref, ownDefault);
+    if (sameName || sameSha || ownName) {
         return { entries: [target], policyStatus: 'not-required' };
     }
 
