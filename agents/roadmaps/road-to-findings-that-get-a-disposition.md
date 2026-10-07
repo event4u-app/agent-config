@@ -227,7 +227,7 @@ owner, because it reverses a recorded supersession.
 - **If you do nothing:** the four forge findings stay open and 3.3 stays blocked; 3.1 still ships.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-07 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-07 | reviewer: claude/host-r5 -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
