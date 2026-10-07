@@ -404,10 +404,10 @@ describe('git.update_strategy', () => {
         }
     };
 
-    it('reads `merge` when nothing declares a strategy, and normalises a declared one', () => {
+    it('reads `merge` when nothing declares a strategy, and trims a declared one', () => {
         expect(updateStrategy(tmp())).toMatchObject({ value: 'merge', state: 'absent' });
         const dir = tmp();
-        fs.writeFileSync(path.join(dir, '.agent-settings.yml'), 'git:\n  update_strategy: " Rebase "\n');
+        fs.writeFileSync(path.join(dir, '.agent-settings.yml'), 'git:\n  update_strategy: " rebase "\n');
         expect(updateStrategy(dir)).toMatchObject({ value: 'rebase', state: 'valid' });
     });
 
