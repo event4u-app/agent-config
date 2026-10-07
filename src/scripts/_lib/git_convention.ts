@@ -67,6 +67,8 @@ export interface GitConventionLayer {
     carries: boolean;
     /** Why a `malformed` layer is unknown: it does not parse, or its document is not a map. */
     why?: string;
+    /** Set when the document parses but is not the shape the file is read in; every key reads `invalid`. */
+    shapeError?: string;
 }
 
 export interface GitConventionSource {
@@ -224,6 +226,7 @@ export function readGitConventionKey(
         if (layer.parsed === 'malformed') {
             return conventionReading(key, 'malformed', null, layer.path, `${layer.why ?? 'the file cannot be read'}, so the value it may set is unknown`);
         }
+        if (layer.shapeError !== undefined) return conventionReading(key, 'invalid', null, layer.path, layer.shapeError);
         const found = _lookup(layer.data, key);
         if (!found.present) continue;
         if ('notAMap' in found) return conventionReading(key, 'invalid', null, layer.path, '`git:` is not a map');

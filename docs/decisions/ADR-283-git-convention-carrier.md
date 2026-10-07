@@ -85,8 +85,13 @@ request must not come from that pull request.
 | `git.branch_pattern` | As `git.commit_format`. | As `git.commit_format`. | As `git.commit_format`. | As `git.commit_format`; a pattern outside the closed alphabet is `invalid`. |
 
 A value outside the schema — a `git:` that is not a map included — is `invalid`
-on every key and is refused the same way `malformed` is. `malformed` is kept for
-a file whose content is unknown because it does not parse.
+on every key and is refused the same way `malformed` is. A carrier that sets one
+of the three keys at the top level, without the `git:` level, is `invalid` on
+every key too, with a reason naming the expected shape: read as absent it would
+apply the default the file was written to replace. `malformed` is kept for
+a file whose content is unknown because it does not parse. A file named
+`.git-convention.yaml` is not read; `git:convention show` warns that it is
+ignored and names `.git-convention.yml`.
 
 ### Target resolution (D10)
 

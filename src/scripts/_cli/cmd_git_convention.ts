@@ -52,7 +52,7 @@ import {
     type GitConventionKey,
     type GitConventionReading,
 } from '../_lib/git_convention.js';
-import { CARRIER_PATH, readCommittedConvention, type TargetDeps } from '../_lib/git_convention_carrier.js';
+import { CARRIER_PATH, IGNORED_CARRIER_PATH, readCommittedConvention, type TargetDeps } from '../_lib/git_convention_carrier.js';
 import {
     FAMILY_ERE,
     checkSubject,
@@ -174,6 +174,9 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
     const validators = commitMessageValidators(cwd);
     const ok = !keys.some((k) => isRefusal(readings[k].state));
     const code: 0 | 1 = ok ? 0 : 1;
+    const warnings = fs.existsSync(path.join(read.root, IGNORED_CARRIER_PATH))
+        ? [`${IGNORED_CARRIER_PATH} is ignored — the team declaration is read only from ${CARRIER_PATH}; rename it to ${CARRIER_PATH}`]
+        : [];
 
     if (json) {
         const entries: Record<string, unknown> = {};
@@ -188,7 +191,7 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
         }
         return {
             code,
-            out: [JSON.stringify({ ok, keys: entries, target: read.target, commit_message_validator: validators[0] ?? null, commit_message_validators: validators }, null, 2)],
+            out: [JSON.stringify({ ok, keys: entries, target: read.target, warnings, commit_message_validator: validators[0] ?? null, commit_message_validators: validators }, null, 2)],
             err: [],
         };
     }
@@ -215,6 +218,7 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
         }
     }
     out.push(`team declaration: ${CARRIER_PATH} at the repository root (ADR-283)`);
+    for (const w of warnings) out.push(`⚠️  ${w}`);
     if (validators.length === 0) out.push('commit-message validator: none in this repository');
     for (const v of validators) out.push(`commit-message validator: ${v.kind} at ${v.path} — also runs at commit time and may be stricter than git.commit_format`);
     return { code, out, err: [] };

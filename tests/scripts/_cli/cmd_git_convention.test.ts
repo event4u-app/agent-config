@@ -137,6 +137,27 @@ describe('git:convention show', () => {
     });
 });
 
+describe('git:convention show beside a carrier under the wrong name', () => {
+    it('warns that .git-convention.yaml is ignored and names .git-convention.yml', () => {
+        const dir = repo(null);
+        fs.writeFileSync(path.join(dir, '.git-convention.yaml'), 'git:\n  update_strategy: rebase\n');
+        const r = runGitConvention(['show'], dir);
+        expect(r.code).toBe(0);
+        const text = [...r.out, ...r.err].join('\n');
+        expect(text).toContain('.git-convention.yaml is ignored');
+        expect(text).toContain('rename it to .git-convention.yml');
+        const json = JSON.parse(runGitConvention(['show', '--json'], dir).out.join('\n')) as { warnings?: string[] };
+        expect(json.warnings?.join('\n')).toContain('.git-convention.yaml is ignored');
+    });
+
+    it('prints no such warning when only the correct file exists', () => {
+        const dir = repo(null);
+        fs.writeFileSync(path.join(dir, '.git-convention.yml'), 'git:\n  update_strategy: rebase\n');
+        const r = runGitConvention(['show'], dir);
+        expect([...r.out, ...r.err].join('\n')).not.toContain('is ignored');
+    });
+});
+
 describe('settings:get beside it', () => {
     it('keeps exit 0 and gains one warning line when a layer does not parse', () => {
         const dir = repo('git:\n  update_strategy: rebase\nx: [\n');

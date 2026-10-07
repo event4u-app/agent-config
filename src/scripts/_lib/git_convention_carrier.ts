@@ -215,9 +215,26 @@ export function carrierBlobAt(repo: string, sha: string, fetchRef: string | null
     return blob.ok ? { kind: 'present', text: blob.out } : { kind: 'no-commit' };
 }
 
+/** A filename a carrier is sometimes given that nothing reads. */
+export const IGNORED_CARRIER_PATH = '.git-convention.yaml';
+
+/**
+ * The carrier holds its keys under `git:`, as the settings files do. Keys set at
+ * the top level are read by nothing, and reading them as absent would apply the
+ * default the file was written to replace.
+ */
+function _parseCarrier(text: string): Pick<GitConventionLayer, 'parsed' | 'data' | 'why' | 'shapeError'> {
+    const parsed = parseLayerText(text);
+    if (parsed.parsed !== 'valid') return parsed;
+    const top = Object.keys(parsed.data as Record<string, unknown>).filter((k) => (GIT_CONVENTION_KEYS as readonly string[]).includes(k));
+    if (top.length === 0) return parsed;
+    const listed = top.map((k) => `\`${k}\``).join(', ');
+    return { ...parsed, shapeError: `${listed} set at the top level; the carrier reads its keys under \`git:\` (\`git:\` on one line, then \`  ${top[0]}: <value>\` indented)` };
+}
+
 function _carrierLayer(label: string, blob: Exclude<CommitBlob, { kind: 'no-commit' }>): GitConventionLayer {
     if (blob.kind === 'absent') return { path: label, carries: true, parsed: 'absent', data: null };
-    return { path: label, carries: true, ...parseLayerText(blob.text) };
+    return { path: label, carries: true, ..._parseCarrier(blob.text) };
 }
 
 /** Read failures map as `git_convention.ts` maps them for the developer files. */
@@ -231,7 +248,7 @@ function _workingTreeLayer(root: string): GitConventionLayer {
         const parsed = (err as NodeJS.ErrnoException).code === 'ENOENT' ? 'absent' : 'malformed';
         return { path: p, carries: true, parsed, data: null };
     }
-    return { path: p, carries: true, ...parseLayerText(text) };
+    return { path: p, carries: true, ..._parseCarrier(text) };
 }
 
 /** The repository root, and whether it is a git repository at all. */
