@@ -1,0 +1,26 @@
+# Findings: git-convention-roadmaps
+<!-- completion-review: v1 | reviewed: 2026-10-07 | scope: e40e3b14cb48245c0a0553e483ff8a0bf42044c854c510a51136764f9b4b69d2 | diff: 1fb3ab95ed440c608f11d9c1d372a452529b75ec | reviewer: r2-fresh-subagent-git-convention-roadmaps | prompt_hash: 2018c2cfce992ad59b635a93e5b11263a14b6bf7be7a560fb5f6e431afd53510 -->
+<!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-git-convention-roadmaps"]}} -->
+<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-07 -->
+
+<!-- context-manifest: v1
+inputs:
+  diff_sha: 1fb3ab95ed440c608f11d9c1d372a452529b75ec
+  scope_hash: e40e3b14cb48245c0a0553e483ff8a0bf42044c854c510a51136764f9b4b69d2
+  roadmap: none
+  roadmap_hash: none
+  ac_hash: none
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-10-07T08:51:43Z
+-->
+
+| # | Severity | File:Line | Finding | Status | Reason/Ref |
+|---|----------|-----------|---------|--------|------------|
+| 1 | medium | src/server/routes/settings.ts:484 | In global mode `keepWithheldGit` replaces the submitted `git` section with the user-global FILE's own `git` section (or drops it when the file has none), but the diff that feeds `guardedChangedKeys` (and `/settings/diff` at :438) is taken against `current.values`, the MERGED view (template defaults + user-global + project). A user-global file without a `git:` section (any file written before this key existed) therefore diffs as `git.commit_format/branch_pattern/update_strategy: <default> -> undefined`, and a project layer setting `git.*` (e.g. `update_strategy: rebase`) diffs as `rebase -> merge`; all three keys are class C, so the save is answered with a 409 guarded-key confirmation for fields the form never showed — the exact phantom-confirmation `keepWithheldGit` documents it prevents. Tests only cover a user-global file seeded from the template (git section present) and send `confirmGuarded: true` in the project-layer case, so neither path is exercised. | open | |
+| 2 | medium | src/domains/git/pr/merge/command.md:179 | The exit-3 disposition reads `gh api repos/{owner}/{repo}/branches/<base>/protection --jq .required_status_checks.strict` and says "both absent or `false` means it does not [require]; a read that fails is treated as required". On a branch with no classic protection (ruleset-only or unprotected) that endpoint returns HTTP 404 `Branch not protected`, so `gh` exits non-zero — a failed read — which the rule maps to "required". The "does not require an up-to-date branch → merge behind" path is then reachable only where classic protection exists with `strict: false`; every other behind PR under `rebase` is wrongly `blocked-external`. The 404-means-absent case needs to be stated (same text mirrored in dist/agent-src/commands/pr/merge.md). | open | |
+| 3 | low | src/scripts/_lib/git_convention_carrier.ts:306 | `atHead` maps a `no-commit` result of `carrierBlobAt` at HEAD (ls-tree / cat-file failure or timeout) to `{ kind: 'absent' }`, so `commit_format` / `branch_pattern` silently fall through to the developer layers and can report `valid`/`absent` with a non-carrier value. This is the "fallback to a default nobody chose" the module and ADR rule out for the target commit (`unresolvable`, never the default); HEAD gets no such state. | open | |
+| 4 | low | src/scripts/_lib/git_convention_carrier.ts:239 | `_workingTreeLayer` treats every read error (EISDIR, EACCES, …) as `absent`, while `git_convention.ts` `_parse` reports non-ENOENT errors as `malformed`. An unreadable working-tree `.git-convention.yml` therefore produces no candidate warning instead of a refusal-state candidate — two readers of the same file disagree on the same failure. | open | |
+| 5 | low | src/scripts/_cli/cmd_git_convention.ts:67 | `COMMITLINT_FILES` omits config names commitlint itself loads (e.g. `.commitlintrc.mjs`, `.commitlintrc.ts`, `.commitlintrc.cts`, `commitlint.config.mts`, `commitlint.config.cts`). In a repo using one of those, `commitMessageValidator` returns null, so `subject` validates against `git.commit_format` and exits 0 instead of the documented exit 3 "decided by a validator this verb does not run", and `show` prints "commit-message validator: none". | open | |
+| 6 | low | src/scripts/_dispatch.bash:292 | Doc drift on `git:convention show` exit codes: the help text says "Exit 1 on malformed or invalid" and src/skills/git-workflow/references/branch-update.md:8 says "(exit 1 for the first two)", but `showConvention` exits 1 for every `isRefusal` state — `malformed`, `invalid`, `discarded` and `unresolvable` — and also when only this checkout's candidate is in a refusal state (as the module header at cmd_git_convention.ts:18 correctly states). A caller following the help/reference would treat a `discarded`/`unresolvable` exit 1 as unexpected. | open | |
+<!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->
