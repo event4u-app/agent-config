@@ -192,6 +192,65 @@ export function verdict(a: Analysis, budget: Budget): string[] {
 }
 
 /**
+ * The raise rule, enforced against the base revision.
+ *
+ * `road-to-a-ratification-fence-that-follows-its-imports` 3.2. The budget's
+ * `shrink_only_note` used to say a raise needs a `raise_log` entry and that
+ * "the gate prints the rule but cannot enforce it, because a raise and a
+ * lowering are the same edit to a number". Against the base revision they are
+ * not: a working `max_bytes` above the base's is a raise, and it passes only if
+ * `raise_log` gained an entry — one absent from the base's log — whose `to`
+ * equals the new ceiling. A lowering needs nothing. The comparison is the
+ * merged value against the base, because that is what ships; a ceiling raised
+ * and lowered inside one branch is judged by where it ends.
+ *
+ * `baseRaw` is the base revision's budget file, or `null` when it has none
+ * (the registration diff), which is not a raise.
+ */
+export function raiseFindings(baseRaw: string | null, workingRaw: string): string[] {
+    if (baseRaw === null) {
+        return [];
+    }
+    const base = JSON.parse(baseRaw) as Record<string, unknown>;
+    const working = JSON.parse(workingRaw) as Record<string, unknown>;
+    const baseMax = base['max_bytes'];
+    const workingMax = working['max_bytes'];
+    if (typeof baseMax !== 'number' || typeof workingMax !== 'number' || workingMax <= baseMax) {
+        return [];
+    }
+    const baseLog = Array.isArray(base['raise_log']) ? (base['raise_log'] as unknown[]) : [];
+    const workingLog = Array.isArray(working['raise_log']) ? (working['raise_log'] as unknown[]) : [];
+    const seen = new Set(baseLog.map((e) => JSON.stringify(e)));
+    const gained = workingLog.filter((e) => !seen.has(JSON.stringify(e)));
+    const matching = gained.some(
+        (e) => typeof e === 'object' && e !== null && (e as Record<string, unknown>)['to'] === workingMax,
+    );
+    if (matching) {
+        return [];
+    }
+    return [
+        `max_bytes raised from ${String(baseMax)} to ${String(workingMax)} against the base revision ` +
+            `with no new raise_log entry whose \`to\` is ${String(workingMax)}. A raise needs a recorded ` +
+            `reason in ${BUDGET_REL}'s raise_log naming what was added and why it could not be avoided.`,
+    ];
+}
+
+/** The base revision's budget file, `null` when absent there, `undefined` when no base resolves. */
+function readBaseBudget(root: string, explicit: string | undefined): string | null | undefined {
+    const candidates = explicit !== undefined ? [explicit] : ['origin/main', 'main'];
+    for (const ref of candidates) {
+        const ok = spawnSync('git', ['rev-parse', '--verify', '--quiet', ref], {
+            cwd: root,
+            stdio: ['ignore', 'ignore', 'ignore'],
+        });
+        if (ok.status !== 0) continue;
+        const shown = spawnSync('git', ['show', `${ref}:${BUDGET_REL}`], { cwd: root, encoding: 'utf-8' });
+        return shown.status === 0 ? shown.stdout : null;
+    }
+    return undefined;
+}
+
+/**
  * Build the hook bundle to a throwaway path and return its metafile JSON.
  *
  * Throws on any failure rather than returning a sentinel: a composition read off
@@ -331,6 +390,13 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
     }
 
     const findings = verdict(analysis, budget);
+    const baseAt = argv.indexOf('--base-ref');
+    const baseBudget = readBaseBudget(root, baseAt >= 0 ? argv[baseAt + 1] : undefined);
+    if (baseBudget === undefined) {
+        process.stdout.write('raise rule: no base revision resolved — the max_bytes raise check was not evaluated\n');
+    } else {
+        findings.push(...raiseFindings(baseBudget, fs.readFileSync(path.join(root, BUDGET_REL), 'utf-8')));
+    }
     // Reported on BOTH paths, red included: a census that goes quiet exactly
     // when the gate fires is the shape `reportScanned` exists to prevent.
     reportScanned({
