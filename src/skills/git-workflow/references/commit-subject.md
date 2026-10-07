@@ -68,7 +68,7 @@ resolves the convention in this order — the first that applies decides:
 3. **The default** — Conventional Commits (`ticket-scope`).
 
 A repository validator — a `commit-msg` hook, a commitlint config (any of its
-config files, or the `commitlint` key of `package.json`) — does not decide, and
+config files, or a `commitlint` key in the package manifest) — does not decide, and
 the verb never guesses what it accepts: a hook's existence says nothing about
 what it checks, and a config is only known by running it. Each one found adds a
 `note:` line (and a `notes` entry under `--json`) saying it also runs at commit
