@@ -73,6 +73,8 @@ export interface LatencyReport {
     runs: number;
     files: number;
     graphState: string;
+    /** The `without` tree's state — `absent`, or that arm is not the no-feeder baseline. */
+    graphStateWithout: string;
     /** Exit codes seen per arm — a shadow arm must not move them. */
     exitCodes: { with: number[]; without: number[] };
     with: Distribution;
@@ -229,6 +231,7 @@ export async function bench(opts: { runs?: number; files?: number }): Promise<La
         const tWith = writeTranscript(withDir, home, 'with');
         const tWithout = writeTranscript(withoutDir, home, 'without');
         const state = graphState(withDir);
+        const stateWithout = graphState(withoutDir);
 
         const edit = [path.join(withDir, 'src', 'service.ts')];
         const feederCall = (): { ms: number; verdict: string | null } => {
@@ -275,6 +278,7 @@ export async function bench(opts: { runs?: number; files?: number }): Promise<La
             runs,
             files,
             graphState: state,
+            graphStateWithout: stateWithout,
             exitCodes,
             with: w,
             without: wo,
@@ -339,7 +343,7 @@ function render(r: LatencyReport): string {
     const row = (name: string, d: Distribution): string =>
         `| ${name} | ${d.n} | ${d.p50} | ${d.p95} | ${d.max} |`;
     return [
-        `graph-feeder latency — ${r.runs} rounds, ${r.files} generated modules, graph state ${r.graphState}`,
+        `graph-feeder latency — ${r.runs} rounds, ${r.files} generated modules, graph state ${r.graphState} (without arm: ${r.graphStateWithout})`,
         `machine: ${r.cpu}, ${r.platform}, node ${r.node}`,
         '',
         '| arm | n | p50 ms | p95 ms | max ms |',

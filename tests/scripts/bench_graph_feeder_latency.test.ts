@@ -22,6 +22,8 @@ describe('bench_graph_feeder_latency — step 3.5 of road-to-a-graph-that-feeds-
         // The `with` arm must reach the path the step prices — an uncommitted
         // edit over a built graph — or the reading measures the short-circuit.
         expect(r.graphState).toBe('edited');
+        // The `without` arm is the baseline only if its feeder finds no graph at all.
+        expect(r.graphStateWithout).toBe('absent');
         expect(r.with.n).toBe(3);
         expect(r.without.n).toBe(3);
         expect(r.feederOnly.n).toBe(3);
