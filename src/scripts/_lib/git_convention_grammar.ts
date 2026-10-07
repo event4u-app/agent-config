@@ -42,6 +42,27 @@ export function firstTicket(text: string, keys?: readonly string[] | null): stri
     return ticketCandidates(text, keys).find((c) => c.status === 'ticket')?.token ?? null;
 }
 
+const KEY = /^[A-Z][A-Z0-9]+$/;
+
+/**
+ * The approved project keys from a convention card's `ticket_keys` line, or
+ * from that line's value alone. A card without the line yields none.
+ */
+export function parseTicketKeys(text: string): string[] {
+    const line = /^\s*ticket_keys\s*:(.*)$/m.exec(text)?.[1];
+    const value = line ?? (text.includes(':') ? '' : text);
+    return value
+        .replace(/[[\]"']/g, ' ')
+        .split(/[\s,]+/)
+        .filter((k) => KEY.test(k));
+}
+
+/** The keys a commitlint config's `issuePrefixes` names: offered for the card, never written by code. */
+export function commitlintIssuePrefixes(configText: string): string[] {
+    const list = /["']?issuePrefixes["']?\s*:\s*\[([^\]]*)\]/.exec(configText)?.[1] ?? '';
+    return [...list.matchAll(/["']([^"']*)["']/g)].map((m) => (m[1] as string).replace(/-$/, '')).filter((k) => KEY.test(k));
+}
+
 export const COMMIT_TYPES = ['feat', 'fix', 'chore', 'docs', 'refactor', 'test', 'perf', 'style', 'build', 'ci', 'revert'] as const;
 
 export type CommitFormat = 'ticket-scope' | 'ticket-conventional';

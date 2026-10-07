@@ -93,7 +93,7 @@ surface cites one reference instead of restating a grammar.
       the keys the caller passes. `git:convention branch` renders a name from
       type, ticket and slug. Subcommands do not move the CLI budget.
       verify: `test -f tests/scripts/_cli/cmd_git_convention_subject.test.ts && npx vitest run tests/scripts/_cli/cmd_git_convention_subject.test.ts tests/cli/registry.test.ts` -> 0
-- [ ] **1.3 Approved project keys live on the convention card.** The card gains
+- [x] **1.3 Approved project keys live on the convention card.** The card gains
       a `ticket_keys` line, filled from the answer `/commit` already asks for
       when it meets an unknown key; a commitlint config's issue prefixes are
       offered as the card proposal, never written silently. The caller passes

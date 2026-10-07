@@ -36,6 +36,8 @@ import { CARRIER_PATH, readCommittedConvention, type TargetDeps } from '../_lib/
 import {
     FAMILY_ERE,
     checkSubject,
+    commitlintIssuePrefixes,
+    parseTicketKeys,
     renderBranch,
     ruleName,
     ticketCandidates,
@@ -289,15 +291,31 @@ export function subjectCommand(args: readonly string[], cwd: string, stdin = '')
     return { code: 1, out: failures.map((x) => `✗ ${x.s}\n  ${x.v.ok ? '' : x.v.rule}`), err: [] };
 }
 
+function _commitlintProposal(cwd: string): { keys: string[]; from: string } | null {
+    const v = commitMessageValidator(cwd);
+    if (v?.kind !== 'commitlint config') return null;
+    try {
+        const keys = commitlintIssuePrefixes(fs.readFileSync(v.path, 'utf-8'));
+        return keys.length === 0 ? null : { keys, from: v.path };
+    } catch {
+        return null;
+    }
+}
+
 export function ticketCommand(args: readonly string[], cwd: string): GitConventionResult {
     const f = _flags(args, ['keys']);
     if (f.bad !== null || f.positional.length > 1) return { code: 2, out: [], err: [`unknown argument: ${f.bad ?? f.positional[1]}`, USAGE] };
     const name = f.positional[0] ?? _git(cwd, 'rev-parse', '--abbrev-ref', 'HEAD') ?? '';
-    const keys = f.values.keys === undefined ? null : f.values.keys.split(/[\s,]+/).filter((k) => k !== '');
+    const keys = f.values.keys === undefined ? null : parseTicketKeys(f.values.keys);
     const all = ticketCandidates(name, keys);
     const ticket = all.find((c) => c.status === 'ticket')?.token ?? null;
-    if (f.json) return { code: 0, out: [JSON.stringify({ branch: name, ticket, candidates: all }, null, 2)], err: [] };
-    return { code: 0, out: [`ticket ${ticket ?? 'none'}`, ...all.map((c) => `  ${c.token.padEnd(14)} ${c.status}`)], err: [] };
+    const proposal = keys === null ? _commitlintProposal(cwd) : null;
+    if (f.json) return { code: 0, out: [JSON.stringify({ branch: name, ticket, candidates: all, proposal }, null, 2)], err: [] };
+    const out = [`ticket ${ticket ?? 'none'}`, ...all.map((c) => `  ${c.token.padEnd(14)} ${c.status}`)];
+    if (proposal !== null) {
+        out.push(`proposal ticket_keys: ${proposal.keys.join(', ')} (issuePrefixes in ${proposal.from}) — offer it for the convention card; this verb writes nothing`);
+    }
+    return { code: 0, out, err: [] };
 }
 
 export function branchCommand(args: readonly string[], cwd: string): GitConventionResult {

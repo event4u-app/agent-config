@@ -226,9 +226,9 @@ parsing.
 
 Write the measurement as a Class-B convention card under
 `agents/memory/curated/conventions/quarantine/commit-subject.md`; the user's
-approval is what moves it to `approved/`. Carry `observed_n`,
-`dominant_share`, `author_count`, `sample_window`, `classifier_version`, and
-`confirm_against` — aggregates only, never per-author identities. Re-measure
+approval is what moves it to `approved/`. Carry `observed_n`, `dominant_family`,
+`dominant_share`, `author_count`, `sample_window`, `classifier_version`, `confirm_against`
+and `ticket_keys` — aggregates only, never per-author identities. `ticket_keys` lists the approved project keys (`ticket_keys: [DEV, OPS]`): it is filled from the user's answer when `/commit` meets a key not on it, and a commitlint config's `issuePrefixes` are offered as the proposal, never written silently. Re-measure
 and re-review when the share falls below **70 %**, when a tier-1 source
 appears, or when the newer half's family changes.
 
