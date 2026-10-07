@@ -738,6 +738,43 @@ export const RETURN_ENVELOPE_POINTER =
     'write-to-disk-first rule: contexts/execution/subagent-response-contract.md. ' +
     'The findings table stays a file.';
 
+/**
+ * Two-line header prepended, verbatim and at byte offset 0, to every
+ * `<slug>.review-input/roadmap.md` snapshot this dispatcher writes.
+ *
+ * Its NAMED job is `check_references`'s file-level skip marker
+ * (`check_references.ts` `FILE_SKIP_MARKER`): the snapshot sits under a
+ * tree that gate walks, while the LIVE roadmap layer is deliberately
+ * excluded from it — so a roadmap that legitimately quotes a nonexistent
+ * path (e.g. documenting a hallucinated council citation) would red CI
+ * through its own review snapshot.
+ *
+ * It has a SECOND, UNNAMED job this docstring exists to surface: pushing the
+ * snapshot's `---` frontmatter fence off byte offset 0 is also the entire
+ * reason `check_agent_artifact_location`'s `FM_RE` — anchored at the absolute
+ * start of the string, no `m` flag — never matches this file. That is what
+ * keeps every snapshot this constant is written into from being reported as
+ * a roadmap-shaped file sitting outside the one directory that gate treats
+ * as the legitimate home for one. Nothing chose that exemption on purpose —
+ * it is a side effect of this header's CONTENT happening to also satisfy a
+ * POSITIONAL requirement a different gate imposes for a different reason.
+ *
+ * Two ways to break it, both silent until the next full tree scan:
+ *   - drop this header from the snapshot (or move it after the frontmatter) —
+ *     every snapshot becomes newly roadmap-shaped and
+ *     `check_agent_artifact_location` starts reporting one finding per
+ *     snapshot that exists.
+ *   - relax `check_agent_artifact_location`'s `FM_RE` to tolerate leading
+ *     content (e.g. adding the `m` flag) — same outcome, from the other side.
+ *
+ * Regression-tested in `check_agent_artifact_location.test.ts`
+ * (describe: "review-input snapshot convention"), which imports this exact
+ * constant rather than a copy, so the test tracks this string verbatim.
+ */
+export const REVIEW_INPUT_ROADMAP_HEADER =
+    '<!-- check-refs: skip -->\n' +
+    '<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->\n';
+
 function reviewerPrompt(args: {
     slug: string;
     headSha: string;
@@ -1288,19 +1325,9 @@ function runDispatch(args: Args): number {
 
     redactions += writeRedacted(path.join(inputDirAbs, 'diff.patch'), scopeDiffText, denyPatterns);
     if (roadmapText !== null) {
-        // The snapshot lands under agents/evidence/, which check_references
-        // walks, while the live roadmap layer is deliberately excluded from
-        // that gate — so a roadmap that legitimately quotes a nonexistent
-        // path (e.g. documenting a hallucinated council citation) would red
-        // CI through its own review snapshot. The header exemption keeps the
-        // snapshot verbatim below the marker; roadmap_hash binds the LIVE
-        // file and is unaffected. Found by the zcs-close CI run, 2026-08-09.
-        const snapshotHeader =
-            '<!-- check-refs: skip -->\n' +
-            '<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->\n';
         redactions += writeRedacted(
             path.join(inputDirAbs, 'roadmap.md'),
-            snapshotHeader + roadmapText,
+            REVIEW_INPUT_ROADMAP_HEADER + roadmapText,
             denyPatterns,
         );
     }

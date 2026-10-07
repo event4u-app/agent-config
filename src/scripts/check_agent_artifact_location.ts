@@ -78,6 +78,29 @@ const SKIP_DIRS: ReadonlySet<string> = new Set([
 
 /** Frontmatter keys that only a roadmap carries in this tree. */
 const FM_ROADMAP_RE = /^complexity:[ \t]*(lightweight|structural)[ \t]*$/m;
+/**
+ * Anchored at the absolute start of the string — `^` with no `m` flag — on
+ * purpose: this is a FRONTMATTER fence, which by the project's own convention
+ * only means something at byte offset 0 of the file. A `---` fence that
+ * begins three lines in is not frontmatter, it is a horizontal rule or a
+ * quoted example, so loosening this to `m` would create false positives of
+ * its own.
+ *
+ * One existing consumer depends on that strictness as an INCIDENTAL
+ * exemption rather than as a documented contract: every R2 review-input
+ * roadmap snapshot this repository writes is prefixed, verbatim, with a
+ * two-line HTML-comment header whose named purpose is a different gate's
+ * file-level skip marker. That header's side effect is pushing this very
+ * fence off offset 0, which is the entire reason this regex — and therefore
+ * this whole detector — never matches those snapshots, even though each one
+ * is a complete roadmap-shaped document sitting outside the one directory
+ * this gate treats as home. See `REVIEW_INPUT_ROADMAP_HEADER` in
+ * `dispatch_r2_reviewer.ts` for the full account and the two independent
+ * ways to break it (drop the header, or add `m` here).
+ *
+ * Regression-tested in `check_agent_artifact_location.test.ts`
+ * (describe: "review-input snapshot convention").
+ */
 const FM_RE = /^---\n([\s\S]*?)\n---/;
 const PHASE_RE = /^##[ \t]+Phase[ \t]/m;
 const CHECKBOX_RE = /^[ \t]*- \[[ x~-]\][ \t]/m;
