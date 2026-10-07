@@ -8,8 +8,8 @@ review_by: 2026-12-31
 > **Stub — not active work.** Written 2026-10-07 by
 > `road-to-findings-that-get-a-disposition` step 1.2, which re-read every row
 > of `agents/evidence/release-findings/16.3.0.json` against `main` @
-> `6051d3744`. Fifteen rows were real, unfixed and carried by no roadmap —
-> twelve read in that step, three a council had already read `still_open`.
+> `6051d3744`. Fourteen rows were real, unfixed and carried by no roadmap —
+> eleven read in that step, three a council had already read `still_open`.
 > That roadmap only records dispositions, so fixing them there would be scope
 > creep; each one is named here with its evidence and what closes it, and its
 > ledger row is `still_open` with this file's slug.

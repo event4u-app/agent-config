@@ -70,22 +70,22 @@ owner, because it reverses a recorded supersession.
 
 ## Phase 1 — Every 16.3.0 finding ends somewhere
 
-- [ ] **1.1 The two symlink findings are closed against the fix.** Re-read
+- [x] **1.1 The two symlink findings are closed against the fix.** Re-read
       `runner.ts:1091-1094` against each finding's text; when it covers the
       finding, record `fixed` with commit `00612c1f2`.
       verify: `node -e 'const j=require("./agents/evidence/release-findings/16.3.0.json");process.exit(j.findings.filter(f=>["7efdf81cb478","a78536c88317"].includes(f.finding_id)&&f.status).length===2?0:1)'` -> 0
-- [ ] **1.2 The rest are read and dispositioned.** Each remaining row gains a
+- [x] **1.2 The rest are read and dispositioned.** Each remaining row gains a
       status and a rationale: `fixed` with commit, `false_positive`,
       `accepted_risk` with its reason, or `still_open` naming the roadmap that
       carries it. Rows owned by a sibling roadmap of this round are
       `still_open` with that roadmap's slug.
       verify: `node -e 'const j=require("./agents/evidence/release-findings/16.3.0.json");console.log(j.findings.filter(f=>!f.status).length)'` -> /^0$/
-- [ ] **1.3 The gate agrees.**
+- [x] **1.3 The gate agrees.**
       verify: `./scripts-run src/scripts/check_finding_dispositions --release 16.3.0` -> 0
 
 ## Phase 2 — Whether a medium security finding blocks
 
-- [ ] **2.1 Implement the decision of `medium-security-is-blocking`.** Under
+- [x] **2.1 Implement the decision of `medium-security-is-blocking`.** Under
       (a), `isBlocking` admits `security × medium`, with tests for the new
       blocking row and for `claim × medium` staying non-blocking. Under (b),
       the decision and its reason are recorded as a row in this file's
@@ -94,15 +94,15 @@ owner, because it reverses a recorded supersession.
 
 ## Phase 3 — A doctor that can stay offline
 
-- [ ] **3.1 An offline flag, additive.** `doctor --no-forge` (alias
+- [x] **3.1 An offline flag, additive.** `doctor --no-forge` (alias
       `--offline`) skips the forge read; `--check <id>` skips it too, since
       no check id reads it. A test injects a runner and asserts no `gh` and
       no `git remote` call is made on either path; the default is unchanged.
       verify: `npx vitest run tests/scripts/doctor_offline_flag.test.ts` -> 0
-- [ ] **3.2 The migration note.** `docs/MIGRATION.md` gains an entry naming
+- [x] **3.2 The migration note.** `docs/MIGRATION.md` gains an entry naming
       the network read, the two environment switches and the new flag.
       verify: `grep -c 'no-forge' docs/MIGRATION.md` -> /^[1-9]/
-- [ ] **3.3 Implement the decision of `doctor-network-default`, then close
+- [ ] <!-- blocked-by: doctor-network-default | asked: no — a background process-full drain lane has no owner channel; the question is carried in the blocker entry and the PR body --> **3.3 Implement the decision of `doctor-network-default`, then close
       the four rows.** Under (a), offline becomes the default and `--online`
       opts in; under (b), the default stays. Either way `c6367568cb1a`,
       `77e3912664b9`, `8605e9fc59cd` (16.2.0) and `eff3d4ed3fee` (16.3.0)
@@ -119,13 +119,13 @@ owner, because it reverses a recorded supersession.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — No row of the 16.3.0 ledger lacks a status.
-- [ ] AC-2 — Each `still_open` row names a roadmap that exists.
-- [ ] AC-3 — The medium-security question has a recorded decision, and the
+- [x] AC-1 — No row of the 16.3.0 ledger lacks a status.
+- [x] AC-2 — Each `still_open` row names a roadmap that exists.
+- [x] AC-3 — The medium-security question has a recorded decision, and the
       gate's tests reflect it.
-- [ ] AC-4 — A `doctor` invocation with the offline flag spawns no forge or
+- [x] AC-4 — A `doctor` invocation with the offline flag spawns no forge or
       remote read, shown by an injected-runner test.
-- [ ] AC-5 — The four forge findings carry a status consistent with the
+- [ ] <!-- blocked-by: doctor-network-default | asked: no — a background process-full drain lane has no owner channel; the question is carried in the blocker entry and the PR body --> AC-5 — The four forge findings carry a status consistent with the
       recorded default.
 
 ## Decisions
@@ -134,17 +134,20 @@ owner, because it reverses a recorded supersession.
 |---|---|---|---|---|---|
 | D1 | reversible-technical | agent | `still_open` with a named roadmap is preferred over `accepted_risk` for unfinished work | The gate's own comment warns that `accepted_risk` is the cheapest way to make a count reach zero (`check_finding_dispositions.ts:91-99`) | — |
 | D2 | reversible-technical | agent | The offline flag ships before the default question is answered | Additive; it changes nothing for anyone who does not pass it | The owner chooses (a) and the flag becomes redundant |
+| D3 | reversible-technical | council:2026-10-07 medium-security-is-blocking | Option (a) of `medium-security-is-blocking`, release gate only: `check_finding_dispositions.isBlocking` admits `security × medium`; `self_review_gate.classifyBlocking` keeps the 2026-07-08 predicate, and the two now differ by exactly that cell, pinned by a matrix test | Council 2026-10-07, claude-sonnet-4-5 + codex, 2 rounds, 2/2 concluded, $0 (subscription seats). Deciding reason: a medium security finding crossed 16.2.0 and 16.3.0 with nobody required to decide it, and `accepted_risk` keeps the gate answerable without a fix. Both seats rejected moving the merge gate: merge asks whether a change may enter trunk, release whether a known risk may ship | Medium security findings routinely get formulaic `accepted_risk` over three consecutive releases, or exceed about ten per release |
+| D4 | reversible-technical | agent | Fourteen rows that are real, unfixed and had no carrier (eleven read in 1.2, three a council had already read `still_open`) name a new stub, `road-to-the-16-3-0-findings-residue`, rather than being fixed here | Fixing them is outside this roadmap's scope, and D1 forbids `accepted_risk` for unfinished work; each item there names its evidence and what closes it | A live roadmap adopts one of the five groups; its rows then name that roadmap |
 
 ## Blockers
 
 ### blocker: medium-security-is-blocking
-- **Status:** open
+- **Status:** resolved
 - **Owner:** council
 - **Blocks:** 2.1
 - **What to do:** pick exactly one — (a) add `security × medium` to `isBlocking` in `src/scripts/check_finding_dispositions.ts` with tests, or (b) keep the predicate and record the reason in this file's `## Decisions` table.
 - **Resolved when:** the council's verdict is recorded under this blocker with date and seats.
 - **Recommendation:** (a) — widening a floor is a strengthening, and 16.3.0 shipped six security findings of which none needed an answer.
 - **If you do nothing:** medium security findings keep shipping with no recorded disposition.
+- **Verdict (2026-10-07):** (a), release gate only — council claude-sonnet-4-5 + codex, two rounds, 2/2 concluded, no spend. Recorded as D3; implemented in step 2.1.
 
 ### blocker: doctor-network-default
 - **Status:** open
