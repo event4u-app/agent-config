@@ -92,6 +92,14 @@ describe('push-ready derives the pull request base once', () => {
     });
 });
 
+describe('the pre-push hook describes push-ready the way the task does', () => {
+    it('says the base comes from the open pull request, and the default branch only without one', () => {
+        const hook = fs.readFileSync(path.join(REPO, 'src', 'scripts', 'install-hooks.sh'), 'utf8');
+        expect(hook).not.toMatch(/Without BASE the sync targets the default branch/);
+        expect(hook).toMatch(/Without BASE the base comes from the\s+#\s+open pull request/);
+    });
+});
+
 describe('push-ready never executes a base name', () => {
     const marker = (): string => path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'push-ready-marker-')), 'ran');
     const hostile = (m: string): string => `m$(touch$IFS${m})`;

@@ -74,8 +74,9 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 #                                          # -> verify -> re-check freshness -> push
 #     task push-ready DRY=1 BASE=<base>    # the same six steps, read-only
 #
-# `<base>` is the base the refusal names. Without BASE the sync targets the
-# default branch, which is wrong for a branch whose PR merges anywhere else.
+# `<base>` is the base the refusal names. Without BASE the base comes from the
+# open pull request (gh pr view), and is the default branch only when there is
+# no open pull request or no gh.
 #
 # The base is a SET: a branch targeting a release line or a stacked parent may
 # also have to integrate the default branch, per the branch-convergence policy
