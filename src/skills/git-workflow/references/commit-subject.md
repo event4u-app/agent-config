@@ -116,6 +116,7 @@ describes a team habit; the name the agent creates follows the declared pattern.
 
 ```
 ticket                      [A-Z][A-Z0-9]+-[0-9]+
+ticket in text              (?<![A-Za-z0-9])[A-Z][A-Z0-9]+-[0-9]+(?![0-9])
 standard names              UTF ISO SHA RFC CVE CWE GHSA
 format ticket-scope         ^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+
 format ticket-conventional  ^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+
@@ -129,7 +130,9 @@ family imperative-plain     ^[A-Z][a-z]+[[:space:]].*[^.]$
 Formats are JavaScript / PCRE syntax; families are POSIX extended, matched in
 order, first hit wins. Under `format ticket-conventional` and `family
 ticket-conventional` a ticket anywhere inside the scope fails, and a standard
-name in the ticket position fails.
+name in the ticket position fails. A ticket is found in a branch or scope only as
+a whole token (`ticket in text`); a version-like key such as `HTTP2-1` still has
+the ticket shape, and a convention card's `ticket_keys` is what excludes it.
 <!-- END GENERATED: git-convention-grammar -->
 
 ## Patterns that are not this grammar

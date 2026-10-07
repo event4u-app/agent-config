@@ -9,6 +9,14 @@
 
 export const TICKET_GRAMMAR = '[A-Z][A-Z0-9]+-[0-9]+';
 
+/**
+ * The grammar as a whole token: no letter or digit right before the key and no
+ * digit right after the number, so `fooDEV-12` holds no ticket. A version-like
+ * key (`HTTP2-1`, `V2-3`) is still ticket-shaped under the grammar; a card's
+ * `ticket_keys` is what tells it apart.
+ */
+export const TICKET_TOKEN = `(?<![A-Za-z0-9])${TICKET_GRAMMAR}(?![0-9])`;
+
 /** Prefixes of standard names that share the ticket shape (`UTF-8`, `CVE-2026-1234`). */
 export const TICKET_DENYLIST = ['UTF', 'ISO', 'SHA', 'RFC', 'CVE', 'CWE', 'GHSA'] as const;
 
@@ -27,7 +35,7 @@ export interface TicketCandidate {
  */
 export function ticketCandidates(text: string, keys?: readonly string[] | null): TicketCandidate[] {
     const out: TicketCandidate[] = [];
-    for (const m of text.matchAll(new RegExp(TICKET_GRAMMAR, 'g'))) {
+    for (const m of text.matchAll(new RegExp(TICKET_TOKEN, 'g'))) {
         const token = m[0];
         const key = token.slice(0, token.indexOf('-'));
         let status: TicketStatus = 'ticket';

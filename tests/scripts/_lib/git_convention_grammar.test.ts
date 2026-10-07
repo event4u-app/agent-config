@@ -8,6 +8,7 @@ import {
     FAMILY_ERE,
     TICKET_DENYLIST,
     TICKET_GRAMMAR,
+    TICKET_TOKEN,
     checkSubject,
     classifySubject,
     firstTicket,
@@ -40,6 +41,19 @@ describe('ticket grammar', () => {
         expect(all.map((c) => c.status)).toEqual(['unknown-key', 'ticket']);
         expect(firstTicket('feat/ABC-1-DEV-2-x', ['DEV'])).toBe('DEV-2');
         expect(firstTicket('feat/ABC-1-x', ['DEV'])).toBeNull();
+    });
+
+    it('finds a ticket only as a whole token, never inside a longer one', () => {
+        expect(ticketCandidates('feat/fooDEV-12-x')).toEqual([]);
+        expect(ticketCandidates('feat/9DEV-12-x')).toEqual([]);
+        expect(ticketCandidates('feat/DEV-12-x').map((c) => c.token)).toEqual(['DEV-12']);
+        expect(checkSubject('feat(apiDEV-1): add x', { format: 'ticket-conventional' }).ok).toBe(true);
+    });
+
+    it('still reads a version-like key as a ticket shape, which ticket_keys settles', () => {
+        expect(firstTicket('feat/HTTP2-1-client')).toBe('HTTP2-1');
+        expect(firstTicket('feat/HTTP2-1-DEV-4-client', ['DEV'])).toBe('DEV-4');
+        expect(TICKET_TOKEN).toBe(`(?<![A-Za-z0-9])${TICKET_GRAMMAR}(?![0-9])`);
     });
 
     it('is the grammar the command suggester matches prompts with', () => {
