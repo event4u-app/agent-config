@@ -6,7 +6,12 @@ decides how a feature branch takes in its base — `/create-pr` § 1b, `/pr:merg
 § 2, `/prepare-for-review` and `/review:changes` defer here. Read
 `git.update_strategy` from `agent-config git:convention show` — a state of
 `malformed`, `invalid` or `discarded` (exit 1 for the first two) is not a
-strategy: stop and report the line it prints, never fall back to `merge`:
+strategy: stop and report the line it prints, never fall back to `merge`.
+A team declares the strategy in `.git-convention.yml` at the repository root
+(ADR-282), and it is read at the commit the branch is judged against — the
+pull request's base — so a value changed on this branch is a candidate `show`
+prints and applies only once it lands there; `unresolvable` means that commit
+could not be read, and it is not a strategy either:
 
 | `git.update_strategy` | Operation | Asked first? |
 |---|---|---|

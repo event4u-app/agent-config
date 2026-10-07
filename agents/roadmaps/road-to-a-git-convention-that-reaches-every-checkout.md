@@ -230,7 +230,7 @@ writes it into settings files and the rename becomes a migration.
       equals the template default, which is what `upgrade` inserts
       (`src/scripts/_cli/cmd_upgrade.ts:35`).
       verify: `test -f tests/server/git_keys_write_route.test.ts && npx vitest run tests/server/git_keys_write_route.test.ts tests/scripts/_cli/cmd_settings_get_user_global_drop.test.ts` -> 0
-- [ ] **2.5 The surfaces name the carrier.** `CHANGELOG.md:160-186`,
+- [x] **2.5 The surfaces name the carrier.** `CHANGELOG.md:160-186`,
       `docs/guidelines/agent-infra/layered-settings.md:20` and `:44`,
       `docs/contracts/settings-classes.md:528-530`, `docs/guidelines/php/git.md`
       and tier 1b of the commit skill (`SKILL.md:49`, `:64`) say where a team

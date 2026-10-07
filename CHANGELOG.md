@@ -180,9 +180,20 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   `sync_pr_branch` exits `3` instead of merging when such a branch is behind
   (a current branch still exits `0`). **What it does not do:** the setting picks the operation and never
   authorises it; git-history-discipline still requires the user's request for
-  every rebase, fixup or autosquash. The keys are set per project — the
-  user-global whitelist is ADR-gated and does not carry them yet — and a
-  commit-linting config in the repository still outranks `git.commit_format`.
+  every rebase, fixup or autosquash. A team declares the keys in
+  `.git-convention.yml`, a tracked file at the repository root that overrides
+  every developer settings file and where either value is a declaration
+  (ADR-282): `git.update_strategy` is read from it at the commit a pull request
+  is judged against, so a worktree, a fresh clone and CI agree and a pull
+  request cannot change the strategy its own update is judged by;
+  `git.commit_format` and `git.branch_pattern` are read at `HEAD`. Without the
+  carrier the keys come from the project settings files as before; the
+  user-global file does not carry them, and the settings GUI no longer offers
+  them while it writes there. `agent-config git:convention show` prints the
+  value in force, the commit it was read at and a differing checkout value as
+  a candidate; a carrier that does not parse or a target commit that cannot be
+  resolved makes `sync_pr_branch` exit `4`, never merge. A commit-linting config
+  in the repository still outranks `git.commit_format`.
   The merge method is not a key: `/pr:merge` already reads it from the forge.
 
 - **A push no longer ships a branch whose tree contradicts its own commits.**

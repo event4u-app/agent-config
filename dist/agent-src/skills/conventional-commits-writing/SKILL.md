@@ -46,7 +46,7 @@ imposing the shipped default there produces commits that read as foreign in
 | Tier | Source | Binding? |
 |---|---|---|
 | **1 — configured** | `commitlint.config.*` · `.gitmessage` · a `commit-msg` hook (husky / lefthook / `.git/hooks`) · `CONTRIBUTING.md` § Commits · a CI job that validates subjects · release automation that PARSES subjects (semantic-release, changesets, git-cliff, conventional-changelog) | yes — Class A, no approval needed |
-| **1b — declared** | `git.commit_format: ticket-conventional` in the project settings — `agent-config git:convention show` names the file and the state; `malformed` or `invalid` declares nothing and is reported, never read as the default. Only the non-default value declares anything: `ticket-scope` is also what a copied template carries, so it proves no choice | yes — the user's own word, so no measurement and no ask |
+| **1b — declared** | `git.commit_format` in `.git-convention.yml`, the team's committed carrier at the repository root (ADR-282), where either value is a declaration — a team that commits `ticket-scope` chose it. Without the carrier, `git.commit_format: ticket-conventional` in a developer settings file, where only the non-default value declares anything: `ticket-scope` is also what a copied template carries, so it proves no choice. `agent-config git:convention show` names the file and the state; `malformed` or `invalid` declares nothing and is reported, never read as the default | yes — the user's own word, so no measurement and no ask |
 | **2 — measured + approved** | the consensus pass below, after the user says yes | yes, for this repository |
 | **3 — measured, unapproved** | the same pass before the user answers | **no — advisory**; report the mismatch, write Conventional |
 | **4 — default** | Conventional Commits | yes |
@@ -61,7 +61,7 @@ Check for the parser before you trust the prevalence.
 ### 1. Look for tier 1 before measuring anything
 
 ```bash
-agent-config git:convention show   # tier 1b only when commit_format reads ticket-conventional, state valid
+agent-config git:convention show   # tier 1b: valid from .git-convention.yml (either value), or ticket-conventional from a settings file
 ls commitlint.config.* .commitlintrc* .gitmessage .czrc 2>/dev/null
 git config --get commit.template
 ls .husky/commit-msg .git/hooks/commit-msg 2>/dev/null

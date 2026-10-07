@@ -38,6 +38,10 @@ hotfix/DEV-999/critical-payment-bug
   per `git.branch_pattern` (package default `{type}/{slug}`, a ticket-named team
   sets `{ticket}-{slug}` → `DEV-1234-device-export`). Reading the ticket back out
   of a branch never depends on the pattern.
+- A team declares `git.branch_pattern`, `git.commit_format` and
+  `git.update_strategy` in `.git-convention.yml` at the repository root, committed
+  so every checkout, worktree and CI run reads the same value; there either value
+  is a declaration. `agent-config git:convention show` prints what is in force.
 
 ## Commit Messages
 
