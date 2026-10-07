@@ -262,7 +262,7 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       refused, `unknown` when that record is missing. No new record kind; serialised with
       the stop-gate lane's Q1 window. `corrected-from-reproduction`.
       verify: fixture — a stop with `stop_hook_active` and no prior refusal of ours writes `set_by: foreign`
-- [~] **3.2 Execute the fingerprint-slot stub.** Bind `mcp_tool_fingerprint` to
+- [~] **3.2 Execute the fingerprint-slot stub.** Bind `mcp_tool_fingerprint` to <!-- deferred-resolution: carried-to=road-to-neighbours-that-pull-their-weight-carried -->
       `post_tool_use`, observe-only, per `agents/roadmaps/stubs/road-to-mcp-fingerprint-slot-binding.md`:
       its admissions-ledger row, `severity: advisory`, `fail_closed: false`, its three
       tests (first sighting silent, mutation reported, malformed input exit 0), the
@@ -425,7 +425,7 @@ one it cannot observe is an ambient actor whose output is advisory evidence only
       does not state and the next author will otherwise rediscover.
 
       **Three 2026-10-05 notes** (seventh re-run, the weak verify oracle, the forward-looking window) — moved verbatim to `agents/evidence/analysis/neighbours-that-pull-their-weight-evidence-2026-10.md` § Step 3.3.
-- [~] **3.4 Suggest `permissions.deny` for never-used foreign tools.** Deferred: writing a
+- [~] **3.4 Suggest `permissions.deny` for never-used foreign tools.** Deferred: writing a <!-- deferred-resolution: carried-to=road-to-neighbours-that-pull-their-weight-carried -->
       consumer's permission block is Class C and a product decision (K15).
 
       **Iron Law 3, surfaced 2026-10-06 — NOT archived.** A product decision
