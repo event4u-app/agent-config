@@ -165,26 +165,28 @@ Trigger context: `git-history-discipline` rule routed here.
 
 ### 1. Snapshot before touching anything
 
+`REMOTE`/`RB`: the published ref, from the `resolve` block of [`references/branch-update.md`](references/branch-update.md) § The rebase sequence — never `@{u}`; unresolved → no squash.
+
 ```bash
 BRANCH=$(git branch --show-current)
 DATE=$(date +%F)
-git fetch origin
+EXPECTED=$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)
+git fetch -q "$REMOTE" "refs/heads/$RB"
 git tag "safe-squash-pre/${BRANCH}/${DATE}" HEAD
-git tag "safe-squash-origin/${BRANCH}/${DATE}" "@{u}"
+git tag "safe-squash-origin/${BRANCH}/${DATE}" "$EXPECTED"
 ```
 
-Two tags = two recoveries (local tip + origin tip). Do not skip the
-tags — `git reflog` is TTL-bounded and unreliable across sessions.
+Two tags = two recoveries (local tip + published tip); `git reflog` is TTL-bounded and unreliable across sessions.
 
 ### 2. Verify aligned starting state
 
 ```bash
-git rev-list --left-right --count HEAD...@{u}
+git rev-list --left-right --count "HEAD...$EXPECTED"
 ```
 
 - `0  0` → aligned, proceed.
 - `N  0` (local ahead) → unpushed work, proceed.
-- `0  N` (origin ahead) → `git pull --ff-only` first, then re-check.
+- `0  N` (published ref ahead) → `git merge --ff-only "$EXPECTED"` first, then re-check.
 - `M  N` (both non-zero) → **divergent**. Abandon the squash and run
   § Divergent-State Recovery below.
 
@@ -197,18 +199,16 @@ git reset --soft "$(git merge-base HEAD <base>)"
 git commit -m "<conventional commit message>"
 ```
 
-Interactive rebase only when the user wants per-commit control — it
-replays derived files (`dist/agent-src/`, router projections)
-per commit and conflicts on every replay.
+Interactive rebase only when the user wants per-commit control — it replays
+derived files (`dist/agent-src/`, router projections) and conflicts on every replay.
 
 ### 4. Re-push in the SAME turn
 
 ```bash
-FETCHED_SHA=$(git rev-parse "@{u}")
-git push --force-with-lease="${BRANCH}:${FETCHED_SHA}" origin "${BRANCH}"
-git fetch origin
-[ "$(git rev-parse HEAD)" = "$(git rev-parse @{u})" ] \
-  && echo "OK: origin matches HEAD" \
+# $EXPECTED is the SHA pinned in step 1 — re-reading it would lease a collaborator's push
+git push --force-with-lease="refs/heads/$RB:$EXPECTED" "$REMOTE" "HEAD:refs/heads/$RB"
+[ "$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)" = "$(git rev-parse HEAD)" ] \
+  && echo "OK: the published ref matches HEAD" \
   || echo "MISMATCH — do not end session"
 ```
 
@@ -216,7 +216,7 @@ If the push fails (pre-push hook, network, token budget):
 - Fix the underlying cause **now**.
 - Re-push immediately.
 - Do not commit new work on top of the squashed-but-unpushed tip.
-- Do not end the session until `HEAD == @{u}`.
+- Do not end the session until the published ref equals `HEAD`.
 
 ### 5. Hand off only with verified parity
 
@@ -228,8 +228,8 @@ Report exactly:
 
 ## Procedure: Divergent-State Recovery
 
-Fires when `git rev-list --left-right --count HEAD...@{u}` shows
-**both** sides non-zero on the current branch.
+Fires when `git rev-list --left-right --count "HEAD...$EXPECTED"` (the published
+ref's SHA, pinned as in § Safe squash-after-push step 1) shows **both** sides non-zero.
 
 ### 1. Stop. Do not pull.
 
@@ -244,23 +244,23 @@ mode behind `git-history-discipline`.
 ```bash
 TS=$(date +%FT%H%M)
 git tag "diverged-local/${TS}" HEAD
-git tag "diverged-origin/${TS}" "@{u}"
+git tag "diverged-origin/${TS}" "$EXPECTED"
 ```
 
 ### 3. Diagnose: which side is the correct future?
 
 ```bash
-git log --oneline @{u}..HEAD   # local-only commits
-git log --oneline HEAD..@{u}   # origin-only commits
-git diff @{u}..HEAD --stat     # shape of local-ahead work
+git log --oneline "$EXPECTED..HEAD"   # local-only commits
+git log --oneline "HEAD..$EXPECTED"   # published-only commits
+git diff "$EXPECTED..HEAD" --stat     # shape of local-ahead work
 ```
 
 Decision matrix:
 
 | Pattern | Future | Action |
 |---|---|---|
-| Local has the same logical work as origin, just reshaped (squash/rebase) | **Local** | After PR-review check (step 4), `git push --force-with-lease=<branch>:<origin-sha>` |
-| Origin has commits local does not reflect (another contributor pushed) | **Origin** | Tag any local-ahead work for cherry-pick, then `git reset --hard @{u}` |
+| Local has the same logical work as origin, just reshaped (squash/rebase) | **Local** | After PR-review check (step 4), `git push --force-with-lease=refs/heads/<b>:<sha> <remote> HEAD:refs/heads/<b>` |
+| Origin has commits local does not reflect (another contributor pushed) | **Origin** | Tag any local-ahead work for cherry-pick, then `git reset --hard "$EXPECTED"` |
 | Both sides have genuine independent work | **ask user** | Never decide silently — surface the two commit lists and let the user pick |
 
 ### 4. PR review-comment check (mandatory before any force-push)
@@ -278,13 +278,13 @@ destroys live review feedback is unrecoverable from the agent side.
 ### 5. Recover or proceed
 
 Use the tags from step 2 to restore either side if step 4 surfaces a
-problem. After resolution, verify `HEAD == @{u}` and report both
+problem. After resolution, verify the published ref equals `HEAD` and report both
 SHAs plus the tags created.
 
 ## Hard prohibitions on a pushed branch
 
 - No `git pull --rebase` after detecting divergent state.
-- No `git push --force` without `--force-with-lease=<branch>:<sha>`.
+- No `git push --force`, and no `--force-with-lease` without its fully qualified `refs/heads/<b>:<sha>`.
 - No squash-then-end-session — the push must complete in the same turn.
 - No reflog-only recovery — always tag the state explicitly first.
 
@@ -321,9 +321,9 @@ force-push would clobber their in-flight work regardless of your local backup.
 
 ## Two protective stops (for the protocol phase)
 
-1. **Pre-rewrite stop.** Before any squash / amend / rebase on a branch that is on origin: `git fetch && git rev-list --left-right --count HEAD...@{u}`. Squash / amend: if **either** side is non-zero — STOP and run § Divergent-State Recovery. Rebase: only the **right** side (commits on origin you lack) must be 0 — your own unpushed commits travel with the rebase, and the lease below is `@{u}` as just fetched. A blind `git pull --rebase` in this state is the documented failure mode. (§ Safe squash-after-push steps 1–2 implement this stop.)
+1. **Pre-rewrite stop.** Before any squash / amend / rebase of a pushed branch: resolve the ref it publishes (`@{push}`, or the pull request's head repository — [`references/branch-update.md`](references/branch-update.md) § The rebase sequence; never `@{u}`, which is the base for a branch pushed without `-u`), pin its SHA once, then `git rev-list --left-right --count "HEAD...$EXPECTED"`. An unresolved target is no rewrite. Squash / amend: if **either** side is non-zero — STOP and run § Divergent-State Recovery. Rebase: the pinned SHA must already be in `HEAD` — your own unpushed commits travel with the rebase. A blind `git pull --rebase` in this state is the documented failure mode. (§ Safe squash-after-push steps 1–2 implement this stop.)
 
-2. **Post-rewrite stop.** After the rewrite, push in the **same turn** with `--force-with-lease=<branch>:<fetched-sha>` and verify `git rev-parse origin/<branch>` equals `git rev-parse HEAD`. If the push fails (hook, network, token budget) — fix the cause and re-push **before** ending the session, committing new work, or handing off. (§ Safe squash-after-push step 4 implements this stop.)
+2. **Post-rewrite stop.** After the rewrite, push in the **same turn** with `git push --force-with-lease=refs/heads/<b>:<pinned-sha> <remote> HEAD:refs/heads/<b>` and verify `git ls-remote <remote> refs/heads/<b>` equals `git rev-parse HEAD`. A rejected lease is a stop — refetch and report, never a bare `--force-with-lease`, never `--force`. If the push fails (hook, network, token budget) — fix the cause and re-push **before** ending the session, committing new work, or handing off. (§ Safe squash-after-push step 4 implements this stop.)
 
 If either stop fires and resolution is not immediate → tag the state (`git tag local-rewritten-tip-<ISO-date>`) and hand control back to the user. Do not let a new session inherit a dirty divergence.
 

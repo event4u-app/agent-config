@@ -99,7 +99,7 @@ review, the conformance count, a merge run — is decided, not discovered.
 
 ## Phase 1 — The rebase addresses the ref it publishes
 
-- [ ] **1.1 The published ref is resolved, never assumed.** The skill, the
+- [x] **1.1 The published ref is resolved, never assumed.** The skill, the
       reference and `/create-pr` resolve the publish target through
       `git rev-parse --symbolic-full-name @{push}` and, for a pull request, its
       head repository, after a fetch; they pin its sha once, test that sha for

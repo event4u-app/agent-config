@@ -142,14 +142,14 @@ sequence first: `check_branch_freshness` → on exit `1`, bring
 `rebase` a rebase that is asked for, never a merge, and `sync_pr_branch` refuses
 a behind branch with exit 3)
 → regenerate the derived files → verify → push (after a rebase:
-`git push --force-with-lease=<branch>:<fetched-sha>`, never a plain push). A
-rebase runs only after the pre-rewrite stop in
+`git push --force-with-lease=refs/heads/<b>:<sha> <remote> HEAD:refs/heads/<b>`,
+never a plain push). A rebase runs only through § The rebase sequence in
 [`branch-update`](../../../../skills/git-workflow/references/branch-update.md):
-the right count of `git rev-list --left-right --count HEAD...@{u}` must be `0`
-after the fetch (your own unpushed commits are the left side and travel with
-the rebase), and `<fetched-sha>` is `git rev-parse @{u}` read then — so a
-collaborator's push lands either before the stop and halts it, or after it and
-fails the lease, and is never overwritten.
+the ref the branch publishes is resolved from `@{push}` or the pull request's
+head repository — never `@{u}`, and an unresolved target means no rewrite — its
+SHA is pinned once after the fetch, must already be in `HEAD`, and is the lease
+unchanged — so a collaborator's push lands either before the pin and halts the
+stop, or after it and fails the lease, and is never overwritten.
 A PR that sits open while its base advances goes stale silently; keeping the
 base merged **at every touch** means it stays `mergeStateStatus: CLEAN` instead
 of accumulating conflicts for the moment the user wants to merge. If the gate
