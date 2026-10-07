@@ -13,6 +13,8 @@ import { join } from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { TEMPLATE_PLACEHOLDER_DEFAULTS } from '../../src/server/io/yamlIO.js';
+
 import { authHeaders, bootTestApp, fixtureSettings, type TestApp } from './helpers.js';
 
 const PORT = 41711;
@@ -56,6 +58,40 @@ async function put(ctx: TestApp, git: Record<string, string>): Promise<{ status:
         payload: { values: { ...base, git: { ...(base['git'] as Record<string, string>), ...git } }, confirmGuarded: true },
     });
     return { status: res.statusCode, body: res.json() };
+}
+
+/** The template seeded by `bootTestApp`, without its `git:` section: a file written before the keys existed. */
+function withoutGitSection(body: string): string {
+    const out = body.replace(/^git:\n[\s\S]*?\n(?=# --- GitHub)/m, '');
+    expect(out).not.toMatch(/^git:/m);
+    return out;
+}
+
+/**
+ * Save exactly what the form was shown, with no guarded-key confirmation. The
+ * seeded file gets its installer placeholders filled first, as an installed file
+ * has them, so the round trip validates.
+ */
+async function saveShown(ctx: TestApp): Promise<{ diff: unknown; status: number; body: string }> {
+    const file = join(ctx.projectRoot, 'settings', '.agent-settings.yml');
+    let body = readFileSync(file, 'utf8');
+    for (const [placeholder, value] of Object.entries(TEMPLATE_PLACEHOLDER_DEFAULTS)) body = body.replaceAll(placeholder, value);
+    writeFileSync(file, body);
+    const shown = await get(ctx);
+    const diff = await ctx.app.inject({
+        method: 'POST',
+        url: '/api/v1/settings/diff',
+        headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
+        payload: { values: shown.values },
+    });
+    expect(diff.statusCode, diff.body).toBe(200);
+    const res = await ctx.app.inject({
+        method: 'PUT',
+        url: '/api/v1/settings',
+        headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json', 'if-unmodified-since': String(shown.lastModified + 5) },
+        payload: { values: shown.values },
+    });
+    return { diff: diff.json(), status: res.statusCode, body: res.body };
 }
 
 describe('global mode — the write root is the user-global layer', () => {
@@ -120,6 +156,14 @@ describe('global mode — the write root is the user-global layer', () => {
         expect(res.statusCode, res.body).toBe(200);
         expect(readFileSync(file, 'utf8')).toMatch(/^\s+update_strategy: rebase$/m);
     });
+    it('a user-global file without a git section: no git diff, no confirmation, none written', async () => {
+        const file = join(ctx.projectRoot, 'settings', '.agent-settings.yml');
+        writeFileSync(file, withoutGitSection(readFileSync(file, 'utf8')));
+        const r = await saveShown(ctx);
+        expect(JSON.stringify(r.diff)).not.toContain('git.');
+        expect(r.status, r.body).toBe(200);
+        expect(readFileSync(file, 'utf8')).not.toMatch(/^git:/m);
+    });
 });
 
 describe('global mode with a project layer above the user-global file', () => {
@@ -150,6 +194,20 @@ describe('global mode with a project layer above the user-global file', () => {
         expect(res.statusCode, res.body).toBe(200);
         expect(readFileSync(file, 'utf8')).toMatch(/^\s+update_strategy: merge$/m);
         expect(readFileSync(file, 'utf8')).not.toMatch(/update_strategy: rebase/);
+    });
+    it('a project git value is not a change to the user-global file: no git diff, no confirmation', async () => {
+        const r = await saveShown(ctx);
+        expect(JSON.stringify(r.diff)).not.toContain('git.');
+        expect(r.status, r.body).toBe(200);
+    });
+
+    it('a user-global file without a git section stays without one under a project git value', async () => {
+        const file = join(ctx.projectRoot, 'settings', '.agent-settings.yml');
+        writeFileSync(file, withoutGitSection(readFileSync(file, 'utf8')));
+        const r = await saveShown(ctx);
+        expect(JSON.stringify(r.diff)).not.toContain('git.');
+        expect(r.status, r.body).toBe(200);
+        expect(readFileSync(file, 'utf8')).not.toMatch(/^git:/m);
     });
 });
 

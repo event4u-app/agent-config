@@ -24,7 +24,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { settingsSchema } from '../schemas/settings.js';
 import { parseYaml, mergeIntoTemplate, diffValues, deepMerge, TEMPLATE_PLACEHOLDER_DEFAULTS } from '../io/yamlIO.js';
 import { writeAtomic } from '../io/atomicWrite.js';
-import { WITHHELD_GIT_KEYS, WITHHELD_REASON, gitKeyWriteIssues, keepWithheldGit, withholdGitKeys } from '../gitKeysGate.js';
+import { WITHHELD_GIT_KEYS, WITHHELD_REASON, gitDiffBase, gitKeyWriteIssues, keepWithheldGit, withholdGitKeys } from '../gitKeysGate.js';
 import { sharedWriteTarget, resolveThroughSymlinks } from '../io/sharedWriteCheck.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
 import { buildSettingsClassIndex, guardedChangedKeys, parseSettingsClassRows, type SettingsClass } from '../../shared/settingsClasses.js';
@@ -201,6 +201,8 @@ interface LayeredState {
     sources: { global: string[]; project: string[] };
     /** The write root's own file, unmerged; null when it does not exist. */
     writeLayer: Record<string, unknown> | null;
+    /** That file's body; null when it does not exist. */
+    writeLayerRaw: string | null;
 }
 
 /**
@@ -350,6 +352,7 @@ async function readLayeredSettings(
             project: projectLayer !== null ? dottedLeafPaths(projectLayer.values) : [],
         },
         writeLayer: globalLayer?.values ?? null,
+        writeLayerRaw: globalLayer?.raw ?? null,
     };
 }
 
@@ -437,7 +440,10 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
             const candidate = opts.userGlobalWrite === true
                 ? keepWithheldGit(parsed.data as Record<string, unknown>, current.writeLayer ?? {})
                 : (parsed.data as Record<string, unknown>);
-            const changes = diffValues(current.values, candidate);
+            const before = opts.userGlobalWrite === true
+                ? gitDiffBase(current.values, current.writeLayer ?? {})
+                : current.values;
+            const changes = diffValues(before, candidate);
             return { changes };
         });
 
@@ -484,7 +490,11 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 ? keepWithheldGit(parsed.data as Record<string, unknown>, current.writeLayer ?? {})
                 : (parsed.data as Record<string, unknown>);
             try {
-                const merged = mergeIntoTemplate(current.raw, candidate);
+                // In global mode the scaffold may be the project file, whose
+                // git section the candidate does not overwrite; the file being
+                // written is the base, so a section it lacks stays absent.
+                const base = opts.userGlobalWrite === true ? (current.writeLayerRaw ?? current.raw) : current.raw;
+                const merged = mergeIntoTemplate(base, candidate);
                 if (opts.dryRun === true) {
                     // No disk write, no Last-Modified bump — surface the
                     // rendered body so the maintainer sees what a real
@@ -515,7 +525,12 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                     const classes = await readClassIndex(packageRoot);
                     const guarded = guardedChangedKeys(
                         classes,
-                        diffValues(current.values as Record<string, unknown>, candidate),
+                        diffValues(
+                            opts.userGlobalWrite === true
+                                ? gitDiffBase(current.values, current.writeLayer ?? {})
+                                : current.values,
+                            candidate,
+                        ),
                     );
                     if (guarded.length > 0) {
                         await reply.code(409).send({

@@ -91,3 +91,14 @@ export function keepWithheldGit(candidate: Record<string, unknown>, fileValues: 
     const { git: _sent, ...rest } = candidate;
     return 'git' in fileValues ? { ...rest, git: fileValues['git'] } : rest;
 }
+
+/**
+ * The before-side of a global-mode diff: the merged view with its `git` section
+ * swapped for the file's own, or dropped when the file has none. The candidate
+ * from `keepWithheldGit` carries exactly that section, so comparing it against
+ * the merged view would report template defaults and project values as edits
+ * to a section the form never showed.
+ */
+export function gitDiffBase(merged: Record<string, unknown>, fileValues: Record<string, unknown>): Record<string, unknown> {
+    return keepWithheldGit(merged, fileValues);
+}
