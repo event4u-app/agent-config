@@ -749,27 +749,13 @@ export const RETURN_ENVELOPE_POINTER =
  * path (e.g. documenting a hallucinated council citation) would red CI
  * through its own review snapshot.
  *
- * It has a SECOND, UNNAMED job this docstring exists to surface: pushing the
- * snapshot's `---` frontmatter fence off byte offset 0 is also the entire
- * reason `check_agent_artifact_location`'s `FM_RE` — anchored at the absolute
- * start of the string, no `m` flag — never matches this file. That is what
- * keeps every snapshot this constant is written into from being reported as
- * a roadmap-shaped file sitting outside the one directory that gate treats
- * as the legitimate home for one. Nothing chose that exemption on purpose —
- * it is a side effect of this header's CONTENT happening to also satisfy a
- * POSITIONAL requirement a different gate imposes for a different reason.
- *
- * Two ways to break it, both silent until the next full tree scan:
- *   - drop this header from the snapshot (or move it after the frontmatter) —
- *     every snapshot becomes newly roadmap-shaped and
- *     `check_agent_artifact_location` starts reporting one finding per
- *     snapshot that exists.
- *   - relax `check_agent_artifact_location`'s `FM_RE` to tolerate leading
- *     content (e.g. adding the `m` flag) — same outcome, from the other side.
- *
- * Regression-tested in `check_agent_artifact_location.test.ts`
- * (describe: "review-input snapshot convention"), which imports this exact
- * constant rather than a copy, so the test tracks this string verbatim.
+ * That is its only job. It used to carry a second, unnamed one — pushing the
+ * frontmatter fence off byte offset 0 kept `check_agent_artifact_location`
+ * from reading the snapshot as a misplaced roadmap. That gate now exempts the
+ * snapshot path by name (`isReviewInputRoadmapSnapshot`), so this header may
+ * change without that gate noticing. Tested in
+ * `check_agent_artifact_location.test.ts` (describe: "review-input snapshot
+ * convention").
  */
 export const REVIEW_INPUT_ROADMAP_HEADER =
     '<!-- check-refs: skip -->\n' +

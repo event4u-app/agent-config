@@ -18,6 +18,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 
 import {
     ROADMAP_ROOT_REL,
+    isReviewInputRoadmapSnapshot,
     roadmapShape,
     scan,
 } from '../../src/scripts/check_agent_artifact_location.js';
@@ -140,75 +141,45 @@ describe('scan — both polarities over a real directory tree', () => {
     });
 });
 
-describe('review-input snapshot convention — the positional dependency this gate incidentally relies on', () => {
-    // `dispatch_r2_reviewer.ts` prefixes every `<slug>.review-input/roadmap.md`
-    // snapshot with REVIEW_INPUT_ROADMAP_HEADER, verbatim and at byte offset 0.
-    // That header's NAMED job is a different gate's file-level skip marker
-    // (`check_references`'s FILE_SKIP_MARKER). Its side effect — pushing the
-    // frontmatter fence off offset 0 — is the ONLY reason this gate's FM_RE,
-    // anchored with `^` and no `m` flag, fails to match these files. Without
-    // that side effect every snapshot would read as a roadmap-shaped file
-    // sitting outside the roadmap root and this gate would report one finding
-    // per snapshot that exists (118 at this writing).
-    //
-    // These cases exercise the real exported constant, not a copy: if the
-    // header text, its position, or FM_RE's anchoring ever changes, the
-    // relevant assertion below flips and the test goes red.
+describe('review-input snapshot convention — exempt by declared path, not by a header accident', () => {
+    // road-to-authority-routing-mechanism 5.2. The R2 review-input roadmap
+    // snapshots used to escape this gate only because their two-line header,
+    // written for check_references, pushed the frontmatter fence off offset 0.
+    // The exemption is now a named path predicate; these cases pin that the
+    // PATH decides, in both directions, and that the header no longer does.
     const snapshotBody = FM + '# Road to a fixture' + PHASE + STEP;
+    const SNAP = 'agents/evidence/reviews/x.review-input/roadmap.md';
 
-    it('a real review-input header is imported, two lines, both HTML comments', () => {
-        // Guards the fixture itself: if this ever stops holding, every other
-        // assertion in this block is exercising the wrong shape.
-        const lines = REVIEW_INPUT_ROADMAP_HEADER.split('\n').filter((l) => l.length > 0);
-        expect(lines).toHaveLength(2);
-        for (const l of lines) {
-            expect(l.startsWith('<!--')).toBe(true);
-        }
+    it('the canonical snapshot path is exempt even WITHOUT the header', () => {
+        expect(scan(tree({ [SNAP]: snapshotBody })).findings).toEqual([]);
+        expect(scan(tree({ [SNAP]: REVIEW_INPUT_ROADMAP_HEADER + snapshotBody })).findings).toEqual([]);
     });
 
-    it('WITH the header: the snapshot does not read as roadmap-shaped', () => {
-        const s = roadmapShape(REVIEW_INPUT_ROADMAP_HEADER + snapshotBody);
-        expect(s.isRoadmap).toBe(false);
-        // Specifically the frontmatter signal — the one FM_RE gates — never
-        // fires, because the fence no longer sits at offset 0.
-        expect(s.signals).not.toContain(
-            'roadmap frontmatter (`complexity:` lightweight|structural)',
-        );
+    it.each([
+        ['outside agents/evidence/', 'docs/x.review-input/roadmap.md'],
+        ['a near-prefix of agents/evidence/', 'agents/evidence-old/x.review-input/roadmap.md'],
+        ['another file in the snapshot directory', 'agents/evidence/reviews/x.review-input/notes.md'],
+        ['an empty slug', 'agents/evidence/reviews/.review-input/roadmap.md'],
+        ['no .review-input directory', 'agents/evidence/reviews/x/roadmap.md'],
+    ])('is still reported when it is %s', (_label, rel) => {
+        const r = scan(tree({ [rel]: snapshotBody }));
+        expect(r.findings.map((x) => x.rel)).toEqual([rel]);
     });
 
-    it('WITHOUT the header: the byte-identical body IS roadmap-shaped', () => {
-        // This is the sensitivity half. Same content, header stripped — proves
-        // the header's presence, not something else about the snapshot, is
-        // what suppresses detection above.
-        const s = roadmapShape(snapshotBody);
-        expect(s.isRoadmap).toBe(true);
-        expect(s.signals).toHaveLength(3);
+    it('the predicate refuses dot segments, so a crafted path cannot reach the exemption', () => {
+        expect(isReviewInputRoadmapSnapshot(SNAP)).toBe(true);
+        expect(isReviewInputRoadmapSnapshot('agents/evidence/../docs/x.review-input/roadmap.md')).toBe(false);
+        expect(isReviewInputRoadmapSnapshot('agents/evidence/./x.review-input/roadmap.md')).toBe(false);
     });
 
-    it('scan(): the header is what keeps an out-of-root snapshot off the report', () => {
-        const dirWithHeader = tree({
-            'agents/evidence/reviews/x.review-input/roadmap.md': REVIEW_INPUT_ROADMAP_HEADER + snapshotBody,
-        });
-        expect(scan(dirWithHeader).findings).toEqual([]);
-
-        const dirWithoutHeader = tree({
-            'agents/evidence/reviews/x.review-input/roadmap.md': snapshotBody,
-        });
-        const r = scan(dirWithoutHeader);
-        expect(r.findings).toHaveLength(1);
-        expect(r.findings[0]?.rel).toBe('agents/evidence/reviews/x.review-input/roadmap.md');
-    });
-
-    it('every real review-input roadmap snapshot in this tree still carries the header at offset 0', () => {
-        // Ties the invariant to the LIVE convention, not just the fixture
-        // above: if a future code path writes a snapshot without the header
-        // (or with it reordered after the frontmatter), this catches it
-        // directly — independently of whether `scan(REPO_ROOT)` also would.
+    it('every real review-input roadmap snapshot in this tree matches the predicate', () => {
+        // Ties the declared path to the LIVE writer output: a writer that moves
+        // its snapshots makes this red rather than letting the gate flood.
         const files = globReviewInputRoadmaps(REPO_ROOT);
         expect(files.length).toBeGreaterThan(0);
         for (const f of files) {
-            const text = fs.readFileSync(f, 'utf-8');
-            expect(text.startsWith(REVIEW_INPUT_ROADMAP_HEADER)).toBe(true);
+            const rel = path.relative(REPO_ROOT, f).split(path.sep).join('/');
+            expect(isReviewInputRoadmapSnapshot(rel)).toBe(true);
         }
     });
 });
