@@ -119,9 +119,10 @@ describe('behindRemedy without a reading', () => {
 });
 
 describe('the behind remedy prints only commands the checkout can run', () => {
-    function behindOutput(): string {
+    function behindOutput(carrier?: string): string {
         const other = path.join(dir, 'other');
         git(['clone', '-q', path.join(dir, 'origin.git'), other], dir);
+        if (carrier !== undefined) commit(other, '.git-convention.yml', carrier);
         commit(other, 'c.txt', 'three');
         git(['push', '-q'], other);
         git(['fetch', '-q', 'origin'], process.cwd());
@@ -144,5 +145,13 @@ describe('the behind remedy prints only commands the checkout can run', () => {
         fs.writeFileSync(path.join(process.cwd(), 'taskfiles', 'dev.yml'), "version: '3'\ntasks:\n  push-ready:\n    cmds: [echo]\n");
         const text = behindOutput();
         expect(text).toMatch(/^ *task push-ready BASE=main(?: |$)/m);
+    });
+
+    it('under a rebase strategy the push-ready line is not printed — it would only refuse', () => {
+        fs.mkdirSync(path.join(process.cwd(), 'taskfiles'));
+        fs.writeFileSync(path.join(process.cwd(), 'taskfiles', 'dev.yml'), "version: '3'\ntasks:\n  push-ready:\n    cmds: [echo]\n");
+        const text = behindOutput('git:\n  update_strategy: rebase\n');
+        expect(text).toContain('update_strategy is `rebase`');
+        expect(text).not.toContain('task push-ready');
     });
 });

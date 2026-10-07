@@ -719,13 +719,6 @@ export function main(
   // branch, so reading the strategy there would fetch inside the push budget.
   // Read it at that commit only if it is already local, else at the cached
   // remote-tracking commit; with neither, the remedy is the generic pointer.
-  // Read by the pre-push hook to print the exact BASE it refused for. Only a
-  // checkout that defines the task gets it: a consumer runs this script from
-  // node_modules, where the task does not exist and the line would not run.
-  if (definesPushReady()) {
-    console.error(`    task push-ready BASE=${remote === "origin" ? base : shown}   # integrate the base set, regenerate, verify, re-check`);
-    console.error("");
-  }
   const localAt = [sha, `refs/remotes/${remote}/${base}`]
     .map((ref) => git(["rev-parse", "--verify", "-q", `${ref}^{commit}`]))
     .find((found): found is string => found !== null && found !== "");
@@ -737,6 +730,15 @@ export function main(
         fetch: false,
         deps: { ...makeTargetDeps(process.cwd()), remoteSha: () => localAt },
       }).readings.update_strategy as GitConventionReading);
+  // Read by the pre-push hook to print the exact BASE it refused for. Only a
+  // checkout that defines the task gets it: a consumer runs this script from
+  // node_modules, where the task does not exist and the line would not run.
+  // Under a strategy other than merge the task would only refuse, so it is not offered.
+  const mergeAllowed = strategy === null || (!isRefusal(strategy.state) && strategy.value === "merge");
+  if (definesPushReady() && mergeAllowed) {
+    console.error(`    task push-ready BASE=${remote === "origin" ? base : shown}   # integrate the base set, regenerate, verify, re-check`);
+    console.error("");
+  }
   for (const line of behindRemedy(base, strategy, remote)) {
     console.error(line);
   }
