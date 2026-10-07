@@ -15,7 +15,6 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 enforced_by:
   - "hook:session-canary"
-# obligation: line 33
 obligation_frequency: "per-task"
 # frequency-override: the per-turn phrases in the body describe the CARRIER
 # (a per-turn beat is the closest reachable cover for a per-task obligation),

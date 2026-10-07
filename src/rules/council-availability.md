@@ -14,7 +14,6 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 enforced_by:
   - "instruction-only: no gate reads a chat claim about availability; check_council_config_location covers the tree side only"
-# obligation: line 27
 obligation_frequency: "per-task"
 ---
 

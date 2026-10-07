@@ -28,7 +28,6 @@ enforced_by:
   - "validator:src/scripts/check_secret_leak.ts"
 collision_ok:
   "commit": "committing is the credential-leak moment this guard exists for"
-# obligation: line 43
 obligation_frequency: "per-edit"
 evidence:
   source_type: own-analysis

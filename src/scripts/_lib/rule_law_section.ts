@@ -25,7 +25,7 @@
  * law in bold prose or a bare fence under no heading at all — several of the 35
  * routed rules without a heading match do exactly that. A heading match is a
  * STRUCTURAL property, checkable; "this sentence is the obligation" is not, and
- * `report_obligation_carriers` plus the `# obligation: line N` marker is where
+ * `report_obligation_carriers` plus the ids in `src/config/rule-obligations.json` is where
  * that question already lives.
  */
 import * as fs from 'node:fs';

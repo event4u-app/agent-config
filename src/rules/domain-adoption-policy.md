@@ -18,7 +18,6 @@ workspaces: [agent-config-maintainer]
 packs: [meta]
 collision_ok:
   "src/skills/": "a skill in a fresh vertical is exactly the domain-gate surface"
-# obligation: line 38
 obligation_frequency: "per-task"
 ---
 

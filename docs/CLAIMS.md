@@ -1236,6 +1236,19 @@ is the named exception in the claim itself.
 - status: unbacked
 - last_verified: 2026-09-13
 
+### claim: turnaround-blocking-by-cause-targets
+- claim: PRE-REGISTERED, unmeasured. Over the next ten-session window of the same shape, the two causes holding the most blocking minutes in the 2026-10 reading meet these targets: avoidable `user-wait` stays at zero, and the CI waiter returns no verdict in the foreground at most half as often.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-07 (`road-to-blocking-time-by-cause` step 3.1), committed BEFORE either mitigation lands; the step order in the roadmap and the commit order here are the pre-registration. Reading: `agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md` (145 blocking calls, 802 blocking minutes over ten sessions).
+  (1) THE TWO CAUSES, by minutes in that reading: `user-wait` 353 min over 4 calls and `ci-wait` 261 min over 40 calls. Chosen as the literal top two; an AI council (2026-10-07, two rounds, 2/2 seats both rounds) refused substituting `network` after the fact, because excluding a cause once its size is seen is redefining the metric after observing it.
+  (2) USER-WAIT TARGET: zero AVOIDABLE blocking minutes. Avoidable means a question answerable from authority the session already held — a decision the instruction or an earlier answer had delegated. Not avoidable: a question whose answer lowers a review or safety floor (owner-reserved), an external blocker, and a question in an interactive exchange the human opened. Baseline labelling, by reading each question's text: 0 of the 4 avoidable — two asked whether to reduce review depth before a release, one reported an exhausted review-service credit (328 min, the human away), one answered a design question the human had just raised. One council seat labelled the 17-min review-depth question avoidable; that dissent is recorded and the agent's labelling stands as the baseline. Total `user-wait` minutes and external-blocker minutes are reported beside the target and never judged, because one unattended outage dominates them. MISS: any blocking question labelled avoidable.
+  (3) CI-WAIT TARGET: at most 10 waiter calls that end `DID NOT SETTLE` in the foreground (baseline 20 of the 44 calls that named a CI waiter, holding 184 min). `ci-wait` minutes are reported beside it (baseline 261; a secondary target of at most 130 min), never as the primary gate, because queue time on the forge is not the agent's. MISS: more than 10.
+  (4) UNDERPOWERED, per cause and never from the aggregate: fewer than 20 CI waits in the window for `ci-wait`; fewer than 5 structured asks for `user-wait`. A window with fewer total blocking calls than 145 is NOT underpowered on that ground alone — a fall in blocking calls may be the mitigation working. Underpowered is neither a pass nor a miss and may be cited for neither.
+  (5) A MITIGATION THAT REMOVES A VERIFICATION STEP IS OUT OF SCOPE, and so is one that only moves a question from the question tool into plain text: the human waits the same either way and only the instrument stops seeing it.
+  (6) SCOPE: one machine's transcript store, an mtime window that moves; a delta between two windows can be a corpus change, which is why each window's shape is recorded on the reading page.
+- status: unbacked
+- last_verified: 2026-10-07
+
 ### claim: touched-file-quality-shadow-to-warn-bar
 - claim: PRE-REGISTERED, unmeasured. Whether the touched-file quality pass (`hooks.verify_before_complete.touched_file_quality`) may move its shipped default from `off`/`shadow` to `warn` — i.e. whether its advisory lines at stop are rare enough, real enough and cheap enough to be worth emitting by default.
 - kind: quant

@@ -15,7 +15,6 @@ packs: [meta]
 enforced_by:
   - "validator:src/scripts/check_condensation.ts"
   - "validator:src/scripts/skill_linter.ts"
-# obligation: line 22
 obligation_frequency: "per-edit"
 ---
 

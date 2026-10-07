@@ -8,7 +8,6 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer]
 packs: [meta]
-# obligation: line 43
 obligation_frequency: "per-edit"
 ---
 
