@@ -167,7 +167,9 @@ and commits on the branch you did not author (§ Under `rebase`, shared branch)
 `ALLOW_FOREIGN=1`, which stands for the user's answer this turn that those
 commits may be rewritten; it is never set to get past the stop.
 Then the remote ref is read once; that literal is the stop (it must already be
-in `HEAD`) and, unchanged, the lease. A collaborator's push lands either before
+in `HEAD`) and, unchanged, the lease. A read that fails is a stop of its own,
+never an empty answer: an empty literal means "never pushed", which skips the
+stop. A collaborator's push lands either before
 the pin and halts the stop, or after it and fails the lease — it is never
 overwritten.
 
@@ -208,7 +210,8 @@ AUTHORS=$(git log --format='%h %ae' "origin/$BASE..HEAD") \
 FOREIGN=$(awk -v me="$ME" 'tolower($2) != tolower(me)' <<<"$AUTHORS")
 [ -z "$FOREIGN" ] || [ "${ALLOW_FOREIGN:-}" = 1 ] \
   || stop "the topic range carries commits you did not author ($(tr '\n' ' ' <<<"$FOREIGN")) — ask the user; set ALLOW_FOREIGN=1 only on their answer this turn"
-EXPECTED=$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)
+PUBLISHED=$(git ls-remote "$REMOTE" "refs/heads/$RB") || stop "could not read $REMOTE/$RB — nothing was rewritten"
+EXPECTED=$(cut -f1 <<<"$PUBLISHED")
 if [ -n "$EXPECTED" ]; then
   git fetch -q "$REMOTE" "refs/heads/$RB" || stop "could not fetch $REMOTE/$RB — nothing was rewritten"
   git merge-base --is-ancestor "$EXPECTED" HEAD || stop "$REMOTE/$RB has commits this branch lacks"

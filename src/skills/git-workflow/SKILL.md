@@ -169,7 +169,8 @@ Trigger context: `git-history-discipline` rule routed here.
 
 ```bash
 DATE=$(date +%F)
-EXPECTED=$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)
+PUBLISHED=$(git ls-remote "$REMOTE" "refs/heads/$RB") || { echo "STOP: could not read $REMOTE/$RB — nothing was rewritten" >&2; exit 1; }
+EXPECTED=$(cut -f1 <<<"$PUBLISHED")
 git fetch -q "$REMOTE" "refs/heads/$RB"
 SNAP="refs/agent-config/rewrites/squash-${DATE}-$$"
 git update-ref "$SNAP/before" HEAD

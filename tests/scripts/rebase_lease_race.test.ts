@@ -370,6 +370,28 @@ describe('a failed fetch of the published ref', () => {
     });
 });
 
+describe('a failed read of the published ref', () => {
+    it('stops instead of reading the failure as a branch that was never pushed', () => {
+        const f = fixture('upstream');
+        const bin = path.join(f.sb.root, 'bin');
+        fs.mkdirSync(bin);
+        const real = execFileSync('bash', ['-c', 'command -v git'], { encoding: 'utf8' }).trim();
+        fs.writeFileSync(path.join(bin, 'git'), [
+            '#!/bin/sh',
+            'case "$1 $3" in "ls-remote refs/heads/"*) echo "fatal: could not read from remote repository" >&2; exit 128;; esac',
+            `exec '${real}' "$@"`,
+            '',
+        ].join('\n'));
+        fs.chmodSync(path.join(bin, 'git'), 0o755);
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const r = runSequence(f.sb, f.me, { ...f.env, PATH: `${bin}:${process.env.PATH ?? ''}` });
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('STOP: could not read origin/feat');
+        expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
+        expect(f.sb.git(f.me, 'for-each-ref', '--format=%(refname)', 'refs/agent-config/rewrites/')).toBe('');
+    });
+});
+
 describe('the recovery ref', () => {
     const rewrites = (f: Fixture): string[] =>
         f.sb.git(f.me, 'for-each-ref', '--format=%(refname) %(objectname)', 'refs/agent-config/rewrites/').split('\n').filter(Boolean);

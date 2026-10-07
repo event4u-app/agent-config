@@ -222,7 +222,9 @@ to set `REMOTE` and `RB` — never `@{u}`, which is the base for a branch pushed
 without `-u`. An unresolved target means no rewrite.
 
 ```bash
-EXPECTED=$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)   # pushed range only
+PUBLISHED=$(git ls-remote "$REMOTE" "refs/heads/$RB") \
+  || { echo "STOP: could not read $REMOTE/$RB — nothing was rewritten" >&2; exit 1; }   # pushed range only
+EXPECTED=$(cut -f1 <<<"$PUBLISHED")
 SAVE="refs/agent-config/rewrites/$(date -u +%Y%m%dT%H%M%SZ)-msgfix/before"
 git update-ref "$SAVE" HEAD
 git rev-list --count HEAD > /tmp/precount.txt
