@@ -1,0 +1,1 @@
+**Skipped:** no code surface for this completion — the diff touches only agents/roadmaps/** (checkbox flips to record already-merged work) and a JSON release-findings ledger (a disposition field, not code), scope 916ad7d38ad9d899bc64b33a7733592da54c3f53affec4ee95179f68244ea929, declared 2026-10-07
