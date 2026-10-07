@@ -1,12 +1,12 @@
 # Findings: git-convention-review-findings
-<!-- completion-review: v1 | reviewed: 2026-10-07 | scope: 49a6c2fdc733f9d2ef0bc99a5897adb39ec03432f3c07ce564564afa5e78fb2f | diff: b6107dd95c93c32c0c349d83584f23d2c38436d4 | reviewer: r2-fresh-subagent-git-convention-review-findings | prompt_hash: fe7779fb7b867f5a96de836b0e026a01570101f30e3c7020ce9b6ee043a2c63e -->
+<!-- completion-review: v1 | reviewed: 2026-10-07 | scope: 39fead0b1fdc41822395bdba652f11af48b9c174f180a4eaaffe59f2c1eced0a | diff: b6107dd95c93c32c0c349d83584f23d2c38436d4 | reviewer: r2-fresh-subagent-git-convention-review-findings | prompt_hash: fe7779fb7b867f5a96de836b0e026a01570101f30e3c7020ce9b6ee043a2c63e -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-git-convention-review-findings"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-07 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: b6107dd95c93c32c0c349d83584f23d2c38436d4
-  scope_hash: 49a6c2fdc733f9d2ef0bc99a5897adb39ec03432f3c07ce564564afa5e78fb2f
+  scope_hash: 39fead0b1fdc41822395bdba652f11af48b9c174f180a4eaaffe59f2c1eced0a
   roadmap: none
   roadmap_hash: none
   ac_hash: none
@@ -14,6 +14,7 @@ excluded: [session-history, agents/runtime, implementation-context]
 tools: [git-diff-branch-scoped, file-read-branch-paths]
 dispatched: 2026-10-07T18:09:49Z
 -->
+<!-- re-bound 2026-10-07 in place: the only change since the reviewed scope is 32640cf7f, which adds a local git identity to two test fixtures (tests/scripts/sync_pr_branch_fork_base.test.ts, tests/scripts/sync_pr_branch_fetch_and_merge_state.test.ts) so the script's merge commit runs in CI without a global identity; no production code and no assertion changed. -->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
