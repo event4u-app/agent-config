@@ -397,6 +397,11 @@ function _replaceFirstLiteral(text: string, from: string, to: string): string {
     return text.slice(0, at) + to + text.slice(at + from.length);
 }
 
+/** An empty `old_string` is the host's create form, which `split('')` does not model. */
+function _applyEdit(text: string, from: string, to: string, all: unknown): string {
+    return all === true && from !== '' ? text.split(from).join(to) : _replaceFirstLiteral(text, from, to);
+}
+
 export function classCVerdict(
     ti: JsonObject,
     on_disk: string | null,
@@ -416,11 +421,14 @@ export function classCVerdict(
             'Re-send it as one form, or write the change through `agent-config settings:set`.'
         );
     }
+    // A file that does not exist yet is created by an edit with an empty
+    // `old_string`, so it is modelled as empty text rather than left unchecked.
+    const current = on_disk ?? '';
     let afterText: string | null = null;
     if (typeof content === 'string') {
         afterText = content;
-    } else if (typeof oldStr === 'string' && typeof newStr === 'string' && on_disk !== null) {
-        if (!on_disk.includes(oldStr)) return null; // the edit will not apply
+    } else if (typeof oldStr === 'string' && typeof newStr === 'string') {
+        if (!current.includes(oldStr)) return null; // the edit will not apply
         // `replace_all` is the host's own flag and it changes WHICH text the
         // edit produces. Modelling only the first occurrence let a
         // `replace_all` edit whose SECOND occurrence is the Class C one pass
@@ -436,12 +444,12 @@ export function classCVerdict(
                 '`agent-config settings:set`.'
             );
         }
-        afterText = all === true ? on_disk.split(oldStr).join(newStr) : _replaceFirstLiteral(on_disk, oldStr, newStr);
+        afterText = _applyEdit(current, oldStr, newStr, all);
     } else if (ti['edits'] !== undefined && !Array.isArray(ti['edits'])) {
         return `${rel_path}: this MultiEdit carries an edit the guard cannot interpret, so the text it would produce is unknown and no key can be cleared. Re-send it as plain edits, or write the change through \`agent-config settings:set\`.`;
-    } else if (Array.isArray(ti['edits']) && on_disk !== null) {
+    } else if (Array.isArray(ti['edits'])) {
         // MultiEdit applies its pairs in order and applies none when one misses.
-        let text = on_disk;
+        let text = current;
         for (const e of ti['edits']) {
             const o = _isObject(e) ? e['old_string'] : undefined;
             const n = _isObject(e) ? e['new_string'] : undefined;
@@ -450,7 +458,7 @@ export function classCVerdict(
                 return `${rel_path}: this MultiEdit carries an edit the guard cannot interpret, so the text it would produce is unknown and no key can be cleared. Re-send it as plain edits, or write the change through \`agent-config settings:set\`.`;
             }
             if (!text.includes(o)) return null;
-            text = a === true ? text.split(o).join(n) : _replaceFirstLiteral(text, o, n);
+            text = _applyEdit(text, o, n, a);
         }
         afterText = text;
     }

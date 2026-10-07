@@ -213,6 +213,21 @@ describe('block_config_weakening — class-c', () => {
         expect(reason).toContain('does not parse');
     });
 
+    // The host creates a missing file from an Edit whose old_string is empty, so
+    // a missing file is empty text, not a reason to stop checking.
+    it('checks an Edit or MultiEdit that creates the carrier', () => {
+        const create = { old_string: '', new_string: 'git:\n  update_strategy: rebase\n' };
+        expect(classCVerdict(create, null, '.git-convention.yml', index)).toContain('git.update_strategy');
+        expect(classCVerdict({ edits: [create] }, null, '.git-convention.yml', index)).toContain('git.update_strategy');
+        expect(classCVerdict({ ...create, replace_all: true }, null, '.git-convention.yml', index)).toContain('git.update_strategy');
+    });
+
+    it('allows creating a settings file that sets only Class A keys', () => {
+        const create = { old_string: '', new_string: 'personal:\n  play_by_play: true\n' };
+        expect(classCVerdict(create, null, '.agent-settings.yml', index)).toBeNull();
+        expect(classCVerdict({ edits: [create] }, null, '.agent-settings.yml', index)).toBeNull();
+    });
+
     it('allows when the edit would not apply at all', () => {
         expect(
             classCVerdict(
