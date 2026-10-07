@@ -280,13 +280,19 @@ echo "PUBLISH AFTER VERIFY: SAVE=$SAVE EXPECTED=$EXPECTED — regenerate and ver
 
 **4. Push in the same turn, then read the published ref back** — after the
 caller's regenerate and verify, in a fresh shell that ran step 1 with `SAVE`
-and `EXPECTED` from step 3. An empty `EXPECTED` (never pushed) makes the lease
+and `EXPECTED` from step 3. It refuses while a rebase is still in progress and when `HEAD` does
+not contain `origin/<base>`: a half-finished rebase is never published. An empty `EXPECTED` (never pushed) makes the lease
 require that the ref does not exist.
 
 ```bash
 # rebase-sequence: publish
 declare -F keep >/dev/null && [ -n "${SAVE:-}" ] && [ "${EXPECTED+set}" = set ] && [ -n "${REMOTE:-}" ] && [ -n "${RB:-}" ] \
   || { echo "STOP: run step 1 in this shell session, with SAVE and EXPECTED from step 3 — nothing was pushed" >&2; exit 1; }
+for d in rebase-merge rebase-apply; do
+  [ ! -e "$(git rev-parse --git-path "$d")" ] || keep "a rebase is in progress — finish it (git rebase --continue) or abort it, then verify again; nothing was pushed"
+done
+git merge-base --is-ancestor "origin/$BASE" HEAD \
+  || keep "HEAD does not contain origin/$BASE, the base it was rebased onto — nothing was pushed"
 git push --force-with-lease="refs/heads/$RB:$EXPECTED" "$REMOTE" "HEAD:refs/heads/$RB" \
   || keep "the lease was rejected — $REMOTE/$RB moved; refetch and report, never retry without the lease"
 [ "$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)" = "$(git rev-parse HEAD)" ] \

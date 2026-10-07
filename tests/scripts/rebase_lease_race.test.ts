@@ -460,3 +460,34 @@ describe('the recovery ref', () => {
         expect(f.sb.git(f.me, 'ls-remote', f.publishUrl)).not.toContain('refs/agent-config/');
     });
 });
+
+describe('the publish step publishes only a finished rebase', () => {
+    it('refuses while a rebase is still in progress', () => {
+        const f = fixture('fork-pr-head');
+        const origin = f.sb.git(f.me, 'remote', 'get-url', 'origin');
+        const base = path.join(f.sb.root, 'base-author');
+        f.sb.git(f.sb.root, 'clone', '-q', origin, base);
+        f.sb.commit(f.me, 'base.txt', 'feature edit\n', 'edit base.txt');
+        f.sb.git(f.me, 'push', '-q', 'alice', 'feat');
+        f.sb.commit(base, 'base.txt', 'base edit\n', 'base edits base.txt');
+        f.sb.git(base, 'push', '-q', 'origin', 'main');
+        const before = published(f);
+        const first = runBlocks(f.sb, f.me, PREPARE_BLOCKS.map((b) => sequenceBlock(b)).join('\n'), f.env);
+        expect(first.stderr).toContain('stopped on a conflict');
+        const save = /SAVE=(refs\/agent-config\/rewrites\/\S+\/before)/.exec(first.stderr)?.[1] ?? '';
+        const r = runBlocks(f.sb, f.me, `${sequenceBlock('resolve')}\n${sequenceBlock('publish')}`, { ...f.env, SAVE: save, EXPECTED: before });
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('a rebase is in progress');
+        expect(published(f)).toBe(before);
+    });
+
+    it('refuses a HEAD that does not contain the base it was rebased onto', () => {
+        const f = fixture('upstream');
+        f.sb.git(f.me, 'fetch', '-q', 'origin');
+        const before = published(f);
+        const r = runBlocks(f.sb, f.me, `${sequenceBlock('resolve')}\n${sequenceBlock('publish')}`, { ...f.env, SAVE: 'refs/agent-config/rewrites/x/before', EXPECTED: before });
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('does not contain origin/main');
+        expect(published(f)).toBe(before);
+    });
+});
