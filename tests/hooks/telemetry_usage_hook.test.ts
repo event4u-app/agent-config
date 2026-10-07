@@ -379,102 +379,17 @@ describe('off means zero OPERATIONS, not merely zero output', () => {
 });
 
 /**
- * The foreign-MCP-tool-name recorder
- * (road-to-neighbours-that-pull-their-weight step 3.3).
- *
- * The slot's other half. `post_tool_use` cannot supply a tool DEFINITION —
- * roadmap decision D2 — so what this records is the one thing the envelope
- * does carry: the name. Two properties are load-bearing and each has its own
- * case below. It must fire on an install that never opted into telemetry,
- * because the census it feeds is a local report and gating it on an org
- * switch would print `0` everywhere and call it a measurement. And it must
- * not fire on anything that is not an `mcp__` tool, because a store that
- * collects every tool name is a different artifact with a different privacy
- * argument than the one its header makes.
+ * The foreign-MCP tool-name recorder moved to its own concern,
+ * `mcp-usage-observation` (road-to-neighbours-that-pull-their-weight D12) —
+ * see tests/hooks/mcp_usage_observation_hook.test.ts. This concern must no
+ * longer write the neighbour store, on an opted-in install or otherwise.
  */
-describe('telemetry-usage foreign MCP tool recorder', () => {
-    // A real settings file with no telemetry section: the concern is OFF, and
-    // the walk-up stops here rather than at some ancestor of the temp dir.
-    const INACTIVE = 'quality:\n  local_auto_run: false\n';
-
-    function storePath(root: string): string {
-        return path.join(root, 'agents', 'runtime', 'neighbour-tool-use.json');
-    }
-
-    function readStore(root: string): Record<string, string> {
-        return JSON.parse(fs.readFileSync(storePath(root), 'utf-8')) as Record<string, string>;
-    }
-
-    function toolEnvelope(toolName: string): string {
-        return JSON.stringify({
-            schema_version: 1,
-            platform: 'claude',
-            event: 'post_tool_use',
-            session_id: 'host-session-token',
-            payload: { tool_name: toolName, tool_input: {} },
-        });
-    }
-
-    it('records a foreign MCP tool name on an install that never enabled telemetry', () => {
-        const root = makeRoot(INACTIVE);
-
-        expect(run(toolEnvelope('mcp__linear-server__create_issue'), { consumer_root: root })).toBe(0);
-
-        const store = readStore(root);
-        expect(Object.keys(store)).toEqual(['mcp__linear-server__create_issue']);
-        expect(store['mcp__linear-server__create_issue']).toBe(new Date().toISOString().slice(0, 10));
-    });
-
-    it('records one entry per distinct tool', () => {
-        const root = makeRoot(INACTIVE);
-
-        run(toolEnvelope('mcp__acme__alpha'), { consumer_root: root });
-        run(toolEnvelope('mcp__acme__alpha'), { consumer_root: root });
-        run(toolEnvelope('mcp__acme__beta'), { consumer_root: root });
-
-        expect(Object.keys(readStore(root)).sort()).toEqual(['mcp__acme__alpha', 'mcp__acme__beta']);
-    });
-
-    it('does not republish the file on a repeat of the same tool on the same day', () => {
-        // Asserted on the file's BYTES across the repeat alone, not on an mtime
-        // ordering. `expect(first).toBeLessThanOrEqual(later)` was the first
-        // shape here and it is a tautology twice over: mtime never decreases,
-        // and the original test did a third, genuinely-writing call before
-        // reading it back. It could not have failed if the skip were deleted.
-        const root = makeRoot(INACTIVE);
-        run(toolEnvelope('mcp__acme__alpha'), { consumer_root: root });
-
-        const before = fs.statSync(storePath(root));
-        run(toolEnvelope('mcp__acme__alpha'), { consumer_root: root });
-        const after = fs.statSync(storePath(root));
-
-        // `update_json_under_lock` republishes via a rename, so a rewrite
-        // changes the inode even when the bytes are identical.
-        expect(after.ino).toBe(before.ino);
-        expect(after.mtimeMs).toBe(before.mtimeMs);
-    });
-
-    it('NEGATIVE — a Skill call and a plain host tool leave no store behind', () => {
-        const skillRoot = makeRoot(ACTIVE);
-        expect(run(envelope('brand-identity'), { consumer_root: skillRoot })).toBe(0);
-        expect(fs.existsSync(storePath(skillRoot))).toBe(false);
-
-        const bashRoot = makeRoot(INACTIVE);
-        expect(run(toolEnvelope('Bash'), { consumer_root: bashRoot })).toBe(0);
-        expect(fs.existsSync(storePath(bashRoot))).toBe(false);
-    });
-
-    it('roots the store at the settings directory, never at a session subdirectory', () => {
-        // Same reason the Class-A log is rooted there: a session started in a
-        // subdirectory would otherwise leave one store per directory it
-        // happened to start in, and the census reads exactly one.
-        const root = makeRoot(INACTIVE);
-        const nested = path.join(root, 'packages', 'web');
-        fs.mkdirSync(nested, { recursive: true });
-
-        expect(run(toolEnvelope('mcp__acme__alpha'), { consumer_root: nested })).toBe(0);
-
-        expect(fs.existsSync(storePath(root))).toBe(true);
-        expect(fs.existsSync(storePath(nested))).toBe(false);
+describe('telemetry-usage no longer records foreign MCP tool names', () => {
+    it('leaves no neighbour store behind for an mcp__ tool, even when active', () => {
+        const root = makeRoot(ACTIVE);
+        const env = JSON.stringify({ payload: { tool_name: 'mcp__acme__alpha', tool_input: {} } });
+        expect(run(env, { consumer_root: root })).toBe(0);
+        expect(fs.existsSync(path.join(root, 'agents', 'runtime', 'neighbour-tool-use.json'))).toBe(false);
+        expect(fs.existsSync(logPath(root))).toBe(false);
     });
 });

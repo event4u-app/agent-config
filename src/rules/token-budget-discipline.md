@@ -104,17 +104,6 @@ canon: a near-miss where a net-positive frontend/design change was
 almost dropped purely on token-budget grounds is the canonical failure
 this escalation exists to prevent.
 
-## Candidate rich skills (justified, not exhaustive)
-
-These skills are approved `rich` by this roadmap's council:
-
-| Skill | Justification summary |
-|---|---|
-| `design-intelligence` | 11 corpus CSVs + 16 design-language prose specs + a 10-category checklist; grounded selection needs the full reference to avoid random corpus subsets |
-| `typography-system` | Modular-scale math + 6 worked example type systems; condensing to "use 1.25 ratio" produces agents that invent arbitrary px values |
-| `accessibility-auditor` | WCAG criteria are non-negotiable detail; every criterion has a testable condition + failure mode; compression loses the test procedures |
-| `design-system-capture` (Phase 6) | Writes + maintains DESIGN.md + PRODUCT.md; needs full templates + worked examples to generate useful artifacts |
-
 ## Rich artifacts lead with a non-negotiable band
 
 ```
@@ -138,25 +127,11 @@ be shorter — that is the ceiling, gated below, and the two controls are
 independent: an artifact can sit comfortably under the ceiling and still bury
 its obligation on line 300.
 
-## The size band is measured, and only its ceiling is gated
+## The size band
 
-The `rich` band is **2,000–3,500 tokens** (ADR-217, `docs/decisions/ADR-217-rich-class-band-measured-and-enforced.md`).
-It was 2,000–5,000 and enforced by nothing until that record: measured with the
-exact BPE tokenizer, the largest rich artifact in the tree is 3,331 tokens, so
-the old ceiling described no artifact that existed. An unused permission costs
-nothing until someone uses it.
-
-`lint_token_budget_discipline.ts` gates the **ceiling** and publishes every rich
-artifact's size on the green path. It does **not** gate the floor, and that is a
-finding rather than an omission: running the check once surfaced a 1,931-token
-skill legitimately holding the class, because `rich` buys exemption from
-condensation — a claim about what compression would *lose*, not about file size.
-The published study supplies a degradation threshold, which is a ceiling.
-Nothing measures a minimum.
-
-Measurement is exact where `js-tiktoken` resolves and the character proxy where
-it does not; the gate says which, and a proxy reading within its own error
-margin of the ceiling is reported **unresolved** rather than classified.
+`rich` is **2,000–3,500 tokens** (ADR-217); only the ceiling is gated, by
+`lint_token_budget_discipline.ts`. Why no floor, and the approved candidate
+list: `guideline:agent-infra/size-and-scope` § Rich-class size band.
 
 ## Governed by
 
