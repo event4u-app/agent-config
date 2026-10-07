@@ -160,7 +160,9 @@ export function dispositionStopMessage(
     resumeCmd: string,
 ): string {
     const count =
-        blocking > 0 ? `  ${blocking} of them are blocking findings with no status yet.\n` : '';
+        blocking > 0
+            ? `  ${blocking} of them are blocking findings with no disposition yet (no status, or still_open).\n`
+            : '';
     return (
         `the disposition gate refuses ${version}. Its own report:\n` +
         `${gateOutput.trim() || '  (the gate printed nothing — run it directly to see why)'}\n` +
@@ -304,8 +306,9 @@ export function settleFindingsLedger(
 }
 
 /**
- * How many blocking findings carry no status — a figure for the stop message,
- * never the reason for it.
+ * How many blocking findings carry no disposition — no status, or `still_open`,
+ * which a blocking row may not rest on — a figure for the stop message, never
+ * the reason for it.
  *
  * The gate refuses for more shapes than this counts (an unknown status, an
  * empty rationale or verifier, a `fixed` with no commit, a malformed ledger),
@@ -317,7 +320,9 @@ function blockingWithoutDisposition(ledgerAbs: string): number {
     }
     try {
         const ledger = parse_ledger(fs.readFileSync(ledgerAbs, 'utf-8'), ledgerAbs);
-        return ledger.findings.filter((f) => isBlocking(f, ledger.release) && !f.status).length;
+        return ledger.findings.filter(
+            (f) => isBlocking(f, ledger.release) && (!f.status || f.status.trim() === 'still_open'),
+        ).length;
     } catch {
         return 0;
     }

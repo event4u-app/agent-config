@@ -397,9 +397,9 @@ function runGate(dir: string, release: string): { code: number; out: string } {
     return { code: res.status ?? 1, out: `${res.stdout ?? ''}${res.stderr ?? ''}` };
 }
 
-function ledgerDir(body: unknown): string {
+function ledgerDir(body: unknown, version = '1.0.0'): string {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'cfd-empty-'));
-    fs.writeFileSync(path.join(dir, '1.0.0.json'), JSON.stringify(body, null, 2) + '\n', 'utf-8');
+    fs.writeFileSync(path.join(dir, `${version}.json`), JSON.stringify(body, null, 2) + '\n', 'utf-8');
     return dir;
 }
 
@@ -451,6 +451,20 @@ describe('exit codes — a present-but-empty ledger is not the same state as an 
         const r = runGate(dir, '1.0.0');
         expect(r.code).toBe(1);
         expect(r.out).toContain('no_findings_reason');
+    });
+
+    it('the CLI passes the ledger release to the cutoff: an open medium security row is red only after it', () => {
+        const [maj, min] = MEDIUM_SECURITY_BLOCKS_AFTER.split('.').map(Number) as [number, number];
+        const after = `${maj}.${min + 1}.0`;
+        const row = finding({ severity: 'medium', kind: 'security' });
+        const atDir = ledgerDir(
+            { schema_version: 1, release: MEDIUM_SECURITY_BLOCKS_AFTER, findings: [row] },
+            MEDIUM_SECURITY_BLOCKS_AFTER,
+        );
+        expect(runGate(atDir, MEDIUM_SECURITY_BLOCKS_AFTER).code).toBe(0);
+        const later = runGate(ledgerDir({ schema_version: 1, release: after, findings: [row] }, after), after);
+        expect(later.code).toBe(1);
+        expect(later.out).toContain('no disposition status');
     });
 
     it('present + dispositioned findings exits 0 and needs no reason', () => {
