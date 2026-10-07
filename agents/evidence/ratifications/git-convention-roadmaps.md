@@ -24,7 +24,7 @@ gate reads this file before every push.
 `src/scripts/hooks/block_config_weakening.ts`. The change adds one basename, `.git-convention.yml`, to
 `CLASS_C_BASENAMES` — the files whose class-C keys an agent may not write. The new file carries
 `git.commit_format`, `git.branch_pattern` and `git.update_strategy`, all class C, as the committed team convention
-decided in ADR-282.
+decided in ADR-283.
 
 ```
 ONE ENTRY IS ADDED TO A REFUSAL LIST. NONE IS REMOVED OR ALTERED.
@@ -48,7 +48,7 @@ The AI council reviewed the diff on 2026-10-07 with two providers present after 
   protection of the newly added file only. It cannot weaken coverage that existed before. The seat asked for a
   regression test, which exists (line 154 of the test above).
 - **One seat (anthropic):** `.agent-settings.yml` is guarded in both spellings, and the new entry has only `.yml`.
-  ADR-282 names `.git-convention.yml` alone and the carrier reader reads no other spelling, so a `.yaml` variant is
+  ADR-283 names `.git-convention.yml` alone and the carrier reader reads no other spelling, so a `.yaml` variant is
   never honoured as a declaration and needs no fence.
 
 Neither seat found a weakening vector.

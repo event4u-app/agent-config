@@ -5,7 +5,7 @@
 > Council record for `road-to-a-git-convention-that-reaches-every-checkout`
 > step 2.2. Run 2026-10-07. Verdict: option (i), a `git:` section in a tracked
 > repository-root file of its own, `.git-convention.yml`. Written down as
-> ADR-282.
+> ADR-283.
 
 ## Attendance, honestly
 
@@ -68,7 +68,7 @@ participates, what a branch-local change is, what `malformed` does — were not
 put to the council. They follow from the stated constraints and from the
 owner's decision D8 of the roadmap (the committed carrier overrides every
 developer layer for `git.commit_format` and `git.branch_pattern`) and are
-recorded in ADR-282 as such.
+recorded in ADR-283 as such.
 
 The raw responses of both runs are gitignored runtime artefacts and are not
 committed; the substance of each seat's answer is reproduced above.

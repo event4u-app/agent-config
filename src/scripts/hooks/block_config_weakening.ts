@@ -126,7 +126,7 @@ const _PATH_KEYS: readonly string[] = ['file_path', 'path', 'target_file', 'file
 export type ConfigKind = 'allowlist' | 'advisory' | 'class-c' | null;
 
 /**
- * Project settings files, and the committed git-convention carrier (ADR-282),
+ * Project settings files, and the committed git-convention carrier (ADR-283),
  * whose keys this guard fences. User-global files are
  * never in reach — the hook only sees a path a tool call named, and the writes
  * that reach `~/.event4u/` go through `settings:set`, which applies its own

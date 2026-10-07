@@ -4,7 +4,7 @@
  * In global mode the route writes the user-global file, and `load_agent_settings`
  * discards `git.*` keys from that file, so a value saved there has no effect in
  * any repository. The form is not offered those keys, and a non-default value is
- * refused with the place a team declares them instead (ADR-282). A template
+ * refused with the place a team declares them instead (ADR-283). A template
  * default is accepted: the form round-trips it, and `upgrade` inserts it too.
  *
  * In every mode a value goes through the same check `git:convention show` and

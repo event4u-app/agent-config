@@ -10,7 +10,7 @@ when the value in force is `malformed`, `invalid`, `discarded` or
 prints, never fall back to `merge`. A candidate in one of these states is
 printed as a warning with exit 0: the update reads only the value in force.
 A team declares the strategy in `.git-convention.yml` at the repository root
-(ADR-282), and it is read at the commit the branch is judged against — the
+(ADR-283), and it is read at the commit the branch is judged against — the
 pull request's base — so a value changed on this branch is a candidate `show`
 prints and applies only once it lands there; `unresolvable` means that commit
 could not be read:

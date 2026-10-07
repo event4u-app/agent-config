@@ -29,7 +29,7 @@ on user request.
 
 The `git.*` keys (`commit_format`, `branch_pattern`, `update_strategy`) have a
 fourth home a team uses instead: `.git-convention.yml` at the repository root,
-committed, read over every file above (ADR-282). `update_strategy` is read from
+committed, read over every file above (ADR-283). `update_strategy` is read from
 it at the commit a pull request is judged against, the other two at `HEAD`.
 The team file carries no `git.*` key.
 

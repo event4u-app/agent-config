@@ -99,7 +99,7 @@ user-global layer: `{ "keys": ["git.commit_format", "git.branch_pattern",
 "git.update_strategy"], "reason": "…" }`. The settings loader discards those keys
 from a user-global file, so the route removes the `git` section from `values`
 and from `schema` instead of offering a field whose value would have no effect.
-A team declares them in `.git-convention.yml` at the repository root (ADR-282).
+A team declares them in `.git-convention.yml` at the repository root (ADR-283).
 
 `legacyHints` is an out-of-band sidecar carrying values that have moved
 out of `settingsSchema` but still live in a pre-v2 file on disk. Keys

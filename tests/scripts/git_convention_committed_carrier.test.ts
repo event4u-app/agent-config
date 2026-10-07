@@ -1,5 +1,5 @@
 /**
- * The committed `.git-convention.yml` (ADR-282) as behaviour, one authority row
+ * The committed `.git-convention.yml` (ADR-283) as behaviour, one authority row
  * of the ADR at a time.
  *
  * `update_strategy` is read at the commit the branch is judged against, so a
@@ -110,7 +110,7 @@ describe('update_strategy is read at the target commit', () => {
         expect(r.out).toContain('git-convention-invalid');
     });
 
-    it('a carrier whose git: is not a map is invalid, not malformed (ADR-282 authority table)', () => {
+    it('a carrier whose git: is not a map is invalid, not malformed (ADR-283 authority table)', () => {
         const f = fixture(tmp, { [CARRIER_PATH]: 'git: rebase\n' });
         advanceMain(f);
         const r = runSync(f.work);

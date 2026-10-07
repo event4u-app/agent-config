@@ -183,7 +183,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   every rebase, fixup or autosquash. A team declares the keys in
   `.git-convention.yml`, a tracked file at the repository root that overrides
   every developer settings file and where either value is a declaration
-  (ADR-282): `git.update_strategy` is read from it at the commit a pull request
+  (ADR-283): `git.update_strategy` is read from it at the commit a pull request
   is judged against, so a worktree, a fresh clone and CI agree and a pull
   request cannot change the strategy its own update is judged by;
   `git.commit_format` and `git.branch_pattern` are read at `HEAD`. Without the

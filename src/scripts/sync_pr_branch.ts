@@ -822,7 +822,7 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
 /**
  * `git.update_strategy` in force for the repository: the committed
  * `.git-convention.yml` at the target commit, over the developer layers
- * (ADR-282). Absent everywhere reads as `merge`, the behaviour before the key
+ * (ADR-283). Absent everywhere reads as `merge`, the behaviour before the key
  * existed; a file that does not parse, a typo, a user-global-only value and a
  * target commit that cannot be resolved are refusals here.
  */

@@ -1,5 +1,5 @@
 ---
-adr: 282
+adr: 283
 status: accepted
 date: 2026-10-07
 decision: a-teams-git-convention-is-carried-by-a-tracked-root-file-of-its-own
@@ -33,7 +33,7 @@ review_trigger: >-
   developer (the revisit condition of the owner's decision D8).
 ---
 
-# ADR-282 — A team's git convention is carried by a tracked root file of its own
+# ADR-283 — A team's git convention is carried by a tracked root file of its own
 
 ## Status
 

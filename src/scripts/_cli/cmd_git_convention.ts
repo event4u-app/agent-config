@@ -194,7 +194,7 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
             if (cand.reason !== null) out.push(`  ⚠️  candidate only, not in force: ${describeRefusal(cand)}`);
         }
     }
-    out.push(`team declaration: ${CARRIER_PATH} at the repository root (ADR-282)`);
+    out.push(`team declaration: ${CARRIER_PATH} at the repository root (ADR-283)`);
     if (validators.length === 0) out.push('commit-message validator: none in this repository');
     for (const v of validators) out.push(`commit-message validator: ${v.kind} at ${v.path} — also runs at commit time and may be stricter than git.commit_format`);
     return { code, out, err: [] };

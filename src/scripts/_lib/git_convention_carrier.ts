@@ -1,6 +1,6 @@
 /**
  * The committed git convention: `.git-convention.yml` at the repository root
- * (ADR-282), layered over the developer settings files.
+ * (ADR-283), layered over the developer settings files.
  *
  * The developer files are gitignored, so a convention declared only there
  * reaches the checkout it was written in and no worktree, fresh clone or CI

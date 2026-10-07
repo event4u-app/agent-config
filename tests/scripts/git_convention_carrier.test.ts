@@ -5,7 +5,7 @@
  * gitignored, so a worktree, a fresh clone and CI never saw a declared `rebase`
  * and merged; the gitignored local layer and a subdirectory's own project file
  * could each override what the repository root declared. With the convention
- * committed in `.git-convention.yml` (ADR-282) those three facts are reversed.
+ * committed in `.git-convention.yml` (ADR-283) those three facts are reversed.
  *
  * Two stay as they were, by decision: the legacy team file and the user-global
  * file the GUI writes still carry no `git.*` key, because the carrier is where

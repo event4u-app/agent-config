@@ -58,7 +58,7 @@ another chunk's scope.
 resolves the convention in this order — the first that applies decides:
 
 1. **A declaration** — `git.commit_format` in `.git-convention.yml` (either
-   value; ADR-282), or a developer settings file value other than the template
+   value; ADR-283), or a developer settings file value other than the template
    default. The rule is one for both values: `settings:sync` writes the
    template default into every project file, so a default there cannot be told
    apart from an insert and never outranks an approved card, whichever value
