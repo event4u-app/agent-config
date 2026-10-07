@@ -6,9 +6,9 @@
  * reaches the checkout it was written in and no worktree, fresh clone or CI
  * run. The carrier is tracked, and where it is read from is the authority:
  *
- * - `update_strategy` at the resolved TARGET commit — the open pull request's
- *   base, else the default branch, else an explicit `--base` — as the server
- *   reports it. The strategy that judges a pull request must not come from that
+ * - `update_strategy` at the resolved TARGET commit — an explicit `--base` when
+ *   given, else the open pull request's base, else the default branch — as the
+ *   server reports it. The strategy that judges a pull request must not come from that
  *   pull request, the same ruling `branch_convergence.ts` records; a value on
  *   the branch is a candidate and is never adopted.
  * - `commit_format` and `branch_pattern` at `HEAD`, at the repository root,

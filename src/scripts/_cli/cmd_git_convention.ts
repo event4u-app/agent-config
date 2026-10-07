@@ -6,7 +6,7 @@
  * that needs the strategy, the commit format or the branch pattern can only ask
  * the `agent-config` binary. `settings:get` answers "not set" for a file that
  * does not parse, which is the reading that turns an unreadable `rebase` into a
- * merge; this verb reports the five states of `_lib/git_convention.ts` instead.
+ * merge; this verb reports the six states of `_lib/git_convention.ts` instead.
  *
  * Subcommands live in one table so a new one is a row, not a new verb.
  *

@@ -109,6 +109,15 @@ describe('update_strategy is read at the target commit', () => {
         expect(r.out).toContain('git-convention-invalid');
     });
 
+    it('a carrier whose git: is not a map is invalid, not malformed (ADR-282 authority table)', () => {
+        const f = fixture(tmp, { [CARRIER_PATH]: 'git: rebase\n' });
+        advanceMain(f);
+        const r = runSync(f.work);
+        expect(r.code).toBe(4);
+        expect(r.out).toContain('git-convention-invalid');
+        expect(r.out).not.toContain('git-convention-malformed');
+    });
+
     it('a target the server does not know is exit 4, never merge', () => {
         const f = fixture(tmp);
         advanceMain(f);

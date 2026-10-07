@@ -78,12 +78,13 @@ request must not come from that pull request.
 
 | Key | Deciding layer | Does the local layer participate? | A branch-local change | `malformed` |
 |---|---|---|---|---|
-| `git.update_strategy` | `.git-convention.yml` at the resolved target commit — the open pull request's base, else the default branch, else `--base` when given — as the server reports it. Without a carrier that sets the key there, the developer layers read at the repository root decide, as before. | Only when the carrier at the target commit does not set the key. | A candidate, never adopted: an edit on the branch or in the working tree is shown by `git:convention show` and takes effect once it lands on the target. | The blob at the target commit does not parse, or its `git:` is not a map → exit 4 from `sync_pr_branch`, `git-convention-malformed`. A target commit that cannot be resolved is exit 4 as well, `git-convention-unresolvable`, never `merge`. |
+| `git.update_strategy` | `.git-convention.yml` at the resolved target commit — an explicit `--base` when given, else the open pull request's base, else the default branch — as the server reports it. Without a carrier that sets the key there, the developer layers read at the repository root decide, as before. | Only when the carrier at the target commit does not set the key. | A candidate, never adopted: an edit on the branch or in the working tree is shown by `git:convention show` and takes effect once it lands on the target. | The blob at the target commit does not parse → exit 4 from `sync_pr_branch`, `git-convention-malformed`. A blob that parses but whose `git:` is not a map is `invalid` (`git-convention-invalid`, exit 4): the file was read, its `git:` value is outside the schema. A target commit that cannot be resolved is exit 4 as well, `git-convention-unresolvable`, never `merge`. |
 | `git.commit_format` | `.git-convention.yml` committed at `HEAD`, at the repository root; it overrides every developer layer, the local layer included (D8). Without a carrier that sets the key, the developer layers read at the repository root decide, never per subdirectory. | Only when the carrier does not set the key. | A committed edit is in force for the branch that carries it, because it shapes that branch's own commits; an uncommitted edit is a candidate shown by `show`. | The blob at `HEAD` does not parse → `malformed`; `show` exits 1 and names the file. |
 | `git.branch_pattern` | As `git.commit_format`. | As `git.commit_format`. | As `git.commit_format`. | As `git.commit_format`; a pattern outside the closed alphabet is `invalid`. |
 
-A value outside the schema is `invalid` on every key and is refused the same way
-`malformed` is.
+A value outside the schema — a `git:` that is not a map included — is `invalid`
+on every key and is refused the same way `malformed` is. `malformed` is kept for
+a file whose content is unknown because it does not parse.
 
 ## Consequences
 

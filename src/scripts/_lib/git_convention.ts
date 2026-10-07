@@ -6,7 +6,7 @@
  * for a setting whose default is harmless and wrong for these three: a team that
  * declares `rebase` and gets a merge commit because an unrelated line elsewhere
  * in the file has an unclosed bracket has had its convention overridden by a
- * default nobody chose. So every key is reported with one of five states, and a
+ * default nobody chose. So every key is reported with one of six states, and a
  * caller that acts on the value refuses on anything but `valid` or `absent`:
  *
  * - `valid`     — the deciding layer parsed and the value is allowed;
