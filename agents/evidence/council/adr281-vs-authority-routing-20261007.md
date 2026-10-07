@@ -29,9 +29,11 @@ completed, not a second one on the same work.
 as `0009ecd7c`. A ratified council decision taken under the owner's stated
 frame.
 
-**Record B** — `docs/decisions/ADR-281-council-confirmed-self-modification.md`,
-open in PR #2251, declaring `supersedes: ADR-268, ADR-118` and already marked
-`status: accepted`.
+**Record B** — ADR-281, `council-confirmed-self-modification`, which declares
+`supersedes: ADR-268, ADR-118` and is already marked `status: accepted`. It is
+cited by number rather than by path: the file exists only on PR #2251's branch,
+so a path reference from the trunk would dangle — and the fact that it has not
+landed is part of what this record concludes.
 
 They were written the same day by two sessions that did not read each other.
 
