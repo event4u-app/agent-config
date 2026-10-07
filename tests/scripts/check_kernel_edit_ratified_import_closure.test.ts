@@ -15,7 +15,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { classifyPaths, evaluate } from '../../src/scripts/check_kernel_edit_ratified.js';
+import { classifyPaths, closureArrivals, evaluate } from '../../src/scripts/check_kernel_edit_ratified.js';
 import { RATIFICATION_DIR } from '../../src/scripts/_lib/ratification_artifact.js';
 
 const POLICY = 'src/scripts/hooks/concern_failure_policy.ts';
@@ -95,5 +95,41 @@ describe('the fence follows the dispatcher import closure', () => {
         );
         fs.writeFileSync(path.join(hooks, 'exit_codes.ts'), 'export const EXIT_BLOCK = 2;\n');
         expect(evaluate(['src/scripts/hooks/timeout_policy.ts'], root, 2).exitCode).toBe(1);
+    });
+});
+
+// The two gaps the first ratification round refused on, pinned in both
+// directions. A name-based classifier cannot see a verdict module with neutral
+// names, so the module is gated at the moment it becomes reachable; and a
+// module the base classes as verdict cannot be declassified by an unrecorded
+// diff that strips its names.
+describe('what the classifier cannot see by name', () => {
+    function headTree(files: Record<string, string>): void {
+        for (const [rel, body] of Object.entries(files)) {
+            fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+            fs.writeFileSync(path.join(root, rel), body);
+        }
+    }
+
+    it('a neutrally-named module newly reachable from the dispatcher is gated, and named', () => {
+        headTree({
+            'src/scripts/hooks/dispatch_hook.ts': "import { acceptsExecution } from './gatekeeper.js';\n",
+            'src/scripts/hooks/gatekeeper.ts': 'export function acceptsExecution(): boolean { return true; }\n',
+        });
+        expect(closureArrivals(root)).toContain('src/scripts/hooks/gatekeeper.ts');
+        expect(evaluate(['src/scripts/hooks/gatekeeper.ts'], root, 2).exitCode).toBe(1);
+    });
+
+    it('a module already in the base closure as payload stays record-free', () => {
+        expect(closureArrivals(root)).toEqual([]);
+        expect(evaluate(['src/scripts/hooks/py_json_dumps.ts'], root, 2).exitCode).toBe(0);
+    });
+
+    it('stripping the names that classed a base verdict module does not declassify it', () => {
+        headTree({
+            'src/scripts/hooks/dispatch_hook.ts': "import { decide } from './concern_failure_policy.js';\n",
+            'src/scripts/hooks/concern_failure_policy.ts': 'export function decide(): number { return 2; }\n',
+        });
+        expect(evaluate([POLICY], root, 2).exitCode).toBe(1);
     });
 });

@@ -222,17 +222,47 @@ export function raiseFindings(baseRaw: string | null, workingRaw: string): strin
     const workingLog = Array.isArray(working['raise_log']) ? (working['raise_log'] as unknown[]) : [];
     const seen = new Set(baseLog.map((e) => JSON.stringify(e)));
     const gained = workingLog.filter((e) => !seen.has(JSON.stringify(e)));
-    const matching = gained.some(
-        (e) => typeof e === 'object' && e !== null && (e as Record<string, unknown>)['to'] === workingMax,
-    );
-    if (matching) {
-        return [];
+    const matching = gained.find((e) => isRecord(e) && e['to'] === workingMax);
+    if (matching === undefined) {
+        return [
+            `max_bytes raised from ${String(baseMax)} to ${String(workingMax)} against the base revision ` +
+                `with no new raise_log entry whose \`to\` is ${String(workingMax)}. A raise needs a recorded ` +
+                `reason in ${BUDGET_REL}'s raise_log naming what was added and why it could not be avoided.`,
+        ];
     }
-    return [
-        `max_bytes raised from ${String(baseMax)} to ${String(workingMax)} against the base revision ` +
-            `with no new raise_log entry whose \`to\` is ${String(workingMax)}. A raise needs a recorded ` +
-            `reason in ${BUDGET_REL}'s raise_log naming what was added and why it could not be avoided.`,
-    ];
+    const problems = raiseEntryProblems(matching as Record<string, unknown>, baseMax);
+    return problems.length === 0
+        ? []
+        : [`the raise_log entry for ${String(workingMax)} is incomplete: ${problems.join('; ')}.`];
+}
+
+function isRecord(v: unknown): v is Record<string, unknown> {
+    return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
+/** The prose fields an entry must carry, matching the entry the log already holds. */
+const RAISE_REASON_FIELDS = ['what_was_added', 'why_it_could_not_be_avoided'] as const;
+
+/**
+ * What a raise entry must say. A bare `{ "to": N }` matched the first version
+ * of this rule, which a ratification reviewer refused on: a log entry with no
+ * reason is the empty log the rule exists to refuse, wearing a key.
+ */
+export function raiseEntryProblems(entry: Record<string, unknown>, baseMax: number): string[] {
+    const problems: string[] = [];
+    if (entry['from'] !== baseMax) {
+        problems.push(`\`from\` must be the base ceiling ${String(baseMax)}`);
+    }
+    if (typeof entry['date'] !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(entry['date'])) {
+        problems.push('`date` must be YYYY-MM-DD');
+    }
+    for (const field of RAISE_REASON_FIELDS) {
+        const v = entry[field];
+        if (typeof v !== 'string' || v.trim().length < 20) {
+            problems.push(`\`${field}\` must say what happened, in at least a sentence`);
+        }
+    }
+    return problems;
 }
 
 /** The base revision's budget file, `null` when absent there, `undefined` when no base resolves. */
@@ -393,6 +423,17 @@ export function main(argv: readonly string[] = process.argv.slice(2), root: stri
     const baseAt = argv.indexOf('--base-ref');
     const baseBudget = readBaseBudget(root, baseAt >= 0 ? argv[baseAt + 1] : undefined);
     if (baseBudget === undefined) {
+        // In CI an unresolvable base is a broken checkout, not a registration
+        // diff: refusing there is the difference between a rule and a notice.
+        // Locally a missing base is ordinary (a fresh clone without origin), so
+        // it is said rather than failed.
+        if (process.env['GITHUB_ACTIONS'] === 'true') {
+            process.stderr.write(
+                'check_hook_bundle_composition: no base revision resolved in CI — the max_bytes raise ' +
+                    'rule cannot be evaluated, and this gate fails closed rather than skip it\n',
+            );
+            return 2;
+        }
         process.stdout.write('raise rule: no base revision resolved — the max_bytes raise check was not evaluated\n');
     } else {
         findings.push(...raiseFindings(baseBudget, fs.readFileSync(path.join(root, BUDGET_REL), 'utf-8')));

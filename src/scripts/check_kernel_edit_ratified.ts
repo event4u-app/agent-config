@@ -75,7 +75,7 @@ import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { GateLedger } from './_lib/gate_ledger.js';
-import { verdictModules } from './_lib/dispatch_import_closure.js';
+import { dispatchImportClosure, verdictModules } from './_lib/dispatch_import_closure.js';
 import { is_kernel_rule } from './_lib/kernel_rules.js';
 import { reportScanned } from './_lib/scan_scope.js';
 import {
@@ -226,6 +226,38 @@ export function derivedPlumbing(root: string = REPO): readonly string[] {
 }
 
 /**
+ * Modules that ARRIVE in the dispatcher's closure: non-concern modules present
+ * in the closure under `root` and absent from the closure under `baseRoot`.
+ *
+ * The classifier reads names, so a verdict-deciding module with neutral names
+ * (`acceptsExecution(): boolean`, no exit constant) reads as `payload` or
+ * `neither` — the gap the first ratification round of this change refused it
+ * on. A name-based classifier cannot close that gap; what can is watching the
+ * one moment such a module becomes reachable. So any module newly reachable
+ * from the dispatcher is gated on the diff that makes it reachable, whatever
+ * its class, and a reviewer reads it once. Modules already in the base closure
+ * are judged by class, so routine edits to a payload helper stay record-free.
+ *
+ * The other direction needs no extra rule: a module the base classes as
+ * `verdict` stays watched through the union in `evaluate` even when the head
+ * strips the names that classed it, so declassifying one is itself a gated
+ * edit of it.
+ *
+ * Meaningful only where the two trees differ — in CI, where the gate's code is
+ * the base revision's and `root` is the head. A local run with `root` equal to
+ * the gate's own tree sees no arrivals, and says nothing it cannot measure.
+ */
+export function closureArrivals(root: string, baseRoot: string = REPO): string[] {
+    if (path.resolve(root) === path.resolve(baseRoot)) {
+        return [];
+    }
+    const base = new Set(dispatchImportClosure(baseRoot).map((e) => e.path));
+    return dispatchImportClosure(root)
+        .filter((e) => e.class !== 'concern' && !base.has(e.path))
+        .map((e) => e.path);
+}
+
+/**
  * A kernel rule, in the source tree or in any projection.
  *
  * The reach is deliberately the same as the retired hook's: any path whose
@@ -365,7 +397,9 @@ export function evaluate(
     // The union of the closure read from the tree under review and from this
     // script's own tree: under CI the gate code is the base revision's and
     // `root` is the head, so a module present on either side is watched.
-    const gated = classifyPaths(files, [...new Set([...derivedPlumbing(), ...derivedPlumbing(root)])]);
+    const gated = classifyPaths(files, [
+        ...new Set([...derivedPlumbing(), ...derivedPlumbing(root), ...closureArrivals(root)]),
+    ]);
     const scanned = files.length;
 
     // Every changed path is a planned target: the gate's denominator is the
