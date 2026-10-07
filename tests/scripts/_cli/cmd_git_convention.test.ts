@@ -23,10 +23,24 @@ afterEach(() => {
     else process.env.EVENT4U_CONFIG_HOME = prevHome;
 });
 
+const git = (cwd: string, ...args: string[]): string =>
+    execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', '-c', 'commit.gpgsign=false', ...args], {
+        cwd,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+/** A checkout with an `origin`, so `update_strategy` has a target commit to be read at. */
 function repo(settings: string | null): string {
-    const dir = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'git-convention-cli-')));
-    made.push(dir);
-    execFileSync('git', ['init', '-q', dir]);
+    const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'git-convention-cli-')));
+    made.push(root);
+    const remote = path.join(root, 'remote.git');
+    git(root, 'init', '-q', '--bare', '-b', 'main', remote);
+    const dir = path.join(root, 'work');
+    git(root, 'init', '-q', '-b', 'main', dir);
+    git(dir, 'commit', '-q', '--allow-empty', '-m', 'seed');
+    git(dir, 'remote', 'add', 'origin', remote);
+    git(dir, 'push', '-q', '-u', 'origin', 'main');
     if (settings !== null) fs.writeFileSync(path.join(dir, '.agent-settings.yml'), settings);
     return dir;
 }

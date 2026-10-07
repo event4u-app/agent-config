@@ -67,13 +67,8 @@ import { fileURLToPath } from "node:url";
 
 import { runGateCli, runSelfTest, type SelfTestCase } from "./_lib/gate_self_test.js";
 import { workspaceIdentity } from "./_lib/git_common_dir.js";
-import {
-  checkoutSource,
-  describeRefusal,
-  isRefusal,
-  readGitConventionKey,
-  type GitConventionReading,
-} from "./_lib/git_convention.js";
+import { describeRefusal, isRefusal, type GitConventionReading } from "./_lib/git_convention.js";
+import { readCommittedConvention } from "./_lib/git_convention_carrier.js";
 import { reportScanned } from "./_lib/scan_scope.js";
 
 // ledger-exempt: single remote-ref probe — the entire scope is ONE ls-remote answer (0 or 1 refs) resolved to one aggregate ancestor verdict, and every empty path already publishes its reason via reportScanned allowEmpty; there is no per-target collection to account.
@@ -647,7 +642,9 @@ export function main(
   console.error("    Pushing now opens a PR that may conflict, and worse: another branch");
   console.error("    may already have shipped what this one is implementing.");
   console.error("");
-  for (const line of behindRemedy(base, readGitConventionKey("update_strategy", checkoutSource(process.cwd())))) {
+  const strategy = readCommittedConvention(process.cwd(), { override: `origin/${base}`, keys: ["update_strategy"] }).readings
+    .update_strategy as GitConventionReading;
+  for (const line of behindRemedy(base, strategy)) {
     console.error(line);
   }
   console.error("");

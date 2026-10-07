@@ -209,7 +209,7 @@ writes it into settings files and the rename becomes a migration.
       carries one authority row per key: layer, whether the local layer
       participates, what a branch-local change is, and what `malformed` does.
       verify: `test -n "$(git ls-files docs/decisions | grep git-convention-carrier)" && grep -q '| council' agents/roadmaps/road-to-a-git-convention-that-reaches-every-checkout.md` -> 0
-- [ ] **2.3 The reader resolves the committed declaration.**
+- [x] **2.3 The reader resolves the committed declaration.**
       `update_strategy` is read at the target commit through the convergence
       reader, independently of the `not-required` early return at
       `sync_pr_branch.ts:482`; a branch without a pull request resolves the

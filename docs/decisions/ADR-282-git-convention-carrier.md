@@ -21,8 +21,10 @@ evidence:
     - agents/roadmaps/road-to-a-git-convention-that-reaches-every-checkout.md
     - src/scripts/_lib/branch_convergence.ts
     - src/scripts/_lib/git_convention.ts
+    - src/scripts/_lib/git_convention_carrier.ts
     - src/scripts/sync_pr_branch.ts
     - tests/scripts/git_convention_carrier.test.ts
+    - tests/scripts/git_convention_committed_carrier.test.ts
 review_trigger: >-
   Three or more tracked, SHA-pinned team policies exist at the repository root —
   then they are consolidated into one repository-policy file instead of adding
@@ -108,8 +110,11 @@ A value outside the schema is `invalid` on every key and is refused the same way
   with attendance stated per run.
 - `tests/scripts/git_convention_carrier.test.ts` — the carrier facts, before and
   after the carrier: a worktree that merged while the primary refused.
+- `tests/scripts/git_convention_committed_carrier.test.ts` — the authority rows
+  above as behaviour.
 
 ## References
 
+- `src/scripts/_lib/git_convention_carrier.ts` — the reader of the carrier.
 - `src/scripts/_lib/branch_convergence.ts` — the 2026-09-03 precedent for a
   policy read at the target commit only.

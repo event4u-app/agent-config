@@ -15,7 +15,9 @@
  *                 value is unknowable;
  * - `invalid`   — the deciding layer sets a value the schema does not allow;
  * - `discarded` — only a user-global file sets the key, and the loader drops
- *                 user-global keys that are not whitelisted.
+ *                 user-global keys that are not whitelisted;
+ * - `unresolvable` — the commit a committed declaration must be read at cannot
+ *                 be resolved, so whether it declares anything is unknown.
  *
  * Where the layers come from is a {@link GitConventionSource}, so a reader of a
  * committed declaration can replace the checkout cascade without touching the
@@ -34,7 +36,7 @@ const _require = createRequire(import.meta.url);
 export const GIT_CONVENTION_KEYS = ['commit_format', 'branch_pattern', 'update_strategy'] as const;
 export type GitConventionKey = (typeof GIT_CONVENTION_KEYS)[number];
 
-export type GitConventionState = 'valid' | 'absent' | 'malformed' | 'invalid' | 'discarded';
+export type GitConventionState = 'valid' | 'absent' | 'malformed' | 'invalid' | 'discarded' | 'unresolvable';
 
 /** Mirrors the enums in `agent-settings.schema.json`; a test pins the parity. */
 export const GIT_CONVENTION_ENUMS: Partial<Record<GitConventionKey, readonly string[]>> = {
@@ -42,7 +44,11 @@ export const GIT_CONVENTION_ENUMS: Partial<Record<GitConventionKey, readonly str
     update_strategy: ['merge', 'rebase'],
 };
 
-export type GitConventionReason = 'git-convention-malformed' | 'git-convention-invalid' | 'git-convention-discarded';
+export type GitConventionReason =
+    | 'git-convention-malformed'
+    | 'git-convention-invalid'
+    | 'git-convention-discarded'
+    | 'git-convention-unresolvable';
 
 export interface GitConventionReading {
     key: GitConventionKey;
@@ -77,6 +83,11 @@ function _parse(p: string): Pick<GitConventionLayer, 'parsed' | 'data'> {
         if ((err as NodeJS.ErrnoException).code === 'ENOENT') return { parsed: 'absent', data: null };
         return { parsed: 'malformed', data: null };
     }
+    return parseLayerText(text);
+}
+
+/** One layer's text, parsed the way the settings loader parses a file. */
+export function parseLayerText(text: string): Pick<GitConventionLayer, 'parsed' | 'data'> {
     let data: unknown;
     try {
         const YAML = _require('yaml') as typeof YamlModule;
@@ -185,15 +196,14 @@ function _defaults(): GitConventionDefaults {
     return out;
 }
 
-function _reading(
+export function conventionReading(
     key: GitConventionKey,
     state: GitConventionState,
     value: string | null,
     source: string | null,
     detail: string | null = null,
 ): GitConventionReading {
-    const reason: GitConventionReason | null =
-        state === 'malformed' || state === 'invalid' || state === 'discarded' ? `git-convention-${state}` : null;
+    const reason: GitConventionReason | null = isRefusal(state) ? `git-convention-${state}` : null;
     return { key, value, source, state, reason, detail };
 }
 
@@ -206,24 +216,24 @@ export function readGitConventionKey(
     const fallback = defaults[key] ?? null;
     for (const layer of [...layers].reverse().filter((l) => l.carries)) {
         if (layer.parsed === 'malformed') {
-            return _reading(key, 'malformed', null, layer.path, 'the file does not parse, so the value it may set is unknown');
+            return conventionReading(key, 'malformed', null, layer.path, 'the file does not parse, so the value it may set is unknown');
         }
         const found = _lookup(layer.data, key);
         if (!found.present) continue;
-        if ('notAMap' in found) return _reading(key, 'invalid', null, layer.path, '`git:` is not a map');
+        if ('notAMap' in found) return conventionReading(key, 'invalid', null, layer.path, '`git:` is not a map');
         if (typeof found.value !== 'string') {
-            return _reading(key, 'invalid', String(found.value), layer.path, 'the value is not a string');
+            return conventionReading(key, 'invalid', String(found.value), layer.path, 'the value is not a string');
         }
         const value = _normalise(key, found.value);
         const why = invalidReason(key, value);
-        return why === null ? _reading(key, 'valid', value, layer.path) : _reading(key, 'invalid', value, layer.path, why);
+        return why === null ? conventionReading(key, 'valid', value, layer.path) : conventionReading(key, 'invalid', value, layer.path, why);
     }
     for (const layer of [...layers].reverse().filter((l) => !l.carries && l.parsed === 'valid')) {
         const found = _lookup(layer.data, key);
         if (!found.present || 'notAMap' in found) continue;
         const value = typeof found.value === 'string' ? _normalise(key, found.value) : String(found.value);
         if (fallback !== null && value === _normalise(key, fallback)) continue;
-        return _reading(
+        return conventionReading(
             key,
             'discarded',
             value,
@@ -231,7 +241,7 @@ export function readGitConventionKey(
             'user-global files do not carry git.* keys; set it in the project settings file',
         );
     }
-    return _reading(key, 'absent', fallback, null);
+    return conventionReading(key, 'absent', fallback, null);
 }
 
 export function readGitConvention(
@@ -245,7 +255,7 @@ export function readGitConvention(
 
 /** True for every state a caller must not act on. */
 export function isRefusal(state: GitConventionState): boolean {
-    return state === 'malformed' || state === 'invalid' || state === 'discarded';
+    return state === 'malformed' || state === 'invalid' || state === 'discarded' || state === 'unresolvable';
 }
 
 /** One line naming the reason code, the key and the file. */

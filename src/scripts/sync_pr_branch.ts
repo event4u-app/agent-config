@@ -29,10 +29,12 @@
  * Exit codes: 0 = already current, or merged cleanly · 1 = conflict, or the base
  * could not be resolved · 2 = internal error · 3 = behind, and
  * `git.update_strategy` is not `merge`, so the merge was refused · 4 =
- * `git.update_strategy` cannot be read (a settings file that does not parse, a
- * value outside the schema, or a value only a user-global file carries), so
- * nothing was checked or merged; the line carries a stable reason code
- * (`git-convention-malformed` / `-invalid` / `-discarded`) and the file.
+ * `git.update_strategy` cannot be read (a settings file or a committed
+ * `.git-convention.yml` that does not parse, a value outside the schema, a
+ * value only a user-global file carries, or a target commit that cannot be
+ * resolved), so nothing was checked or merged; the line carries a stable reason
+ * code (`git-convention-malformed` / `-invalid` / `-discarded` /
+ * `-unresolvable`) and the file.
  * `scanned:` on every path.
  */
 
@@ -46,14 +48,17 @@ import {
     loadPolicyAtSha,
     type ShaFileReader,
 } from './_lib/branch_convergence.js';
+import { describeRefusal, isRefusal, type GitConventionReading } from './_lib/git_convention.js';
 import {
-    checkoutSource,
-    describeRefusal,
-    isRefusal,
-    readGitConventionKey,
-    type GitConventionReading,
-} from './_lib/git_convention.js';
+    makeTargetDeps,
+    parseSymrefDefault,
+    readCommittedConvention,
+    resolveTarget,
+    type TargetDeps,
+} from './_lib/git_convention_carrier.js';
 import { reportScanned } from './_lib/scan_scope.js';
+
+export { parseSymrefDefault };
 
 const NETWORK_TIMEOUT_MS = 8_000;
 
@@ -358,62 +363,13 @@ export class UnresolvableBase extends Error {
  * repository has none, so a live fixture could only ever cover the
  * default-target path.
  */
-export interface BaseDeps {
-    readonly currentBranch: () => string;
-    /** The open PR's `baseRefName`, bare (`release/1.x`), or null. */
-    readonly prBase: (branch: string) => string | null;
-    /** The default branch as a remote-tracking ref (`origin/main`), or null. */
-    readonly defaultBranch: () => string | null;
-    /** The SHA the server reports for a ref right now, or null. */
-    readonly remoteSha: (ref: string) => string | null;
+export interface BaseDeps extends TargetDeps {
     readonly readAtSha: ShaFileReader;
 }
 
 export function makeGitDeps(repo: string): BaseDeps {
     return {
-        currentBranch: (): string => sh('git', ['rev-parse', '--abbrev-ref', 'HEAD'], repo).out.trim(),
-        prBase: (branch: string): string | null => {
-            if (branch === '' || branch === 'HEAD') return null;
-            // The forge knows the REAL base, which matters for a stacked or
-            // release-line PR: measuring against the repo default would compare
-            // against a branch this PR never merges into.
-            const pr = sh('gh', ['pr', 'list', '--head', branch, '--state', 'open', '--json', 'baseRefName', '--limit', '1'], repo);
-            if (!pr.ok) return null;
-            try {
-                const rows = JSON.parse(pr.out || '[]') as Array<{ baseRefName?: string }>;
-                const b = rows[0]?.baseRefName;
-                return typeof b === 'string' && b !== '' ? b : null;
-            } catch {
-                return null;
-            }
-        },
-        // ASK THE SERVER first, and only then fall back to the local ref.
-        //
-        // The local-only form was this module's whole answer until the default
-        // branch became load-bearing here: the policy's `include` needs a ref to
-        // add, and the target-is-default identity check needs one to compare
-        // against. Measured in this worktree on 2026-09-03 — `refs/remotes/
-        // origin/HEAD` is not set, so the local form returned null and
-        // `sync_pr_branch` reported "no open PR and no origin/HEAD" while
-        // `check_branch_freshness`, standing three lines away in the same
-        // sequence, resolved `origin/main` from the server symref and passed.
-        // Two resolvers disagreeing about the base is the defect this roadmap
-        // exists to close, one layer down. Mirrors
-        // `check_branch_freshness.ts:223` `serverDefaultBase`.
-        defaultBranch: (): string | null => {
-            const remote = sh('git', ['ls-remote', '--symref', 'origin', 'HEAD'], repo);
-            const fromServer = remote.ok ? parseSymrefDefault(remote.out) : null;
-            if (fromServer !== null) return fromServer;
-            const head = sh('git', ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD'], repo);
-            return head.ok && head.out.trim() !== '' ? head.out.trim() : null;
-        },
-        remoteSha: (ref: string): string | null => {
-            const bare = ref.replace(/^origin\//, '');
-            const out = sh('git', ['ls-remote', '--heads', 'origin', bare], repo);
-            if (!out.ok) return null;
-            const sha = out.out.trim().split(/\s+/)[0];
-            return sha !== undefined && /^[0-9a-f]{40}$/.test(sha) ? sha : null;
-        },
+        ...makeTargetDeps(repo),
         // `git show <sha>:<path>` and nothing else. There is no filesystem read
         // here by construction: a policy the PR head carries must not be able to
         // change the criteria the PR is judged against.
@@ -422,33 +378,6 @@ export function makeGitDeps(repo: string): BaseDeps {
             return out.ok ? out.out : null;
         },
     };
-}
-
-/**
- * The default branch the SERVER reports, from `git ls-remote --symref origin HEAD`.
- *
- * Pure and exported so the parse is testable without a network round trip, and
- * because it closes a measured defect rather than a hypothetical one. Until
- * 2026-09-03 this module read the default branch from `refs/remotes/origin/HEAD`
- * alone — a clone-time ref that is simply absent in some checkouts. Measured in
- * a worktree of this repository the same day: the local form returned null, so
- * `sync_pr_branch` refused with "no open PR and no origin/HEAD" while
- * `check_branch_freshness`, three lines later in the same documented sequence,
- * resolved `origin/main` from the server symref and passed. Two resolvers
- * disagreeing about the base is this roadmap's own subject one layer down, and
- * the default branch stopped being cosmetic here the moment the policy's
- * `include` needed a ref to add. Mirrors `check_branch_freshness.ts:223`.
- */
-export function parseSymrefDefault(lsRemoteOut: string): string | null {
-    for (const line of lsRemoteOut.split('\n')) {
-        const t = line.trim();
-        if (!t.startsWith('ref:')) continue;
-        const name = t.slice('ref:'.length).trim().split(/\s+/)[0] ?? '';
-        if (!name.startsWith('refs/heads/')) continue;
-        const short = name.slice('refs/heads/'.length).trim();
-        if (short !== '') return `origin/${short}`;
-    }
-    return null;
 }
 
 /** Strip the remote prefix so a policy key is the branch name a human writes. */
@@ -468,18 +397,9 @@ function bareName(ref: string): string {
 export function resolveBase(repo: string, override: string | null, deps: BaseDeps = makeGitDeps(repo)): ResolveBaseResult {
     const defaultRef = deps.defaultBranch();
 
-    let target: BaseEntry;
-    if (override !== null && override.trim() !== '') {
-        target = { ref: override.trim(), reason: 'explicit-base-override' };
-    } else {
-        const pr = deps.prBase(deps.currentBranch());
-        if (pr !== null) {
-            target = { ref: `origin/${pr}`, reason: 'pull-request-target' };
-        } else if (defaultRef !== null) {
-            target = { ref: defaultRef, reason: 'repository-default-branch' };
-        } else {
-            throw new UnresolvableBase('no open PR and no origin/HEAD');
-        }
+    const target: BaseEntry | null = resolveTarget(deps, override, defaultRef);
+    if (target === null) {
+        throw new UnresolvableBase('no open PR and no origin/HEAD');
     }
 
     // A PR targeting the default branch needs no entry — identity by ref name,
@@ -862,13 +782,16 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
 }
 
 /**
- * `git.update_strategy` for the repository through the one convention reader.
- * Absent reads as `merge`, the behaviour before the key existed; a file that
- * does not parse, a typo and a user-global-only value are refusals the caller
- * acts on, never a fallback to `merge`.
+ * `git.update_strategy` in force for the repository: the committed
+ * `.git-convention.yml` at the target commit, over the developer layers
+ * (ADR-282). Absent everywhere reads as `merge`, the behaviour before the key
+ * existed; a file that does not parse, a typo, a user-global-only value and a
+ * target commit that cannot be resolved are refusals the caller acts on, never
+ * a fallback to `merge`.
  */
-export function updateStrategy(repo: string): GitConventionReading {
-    return readGitConventionKey('update_strategy', checkoutSource(repo));
+export function updateStrategy(repo: string, base: string | null = null, deps?: TargetDeps): GitConventionReading {
+    const read = readCommittedConvention(repo, { override: base, keys: ['update_strategy'], ...(deps ? { deps } : {}) });
+    return read.readings.update_strategy as GitConventionReading;
 }
 
 export function main(argv?: readonly string[]): number {
@@ -938,7 +861,7 @@ export function main(argv?: readonly string[]): number {
     // git-history-discipline — so the branch is only CHECKED (dry run), and a
     // branch that is behind is refused rather than merged. A current branch
     // passes, so an automated pre-push sync stays green when nothing is to do.
-    const reading = updateStrategy(repo);
+    const reading = updateStrategy(repo, base);
     if (isRefusal(reading.state)) {
         process.stdout.write(`❌  sync_pr_branch: refused — ${describeRefusal(reading)}. Nothing was checked or merged.\n`);
         reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'git.update_strategy unreadable' });
