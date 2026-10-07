@@ -264,6 +264,19 @@ export interface Plan {
      * 0 is the target's update the one a reader needs, not this branch's.
      */
     targetStale?: { target: string; defaultRef: string; behind: number; branchBehind: number };
+    /** The base-set summary and the per-ref behind list a dry run found, so a caller can word its own line. */
+    summary?: string;
+    behindDetail?: string;
+}
+
+/** The refusal for a branch that is behind under a strategy other than `merge`. */
+export function behindRefusalMessage(plan: Plan, strategy: string): string {
+    const t = plan.targetStale;
+    return (
+        `⚠️  sync_pr_branch: refused — the branch is behind and git.update_strategy is \`${strategy}\`; this script only merges. ` +
+        `Rebase on request instead (git-workflow references/branch-update.md). ${plan.summary ?? ''}. Behind: ${plan.behindDetail ?? '?'}.` +
+        (t === undefined ? '' : ` The target ${t.target} is itself ${String(t.behind)} commit(s) behind ${t.defaultRef}; once this branch is current with it, the target needs updating too.`)
+    );
 }
 
 /**
@@ -736,6 +749,8 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
                 : {}),
             exit: 0,
             message: `${summary}. Behind: ${detail} — would merge in that order. Dry run, nothing changed.`,
+            summary,
+            behindDetail: detail,
             generated: [],
             remeasured: [],
             authored: [],
@@ -905,12 +920,7 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
                 return 3;
             }
             if (plan.exit === 0 && (plan.behind ?? 0) > 0) {
-                process.stdout.write(
-                    `⚠️  sync_pr_branch: refused — the branch is behind and git.update_strategy is \`${strategy}\`; this script only merges. ` +
-                        `Rebase on request instead (git-workflow references/branch-update.md). ${plan.message.replace(' — would merge in that order. Dry run, nothing changed.', '.')}` +
-                        (t === undefined ? '' : ` The target ${t.target} is itself ${String(t.behind)} commit(s) behind ${t.defaultRef}; once this branch is current with it, the target needs updating too.`) +
-                        '\n',
-                );
+                process.stdout.write(`${behindRefusalMessage(plan, strategy)}\n`);
                 reportScanned({ gate: 'sync_pr_branch', scanned: plan.scanned, units: 'base ref(s)', roots: ['origin'] });
                 return 3;
             }
