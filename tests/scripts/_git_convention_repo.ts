@@ -105,12 +105,27 @@ export function runSync(repo: string, base = 'origin/main'): SyncRun {
     return { code, out, before, after, parents };
 }
 
-/** Point every user-global read at an empty directory for the duration of a test. */
+/**
+ * Point every user-global read at an empty directory for the duration of a test.
+ *
+ * That includes the developer's global git config: the code under test spawns
+ * its own `git merge`, which the `-c` flags in `git()` above never reach. On a
+ * runner whose hostname git cannot derive an email from, that merge fails for
+ * want of an identity; on a laptop it inherits commit signing instead.
+ */
 export function isolateUserGlobal(tmp: TmpDirs): () => void {
-    const saved = process.env['EVENT4U_CONFIG_HOME'];
-    process.env['EVENT4U_CONFIG_HOME'] = tmp.make('git-convention-home-');
+    const home = tmp.make('git-convention-home-');
+    const gitconfig = write(home, '.gitconfig', '[user]\n\tname = t\n\temail = t@example.com\n[commit]\n\tgpgsign = false\n');
+    const saved = {
+        EVENT4U_CONFIG_HOME: process.env['EVENT4U_CONFIG_HOME'],
+        GIT_CONFIG_GLOBAL: process.env['GIT_CONFIG_GLOBAL'],
+    };
+    process.env['EVENT4U_CONFIG_HOME'] = home;
+    process.env['GIT_CONFIG_GLOBAL'] = gitconfig;
     return () => {
-        if (saved === undefined) delete process.env['EVENT4U_CONFIG_HOME'];
-        else process.env['EVENT4U_CONFIG_HOME'] = saved;
+        for (const [key, value] of Object.entries(saved)) {
+            if (value === undefined) delete process.env[key];
+            else process.env[key] = value;
+        }
     };
 }
