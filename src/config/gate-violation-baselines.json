@@ -113,6 +113,36 @@
       "landed": "2026-09-07",
       "falsifier": "./scripts-run src/scripts/lint_roadmap_later_disposition  # the ratchet line names the current count; it fails when the count RISES above this entry",
       "note": "Parked roadmaps carrying no machine-readable wake condition — neither a structured three-part `entry_condition` (what / when / who) nor one of the four unambiguous body phrases. REVEALED rather than created: until 2026-09-07 the gate short-circuited on the frontmatter status word (`if (status !== 'later' && !RESUME_RE.test(body))`), so 63 of 82 parked roadmaps passed with no resume text present at all, and `trigger` was in RESUME_RE so 11 more passed on a prose mention of the word. Measured after the correction and after migrating the three pre-contract scalar `entry_condition` fields to the mapping form: 19 before the migration, 18 after. Shrink-only from here: a NEWLY parked roadmap must carry a real wake condition. A malformed `entry_condition` is deliberately OUTSIDE this ratchet and fails hard at zero — a scalar or a blank part is a defect the author introduced in the change that wrote it, not inherited debt."
+    },
+    "report_installed_rule_links:kinds:claude-code:rules": {
+      "count": 114,
+      "landed": "2026-10-06",
+      "falsifier": "./scripts-run src/scripts/report_installed_rule_links --kinds all --host claude-code  # the `kind: rules` line prints the live count and this entry as its baseline",
+      "note": "Links inside installed Claude Code rules that point at nothing the install carries, counted per kind for the first time on 2026-10-06 — a starting point, not a regression. 114 rather than the rule reading's 115 because the per-kind split moves the one `docs/` target into the non-projected row. REPORT-ONLY: nothing fails on this number yet (road-to-installed-links-of-every-kind D2); whether a kind count should ever fail a build is decided after one release of readings. Shrink-only: lower it when a repair lands; repairs belong to road-to-rule-triggers-and-links-that-hold."
+    },
+    "report_installed_rule_links:kinds:claude-code:skills": {
+      "count": 296,
+      "landed": "2026-10-06",
+      "falsifier": "./scripts-run src/scripts/report_installed_rule_links --kinds all --host claude-code  # the `kind: skills` line prints the live count and this entry as its baseline",
+      "note": "Links inside installed Claude Code skills (every `.md` under a skill, resolved from its own installed directory) that point at nothing the install carries, of 1752 deployable links, counted for the first time on 2026-10-06 — a starting point, not a regression. `docs/` and ADR targets are excluded and live in the non-projected entry. REPORT-ONLY (road-to-installed-links-of-every-kind D2). Shrink-only: lower it when a repair lands."
+    },
+    "report_installed_rule_links:kinds:claude-code:commands": {
+      "count": 441,
+      "landed": "2026-10-06",
+      "falsifier": "./scripts-run src/scripts/report_installed_rule_links --kinds all --host claude-code  # the `kind: commands` line prints the live count and this entry as its baseline",
+      "note": "Links inside installed Claude Code commands that point at nothing the install carries, of 891 deployable links, counted for the first time on 2026-10-06 — a starting point, not a regression. `docs/` and ADR targets are excluded and live in the non-projected entry. REPORT-ONLY (road-to-installed-links-of-every-kind D2). Shrink-only: lower it when a repair lands."
+    },
+    "report_installed_rule_links:kinds:claude-code:non-projected": {
+      "count": 314,
+      "landed": "2026-10-06",
+      "falsifier": "./scripts-run src/scripts/report_installed_rule_links --kinds all --host claude-code  # the `kind: non-projected` line prints the live count and this entry as its baseline",
+      "note": "Links from installed Claude Code rules, skills and commands into `docs/` or an ADR file — trees no install carries, so every one is dead by construction and is kept apart from the deployable counts. Counted for the first time on 2026-10-06. REPORT-ONLY (road-to-installed-links-of-every-kind D2). Shrink-only: a link removed or replaced by an installed target lowers it."
+    },
+    "report_installed_rule_links:kinds:augment:contexts": {
+      "count": 107,
+      "landed": "2026-10-06",
+      "falsifier": "./scripts-run src/scripts/report_installed_rule_links --kinds all --host augment  # the `kind: contexts` line prints the live count and this entry as its baseline",
+      "note": "Links inside installed contexts that point at nothing the install carries, of 447 deployable links. Recorded for augment because it is the only host whose plan deploys `contexts/`; Claude Code's reading for the kind is `not installed`, which is an absence, not a zero. Counted for the first time on 2026-10-06. REPORT-ONLY (road-to-installed-links-of-every-kind D2). Shrink-only: lower it when a repair lands."
     }
   },
   "retired": {
