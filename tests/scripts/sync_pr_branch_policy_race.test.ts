@@ -107,3 +107,42 @@ describe('integrateWithPinnedBase — a refused pin merges nothing', () => {
         expect(merged).toEqual([]);
     });
 });
+
+describe('integrateWithPinnedBase — the policy is checked before the first merge only', () => {
+    it('a base that moves after a merge goes to the base-moved retry, never to a "nothing was merged" stop', () => {
+        const merged: string[] = [];
+        let asked = 0;
+        const shas = ['a'.repeat(40), 'b'.repeat(40), 'b'.repeat(40), 'b'.repeat(40)];
+        const checks: number[] = [];
+        const out = integrateWithPinnedBase(['origin/main'], {
+            remoteSha: () => shas[Math.min(asked++, shas.length - 1)] as string,
+            merge: (ref) => {
+                merged.push(ref);
+                return { ok: true, conflicted: [] };
+            },
+            checkPin: (pinned) => {
+                checks.push(pinned.length);
+                return checks.length > 1 ? 'nothing was merged' : null;
+            },
+        });
+        expect(merged.length).toBeGreaterThan(0);
+        expect(checks).toHaveLength(1);
+        expect(out.message).not.toContain('nothing was merged');
+        expect(out).toMatchObject({ ok: true, conflicted: [] });
+        expect(out.attempts.map((a) => a.attempt)).toEqual([1, 2]);
+    });
+
+    it('end to end: the strategy changes after attempt 1 merged — the report names no unmerged tree', () => {
+        const f = fixture(tmp);
+        const a = git(f.seed, 'rev-parse', 'HEAD').trim();
+        commitIn(f.work, 'c.txt', 'c\n');
+        const b = advanceMain(f, { [CARRIER_PATH]: 'git:\n  update_strategy: rebase\n' });
+        // Strategy read and pin both see `a`; after attempt 1's merge the server reports `b`.
+        let asked = 0;
+        const deps: BaseDeps = { ...makeGitDeps(f.work), remoteSha: () => (asked++ < 2 ? a : b) };
+        const r = run(f, deps);
+        const mergedA = contains(f.work, a);
+        expect(mergedA).toBe(true);
+        expect(r.out).not.toContain('nothing was merged');
+    });
+});

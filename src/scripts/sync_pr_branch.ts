@@ -554,7 +554,7 @@ export interface IntegrationOutcome {
 export interface IntegrateOps {
     readonly remoteSha: (ref: string) => string | null;
     readonly merge: (ref: string) => { ok: boolean; conflicted: string[] };
-    /** Asked once per attempt with the pinned OIDs, before any merge; a message stops the run. */
+    /** Asked once, before the first merge, with the pinned OIDs; a message stops the run. */
     readonly checkPin?: (pinned: readonly { ref: string; before: string | null }[]) => string | null;
 }
 
@@ -578,7 +578,9 @@ export function integrateWithPinnedBase(refs: readonly string[], ops: IntegrateO
     const attempts: IntegrationAttempt[] = [];
     for (let n = 1; n <= MAX_BASE_ATTEMPTS; n++) {
         const pinned = refs.map((ref) => ({ ref, before: ops.remoteSha(ref) }));
-        const stop = ops.checkPin?.(pinned) ?? null;
+        // Only before the first merge: once one has landed, a "nothing was
+        // merged" stop would misreport the tree, so a later move is a base move.
+        const stop = n === 1 ? (ops.checkPin?.(pinned) ?? null) : null;
         if (stop !== null) return { ok: false, stopped: true, attempts, conflicted: [], message: stop };
         let conflicted: string[] = [];
         let clean = true;
