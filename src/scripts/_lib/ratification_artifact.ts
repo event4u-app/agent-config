@@ -97,6 +97,7 @@ export interface RatificationProblem {
         | 'diversity-required'
         | 'diversity-unverifiable'
         | 'bad-effective-after'
+        | 'no-seats'
         | 'malformed-seats'
         | 'bad-seat-provider'
         | 'unknown-seat-verdict'
@@ -128,9 +129,9 @@ export type SeatsReading =
  * The `seats:` map — provider id to that seat's FINAL verdict — in source
  * order, which is the order `providers` is derived in.
  *
- * Absent and present-but-unusable are different answers: an artifact written
- * before the field existed is read as it always was, while a `seats:` key that
- * is empty, a scalar, a list, or carries a bad id or verdict is a refusal.
+ * Absent and present-but-unusable are reported apart: a missing key and a
+ * `seats:` key that is empty, a scalar, a list, or carries a bad id or verdict
+ * are both refusals, with different codes.
  */
 export function readSeats(fm: AdrFrontmatter, text = ''): SeatsReading {
     const duplicates = duplicateSeatKeys(text);
@@ -249,13 +250,28 @@ export function renderRatificationHeader(
 }
 
 /**
- * The header claims the seats do not support. Empty when `seats:` is absent —
- * an artifact written before the field existed is read as it always was. When
- * seats are present the recorded header must EQUAL the derived one; the two
- * named cases get their own codes so a reader sees which overclaim it was.
+ * The header claims the seats do not support.
+ *
+ * `seats:` is required. Optional, it left `providers` and `verdict` free-written
+ * for every author who omitted it, which is the defect it exists to close; the
+ * round-2 ratification review refused that shape. The gate reads only the
+ * artifacts in the diff under review, so an artifact merged before the field
+ * existed is never re-read and needs no migration to stay valid.
+ *
+ * The recorded header must EQUAL the derived one; the two named overclaims get
+ * their own codes so a reader sees which one it was.
  */
 function seatProblems(reading: SeatsReading, providers: readonly string[], verdict: string | null): RatificationProblem[] {
-    if (reading.kind === 'absent') return [];
+    if (reading.kind === 'absent') {
+        return [
+            {
+                code: 'no-seats',
+                message:
+                    'missing `seats:` — `providers` and `verdict` are derived from the per-seat final ' +
+                    'verdicts, never typed (print all three with `ratification_header`)',
+            },
+        ];
+    }
     if (reading.kind === 'invalid') return reading.problems;
     const seats = reading.seats;
     const problems: RatificationProblem[] = [];

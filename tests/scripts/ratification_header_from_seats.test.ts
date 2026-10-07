@@ -119,9 +119,16 @@ describe('the reader checks a recorded header against its seats', () => {
         );
     });
 
-    it('reads an artifact without `seats:` as before', () => {
+    it('refuses an artifact without `seats:` — the header is never free-written', () => {
         const text = artifact(['providers: [anthropic, openai]', 'verdict: ratified'].join('\n'));
-        expect(readRatification(text, 2).problems).toEqual([]);
+        expect(codes(text)).toEqual(['no-seats']);
+        expect(isRatified(readRatification(text, 2))).toBe(false);
+    });
+
+    it('refuses an explicit `seats: null`', () => {
+        expect(codes(artifact(['providers: [anthropic, openai]', 'verdict: ratified', 'seats: null'].join('\n')))).toContain(
+            'malformed-seats',
+        );
     });
 });
 

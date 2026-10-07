@@ -45,10 +45,10 @@ could follow and everybody broke.
 | `verdict` | `ratified` · `confirmed-non-expanding` · `refused` · `non-convergent` | a closed vocabulary; an open one always reads as approval to a grep |
 | `effective_after` | `merge`, or an ISO-8601 instant with a timezone | an authority-expanding change is inert until this passes |
 
-A seventh field, `seats:`, is a map from provider id to that seat's **final**
-verdict (the four above, or `no-final-verdict` for a seat that closed or was
-absent at the last round). When it is recorded, `providers` and `verdict` are
-not free-written: `./scripts-run src/scripts/ratification_header --seat
+A seventh field, `seats:`, is required: a map from provider id to that seat's
+**final** verdict (the four above, or `no-final-verdict` for a seat that closed
+or was absent at the last round). `providers` and `verdict` are not
+free-written: `./scripts-run src/scripts/ratification_header --seat
 <provider>=<verdict> …` prints all three, and the reader requires the recorded
 `providers` (in seat order) and `verdict` to equal the derived ones. It names
 the two overclaims that motivated the field — a passing verdict over a refusing
@@ -56,7 +56,9 @@ or non-convergent seat (`seat-dissent`), a provider that gave no final verdict
 (`providers-exceed-seats`) — and reports any other mismatch as
 `header-not-derived`. A `seats:` key that is empty, not a map, repeats a seat
 or uses a key outside `^[a-z0-9][a-z0-9._-]*$` is refused, never read as
-absent. An artifact without `seats:` is read as before.
+absent; a missing `seats:` is `no-seats`. The gate reads only the artifacts in
+the diff under review, so an artifact merged before the field existed is never
+re-read and is not migrated.
 
 `ratified` and `confirmed-non-expanding` let a diff land; `refused` and
 `non-convergent` do not. The second passing verdict exists because the gate
