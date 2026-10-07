@@ -59,6 +59,10 @@ interface BudgetEntry {
     /** `false` for wall-clock metrics: they cannot be compared run-to-run,
      * so they are excluded from the drift check. Missing = deterministic. */
     deterministic?: boolean;
+    /** Repository paths (globs as the workflow `paths` filter writes them) the
+     * metric is measured from. Every one must trigger the umbrella, so the PR
+     * that moves the input is the PR that sees the budget. */
+    inputs?: string[];
 }
 interface BudgetsDoc {
     regression_pct: number;
