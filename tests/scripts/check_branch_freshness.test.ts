@@ -63,6 +63,20 @@ function captureStdout(fn: () => void): string {
   return said.join("");
 }
 
+function captureStderr(fn: () => void): string {
+  const said: string[] = [];
+  const error = console.error;
+  console.error = (...args: unknown[]) => {
+    said.push(`${args.map(String).join(" ")}\n`);
+  };
+  try {
+    fn();
+  } finally {
+    console.error = error;
+  }
+  return said.join("");
+}
+
 let dir: string;
 let cwd: string;
 
@@ -136,11 +150,62 @@ describe("check_branch_freshness", () => {
     delete process.env["CI"];
   });
 
+  it("checks another remote's main from local main — standing on main is not standing on upstream/main", () => {
+    const work = process.cwd();
+    const upstream = path.join(dir, "upstream.git");
+    fs.mkdirSync(upstream);
+    git(["init", "--bare", "-b", "main"], upstream);
+    git(["remote", "add", "upstream", upstream], work);
+    git(["push", "upstream", "main"], work);
+    const other = path.join(dir, "up-other");
+    git(["clone", upstream, other], dir);
+    commit(other, "u.txt", "upstream moved");
+    git(["push"], other);
+    expect(main(["--quiet", "--base", "upstream/main"], noPr)).toBe(1);
+    expect(main(["--quiet", "--base", "origin/main"], noPr)).toBe(0);
+  });
+
   it("does not fail closed when the remote is unreachable, but says so", () => {
     git(["checkout", "-b", "feat/z"], process.cwd());
-    // An unknown base name is indistinguishable from an unreachable remote at
-    // this layer, and both must report NOT VERIFIED rather than a false green.
-    expect(main(["--base", "no-such-base"], noPr)).toBe(0);
+    git(["remote", "set-url", "origin", path.join(dir, "gone.git")], process.cwd());
+    const said = captureStdout(() => {
+      expect(main(["--base", "main"], noPr)).toBe(0);
+    });
+    expect(said).toContain("NOT VERIFIED");
+  });
+
+  it("refuses a base the reachable remote does not have, instead of passing it as NOT VERIFIED", () => {
+    git(["checkout", "-b", "feat/z"], process.cwd());
+    for (const spelling of ["no-such-base", "origin/no-such-base", "origin/origin/main"]) {
+      const said = captureStderr(() => {
+        expect(main(["--base", spelling], noPr)).toBe(1);
+      });
+      expect(said).toContain("does not exist on origin");
+    }
+  });
+
+  it("reads `main` and `origin/main` as the same branch on origin", () => {
+    const work = process.cwd();
+    git(["checkout", "-b", "feat/spell"], work);
+    commit(work, "b.txt", "two");
+    expect(main(["--quiet", "--base", "main"], noPr)).toBe(0);
+    expect(main(["--quiet", "--base", "origin/main"], noPr)).toBe(0);
+    expect(main(["--quiet", "--base=origin/main"], noPr)).toBe(0);
+
+    const other = path.join(dir, "other");
+    git(["clone", path.join(dir, "origin.git"), other], dir);
+    commit(other, "c.txt", "three");
+    git(["push"], other);
+    expect(main(["--quiet", "--base", "main"], noPr)).toBe(1);
+    // The task line is printed only where the checkout defines the task.
+    fs.mkdirSync(path.join(work, "taskfiles"));
+    fs.writeFileSync(path.join(work, "taskfiles", "dev.yml"), "tasks:\n  push-ready:\n    cmds: [echo]\n");
+    const said = captureStderr(() => {
+      expect(main(["--quiet", "--base", "origin/main"], noPr)).toBe(1);
+    });
+    expect(said).toContain("BEHIND origin/main");
+    expect(said).not.toContain("origin/origin/");
+    expect(said).toMatch(/^ *task push-ready BASE=main(?: |$)/m);
   });
 
   it("is registered in preflight — the gate exists to run before a push", () => {

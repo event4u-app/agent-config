@@ -10,9 +10,11 @@ skill defer here.
 
 The rules are code: `agent-config git:convention` runs them, and the commands
 call it. This page is what a command reads **when the verb cannot run** — no
-`agent-config` on `PATH`, or exit `2`. Then apply the generated block below by
-reading, say once that the verb was unavailable, and never invent a grammar the
-block does not show.
+`agent-config` on `PATH`, or exit `2` for a usage or unknown-verb error. Then
+apply the generated block below by reading, say once that the verb was
+unavailable, and never invent a grammar the block does not show. Exit `2` with
+`no subjects on stdin — the verb ran` is not that case: the verb ran and
+received nothing, so pipe the subjects again rather than falling back.
 
 ## Reading the ticket
 
@@ -27,12 +29,21 @@ every candidate with its status:
 - **`standard-name`** — a key in the denylist (`UTF-8`, `ISO-8601`, `SHA-256`,
   `CVE-2026-12345`, `CWE-79`) is never a ticket, with or without a card:
   `fix/CVE-2026-12345-patch` yields none.
+- **`version-like`** — without a card, a protocol or language name followed
+  by a one-digit number (`HTTP-2`, `PHP-8`; the list is the `version-like names`
+  row below) is a major version, not a ticket: `feat/HTTP-2-support` yields
+  none. Two or more digits (`PHP-12`) read as a ticket, and a card that lists
+  the key keeps it a ticket.
+- **Case** — without a card only an upper-case key is detected, so
+  `feat/dev-12-export` yields none. With `--keys`, a key written in any case is
+  matched against the card and reported upper-cased (`dev-12` → `DEV-12`).
 - **`unknown-key`** — `--keys` takes the `ticket_keys` line of the approved
   convention card (`agents/memory/curated/conventions/approved/commit-subject.md`,
   see the [`conventional-commits-writing`](../../conventional-commits-writing/SKILL.md)
-  skill § 7), as the caller reads it. A candidate whose key is not on it is
+  skill § 4), as the caller reads it. A candidate whose key is not on it is
   asked about by `/commit` — a yes adds the key to the card — and omitted by
-  `/commit:in-chunks`. Without a card the grammar and the denylist decide alone.
+  `/commit:in-chunks`. Without a card the grammar, the denylist and the
+  version-like names decide alone.
 - **`proposal`** — without `--keys`, a commitlint config's `issuePrefixes` are
   printed as a proposed `ticket_keys` line. Offer it; the verb writes nothing.
 
@@ -46,6 +57,17 @@ every candidate with its status:
 Under `ticket-conventional` **a ticket is never in the scope** — not as the
 scope, not inside a compound one (`feat(api,DEV-1234)` fails). The scope names
 the system area (`api/audio`, `ci`), only where it adds clarity.
+
+**Under an approved family** (the card's `dominant_family`) the ticket is
+optional, as under `ticket-conventional`: with a ticket it stands in the
+family's leading position (`[DEV-1234] Add export filter`), without one the
+subject is the family's form without the ticket part (`Add export filter`), and
+a ticket anywhere else fails. A branch without a ticket is therefore never a
+stop under a card.
+
+Git's own `fixup!`, `squash!`, `amend!` and `Revert "…"` subjects are valid under
+both `git.commit_format` values and under every family: git writes them itself,
+so the same rule holds everywhere a subject is checked.
 
 **Area scope under `/commit:in-chunks`.** Several commits on one branch carry the
 same ticket in front of each; the scope is chosen per commit from the area that
@@ -67,6 +89,27 @@ resolves the convention in this order — the first that applies decides:
 2. **An approved measurement** — the card's `dominant_family`.
 3. **The default** — Conventional Commits (`ticket-scope`).
 
+When the third case decides — no declaration and no approved card — and the
+repository has no commitlint config, `subject` and `show` add the line `no convention established — run git:convention measure`
+(`convention_established: false` under `--json`); the exit is unchanged.
+A commitlint config is the repository's own subject validator, so it
+establishes the convention: no such line, and `measure` says the config governs.
+`agent-config git:convention measure [--limit N] [--family F] [--json]` then reads
+the history of the default branch — the one the server names, else
+`refs/remotes/origin/HEAD`; with neither it samples nothing, exits 1 and says so
+(`trunk_unresolved` under `--json`) rather than guess one. It proposes a subject family when one clears the `measure bar` row
+of the block below, otherwise names the two strongest; it proposes a
+`branch_pattern` from the remote branch names, or `no clear pattern`; and it
+shows the observed update style, which is never adopted. Where the chosen family
+maps to a `git.commit_format` value or a pattern was proposed, it prints the
+ready-to-commit content of `.git-convention.yml` (`commit_format`,
+`branch_pattern`, never `update_strategy`); the verb writes nothing. A human
+creates and commits that file, or, on the user's yes this turn,
+`agent-config git:convention init --yes [--commit-format F] [--branch-pattern P]`
+creates it once — never over an existing carrier, never `update_strategy`, and
+uncommitted (ADR-283 § Creation). `/commit` asks the user once and writes the answer
+to the approved card.
+
 A repository validator — a `commit-msg` hook, a commitlint config (any of its
 config files, or a `commitlint` key in the package manifest) — does not decide, and
 the verb never guesses what it accepts: a hook's existence says nothing about
@@ -83,7 +126,7 @@ A format that cannot be read (`malformed`, `invalid`, `discarded`), or an
 approved family with no grammar, exits `1` with the line that says why; it is
 never read as the default.
 Exit `1` also lists each failing subject with the rule it broke. Exit `2` is a
-usage error. How a family is measured and approved is the
+usage error; an empty stdin is one, and says `the verb ran`. How a family is measured and approved is the
 [`conventional-commits-writing`](../../conventional-commits-writing/SKILL.md)
 skill's procedure; this page only consumes its card.
 
@@ -113,27 +156,38 @@ describes a team habit; the name the agent creates follows the declared pattern.
 ## The grammar
 
 <!-- BEGIN GENERATED: git-convention-grammar -->
-<!-- Written by `./scripts-run src/scripts/generate_git_convention_grammar` from `src/scripts/_lib/git_convention_grammar.ts`; edit the module, never this block. -->
+<!-- Written by `./scripts-run src/scripts/generate_git_convention_grammar` from `src/scripts/_lib/git_convention_grammar.ts` and `src/scripts/_lib/git_convention_measure.ts`; edit the modules, never this block. -->
 
 ```
-ticket                      [A-Z][A-Z0-9]+-[0-9]+
-ticket in text              (?<![A-Za-z0-9])[A-Z][A-Z0-9]+-[0-9]+(?![0-9])
-standard names              UTF ISO SHA RFC CVE CWE GHSA
-format ticket-scope         ^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+
-format ticket-conventional  ^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+
-family conventional         ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
-family ticket-conventional  ^[A-Z][A-Z0-9]+-[0-9]+ (build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
-family ticket-prefix        ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
-family gitmoji              ^:[a-z0-9_+-]+:[[:space:]]|^[^ -~[:cntrl:][:space:]]
-family imperative-plain     ^[A-Z][a-z]+[[:space:]].*[^.]$
+ticket                                 [A-Z][A-Z0-9]+-[0-9]+
+ticket in text                         (?<![A-Za-z0-9])[A-Z][A-Z0-9]+-[0-9]+(?![0-9])
+standard names                         UTF ISO SHA RFC CVE CWE GHSA
+version-like names                     HTTP HTTPS TLS SSL OAUTH PHP PYTHON JAVA JDK NODE ES HTML CSS (one-digit number, no card)
+format ticket-scope                    ^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+
+format ticket-conventional             ^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+
+family conventional                    ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
+family ticket-conventional             ^[A-Z][A-Z0-9]+-[0-9]+ (build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
+family ticket-prefix                   ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
+family gitmoji                         ^:[a-z0-9_+-]+:[[:space:]]|^[^ -~[:cntrl:][:space:]]
+family imperative-plain                ^[A-Z][a-z]+[[:space:]].*[^.]$
+family ticket-prefix, no ticket        ^\S.* (no ticket elsewhere in the subject)
+family ticket-conventional, no ticket  ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?:  (no ticket elsewhere in the subject)
+any format or family                   ^((fixup|squash|amend)! .+|Revert ".+")$ (git's own subjects)
+measure sample                         newest 200 non-merge commits since 24 months ago, or regardless of age when that window yields fewer than 30; bots, automation subjects, commits over 500 files dropped
+measure bar                            n >= 30; >= 80 % capped at 20 per author per half (3+ authors), else >= 90 % uncapped; both halves agree
+measure migration                      the newer half, or the newest 30 commits, clearing the bar on another family than the dominant one: "migrating to <family>", and that family is proposed
+measure branches                       >= 10 remote branch names, top shape >= 80 %
 ```
 
 Formats are JavaScript / PCRE syntax; families are POSIX extended, matched in
 order, first hit wins. Under `format ticket-conventional` and `family
 ticket-conventional` a ticket anywhere inside the scope fails, and a standard
 name in the ticket position fails. A ticket is found in a branch or scope only as
-a whole token (`ticket in text`); a version-like key such as `HTTP2-1` still has
-the ticket shape, and a convention card's `ticket_keys` is what excludes it.
+a whole token (`ticket in text`). Without a card, a version-like name — one of
+the keys above with a one-digit number, such as `HTTP-2` or `PHP-8` — is not a
+ticket; `HTTP2-1` still has the ticket shape. A convention card's `ticket_keys`
+settles both, and matches a key written in lower case; without a card a
+lower-case key is never detected.
 <!-- END GENERATED: git-convention-grammar -->
 
 ## Patterns that are not this grammar

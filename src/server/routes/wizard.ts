@@ -47,6 +47,7 @@ import { detectAgentSwitch, AGENT_SWITCH_INSTALL_COMMAND, AGENT_SWITCH_REPO } fr
 import { readDismissedRecommendations, dismissRecommendation } from '../../install/wizardDismissals.js';
 import { installCompleted, installDoneSummary } from '../../install/preserve.js';
 import { apiOnQuotaView } from '../../scripts/ai_council/transport_resolver.js';
+import { refuseGitKeys } from '../gitKeysGate.js';
 
 export interface WizardRouteOptions {
     /** Write root — every on-disk artefact (state, settings, user-md) resolves under this. */
@@ -86,6 +87,8 @@ export interface WizardRouteOptions {
      * endpoints.
      */
     extendedSteps?: boolean;
+    /** True when `writeRoot` is the user-global directory, whose settings file carries no `git.*` keys. */
+    userGlobalWrite?: boolean;
     /**
      * Initial step index reported by `GET /api/v1/wizard/state` when no
      * `wizard-state.json` is present. road-to-unified-setup § B0 — the
@@ -1335,12 +1338,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
         });
 
         app.post('/api/v1/wizard/finish', async (request, reply) => {
-            const body = (request.body ?? {}) as {
-                settings?: unknown;
-                identity?: unknown;
-                scope?: unknown;
-                modulesConfig?: unknown;
-            };
+            const body = (request.body ?? {}) as { settings?: unknown; identity?: unknown; scope?: unknown; modulesConfig?: unknown };
             const settingsParsed = settingsSchema.safeParse(body.settings);
             if (!settingsParsed.success) {
                 await reply.code(422).send({
@@ -1404,6 +1402,8 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             const effectiveWriteRoot = scope === 'project' && projectScopeRoot !== null
                 ? projectScopeRoot
                 : opts.writeRoot;
+            const userGlobalTarget = opts.userGlobalWrite === true && effectiveWriteRoot === opts.writeRoot;
+            if (await refuseGitKeys(reply, settingsParsed.data as Record<string, unknown>, opts.packageRoot, userGlobalTarget)) return reply;
 
             try {
                 const template = await readTemplate(opts.packageRoot);

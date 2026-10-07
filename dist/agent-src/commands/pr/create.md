@@ -150,6 +150,9 @@ head repository — never `@{u}`, and an unresolved target means no rewrite — 
 SHA is pinned once after the fetch, must already be in `HEAD`, and is the lease
 unchanged — so a collaborator's push lands either before the pin and halts the
 stop, or after it and fails the lease, and is never overwritten.
+Its steps 1–3 rebase and report, then stop: the regenerate → verify above runs
+on the rebased tree, and only then does its step 4 publish, re-running step 1
+with the `SAVE` and `EXPECTED` step 3 printed.
 A PR that sits open while its base advances goes stale silently; keeping the
 base merged **at every touch** means it stays `mergeStateStatus: CLEAN` instead
 of accumulating conflicts for the moment the user wants to merge. If the gate
@@ -172,7 +175,9 @@ tree at the moment you believe your work is finished.
 
 **The resolution is executable now, not just described.**
 `agent-config git:convention sync --base origin/<base>`, `<base>` being the
-PR's `baseRefName` (`gh pr view --json baseRefName`), fetches and merges that
+`baseRefName` of the branch's `OPEN` pull request (`gh pr view --json
+state,baseRefName`; a closed or merged one does not count, and without an open
+one the base is the default branch), fetches and merges that
 base in when the branch is behind, so a stacked or release-line PR is measured
 against what it actually merges into. It never asks the forge itself: without
 `--base` the target is the default branch, which is right only for a PR into it. The base is a

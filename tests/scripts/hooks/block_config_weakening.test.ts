@@ -213,6 +213,21 @@ describe('block_config_weakening — class-c', () => {
         expect(reason).toContain('does not parse');
     });
 
+    // The host creates a missing file from an Edit whose old_string is empty, so
+    // a missing file is empty text, not a reason to stop checking.
+    it('checks an Edit or MultiEdit that creates the carrier', () => {
+        const create = { old_string: '', new_string: 'git:\n  update_strategy: rebase\n' };
+        expect(classCVerdict(create, null, '.git-convention.yml', index)).toContain('git.update_strategy');
+        expect(classCVerdict({ edits: [create] }, null, '.git-convention.yml', index)).toContain('git.update_strategy');
+        expect(classCVerdict({ ...create, replace_all: true }, null, '.git-convention.yml', index)).toContain('git.update_strategy');
+    });
+
+    it('allows creating a settings file that sets only Class A keys', () => {
+        const create = { old_string: '', new_string: 'personal:\n  play_by_play: true\n' };
+        expect(classCVerdict(create, null, '.agent-settings.yml', index)).toBeNull();
+        expect(classCVerdict({ edits: [create] }, null, '.agent-settings.yml', index)).toBeNull();
+    });
+
     it('allows when the edit would not apply at all', () => {
         expect(
             classCVerdict(
@@ -258,6 +273,90 @@ describe('block_config_weakening — class-c, the reviewed defects', () => {
         expect(
             classCVerdict({ old_string: 'false', new_string: 'true' }, before, '.agent-settings.yml', index),
         ).toBeNull();
+    });
+
+    // MultiEdit carries its replacement pairs under `edits`, applied in order;
+    // reading only the top-level pair let every MultiEdit through.
+    it('models MultiEdit — a Class C change in any of the edits is caught', () => {
+        const before = [
+            'personal:',
+            '  play_by_play: false',
+            'hooks:',
+            '  injection_scan:',
+            '    enabled: false',
+            '',
+        ].join('\n');
+        const ti = {
+            file_path: '.agent-settings.yml',
+            edits: [
+                { old_string: 'play_by_play: false', new_string: 'play_by_play: true' },
+                { old_string: '    enabled: false', new_string: '    enabled: true' },
+            ],
+        };
+        const reason = classCVerdict(ti, before, '.agent-settings.yml', index);
+        expect(reason).not.toBeNull();
+        expect(reason).toContain('hooks.injection_scan.enabled');
+        expect(
+            classCVerdict({ edits: [{ old_string: 'play_by_play: false', new_string: 'play_by_play: true' }] }, before, '.agent-settings.yml', index),
+        ).toBeNull();
+    });
+
+    // The host applies a MultiEdit atomically: when any pair misses, it writes
+    // none of them. A Class C change in an earlier pair is then never written,
+    // so the guard allows the payload rather than judging a text nobody wrote.
+    it('allows a MultiEdit whose Class C edit is followed by one that misses — the host applies none', () => {
+        const before = 'hooks:\n  injection_scan:\n    enabled: false\n';
+        const clear = { old_string: '  injection_scan:\n    enabled: false\n', new_string: '' };
+        expect(classCVerdict({ edits: [clear] }, before, '.agent-settings.yml', index)).toContain('hooks.injection_scan');
+        const miss = { old_string: 'no such text in the file', new_string: 'x' };
+        expect(classCVerdict({ edits: [clear, miss] }, before, '.agent-settings.yml', index)).toBeNull();
+    });
+
+    it('refuses a MultiEdit edits list it cannot interpret', () => {
+        const reason = classCVerdict(
+            { edits: [{ old_string: 'false' }] } as never,
+            'personal:\n  play_by_play: false\n',
+            '.agent-settings.yml',
+            index,
+        );
+        expect(reason).not.toBeNull();
+        expect(reason).toContain('cannot interpret');
+    });
+
+    // The host writes `new_string` literally; `String.replace` expands `$&`,
+    // `$$` and friends, so a guard that simulates with it evaluates a
+    // different text from the one written. `$&` re-inserts the match, which
+    // made the class C value look unchanged while the host wrote `$&`.
+    it('applies new_string literally — replacement tokens do not hide a Class C change', () => {
+        const before = 'hooks:\n  injection_scan:\n    enabled: false\n';
+        const edit = { old_string: 'false', new_string: '$&' };
+        expect(classCVerdict(edit, before, '.agent-settings.yml', index)).toContain('hooks.injection_scan.enabled');
+        expect(classCVerdict({ edits: [edit] }, before, '.agent-settings.yml', index)).toContain(
+            'hooks.injection_scan.enabled',
+        );
+    });
+
+    // The guard decides which edit form it models from the payload's fields. A
+    // payload carrying two forms at once — a decoy `content` or `old_string`
+    // beside `edits` — would be checked as one form while the host runs
+    // another, so an ambiguous payload is refused rather than guessed.
+    it('refuses a payload that carries more than one edit form', () => {
+        const before = 'hooks:\n  injection_scan:\n    enabled: false\n';
+        const edits = [{ old_string: '    enabled: false', new_string: '    enabled: true' }];
+        for (const decoy of [{ content: before }, { old_string: 'x', new_string: 'x' }]) {
+            const reason = classCVerdict({ ...decoy, edits }, before, '.agent-settings.yml', index);
+            expect(reason).toContain('more than one edit form');
+        }
+    });
+
+    it('refuses an edits value that is not a list', () => {
+        const reason = classCVerdict(
+            { edits: { old_string: 'false', new_string: 'true' } } as never,
+            'hooks:\n  injection_scan:\n    enabled: false\n',
+            '.agent-settings.yml',
+            index,
+        );
+        expect(reason).toContain('cannot interpret');
     });
 
     it('refuses a replace_all value it cannot interpret', () => {

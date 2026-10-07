@@ -94,12 +94,20 @@ not. A criterion that says of itself that it is not met is not ticked. A
       line whose own criterion text contains `NOT met`. A fixture shows it red;
       run over the tree, the archived AC-3 is reported as a hit.
       verify: `npx vitest run tests/scripts/lint_ticked_unmet_criteria.test.ts` -> 0
-- [ ] <!-- blocked-by: ac3-carry-needs-receiver-backlink --> **4.2 The pressure that made the tick.** The progress check stops
+- [x] **4.2 The pressure that made the tick.** The progress check stops
       counting `[~]` in a file under `archive/` toward the Iron-Law-3 failure
       that `:354-359` describes, so an honest deferral can stand in an
       archived roadmap; the archived AC-3 then becomes `[~]` with a one-line
       dated note.
       verify: `npx vitest run tests/scripts/roadmap_progress_archived_deferral.test.ts` -> 0
+
+      Done 2026-10-07: the `relates:` row this needed was already present on
+      `road-to-a-ratification-fence-that-follows-its-imports` (its step 4.2
+      landed the back-link); this change flips the archived AC-3 to `[~]`
+      with `<!-- deferred-resolution: carried-to=road-to-a-ratification-fence-that-follows-its-imports -->`
+      and a dated note. `lint_deferral_integrity` stays at its 243 baseline
+      (the new `[~]` is annotated, not counted) and reports "every annotated
+      carry resolves"; `lint_ticked_unmet_criteria` no longer lists this AC-3.
 
       **Measured 2026-10-07 — the progress half needed no change, the flip
       meets a different gate.** `update_roadmap_progress` already excludes
@@ -165,10 +173,14 @@ not. A criterion that says of itself that it is not met is not ticked. A
 - **If you do nothing:** the 51 owner-wait entries the census lists stay unasked, the report keeps showing them, and nothing reds.
 
 ### blocker: ac3-carry-needs-receiver-backlink
-- **Status:** open
+- **Status:** resolved — 2026-10-07. The `relates:` row was already present;
+  this change adds the `[~]` flip and the `deferred-resolution:` annotation
+  to `agents/roadmaps/archive/road-to-a-kernel-that-guards-its-plumbing.md`'s
+  AC-3. `lint_deferral_integrity` confirms the carry resolves and stays at
+  its 243 baseline.
 - **Owner:** implementer
 - **Blocks:** step 4.2
-- **What to do:** add a `relates:` row naming `road-to-a-kernel-that-guards-its-plumbing` to `agents/roadmaps/road-to-a-ratification-fence-that-follows-its-imports.md` (its step 4.1 is the receiver), then flip the archived AC-3 to `[~]` with `<!-- deferred-resolution: carried-to=road-to-a-ratification-fence-that-follows-its-imports -->` and a dated one-line note.
+- **What to do:** add a `relates:` row naming `road-to-a-kernel-that-guards-its-plumbing` to `agents/roadmaps/archive/road-to-a-ratification-fence-that-follows-its-imports.md` (its step 4.1 is the receiver), then flip the archived AC-3 to `[~]` with `<!-- deferred-resolution: carried-to=road-to-a-ratification-fence-that-follows-its-imports -->` and a dated one-line note.
 - **Resolved when:** the archived AC-3 reads `[~]`, `./scripts-run src/scripts/lint_deferral_integrity` exits 0 at its baseline of 243, and `./scripts-run src/scripts/lint_ticked_unmet_criteria` no longer lists it.
 - **Recommendation:** do it in the change that lands that roadmap's step 4.2, which already writes a line under the same AC-3 — one edit to the archived file instead of two racing ones.
 - **If you do nothing:** AC-3 stays ticked over its own "NOT met" and stays listed by the 4.1 lint.

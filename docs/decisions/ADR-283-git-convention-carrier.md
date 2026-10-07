@@ -85,8 +85,13 @@ request must not come from that pull request.
 | `git.branch_pattern` | As `git.commit_format`. | As `git.commit_format`. | As `git.commit_format`. | As `git.commit_format`; a pattern outside the closed alphabet is `invalid`. |
 
 A value outside the schema — a `git:` that is not a map included — is `invalid`
-on every key and is refused the same way `malformed` is. `malformed` is kept for
-a file whose content is unknown because it does not parse.
+on every key and is refused the same way `malformed` is. A carrier that sets one
+of the three keys at the top level, without the `git:` level, is `invalid` on
+every key too, with a reason naming the expected shape: read as absent it would
+apply the default the file was written to replace. `malformed` is kept for
+a file whose content is unknown because it does not parse. A file named
+`.git-convention.yaml` is not read; `git:convention show` warns that it is
+ignored and names `.git-convention.yml`.
 
 ### Target resolution (D10)
 
@@ -102,6 +107,25 @@ the strategy without being stopped by a `commit_format` or `branch_pattern` the
 pull request's head breaks. The stated loss: a human who runs `sync` or `show`
 on a stacked or release-line pull request without `--base` is judged against
 the default branch; that usage is documented as non-pull-request only.
+
+### Creation
+
+Owner decision, 2026-10-07: the agent may **create** `.git-convention.yml` after
+the user's explicit yes this turn — create once, never change. The one path is
+`agent-config git:convention init --yes [--commit-format F] [--branch-pattern P]`,
+bounded so the class-C fence keeps its meaning:
+
+- it refuses, exit 1, when `.git-convention.yml` or `.git-convention.yaml`
+  already exists at the repository root — it never overwrites and never edits;
+- it refuses without `--yes`, which stands for the user's answer this turn;
+- it writes `git.commit_format` and `git.branch_pattern` only, each validated
+  by the reader's checks (an invalid value is exit 1, nothing written), and
+  never `git.update_strategy` — it has no flag for it;
+- an omitted value is what `measure` proposes;
+- it prints the content and says the file is created but not committed.
+
+The config-weakening guard is unchanged and still refuses every direct write
+to the carrier, so a change to an existing declaration stays a human edit.
 
 ## Consequences
 

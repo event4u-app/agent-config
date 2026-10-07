@@ -97,8 +97,9 @@ branch** — that is what makes the deliverable remote. Then:
    [`commit-policy`](../../../rules/commit-policy.md) — never ask how).
 2. Update the branch against its PR base first:
    `agent-config git:convention sync --base origin/<base>`, `<base>` being the
-   PR's `baseRefName` (`gh pr view --json baseRefName`) — without `--base` the
-   target is the default branch, wrong for any other base — then regenerate any derived files
+   `baseRefName` of the branch's `OPEN` pull request (`gh pr view --json
+   state,baseRefName`; a closed or merged one does not count) — otherwise, and
+   without `--base`, the target is the default branch, wrong for any other base — then regenerate any derived files
    the merge touched (`task sync && task generate-tools`). Under
    `git.update_strategy: rebase` the script refuses a behind branch (exit 3); rebase on the user's request
    instead ([`branch-update`](../../../../skills/git-workflow/references/branch-update.md)),

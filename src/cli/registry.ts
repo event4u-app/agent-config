@@ -35,7 +35,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'settings:sync', disposition: 'delegate', synopsis: 'Additively merge new template keys into an existing .agent-settings.yml.' },
     { name: 'settings:migrate', disposition: 'delegate', synopsis: 'Lift legacy project-local settings into ~/.event4u/agent-config/.' },
     { name: 'settings:get', disposition: 'delegate', synopsis: 'Read one setting: value, resolved source file, class, and absent-vs-default divergence.' },
-    { name: 'git:convention', disposition: 'delegate', synopsis: 'The git convention: show the keys, check subjects, read a ticket, render a branch name.' },
+    { name: 'git:convention', disposition: 'delegate', synopsis: 'The git convention: show the keys, check subjects, read a ticket, render a branch name, measure the history.' },
     { name: 'settings:set', disposition: 'delegate', synopsis: 'Set one A/B-class setting in the global file; C-class keys are refused.' },
     { name: 'uninstall', disposition: 'delegate', synopsis: 'Remove bridge markers (project) or lockfile entries (global).' },
     { name: 'prune', disposition: 'delegate', synopsis: 'Remove project bridge markers not declared in installed-tools.lock.' },

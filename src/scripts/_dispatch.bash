@@ -297,7 +297,13 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              branch: a pull request passes --base origin/<its base>.
                              subject checks subjects on stdin against the convention in
                              force; ticket reads the ticket out of a branch name; branch
-                             renders a name from git.branch_pattern; sync brings the
+                             renders a name from git.branch_pattern; measure proposes
+                             a convention from the history (subject family, branch
+                             pattern, observed update style) and writes nothing;
+                             init --yes creates .git-convention.yml once on the
+                             user's yes (never over one, never committed);
+                             show and subject print "no convention established" when
+                             no declaration, approved card or commitlint config exists; sync brings the
                              branch up to --base (else the default branch) per
                              git.update_strategy (exit 1 base unresolved, 3 behind
                              under rebase, 4 strategy unreadable).
@@ -305,6 +311,7 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                                     git:convention subject [--format F|--family F]
                                     git:convention ticket [BRANCH] [--keys K]
                                     git:convention branch --slug S [--type T] [--ticket K]
+                                    git:convention measure [--limit N] [--family F]
                                     git:convention sync [--base REF] [--dry-run]
   settings:set               Set one setting in the global file. Refuses every class-C
                              (guarded) key from docs/contracts/settings-classes.md, and

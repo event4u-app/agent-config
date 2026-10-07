@@ -102,6 +102,43 @@ once the user resolves it (move to a store, or add an audited
 `# secret-allow` / `.secret-allow` entry for a confirmed false positive). Never
 silently commit a secret; never silently strip one.
 
+### 3c. Establish the convention — once per repository
+
+Before any subject is generated, run
+`agent-config git:convention show --key commit_format`. It prints
+`no convention established — run git:convention measure` only when there is
+no declaration, no approved card and no commitlint config; otherwise skip this step.
+
+1. Run `agent-config git:convention measure`. Its `verdict` line is the input to
+   the one question below; the thresholds behind it are the `measure` rows of
+   [`commit-subject`](../../../skills/git-workflow/references/commit-subject.md) § The grammar.
+2. Ask **once**, as numbered options, naming the family, its share, the capped
+   total and the author count from the verb's output:
+   - `verdict established: <family>` → the established family (recommended) vs
+     Conventional Commits;
+   - `verdict below the bar` → the two strongest families (each with its share)
+     vs Conventional Commits, quoting the verb's reasons.
+3. Run `agent-config git:convention measure --family <answer>` (Conventional
+   Commits is `--family conventional`) and write its `card` block to
+   `agents/memory/curated/conventions/approved/commit-subject.md` — **also when
+   the answer is Conventional Commits**, so this question is never asked again in
+   this repository. The card is the one file this command writes. Stage it
+   explicitly with `git add -- agents/memory/curated/conventions/approved/commit-subject.md`
+   and commit it in the first commit of this run — the commit it was approved
+   for — so a worktree or a fresh clone reads the same answer instead of asking
+   again; name it in the report.
+4. When the same output carries a `team file` block, show it: it is the
+   ready-to-commit `.git-convention.yml` (`commit_format`, `branch_pattern`,
+   never `update_strategy`). Ask once whether to create it. Only on the user's
+   explicit yes this turn run `agent-config git:convention init --yes` with the
+   shown values (`--commit-format`, `--branch-pattern`); it creates the file once,
+   refuses when one exists and never commits it — name it in the report. On no,
+   print the content for a human to create and commit. Never write the file by
+   hand, and never change an existing one.
+
+Then generate every subject under the answer: `git:convention subject` reads the
+card the moment it exists.
+
 ### 4. Plan the commits
 
 For each logical group, determine the commit message following the commit conventions rule
@@ -206,7 +243,7 @@ Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
 
 - **Preview path: never commit before the user confirms the plan — once, for the whole plan.** On the terse path (`preview_artifacts: false` AND `routine_confirmations: false`) the `/commit` invocation itself is the confirmation (`commit-policy` exception 3); proceed without a prompt.
 - **Never push** — pushing is left to the user.
-- **Never modify files** — only stage and commit existing changes.
+- **Never modify files** — only stage and commit existing changes. The one exception is the convention card step 3c writes after the user's answer, committed with the first commit of the run.
 - **Do NOT add untracked files** unless they are clearly part of the change (check with `git status`).
 - **Follow commit conventions** as defined in `.augment/rules/commit-conventions.md`.
 

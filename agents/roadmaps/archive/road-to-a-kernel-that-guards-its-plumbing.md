@@ -722,7 +722,7 @@ dashboard, the archival sweep and the continuation ladder can act on.
       sidecar rather than the bundle, because `block_plumbing_writes` refused
       the bundle edit — step 1.2 working, and the same `mismatch` through the
       same branch either way.
-- [x] AC-3 — After the measured window, a blocking concern that throws refuses;
+- [~] AC-3 — After the measured window, a blocking concern that throws refuses;
       an advisory one allows with an issue row. **The "or exceeds `sla_ms × 3`"
       half is NOT met and was refused rather than missed** — see 3.3's closing
       record and `agents/evidence/analysis/concern-sla-warn-only-window.md`
@@ -738,6 +738,9 @@ dashboard, the archival sweep and the continuation ladder can act on.
       narrowing it is, because a box ticked over an unmet clause is worse than
       an open box.
       2026-10-07: the spawn-path measurement is received by step 4.1 of `road-to-a-ratification-fence-that-follows-its-imports`.
+      <!-- deferred-resolution: carried-to=road-to-a-ratification-fence-that-follows-its-imports -->
+      2026-10-07: flipped to `[~]` — the half above is a carry, not a close,
+      and the receiver links back via its own `relates:` row.
 - [x] AC-4 — `lint-deny-text` and `lint-exit-codes` are in CI and green.
 - [x] AC-5 — A Class C key edit in project settings is refused; a Class A
       key edit is not; no user-global file is touched.

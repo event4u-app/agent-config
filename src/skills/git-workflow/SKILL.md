@@ -56,7 +56,7 @@ gh pr view <number> --json number,state,mergeStateStatus,mergedAt,baseRefName
   **same turn**; never merge on a status seen earlier in the conversation.
 - **"Based on main" / "current"** → prove it with
   `npx tsx node_modules/@event4u/agent-config/src/scripts/check_branch_freshness.ts`;
-  exit `1` ⇒ the branch is behind and is **not** current — update it from the base per `git.update_strategy` ([`references/branch-update.md`](references/branch-update.md)),
+  exit `1` ⇒ the branch is behind and is **not** current (or the named base does not exist on the remote; the message says which) — update it from the base per `git.update_strategy` ([`references/branch-update.md`](references/branch-update.md)),
   regenerate the derived files, then open the PR (see
   [`/create-pr`](../../commands/pr/create.md) § 1b). Exit `0` means only that
   the gate did **not refuse**: read the line. `branch is current` is the pass;
@@ -169,7 +169,7 @@ Trigger context: `git-history-discipline` rule routed here.
 
 ```bash
 DATE=$(date +%F)
-EXPECTED=$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)
+PUBLISHED=$(git ls-remote "$REMOTE" "refs/heads/$RB") || { echo "STOP: could not read $REMOTE/$RB — nothing was rewritten" >&2; exit 1; }; EXPECTED=$(cut -f1 <<<"$PUBLISHED")
 git fetch -q "$REMOTE" "refs/heads/$RB"
 SNAP="refs/agent-config/rewrites/squash-${DATE}-$$"
 git update-ref "$SNAP/before" HEAD
