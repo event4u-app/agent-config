@@ -86,3 +86,13 @@ describe('the card measure --family prints', () => {
         expect(runGitConvention(['show', '--key', 'commit_format'], dir).out.join('\n')).not.toContain(NO_CONVENTION);
     });
 });
+
+describe('a history that switched families recently', () => {
+    it('reports migrating to the newer family and proposes it', () => {
+        const older = Array.from({ length: 160 }, (_, i) => `[DEV-${i + 1}] Add ${i}`);
+        const dir = repo([...older, ...conventional(40)], null);
+        const text = runGitConvention(['measure'], dir).out.join('\n');
+        expect(text).toMatch(/established: conventional \(migrating to conventional — /);
+        expect(text).toMatch(/team file/);
+    });
+});

@@ -19,6 +19,8 @@ import { classifySubject, COMMIT_TYPES, TICKET_GRAMMAR, type CommitFormat, type 
 export const MEASURE_LIMIT = 200;
 export const MEASURE_SINCE = '24 months ago';
 export const MIN_N = 30;
+/** The newest eligible commits read on their own for a recent switch the halves still average away. */
+export const RECENT_WINDOW = MIN_N;
 /** With three or more human authors, over the per-author-capped sample. */
 export const SHARE_BAR = 0.8;
 /** With one or two authors, uncapped: a cap of 20 would put `MIN_N` out of reach. */
@@ -65,9 +67,13 @@ export interface SubjectMeasurement {
     newer: HalfReading;
     older: HalfReading;
     halvesAgree: boolean;
+    /** The newest `RECENT_WINDOW` eligible commits, capped per author like the halves. */
+    recent: HalfReading;
+    /** Which reading showed the switch when `migrating`. */
+    migratedBy: 'newer-half' | 'recent-window' | null;
     /** The family to propose, or null below the bar. */
     established: SubjectFamily | null;
-    /** True when the halves disagree and only the newer half cleared the bar on its own. */
+    /** True when the newer half, or the newest window, clears the bar on a family other than the history's dominant one. */
     migrating: boolean;
     /** Why the history is below the bar; empty when a family is established. */
     reasons: string[];
@@ -135,10 +141,12 @@ export function measureSubjects(commits: readonly HistoryCommit[]): SubjectMeasu
     const newer = _half(newerSample);
     const older = _half(olderSample);
     const halvesAgree = newer.family !== null && newer.family === older.family;
+    const recent = _half((capped ? _cap(eligible) : eligible).slice(0, RECENT_WINDOW));
     const top = families[0];
 
     let established: SubjectFamily | null = null;
     let migrating = false;
+    let migratedBy: SubjectMeasurement['migratedBy'] = null;
     const reasons: string[] = [];
     if (eligible.length < MIN_N) reasons.push(`n ${eligible.length} < ${MIN_N}`);
     if (top === undefined || top.family === 'other') reasons.push('no family with a grammar leads');
@@ -148,6 +156,15 @@ export function measureSubjects(commits: readonly HistoryCommit[]): SubjectMeasu
     else if (!halvesAgree && _clears(newer.n, newer, bar)) {
         established = newer.family as SubjectFamily;
         migrating = true;
+        migratedBy = 'newer-half';
+    }
+    // A switch younger than half the sample: both halves still read the old
+    // family, so only the newest window shows the history has moved on.
+    if (!migrating && recent.n >= RECENT_WINDOW && recent.family !== top?.family && _clears(recent.n, recent, bar)) {
+        established = recent.family as SubjectFamily;
+        migrating = true;
+        migratedBy = 'recent-window';
+        reasons.push(`the newest ${recent.n} read ${recent.family} at ${pct(recent.share)}, not ${top?.family ?? '—'}`);
     }
     return {
         eligible: eligible.length,
@@ -160,6 +177,8 @@ export function measureSubjects(commits: readonly HistoryCommit[]): SubjectMeasu
         newer,
         older,
         halvesAgree,
+        recent,
+        migratedBy,
         established,
         migrating,
         reasons: established === null || migrating ? reasons : [],

@@ -462,7 +462,8 @@ export function measureCommand(args: readonly string[], cwd: string): GitConvent
                 bar: { min_n: MIN_N, share: m.bar },
                 families: m.families,
                 halves: { newer: m.newer, older: m.older, agree: m.halvesAgree },
-                verdict: { established: m.established, migrating: m.migrating, reasons: m.reasons, strongest: m.strongest },
+                recent: m.recent,
+                verdict: { established: m.established, migrating: m.migrating, migrated_by: m.migratedBy, reasons: m.reasons, strongest: m.strongest },
                 branches: { sampled: b.sampled, pattern: b.pattern, share: b.share, shapes: b.shapes },
                 update_style: { observed: u.observed, base_merges: u.baseMerges, merges: u.merges, adopted: false },
                 chosen: family,
@@ -484,7 +485,7 @@ export function measureCommand(args: readonly string[], cwd: string): GitConvent
         ...m.families.map((x) => `          ${x.family.padEnd(20)} ${String(x.count).padStart(4)}  ${pct(x.share)}`),
         `halves    newer ${m.newer.family ?? '—'} ${pct(m.newer.share)} · older ${m.older.family ?? '—'} ${pct(m.older.share)} — ${m.halvesAgree ? 'agree' : 'disagree'}`,
         m.established !== null
-            ? `verdict   established: ${m.established}${m.migrating ? ' (migrating — the newer half alone clears the bar)' : ''} — bar n ≥ ${MIN_N}, share ≥ ${pct(m.bar)}`
+            ? `verdict   established: ${m.established}${m.migrating ? ` (migrating to ${m.established} — ${m.migratedBy === 'recent-window' ? `the newest ${m.recent.n} commits` : 'the newer half'} alone clear the bar)` : ''} — bar n ≥ ${MIN_N}, share ≥ ${pct(m.bar)}`
             : `verdict   below the bar (${m.reasons.join('; ')}) — strongest: ${m.strongest.join(', ') || 'none with a grammar'}`,
         b.pattern !== null
             ? `branches  ${b.sampled} sampled — proposed branch_pattern "${b.pattern}" (${pct(b.share)})`

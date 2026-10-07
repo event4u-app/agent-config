@@ -5,6 +5,7 @@ import {
     AUTHOR_CAP_PER_HALF,
     MIN_BRANCHES,
     MIN_N,
+    RECENT_WINDOW,
     SHARE_BAR,
     SMALL_TEAM_SHARE_BAR,
     classifyBranch,
@@ -80,6 +81,26 @@ describe('measureSubjects', () => {
         expect(m.newer.n).toBeLessThan(MIN_N);
         expect(m.migrating).toBe(false);
         expect(m.established).toBeNull();
+    });
+
+    it('reads a recent switch from the newest window even when both halves still agree on the old family', () => {
+        // Newest first: 40 conventional, then 160 ticket-prefix, ten authors so nothing is capped.
+        const commits = [
+            ...many(40, (i) => `feat: change ${i}`, (i) => `author${i % 10}`),
+            ...many(160, (i) => `[DEV-${i + 1}] Add ${i}`, (i) => `author${i % 10}`),
+        ];
+        const m = measureSubjects(commits);
+        expect(m.halvesAgree).toBe(true);
+        expect(m.migrating).toBe(true);
+        expect(m.established).toBe('conventional');
+        expect(m.recent.family).toBe('conventional');
+        expect(m.recent.n).toBe(RECENT_WINDOW);
+    });
+
+    it('does not call a history migrating when its newest window agrees with the dominant family', () => {
+        const m = measureSubjects(many(200, (i) => `feat: change ${i}`, (i) => `author${i % 10}`));
+        expect(m.migrating).toBe(false);
+        expect(m.established).toBe('conventional');
     });
 
     it('reads a migrating history from the newer half alone when it clears the bar', () => {

@@ -156,6 +156,7 @@ family gitmoji              ^:[a-z0-9_+-]+:[[:space:]]|^[^ -~[:cntrl:][:space:]]
 family imperative-plain     ^[A-Z][a-z]+[[:space:]].*[^.]$
 measure sample              newest 200 non-merge commits since 24 months ago, or regardless of age when that window yields fewer than 30; bots, automation subjects, commits over 500 files dropped
 measure bar                 n >= 30; >= 80 % capped at 20 per author per half (3+ authors), else >= 90 % uncapped; both halves agree
+measure migration           the newer half, or the newest 30 commits, clearing the bar on another family than the dominant one: "migrating to <family>", and that family is proposed
 measure branches            >= 10 remote branch names, top shape >= 80 %
 ```
 

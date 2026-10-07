@@ -25,6 +25,7 @@ import {
     MIN_BRANCHES,
     MIN_CAPPED_AUTHORS,
     MIN_N,
+    RECENT_WINDOW,
     SHARE_BAR,
     SMALL_TEAM_SHARE_BAR,
     pct,
@@ -50,6 +51,7 @@ export function renderBlock(): string {
         ...FAMILY_ERE.map(([f, ere]) => [`family ${f}`, ere] as [string, string]),
         ['measure sample', `newest ${MEASURE_LIMIT} non-merge commits since ${MEASURE_SINCE}, or regardless of age when that window yields fewer than ${MIN_N}; bots, automation subjects, commits over ${BULK_IMPORT_FILES} files dropped`],
         ['measure bar', `n >= ${MIN_N}; >= ${pct(SHARE_BAR)} capped at ${AUTHOR_CAP_PER_HALF} per author per half (${MIN_CAPPED_AUTHORS}+ authors), else >= ${pct(SMALL_TEAM_SHARE_BAR)} uncapped; both halves agree`],
+        ['measure migration', `the newer half, or the newest ${RECENT_WINDOW} commits, clearing the bar on another family than the dominant one: "migrating to <family>", and that family is proposed`],
         ['measure branches', `>= ${MIN_BRANCHES} remote branch names, top shape >= ${pct(SHARE_BAR)}`],
     ];
     const width = Math.max(...rows.map(([k]) => k.length)) + 2;
