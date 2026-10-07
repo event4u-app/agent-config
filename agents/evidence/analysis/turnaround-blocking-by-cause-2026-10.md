@@ -126,3 +126,52 @@ first is counted here too):
 Most CI minutes were spent in waits that returned no verdict at all: the
 9-minute foreground deadline expired while checks were still pending, and the
 caller waited again.
+
+## What grew the context floor
+
+`road-to-blocking-time-by-cause` 4.1. The 2026-10-01 reading measured a
+first-call context floor maximum of 244,518 tokens against the 230,705
+baseline and declined to attribute it. Read from the same store:
+
+| | Max-floor session | Comparator |
+|---|---|---|
+| Session | `1e95a767` | `0ae74690` |
+| First call | 2026-09-29T06:39Z | 2026-10-01T00:48Z |
+| Host version | 2.1.277 | 2.1.277 |
+| First-call floor | 244,518 | 232,272 |
+| Started with | `/analyze:inbox` | `/roadmap:process-full` |
+
+The comparator is the session nearest the baseline that ran the same host
+version, so the host's own system prompt and tool schemas are held constant as
+far as the store can show. The floor delta is **12,246 tokens**.
+
+Contributors, measured as the characters each one put into the transcript
+before the first API call (`chars / 4` is the estimate every other payload
+measurement in this repository uses):
+
+| Contributor | Max-floor | Comparator | Delta (chars) | ≈ tokens |
+|---|---:|---:|---:|---:|
+| Invoked command body (the slash command's own text) | 65,681 | 30,205 | +35,476 | +8,869 |
+| Instructions (always-loaded rule and memory text) | 414,754 | 414,892 | −138 | −35 |
+| Session context | 1,079 | 1,003 | +76 | +19 |
+| Hook additional context | 2,521 | 2,576 | −55 | −14 |
+| Skill listing | 42,131 | 42,131 | 0 | 0 |
+| Deferred-tools, agent-listing and MCP-instruction deltas | 12,250 | 12,250 | 0 | 0 |
+| Prompt snapshot | 10,178 | 10,178 | 0 | 0 |
+| Everything else (environment, model, output style, date, permissions, hook success, command header) | 7,449 | 7,449 | 0 | 0 |
+
+**Attribution.** About 8,870 of the 12,246 tokens — 72 % — are the body of
+the slash command the session was started with: `/analyze:inbox` is 35,476
+characters longer than `/roadmap:process-full`. The always-loaded instructions
+are flat (−138 characters), and so is every attachment the host injects. The
+floor maximum is therefore set by **which command opened the session**, not by
+growth in the context every session pays.
+
+**Unattributed: about 3,400 tokens** (12,246 less the +8,839 net of the rows
+above). The host's system prompt and tool
+definitions are not written to the transcript, so the store cannot show them.
+The same host version on both sides makes a change there unlikely; it does not
+rule one out, and this page does not claim it.
+
+`src/config/turnaround-budget.json` is not edited: `git diff --exit-code
+a75bb3210 -- src/config/turnaround-budget.json` exits 0.
