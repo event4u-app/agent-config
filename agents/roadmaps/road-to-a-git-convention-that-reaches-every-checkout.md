@@ -4,7 +4,6 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "First of three receivers for inbox round inbox-2026-10-f, which reviewed PR #2235 (the git.* settings) and measured that its three keys reach no worktree, fresh clone or CI run and that an unreadable settings file silently yields a merge. No active roadmap owns the git.* keys; they do not exist on main yet. Archiving an unrelated roadmap to buy the slot would hide the growth instead of naming it."
-estate_growth_exempt: "+1 open_blockers for `committed-over-developer`: which layer wins for two team-convention keys is a product decision only the owner can take, so it exists as a blocker before step 2.3 can be scheduled."
 relates:
   - slug: road-to-one-owner-for-the-ticket-and-the-subject
     relation: disjoint
@@ -210,14 +209,15 @@ writes it into settings files and the rename becomes a migration.
       carries one authority row per key: layer, whether the local layer
       participates, what a branch-local change is, and what `malformed` does.
       verify: `test -n "$(git ls-files docs/decisions | grep git-convention-carrier)" && grep -q '| council' agents/roadmaps/road-to-a-git-convention-that-reaches-every-checkout.md` -> 0
-- [ ] **2.3 The reader resolves the committed declaration.** <!-- blocked-by: committed-over-developer | asked: yes -->
+- [ ] **2.3 The reader resolves the committed declaration.**
       `update_strategy` is read at the target commit through the convergence
       reader, independently of the `not-required` early return at
       `sync_pr_branch.ts:482`; a branch without a pull request resolves the
       default branch, and nothing resolvable is exit 4, never `merge`.
       `malformed` is judged on that blob. `commit_format` and `branch_pattern`
-      are read at the repository root, never per directory, with precedence
-      against the developer layers per the blocker. Where the checkout's value
+      are read at the repository root, never per directory, and the committed
+      carrier overrides every developer layer for them, the local layer
+      included (D8). Where the checkout's value
       differs from the target commit's, `show` prints both and names the one in
       force. The class-C fence gains the carrier's basename
       (`src/scripts/hooks/block_config_weakening.ts:134`), and 2.1's assertions
@@ -289,12 +289,13 @@ writes it into settings files and the rename becomes a migration.
 | D4 | deterministic | evidence | Code an installed command calls is reached through one new CLI verb | A consumer project has no `node_modules`, so a skill-bundled script run through `tsx` cannot start; the budget record lets a registering change move the number | A second consumer-reachable carrier of code exists |
 | D5 | reversible-technical | agent | The value is renamed to the family whose grammar it is; an alias only after a release | `conventional-commits-writing/SKILL.md:150`, `:172`; the value is unreleased at the pin | A release carries `ticket-prefix` as a value |
 | D6 | reversible-technical | agent | A branch-local value of a key is shown as a candidate, never adopted | AC-4; the strategy that judges a pull request must not come from that pull request | — |
+| D8 | product-owned | owner | For `git.commit_format` and `git.branch_pattern`, the committed carrier overrides every developer layer, the gitignored local layer included | Owner answer to blocker `committed-over-developer`, 2026-10-07; `upgrade` inserts template defaults into every developer file, so a developer-wins order would let an inserted default override the team | A team needs a per-developer override and names the key |
 | D7 | deterministic | evidence | "merge" and "push" in this file name the subject matter, an update strategy, never an operation this roadmap authorises; every real merge, push or rewrite during execution stays governed by `git-history-discipline` and is asked per turn | `closure_scan` classifies the word `merge` as a typed operation on every line that mentions the strategy | — |
 
 ## Blockers
 
 ### blocker: committed-over-developer
-- **Status:** open
+- **Status:** resolved — owner chose (a) on 2026-10-07; recorded as D8
 - **Ownership:** product-owned
 - **Owner:** user
 - **Blocks:** step 2.3 — The reader resolves the committed declaration

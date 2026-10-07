@@ -5,7 +5,6 @@ execution:
   mode: phase-checkpoints
 depends: [road-to-a-git-convention-that-reaches-every-checkout]
 estate_offset_exempt: "Third of three receivers for inbox round inbox-2026-10-f. PR #2235 introduces a rebase update strategy whose stop and lease resolve through @{u}, which is the base for a branch pushed without -u, and which has no snapshot, no equivalence proof and no merge-commit check; no active roadmap owns the rebase path, and branch-update.md does not exist on main, so nothing can be offset against it."
-estate_growth_exempt: "+1 open_blockers for `behind-pr-under-non-merge`: whether /pr:merge may merge a green but behind pull request under a rebase strategy decides what a merge run does to every other pull request, which is the owner's call."
 relates:
   - slug: road-to-a-git-convention-that-reaches-every-checkout
     relation: depends
@@ -154,9 +153,11 @@ review, the conformance count, a merge run — is decided, not discovered.
       refuses that case with the reason code `TARGET_POLICY_STALE` instead of the
       ordinary behind message, and `/fix:ci` and `/roadmap:next` name it.
       verify: `test -f tests/scripts/sync_pr_branch_target_behind_default.test.ts && npx vitest run tests/scripts/sync_pr_branch_target_behind_default.test.ts && git grep -q TARGET_POLICY_STALE -- src/domains/engineering-base/fix/ci/command.md` -> 0
-- [ ] **3.2 `/pr:merge` treats a behind pull request as the owner decided.** <!-- blocked-by: behind-pr-under-non-merge | asked: yes -->
-      § 2 and § 6 implement the answer and name the forge setting that decides
-      the case, an up-to-date branch requirement. A merge run never rebases a
+- [ ] **3.2 `/pr:merge` treats a behind pull request as the owner decided.**
+      § 2 and § 6 merge a green, conflict-free pull request that is behind its
+      base when the forge does not require an up-to-date branch, and say so in
+      the summary (D7); where the forge requires one, the pull request stays
+      blocked and the summary names that setting. A merge run never rebases a
       pull request it did not author, and its summary lists each pull request
       with its state and reason.
       verify: `grep -q 'up-to-date branch' src/domains/git/pr/merge/command.md` -> 0
@@ -216,12 +217,13 @@ review, the conformance count, a merge run — is decided, not discovered.
 | D3 | deterministic | evidence | Equivalence is reported from stable patch ids; `range-diff` is shown, never parsed | `git-range-diff` OUTPUT STABILITY; `git-patch-id --stable` | — |
 | D4 | reversible-technical | agent | The recovery ref lives under `refs/agent-config/rewrites/` | Lightweight tags leak through `git push --tags` and count as a tag push | A host needs the snapshot visible to a non-git tool |
 | D5 | reversible-technical | agent | A branch with known descendants is refused, not restacked | Parent-first without `--onto` replays rewritten commits; `--onto` unasked needs a question | The tree gains an explicit parent graph with an undo |
+| D7 | product-owned | owner | Under a strategy other than `merge`, `/pr:merge` merges a green, conflict-free but behind pull request when the forge does not require an up-to-date branch, and says so in the summary | Owner answer to blocker `behind-pr-under-non-merge`, 2026-10-07; matches waiver `arr-2026-09-10-strict-status-checks` | A merge of a behind pull request breaks the base |
 | D6 | deterministic | evidence | "merge", "push" and "rebase" in this file name the procedure being specified, never an operation this roadmap authorises; every real rewrite or push during execution stays governed by `git-history-discipline` and is asked per turn | `closure_scan` classifies the word `merge` as a typed operation on every line that mentions it | — |
 
 ## Blockers
 
 ### blocker: behind-pr-under-non-merge
-- **Status:** open
+- **Status:** resolved — owner chose (a) on 2026-10-07; recorded as D7
 - **Ownership:** product-owned
 - **Owner:** user
 - **Blocks:** step 3.2 — `/pr:merge` treats a behind pull request as the owner decided
