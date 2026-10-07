@@ -27,7 +27,9 @@ of a settings file passed unchecked. The change:
 - replaces `new_string` literally — `String.replace` expanded `$&` and `$$`, so the guard could evaluate a text the
   host never writes (this also closed the same gap on the single-Edit path);
 - refuses an `edits` value that is not a list, an edit it cannot interpret, and a payload that carries more than one
-  edit form at once.
+  edit form at once;
+- checks an Edit or MultiEdit that creates a settings or carrier file that does not exist yet (an empty
+  `old_string` creates it): the missing file is treated as empty text.
 
 ```
 NO ENTRY IS REMOVED FROM ANY REFUSAL. A WRITE PATH THAT WAS UNCHECKED IS NOW CHECKED.
@@ -45,6 +47,13 @@ NO PARSER CONTRACT, CEILING, FLOOR OR BASELINE MOVES. NO KERNEL RULE IS TOUCHED.
    Write or Edit while the host ran the edits. Fixed: such a payload is refused, with a test that was red first.
 3. **Round 3** (final diff): the CLI quota of both seats was exhausted and the anthropic API account had no credit.
    Only `openai/gpt-4o` answered on the metered rung: `confirmed-non-expanding`, no weakening path.
+
+4. **Round 4** (final diff, after a completion review found the file-creation gap): CLI quota of both seats still
+   exhausted (50/50 on the council's own counter), anthropic API account without credit. `openai/gpt-4o` on the
+   metered rung: `confirmed-non-expanding`.
+
+The council's quota counter was not reset to obtain a second seat: it is the run's own budget control, and resetting
+it is the owner's call. A two-provider verdict on the final diff is open residue, named in the PR description.
 
 The header is derived by `ratification_header` from the final verdict each seat gave **on the final diff**. That is
 why it carries one provider: anthropic's last verdict is on the round-2 diff, which lacked only the refusal of
