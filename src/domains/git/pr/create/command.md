@@ -171,7 +171,7 @@ runner; the hook never merges, because a merge inside `pre-push` rewrites the
 tree at the moment you believe your work is finished.
 
 **The resolution is executable now, not just described.**
-`./scripts-run src/scripts/sync_pr_branch` resolves the base from the open PR
+`agent-config git:convention sync` resolves the base from the open PR
 (so a stacked or release-line PR is measured against what it actually merges
 into), fetches, and merges it in when the branch is behind. The base is a
 **set**: when the PR targets something other than the default branch, whether

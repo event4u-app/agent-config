@@ -9,9 +9,9 @@
  */
 import * as path from 'node:path';
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { showConvention } from '../../src/scripts/_cli/cmd_git_convention.js';
+import { runGitConvention, showConvention } from '../../src/scripts/_cli/cmd_git_convention.js';
 import { CARRIER_PATH, makeTargetDeps, readCommittedConvention, type TargetDeps } from '../../src/scripts/_lib/git_convention_carrier.js';
 import { classify_target } from '../../src/scripts/hooks/block_config_weakening.js';
 
@@ -222,6 +222,44 @@ describe('git:convention show', () => {
         const r = showConvention(['--base', 'origin/main'], f.work, noPr(f.work));
         expect(r.code).toBe(1);
         expect(r.out.join('\n')).not.toContain('git.update_strategy = merge');
+    });
+});
+
+describe('git:convention sync — the branch update an installed command can reach', () => {
+    const sync = (cwd: string, ...args: string[]): { code: number; out: string } => {
+        const spy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        try {
+            const r = runGitConvention(['sync', '--base', 'origin/main', ...args], cwd);
+            return { code: r.code, out: spy.mock.calls.map((c) => String(c[0])).join('') };
+        } finally {
+            spy.mockRestore();
+        }
+    };
+
+    it('runs the sync in the directory it was called from and passes its exit codes through', () => {
+        const f = fixture(tmp, { [CARRIER_PATH]: REBASE });
+        expect(sync(f.work).code).toBe(0);
+        advanceMain(f);
+        const before = git(f.work, 'rev-parse', 'HEAD');
+        const behind = sync(f.work);
+        expect(behind.code).toBe(3);
+        expect(behind.out).toContain('git.update_strategy is `rebase`');
+        expect(git(f.work, 'rev-parse', 'HEAD')).toBe(before);
+    });
+
+    it('merges under the default strategy and refuses an unreadable one with exit 4', () => {
+        const merge = fixture(tmp);
+        commitIn(merge.work, 'f.txt', 'f\n');
+        advanceMain(merge);
+        expect(sync(merge.work).code).toBe(0);
+        expect(git(merge.work, 'rev-list', '--parents', '-n', '1', 'HEAD').trim().split(' ')).toHaveLength(3);
+
+        const broken = fixture(tmp, { [CARRIER_PATH]: 'git:\n  update_strategy: rebsae\n' });
+        expect(sync(broken.work).code).toBe(4);
+    });
+
+    it('lists sync in its usage', () => {
+        expect(runGitConvention(['--help'], process.cwd()).out.join('\n')).toContain('git:convention sync');
     });
 });
 

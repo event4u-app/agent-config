@@ -292,11 +292,14 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              validator that outranks it. Exit 1 on malformed or invalid.
                              subject checks subjects on stdin against the convention in
                              force; ticket reads the ticket out of a branch name; branch
-                             renders a name from git.branch_pattern.
+                             renders a name from git.branch_pattern; sync brings the
+                             branch up to its PR base per git.update_strategy (exit 3
+                             behind under rebase, 4 strategy unreadable).
                              Usage: git:convention show [--json] [--base REF]
                                     git:convention subject [--format F|--family F]
                                     git:convention ticket [BRANCH] [--keys K]
                                     git:convention branch --slug S [--type T] [--ticket K]
+                                    git:convention sync [--base REF] [--dry-run]
   settings:set               Set one setting in the global file. Refuses every class-C
                              (guarded) key from docs/contracts/settings-classes.md, and
                              refuses everything when that contract is unreadable.

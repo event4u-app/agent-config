@@ -96,7 +96,7 @@ branch** — that is what makes the deliverable remote. Then:
 1. Commit the fix (chunked, the agent picks the split per
    [`commit-policy`](../../../rules/commit-policy.md) — never ask how).
 2. Update the branch against its PR base first:
-   `./scripts-run src/scripts/sync_pr_branch`, then regenerate any derived files
+   `agent-config git:convention sync`, then regenerate any derived files
    the merge touched (`task sync && task generate-tools`). Under
    `git.update_strategy: rebase` the script refuses a behind branch (exit 3); rebase on the user's request
    instead ([`branch-update`](../../../../skills/git-workflow/references/branch-update.md)),

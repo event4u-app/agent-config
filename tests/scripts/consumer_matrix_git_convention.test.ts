@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { checkGitConventionShow, checkGitConventionSubject } from '../../src/scripts/consumer_matrix.js';
+import { checkGitConventionShow, checkGitConventionSubject, checkGitConventionSync } from '../../src/scripts/consumer_matrix.js';
 
 function shown(overrides: Record<string, Record<string, unknown>> = {}): string {
     const base: Record<string, Record<string, unknown>> = {
@@ -57,5 +57,22 @@ describe('checkGitConventionSubject', () => {
 
     it('fails when the compound-scope ticket is accepted', () => {
         expect(() => checkGitConventionSubject(valid, { status: 0, stdout: '1 subject(s) valid' })).toThrow(/compound scope/);
+    });
+});
+
+describe('checkGitConventionSync', () => {
+    const current = { status: 0, stdout: '✅  sync_pr_branch: current' };
+    const behind = { status: 3, stdout: '⚠️  sync_pr_branch: refused — the branch is behind and git.update_strategy is `rebase`; this script only merges.' };
+
+    it('passes when a current branch exits 0 and a behind one is refused under the committed rebase', () => {
+        expect(checkGitConventionSync(current, behind)).toContain('exit 3');
+    });
+
+    it('fails when the verb is missing from the install', () => {
+        expect(() => checkGitConventionSync({ status: 2, stdout: '', stderr: 'unknown subcommand: sync' }, behind)).toThrow(/current branch/);
+    });
+
+    it('fails when a behind branch is not refused under rebase', () => {
+        expect(() => checkGitConventionSync(current, { status: 0, stdout: '✅  merged' })).toThrow(/behind branch/);
     });
 });

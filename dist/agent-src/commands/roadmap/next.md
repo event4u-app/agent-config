@@ -280,7 +280,7 @@ was for a conflict whose entire existence is a remote fact. That is the friction
 this clause removes; the floor it keeps is the *unnamed* push.
 
 **Before every push to the open PR**, bring the branch up to its base with
-`./scripts-run src/scripts/sync_pr_branch` and regenerate afterwards (under
+`agent-config git:convention sync` and regenerate afterwards (under
 `git.update_strategy: rebase` it refuses a behind branch with exit 3 — rebase on request instead, per
 [`branch-update`](../../../../skills/git-workflow/references/branch-update.md); an exit 3
 reading `TARGET_POLICY_STALE` means the non-default target is itself behind its

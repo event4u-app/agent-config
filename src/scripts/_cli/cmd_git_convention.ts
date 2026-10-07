@@ -24,6 +24,11 @@
  * be read · `2` usage · `3` decided by a validator this verb does not run, or a
  * validator and the committed declaration disagree. `ticket` exits `0`; `branch`
  * prints the name and exits `0`, or `1` on a value it would have to rewrite.
+ *
+ * `sync` is `sync_pr_branch` run in-process, its arguments and exit codes
+ * unchanged: `0` current or merged · `1` conflict or no base · `2` internal
+ * error · `3` behind under a strategy other than `merge` · `4` the strategy
+ * cannot be read.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -45,9 +50,10 @@ import {
     type SubjectFamily,
     type SubjectRule,
 } from '../_lib/git_convention_grammar.js';
+import { main as syncPrBranch } from '../sync_pr_branch.js';
 
 export interface GitConventionResult {
-    code: 0 | 1 | 2 | 3;
+    code: 0 | 1 | 2 | 3 | 4;
     out: string[];
     err: string[];
 }
@@ -344,6 +350,8 @@ export const SUBCOMMANDS: Readonly<Record<string, (args: readonly string[], cwd:
     subject: (args, cwd, stdin) => subjectCommand(args, cwd, stdin),
     ticket: (args, cwd) => ticketCommand(args, cwd),
     branch: (args, cwd) => branchCommand(args, cwd),
+    // Prints as it runs; a later `--repo` in `args` overrides the directory.
+    sync: (args, cwd) => ({ code: syncPrBranch(['--repo', cwd, ...args]) as GitConventionResult['code'], out: [], err: [] }),
 };
 
 const USAGE = [
@@ -351,6 +359,7 @@ const USAGE = [
     '       agent-config git:convention subject [--format F | --family F] [--json]   (subjects on stdin)',
     '       agent-config git:convention ticket [BRANCH] [--keys "DEV, OPS"] [--json]',
     '       agent-config git:convention branch --slug S [--type T] [--ticket K] [--pattern P] [--json]',
+    '       agent-config git:convention sync [--base REF] [--dry-run] [--auto-resolve-generated] [--quiet]',
 ].join('\n');
 
 export function runGitConvention(argv: readonly string[], cwd: string, stdin?: string): GitConventionResult {

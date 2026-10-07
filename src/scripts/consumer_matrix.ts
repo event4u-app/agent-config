@@ -564,6 +564,24 @@ export function checkGitConventionSubject(
     return 'a valid subject resolves; a ticket inside a compound scope is rejected';
 }
 
+/**
+ * The verdict on `git:convention sync` from the packed install: the update
+ * `/pr:merge` § 2 runs. A current branch exits 0; a behind one is refused with
+ * exit 3 under the committed `rebase`, never merged.
+ */
+export function checkGitConventionSync(
+    current: { status: number; stdout: string; stderr?: string },
+    behind: { status: number; stdout: string; stderr?: string },
+): string {
+    if (current.status !== 0) {
+        throw new Error(`git:convention sync did not pass a current branch, exit ${current.status}: ${(current.stdout + (current.stderr ?? '')).slice(-400)}`);
+    }
+    if (behind.status !== 3 || !behind.stdout.includes('git.update_strategy is `rebase`')) {
+        throw new Error(`git:convention sync did not refuse a behind branch under rebase, exit ${behind.status}: ${behind.stdout.slice(-400)}`);
+    }
+    return 'sync passes a current branch and refuses a behind one with exit 3';
+}
+
 function legGitConvention(ctx: Ctx): string {
     const env = binEnv(ctx);
     const remote = path.join(ctx.tmpRoot, 'git-convention-origin.git');
@@ -585,7 +603,17 @@ function legGitConvention(ctx: Ctx): string {
     const r = run(ctx.bin, ['git:convention', 'show', '--json', '--base', 'origin/main'], { cwd: repo, env });
     const shown = checkGitConventionShow(r.status, r.stdout, r.stderr);
     const subject = (line: string) => run(ctx.bin, ['git:convention', 'subject'], { cwd: repo, env, input: `${line}\n` });
-    return `${shown}; ${checkGitConventionSubject(subject('DEV-1 feat(api): add x'), subject('DEV-1 feat(api,DEV-1): add x'))}`;
+    const subjects = checkGitConventionSubject(subject('DEV-1 feat(api): add x'), subject('DEV-1 feat(api,DEV-1): add x'));
+    const sync = () => run(ctx.bin, ['git:convention', 'sync', '--base', 'origin/main'], { cwd: repo, env });
+    git(repo, 'switch', '-q', '-c', 'feature');
+    const current = sync();
+    git(repo, 'switch', '-q', 'main');
+    fs.writeFileSync(path.join(repo, 'advance.txt'), 'advance\n');
+    git(repo, 'add', 'advance.txt');
+    git(repo, 'commit', '-q', '-m', 'advance main');
+    git(repo, 'push', '-q', 'origin', 'main');
+    git(repo, 'switch', '-q', 'feature');
+    return `${shown}; ${subjects}; ${checkGitConventionSync(current, sync())}`;
 }
 
 function legUninstall(ctx: Ctx): string {

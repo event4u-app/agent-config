@@ -140,7 +140,7 @@ on every path:
 agent-config git:convention show        # git.update_strategy: value, source, state
 git fetch origin
 gh pr checkout <N>
-./scripts-run src/scripts/sync_pr_branch --base origin/<base>
+agent-config git:convention sync --base origin/<base>
 ```
 
 A `git.update_strategy` whose state is `malformed`, `invalid` or `discarded` is

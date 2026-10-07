@@ -937,9 +937,14 @@ export function main(argv?: readonly string[]): number {
     return plan.exit;
 }
 
+// Inlined into the `git:convention` delegate bundle this module shares that
+// bundle's `import.meta.url`, so the URL comparison below would run `main` at
+// import time with the verb's argv. Defined by the esbuild builds only.
+declare const __AGENT_CONFIG_BUNDLE__: boolean | undefined;
 const _HERE = fileURLToPath(import.meta.url);
 function _isCliEntry(): boolean {
     if (process.argv[1] === undefined) return false;
+    if (typeof __AGENT_CONFIG_BUNDLE__ !== 'undefined' && __AGENT_CONFIG_BUNDLE__) return path.basename(process.argv[1], '.js') === 'sync_pr_branch';
     return import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href || process.argv[1] === _HERE;
 }
 if (_isCliEntry()) {
