@@ -5,9 +5,10 @@ opening a PR. The one place that
 decides how a feature branch takes in its base — `/create-pr` § 1b, `/pr:merge`
 § 2, `/prepare-for-review` and `/review:changes` defer here. Read
 `git.update_strategy` from `agent-config git:convention show`, which exits 1
-when the value in force, or this checkout's candidate, is `malformed`,
-`invalid`, `discarded` or `unresolvable` — none of these is a strategy: stop
-and report the line it prints, never fall back to `merge`.
+when the value in force is `malformed`, `invalid`, `discarded` or
+`unresolvable` — none of these is a strategy: stop and report the line it
+prints, never fall back to `merge`. A candidate in one of these states is
+printed as a warning with exit 0: the update reads only the value in force.
 A team declares the strategy in `.git-convention.yml` at the repository root
 (ADR-282), and it is read at the commit the branch is judged against — the
 pull request's base — so a value changed on this branch is a candidate `show`

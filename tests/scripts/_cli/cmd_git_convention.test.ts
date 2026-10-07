@@ -194,6 +194,21 @@ describe('git:convention show exits non-zero on every state sync refuses', () =>
         expect(r.code).toBe(1);
     });
 
+    it('a candidate in a refusal state is a warning, exit 0, while the value in force is readable', () => {
+        const dir = repo('git:\n  update_strategy: rebase\n');
+        fs.writeFileSync(path.join(dir, '.git-convention.yml'), 'git:\n  update_strategy: merge\nx: [\n');
+        const r = runGitConvention(['show'], dir);
+        expect(r.code).toBe(0);
+        const text = r.out.join('\n');
+        expect(text).toContain('git.update_strategy = rebase');
+        expect(text).toMatch(/candidate only, not in force: git-convention-malformed/);
+        const j = runGitConvention(['show', '--json'], dir);
+        expect(j.code).toBe(0);
+        const parsed = JSON.parse(j.out.join('\n')) as { ok: boolean; keys: Record<string, { candidate: { state: string } | null }> };
+        expect(parsed.ok).toBe(true);
+        expect(parsed.keys.update_strategy?.candidate?.state).toBe('malformed');
+    });
+
     it('the /pr:merge prose lists exactly the states the code refuses', () => {
         const text = fs.readFileSync(path.join(PACKAGE_ROOT, 'src', 'domains', 'git', 'pr', 'merge', 'command.md'), 'utf8');
         const sentence = /A `git\.update_strategy` whose state is ([^\n]+(?:\n[^\n]+)?) is\s+not a strategy/.exec(text)?.[1] ?? '';
@@ -210,13 +225,14 @@ describe('the documented `show` exit-1 set', () => {
         return [...(m?.[1] ?? '').matchAll(/[a-z]+/g)].map((w) => w[0]).filter((w) => w !== 'or');
     };
 
-    it('the CLI help names every refusal state and the candidate case', () => {
+    it('the CLI help names every refusal state of the value in force, and a candidate as a warning', () => {
         const help = fs.readFileSync(path.join(repoRoot, 'src/scripts/_dispatch.bash'), 'utf-8');
-        expect(listed(help, /Exit 1 when a key, or this checkout's candidate for it, is ([a-z, ]+?)\./)).toEqual([...REFUSAL_STATES]);
+        expect(listed(help, /Exit 1 when a key in force is ([a-z, ]+?);/)).toEqual([...REFUSAL_STATES]);
+        expect(help.replace(/\s+/g, ' ')).toContain('a candidate in one of these states is a warning, exit 0');
     });
 
     it('the branch-update reference names every refusal state', () => {
         const ref = fs.readFileSync(path.join(repoRoot, 'src/skills/git-workflow/references/branch-update.md'), 'utf-8');
-        expect(listed(ref, /exits 1 when the value in force, or this checkout's candidate, is ([`a-z, ]+?) —/)).toEqual([...REFUSAL_STATES]);
+        expect(listed(ref, /exits 1 when the value in force is ([`a-z, ]+?) —/)).toEqual([...REFUSAL_STATES]);
     });
 });

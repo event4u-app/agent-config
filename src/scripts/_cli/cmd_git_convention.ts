@@ -15,9 +15,9 @@
  * commit the branch is judged against. Where this checkout's own value differs,
  * it is printed as a candidate beside the value in force.
  *
- * `show` exit codes: `0` every key readable · `1` a key, or this checkout's
- * candidate for it, is in a state `isRefusal` names (the set `sync` refuses
- * with exit 4) · `2` usage error.
+ * `show` exit codes: `0` every key in force is readable · `1` a key in force
+ * is in a state `isRefusal` names (the set `sync` refuses) · `2` usage error.
+ * A candidate in such a state is printed as a warning: `sync` never reads it.
  *
  * `subject` reads subjects on stdin and exits `0` all valid · `1` a subject
  * fails, or the format cannot be read · `2` usage. It checks only the
@@ -152,7 +152,7 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
     const read = readCommittedConvention(cwd, { override: base, ...(deps ? { deps } : {}) });
     const readings = read.readings as Record<(typeof GIT_CONVENTION_KEYS)[number], GitConventionReading>;
     const validators = commitMessageValidators(cwd);
-    const ok = !GIT_CONVENTION_KEYS.some((k) => isRefusal(readings[k].state) || (read.candidates[k] !== undefined && isRefusal((read.candidates[k] as GitConventionReading).state)));
+    const ok = !GIT_CONVENTION_KEYS.some((k) => isRefusal(readings[k].state));
     const code: 0 | 1 = ok ? 0 : 1;
 
     if (json) {
@@ -191,7 +191,7 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
             out.push(
                 `  candidate ${cand.value ?? 'unknown'} (${cand.state}) from ${cand.source ?? '(template default)'} — this checkout's value; the value above is in force`,
             );
-            if (cand.reason !== null) out.push(`  ⚠️  ${describeRefusal(cand)}`);
+            if (cand.reason !== null) out.push(`  ⚠️  candidate only, not in force: ${describeRefusal(cand)}`);
         }
     }
     out.push(`team declaration: ${CARRIER_PATH} at the repository root (ADR-282)`);

@@ -150,7 +150,10 @@ agent-config git:convention sync --base origin/<base>
 A `git.update_strategy` whose state is `malformed`, `invalid`, `discarded` or
 `unresolvable` is not a strategy — `show` exits `1` on it and the script
 refuses it with exit 4, or with exit 1 when the target itself cannot be
-resolved — so stop on this PR and report the line `show` printed.
+resolved — so stop on this PR and report the line `show` printed. A
+candidate in such a state (this checkout's uncommitted value) is a warning
+`show` prints with exit `0`; the script never reads it, so it does not stop
+the PR.
 The one narrowing is offline: a target that cannot be resolved while origin is
 unreachable, with no developer layer declaring anything but `merge`, is the
 `unverified` warning below (exit `0`, nothing merged). Otherwise
