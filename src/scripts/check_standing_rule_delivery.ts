@@ -71,6 +71,7 @@
  * converts into the other.
  */
 
+import { createHash } from 'node:crypto';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
@@ -80,6 +81,8 @@ import { fileURLToPath } from 'node:url';
 import { assertScanned, DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 import { measure, method_note } from './_lib/token_count.js';
 import * as rule_layer_overlap from './_lib/rule_layer_overlap.js';
+import { lawText, ruleBody } from './_lib/rule_law_section.js';
+import { is_thin_entry, lawDigest, STUB_LAW_OPEN } from './_lib/thin_rules.js';
 
 const PROG = 'check_standing_rule_delivery';
 const _HERE = fileURLToPath(import.meta.url);
@@ -205,6 +208,80 @@ export function measureStandingDelivery(
     };
 }
 
+/** One installed rule, compared against the source it was installed from. */
+export interface ReinstallRow {
+    readonly layer: string;
+    readonly id: string;
+    /** What the two digests are of — named, so a reader knows what "differs" means. */
+    readonly compared: 'body' | 'law' | 'none';
+    readonly installed: string;
+    readonly source: string;
+    readonly status: 'current' | 'pending reinstall' | 'no source';
+}
+
+function bodyDigest(text: string): string {
+    return createHash('sha256').update(ruleBody(text), 'utf-8').digest('hex').slice(0, 16);
+}
+
+/**
+ * Per installed rule: its digest against the CURRENT source digest
+ * (`road-to-a-default-install-served-once` step 1.2).
+ *
+ * The cap above measures installed directories only, by design, so a source
+ * rule that got smaller is invisible until a reinstall. This names every rule
+ * whose installed copy no longer matches its source as `pending reinstall`.
+ * It REPORTS and fails nothing — every source edit makes an older install
+ * differ, and that is a state to act on, not an error.
+ *
+ * What is compared depends on the installed form, and the row says which:
+ *
+ * - **body** — a full-bodied copy: sha256 of the body after the frontmatter
+ *   and comment strip, because the installer rewrites the frontmatter into
+ *   host form and the body is what the host reads.
+ * - **law** — a stub carrying a copied law: the digest the stub recorded
+ *   against the digest of the source's law section today.
+ * - **none** — a stub with no copied text: its body is read from the package
+ *   at delivery, so nothing installed can go stale.
+ */
+export function reinstallRows(
+    layer: string,
+    installed_dir: string,
+    source_dir: string,
+): ReinstallRow[] {
+    const l = rule_layer_overlap.readRuleLayer(installed_dir);
+    if (l === null) return [];
+    const rows: ReinstallRow[] = [];
+    for (const [name, text] of l.files) {
+        const id = name.replace(/\.md$/, '');
+        let src: string | null;
+        try {
+            src = fs.readFileSync(path.join(source_dir, name), 'utf-8');
+        } catch {
+            src = null;
+        }
+        let compared: ReinstallRow['compared'] = 'body';
+        let installed = bodyDigest(text);
+        let source = src === null ? '-' : bodyDigest(src);
+        if (is_thin_entry(text)) {
+            const at = text.indexOf(STUB_LAW_OPEN);
+            if (at === -1) {
+                compared = 'none';
+                installed = '-';
+                source = '-';
+            } else {
+                compared = 'law';
+                installed = text.slice(at + STUB_LAW_OPEN.length).split(' ')[0] ?? '';
+                const law = src === null ? null : lawText(ruleBody(src));
+                source = law === null ? '-' : lawDigest(law);
+            }
+        }
+        const status: ReinstallRow['status'] =
+            src === null ? 'no source' : installed === source ? 'current' : 'pending reinstall';
+        rows.push({ layer, id, compared, installed, source, status });
+    }
+    return rows;
+}
+
 /**
  * Where the loaded-instruction record would live if the host wrote one.
  *
@@ -328,6 +405,25 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         out(
             `  overlap  ${String(measured.overlap_rules).padStart(4)} rule(s) in both layers `
                 + `(${measured.duplicate_rules} duplicate, ${measured.divergent_rules} divergent)\n`,
+        );
+    }
+
+    // Step 1.2 — the installed copy against the current source, per rule.
+    // Reported, never failed: see `reinstallRows`.
+    const source_dir = path.join(REPO_ROOT, 'dist', 'agent-src', 'rules');
+    const rows = [
+        ...reinstallRows('global', path.join(os.homedir(), '.claude', 'rules'), source_dir),
+        ...reinstallRows('project', path.join(REPO_ROOT, '.claude', 'rules'), source_dir),
+    ];
+    const pending = rows.filter((r) => r.status === 'pending reinstall');
+    out(
+        `  reinstall ${pending.length} of ${rows.length} installed rule(s) differ from `
+            + `${path.relative(REPO_ROOT, source_dir)} (installed digest vs current source digest)\n`,
+    );
+    for (const r of rows) {
+        out(
+            `    ${r.layer.padEnd(8)} ${r.id.padEnd(40)} ${r.compared.padEnd(5)} `
+                + `${r.installed.padEnd(16)} ${r.source.padEnd(16)} ${r.status}\n`,
         );
     }
 

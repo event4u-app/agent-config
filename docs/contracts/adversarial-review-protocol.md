@@ -350,8 +350,9 @@ ledger artifact under `agents/evidence/reviews/canary/`, and — absolutely
 (`./scripts-run src/scripts/check_gate_coverage --canary`) creates each
 plant, runs the gate, and deletes the plant in a `finally`, including any
 directory it had to create. It is deliberately kept OFF the default CI
-path: it mutates the working tree, so it is an operator-invoked
-experiment, never a per-PR gate.
+path: it mutates the working tree, so it runs on a schedule in a throwaway
+checkout (`.github/workflows/gate-canary.yml`, monthly, the ledger uploaded
+as a run artifact) or by an operator — never as a per-PR gate.
 
 **What differs, and why.** The rotating class list above (vulnerable
 dependency pin · dead script target · oversized artifact · stale

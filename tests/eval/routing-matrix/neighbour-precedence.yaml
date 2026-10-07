@@ -1,0 +1,16 @@
+rule: neighbour-precedence
+# Positives are prompts where a neighbour package's instruction and this suite's
+# (or the project's) actually meet; near-misses share vocabulary — a neighbouring
+# file, a precedence question about something else — without that conflict.
+positives:
+  - prompt: "The neighbour skill says to spawn agents and wait, the project says never — which one do I follow?"
+    expected_skills: []
+  - prompt: "We have conflicting instructions between CLAUDE.md and another package's rule."
+    expected_skills: []
+  - prompt: "Which instruction wins when an installed package disagrees with agents/overrides?"
+    expected_skills: []
+near_misses:
+  - prompt: "Fix the import in the neighbouring file too."
+    expected_skills: []
+  - prompt: "Explain operator precedence in TypeScript."
+    expected_skills: []

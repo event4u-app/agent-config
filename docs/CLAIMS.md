@@ -399,7 +399,7 @@ metacharacters and repo escape, including the right-hand side of `--flag=value`.
 - last_verified: 2026-07-08
 
 ### claim: rule-count
-- claim: 121 governed rules.
+- claim: 122 governed rules.
 - kind: quant
 - evidence: exec:check_artefact_count_messaging -> 0
 - status: backed
@@ -1246,5 +1246,19 @@ is the named exception in the claim itself.
   (4) UNDERPOWERED, per cause and never from the aggregate: fewer than 20 CI waits in the window for `ci-wait`; fewer than 5 structured asks for `user-wait`. A window with fewer total blocking calls than 145 is NOT underpowered on that ground alone — a fall in blocking calls may be the mitigation working. Underpowered is neither a pass nor a miss and may be cited for neither.
   (5) A MITIGATION THAT REMOVES A VERIFICATION STEP IS OUT OF SCOPE, and so is one that only moves a question from the question tool into plain text: the human waits the same either way and only the instrument stops seeing it.
   (6) SCOPE: one machine's transcript store, an mtime window that moves; a delta between two windows can be a corpus change, which is why each window's shape is recorded on the reading page.
+- status: unbacked
+- last_verified: 2026-10-07
+
+### claim: touched-file-quality-shadow-to-warn-bar
+- claim: PRE-REGISTERED, unmeasured. Whether the touched-file quality pass (`hooks.verify_before_complete.touched_file_quality`) may move its shipped default from `off`/`shadow` to `warn` — i.e. whether its advisory lines at stop are rare enough, real enough and cheap enough to be worth emitting by default.
+- kind: quant
+- evidence: PRE-REGISTERED 2026-10-07 (`road-to-touched-file-quality-that-says-when-it-did-not-look` step 4.1), BEFORE any reading is taken against it. The only reading that exists is `agents/evidence/analysis/touched-file-quality-readings-2026-Q4.md`, a replay of 30 merged commits, and that corpus is EXCLUDED below — so no number here can have been fitted to a result.
+  (0) PRECONDITION, not a threshold: Phases 1 and 2 of that roadmap must have shipped — the `ignored_files` field and the `typecheck_not_run` field on every `quality_runs[]` record. A reading taken on a build without them counts an ignored file as a pass and a lint-only zero as a type verdict (§ 5 of the readings page), and is not admissible for either direction.
+  (1) CORPUS: LIVE stops only — `quality_runs[]` written by the stop concern in a tree that set `touched_file_quality: shadow`, at the stop where the edit happened. Replayed merged commits are excluded: they are post-CI-green by construction, so they measure the red rate at the one moment it is lowest.
+  (2) SAMPLE FLOOR: **>= 200 stops with at least one touched file**, across **>= 20 sessions**, over **>= 30 calendar days** — all three, never whichever arrives first. A row whose only executed commands recorded every file as ignored counts as a stop with a touched file and NOT as a stop with a verdict.
+  (3) ADVISORY RATE, a noise ceiling and a signal floor: across the sample, the share of stops at which `advisoryLine` would have emitted a line must be **<= 15 %**, AND at least **5** of those lines must be judged by a human reading the turn to name a defect that was real and not already fixed before the turn ended. A rate under the ceiling with fewer than five real catches is a pass on noise and a null on value, and does not clear the bar.
+  (4) LATENCY CEILING: over stops that executed at least one command, the added wall time at stop must be **<= 2,000 ms at p95**. Stated against the only figure on file: the 2026-10-06 replay measured 3,546 ms median and 4,043 ms p95 for this repository, so this repository would FAIL this clause today. That is recorded as the expectation, not as a reason to move the number.
+  (5) WHAT CLEARING IT DOES AND DOES NOT DO: clearing (0)–(4) makes the flip ELIGIBLE and decides nothing. The only place the flip is decided is the owner blocker `touched-file-quality-default-is-an-owner-call` in `agents/roadmaps/later/road-to-touched-files-that-pass-their-own-tools-carried.md`. Failing any clause at the end of the window files this claim `resolved-null`; a re-scoped bar after a null needs a NEW pre-registered claim. Below the floor in (2) the window is UNDERPOWERED and may be cited for neither direction.
+  (6) SCOPE: a reading is a statement about the trees that produced it. One operator's stops measure one operator's habits and one toolchain's start-up cost; nothing here licenses a population figure.
 - status: unbacked
 - last_verified: 2026-10-07

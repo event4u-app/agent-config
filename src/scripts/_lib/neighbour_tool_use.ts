@@ -3,7 +3,7 @@
  * reader in the neighbour census.
  *
  * WHY A MODULE OF ITS OWN, AND NOT A CONSTANT IN EITHER SIDE. The writer lives
- * in `hooks/telemetry_usage_hook.ts`, which is inlined into the shared hook
+ * in `hooks/mcp_usage_observation_hook.ts`, which is inlined into the shared hook
  * bundle `check_hook_bundle_composition` caps; the reader lives in
  * `_lib/neighbour_census.ts`, which is not. Putting the pair here lets esbuild
  * tree-shake {@link toolsUsedByServer} out of the hook bundle while both sides
@@ -113,16 +113,14 @@ export function toolBelongsTo(tool: string, segment: string): boolean {
 /**
  * The directory the store lives under, from any directory inside the project.
  *
- * The WRITER roots the store at the directory holding `.agent-settings.yml`
- * (`telemetry_usage_hook.readSettingsFor`), because a session started in a
- * subdirectory would otherwise scatter one store per directory it happened to
- * start in. The reader has to resolve the same way or it looks in the wrong
- * place: a monorepo with settings at the repo root and `.mcp.json` under
- * `packages/web` would report `0` for a server in daily use. The two walks are
- * pinned equal by a fixture rather than by assertion.
+ * Both the writer and the reader call this one function, so the store is
+ * rooted at the directory holding `.agent-settings.yml` on both sides: a
+ * session started in a subdirectory would otherwise scatter one store per
+ * directory, and a monorepo with settings at the repo root and `.mcp.json`
+ * under `packages/web` would read `0` for a server in daily use. A fixture
+ * still pins the two sides equal end to end.
  *
- * No settings file on any ancestor → `start`, matching the writer's own
- * fallback.
+ * No settings file on any ancestor → `start`.
  */
 export function resolveStoreRoot(start: string): string {
     let dir = path.resolve(start);

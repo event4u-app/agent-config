@@ -188,6 +188,14 @@ what "the quality commands the project's own toolchain already lists" implies to
 reader, and it should be said in the open rather than discovered by the first
 consumer who flips the key expecting type safety.
 
+*2026-10-07 — follow-up, findings above unchanged:*
+`road-to-touched-file-quality-that-says-when-it-did-not-look` added two record
+fields for (a) and (b). `ignored_files` lists matched files the tool declined to
+look at, and a run where all were ignored with exit 0 now records `exit_code: null`
+(commit `41147ed65`); `typecheck_not_run` names, on every record of a turn, each
+emitted type-check command that produced no verdict (same commit). The
+table/resolver parity test landed in `bda6021dc`.
+
 ## 6. What this means for 2.3 — the `shadow → warn` default flip
 
 2.3 is deferred to the owner and this page does not decide it. What it supplies is

@@ -6,8 +6,9 @@ Reports here are one of two kinds; nothing else accumulates:
    the same path on every run (`command-surface.{md,json}`,
    `command-budget-audit.{md,json}` from `audit_command_surface.ts`;
    `auto-rules-audit.*`, `auto-rules-overlap.json`; `skill-overlap.*`;
-   `user-type-axis-audit.md` from `audit_user_type_axis.ts`). Staleness is
-   fixed by re-running the generator, never by hand-editing.
+   `user-type-axis-audit.md` from `audit_user_type_axis.ts --write`, run by
+   `task regen-user-type-axis-report`; without `--write` that audit only reads).
+   Staleness is fixed by re-running the generator, never by hand-editing.
 2. **Decision-provenance snapshots** — point-in-time worksheets that stable
    artifacts (ADRs, contracts) cite as evidence. They stay tracked exactly as
    long as a stable artifact links them. Current set:

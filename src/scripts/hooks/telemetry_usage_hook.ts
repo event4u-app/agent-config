@@ -29,23 +29,11 @@
  * settings file is how it learns it is off, the same as the artefact-
  * engagement surface it mirrors.)
  *
- * THAT SENTENCE USED TO READ "no directory creation", UNQUALIFIED, AND IS
- * NARROWED RATHER THAN QUIETLY LEFT STANDING. The foreign-MCP recorder below
- * writes `agents/runtime/neighbour-tool-use.json` on an install that never
- * enabled telemetry, and creates that directory and a lock sentinel beside it.
- * That is deliberate — the store is a local census input, not telemetry, and
- * gating it on the org switch would print `0` everywhere (roadmap decision D9)
- * — but it IS a file operation, so the guarantee now says which operations it
- * covers. An unqualified claim this file's own code contradicts is worse than
- * the narrower one it is replaced by.
- *
- * NOT REACHED YET, AND SAYING SO HERE BECAUSE THIS IS WHERE A READER LOOKS.
- * The manifest entry for this concern carries `tools: [Skill]`, which the
- * dispatcher matches exactly, so it is not invoked for an MCP call at all and
- * the branch below is dead in production. Held as the
- * `mcp-recorder-unreachable-behind-the-tools-filter` blocker on
- * road-to-neighbours-that-pull-their-weight: the manifest is a gated
- * governance surface and the council split on the edit rather than converging.
+ * The foreign-MCP tool-name recorder that once branched here lives in its own
+ * concern, `mcp-usage-observation` (road-to-neighbours-that-pull-their-weight
+ * D12): this concern's `tools: [Skill]` filter meant the dispatcher never
+ * called that branch, and default-on local collection does not belong under an
+ * opt-in telemetry name.
  *
  * NO OUTBOUND CALL EXISTS HERE, DELIBERATELY. Transport is Phase 2 and is
  * blocked on `sink-choice`; org-wide enablement is Phase 3 and is blocked on
@@ -74,12 +62,7 @@ import {
     FLUSH_SESSION_END,
     spool_path_for,
 } from '../../agent-src/templates/scripts/telemetry/transport.js';
-import {
-    FOREIGN_TOOL_USE_REL,
-    MCP_TOOL_PREFIX,
-    usageDay,
-} from '../_lib/neighbour_tool_use.js';
-import { is_replay_mode, update_json_under_lock } from './state_io.js';
+import { is_replay_mode } from './state_io.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW } from './exit_codes.js';
 
@@ -272,29 +255,7 @@ function processEnvelope(envelope: JsonValue, consumer_root: string): number {
 
         const payload = unwrapPayload(envelope);
         const tool = extractToolName(payload);
-        if (tool !== SKILL_TOOL_NAME) {
-            // The other half of this slot's observation, and the only half a
-            // `post_tool_use` envelope can supply: the tool's NAME. The MCP
-            // fingerprint store wants a tool DEFINITION, which this envelope
-            // never carries (roadmap decision D2), so what is recorded here is
-            // what was actually seen. Rooted at the settings directory, not at
-            // the session cwd, for the same reason the Class-A log below is.
-            if (tool !== null && tool.startsWith(MCP_TOOL_PREFIX)) {
-                // The mutator's cast is safe at the only place that matters:
-                // the reader in `neighbour_tool_use` drops any value that is
-                // not a string, so a hand-edited store cannot widen this.
-                // Kept OUT of the argument list below — esbuild preserves a
-                // comment in that position and it would cost the shared
-                // bundle ~190 bytes of prose nothing executes.
-                const day = usageDay(new Date());
-                update_json_under_lock<Record<string, string>>(
-                    path.join(readSettingsFor(consumer_root).root, FOREIGN_TOOL_USE_REL),
-                    (seen) => (seen[tool] === day ? null : ({ ...seen, [tool]: day } as Record<string, string>)),
-                    { blocking: false },
-                );
-            }
-            return EXIT_ALLOW;
-        }
+        if (tool !== SKILL_TOOL_NAME) return EXIT_ALLOW;
 
         const { settings, text, root } = readSettingsFor(consumer_root);
         if (!settings.active) return EXIT_ALLOW;

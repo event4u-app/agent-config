@@ -76,6 +76,11 @@ reason, never left to read as finished.
   opt-in feature observes nothing from non-adopters; the field counter stays
   structurally zero at any window length, and the circularity named in § 2 of
   the evidence page persists.
+- **Note (2026-10-07):** `road-to-touched-file-quality-that-says-when-it-did-not-look`
+  fixed both soundness findings this recommendation names and pre-registered the
+  bar a `warn` default would have to clear as `claim:touched-file-quality-shadow-to-warn-bar`
+  in `docs/CLAIMS.md`. The claim decides nothing; this blocker remains the only
+  place the default is decided.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/drain-lane-f -->

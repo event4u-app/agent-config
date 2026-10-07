@@ -30,7 +30,8 @@
  * definition. It runs the same contract as the review-side canary in
  * `docs/contracts/adversarial-review-protocol.md` § 6 (rotating class, sealed
  * record, NEVER SHIPS) and is deliberately kept OFF the default CI path: it
- * mutates the tree, so it is an operator-invoked biannual experiment, not a
+ * mutates the tree, so it is a scheduled experiment (`.github/workflows/gate-canary.yml`,
+ * monthly, ledger uploaded as a run artifact) or an operator run, never a
  * per-PR gate. Every plant is reverted in a `finally`.
  *
  * CLI:
@@ -415,8 +416,8 @@ function report_negative_control_inventory(specs: readonly GateSpec[]): void {
   // The arithmetic is the guard against skimming: two numbers that reconcile
   // against the enforced total cannot be read as "all of them checked".
   process.stdout.write(
-    `  ⚠️  declared, not run — the mutating --canary path is operator-invoked and off the per-PR workflow, ` +
-      `so no negative control ran here.\n`,
+    `  ⚠️  declared, not run — the mutating --canary path is off the per-PR workflow (it runs monthly ` +
+      `in .github/workflows/gate-canary.yml), so no negative control ran here.\n`,
   );
   for (const s of without) {
     process.stdout.write(`  · ${s.id}: ${s.no_canary_reason ?? '(no reason recorded)'}\n`);
