@@ -200,8 +200,12 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // `conventional-commits-writing` (0x2f = 47) and `merge-conflicts`
         // (0x25 = 37) seal, moving the holdout 25 -> 27; `jira-integration`
         // (0x93 = 147) trains, moving the train count 90 -> 91.
+        //
+        // 118 -> 119 on 2026-10-07: the same branch's fourth corpus,
+        // `using-git-worktrees` (0xba = 186), trains, moving the train count
+        // 91 -> 92; the holdout is unchanged.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(118);
+        expect(all.length).toBe(119);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(27);
     });
 });
@@ -232,7 +236,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 90 -> 91 on 2026-10-06 (third growth of the day): `jira-integration`
         // trains; `conventional-commits-writing` and `merge-conflicts` sealed
         // and are absent here. See the partition note above.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(91);
+        // 91 -> 92 on 2026-10-07: `using-git-worktrees` trains.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(92);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {
