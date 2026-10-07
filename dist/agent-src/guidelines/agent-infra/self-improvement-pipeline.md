@@ -1,8 +1,11 @@
 # Self-Improvement Pipeline
 
 Five-stage flow that turns real project experience into reviewed
-rule / skill / command / guideline changes. No autonomous self-edits;
-every upstream change ships via a human-reviewed PR.
+rule / skill / command / guideline changes. Self-modification is a goal
+(ADR-281): for a proposal scoped to the package the approval is the AI
+council's ratification record, and the user is its last rung; a change a
+user asked for keeps that user's approval as now. A passing record makes a
+change ready, not landed — every upstream change still ships via a PR.
 
 Referenced by `road-to-curated-self-improvement.md`. Consumed by the live
 artifacts — the `skill-improvement-trigger` rule and the existing skills
@@ -84,7 +87,11 @@ blocks — it does not hand a half-filled doc to the next stage.
 
 ### Stage 5 — Upstream
 
-- **Trigger:** gate passed AND a human approver signed off.
+- **Trigger:** gate passed AND, for a proposal scoped to the package, a
+  council ratification record whose `subject` matches the proposal's change
+  passed it (ADR-281); where the council cannot conclude, the user decides by
+  the route ADR-281 § 5 names. A proposal scoped to a consumer's own project
+  needs that user's approval, as before.
 - **Executor:** `upstream-contribute` skill. Refuses invocation if
   the proposal frontmatter is not `stage: gated`.
 - **Input:** gated proposal doc.
