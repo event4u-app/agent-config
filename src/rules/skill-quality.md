@@ -10,7 +10,6 @@ enforced_by:
   - "validator:src/scripts/skill_linter.ts"
 collision_ok:
   "src/skills/": "every skill edit passes the executable-quality floor"
-# obligation: line 14
 obligation_frequency: "per-edit"
 ---
 

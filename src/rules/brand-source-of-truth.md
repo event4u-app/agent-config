@@ -20,7 +20,6 @@ applies_to_user_types:
 self_contained: true
 workspaces: [engineering]
 packs: [brand]
-# obligation: line 51
 obligation_frequency: "per-edit"
 ---
 

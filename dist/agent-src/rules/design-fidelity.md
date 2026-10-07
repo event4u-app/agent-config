@@ -41,7 +41,6 @@ collision_ok:
   "mockup": "a provided mockup is the spec — 1:1 fidelity floor"
 enforced_by:
   - "instruction-only: no artifact in this tree records a fidelity comparison. lint_design_slop and lint_design_quality measure generic AI-aesthetic tells and accessibility; neither reads the handover, so a 1:1 claim is model-carried"
-# obligation: line 60
 obligation_frequency: "per-edit"
 ---
 

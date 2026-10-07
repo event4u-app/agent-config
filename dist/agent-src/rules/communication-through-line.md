@@ -8,7 +8,6 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 triggers:
   - phrase: "reporting progress"
-# obligation: line 20
 obligation_frequency: "per-turn"
 ---
 

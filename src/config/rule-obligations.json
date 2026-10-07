@@ -1,0 +1,833 @@
+{
+    "_comment": "Stable obligation ids per rule (road-to-enforcement-per-obligation, council 2026-10-07, option (a)). One id per normative obligation, `<rule>.<obligation>`, instruction-only obligations included so the denominator is not shaped by what is gateable. `bindings` maps an enforced_by entry, spelled as in the rule frontmatter, to the ids it refuses; an entry absent from `bindings` is UNBOUND and keeps rule-level credit only, an entry bound to [] refuses none of the rule obligations. Kernel rules are absent and stay at rule granularity. The id is never derived from law text, so rewording a law keeps its id. Read by src/scripts/_lib/rule_obligations.ts and check_enforcement_coverage; checked by tests/scripts/rule_obligation_ids.test.ts.",
+    "rules": {
+        "active-remediation": {
+            "obligations": [
+                "active-remediation.never-ignore-spotted-issue",
+                "active-remediation.fix-small-aligned-now",
+                "active-remediation.note-then-ask-after-task",
+                "active-remediation.follow-up-pr-when-many",
+                "active-remediation.live-security-gap-not-deferred",
+                "active-remediation.ask-carries-candidate-fixes"
+            ]
+        },
+        "analysis-skill-routing": {
+            "obligations": [
+                "analysis-skill-routing.narrowest-analysis-skill"
+            ]
+        },
+        "architecture": {
+            "obligations": [
+                "architecture.thin-handlers",
+                "architecture.validate-at-request-boundary",
+                "architecture.read-project-docs-before-structure"
+            ]
+        },
+        "artifact-drafting-protocol": {
+            "obligations": [
+                "artifact-drafting-protocol.understand-research-draft-phases",
+                "artifact-drafting-protocol.numbered-prompt-per-phase",
+                "artifact-drafting-protocol.commit-only-on-approval"
+            ]
+        },
+        "artifact-engagement-recording": {
+            "obligations": [
+                "artifact-engagement-recording.record-engagement-when-enabled",
+                "artifact-engagement-recording.content-free-event-schema"
+            ]
+        },
+        "augment-edit-discipline": {
+            "obligations": [
+                "augment-edit-discipline.project-agnostic-content",
+                "augment-edit-discipline.sync-counts-and-references"
+            ]
+        },
+        "autonomous-execution": {
+            "obligations": [
+                "autonomous-execution.task-scoped-autonomy",
+                "autonomous-execution.fix-loop-strategy-ladder",
+                "autonomous-execution.allowlist-growth-cap"
+            ]
+        },
+        "brand-consistency": {
+            "obligations": [
+                "brand-consistency.values-trace-to-brand-tokens"
+            ]
+        },
+        "brand-source-of-truth": {
+            "obligations": [
+                "brand-source-of-truth.consumer-brand-wins",
+                "brand-source-of-truth.values-trace-to-brand-tokens"
+            ]
+        },
+        "broken-access-control": {
+            "obligations": [
+                "broken-access-control.server-side-ownership-check",
+                "broken-access-control.three-negative-tests",
+                "broken-access-control.server-strips-fields-by-role",
+                "broken-access-control.live-exposure-surfaced"
+            ]
+        },
+        "cli-output-handling": {
+            "obligations": [
+                "cli-output-handling.wrap-verbose-output-with-rtk"
+            ]
+        },
+        "code-comment-discipline": {
+            "obligations": [
+                "code-comment-discipline.comment-states-why-only",
+                "code-comment-discipline.no-restating-comments",
+                "code-comment-discipline.no-signature-mirror-docblock",
+                "code-comment-discipline.no-provenance-comments"
+            ],
+            "bindings": {
+                "validator:src/scripts/lint_code_comments.ts": [
+                    "code-comment-discipline.no-provenance-comments"
+                ],
+                "hook:comment-discipline": [
+                    "code-comment-discipline.no-provenance-comments"
+                ]
+            }
+        },
+        "code-provenance": {
+            "obligations": [
+                "code-provenance.no-verbatim-external-code",
+                "code-provenance.ledger-and-license-check-per-borrow",
+                "code-provenance.unknown-license-no-borrow",
+                "code-provenance.harvest-claims-cited-or-labelled"
+            ]
+        },
+        "command-suggestion-policy": {
+            "obligations": [
+                "command-suggestion-policy.suggest-never-invoke",
+                "command-suggestion-policy.run-as-is-always-present",
+                "command-suggestion-policy.high-tier-removes-only-second-confirmation"
+            ]
+        },
+        "commit-conventions": {
+            "obligations": [
+                "commit-conventions.repo-convention-or-conventional-commits",
+                "commit-conventions.emoji-free-subjects-and-branches"
+            ]
+        },
+        "communication-through-line": {
+            "obligations": [
+                "communication-through-line.state-goal-once",
+                "communication-through-line.tie-turns-to-goal",
+                "communication-through-line.one-end-summary"
+            ]
+        },
+        "content-quoting-floor": {
+            "obligations": [
+                "content-quoting-floor.quote-max-fifteen-words",
+                "content-quoting-floor.one-quote-per-source",
+                "content-quoting-floor.no-complete-short-work",
+                "content-quoting-floor.paraphrase-by-default"
+            ]
+        },
+        "context-hygiene": {
+            "obligations": [
+                "context-hygiene.suggest-fresh-chat-at-thresholds",
+                "context-hygiene.stop-after-three-failures",
+                "context-hygiene.no-tool-loop",
+                "context-hygiene.read-loop-abort",
+                "context-hygiene.one-waiter-per-condition"
+            ]
+        },
+        "copilot-routing": {
+            "obligations": [
+                "copilot-routing.route-copilot-tuning-to-copilot-config"
+            ]
+        },
+        "council-availability": {
+            "obligations": [
+                "council-availability.cli-resolver-decides-availability",
+                "council-availability.probe-before-claiming-unavailable",
+                "council-availability.never-copy-global-config",
+                "council-availability.fan-out-is-not-a-council"
+            ]
+        },
+        "cross-source-consistency": {
+            "obligations": [
+                "cross-source-consistency.surface-discrepancy-and-ask",
+                "cross-source-consistency.no-silent-scope-expansion"
+            ]
+        },
+        "decision-revisit-gate": {
+            "obligations": [
+                "decision-revisit-gate.surface-lock-blocking-benefit",
+                "decision-revisit-gate.council-first-reevaluation",
+                "decision-revisit-gate.user-for-reserved-set",
+                "decision-revisit-gate.evaluate-lock-before-citing"
+            ]
+        },
+        "delegation-policy": {
+            "obligations": [
+                "delegation-policy.dispatch-delegable-slices",
+                "delegation-policy.ambiguity-asks-not-spawns",
+                "delegation-policy.verify-subagent-returns"
+            ]
+        },
+        "design-fidelity": {
+            "obligations": [
+                "design-fidelity.build-provided-design-one-to-one",
+                "design-fidelity.surface-better-idea-as-proposal",
+                "design-fidelity.source-over-screenshot",
+                "design-fidelity.adapt-artifact-code-by-default",
+                "design-fidelity.fidelity-proof-artifact"
+            ]
+        },
+        "design-review-after-ui-write": {
+            "obligations": [
+                "design-review-after-ui-write.review-ui-before-done",
+                "design-review-after-ui-write.scope-verdict-without-render"
+            ]
+        },
+        "devcontainer-routing": {
+            "obligations": [
+                "devcontainer-routing.route-dev-environment-to-devcontainer"
+            ]
+        },
+        "doc-screenshot-hygiene": {
+            "obligations": [
+                "doc-screenshot-hygiene.anonymize-before-shipping",
+                "doc-screenshot-hygiene.confirm-data-bearing-embed",
+                "doc-screenshot-hygiene.no-terminal-screenshots"
+            ]
+        },
+        "docker-commands": {
+            "obligations": [
+                "docker-commands.php-tooling-in-container"
+            ]
+        },
+        "domain-adoption-policy": {
+            "obligations": [
+                "domain-adoption-policy.three-gates-before-new-domain"
+            ]
+        },
+        "domain-safety-disclaimer": {
+            "obligations": [
+                "domain-safety-disclaimer.advisory-disclaimer",
+                "domain-safety-disclaimer.refuse-diagnosis-and-dosage",
+                "domain-safety-disclaimer.strategic-assumptions-and-confidence"
+            ]
+        },
+        "domain-safety-pii": {
+            "obligations": [
+                "domain-safety-pii.placeholders-in-drafts",
+                "domain-safety-pii.allowlisted-log-fields",
+                "domain-safety-pii.export-redaction-and-reidentification-check",
+                "domain-safety-pii.privilege-markers-block-outbound"
+            ]
+        },
+        "domain-safety-retention": {
+            "obligations": [
+                "domain-safety-retention.name-jurisdiction-gap",
+                "domain-safety-retention.no-deletion-under-hold",
+                "domain-safety-retention.raw-versus-aggregate-tracks",
+                "domain-safety-retention.dsr-readiness-floor"
+            ]
+        },
+        "downstream-changes": {
+            "obligations": [
+                "downstream-changes.update-all-downstream",
+                "downstream-changes.defect-pattern-search-with-count",
+                "downstream-changes.doc-follows-public-surface"
+            ]
+        },
+        "engineering-safety-floor": {
+            "obligations": [
+                "engineering-safety-floor.production-moves-need-this-turn-confirmation",
+                "engineering-safety-floor.surface-blast-radius-and-rollback"
+            ]
+        },
+        "evaluator-independence": {
+            "obligations": [
+                "evaluator-independence.no-verdict-in-evaluator-prompt",
+                "evaluator-independence.no-narrowed-review-scope",
+                "evaluator-independence.prompt-recorded-with-verdict",
+                "evaluator-independence.one-evaluation-per-turn",
+                "evaluator-independence.no-silent-test-weakening"
+            ]
+        },
+        "external-code-graph-interop": {
+            "obligations": [
+                "external-code-graph-interop.query-shipped-index-first",
+                "external-code-graph-interop.report-index-freshness"
+            ]
+        },
+        "external-reference-deep-dive": {
+            "obligations": [
+                "external-reference-deep-dive.deep-dive-before-conclusion",
+                "external-reference-deep-dive.cite-inspected-sources"
+            ]
+        },
+        "fast-path-marker-visibility": {
+            "obligations": [
+                "fast-path-marker-visibility.verbatim-fast-path-marker"
+            ]
+        },
+        "finance-safety-floor": {
+            "obligations": [
+                "finance-safety-floor.no-final-investment-call",
+                "finance-safety-floor.disclosure-footer",
+                "finance-safety-floor.sensitivity-and-counter-case"
+            ]
+        },
+        "fix-what-you-see": {
+            "obligations": [
+                "fix-what-you-see.fix-or-roadmap-whoever-wrote-it",
+                "fix-what-you-see.no-red-check-handed-back"
+            ]
+        },
+        "framework-neutrality-in-generic-skills": {
+            "obligations": [
+                "framework-neutrality-in-generic-skills.no-framework-mandate-in-generic-artifacts"
+            ],
+            "bindings": {
+                "validator:src/scripts/lint_framework_leakage.ts": [
+                    "framework-neutrality-in-generic-skills.no-framework-mandate-in-generic-artifacts"
+                ]
+            }
+        },
+        "git-history-discipline": {
+            "obligations": [
+                "git-history-discipline.no-unsolicited-rewrite",
+                "git-history-discipline.rewrite-pairs-with-repush",
+                "git-history-discipline.never-drop-inherited-commits",
+                "git-history-discipline.no-hook-bypass"
+            ],
+            "bindings": {
+                "hook:block-no-verify": [
+                    "git-history-discipline.no-hook-bypass"
+                ]
+            }
+        },
+        "guidelines": {
+            "obligations": [
+                "guidelines.check-guideline-before-code"
+            ]
+        },
+        "history-discipline": {
+            "obligations": [
+                "history-discipline.audit-who-what-when",
+                "history-discipline.cheapest-sufficient-tier",
+                "history-discipline.audit-table-growth-budget",
+                "history-discipline.audit-privacy-interlock",
+                "history-discipline.no-lossy-audit-trail"
+            ]
+        },
+        "icon-consistency": {
+            "obligations": [
+                "icon-consistency.one-icon-system"
+            ]
+        },
+        "image-likeness-and-rights": {
+            "obligations": [
+                "image-likeness-and-rights.rights-before-likeness-mark-or-style"
+            ]
+        },
+        "improve-before-implement": {
+            "obligations": [
+                "improve-before-implement.demand-gate",
+                "improve-before-implement.solution-size-ladder",
+                "improve-before-implement.three-pre-implementation-checks",
+                "improve-before-implement.challenge-never-refuse"
+            ]
+        },
+        "invite-challenge": {
+            "obligations": [
+                "invite-challenge.confirm-goal-before-complex-plan"
+            ]
+        },
+        "laravel-routing": {
+            "obligations": [
+                "laravel-routing.route-laravel-php-to-laravel-skill"
+            ]
+        },
+        "laravel-translations": {
+            "obligations": [
+                "laravel-translations.user-strings-via-translation-keys"
+            ]
+        },
+        "legal-safety-floor": {
+            "obligations": [
+                "legal-safety-floor.no-binding-legal-conclusion",
+                "legal-safety-floor.consent-gate",
+                "legal-safety-floor.council-gated-work-product",
+                "legal-safety-floor.no-individual-case-examination",
+                "legal-safety-floor.work-product-line",
+                "legal-safety-floor.eu-de-scope-only"
+            ]
+        },
+        "lethal-trifecta-guard": {
+            "obligations": [
+                "lethal-trifecta-guard.break-a-leg-or-gate-egress"
+            ],
+            "bindings": {
+                "validator:src/scripts/lint_skill_frontmatter_safety.ts": []
+            }
+        },
+        "linked-projects-onboarding-gate": {
+            "obligations": [
+                "linked-projects-onboarding-gate.prompt-once-for-sibling-repo"
+            ]
+        },
+        "low-impact-corpus-privacy-floor": {
+            "obligations": [
+                "low-impact-corpus-privacy-floor.redactor-clears-every-entry",
+                "low-impact-corpus-privacy-floor.refuse-never-auto-rewrite"
+            ]
+        },
+        "markdown-safe-codeblocks": {
+            "obligations": [
+                "markdown-safe-codeblocks.no-nested-triple-backticks"
+            ]
+        },
+        "media-governance-routing": {
+            "obligations": [
+                "media-governance-routing.consult-media-policies-before-prompt"
+            ],
+            "bindings": {
+                "validator:src/scripts/lint_media_policy_linkage.ts": []
+            }
+        },
+        "media-sync-ground-truth": {
+            "obligations": [
+                "media-sync-ground-truth.transcribe-audio-first",
+                "media-sync-ground-truth.vocal-map-signoff-before-render"
+            ]
+        },
+        "minimal-safe-diff": {
+            "obligations": [
+                "minimal-safe-diff.smallest-change",
+                "minimal-safe-diff.no-drive-by-edits",
+                "minimal-safe-diff.repair-shared-path-once",
+                "minimal-safe-diff.clean-own-orphans"
+            ]
+        },
+        "missing-skill-recovery": {
+            "obligations": [
+                "missing-skill-recovery.no-absence-from-catalogue",
+                "missing-skill-recovery.ask-by-task",
+                "missing-skill-recovery.no-rebuild-of-undelivered-skill"
+            ]
+        },
+        "missing-tool-handling": {
+            "obligations": [
+                "missing-tool-handling.ask-before-installing-missing-tool"
+            ]
+        },
+        "model-recommendation": {
+            "obligations": [
+                "model-recommendation.route-to-tier-best-model"
+            ]
+        },
+        "neighbour-precedence": {
+            "obligations": [
+                "neighbour-precedence.authority-bands-first",
+                "neighbour-precedence.follow-source-order",
+                "neighbour-precedence.name-followed-instruction",
+                "neighbour-precedence.neighbour-done-is-not-completion"
+            ]
+        },
+        "no-attribution-footers": {
+            "obligations": [
+                "no-attribution-footers.no-attribution-footer"
+            ]
+        },
+        "no-decorative-emojis-in-git-surfaces": {
+            "obligations": [
+                "no-decorative-emojis-in-git-surfaces.no-emoji-in-titles-and-comments",
+                "no-decorative-emojis-in-git-surfaces.no-blacklist-emoji",
+                "no-decorative-emojis-in-git-surfaces.body-emoji-needs-legend"
+            ]
+        },
+        "no-pr-progress-comments": {
+            "obligations": [
+                "no-pr-progress-comments.no-unsolicited-pr-comments"
+            ]
+        },
+        "no-roadmap-references": {
+            "obligations": [
+                "no-roadmap-references.no-roadmap-file-links",
+                "no-roadmap-references.no-council-artefact-links"
+            ],
+            "bindings": {
+                "validator:src/scripts/check_no_roadmap_refs.ts": [
+                    "no-roadmap-references.no-roadmap-file-links"
+                ],
+                "validator:src/scripts/check_council_references.ts": [
+                    "no-roadmap-references.no-council-artefact-links"
+                ]
+            }
+        },
+        "notes-first-reasoning": {
+            "obligations": [
+                "notes-first-reasoning.reasoning-in-notes-file"
+            ]
+        },
+        "onboarding-gate": {
+            "obligations": [
+                "onboarding-gate.setup-before-first-request"
+            ]
+        },
+        "output-discipline": {
+            "obligations": [
+                "output-discipline.no-placeholder-prose",
+                "output-discipline.paused-marker-on-overflow"
+            ],
+            "bindings": {
+                "validator:src/scripts/lint_output_slop.ts": [
+                    "output-discipline.no-placeholder-prose"
+                ]
+            }
+        },
+        "package-ci-checks": {
+            "obligations": [
+                "package-ci-checks.task-ci-green-before-push"
+            ]
+        },
+        "persona-governance": {
+            "obligations": [
+                "persona-governance.per-domain-specialist-cap",
+                "persona-governance.skill-citation-floor",
+                "persona-governance.deprecation-candidate-when-full",
+                "persona-governance.schema-conformance"
+            ],
+            "bindings": {
+                "validator:src/scripts/lint_persona_governance.ts": [
+                    "persona-governance.per-domain-specialist-cap"
+                ]
+            }
+        },
+        "php-coding": {
+            "obligations": [
+                "php-coding.php-coding-patterns"
+            ]
+        },
+        "playbook-precedence": {
+            "obligations": [
+                "playbook-precedence.matching-playbook-first",
+                "playbook-precedence.propose-playbook-commands",
+                "playbook-precedence.no-synthesised-commands"
+            ]
+        },
+        "prefer-enums-over-literals": {
+            "obligations": [
+                "prefer-enums-over-literals.multi-state-field-is-enum",
+                "prefer-enums-over-literals.defer-literal-refactor-to-ask"
+            ]
+        },
+        "preservation-guard": {
+            "obligations": [
+                "preservation-guard.every-passage-stays",
+                "preservation-guard.iron-law-headings-verbatim",
+                "preservation-guard.fences-byte-for-byte",
+                "preservation-guard.no-weakening",
+                "preservation-guard.no-scope-broadening"
+            ],
+            "bindings": {
+                "validator:src/scripts/check_condensation.ts": [
+                    "preservation-guard.every-passage-stays",
+                    "preservation-guard.iron-law-headings-verbatim",
+                    "preservation-guard.fences-byte-for-byte"
+                ],
+                "validator:src/scripts/skill_linter.ts": []
+            }
+        },
+        "provider-lifecycle-discipline": {
+            "obligations": [
+                "provider-lifecycle-discipline.no-silent-non-stable-provider",
+                "provider-lifecycle-discipline.read-tier-before-picking"
+            ]
+        },
+        "question-not-instruction": {
+            "obligations": [
+                "question-not-instruction.answer-questions-never-act"
+            ]
+        },
+        "recurring-criticism": {
+            "obligations": [
+                "recurring-criticism.reopen-dismissing-disposition",
+                "recurring-criticism.resolve-on-evidence-not-count",
+                "recurring-criticism.no-hardening-by-weakening-floor"
+            ]
+        },
+        "reviewer-awareness": {
+            "obligations": [
+                "reviewer-awareness.reviewer-by-path-and-risk",
+                "reviewer-awareness.consult-ownership-before-safety-claim"
+            ]
+        },
+        "roadmap-ci-steps-policy": {
+            "obligations": [
+                "roadmap-ci-steps-policy.no-scheduled-pipeline-steps",
+                "roadmap-ci-steps-policy.skip-pipeline-steps-inline"
+            ]
+        },
+        "roadmap-progress-sync": {
+            "obligations": [
+                "roadmap-progress-sync.regen-dashboard-same-response",
+                "roadmap-progress-sync.flip-checkbox-with-work",
+                "roadmap-progress-sync.no-silent-archive-with-deferred",
+                "roadmap-progress-sync.park-blocked-roadmaps-in-later",
+                "roadmap-progress-sync.archive-in-completing-pr"
+            ]
+        },
+        "role-mode-adherence": {
+            "obligations": [
+                "role-mode-adherence.contract-fields-in-order",
+                "role-mode-adherence.mode-marker",
+                "role-mode-adherence.refuse-forbidden-work"
+            ]
+        },
+        "rule-type-governance": {
+            "obligations": [
+                "rule-type-governance.always-versus-auto-per-table"
+            ]
+        },
+        "runtime-safety": {
+            "obligations": [
+                "runtime-safety.manual-default-execution",
+                "runtime-safety.assisted-proposes-only",
+                "runtime-safety.automated-requirements",
+                "runtime-safety.allowlisted-handlers"
+            ]
+        },
+        "scale-discipline": {
+            "obligations": [
+                "scale-discipline.indexes-with-queries",
+                "scale-discipline.bounded-reads",
+                "scale-discipline.reversible-migrations",
+                "scale-discipline.append-only-retention",
+                "scale-discipline.thin-sync-handler",
+                "scale-discipline.durable-queue-after-commit",
+                "scale-discipline.finite-resource-headroom",
+                "scale-discipline.waiver-carries-reason"
+            ]
+        },
+        "secret-vcs-guard": {
+            "obligations": [
+                "secret-vcs-guard.no-credential-in-tracked-file",
+                "secret-vcs-guard.detect-show-ask-offer",
+                "secret-vcs-guard.never-silently-strip",
+                "secret-vcs-guard.rotate-first-when-in-history"
+            ],
+            "bindings": {
+                "validator:src/scripts/check_secret_leak.ts": [
+                    "secret-vcs-guard.no-credential-in-tracked-file"
+                ]
+            }
+        },
+        "security-sensitive-stop": {
+            "obligations": [
+                "security-sensitive-stop.threat-model-before-first-edit",
+                "security-sensitive-stop.ask-when-analysis-blocked"
+            ]
+        },
+        "self-repair-loop": {
+            "obligations": [
+                "self-repair-loop.queue-and-fix-own-defects",
+                "self-repair-loop.fix-in-agent-config-not-project",
+                "self-repair-loop.correct-turn-openly",
+                "self-repair-loop.outward-step-needs-user-word"
+            ]
+        },
+        "senior-engineering-discipline": {
+            "obligations": [
+                "senior-engineering-discipline.generalize-not-overfit",
+                "senior-engineering-discipline.supply-invisible-controls",
+                "senior-engineering-discipline.verify-apis-against-source",
+                "senior-engineering-discipline.changed-files-static-pass-before-push"
+            ]
+        },
+        "session-canary": {
+            "obligations": [
+                "session-canary.greet-by-name-at-task-start",
+                "session-canary.keep-reply-close-markers",
+                "session-canary.surface-dropped-canary"
+            ]
+        },
+        "settings-ask-protocol": {
+            "obligations": [
+                "settings-ask-protocol.one-settings-question-per-execution",
+                "settings-ask-protocol.class-decides-storage",
+                "settings-ask-protocol.conservative-defaults-named",
+                "settings-ask-protocol.no-silent-permissive-default"
+            ]
+        },
+        "size-enforcement": {
+            "obligations": [
+                "size-enforcement.split-by-responsibility",
+                "size-enforcement.pitfalls-as-section-not-skill",
+                "size-enforcement.small-rule-files"
+            ]
+        },
+        "skill-improvement-trigger": {
+            "obligations": [
+                "skill-improvement-trigger.capture-learning-after-task"
+            ]
+        },
+        "skill-quality": {
+            "obligations": [
+                "skill-quality.executable-validated-self-contained-skills"
+            ],
+            "bindings": {
+                "validator:src/scripts/skill_linter.ts": [
+                    "skill-quality.executable-validated-self-contained-skills"
+                ]
+            }
+        },
+        "slash-command-routing-policy": {
+            "obligations": [
+                "slash-command-routing-policy.route-to-command-file"
+            ]
+        },
+        "source-confidentiality": {
+            "obligations": [
+                "source-confidentiality.no-derivation-attribution",
+                "source-confidentiality.encrypted-source-links",
+                "source-confidentiality.anonymized-tracked-harvest-roadmaps"
+            ],
+            "bindings": {
+                "validator:src/scripts/check_no_external_sources.ts": [
+                    "source-confidentiality.no-derivation-attribution"
+                ]
+            }
+        },
+        "source-discovery-gate": {
+            "obligations": [
+                "source-discovery-gate.evidence-before-structural-claim",
+                "source-discovery-gate.local-before-remote"
+            ]
+        },
+        "source-of-truth": {
+            "obligations": [
+                "source-of-truth.no-edits-in-projections",
+                "source-of-truth.edit-src-then-condense"
+            ],
+            "bindings": {
+                "validator:src/scripts/check_condensation.ts": [
+                    "source-of-truth.no-edits-in-projections",
+                    "source-of-truth.edit-src-then-condense"
+                ]
+            }
+        },
+        "spreadsheet-source-quality": {
+            "obligations": [
+                "spreadsheet-source-quality.official-sources-first",
+                "spreadsheet-source-quality.unofficial-figures-marked-with-permission",
+                "spreadsheet-source-quality.source-per-cell"
+            ]
+        },
+        "strategy-safety-floor": {
+            "obligations": [
+                "strategy-safety-floor.no-final-strategy-call",
+                "strategy-safety-floor.disclosure-footer",
+                "strategy-safety-floor.structural-elements"
+            ]
+        },
+        "symfony-routing": {
+            "obligations": [
+                "symfony-routing.route-symfony-php-to-symfony-workflow"
+            ]
+        },
+        "telegraph-speak": {
+            "obligations": [
+                "telegraph-speak.condense-body-prose-only",
+                "telegraph-speak.preserve-carve-outs-byte-for-byte",
+                "telegraph-speak.dormant-until-bench-passes"
+            ]
+        },
+        "test-first": {
+            "obligations": [
+                "test-first.failing-test-first",
+                "test-first.regression-test-for-bug",
+                "test-first.characterization-test-for-legacy",
+                "test-first.test-seen-red"
+            ]
+        },
+        "think-before-action": {
+            "obligations": [
+                "think-before-action.analyze-before-coding",
+                "think-before-action.verify-with-real-tools",
+                "think-before-action.max-two-retries-per-approach",
+                "think-before-action.intent-line-before-behaviour-change"
+            ]
+        },
+        "token-budget-discipline": {
+            "obligations": [
+                "token-budget-discipline.load-rich-skills-in-full",
+                "token-budget-discipline.rich-justification-and-cap",
+                "token-budget-discipline.rich-size-ceiling",
+                "token-budget-discipline.surface-budget-tradeoff"
+            ]
+        },
+        "token-efficiency": {
+            "obligations": [
+                "token-efficiency.no-full-output-in-context",
+                "token-efficiency.no-repeated-tool-calls",
+                "token-efficiency.batch-independent-calls",
+                "token-efficiency.one-command-per-bash-call",
+                "token-efficiency.probe-large-files"
+            ]
+        },
+        "token-optimizer-maintenance": {
+            "obligations": [
+                "token-optimizer-maintenance.update-optimizer-row-with-asset"
+            ],
+            "bindings": {
+                "validator:src/scripts/check_token_optimizer_freshness.ts": [
+                    "token-optimizer-maintenance.update-optimizer-row-with-asset"
+                ]
+            }
+        },
+        "tool-safety": {
+            "obligations": [
+                "tool-safety.deny-by-default-tools",
+                "tool-safety.allowlisted-tool-names",
+                "tool-safety.read-first",
+                "tool-safety.no-hidden-credentials",
+                "tool-safety.no-arbitrary-execution",
+                "tool-safety.scoped-grants-over-bare-names"
+            ],
+            "bindings": {
+                "validator:src/scripts/lint_agent_security.ts": [
+                    "tool-safety.deny-by-default-tools",
+                    "tool-safety.scoped-grants-over-bare-names"
+                ]
+            }
+        },
+        "ui-audit-gate": {
+            "obligations": [
+                "ui-audit-gate.audit-before-new-ui"
+            ]
+        },
+        "untrusted-input-defense": {
+            "obligations": [
+                "untrusted-input-defense.untrusted-content-is-data",
+                "untrusted-input-defense.quarantine-found-instructions"
+            ]
+        },
+        "upstream-proposal": {
+            "obligations": [
+                "upstream-proposal.ask-to-upstream"
+            ]
+        },
+        "user-interaction": {
+            "obligations": [
+                "user-interaction.single-recommendation-line",
+                "user-interaction.pre-send-self-check",
+                "user-interaction.decision-outlives-turn",
+                "user-interaction.one-decision-per-turn"
+            ]
+        },
+        "user-interrupt-priority": {
+            "obligations": [
+                "user-interrupt-priority.stop-for-new-task",
+                "user-interrupt-priority.ask-before-resume"
+            ]
+        }
+    }
+}

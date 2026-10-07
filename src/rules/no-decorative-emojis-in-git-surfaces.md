@@ -17,7 +17,6 @@ triggers:
 self_contained: true
 workspaces: [agent-config-maintainer, engineering]
 packs: [meta]
-# obligation: line 27
 obligation_frequency: "per-commit"
 ---
 
