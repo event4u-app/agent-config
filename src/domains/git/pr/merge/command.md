@@ -136,14 +136,17 @@ says what happens to it instead.
 
 ## 2. Sync with the base
 
-Read the strategy first, then let one script do the update, so the
-branch-convergence policy (the base SET a non-default target carries) is read
-on every path:
+Check the PR out, read the strategy against its base, then let one script do
+the update, so the branch-convergence policy (the base SET a non-default target
+carries) is read on every path. `show` takes the same `--base` as `sync` and
+runs after the checkout: without them it resolves its target from whatever
+branch was checked out before, and the gate would judge a different target than
+the one the sync acts on.
 
 ```bash
-agent-config git:convention show        # git.update_strategy: value, source, state
 git fetch origin
 gh pr checkout <N>
+agent-config git:convention show --base origin/<base>   # git.update_strategy: value, source, state
 agent-config git:convention sync --base origin/<base>
 ```
 

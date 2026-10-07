@@ -215,6 +215,17 @@ describe('git:convention show exits non-zero on every state sync refuses', () =>
         const listed = [...sentence.matchAll(/`([a-z]+)`/g)].map((m) => m[1]).sort();
         expect(listed).toEqual([...REFUSAL_STATES].sort());
     });
+
+    it('the /pr:merge gate reads the strategy against the same target the sync acts on', () => {
+        const text = fs.readFileSync(path.join(PACKAGE_ROOT, 'src', 'domains', 'git', 'pr', 'merge', 'command.md'), 'utf8');
+        const block = /## 2\. Sync with the base[\s\S]*?```bash\n([\s\S]*?)```/.exec(text)?.[1] ?? '';
+        const lines = block.split('\n').map((l) => l.replace(/#.*$/, '').trim()).filter((l) => l !== '');
+        const checkout = lines.indexOf('gh pr checkout <N>');
+        const show = lines.indexOf('agent-config git:convention show --base origin/<base>');
+        expect(checkout).toBeGreaterThanOrEqual(0);
+        expect(show).toBeGreaterThan(checkout);
+        expect(lines).toContain('agent-config git:convention sync --base origin/<base>');
+    });
 });
 
 describe('the documented `show` exit-1 set', () => {
