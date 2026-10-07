@@ -286,6 +286,8 @@ describe('advisoryLine — 2.2', () => {
         output_head: [],
         skipped: null,
         files: ['a.ts'],
+        ignored_files: [],
+        typecheck_not_run: [],
         at: '2026-10-01T00:00:00+00:00',
         ...over,
     });
@@ -334,21 +336,8 @@ describe('truncateToBytes', () => {
 });
 
 describe('the resolver is the only authority', () => {
-    it('the scoped table names no command the resolver cannot emit', () => {
-        // Read the resolver's own quality functions and assert every key of the
-        // scoped table appears there. A table row for a command the resolver
-        // never emits is a second authority, which D2 forbids.
-        const src = fs.readFileSync(
-            path.join(
-                process.cwd(),
-                'src/agent-src/templates/scripts/work_engine/stack/runner.ts',
-            ),
-            'utf-8',
-        );
-        for (const command of ['npx eslint .', 'vendor/bin/phpstan analyse', 'vendor/bin/pint', 'ruff check', 'mypy .']) {
-            expect(src).toContain(`'${command}'`);
-        }
-    });
+    // Table-vs-resolver parity lives in touched_file_quality_parity.test.ts,
+    // which runs the resolver instead of matching a copied list against source.
 
     it('the real shell spawn is reachable', () => {
         // Guards the injected-spawn convenience above from hiding a broken

@@ -55,7 +55,7 @@ import {
     sliceForId,
     sliceSizes,
 } from './measure_skill_ranker_baseline.js';
-import { _globSkillMd, rank, type RankRow } from './skill_tools/score_skill_relevance.js';
+import { _globSkillMd, rank, rankDetailed, type RankRow } from './skill_tools/score_skill_relevance.js';
 
 /** How deep "outside the top ten" is. 1.3's own number, not a derived one. */
 export const DEEP_MISS_DEPTH = 10;
@@ -92,6 +92,38 @@ export interface RowReading {
     rankedFirst: string | null;
     topScore: number;
     rankOfExpected: number;
+    /** An expected skill shares the winner's integer score (hit or miss). */
+    expectedInTopScoreBlock: boolean;
+    /** An expected skill shares the winner's whole ordering key and loses on name. */
+    lostOnTie: boolean;
+}
+
+/**
+ * The two tie readings for one ranking.
+ *
+ * `inBlock` asks whether an expected skill scored the winner's INTEGER — the
+ * block the alphabet orders under `keyword-v1`. `lostOnTie` asks whether the
+ * row was a top-1 miss that nothing but the name decided: the expected skill
+ * shares the winner's integer score and, under `tieBreakUnrounded`, its
+ * unrounded score too. Without the flag the two keys coincide, so `lostOnTie`
+ * is the evidence page's "scored exactly the winner's score and lost on its
+ * initial" class; with it, `lostOnTie` is what the unrounded score left.
+ */
+export function tieReading(
+    rows: readonly RankRow[],
+    raw: ReadonlyMap<string, number>,
+    expected: readonly string[],
+    tieBreakUnrounded: boolean,
+): { inBlock: boolean; lostOnTie: boolean } {
+    const first = rows[0];
+    if (!first) return { inBlock: false, lostOnTie: false };
+    const block = rows.filter((r) => r[1] === first[1]);
+    const inBlock = block.some((r) => expected.includes(r[0]));
+    if (!inBlock || expected.includes(first[0])) return { inBlock, lostOnTie: false };
+    const lostOnTie = block.some(
+        (r) => expected.includes(r[0]) && (!tieBreakUnrounded || raw.get(r[0]) === raw.get(first[0])),
+    );
+    return { inBlock, lostOnTie };
 }
 
 export function readRows(
@@ -101,13 +133,16 @@ export function readRows(
 ): RowReading[] {
     const opts = rankOptionsFor(ranker);
     return prompts.map((p) => {
-        const rows = rank(p.prompt, skillsDir, opts);
+        const { rows, raw } = rankDetailed(p.prompt, skillsDir, opts);
+        const tie = tieReading(rows, raw, p.expected, Boolean(opts.tieBreakUnrounded));
         return {
             id: p.id,
             expected: p.expected,
             rankedFirst: rows[0]?.[0] ?? null,
             topScore: rows[0]?.[1] ?? 0,
             rankOfExpected: firstExpectedRank(rows, p.expected),
+            expectedInTopScoreBlock: tie.inBlock,
+            lostOnTie: tie.lostOnTie,
         };
     });
 }
@@ -262,6 +297,41 @@ export function falseActivation(
     };
 }
 
+export interface AbstentionReading {
+    empties: number;
+    /** Empties whose top score is 0 — the ranker already abstains. */
+    noSkill: number;
+    threshold: number | null;
+    /** Empties whose top score is below `threshold`. */
+    abstainedEmpties: number;
+    correctHits: number;
+    /** Correct top-1 hits whose top score is below `threshold`. */
+    hitsLost: number;
+}
+
+/**
+ * What abstaining below one threshold buys on the empties and costs on the hits.
+ *
+ * A `null` threshold reads the no-skill rate only: with no correct hit there is
+ * no recall to cost, and inventing a cutoff would put a number chosen here
+ * beside a measured one.
+ */
+export function abstentionReading(
+    labelled: readonly RowReading[],
+    emptyTopScores: readonly number[],
+    threshold: number | null,
+): AbstentionReading {
+    const hits = labelled.filter((r) => r.rankOfExpected === 1);
+    return {
+        empties: emptyTopScores.length,
+        noSkill: emptyTopScores.filter((s) => s === 0).length,
+        threshold,
+        abstainedEmpties: threshold === null ? 0 : emptyTopScores.filter((s) => s < threshold).length,
+        correctHits: hits.length,
+        hitsLost: threshold === null ? 0 : hits.filter((r) => r.topScore < threshold).length,
+    };
+}
+
 function interval(successes: number, trials: number): string {
     const raw = wilsonInterval(successes, trials);
     return `${round3(raw.lower).toFixed(3)} – ${round3(raw.upper).toFixed(3)}`;
@@ -286,6 +356,8 @@ export function renderReport(opts: {
     const misses = readings.filter((r) => r.rankOfExpected !== 1);
     const deep = misses.filter((r) => r.rankOfExpected === 0 || r.rankOfExpected > DEEP_MISS_DEPTH).length;
     const mrr = meanReciprocalRank(readings);
+    const tieLoss = readings.filter((r) => r.lostOnTie).length;
+    const inBlock = readings.filter((r) => r.expectedInTopScoreBlock).length;
 
     const empties = emptyRowIds(opts.repo, opts.slice);
     const rankOpts = rankOptionsFor(opts.ranker);
@@ -368,6 +440,18 @@ export function renderReport(opts: {
     L.push('of the existing signal can recover a skill the formula never surfaces. The two');
     L.push('take different fixes, which is why the split is reported rather than an average.');
     L.push('');
+    L.push('## Ties');
+    L.push('');
+    L.push('| metric | rows | share of rows read |');
+    L.push('|---|---:|---:|');
+    L.push(`| \`top1_loss_due_to_tie\` | ${String(tieLoss)} | ${pct(tieLoss, n)} |`);
+    L.push(`| \`expected_in_top_score_block\` | ${String(inBlock)} | ${pct(inBlock, n)} |`);
+    L.push('');
+    L.push('`top1_loss_due_to_tie` counts top-1 misses where an expected skill shares the');
+    L.push('winner\'s whole ordering key and loses on the name alone — the integer score, and');
+    L.push('under `tieBreakUnrounded` the unrounded score as well. `expected_in_top_score_block`');
+    L.push('counts rows, hit or miss, whose expected skill scores the winner\'s integer.');
+    L.push('');
     L.push('## False activation on the no-skill prompts');
     L.push('');
     L.push('| | |');
@@ -392,6 +476,23 @@ export function renderReport(opts: {
     L.push('here, because the question is whether the ranker\'s confidence separates the two');
     L.push('populations at all. A share near one half means it does not: a prompt a seat');
     L.push('judged to have no skill answer is scored as confidently as a prompt it got right.');
+    L.push('');
+    const ab = abstentionReading(readings, emptyScores, fa.correct_hits > 0 ? fa.median_correct_hit_score : null);
+    L.push('## Abstention, beside its cost');
+    L.push('');
+    L.push('| | |');
+    L.push('|---|---:|');
+    L.push(`| empties the ranker already returns nothing for (no-skill rate) | ${String(ab.noSkill)} of ${String(ab.empties)} (${pct(ab.noSkill, ab.empties)}) |`);
+    if (ab.threshold === null) {
+        L.push('| abstention threshold | n/a — no correct top-1 hit, so no threshold |');
+    } else {
+        L.push(`| abstention threshold (abstain below the median correct-hit score) | ${String(ab.threshold)} |`);
+        L.push(`| empties that threshold abstains on | ${String(ab.abstainedEmpties)} of ${String(ab.empties)} (${pct(ab.abstainedEmpties, ab.empties)}) |`);
+        L.push(`| correct top-1 hits it would suppress (recall cost) | ${String(ab.hitsLost)} of ${String(ab.correctHits)} (${pct(ab.hitsLost, ab.correctHits)}) |`);
+    }
+    L.push('');
+    L.push('One threshold, the same median the false-activation table compares against, so');
+    L.push('the gain on the empties and the recall it costs are read off one number.');
     L.push('');
     L.push(`## Per-pack top-1, worst first`);
     L.push('');

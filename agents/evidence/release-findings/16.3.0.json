@@ -40,7 +40,11 @@
       "kind": "security",
       "title": "Release-PR skip is keyed on the PR author's branch name, with package.json content unchecked",
       "detail": "The Tests, Node Tests and smoke-install jobs are skipped when head_ref starts with 'release/'. The updated comment concedes that package.json is admitted on a release PR, and that 'no gate reads package.json CONTENT, so a bin/files/dependencies edit would ride a release PR with this matrix skipped'. A skipped job reports as success to a required check. A scripts, bin or dependency change under a release/* branch name (including a fork branch) bypasses the install and test matrix. The only stated mitigation is the contract's allowlist, and this diff only rewrites the comments, not the condition.",
-      "file": ".github/workflows/smoke-public-install.yml"
+      "file": ".github/workflows/smoke-public-install.yml",
+      "status": "fixed",
+      "commit": "96aaee818",
+      "rationale": "check_release_manifest_content now runs in the release-shape job after check_release_pr_shape and fails a release PR whose package.json, package-lock.json or plugin manifests differ from the base outside the per-file version fields, so an added script, dependency or bin edit can no longer ride a release PR unread while smoke is skipped. The head-ref skip itself is unchanged by design (the roadmap closes the gap by reading content).",
+      "verified_by": "tests/scripts/check_release_manifest_content.test.ts (red seen with the version-field check disabled)"
     },
     {
       "finding_id": "f733a2f9e542",
@@ -56,7 +60,10 @@
       "kind": "claim",
       "title": "Governance ratification rests on council seats that read an author-written description, not the diff",
       "detail": "The verdict artefact for the widened ratification gate and deny set was produced by two council seats shown only a description written by the author of the change. Its 'Facts you may rely on' block contains unverifiable assertions ('No existing refusal becomes a non-refusal'), and the representation prompt carried the author's own recommendation. The file admits the reviewers 'could only reason from' those facts. This is the pattern evaluator-independence calls out. The ratification is admissible only with the prompt recorded, which it is, but it is not evidence that the diff itself was reviewed.",
-      "file": "agents/evidence/analysis/blocking-severities-ratification-prompt.md"
+      "file": "agents/evidence/analysis/blocking-severities-ratification-prompt.md",
+      "status": "still_open",
+      "rationale": "True and not closed: nothing requires a seat to be shown the diff rather than an author-written description. Both seats, rounds 3 and 4, read it still_open. The 3.1 ratification itself sent the complete diff in every round, which is practice, not a mechanism.",
+      "verified_by": "ai-council round 4 (anthropic, openai), 2026-10-07, prompt agents/evidence/analysis/release-evidence-seats-ratification-prompt-r4.md"
     },
     {
       "finding_id": "4507566202f6",
@@ -128,7 +135,10 @@
       "kind": "claim",
       "title": "Recorded verdict `ratified` while one seat's final verdict was non-convergent",
       "detail": "The recorder ratification's frontmatter says `verdict: ratified`. Its own table shows pass 3 as anthropic `non-convergent` and openai `ratified`, and the earlier openai verdicts were `non-convergent`. The text says openly that the review did not converge, and that three requirements remain unmet: the cowork policy, the retained suffix fallback, and selective routing within the slot. The sibling blocking-severities record argues that `non-convergent` blocks a change, so recording `ratified` over an unresolved dissent is inconsistent with that reasoning. Listing both providers in the frontmatter implies a two-provider agreement that the final pass does not show.",
-      "file": "agents/evidence/ratifications/drain-failed-command-recorder.md"
+      "file": "agents/evidence/ratifications/drain-failed-command-recorder.md",
+      "status": "still_open",
+      "rationale": "True about the named artifact, which is unchanged. Since road-to-release-evidence-that-reproduces 3.1 the reader requires a seats map and refuses a passing verdict over a non-convergent seat, so a NEW artifact of this shape fails the gate; the named one was merged before the field existed and the gate does not re-read it. The seats split on the label (anthropic fixed, openai still_open); still_open is the reading both share for the named artifact.",
+      "verified_by": "ai-council round 4 (anthropic, openai), 2026-10-07, prompt agents/evidence/analysis/release-evidence-seats-ratification-prompt-r4.md"
     },
     {
       "finding_id": "13568e8fe68a",
@@ -136,7 +146,10 @@
       "kind": "claim",
       "title": "Dependabot ratification lists two providers but the closing verdict came from one seat",
       "detail": "The record lists `providers: [anthropic, openai]` and `verdict: confirmed-non-expanding`. It also states that the run was degraded: the quorum line reads `1/2 present` after the final round, and the closing verdict is one seat's, written against the other's objections. The frontmatter therefore overstates provider diversity for the verdict actually recorded. The ratification policy expects two distinct providers. The degraded quorum is disclosed in the body but not reflected in the machine-read header.",
-      "file": "agents/evidence/ratifications/fix-dependabot-prs-can-reach-their-required-check.md"
+      "file": "agents/evidence/ratifications/fix-dependabot-prs-can-reach-their-required-check.md",
+      "status": "still_open",
+      "rationale": "True about the named artifact, which is unchanged. Since 3.1 a provider that gave no final verdict cannot be listed (providers-exceed-seats), so a NEW artifact of this shape fails the gate; the named one is not re-read. Seats split as for 2c9959f7262d; recorded still_open.",
+      "verified_by": "ai-council round 4 (anthropic, openai), 2026-10-07, prompt agents/evidence/analysis/release-evidence-seats-ratification-prompt-r4.md"
     },
     {
       "finding_id": "eff3d4ed3fee",
@@ -160,7 +173,10 @@
       "kind": "correctness",
       "title": "Turnaround reading records two gated-direction regressions and leaves them standing",
       "detail": "The probe's gate exits 1. Blocking share rose from 0.6202 to 0.8908, and max first-call context floor rose from 230,705 to 244,518 (about +6%). The reading deliberately re-bases neither baseline. A standing-context regression ships in a release that also reworks rule delivery and thinning. The blocking-share hypothesis, parallel drain runs waiting on CI settles, is explicitly unverified. No owner or follow-up roadmap is named for either regression, so the same refusal will repeat on the next reading.",
-      "file": "agents/evidence/analysis/turnaround-reading-2026-10-01.md"
+      "file": "agents/evidence/analysis/turnaround-reading-2026-10-01.md",
+      "status": "still_open",
+      "rationale": "Re-read and confirmed real: both regressions still stand and neither baseline is re-based. What the finding said was missing now exists. OWNER: agents/roadmaps/road-to-blocking-time-by-cause.md. READING: agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md splits the blocking tail by cause and REFUTES the unverified hypothesis for its window: CI plus subagent waits hold 267 of 802 blocking minutes (33 %), not the majority; the largest cause is questions waiting on the human (353 min, one of them 328 min). The same page attributes the context-floor rise: about 8,870 of the 12,246 tokens between the 244,518 session and a same-host-version comparator are the opening slash command's own body, the always-loaded instructions are flat, and about 3,400 tokens are unattributable from the store. TARGETS: claim turnaround-blocking-by-cause-targets in docs/CLAIMS.md, pre-registered before the ci-wait mitigation landed. Left open, not fixed: the re-read against those targets needs a ten-session window that does not exist yet, and the user-wait mitigation is with the owner.",
+      "verified_by": "probe_turnaround over the ten most recent sessions of this package's transcript store at 2026-10-07 ~02:30Z, the measuring session excluded; context-floor contributors read from the rows before the first assistant call of sessions 1e95a767 and 0ae74690; `git diff --exit-code a75bb3210 -- src/config/turnaround-budget.json` exits 0."
     },
     {
       "finding_id": "2bc152181f76",

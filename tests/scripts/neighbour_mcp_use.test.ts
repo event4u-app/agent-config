@@ -31,7 +31,7 @@ import {
     toolBelongsTo,
     toolsUsedByServer,
 } from '../../src/scripts/_lib/neighbour_tool_use.js';
-import { run } from '../../src/scripts/hooks/telemetry_usage_hook.js';
+import { run } from '../../src/scripts/hooks/mcp_usage_observation_hook.js';
 
 const REPO_ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..', '..');
 
@@ -123,43 +123,54 @@ describe('mcp servers carry observed use', () => {
  * is exactly how a concern the dispatcher skips keeps a green test suite.
  *
  * `_concern_matches_tool` matches a `tools:` entry EXACTLY — `names.includes`,
- * no globbing — so `tools: [Skill]`, which was provable from this hook's source
- * while `Skill` was its only branch surface, now silences it for every MCP call.
- * There is no value of the key that admits `mcp__<server>__<tool>`, because the
- * names are not enumerable. The entry therefore carries no `tools:` key, and
- * this asserts that against the SHIPPED manifest rather than against a literal.
+ * no globbing — so the recorder lives in a concern that carries no `tools:` key
+ * (`mcp-usage-observation`, decision D12). This asserts that against the
+ * SHIPPED manifest rather than against a literal; it is the positive the
+ * `mcp-recorder-unreachable-behind-the-tools-filter` blocker waited for.
  */
-describe('the recorder is NOT reachable through the dispatcher — the open blocker', () => {
-    it('the shipped telemetry-usage entry still filters the recorder out', () => {
-        // This asserts a DEFECT, deliberately, and it is the falsifiable half
-        // of the `mcp-recorder-unreachable-behind-the-tools-filter` blocker on
-        // road-to-neighbours-that-pull-their-weight. The recorder below records
-        // nothing in production: `tools: [Skill]` makes the dispatcher skip the
-        // concern for every MCP call. Removing the key is a hook-plumbing edit
-        // that the council split on (2026-10-02, anthropic + openai), so it is
-        // owner-reserved rather than taken here.
-        //
-        // When the blocker closes, this test FLIPS to `true` — which is the
-        // point. A gap recorded only in prose is a gap the next run rediscovers.
-        const manifest = parse(
-            fs.readFileSync(path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'), 'utf-8'),
-        ) as { concerns: Record<string, Record<string, unknown>> };
-        const entry = manifest.concerns['telemetry-usage'];
+describe('the recorder is reachable through the dispatcher', () => {
+    const manifest = parse(
+        fs.readFileSync(path.join(REPO_ROOT, 'src', 'scripts', 'hook_manifest.yaml'), 'utf-8'),
+    ) as {
+        concerns: Record<string, Record<string, unknown>>;
+        platforms: Record<string, Record<string, unknown>>;
+    };
+
+    it('the shipped mcp-usage-observation entry admits an MCP tool call', () => {
+        const entry = manifest.concerns['mcp-usage-observation'];
 
         expect(entry).toBeDefined();
+        expect(entry?.['script']).toBe('src/scripts/hooks/mcp_usage_observation_hook.ts');
+        expect(_concern_matches_tool(entry as never, 'mcp__acme__alpha')).toBe(true);
+        // Reduced payload: no body class declared, so the dispatcher serves
+        // size-only stubs for tool_input and tool_response.
+        expect(entry?.['needs_payload_bodies']).toBeUndefined();
+    });
+
+    it('is bound on every post_tool_use slot that binds telemetry-usage', () => {
+        let bound = 0;
+        for (const slots of Object.values(manifest.platforms)) {
+            const post = slots['post_tool_use'];
+            if (!Array.isArray(post) || !post.includes('telemetry-usage')) continue;
+            expect(post).toContain('mcp-usage-observation');
+            bound += 1;
+        }
+        // Control: the loop ran over real rows rather than an empty table.
+        expect(bound).toBeGreaterThan(0);
+    });
+
+    it('telemetry-usage keeps its Skill-only filter — default-on collection is not under its name', () => {
+        const entry = manifest.concerns['telemetry-usage'];
+
         expect(_concern_matches_tool(entry as never, 'Skill')).toBe(true);
         expect(_concern_matches_tool(entry as never, 'mcp__acme__alpha')).toBe(false);
     });
 
-    it('and no value of the key could admit one — matching is exact', () => {
-        // Why the blocker is a design question and not a one-line edit: a glob
-        // is not an escape, so "narrow the filter instead of removing it" is
-        // not an available option under the current dispatcher.
+    it('and no value of a tools key could admit one — matching is exact', () => {
         expect(_concern_matches_tool({ tools: ['Skill', 'mcp__*'] } as never, 'mcp__acme__alpha')).toBe(
             false,
         );
-        // Control: an absent key does admit it, so the assertion above is
-        // about the filter's VALUE and not about a matcher that always refuses.
+        // Control: an absent key does admit it.
         expect(_concern_matches_tool({} as never, 'mcp__acme__alpha')).toBe(true);
     });
 });

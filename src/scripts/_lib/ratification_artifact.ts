@@ -96,8 +96,225 @@ export interface RatificationProblem {
         | 'no-providers'
         | 'diversity-required'
         | 'diversity-unverifiable'
-        | 'bad-effective-after';
+        | 'bad-effective-after'
+        | 'no-seats'
+        | 'malformed-seats'
+        | 'bad-seat-provider'
+        | 'unknown-seat-verdict'
+        | 'seat-dissent'
+        | 'providers-exceed-seats'
+        | 'header-not-derived';
     message: string;
+}
+
+/** A seat that closed, timed out or was absent at the last round gave no final verdict. */
+export const SEAT_NO_FINAL_VERDICT = 'no-final-verdict';
+export type SeatVerdict = RatificationVerdict | typeof SEAT_NO_FINAL_VERDICT;
+/** Every value a seat's final verdict may take — shared by the writer and the reader. */
+export const SEAT_VERDICTS: readonly string[] = [...RATIFICATION_VERDICTS, SEAT_NO_FINAL_VERDICT];
+
+/**
+ * A provider id as a seat key: lower-case, no whitespace and no YAML
+ * metacharacter, so a rendered header cannot be split or extended by a name
+ * and two spellings of one provider cannot collide after normalisation.
+ */
+export const SEAT_PROVIDER_RE = /^[a-z0-9][a-z0-9._-]*$/u;
+
+export type SeatsReading =
+    | { kind: 'absent' }
+    | { kind: 'invalid'; problems: RatificationProblem[] }
+    | { kind: 'present'; seats: Map<string, SeatVerdict> };
+
+/**
+ * The `seats:` map — provider id to that seat's FINAL verdict — in source
+ * order, which is the order `providers` is derived in.
+ *
+ * Absent and present-but-unusable are reported apart: a missing key and a
+ * `seats:` key that is empty, a scalar, a list, or carries a bad id or verdict
+ * are both refusals, with different codes.
+ */
+export function readSeats(fm: AdrFrontmatter, text = ''): SeatsReading {
+    const duplicates = duplicateSeatKeys(text);
+    if (duplicates.length > 0) {
+        return {
+            kind: 'invalid',
+            problems: [
+                {
+                    code: 'bad-seat-provider',
+                    message: `seat \`${duplicates.join('`, `')}\` is recorded more than once — the parser keeps only the last`,
+                },
+            ],
+        };
+    }
+    const hasScalar = Object.prototype.hasOwnProperty.call(fm.scalars, 'seats');
+    const node = fm.nested['seats'];
+    if (node === undefined && !hasScalar) {
+        return { kind: 'absent' };
+    }
+    if (node === undefined || typeof node === 'string' || Array.isArray(node)) {
+        return {
+            kind: 'invalid',
+            problems: [{ code: 'malformed-seats', message: '`seats:` is present but is not a provider-to-verdict map' }],
+        };
+    }
+    const problems: RatificationProblem[] = [];
+    const seats = new Map<string, SeatVerdict>();
+    for (const [provider, verdict] of Object.entries(node)) {
+        if (!SEAT_PROVIDER_RE.test(provider)) {
+            problems.push({
+                code: 'bad-seat-provider',
+                message: `seat key \`${provider}\` is not a provider id (${String(SEAT_PROVIDER_RE)})`,
+            });
+            continue;
+        }
+        if (typeof verdict !== 'string' || !SEAT_VERDICTS.includes(verdict.trim())) {
+            problems.push({
+                code: 'unknown-seat-verdict',
+                message: `seat \`${provider}\` records \`${String(verdict)}\`, not one of ${SEAT_VERDICTS.join(', ')}`,
+            });
+            continue;
+        }
+        seats.set(provider, verdict.trim() as SeatVerdict);
+    }
+    if (problems.length === 0 && seats.size === 0) {
+        problems.push({ code: 'malformed-seats', message: '`seats:` is present and empty' });
+    }
+    return problems.length > 0 ? { kind: 'invalid', problems } : { kind: 'present', seats };
+}
+
+/** Keys repeated inside the frontmatter `seats:` block, read from the raw text. */
+function duplicateSeatKeys(text: string): string[] {
+    if (!text.startsWith('---\n')) return [];
+    const end = text.indexOf('\n---\n', 4);
+    const lines = text.slice(4, end === -1 ? undefined : end).split('\n');
+    const start = lines.findIndex((l) => /^seats:\s*$/u.test(l));
+    if (start === -1) return [];
+    const seen = new Set<string>();
+    const dup = new Set<string>();
+    for (const line of lines.slice(start + 1)) {
+        if (!/^\s/u.test(line)) break;
+        // Compared by the identity a YAML parser would give the key, so a quoted
+        // spelling cannot hide a second entry for the same seat.
+        const key = line
+            .slice(0, line.indexOf(':') === -1 ? undefined : line.indexOf(':'))
+            .trim()
+            .replace(/^(["'])(.*)\1$/u, '$2')
+            .trim();
+        if (key === '' || key.startsWith('#')) continue;
+        if (seen.has(key)) dup.add(key);
+        seen.add(key);
+    }
+    return [...dup];
+}
+
+/**
+ * The header a set of seat verdicts supports, and no more.
+ *
+ * `providers` is every seat that gave a final verdict — a closed seat is not a
+ * provider the verdict came from. Any refusing seat makes the verdict `refused`,
+ * any non-convergent one `non-convergent`; only when every final seat passed is
+ * the verdict passing, and then `ratified` if any seat said so. No final seat at
+ * all is `non-convergent`: a review that ended without a verdict did not pass.
+ */
+export function deriveRatificationHeader(
+    seats: ReadonlyMap<string, SeatVerdict> | Readonly<Record<string, SeatVerdict>>,
+): { providers: string[]; verdict: RatificationVerdict } {
+    const entries = seats instanceof Map ? [...seats.entries()] : Object.entries(seats);
+    const final = entries.filter(([, v]) => v !== SEAT_NO_FINAL_VERDICT) as [string, RatificationVerdict][];
+    const verdicts = final.map(([, v]) => v);
+    let verdict: RatificationVerdict;
+    if (verdicts.includes('refused')) {
+        verdict = 'refused';
+    } else if (final.length === 0 || verdicts.includes('non-convergent')) {
+        verdict = 'non-convergent';
+    } else {
+        verdict = verdicts.includes('ratified') ? 'ratified' : 'confirmed-non-expanding';
+    }
+    return { providers: final.map(([p]) => p), verdict };
+}
+
+/**
+ * The `providers:`, `verdict:` and `seats:` frontmatter lines, derived — never
+ * typed. Throws on a provider id outside {@link SEAT_PROVIDER_RE}: a name that
+ * could carry YAML syntax is refused rather than escaped.
+ */
+export function renderRatificationHeader(
+    seats: ReadonlyMap<string, SeatVerdict> | Readonly<Record<string, SeatVerdict>>,
+): string {
+    const entries = seats instanceof Map ? [...seats.entries()] : Object.entries(seats);
+    for (const [p, v] of entries) {
+        if (!SEAT_PROVIDER_RE.test(p)) throw new Error(`not a provider id: ${JSON.stringify(p)}`);
+        if (!SEAT_VERDICTS.includes(v)) throw new Error(`not a seat verdict: ${JSON.stringify(v)}`);
+    }
+    const { providers, verdict } = deriveRatificationHeader(seats);
+    return [
+        `providers: [${providers.join(', ')}]`,
+        `verdict: ${verdict}`,
+        'seats:',
+        ...entries.map(([p, v]) => `  ${p}: ${v}`),
+    ].join('\n');
+}
+
+/**
+ * The header claims the seats do not support.
+ *
+ * `seats:` is required. Optional, it left `providers` and `verdict` free-written
+ * for every author who omitted it, which is the defect it exists to close; the
+ * round-2 ratification review refused that shape. The gate reads only the
+ * artifacts in the diff under review, so an artifact merged before the field
+ * existed is never re-read and needs no migration to stay valid.
+ *
+ * The recorded header must EQUAL the derived one; the two named overclaims get
+ * their own codes so a reader sees which one it was.
+ */
+function seatProblems(reading: SeatsReading, providers: readonly string[], verdict: string | null): RatificationProblem[] {
+    if (reading.kind === 'absent') {
+        return [
+            {
+                code: 'no-seats',
+                message:
+                    'missing `seats:` — `providers` and `verdict` are derived from the per-seat final ' +
+                    'verdicts, never typed (print all three with `ratification_header`)',
+            },
+        ];
+    }
+    if (reading.kind === 'invalid') return reading.problems;
+    const seats = reading.seats;
+    const problems: RatificationProblem[] = [];
+    if (verdict !== null && PASSING_VERDICTS.has(verdict)) {
+        const dissent = [...seats].filter(([, v]) => v === 'refused' || v === 'non-convergent');
+        if (dissent.length > 0) {
+            problems.push({
+                code: 'seat-dissent',
+                message:
+                    `verdict \`${verdict}\` while ${dissent.map(([p, v]) => `${p} was \`${v}\``).join(', ')} ` +
+                    'at the final round — a header cannot say more than its seats said',
+            });
+        }
+    }
+    const derived = deriveRatificationHeader(seats);
+    const extra = providers.filter((p) => !derived.providers.includes(p));
+    if (extra.length > 0) {
+        problems.push({
+            code: 'providers-exceed-seats',
+            message:
+                `providers names ${extra.join(', ')}, which gave no final verdict ` +
+                `(${String(derived.providers.length)} seat(s) did) — diversity is counted over seats that answered`,
+        });
+    }
+    if (
+        problems.length === 0 &&
+        (verdict !== derived.verdict || providers.join('\u0000') !== derived.providers.join('\u0000'))
+    ) {
+        problems.push({
+            code: 'header-not-derived',
+            message:
+                `recorded providers [${providers.join(', ')}] / verdict \`${String(verdict)}\` differ from the ` +
+                `header the seats derive: [${derived.providers.join(', ')}] / \`${derived.verdict}\` ` +
+                '(print it with `ratification_header`)',
+        });
+    }
+    return problems;
 }
 
 export interface RatificationReading {
@@ -207,6 +424,8 @@ export function readRatification(
             }
         }
     }
+
+    problems.push(...seatProblems(readSeats(fm, text), providers, verdict));
 
     // Diversity, against the REQUIRED count.
     //

@@ -16,7 +16,6 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 enforced_by:
   - "hook:context-hygiene"
-# obligation: line 67
 obligation_frequency: "per-turn"
 ---
 

@@ -34,7 +34,6 @@ packs: [finance-basic, finance-advanced]
 trust:
   level: advisory
   human_review_required: true
-# obligation: line 53
 obligation_frequency: "per-task"
 ---
 <!-- agent-config:human-review-banner -->

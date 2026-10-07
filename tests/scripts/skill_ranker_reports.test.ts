@@ -50,7 +50,7 @@ import { main as sweepMain } from '../../src/scripts/sweep_skill_ranker_signals'
 import { _body_signals } from '../../src/scripts/skill_tools/score_skill_relevance';
 
 function reading(over: Partial<RowReading> = {}): RowReading {
-    return { id: 'r#positives[0]', expected: ['alpha'], rankedFirst: 'beta', topScore: 10, rankOfExpected: 0, ...over };
+    return { id: 'r#positives[0]', expected: ['alpha'], rankedFirst: 'beta', topScore: 10, rankOfExpected: 0, expectedInTopScoreBlock: false, lostOnTie: false, ...over };
 }
 
 describe('firstExpectedRank — absent is 0, never a sentinel that does arithmetic', () => {
@@ -322,9 +322,9 @@ describe('perPackTop1 — a total order, so the published table reproduces', () 
 
     it('orders by top-1 ascending, then n descending, then pack name — and ties resolve', () => {
         const rows: RowReading[] = [
-            { id: 'a', expected: ['alpha'], rankedFirst: 'x', topScore: 1, rankOfExpected: 2 },
-            { id: 'b', expected: ['beta'], rankedFirst: 'x', topScore: 1, rankOfExpected: 2 },
-            { id: 'c', expected: ['gamma'], rankedFirst: 'gamma', topScore: 1, rankOfExpected: 1 },
+            { id: 'a', expected: ['alpha'], rankedFirst: 'x', topScore: 1, rankOfExpected: 2, expectedInTopScoreBlock: false, lostOnTie: false },
+            { id: 'b', expected: ['beta'], rankedFirst: 'x', topScore: 1, rankOfExpected: 2, expectedInTopScoreBlock: false, lostOnTie: false },
+            { id: 'c', expected: ['gamma'], rankedFirst: 'gamma', topScore: 1, rankOfExpected: 1, expectedInTopScoreBlock: false, lostOnTie: false },
         ];
         const got = perPackTop1(rows, root);
         expect(got.map((p) => p.pack)).toEqual(['one', 'two', 'three']);

@@ -70,7 +70,7 @@ council first.
 
 ## Phase 1 — The granularity question goes to the council
 
-- [ ] **1.1 Challenge the change before building it.** Put blocker
+- [x] **1.1 Challenge the change before building it.** Put blocker
       `obligation-granularity` to the council with the audit, the three worked
       rows above and the coverage summary. The verdict, the dissent and the
       prompt are recorded at the blocker, and its `Status` closes.
@@ -78,25 +78,25 @@ council first.
 
 ## Phase 2 — Every extracted law has a stable id
 
-- [ ] <!-- blocked-by: obligation-granularity | asked: no — the question is routed to the council in step 1.1, not to the owner --> **2.1 Ids in frontmatter, not in bodies.** Each non-kernel rule with a law
+- [x] **2.1 Ids in frontmatter, not in bodies.** *(Landed in the sidecar `src/config/rule-obligations.json` instead — D2 revised, reason in the row: 112 non-kernel rules, 290 ids; lint in `src/scripts/_lib/rule_obligations.ts`.)* Each non-kernel rule with a law
       section declares its obligations as `<rule>.<obligation>` ids in
       frontmatter, so no rule body grows. A lint asserts ids are unique,
       prefixed with their own rule id, and stable across a reword of the law
       text (a fixture rewords a law and keeps the id).
       verify: `npx vitest run tests/scripts/rule_obligation_ids.test.ts` -> 0
-- [ ] <!-- blocked-by: obligation-granularity | asked: no — the question is routed to the council in step 1.1, not to the owner --> **2.2 The old marker is read or retired.** Where a rule carries
+- [x] **2.2 The old marker is read or retired.** *(Retired: all 107 markers removed; 34 of the 68 on law-section rules pointed outside the law. The lint refuses its return; `report_obligation_mechanism` now prints the id count.)* Where a rule carries
       `# obligation: line N`, its first id points at the same law; the marker is
       then either read by the lint or removed, never left as a second source.
       verify: `npx vitest run tests/scripts/rule_obligation_ids.test.ts` -> 0
 
 ## Phase 3 — `enforced_by` binds to an id, and coverage counts obligations
 
-- [ ] <!-- blocked-by: obligation-granularity | asked: no — the question is routed to the council in step 1.1, not to the owner --> **3.1 An entry names what it carries.** An `enforced_by` entry may name
+- [ ] **3.1 An entry names what it carries.** An `enforced_by` entry may name
       the law ids it refuses. `check_enforcement_coverage` credits only those
       ids; an entry with no ids keeps today's rule-level credit and is counted
       as unbound, so nothing in the tree changes class on the day this lands.
       verify: `npx vitest run tests/scripts/check_enforcement_coverage_obligations.test.ts` -> 0
-- [ ] <!-- blocked-by: obligation-granularity | asked: no — the question is routed to the council in step 1.1, not to the owner --> **3.2 Obligations beside rules.** The report's summary prints obligation
+- [ ] **3.2 Obligations beside rules.** The report's summary prints obligation
       counts per class next to the existing rule counts, and every existing
       rule-level field keeps its name and meaning. No new failing condition is
       added.
@@ -104,12 +104,12 @@ council first.
 
 ## Phase 4 — The sixteen, re-read
 
-- [ ] <!-- blocked-by: obligation-granularity | asked: no — the question is routed to the council in step 1.1, not to the owner --> **4.1 Bind the gated rules per obligation.** For each of the sixteen rules
+- [ ] **4.1 Bind the gated rules per obligation.** For each of the sixteen rules
       counted as gated, its `enforced_by` entries name the ids each one
       actually refuses, read from the gate's own code, not from the rule's
       prose.
       verify: `npx vitest run tests/scripts/check_enforcement_coverage_obligations.test.ts` -> 0
-- [ ] <!-- blocked-by: obligation-granularity | asked: no — the question is routed to the council in step 1.1, not to the owner --> **4.2 Publish the delta.** A page lists, per rule, obligations gated
+- [ ] **4.2 Publish the delta.** A page lists, per rule, obligations gated
       before and after, with the command that reproduces it, at
       `agents/evidence/analysis/enforcement-per-obligation-2026-10.md`, carrying
       `<!-- evidence-type: analysis -->`. Finding `bfe1d6e6d8ca` gets its
@@ -118,7 +118,7 @@ council first.
 
 ## Phase 5 — Observer candidates, named
 
-- [ ] <!-- blocked-by: obligation-granularity | asked: no — the question is routed to the council in step 1.1, not to the owner --> **5.1 A list, no wiring.** The 4.2 page gains a section naming each
+- [ ] **5.1 A list, no wiring.** The 4.2 page gains a section naming each
       obligation in the observer set that an existing backstop could refuse,
       with the backstop's path and the slot it would bind to. Nothing is wired.
       verify: `grep -c -i 'observer candidates' agents/evidence/analysis/enforcement-per-obligation-2026-10.md` -> /^[1-9]/
@@ -133,7 +133,7 @@ council first.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The council's verdict on `obligation-granularity` is recorded at
+- [x] AC-1 — The council's verdict on `obligation-granularity` is recorded at
       the blocker with its prompt.
 - [ ] AC-2 — If option (a) is chosen: every non-kernel rule with a law section
       has stable obligation ids, and `check_enforcement_coverage` reports
@@ -149,19 +149,62 @@ council first.
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
 | D1 | contested-technical | council: blocker obligation-granularity | Granularity of `enforced_by` | Blocker `obligation-granularity`; the over-credit is shown in three audit rows | The council splits |
-| D2 | reversible-technical | agent | Ids live in frontmatter | Rule bodies are paid on every spawn; a frontmatter key adds no body text | A host is found reading frontmatter into context |
+| D2 | reversible-technical | agent | Ids live in frontmatter — **revised 2026-10-07: ids live in the sidecar `src/config/rule-obligations.json`** | The revisit condition fired on the first measurement: `check_preamble_payload_budget` counts every byte of every projected rule file, frontmatter included, as per-spawn payload under zero net growth, so ~290 ids in frontmatter would have been payload. The sidecar keeps every rule file at zero growth (the 107 retired markers shrink it) and is still one place per rule | A consumer needs the ids inside the rule file itself |
 | D3 | deterministic | evidence | An entry without ids keeps rule-level credit, counted as unbound | Changing every row's class in one change would make the delta unreadable | Unbound entries are still present after Phase 4 |
 
 ## Blockers
 
 ### blocker: obligation-granularity
-- **Status:** open
+- **Status:** resolved — council 2026-10-07, option (a), 2/2 convergent
 - **Owner:** council
 - **Blocks:** 2.1, 2.2, 3.1, 3.2, 4.1, 4.2, 5.1
 - **What to do:** pick exactly one — (a) stable law ids `<rule>.<obligation>` in each non-kernel rule's frontmatter under `src/rules/`, and `enforced_by` entries bind to those ids in `src/scripts/check_enforcement_coverage.ts`; or (b) keep the `enforced_by` field at rule granularity and add a partial-credit annotation per rule that `./scripts-run src/scripts/report_obligation_mechanism --table` prints, with no id scheme.
 - **Resolved when:** this entry records the council's choice, its dissent and the prompt sent, and `Status` reads resolved.
 - **Recommendation:** (a). An annotation in (b) is prose a gate cannot read, so the next audit would over-credit the same way; ids make the credit checkable and let the delta in 4.2 be computed rather than written.
 - **If you do nothing:** the coverage report keeps crediting whole rules for one gated clause, the 16/120 blocking figure keeps reading higher than what is refused, and finding `bfe1d6e6d8ca` stays undispositioned.
+- **Resolution (2026-10-07):** AI council, members anthropic + openai, one
+  round, 2/2 present after the run, both seats chose **(a)**. Spend $0.00
+  (both seats subscription-authed, nothing billed). Run from the lane worktree
+  with `council_cli run <question-file> --confirm --proceed-anyway --invocation agent`.
+  - **Verdict.** (a): binding must match the gate's actual refusal boundary;
+    an id makes "partially covered" a falsifiable claim, where a (b)
+    annotation records the uncertainty without resolving it.
+  - **Refinements both seats attached, adopted:** an `enforced_by` entry with
+    no ids is reported as *unbound* and never counted as obligation-level
+    blocking coverage (rule-level counts unchanged, per D3); the
+    entry-to-id mapping is an explicit structure, not an overloaded string
+    syntax; every non-kernel obligation gets an id, instruction-only ones
+    included, so the denominator is not shaped by what is gateable; the nine
+    kernel rules are reported as their own rule-granularity cohort.
+  - **Dissent / refinements not adopted here, with the reason:** openai asked
+    for a deterministic mapping from each id to one normative clause, plus
+    aliases or tombstones for retired ids and separately reported
+    split/merge records. Not built: the id slug names its clause, 4.1 reads
+    credit from gate code, and a clause-anchor would reintroduce the
+    line-number brittleness 2.2 retires. Revisit if an id is found pointing
+    at a clause its slug does not name. anthropic asked for a validator that
+    fails when a gate stops refusing a bound id; openai disagreed (gate
+    semantics are not inferable from code by a script). Not built — the
+    roadmap adds no failing condition.
+  - **Strongest argument against (a), both seats:** obligation boundaries
+    are editorial, so a split or merge moves the measured share without any
+    gate changing. Mitigation: 4.2 publishes per-rule counts, so a boundary
+    change shows up as a reviewable diff.
+  - **Prompt sent (verbatim, condensed context omitted):** "Question: at what
+    granularity should a rule's `enforced_by` declaration bind? […] the three
+    worked rows (`git-history-discipline`, `language-and-tone`,
+    `secret-vcs-guard`), the coverage summary (total 120, blocking 16,
+    13.3 %), the absence of any law id, the `# obligation: line N` marker, the
+    kernel carve-out and the per-spawn cost of body prose […] Options (choose
+    exactly one): (a) stable obligation ids `<rule>.<obligation>` […] credits
+    only named ids, keeps rule-level credit for entries without ids (counted
+    as unbound), prints obligation counts beside the unchanged rule counts, no
+    new failing condition; (b) keep `enforced_by` at rule granularity and add
+    a per-rule partial-credit annotation, no id scheme. What to answer: which
+    option and why, the strongest argument against your choice, any condition
+    under which the other option would be better, and any risk the
+    implementation must guard against." The roadmap's own recommendation was
+    deliberately not included in the prompt.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->

@@ -829,6 +829,8 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 - **Known limitations:** An installed layer measured against its limit, and the consent an installer must have before thinning (#2201) (src/scripts/install.ts declares a residual) (df7ea79); Two Phase-0 instruments closed against measurement, and the third blocked by a record rather than a ceiling (#2198) (src/scripts/check_standing_rule_delivery.ts declares a residual) (92027a2); A rule carrier that delivers what the install carries, in the host's form, in a string the host keeps (#2182) (src/scripts/install.ts declares a residual) (7fdfd0a); Rule triggers and installed links that hold (#2174) (src/scripts/install.ts declares a residual) (328a21b); A tree that keeps its neighbours (#2161) (src/scripts/install.ts declares a residual) (4399b5a); make the two pack-boundary gates green on the trunk and run the workflow-security audit in CI (#2155) (90a0ad5); +2 more.
 
 > **Governance mix:** governance-only 23 vs consumer-only 1 (taxonomy 1.1.0).
+>
+> _Re-measured 2026-10-07:_ governance-only 83 vs consumer-only 3 (taxonomy 1.1.0) on `16.2.0..16.3.0` (`8d157f5e7..91aaf5e21`), via `./scripts-run src/scripts/measure_release_mix --from 16.2.0 --to 16.3.0`. The line above was measured to an unrecorded `HEAD` at write time.
 
 ### Features
 

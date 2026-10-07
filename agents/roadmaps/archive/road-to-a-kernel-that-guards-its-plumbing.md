@@ -737,6 +737,7 @@ dashboard, the archival sweep and the continuation ladder can act on.
       ticked on the half that was landed and the other half is carried as the
       narrowing it is, because a box ticked over an unmet clause is worse than
       an open box.
+      2026-10-07: the spawn-path measurement is received by step 4.1 of `road-to-a-ratification-fence-that-follows-its-imports`.
 - [x] AC-4 — `lint-deny-text` and `lint-exit-codes` are in CI and green.
 - [x] AC-5 — A Class C key edit in project settings is refused; a Class A
       key edit is not; no user-global file is touched.

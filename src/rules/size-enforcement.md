@@ -5,7 +5,6 @@ description: "Creating or editing rules, skills, commands, guidelines, AGENTS.md
 alwaysApply: false
 workspaces: [agent-config-maintainer]
 packs: [meta]
-# obligation: line 21
 obligation_frequency: "per-edit"
 ---
 

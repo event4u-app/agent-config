@@ -264,11 +264,8 @@ export const SUPPRESSION_INVENTORY: readonly SuppressionSpec[] = [
         file: 'src/config/conformance-claim-baseline.json',
         listKey: 'undeclared',
         tier: 'string_list',
-        // Absent at the base ref because this change introduces it. Remove the
-        // flag on the next change once the introducing commit is an ancestor of
-        // main — the scan below fails while it is set and the file resolves,
-        // so the flag closes itself rather than needing to be remembered.
-        newInThisChange: true,
+        // `newInThisChange` removed: the baseline resolves at the base ref since
+        // 9a013fac5, and the scan reported the stale flag as designed.
         what: 'skill and rule artefacts carrying a standard-conformance claim with no enforced_by declaration',
     },
 ];

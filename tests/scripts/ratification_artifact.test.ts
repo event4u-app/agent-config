@@ -36,6 +36,12 @@ function artifact(overrides: Record<string, string> = {}, providers = ['anthropi
     for (const p of providers) {
         lines.push(`  - ${p}`);
     }
+    // Every seat records the artifact's own verdict, so the header is the one
+    // the seats derive and these cases exercise the other checks.
+    lines.push('seats:');
+    for (const p of providers) {
+        lines.push(`  ${p}: ${fields['verdict'] ?? ''}`);
+    }
     lines.push('---', '', '# Ratification', '', 'Body.', '');
     return lines.join('\n');
 }
@@ -136,6 +142,9 @@ describe('readRatification', () => {
             'reviewed_by: openai/gpt-5',
             'providers: [anthropic, openai]',
             'verdict: ratified',
+            'seats:',
+            '  anthropic: ratified',
+            '  openai: ratified',
             'effective_after: merge',
             '---',
             '',

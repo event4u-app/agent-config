@@ -14,7 +14,6 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 enforced_by:
   - "hook:self-repair"
-# obligation: line 28
 obligation_frequency: "per-turn"
 ---
 

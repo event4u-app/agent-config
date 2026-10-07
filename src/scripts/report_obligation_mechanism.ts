@@ -11,8 +11,11 @@
  *     declaration resolves TO (a wired validator, a bound hook, nothing).
  *   · `report_obligation_carriers` — how many artifacts restate the same
  *     obligation, which is a different question from whether one enforces it.
- *   · The `# obligation: line N` frontmatter marker — 107 of 121 rules carry
- *     one and nothing in the tree reads it, so this is its first reader.
+ *   · `src/config/rule-obligations.json` — the stable obligation ids per rule
+ *     (road-to-enforcement-per-obligation). It replaced the hand-kept
+ *     `# obligation: line N` frontmatter marker this report was the only
+ *     reader of, and whose line numbers had drifted out of the law section on
+ *     half the rules that carried one.
  *
  * **Two columns, and conflating them would be the error worth avoiding.**
  * `carried` is measured: a gate either refuses or it does not.
@@ -30,6 +33,8 @@ import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+
+import { loadRuleObligations, RULE_OBLIGATIONS_PATH } from './_lib/rule_obligations.js';
 
 // ledger-exempt: a REPORTER, not a gate. Its only non-zero exit says an input
 // instrument could not be run, which is a statement about the walk.
@@ -53,7 +58,8 @@ const REFUSING: ReadonlySet<string> = new Set(['validator', 'validator-local', '
 export interface MechanismRow {
     rule: string;
     tier: string;
-    marker_line: number | null;
+    /** Obligation ids this rule declares, `null` when it declares none (the kernel). */
+    obligations: number | null;
     frequency: string;
     declared: number;
     effective: string;
@@ -63,15 +69,6 @@ export interface MechanismRow {
     slot_exists: boolean;
     /** Artifacts restating this rule's obligations, per the carrier census. */
     restatements: number;
-}
-
-/** `# obligation: line N` inside the frontmatter block. */
-export function markerLine(content: string): number | null {
-    if (!content.startsWith('---')) return null;
-    const end = content.indexOf('\n---', 3);
-    const block = end === -1 ? content : content.slice(0, end);
-    const m = /^#\s*obligation:\s*line\s+(\d+)\s*$/m.exec(block);
-    return m ? Number.parseInt(m[1] as string, 10) : null;
 }
 
 function run(root: string, script: string, args: readonly string[]): string {
@@ -123,10 +120,11 @@ export function rows(root: string): MechanismRow[] {
         }
     }
 
+    const inventory = fs.existsSync(path.join(root, RULE_OBLIGATIONS_PATH))
+        ? loadRuleObligations(root).rules
+        : {};
     const out: MechanismRow[] = [];
     for (const r of coverage.rules) {
-        const file = path.join(root, 'src', 'rules', `${r.id}.md`);
-        const content = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
         const declared = r.declared ?? [];
         const effective = r.effective ?? 'none';
         const frequency = r.obligation_frequency ?? '—';
@@ -140,7 +138,7 @@ export function rows(root: string): MechanismRow[] {
         out.push({
             rule: r.id,
             tier: r.tier ?? '—',
-            marker_line: markerLine(content),
+            obligations: inventory[r.id]?.obligations.length ?? null,
             frequency,
             declared: declared.length,
             effective,
@@ -155,11 +153,11 @@ export function rows(root: string): MechanismRow[] {
 
 export function renderTable(data: readonly MechanismRow[]): string[] {
     const L: string[] = [];
-    L.push('| Rule | Tier | Marker | Frequency | `enforced_by` | Resolves to | Carried | Slot exists | Restatements |');
+    L.push('| Rule | Tier | Obligations | Frequency | `enforced_by` | Resolves to | Carried | Slot exists | Restatements |');
     L.push('|---|---|---:|---|---:|---|---|---|---:|');
     for (const r of data) {
         L.push(
-            `| \`${r.rule}\` | ${r.tier} | ${r.marker_line === null ? '—' : String(r.marker_line)} | ` +
+            `| \`${r.rule}\` | ${r.tier} | ${r.obligations === null ? '—' : String(r.obligations)} | ` +
                 `${r.frequency} | ${String(r.declared)} | \`${r.effective}\` | ${r.carried} | ` +
                 `${r.slot_exists ? 'yes' : 'no'} | ${String(r.restatements)} |`,
         );
@@ -210,7 +208,7 @@ export function main(): number {
             `  declared gap (the rule says instruction-only / none): ${String(by('declared-gap'))}\n` +
             `  no enforcement declaration at all: ${String(by('undeclared'))}\n` +
             `  not gated, but a host event fires at the obligation's frequency: ${String(slotNoGate)}\n` +
-            `  carry no \`# obligation: line N\` marker: ${String(data.filter((r) => r.marker_line === null).length)}\n`,
+            `  declare no obligation ids: ${String(data.filter((r) => r.obligations === null).length)}\n`,
     );
     return 0;
 }

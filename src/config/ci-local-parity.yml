@@ -168,6 +168,9 @@ ci_only:
   - id: check_release_surface_equality
     class: release
     reason: "shells out to `gh pr diff <n>` for a live release PR — there is no PR body to compare the CHANGELOG against on a local checkout"
+  - id: check_release_manifest_content
+    class: release
+    reason: "compares a release PR's manifests against its base; on any other branch the version fields do not move and the assertion is vacuous. `src/config/release-gate-locality.yml` gives it a `local:` command under the release-shape row, so `task release:verify` runs it on a release head before the PR exists"
   - id: check_release_highlights
     class: release
     reason: "requires `--version X.Y.Z` and derives evidence from a release span; exits 2 without one, so a local run gates nothing"

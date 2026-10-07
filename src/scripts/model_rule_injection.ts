@@ -617,7 +617,7 @@ export function runEndpoints(corpusDir: string): EndpointResult[] {
     let deliveries = 0;
     let unequal = 0;
     for (const c of positives) {
-        const injection = buildInjection(REPO_ROOT, c.prompt, c.openFiles, null, new Set());
+        const injection = buildInjection(REPO_ROOT, c.prompt, c.openFiles, null, new Set(), false);
         if (injection === null) continue;
         for (const id of injection.rules) {
             const projected = loadRuleBody(REPO_ROOT, id);
@@ -803,12 +803,12 @@ export function runSelftest(corpusDir: string): SelftestCase[] {
     const probe = cases.find(
         (c) =>
             c.label === 'positive' &&
-            buildInjection(REPO_ROOT, c.prompt, c.openFiles, null, new Set()) !== null,
+            buildInjection(REPO_ROOT, c.prompt, c.openFiles, null, new Set(), false) !== null,
     );
     const injection =
         probe === undefined
             ? null
-            : buildInjection(REPO_ROOT, probe.prompt, probe.openFiles, null, new Set());
+            : buildInjection(REPO_ROOT, probe.prompt, probe.openFiles, null, new Set(), false);
     if (injection === null || injection.rules.length === 0) {
         out.push({
             endpoint: 'a-delivery',

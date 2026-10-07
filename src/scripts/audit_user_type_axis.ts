@@ -3,10 +3,15 @@
  * Audit the user-type axis frontmatter coverage (step-9 Phase 4).
  *
  * Ported from the retired Python `src/scripts/audit_user_type_axis.py` (ADR-200,
- * Phase 8 / Wave 8a). The CLI contract is pinned — the single
- * `--quiet` flag, exit code (1 when orphans exist, else 0), the stdout
- * split, byte-identical stdout summary, AND byte-identical generated
- * Markdown report. Stdlib-only — no YAML dependency.
+ * Phase 8 / Wave 8a). The CLI contract is pinned — `--quiet`, exit code (1
+ * when orphans exist, else 0), the stdout split, byte-identical stdout
+ * summary, AND byte-identical generated Markdown report. Stdlib-only — no YAML
+ * dependency.
+ *
+ * `--write` (2026-10-07) is the one deliberate addition: the report is written
+ * ONLY under it. Every run used to rewrite the tracked report, so the
+ * `lint-user-type-axis` task — a read — dirtied the working tree. The lint
+ * reads; `task regen-user-type-axis-report` writes.
  *
  * Two checks across `src/skills/`:
  *
@@ -242,6 +247,7 @@ export function _render_report(
 
 export function main(argv: string[]): number {
     const quiet = argv.includes('--quiet');
+    const write = argv.includes('--write');
     // Scope assertion: the orphan/unused verdict is a set difference against
     // the skills corpus, so an unreadable corpus does not yield "no orphans",
     // it yields a vacuous answer that looks identical to a clean one.
@@ -267,9 +273,11 @@ export function main(argv: string[]): number {
     const orphans = new Set<string>([...used].filter((v) => !declared.has(v)));
     const unused = new Set<string>([...declared].filter((v) => !used.has(v)));
 
-    const report = _render_report(declared, byValue, orphans, unused);
-    fs.mkdirSync(path.dirname(REPORT_PATH), { recursive: true });
-    fs.writeFileSync(REPORT_PATH, report, 'utf-8');
+    if (write) {
+        const report = _render_report(declared, byValue, orphans, unused);
+        fs.mkdirSync(path.dirname(REPORT_PATH), { recursive: true });
+        fs.writeFileSync(REPORT_PATH, report, 'utf-8');
+    }
 
     if (!quiet) {
         process.stdout.write(
@@ -283,7 +291,11 @@ export function main(argv: string[]): number {
         if (unused.size > 0) {
             process.stdout.write('  warn unused: ' + _sorted(unused).join(', ') + '\n');
         }
-        process.stdout.write(`  report: ${_relativeToPosix(REPORT_PATH, REPO_ROOT)}\n`);
+        process.stdout.write(
+            write
+                ? `  report: ${_relativeToPosix(REPORT_PATH, REPO_ROOT)}\n`
+                : '  report: not written (pass --write to regenerate it)\n',
+        );
     }
 
     if (orphans.size === 0) {

@@ -65,7 +65,7 @@
  *
  * WHAT IT DOES NOT ASSERT. Not that the extracted section is the rule's real
  * obligation — a heading match is structural and checkable, "this sentence is
- * the obligation" is not; the `# obligation: line N` marker and
+ * the obligation" is not; the ids in `src/config/rule-obligations.json` and
  * `report_obligation_carriers` own that. Not that a rule at its recorded
  * exception is correct, only that it is not worse. And not a cross-commit
  * ratchet: this gate reads one tree, so "shrink-only" means the tree sits at or

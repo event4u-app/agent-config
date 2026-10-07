@@ -12,7 +12,6 @@ workspaces: [engineering]
 packs: [engineering-base]
 collision_ok:
   "commit": "format floor for every commit message"
-# obligation: line 19
 obligation_frequency: "per-commit"
 ---
 

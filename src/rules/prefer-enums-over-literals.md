@@ -15,7 +15,6 @@ packs: [engineering-base]
 collision_ok:
   "migration": "migrations add columns — multi-state fields should land as enums from the start"
   "category": "a category field is the canonical enum candidate"
-# obligation: line 27
 obligation_frequency: "per-edit"
 ---
 

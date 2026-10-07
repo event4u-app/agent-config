@@ -1,0 +1,1625 @@
+diff --git a/.github/workflows/consistency.yml b/.github/workflows/consistency.yml
+index 70c9d79752e0ed50aa9b5b8e7ed6f305b51bcd13..5c5d3c7692cfc0df840328afd362a42487dd4de1 100644
+--- a/.github/workflows/consistency.yml
++++ b/.github/workflows/consistency.yml
+@@ -276,21 +276,28 @@ jobs:
+       # changed .github/workflows/**. Same reason as the steps above: no workflow
+       # invokes `task ci`.
+       #
+-      # Warn-only by design and left that way — it is advisory on MEDIUM and only
+-      # `--strict` turns a HIGH into exit 1. Wired WITHOUT `--strict` because the
+-      # severity model is council-locked (2026-06-13) and promoting the tier is a
+-      # separate decision, recorded unresolved in
++      # Run with `--strict`, so a HIGH fails this job. MEDIUM stays advisory — the
++      # tier assignment is the council-locked model of 2026-06-13 and is unchanged;
++      # what changed is the invocation. Until 2026-10-07 this step ran without
++      # `--strict` and a planted HIGH exited 0 (the control reading in
++      # tests/scripts/workflow_security_argv_control.test.ts). The AI council
++      # (anthropic + openai, 2/2, both choosing option a) decided the invocation
++      # on 2026-10-07; the record is
+       # agents/evidence/analysis/workflow-security-net-degraded-decision.md.
+-      # What the step buys today is that the audit RUNS on every pull request and
+-      # its findings are in the log, plus the `scanned:` floor the row in
+-      # src/config/gate-coverage.yml pins — a workflows directory that empties out
+-      # now fails here instead of printing "0 HIGH, 0 MEDIUM" over nothing.
+       #
+       # Called as a script rather than through `task`, so the argv CI runs is the
+-      # argv the manifest declares; its verdict on this tree at wiring time was
+-      # 0 HIGH, 0 MEDIUM, 0 allowlisted over 34 workflow files.
+-      - name: Audit workflow security (warn-only)
+-        run: ./scripts-run src/scripts/lint_workflow_security
++      # argv the manifest declares; its verdict on this tree at that date was
++      # 0 HIGH, 0 MEDIUM, 0 allowlisted over 35 workflow files.
++      - name: Audit workflow security (HIGH blocks)
++        run: ./scripts-run src/scripts/lint_workflow_security --strict
++
++      # Pack boundaries ran only in `task ci`, which no workflow invokes, so a
++      # pull request that added a cross-pack link got no red check from
++      # anything. Run here as a script, with the argv the `lint_pack_boundaries`
++      # row in src/config/gate-coverage.yml pins: a count above the baseline in
++      # src/config/gate-violation-baselines.json exits 1 and fails this job.
++      - name: Enforce cross-pack reference boundaries
++        run: ./scripts-run src/scripts/lint_pack_boundaries --quiet
+ 
+       - name: Block readable external inspiration/harvest source names
+         run: task check-no-external-sources
+diff --git a/.github/workflows/gate-canary.yml b/.github/workflows/gate-canary.yml
+new file mode 100644
+index 0000000000000000000000000000000000000000..04685550cf5ab0bb2bb7ec84d119b2cc29fcea45
+--- /dev/null
++++ b/.github/workflows/gate-canary.yml
+@@ -0,0 +1,81 @@
++name: Gate canary (monthly + manual)
++
++# Step 4.2 of road-to-gates-a-pull-request-can-hear.
++#
++# `check_gate_coverage --canary` plants one declared violation per gate that
++# carries a recipe in src/config/gate-coverage.yml, runs the gate, records
++# red/green, and deletes the plant in a `finally`. Until this workflow it had no
++# caller — no task, no workflow, no package.json script — so "when did the
++# canary last run" had no answer anyone could look up.
++#
++# WHY SCHEDULED AND NOT PER-PR. The canary mutates the tree it runs in, which is
++# why the gate's own prose keeps it off the per-PR path. Here it mutates a
++# throwaway checkout on a runner that is discarded afterwards, and the only
++# thing kept is the ledger, uploaded as a run artifact. This is NOT a required
++# check and must not become one.
++#
++# CADENCE. Monthly. `adversarial-review-protocol` § 6 sets biannual as the
++# minimum for the gate-surface canary; running more often costs one runner hour
++# and shortens the window in which a gate can be dead without anyone knowing.
++#
++# READ-ONLY on the repository: it never commits and never pushes. The plants
++# exist only in the runner's working copy.
++
++on:
++  workflow_dispatch:
++  schedule:
++    # 05:00 UTC on the 1st of each month.
++    - cron: "0 5 1 * *"
++
++# One run at a time: a manual dispatch during a scheduled run waits rather than
++# overlapping it, so two ledgers for the same day are never written at once.
++concurrency:
++  group: ${{ github.workflow }}
++  cancel-in-progress: false
++
++permissions:
++  contents: read
++
++jobs:
++  canary:
++    name: Plant one defect per gate and record which ones went red
++    runs-on: ubuntu-latest
++    timeout-minutes: 60
++    steps:
++      - name: Checkout
++        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
++        with:
++          # Full history: several gates resolve `origin/main` or walk history,
++          # and a shallow clone would make them exit non-zero for a reason
++          # unrelated to the plant — which the canary would record as caught.
++          fetch-depth: 0
++          persist-credentials: false
++
++      - name: Setup Node
++        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
++        with:
++          node-version: "20"
++          cache: "npm"
++
++      - name: Install Node deps
++        run: |
++          npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000 \
++            || (sleep 10 && npm ci --no-audit --no-fund --fetch-retries=5 --fetch-retry-mintimeout=10000)
++
++      - name: Run the gate canary
++        id: canary
++        run: |
++          ledger="agents/evidence/reviews/canary/gate-surface-$(date -u +%Y-%m-%d)-ci.md"
++          echo "ledger=${ledger}" >> "$GITHUB_OUTPUT"
++          ./scripts-run src/scripts/check_gate_coverage --canary --ledger "${ledger}"
++
++      - name: Upload the canary ledger
++        # Only when the canary step got far enough to name a ledger; otherwise
++        # this step would add a second, misleading failure to the real one.
++        if: always() && steps.canary.outputs.ledger != ''
++        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
++        with:
++          name: gate-canary-ledger
++          path: ${{ steps.canary.outputs.ledger }}
++          if-no-files-found: error
++          retention-days: 90
+diff --git a/agents/evidence/analysis/gates-a-pr-can-hear-2026-10.md b/agents/evidence/analysis/gates-a-pr-can-hear-2026-10.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..65d86f750535c4d975c695c30de70d44de97f54a
+--- /dev/null
++++ b/agents/evidence/analysis/gates-a-pr-can-hear-2026-10.md
+@@ -0,0 +1,68 @@
++<!-- evidence-type: analysis -->
++# Gates a pull request can hear — control readings, 2026-10-07
++
++Read at `main` @ `adaad0aa2`. Two readings, each stated with the command that
++produced it so a later reader can re-run it rather than trust it.
++
++## Reading 1 — the workflow-security audit under the argv CI runs
++
++`tests/scripts/workflow_security_argv_control.test.ts` plants one workflow
++carrying a `pull_request_target` trigger and a checkout of
++`github.event.pull_request.head.sha` in a temporary directory, points the gate
++at it through `LINT_WORKFLOW_SECURITY_DIR`, and runs it twice. The CI argv is
++read from the step in `.github/workflows/consistency.yml`, not written into the
++test.
++
++| Argv | Source | Exit code | HIGH in output |
++|---|---|---|---|
++| *(none)* | the `Audit workflow security (warn-only)` step in `consistency.yml` | **0** | yes |
++| `--strict` | the gate's own flag | **1** | yes |
++
++So a pull request that adds a HIGH today merges with a green check: the finding
++is in the log and the job passes. The step's name says `warn-only`, and the test
++holds the name to that outcome — adding `--strict` without renaming the step was
++run once on purpose and failed the name assertion, 1 of 4.
++
++**Superseded in the same change.** The AI council decided option (a) on
++2026-10-07 (2/2; record in
++`agents/evidence/analysis/workflow-security-net-degraded-decision.md`), so the
++step now runs `--strict` under the name `Audit workflow security (HIGH blocks)`
++and the same test, unchanged, reads exit 1 for the CI argv. The table above is
++the reading before the step changed.
++
++## Reading 2 — pack boundaries are run by no workflow
++
++```
++$ grep -l lint_pack_boundaries .github/workflows/*.yml
++(no output, exit 1)
++```
++
++The only caller is the `lint-pack-boundaries` task
++(`taskfiles/content.yml:439-442`, argv `--quiet`), which is listed under
++`task ci` (`Taskfile.yml:379`). `.github/workflows/skill-lint.yml:95` records
++that the local `task ci` / `ci-strict` meta-tasks are invoked by no workflow. The
++chain therefore ends on a developer's machine: nothing a pull request triggers
++runs `lint_pack_boundaries`.
++
++Run directly on this tree, `./scripts-run src/scripts/lint_pack_boundaries`
++reports 203 violations and exits 0, because 203 is the baseline recorded in
++`src/config/gate-violation-baselines.json`. A 204th would exit non-zero — on a
++machine that ran it.
++
++**Planted once by hand on 2026-10-07** — a `founder-strategy` skill linking into
++`gtm-marketing`: `./scripts-run src/scripts/lint_pack_boundaries --quiet`
++reported `scanned: 831`, 204 violations against a baseline of 203, and exited 1.
++The plant was removed afterwards. It is not a standing canary recipe: on a
++ratchet a fixed plant reads green once real fixes open headroom under the
++baseline, so the gate-coverage row carries a `no_canary_reason` and relies on
++`--self-test`, which runs over fixture roots the ratchet never judges.
++
++## Reading 3 — the required checks, contract against ruleset
++
++`gh api repos/event4u-app/agent-config/rulesets/17749383`, read 2026-10-07:
++`required_status_checks` holds two contexts, `Sync + Generate Tools Consistency`
++and `Standing payload delta + budget gate`. Before this change
++`src/scripts/print_required_checks.ts` named the first alone and
++`docs/contracts/branch-protection-policy.md` marked it "the only required one".
++`./scripts-run src/scripts/report_required_checks_drift` now performs that
++comparison; on the corrected tree it reports agreement and exits 0.
+diff --git a/agents/evidence/analysis/workflow-security-net-degraded-decision.md b/agents/evidence/analysis/workflow-security-net-degraded-decision.md
+index 90da06587aa8c57045df53ef3e6a65f03d7b44c1..17c96466abbfcf87414c3f0576f1b73cfab18f1a 100644
+--- a/agents/evidence/analysis/workflow-security-net-degraded-decision.md
++++ b/agents/evidence/analysis/workflow-security-net-degraded-decision.md
+@@ -83,3 +83,36 @@ push steps, three sabotage probes red then green. The part that does is
+ part 2, the refusal to re-tier, and it is deliberately the conservative
+ direction: it leaves a detector where a blocker might belong, rather than moving
+ a locked line with nobody watching.
++
++## Revisited 2026-10-07 — the CI invocation, decided with two seats
++
++The question this page carried — "whether CI should invoke `--strict`" — went to
++the AI council on 2026-10-07 as a decision-revisit of the 2026-06-13 lock.
++**Members:** anthropic (claude-sonnet-4-5) and openai (codex-default), one round
++with peer review, quorum 2/2, $0.00 metered (subscription transport).
++**Verdict: option (a), 2 of 2** — run the step in
++`.github/workflows/consistency.yml` under `--strict`, set `argv: ["--strict"]`
++on the gate's row in `src/config/gate-coverage.yml`. The tier assignment is
++untouched: MEDIUM stays advisory, and only a HIGH changes the exit code.
++
++The reasons both seats gave: a HIGH is a trust-boundary failure rather than
++hygiene; the tree reads 0 HIGH over 35 workflow files, so enforcement costs
++nothing to turn on; the 2026-06-13 lock settled what is HIGH, not whether a HIGH
++blocks, and the 2026-08-22 entry above recorded that second question as open
++rather than answered.
++
++What the seats asked to be carried, and where it stands:
++
++- **The gate runs the PR's own copy of itself** (openai). A contributor could
++  weaken the detector or its allowlist in the same pull request. True of every
++  in-tree gate here; `--strict` is a net for honest mistakes, not a boundary
++  against a hostile author. Named, not closed.
++- **The pull request that turns `--strict` on is judged by its own head's
++  workflow**, so its CI run is the first `--strict` run; the canary recipe on the
++  row and the monthly `.github/workflows/gate-canary.yml` keep proving it fails.
++- **Revisit if** HIGH false positives block legitimate workflows, if exceptions
++  become routine, or if the allowlist grows toward its cap of 20 with entries
++  that cannot be removed. The response is to refine the rule or add a bounded,
++  reasoned allowlist entry — not to return the whole audit to warn-only.
++- A correction to the question as posed: the gate scans `*.yml` **and**
++  `*.yaml`, not `*.yml` alone.
+diff --git a/agents/evidence/ratifications/drain-road-to-gates-a-pull-request-can-hear-20261007.md b/agents/evidence/ratifications/drain-road-to-gates-a-pull-request-can-hear-20261007.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..bc54b7a40cf168cd6de9c3675ee56bec06dd0a64
+--- /dev/null
++++ b/agents/evidence/ratifications/drain-road-to-gates-a-pull-request-can-hear-20261007.md
+@@ -0,0 +1,96 @@
++---
++proposed_by: claude-opus-5.5/drain-lane-gates-a-pr-can-hear-2026-10-07
++implemented_by: claude-opus-5.5/drain-lane-gates-a-pr-can-hear-2026-10-07
++reviewed_by: council/anthropic+openai-2026-10-07-gates-a-pr-can-hear
++providers:
++  - anthropic
++  - openai
++verdict: confirmed-non-expanding
++effective_after: merge
++---
++
++<!-- evidence-type: ratification -->
++
++# Ratification — gates a pull request can hear
++
++## What was reviewed
++
++The governance surfaces of branch
++`drain/road-to-gates-a-pull-request-can-hear-20261007`:
++
++- `.github/workflows/consistency.yml` — the workflow-security audit runs under
++  `--strict` (a HIGH fails the job; MEDIUM stays advisory), and a new step runs
++  `lint_pack_boundaries --quiet`, which fails when the cross-pack violation count
++  rises above its recorded baseline.
++- `.github/workflows/gate-canary.yml` (new) — monthly and manual,
++  `permissions: contents: read`, `persist-credentials: false`, runs
++  `check_gate_coverage --canary` in a throwaway checkout and uploads the ledger.
++  Not a required check.
++- `src/config/gate-coverage.yml` — the `lint_workflow_security` row pins
++  `["--strict"]` and carries a create-only canary; a new `lint_pack_boundaries`
++  row carries a `no_canary_reason` pointing at the gate's `--self-test`.
++- `taskfiles/ci-fast.yml` — the local task matches the CI argv; a report
++  regeneration task.
++
++The `--strict` invocation implements an AI-council decision taken the same day
++(2/2, option a) as a decision-revisit of the 2026-06-13 severity lock, recorded
++in `agents/evidence/analysis/workflow-security-net-degraded-decision.md`. No
++ruleset, required-check list, permission, token scope or bypass changed.
++
++## Verdict: `confirmed-non-expanding`
++
++Every change removes merge paths or adds measurement; none grants the agent a
++permission, a write, a bypass or an approval. Both seats classified it that way
++in round 1 on the stated test — "widening a check's rejection surface is not an
++increase in the modifying agent's power".
++
++## How the review ran, stated as it happened
++
++Three rounds, both providers present in each, $0.00 metered (subscription
++transport).
++
++1. **Round 1** — both seats `confirmed-non-expanding`, each with requested
++   changes: (a) `npm ci` without `--ignore-scripts` in `gate-canary.yml` would be
++   a HIGH; (b) the pack-boundary baseline was unverified; (c) a one-link
++   pack-boundary canary only discriminates while the live count equals the
++   baseline.
++2. Dispositions: (a) refuted on evidence — the install rule is scoped to
++   `pull_request_target` workflows, and `lint_workflow_security --strict` read
++   0 HIGH over 35 files with `gate-canary.yml` present; the task description that
++   omitted that scope was corrected. (b) the baseline file is unchanged (203) and
++   the branch reads 203. (c) first answered with a 25-link plant.
++3. **Round 2** — split: anthropic `refused`, openai `confirmed-non-expanding`
++   with changes requested. Both held (a) and (b) and rejected (c): any fixed
++   plant reads green once fixes open headroom below the baseline. Both also
++   found a `concurrency.group` keyed by `run_id`, which serialises nothing.
++4. The pack-boundary canary was withdrawn for a `no_canary_reason` that relies on
++   `--self-test` (fixture roots, ratchet not consulted; 5/5, sabotage 4/5), and
++   the concurrency group became `${{ github.workflow }}`.
++5. **Round 3** — both seats approved the branch with no defect found. The verdict
++   tokens were not uniform and are not rounded up here: anthropic answered
++   `APPROVE` without a token from the closed set, and openai answered `ratified`
++   without arguing that anything had expanded, contradicting its own round-1
++   classification. This record carries `confirmed-non-expanding` because that is
++   the classification both seats gave with reasons, and no round argued an
++   expansion. Either label passes the gate; the choice is stated so a reader can
++   disagree with it.
++
++The implementing session wrote the questions and the dispositions; it did not
++write any verdict. The council questions and responses live in the gitignored,
++auto-pruned council runtime and are summarised here rather than cited.
++
++## Residue the review named, kept rather than closed
++
++- The gate runs the pull request's own copy of itself, so a hostile author could
++  weaken it in the same change. True of every in-tree gate; `--strict` is a net
++  for mistakes, not a boundary against the author.
++- The pull request that turns `--strict` on is judged by its own head — its CI
++  run is the first `--strict` run.
++- `--self-test` for `lint_pack_boundaries` is not run by any workflow; the round-3
++  openai seat asked for it in durable CI. Not done in this change.
++
++## What would have changed the verdict
++
++A new repository write, push or commit capability, a ruleset or required-check
++change, a bypass, or a change to the HIGH/MEDIUM tier assignment without the
++recorded council decision.
+diff --git a/agents/reports/README.md b/agents/reports/README.md
+index f2674b14e9a7c3bbd59525504cc5b0c721495693..056b484c6976a02a279f114876613355dd404e3b 100644
+--- a/agents/reports/README.md
++++ b/agents/reports/README.md
+@@ -6,8 +6,9 @@ Reports here are one of two kinds; nothing else accumulates:
+    the same path on every run (`command-surface.{md,json}`,
+    `command-budget-audit.{md,json}` from `audit_command_surface.ts`;
+    `auto-rules-audit.*`, `auto-rules-overlap.json`; `skill-overlap.*`;
+-   `user-type-axis-audit.md` from `audit_user_type_axis.ts`). Staleness is
+-   fixed by re-running the generator, never by hand-editing.
++   `user-type-axis-audit.md` from `audit_user_type_axis.ts --write`, run by
++   `task regen-user-type-axis-report`; without `--write` that audit only reads).
++   Staleness is fixed by re-running the generator, never by hand-editing.
+ 2. **Decision-provenance snapshots** — point-in-time worksheets that stable
+    artifacts (ADRs, contracts) cite as evidence. They stay tracked exactly as
+    long as a stable artifact links them. Current set:
+diff --git a/agents/roadmaps/road-to-gates-a-pull-request-can-hear.md b/agents/roadmaps/road-to-gates-a-pull-request-can-hear.md
+index c2339a58bd36cfbb118cbe0e751455d19bb94345..9816bf8fea1ac50a5c9ae010708f4561824c2701 100644
+--- a/agents/roadmaps/road-to-gates-a-pull-request-can-hear.md
++++ b/agents/roadmaps/road-to-gates-a-pull-request-can-hear.md
+@@ -70,14 +70,14 @@ checks agrees with the ruleset, and a report says so when it does not.
+ 
+ ## Phase 1 — Control readings
+ 
+-- [ ] **1.1 An injected HIGH, read under both argvs.** A test plants a fixture
++- [x] **1.1 An injected HIGH, read under both argvs.** A test plants a fixture
+       workflow carrying a `pull_request_target` untrusted checkout in a temp
+       tree and runs the gate twice: under the argv
+       `.github/workflows/consistency.yml` runs it exits 0 with the HIGH in its
+       output; under `--strict` it exits 1. This is the reading every later
+       step argues from.
+       verify: `npx vitest run tests/scripts/workflow_security_argv_control.test.ts` -> 0
+-- [ ] **1.2 Pack boundaries are run by no workflow, as a recorded fact.** The
++- [x] **1.2 Pack boundaries are run by no workflow, as a recorded fact.** The
+       grep result and the `task ci` chain that holds the only caller are
+       written to `agents/evidence/analysis/gates-a-pr-can-hear-2026-10.md`
+       with its `evidence-type` marker, beside 1.1's two exit codes.
+@@ -85,7 +85,7 @@ checks agrees with the ruleset, and a report says so when it does not.
+ 
+ ## Phase 2 — The workflow-security severity
+ 
+-- [ ] <!-- blocked-by: workflow-security-severity --> **2.1 The step follows
++- [x] **2.1 The step follows
+       the decision.** Under (a): the CI step gains `--strict`, the
+       gate-coverage row's `argv` becomes `["--strict"]` and its
+       `no_canary_reason` is replaced by a canary recipe. Under (b): the step
+@@ -95,7 +95,7 @@ checks agrees with the ruleset, and a report says so when it does not.
+ 
+ ## Phase 3 — Pack boundaries a pull request runs
+ 
+-- [ ] **3.1 A pull-request step with the manifest's argv.** `consistency.yml`
++- [x] **3.1 A pull-request step with the manifest's argv.** `consistency.yml`
+       gains a step running `./scripts-run src/scripts/lint_pack_boundaries`
+       with the argv a new gate-coverage row declares, so a new violation above
+       the 203 baseline fails the PR that adds it.
+@@ -108,14 +108,14 @@ checks agrees with the ruleset, and a report says so when it does not.
+ 
+ ## Phase 4 — Reads that do not write, and a canary that runs
+ 
+-- [ ] **4.1 The audit writes only when asked.**
++- [x] **4.1 The audit writes only when asked.**
+       `audit_user_type_axis` writes `REPORT_PATH` only under `--write`; the
+       `lint-user-type-axis` task keeps reading, and a regeneration task passes
+       `--write`.
+       A test runs it in a temp copy and asserts `git status --porcelain
+       agents/reports/` is empty afterwards.
+       verify: `npx vitest run tests/scripts/audit_user_type_axis_no_write.test.ts` -> 0
+-- [ ] **4.2 A scheduled caller for the canary.** A scheduled workflow runs
++- [x] **4.2 A scheduled caller for the canary.** A scheduled workflow runs
+       `./scripts-run src/scripts/check_gate_coverage --canary --ledger <file>`
+       from `.github/workflows/gate-canary.yml`, at least as often as
+       `adversarial-review-protocol` § 6 requires, and
+@@ -125,11 +125,11 @@ checks agrees with the ruleset, and a report says so when it does not.
+ 
+ ## Phase 5 — The required checks the contract names
+ 
+-- [ ] **5.1 The contract names both contexts.**
++- [x] **5.1 The contract names both contexts.**
+       `branch-protection-policy.md` and `print_required_checks.ts:132` list
+       the two contexts #2169 recorded, with the date the ruleset was read.
+       verify: `grep -c 'Standing payload delta + budget gate' src/scripts/print_required_checks.ts` -> /^[1-9]/
+-- [ ] **5.2 A read-only comparator.** A `report_` script reads
++- [x] **5.2 A read-only comparator.** A `report_` script reads
+       `gh api repos/{owner}/{repo}/rulesets`, extracts the required status
+       contexts of `main protection`, compares them to the contract's list and
+       exits non-zero on a mismatch. It is run by hand or on a schedule, and is
+@@ -147,15 +147,15 @@ checks agrees with the ruleset, and a report says so when it does not.
+ 
+ ## Acceptance Criteria
+ 
+-- [ ] AC-1 — A test shows, for the argv CI runs, whether an injected HIGH
++- [x] AC-1 — A test shows, for the argv CI runs, whether an injected HIGH
+       fails the job, and the CI comment states the same outcome.
+-- [ ] AC-2 — A pull request that adds a pack-boundary violation above the
++- [x] AC-2 — A pull request that adds a pack-boundary violation above the
+       recorded baseline gets a red check from a workflow.
+-- [ ] AC-3 — Running `audit_user_type_axis` without `--write` leaves the
++- [x] AC-3 — Running `audit_user_type_axis` without `--write` leaves the
+       working tree clean.
+-- [ ] AC-4 — The canary path has a scheduled caller whose ledger carries a
++- [x] AC-4 — The canary path has a scheduled caller whose ledger carries a
+       date.
+-- [ ] AC-5 — The contract's required-check list matches the ruleset, and the
++- [x] AC-5 — The contract's required-check list matches the ruleset, and the
+       comparator exits non-zero on a fixture where they differ.
+ 
+ ## Decisions
+@@ -170,13 +170,14 @@ checks agrees with the ruleset, and a report says so when it does not.
+ ## Blockers
+ 
+ ### blocker: workflow-security-severity
+-- **Status:** open
++- **Status:** resolved
+ - **Owner:** council
+ - **Blocks:** step 2.1, AC-1
+ - **What to do:** pick exactly one — (a) add `--strict` to the step in `.github/workflows/consistency.yml` and set `argv: ["--strict"]` on the `lint_workflow_security` row of `src/config/gate-coverage.yml`, or (b) keep warn-only and correct every sentence that claims the audit can fail a pull request, recording the reasoning in `agents/evidence/analysis/workflow-security-net-degraded-decision.md`.
+ - **Resolved when:** a council verdict with two seats is recorded in `agents/evidence/analysis/workflow-security-net-degraded-decision.md` naming (a) or (b), as a decision-revisit of the 2026-06-13 lock.
+ - **Recommendation:** (a) — the decision page records that the only reason not to was that no council seat was available, and `agent-config council:status` is the check that answers whether that still holds.
+ - **If you do nothing:** the audit stays a log line; a HIGH in a workflow change merges with a green check.
++- **Resolution (2026-10-07):** option (a), AI council 2/2 (anthropic + openai, one round with peer review, $0.00 metered), recorded as a decision-revisit in `agents/evidence/analysis/workflow-security-net-degraded-decision.md` § Revisited 2026-10-07. The step runs `--strict`, the gate-coverage row's `argv` is `["--strict"]` with a canary recipe in place of `no_canary_reason`; tiers unchanged.
+ 
+ ### blocker: pack-boundary-base-narrow-edge
+ - **Status:** open
+diff --git a/docs/contracts/adversarial-review-protocol.md b/docs/contracts/adversarial-review-protocol.md
+index 1909c7055e945abed73589f8cd94b03815ec7360..7e12bddef910fc8cab33dfcc1e33a0ac5b54b68d 100644
+--- a/docs/contracts/adversarial-review-protocol.md
++++ b/docs/contracts/adversarial-review-protocol.md
+@@ -350,8 +350,9 @@ ledger artifact under `agents/evidence/reviews/canary/`, and — absolutely
+ (`./scripts-run src/scripts/check_gate_coverage --canary`) creates each
+ plant, runs the gate, and deletes the plant in a `finally`, including any
+ directory it had to create. It is deliberately kept OFF the default CI
+-path: it mutates the working tree, so it is an operator-invoked
+-experiment, never a per-PR gate.
++path: it mutates the working tree, so it runs on a schedule in a throwaway
++checkout (`.github/workflows/gate-canary.yml`, monthly, the ledger uploaded
++as a run artifact) or by an operator — never as a per-PR gate.
+ 
+ **What differs, and why.** The rotating class list above (vulnerable
+ dependency pin · dead script target · oversized artifact · stale
+diff --git a/docs/contracts/branch-protection-policy.md b/docs/contracts/branch-protection-policy.md
+index 5bc2a9feb73c162b6ae062ce86427062e5598f2d..4ea0394b2b9b92270ad401393bd32bd3c8ec68cc 100644
+--- a/docs/contracts/branch-protection-policy.md
++++ b/docs/contracts/branch-protection-policy.md
+@@ -76,12 +76,12 @@ the **reported check names** — the strings a required-check list must match.
+ 
+ | Workflow | Reported checks |
+ |---|---|
+-| `consistency.yml` | `Sync + Generate Tools Consistency` **(the only required one)** |
++| `consistency.yml` | `Sync + Generate Tools Consistency` **(required — one of two; ruleset read 2026-10-07)** |
+ | `smoke.yml` | `Smoke — kernel` · `Smoke — router` · `Smoke — schema` · `Smoke — skills` |
+ | `skill-lint.yml` | `skill-lint` (+ `skill-lint-strict`, release-gated) |
+ | `tests.yml` | `Static Checks (ESLint · typecheck · prepack)` · `Install Script Tests ({ubuntu,macos}-latest, shard N/4)` · `Install Aux Tests ({ubuntu,macos}-latest)` · `Node Tests ({ubuntu,macos}-latest, shard N/4)` · `Golden Tests ({ubuntu,macos}-latest)` · `Workspace Tests ({ubuntu,macos}-latest)` |
+ | `smoke-public-install.yml` | `{ubuntu,macos,windows}-latest · node {20,22}` · `tarball E2E · node {20,22}` · `npm publish dry-run · node {20,22}` |
+-| `standing-payload-delta.yml` | `Standing payload delta + budget gate` — renamed from `Standing payload delta (report-only)` on 2026-09-10, before it is pinned as a required check; the job carries a blocking budget step and has since 2026-08-24 |
++| `standing-payload-delta.yml` | `Standing payload delta + budget gate` **(required — the second of two since 2026-09-11; ruleset read 2026-10-07)** — renamed from `Standing payload delta (report-only)` on 2026-09-10, before it was pinned as a required check; the job carries a blocking budget step and has since 2026-08-24 |
+ | `rule-backstops.yml` | `Rule backstops` |
+ | `no-python-in-src.yml` | `no-python-in-src` |
+ | `commit-subjects.yml` | `lint commit subjects` |
+diff --git a/package-lock.json b/package-lock.json
+index dadd48ba31066fb98e69ea185fdd1d9bc35763ef..87d983688d7ef2748e65ffbe9486ddb0d30b0dc4 100644
+--- a/package-lock.json
++++ b/package-lock.json
+@@ -1764,9 +1764,9 @@
+             }
+         },
+         "node_modules/@modelcontextprotocol/sdk": {
+-            "version": "1.30.0",
+-            "resolved": "https://registry.npmjs.org/@modelcontextprotocol/sdk/-/sdk-1.30.0.tgz",
+-            "integrity": "sha512-xKd8OIzlqNzcqcNumGAa6g+PW2kjD5vrpcKOnfldAUPP3j7lnqMPwlTXQm8gF+UwH72z0lqaRbjr9hqGz0eITA==",
++            "version": "1.32.1",
++            "resolved": "https://registry.npmjs.org/@modelcontextprotocol/sdk/-/sdk-1.32.1.tgz",
++            "integrity": "sha512-2DdE+SJDtzLEEWzY1ZjY7Q+VcPhcV1KisD3zI4u0XZyktsjHum1mwbMI+JaulUBi2OZk+KJAi2uPXzxichPkdw==",
+             "license": "MIT",
+             "dependencies": {
+                 "@hono/node-server": "^1.19.9 || ^2.0.5",
+diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
+index 21dc4297f6a691284730bdb60b062126c45aa54c..b7dfcd57a8c008ca03f7b93305f72d12f662c7db 100644
+--- a/src/config/gate-coverage.yml
++++ b/src/config/gate-coverage.yml
+@@ -3230,30 +3230,60 @@ gates:
+       actually there, which a review caught and which is why the assertion now
+       exists rather than the sentence being softened.
+   - id: lint_workflow_security
+-    argv: []
++    argv: ["--strict"]
+     min_scanned: 25
+-    corpus: "workflow files under .github/workflows/ — `*.yml` then `*.yaml`, the two globs the gate scans in that order (34 today). The floor is 25 because workflows are consolidated and split routinely, so a handful leaving is normal, while a glob that stopped matching or a directory that moved reads far below it. Counting FILES and not findings is the point: this gate legitimately reports zero findings, so a floor over findings would be the false-count shape this file rejects."
++    corpus: "workflow files under .github/workflows/ — `*.yml` then `*.yaml`, the two globs the gate scans in that order (35 today). The floor is 25 because workflows are consolidated and split routinely, so a handful leaving is normal, while a glob that stopped matching or a directory that moved reads far below it. Counting FILES and not findings is the point: this gate legitimately reports zero findings, so a floor over findings would be the false-count shape this file rejects."
++    status: enforced
++    ci_invocation: .github/workflows/consistency.yml
++    canary:
++      class: contract-violation
++      path: .github/workflows/zz-canary-workflow-security.yml
++      content: |
++        name: zz canary — planted by check_gate_coverage --canary; never ships
++        on:
++          pull_request_target:
++        jobs:
++          build:
++            runs-on: ubuntu-latest
++            steps:
++              - uses: actions/checkout@0000000000000000000000000000000000000000
++                with:
++                  persist-credentials: false
++                  ref: ${{ github.event.pull_request.head.sha }}
++    note: >-
++      road-to-gates-a-pull-request-can-hear 2.1. Until 2026-10-07 the CI
++      invocation carried no `--strict`, so a planted HIGH was reported and the
++      gate still exited 0, and this row carried a no_canary_reason saying so.
++      The AI council (anthropic + openai, 2/2, both choosing option a) decided on
++      2026-10-07 to run the step under `--strict`; the tier assignment of the
++      2026-06-13 lock is unchanged, MEDIUM stays advisory. The recipe above is a
++      `pull_request_target` workflow checking out the untrusted head ref — a HIGH
++      — and `--self-test` (5 cases, 3 rejecting) still pins the tier split from
++      the other side: a MEDIUM under `--strict` must PASS.
++  - id: lint_pack_boundaries
++    argv: ["--quiet"]
++    min_scanned: 600
++    corpus: "source artefacts the shared resolver yields (`_lib/agent_src.iter_artefacts` over skills, rules, agent-src and domains), counted as FILES — 830 on 2026-10-07, of which 139 sit outside any pack's scope and are still counted because they were read. The floor is 600 because artefacts are merged and retired routinely, while a resolver that stopped yielding a root drops by hundreds at once: skills alone are over half the corpus. The violation COUNT is not what this floor guards; that is the ratchet in src/config/gate-violation-baselines.json, which fails the run when it rises above the recorded baseline."
+     status: enforced
+     ci_invocation: .github/workflows/consistency.yml
+     no_canary_reason: >-
+-      A create-only canary cannot change this gate's verdict. It is warn-only by
+-      design — the council-locked severity model (2026-06-13) makes MEDIUM
+-      advisory and only `--strict` turns a HIGH into exit 1 — and the CI
+-      invocation this row pins carries no `--strict`, so a planted workflow with
+-      a `pull_request_target` untrusted checkout would be REPORTED and the gate
+-      would still exit 0. A canary run under a different argv would prove
+-      something about an invocation CI does not make, which is the drift
+-      `ci_invocation` exists to stop. Discrimination is proven by `--self-test`
+-      instead (5 cases, 3 rejecting), which drives the two exits the gate really
+-      has rather than the one the CI invocation cannot reach: an empty workflows
+-      directory exits 2 instead of printing "0 HIGH, 0 MEDIUM" over nothing, a
+-      `pull_request_target` checkout of the untrusted ref exits 1 under
+-      `--strict`, and an over-cap allowlist exits 2 instead of suppressing
+-      silently. The two accepting cases pin the warn-only tier from the other
+-      side — a MEDIUM under `--strict` must still PASS, which is the direction a
+-      future re-tiering would silently break, and a clean workflow must pass at
+-      all. Seen red deliberately on 2026-10-01 by emptying `DANGEROUS_TRIGGERS`:
+-      the HIGH case alone fails, 4/5, and restoring it returns 5/5. Promoting the
+-      tier so a canary becomes expressible is a separate decision, recorded
+-      unresolved in
+-      agents/evidence/analysis/workflow-security-net-degraded-decision.md.
++      A create-only canary cannot discriminate reliably on a ratchet. The gate
++      fails only when the live violation count rises ABOVE the recorded baseline,
++      so a planted violation reads red only while the count sits at the baseline:
++      once real fixes lower the count and nobody lowers the baseline, any fixed
++      plant smaller than that headroom reads green and the ledger would call a
++      live gate dead. Measured once by hand on 2026-10-07 at count == baseline
++      (203): one planted `founder-strategy` -> `gtm-marketing` link read 204 and
++      exited 1. Discrimination is proven instead by `--self-test` (5 cases, 3
++      rejecting), which runs the real CLI over fixture roots where the ratchet is
++      not consulted, so any violation exits 1 whatever the repository's headroom:
++      an undeclared cross-pack link and an artefact with no resolvable pack exit
++      1, an empty corpus exits 2, and a link declared through `requires` and a
++      link inside one pack pass. Seen red deliberately on 2026-10-07 by making the
++      allow rule accept every link: the cross-pack case alone fails, 4/5.
++    note: >-
++      road-to-gates-a-pull-request-can-hear 3.1. Until this row the gate ran only
++      under the local `task ci`, which no workflow invokes, so a pull request that
++      added a cross-pack link got no red check from anything. The step in
++      consistency.yml runs it with this argv; `--self-test` proves the CLI still
++      rejects an undeclared link, an unresolved pack and an empty corpus.
+diff --git a/src/scripts/audit_user_type_axis.ts b/src/scripts/audit_user_type_axis.ts
+index 1b4437824d847d838d41852a833ba99f9d279771..3548f2cf9ce6f1432afbb83d5e9949df302bdb77 100644
+--- a/src/scripts/audit_user_type_axis.ts
++++ b/src/scripts/audit_user_type_axis.ts
+@@ -3,10 +3,15 @@
+  * Audit the user-type axis frontmatter coverage (step-9 Phase 4).
+  *
+  * Ported from the retired Python `src/scripts/audit_user_type_axis.py` (ADR-200,
+- * Phase 8 / Wave 8a). The CLI contract is pinned — the single
+- * `--quiet` flag, exit code (1 when orphans exist, else 0), the stdout
+- * split, byte-identical stdout summary, AND byte-identical generated
+- * Markdown report. Stdlib-only — no YAML dependency.
++ * Phase 8 / Wave 8a). The CLI contract is pinned — `--quiet`, exit code (1
++ * when orphans exist, else 0), the stdout split, byte-identical stdout
++ * summary, AND byte-identical generated Markdown report. Stdlib-only — no YAML
++ * dependency.
++ *
++ * `--write` (2026-10-07) is the one deliberate addition: the report is written
++ * ONLY under it. Every run used to rewrite the tracked report, so the
++ * `lint-user-type-axis` task — a read — dirtied the working tree. The lint
++ * reads; `task regen-user-type-axis-report` writes.
+  *
+  * Two checks across `src/skills/`:
+  *
+@@ -242,6 +247,7 @@ export function _render_report(
+ 
+ export function main(argv: string[]): number {
+     const quiet = argv.includes('--quiet');
++    const write = argv.includes('--write');
+     // Scope assertion: the orphan/unused verdict is a set difference against
+     // the skills corpus, so an unreadable corpus does not yield "no orphans",
+     // it yields a vacuous answer that looks identical to a clean one.
+@@ -267,9 +273,11 @@ export function main(argv: string[]): number {
+     const orphans = new Set<string>([...used].filter((v) => !declared.has(v)));
+     const unused = new Set<string>([...declared].filter((v) => !used.has(v)));
+ 
+-    const report = _render_report(declared, byValue, orphans, unused);
+-    fs.mkdirSync(path.dirname(REPORT_PATH), { recursive: true });
+-    fs.writeFileSync(REPORT_PATH, report, 'utf-8');
++    if (write) {
++        const report = _render_report(declared, byValue, orphans, unused);
++        fs.mkdirSync(path.dirname(REPORT_PATH), { recursive: true });
++        fs.writeFileSync(REPORT_PATH, report, 'utf-8');
++    }
+ 
+     if (!quiet) {
+         process.stdout.write(
+@@ -283,7 +291,11 @@ export function main(argv: string[]): number {
+         if (unused.size > 0) {
+             process.stdout.write('  warn unused: ' + _sorted(unused).join(', ') + '\n');
+         }
+-        process.stdout.write(`  report: ${_relativeToPosix(REPORT_PATH, REPO_ROOT)}\n`);
++        process.stdout.write(
++            write
++                ? `  report: ${_relativeToPosix(REPORT_PATH, REPO_ROOT)}\n`
++                : '  report: not written (pass --write to regenerate it)\n',
++        );
+     }
+ 
+     if (orphans.size === 0) {
+diff --git a/src/scripts/check_gate_coverage.ts b/src/scripts/check_gate_coverage.ts
+index 51c63688d3e06d8437ea5be675c3d44d9ff41501..3b6b7497d98b26341e7236f27499bcc77a58088d 100644
+--- a/src/scripts/check_gate_coverage.ts
++++ b/src/scripts/check_gate_coverage.ts
+@@ -30,7 +30,8 @@
+  * definition. It runs the same contract as the review-side canary in
+  * `docs/contracts/adversarial-review-protocol.md` § 6 (rotating class, sealed
+  * record, NEVER SHIPS) and is deliberately kept OFF the default CI path: it
+- * mutates the tree, so it is an operator-invoked biannual experiment, not a
++ * mutates the tree, so it is a scheduled experiment (`.github/workflows/gate-canary.yml`,
++ * monthly, ledger uploaded as a run artifact) or an operator run, never a
+  * per-PR gate. Every plant is reverted in a `finally`.
+  *
+  * CLI:
+@@ -415,8 +416,8 @@ function report_negative_control_inventory(specs: readonly GateSpec[]): void {
+   // The arithmetic is the guard against skimming: two numbers that reconcile
+   // against the enforced total cannot be read as "all of them checked".
+   process.stdout.write(
+-    `  ⚠️  declared, not run — the mutating --canary path is operator-invoked and off the per-PR workflow, ` +
+-      `so no negative control ran here.\n`,
++    `  ⚠️  declared, not run — the mutating --canary path is off the per-PR workflow (it runs monthly ` +
++      `in .github/workflows/gate-canary.yml), so no negative control ran here.\n`,
+   );
+   for (const s of without) {
+     process.stdout.write(`  · ${s.id}: ${s.no_canary_reason ?? '(no reason recorded)'}\n`);
+diff --git a/src/scripts/lint_pack_boundaries.ts b/src/scripts/lint_pack_boundaries.ts
+index 8063dbdac32186a8dc4f85392b7778f2e6583fc7..8f7552afaf8f765d678b2b0d2b72e74ca1772305 100644
+--- a/src/scripts/lint_pack_boundaries.ts
++++ b/src/scripts/lint_pack_boundaries.ts
+@@ -48,6 +48,10 @@
+  *   (external / absolute / out-of-tree targets ignored), the allow rule
+  *   (same pack · always-installed · declared `requires`), the per-violation text and
+  *   JSON shapes, the stdout/stderr split, and exit 0 clean / 1 violations.
++ * - **ADDED (2026-10-07):** a `scanned: <N>` line on every path (stdout in text
++ *   mode, stderr under `--format json` so the payload stays parseable), and
++ *   `--self-test`, which runs this CLI against planted fixture trees. Both are
++ *   what `src/config/gate-coverage.yml` asks of a gate a pull request runs.
+  *
+  * ## Where the `requires` graph is read from
+  *
+@@ -62,6 +66,7 @@
+  */
+ 
+ import * as fs from 'node:fs';
++import * as os from 'node:os';
+ import * as path from 'node:path';
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ import { parse as parseYaml } from 'yaml';
+@@ -74,7 +79,8 @@ import {
+     iter_artefacts,
+ } from './_lib/agent_src.js';
+ import { checkRatchet } from './_lib/gate_baseline.js';
+-import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
++import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
++import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
+ import { parse_frontmatter } from './validate_frontmatter.js';
+ 
+ const _HERE = path.resolve(fileURLToPath(import.meta.url));
+@@ -118,6 +124,19 @@ function _set_paths_for_test(opts: { root?: string; vocab?: string }): void {
+     }
+ }
+ 
++// `--self-test` drives this CLI from a CHILD process, which cannot reach the
++// setter above, so the fixture root is also readable from the environment.
++// Applied through the setter rather than at the `ROOT` declaration, so a
++// fixture run is still recognised as overridden and never judged by the
++// repo's violation ratchet.
++// Honoured only inside a self-test child, so an inherited value can never
++// redirect the production gate or switch its ratchet off.
++const _ENV_ROOT =
++    process.env['GATE_SELF_TEST_CHILD'] === '1' ? process.env['LINT_PACK_BOUNDARIES_ROOT'] : undefined;
++if (_ENV_ROOT !== undefined && _ENV_ROOT !== '') {
++    _set_paths_for_test({ root: _realpath(path.resolve(_ENV_ROOT)) });
++}
++
+ // [..](target) with an optional #fragment / ?query stripped from the target.
+ const LINK_RE = /\[[^\]]*\]\(([^)#?]+)(?:[#?][^)]*)?\)/g;
+ 
+@@ -614,7 +633,7 @@ function parse_args(argv: readonly string[]): ParsedArgs {
+             quiet = true;
+         } else if (arg === '-h' || arg === '--help') {
+             process.stdout.write(
+-                'usage: lint_pack_boundaries [-h] [--format {text,json}] [--quiet]\n',
++                'usage: lint_pack_boundaries [-h] [--format {text,json}] [--quiet] [--self-test]\n',
+             );
+             process.exit(0);
+         } else {
+@@ -629,8 +648,129 @@ function _argparse_error(message: string): never {
+     process.exit(2);
+ }
+ 
++/**
++ * Plant fixture trees and run this gate's real CLI against each one.
++ *
++ * Three rejecting cases cover the three exits a pull request can be failed by:
++ * an undeclared cross-pack link, an artefact with no resolvable pack, and an
++ * empty corpus. The two accepting cases pin the allow rule from the other side,
++ * so a gate that started rejecting everything fails here too.
++ */
++function selfTest(): number {
++    const plant = (name: string, files: Record<string, string>): string => {
++        const dir = fs.mkdtempSync(path.join(os.tmpdir(), `lpb-selftest-${name}-`));
++        for (const [rel, body] of Object.entries(files)) {
++            const p = path.join(dir, rel);
++            fs.mkdirSync(path.dirname(p), { recursive: true });
++            fs.writeFileSync(p, body, 'utf-8');
++        }
++        return dir;
++    };
++    const skill = (slug: string, packs: string, body: string): [string, string] => [
++        `skills/${slug}/SKILL.md`,
++        `---\nname: ${slug}\npacks: [${packs}]\n---\n\n${body}\n`,
++    ];
++    const run = (dir: string): number => {
++        const prev = process.env['LINT_PACK_BOUNDARIES_ROOT'];
++        process.env['LINT_PACK_BOUNDARIES_ROOT'] = dir;
++        try {
++            return runGateCli(
++                _DEFAULT_ROOT,
++                path.join('src', 'scripts', 'lint_pack_boundaries.ts'),
++                ['--quiet'],
++                _DEFAULT_ROOT,
++            );
++        } finally {
++            if (prev === undefined) {
++                delete process.env['LINT_PACK_BOUNDARIES_ROOT'];
++            } else {
++                process.env['LINT_PACK_BOUNDARIES_ROOT'] = prev;
++            }
++            fs.rmSync(dir, { recursive: true, force: true });
++        }
++    };
++    const twoPacks = '- id: alpha\n  requires: []\n- id: beta\n  requires: []\n';
++    // A reject case counts only on the exit it names: a crash or a dead-scope
++    // exit on a fixture that should yield a finding reads as NOT rejected.
++    const rejectsWith = (want: number, got: number): number => (got === want ? 1 : 0);
++
++    return runSelfTest({
++        gate: 'lint_pack_boundaries',
++        minCases: 5,
++        minRejectCases: 3,
++        cases: [
++            {
++                name: 'an undeclared cross-pack link is rejected with exit 1',
++                expect: 'reject',
++                run: () =>
++                    rejectsWith(1, run(
++                        plant('cross', {
++                            'packs.yml': twoPacks,
++                            ...Object.fromEntries([
++                                skill('a-one', 'alpha', 'reaches [b](../b-one/SKILL.md)'),
++                                skill('b-one', 'beta', 'leaf'),
++                            ]),
++                        }),
++                    )),
++            },
++            {
++                name: 'a SKILL.md with no packs is a finding (exit 1), never a silent pass',
++                expect: 'reject',
++                run: () =>
++                    rejectsWith(1, run(
++                        plant('nopack', {
++                            'packs.yml': twoPacks,
++                            'skills/nopack/SKILL.md': '---\nname: nopack\n---\n\nno packs key\n',
++                        }),
++                    )),
++            },
++            {
++                name: 'an empty corpus is a dead scope (exit 2), not "no cross-pack drift"',
++                expect: 'reject',
++                run: () => rejectsWith(2, run(plant('empty', { 'packs.yml': twoPacks }))),
++            },
++            {
++                name: 'a link declared through requires passes',
++                expect: 'accept',
++                run: () =>
++                    run(
++                        plant('declared', {
++                            'packs.yml': '- id: alpha\n  requires: [beta]\n- id: beta\n  requires: []\n',
++                            ...Object.fromEntries([
++                                skill('a-one', 'alpha', 'reaches [b](../b-one/SKILL.md)'),
++                                skill('b-one', 'beta', 'leaf'),
++                            ]),
++                        }),
++                    ),
++            },
++            {
++                name: 'a link inside one pack passes',
++                expect: 'accept',
++                run: () =>
++                    run(
++                        plant('same', {
++                            'packs.yml': twoPacks,
++                            ...Object.fromEntries([
++                                skill('a-one', 'alpha', 'reaches [two](../a-two/SKILL.md)'),
++                                skill('a-two', 'alpha', 'leaf'),
++                            ]),
++                        }),
++                    ),
++            },
++        ],
++    });
++}
++
+ function main(argv?: readonly string[]): number {
+-    const args = parse_args(argv ?? process.argv.slice(2));
++    const rawArgv = argv ?? process.argv.slice(2);
++    if (rawArgv.includes('--self-test')) {
++        if (process.env['GATE_SELF_TEST_CHILD'] === '1') {
++            process.stderr.write('lint_pack_boundaries: --self-test does not recurse\n');
++            return 2;
++        }
++        return selfTest();
++    }
++    const args = parse_args(rawArgv);
+ 
+     const { index: artefact_pack, unassigned, scanned } = _build_artefact_index();
+ 
+@@ -638,12 +778,17 @@ function main(argv?: readonly string[]): number {
+     // clean. That was this gate's shipped state until 2026-08-02 — it walked
+     // the deleted `packages/` tree and skipped green forever.
+     try {
+-        assertScanned({
+-            gate: 'lint_pack_boundaries',
+-            scanned,
+-            units: 'artefact(s)',
+-            roots: _scan_roots().map((r) => _relPosix(r, ROOT) || '.'),
+-        });
++        reportScanned(
++            {
++                gate: 'lint_pack_boundaries',
++                scanned,
++                units: 'artefact(s)',
++                roots: _scan_roots().map((r) => _relPosix(r, ROOT) || '.'),
++            },
++            args.format === 'json'
++                ? process.stderr.write.bind(process.stderr)
++                : process.stdout.write.bind(process.stdout),
++        );
+     } catch (exc) {
+         if (!(exc instanceof DeadScopeError)) {
+             throw exc;
+diff --git a/src/scripts/lint_workflow_security.ts b/src/scripts/lint_workflow_security.ts
+index f9e5f09f467798b141b0b49f322cb5f6f3ef8605..1bac47fe694846a00052d86a7f922baa837c7482 100644
+--- a/src/scripts/lint_workflow_security.ts
++++ b/src/scripts/lint_workflow_security.ts
+@@ -28,6 +28,9 @@
+  * TIERS are untouched; only the description of what MEDIUM covers now matches
+  * the code. Re-tiering the locked model is a separate decision, recorded as
+  * unresolved in agents/evidence/analysis/workflow-security-net-degraded-decision.md.
++ * The CI INVOCATION is decided there too: since 2026-10-07 consistency.yml runs
++ * this gate under `--strict` (AI council, 2/2), so a HIGH fails a pull request;
++ * the tiers are unchanged.
+  *
+  * Script-injection detection (regex-based) is intentionally deferred — it
+  * requires an AST-aware pass to avoid false positives on quoted / escaped
+@@ -805,7 +808,9 @@ export function main(argv?: string[]): number {
+         );
+         if (high.length || medium.length) {
+             process.stdout.write(
+-                '  (warn-only — run with --strict to make HIGH findings block CI)\n',
++                args.strict
++                    ? '  (--strict — HIGH findings fail this run; MEDIUM stays advisory)\n'
++                    : '  (warn-only — run with --strict to make HIGH findings block CI)\n',
+             );
+         } else {
+             process.stdout.write('  no non-allowlisted findings\n');
+@@ -813,6 +818,12 @@ export function main(argv?: string[]): number {
+     }
+ 
+     if (args.strict && high.length) {
++        if (args.quiet) {
++            // --quiet suppresses the report; a failing run still names its cause.
++            process.stderr.write(
++                `workflow-security: ${high.length} HIGH under --strict — rerun without --quiet for the findings\n`,
++            );
++        }
+         return 1;
+     }
+     return 0;
+diff --git a/src/scripts/print_required_checks.ts b/src/scripts/print_required_checks.ts
+index 50265d750ad3c3e5166ab2d1fef23c69effd2f00..71dabae3985a330c6b17afb310784125423a8450 100644
+--- a/src/scripts/print_required_checks.ts
++++ b/src/scripts/print_required_checks.ts
+@@ -63,6 +63,8 @@ const DOCS_ONLY_ALLOWED_TOP: ReadonlySet<string> = new Set([
+ 
+ // Check names below are the strings GitHub actually REPORTS, verified against
+ // `gh pr checks 1108` on 2026-08-02 (road-to-renewal-foundation Phase 1).
++// `Standing payload delta + budget gate` was added to all three shapes on
++// 2026-10-07, when it was found required by the ruleset and absent here.
+ //
+ // They previously named a matrix that had drifted into fiction — `Consistency`,
+ // `Skill Lint`, `Tests / install-tests`, `Tests / node-tests`,
+@@ -79,6 +81,7 @@ const DOCS_ONLY_ALLOWED_TOP: ReadonlySet<string> = new Set([
+ // change — the exact failure this reconciliation removed.
+ const FEATURE_CHECKS = [
+     'Sync + Generate Tools Consistency',
++    'Standing payload delta + budget gate',
+     'Smoke — kernel',
+     'Smoke — router',
+     'Smoke — schema',
+@@ -98,6 +101,7 @@ const FEATURE_CHECKS = [
+ 
+ const RELEASE_CHECKS = [
+     'Sync + Generate Tools Consistency',
++    'Standing payload delta + budget gate',
+     'Smoke — kernel',
+     'Smoke — router',
+     'Smoke — schema',
+@@ -112,6 +116,7 @@ const RELEASE_CHECKS = [
+ 
+ const DOCS_ONLY_CHECKS = [
+     'Sync + Generate Tools Consistency',
++    'Standing payload delta + budget gate',
+     'Smoke — kernel',
+     'Smoke — router',
+     'Smoke — schema',
+@@ -120,8 +125,11 @@ const DOCS_ONLY_CHECKS = [
+ 
+ /**
+  * The checks that mechanically BLOCK a merge, per the repository ruleset
+- * `main protection` (id 17749383). Everything else above runs and is visible
+- * on the PR but does not gate the merge button.
++ * `main protection` (id 17749383), read on 2026-10-07: two required status
++ * contexts, the second added on 2026-09-11 (ADR-276, recorded by #2169).
++ * Everything else above runs and is visible on the PR but does not gate the
++ * merge button. `standing-payload-delta.yml` runs on every `pull_request`, so
++ * the second context appears in all three shapes.
+  *
+  * Deliberately a constant, not an API read: this script is contractually
+  * offline ("never invokes `gh`, never touches the network"). Re-verify with
+@@ -129,7 +137,10 @@ const DOCS_ONLY_CHECKS = [
+  * changes — `docs/contracts/branch-protection-policy.md` § Change discipline
+  * owns that procedure.
+  */
+-const ENFORCED_CHECKS = ['Sync + Generate Tools Consistency'] as const;
++const ENFORCED_CHECKS = [
++    'Sync + Generate Tools Consistency',
++    'Standing payload delta + budget gate',
++] as const;
+ 
+ /** `git rev-parse --abbrev-ref HEAD`, mirroring `_git(check=True)`. */
+ function current_branch(): string {
+@@ -314,6 +325,7 @@ export {
+     FEATURE_CHECKS,
+     RELEASE_CHECKS,
+     DOCS_ONLY_CHECKS,
++    ENFORCED_CHECKS,
+     current_branch,
+     diff_files,
+     is_docs_only,
+diff --git a/src/scripts/report_required_checks_drift.ts b/src/scripts/report_required_checks_drift.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..7270d1f32a19f0b25cf6203eb8b7fc69950a40ba
+--- /dev/null
++++ b/src/scripts/report_required_checks_drift.ts
+@@ -0,0 +1,196 @@
++#!/usr/bin/env tsx
++/**
++ * Required-check drift report — compares the live ruleset to the contract.
++ *
++ * `print_required_checks.ts` carries the list of status contexts the `main
++ * protection` ruleset requires, and it is contractually offline: it never calls
++ * `gh`. So nothing compared that list to the ruleset, and it drifted — it named
++ * one required context for a month after the ruleset gained a second. This
++ * report is the comparison: it reads the ruleset through `gh api`, extracts the
++ * required status contexts, and exits non-zero when they differ from
++ * `ENFORCED_CHECKS`.
++ *
++ * READ-ONLY. It writes nothing and changes nothing on the ruleset. It is run by
++ * hand or on a schedule and is NOT wired as a required check — a network read
++ * cannot sit on the path of every pull request, and the token it needs is a
++ * repository-read token, not something each PR should depend on.
++ *
++ * Usage:
++ *   ./scripts-run src/scripts/report_required_checks_drift
++ *   ./scripts-run src/scripts/report_required_checks_drift --repo <owner/name>
++ *   ./scripts-run src/scripts/report_required_checks_drift --from-json <file>
++ *
++ * `--from-json` reads a ruleset object (the shape `gh api
++ * repos/{owner}/{repo}/rulesets/{id}` returns) from a file instead of the
++ * network, so the comparison itself is testable offline.
++ *
++ * Exit codes: 0 the lists agree · 1 they differ · 2 usage error, or the ruleset
++ * could not be read or carries no required-status-checks rule.
++ */
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as path from 'node:path';
++import { fileURLToPath, pathToFileURL } from 'node:url';
++
++import { ENFORCED_CHECKS } from './print_required_checks.js';
++
++const _HERE = fileURLToPath(import.meta.url);
++
++export const RULESET_NAME = 'main protection';
++const DEFAULT_REPO = 'event4u-app/agent-config';
++
++export interface Drift {
++    readonly missingFromContract: readonly string[];
++    readonly missingFromRuleset: readonly string[];
++}
++
++class ReadError extends Error {}
++
++/** The required status contexts of one ruleset object, sorted. */
++export function requiredContexts(ruleset: unknown): string[] {
++    const rules = (ruleset as { rules?: unknown }).rules;
++    if (!Array.isArray(rules)) {
++        throw new ReadError('the ruleset object carries no `rules` array');
++    }
++    const lists = rules
++        .filter(
++            (r): r is { parameters?: { required_status_checks?: unknown } } =>
++                typeof r === 'object' && r !== null && (r as { type?: unknown }).type === 'required_status_checks',
++        )
++        .map((r) => r.parameters?.required_status_checks)
++        .filter((c): c is unknown[] => Array.isArray(c));
++    if (lists.length === 0) {
++        throw new ReadError('the ruleset has no `required_status_checks` rule');
++    }
++    // Every such rule counts: a context required by any of them blocks the merge.
++    const contexts = new Set(
++        lists
++            .flat()
++            .map((c) => (c as { context?: unknown }).context)
++            .filter((c): c is string => typeof c === 'string'),
++    );
++    return [...contexts].sort();
++}
++
++/** Set difference in both directions; empty both ways means agreement. */
++export function compare(live: readonly string[], contract: readonly string[]): Drift {
++    const liveSet = new Set(live);
++    const contractSet = new Set(contract);
++    return {
++        missingFromContract: live.filter((c) => !contractSet.has(c)).sort(),
++        missingFromRuleset: contract.filter((c) => !liveSet.has(c)).sort(),
++    };
++}
++
++function ghJson(endpoint: string, paginate = false): unknown {
++    const args = paginate ? ['api', '--paginate', '--slurp', endpoint] : ['api', endpoint];
++    const r = spawnSync('gh', args, { encoding: 'utf-8', maxBuffer: 16 * 1024 * 1024 });
++    if (r.status !== 0) {
++        throw new ReadError(`gh api ${endpoint} failed: ${(r.stderr ?? '').trim() || `exit ${String(r.status)}`}`);
++    }
++    return JSON.parse(r.stdout) as unknown;
++}
++
++function readLiveRuleset(repo: string): unknown {
++    // --paginate --slurp: one array per page, so a ruleset past the first page
++    // of 30 is still found.
++    const pages = ghJson(`repos/${repo}/rulesets`, true);
++    if (!Array.isArray(pages) || !pages.every((p) => Array.isArray(p))) {
++        throw new ReadError('the rulesets listing is not an array of pages');
++    }
++    const list = (pages as unknown[][]).flat();
++    const hit = list.find((r) => (r as { name?: unknown }).name === RULESET_NAME) as { id?: unknown } | undefined;
++    if (hit === undefined || typeof hit.id !== 'number') {
++        throw new ReadError(`no ruleset named "${RULESET_NAME}" on ${repo}`);
++    }
++    return ghJson(`repos/${repo}/rulesets/${String(hit.id)}`);
++}
++
++interface Options {
++    repo: string;
++    fromJson: string | null;
++}
++
++function parseArgs(argv: readonly string[]): Options | string {
++    let repo = DEFAULT_REPO;
++    let fromJson: string | null = null;
++    for (let i = 0; i < argv.length; i++) {
++        const a = argv[i] as string;
++        if (a === '--repo' || a === '--from-json') {
++            const v = argv[i + 1];
++            if (v === undefined || v.startsWith('--')) {
++                return `${a} needs a value`;
++            }
++            if (a === '--repo') {
++                repo = v;
++            } else {
++                fromJson = v;
++            }
++            i++;
++        } else {
++            return `unknown argument: ${a}`;
++        }
++    }
++    return { repo, fromJson };
++}
++
++export function main(argv: readonly string[] = process.argv.slice(2)): number {
++    const opts = parseArgs(argv);
++    if (typeof opts === 'string') {
++        process.stderr.write(`❌  report_required_checks_drift: ${opts}\n`);
++        process.stderr.write('usage: report_required_checks_drift [--repo OWNER/NAME] [--from-json FILE]\n');
++        return 2;
++    }
++    let live: string[];
++    try {
++        const ruleset =
++            opts.fromJson === null
++                ? readLiveRuleset(opts.repo)
++                : (JSON.parse(fs.readFileSync(opts.fromJson, 'utf-8')) as unknown);
++        live = requiredContexts(ruleset);
++    } catch (e) {
++        process.stderr.write(`❌  report_required_checks_drift: ${e instanceof Error ? e.message : String(e)}\n`);
++        return 2;
++    }
++    const drift = compare(live, ENFORCED_CHECKS);
++    const source = opts.fromJson === null ? `${opts.repo} ruleset "${RULESET_NAME}"` : opts.fromJson;
++    process.stdout.write(`required contexts read from ${source}: ${String(live.length)}\n`);
++    for (const c of live) {
++        process.stdout.write(`  - ${c}\n`);
++    }
++    if (drift.missingFromContract.length === 0 && drift.missingFromRuleset.length === 0) {
++        process.stdout.write(
++            '✅  agrees with ENFORCED_CHECKS in src/scripts/print_required_checks.ts\n',
++        );
++        return 0;
++    }
++    for (const c of drift.missingFromContract) {
++        process.stdout.write(`  ❌ required by the ruleset, absent from the contract: ${c}\n`);
++    }
++    for (const c of drift.missingFromRuleset) {
++        process.stdout.write(`  ❌ named by the contract, not required by the ruleset: ${c}\n`);
++    }
++    process.stdout.write(
++        '❌  drift — update ENFORCED_CHECKS and docs/contracts/branch-protection-policy.md ' +
++            'together, with the date the ruleset was read.\n',
++    );
++    return 1;
++}
++
++function _isCliEntry(): boolean {
++    if (process.argv[1] === undefined) {
++        return false;
++    }
++    if (pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) {
++        return true;
++    }
++    try {
++        return fs.realpathSync(path.resolve(process.argv[1])) === fs.realpathSync(_HERE);
++    } catch {
++        return false;
++    }
++}
++
++if (_isCliEntry()) {
++    process.exitCode = main();
++}
+diff --git a/taskfiles/ci-fast.yml b/taskfiles/ci-fast.yml
+index be17bcabc38cadc3078115cce24fc4a7707138b1..1a0c5de22679b17b8bf8bef4b652502b3e0e01b1 100644
+--- a/taskfiles/ci-fast.yml
++++ b/taskfiles/ci-fast.yml
+@@ -781,6 +781,11 @@ tasks:
+     desc: Audit recommended_for_user_types frontmatter vs user-types/*.yml stems (step-9 Phase 4)
+     cmd: ./scripts-run src/scripts/audit_user_type_axis {{.QUIET_FLAG}}
+ 
++  regen-user-type-axis-report:
++    silent: true
++    desc: Regenerate agents/reports/user-type-axis-audit.md — the only caller that passes --write; the lint above reads and writes nothing
++    cmd: ./scripts-run src/scripts/audit_user_type_axis --write
++
+   lint-skill-tools:
+     silent: true
+     desc: Block D · D1 — meta-lint src/scripts/skill_tools/*.ts (--json flag, snake_case_verb_noun naming, embedded _SAMPLE or CLI-entry guard); asserts its scan scope, so an emptied corpus fails instead of reporting clean
+@@ -1032,8 +1037,8 @@ tasks:
+ 
+   lint-workflow-security:
+     silent: true
+-    desc: "Warn-only audit of .github/workflows/* for high-risk patterns (pull_request_target untrusted checkout, write-all, install w/o --ignore-scripts, unpinned third-party actions) — road-to-security-hardening P2"
+-    cmd: ./scripts-run src/scripts/lint_workflow_security {{.QUIET_FLAG}}
++    desc: "Audit of .github/workflows/* — a HIGH (pull_request_target/workflow_run untrusted checkout, write-all, install w/o --ignore-scripts inside a pull_request_target workflow) fails under --strict, as in CI; MEDIUM (mutable action pins, kept checkout credentials) stays advisory"
++    cmd: ./scripts-run src/scripts/lint_workflow_security --strict {{.QUIET_FLAG}}
+ 
+   lint-missions:
+     silent: true
+diff --git a/tests/scripts/audit_user_type_axis_no_write.test.ts b/tests/scripts/audit_user_type_axis_no_write.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..653d414a01d4ec9d40c852c172582c9a97aeed05
+--- /dev/null
++++ b/tests/scripts/audit_user_type_axis_no_write.test.ts
+@@ -0,0 +1,71 @@
++// A read that writes: `audit_user_type_axis` used to rewrite the tracked
++// agents/reports/user-type-axis-audit.md on every run, so the
++// `lint-user-type-axis` task dirtied the working tree. It now writes only under
++// `--write`. The test runs the real CLI in a throwaway git copy of the inputs
++// the audit reads, so the assertion is the one a reviewer cares about — `git
++// status` stays empty — and the real checkout is never touched.
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { afterAll, beforeAll, describe, expect, it } from 'vitest';
++
++const REPO_ROOT = path.resolve(__dirname, '..', '..');
++const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
++const REPORT_REL = 'agents/reports/user-type-axis-audit.md';
++
++let copy: string;
++
++function git(args: readonly string[]): string {
++    const r = spawnSync('git', ['-C', copy, ...args], { encoding: 'utf-8' });
++    if (r.status !== 0) {
++        throw new Error(`git ${args.join(' ')} failed: ${r.stderr}`);
++    }
++    return r.stdout;
++}
++
++function runAudit(args: readonly string[]): number | null {
++    const script = path.join(copy, 'src', 'scripts', 'audit_user_type_axis.ts');
++    return spawnSync(TSX, [script, ...args], { cwd: copy, encoding: 'utf-8' }).status;
++}
++
++beforeAll(() => {
++    copy = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'uta-nowrite-')));
++    // The script and every module it imports resolve relative to its own file,
++    // so the copy carries src/ and the two data roots it reads. node_modules is
++    // linked, never copied.
++    fs.cpSync(path.join(REPO_ROOT, 'src'), path.join(copy, 'src'), { recursive: true });
++    fs.cpSync(path.join(REPO_ROOT, 'user-types'), path.join(copy, 'user-types'), { recursive: true });
++    fs.mkdirSync(path.join(copy, 'agents', 'reports'), { recursive: true });
++    fs.copyFileSync(path.join(REPO_ROOT, REPORT_REL), path.join(copy, REPORT_REL));
++    for (const f of ['package.json', 'tsconfig.json']) {
++        fs.copyFileSync(path.join(REPO_ROOT, f), path.join(copy, f));
++    }
++    fs.symlinkSync(path.join(REPO_ROOT, 'node_modules'), path.join(copy, 'node_modules'));
++    git(['init', '-q']);
++    git(['-c', 'user.email=t@example.com', '-c', 'user.name=t', 'add', 'agents/reports']);
++    git(['-c', 'user.email=t@example.com', '-c', 'user.name=t', 'commit', '-q', '-m', 'seed']);
++    // Make any rewrite observable: the committed report is a sentinel the
++    // renderer would never produce.
++    fs.writeFileSync(path.join(copy, REPORT_REL), 'sentinel\n', 'utf-8');
++    git(['-c', 'user.email=t@example.com', '-c', 'user.name=t', 'commit', '-q', '-am', 'sentinel']);
++}, 120_000);
++
++afterAll(() => {
++    fs.rmSync(copy, { recursive: true, force: true });
++});
++
++describe('audit_user_type_axis — a read leaves the tree clean', () => {
++    it('without --write, git status of agents/reports/ is empty afterwards', () => {
++        const code = runAudit(['--quiet']);
++        expect([0, 1]).toContain(code);
++        expect(git(['status', '--porcelain', 'agents/reports/'])).toBe('');
++    });
++
++    it('with --write, the report is regenerated', () => {
++        const code = runAudit(['--quiet', '--write']);
++        expect([0, 1]).toContain(code);
++        expect(git(['status', '--porcelain', 'agents/reports/'])).toContain(REPORT_REL);
++        expect(fs.readFileSync(path.join(copy, REPORT_REL), 'utf-8')).toContain('user-type');
++    });
++});
+diff --git a/tests/scripts/print_required_checks.test.ts b/tests/scripts/print_required_checks.test.ts
+index c99e76512243bcb5d862079a628754bf0d05e2c6..a8e1a4a6c2245b035f72ca18af7ae43dbe7a9d7b 100644
+--- a/tests/scripts/print_required_checks.test.ts
++++ b/tests/scripts/print_required_checks.test.ts
+@@ -50,8 +50,9 @@ describe('print_required_checks — CLI contract', () => {
+             "docs-only": "Branch: docs/x
+           Base:   HEAD
+           PR shape: feature  (0 file(s) in diff)
+-          Checks this PR will face (16):
++          Checks this PR will face (17):
+             ! Sync + Generate Tools Consistency
++            ! Standing payload delta + budget gate
+             - Smoke — kernel
+             - Smoke — router
+             - Smoke — schema
+@@ -68,14 +69,15 @@ describe('print_required_checks — CLI contract', () => {
+             - no-python-in-src
+             - lint commit subjects
+ 
+-          ! = blocks merge (1 of 16); - = runs, visible, advisory
++          ! = blocks merge (2 of 17); - = runs, visible, advisory
+           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
+           ",
+             "eq-joined": "Branch: feat/y
+           Base:   HEAD
+           PR shape: feature  (0 file(s) in diff)
+-          Checks this PR will face (16):
++          Checks this PR will face (17):
+             ! Sync + Generate Tools Consistency
++            ! Standing payload delta + budget gate
+             - Smoke — kernel
+             - Smoke — router
+             - Smoke — schema
+@@ -92,14 +94,15 @@ describe('print_required_checks — CLI contract', () => {
+             - no-python-in-src
+             - lint commit subjects
+ 
+-          ! = blocks merge (1 of 16); - = runs, visible, advisory
++          ! = blocks merge (2 of 17); - = runs, visible, advisory
+           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
+           ",
+             "feature": "Branch: feat/x
+           Base:   HEAD
+           PR shape: feature  (0 file(s) in diff)
+-          Checks this PR will face (16):
++          Checks this PR will face (17):
+             ! Sync + Generate Tools Consistency
++            ! Standing payload delta + budget gate
+             - Smoke — kernel
+             - Smoke — router
+             - Smoke — schema
+@@ -116,14 +119,15 @@ describe('print_required_checks — CLI contract', () => {
+             - no-python-in-src
+             - lint commit subjects
+ 
+-          ! = blocks merge (1 of 16); - = runs, visible, advisory
++          ! = blocks merge (2 of 17); - = runs, visible, advisory
+           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
+           ",
+             "release": "Branch: release/1.2.3
+           Base:   HEAD
+           PR shape: release  (0 file(s) in diff)
+-          Checks this PR will face (11):
++          Checks this PR will face (12):
+             ! Sync + Generate Tools Consistency
++            ! Standing payload delta + budget gate
+             - Smoke — kernel
+             - Smoke — router
+             - Smoke — schema
+@@ -135,7 +139,7 @@ describe('print_required_checks — CLI contract', () => {
+             - npm audit (runtime deps, high+)
+             - skill-lint-strict
+ 
+-          ! = blocks merge (1 of 11); - = runs, visible, advisory
++          ! = blocks merge (2 of 12); - = runs, visible, advisory
+           Contract: docs/contracts/branch-protection-policy.md (per-PR-shape matrix)
+           ",
+           }
+diff --git a/tests/scripts/report_required_checks_drift.test.ts b/tests/scripts/report_required_checks_drift.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..83a601ac5b6f65b68b3fd23cbb6ed9792fe1d90b
+--- /dev/null
++++ b/tests/scripts/report_required_checks_drift.test.ts
+@@ -0,0 +1,97 @@
++// The required-check comparator, driven offline through `--from-json` so the
++// comparison itself is tested without a network read or a token.
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { afterEach, describe, expect, it } from 'vitest';
++
++import { ENFORCED_CHECKS } from '../../src/scripts/print_required_checks.js';
++import { compare, requiredContexts } from '../../src/scripts/report_required_checks_drift.js';
++
++const REPO_ROOT = path.resolve(__dirname, '..', '..');
++const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
++const SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'report_required_checks_drift.ts');
++
++function ruleset(contexts: readonly string[]): unknown {
++    return {
++        id: 1,
++        name: 'main protection',
++        rules: [
++            { type: 'deletion' },
++            {
++                type: 'required_status_checks',
++                parameters: {
++                    strict_required_status_checks_policy: false,
++                    required_status_checks: contexts.map((context) => ({ context })),
++                },
++            },
++        ],
++    };
++}
++
++const tmp: string[] = [];
++afterEach(() => {
++    for (const d of tmp.splice(0)) {
++        fs.rmSync(d, { recursive: true, force: true });
++    }
++});
++
++function run(body: unknown): { code: number | null; out: string } {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'rrcd-'));
++    tmp.push(dir);
++    const file = path.join(dir, 'ruleset.json');
++    fs.writeFileSync(file, JSON.stringify(body), 'utf-8');
++    const r = spawnSync(TSX, [SCRIPT, '--from-json', file], { cwd: REPO_ROOT, encoding: 'utf-8' });
++    return { code: r.status, out: `${r.stdout}${r.stderr}` };
++}
++
++describe('report_required_checks_drift', () => {
++    it('exits 0 when the ruleset requires exactly the contract list', () => {
++        const r = run(ruleset([...ENFORCED_CHECKS].reverse()));
++        expect(r.code, r.out).toBe(0);
++    });
++
++    it('exits 1 when the ruleset requires a context the contract does not name', () => {
++        const r = run(ruleset([...ENFORCED_CHECKS, 'Some new required check']));
++        expect(r.code).toBe(1);
++        expect(r.out).toContain('required by the ruleset, absent from the contract: Some new required check');
++    });
++
++    it('exits 1 when the contract names a context the ruleset no longer requires', () => {
++        const r = run(ruleset([ENFORCED_CHECKS[0]]));
++        expect(r.code).toBe(1);
++        expect(r.out).toContain(`named by the contract, not required by the ruleset: ${ENFORCED_CHECKS[1]}`);
++    });
++
++    it('exits 2 when the ruleset has no required-status-checks rule — never "agrees"', () => {
++        const r = run({ id: 1, name: 'main protection', rules: [{ type: 'deletion' }] });
++        expect(r.code).toBe(2);
++    });
++
++    it('reads every required_status_checks rule, not only the first', () => {
++        const body = {
++            id: 1,
++            name: 'main protection',
++            rules: [
++                { type: 'required_status_checks', parameters: { required_status_checks: [{ context: ENFORCED_CHECKS[0] }] } },
++                { type: 'required_status_checks', parameters: { required_status_checks: [{ context: ENFORCED_CHECKS[1] }] } },
++            ],
++        };
++        const r = run(body);
++        expect(r.code, r.out).toBe(0);
++    });
++
++    it('exits 2 on an unknown argument', () => {
++        const r = spawnSync(TSX, [SCRIPT, '--bogus'], { cwd: REPO_ROOT, encoding: 'utf-8' });
++        expect(r.status).toBe(2);
++    });
++
++    it('compare and requiredContexts agree with the CLI on a direct call', () => {
++        expect(requiredContexts(ruleset(['b', 'a']))).toEqual(['a', 'b']);
++        expect(compare(['a', 'c'], ['a', 'b'])).toEqual({
++            missingFromContract: ['c'],
++            missingFromRuleset: ['b'],
++        });
++    });
++});
+diff --git a/tests/scripts/workflow_security_argv_control.test.ts b/tests/scripts/workflow_security_argv_control.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..5ae4442ee35756160c290b048e855620ac3924d2
+--- /dev/null
++++ b/tests/scripts/workflow_security_argv_control.test.ts
+@@ -0,0 +1,109 @@
++// Control reading for the workflow-security audit: does the argv CI actually
++// runs fail a pull request that plants a HIGH?
++//
++// The argv is read from .github/workflows/consistency.yml rather than written
++// here, so the test follows the step: today it pins "reported, exit 0", and the
++// day the step gains `--strict` the same assertions pin "exit 1" instead. The
++// step's own name is held to the same outcome, so the prose next to the gate
++// cannot claim a verdict the gate does not deliver.
++import { spawnSync } from 'node:child_process';
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { afterEach, describe, expect, it } from 'vitest';
++
++const REPO_ROOT = path.resolve(__dirname, '..', '..');
++const TSX = path.join(REPO_ROOT, 'node_modules', '.bin', 'tsx');
++const SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', 'lint_workflow_security.ts');
++const CONSISTENCY = path.join(REPO_ROOT, '.github', 'workflows', 'consistency.yml');
++const STEP_COMMAND = './scripts-run src/scripts/lint_workflow_security';
++
++const HIGH_WF = [
++    'on:',
++    '  pull_request_target:',
++    'jobs:',
++    '  build:',
++    '    steps:',
++    '      - uses: actions/checkout@0000000000000000000000000000000000000000',
++    '        with:',
++    '          persist-credentials: false',
++    '          ref: ${{ github.event.pull_request.head.sha }}',
++    '',
++].join('\n');
++
++interface CiStep {
++    readonly name: string;
++    readonly argv: readonly string[];
++}
++
++/** The step in consistency.yml that runs the audit: its name and its argv. */
++function readCiStep(): CiStep {
++    const lines = fs.readFileSync(CONSISTENCY, 'utf-8').split('\n');
++    const runIdx = lines.findIndex((l) => l.trim().startsWith(`run: ${STEP_COMMAND}`));
++    if (runIdx < 0) {
++        throw new Error(`no step in consistency.yml runs \`${STEP_COMMAND}\``);
++    }
++    const runLine = (lines[runIdx] as string).trim();
++    const rest = runLine.slice(`run: ${STEP_COMMAND}`.length).trim();
++    const nameLine = (lines[runIdx - 1] as string).trim();
++    if (!nameLine.startsWith('- name:')) {
++        throw new Error('the audit step has no `name:` on the line above its `run:`');
++    }
++    return {
++        name: nameLine.slice('- name:'.length).trim(),
++        argv: rest === '' ? [] : rest.split(/\s+/),
++    };
++}
++
++const tmpDirs: string[] = [];
++afterEach(() => {
++    for (const d of tmpDirs.splice(0)) {
++        fs.rmSync(d, { recursive: true, force: true });
++    }
++});
++
++function plantHigh(): string {
++    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wsac-'));
++    tmpDirs.push(dir);
++    fs.writeFileSync(path.join(dir, 'bad.yml'), HIGH_WF, 'utf-8');
++    return dir;
++}
++
++function runGate(wfDir: string, argv: readonly string[]): { code: number | null; out: string } {
++    const r = spawnSync(TSX, [SCRIPT, ...argv], {
++        cwd: REPO_ROOT,
++        encoding: 'utf-8',
++        env: { ...process.env, LINT_WORKFLOW_SECURITY_DIR: wfDir },
++    });
++    return { code: r.status, out: `${r.stdout}${r.stderr}` };
++}
++
++describe('workflow-security audit — control reading under the argv CI runs', () => {
++    it('finds the audit step in consistency.yml', () => {
++        const step = readCiStep();
++        expect(step.name.length).toBeGreaterThan(0);
++    });
++
++    it('under --strict, an injected HIGH exits 1', () => {
++        const r = runGate(plantHigh(), ['--strict']);
++        expect(r.out).toMatch(/HIGH/);
++        expect(r.code).toBe(1);
++    });
++
++    it('under the argv CI runs, the HIGH is reported and the exit code matches the step', () => {
++        const step = readCiStep();
++        const r = runGate(plantHigh(), step.argv);
++        expect(r.out).toMatch(/pull_request_target/);
++        if (step.argv.includes('--strict')) {
++            expect(r.code).toBe(1);
++        } else {
++            expect(r.code).toBe(0);
++        }
++    });
++
++    it("the step's own name states the outcome the argv delivers", () => {
++        const step = readCiStep();
++        const saysWarnOnly = /warn-only/i.test(step.name);
++        expect(saysWarnOnly).toBe(!step.argv.includes('--strict'));
++    });
++});
