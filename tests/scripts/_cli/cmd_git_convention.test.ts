@@ -97,6 +97,15 @@ describe('git:convention show', () => {
         expect(runGitConvention(['show'], dir).out.join('\n')).toContain('outranks git.commit_format');
     });
 
+    it.each(['.commitlintrc.mjs', '.commitlintrc.ts', '.commitlintrc.cts', '.commitlintrc.mts', 'commitlint.config.cts', 'commitlint.config.mts'])(
+        'names %s, a config file commitlint itself loads',
+        (name) => {
+            const dir = repo(null);
+            fs.writeFileSync(path.join(dir, name), 'export default {};\n');
+            expect(commitMessageValidator(dir)).toMatchObject({ kind: 'commitlint config', path: path.join(dir, name) });
+        },
+    );
+
     it('sees an executable commit-msg hook and ignores the shipped sample', () => {
         const dir = repo(null);
         const hooks = path.join(dir, '.git', 'hooks');

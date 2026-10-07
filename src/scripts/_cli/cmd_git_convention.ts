@@ -64,17 +64,24 @@ export interface CommitMessageValidator {
     path: string;
 }
 
+/** Every file name in commitlint's documented config search places; `package.json` is checked separately. */
 const COMMITLINT_FILES = [
+    '.commitlintrc',
+    '.commitlintrc.json',
+    '.commitlintrc.yaml',
+    '.commitlintrc.yml',
+    '.commitlintrc.js',
+    '.commitlintrc.cjs',
+    '.commitlintrc.mjs',
+    '.commitlintrc.ts',
+    '.commitlintrc.cts',
+    '.commitlintrc.mts',
     'commitlint.config.js',
     'commitlint.config.cjs',
     'commitlint.config.mjs',
     'commitlint.config.ts',
-    '.commitlintrc',
-    '.commitlintrc.json',
-    '.commitlintrc.yml',
-    '.commitlintrc.yaml',
-    '.commitlintrc.js',
-    '.commitlintrc.cjs',
+    'commitlint.config.cts',
+    'commitlint.config.mts',
 ] as const;
 
 function _git(cwd: string, ...args: string[]): string | null {
