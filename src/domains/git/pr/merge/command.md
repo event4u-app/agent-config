@@ -161,11 +161,33 @@ Read its exit and its line together:
   line; it is never read as current.
 - exit `1` → a conflict report goes to § 3; a base that could not be resolved
   stops this PR.
-- exit `3` → behind under a strategy other than `merge`: reported and left for
-  the author, disposition `blocked-external`. A behind PR is not merged even
-  where the forge would accept it: its checks never ran against the current
-  base. The rebase is the author's, or a separate request under
+- exit `3` → behind under a strategy other than `merge`. This run never
+  rebases a PR it did not author — the rebase is the author's, or a separate
+  request under
   [`branch-update`](../../../../skills/git-workflow/references/branch-update.md).
+  What happens to the PR is an owner decision (recorded
+  2026-10-07), and it turns on one forge setting — whether the base requires an
+  up-to-date branch before merging:
+
+  ```bash
+  gh api repos/{owner}/{repo}/branches/<base>/protection --jq .required_status_checks.strict
+  gh api repos/{owner}/{repo}/rules/branches/<base> \
+    --jq '.[] | select(.type == "required_status_checks") | .parameters.strict_required_status_checks_policy'
+  ```
+
+  Either reading `true` means the forge requires an up-to-date branch; both
+  absent or `false` means it does not; a read that fails is treated as
+  required.
+  - **The forge does not require an up-to-date branch**, and the PR is green
+    and conflict-free → it goes on to § 3–§ 9 and is merged behind its base;
+    the summary row says so (`merged behind <base>; the forge does not require
+    an up-to-date branch`). Its checks never ran against the current base, and
+    the summary is where that stays visible.
+  - **The forge requires an up-to-date branch** → disposition
+    `blocked-external`, the row naming that setting as the reason.
+  - **The line reads `TARGET_POLICY_STALE`** → the PR's non-default target is
+    itself behind its default branch: `blocked-external`, reason "the target's
+    update", whatever the forge setting.
 - exit `4` → the strategy could not be read (the line names the reason code
   and the file); nothing was checked or merged. Stop on this PR and report it.
 - any other exit → the check could not run (internal error); stop on this PR
@@ -311,6 +333,15 @@ After each merge the base has moved, so the next PR is re-synced against the
 NEW base — that is the loop, and it is why pre-greening several PRs ahead of
 their merges is wasted work.
 
+**Under a strategy other than `merge`**, every PR after the first is behind the
+base the previous merge moved, and this run rebases none of them. Where the
+forge does not require an up-to-date branch, a green, conflict-free PR that is
+behind still merges (§ 2, exit `3`) — three green branches merge without three
+sequential rebases — and each such row says it merged behind its base. Where
+the forge requires an up-to-date branch, the first merge leaves every remaining
+PR `blocked-external`, and the summary names that setting rather than leaving
+the reader to find it.
+
 **Under `--no-merge` that loop does not turn**, and the paragraph above is
 written for the form that does. Nothing merges, so the base does not advance,
 no PR leaves the open list, and the run is a **preparation sweep**: it syncs,
@@ -439,8 +470,11 @@ run, so it does not exist until one has happened): one row per PR with queue
 position, the `base_ref@base_sha` it was prepared against — without it a
 "prepared" row records nothing checkable, since mergeability is a fact about a
 base and not about a queue —
-conflict classes hit, CI iterations used, disposition, and any edits dropped in
-conflict resolution. The disposition set is closed:
+conflict classes hit, CI iterations used, disposition **with its reason** —
+`merged behind <base>` where § 2 merged a PR its forge let through behind,
+`requires an up-to-date branch` or `TARGET_POLICY_STALE` for a behind PR left
+blocked — and any edits dropped in conflict resolution. Every PR the run saw
+gets a row; none is summarised away. The disposition set is closed:
 
 `merged <sha>` · `superseded-closed` · `blocked-external` · `twice-exhausted` ·
 `unauthorized` · `arrived-after-cutoff`

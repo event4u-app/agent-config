@@ -153,7 +153,7 @@ review, the conformance count, a merge run — is decided, not discovered.
       refuses that case with the reason code `TARGET_POLICY_STALE` instead of the
       ordinary behind message, and `/fix:ci` and `/roadmap:next` name it.
       verify: `test -f tests/scripts/sync_pr_branch_target_behind_default.test.ts && npx vitest run tests/scripts/sync_pr_branch_target_behind_default.test.ts && git grep -q TARGET_POLICY_STALE -- src/domains/engineering-base/fix/ci/command.md` -> 0
-- [ ] **3.2 `/pr:merge` treats a behind pull request as the owner decided.**
+- [x] **3.2 `/pr:merge` treats a behind pull request as the owner decided.**
       § 2 and § 6 merge a green, conflict-free pull request that is behind its
       base when the forge does not require an up-to-date branch, and say so in
       the summary (D7); where the forge requires one, the pull request stays
