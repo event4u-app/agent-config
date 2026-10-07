@@ -1,12 +1,12 @@
 # Findings: git-convention-settings
-<!-- completion-review: v1 | reviewed: 2026-10-06 | scope: cebe98c6b15b31126fa6e7aa8095c4a12dc19c5caad89d1c4cd38ada973745fb | diff: 0e6b1704e476d25095dcc70e3bc3e236d65bdaae | reviewer: r2-fresh-subagent-git-convention-settings | prompt_hash: 9dd56b6ccbd9c8405b07806a53b53d135b3b4faecf089e78e64d41b6c3f3f610 -->
+<!-- completion-review: v1 | reviewed: 2026-10-06 | scope: 3cb7218d909e7efb5a104425bbbe0552b916312b54527d02d53b42792e302f7d | diff: 0e6b1704e476d25095dcc70e3bc3e236d65bdaae | reviewer: r2-fresh-subagent-git-convention-settings | prompt_hash: 9dd56b6ccbd9c8405b07806a53b53d135b3b4faecf089e78e64d41b6c3f3f610 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-git-convention-settings"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-06 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: 0e6b1704e476d25095dcc70e3bc3e236d65bdaae
-  scope_hash: cebe98c6b15b31126fa6e7aa8095c4a12dc19c5caad89d1c4cd38ada973745fb
+  scope_hash: 3cb7218d909e7efb5a104425bbbe0552b916312b54527d02d53b42792e302f7d
   roadmap: none
   roadmap_hash: none
   ac_hash: none
