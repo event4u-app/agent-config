@@ -284,11 +284,13 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              class, and whether "absent" differs from the default.
                              Usage: settings:get <key> [--json]
   git:convention             The git convention (git.commit_format, git.branch_pattern,
-                             git.update_strategy): value, source file and state
-                             (valid|absent|malformed|invalid|discarded), and any
-                             repository commit-message validator that outranks it.
-                             Exit 1 on malformed or invalid.
-                             Usage: git:convention show [--json]
+                             git.update_strategy): value in force, source and state
+                             (valid|absent|malformed|invalid|discarded|unresolvable),
+                             read from a committed .git-convention.yml over the
+                             settings files; this checkout's differing value is shown
+                             as a candidate, and any repository commit-message
+                             validator that outranks it. Exit 1 on malformed or invalid.
+                             Usage: git:convention show [--json] [--base REF]
   settings:set               Set one setting in the global file. Refuses every class-C
                              (guarded) key from docs/contracts/settings-classes.md, and
                              refuses everything when that contract is unreadable.

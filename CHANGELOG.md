@@ -193,7 +193,12 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   value in force, the commit it was read at and a differing checkout value as
   a candidate; a carrier that does not parse or a target commit that cannot be
   resolved makes `sync_pr_branch` exit `4`, never merge. A commit-linting config
-  in the repository still outranks `git.commit_format`.
+  in the repository still outranks `git.commit_format`. In a packed consumer
+  install `git:convention show` is the git surface that resolves, and the
+  consumer matrix proves it with a `git-convention` leg; `sync_pr_branch` and
+  `check_branch_freshness`, which `/pr:merge`, `/create-pr`, `/fix:ci` and
+  `/roadmap:next` run through `./scripts-run`, still need a source checkout of
+  this package.
   The merge method is not a key: `/pr:merge` already reads it from the forge.
 
 - **A push no longer ships a branch whose tree contradicts its own commits.**

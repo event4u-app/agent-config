@@ -236,7 +236,7 @@ writes it into settings files and the rename becomes a migration.
       and tier 1b of the commit skill (`SKILL.md:49`, `:64`) say where a team
       declares: in the carrier, where either value is a declaration.
       verify: `git grep -q -F 'either value' -- src/skills/conventional-commits-writing/SKILL.md` -> 0
-- [ ] **2.6 The verb is proven in a packed install.**
+- [x] **2.6 The verb is proven in a packed install.**
       `src/scripts/consumer_matrix.ts` gains a leg that runs
       `git:convention show` in a packed global install. The changelog entry says
       which git surfaces still need a source checkout.
