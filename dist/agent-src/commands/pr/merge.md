@@ -145,7 +145,10 @@ agent-config git:convention sync --base origin/<base>
 
 A `git.update_strategy` whose state is `malformed`, `invalid`, `discarded` or
 `unresolvable` is not a strategy — `show` exits `1` on it and the script
-refuses it with exit 4 — so stop on this PR and report the line `show` printed. Otherwise
+refuses it with exit 4 — so stop on this PR and report the line `show` printed.
+The one narrowing is offline: a target that cannot be resolved while origin is
+unreachable, with no developer layer declaring anything but `merge`, is the
+`unverified` warning below (exit `0`, nothing merged). Otherwise
 the strategy decides what the script does — under `merge` it merges the base
 set in, under `rebase` it only checks, because a
 `Merge branch '<base>' into …` commit is what that setting excludes and the
