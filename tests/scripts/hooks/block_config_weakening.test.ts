@@ -297,6 +297,29 @@ describe('block_config_weakening — class-c, the reviewed defects', () => {
         expect(reason).toContain('cannot interpret');
     });
 
+    // The host writes `new_string` literally; `String.replace` expands `$&`,
+    // `$$` and friends, so a guard that simulates with it evaluates a
+    // different text from the one written. `$&` re-inserts the match, which
+    // made the class C value look unchanged while the host wrote `$&`.
+    it('applies new_string literally — replacement tokens do not hide a Class C change', () => {
+        const before = 'hooks:\n  injection_scan:\n    enabled: false\n';
+        const edit = { old_string: 'false', new_string: '$&' };
+        expect(classCVerdict(edit, before, '.agent-settings.yml', index)).toContain('hooks.injection_scan.enabled');
+        expect(classCVerdict({ edits: [edit] }, before, '.agent-settings.yml', index)).toContain(
+            'hooks.injection_scan.enabled',
+        );
+    });
+
+    it('refuses an edits value that is not a list', () => {
+        const reason = classCVerdict(
+            { edits: { old_string: 'false', new_string: 'true' } } as never,
+            'hooks:\n  injection_scan:\n    enabled: false\n',
+            '.agent-settings.yml',
+            index,
+        );
+        expect(reason).toContain('cannot interpret');
+    });
+
     it('refuses a replace_all value it cannot interpret', () => {
         const reason = classCVerdict(
             { old_string: 'false', new_string: 'true', replace_all: 'yes' as unknown as boolean },

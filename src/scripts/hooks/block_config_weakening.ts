@@ -391,6 +391,12 @@ export interface Decision {
  * edit tool — `EDIT_TOOLS` is the corpus, and the shell shapes are
  * `block_plumbing_writes`' subject, not this one.
  */
+/** The host writes `new_string` verbatim; `String.replace` would expand `$&`-style tokens. */
+function _replaceFirstLiteral(text: string, from: string, to: string): string {
+    const at = text.indexOf(from);
+    return text.slice(0, at) + to + text.slice(at + from.length);
+}
+
 export function classCVerdict(
     ti: JsonObject,
     on_disk: string | null,
@@ -422,7 +428,9 @@ export function classCVerdict(
                 '`agent-config settings:set`.'
             );
         }
-        afterText = all === true ? on_disk.split(oldStr).join(newStr) : on_disk.replace(oldStr, newStr);
+        afterText = all === true ? on_disk.split(oldStr).join(newStr) : _replaceFirstLiteral(on_disk, oldStr, newStr);
+    } else if (ti['edits'] !== undefined && !Array.isArray(ti['edits'])) {
+        return `${rel_path}: this MultiEdit carries an edit the guard cannot interpret, so the text it would produce is unknown and no key can be cleared. Re-send it as plain edits, or write the change through \`agent-config settings:set\`.`;
     } else if (Array.isArray(ti['edits']) && on_disk !== null) {
         // MultiEdit applies its pairs in order and applies none when one misses.
         let text = on_disk;
@@ -434,7 +442,7 @@ export function classCVerdict(
                 return `${rel_path}: this MultiEdit carries an edit the guard cannot interpret, so the text it would produce is unknown and no key can be cleared. Re-send it as plain edits, or write the change through \`agent-config settings:set\`.`;
             }
             if (!text.includes(o)) return null;
-            text = a === true ? text.split(o).join(n) : text.replace(o, n);
+            text = a === true ? text.split(o).join(n) : _replaceFirstLiteral(text, o, n);
         }
         afterText = text;
     }
