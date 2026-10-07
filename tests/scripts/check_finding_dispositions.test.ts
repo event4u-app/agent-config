@@ -148,7 +148,8 @@ describe('the medium-security widening is prospective', () => {
     const [maj, min, pat] = MEDIUM_SECURITY_BLOCKS_AFTER.split('.').map(Number) as [number, number, number];
     const next = `${maj}.${min + 1}.0`;
     const nextPatch = `${maj}.${min}.${pat + 1}`;
-    const earlier = `${maj}.${Math.max(0, min - 1)}.0`;
+    const olderLine = min > 0 ? `${maj}.${min - 1}` : `${maj - 1}.99`;
+    const earlier = `${olderLine}.0`;
 
     it('binds every release after the cutoff, and binds with no release at all', () => {
         expect(isBlocking(medium, next)).toBe(true);
@@ -169,7 +170,7 @@ describe('the medium-security widening is prospective', () => {
     });
 
     it('orders by version, so a later patch on an older line stays exempt', () => {
-        expect(isBlocking(medium, `${maj}.${Math.max(0, min - 1)}.99`)).toBe(false);
+        expect(isBlocking(medium, `${olderLine}.99`)).toBe(false);
     });
 
     it('an unparseable release falls to the wider rule', () => {

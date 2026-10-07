@@ -269,7 +269,7 @@
       "status": "fixed",
       "commit": "fc1bdec4f",
       "rationale": "The only prose consumer of the regenerated JSON, delivery-set-result-2026-08-31.md, now opens with a banner (fc1bdec4f, #2243) saying the JSON keeps its dated name, is re-run when the corpus moves, and holds the current reading; the page copies no figure in. No other document quotes these figures. Regeneration in place without provenance is the separate row 2ce05ad49c18.",
-      "verified_by": "grep -n '237f203916c5' agents/evidence/analysis/delivery-set-result-2026-08-31.md",
+      "verified_by": "grep -n 'not the current one' agents/evidence/analysis/delivery-set-result-2026-08-31.md",
       "date": "2026-10-07"
     },
     {
@@ -353,7 +353,7 @@
       "file": "agents/evidence/reviews/behavior-vocabulary-close-round11.review-input/acceptance-criteria.md",
       "status": "still_open",
       "rationale": "Carried by road-to-the-16-3-0-findings-residue (item 6). The premise is true and wider than stated: rounds 10 to 21 record `roadmap: none`, and the round-11 and round-12 acceptance-criteria inputs are empty. The records themselves stay as they are: they are what each reviewer was actually given, rewriting them would falsify that, and each round already discloses itself as single-member and provisional; the roadmap's acceptance criteria cite no round 10 to 21 as evidence. What is open is the mechanism: a review can still be dispatched without the roadmap when the roadmap is in the changed set, so the row is not accepted as closed.",
-      "verified_by": "grep -c 'roadmap: none' agents/evidence/reviews/behavior-vocabulary-close-round1*.findings.md",
+      "verified_by": "grep -c 'roadmap: none' agents/evidence/reviews/behavior-vocabulary-close-round1[0-9].findings.md agents/evidence/reviews/behavior-vocabulary-close-round2[01].findings.md",
       "date": "2026-10-07"
     },
     {
