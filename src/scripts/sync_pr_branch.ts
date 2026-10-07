@@ -730,10 +730,29 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
         };
     }
 
-    const behindEach = order.map((ref) => ({
-        ref,
-        behind: Number(sh('git', ['rev-list', '--count', `HEAD..${ref}`], repo).out.trim() || '0'),
-    }));
+    // A count git could not take is not a count of 0: a ref this checkout never
+    // fetched (a single-branch clone) would otherwise read as "already current".
+    const countBehind = (from: string, ref: string): number | null => {
+        const r = sh('git', ['rev-list', '--count', `${from}..${ref}`], repo);
+        const n = Number(r.out.trim());
+        return r.ok && r.out.trim() !== '' && Number.isInteger(n) ? n : null;
+    };
+    const uncountable = (ref: string): Plan => ({
+        exit: 1,
+        message:
+            `cannot count commits behind ${ref} — it is not in this checkout (a single-branch clone fetches only its own branch). ` +
+            `Fetch it: git fetch origin +refs/heads/${bareName(ref)}:refs/remotes/origin/${bareName(ref)}`,
+        generated: [],
+        remeasured: [],
+        authored: [],
+        scanned: 0,
+    });
+    const behindEach: { ref: string; behind: number }[] = [];
+    for (const ref of order) {
+        const behind = countBehind('HEAD', ref);
+        if (behind === null) return uncountable(ref);
+        behindEach.push({ ref, behind });
+    }
     // De-duplicated by ancestry: a ref already contained in HEAD is 0 behind and
     // is not merged again, which is what keeps a target that already contains
     // the default from being merged twice.
@@ -745,9 +764,8 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
         const detail = stale.map((b) => `${b.ref} (${String(b.behind)} behind)`).join(', ');
         const added = resolved.entries.find((e) => e.reason === 'branch-convergence-policy:include-default');
         const target = resolved.entries[0]?.ref ?? '';
-        const targetBehind = added === undefined
-            ? 0
-            : Number(sh('git', ['rev-list', '--count', `${target}..${added.ref}`], repo).out.trim() || '0');
+        const targetBehind = added === undefined ? 0 : countBehind(target, added.ref);
+        if (targetBehind === null) return uncountable(added?.ref ?? target);
         return {
             ...(targetBehind > 0 && added !== undefined
                 ? { targetStale: { target, defaultRef: added.ref, behind: targetBehind, branchBehind: behindEach.find((b) => b.ref === target)?.behind ?? 0 } }
@@ -913,8 +931,9 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
                     '  --auto-resolve-generated have nothing to change there). A strategy that\n' +
                     '  cannot be read (unparsable file, typo, user-global-only) exits 4.\n' +
                     '  The base is --base; without it the default branch, so a PR into any other\n' +
-                    '  base must pass --base origin/<its base>. A base that cannot be resolved\n' +
-                    '  exits 1; one whose commit cannot be fetched is unverified, exit 0. A conflict is\n' +
+                    '  base must pass --base origin/<its base>; a bare name means origin/<name>.\n' +
+                    '  A base that cannot be resolved or counted exits 1; one whose commit\n' +
+                    '  cannot be fetched is unverified, exit 0. A conflict is\n' +
                     '  reported and never auto-resolved; generated and authored conflicts are\n' +
                     '  listed separately because only the first has one correct resolution;\n' +
                     '  measured ratchet baselines are a third class, re-measured not merged.\n' +

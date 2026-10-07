@@ -95,7 +95,12 @@ export interface TargetRef {
  * `defaultRef` is passed by a caller that already asked for it.
  */
 export function resolveTarget(deps: TargetDeps, override: string | null, defaultRef?: string | null): TargetRef | null {
-    if (override !== null && override.trim() !== '') return { ref: override.trim(), reason: 'explicit-base-override' };
+    // A bare name is the branch on origin, as `remoteSha` already reads it: the
+    // local branch of that name is a clone-time copy nothing keeps current.
+    if (override !== null && override.trim() !== '') {
+        const ref = override.trim();
+        return { ref: ref.startsWith('origin/') ? ref : `origin/${ref}`, reason: 'explicit-base-override' };
+    }
     const def = defaultRef === undefined ? deps.defaultBranch() : defaultRef;
     return def === null ? null : { ref: def, reason: 'repository-default-branch' };
 }
