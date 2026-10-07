@@ -71,8 +71,8 @@ surface cites one reference instead of restating a grammar.
 
 ## Phase 1 — The grammars and one verb that computes them
 
-- [ ] **1.1 The grammars live in the module.**
-      `src/scripts/_lib/git_convention.ts` gains: the ticket grammar with its
+- [x] **1.1 The grammars live in the module.**
+      `src/scripts/_lib/git_convention_grammar.ts`, beside the reader, holds: the ticket grammar with its
       denylist (`CVE`, `CWE` and `GHSA` join the four) and an optional key
       allowlist, returning every candidate in a name, not only the first; the
       subject grammar per format and per approved family, where a ticket
