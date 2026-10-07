@@ -8,8 +8,8 @@ review_by: 2026-12-31
 > **Stub — not active work.** Written 2026-10-07 by
 > `road-to-findings-that-get-a-disposition` step 1.2, which re-read every row
 > of `agents/evidence/release-findings/16.3.0.json` against `main` @
-> `6051d3744`. Fourteen rows were real, unfixed and carried by no roadmap —
-> eleven read in that step, three a council had already read `still_open`.
+> `6051d3744`. Sixteen rows were real, unfixed and carried by no roadmap —
+> thirteen read in steps 1.1 and 1.2, three a council had already read `still_open`.
 > That roadmap only records dispositions, so fixing them there would be scope
 > creep; each one is named here with its evidence and what closes it, and its
 > ledger row is `still_open` with this file's slug.
@@ -30,13 +30,13 @@ every fix below needs room first.
   boundaries"), and `_pnpm_packages` drops a multi-line flow sequence (the
   "KNOWN GAP" comment in that function). Closes when each has a fixture that
   fails today and passes after.
-- **a78536c88317 (residual)** — the row is `fixed` for the vector it names (a
-  literal entry that is itself a symlink, closed by `lstatSync`), but
-  `lstatSync` resolves only the last segment: a literal `pkg/x` whose `pkg` is
-  a symlink to outside the root still resolves outside it, and the glob branch's
-  `readdirSync` follows a symlinked parent the same way. No test pins the
-  `lstat` fix either. Closes with a realpath containment check and a symlink
-  fixture for both branches.
+- **7efdf81cb478**, **a78536c88317** — scope expansion can still leave the
+  project root. `lstatSync` (00612c1f2) closed the vector both name, a literal
+  entry that is itself a symlink, but it resolves only the last segment: a
+  literal `pkg/x` whose `pkg` is a symlink to outside the root still resolves
+  outside it, and the glob branch's `readdirSync` follows a symlinked parent
+  the same way. No test pins the `lstat` fix either. Closes with a realpath
+  containment check and a symlink fixture for both branches.
 
 ## 2. Delivery-set measurements that move without provenance
 

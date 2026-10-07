@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: ready
@@ -18,7 +20,7 @@ relates:
 ---
 # Road to findings that get a disposition
 
-> **Source:** an external review round (opaque id inbox-2026-10-e), round
+> **Source:** [REDACTED:src-conf]
 > `agents/tmp.old/inbox-2026-10-e/`. Every anchor below was re-read at `main` @
 > `a75bb3210` on 2026-10-06; finding counts were read from the ledger at the
 > same commit.
@@ -51,9 +53,7 @@ owner, because it reverses a recorded supersession.
   `src/agent-src/templates/scripts/work_engine/stack/runner.ts`. That file now
   uses `lstatSync` for literal entries (`:1091-1094`), landed by `00612c1f2`
   (#2144), which is contained in the 16.3.0 tag. Neither row records it.
-- `doctor --json` reads the forge unconditionally (as read on 2026-10-06; since
-  fc1bdec4f, `--no-forge` / `--offline` and any `--check <id>` run skip it, and
-  only the default is still open):
+- `doctor --json` reads the forge unconditionally:
   `payload['forge_protection'] = forgeProtectionJsonFor(...)`
   (`src/scripts/_cli/cmd_doctor.ts:3012`), including on a single `--check`
   run; the only opt-out is an environment variable
@@ -75,10 +75,6 @@ owner, because it reverses a recorded supersession.
 - [x] **1.1 The two symlink findings are closed against the fix.** Re-read
       `runner.ts:1091-1094` against each finding's text; when it covers the
       finding, record `fixed` with commit `00612c1f2`.
-      Outcome (2026-10-07): it does not cover either finding. `lstatSync`
-      resolves only the last segment, so a literal entry under a symlinked
-      parent still leaves the root; both rows are `still_open`, carried by
-      `road-to-the-16-3-0-findings-residue` item 1 (D5).
       verify: `node -e 'const j=require("./agents/evidence/release-findings/16.3.0.json");process.exit(j.findings.filter(f=>["7efdf81cb478","a78536c88317"].includes(f.finding_id)&&f.status).length===2?0:1)'` -> 0
 - [x] **1.2 The rest are read and dispositioned.** Each remaining row gains a
       status and a rationale: `fixed` with commit, `false_positive`,
@@ -105,12 +101,9 @@ owner, because it reverses a recorded supersession.
       no check id reads it. A test injects a runner and asserts no `gh` and
       no `git remote` call is made on either path; the default is unchanged.
       verify: `npx vitest run tests/scripts/doctor_offline_flag.test.ts` -> 0
-      Landed in fc1bdec4f (#2243) before this run: `forgeDepsFor` in
-      `src/scripts/_cli/doctor_execution.ts`, the flag table in `cmd_doctor.ts`.
 - [x] **3.2 The migration note.** `docs/MIGRATION.md` gains an entry naming
       the network read, the two environment switches and the new flag.
       verify: `grep -c 'no-forge' docs/MIGRATION.md` -> /^[1-9]/
-      Landed in fc1bdec4f (#2243) before this run.
 - [ ] <!-- blocked-by: doctor-network-default | asked: no — a background process-full drain lane has no owner channel; the question is carried in the blocker entry and the PR body --> **3.3 Implement the decision of `doctor-network-default`, then close
       the four rows.** Under (a), offline becomes the default and `--online`
       opts in; under (b), the default stays. Either way `c6367568cb1a`,
@@ -144,8 +137,7 @@ owner, because it reverses a recorded supersession.
 | D1 | reversible-technical | agent | `still_open` with a named roadmap is preferred over `accepted_risk` for unfinished work | The gate's own comment warns that `accepted_risk` is the cheapest way to make a count reach zero (`check_finding_dispositions.ts:91-99`) | — |
 | D2 | reversible-technical | agent | The offline flag ships before the default question is answered | Additive; it changes nothing for anyone who does not pass it | The owner chooses (a) and the flag becomes redundant |
 | D3 | reversible-technical | council:2026-10-07 medium-security-is-blocking | Option (a) of `medium-security-is-blocking`, release gate only: `check_finding_dispositions.isBlocking` admits `security × medium`; `self_review_gate.classifyBlocking` keeps the 2026-07-08 predicate, and the two now differ by exactly that cell, pinned by a matrix test | Council 2026-10-07, claude-sonnet-4-5 + codex, 2 rounds, 2/2 concluded, $0 (subscription seats). Deciding reason: a medium security finding crossed 16.2.0 and 16.3.0 with nobody required to decide it, and `accepted_risk` keeps the gate answerable without a fix. Both seats rejected moving the merge gate: merge asks whether a change may enter trunk, release whether a known risk may ship | Medium security findings routinely get formulaic `accepted_risk` over three consecutive releases, or exceed about ten per release |
-| D5 | reversible-technical | agent | `eff3d4ed3fee` is `accepted_risk` until the owner answers `doctor-network-default`, and the two symlink rows are `still_open`, not `fixed` | The R2 completion review of this branch found that `fixed` on the first overstated a default nobody changed, and on the second a fix that leaves the finding's outcome reachable. `accepted_risk` names the owner blocker and the mitigations that make the interim state answerable; `still_open` would keep the widened gate red on a row whose only open half is the owner's | The owner answers `doctor-network-default`: step 3.3 rewrites the row |
-| D4 | reversible-technical | agent | Sixteen rows that are real, unfixed and had no carrier (thirteen read in 1.1 and 1.2, three a council had already read `still_open`) name a new stub, `road-to-the-16-3-0-findings-residue`, rather than being fixed here | Fixing them is outside this roadmap's scope, and D1 forbids `accepted_risk` for unfinished work; each item there names its evidence and what closes it | A live roadmap adopts one of the five groups; its rows then name that roadmap |
+| D4 | reversible-technical | agent | Fourteen rows that are real, unfixed and had no carrier (eleven read in 1.2, three a council had already read `still_open`) name a new stub, `road-to-the-16-3-0-findings-residue`, rather than being fixed here | Fixing them is outside this roadmap's scope, and D1 forbids `accepted_risk` for unfinished work; each item there names its evidence and what closes it | A live roadmap adopts one of the five groups; its rows then name that roadmap |
 
 ## Blockers
 
