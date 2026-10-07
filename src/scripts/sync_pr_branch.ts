@@ -72,7 +72,7 @@ import {
     type ConventionTarget,
     type TargetDeps,
 } from './_lib/git_convention_carrier.js';
-import { blankBaseError, splitResolvedRef } from './_lib/git_base_ref.js';
+import { baseValueError, splitResolvedRef } from './_lib/git_base_ref.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 export { parseSymrefDefault };
@@ -644,7 +644,7 @@ function mergePinned(repo: string, ref: string, sha: string | null): { ok: boole
     let target = ref;
     if (sha !== null && tracking() !== sha) {
         const { remote, branch } = splitResolvedRef(ref);
-        sh('git', ['fetch', remote, `+refs/heads/${branch}:refs/remotes/${remote}/${branch}`], repo);
+        sh('git', ['fetch', '--', remote, `+refs/heads/${branch}:refs/remotes/${remote}/${branch}`], repo);
         if (tracking() !== sha) {
             if (!sh('git', ['cat-file', '-e', `${sha}^{commit}`], repo).ok) {
                 return { ok: false, conflicted: [], error: `the pinned commit ${sha.slice(0, 12)} of ${ref} could not be fetched — nothing was merged for it.` };
@@ -652,7 +652,7 @@ function mergePinned(repo: string, ref: string, sha: string | null): { ok: boole
             target = sha;
         }
     }
-    const m = sh('git', ['merge', target, '--no-edit'], repo);
+    const m = sh('git', ['merge', '--no-edit', target], repo);
     if (!m.ok) {
         // A merge git refuses before it starts (local changes it would
         // overwrite, an untracked file in the way) leaves no unmerged path.
@@ -789,7 +789,7 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
     const order = integrationOrder(resolved);
 
     const remotes = [...new Set(['origin', ...order.map((ref) => splitResolvedRef(ref).remote)])];
-    const failed = remotes.map((remote) => ({ remote, ...sh('git', ['fetch', remote, '--prune'], repo) })).find((f) => !f.ok);
+    const failed = remotes.map((remote) => ({ remote, ...sh('git', ['fetch', '--prune', '--', remote], repo) })).find((f) => !f.ok);
     if (failed !== undefined) {
         // Unreachable remote is not "already current" — saying so is the whole
         // point, since a silent pass here reproduces the staleness this closes.
@@ -822,7 +822,7 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
         exit: 1,
         message:
             `cannot count commits behind ${ref} — it is not in this checkout (a single-branch clone fetches only its own branch). ` +
-            `Fetch it: git fetch ${splitResolvedRef(ref).remote} +refs/heads/${bareName(ref)}:refs/remotes/${splitResolvedRef(ref).remote}/${bareName(ref)}`,
+            `Fetch it: git fetch -- ${splitResolvedRef(ref).remote} +refs/heads/${bareName(ref)}:refs/remotes/${splitResolvedRef(ref).remote}/${bareName(ref)}`,
         generated: [],
         remeasured: [],
         authored: [],
@@ -1018,7 +1018,7 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
                 reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'argument error' });
                 return 1;
             }
-            const blank = blankBaseError(v);
+            const blank = baseValueError(v);
             if (blank !== null) {
                 process.stderr.write(`❌  sync_pr_branch: ${blank}\n`);
                 reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'argument error' });

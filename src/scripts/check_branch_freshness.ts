@@ -70,7 +70,7 @@ import { fileURLToPath } from "node:url";
 import { runGateCli, runSelfTest, type SelfTestCase } from "./_lib/gate_self_test.js";
 import { workspaceIdentity } from "./_lib/git_common_dir.js";
 import { describeRefusal, isRefusal, type GitConventionReading } from "./_lib/git_convention.js";
-import { blankBaseError, parseBaseRef } from "./_lib/git_base_ref.js";
+import { baseValueError, parseBaseRef } from "./_lib/git_base_ref.js";
 import { makeTargetDeps, parseExactHeadSha, readCommittedConvention } from "./_lib/git_convention_carrier.js";
 import { reportScanned } from "./_lib/scan_scope.js";
 
@@ -284,10 +284,10 @@ export function explicitBase(argv: readonly string[]): string | null {
  */
 export function blankExplicitBase(argv: readonly string[]): string | null {
   const joined = argv.find((a) => a.startsWith("--base="));
-  if (joined !== undefined) return blankBaseError(joined.slice("--base=".length));
+  if (joined !== undefined) return baseValueError(joined.slice("--base=".length));
   const flag = argv.indexOf("--base");
   const value = flag < 0 ? undefined : argv[flag + 1];
-  return value === undefined || value.startsWith("-") ? null : blankBaseError(value);
+  return value === undefined || value.startsWith("--") ? null : baseValueError(value);
 }
 
 /** `--base` wins, then the open PR's base, then the repo default. */

@@ -39,6 +39,19 @@ export function blankBaseError(value: string): string | null {
     return value.trim() === '' ? '--base was given an empty value — name the base branch (an unset variable expands to nothing); nothing was read or merged' : null;
 }
 
+/**
+ * The usage error for any `--base` value that must not reach git: a blank one,
+ * or one whose branch name starts with `-`, which git would read as an option.
+ * No branch can carry that name (`git check-ref-format --branch` refuses it).
+ */
+export function baseValueError(value: string, remotes: readonly string[] = []): string | null {
+    const blank = blankBaseError(value);
+    if (blank !== null) return blank;
+    const v = value.trim();
+    const branch = v.startsWith('-') ? v : (parseBaseRef(v, remotes)?.branch ?? v);
+    return branch.startsWith('-') ? `--base ${JSON.stringify(v)} names a branch that starts with "-", which git reads as an option — no branch has that name; nothing was read or merged` : null;
+}
+
 /** Read a `--base` value; null when it is empty. `remotes` are the configured remote names. */
 export function parseBaseRef(value: string, remotes: readonly string[] = []): BaseRef | null {
     const v = value.trim();

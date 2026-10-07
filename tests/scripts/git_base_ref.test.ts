@@ -46,13 +46,13 @@ describe('the server is asked on the remote the base names', () => {
     }
 
     it('upstream/main asks upstream for refs/heads/main', () => {
-        expect(asked('upstream/main')).toEqual([['ls-remote', 'upstream', 'refs/heads/main']]);
+        expect(asked('upstream/main')).toEqual([['ls-remote', '--', 'upstream', 'refs/heads/main']]);
     });
     it('refs/heads/main asks origin for refs/heads/main', () => {
-        expect(asked('refs/heads/main')).toEqual([['ls-remote', 'origin', 'refs/heads/main']]);
+        expect(asked('refs/heads/main')).toEqual([['ls-remote', '--', 'origin', 'refs/heads/main']]);
     });
     it('origin/release/1.x asks origin for refs/heads/release/1.x', () => {
-        expect(asked('origin/release/1.x')).toEqual([['ls-remote', 'origin', 'refs/heads/release/1.x']]);
+        expect(asked('origin/release/1.x')).toEqual([['ls-remote', '--', 'origin', 'refs/heads/release/1.x']]);
     });
     it('makeTargetDeps lists the configured remotes', () => {
         const run: GitRunner = () => ({ ok: true, out: 'origin\nupstream\n', err: '', timedOut: false });

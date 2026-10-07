@@ -156,7 +156,7 @@ export function makeTargetDeps(repo: string, run: GitRunner = runGit): TargetDep
         // The server first, the local ref second: `refs/remotes/origin/HEAD` is
         // not set in every checkout (see `parseSymrefDefault`).
         defaultBranch: (): string | null => {
-            const remote = ask('git', ['ls-remote', '--symref', 'origin', 'HEAD']);
+            const remote = ask('git', ['ls-remote', '--symref', '--', 'origin', 'HEAD']);
             const fromServer = remote.ok ? parseSymrefDefault(remote.out) : null;
             if (fromServer !== null) return fromServer;
             const head = ask('git', ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']);
@@ -164,7 +164,7 @@ export function makeTargetDeps(repo: string, run: GitRunner = runGit): TargetDep
         },
         remoteSha: (ref: string): string | null => {
             const { remote, branch } = splitResolvedRef(ref);
-            const out = ask('git', ['ls-remote', remote, `refs/heads/${branch}`]);
+            const out = ask('git', ['ls-remote', '--', remote, `refs/heads/${branch}`]);
             return out.ok ? parseExactHeadSha(out.out, branch) : null;
         },
         remotes: (): readonly string[] => {
@@ -219,7 +219,7 @@ export function carrierBlobAt(repo: string, sha: string, fetchRef: string | null
     const has = (): boolean => local(['cat-file', '-e', `${sha}^{commit}`]).ok;
     if (!has()) {
         const from = fetchRef === null ? null : splitResolvedRef(fetchRef);
-        const fetched = from === null ? null : run('git', ['fetch', '-q', from.remote, from.branch], repo, CARRIER_FETCH_TIMEOUT_MS);
+        const fetched = from === null ? null : run('git', ['fetch', '-q', '--', from.remote, from.branch], repo, CARRIER_FETCH_TIMEOUT_MS);
         if (fetched?.timedOut === true) return { kind: 'no-commit', timedOut: true };
         if (!has()) return { kind: 'no-commit' };
     }

@@ -45,7 +45,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { blankBaseError } from '../_lib/git_base_ref.js';
+import { baseValueError } from '../_lib/git_base_ref.js';
 import {
     GIT_CONVENTION_KEYS,
     conventionDefault,
@@ -178,7 +178,7 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
         const next = args[i + 1];
         if (a === '--json') json = true;
         else if (a === '--base' && next !== undefined && !next.startsWith('--')) {
-            const blank = blankBaseError(next);
+            const blank = baseValueError(next);
             if (blank !== null) return { code: 2, out: [], err: [blank, USAGE] };
             base = args[++i] as string;
         } else if (a === '--key' && next !== undefined && (GIT_CONVENTION_KEYS as readonly string[]).includes(next)) {
