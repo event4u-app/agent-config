@@ -171,9 +171,11 @@ runner; the hook never merges, because a merge inside `pre-push` rewrites the
 tree at the moment you believe your work is finished.
 
 **The resolution is executable now, not just described.**
-`agent-config git:convention sync` resolves the base from the open PR
-(so a stacked or release-line PR is measured against what it actually merges
-into), fetches, and merges it in when the branch is behind. The base is a
+`agent-config git:convention sync --base origin/<base>`, `<base>` being the
+PR's `baseRefName` (`gh pr view --json baseRefName`), fetches and merges that
+base in when the branch is behind, so a stacked or release-line PR is measured
+against what it actually merges into. It never asks the forge itself: without
+`--base` the target is the default branch, which is right only for a PR into it. The base is a
 **set**: when the PR targets something other than the default branch, whether
 the default branch joins the set is a per-target policy read from the *target's
 own commit*, never from this branch — see `src/scripts/_lib/branch_convergence.ts`.

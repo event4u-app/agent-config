@@ -292,12 +292,16 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              validator that also runs at commit. Exit 1 when a key in
                              force is malformed, invalid, discarded or unresolvable;
                              a candidate in one of these states is a warning, exit 0.
+                             --key limits show to the named keys (repeatable).
+                             update_strategy is read at --base, else the default
+                             branch: a pull request passes --base origin/<its base>.
                              subject checks subjects on stdin against the convention in
                              force; ticket reads the ticket out of a branch name; branch
                              renders a name from git.branch_pattern; sync brings the
-                             branch up to its PR base per git.update_strategy (exit 3
-                             behind under rebase, 4 strategy unreadable).
-                             Usage: git:convention show [--json] [--base REF]
+                             branch up to --base (else the default branch) per
+                             git.update_strategy (exit 1 base unresolved, 3 behind
+                             under rebase, 4 strategy unreadable).
+                             Usage: git:convention show [--json] [--base REF] [--key K]
                                     git:convention subject [--format F|--family F]
                                     git:convention ticket [BRANCH] [--keys K]
                                     git:convention branch --slug S [--type T] [--ticket K]

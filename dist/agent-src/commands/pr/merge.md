@@ -139,14 +139,15 @@ says what happens to it instead.
 Check the PR out, read the strategy against its base, then let one script do
 the update, so the branch-convergence policy (the base SET a non-default target
 carries) is read on every path. `show` takes the same `--base` as `sync` and
-runs after the checkout: without them it resolves its target from whatever
-branch was checked out before, and the gate would judge a different target than
-the one the sync acts on.
+runs after the checkout: without `--base` both read the default branch, and a PR
+into any other base would be judged against the wrong commit. `--key
+update_strategy` limits `show`'s exit to the strategy, so a `commit_format` or
+`branch_pattern` the PR head breaks does not stop the update.
 
 ```bash
 git fetch origin
 gh pr checkout <N>
-agent-config git:convention show --base origin/<base>   # git.update_strategy: value, source, state
+agent-config git:convention show --key update_strategy --base origin/<base>   # value, source, state
 agent-config git:convention sync --base origin/<base>
 ```
 
@@ -157,9 +158,9 @@ resolved — so stop on this PR and report the line `show` printed. A
 candidate in such a state (this checkout's uncommitted value) is a warning
 `show` prints with exit `0`; the script never reads it, so it does not stop
 the PR.
-The one narrowing is offline: a target that cannot be resolved while origin is
-unreachable, with no developer layer declaring anything but `merge`, is the
-`unverified` warning below (exit `0`, nothing merged). Otherwise
+The one narrowing: a base the server names whose commit could not be fetched is
+the `unverified` warning below (exit `0`, nothing merged); origin unreachable at
+the ref lookup is exit `1`. Otherwise
 the strategy decides what the script does — under `merge` it merges the base
 set in, under `rebase` it only checks, because a
 `Merge branch '<base>' into …` commit is what that setting excludes and the
@@ -169,12 +170,12 @@ Read its exit and its line together:
 
 - exit `0` with a `✅` line → the PR is current with its base, or under `merge`
   the base was merged in cleanly; go on to § 3.
-- exit `0` with a `⚠️` line reading `unverified` (origin could not be fetched)
+- exit `0` with a `⚠️` line reading `unverified` (the base commit or origin could not be fetched)
   or `BYPASSED` (the convergence policy is disabled at the target) → **not
   checked**: nothing is known about freshness. Stop on this PR and report the
   line; it is never read as current.
 - exit `1` → a conflict report goes to § 3; a base that could not be resolved
-  (no PR base, no default branch, a `--base` the server does not know) stops
+  (a `--base` the server does not know, no origin, origin unreachable) stops
   this PR.
 - exit `3` → behind under a strategy other than `merge`. This run never
   rebases a PR it did not author — the rebase is the author's, or a separate

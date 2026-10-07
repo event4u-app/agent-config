@@ -4,17 +4,17 @@ Detail for [`git-workflow`](../SKILL.md) § Live remote state and § Before
 opening a PR. The one place that
 decides how a feature branch takes in its base — `/create-pr` § 1b, `/pr:merge`
 § 2, `/prepare-for-review` and `/review:changes` defer here. Read
-`git.update_strategy` from `agent-config git:convention show`, which exits 1
+`git.update_strategy` from `agent-config git:convention show --key update_strategy --base origin/<base>`, which exits 1
 when the value in force is `malformed`, `invalid`, `discarded` or
 `unresolvable` — none of these is a strategy: stop and report the line it
 prints, never fall back to `merge`. A candidate in one of these states is
 printed as a warning with exit 0: the update reads only the value in force.
 A team declares the strategy in `.git-convention.yml` at the repository root
 (ADR-283), and it is read at the commit the branch is judged against — the
-pull request's base — so a value changed on this branch is a candidate `show`
-prints and applies only once it lands there; `unresolvable` means that commit
-could not be read, or a GitHub remote's forge could not be asked for the pull
-request's base (pass `--base origin/<base>` when the base is known):
+`--base` given, the pull request's base — so a value changed on this branch is
+a candidate `show` prints and applies only once it lands there; `unresolvable`
+means that commit could not be read. Without `--base` the target is the default
+branch, right only for a branch that targets it; nothing asks the forge:
 
 | `git.update_strategy` | Operation | Asked first? |
 |---|---|---|
@@ -61,8 +61,9 @@ request's base (pass `--base origin/<base>` when the base is known):
   also behind the target gets the ordinary behind line first.
 - **`sync_pr_branch` exits** — `0` with a `✅` line: current, or under `merge`
   merged cleanly; `0` with a `⚠️` `unverified` or `BYPASSED` line: **not
-  checked** (origin not fetched, or the convergence policy disabled), never
-  read as current; `3`: behind under a strategy other than `merge`, refused and
+  checked** (the base commit or origin not fetched, or the convergence policy
+  disabled), never read as current; `1`: a conflict, or the base could not be
+  resolved; `3`: behind under a strategy other than `merge`, refused and
   never merged; `4`: the strategy itself cannot be read — the line names the
   reason code and the file, and nothing was checked. A current branch passes
   with exit 0, so automated pre-push syncs stay green when there is nothing to do.
