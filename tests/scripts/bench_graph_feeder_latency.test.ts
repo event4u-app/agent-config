@@ -5,7 +5,18 @@ import * as path from 'node:path';
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { bench, benchRepo, distribution, makeFixture, ORDERS, parseArgs, percentile } from '../../src/scripts/bench_graph_feeder_latency.js';
+import {
+    bench,
+    benchLoadSplit,
+    benchRepo,
+    distribution,
+    makeFixture,
+    ORDERS,
+    parseArgs,
+    percentile,
+} from '../../src/scripts/bench_graph_feeder_latency.js';
+import { NATIVE_CACHE_REL } from '../../src/scripts/code_graph/detect.js';
+import { sqliteTwinPath } from '../../src/scripts/code_graph/sqlite_store.js';
 
 describe('bench_graph_feeder_latency — step 3.5 of road-to-a-graph-that-feeds-the-gate', () => {
     it('takes nearest-rank percentiles, so p95 of twenty samples is the nineteenth', () => {
@@ -78,7 +89,32 @@ describe('bench_graph_feeder_latency — step 3.5 of road-to-a-graph-that-feeds-
         }
     }, 120_000);
 
+    it('decomposes the load term over a copy, leaving the measured repository without a twin', async () => {
+        const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'feeder-split-')));
+        try {
+            const dir = await makeFixture(root, 2, true);
+            const graph = path.join(dir, NATIVE_CACHE_REL);
+            const twin = sqliteTwinPath(graph);
+            fs.rmSync(twin, { force: true });
+            const r = benchLoadSplit({ graph, runs: 2 });
+            // `--repo` re-emits this file through `loadGraph`; the split must not.
+            expect(fs.existsSync(twin)).toBe(false);
+            for (const d of Object.values(r.stages)) expect(d.n).toBe(2);
+            expect(r.loadGraph.n).toBe(2);
+            // A small graph with unique ids gets its twin, so the attempt is not a
+            // silent failure here; a real index that fails reads 0 instead.
+            expect(r.twinWritten).toBe(2);
+            expect(r.nodes).toBeGreaterThan(0);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    }, 120_000);
+
     it('refuses flag combinations it would otherwise silently misread', () => {
+        expect(parseArgs(['--load-split', 'g.json'])).not.toBeNull();
+        expect(parseArgs(['--load-split', 'g.json', '--repo', '.', '--edit', 'src/a.ts'])).toBeNull();
+        expect(parseArgs(['--load-split', 'g.json', '--files', '9'])).toBeNull();
+        expect(parseArgs(['--load-split'])).toBeNull();
         expect(parseArgs(['--repo', '.', '--edit', 'src/a.ts'])).not.toBeNull();
         expect(parseArgs(['--repo', '.', '--edit', 'src/a.ts', '--files', '9'])).toBeNull();
         expect(parseArgs(['--repo', '--edit', 'src/a.ts'])).toBeNull();

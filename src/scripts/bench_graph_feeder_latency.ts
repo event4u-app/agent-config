@@ -39,7 +39,10 @@
  * was taken with. Not a gate: it prints and exits 0 on any completed run.
  *
  * `--repo P --edit F` takes the third reading only, over an EXISTING repository
- * and its own graph — read-only, no hook call, no row written. A generated tree
+ * and its own graph: no hook call and no feeder row written, but NOT read-only.
+ * `loadGraph` re-emits the repository's SQLite twin
+ * (`agents/runtime/state/code-graph-v1.sqlite3`) whenever no valid one exists,
+ * and the unbilled warm-up round absorbs that write. A generated tree
  * prices the walk; it does not price opening a real index, whose load time grows
  * with the graph and is the larger term on a repository of any size.
  *
@@ -47,6 +50,10 @@
  *   ./scripts-run src/scripts/bench_graph_feeder_latency [--runs N] [--files N]
  *     [--format text|json]
  *   ./scripts-run src/scripts/bench_graph_feeder_latency --repo P --edit F [--runs N]
+ *   ./scripts-run src/scripts/bench_graph_feeder_latency --load-split GRAPH_JSON [--runs N]
+ *
+ * `--load-split` decomposes the load term `--repo` reports (`benchLoadSplit`)
+ * over a scratch copy of the graph file, so it writes nothing to the repository.
  */
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -57,8 +64,13 @@ import { pathToFileURL } from 'node:url';
 
 import { gitEnv } from './_lib/git_env.js';
 import { graphUntestedVerdict } from './_lib/graph_feeder_record.js';
+import { LexicalIndex } from './_lib/lexical_index.js';
 import { buildFromRepo } from './code_graph/build.js';
 import { graphState, NATIVE_CACHE_REL } from './code_graph/detect.js';
+import { loadGraph } from './code_graph/query.js';
+import { emitSqliteTwin, sqliteTwinPath } from './code_graph/sqlite_store.js';
+import type { CodeEdge, CodeGraph } from './code_graph/types.js';
+import { validateGraph } from './code_graph/validate.js';
 import { clearHookStdinOverride, setHookStdinOverride } from './hooks/hook_stdin.js';
 import { main as turnEndGateMain } from './hooks/turn_end_gate_hook.js';
 
@@ -307,7 +319,14 @@ export interface RepoReport {
     feederOnly: Distribution;
 }
 
-/** The feeder's work alone over an existing repository's graph. Writes nothing. */
+/**
+ * The feeder's work alone over an existing repository's graph. Writes no feeder
+ * row and calls no hook, but it is NOT read-only: `graphUntestedVerdict` ->
+ * `loadGraph` re-emits `agents/runtime/state/code-graph-v1.sqlite3` into the
+ * measured repository whenever no valid twin exists, and the unbilled warm-up
+ * round absorbs that write, so billed rounds price whatever path the twin left
+ * (twin-backed when the emit succeeded, the JSON path when it failed).
+ */
 export function benchRepo(opts: { repo: string; edit: string; runs?: number | undefined }): RepoReport {
     const runs = Math.max(1, opts.runs ?? 30);
     const repo = path.resolve(opts.repo);
@@ -326,6 +345,134 @@ export function benchRepo(opts: { repo: string; edit: string; runs?: number | un
         }
     }
     return { runs, repo: path.basename(repo), edit: opts.edit, graphState: state, verdicts, feederOnly: distribution(samples) };
+}
+
+export interface LoadSplitReport {
+    runs: number;
+    graph: string;
+    bytes: number;
+    nodes: number;
+    edges: number;
+    /** `loadGraph`'s JSON path, stage by stage, each a distribution over the billed rounds. */
+    stages: { read: Distribution; parse: Distribution; validate: Distribution; twinEmit: Distribution; maps: Distribution; lexical: Distribution };
+    /** Billed rounds in which `emitSqliteTwin` returned true; 0 means every stop pays the attempt again. */
+    twinWritten: number;
+    /** The whole `loadGraph` over the same copy with its twin removed first: the term the stages decompose. */
+    loadGraph: Distribution;
+}
+
+/**
+ * Decompose `loadGraph`'s JSON path (`code_graph/query.ts`) over a COPY of a
+ * graph cache, so the measured repository is never written. Each round removes
+ * the copy's twin first, then times the stages `loadGraph` runs when no valid
+ * twin exists: read, `JSON.parse`, `validateGraph`, `emitSqliteTwin`, and the
+ * node and edge maps, and the lexical index. The stages re-implement that sequence
+ * rather than instrument it, so the whole `loadGraph` is timed in the same round
+ * as the check that the split accounts for the term it names. Foreign-graph
+ * adaptation is not timed: a native cache never takes it.
+ */
+export function benchLoadSplit(opts: { graph: string; runs?: number | undefined }): LoadSplitReport {
+    const runs = Math.max(1, opts.runs ?? 5);
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'feeder-load-split-'));
+    const copy = path.join(root, 'code-graph-v1.json');
+    fs.copyFileSync(opts.graph, copy);
+    const twin = sqliteTwinPath(copy);
+    const read: number[] = [];
+    const parse: number[] = [];
+    const validate: number[] = [];
+    const twinEmit: number[] = [];
+    const maps: number[] = [];
+    const lexical: number[] = [];
+    const whole: number[] = [];
+    let twinWritten = 0;
+    let nodes = 0;
+    let edges = 0;
+    const push = (m: Map<string, CodeEdge[]>, k: string, e: CodeEdge): void => {
+        const arr = m.get(k);
+        if (arr) arr.push(e);
+        else m.set(k, [e]);
+    };
+    try {
+        for (let i = 0; i <= runs; i++) {
+            fs.rmSync(twin, { force: true });
+            const t0 = performance.now();
+            const raw = fs.readFileSync(copy, 'utf-8');
+            const t1 = performance.now();
+            const parsed = JSON.parse(raw) as unknown;
+            const t2 = performance.now();
+            const v = validateGraph(parsed);
+            if (!v.ok) throw new Error(`invalid graph at ${opts.graph}: ${v.errors.slice(0, 3).join('; ')}`);
+            const graph = parsed as CodeGraph;
+            const t3 = performance.now();
+            const wrote = emitSqliteTwin(graph, raw, copy);
+            const t4 = performance.now();
+            const byId = new Map(graph.nodes.map((n) => [n.id, n]));
+            const outM = new Map<string, CodeEdge[]>();
+            const inM = new Map<string, CodeEdge[]>();
+            for (const e of graph.edges) {
+                push(outM, e.source, e);
+                push(inM, e.target, e);
+            }
+            const t45 = performance.now();
+            new LexicalIndex(graph.nodes.map((n) => ({ id: n.id, text: `${n.label} ${n.id}` })));
+            const t5 = performance.now();
+            fs.rmSync(twin, { force: true });
+            const t6 = performance.now();
+            loadGraph(copy).close();
+            const t7 = performance.now();
+            void byId;
+            nodes = graph.nodes.length;
+            edges = graph.edges.length;
+            // Round zero is the warm-up and is not billed.
+            if (i === 0) continue;
+            read.push(t1 - t0);
+            parse.push(t2 - t1);
+            validate.push(t3 - t2);
+            twinEmit.push(t4 - t3);
+            maps.push(t45 - t4);
+            lexical.push(t5 - t45);
+            whole.push(t7 - t6);
+            if (wrote) twinWritten++;
+        }
+    } finally {
+        fs.rmSync(root, { recursive: true, force: true });
+    }
+    return {
+        runs,
+        graph: path.basename(opts.graph),
+        bytes: fs.statSync(opts.graph).size,
+        nodes,
+        edges,
+        stages: {
+            read: distribution(read),
+            parse: distribution(parse),
+            validate: distribution(validate),
+            twinEmit: distribution(twinEmit),
+            maps: distribution(maps),
+            lexical: distribution(lexical),
+        },
+        twinWritten,
+        loadGraph: distribution(whole),
+    };
+}
+
+function renderLoadSplit(r: LoadSplitReport): string {
+    const row = (name: string, d: Distribution): string => `| ${name} | ${d.n} | ${d.p50} | ${d.p95} | ${d.max} |`;
+    return [
+        `loadGraph JSON path over a copy of ${r.graph}: ${r.bytes} bytes, ${r.nodes} nodes, ${r.edges} edges, ${r.runs} billed rounds`,
+        '',
+        '| stage | n | p50 ms | p95 ms | max ms |',
+        '|---|---|---|---|---|',
+        row('read file', r.stages.read),
+        row('JSON.parse', r.stages.parse),
+        row('validateGraph', r.stages.validate),
+        row('emitSqliteTwin', r.stages.twinEmit),
+        row('node + edge maps', r.stages.maps),
+        row('lexical index', r.stages.lexical),
+        row('whole loadGraph', r.loadGraph),
+        '',
+        `twin written in ${r.twinWritten} of ${r.runs} rounds`,
+    ].join('\n');
 }
 
 function renderRepo(r: RepoReport): string {
@@ -363,6 +510,7 @@ export interface Args {
     files?: number;
     repo?: string;
     edit?: string;
+    loadSplit?: string;
     format: 'text' | 'json';
 }
 
@@ -381,6 +529,9 @@ export function parseArgs(argv: readonly string[]): Args | null {
             if (a === '--repo') out.repo = v;
             else out.edit = v;
             i++;
+        } else if (a === '--load-split' && v !== undefined && v !== '' && !v.startsWith('--')) {
+            out.loadSplit = v;
+            i++;
         } else if (a === '--format' && (v === 'text' || v === 'json')) {
             out.format = v;
             i++;
@@ -392,6 +543,8 @@ export function parseArgs(argv: readonly string[]): Args | null {
     if ((out.repo === undefined) !== (out.edit === undefined)) return null;
     // `--files` sizes the generated fixture, which `--repo` mode never builds.
     if (out.repo !== undefined && out.files !== undefined) return null;
+    // `--load-split` reads one graph file; it neither builds a fixture nor prices an edit.
+    if (out.loadSplit !== undefined && (out.repo !== undefined || out.files !== undefined)) return null;
     return out;
 }
 
@@ -400,9 +553,15 @@ async function cli(): Promise<number> {
     if (args === null) {
         process.stderr.write(
             'usage: bench_graph_feeder_latency [--runs N] [--files N] [--format text|json]\n' +
-                '       bench_graph_feeder_latency --repo P --edit F [--runs N] [--format text|json]\n',
+                '       bench_graph_feeder_latency --repo P --edit F [--runs N] [--format text|json]\n' +
+                '       bench_graph_feeder_latency --load-split GRAPH_JSON [--runs N] [--format text|json]\n',
         );
         return 2;
+    }
+    if (args.loadSplit !== undefined) {
+        const r = benchLoadSplit({ graph: args.loadSplit, runs: args.runs });
+        process.stdout.write(args.format === 'json' ? `${JSON.stringify(r, null, 2)}\n` : `${renderLoadSplit(r)}\n`);
+        return 0;
     }
     if (args.repo !== undefined && args.edit !== undefined) {
         const r = benchRepo({ repo: args.repo, edit: args.edit, runs: args.runs });
