@@ -93,8 +93,10 @@ describe("pre-push — base freshness", () => {
     expect(body).toMatch(/^[^#\n]*check_branch_freshness/m);
   });
 
+  const BEHIND_LINE = "    task push-ready BASE=main   # integrate, regenerate, verify, re-check";
+
   it("refuses the push when the branch is verified behind its base", () => {
-    const out = run(1);
+    const out = run(1, {}, BEHIND_LINE);
     expect(out).toContain(FRESHNESS);
     expect(out).toContain(BLOCKED);
     expect(out).toContain("task push-ready");
@@ -106,8 +108,23 @@ describe("pre-push — base freshness", () => {
     expect(out).not.toContain("BASE=<base>");
   });
 
-  it("names the fix and never performs it — this hook refuses, it never merges", () => {
+  it("reports a base the remote does not have as that, not as staleness", () => {
+    const out = run(1, {}, "❌  check_branch_freshness: base `mian` does not exist on origin — base given on the command line.");
+    expect(out).toContain("Push blocked");
+    expect(out).toContain("origin/mian does not exist on the remote");
+    expect(out).not.toContain(BLOCKED);
+    expect(out).not.toContain("BASE=<base>");
+  });
+
+  it("never claims staleness when the gate gave no verdict line", () => {
     const out = run(1);
+    expect(out).toContain("Push blocked");
+    expect(out).not.toContain(BLOCKED);
+    expect(out).not.toContain("BASE=<base>");
+  });
+
+  it("names the fix and never performs it — this hook refuses, it never merges", () => {
+    const out = run(1, {}, BEHIND_LINE);
     expect(out).toContain("it never merges");
     expect(out).not.toMatch(/git merge|git rebase/);
   });

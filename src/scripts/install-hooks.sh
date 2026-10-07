@@ -144,10 +144,12 @@ fail=0
 # no useful second finding to collect from a tree that is about to move.
 #
 # It never merges. `check_branch_freshness` asks the REMOTE (one `ls-remote`,
-# measured 4.5s) and returns 1 only on a VERIFIED behind state; offline, in CI,
-# on a detached HEAD, or standing on the base itself it returns 0 and says so.
-# So an unreachable network cannot block a push, and a stale local tracking ref
-# cannot fake a green.
+# measured 4.5s) and returns 1 on a VERIFIED behind state, or when the remote
+# answered without the base at all (a misspelled or deleted base); offline, in
+# CI, on a detached HEAD, or standing on the base itself it returns 0 and says
+# so. So an unreachable network cannot block a push, and a stale local tracking
+# ref cannot fake a green. The refusal below names which of the two it was, read
+# from the gate's own lines, so a typo is never reported as staleness.
 echo "🔍 Base freshness — is this branch behind the base it will merge into?"
 if [ "${AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS:-}" = "1" ]; then
     echo "⏭️  skipped via AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1"
@@ -161,14 +163,23 @@ fi
 if [ "${fresh_rc:-0}" -ne 0 ]; then
     # The gate prints the base in the spelling `task push-ready` accepts.
     base=$(printf '%s\n' "$fresh_out" | sed -n 's/^ *task push-ready BASE=\([^ ]*\).*/\1/p' | head -n 1)
-    [ -n "$base" ] || base="<base>"
+    absent=$(printf '%s\n' "$fresh_out" | sed -n 's/.*base `\([^`]*\)` does not exist on \([^ ]*\) .*/\2\/\1/p' | head -n 1)
     echo ""
-    echo "   Push blocked — the branch is behind its base, and the gates you just"
-    echo "   passed were answered against a base that no longer exists."
-    echo ""
-    echo "     task push-ready BASE=$base         # fetch → integrate the base SET"
-    echo "                                         # → regenerate → verify → re-check"
-    echo "     task push-ready DRY=1 BASE=$base   # the same steps, read-only"
+    if [ -n "$base" ]; then
+        echo "   Push blocked — the branch is behind its base, and the gates you just"
+        echo "   passed were answered against a base that no longer exists."
+        echo ""
+        echo "     task push-ready BASE=$base         # fetch → integrate the base SET"
+        echo "                                         # → regenerate → verify → re-check"
+        echo "     task push-ready DRY=1 BASE=$base   # the same steps, read-only"
+    elif [ -n "$absent" ]; then
+        echo "   Push blocked — the base $absent does not exist on the remote: a"
+        echo "   misspelled or deleted base, not a stale branch. Name a branch the"
+        echo "   remote has (--base main and --base origin/main are the same branch)."
+    else
+        echo "   Push blocked — the freshness gate refused without a verdict line;"
+        echo "   its output is above."
+    fi
     echo ""
     echo "   This hook refuses; it never merges. Bypass a genuine WIP push with"
     echo "   AGENT_CONFIG_SKIP_PREPUSH_FRESHNESS=1."
