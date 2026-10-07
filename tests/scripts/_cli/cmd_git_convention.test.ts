@@ -49,7 +49,7 @@ function repo(settings: string | null): string {
 describe('git:convention show', () => {
     it('prints the three keys with value, source and state', () => {
         const dir = repo('git:\n  update_strategy: rebase\n');
-        const r = runGitConvention(['show'], dir);
+        const r = runGitConvention(['show', '--base', 'origin/main'], dir);
         expect(r.code).toBe(0);
         const text = r.out.join('\n');
         expect(text).toContain('git.update_strategy = rebase');
@@ -60,7 +60,7 @@ describe('git:convention show', () => {
 
     it('emits JSON with one entry per key', () => {
         const dir = repo('git:\n  commit_format: ticket-scope\n');
-        const r = runGitConvention(['show', '--json'], dir);
+        const r = runGitConvention(['show', '--json', '--base', 'origin/main'], dir);
         expect(r.code).toBe(0);
         const parsed = JSON.parse(r.out.join('\n')) as {
             ok: boolean;
@@ -75,7 +75,7 @@ describe('git:convention show', () => {
 
     it('exits non-zero on a malformed file and never prints merge for it', () => {
         const dir = repo('git:\n  update_strategy: rebase\nx: [\n');
-        const r = runGitConvention(['show'], dir);
+        const r = runGitConvention(['show', '--base', 'origin/main'], dir);
         expect(r.code).toBe(1);
         const text = r.out.join('\n');
         expect(text).toContain('git-convention-malformed');
@@ -84,8 +84,8 @@ describe('git:convention show', () => {
 
     it('exits non-zero on an invalid value, in JSON too', () => {
         const dir = repo('git:\n  update_strategy: rebsae\n');
-        expect(runGitConvention(['show'], dir).code).toBe(1);
-        const r = runGitConvention(['show', '--json'], dir);
+        expect(runGitConvention(['show', '--base', 'origin/main'], dir).code).toBe(1);
+        const r = runGitConvention(['show', '--json', '--base', 'origin/main'], dir);
         expect(r.code).toBe(1);
         expect(JSON.parse(r.out.join('\n')).keys.update_strategy.state).toBe('invalid');
     });
@@ -96,7 +96,7 @@ describe('git:convention show', () => {
         fs.writeFileSync(path.join(dir, '.git', 'hooks', 'commit-msg'), '#!/bin/sh\n', { mode: 0o755 });
         expect(commitMessageValidator(dir)).toMatchObject({ kind: 'commit-msg hook' });
         expect(commitMessageValidators(dir).map((v) => v.kind)).toEqual(['commit-msg hook', 'commitlint config']);
-        const text = runGitConvention(['show'], dir).out.join('\n');
+        const text = runGitConvention(['show', '--base', 'origin/main'], dir).out.join('\n');
         expect(text).toContain(`commitlint config at ${path.join(dir, 'commitlint.config.js')} — also runs at commit time and may be stricter`);
         expect(text).toContain('commit-msg hook at');
         expect(text).not.toContain('outranks');
@@ -181,7 +181,7 @@ describe('git:convention show exits non-zero on every state sync refuses', () =>
         fs.mkdirSync(path.join(home, 'settings'), { recursive: true });
         fs.writeFileSync(path.join(home, 'settings', '.agent-settings.yml'), 'git:\n  update_strategy: rebase\n');
         const dir = repo(null);
-        const r = runGitConvention(['show', '--json'], dir);
+        const r = runGitConvention(['show', '--json', '--base', 'origin/main'], dir);
         expect(JSON.parse(r.out.join('\n')).keys.update_strategy.state).toBe('discarded');
         expect(r.code).toBe(1);
     });
@@ -197,12 +197,12 @@ describe('git:convention show exits non-zero on every state sync refuses', () =>
     it('a candidate in a refusal state is a warning, exit 0, while the value in force is readable', () => {
         const dir = repo('git:\n  update_strategy: rebase\n');
         fs.writeFileSync(path.join(dir, '.git-convention.yml'), 'git:\n  update_strategy: merge\nx: [\n');
-        const r = runGitConvention(['show'], dir);
+        const r = runGitConvention(['show', '--base', 'origin/main'], dir);
         expect(r.code).toBe(0);
         const text = r.out.join('\n');
         expect(text).toContain('git.update_strategy = rebase');
         expect(text).toMatch(/candidate only, not in force: git-convention-malformed/);
-        const j = runGitConvention(['show', '--json'], dir);
+        const j = runGitConvention(['show', '--json', '--base', 'origin/main'], dir);
         expect(j.code).toBe(0);
         const parsed = JSON.parse(j.out.join('\n')) as { ok: boolean; keys: Record<string, { candidate: { state: string } | null }> };
         expect(parsed.ok).toBe(true);

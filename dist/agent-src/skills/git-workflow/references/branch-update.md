@@ -13,7 +13,8 @@ A team declares the strategy in `.git-convention.yml` at the repository root
 (ADR-283), and it is read at the commit the branch is judged against — the
 pull request's base — so a value changed on this branch is a candidate `show`
 prints and applies only once it lands there; `unresolvable` means that commit
-could not be read:
+could not be read, or the forge could not be asked for the pull request's base
+(pass `--base origin/<base>` when the base is known):
 
 | `git.update_strategy` | Operation | Asked first? |
 |---|---|---|

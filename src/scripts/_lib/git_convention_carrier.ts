@@ -18,7 +18,8 @@
  * developer layer including the gitignored local one (the owner's D8), and a
  * carrier that does not set a key leaves it to the developer layers read at
  * the repository root, never per subdirectory. A target commit that cannot be
- * resolved is `unresolvable`, never the default.
+ * resolved is `unresolvable`, never the default — and a forge that could not be
+ * asked for the open pull request's base is that case, not "no pull request".
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -55,25 +56,32 @@ export interface GitRunResult {
     out: string;
     err: string;
     timedOut: boolean;
+    /** The command itself is not installed. */
+    missing?: boolean;
 }
 
 export type GitRunner = (cmd: string, args: readonly string[], cwd: string, timeoutMs: number) => GitRunResult;
 
 export const runGit: GitRunner = (cmd, args, cwd, timeoutMs) => {
     const r = spawnSync(cmd, [...args], { cwd, encoding: 'utf-8', timeout: timeoutMs, maxBuffer: 32 * 1024 * 1024 });
-    const timedOut = (r.error as NodeJS.ErrnoException | undefined)?.code === 'ETIMEDOUT';
-    return { ok: r.status === 0, out: r.stdout ?? '', err: (r.stderr ?? '').trim(), timedOut };
+    const code = (r.error as NodeJS.ErrnoException | undefined)?.code;
+    return { ok: r.status === 0, out: r.stdout ?? '', err: (r.stderr ?? '').trim(), timedOut: code === 'ETIMEDOUT', missing: code === 'ENOENT' };
 };
 
 function sh(cmd: string, args: readonly string[], cwd: string): { ok: boolean; out: string; err: string } {
     return runGit(cmd, args, cwd, NETWORK_TIMEOUT_MS);
 }
 
+/** The forge could not be asked; `unknown` says why. Not the same answer as "no open PR". */
+export interface PrBaseUnknown {
+    readonly unknown: string;
+}
+
 /** The git questions target resolution asks, injected so no network is needed in tests. */
 export interface TargetDeps {
     readonly currentBranch: () => string;
-    /** The open PR's `baseRefName`, bare (`release/1.x`), or null. */
-    readonly prBase: (branch: string) => string | null;
+    /** The open PR's `baseRefName`, bare (`release/1.x`); null when the forge answered "none". */
+    readonly prBase: (branch: string) => string | PrBaseUnknown | null;
     /** The default branch as a remote-tracking ref (`origin/main`), or null. */
     readonly defaultBranch: () => string | null;
     /** The SHA the server reports for a ref right now, or null. */
@@ -87,14 +95,21 @@ export interface TargetRef {
     readonly reason: TargetReason;
 }
 
+/** The pull request's base could not be asked for, so the default branch is no answer either. */
+export interface TargetUnresolvable {
+    readonly unresolvable: string;
+}
+
 /**
  * The ref a branch is judged against: `--base`, else the open PR's base, else
  * the default branch. `defaultRef` is passed by a caller that already asked for
- * it; otherwise it is asked for only when the first two do not answer.
+ * it; otherwise it is asked for only when the forge answered that there is no
+ * open PR.
  */
-export function resolveTarget(deps: TargetDeps, override: string | null, defaultRef?: string | null): TargetRef | null {
+export function resolveTarget(deps: TargetDeps, override: string | null, defaultRef?: string | null): TargetRef | TargetUnresolvable | null {
     if (override !== null && override.trim() !== '') return { ref: override.trim(), reason: 'explicit-base-override' };
     const pr = deps.prBase(deps.currentBranch());
+    if (typeof pr === 'object' && pr !== null) return { unresolvable: `the open pull request's base could not be asked for (${pr.unknown})` };
     if (pr !== null) return { ref: `origin/${pr}`, reason: 'pull-request-target' };
     const def = defaultRef === undefined ? deps.defaultBranch() : defaultRef;
     return def === null ? null : { ref: def, reason: 'repository-default-branch' };
@@ -141,36 +156,52 @@ export function parseExactHeadSha(lsRemoteOut: string, branch: string): string |
     return null;
 }
 
-export function makeTargetDeps(repo: string): TargetDeps {
+/**
+ * `gh pr list` read as one of three answers, mirroring `check_branch_freshness`:
+ * a base, "no open PR" (null), or could-not-ask. A failed call is never "none" —
+ * read that way it sends a release-line PR to the default branch's carrier.
+ */
+export function parsePrBase(res: GitRunResult): string | PrBaseUnknown | null {
+    if (res.missing === true) return { unknown: 'the gh CLI is not installed' };
+    if (res.timedOut) return { unknown: `gh did not answer within ${NETWORK_TIMEOUT_MS / 1000} s` };
+    if (!res.ok) {
+        const first = res.err.split('\n')[0]?.trim() ?? '';
+        return { unknown: `gh could not answer — not authenticated, no GitHub remote, or the network failed${first === '' ? '' : `: ${first}`}` };
+    }
+    let rows: unknown;
+    try {
+        rows = JSON.parse(res.out || '[]');
+    } catch {
+        return { unknown: 'gh returned output that is not JSON' };
+    }
+    if (!Array.isArray(rows) || rows.length === 0) return null;
+    const b = (rows[0] as { baseRefName?: unknown }).baseRefName;
+    return typeof b === 'string' && b.trim() !== '' ? b.trim() : { unknown: 'gh answered without a baseRefName' };
+}
+
+export function makeTargetDeps(repo: string, run: GitRunner = runGit): TargetDeps {
+    const ask = (cmd: string, args: readonly string[]): GitRunResult => run(cmd, args, repo, NETWORK_TIMEOUT_MS);
     return {
-        currentBranch: (): string => sh('git', ['rev-parse', '--abbrev-ref', 'HEAD'], repo).out.trim(),
-        prBase: (branch: string): string | null => {
+        currentBranch: (): string => ask('git', ['rev-parse', '--abbrev-ref', 'HEAD']).out.trim(),
+        prBase: (branch: string): string | PrBaseUnknown | null => {
             if (branch === '' || branch === 'HEAD') return null;
             // The forge knows the REAL base, which matters for a stacked or
             // release-line PR: measuring against the repo default would compare
             // against a branch this PR never merges into.
-            const pr = sh('gh', ['pr', 'list', '--head', branch, '--state', 'open', '--json', 'baseRefName', '--limit', '1'], repo);
-            if (!pr.ok) return null;
-            try {
-                const rows = JSON.parse(pr.out || '[]') as Array<{ baseRefName?: string }>;
-                const b = rows[0]?.baseRefName;
-                return typeof b === 'string' && b !== '' ? b : null;
-            } catch {
-                return null;
-            }
+            return parsePrBase(ask('gh', ['pr', 'list', '--head', branch, '--state', 'open', '--json', 'baseRefName', '--limit', '1']));
         },
         // The server first, the local ref second: `refs/remotes/origin/HEAD` is
         // not set in every checkout (see `parseSymrefDefault`).
         defaultBranch: (): string | null => {
-            const remote = sh('git', ['ls-remote', '--symref', 'origin', 'HEAD'], repo);
+            const remote = ask('git', ['ls-remote', '--symref', 'origin', 'HEAD']);
             const fromServer = remote.ok ? parseSymrefDefault(remote.out) : null;
             if (fromServer !== null) return fromServer;
-            const head = sh('git', ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD'], repo);
+            const head = ask('git', ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']);
             return head.ok && head.out.trim() !== '' ? head.out.trim() : null;
         },
         remoteSha: (ref: string): string | null => {
             const bare = ref.replace(/^origin\//, '');
-            const out = sh('git', ['ls-remote', 'origin', `refs/heads/${bare}`], repo);
+            const out = ask('git', ['ls-remote', 'origin', `refs/heads/${bare}`]);
             return out.ok ? parseExactHeadSha(out.out, bare) : null;
         },
     };
@@ -183,15 +214,15 @@ export function makeTargetDeps(repo: string): TargetDeps {
  * against another when the pull request is retargeted in between.
  */
 export function memoTargetDeps<T extends TargetDeps>(deps: T): T {
-    const cache = new Map<string, string | null>();
-    const once = (key: string, ask: () => string | null): string | null => {
+    const cache = new Map<string, unknown>();
+    const once = <V>(key: string, ask: () => V): V => {
         if (!cache.has(key)) cache.set(key, ask());
-        return cache.get(key) as string | null;
+        return cache.get(key) as V;
     };
     return {
         ...deps,
-        currentBranch: (): string => once('branch', () => deps.currentBranch()) ?? '',
-        prBase: (branch: string): string | null => once(`pr ${branch}`, () => deps.prBase(branch)),
+        currentBranch: (): string => once('branch', () => deps.currentBranch()),
+        prBase: (branch: string): string | PrBaseUnknown | null => once(`pr ${branch}`, () => deps.prBase(branch)),
         defaultBranch: (): string | null => once('default', () => deps.defaultBranch()),
         remoteSha: (ref: string): string | null => once(`sha ${ref}`, () => deps.remoteSha(ref)),
     };
@@ -317,7 +348,13 @@ export function readCommittedConvention(cwd: string, options: CommittedOptions =
             continue;
         }
         const deps = options.deps ?? makeTargetDeps(root);
-        const ref = resolveTarget(deps, options.override ?? null);
+        const resolved = resolveTarget(deps, options.override ?? null);
+        if (resolved !== null && 'unresolvable' in resolved) {
+            readAt[key] = null;
+            readings[key] = conventionReading(key, 'unresolvable', null, CARRIER_PATH, `${resolved.unresolvable}, so the target commit is unknown`);
+            continue;
+        }
+        const ref = resolved;
         const sha = ref === null ? null : deps.remoteSha(ref.ref);
         target = ref === null ? null : { ...ref, sha };
         readAt[key] = sha;

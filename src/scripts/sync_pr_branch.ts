@@ -383,6 +383,14 @@ export class UnresolvableBase extends Error {
     }
 }
 
+/** The forge could not be asked for the PR's base; offline this is `unverified`, not a refusal. */
+export class UnaskedPullRequestBase extends UnresolvableBase {
+    constructor(detail: string) {
+        super(detail);
+        this.name = 'UnaskedPullRequestBase';
+    }
+}
+
 /**
  * The git questions base resolution asks, as data.
  *
@@ -425,9 +433,12 @@ function bareName(ref: string): string {
 export function resolveBase(repo: string, override: string | null, deps: BaseDeps = makeGitDeps(repo)): ResolveBaseResult {
     const defaultRef = deps.defaultBranch();
 
-    const target: BaseEntry | null = resolveTarget(deps, override, defaultRef);
+    const target = resolveTarget(deps, override, defaultRef);
     if (target === null) {
         throw new UnresolvableBase('no open PR and no origin/HEAD');
+    }
+    if ('unresolvable' in target) {
+        throw new UnaskedPullRequestBase(target.unresolvable);
     }
 
     // A PR targeting the default branch needs no entry — identity by ref name,
@@ -701,7 +712,20 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
     } catch (exc) {
         // A missing policy, an unresolvable target SHA and an unresolvable base
         // are all REFUSALS carrying their own typed message. None of them
-        // degrades to "check the default branch instead".
+        // degrades to "check the default branch instead". The one exception is
+        // a forge that could not be asked while origin is unreachable too: that
+        // is the offline case, which is `unverified`, never a pass.
+        const offline = exc instanceof UnaskedPullRequestBase ? sh('git', ['fetch', 'origin', '--prune'], repo) : null;
+        if (offline !== null && !offline.ok) {
+            return {
+                exit: 0,
+                message: `unverified — could not fetch origin (${offline.err.split('\n')[0] ?? '?'}), and ${exc instanceof Error ? exc.message.replace(/^unresolvable — /, '') : ''}. Base freshness NOT checked.`,
+                generated: [],
+                remeasured: [],
+                authored: [],
+                scanned: 0,
+            };
+        }
         return {
             exit: 1,
             message: `cannot resolve a base set to update against — ${exc instanceof Error ? exc.message : String(exc)}`,
@@ -846,7 +870,8 @@ export interface StrategyGate {
  * The one place that maps an unreadable `git.update_strategy` to an exit.
  *
  * A target that resolves to nothing — no pull request base, no default branch,
- * a `--base` the server does not know — is the base failure, exit 1. A target
+ * a `--base` the server does not know, a forge that could not be asked for the
+ * pull request's base — is the base failure, exit 1. A target
  * that resolves but whose carrier cannot be read, parsed or accepted is exit 4.
  * Offline the target's carrier is unread: with no developer value other than
  * `merge` that is the `unverified` warning (exit 0, nothing touched), while a
