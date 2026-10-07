@@ -63,8 +63,11 @@ decision disagreed; this record makes them agree.
    PR is mergeable, `classify_merge_risk` classifies the diff:
    - `routine` → squash-merge with `--match-head-commit <head>`. No review.
    - `needs-council` → the AI council reviews the diff with a neutral prompt and
-     answers (a) is it destructive or dangerous under our rules, and (b) is a
-     user review unnecessary. **Both seats: not dangerous, user review
+     answers (a) is it destructive or dangerous under our rules — read as the
+     six dangerous-action predicates of
+     `agents/evidence/council/authority-routing-20261007.md` § 4, where a council
+     may resolve doubt but cannot waive danger — and (b) is a user review
+     unnecessary. **Both seats: not dangerous, user review
      unnecessary → merge.** Dangerous, split, degraded quorum, or council
      unavailable → stop and hand to the owner with the reasons. Verdict and
      prompt are recorded as evidence.

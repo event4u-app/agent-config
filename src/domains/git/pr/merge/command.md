@@ -396,9 +396,12 @@ unreadable diff is `needs-council` — the gate fails closed.
 
 - **`routine`** → merge in § 9. No review step.
 - **`needs-council`** → the AI council reviews the diff with a **neutral**
-  prompt (scope, diff, the triggers, two questions: *is this destructive or
-  dangerous under our rules?* and *is an owner review unnecessary?* — never an
-  expected answer, per `evaluator-independence`). Record the prompt and both
+  prompt (scope, diff, the triggers, two questions: *does any of the six
+  dangerous-action predicates of the authority-routing council record
+  (`agents/evidence/council/authority-routing-20261007.md` § 4) apply?* and *is
+  an owner review unnecessary?* — never an expected answer, per
+  `evaluator-independence`). A council may resolve doubt but cannot waive
+  danger: a seat finding that a predicate applies is a "dangerous" seat. Record the prompt and both
   verdicts under `agents/evidence/`. **Both seats: not dangerous, owner review
   unnecessary → merge.** Dangerous, split, degraded quorum, or council
   unavailable → do not merge; record the PR `unauthorized` and hand it to the
