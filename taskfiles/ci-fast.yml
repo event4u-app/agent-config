@@ -781,6 +781,11 @@ tasks:
     desc: Audit recommended_for_user_types frontmatter vs user-types/*.yml stems (step-9 Phase 4)
     cmd: ./scripts-run src/scripts/audit_user_type_axis {{.QUIET_FLAG}}
 
+  regen-user-type-axis-report:
+    silent: true
+    desc: Regenerate agents/reports/user-type-axis-audit.md — the only caller that passes --write; the lint above reads and writes nothing
+    cmd: ./scripts-run src/scripts/audit_user_type_axis --write
+
   lint-skill-tools:
     silent: true
     desc: Block D · D1 — meta-lint src/scripts/skill_tools/*.ts (--json flag, snake_case_verb_noun naming, embedded _SAMPLE or CLI-entry guard); asserts its scan scope, so an emptied corpus fails instead of reporting clean
@@ -1032,8 +1037,8 @@ tasks:
 
   lint-workflow-security:
     silent: true
-    desc: "Warn-only audit of .github/workflows/* for high-risk patterns (pull_request_target untrusted checkout, write-all, install w/o --ignore-scripts, unpinned third-party actions) — road-to-security-hardening P2"
-    cmd: ./scripts-run src/scripts/lint_workflow_security {{.QUIET_FLAG}}
+    desc: "Audit of .github/workflows/* — a HIGH (pull_request_target/workflow_run untrusted checkout, write-all, install w/o --ignore-scripts inside a pull_request_target workflow) fails under --strict, as in CI; MEDIUM (mutable action pins, kept checkout credentials) stays advisory"
+    cmd: ./scripts-run src/scripts/lint_workflow_security --strict {{.QUIET_FLAG}}
 
   lint-missions:
     silent: true

@@ -48,6 +48,10 @@
  *   (external / absolute / out-of-tree targets ignored), the allow rule
  *   (same pack · always-installed · declared `requires`), the per-violation text and
  *   JSON shapes, the stdout/stderr split, and exit 0 clean / 1 violations.
+ * - **ADDED (2026-10-07):** a `scanned: <N>` line on every path (stdout in text
+ *   mode, stderr under `--format json` so the payload stays parseable), and
+ *   `--self-test`, which runs this CLI against planted fixture trees. Both are
+ *   what `src/config/gate-coverage.yml` asks of a gate a pull request runs.
  *
  * ## Where the `requires` graph is read from
  *
@@ -62,6 +66,7 @@
  */
 
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parse as parseYaml } from 'yaml';
@@ -74,7 +79,8 @@ import {
     iter_artefacts,
 } from './_lib/agent_src.js';
 import { checkRatchet } from './_lib/gate_baseline.js';
-import { DeadScopeError, assertScanned } from './_lib/scan_scope.js';
+import { runGateCli, runSelfTest } from './_lib/gate_self_test.js';
+import { DeadScopeError, reportScanned } from './_lib/scan_scope.js';
 import { parse_frontmatter } from './validate_frontmatter.js';
 
 const _HERE = path.resolve(fileURLToPath(import.meta.url));
@@ -116,6 +122,19 @@ function _set_paths_for_test(opts: { root?: string; vocab?: string }): void {
     if (opts.vocab !== undefined) {
         VOCAB = opts.vocab;
     }
+}
+
+// `--self-test` drives this CLI from a CHILD process, which cannot reach the
+// setter above, so the fixture root is also readable from the environment.
+// Applied through the setter rather than at the `ROOT` declaration, so a
+// fixture run is still recognised as overridden and never judged by the
+// repo's violation ratchet.
+// Honoured only inside a self-test child, so an inherited value can never
+// redirect the production gate or switch its ratchet off.
+const _ENV_ROOT =
+    process.env['GATE_SELF_TEST_CHILD'] === '1' ? process.env['LINT_PACK_BOUNDARIES_ROOT'] : undefined;
+if (_ENV_ROOT !== undefined && _ENV_ROOT !== '') {
+    _set_paths_for_test({ root: _realpath(path.resolve(_ENV_ROOT)) });
 }
 
 // [..](target) with an optional #fragment / ?query stripped from the target.
@@ -614,7 +633,7 @@ function parse_args(argv: readonly string[]): ParsedArgs {
             quiet = true;
         } else if (arg === '-h' || arg === '--help') {
             process.stdout.write(
-                'usage: lint_pack_boundaries [-h] [--format {text,json}] [--quiet]\n',
+                'usage: lint_pack_boundaries [-h] [--format {text,json}] [--quiet] [--self-test]\n',
             );
             process.exit(0);
         } else {
@@ -629,8 +648,129 @@ function _argparse_error(message: string): never {
     process.exit(2);
 }
 
+/**
+ * Plant fixture trees and run this gate's real CLI against each one.
+ *
+ * Three rejecting cases cover the three exits a pull request can be failed by:
+ * an undeclared cross-pack link, an artefact with no resolvable pack, and an
+ * empty corpus. The two accepting cases pin the allow rule from the other side,
+ * so a gate that started rejecting everything fails here too.
+ */
+function selfTest(): number {
+    const plant = (name: string, files: Record<string, string>): string => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), `lpb-selftest-${name}-`));
+        for (const [rel, body] of Object.entries(files)) {
+            const p = path.join(dir, rel);
+            fs.mkdirSync(path.dirname(p), { recursive: true });
+            fs.writeFileSync(p, body, 'utf-8');
+        }
+        return dir;
+    };
+    const skill = (slug: string, packs: string, body: string): [string, string] => [
+        `skills/${slug}/SKILL.md`,
+        `---\nname: ${slug}\npacks: [${packs}]\n---\n\n${body}\n`,
+    ];
+    const run = (dir: string): number => {
+        const prev = process.env['LINT_PACK_BOUNDARIES_ROOT'];
+        process.env['LINT_PACK_BOUNDARIES_ROOT'] = dir;
+        try {
+            return runGateCli(
+                _DEFAULT_ROOT,
+                path.join('src', 'scripts', 'lint_pack_boundaries.ts'),
+                ['--quiet'],
+                _DEFAULT_ROOT,
+            );
+        } finally {
+            if (prev === undefined) {
+                delete process.env['LINT_PACK_BOUNDARIES_ROOT'];
+            } else {
+                process.env['LINT_PACK_BOUNDARIES_ROOT'] = prev;
+            }
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
+    };
+    const twoPacks = '- id: alpha\n  requires: []\n- id: beta\n  requires: []\n';
+    // A reject case counts only on the exit it names: a crash or a dead-scope
+    // exit on a fixture that should yield a finding reads as NOT rejected.
+    const rejectsWith = (want: number, got: number): number => (got === want ? 1 : 0);
+
+    return runSelfTest({
+        gate: 'lint_pack_boundaries',
+        minCases: 5,
+        minRejectCases: 3,
+        cases: [
+            {
+                name: 'an undeclared cross-pack link is rejected with exit 1',
+                expect: 'reject',
+                run: () =>
+                    rejectsWith(1, run(
+                        plant('cross', {
+                            'packs.yml': twoPacks,
+                            ...Object.fromEntries([
+                                skill('a-one', 'alpha', 'reaches [b](../b-one/SKILL.md)'),
+                                skill('b-one', 'beta', 'leaf'),
+                            ]),
+                        }),
+                    )),
+            },
+            {
+                name: 'a SKILL.md with no packs is a finding (exit 1), never a silent pass',
+                expect: 'reject',
+                run: () =>
+                    rejectsWith(1, run(
+                        plant('nopack', {
+                            'packs.yml': twoPacks,
+                            'skills/nopack/SKILL.md': '---\nname: nopack\n---\n\nno packs key\n',
+                        }),
+                    )),
+            },
+            {
+                name: 'an empty corpus is a dead scope (exit 2), not "no cross-pack drift"',
+                expect: 'reject',
+                run: () => rejectsWith(2, run(plant('empty', { 'packs.yml': twoPacks }))),
+            },
+            {
+                name: 'a link declared through requires passes',
+                expect: 'accept',
+                run: () =>
+                    run(
+                        plant('declared', {
+                            'packs.yml': '- id: alpha\n  requires: [beta]\n- id: beta\n  requires: []\n',
+                            ...Object.fromEntries([
+                                skill('a-one', 'alpha', 'reaches [b](../b-one/SKILL.md)'),
+                                skill('b-one', 'beta', 'leaf'),
+                            ]),
+                        }),
+                    ),
+            },
+            {
+                name: 'a link inside one pack passes',
+                expect: 'accept',
+                run: () =>
+                    run(
+                        plant('same', {
+                            'packs.yml': twoPacks,
+                            ...Object.fromEntries([
+                                skill('a-one', 'alpha', 'reaches [two](../a-two/SKILL.md)'),
+                                skill('a-two', 'alpha', 'leaf'),
+                            ]),
+                        }),
+                    ),
+            },
+        ],
+    });
+}
+
 function main(argv?: readonly string[]): number {
-    const args = parse_args(argv ?? process.argv.slice(2));
+    const rawArgv = argv ?? process.argv.slice(2);
+    if (rawArgv.includes('--self-test')) {
+        if (process.env['GATE_SELF_TEST_CHILD'] === '1') {
+            process.stderr.write('lint_pack_boundaries: --self-test does not recurse\n');
+            return 2;
+        }
+        return selfTest();
+    }
+    const args = parse_args(rawArgv);
 
     const { index: artefact_pack, unassigned, scanned } = _build_artefact_index();
 
@@ -638,12 +778,17 @@ function main(argv?: readonly string[]): number {
     // clean. That was this gate's shipped state until 2026-08-02 — it walked
     // the deleted `packages/` tree and skipped green forever.
     try {
-        assertScanned({
-            gate: 'lint_pack_boundaries',
-            scanned,
-            units: 'artefact(s)',
-            roots: _scan_roots().map((r) => _relPosix(r, ROOT) || '.'),
-        });
+        reportScanned(
+            {
+                gate: 'lint_pack_boundaries',
+                scanned,
+                units: 'artefact(s)',
+                roots: _scan_roots().map((r) => _relPosix(r, ROOT) || '.'),
+            },
+            args.format === 'json'
+                ? process.stderr.write.bind(process.stderr)
+                : process.stdout.write.bind(process.stdout),
+        );
     } catch (exc) {
         if (!(exc instanceof DeadScopeError)) {
             throw exc;
