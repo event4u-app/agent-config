@@ -169,13 +169,7 @@ owner, because it reverses a recorded supersession.
       narrow residual today, and step 1.2's own instruction only asks for
       the name where a sibling roadmap owns the row. Inventing a roadmap
       per orphan finding is a separate, larger decision this task does not
-      make. The two named roadmaps are not equally "open": `road-to-
-      blocking-time-by-cause` is active, with a named gap the finding's
-      own rationale says still needs a ten-session window; `road-to-
-      release-evidence-that-reproduces` is archived with every step closed
-      — it dispositioned `2c9959f7262d` on its own narrower terms and will
-      not revisit it, so naming it an "owner" means "the finding was
-      already reasoned about there," not "there is open work tracking it." Corrected 2026-10-07 by an independent R2 completion review
+      make. Corrected 2026-10-07 by an independent R2 completion review
       (finding 2): the first-pass text named `bfe1d6e6d8ca` as the second
       roadmap-owning row, but that finding is `status: fixed` (commit
       `93a192bbd`), landed by a parallel lane after this roadmap's own
@@ -203,6 +197,7 @@ owner, because it reverses a recorded supersession.
 | D1 | reversible-technical | agent | `still_open` with a named roadmap is preferred over `accepted_risk` for unfinished work | The gate's own comment warns that `accepted_risk` is the cheapest way to make a count reach zero (`check_finding_dispositions.ts:91-99`) | — |
 | D2 | reversible-technical | agent | The offline flag ships before the default question is answered | Additive; it changes nothing for anyone who does not pass it | The owner chooses (a) and the flag becomes redundant |
 | D3 | reversible-technical | council:medium-security-is-blocking | `isBlocking`/`classifyBlocking` admit `security × medium`; `claim × medium` stays non-blocking | 2026-10-07, anthropic claude-sonnet-4-5 + openai codex-default, 2/2 convergent on (a). Both named the gate's existing `accepted_risk` terminal state as what keeps this a review gate rather than a remediation mandate; anthropic additionally asked that "medium" be defined in this project's severity taxonomy and that triage happen continuously rather than at release time — neither is this roadmap's to do, both are named here for the next reader | A later release ships a `security × medium` finding routinely left `still_open` for longer than one release cycle, suggesting the floor is being gamed rather than used |
+| D4 | reversible-technical | independent:r2-completion-review-round-4 | The two AC-2 roadmap-owning rows are not equally "open": `road-to-blocking-time-by-cause` is active, with a named gap the finding's own rationale says still needs a ten-session window; `road-to-release-evidence-that-reproduces` is archived with every step closed — it dispositioned `2c9959f7262d` on its own narrower terms and will not revisit it, so naming it an "owner" means "the finding was already reasoned about there," not "there is open work tracking it" | Round-4 R2 completion review finding 1 (`drain-findings-disposition-20261007-r4.findings.md`); `grep -n "^status:\|^- \[ \]\|^- \[x\]" agents/roadmaps/archive/road-to-release-evidence-that-reproduces.md` shows all 14 steps `[x]` | Either roadmap's open/closed state flips |
 
 ## Blockers
 
