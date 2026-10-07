@@ -274,7 +274,7 @@ At `df377ca64`:
 
 ## Phase 3 — The trunk's own checks
 
-- [ ] **3.1 Dated evidence leaves the two roadmaps for a page each.** In each
+- [x] **3.1 Dated evidence leaves the two roadmaps for a page each.** In each
       of the two files, move dated evidence paragraphs verbatim to one page
       under `agents/evidence/analysis/` — with its `evidence-type` marker —
       leaving one line with the date and the page name where each stood. That
@@ -295,9 +295,19 @@ At `df377ca64`:
       `road-to-neighbours-that-pull-their-weight.md` was deliberately left alone:
       its own D15 names an active drain lane possibly still editing it, and a
       concurrent-edit collision on a file this task has no context on is a cost
-      this step should not spend to close a trunk lint. `lint_roadmap_complexity`
-      therefore still exits 1 on that one file; AC-3 and AC-6 stay open for the
-      same reason.
+      this step should not spend to close a trunk lint.
+      **Done (2026-10-07).** `road-to-neighbours-that-pull-their-weight.md` was
+      archived the same day (`#2259`, `7dc88a61a`) and is no longer over cap
+      (its carried follow-up measures 468 lines, lightweight, clean). The lint's
+      live failure had moved to a third file by then —
+      `road-to-rule-triggers-and-links-that-hold.md` (609 lines) — which this
+      step's own precedent covers: no open PR or recent branch touches it, so
+      its step 1.2 done-note (the measurement and its two first-attempt
+      defects) was moved verbatim to
+      `agents/evidence/analysis/rule-triggers-and-links-evidence-2026-10.md`,
+      leaving a one-line pointer; no checkbox, decision, criterion, tag or
+      blocker field changed. `lint_roadmap_complexity` now exits 0 over all 19
+      active roadmaps (12 lightweight, 7 structural, 0 untagged).
 - [x] **3.2 The lint names the remedy.** When a `lightweight` roadmap exceeds
       the line cap, the message says that dated evidence belongs on an
       evidence page and that an agent may not retag; today it suggests
@@ -379,12 +389,12 @@ At `df377ca64`:
       leaves no field in the hook's state that names a loop.
 - [x] AC-2 — `analyze-session` on a project where the hook has run prints a
       tool-call count taken from the hook's file.
-- [ ] AC-3 — `./scripts-run src/scripts/lint_roadmap_complexity` exits 0 on the
+- [x] AC-3 — `./scripts-run src/scripts/lint_roadmap_complexity` exits 0 on the
       trunk with both roadmaps still tagged `lightweight`.
 - [x] AC-4 — `closure_scan` run on the thinned-layer roadmap at `df377ca64`
       lists its three name-filtered clauses whose test does not exist.
 - [x] AC-5 — The change adds no file under `src/scripts/`.
-- [ ] AC-6 — `task ci` passes its roadmap-complexity step.
+- [x] AC-6 — `task ci` passes its roadmap-complexity step.
 - [x] AC-7 — With a session id and one session in the checkout, a self-review
       in a second user turn is counted from zero.
 - [x] AC-8 — What a session start with source `compact` injects and moves is
