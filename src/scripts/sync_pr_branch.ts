@@ -33,7 +33,9 @@
  *
  * Exit codes: 0 = already current, or merged cleanly, or `unverified` (the
  * target resolved but its commit could not be fetched; nothing was touched) ·
- * 1 = conflict, or the base could not be resolved (no `--base` and no default
+ * 1 = conflict, git refusing the merge before it starts (a dirty tree, an
+ * untracked file in the way — git's own line is printed), or the base could
+ * not be resolved (no `--base` and no default
  * branch, a `--base` the server does not know, no origin, or origin unreachable
  * at the ref lookup) · 2 = internal error · 3 = behind, and
  * `git.update_strategy` is not `merge`, so the merge was refused (reason code
@@ -647,7 +649,12 @@ function mergePinned(repo: string, ref: string, sha: string | null): { ok: boole
     }
     const m = sh('git', ['merge', target, '--no-edit'], repo);
     if (!m.ok) {
-        return { ok: false, conflicted: sh('git', ['diff', '--name-only', '--diff-filter=U'], repo).out.split('\n') };
+        // A merge git refuses before it starts (local changes it would
+        // overwrite, an untracked file in the way) leaves no unmerged path.
+        const conflicted = sh('git', ['diff', '--name-only', '--diff-filter=U'], repo).out.split('\n').filter((p) => p.trim() !== '');
+        if (conflicted.length > 0) return { ok: false, conflicted };
+        const why = (m.err || m.out).trim().split('\n').join(' ');
+        return { ok: false, conflicted: [], error: `git refused to merge ${ref}: ${why || 'no reason given'} — nothing was merged for it.` };
     }
     if (sha !== null && !sh('git', ['merge-base', '--is-ancestor', sha, 'HEAD'], repo).ok) {
         return { ok: false, conflicted: [], error: `the merge of ${ref} left HEAD without its pinned commit ${sha.slice(0, 12)}.` };
