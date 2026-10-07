@@ -24,7 +24,11 @@
       "kind": "claim",
       "title": "'Carried by a gate that can refuse' over-credits rules whose obligation is model-carried",
       "detail": "The 16-rule 'gate' class is defined as 'a validator, hook or test blocks the forbidden outcome', but classification follows the presence of an enforced_by entry, not what it blocks. git-history-discipline is counted as gated, yet its own text says the guard only blocks --no-verify/hooksPath overrides, and only on claude. Unsolicited rebase, squash and amend are not blocked. language-and-tone (a markdown-language validator) and secret-vcs-guard (a CI scan, not the agent-side write gate) have the same problem. The 16/10/15/80 split therefore overstates mechanical coverage, and the report itself warns against exactly this inflation.",
-      "file": "agents/evidence/analysis/obligation-mechanism-audit-2026-10.md"
+      "file": "agents/evidence/analysis/obligation-mechanism-audit-2026-10.md",
+      "status": "fixed",
+      "commit": "93a192bbd",
+      "rationale": "Each non-kernel rule with a law section now declares stable obligation ids (src/config/rule-obligations.json) and an enforced_by entry binds only to the ids its gate actually refuses; check_enforcement_coverage prints the narrower obligation count beside the unchanged rule count. The three named rules are no longer counted whole: git-history-discipline is credited with 1 of 4 obligations (no-hook-bypass only — rebase/squash/amend/drop stay unbound), secret-vcs-guard with 1 of 4 (no-credential-in-tracked-file), and language-and-tone is a kernel rule reported at its own rule-granularity cohort rather than folded into the per-obligation count. The rule-level figure this finding quoted is unchanged by design (D3) and still prints first; the obligation figure beside it is the corrected reading.",
+      "verified_by": "road-to-enforcement-per-obligation Phase 3-4; agents/evidence/analysis/enforcement-per-obligation-2026-10.md; tests/scripts/check_enforcement_coverage_obligations.test.ts"
     },
     {
       "finding_id": "27ed7df17579",

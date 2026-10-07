@@ -74,7 +74,7 @@ council first.
       `obligation-granularity` to the council with the audit, the three worked
       rows above and the coverage summary. The verdict, the dissent and the
       prompt are recorded at the blocker, and its `Status` closes.
-      verify: `grep -A1 '^### blocker: obligation-granularity' agents/roadmaps/road-to-enforcement-per-obligation.md | grep -c 'resolved'` -> /^1$/
+      verify: `grep -A1 '^### blocker: obligation-granularity' agents/roadmaps/archive/road-to-enforcement-per-obligation.md | grep -c 'resolved'` -> /^1$/
 
 ## Phase 2 — Every extracted law has a stable id
 
@@ -91,37 +91,72 @@ council first.
 
 ## Phase 3 — `enforced_by` binds to an id, and coverage counts obligations
 
-- [ ] **3.1 An entry names what it carries.** An `enforced_by` entry may name
+- [x] **3.1 An entry names what it carries.** An `enforced_by` entry may name
       the law ids it refuses. `check_enforcement_coverage` credits only those
       ids; an entry with no ids keeps today's rule-level credit and is counted
       as unbound, so nothing in the tree changes class on the day this lands.
       verify: `npx vitest run tests/scripts/check_enforcement_coverage_obligations.test.ts` -> 0
-- [ ] **3.2 Obligations beside rules.** The report's summary prints obligation
+      done 2026-10-07 (landed with 2.1/2.2 in #2246; checkbox corrected by a
+      later drain lane that re-ran the verify and found it already green):
+      `obligation_credit` in `check_enforcement_coverage.ts` resolves each
+      entry's bound ids from `src/config/rule-obligations.json`'s `bindings`
+      map; an entry absent from `bindings` is reported `unbound` and keeps
+      rule-level credit (D3). 12/12 tests in the verify file pass.
+- [x] **3.2 Obligations beside rules.** The report's summary prints obligation
       counts per class next to the existing rule counts, and every existing
       rule-level field keeps its name and meaning. No new failing condition is
       added.
       verify: `npx vitest run tests/scripts/check_enforcement_coverage_obligations.test.ts` -> 0
+      done 2026-10-07 (same landing as 3.1): `summarise_obligations` feeds two
+      lines into the human report — `obligations: 18/294 bound … · 0 observer
+      · 276 not bound` and `obligation frame: 11 rule(s) still credited by an
+      unbound entry · 9 kernel rule(s) … · 0 rule(s) without ids` — printed
+      beside the unchanged rule-level `declared`/`undeclared` line. Exit code
+      of a bare run is unchanged (0); no `--check` ratchet reads the new
+      fields.
 
 ## Phase 4 — The sixteen, re-read
 
-- [ ] **4.1 Bind the gated rules per obligation.** For each of the sixteen rules
+- [x] **4.1 Bind the gated rules per obligation.** For each of the sixteen rules
       counted as gated, its `enforced_by` entries name the ids each one
       actually refuses, read from the gate's own code, not from the rule's
       prose.
       verify: `npx vitest run tests/scripts/check_enforcement_coverage_obligations.test.ts` -> 0
-- [ ] **4.2 Publish the delta.** A page lists, per rule, obligations gated
+      done 2026-10-07 (same landing as 3.1): 15 non-kernel rules of the
+      sixteen carry a `bindings` entry in `src/config/rule-obligations.json`
+      (`language-and-tone` is the sixteenth, kernel, reported at rule
+      granularity per D1's refinement); each binding was read from the
+      gate's own refusal code, not restated from the rule's prose — e.g.
+      `git-history-discipline` binds `hook:block-no-verify` to
+      `no-hook-bypass` only, leaving rebase/squash/amend/drop unbound.
+- [x] **4.2 Publish the delta.** A page lists, per rule, obligations gated
       before and after, with the command that reproduces it, at
       `agents/evidence/analysis/enforcement-per-obligation-2026-10.md`, carrying
       `<!-- evidence-type: analysis -->`. Finding `bfe1d6e6d8ca` gets its
       `status` and `rationale` in `16.3.0.json` pointing at that page.
       verify: `grep -c 'road-to-enforcement-per-obligation' agents/evidence/release-findings/16.3.0.json` -> /^[1-9]/
+      done 2026-10-07: the page was published by #2246 with its
+      `evidence-type` marker, the per-rule before/after table and the
+      reproducing commands. What #2246 did not finish: `bfe1d6e6d8ca` in
+      `16.3.0.json` carried no `status`. Closed here — `status: "fixed"`,
+      `commit: "93a192bbd"` (the landing commit), and a `rationale` naming
+      the three rules the finding cited by name and their corrected counts;
+      `verified_by` names this roadmap, the evidence page and the test file,
+      which also satisfies the verify's literal-slug grep. JSON re-validated
+      and `check_finding_dispositions --release 16.3.0` still reports
+      `blocking 0/0 dispositioned`.
 
 ## Phase 5 — Observer candidates, named
 
-- [ ] **5.1 A list, no wiring.** The 4.2 page gains a section naming each
+- [x] **5.1 A list, no wiring.** The 4.2 page gains a section naming each
       obligation in the observer set that an existing backstop could refuse,
       with the backstop's path and the slot it would bind to. Nothing is wired.
       verify: `grep -c -i 'observer candidates' agents/evidence/analysis/enforcement-per-obligation-2026-10.md` -> /^[1-9]/
+      done 2026-10-07 (landed with 4.2 in #2246): the page's `## Observer
+      candidates` section names six obligations with their existing backstop,
+      the slot an `enforced_by` entry would use, and why each is not wired
+      today. Nothing in `src/scripts/hook_manifest.yaml` or any rule's
+      frontmatter changed.
 
 ## What this roadmap deliberately does not do
 
@@ -135,14 +170,26 @@ council first.
 
 - [x] AC-1 — The council's verdict on `obligation-granularity` is recorded at
       the blocker with its prompt.
-- [ ] AC-2 — If option (a) is chosen: every non-kernel rule with a law section
+- [x] AC-2 — If option (a) is chosen: every non-kernel rule with a law section
       has stable obligation ids, and `check_enforcement_coverage` reports
       obligation counts per class beside rule counts with an unchanged exit
       code. If option (b) is chosen: the audit and the coverage report mark
       partial credit per rule, and Phases 2–3 are re-deferred with that reason.
-- [ ] AC-3 — A published page states, for each of the sixteen gated rules,
+      Option (a) was chosen. 112 non-kernel rules carry 294 ids in
+      `src/config/rule-obligations.json`; a bare `check_enforcement_coverage`
+      run prints `obligations: 18/294 bound … · 0 observer · 276 not bound`
+      and `obligation frame: …` beside the unchanged rule-level line, and
+      exits 0 — the same exit code as before this phase.
+- [x] AC-3 — A published page states, for each of the sixteen gated rules,
       which obligations a gate refuses.
-- [ ] AC-4 — Release finding `bfe1d6e6d8ca` carries a disposition.
+      `agents/evidence/analysis/enforcement-per-obligation-2026-10.md`'s table
+      covers all sixteen: 15 non-kernel rows with a "Refused after" column
+      naming the bound ids, plus the kernel row (`language-and-tone`) stating
+      it stays at rule granularity.
+- [x] AC-4 — Release finding `bfe1d6e6d8ca` carries a disposition.
+      `agents/evidence/release-findings/16.3.0.json` now carries
+      `status: "fixed"`, `commit: "93a192bbd"` and a `rationale` naming the
+      corrected per-rule counts for the three rules the finding cited.
 
 ## Decisions
 
