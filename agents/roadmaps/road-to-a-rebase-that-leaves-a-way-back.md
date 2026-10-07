@@ -177,7 +177,7 @@ review, the conformance count, a merge run — is decided, not discovered.
       The verdict, (b), is a Decisions row with its council record and is
       built with a test that rebases a branch with a `fixed` row.
       verify: `test -f tests/scripts/check_completion_review_rebase_remedy.test.ts && npx vitest run tests/scripts/check_completion_review_rebase_remedy.test.ts tests/scripts/check_completion_review.test.ts` -> 0
-- [ ] **3.5 The scan's two counts are recorded and handed over.** A test fixes
+- [x] **3.5 The scan's two counts are recorded and handed over.** A test fixes
       them: one violation for an asked-for rebase with its lease push, none for
       an unasked rebase. An evidence note (typed `analysis`) states both for
       `road-to-typed-grants-that-persist`. The classifier is unchanged: what
