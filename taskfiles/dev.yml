@@ -203,8 +203,9 @@ tasks:
       would do, so a stale branch can be inspected without mutating it.
 
       BASE names the PR's base branch. Without it the base is derived once,
-      here, from the open pull request (`gh pr view --json baseRefName`), and
-      is the default branch only when there is no open pull request (or no
+      here, from the open pull request (`gh pr view --json baseRefName`,
+      with `state` read too: a closed or merged pull request does not count),
+      and is the default branch only when there is no open pull request (or no
       `gh`). push-ready resolves that base once, here, and passes the same
       value to step 2 and step 5, so the branch is merged with and re-checked
       against one base. Without push-ready the two resolvers differ:
@@ -221,7 +222,7 @@ tasks:
       DRY: '{{.DRY | default ""}}'
       BASE: '{{.BASE | default ""}}'
       PR_BASE:
-        sh: 'b={{shellQuote .BASE}}; if [ -z "$b" ]; then b=$(gh pr view --json baseRefName --jq .baseRefName 2>/dev/null || true); fi; b=${b#origin/}; if [ -n "$b" ] && ! git check-ref-format --branch "$b" >/dev/null 2>&1; then printf "push-ready: base is not a valid branch name: %s\n" "$b" >&2; exit 1; fi; printf "%s" "$b"'
+        sh: 'b={{shellQuote .BASE}}; if [ -z "$b" ]; then s=$(gh pr view --json state,baseRefName --jq ''.state + " " + .baseRefName'' 2>/dev/null || true); case "$s" in "OPEN "*) b=${s#OPEN };; esac; fi; b=${b#origin/}; if [ -n "$b" ] && ! git check-ref-format --branch "$b" >/dev/null 2>&1; then printf "push-ready: base is not a valid branch name: %s\n" "$b" >&2; exit 1; fi; printf "%s" "$b"'
     cmds:
       - 'echo "── push-ready ──────────────────────────────────────────"'
       - 'echo "  base: "{{if .PR_BASE}}{{shellQuote .PR_BASE}}{{else}}"the default branch (no BASE, no open pull request)"{{end}}'

@@ -36,23 +36,32 @@ const shellQuote = (v: string): string => `'${v.split("'").join("'\\''")}'`;
 const renderBase = (tpl: string, base: string): string => tpl.split('{{shellQuote .BASE}}').join(shellQuote(base)).split('{{.BASE}}').join(base);
 
 /** The task-level derivation, run as Task runs it, with BASE substituted and a stand-in `gh` on PATH. */
-function deriveRun(base: string, ghOut: string | null): { out: string; status: number | null; err: string } {
+function deriveRun(base: string, ghOut: string | null, state = 'OPEN'): { out: string; status: number | null; err: string } {
     const spec = TASK?.vars?.['PR_BASE'] as { sh?: string } | undefined;
     if (spec?.sh === undefined) throw new Error('push-ready declares no PR_BASE derivation');
     const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'push-ready-gh-'));
     fs.writeFileSync(path.join(bin, 'answer'), ghOut === null ? '' : `${ghOut}\n`);
-    const gh = ghOut === null ? 'exit 1' : `[ "$1 $2" = "pr view" ] && cat '${path.join(bin, 'answer')}'`;
+    // `gh pr view` answers for the branch's latest pull request whatever its
+    // state: asked for the state it prints "<STATE> <base>", else the base alone.
+    const gh = ghOut === null
+        ? 'exit 1'
+        : `[ "$1 $2" = "pr view" ] || exit 1; case "$*" in *state*) printf '%s ' '${state}';; esac; cat '${path.join(bin, 'answer')}'`;
     fs.writeFileSync(path.join(bin, 'gh'), `#!/bin/sh\n${gh}\n`);
     fs.chmodSync(path.join(bin, 'gh'), 0o755);
     const r = spawnSync('sh', ['-c', renderBase(spec.sh, base)], { cwd: REPO, encoding: 'utf-8', env: { ...process.env, PATH: `${bin}:${process.env.PATH ?? ''}` } });
     return { out: r.stdout.trim(), status: r.status, err: r.stderr };
 }
 
-const derive = (base: string, ghOut: string | null): string => deriveRun(base, ghOut).out;
+const derive = (base: string, ghOut: string | null, state?: string): string => deriveRun(base, ghOut, state).out;
 
 describe('push-ready derives the pull request base once', () => {
     it('takes the open pull request base when BASE is not given', () => {
         expect(derive('', 'release/1.x')).toBe('release/1.x');
+    });
+
+    it('takes the default branch when the branch\'s pull request is closed or merged', () => {
+        expect(derive('', 'release/1.x', 'CLOSED')).toBe('');
+        expect(derive('', 'release/1.x', 'MERGED')).toBe('');
     });
 
     it('falls back to the default branch (an empty base) when there is no pull request', () => {
