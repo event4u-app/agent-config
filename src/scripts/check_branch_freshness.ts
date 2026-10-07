@@ -46,7 +46,9 @@
  * branch AS THE SERVER REPORTS IT (`ls-remote --symref`), then the local
  * `origin/HEAD`, then `main`. Every message names the base AND where it came
  * from, because "I checked main because that is the PR's base" and "I checked
- * main because I could not ask" must never print the same.
+ * main because I could not ask" must never print the same. An explicit
+ * `--base` given a blank value exits 2: an unset variable is not a request for
+ * the PR's base.
  *
  * The server symref matters for the same reason `remoteHead` exists: the local
  * `refs/remotes/origin/HEAD` is written at clone time and never refreshed, so
@@ -68,7 +70,7 @@ import { fileURLToPath } from "node:url";
 import { runGateCli, runSelfTest, type SelfTestCase } from "./_lib/gate_self_test.js";
 import { workspaceIdentity } from "./_lib/git_common_dir.js";
 import { describeRefusal, isRefusal, type GitConventionReading } from "./_lib/git_convention.js";
-import { parseBaseRef } from "./_lib/git_base_ref.js";
+import { blankBaseError, parseBaseRef } from "./_lib/git_base_ref.js";
 import { makeTargetDeps, parseExactHeadSha, readCommittedConvention } from "./_lib/git_convention_carrier.js";
 import { reportScanned } from "./_lib/scan_scope.js";
 
@@ -273,6 +275,19 @@ export function explicitBase(argv: readonly string[]): string | null {
     return null;
   }
   return explicit;
+}
+
+/**
+ * The usage error for a `--base` given a blank value, in either spelling, or
+ * null. A missing value or one that is another flag stays `explicitBase`'s
+ * typo case.
+ */
+export function blankExplicitBase(argv: readonly string[]): string | null {
+  const joined = argv.find((a) => a.startsWith("--base="));
+  if (joined !== undefined) return blankBaseError(joined.slice("--base=".length));
+  const flag = argv.indexOf("--base");
+  const value = flag < 0 ? undefined : argv[flag + 1];
+  return value === undefined || value.startsWith("-") ? null : blankBaseError(value);
 }
 
 /** `--base` wins, then the open PR's base, then the repo default. */
@@ -598,6 +613,12 @@ export function main(
     return selfTest(path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", ".."));
   }
   const quiet = argv.includes("--quiet");
+  const blank = blankExplicitBase(argv);
+  if (blank !== null) {
+    scanReport(0, "argument error");
+    console.error(`❌  check_branch_freshness: ${blank}`);
+    return 2;
+  }
 
   // CI merges or refuses on the server; a second opinion here would be noise.
   if (process.env["CI"] === "true" || process.env["GITHUB_ACTIONS"] === "true") {

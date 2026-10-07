@@ -221,7 +221,9 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   that moves between the strategy read and the merge is read again at the
   commit being merged, which is governed by the strategy it carries: the same
   strategy goes on against it, another one exits `1` before anything is
-  merged. A commit-linting config
+  merged. A blank `--base` is a usage error (exit `2`) in `sync_pr_branch`,
+  `git:convention show` and `sync`, and `check_branch_freshness`, never read
+  as no `--base`. A commit-linting config
   in the repository still outranks `git.commit_format`. In a packed consumer
   install `git:convention show` is the git surface that resolves, and the
   consumer matrix proves it with a `git-convention` leg; `sync_pr_branch` and

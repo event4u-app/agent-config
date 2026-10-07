@@ -70,7 +70,7 @@ import {
     type ConventionTarget,
     type TargetDeps,
 } from './_lib/git_convention_carrier.js';
-import { splitResolvedRef } from './_lib/git_base_ref.js';
+import { blankBaseError, splitResolvedRef } from './_lib/git_base_ref.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 export { parseSymrefDefault };
@@ -969,6 +969,12 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
                 reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'argument error' });
                 return 1;
             }
+            const blank = blankBaseError(v);
+            if (blank !== null) {
+                process.stderr.write(`❌  sync_pr_branch: ${blank}\n`);
+                reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'argument error' });
+                return 2;
+            }
             base = v;
         } else if (a === '--dry-run') {
             dryRun = true;
@@ -986,7 +992,8 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
                     '  cannot be read (unparsable file, typo, user-global-only) exits 4.\n' +
                     '  The base is --base; without it the default branch, so a PR into any other\n' +
                     '  base must pass --base <its base>; a branch name and refs/heads/<name> mean\n' +
-                    '  origin/<name>, and <remote>/<name> is used as given.\n' +
+                    '  origin/<name>, and <remote>/<name> is used as given. A blank --base\n' +
+                    '  is a usage error, exit 2.\n' +
                     '  A base that cannot be resolved or counted exits 1; one whose commit\n' +
                     '  cannot be fetched is unverified, exit 0. A target that moves before the\n' +
                     '  merge is read again at the new commit; another strategy there exits 1,\n' +

@@ -23,7 +23,9 @@
  *
  * `--base` names the commit `update_strategy` is read at. Without it that is
  * the default branch, which is the answer only for a branch that targets it: a
- * caller acting on a pull request passes `--base origin/<its base>`.
+ * caller acting on a pull request passes `--base origin/<its base>`. A blank
+ * `--base` is a usage error (exit `2`) in `show` and in `sync`, never read as
+ * no `--base`.
  *
  * `subject` reads subjects on stdin and exits `0` all valid · `1` a subject
  * fails, or the format cannot be read · `2` usage. It checks only the
@@ -34,7 +36,7 @@
  *
  * `sync` is `sync_pr_branch` run in-process, its arguments and exit codes
  * unchanged: `0` current or merged · `1` conflict or no base · `2` internal
- * error · `3` behind under a strategy other than `merge` · `4` the strategy
+ * error or a blank `--base` · `3` behind under a strategy other than `merge` · `4` the strategy
  * cannot be read.
  */
 import { spawnSync } from 'node:child_process';
@@ -43,6 +45,7 @@ import * as path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { blankBaseError } from '../_lib/git_base_ref.js';
 import {
     GIT_CONVENTION_KEYS,
     conventionDefault,
@@ -174,8 +177,11 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
         const a = args[i] as string;
         const next = args[i + 1];
         if (a === '--json') json = true;
-        else if (a === '--base' && next !== undefined && !next.startsWith('--')) base = args[++i] as string;
-        else if (a === '--key' && next !== undefined && (GIT_CONVENTION_KEYS as readonly string[]).includes(next)) {
+        else if (a === '--base' && next !== undefined && !next.startsWith('--')) {
+            const blank = blankBaseError(next);
+            if (blank !== null) return { code: 2, out: [], err: [blank, USAGE] };
+            base = args[++i] as string;
+        } else if (a === '--key' && next !== undefined && (GIT_CONVENTION_KEYS as readonly string[]).includes(next)) {
             if (!asked.includes(next as GitConventionKey)) asked.push(next as GitConventionKey);
             i++;
         } else return { code: 2, out: [], err: [a === '--key' ? `unknown key: ${next ?? '(none)'}` : `unknown argument: ${a}`, USAGE] };

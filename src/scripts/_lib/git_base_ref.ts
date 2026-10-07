@@ -29,6 +29,16 @@ export interface BaseRef {
 const REMOTE_TRACKING = 'refs/remotes/';
 const LOCAL_HEADS = 'refs/heads/';
 
+/**
+ * The usage error for a `--base` given a blank value, or null for one that
+ * names something. Every tool that accepts `--base` rejects a blank one: an
+ * unset variable expands to nothing, and reading that as "no override" judged
+ * the run against the default branch without a word.
+ */
+export function blankBaseError(value: string): string | null {
+    return value.trim() === '' ? '--base was given an empty value — name the base branch (an unset variable expands to nothing); nothing was read or merged' : null;
+}
+
 /** Read a `--base` value; null when it is empty. `remotes` are the configured remote names. */
 export function parseBaseRef(value: string, remotes: readonly string[] = []): BaseRef | null {
     const v = value.trim();
