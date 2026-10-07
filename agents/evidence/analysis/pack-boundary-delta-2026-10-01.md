@@ -132,3 +132,11 @@ New violations remaining against the baseline-era set under the corrected
 rule: **0**. Twelve pre-existing ones were cleared as a side effect, because
 three of the de-linked sites carried more occurrences than the delta named.
 The baseline is lowered to 203 and `landed` refreshed in the same change.
+
+> **Correction, 2026-10-07 (release finding `aee552b96cc0`).** The sentence
+> above over-attributes. By this page's own Result table the 33 de-links take
+> 238 to 203, which is 35 occurrences: only **2** extra clearances come from the
+> de-linked sites carrying more occurrences than the delta named. The rest of
+> the 215 → 203 net of 12 was cleared before this change, by the links listed
+> under "The 13 cleared since the baseline". The 0 new violations and the
+> lowered baseline of 203 are unaffected.

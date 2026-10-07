@@ -150,6 +150,45 @@ artifact exists because the issue is still owed, and "it failed one of six" is n
 something a later triage can act on. A deferral with no reason is the
 note-and-forget this rule already forbids, wearing an artifact's clothes.
 
+## fix-what-you-see — why a separate rule, and its activation gap
+
+Moved verbatim from [`fix-what-you-see`](../../rules/fix-what-you-see.md)
+on 2026-10-06 to pay for the standing-payload cost of `neighbour-precedence`;
+the rule keeps a pointer here.
+
+### Why separate from `active-remediation`
+
+That rule forbids ignoring a spotted issue and its ladder permits **note + ask**.
+Two properties made it insufficient, both measured 2026-08-20: it is `type: auto`
+on `refactor`/`legacy`/`cleanup` triggers — **none of which a failing CI job
+matches**, so it does not load when the obligation matters most — and its
+note-and-ask tier is what let a session name a red check's cause, name the
+file's author, and hand it back still red.
+
+Mechanics (fix-now size criteria, follow-up shape) stay there; this rule only
+deletes the two escapes.
+
+### Honest activation gap — this rule is `auto`, and it wanted to be `always`
+
+It shipped `auto` for a budget reason, not a design one, and the gap that leaves
+is exactly the one it was written to close: **a red check the agent sees in tool
+output triggers nothing.** Keyword triggers match the PROMPT. So the rule loads
+when a human says "CI is red" or "not my test", and does NOT load when a test
+run comes back red and nobody has said a word.
+
+`check_always_budget` is the reason: the extended always-budget sat at
+60,252 / 60,254 chars — **two characters of headroom** — and the cap is a
+ratchet that may only move down. The other nine always-rules are the kernel,
+which `block_kernel_rule_writes` denies agent writes to, so no room can be made
+from this side. A 2,332-char rule puts the total at 103.9 %.
+
+Closing the gap needs one of: the ext-cap ratchet opened deliberately (a
+maintainer decision, recorded), a kernel rule shortened to make room, or a
+`post_tool_use` carrier that notices a non-zero verification exit — the only
+option that would fire on tool output rather than on wording. Until then, `auto`
+plus this paragraph is the honest state: the obligation is real, its delivery is
+partial, and the partiality is named rather than implied away.
+
 ## See also
 
 - [`active-remediation`](../../rules/active-remediation.md) — the rule this file details (Iron Law + ladder + live-security carve-out).

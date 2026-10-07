@@ -89,6 +89,22 @@ export interface QualityRun {
     readonly output_head: readonly string[];
     readonly skipped: SkipReason | null;
     readonly files: readonly string[];
+    /**
+     * Matched files the tool reported it declined to look at. A run where EVERY
+     * matched file is listed here and the tool exited 0 is a verdict about
+     * nothing, so `exit_code` is `null` for it — the readings page § 5(a) found
+     * that row recorded `0, skipped: null`, the exact shape of a pass. A field
+     * rather than a fifth `SkipReason` (D2): a partly-ignored run keeps its real
+     * exit code, and a skip reason cannot sit beside a verdict.
+     */
+    readonly ignored_files: readonly string[];
+    /**
+     * Type-check commands the resolver emitted that produced no verdict on this
+     * turn — unscoped, absent or mutating. Identical on every record of the turn,
+     * so ANY single row says that a `0` beside it was a lint verdict and not a
+     * type verdict (§ 5(b): `tsc --noEmit` is unscoped on every stop).
+     */
+    readonly typecheck_not_run: readonly string[];
     readonly at: string;
 }
 
@@ -112,7 +128,20 @@ interface ToolSpec {
      * the resolver's by exactly the flag that makes it read-only.
      */
     readonly check_form: boolean;
+    /**
+     * A line the tool prints, exit 0, for an input its own config ignores. Per
+     * row because the wording is the tool's (D1); a row without one reads no
+     * output as an ignore, which keeps the pre-existing behaviour rather than
+     * guessing at a message the tool might print.
+     */
+    readonly ignored_signal?: RegExp;
 }
+
+/**
+ * ESLint 9's stylish report for an ignored input: the absolute path on its own
+ * line, then this indented warning. Pinned verbatim by the ignored-file fixture.
+ */
+const ESLINT_IGNORED = /^\s+\d+:\d+\s+warning\s+File ignored because of a matching ignore pattern\b/;
 
 const JS_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.cts'] as const;
 
@@ -124,7 +153,15 @@ const JS_EXTENSIONS = ['.js', '.jsx', '.mjs', '.cjs', '.ts', '.tsx', '.mts', '.c
  * and absence is what produces `skipped: unscoped`.
  */
 const SCOPED_FORMS: ReadonlyMap<string, ToolSpec> = new Map<string, ToolSpec>([
-    ['npx eslint .', { argv: ['npx', 'eslint'], extensions: JS_EXTENSIONS, check_form: false }],
+    [
+        'npx eslint .',
+        {
+            argv: ['npx', 'eslint'],
+            extensions: JS_EXTENSIONS,
+            check_form: false,
+            ignored_signal: ESLINT_IGNORED,
+        },
+    ],
     [
         'vendor/bin/phpstan analyse',
         { argv: ['vendor/bin/phpstan', 'analyse'], extensions: ['.php'], check_form: false },
@@ -152,6 +189,38 @@ const SCOPED_FORMS: ReadonlyMap<string, ToolSpec> = new Map<string, ToolSpec>([
  * under the wrong reason and counted in the wrong bucket by 2.1.
  */
 const MUTATING_WITHOUT_CHECK_FORM: ReadonlySet<string> = new Set<string>([]);
+
+/**
+ * Resolver commands with no file-scoped form, unscoped ON PURPOSE (rule 3).
+ *
+ * Named so the parity test can tell a deliberate absence from `SCOPED_FORMS`
+ * apart from a resolver command nobody classified: every command the resolver
+ * emits is a scoped key, a mutating key, or on this list — or a test is red.
+ */
+export const UNSCOPED_ON_PURPOSE: readonly string[] = [
+    'npx tsc --noEmit',
+    'go vet ./...',
+    'cargo clippy',
+];
+
+/** The keys of `SCOPED_FORMS`, for the parity test. */
+export const SCOPED_FORM_COMMANDS: readonly string[] = [...SCOPED_FORMS.keys()];
+
+/** The keys of `MUTATING_WITHOUT_CHECK_FORM`, for the parity test. */
+export const MUTATING_COMMANDS: readonly string[] = [...MUTATING_WITHOUT_CHECK_FORM];
+
+/**
+ * Resolver commands whose verdict is a type verdict. `go vet` and `cargo clippy`
+ * both compile the package, so a type error stops them; ESLint, ruff and pint do
+ * not type-check, which is the whole of § 5(b).
+ */
+export const TYPE_CHECK_COMMANDS: ReadonlySet<string> = new Set<string>([
+    'npx tsc --noEmit',
+    'vendor/bin/phpstan analyse',
+    'mypy .',
+    'go vet ./...',
+    'cargo clippy',
+]);
 
 function extensionOf(file: string): string {
     const base = path.basename(file);
@@ -253,7 +322,7 @@ function defaultSpawn(
 export function runTouchedFileQuality(opts: RunOptions): QualityRun[] {
     const timeout_ms = opts.timeout_ms ?? DEFAULT_TIMEOUT_MS;
     const spawn = opts.spawn ?? defaultSpawn;
-    const out: QualityRun[] = [];
+    const out: Omit<QualityRun, 'typecheck_not_run'>[] = [];
     for (const plan of planQualityRuns(opts.commands, opts.files)) {
         if (plan.argv === null) {
             out.push({
@@ -263,6 +332,7 @@ export function runTouchedFileQuality(opts: RunOptions): QualityRun[] {
                 output_head: [],
                 skipped: plan.skipped,
                 files: [],
+                ignored_files: [],
                 at: now(),
             });
             continue;
@@ -282,17 +352,69 @@ export function runTouchedFileQuality(opts: RunOptions): QualityRun[] {
         // tool is a wrapper script whose own dependency is missing. Same meaning
         // as ENOENT for this module's purposes, and the same bucket in 2.1.
         const absent = enoent || status === 127;
+        const signal = SCOPED_FORMS.get(plan.source_command)?.ignored_signal;
+        const ignored =
+            absent || signal === undefined ? [] : ignoredFiles(output, signal, plan.files);
+        // Every matched file ignored AND exit 0: the tool looked at nothing, so
+        // there is no verdict to record. A non-zero exit over the same set stays,
+        // because a red the tool raised (a config crash, say) is real.
+        const nothingLooked = ignored.length === plan.files.length && status === 0;
         out.push({
             command: renderCommand(plan.argv),
             source_command: plan.source_command,
-            exit_code: absent ? null : status,
+            exit_code: absent || nothingLooked ? null : status,
             output_head: absent ? [] : headLines(output, OUTPUT_HEAD_LINES),
             skipped: absent ? 'absent' : null,
             files: plan.files,
+            ignored_files: ignored,
             at: now(),
         });
     }
-    return out;
+    // `no_files` is excluded: no file the type checker reads was touched, so
+    // there was nothing on this turn for it to have caught.
+    const typecheck_not_run = out
+        .filter(
+            (r) =>
+                TYPE_CHECK_COMMANDS.has(r.source_command) &&
+                r.exit_code === null &&
+                r.skipped !== 'no_files' &&
+                r.skipped !== null,
+        )
+        .map((r) => r.source_command);
+    return out.map((r) => ({ ...r, typecheck_not_run: [...typecheck_not_run] }));
+}
+
+/**
+ * The matched files the tool's output reports as ignored.
+ *
+ * The stylish report names the file on an unindented line and the warning on
+ * the indented lines under it, so a signal line is attributed to the last path
+ * line above it. A signal that cannot be attributed is attributed to the one
+ * matched file only when there is exactly one; otherwise it is dropped, so an
+ * unreadable report keeps today's behaviour instead of inventing an ignore.
+ */
+export function ignoredFiles(
+    output: string,
+    signal: RegExp,
+    files: readonly string[],
+): string[] {
+    const reported: string[] = [];
+    let unattributed = false;
+    let current: string | null = null;
+    for (const line of output.split(/\r\n|\r|\n/)) {
+        if (signal.test(line)) {
+            if (current === null) unattributed = true;
+            else reported.push(normalizePath(current));
+            continue;
+        }
+        if (line !== '' && !/^\s/.test(line)) current = line.trim();
+    }
+    const hit = files.filter((f) => {
+        const want = normalizePath(f);
+        return reported.some((r) => r === want || r.endsWith(`/${want}`));
+    });
+    if (hit.length === 0 && unattributed && files.length === 1) return [...files];
+    return hit;
 }
 
 /**
@@ -306,11 +428,25 @@ export function runTouchedFileQuality(opts: RunOptions): QualityRun[] {
 export const WARN_LINE_MAX_BYTES = 200;
 
 export function advisoryLine(runs: readonly QualityRun[]): string | null {
+    const ignored = [...new Set(runs.flatMap((r) => r.ignored_files))];
+    const ignoredPart =
+        ignored.length === 0
+            ? ''
+            : `ignored ${ignored[0] ?? ''}${ignored.length > 1 ? ` (+${String(ignored.length - 1)} more)` : ''}`;
     const failed = runs.find((r) => r.skipped === null && r.exit_code !== null && r.exit_code !== 0);
-    if (failed === undefined) return null;
+    if (failed === undefined) {
+        // Nothing failed. Silence is right when every file was looked at; when a
+        // file was ignored, silence would read as clean, so say what was not seen.
+        if (ignored.length === 0) return null;
+        return truncateToBytes(
+            `touched-file quality: no verdict, ${ignoredPart}`,
+            WARN_LINE_MAX_BYTES,
+        );
+    }
     const file = failed.files[0] ?? '(no file)';
     const more = failed.files.length > 1 ? ` (+${String(failed.files.length - 1)} more)` : '';
-    const line = `touched-file quality: ${failed.source_command} exited ${String(failed.exit_code)} on ${file}${more}`;
+    const tail = ignoredPart === '' ? '' : `; ${ignoredPart}`;
+    const line = `touched-file quality: ${failed.source_command} exited ${String(failed.exit_code)} on ${file}${more}${tail}`;
     return truncateToBytes(line, WARN_LINE_MAX_BYTES);
 }
 

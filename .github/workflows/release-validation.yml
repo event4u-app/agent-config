@@ -110,6 +110,20 @@ jobs:
           fi
           ./scripts-run src/scripts/check_release_pr_shape --pr "$pr_num"
 
+      # The shape check reads manifest NAMES; this reads their CONTENT. Smoke is
+      # skipped on release heads, so without it an added script or dependency
+      # could ride a release PR unread (docs/contracts/release-pr-gating.md).
+      - name: Check release-manifest content (version fields only)
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE_REF:-}" ]; then
+            echo "::warning::No PR context — skipping manifest content check (workflow_dispatch)"
+            exit 0
+          fi
+          ./scripts-run src/scripts/check_release_manifest_content --base "origin/${BASE_REF}"
+
   changelog-entry:
     if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}
     name: CHANGELOG entry exists for head version

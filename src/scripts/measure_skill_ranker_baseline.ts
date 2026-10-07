@@ -495,6 +495,11 @@ export const RANKER_LABELS: Readonly<Record<string, RankOptions>> = {
     headings: { includeHeadings: true },
     idf: { idfWeighting: true },
     'idf+when-to-use': { idfWeighting: true, includeWhenToUse: true },
+    // `road-to-a-ranker-whose-ties-break-on-signal` Phase 3: the order inside a
+    // block of equal integer scores, alone and over the one weighting that
+    // makes the unrounded score vary.
+    ties: { tieBreakUnrounded: true },
+    'idf+ties': { idfWeighting: true, tieBreakUnrounded: true },
 };
 
 /**

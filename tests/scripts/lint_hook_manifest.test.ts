@@ -318,7 +318,7 @@ describe("effect: — the census's field (Phase 2.2)", () => {
       concerns: Record<string, { severity?: string; effect?: string }>;
     };
     const names = Object.keys(manifest.concerns);
-    expect(names.length).toBe(62);
+    expect(names.length).toBe(63);
     const missing = names.filter((n) => !CONCERN_EFFECTS.has(String(manifest.concerns[n]?.effect)));
     expect(missing).toStrictEqual([]);
     const mismatched = names.filter(

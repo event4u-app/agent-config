@@ -42,6 +42,34 @@ reason, which no arithmetic can.
 or that promises a future breaking removal, gets a row here in the same commit
 that makes the promise. A promise with no row is not tracked and will be missed.
 
+## 16.2.0 — `doctor --json` reads the forge, and `--no-forge` opts out
+
+💡 advisory · ✋ manual only if you scripted `doctor` as an offline diagnostic.
+
+### What changed
+
+Since 16.2.0, `agent-config doctor --json` fills its `forge_protection` block
+from a **network read**: one `git ls-remote --get-url origin` (local) and then
+several `gh api` calls against the repository's forge, under a 15 s budget. Any
+failure — no GitHub remote, no `gh`, no credentials, a timeout — degrades to
+five `unread` rows rather than an error. This reverses the earlier "`doctor`
+does not reach the network" boundary; the supersession is recorded in
+`road-to-adversarial-verification-and-long-runs` Phase 3.2. It shipped without
+an entry here; this section is that entry, written after the fact.
+
+### How to keep it offline
+
+- **`--no-forge`** (alias **`--offline`**) — skips the read before anything
+  spawns. The block keeps its shape: five `unread` rows, `repository: null`.
+- **`--check <id>`** — skips the read too, since no check id reads the block.
+- **`AGENT_CONFIG_DOCTOR_NO_FORGE=1`** or **`AGENT_CONFIG_OFFLINE=1`** — the
+  environment switches that existed before the flag; both are read as the
+  literal `1` only.
+
+The flag is additive: a run that passes none of these reads the forge exactly
+as before. Whether offline becomes the default is an open owner decision
+(`road-to-findings-that-get-a-disposition`, blocker `doctor-network-default`).
+
 ## 16.0.0 — the stored standing-payload ceiling is deleted
 
 💡 advisory · 🔄 automatic — **no consumer action.**

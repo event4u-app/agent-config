@@ -70,6 +70,15 @@ Taken against the fourth figure above, spawns add on the order of
 roughly **doubles** the standing-instruction bill, and it does so invisibly,
 because no spawn is ever shown the bundle it was charged for.
 
+> **Correction, 2026-10-07 (release finding `27ed7df17579`).** Both products
+> above are in **bytes**, not characters, and carry two biases the paragraph
+> does not state. The 647 counts every `Agent` call with no filter on subagent
+> type, while only non-built-in subagents receive the hierarchy, which biases
+> the spawn product upward. And today's 351,894-byte layer is applied to
+> transcripts written while the layer had another, unmeasured size. "Roughly
+> doubles" is therefore an unmeasured estimate, not a measured ratio. The
+> unit fix applies to the table below, whose columns now read bytes.
+
 **This is one machine's history, not a rate anyone else should adopt.** It is
 reported because the alternative was to state the per-spawn unit with no sense
 of how often it is paid, and a unit with no multiplier is not a cost.
@@ -82,7 +91,7 @@ omission here: the flip has not happened. The thinning work is held by its own
 roadmap, which may not start before the carrier roadmap's Phase 1 has merged,
 and that phase is open.
 
-| | Session (characters) | Per spawn (characters) |
+| | Session (bytes) | Per spawn (bytes) |
 |---|---:|---:|
 | before the flip (2026-10-02) | 351,894 | 351,894 |
 | after the flip | — | — |

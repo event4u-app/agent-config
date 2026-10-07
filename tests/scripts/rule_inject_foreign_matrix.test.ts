@@ -21,6 +21,7 @@
 // small router into a temp directory, and runs THAT. The tree carries no
 // `src/scripts/**/*.ts` at all, which is the "no source checkout" column of the
 // matrix and the state every consumer is actually in.
+import { THIN_ENTRY_MARKER } from '../../src/scripts/_lib/thin_rules.js';
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -334,7 +335,7 @@ describe('rule-inject — foreign-project matrix on the built bundle (1.8)', () 
         const ws = mkdtemp('rim-scope-');
         const rules = path.join(ws, '.claude', 'rules');
         fs.mkdirSync(rules, { recursive: true });
-        fs.writeFileSync(path.join(rules, 'prompt-rule.md'), 'INSTALLED STUB\n', 'utf-8');
+        fs.writeFileSync(path.join(rules, 'prompt-rule.md'), `INSTALLED STUB\n${THIN_ENTRY_MARKER}\n`, 'utf-8');
         const r = dispatch(INSTALL, ws, 'rim-9');
         expect(r.ids).toContain('prompt-rule');
         expect(r.ids).not.toContain('second-rule');
@@ -388,7 +389,7 @@ describe('rule-inject — foreign-project matrix on the built bundle (1.8)', () 
         const home = mkdtemp('rim-scope-home-');
         const rules = path.join(home, '.claude', 'rules');
         fs.mkdirSync(rules, { recursive: true });
-        fs.writeFileSync(path.join(rules, 'second-rule.md'), 'INSTALLED STUB\n', 'utf-8');
+        fs.writeFileSync(path.join(rules, 'second-rule.md'), `INSTALLED STUB\n${THIN_ENTRY_MARKER}\n`, 'utf-8');
         const r = dispatch(INSTALL, ws, 'rim-11', { home });
         expect(r.ids).toEqual(['second-rule']);
     });

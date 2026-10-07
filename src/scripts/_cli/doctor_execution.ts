@@ -19,6 +19,7 @@ import {
     resolveExecutionPosture,
 } from '../../shared/missionExecution.js';
 import {
+    UNREAD_FORGE,
     forgeProtectionRows,
     protectionActions,
     type ForgeReading,
@@ -147,6 +148,25 @@ export interface ForgeDeps {
     readonly env?: Readonly<Record<string, string | undefined>>;
     /** The subprocess runner for both `git` and `gh`. */
     readonly run?: Runner;
+    /**
+     * Skip the read before anything spawns — `--no-forge` / `--offline`, and a
+     * `--check <id>` run, since no check id reads this block. The block keeps
+     * its shape: five `unread` rows, exactly what a failed read produces.
+     */
+    readonly offline?: boolean;
+}
+
+/**
+ * Whether a `doctor` run reads the forge. Additive: a run that passes neither
+ * `--no-forge` nor `--check` reads it exactly as before. The default itself is
+ * an owner decision (`road-to-findings-that-get-a-disposition`, blocker
+ * `doctor-network-default`), so this function does not decide it.
+ */
+export function forgeDepsFor(opts: {
+    readonly no_forge: boolean;
+    readonly check: string | null;
+}): ForgeDeps {
+    return { offline: opts.no_forge || opts.check !== null };
 }
 
 export function forgeProtectionJsonFor(root: string, deps: ForgeDeps = {}): Dict {
@@ -155,6 +175,7 @@ export function forgeProtectionJsonFor(root: string, deps: ForgeDeps = {}): Dict
     // binding were asserted one layer down against fakes while a regression in
     // the real wiring stayed invisible. `deps` is that seam; production passes
     // nothing and gets `process.env` plus the real spawn.
+    if (deps.offline === true) return forgeProtectionJson(UNREAD_FORGE, null);
     const env = deps.env ?? process.env;
     const run = deps.run;
     const remaining = budgetOf(FORGE_TOTAL_BUDGET_MS);

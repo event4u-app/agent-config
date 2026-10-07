@@ -147,7 +147,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { hookSectionEnabled } from '../_lib/hook_settings.js';
 import * as user_global_paths from '../_lib/user_global_paths.js';
-import { deliversBodies, resolveLeanProjection } from '../_lib/lean_projection_mode.js';
+import {
+    deliversBodies,
+    installerThinsHost,
+    resolveLeanProjection,
+} from '../_lib/lean_projection_mode.js';
 import { enforcement_class_from_frontmatter } from '../_lib/obligation_frequency.js';
 import {
     appendDelivered,
@@ -168,7 +172,8 @@ import {
 } from '../_lib/rule_injection.js';
 import { readConsequenceClass, stubLawIds } from '../_lib/rule_consequence_class.js';
 import { lawText, ruleBody } from '../_lib/rule_law_section.js';
-import { hostRuleLayerIds } from '../_lib/rule_layer_overlap.js';
+import { hostRuleLayerDirs, hostRuleLayerIds } from '../_lib/rule_layer_overlap.js';
+import { is_thin_entry } from '../_lib/thin_rules.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
@@ -853,6 +858,9 @@ export function buildInjection(
     openFiles: string[] | null,
     command: string | null,
     seen: Set<string>,
+    // `false` only for an offline measurement of WHAT the concern delivers,
+    // which must not read the measuring machine's installed rule files.
+    servedOnce = true,
 ): Injection | null {
     let router;
     try {
@@ -878,12 +886,45 @@ export function buildInjection(
     // `hostRuleLayerIds`. No filter then, because scoping to an empty set would
     // re-create the silence step 1.1 repaired.
     const scope = hostRuleLayerIds(root);
-    const matches = matchTierRules(router, prompt, openFiles, command).filter(
+    let matches = matchTierRules(router, prompt, openFiles, command).filter(
         (m) => !seen.has(m.id) && (scope === null || scope.has(m.id)),
     );
     if (matches.length === 0) return null;
+    // ONE COPY (`road-to-a-default-install-served-once` 1.1). The gate opens on
+    // the template's `delivery`, but the installer thins only on an explicit
+    // user-global choice, so a default install carries every routed body in
+    // its rule files already. A rule whose installed copy is a full body gets
+    // nothing; a stub still gets its body. Asked only off the consent path, so
+    // an opted-in install's delivery is unchanged byte for byte.
+    if (servedOnce && scope !== null && !installerThinsHost(DELIVERY_HOST, { packageRoot: ruleSources(root).pkg })) {
+        const full = installedFullIds(root, matches.map((m) => m.id));
+        matches = matches.filter((m) => !full.has(m.id));
+        if (matches.length === 0) return null;
+    }
     const sel = selectForInjection(root, matches, CAP_BYTES);
     return compose(root, sel, highConsequenceIds(root));
+}
+
+/**
+ * Ids among `ids` whose copy in EITHER host rule layer is a full body rather
+ * than a stub. Either, because the host loads both: one full copy is enough
+ * for the body to be standing in context already. Reads only matched ids,
+ * never the whole layer, because this runs on the per-prompt path.
+ */
+export function installedFullIds(root: string, ids: readonly string[]): Set<string> {
+    const out = new Set<string>();
+    for (const dir of hostRuleLayerDirs(root)) {
+        for (const id of ids) {
+            let text: string;
+            try {
+                text = fs.readFileSync(path.join(dir, `${id}.md`), 'utf-8');
+            } catch {
+                continue;
+            }
+            if (!is_thin_entry(text)) out.add(id);
+        }
+    }
+    return out;
 }
 
 // ── main ─────────────────────────────────────────────────────────────────

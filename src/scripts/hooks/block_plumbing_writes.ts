@@ -5,10 +5,14 @@
  * road-to-a-kernel-that-guards-its-plumbing 1.2 — the other half of a
  * deliberate split, and the split is the whole design:
  *
- *   · plumbing SOURCES (`hook_manifest.yaml`, `host_lowering.yaml`, the
- *     `*-dispatcher.sh` trampolines, both hook budget files) are edited
- *     legitimately all the time. They carry a RECORD — the ADR-268 § 4
- *     ratification gate, path set extended by step 1.1 — not a deny.
+ *   · plumbing SOURCES are edited legitimately all the time. They carry a
+ *     RECORD — the ADR-268 § 4 ratification gate — not a deny. Which files
+ *     count is NOT listed here: it is `check_kernel_edit_ratified`'s
+ *     `PLUMBING_SOURCE_RE` plus the verdict-deciding modules of the
+ *     dispatcher's import closure (`derivedPlumbing`), computed at run time.
+ *     A copy of that list here drifted once already — it named the pattern
+ *     and missed the policy module a refactor moved out of the dispatcher —
+ *     so this header points at the set instead of restating it.
  *   · plumbing BUILD OUTPUTS have no legitimate hand edit at all. They carry a
  *     DENY, which is this file.
  *

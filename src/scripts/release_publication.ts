@@ -466,20 +466,37 @@ export function local_release_gate_argv(): string[] {
  * Returns `null` on any measurement failure — a shallow clone or a missing tag
  * is an environment fact, and a release must not stop over one. `null` means
  * the line is simply not rendered.
+ *
+ * Both ends are resolved to SHAs BEFORE measuring, and the rendered level
+ * carries them. The 16.3.0 line read `23 vs 1` while the measurer re-run on
+ * `16.2.0..16.3.0` reads `83 vs 3`: `HEAD` at write time was not the commit the
+ * tag later named, and the line recorded neither end, so nobody could say which
+ * range it had read. With both SHAs in the line, `measure_release_mix --from
+ * <from> --to <to>` reproduces it.
  */
 export function measure_mix_obligation(
     version: string,
     fromRef?: string | null,
+    opts: { toRef?: string; cwd?: string } = {},
 ): MixObligation | null {
+    const cwd = opts.cwd ?? REPO_ROOT;
+    const toRef = opts.toRef ?? 'HEAD';
     try {
-        const from = fromRef ?? previous_release_tag('HEAD', REPO_ROOT);
+        const from = fromRef ?? previous_release_tag(toRef, cwd);
         if (!from) return null;
-        const reading = measureRange(from, 'HEAD', loadTaxonomy(), version, REPO_ROOT);
+        const from_sha = _resolve_commit(from, cwd);
+        const to_sha = _resolve_commit(toRef, cwd);
+        const reading = measureRange(from_sha, to_sha, loadTaxonomy(), version, cwd);
         const o = reading.response_obligation;
         return {
             level:
                 `governance-only ${String(o.governance_only)} vs consumer-only ` +
-                `${String(o.consumer_only)} (taxonomy ${reading.taxonomy_version})`,
+                `${String(o.consumer_only)} (taxonomy ${reading.taxonomy_version}; ` +
+                `range ${from_sha.slice(0, 12)}..${to_sha.slice(0, 12)})`,
+            from_sha,
+            to_sha,
+            governance_only: o.governance_only,
+            consumer_only: o.consumer_only,
         };
     } catch (err) {
         // Printed rather than swallowed. Nothing refuses over the reading any
@@ -492,6 +509,15 @@ export function measure_mix_obligation(
         );
         return null;
     }
+}
+
+function _resolve_commit(ref: string, cwd: string): string {
+    const r = spawnSync('git', ['rev-parse', '--verify', `${ref}^{commit}`], { encoding: 'utf-8', cwd });
+    const sha = (r.stdout ?? '').trim();
+    if (r.status !== 0 || !/^[0-9a-f]{40}$/u.test(sha)) {
+        throw new Error(`cannot resolve \`${ref}\` to a commit`);
+    }
+    return sha;
 }
 
 /**
