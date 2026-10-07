@@ -16,6 +16,7 @@
 // readings and the derivation of the 110,000 cap live in
 // `agents/evidence/analysis/standing-rule-delivery-topologies.md`.
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -24,7 +25,10 @@ import {
     instructionsLoadedRecord,
     readBudget,
     reasonIsStated,
+    reinstallRows,
 } from '../../src/scripts/check_standing_rule_delivery.js';
+import { lawText, ruleBody } from '../../src/scripts/_lib/rule_law_section.js';
+import { lawDigest, STUB_LAW_OPEN, THIN_ENTRY_MARKER } from '../../src/scripts/_lib/thin_rules.js';
 
 const BLOCK = [
     'standing_rule_delivery:',
@@ -123,4 +127,76 @@ describe('instructionsLoadedRecord', () => {
             path.join('/repo', 'agents', 'runtime', 'metrics', 'instructions-loaded.jsonl'),
         );
     });
+});
+
+// `road-to-a-default-install-served-once` step 1.2 — a source reduction shows
+// as pending reinstall instead of as nothing.
+describe('reinstallRows — pending reinstall column', () => {
+    const SRC_BODY = '---\ntype: auto\n---\n\n# Rule\n\nFull body that the source now shortened.\n';
+    const LAW = 'NEVER DO THE THING.';
+    const lawRule = (law: string): string =>
+        `---\ntype: auto\n---\n\n# Law rule\n\n## The Iron Law\n\n\`\`\`\n${law}\n\`\`\`\n\nMore prose.\n`;
+
+    function layers(): { inst: string; src: string } {
+        const base = fs.mkdtempSync(path.join(os.tmpdir(), 'srd-reinstall-'));
+        const inst = path.join(base, 'installed');
+        const src = path.join(base, 'source');
+        fs.mkdirSync(inst);
+        fs.mkdirSync(src);
+        return { inst, src };
+    }
+
+    it('marks pending reinstall when the source body shrank after the install', () => {
+        const { inst, src } = layers();
+        fs.writeFileSync(path.join(src, 'a-rule.md'), SRC_BODY.replace(' that the source now shortened', ''));
+        // The installer rewrites frontmatter into host form; only the body counts.
+        fs.writeFileSync(path.join(inst, 'a-rule.md'), SRC_BODY.replace('type: auto', 'paths: []'));
+        const [row] = reinstallRows('global', inst, src);
+        expect(row).toMatchObject({ id: 'a-rule', compared: 'body', status: 'pending reinstall' });
+        expect(row?.installed).not.toBe(row?.source);
+    });
+
+    it('a matching body under rewritten frontmatter is current, not pending reinstall', () => {
+        const { inst, src } = layers();
+        fs.writeFileSync(path.join(src, 'a-rule.md'), SRC_BODY);
+        fs.writeFileSync(path.join(inst, 'a-rule.md'), SRC_BODY.replace('type: auto', 'package: x'));
+        expect(reinstallRows('global', inst, src)[0]?.status).toBe('current');
+    });
+
+    it('a stub compares its copied law digest — pending reinstall when the source law moved', () => {
+        const { inst, src } = layers();
+        const stub = (digest: string): string =>
+            `# law-rule\n\n${THIN_ENTRY_MARKER}\n\n${STUB_LAW_OPEN}${digest} -->\n${LAW}\n<!-- /law -->\n`;
+        // Positive control first: a stub written from the CURRENT law is current.
+        fs.writeFileSync(path.join(src, 'law-rule.md'), lawRule(LAW));
+        const now = reinstallRows('global', src, src)[0];
+        expect(now?.compared).toBe('body');
+        fs.writeFileSync(path.join(inst, 'law-rule.md'), stub(reinstallLawDigest(src)));
+        expect(reinstallRows('global', inst, src)[0]).toMatchObject({ compared: 'law', status: 'current' });
+        // Then the source law changes and the installed stub does not.
+        fs.writeFileSync(path.join(src, 'law-rule.md'), lawRule('NEVER DO THE OTHER THING.'));
+        expect(reinstallRows('global', inst, src)[0]).toMatchObject({
+            compared: 'law',
+            status: 'pending reinstall',
+        });
+    });
+
+    it('a stub with no copied text cannot go stale, and a missing source is named, not pending reinstall', () => {
+        const { inst, src } = layers();
+        fs.writeFileSync(path.join(src, 'thin.md'), SRC_BODY);
+        fs.writeFileSync(path.join(inst, 'thin.md'), `# thin\n\n${THIN_ENTRY_MARKER}\n`);
+        fs.writeFileSync(path.join(inst, 'gone.md'), SRC_BODY);
+        const rows = reinstallRows('project', inst, src);
+        expect(rows.find((r) => r.id === 'thin')).toMatchObject({ compared: 'none', status: 'current' });
+        expect(rows.find((r) => r.id === 'gone')?.status).toBe('no source');
+        expect(rows.filter((r) => r.status === 'pending reinstall')).toEqual([]);
+    });
+
+    /** The digest the stub writer would record for the law in `dir/law-rule.md`. */
+    function reinstallLawDigest(dir: string): string {
+        const text = fs.readFileSync(path.join(dir, 'law-rule.md'), 'utf-8');
+        const law = lawText(ruleBody(text));
+        if (law === null) throw new Error('fixture has no law section');
+        return lawDigest(law);
+    }
 });

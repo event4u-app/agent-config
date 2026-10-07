@@ -53,8 +53,12 @@ keep-beta-reason: >-
 > fixes below: "no escape hatch" is about the path set, which is closed and has no
 > override, while this is about content inside an admitted path, which no gate
 > reads. Closing it needs a content check (version fields only in the npm and
-> plugin manifests) that does not exist; until one does, it is held by review, and
-> it is recorded here rather than left for a reader to infer from silence.
+> plugin manifests). That check now exists: `check_release_manifest_content` runs
+> in the `release-shape` job right after the shape check, compares
+> `package.json`, `package-lock.json` and the three plugin manifests against the
+> base, and fails on any difference outside the version fields the release
+> writes — named per file, so a dependency's lockfile `version` is not waved
+> through as a release bump.
 
 ## Release-PR shape
 
@@ -174,9 +178,9 @@ proves nothing about it either way, and the two jobs with steps that do inspect
 manifest content (`static-checks`, `smoke`) name the release-path twin that
 inspects it instead. It is NOT the
 stronger claim the opening blockquote withdraws — `package.json` is admitted and
-carries `bin`, `files`, `dependencies` and `engines`, whose content no gate
-reads. That residue is the blockquote's, not this section's, and the `smoke` row
-below points back at it.
+carries `bin`, `files`, `dependencies` and `engines`, whose content is read by
+`check_release_manifest_content` in the `release-shape` job and nowhere on this
+list. The `smoke` row below points back at the blockquote.
 
 It does admit six paths under `src/` and `dist/`: pack and domain metadata
 (`pack.yaml` ×2), their READMEs (×2), and the project-settings template pin with
@@ -200,7 +204,7 @@ parses decays.
 | `tests.yml` | `golden-tests` | golden corpora live under `tests/` and `internal/`, neither admitted |
 | `tests.yml` | `collector-lifecycle` | exercises collector scripts under `src/scripts/`, none admitted |
 | `tests.yml` | `workspace-tests` | exercises workspace wiring under `src/` and `tests/`; the admitted pack and domain files are metadata those tests do not read |
-| `smoke-public-install.yml` | `smoke` | no `src/scripts/install*`, matching this job's own `paths:` filter. TWO admitted paths ARE among its triggers: `package.json`, whose content no gate reads (opening blockquote), and `src/agent-src/templates/agents/agent-project-settings.example.yml`, a version-pinned example file whose pin `check_template_pin_drift` gates on the kept surface |
+| `smoke-public-install.yml` | `smoke` | no `src/scripts/install*`, matching this job's own `paths:` filter. TWO admitted paths ARE among its triggers: `package.json`, whose content `check_release_manifest_content` reads in the `release-shape` job (opening blockquote), and `src/agent-src/templates/agents/agent-project-settings.example.yml`, a version-pinned example file whose pin `check_template_pin_drift` gates on the kept surface |
 
 `push:` to `main` and the weekly cron on `smoke-public-install.yml` stay
 **unconditional** — those catch drift the PR matrix can't see.
@@ -217,7 +221,7 @@ the feature-PR floor by adding:
 | `smoke.yml` | `smoke-contracts` | Contract self-checks (kernel, router, hashes) |
 | `release-guard.yml` | `assert-version-matches-tag` | already gates `npm publish`; remains tag-trigger |
 | `migration-dry-run.yml` | (existing) | Migration plan dry-runs |
-| `release-validation.yml` (Phase B) | `release-shape` | shape detector — fails closed if diff exits the allowlist |
+| `release-validation.yml` (Phase B) | `release-shape` | shape detector — fails closed if diff exits the allowlist; then `check_release_manifest_content` — the five manifests differ from the base in version fields only |
 | `release-validation.yml` (Phase B) | `changelog-entry` | CHANGELOG carries an entry matching the head-branch version |
 | `release-validation.yml` (Phase B) | `version-consistency` | `package.json` / `marketplace.json` agree on the version (pack manifests carry no version field), and `check_template_pin_drift` holds the settings-template pin to it — the check § Cut surface's `smoke` row forward-references |
 | `release-validation.yml` (release-truth) | `surface-equality` | PR body equals the CHANGELOG entry (whitespace-normalized) — release.ts derives all four surfaces (PR body, changelog, GitHub release notes, annotated tag message) from the changelog section at the relevant head |

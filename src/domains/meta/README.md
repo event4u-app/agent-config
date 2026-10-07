@@ -7,7 +7,7 @@ Artefacts that maintain this package (agent-config itself).
 - **id**: `meta`
 - **owner**: agent-config-maintainer
 - **requires**: engineering-base
-- **artefacts**: 304
+- **artefacts**: 305
 
 ## Commands (158)
 
@@ -170,7 +170,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`worktree-status`** — List active worktrees — ownership (scope lock), dirty state, ahead/behind, merge-readiness incl. verification evidence
 - **`worktree-verify`** — Run the scoped verification for a worktree's declared change — narrow probes matched to the diff, never the full CI pipeline
 
-## Rules (70)
+## Rules (71)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -207,6 +207,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`missing-skill-recovery`** — A skill exists in the tree but not in the host's catalogue — ask for it by TASK via suggest_skill_for_task, never conclude it does not exist
 - **`missing-tool-handling`** — CLI tool needed for the task is not installed — ask before working around it; do NOT install silently
 - **`model-recommendation`** — Task start, type switch, or skill/command with a model_tier — switch or suggest the right capability tier
+- **`neighbour-precedence`** — A neighbour package's skill, always-on text or MCP tool text disagrees with this suite or the project — follow the source order below the four authority bands; name what you followed
 - **`no-attribution-footers`** — PR/issue/comment/commit bodies — no 'Generated with' / 'Co-authored by' / 'opened by' attribution footers
 - **`no-cheap-questions`** — No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on)
 - **`no-decorative-emojis-in-git-surfaces`** — PR/issue/commit titles and comments — no decorative emojis; bodies only with an in-artifact legend

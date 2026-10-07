@@ -16,8 +16,14 @@
  * the hook path, and `neighbour-overlap.json`, the cross-root pairs keyed by the
  * census digest. Nothing outside that directory is touched, and a failed write
  * is not a failed census.
+ *
+ * `--contradictions` (step 2.2) writes neither cache. It forms candidate pairs
+ * and hands them to ONE council seat, whose question and transcript land under
+ * gitignored `agents/runtime/council/`; with no council configured it prints
+ * `n/a` and asks nobody.
  */
 
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -32,6 +38,22 @@ import {
     type NeighbourCensus,
 } from '../_lib/neighbour_census.js';
 import { scanNeighbourBody, writeScanCache } from '../_lib/neighbour_scan.js';
+import {
+    RANK_NEIGHBOUR_ALWAYS_ON,
+    RANK_NEIGHBOUR_SKILL,
+    RANK_PROJECT,
+    collisionPair,
+    extractInstructions,
+    modalityPairs,
+    parseVerdicts,
+    renderReview,
+    reviewRows,
+    seatPrompt,
+    type CandidatePair,
+    type InstructionSource,
+    type ReviewRow,
+} from '../_lib/neighbour_contradictions.js';
+import { resolveAvailability } from '../council_availability_hook.js';
 import { resolvePackageRoot } from '../_lib/package_root.js';
 import {
     OVERLAP_THRESHOLD,
@@ -144,6 +166,109 @@ export function runCensus(
     return full;
 }
 
+/**
+ * Candidate pairs for `--contradictions` (step 2.2), READ-ONLY.
+ *
+ * Calls `census()` directly rather than `runCensus()`, because the latter
+ * writes the scan and overlap caches and this mode promises to change no file.
+ * The shape scan still runs, and a refused neighbour body contributes no line.
+ */
+export function contradictionCandidates(
+    projectRoot: string,
+    packageRoot: string,
+    homeRoot?: string,
+): CandidatePair[] {
+    const ours = ourSkillNames(packageRoot);
+    const c = census(projectRoot, {
+        gatedEvents: gatedEvents(packageRoot),
+        templatesRoot: path.join(packageRoot, 'src', 'agent-src', 'templates'),
+        ourSkillNames: ours,
+        packageRoot,
+        scan: (p) => scanNeighbourBody(p).kind,
+        ...(homeRoot === undefined ? {} : { homeRoot }),
+    });
+    const sources: InstructionSource[] = [];
+    for (const name of ['CLAUDE.md', 'AGENTS.md']) {
+        const file = path.join(projectRoot, name);
+        if (fs.existsSync(file)) sources.push({ label: name, file, rank: RANK_PROJECT });
+    }
+    for (const r of c.rule_files) {
+        if (scanNeighbourBody(r.source).kind === null) {
+            sources.push({ label: r.id, file: r.source, rank: RANK_NEIGHBOUR_ALWAYS_ON });
+        }
+    }
+    for (const s of c.skills) {
+        if (s.unscanned === null) sources.push({ label: s.qualified, file: s.source, rank: RANK_NEIGHBOUR_SKILL });
+    }
+    const pairs = modalityPairs(sources.flatMap((src) => extractInstructions(src)));
+    for (const s of c.skills) {
+        const name = s.qualified.split(':').slice(1).join(':') || s.qualified;
+        if (ours.has(name)) pairs.push(collisionPair(s.qualified, name));
+    }
+    return pairs;
+}
+
+/** One council seat, run through the council CLI; `null` when it cannot answer. */
+export type Seat = (prompt: string) => string | null;
+
+function councilSeat(projectRoot: string): Seat {
+    return (prompt) => {
+        const stamp = new Date().toISOString().replace(/[:.]/gu, '-');
+        const q = path.join(projectRoot, 'agents', 'runtime', 'council', 'questions', `neighbour-contradictions-${stamp}.md`);
+        const out = path.join(projectRoot, 'agents', 'runtime', 'council', 'responses', `neighbour-contradictions-${stamp}.md`);
+        try {
+            fs.mkdirSync(path.dirname(q), { recursive: true });
+            fs.writeFileSync(q, prompt, 'utf-8');
+            const args = ['council', 'run', q, '--single', '--prompt-mode', 'analysis', '--output', out, '--confirm', '--invocation', 'user_explicit'];
+            const res = spawnSync('agent-config', args, { cwd: projectRoot, encoding: 'utf-8' });
+            if (res.status !== 0) return null;
+            const doc = JSON.parse(fs.readFileSync(out, 'utf-8')) as { responses?: { text?: string }[] };
+            return doc.responses?.map((r) => r.text ?? '').join('\n') ?? null;
+        } catch {
+            return null;
+        }
+    };
+}
+
+/**
+ * `--contradictions`: a verdict table, or `n/a` when no council is configured.
+ *
+ * Report-only — it edits nothing and gates nothing. The council transcript the
+ * seat writes lands under gitignored `agents/runtime/council/`; no tracked file
+ * changes.
+ */
+export function runContradictions(
+    projectRoot: string,
+    packageRoot: string,
+    opts: { homeRoot?: string; seat?: Seat; configured?: boolean } = {},
+): { lines: string[]; rows: ReviewRow[] | null } {
+    const configured =
+        opts.configured ?? resolveAvailability(projectRoot, process.env)?.configured ?? false;
+    const pairs = contradictionCandidates(projectRoot, packageRoot, opts.homeRoot);
+    if (!configured) {
+        return {
+            lines: [`  contradictions: n/a — no council configured (${pairs.length} candidate pair(s) formed, none reviewed)`],
+            rows: null,
+        };
+    }
+    if (pairs.length === 0) return { lines: renderReview([]), rows: [] };
+    let rubric = '';
+    for (const rel of [['dist', 'agent-src', 'rules'], ['src', 'rules']]) {
+        try {
+            rubric = fs.readFileSync(path.join(packageRoot, ...rel, 'neighbour-precedence.md'), 'utf-8');
+            break;
+        } catch {
+            // Try the next layout.
+        }
+    }
+    const answer = (opts.seat ?? councilSeat(projectRoot))(seatPrompt(pairs, rubric));
+    if (answer === null) {
+        return { lines: [`  contradictions: n/a — the council seat did not answer (${pairs.length} candidate pair(s) formed)`], rows: null };
+    }
+    const rows = reviewRows(pairs, parseVerdicts(answer, pairs.length));
+    return { lines: renderReview(rows), rows };
+}
+
 /** The one line the full `doctor` run prints, linking to this verb. */
 export function summaryLine(c: NeighbourCensus): string {
     const counts = [
@@ -218,10 +343,12 @@ export function renderText(c: NeighbourCensus): string[] {
 
 export function main(argv: readonly string[] = process.argv.slice(2)): number {
     let json = false;
+    let contradictions = false;
     let root = process.cwd();
     let home: string | undefined;
     for (let i = 0; i < argv.length; i += 1) {
         if (argv[i] === '--json') json = true;
+        else if (argv[i] === '--contradictions') contradictions = true;
         else if (argv[i] === '--project') {
             root = argv[i + 1] ?? root;
             i += 1;
@@ -236,6 +363,12 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
             process.stderr.write(`doctor neighbours: unknown argument: ${argv[i]}\n`);
             return 2;
         }
+    }
+    if (contradictions) {
+        const r = runContradictions(path.resolve(root), resolvePackageRoot(import.meta.url), home === undefined ? {} : { homeRoot: home });
+        if (json) process.stdout.write(`${JSON.stringify({ contradictions: r.rows })}\n`);
+        else for (const line of r.lines) process.stdout.write(`${line}\n`);
+        return 0;
     }
     const c = runCensus(path.resolve(root), resolvePackageRoot(import.meta.url), home);
     if (json) {

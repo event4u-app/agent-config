@@ -63,6 +63,8 @@ const DOCS_ONLY_ALLOWED_TOP: ReadonlySet<string> = new Set([
 
 // Check names below are the strings GitHub actually REPORTS, verified against
 // `gh pr checks 1108` on 2026-08-02 (road-to-renewal-foundation Phase 1).
+// `Standing payload delta + budget gate` was added to all three shapes on
+// 2026-10-07, when it was found required by the ruleset and absent here.
 //
 // They previously named a matrix that had drifted into fiction — `Consistency`,
 // `Skill Lint`, `Tests / install-tests`, `Tests / node-tests`,
@@ -79,6 +81,7 @@ const DOCS_ONLY_ALLOWED_TOP: ReadonlySet<string> = new Set([
 // change — the exact failure this reconciliation removed.
 const FEATURE_CHECKS = [
     'Sync + Generate Tools Consistency',
+    'Standing payload delta + budget gate',
     'Smoke — kernel',
     'Smoke — router',
     'Smoke — schema',
@@ -98,6 +101,7 @@ const FEATURE_CHECKS = [
 
 const RELEASE_CHECKS = [
     'Sync + Generate Tools Consistency',
+    'Standing payload delta + budget gate',
     'Smoke — kernel',
     'Smoke — router',
     'Smoke — schema',
@@ -112,6 +116,7 @@ const RELEASE_CHECKS = [
 
 const DOCS_ONLY_CHECKS = [
     'Sync + Generate Tools Consistency',
+    'Standing payload delta + budget gate',
     'Smoke — kernel',
     'Smoke — router',
     'Smoke — schema',
@@ -120,8 +125,11 @@ const DOCS_ONLY_CHECKS = [
 
 /**
  * The checks that mechanically BLOCK a merge, per the repository ruleset
- * `main protection` (id 17749383). Everything else above runs and is visible
- * on the PR but does not gate the merge button.
+ * `main protection` (id 17749383), read on 2026-10-07: two required status
+ * contexts, the second added on 2026-09-11 (ADR-276, recorded by #2169).
+ * Everything else above runs and is visible on the PR but does not gate the
+ * merge button. `standing-payload-delta.yml` runs on every `pull_request`, so
+ * the second context appears in all three shapes.
  *
  * Deliberately a constant, not an API read: this script is contractually
  * offline ("never invokes `gh`, never touches the network"). Re-verify with
@@ -129,7 +137,10 @@ const DOCS_ONLY_CHECKS = [
  * changes — `docs/contracts/branch-protection-policy.md` § Change discipline
  * owns that procedure.
  */
-const ENFORCED_CHECKS = ['Sync + Generate Tools Consistency'] as const;
+const ENFORCED_CHECKS = [
+    'Sync + Generate Tools Consistency',
+    'Standing payload delta + budget gate',
+] as const;
 
 /** `git rev-parse --abbrev-ref HEAD`, mirroring `_git(check=True)`. */
 function current_branch(): string {
@@ -314,6 +325,7 @@ export {
     FEATURE_CHECKS,
     RELEASE_CHECKS,
     DOCS_ONLY_CHECKS,
+    ENFORCED_CHECKS,
     current_branch,
     diff_files,
     is_docs_only,

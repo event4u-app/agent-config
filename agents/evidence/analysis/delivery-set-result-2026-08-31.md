@@ -9,6 +9,14 @@ pre-registered in `agents/evidence/analysis/delivery-set-preregistration-2026-08
 Reproduce: `./scripts-run src/scripts/measure_delivery_sets`.
 Machine record: `agents/evidence/analysis/delivery-set-measurement-2026-08-31.json`.
 
+> **The figures on this page are the 2026-08-31 reading, not the current one**
+> (release finding `237f203916c5`, 2026-10-07). The machine record keeps its
+> dated filename but is re-run whenever the train corpus moves, so it is the
+> source and this page is the first reading. Read the current
+> figures there (`metrics`, `corpus`) rather than here; they are not copied in,
+> because a copied figure goes stale the same way these did. Both verdicts below,
+> ceiling breached and token target met, held at the 2026-10-07 reading.
+
 Arm: the shipped `description` index. 82 train corpora, 764 distinct prompts,
 387 positives / 388 negatives, 299-skill catalogue, k = 5. The 18 sealed
 holdout corpora were not read.

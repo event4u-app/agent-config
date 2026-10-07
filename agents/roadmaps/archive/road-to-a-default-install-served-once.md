@@ -38,14 +38,14 @@ instead of as nothing.
 
 ## Phase 1 — One copy, and a visible gap
 
-- [ ] **1.1 A default install is not served twice.** One fixture over a default
+- [x] **1.1 A default install is not served twice.** One fixture over a default
       (unthinned) install counts injected characters for rules whose full body
       already stands. The gate then keys on the installed form of each rule —
       a stub gets the body, a full body gets nothing — or on the same consent
       predicate the installer uses. The fixture asserts zero duplicated bodies
       on a default install and unchanged delivery on an opted-in one.
       verify: `npx vitest run tests/scripts/rule_inject_default_install_no_double.test.ts` -> 0
-- [ ] **1.2 A source reduction shows as pending reinstall.** The standing
+- [x] **1.2 A source reduction shows as pending reinstall.** The standing
       delivery report gains one column per standing rule: installed digest
       against the current source digest, `pending reinstall` where they differ.
       verify: `npx vitest run tests/scripts/check_standing_rule_delivery.test.ts -t 'pending reinstall'` -> 0
@@ -59,10 +59,10 @@ instead of as nothing.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — On a default install the fixture counts zero rule bodies delivered
+- [x] AC-1 — On a default install the fixture counts zero rule bodies delivered
       both as a file and by injection, and an opted-in install's delivery is
       byte-identical to before.
-- [ ] AC-2 — The standing delivery report names every rule whose installed copy
+- [x] AC-2 — The standing delivery report names every rule whose installed copy
       differs from its source.
 
 ## Decisions
@@ -70,6 +70,7 @@ instead of as nothing.
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
 | D1 | reversible-technical | agent | The steps move here unchanged rather than being re-worded | They were accepted in #2225; only their container changed | The installed-layer roadmap is re-reviewed on a later date and can take them back |
+| D2 | reversible-technical | agent | 1.1 keys on BOTH: the installed form decides only when the installer's consent predicate (`installerThinsHost`) is false, so a default install skips full-bodied copies, a stub still gets its body, and an opted-in install is untouched (its full-bodied `no_stub` rules included). The offline `model_rule_injection` harness opts out, because it measures what the concern delivers and must not read the measuring machine's installed files | `rule_inject_default_install_no_double.test.ts`, seen red with the filter neutralised | The default flip of thinning lands, which makes the consent branch the common one |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->

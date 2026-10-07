@@ -644,9 +644,10 @@ obligation the 2026-09-19 entry sets applies in full:
 
 The stale-by-two-corpora condition the 2026-10-01 entry records for
 `delivery-set-result-2026-08-31.md` is NOT repaired here and is not inherited
-silently either: that is a prose record with its own re-take section, this
-change re-ran the JSON the test reads, and conflating the two is the error that
-entry was written to stop.
+silently either: that is a prose record, this change re-ran the JSON the test
+reads, and conflating the two is the error that entry was written to stop. (The
+prose record had no re-take section; since 2026-10-07 it carries a note that
+names the JSON as the current reading, release finding `237f203916c5`.)
 
 ## What this freeze does NOT establish
 

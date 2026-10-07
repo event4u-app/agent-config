@@ -3230,30 +3230,60 @@ gates:
       actually there, which a review caught and which is why the assertion now
       exists rather than the sentence being softened.
   - id: lint_workflow_security
-    argv: []
+    argv: ["--strict"]
     min_scanned: 25
-    corpus: "workflow files under .github/workflows/ — `*.yml` then `*.yaml`, the two globs the gate scans in that order (34 today). The floor is 25 because workflows are consolidated and split routinely, so a handful leaving is normal, while a glob that stopped matching or a directory that moved reads far below it. Counting FILES and not findings is the point: this gate legitimately reports zero findings, so a floor over findings would be the false-count shape this file rejects."
+    corpus: "workflow files under .github/workflows/ — `*.yml` then `*.yaml`, the two globs the gate scans in that order (35 today). The floor is 25 because workflows are consolidated and split routinely, so a handful leaving is normal, while a glob that stopped matching or a directory that moved reads far below it. Counting FILES and not findings is the point: this gate legitimately reports zero findings, so a floor over findings would be the false-count shape this file rejects."
+    status: enforced
+    ci_invocation: .github/workflows/consistency.yml
+    canary:
+      class: contract-violation
+      path: .github/workflows/zz-canary-workflow-security.yml
+      content: |
+        name: zz canary — planted by check_gate_coverage --canary; never ships
+        on:
+          pull_request_target:
+        jobs:
+          build:
+            runs-on: ubuntu-latest
+            steps:
+              - uses: actions/checkout@0000000000000000000000000000000000000000
+                with:
+                  persist-credentials: false
+                  ref: ${{ github.event.pull_request.head.sha }}
+    note: >-
+      road-to-gates-a-pull-request-can-hear 2.1. Until 2026-10-07 the CI
+      invocation carried no `--strict`, so a planted HIGH was reported and the
+      gate still exited 0, and this row carried a no_canary_reason saying so.
+      The AI council (anthropic + openai, 2/2, both choosing option a) decided on
+      2026-10-07 to run the step under `--strict`; the tier assignment of the
+      2026-06-13 lock is unchanged, MEDIUM stays advisory. The recipe above is a
+      `pull_request_target` workflow checking out the untrusted head ref — a HIGH
+      — and `--self-test` (5 cases, 3 rejecting) still pins the tier split from
+      the other side: a MEDIUM under `--strict` must PASS.
+  - id: lint_pack_boundaries
+    argv: ["--quiet"]
+    min_scanned: 600
+    corpus: "source artefacts the shared resolver yields (`_lib/agent_src.iter_artefacts` over skills, rules, agent-src and domains), counted as FILES — 830 on 2026-10-07, of which 139 sit outside any pack's scope and are still counted because they were read. The floor is 600 because artefacts are merged and retired routinely, while a resolver that stopped yielding a root drops by hundreds at once: skills alone are over half the corpus. The violation COUNT is not what this floor guards; that is the ratchet in src/config/gate-violation-baselines.json, which fails the run when it rises above the recorded baseline."
     status: enforced
     ci_invocation: .github/workflows/consistency.yml
     no_canary_reason: >-
-      A create-only canary cannot change this gate's verdict. It is warn-only by
-      design — the council-locked severity model (2026-06-13) makes MEDIUM
-      advisory and only `--strict` turns a HIGH into exit 1 — and the CI
-      invocation this row pins carries no `--strict`, so a planted workflow with
-      a `pull_request_target` untrusted checkout would be REPORTED and the gate
-      would still exit 0. A canary run under a different argv would prove
-      something about an invocation CI does not make, which is the drift
-      `ci_invocation` exists to stop. Discrimination is proven by `--self-test`
-      instead (5 cases, 3 rejecting), which drives the two exits the gate really
-      has rather than the one the CI invocation cannot reach: an empty workflows
-      directory exits 2 instead of printing "0 HIGH, 0 MEDIUM" over nothing, a
-      `pull_request_target` checkout of the untrusted ref exits 1 under
-      `--strict`, and an over-cap allowlist exits 2 instead of suppressing
-      silently. The two accepting cases pin the warn-only tier from the other
-      side — a MEDIUM under `--strict` must still PASS, which is the direction a
-      future re-tiering would silently break, and a clean workflow must pass at
-      all. Seen red deliberately on 2026-10-01 by emptying `DANGEROUS_TRIGGERS`:
-      the HIGH case alone fails, 4/5, and restoring it returns 5/5. Promoting the
-      tier so a canary becomes expressible is a separate decision, recorded
-      unresolved in
-      agents/evidence/analysis/workflow-security-net-degraded-decision.md.
+      A create-only canary cannot discriminate reliably on a ratchet. The gate
+      fails only when the live violation count rises ABOVE the recorded baseline,
+      so a planted violation reads red only while the count sits at the baseline:
+      once real fixes lower the count and nobody lowers the baseline, any fixed
+      plant smaller than that headroom reads green and the ledger would call a
+      live gate dead. Measured once by hand on 2026-10-07 at count == baseline
+      (203): one planted `founder-strategy` -> `gtm-marketing` link read 204 and
+      exited 1. Discrimination is proven instead by `--self-test` (5 cases, 3
+      rejecting), which runs the real CLI over fixture roots where the ratchet is
+      not consulted, so any violation exits 1 whatever the repository's headroom:
+      an undeclared cross-pack link and an artefact with no resolvable pack exit
+      1, an empty corpus exits 2, and a link declared through `requires` and a
+      link inside one pack pass. Seen red deliberately on 2026-10-07 by making the
+      allow rule accept every link: the cross-pack case alone fails, 4/5.
+    note: >-
+      road-to-gates-a-pull-request-can-hear 3.1. Until this row the gate ran only
+      under the local `task ci`, which no workflow invokes, so a pull request that
+      added a cross-pack link got no red check from anything. The step in
+      consistency.yml runs it with this argv; `--self-test` proves the CLI still
+      rejects an undeclared link, an unresolved pack and an empty corpus.

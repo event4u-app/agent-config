@@ -24,6 +24,7 @@ on:
       - 'package.json'           # the `files[]` whitelist + version bump
       - 'package-lock.json'      # runtime_dep_count derives from the lock
       - 'src/cli/registry.ts'    # cli_help_command_count
+      - 'src/scripts/mcp_server/**' # mcp_public_tool_count
       - 'src/config/evaluator-budgets.json'
       - 'src/scripts/install.ts' # headless-install leg
       - 'src/scripts/evaluator_umbrella.sh'

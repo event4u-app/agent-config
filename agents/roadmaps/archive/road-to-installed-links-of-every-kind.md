@@ -42,17 +42,29 @@ commands and contexts get the same one, and the numbers can only go down.
 
 ## Phase 1 — The count, per kind
 
-- [ ] **1.1 One unresolved count per installed kind.** The report gains a
+- [x] **1.1 One unresolved count per installed kind.** The report gains a
       kind selector covering skills, commands, contexts and guidelines beside
       rules, and prints one line per kind of the form `kind: <name> unresolved
       <n> of <m>`, with ADR and `docs/` targets as their own row. It reports and
       fails nothing.
       verify: `./scripts-run src/scripts/report_installed_rule_links --kinds all | grep -c 'kind:'` -> /^[1-9]/
-- [ ] **1.2 The counts become a baseline that only shrinks.** The per-kind
+      Landed 2026-10-06: `--kinds` and `--host` (default `claude-code`) on the
+      existing report, reading every kind through the rule report's own link
+      resolver. First reading for Claude Code: rules 114 of 501, skills 296 of
+      1752, commands 441 of 891, contexts and guidelines not installed,
+      non-projected 314 of 314. Contexts read 107 of 447 for augment, the one
+      host that deploys them; no host deploys guidelines.
+- [x] **1.2 The counts become a baseline that only shrinks.** The per-kind
       numbers are recorded in `src/config/gate-violation-baselines.json` with
       the date and the command, and a test shows a fixture link added to a
       skill raises its kind's count while the recorded baseline does not move.
       verify: `npx vitest run tests/scripts/report_installed_links_kinds.test.ts` -> 0
+      Landed 2026-10-06: five `report_installed_rule_links:kinds:<host>:<kind>`
+      entries, each with `landed` and a `falsifier` naming the command; the
+      report prints each one as `[baseline N]` beside the live count. A kind at
+      zero or not installed carries no entry, because the baseline file admits
+      only positive counts. The test plants one dead link per kind and was seen
+      red with the resolver pointed at the wrong install directory.
 
 ## What this roadmap deliberately does not do
 
@@ -64,9 +76,9 @@ commands and contexts get the same one, and the numbers can only go down.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — One command prints an unresolved count for every installed kind,
+- [x] AC-1 — One command prints an unresolved count for every installed kind,
       with non-projected targets on their own row.
-- [ ] AC-2 — The per-kind counts are recorded with their date and command, and
+- [x] AC-2 — The per-kind counts are recorded with their date and command, and
       a test shows a new dead link moves the count and not the baseline.
 
 ## Decisions

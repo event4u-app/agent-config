@@ -28,6 +28,9 @@
  * TIERS are untouched; only the description of what MEDIUM covers now matches
  * the code. Re-tiering the locked model is a separate decision, recorded as
  * unresolved in agents/evidence/analysis/workflow-security-net-degraded-decision.md.
+ * The CI INVOCATION is decided there too: since 2026-10-07 consistency.yml runs
+ * this gate under `--strict` (AI council, 2/2), so a HIGH fails a pull request;
+ * the tiers are unchanged.
  *
  * Script-injection detection (regex-based) is intentionally deferred — it
  * requires an AST-aware pass to avoid false positives on quoted / escaped
@@ -805,7 +808,9 @@ export function main(argv?: string[]): number {
         );
         if (high.length || medium.length) {
             process.stdout.write(
-                '  (warn-only — run with --strict to make HIGH findings block CI)\n',
+                args.strict
+                    ? '  (--strict — HIGH findings fail this run; MEDIUM stays advisory)\n'
+                    : '  (warn-only — run with --strict to make HIGH findings block CI)\n',
             );
         } else {
             process.stdout.write('  no non-allowlisted findings\n');
@@ -813,6 +818,12 @@ export function main(argv?: string[]): number {
     }
 
     if (args.strict && high.length) {
+        if (args.quiet) {
+            // --quiet suppresses the report; a failing run still names its cause.
+            process.stderr.write(
+                `workflow-security: ${high.length} HIGH under --strict — rerun without --quiet for the findings\n`,
+            );
+        }
         return 1;
     }
     return 0;

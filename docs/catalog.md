@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **744 public artefacts** shipped by
+Consumer-facing catalog of all **745 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -327,7 +327,7 @@ are excluded.
 | skill | [`workspace-link`](../dist/agent-src/skills/workspace-link/SKILL.md) | official | Use when a cross-workspace import will not resolve — cannot find module @org/*, TS2307 — to link the packages properly with the workspace: protocol instead of patching tsconfig paths. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 
-## Rules (119)
+## Rules (120)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -397,6 +397,7 @@ are excluded.
 | rule | [`missing-skill-recovery`](../dist/agent-src/rules/missing-skill-recovery.md) | auto | A skill exists in the tree but not in the host's catalogue — ask for it by TASK via suggest_skill_for_task, never conclude it does not exist |
 | rule | [`missing-tool-handling`](../dist/agent-src/rules/missing-tool-handling.md) | auto | CLI tool needed for the task is not installed — ask before working around it; do NOT install silently |
 | rule | [`model-recommendation`](../dist/agent-src/rules/model-recommendation.md) | auto | Task start, type switch, or skill/command with a model_tier — switch or suggest the right capability tier |
+| rule | [`neighbour-precedence`](../dist/agent-src/rules/neighbour-precedence.md) | auto | A neighbour package's skill, always-on text or MCP tool text disagrees with this suite or the project — follow the source order below the four authority bands; name what you followed |
 | rule | [`no-attribution-footers`](../dist/agent-src/rules/no-attribution-footers.md) | auto | PR/issue/comment/commit bodies — no 'Generated with' / 'Co-authored by' / 'opened by' attribution footers |
 | rule | [`no-cheap-questions`](../dist/agent-src/rules/no-cheap-questions.md) | always | No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on) |
 | rule | [`no-decorative-emojis-in-git-surfaces`](../dist/agent-src/rules/no-decorative-emojis-in-git-surfaces.md) | auto | PR/issue/commit titles and comments — no decorative emojis; bodies only with an in-artifact legend |

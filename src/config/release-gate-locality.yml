@@ -55,7 +55,8 @@ workflow: .github/workflows/release-validation.yml
 
 jobs:
   release-shape:
-    local: 'git diff --name-only origin/main...HEAD | ./scripts-run src/scripts/check_release_pr_shape --files -'
+    # Two steps in one job: the file-name shape, then the manifest content.
+    local: 'git diff --name-only origin/main...HEAD | ./scripts-run src/scripts/check_release_pr_shape --files - && ./scripts-run src/scripts/check_release_manifest_content --base origin/main'
     verify: true
     # The assertion is about a RELEASE PR's diff — every ordinary branch fails
     # it by construction, so running it off a release branch would teach a
