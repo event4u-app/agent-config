@@ -418,6 +418,12 @@ function bareName(ref: string): string {
     return splitResolvedRef(ref).branch;
 }
 
+function sameRemoteBranch(a: string, b: string): boolean {
+    const x = splitResolvedRef(a);
+    const y = splitResolvedRef(b);
+    return x.remote === y.remote && x.branch === y.branch;
+}
+
 /**
  * Resolve the base SET this branch has to be current with.
  *
@@ -435,9 +441,10 @@ export function resolveBase(repo: string, override: string | null, deps: BaseDep
         throw new UnresolvableBase('no --base and no origin/HEAD');
     }
 
-    // A PR targeting the default branch needs no entry — identity by ref name,
-    // or by the SHA both names resolve to.
-    const sameName = defaultRef !== null && bareName(target.ref) === bareName(defaultRef);
+    // A PR targeting the default branch needs no entry — identity by remote and
+    // branch name, or by the SHA both names resolve to. The branch name alone is
+    // not identity: `upstream/main` can sit on a different commit than `origin/main`.
+    const sameName = defaultRef !== null && sameRemoteBranch(target.ref, defaultRef);
     const targetSha = deps.remoteSha(target.ref);
     const defaultSha = defaultRef === null ? null : deps.remoteSha(defaultRef);
     const sameSha = targetSha !== null && defaultSha !== null && targetSha === defaultSha;
