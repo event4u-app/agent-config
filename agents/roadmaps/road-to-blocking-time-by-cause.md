@@ -61,7 +61,7 @@ what grew. No baseline is moved.
 
 ## Phase 1 — Every blocking call has a cause
 
-- [ ] **1.1 A classifier over a fixture transcript.** `probe_turnaround` keeps,
+- [x] **1.1 A classifier over a fixture transcript.** `probe_turnaround` keeps,
       for each call over `BLOCKING_SECONDS`, its tool name and a bounded
       summary of its input, and assigns exactly one cause from a closed set:
       `ci-wait`, `subagent-wait`, `test`, `build`, `network`, `sleep-poll`,
@@ -70,7 +70,7 @@ what grew. No baseline is moved.
       call per cause and one unmatched call asserts each assignment; the test
       is seen red before the classifier exists.
       verify: `npx vitest run tests/scripts/probe_turnaround_causes.test.ts` -> 0
-- [ ] **1.2 Minutes per cause, unknown always printed.** The text and `--json`
+- [x] **1.2 Minutes per cause, unknown always printed.** The text and `--json`
       outputs print blocking calls and minutes per cause beside the existing
       tail line, and the `unknown` row is printed even at zero. The existing
       four figures and the `--against-baseline` exit code are byte-identical
