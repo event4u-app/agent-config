@@ -27,8 +27,10 @@ on:
     # 05:00 UTC on the 1st of each month.
     - cron: "0 5 1 * *"
 
+# One run at a time: a manual dispatch during a scheduled run waits rather than
+# overlapping it, so two ledgers for the same day are never written at once.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.run_id }}
+  group: ${{ github.workflow }}
   cancel-in-progress: false
 
 permissions:

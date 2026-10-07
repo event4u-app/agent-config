@@ -49,11 +49,13 @@ reports 203 violations and exits 0, because 203 is the baseline recorded in
 `src/config/gate-violation-baselines.json`. A 204th would exit non-zero — on a
 machine that ran it.
 
-**Planted once on 2026-10-07** (the recipe the new `lint_pack_boundaries` row in
-`src/config/gate-coverage.yml` declares — a `founder-strategy` skill linking into
-`gtm-marketing`): `./scripts-run src/scripts/lint_pack_boundaries --quiet`
+**Planted once by hand on 2026-10-07** — a `founder-strategy` skill linking into
+`gtm-marketing`: `./scripts-run src/scripts/lint_pack_boundaries --quiet`
 reported `scanned: 831`, 204 violations against a baseline of 203, and exited 1.
-The plant was removed afterwards.
+The plant was removed afterwards. It is not a standing canary recipe: on a
+ratchet a fixed plant reads green once real fixes open headroom under the
+baseline, so the gate-coverage row carries a `no_canary_reason` and relies on
+`--self-test`, which runs over fixture roots the ratchet never judges.
 
 ## Reading 3 — the required checks, contract against ruleset
 
