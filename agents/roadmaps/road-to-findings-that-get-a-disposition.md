@@ -159,7 +159,7 @@ owner, because it reverses a recorded supersession.
 - **If you do nothing:** the four forge findings stay open and 3.3 stays blocked; 3.1 still ships.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-07 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -167,3 +167,4 @@ owner, because it reverses a recorded supersession.
 | 2 | A wider blocking predicate stalls a release | product | Option (a) turns a medium security finding into a release blocker. | The disposition vocabulary already admits `accepted_risk`; a release can answer, not wait. | Phase 2 — Whether a medium security finding blocks |
 | 3 | The offline test passes on a stub | implementation | A test that injects a runner may not exercise the real composition root. | `forgeProtectionJsonFor` already takes `deps`; the test goes through it, not below it. | Phase 3 — A doctor that can stay offline |
 | 4 | Reversing a council-reached default without the owner | product | The default was set by a recorded supersession. | The default change sits behind an owner blocker; only the additive flag ships without it. | Context |
+| 5 | The wider predicate reds an older ledger | implementation | Ledgers 14.21.0 to 16.2.0 hold medium security rows with no status, written while those rows were advisory; `--release <old>` now reds on them. | CI runs the gate only for the version in package.json and for a new release branch, so no shipped release is re-gated; an explicit `--release` on an old version reports the gap, which is the true reading. | Phase 2 — Whether a medium security finding blocks |
