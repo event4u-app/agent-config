@@ -170,14 +170,24 @@ Read its exit and its line together:
   up-to-date branch before merging:
 
   ```bash
-  gh api repos/{owner}/{repo}/branches/<base>/protection --jq .required_status_checks.strict
+  gh api repos/{owner}/{repo}/branches/<base>/protection \
+    --jq .required_status_checks.strict 2>&1; echo "exit=$?"
   gh api repos/{owner}/{repo}/rules/branches/<base> \
-    --jq '.[] | select(.type == "required_status_checks") | .parameters.strict_required_status_checks_policy'
+    --jq '.[] | select(.type == "required_status_checks") | .parameters.strict_required_status_checks_policy'; echo "exit=$?"
   ```
 
-  Either reading `true` means the forge requires an up-to-date branch; both
-  absent or `false` means it does not; a read that fails is treated as
-  required.
+  Each read has three outcomes, told apart by the exit code and the message:
+
+  | Read | Absent | Value | Failed |
+  |---|---|---|---|
+  | classic protection | non-zero exit **and** the output contains `(HTTP 404)` (`Branch not protected`) | exit `0`: `true` or `false` | any other non-zero exit, or output that is not `true` / `false` |
+  | rulesets | exit `0` with empty output (no rule requiring status checks) | exit `0`: `true` or `false` | non-zero exit |
+
+  A `404` from the classic endpoint is not a failed read: it is what a branch
+  protected only by rulesets, or not protected at all, returns. Either reading
+  `true` means the forge requires an up-to-date branch; both absent or `false`
+  means it does not; a **failed** read is treated as required. A base
+  protected by rulesets alone is decided by the rulesets read.
   - **The forge does not require an up-to-date branch**, and the PR is green
     and conflict-free → it goes on to § 3–§ 9 and is merged behind its base;
     the summary row says so (`merged behind <base>; the forge does not require
