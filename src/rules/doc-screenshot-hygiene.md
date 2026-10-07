@@ -28,7 +28,6 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 collision_ok:
   "screenshot": "a screenshot shipping into docs is the PII/anonymization gate"
-# obligation: line 49
 obligation_frequency: "per-event"
 ---
 

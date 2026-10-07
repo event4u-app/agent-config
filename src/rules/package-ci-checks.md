@@ -10,7 +10,6 @@ routes_to:
   - "skill:lint-skills"
 workspaces: [agent-config-maintainer]
 packs: [meta]
-# obligation: line 17
 obligation_frequency: "per-commit"
 ---
 

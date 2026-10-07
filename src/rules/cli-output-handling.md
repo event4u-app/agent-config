@@ -35,7 +35,6 @@ collision_ok:
   "composer": "composer output is verbose — rtk wrap applies"
   "docker": "docker output is verbose — rtk wrap applies"
   "rector": "rector output is verbose — rtk wrap applies"
-# obligation: line 42
 obligation_frequency: "per-edit"
 ---
 

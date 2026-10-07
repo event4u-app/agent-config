@@ -29,7 +29,6 @@ enforced_by:
   - "instruction-only: threat-model-before-you-edit is a pre-edit reasoning step only the model observes"
 collision_ok:
   "tenant": "tenancy is a threat-model-before-edit surface"
-# obligation: line 36
 obligation_frequency: "per-edit"
 evidence:
   source_type: own-analysis

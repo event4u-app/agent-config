@@ -17,7 +17,6 @@ applies_to_user_types:
 self_contained: true
 workspaces: [engineering]
 packs: [meta]
-# obligation: line 37
 obligation_frequency: "per-turn"
 ---
 

@@ -43,7 +43,6 @@ workspaces: [agent-config-maintainer, construction, engineering, finance, founde
 packs: [meta]
 collision_ok:
   "review this contract": "contract review is advisory-shaped — the not-legal-advice footer floor"
-# obligation: line 52
 obligation_frequency: "per-task"
 ---
 

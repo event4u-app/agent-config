@@ -15,7 +15,6 @@ collision_ok:
   "artisan": "artisan runs inside the project container, never on the host"
   "composer": "composer runs inside the project container"
   "docker": "its own core subject"
-# obligation: line 22
 obligation_frequency: "per-edit"
 ---
 

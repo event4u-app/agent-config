@@ -43,7 +43,6 @@ collision_ok:
   "formrequest": "FormRequest named in a generic artifact is leakage — the lint surface"
   "phpstan": "phpstan named in a generic artifact is leakage — the lint surface"
   "rector": "rector named in a generic artifact is leakage — the lint surface"
-# obligation: line 65
 obligation_frequency: "per-edit"
 ---
 
