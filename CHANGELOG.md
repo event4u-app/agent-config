@@ -191,8 +191,11 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   user-global file does not carry them, and the settings GUI no longer offers
   them while it writes there. `agent-config git:convention show` prints the
   value in force, the commit it was read at and a differing checkout value as
-  a candidate; a carrier that does not parse or a target commit that cannot be
-  resolved makes `sync_pr_branch` exit `4`, never merge. A commit-linting config
+  a candidate; `show --key` judges only the named keys. The commit is the
+  `--base` given — a pull request passes `--base origin/<its base>` — else the
+  default branch; nothing asks the forge. A carrier that does not parse makes
+  `sync_pr_branch` exit `4`, a target that names no commit exit `1`, and a named
+  commit that cannot be fetched is `unverified`; none of them merges. A commit-linting config
   in the repository still outranks `git.commit_format`. In a packed consumer
   install `git:convention show` is the git surface that resolves, and the
   consumer matrix proves it with a `git-convention` leg; `sync_pr_branch` and

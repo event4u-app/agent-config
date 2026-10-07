@@ -18,6 +18,7 @@ evidence:
   strength: E1
   basis:
     - agents/evidence/council/git-convention-carrier-2026-10.md
+    - agents/evidence/council/git-convention-target-resolution-2026-10.md
     - agents/roadmaps/archive/road-to-a-git-convention-that-reaches-every-checkout.md
     - src/scripts/_lib/branch_convergence.ts
     - src/scripts/_lib/git_convention.ts
@@ -30,7 +31,8 @@ review_trigger: >-
   then they are consolidated into one repository-policy file instead of adding
   another. Also reopened if a council explicitly broadens the charter of
   `.branch-convergence.yml`, or if a team names a key it needs to override per
-  developer (the revisit condition of the owner's decision D8).
+  developer (the revisit condition of the owner's decision D8), or if a
+  pull-request caller is found that cannot pass its base as `--base` (D10).
 ---
 
 # ADR-283 — A team's git convention is carried by a tracked root file of its own
@@ -78,13 +80,28 @@ request must not come from that pull request.
 
 | Key | Deciding layer | Does the local layer participate? | A branch-local change | `malformed` |
 |---|---|---|---|---|
-| `git.update_strategy` | `.git-convention.yml` at the resolved target commit — an explicit `--base` when given, else the open pull request's base, else the default branch — as the server reports it. Without a carrier that sets the key there, the developer layers read at the repository root decide, as before. | Only when the carrier at the target commit does not set the key. | A candidate, never adopted: an edit on the branch or in the working tree is shown by `git:convention show` and takes effect once it lands on the target. | The blob at the target commit does not parse → exit 4 from `sync_pr_branch`, `git-convention-malformed`. A blob that parses but whose `git:` is not a map is `invalid` (`git-convention-invalid`, exit 4): the file was read, its `git:` value is outside the schema. A target that resolves to no commit — no pull request base, no default branch, a `--base` the server does not know, or a GitHub remote whose `gh` call for the open pull request's base failed (unauthenticated, no network, timed out, unparsable output), which is never read as "no pull request" and never falls back to the default branch (a repository with no GitHub remote, or without `gh`, has no pull request to consult and resolves the default branch) — is exit 1, the base could not be resolved, the exit `sync_pr_branch` already gives a missing base. A target commit that resolves but cannot be fetched is exit 4, `git-convention-unresolvable`, never `merge` — with one narrowing: when the remote does not answer at all and the developer layers read `merge` or nothing, `sync_pr_branch` runs its `unverified` path instead (exit 0, warning, nothing merged), because a run that cannot fetch cannot mutate the branch either. |
+| `git.update_strategy` | `.git-convention.yml` at the resolved target commit — the explicit `--base` when given, else the default branch — as the server reports it. Nothing asks a forge for a pull request's base: a caller acting on a pull request passes `--base origin/<its base>`, and the default-branch path is for operations that are not about a pull request (D10). Without a carrier that sets the key there, the developer layers read at the repository root decide, as before. | Only when the carrier at the target commit does not set the key. | A candidate, never adopted: an edit on the branch or in the working tree is shown by `git:convention show` and takes effect once it lands on the target. | The blob at the target commit does not parse → exit 4 from `sync_pr_branch`, `git-convention-malformed`. A blob that parses but whose `git:` is not a map is `invalid` (`git-convention-invalid`, exit 4): the file was read, its `git:` value is outside the schema. A target that resolves to no commit — no `--base` and no default branch, a ref the server does not know, no origin, or origin unreachable at the ref lookup — is exit 1, the base could not be resolved. A target the server names whose commit cannot be fetched is the `unverified` path: exit 0, a warning, nothing merged. A developer file that is itself a refusal is exit 4 whatever the target does. `sync_pr_branch`'s `strategyExit` is the one function that decides these exits. |
 | `git.commit_format` | `.git-convention.yml` committed at `HEAD`, at the repository root; it overrides every developer layer, the local layer included (D8). Without a carrier that sets the key, the developer layers read at the repository root decide, never per subdirectory. | Only when the carrier does not set the key. | A committed edit is in force for the branch that carries it, because it shapes that branch's own commits; an uncommitted edit is a candidate shown by `show`. | The blob at `HEAD` does not parse → `malformed`; `show` exits 1 and names the file. |
 | `git.branch_pattern` | As `git.commit_format`. | As `git.commit_format`. | As `git.commit_format`. | As `git.commit_format`; a pattern outside the closed alphabet is `invalid`. |
 
 A value outside the schema — a `git:` that is not a map included — is `invalid`
 on every key and is refused the same way `malformed` is. `malformed` is kept for
 a file whose content is unknown because it does not parse.
+
+### Target resolution (D10)
+
+Until D10 the target without `--base` was the open pull request's base, asked
+of the forge. Seven review rounds of that detection (12, 10, 6, 6, 6, 5 and 10
+findings) did not converge: each fix to host matching, authentication or
+offline classification opened a new case, and a wrong answer read a valid
+carrier at the wrong commit and exited 0. The AI council (2/2 convergent,
+`agents/evidence/council/git-convention-target-resolution-2026-10.md`) removed
+the detection: every pull-request caller already knows its base and passes it.
+`show --key` limits `show`'s exit to the requested keys, so `/pr:merge` reads
+the strategy without being stopped by a `commit_format` or `branch_pattern` the
+pull request's head breaks. The stated loss: a human who runs `sync` or `show`
+on a stacked or release-line pull request without `--base` is judged against
+the default branch; that usage is documented as non-pull-request only.
 
 ## Consequences
 
@@ -109,6 +126,8 @@ a file whose content is unknown because it does not parse.
 
 - `agents/evidence/council/git-convention-carrier-2026-10.md` — both readings,
   with attendance stated per run.
+- `agents/evidence/council/git-convention-target-resolution-2026-10.md` — the
+  2/2 reading that removed forge detection from target resolution (D10).
 - `tests/scripts/git_convention_carrier.test.ts` — the carrier facts, before and
   after the carrier: a worktree that merged while the primary refused.
 - `tests/scripts/git_convention_committed_carrier.test.ts` — the authority rows
