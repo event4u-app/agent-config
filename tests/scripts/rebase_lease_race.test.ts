@@ -163,3 +163,30 @@ describe('control — the lease form is what makes the difference', () => {
         expect(published(f)).toBe(f.sb.git(f.me, 'rev-parse', 'HEAD'));
     });
 });
+
+describe('stops before anything is rewritten', () => {
+    it('refuses a topic range that carries a merge commit', () => {
+        const f = fixture('upstream');
+        // A branch that ran under `merge` before the switch carries one.
+        f.sb.git(f.me, 'fetch', '-q', 'origin');
+        f.sb.git(f.me, 'merge', '-q', '--no-edit', 'origin/main');
+        f.sb.git(f.me, 'push', '-q', 'origin', 'feat');
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('carries a merge commit');
+        expect(r.stderr).toContain('--rebase-merges');
+        expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
+        expect(published(f)).toBe(before);
+    });
+
+    it('refuses a dirty working tree', () => {
+        const f = fixture('upstream');
+        fs.writeFileSync(path.join(f.me, 'feat.txt'), 'edited, not committed\n');
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('working tree is dirty');
+        expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
+    });
+});

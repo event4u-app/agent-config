@@ -91,15 +91,25 @@ fi
 [ -n "$REMOTE" ] && [ -n "$RB" ] || { echo "STOP: publish target unresolved — no rewrite" >&2; exit 1; }
 ```
 
-**2. Pin, stop, rebase.** The remote ref is read once; that literal is the
-stop (it must already be in `HEAD`) and, unchanged, the lease. A collaborator's
-push lands either before the pin and halts the stop, or after it and fails the
-lease — it is never overwritten.
+**2. Stop, pin, rebase.** Three stops come first, before anything is
+rewritten: a dirty working tree; a merge commit in the topic range
+(`git rev-list --merges origin/<base>..HEAD` is non-empty) — the default
+`merge` strategy and `/prepare-for-review` put them there, so a branch switched
+to `rebase` usually carries one, and a plain rebase silently drops it;
+`--rebase-merges` is a separate operation the user asks for, never a fallback;
+and commits on the branch you did not author (§ Under `rebase`, shared branch).
+Then the remote ref is read once; that literal is the stop (it must already be
+in `HEAD`) and, unchanged, the lease. A collaborator's push lands either before
+the pin and halts the stop, or after it and fails the lease — it is never
+overwritten.
 
 ```bash
 # rebase-sequence: rebase
 stop() { echo "STOP: $*" >&2; exit 1; }
+[ -z "$(git status --porcelain --untracked-files=no)" ] || stop "the working tree is dirty — nothing was rewritten"
 git fetch -q origin "$BASE"
+[ -z "$(git rev-list --merges "origin/$BASE..HEAD")" ] \
+  || stop "the topic range carries a merge commit, which a plain rebase drops — --rebase-merges is a separate operation the user asks for"
 EXPECTED=$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)
 if [ -n "$EXPECTED" ]; then
   git fetch -q "$REMOTE" "refs/heads/$RB"

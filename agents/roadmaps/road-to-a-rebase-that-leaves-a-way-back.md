@@ -119,7 +119,7 @@ review, the conformance count, a merge run — is decided, not discovered.
 
 ## Phase 2 — A rewrite with a way back and an equivalence report
 
-- [ ] **2.1 Three stops before the rebase.** The `rebase` row stops when the
+- [x] **2.1 Three stops before the rebase.** The `rebase` row stops when the
       topic range carries a merge commit
       (`git rev-list --merges origin/<base>..HEAD` is non-empty), when the
       working tree is dirty, and on the foreign-commit rule
