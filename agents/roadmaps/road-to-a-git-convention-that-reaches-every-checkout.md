@@ -189,7 +189,7 @@ writes it into settings files and the rename becomes a migration.
 
 ## Phase 2 — The declaration reaches every checkout
 
-- [ ] **2.1 The carrier facts become tests.**
+- [x] **2.1 The carrier facts become tests.**
       `tests/scripts/git_convention_carrier.test.ts` asserts today's behaviour:
       a worktree with its own commit merges while the primary refuses; a key in
       the team file reads "not set"; a key written through the GUI's write root
