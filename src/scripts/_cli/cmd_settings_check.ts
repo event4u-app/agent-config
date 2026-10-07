@@ -204,7 +204,8 @@ const _PRESCAN_RULES: readonly PrescanRule[] = [
 ];
 
 interface Finding {
-    line: number;
+    /** null when no single line can be named, printed as `line:-`. */
+    line: number | null;
     kind: string;
     verdict: string;
     hint: string;
@@ -266,9 +267,8 @@ function _git_convention_findings(target: string, text: string): Finding[] {
     for (const key of GIT_CONVENTION_KEYS) {
         const reading = readGitConventionKey(key, fileSource({ developer: [target] }), {});
         if (reading.state !== 'invalid' && reading.state !== 'malformed') continue;
-        const keyLine = lines.findIndex((l) => new RegExp(`^\\s+${key}\\s*:`).test(l));
         findings.push({
-            line: keyLine + 1,
+            line: _gitKeyLine(lines, key),
             kind: `git.${key}`,
             verdict: reading.state,
             hint: reading.detail ?? reading.state,
@@ -277,9 +277,25 @@ function _git_convention_findings(target: string, text: string): Finding[] {
     return findings;
 }
 
+/**
+ * The 1-based line of `key` inside a block-style `git:` section, or null: a
+ * same-named key elsewhere is not it, and an inline `git:` value has no line
+ * of its own to name.
+ */
+function _gitKeyLine(lines: readonly string[], key: string): number | null {
+    const start = lines.findIndex((l) => /^git\s*:\s*(#.*)?$/.test(l));
+    if (start === -1) return null;
+    for (let i = start + 1; i < lines.length; i++) {
+        const l = lines[i] as string;
+        if (/^\S/.test(l) && !l.startsWith('#')) return null;
+        if (new RegExp(`^\\s+${key}\\s*:`).test(l)) return i + 1;
+    }
+    return null;
+}
+
 function _format(finding: Finding): string {
     return (
-        `  ❌  line:${_ljust(String(finding.line), 4)}  ` +
+        `  ❌  line:${_ljust(finding.line === null ? '-' : String(finding.line), 4)}  ` +
         `${_ljust(finding.kind, 22)}  ${_ljust(finding.verdict, 14)}  ${finding.hint}`
     );
 }

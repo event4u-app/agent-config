@@ -198,6 +198,24 @@ describe('cmd_settings_check — the git convention keys', () => {
         expect(t.stderr).toContain('line:3');
     });
 
+    it('names the line under git:, not a same-named key in another section', () => {
+        const root = freshRoot();
+        writeFixture(root, 'other:\n  update_strategy: anything\ngit:\n  update_strategy: rebsae\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.status).toBe(1);
+        expect(t.stderr).toMatch(/line:4 +git\.update_strategy/);
+    });
+
+    it('claims no line when git: is not a block map', () => {
+        const root = freshRoot();
+        writeFixture(root, 'git: rebase\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.status).toBe(1);
+        expect(t.stderr).toContain('git.update_strategy');
+        expect(t.stderr).not.toContain('line:0');
+        expect(t.stderr).toMatch(/line:- +git\.update_strategy/);
+    });
+
     it('fails a branch pattern that could reach a shell', () => {
         const root = freshRoot();
         writeFixture(root, 'git:\n  branch_pattern: "a;b/{slug}"\n');
