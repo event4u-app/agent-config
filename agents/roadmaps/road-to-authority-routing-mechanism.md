@@ -381,7 +381,7 @@ before 8.3 gates anything.*
 - **Recommendation:** Decide who holds the signing credential (or equivalent platform identity) the registry in Phase 3.1/3.2 binds to, and how it is stored — this is custody of a real credential, which the dangerous-action test's predicate 5 (recovery needs a privileged credential) routes to you.
 - **If you do nothing:** Phase 3.2 cannot choose a concrete registry implementation; it stays a design sketch.
 - **What to do:**
-  1. Name the credential type (a signing key, a platform app identity, a required-reviewer group) and where it lives, and record it as the `credential_ref` field this blocker's resolution adds to `src/config/approver-registry.json`.
+  1. Name the credential type — (a) a signing key, (b) a platform app identity, or (c) a required-reviewer group bound via the existing `platform-anchor.json` layer — and where it lives.
 - **Resolved when:** This blocker's `Status:` is `resolved` with the custody decision recorded.
 
 ### blocker: approver-credential-revocation-policy
@@ -392,7 +392,7 @@ before 8.3 gates anything.*
 - **Recommendation:** Define how an approver credential is revoked (departure, compromise, role change) and how fast the registry must reflect it — a revocation policy is a standing authority decision, not a technical default the agent should pick.
 - **If you do nothing:** The registry ships with no revocation path, so a compromised or stale credential stays valid indefinitely.
 - **What to do:**
-  1. Name the revocation trigger and the maximum propagation delay, and record it as the `revocation_policy` field this blocker's resolution adds to `src/config/approver-registry.json`.
+  1. Name the revocation trigger — (a) departure, (b) credential compromise, or (c) role change — and the maximum propagation delay.
 - **Resolved when:** This blocker's `Status:` is `resolved` with the policy recorded.
 
 ### blocker: ratification-approval-expiry-window
