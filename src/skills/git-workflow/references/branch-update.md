@@ -87,7 +87,12 @@ resolved target with no remote ref is a branch that was never pushed.
 configuration determines one; with an open pull request, its head repository and
 `headRefName` (`gh pr view --json headRefName,headRepository,headRepositoryOwner`)
 name it — set `PR_HEAD_REPO=<owner>/<name>` and `PR_HEAD_REF=<headRefName>`
-first. The two must agree when both resolve.
+first. The two must agree when both resolve. A target that names the base
+branch — `BASE`, or the default branch the publish remote reports — is a stop:
+under `push.default=upstream` or `tracking`, `@{push}` of a branch cut with
+`--track origin/main` IS `origin/main`, and nothing later in the sequence would
+notice — the base is an ancestor of `HEAD`, so the pin passes
+and the lease is the base's own SHA.
 
 ```bash
 # rebase-sequence: resolve
@@ -106,6 +111,11 @@ if [ -n "${PR_HEAD_REPO:-}" ]; then
   REMOTE=$PR_REMOTE RB=$PR_HEAD_REF
 fi
 [ -n "$REMOTE" ] && [ -n "$RB" ] || { echo "STOP: publish target unresolved — no rewrite" >&2; exit 1; }
+DEF=$(git ls-remote --symref "$REMOTE" HEAD | awk '$1 == "ref:" { sub("^refs/heads/", "", $2); print $2; exit }')
+for b in "${BASE:-}" "$DEF"; do
+  [ -z "$b" ] || [ "$RB" != "$b" ] \
+    || { echo "STOP: the publish target $REMOTE/$RB is the base branch — a rewrite is never published onto its base" >&2; exit 1; }
+done
 ```
 
 **2. Stop, pin, rebase.** Three stops come first, before anything is

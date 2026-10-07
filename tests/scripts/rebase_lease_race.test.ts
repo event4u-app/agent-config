@@ -142,6 +142,39 @@ describe('an unresolved publish target', () => {
         expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
     });
 
+    it('refuses a publish target that is the base itself, as push.default=upstream resolves it', () => {
+        const f = fixture('upstream');
+        f.sb.git(f.me, 'branch', '-u', 'origin/main');
+        f.sb.git(f.me, 'config', 'push.default', 'upstream');
+        expect(f.sb.git(f.me, 'rev-parse', '--symbolic-full-name', '@{push}')).toBe('refs/remotes/origin/main');
+        // Already on top of the base, so the "has commits this branch lacks" stop cannot catch it.
+        f.sb.git(f.me, 'fetch', '-q', 'origin');
+        f.sb.git(f.me, 'rebase', '-q', 'origin/main');
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const baseBefore = f.sb.git(f.me, 'ls-remote', 'origin', 'refs/heads/main').split('\t')[0];
+        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('is the base branch');
+        expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
+        expect(f.sb.git(f.me, 'ls-remote', 'origin', 'refs/heads/main').split('\t')[0]).toBe(baseBefore);
+    });
+
+    it('refuses the remote default branch even when BASE is not a branch name', () => {
+        const f = fixture('upstream');
+        f.sb.git(f.me, 'branch', '-u', 'origin/main');
+        f.sb.git(f.me, 'config', 'push.default', 'upstream');
+        const r = runBlocks(f.sb, f.me, sequenceBlock('resolve'), { BASE: '' });
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('is the base branch');
+    });
+
+    it('refuses a pull request head that names the base branch', () => {
+        const f = fixture('fork-pr-head');
+        const r = runBlocks(f.sb, f.me, SEQUENCE, { ...f.env, PR_HEAD_REF: 'main' });
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('is the base branch');
+    });
+
     it('stops when @{push} and the pull request head disagree', () => {
         const f = fixture('pushRemote');
         const r = runBlocks(f.sb, f.me, SEQUENCE, { ...f.env, PR_HEAD_REPO: 'upstream/project', PR_HEAD_REF: 'feat' });
