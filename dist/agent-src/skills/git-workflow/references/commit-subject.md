@@ -112,7 +112,7 @@ format ticket-conventional  ^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refac
 family conventional         ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
 family ticket-conventional  ^[A-Z][A-Z0-9]+-[0-9]+ (build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
 family ticket-prefix        ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
-family gitmoji              ^:[a-z0-9_+-]+:[[:space:]]|^[^[:ascii:][:space:]]
+family gitmoji              ^:[a-z0-9_+-]+:[[:space:]]|^[^ -~[:cntrl:][:space:]]
 family imperative-plain     ^[A-Z][a-z]+[[:space:]].*[^.]$
 ```
 

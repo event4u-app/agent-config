@@ -84,13 +84,15 @@ export const FAMILY_ERE: ReadonlyArray<readonly [SubjectFamily, string]> = [
     ['conventional', '^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\([^)]+\\))?!?: '],
     ['ticket-conventional', `^${TICKET_GRAMMAR} (build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\([^)]+\\))?!?: `],
     ['ticket-prefix', `^\\[${TICKET_GRAMMAR}\\][: ]|^${TICKET_GRAMMAR}[: ]`],
-    ['gitmoji', '^:[a-z0-9_+-]+:[[:space:]]|^[^[:ascii:][:space:]]'],
+    // `[:ascii:]` is not a POSIX class (GNU and BSD grep reject it); a leading
+    // character outside printable ASCII, the controls and the spaces is the same set.
+    ['gitmoji', '^:[a-z0-9_+-]+:[[:space:]]|^[^ -~[:cntrl:][:space:]]'],
     ['imperative-plain', '^[A-Z][a-z]+[[:space:]].*[^.]$'],
 ];
 
-/** The two POSIX classes the families use, and nothing else, translated for a JavaScript engine. */
+/** The two POSIX bracket expressions the families use, and nothing else, translated for a JavaScript engine. */
 function _js(ere: string): RegExp {
-    return new RegExp(ere.replaceAll('[^[:ascii:][:space:]]', '[^\\x00-\\x7F\\s]').replaceAll('[[:space:]]', '\\s'));
+    return new RegExp(ere.replaceAll('[^ -~[:cntrl:][:space:]]', '[^\\x00-\\x7F\\s]').replaceAll('[[:space:]]', '\\s'));
 }
 
 const FAMILY_JS: ReadonlyArray<readonly [SubjectFamily, RegExp]> = FAMILY_ERE.map(([f, ere]) => [f, _js(ere)] as const);

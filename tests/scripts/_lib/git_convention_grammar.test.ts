@@ -1,3 +1,4 @@
+import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -128,5 +129,23 @@ describe('branch renderer', () => {
         expect(renderBranch('{type}/{slug}', { type: 'feat', slug: 'has space' }).ok).toBe(false);
         expect(renderBranch('{type}/{slug}', { type: 'feat', slug: '' }).ok).toBe(false);
         expect(renderBranch('{ticket}-{slug}', { ticket: 'dev-1', slug: 'x' }).ok).toBe(false);
+    });
+});
+
+describe('the family EREs are POSIX extended, as the reference says', () => {
+    // The reference is the fallback a command applies with `grep -E` when the
+    // binary cannot run, so each expression must compile under the system grep.
+    const grepE = (ere: string, input: string) => spawnSync('grep', ['-E', ere], { input, encoding: 'utf8' });
+    const SUBJECTS = ['feat(api): add x', 'DEV-1 fix: y', '[DEV-1] z', ':sparkles: add x', '✨ add x', 'Add the thing', 'add the thing.', '~ tilde'];
+
+    it.each(FAMILY_ERE.map(([family, ere]) => [family, ere] as const))('%s compiles under grep -E', (_family, ere) => {
+        expect(grepE(ere, 'x\n').status).not.toBe(2);
+    });
+
+    it('grep -E classifies like the in-process matcher, first hit wins', () => {
+        for (const subject of SUBJECTS) {
+            const byGrep = FAMILY_ERE.find(([, ere]) => grepE(ere, `${subject}\n`).status === 0)?.[0] ?? 'other';
+            expect(byGrep, subject).toBe(classifySubject(subject));
+        }
     });
 });
