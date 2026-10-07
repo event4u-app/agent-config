@@ -108,13 +108,62 @@ const NOISE_SEGMENT = /^(cd\b|export\b|set\b|[A-Za-z_][A-Za-z0-9_]*=\S*$)/;
 /** A loop keyword in front of a body: `for …; do sleep 60` reads as the sleep. */
 const LOOP_KEYWORD = /^(do|then|else)\s+/;
 
-/** Exactly one cause per call; `unknown` when no rule matches. */
+/**
+ * Split a shell command at `;`, `&&`, `||`, `|` and newlines that sit OUTSIDE
+ * quotes. A separator inside `"…"` or `'…'`, or escaped with a backslash, is
+ * part of an argument — splitting there would read a commit message as a
+ * command. Not a shell parser: subshells, `$(…)` and heredocs are not modelled.
+ */
+function shellSegments(cmd: string): string[] {
+    const out: string[] = [];
+    let cur = '';
+    let quote: '' | '"' | "'" = '';
+    for (let i = 0; i < cmd.length; i++) {
+        const ch = cmd[i] as string;
+        if (quote === '' && ch === '\\' && i + 1 < cmd.length) {
+            cur += ch + (cmd[i + 1] as string);
+            i++;
+            continue;
+        }
+        if (quote !== '') {
+            if (ch === quote) quote = '';
+            cur += ch;
+            continue;
+        }
+        if (ch === '"' || ch === "'") {
+            quote = ch;
+            cur += ch;
+            continue;
+        }
+        const two = cmd.slice(i, i + 2);
+        if (two === '&&' || two === '||') {
+            out.push(cur);
+            cur = '';
+            i++;
+            continue;
+        }
+        if (ch === ';' || ch === '|' || ch === '\n') {
+            out.push(cur);
+            cur = '';
+            continue;
+        }
+        cur += ch;
+    }
+    out.push(cur);
+    return out;
+}
+
+/**
+ * Exactly one cause per call; `unknown` when no rule matches. A compound
+ * command takes the cause of its FIRST matching segment, so `git commit && git
+ * push` reads as the push — the whole call's time lands on that one cause.
+ */
 export function classifyBlockingCall(tool: string, input: unknown): BlockingCause {
     if (tool.startsWith('mcp__')) return 'mcp';
     const byName = TOOL_CAUSE[tool];
     if (byName !== undefined) return byName;
     if (tool !== 'Bash' || !isObj(input) || typeof input['command'] !== 'string') return 'unknown';
-    for (const raw of input['command'].split(/;|&&|\|\||\||\n/)) {
+    for (const raw of shellSegments(input['command'])) {
         const seg = raw.trim().replace(LOOP_KEYWORD, '');
         if (seg === '' || NOISE_SEGMENT.test(seg)) continue;
         for (const [re, cause] of SHELL_RULES) if (re.test(seg)) return cause;

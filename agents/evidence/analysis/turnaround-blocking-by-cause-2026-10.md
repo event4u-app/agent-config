@@ -71,26 +71,35 @@ Each new rule is pinned in `tests/scripts/probe_turnaround_causes.test.ts`.
 
 ## Second pass — the reading
 
-Same command, same window — the four existing figures came out identical in
-both passes, so the corpus did not move between them:
+Same window — the four existing figures came out identical in every pass, so
+the corpus did not move between them. The table is the classifier as it ships
+in PR #2248, after a review of that PR made shell splitting quote-aware (a `;`
+or `|` inside a quoted argument no longer opens a segment); that moved one call
+of 1 min from `network` to `unknown` and changed nothing else:
 
 | Cause | Calls | Minutes | Share of blocking minutes |
 |---|---:|---:|---:|
 | user-wait | 4 | 353 | 44.0 % |
 | ci-wait | 40 | 261 | 32.5 % |
-| network | 69 | 113 | 14.1 % |
+| network | 68 | 112 | 14.0 % |
 | sleep-poll | 3 | 28 | 3.5 % |
 | build | 10 | 17 | 2.1 % |
 | test | 6 | 12 | 1.5 % |
-| unknown | 8 | 11 | 1.4 % |
+| unknown | 9 | 12 | 1.5 % |
 | subagent-wait | 5 | 6 | 0.7 % |
 | mcp | 0 | 0 | 0.0 % |
 | **total** | **145** | **802** | |
 
-The unknown share is now 11 of 802 blocking minutes (1.4 %), below every named
-cause above `test`, so the reading bounds the claim below. What is left in
+The unknown share is now 12 of 802 blocking minutes (1.5 %), far below the
+largest named cause, so the reading bounds the claim below. What is left in
 `unknown` is short calls with no common shape (a gate-coverage check run four
 times, a heredoc script, a branch loop).
+
+**What the classifier cannot see.** A compound command takes the cause of its
+first matching segment, so `git commit && git push` puts the whole call's time
+— commit hooks included — on `network`. Subshells, `$(…)` and heredoc bodies
+are not modelled. Per-cause minutes are therefore an attribution by rule, not a
+measurement of where inside a call the time went.
 
 ## The hypothesis — refuted
 

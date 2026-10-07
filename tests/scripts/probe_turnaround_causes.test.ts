@@ -121,6 +121,15 @@ describe("classifyBlockingCall — 1.1", () => {
     expect(classifyBlockingCall("ExitPlanMode", {})).toBe("user-wait");
   });
 
+  // Review of #2248: a separator inside quotes is part of an argument, not a
+  // command boundary, so the quoted text must not be read as a command.
+  it("does not split a command inside a quoted argument", () => {
+    expect(classifyBlockingCall("Bash", { command: 'git commit -m "x; npx vitest run"' })).toBe("unknown");
+    expect(classifyBlockingCall("Bash", { command: "perl -pe 's/a|sleep 9/b/' f" })).toBe("unknown");
+    expect(classifyBlockingCall("Bash", { command: 'git commit -m "a && b" && git push' })).toBe("network");
+    expect(classifyBlockingCall("Bash", { command: "echo \\; ; npx vitest run" })).toBe("test");
+  });
+
   it("never invents a cause for an unmatched call", () => {
     expect(classifyBlockingCall("SomeNewTool", {})).toBe("unknown");
     expect(classifyBlockingCall("Bash", {})).toBe("unknown");

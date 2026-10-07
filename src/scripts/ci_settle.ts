@@ -287,9 +287,9 @@ export function renderNoSettle(timeoutMin: number, last: PollState | null): stri
     const lines: string[] = [];
     let next = '';
     if (last !== null && last.kind === 'pending' && last.total > 0) {
-        const names = (last.pendingNames ?? []).map((n) =>
-            n.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').trim().slice(0, MAX_NAME_CHARS),
-        );
+        const names = (last.pendingNames ?? [])
+            .map((n) => n.replace(/[\u0000-\u001f\u007f-\u009f\u2028\u2029]/g, ' ').trim().slice(0, MAX_NAME_CHARS))
+            .filter((n) => n !== '');
         const shown = names.slice(0, MAX_NAMED).join(', ');
         const more = names.length > MAX_NAMED ? ` (+${String(names.length - MAX_NAMED)} more)` : '';
         lines.push(

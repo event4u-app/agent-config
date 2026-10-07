@@ -526,6 +526,11 @@ describe('renderNoSettle — what an expired wait hands its caller', () => {
         expect(text).toContain('+5 more');
     });
 
+    it('drops a name that is empty once sanitised, and strips Unicode line separators', () => {
+        const lines = renderNoSettle(9, pending(['\u0007\u0008', 'a\u2028b', 'c']));
+        expect(lines[0]).toBe('ci_settle: 8/11 settled; still pending: a b, c');
+    });
+
     it('says nothing about pending checks when the last poll could not be read', () => {
         const lines = renderNoSettle(9, { kind: 'unreadable', reason: 'HTTP 502' });
         expect(lines).toHaveLength(1);
