@@ -453,7 +453,7 @@ describe('exit codes — a present-but-empty ledger is not the same state as an 
         expect(r.out).toContain('no_findings_reason');
     });
 
-    it('the CLI passes the ledger release to the cutoff: an open medium security row is red only after it', () => {
+    it('the CLI --release decides the cutoff: an open medium security row is red only after it', () => {
         const [maj, min] = MEDIUM_SECURITY_BLOCKS_AFTER.split('.').map(Number) as [number, number];
         const after = `${maj}.${min + 1}.0`;
         const row = finding({ severity: 'medium', kind: 'security' });
@@ -465,6 +465,13 @@ describe('exit codes — a present-but-empty ledger is not the same state as an 
         const later = runGate(ledgerDir({ schema_version: 1, release: after, findings: [row] }, after), after);
         expect(later.code).toBe(1);
         expect(later.out).toContain('no disposition status');
+        // A ledger whose own `release` field lags the version being cut is still
+        // judged by the version being cut.
+        const stale = runGate(
+            ledgerDir({ schema_version: 1, release: MEDIUM_SECURITY_BLOCKS_AFTER, findings: [row] }, after),
+            after,
+        );
+        expect(stale.code).toBe(1);
     });
 
     it('present + dispositioned findings exits 0 and needs no reason', () => {

@@ -298,7 +298,7 @@ export function settleFindingsLedger(
                 // the operator `scanned: N` and discarded the entire reason the
                 // release stopped.
                 [verdict.stdout, verdict.stderr].map((s) => s.trim()).filter(Boolean).join('\n'),
-                blockingWithoutDisposition(path.join(deps.repoRoot, rel)),
+                blockingWithoutDisposition(path.join(deps.repoRoot, rel), version),
                 'task release -- --resume --yes',
             ),
         );
@@ -312,17 +312,20 @@ export function settleFindingsLedger(
  *
  * The gate refuses for more shapes than this counts (an unknown status, an
  * empty rationale or verifier, a `fixed` with no commit, a malformed ledger),
- * which is why the gate's own output is what the operator is shown.
+ * which is why the gate's own output is what the operator is shown. It
+ * classifies against the version being released, the same input the gate
+ * reads from `--release`, not the ledger file's own `release` field.
  */
-function blockingWithoutDisposition(ledgerAbs: string): number {
+export function blockingWithoutDisposition(ledgerAbs: string, version: string): number {
     if (!fs.existsSync(ledgerAbs)) {
         return 0;
     }
     try {
         const ledger = parse_ledger(fs.readFileSync(ledgerAbs, 'utf-8'), ledgerAbs);
-        return ledger.findings.filter(
-            (f) => isBlocking(f, ledger.release) && (!f.status || f.status.trim() === 'still_open'),
-        ).length;
+        return ledger.findings.filter((f) => {
+            const status = (f.status ?? '').trim();
+            return isBlocking(f, version) && (status === '' || status === 'still_open');
+        }).length;
     } catch {
         return 0;
     }

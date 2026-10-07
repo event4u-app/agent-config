@@ -8,12 +8,14 @@ import { describe, expect, it } from 'vitest';
 
 import {
     INTEGRITY_FIELDS,
+    MEDIUM_SECURITY_BLOCKS_AFTER,
     type Ledger,
     empty_ledger_problem,
     merge_ingest,
 } from '../../src/scripts/check_finding_dispositions.js';
 import {
     FINDINGS_WORKFLOW,
+    blockingWithoutDisposition,
     dispositionStopMessage,
     ledgerAbsentMessage,
     ledgerOnBranchArgv,
@@ -375,6 +377,42 @@ describe('merge_ingest — a review that found nothing', () => {
         });
         expect(reasoned).toBe(false);
         expect(ledger.no_findings_reason).toBeUndefined();
+    });
+});
+
+describe('blockingWithoutDisposition — the stop figure', () => {
+    const write = (findings: unknown[], release = '9.9.9'): string => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bwd-'));
+        const file = path.join(dir, 'ledger.json');
+        fs.writeFileSync(file, JSON.stringify({ schema_version: 1, release, findings }));
+        return file;
+    };
+    const row = (extra: Record<string, unknown>) => ({
+        finding_id: Math.random().toString(16).slice(2, 14),
+        severity: 'medium',
+        kind: 'security',
+        title: 't',
+        ...extra,
+    });
+    const after = (() => {
+        const [maj, min] = MEDIUM_SECURITY_BLOCKS_AFTER.split('.').map(Number) as [number, number];
+        return `${maj}.${min + 1}.0`;
+    })();
+
+    it('counts no status, whitespace status and still_open; not a real disposition', () => {
+        const file = write([
+            row({}),
+            row({ status: '   ' }),
+            row({ status: 'still_open' }),
+            row({ status: 'accepted_risk', rationale: 'r', verified_by: 'v' }),
+        ]);
+        expect(blockingWithoutDisposition(file, after)).toBe(3);
+    });
+
+    it('classifies against the version being released, not the ledger field', () => {
+        const file = write([row({})], MEDIUM_SECURITY_BLOCKS_AFTER);
+        expect(blockingWithoutDisposition(file, after)).toBe(1);
+        expect(blockingWithoutDisposition(file, MEDIUM_SECURITY_BLOCKS_AFTER)).toBe(0);
     });
 });
 

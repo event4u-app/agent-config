@@ -100,7 +100,8 @@ ledger does not yet record it.
   (`check_finding_dispositions.isBlocking`) is stricter by one cell: a
   **medium security** finding needs a disposition before a release ships, while
   it stays advisory at merge (council 2026-10-07, 2/2). `accepted_risk` with a
-  rationale satisfies it; `still_open` does not. It binds releases after 16.3.0
+  rationale and a `verified_by` satisfies it, like any blocking row; `still_open`
+  does not. It binds releases after 16.3.0
   (`MEDIUM_SECURITY_BLOCKS_AFTER`); earlier ledgers are judged as they shipped.
 - `gateVerdict(findings, {enforce})` — mirrors
   `check_quality_regression.gateVerdict`: `0` pass / `2` block. Shipped
