@@ -32,6 +32,12 @@
  *   - `payload` — names the payload a concern receives (`payload`, `stdin`).
  *   - `neither` — everything else (timing, state I/O, logging).
  *   - `concern` — imported by the concern table; outside the fence.
+ *
+ * The classes read NAMES, not data flow. A module already in the closure as
+ * `payload` or `neither` that gains verdict-influencing logic under a neutral
+ * name is not reclassified; the gate covers the arrival of such a module
+ * (`closureArrivals`) and its declassification (the base∪head union), not this.
+ * Closing it needs call-graph analysis — a different design, not a tweak.
  */
 
 import * as fs from 'node:fs';
