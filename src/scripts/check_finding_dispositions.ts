@@ -319,9 +319,9 @@ export function mediumSecurityBinds(release: string | null): boolean {
  *
  * The cutoff orders by version, not by publication date: a maintenance release
  * on an older line (a 16.2.x cut after the decision) sits at or before the
- * cutoff and is exempt. This package ships from one line, so no such release
- * exists; one that is cut is a reason to revisit this, not to read it as
- * covered.
+ * cutoff and is exempt. The council ratified the prospective cutoff and this
+ * documented exemption on 2026-10-07 (2/2); cutting a maintenance line is the
+ * condition that reopens it.
  *
  * The `contradicted` clause is shared with the merge gate, and has to be or the
  * two disagree: the review would stop counting a disproved deletion claim as

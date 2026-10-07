@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: ready
@@ -18,7 +20,7 @@ relates:
 ---
 # Road to findings that get a disposition
 
-> **Source:** an external review round (opaque id inbox-2026-10-e), round
+> **Source:** [REDACTED:src-conf]
 > `agents/tmp.old/inbox-2026-10-e/`. Every anchor below was re-read at `main` @
 > `a75bb3210` on 2026-10-06; finding counts were read from the ledger at the
 > same commit.
@@ -146,8 +148,7 @@ owner, because it reverses a recorded supersession.
 | D2 | reversible-technical | agent | The offline flag ships before the default question is answered | Additive; it changes nothing for anyone who does not pass it | The owner chooses (a) and the flag becomes redundant |
 | D3 | reversible-technical | council:2026-10-07 medium-security-is-blocking | Option (a) of `medium-security-is-blocking`, release gate only: `check_finding_dispositions.isBlocking` admits `security × medium`; `self_review_gate.classifyBlocking` keeps the 2026-07-08 predicate, and the two now differ by exactly that cell, pinned by a matrix test | Council 2026-10-07, claude-sonnet-4-5 + codex, 2 rounds, 2/2 concluded, $0 (subscription seats). Deciding reason: a medium security finding crossed 16.2.0 and 16.3.0 with nobody required to decide it, and `accepted_risk` keeps the gate answerable without a fix. Both seats rejected moving the merge gate: merge asks whether a change may enter trunk, release whether a known risk may ship | Medium security findings routinely get formulaic `accepted_risk` over three consecutive releases, or exceed about ten per release |
 | D4 | reversible-technical | agent | Seventeen rows that are real, unfixed and had no carrier (fourteen read in 1.1 and 1.2, three a council had already read `still_open`) name a new stub, `road-to-the-16-3-0-findings-residue`, rather than being fixed here | Fixing them is outside this roadmap's scope, and D1 forbids `accepted_risk` for unfinished work; each item there names its evidence and what closes it | A live roadmap adopts one of the six groups; its rows then name that roadmap |
-| D5 | reversible-technical | council:2026-10-07 medium-security-cutoff-and-carry | The medium-security widening binds releases after 16.3.0 only (`MEDIUM_SECURITY_BLOCKS_AFTER`); `eff3d4ed3fee` is `still_open`, carried by step 3.3, and the two symlink rows are `still_open`, carried by the residue stub | Two R2 rounds on this branch: round 1 found `fixed` overstated all three rows, round 2 found that `accepted_risk` on `eff3d4ed3fee` was a relabel to keep the widened gate green, against D1. A retroactive widening leaves only those two outcomes or a red trunk for an already-shipped release; a prospective one lets the row say what is true. The council's stated purpose was an accountable decision before publication, which a shipped release can no longer give | The owner answers `doctor-network-default`: step 3.3 rewrites the row; or a shipped release must be re-gated after the fact |
-| D6 | reversible-technical | owner | Open: whether the gate for a release must also require a disposition for `security × medium` rows still open in EARLIER ledgers (carry-forward). Not implemented; carried by `road-to-the-16-3-0-findings-residue` item 7 | Council 2026-10-07 (claude-sonnet-4-5 + codex, 2/2 present) ratified the prospective cutoff and the documented semver exemption, and SPLIT on carry-forward: one seat rejects it as a compounding multi-ledger burden for a triage failure, the other requires it, resolved in the new ledger by finding id. A split is an escalation condition, so the choice is the owner's | The owner answers; or an open medium security row crosses another release |
+| D5 | reversible-technical | agent | The medium-security widening binds releases after 16.3.0 only (`MEDIUM_SECURITY_BLOCKS_AFTER`); `eff3d4ed3fee` is `still_open`, carried by step 3.3, and the two symlink rows are `still_open`, carried by the residue stub | Two R2 rounds on this branch: round 1 found `fixed` overstated all three rows, round 2 found that `accepted_risk` on `eff3d4ed3fee` was a relabel to keep the widened gate green, against D1. A retroactive widening leaves only those two outcomes or a red trunk for an already-shipped release; a prospective one lets the row say what is true. The council's stated purpose was an accountable decision before publication, which a shipped release can no longer give | The owner answers `doctor-network-default`: step 3.3 rewrites the row; or a shipped release must be re-gated after the fact |
 
 ## Blockers
 

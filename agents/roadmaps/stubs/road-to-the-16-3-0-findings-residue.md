@@ -103,6 +103,19 @@ Either is a governance-surface edit and needs its own ratification.
   refuses, or warns loudly, when a roadmap is in the changed set but none was
   passed.
 
+## 7. Carry-forward of open medium security rows — waits on the owner
+
+Not a ledger row: a gap the R2 review of the disposition run found in the
+release-gate widening. The gate reads only the ledger of the release being cut,
+so a medium security row left open at or before 16.3.0 (`eff3d4ed3fee` and the
+three 16.2.0 forge rows) is not gated again unless a later review re-reports it.
+The council split on 2026-10-07: one seat rejects carry-forward as a compounding
+multi-ledger burden for what is a triage failure; the other requires it, with
+each carried row resolved in the new release's ledger by finding id and the
+published ledgers left as they are. Closes when the owner picks one; the second
+option is then built here with tests for resolution by id, duplicates and
+supersession.
+
 ## Not here
 
 The two duplicated `diff.patch` snapshot findings (**6a0b6bcea5af**,
