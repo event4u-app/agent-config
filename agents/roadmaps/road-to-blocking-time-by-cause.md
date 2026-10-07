@@ -79,7 +79,7 @@ what grew. No baseline is moved.
 
 ## Phase 2 — The hypothesis meets a reading
 
-- [ ] **2.1 One reading, published.** Run the probe over a ten-session window
+- [x] **2.1 One reading, published.** Run the probe over a ten-session window
       and write the per-cause table, the command, the window's shape and the
       unknown share to
       `agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md`,
@@ -87,7 +87,7 @@ what grew. No baseline is moved.
       `ci-wait` plus `subagent-wait` hold the majority of blocking minutes —
       confirmed or refuted, not "consistent with".
       verify: `grep -c 'evidence-type: analysis' agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md` -> /^1$/
-- [ ] **2.2 The unknown share bounds the claim.** If `unknown` holds more
+- [x] **2.2 The unknown share bounds the claim.** If `unknown` holds more
       blocking minutes than the largest named cause, the page says the reading
       is inconclusive, 1.1's table gains rows for what the unknown calls were,
       and 2.1 is re-run before Phase 3 starts.

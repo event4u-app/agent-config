@@ -67,6 +67,9 @@ export const BLOCKING_CAUSES = [
     'network',
     'sleep-poll',
     'mcp',
+    // Added by 2.2: the first reading's unknown share was mostly a question
+    // waiting on the human, which no agent-side mitigation can shorten.
+    'user-wait',
     'unknown',
 ] as const;
 export type BlockingCause = (typeof BLOCKING_CAUSES)[number];
@@ -79,6 +82,8 @@ const TOOL_CAUSE: Readonly<Record<string, BlockingCause>> = {
     Monitor: 'sleep-poll',
     WebFetch: 'network',
     WebSearch: 'network',
+    AskUserQuestion: 'user-wait',
+    ExitPlanMode: 'user-wait',
 };
 
 /**
@@ -94,10 +99,14 @@ const SHELL_RULES: ReadonlyArray<readonly [RegExp, BlockingCause]> = [
     [/^((npx |\S*node_modules\/\.bin\/)?(vitest|jest|pytest|phpunit)\b|npm (run )?test\b|task (ci|test)\b)/, 'test'],
     [/^(task (sync|generate-tools|build)\b|npm (ci|install|run build)\b|(npx )?tsc\b|make\b|esbuild\b)/, 'build'],
     [/^(git (push|fetch|pull|clone)\b|curl\b|wget\b|gh (pr (merge|create)|api)\b)/, 'network'],
+    [/^(\S*\/)?scripts-run \S*council_cli run\b/, 'network'],
 ];
 
 /** A segment that only changes directory or sets a variable waited on nothing. */
 const NOISE_SEGMENT = /^(cd\b|export\b|set\b|[A-Za-z_][A-Za-z0-9_]*=\S*$)/;
+
+/** A loop keyword in front of a body: `for …; do sleep 60` reads as the sleep. */
+const LOOP_KEYWORD = /^(do|then|else)\s+/;
 
 /** Exactly one cause per call; `unknown` when no rule matches. */
 export function classifyBlockingCall(tool: string, input: unknown): BlockingCause {
@@ -106,7 +115,7 @@ export function classifyBlockingCall(tool: string, input: unknown): BlockingCaus
     if (byName !== undefined) return byName;
     if (tool !== 'Bash' || !isObj(input) || typeof input['command'] !== 'string') return 'unknown';
     for (const raw of input['command'].split(/;|&&|\|\||\||\n/)) {
-        const seg = raw.trim();
+        const seg = raw.trim().replace(LOOP_KEYWORD, '');
         if (seg === '' || NOISE_SEGMENT.test(seg)) continue;
         for (const [re, cause] of SHELL_RULES) if (re.test(seg)) return cause;
     }

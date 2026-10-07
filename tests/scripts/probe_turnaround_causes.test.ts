@@ -36,7 +36,8 @@ const CALLS: readonly Call[] = [
   { name: "Bash", input: { command: "git push -u origin feature/x 2>&1" }, seconds: 605 },
   { name: "Bash", input: { command: "sleep 240; gh pr view 12" }, seconds: 606 },
   { name: "mcp__claude_ai_Atlassian_Rovo__search", input: { query: "x" }, seconds: 607 },
-  { name: "Bash", input: { command: "perl -i -pe 's/a/b/' some/file.md" }, seconds: 608 },
+  { name: "AskUserQuestion", input: { questions: [] }, seconds: 608 },
+  { name: "Bash", input: { command: "perl -i -pe 's/a/b/' some/file.md" }, seconds: 609 },
   { name: "Bash", input: { command: "ls" }, seconds: 5 },
 ];
 
@@ -98,18 +99,26 @@ describe("classifyBlockingCall — 1.1", () => {
       "network",
       "sleep-poll",
       "mcp",
+      "user-wait",
       "unknown",
     ]);
   });
 
   it("assigns each fixture call exactly its cause", () => {
-    const got = CALLS.slice(0, 8).map((c) => classifyBlockingCall(c.name, c.input));
+    const got = CALLS.slice(0, 9).map((c) => classifyBlockingCall(c.name, c.input));
     expect(got).toEqual([...BLOCKING_CAUSES]);
   });
 
   it("looks past a cd / env-assignment prefix to the command that waited", () => {
     expect(classifyBlockingCall("Bash", { command: "SP=/tmp/x; cd /tmp/y && npx vitest run" })).toBe("test");
     expect(classifyBlockingCall("Bash", { command: "cd ../a; gh pr checks 12 --watch" })).toBe("ci-wait");
+  });
+
+  // 2.2: the first reading's unknown share was mostly these, so they got rows.
+  it("reads a poll loop's body, a council run and a question to the user", () => {
+    expect(classifyBlockingCall("Bash", { command: "for i in 1 2 3; do sleep 60; gh pr view 1; done" })).toBe("sleep-poll");
+    expect(classifyBlockingCall("Bash", { command: "./scripts-run src/scripts/council_cli run q.md" })).toBe("network");
+    expect(classifyBlockingCall("ExitPlanMode", {})).toBe("user-wait");
   });
 
   it("never invents a cause for an unmatched call", () => {
@@ -155,9 +164,9 @@ describe("minutes per cause — 1.2", () => {
     // Pinned from the probe BEFORE the cause axis existed, on this fixture.
     expect(out).toContain(
       [
-        "  API calls per user request   9  (9 calls / 1 requests)",
-        "  mean tool-call batch size    1  (9 tool calls / 9 tool-using requests)",
-        "  blocking tail (>60s)        8 call(s), 81 min = 99.9 % of 81 min tool time",
+        "  API calls per user request   10  (10 calls / 1 requests)",
+        "  mean tool-call batch size    1  (10 tool calls / 10 tool-using requests)",
+        "  blocking tail (>60s)        9 call(s), 91 min = 99.9 % of 91 min tool time",
       ].join("\n"),
     );
     expect(out).toContain("  first-call context floor     1010–1010 tokens");
