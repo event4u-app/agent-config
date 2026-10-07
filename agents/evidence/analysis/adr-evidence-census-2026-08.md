@@ -24,8 +24,8 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 
 | Axis | Value | Records |
 |---|---|---|
-| `evidence.strength` | `E0` | 80 |
-| `evidence.strength` | `E1` | 75 |
+| `evidence.strength` | `E0` | 79 |
+| `evidence.strength` | `E1` | 76 |
 | `evidence.strength` | `E2` | 51 |
 | `evidence.strength` | `E3` | 23 |
 | `evidence.strength` | `E4` | 0 |
@@ -259,7 +259,7 @@ A council marker never raises a grade above `E0`. That is structural here, not a
 | `docs/decisions/ADR-279-no-spend-bound-by-default.md` | `mixed` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | measurement @ ADR-279-no-spend-bound-by-default.md:152<br>council @ ADR-279-no-spend-bound-by-default.md:153<br>owner @ ADR-279-no-spend-bound-by-default.md:228 | provenance: human · evidence: E2 |
 | `docs/decisions/ADR-280-capability-federation-behind-a-trust-contract.md` | `agentic` (`agentic_mode: council`) | `E0` — markers present, none graded: repeated (comparative language with nothing measured to compare (E2 needs a measurement or a benchmark)) | `incomplete` | repeated @ ADR-280-capability-federation-behind-a-trust-contract.md:82<br>council @ ADR-280-capability-federation-behind-a-trust-contract.md:122 | provenance: human · evidence: E1 |
 | `docs/decisions/ADR-281-council-confirmed-self-modification.md` | `mixed` (`agentic_mode: council`) | `E0` — markers present, none graded: owner (an owner or maintainer declaration is provenance, not evidence) | `incomplete` | owner @ ADR-281-council-confirmed-self-modification.md:42<br>council @ ADR-281-council-confirmed-self-modification.md:68, ADR-281-council-confirmed-self-modification.md:92, ADR-281-council-confirmed-self-modification.md:94, ADR-281-council-confirmed-self-modification.md:113, ADR-281-council-confirmed-self-modification.md:120, ADR-281-council-confirmed-self-modification.md:133 | provenance: human · evidence: E2 |
-| `docs/decisions/ADR-282-auto-merge-authority-with-a-council-danger-gate.md` | `mixed` (`agentic_mode: council`) | `E0` — markers present, none graded: owner (an owner or maintainer declaration is provenance, not evidence) | `incomplete` | owner @ ADR-282-auto-merge-authority-with-a-council-danger-gate.md:17, ADR-282-auto-merge-authority-with-a-council-danger-gate.md:38, ADR-282-auto-merge-authority-with-a-council-danger-gate.md:130<br>council @ ADR-282-auto-merge-authority-with-a-council-danger-gate.md:65, ADR-282-auto-merge-authority-with-a-council-danger-gate.md:67 | provenance: human · evidence: E0 |
+| `docs/decisions/ADR-282-auto-merge-authority-with-a-council-danger-gate.md` | `mixed` (`agentic_mode: council`) | `E1` — one dated local observation | `incomplete` | owner @ ADR-282-auto-merge-authority-with-a-council-danger-gate.md:17, ADR-282-auto-merge-authority-with-a-council-danger-gate.md:38, ADR-282-auto-merge-authority-with-a-council-danger-gate.md:142<br>council @ ADR-282-auto-merge-authority-with-a-council-danger-gate.md:65, ADR-282-auto-merge-authority-with-a-council-danger-gate.md:70<br>measurement @ ADR-282-auto-merge-authority-with-a-council-danger-gate.md:99 | provenance: human · evidence: E0 |
 | `docs/decisions/ADR-rule-kernel-and-router.md` | `unknown` | `E1` — one dated local observation | `incomplete` | measurement @ ADR-rule-kernel-and-router.md:55, ADR-rule-kernel-and-router.md:107, ADR-rule-kernel-and-router.md:112, ADR-rule-kernel-and-router.md:113, ADR-rule-kernel-and-router.md:117 | provenance: — · evidence: — |
 | `docs/adrs/cost/0001-hard-stop-hook.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: — · evidence: — |
 | `docs/adrs/memory/0001-consumer-side-snapshot.md` | `unknown` | `E0` — no evidence marker found | `incomplete` | _none_ | provenance: — · evidence: — |
