@@ -19,6 +19,7 @@
  *   - API calls per real user request      (F1)
  *   - mean tool-call batch size            (F1 — measured 1.00, i.e. fully serial)
  *   - the >60 s blocking tail and its share of tool time  (F2)
+ *   - that tail split by cause, `unknown` always printed (road-to-blocking-time-by-cause)
  *   - the first-call context floor         (F3 cross-check)
  *
  * A MEASUREMENT, NOT A GATE — by default. `--against-baseline` compares against
@@ -53,6 +54,142 @@ export const BLOCKING_SECONDS = 60;
 
 type Entry = Record<string, unknown>;
 
+/**
+ * What a blocking call waited on. A CLOSED set, and `unknown` is a row of its
+ * own rather than a fallback folded into a named cause: a share hidden inside
+ * `ci-wait` would confirm whatever hypothesis it was folded into.
+ */
+export const BLOCKING_CAUSES = [
+    'ci-wait',
+    'subagent-wait',
+    'test',
+    'build',
+    'network',
+    'sleep-poll',
+    'mcp',
+    // Added by 2.2: the first reading's unknown share was mostly a question
+    // waiting on the human, which no agent-side mitigation can shorten.
+    'user-wait',
+    'unknown',
+] as const;
+export type BlockingCause = (typeof BLOCKING_CAUSES)[number];
+
+/** Non-shell tools, by exact name. A shell call is classified by its command. */
+const TOOL_CAUSE: Readonly<Record<string, BlockingCause>> = {
+    Agent: 'subagent-wait',
+    Task: 'subagent-wait',
+    TaskOutput: 'subagent-wait',
+    Monitor: 'sleep-poll',
+    WebFetch: 'network',
+    WebSearch: 'network',
+    AskUserQuestion: 'user-wait',
+    ExitPlanMode: 'user-wait',
+};
+
+/**
+ * Shell rules, matched against each command SEGMENT's leading words in order.
+ * The first segment any rule matches decides; a segment no rule matches is
+ * skipped, so `cd ../lane; ./scripts-run …/ci_settle 12` reads as the settle it
+ * is and not as the `cd` in front of it.
+ */
+const SHELL_RULES: ReadonlyArray<readonly [RegExp, BlockingCause]> = [
+    [/^(\S*\/)?scripts-run \S*ci_settle\b/, 'ci-wait'],
+    [/^gh (run watch|pr checks)\b/, 'ci-wait'],
+    [/^(sleep|until|while|watch)\b/, 'sleep-poll'],
+    [/^((npx |\S*node_modules\/\.bin\/)?(vitest|jest|pytest|phpunit)\b|npm (run )?test\b|task (ci|test)\b)/, 'test'],
+    [/^(task (sync|generate-tools|build)\b|npm (ci|install|run build)\b|(npx )?tsc\b|make\b|esbuild\b)/, 'build'],
+    [/^(git (push|fetch|pull|clone)\b|curl\b|wget\b|gh (pr (merge|create)|api)\b)/, 'network'],
+    [/^(\S*\/)?scripts-run \S*council_cli run\b/, 'network'],
+];
+
+/** A segment that only changes directory or sets a variable waited on nothing. */
+const NOISE_SEGMENT = /^(cd\b|export\b|set\b|[A-Za-z_][A-Za-z0-9_]*=\S*$)/;
+
+/** A loop keyword in front of a body: `for …; do sleep 60` reads as the sleep. */
+const LOOP_KEYWORD = /^(do|then|else)\s+/;
+
+/**
+ * Split a shell command at `;`, `&&`, `||`, `|` and newlines that sit OUTSIDE
+ * quotes. A separator inside `"…"` or `'…'`, or escaped with a backslash, is
+ * part of an argument — splitting there would read a commit message as a
+ * command. Not a shell parser: subshells, `$(…)` and heredocs are not modelled.
+ */
+function shellSegments(cmd: string): string[] {
+    const out: string[] = [];
+    let cur = '';
+    let quote: '' | '"' | "'" = '';
+    for (let i = 0; i < cmd.length; i++) {
+        const ch = cmd[i] as string;
+        if (quote === '' && ch === '\\' && i + 1 < cmd.length) {
+            cur += ch + (cmd[i + 1] as string);
+            i++;
+            continue;
+        }
+        if (quote !== '') {
+            if (ch === quote) quote = '';
+            cur += ch;
+            continue;
+        }
+        if (ch === '"' || ch === "'") {
+            quote = ch;
+            cur += ch;
+            continue;
+        }
+        const two = cmd.slice(i, i + 2);
+        if (two === '&&' || two === '||') {
+            out.push(cur);
+            cur = '';
+            i++;
+            continue;
+        }
+        if (ch === ';' || ch === '|' || ch === '\n') {
+            out.push(cur);
+            cur = '';
+            continue;
+        }
+        cur += ch;
+    }
+    out.push(cur);
+    return out;
+}
+
+/**
+ * Exactly one cause per call; `unknown` when no rule matches. A compound
+ * command takes the cause of its FIRST matching segment, so `git commit && git
+ * push` reads as the push — the whole call's time lands on that one cause.
+ */
+export function classifyBlockingCall(tool: string, input: unknown): BlockingCause {
+    if (tool.startsWith('mcp__')) return 'mcp';
+    const byName = TOOL_CAUSE[tool];
+    if (byName !== undefined) return byName;
+    if (tool !== 'Bash' || !isObj(input) || typeof input['command'] !== 'string') return 'unknown';
+    for (const raw of shellSegments(input['command'])) {
+        const seg = raw.trim().replace(LOOP_KEYWORD, '');
+        if (seg === '' || NOISE_SEGMENT.test(seg)) continue;
+        for (const [re, cause] of SHELL_RULES) if (re.test(seg)) return cause;
+    }
+    return 'unknown';
+}
+
+/**
+ * The in-memory record of one blocking call. `summary` is bounded and never
+ * printed or serialised by `main`: command text names local paths and hosts,
+ * and the published reading carries counts and minutes only.
+ */
+export interface BlockingCall {
+    tool: string;
+    summary: string;
+    cause: BlockingCause;
+    seconds: number;
+}
+
+const SUMMARY_CHARS = 120;
+
+function summarise(tool: string, input: unknown): string {
+    const body = isObj(input) && typeof input['command'] === 'string' ? input['command'] : JSON.stringify(input ?? {});
+    return `${tool}: ${body}`.slice(0, SUMMARY_CHARS);
+}
+
 function isObj(v: unknown): v is Record<string, unknown> {
     return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
@@ -72,6 +209,12 @@ export interface Turnaround {
     blockingShare: number;
     contextFloorMin: number;
     contextFloorMax: number;
+    /** Blocking calls and seconds per cause; every cause present, `unknown` included. */
+    blockingByCause: Record<BlockingCause, { calls: number; seconds: number }>;
+}
+
+function emptyByCause(): Turnaround['blockingByCause'] {
+    return Object.fromEntries(BLOCKING_CAUSES.map((c) => [c, { calls: 0, seconds: 0 }])) as Turnaround['blockingByCause'];
 }
 
 const ZERO: Turnaround = {
@@ -88,6 +231,7 @@ const ZERO: Turnaround = {
     blockingShare: 0,
     contextFloorMin: 0,
     contextFloorMax: 0,
+    blockingByCause: emptyByCause(),
 };
 
 function ms(iso: unknown): number | null {
@@ -133,12 +277,20 @@ export function recentSessions(store: string, limit: number, includeCurrent = fa
 }
 
 export function measure(files: readonly string[]): Turnaround {
+    return measureDetailed(files).turnaround;
+}
+
+/** `measure`, plus the per-call blocking records the cause table is built from. */
+export function measureDetailed(files: readonly string[]): { turnaround: Turnaround; blocking: BlockingCall[] } {
     const requestIds = new Set<string>();
     /** requestId → tool_use blocks in it. */
     const batch = new Map<string, number>();
     /** tool_use id → the timestamp the assistant emitted it. */
     const emittedAt = new Map<string, number>();
+    /** tool_use id → what was called, kept only until its result arrives. */
+    const calledWith = new Map<string, { tool: string; input: unknown }>();
     const durations: number[] = [];
+    const blockingCalls: BlockingCall[] = [];
     const contextFloors: number[] = [];
     let userRequests = 0;
     let sessions = 0;
@@ -172,8 +324,20 @@ export function measure(files: readonly string[]): Turnaround {
                         const id = String(b['tool_use_id'] ?? '');
                         const started = emittedAt.get(id);
                         if (started === undefined || at === null) continue;
-                        durations.push((at - started) / 1000);
+                        const seconds = (at - started) / 1000;
+                        durations.push(seconds);
                         emittedAt.delete(id);
+                        const call = calledWith.get(id);
+                        calledWith.delete(id);
+                        if (seconds > BLOCKING_SECONDS) {
+                            const tool = call?.tool ?? '';
+                            blockingCalls.push({
+                                tool,
+                                summary: summarise(tool, call?.input),
+                                cause: classifyBlockingCall(tool, call?.input),
+                                seconds,
+                            });
+                        }
                     }
                 }
                 continue;
@@ -202,7 +366,10 @@ export function measure(files: readonly string[]): Turnaround {
                 if (!isObj(b) || b['type'] !== 'tool_use') continue;
                 n += 1;
                 const id = String(b['id'] ?? '');
-                if (id !== '' && at !== null) emittedAt.set(id, at);
+                if (id !== '' && at !== null) {
+                    emittedAt.set(id, at);
+                    calledWith.set(id, { tool: String(b['name'] ?? ''), input: b['input'] });
+                }
             }
             if (n > 0 && typeof rid === 'string' && rid !== '') {
                 batch.set(rid, (batch.get(rid) ?? 0) + n);
@@ -216,8 +383,14 @@ export function measure(files: readonly string[]): Turnaround {
     const blocking = durations.filter((d) => d > BLOCKING_SECONDS);
     const blockingSeconds = blocking.reduce((a, b) => a + b, 0);
     const round = (x: number, p = 2): number => Math.round(x * 10 ** p) / 10 ** p;
+    const byCause = emptyByCause();
+    for (const c of blockingCalls) {
+        byCause[c.cause].calls += 1;
+        byCause[c.cause].seconds += c.seconds;
+    }
+    for (const c of BLOCKING_CAUSES) byCause[c].seconds = round(byCause[c].seconds, 1);
 
-    return {
+    const turnaround: Turnaround = {
         sessions,
         userRequests,
         apiCalls: requestIds.size,
@@ -231,7 +404,9 @@ export function measure(files: readonly string[]): Turnaround {
         blockingShare: toolSeconds === 0 ? 0 : round(blockingSeconds / toolSeconds, 4),
         contextFloorMin: contextFloors.length === 0 ? 0 : Math.min(...contextFloors),
         contextFloorMax: contextFloors.length === 0 ? 0 : Math.max(...contextFloors),
+        blockingByCause: byCause,
     };
+    return { turnaround, blocking: blockingCalls };
 }
 
 export interface Budget {
@@ -297,6 +472,11 @@ function render(t: Turnaround, store: string): string {
         `  mean tool-call batch size    ${String(t.meanBatchSize)}  (${String(t.toolCalls)} tool calls / ${String(t.toolUsingRequests)} tool-using requests)`,
         `  blocking tail (>${String(BLOCKING_SECONDS)}s)        ${String(t.blockingCalls)} call(s), ${String(Math.round(t.blockingSeconds / 60))} min = ${pct(t.blockingShare)} of ${String(Math.round(t.toolSeconds / 60))} min tool time`,
         `  first-call context floor     ${String(t.contextFloorMin)}–${String(t.contextFloorMax)} tokens`,
+        `  blocking tail by cause`,
+        ...BLOCKING_CAUSES.map((c) => {
+            const row = t.blockingByCause[c];
+            return `    ${c.padEnd(14)}${String(row.calls)} call(s), ${String(Math.round(row.seconds / 60))} min`;
+        }),
         '',
     ].join('\n');
 }
