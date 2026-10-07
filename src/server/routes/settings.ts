@@ -22,7 +22,8 @@ import { dirname, join } from 'node:path';
 import type { ZodIssue } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { settingsSchema } from '../schemas/settings.js';
-import { parseYaml, mergeIntoTemplate, diffValues, deepMerge, TEMPLATE_PLACEHOLDER_DEFAULTS } from '../io/yamlIO.js';
+import { parseYaml, mergeIntoTemplate, diffValues, deepMerge, renderSparseSettings, TEMPLATE_PLACEHOLDER_DEFAULTS } from '../io/yamlIO.js';
+import { sparseSettingsValues } from './wizard.js';
 import { writeAtomic } from '../io/atomicWrite.js';
 import { WITHHELD_GIT_KEYS, WITHHELD_REASON, gitDiffBase, gitKeyWriteIssues, keepWithheldGit, withholdGitKeys } from '../gitKeysGate.js';
 import { sharedWriteTarget, resolveThroughSymlinks } from '../io/sharedWriteCheck.js';
@@ -493,9 +494,18 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 // In global mode the scaffold may be the project file, whose
                 // git section the candidate does not overwrite; the file being
                 // written is the base, so a section it lacks stays absent. An
-                // absent user-global file starts empty, never from the project.
-                const base = opts.userGlobalWrite === true ? (current.writeLayerRaw ?? '') : current.raw;
-                const merged = mergeIntoTemplate(base, candidate);
+                // absent user-global file is rendered the way the wizard renders
+                // a fresh one: merging into an empty body appends flat dotted
+                // keys, which no reader resolves.
+                const ownRaw = current.writeLayerRaw;
+                const merged = opts.userGlobalWrite !== true
+                    ? mergeIntoTemplate(current.raw, candidate)
+                    : ownRaw !== null
+                        ? mergeIntoTemplate(ownRaw, candidate)
+                        : renderSparseSettings(sparseSettingsValues(
+                            await fs.readFile(join(packageRoot, 'src', 'config', 'agent-settings.template.yml'), 'utf8'),
+                            candidate,
+                        ));
                 if (opts.dryRun === true) {
                     // No disk write, no Last-Modified bump — surface the
                     // rendered body so the maintainer sees what a real
