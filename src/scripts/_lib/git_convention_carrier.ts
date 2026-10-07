@@ -102,6 +102,22 @@ export function parseSymrefDefault(lsRemoteOut: string): string | null {
     return null;
 }
 
+/**
+ * The SHA of exactly `refs/heads/<branch>` in `git ls-remote` output.
+ *
+ * A ls-remote pattern matches every ref whose trailing path components equal
+ * it and the output is sorted by refname, so `backport/main` is listed before
+ * `main`: the first line is not the branch that was asked for.
+ */
+export function parseExactHeadSha(lsRemoteOut: string, branch: string): string | null {
+    const want = `refs/heads/${branch}`;
+    for (const line of lsRemoteOut.split('\n')) {
+        const [sha, name] = line.trim().split(/\s+/);
+        if (name === want && sha !== undefined && /^[0-9a-f]{40}$/.test(sha)) return sha;
+    }
+    return null;
+}
+
 export function makeTargetDeps(repo: string): TargetDeps {
     return {
         currentBranch: (): string => sh('git', ['rev-parse', '--abbrev-ref', 'HEAD'], repo).out.trim(),
@@ -131,10 +147,8 @@ export function makeTargetDeps(repo: string): TargetDeps {
         },
         remoteSha: (ref: string): string | null => {
             const bare = ref.replace(/^origin\//, '');
-            const out = sh('git', ['ls-remote', '--heads', 'origin', bare], repo);
-            if (!out.ok) return null;
-            const sha = out.out.trim().split(/\s+/)[0];
-            return sha !== undefined && /^[0-9a-f]{40}$/.test(sha) ? sha : null;
+            const out = sh('git', ['ls-remote', 'origin', `refs/heads/${bare}`], repo);
+            return out.ok ? parseExactHeadSha(out.out, bare) : null;
         },
     };
 }

@@ -133,6 +133,20 @@ describe('update_strategy is read at the target commit', () => {
         expect(viaPr.readAt.update_strategy).toBe(git(f.seed, 'rev-parse', 'HEAD').trim());
     });
 
+    it('a remote branch whose name ends in the target name never stands in for it', () => {
+        const f = fixture(tmp, { [CARRIER_PATH]: MERGE });
+        const mainSha = git(f.seed, 'rev-parse', 'HEAD').trim();
+        git(f.seed, 'switch', '-q', '-c', 'backport/main');
+        commitIn(f.seed, CARRIER_PATH, REBASE);
+        git(f.seed, 'push', '-q', 'origin', 'backport/main');
+        expect(git(f.work, 'ls-remote', '--heads', 'origin', 'main').split('\n')[0]).toContain('refs/heads/backport/main');
+
+        expect(makeTargetDeps(f.work).remoteSha('origin/main')).toBe(mainSha);
+        const read = readCommittedConvention(f.work, { deps: noPr(f.work), keys: ['update_strategy'] });
+        expect(read.readAt.update_strategy).toBe(mainSha);
+        expect(read.readings.update_strategy?.value).toBe('merge');
+    });
+
     it('no pull request and no default branch is unresolvable', () => {
         const f = fixture(tmp, { [CARRIER_PATH]: REBASE });
         const deps: TargetDeps = { ...noPr(f.work), defaultBranch: () => null };

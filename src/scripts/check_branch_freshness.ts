@@ -68,7 +68,7 @@ import { fileURLToPath } from "node:url";
 import { runGateCli, runSelfTest, type SelfTestCase } from "./_lib/gate_self_test.js";
 import { workspaceIdentity } from "./_lib/git_common_dir.js";
 import { describeRefusal, isRefusal, type GitConventionReading } from "./_lib/git_convention.js";
-import { readCommittedConvention } from "./_lib/git_convention_carrier.js";
+import { parseExactHeadSha, readCommittedConvention } from "./_lib/git_convention_carrier.js";
 import { reportScanned } from "./_lib/scan_scope.js";
 
 // ledger-exempt: single remote-ref probe — the entire scope is ONE ls-remote answer (0 or 1 refs) resolved to one aggregate ancestor verdict, and every empty path already publishes its reason via reportScanned allowEmpty; there is no per-target collection to account.
@@ -323,12 +323,8 @@ export function describeBase(r: BaseResolution): string {
 
 /** The SHA the server reports for `<base>` right now — never a tracking ref. */
 export function remoteHead(base: string, remote = "origin"): string | null {
-  const out = git(["ls-remote", "--heads", remote, base]);
-  if (out === null || out === "") {
-    return null;
-  }
-  const sha = out.split(/\s+/)[0];
-  return sha !== undefined && /^[0-9a-f]{40}$/.test(sha) ? sha : null;
+  const out = git(["ls-remote", remote, `refs/heads/${base}`]);
+  return out === null ? null : parseExactHeadSha(out, base);
 }
 
 /**
