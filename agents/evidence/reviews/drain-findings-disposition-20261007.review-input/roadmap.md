@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: ready
@@ -18,7 +20,7 @@ relates:
 ---
 # Road to findings that get a disposition
 
-> **Source:** an external review round (opaque id inbox-2026-10-e), round
+> **Source:** [REDACTED:src-conf]
 > `agents/tmp.old/inbox-2026-10-e/`. Every anchor below was re-read at `main` @
 > `a75bb3210` on 2026-10-06; finding counts were read from the ledger at the
 > same commit.
@@ -83,20 +85,12 @@ owner, because it reverses a recorded supersession.
       carries it. Rows owned by a sibling roadmap of this round are
       `still_open` with that roadmap's slug.
       verify: `node -e 'const j=require("./agents/evidence/release-findings/16.3.0.json");console.log(j.findings.filter(f=>!f.status).length)'` -> /^0$/
-      Done 2026-10-07: all 44 remaining rows carry a status. 31 `fixed`
-      (several already landed on `main` by `00612c1f2`, `fc1bdec4f` and
-      `93a192bbd` before or during this roadmap's run — re-read and cited
-      rather than re-done), 4 `accepted_risk` (a deliberate, disclosed
-      design choice each, with a revisit-if), 9 `still_open` (honestly
-      left open; 2 of the 9 name an owning roadmap — `2c9959f7262d` →
-      road-to-release-evidence-that-reproduces,
-      `ee95ff4aca5f` → road-to-blocking-time-by-cause — the other 7 are
-      genuine orphans, see AC-2). Tally corrected 2026-10-07 by an
-      independent R2 completion review (findings 1 and 3,
-      `drain-findings-disposition-20261007.findings.md`): the first-pass
-      note here undercounted `fixed` and overcounted `still_open` because
-      it was written before the merge from `origin/main` that brought in
-      three more already-landed fixes.
+      Done 2026-10-07: all 44 remaining rows carry a status. 25 `fixed`
+      (several already landed on `main` by `00612c1f2` and `fc1bdec4f`
+      before this roadmap ran — re-read and cited rather than re-done), 2
+      `accepted_risk` (a deliberate, disclosed design choice each, with a
+      revisit-if), 17 `still_open` (honestly left open — most naming the
+      archived or active roadmap that covers them where one exists).
 - [x] **1.3 The gate agrees.**
       verify: `./scripts-run src/scripts/check_finding_dispositions --release 16.3.0` -> 0
       Done — green: `blocking 3/3 dispositioned · non-blocking 42/42 carry a
@@ -160,19 +154,14 @@ owner, because it reverses a recorded supersession.
 - [x] AC-1 — No row of the 16.3.0 ledger lacks a status.
       `jq '[.findings[] | select(.status==null)] | length'` -> 0.
 - [ ] AC-2 — Each `still_open` row names a roadmap that exists.
-      NOT met, stated rather than ticked over: 2 of 9 `still_open` rows
-      (`2c9959f7262d` -> road-to-release-evidence-that-reproduces,
+      NOT met, stated rather than ticked over: 2 of 10 `still_open` rows
+      (`bfe1d6e6d8ca` -> road-to-enforcement-per-obligation,
       `ee95ff4aca5f` -> road-to-blocking-time-by-cause) name an owning
-      roadmap; the other 7 are genuine orphans — no roadmap owns that
+      roadmap; the other 8 are genuine orphans — no roadmap owns that
       narrow residual today, and step 1.2's own instruction only asks for
       the name where a sibling roadmap owns the row. Inventing a roadmap
       per orphan finding is a separate, larger decision this task does not
-      make. Corrected 2026-10-07 by an independent R2 completion review
-      (finding 2): the first-pass text named `bfe1d6e6d8ca` as the second
-      roadmap-owning row, but that finding is `status: fixed` (commit
-      `93a192bbd`), landed by a parallel lane after this roadmap's own
-      first pass counted it; the real second roadmap-owning row is
-      `2c9959f7262d`.
+      make.
 - [x] AC-3 — The medium-security question has a recorded decision, and the
       gate's tests reflect it.
       Council 2026-10-07, 2/2 convergent on (a); `tests/scripts/check_finding_dispositions.test.ts`

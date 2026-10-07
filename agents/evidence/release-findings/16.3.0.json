@@ -524,7 +524,7 @@
       "detail": "`behavior-vocabulary-close-round14.review-input/diff.patch` duplicates the full source, test and generated diff, including both `src/` and `dist/` copies of every file, into the evidence tree. A stale snapshot of code that has since changed (round-15 fixes for `bundle exec` presence, the literal-workspace exclusion and the complexity retag) then sits in the repo and shows up in greps and diffs as if it were current. Disposition: deferred. Acceptable as an immutable audit record, but a short README or header marking it 'frozen at round 14, superseded by later commits' would stop it being read as live code.",
       "file": "agents/evidence/reviews/behavior-vocabulary-close-round14.review-input/diff.patch",
       "status": "fixed",
-      "commit": "pending (this roadmap's PR)",
+      "commit": "2e80393ff",
       "rationale": "Added agents/evidence/reviews/behavior-vocabulary-close-round14.review-input/README.md naming the three round-15 fixes this snapshot predates and pointing readers at the live tree, exactly the remedy this finding names. Scoped to round 14 only, the file this finding names — not swept across the ~20 other review rounds' own snapshots, which is a separate, larger decision this task does not make.",
       "verified_by": "agents/evidence/reviews/behavior-vocabulary-close-round14.review-input/README.md, added in this change"
     }
