@@ -122,8 +122,11 @@ neither a declaration nor an approved card; otherwise skip this step.
    Commits is `--family conventional`) and write its `card` block to
    `agents/memory/curated/conventions/approved/commit-subject.md` — **also when
    the answer is Conventional Commits**, so this question is never asked again in
-   this repository. The card is the one file this command writes; leave it
-   unstaged and name it in the report, the user decides whether it is committed.
+   this repository. The card is the one file this command writes. Stage it
+   explicitly with `git add -- agents/memory/curated/conventions/approved/commit-subject.md`
+   and commit it in the first commit of this run — the commit it was approved
+   for — so a worktree or a fresh clone reads the same answer instead of asking
+   again; name it in the report.
 4. When the same output carries a `team file` block, show it: it is the
    ready-to-commit `.git-convention.yml` (`commit_format`, `branch_pattern`,
    never `update_strategy`). The file is class C — a human creates and commits
@@ -236,7 +239,7 @@ Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
 
 - **Preview path: never commit before the user confirms the plan — once, for the whole plan.** On the terse path (`preview_artifacts: false` AND `routine_confirmations: false`) the `/commit` invocation itself is the confirmation (`commit-policy` exception 3); proceed without a prompt.
 - **Never push** — pushing is left to the user.
-- **Never modify files** — only stage and commit existing changes. The one exception is the convention card step 3c writes after the user's answer, left unstaged.
+- **Never modify files** — only stage and commit existing changes. The one exception is the convention card step 3c writes after the user's answer, committed with the first commit of the run.
 - **Do NOT add untracked files** unless they are clearly part of the change (check with `git status`).
 - **Follow commit conventions** as defined in `.augment/rules/commit-conventions.md`.
 

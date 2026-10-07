@@ -102,6 +102,12 @@ Before staging anything, pipe every generated subject through
   Do **not** auto-commit broken messages even though confirmation is
   otherwise suppressed.
 
+An approved convention card an earlier [`/commit`](../commit.md) wrote and left
+uncommitted (`agents/memory/curated/conventions/approved/commit-subject.md`,
+unstaged or untracked) rides in the first chunk: add it with that chunk's files
+(`git add -- agents/memory/curated/conventions/approved/commit-subject.md`), so
+every worktree and clone reads the convention it was approved under.
+
 For each planned commit in order:
 
 ```bash
