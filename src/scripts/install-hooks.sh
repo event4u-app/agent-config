@@ -173,6 +173,11 @@ if [ "${fresh_rc:-0}" -ne 0 ]; then
         echo "     task push-ready BASE=$base         # fetch → integrate the base SET"
         echo "                                         # → regenerate → verify → re-check"
         echo "     task push-ready DRY=1 BASE=$base   # the same steps, read-only"
+    elif printf '%s\n' "$fresh_out" | grep -q 'branch is BEHIND'; then
+        # A strategy that does not merge gets no push-ready line; its remedy
+        # is printed by the gate itself.
+        echo "   Push blocked — the branch is behind its base. The remedy for this"
+        echo "   project's update strategy is printed above."
     elif [ -n "$absent" ]; then
         echo "   Push blocked — the base $absent does not exist on the remote: a"
         echo "   misspelled or deleted base, not a stale branch. Name a branch the"

@@ -116,6 +116,13 @@ describe("pre-push — base freshness", () => {
     expect(out).not.toContain("BASE=<base>");
   });
 
+  it("a branch behind under a strategy that does not merge is reported as behind, without push-ready", () => {
+    const out = run(1, {}, "❌  branch is BEHIND origin/main — the remote is at abc123456. (default branch)");
+    expect(out).toContain("Push blocked — the branch is behind its base");
+    expect(out).not.toContain("task push-ready");
+    expect(out).not.toContain("without a verdict line");
+  });
+
   it("never claims staleness when the gate gave no verdict line", () => {
     const out = run(1);
     expect(out).toContain("Push blocked");
