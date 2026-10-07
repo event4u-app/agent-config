@@ -72,8 +72,7 @@ Roadmap: <path> · mode: <autonomous | phase-checkpoints>
 
 Git: branch <feat/<roadmap-slug>> · commits: chunked (N commit steps
      detected / delivery commits) · push: to feat/<roadmap-slug> ONLY
-     · PR: open against <default branch> (no merge — unless the owner
-       gave an auto-merge instruction, ADR-282: merge via /pr:merge § 9a)
+     · PR: open against <default branch> (no merge, except § 5)
 Artifacts: <N> planned (skills/rules/commands/guidelines) —
      batched overlap check: <result — run NOW, against current state>
 Open questions: <N> → decision sheet below (<M> rows); the rest via AI
@@ -86,8 +85,7 @@ Deferred items: <wait | spawn-follow-up-draft | cancel-with-memo> (default wait)
 
 Always active regardless of this contract (never lifted):
   • Hard Floor per-commit diff gate (bulk deletions / infra)
-  • Push anywhere except feat/<roadmap-slug>; any merge without an
-    owner auto-merge instruction (ADR-282)
+  • Push anywhere except feat/<roadmap-slug>; merge (§ 5)
   • security-sensitive-stop on auth/billing/tenant/secret paths
   • N=3 validation budget · context-hygiene read-loop abort
   • Deferred-[~] archival gate
@@ -204,7 +202,7 @@ They are not optional reading: a slug grammar does not imply a namespace, and
 | Create feature branch `feat/<roadmap-slug>` (or reuse the current worktree branch) | Never a prod trunk; one branch per run |
 | Chunked commits on that branch | Per-commit Hard-Floor diff gate stays ([`commit-mechanics`](../authority/commit-mechanics.md)); agent picks the split per [`commit-policy`](../../rules/commit-policy.md) |
 | Push to that branch **only** | Push to any other ref = Hard Floor, ask |
-| Open ONE PR (description-only flow) | Acceptance never merges; never close/retarget. A merge needs the owner's explicit auto-merge instruction and runs through `/pr:merge` § 9a's danger gate (ADR-282) |
+| Open ONE PR (description-only flow) | Acceptance never merges, closes or retargets; merging is § 5's one exception |
 | Batched artifact drafting | The drafting-protocol **Research/overlap pass runs NOW at contract time against current artifact state**; results cached; Understand/Draft phases run non-interactively during the run. Artifacts NOT in the batch still trigger the interactive protocol |
 | Council auto-enable | In-run open questions route to the AI council silently; `high_impact` / `user_required` classifications STILL escalate to the user per [`ask-when-uncertain`](../../rules/ask-when-uncertain.md). **No council configured** → the contract summary says so and in-run true ambiguity halts (never silent guessing) |
 
@@ -213,7 +211,7 @@ the PR has to be able to reach one:
 
 | Grant | Boundary |
 |---|---|
-| Update the PR after opening it — title, body, further pushes to the same branch | Still never close or retarget; merge only as the row above says |
+| Update the PR after opening it — title, body, further pushes to the same branch | Still never close or retarget; merge only per § 5 |
 | Reversible repository / branch settings the agent can change (branch protection included) | Only settings this run needs to reach a reviewable PR, and only reversible ones; a setting the agent changes it also restores if the run's need ends |
 | Start, re-run and fix CI; update the merge base; resolve conflicts | Standard git and CI operations on the run's own branch |
 | Install project-local dependencies | Inside the repo; never a global or system package manager without its own confirmation |
@@ -227,7 +225,7 @@ These grants satisfy [`scope-control`](../../rules/scope-control.md)'s
 
 | Mode | End state | Halts during run |
 |---|---|---|
-| `autonomous` | All steps `[x]` · quality green per cadence · work committed in chunks on `feat/<roadmap-slug>` · pushed · PR open · archival sweep run. **No merge unless the owner gave an auto-merge instruction (ADR-282)** — then merged through the danger gate, or handed back. | Safety floors only (+ quality-red, + step reveals out-of-roadmap work) |
+| `autonomous` | All steps `[x]` · quality green per cadence · work committed in chunks on `feat/<roadmap-slug>` · pushed · PR open · archival sweep run. **No merge without an owner auto-merge instruction (§ 5).** | Safety floors only (+ quality-red, + step reveals out-of-roadmap work) |
 | `phase-checkpoints` | Same end state | Safety floors + a compact status + "continue?" prompt at each phase boundary |
 | `interactive` (derived, never from an absent field) | Legacy: work lands, no git delivery without per-op permission | All gates as authored by their owning rules |
 
@@ -240,9 +238,8 @@ git grants are omitted from the contract (nothing to authorize —
 **ADR-237 widens § 3 and leaves this section untouched — deliberately.** An
 end-to-end delegation is tolerable precisely because a PR is reviewable before
 it merges, so the boundary that keeps merging out is the one that makes the rest
-safe. Nothing below is reachable by acceptance. The one exception is a merge, and
-it comes from outside the contract: the owner's explicit auto-merge instruction
-(ADR-282), gated by `/pr:merge` § 9a.
+safe. Nothing below is reachable by acceptance. A merge comes only from outside
+it: an owner auto-merge instruction (ADR-282, `/pr:merge` § 9a).
 
 - Any [`non-destructive-by-default`](../../rules/non-destructive-by-default.md)
   trigger beyond the two named grants (own-branch push, PR-open):
