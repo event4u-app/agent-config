@@ -161,7 +161,7 @@ review, the conformance count, a merge run — is decided, not discovered.
       pull request it did not author, and its summary lists each pull request
       with its state and reason.
       verify: `grep -q 'up-to-date branch' src/domains/git/pr/merge/command.md` -> 0
-- [ ] **3.3 The gate's verdicts after a rebase become a test.**
+- [x] **3.3 The gate's verdicts after a rebase become a test.**
       `tests/scripts/check_completion_review_after_rebase.test.ts` records the
       three measured readings: pass before the rebase, `fix-before-artifact`
       after it, `unresolvable-fix-ref` in a `git clone --no-local` of it.
