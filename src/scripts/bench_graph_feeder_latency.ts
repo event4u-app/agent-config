@@ -41,7 +41,7 @@
  * `--repo P --edit F` takes the third reading only, over an EXISTING repository
  * and its own graph: no hook call and no feeder row written, but NOT read-only.
  * `loadGraph` re-emits the repository's SQLite twin
- * (`agents/runtime/state/code-graph-v1.sqlite3`) whenever no valid one exists,
+ * (`sqliteTwinPath` of its graph cache) whenever no valid one exists,
  * and the unbilled warm-up round absorbs that write. A generated tree
  * prices the walk; it does not price opening a real index, whose load time grows
  * with the graph and is the larger term on a repository of any size.
@@ -322,7 +322,7 @@ export interface RepoReport {
 /**
  * The feeder's work alone over an existing repository's graph. Writes no feeder
  * row and calls no hook, but it is NOT read-only: `graphUntestedVerdict` ->
- * `loadGraph` re-emits `agents/runtime/state/code-graph-v1.sqlite3` into the
+ * `loadGraph` re-emits the graph cache's SQLite twin (`sqliteTwinPath`) into the
  * measured repository whenever no valid twin exists, and the unbilled warm-up
  * round absorbs that write, so billed rounds price whatever path the twin left
  * (twin-backed when the emit succeeded, the JSON path when it failed).
