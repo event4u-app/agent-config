@@ -1,12 +1,12 @@
 # Findings: git-convention-review-findings
-<!-- completion-review: v1 | reviewed: 2026-10-07 | scope: dbf6570ce51ac33384a39b68486f67225645f635fb12a5250a623b3f332233bf | diff: 5840b15678d21191488f53824a04c425324700ad | reviewer: r2-fresh-subagent-git-convention-review-findings | prompt_hash: b78de1891bec9118b72a5e8e89e484b5bd19ace000dbac872c18c71db1bfe478 -->
+<!-- completion-review: v1 | reviewed: 2026-10-07 | scope: 6f1bb2376360cc9008ddf8fd3c01dff80d4bc74acf3b04503d9d22153e253894 | diff: 5840b15678d21191488f53824a04c425324700ad | reviewer: r2-fresh-subagent-git-convention-review-findings | prompt_hash: b78de1891bec9118b72a5e8e89e484b5bd19ace000dbac872c18c71db1bfe478 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-git-convention-review-findings"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-07 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: 5840b15678d21191488f53824a04c425324700ad
-  scope_hash: dbf6570ce51ac33384a39b68486f67225645f635fb12a5250a623b3f332233bf
+  scope_hash: 6f1bb2376360cc9008ddf8fd3c01dff80d4bc74acf3b04503d9d22153e253894
   roadmap: none
   roadmap_hash: none
   ac_hash: none
@@ -26,3 +26,4 @@ dispatched: 2026-10-07T14:23:37Z
 <!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->
 
 <!-- re-bound 2026-10-07 in place: the content added after the reviewed scope is the base merge of origin/feat/git-convention-settings at c74f7cdc9 (a merge of main into the base) and 23fb35a0c, which joins two shell lines of the squash snapshot in src/skills/git-workflow/SKILL.md to keep the skill at its 400-line ceiling; no behaviour change, tests/scripts/rebase_lease_race.test.ts 34/34. -->
+<!-- re-bound 2026-10-07 in place again: the only content added since is agents/evidence/ratifications/git-convention-review-findings.md (round 5 of the ratification, both CLI seats); no code changed. -->
