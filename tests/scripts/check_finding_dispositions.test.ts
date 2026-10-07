@@ -119,12 +119,13 @@ describe('blocking classification against self_review_gate', () => {
 
     it('a medium security finding is red undispositioned and on still_open, green on accepted_risk', () => {
         const medium = { severity: 'medium' as const, kind: 'security' as const };
+        const { commit: _commit, ...uncommitted } = COMPLETE;
         expect(missing_dispositions([finding(medium)])[0]).toContain('no disposition status');
         expect(
-            missing_dispositions([finding({ ...medium, ...COMPLETE, status: 'still_open', commit: undefined })]),
+            missing_dispositions([finding({ ...medium, ...uncommitted, status: 'still_open' })]),
         ).toHaveLength(1);
         expect(
-            missing_dispositions([finding({ ...medium, ...COMPLETE, status: 'accepted_risk', commit: undefined })]),
+            missing_dispositions([finding({ ...medium, ...uncommitted, status: 'accepted_risk' })]),
         ).toEqual([]);
     });
 
