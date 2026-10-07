@@ -1,0 +1,1 @@
+**Skipped:** no code surface for this completion — the diff touches only agents/roadmaps/** (checkbox flips, evidence extraction) and agents/evidence/** (a new evidence page), scope e124804d6e20824423f3bf3faf7c94040a3bfbaac0c4933c51e52bbfa9b1b801, declared 2026-10-07
