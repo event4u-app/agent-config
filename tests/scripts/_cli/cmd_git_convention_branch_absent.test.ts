@@ -12,7 +12,7 @@ import * as path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../../src/scripts/_lib/agent_settings.js', async (importOriginal) => {
-    const real = await importOriginal<typeof import('../../../src/scripts/_lib/agent_settings.js')>();
+    const real = await importOriginal<Record<string, unknown>>();
     return { ...real, template_defaults: () => ({}) };
 });
 
