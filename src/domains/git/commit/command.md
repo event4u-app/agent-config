@@ -57,7 +57,13 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
 
 ### 2. Determine the ticket number
 
-- Extract the ticket ID from the current branch name (e.g. `feat/DEV-1234/...` → `DEV-1234`).
+- Read the ticket from the current branch name:
+  `agent-config git:convention ticket --keys "<the ticket_keys line of the approved convention card>"`
+  (no card → no `--keys`). The first line is `ticket <ID>` or `ticket none`
+  (`feat/DEV-1234/...`, `fix/DEV-1234-quantity` → `DEV-1234`; `fix/CVE-2026-12345-patch` → none).
+  A candidate marked `unknown-key` → ask the user whether it is a ticket; a yes
+  adds its key to the card's `ticket_keys`. A `proposal` line → offer it for the
+  card, never write it unasked.
 - If no ticket ID is found in the branch name, ask the user:
   ```
   > No Jira ticket found in branch name. Do you want to include one?
@@ -65,8 +71,9 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
   > 1. Yes — I'll provide the ticket number
   > 2. No — skip ticket number
   ```
-- If the user provides a ticket number, use it as the scope in all commit messages.
-- If skipped, omit the scope entirely — write `chore: ...` not `chore(): ...`.
+- Place the ticket (given or read) in every message per the convention in force —
+  [`commit-subject`](../../../skills/git-workflow/references/commit-subject.md) § Placing the ticket;
+  skipped → omit it, never `chore(): …`.
 
 ### 3. Analyze the changes
 
@@ -114,14 +121,17 @@ from `.agent-settings.yml`. Both default to `false`.
 
 **Terse path** — `preview_artifacts: false` AND `routine_confirmations: false`:
 
-1. Validate every generated commit message against the
-   conventional-commits regex
-   `^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`.
+1. Pipe every generated subject, one per line, through
+   `agent-config git:convention subject` — it resolves the convention in force
+   and validates against it. Act on the exit code: `0` valid · `1` the output
+   lists each failure and its rule → treat as invalid. A `note:` line naming a
+   `commit-msg` hook or a commitlint config means that validator also runs at
+   commit and may be stricter; it never changes the exit.
 2. **All messages valid** → skip the preview block and the confirmation
    prompt. Print one line summarising the plan and proceed to step 6:
 
    ```
-   → 3 commits planned: feat, test, chore (scope: DEV-1234)
+   → 3 commits planned: feat, test, chore (ticket: DEV-1234)
    ```
 
 3. **Any message invalid** → `preview-on-error` safety net fires:
@@ -140,7 +150,9 @@ Show the proposed commits as a numbered list, including which files go into each
 ```
 Proposed commits:
 
-(Laravel-project example)
+(Laravel-project example, `git.commit_format: ticket-scope`; under
+`ticket-conventional` the first subject reads
+`DEV-1234 feat(working-time): add absence type filter to working time report`)
 1. feat(DEV-1234): add absence type filter to working time report
    → app/Services/WorkingTimeService.php
    → app/Http/Controllers/WorkingTimeController.php

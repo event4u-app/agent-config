@@ -17,22 +17,13 @@
 //   - each pre-scan rule family (separator, complex key, block scalar, tag,
 //     anchor, nested flow, tab-in-indent) → exit 1 + finding lines.
 //   - round-trip parser gate finding (malformed mapping the pre-scan misses).
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
 import { main } from '../../../src/scripts/_cli/cmd_settings_check.js';
 import { runInProc } from '../../_lib/run_in_process.js';
 
-const REPO_ROOT = path.resolve(fileURLToPath(import.meta.url), '..', '..', '..', '..');
-const TS_SCRIPT = path.join(REPO_ROOT, 'src', 'scripts', '_cli', 'cmd_settings_check.ts');
-const TSX_BIN = path.resolve(
-    REPO_ROOT,
-    process.env['TSX_BIN'] ??
-        path.join('node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx'),
-);
 
 const itPy = it;
 
@@ -194,5 +185,93 @@ describe('cmd_settings_check — round-trip parser gate', () => {
         const root = freshRoot();
         const p = writeFixture(root, 'parent:\n    deep: 1\n  shallow: 2\n');
         expectParity(['--path', p], root);
+    });
+});
+
+describe('cmd_settings_check — the git convention keys', () => {
+    it('fails a typo in git.update_strategy, naming the key and the line', () => {
+        const root = freshRoot();
+        writeFixture(root, 'git:\n  commit_format: ticket-scope\n  update_strategy: rebsae\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.status).toBe(1);
+        expect(t.stderr).toContain('git.update_strategy');
+        expect(t.stderr).toContain('line:3');
+    });
+
+    it('names the line under git:, not a same-named key in another section', () => {
+        const root = freshRoot();
+        writeFixture(root, 'other:\n  update_strategy: anything\ngit:\n  update_strategy: rebsae\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.status).toBe(1);
+        expect(t.stderr).toMatch(/line:4 +git\.update_strategy/);
+    });
+
+    it('claims no line when git: is not a block map', () => {
+        const root = freshRoot();
+        writeFixture(root, 'git: rebase\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.status).toBe(1);
+        expect(t.stderr).toContain('git.update_strategy');
+        expect(t.stderr).not.toContain('line:0');
+        expect(t.stderr).toMatch(/line:- +git\.update_strategy/);
+    });
+
+    it('fails a branch pattern that could reach a shell', () => {
+        const root = freshRoot();
+        writeFixture(root, 'git:\n  branch_pattern: "a;b/{slug}"\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.status).toBe(1);
+        expect(t.stderr).toContain('git.branch_pattern');
+    });
+
+    it('a document that parses but is not a map is one git finding, never called a parse failure', () => {
+        const root = freshRoot();
+        writeFixture(root, '- a\n- b\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.status).toBe(1);
+        expect(t.stderr.match(/git\.\S+ +malformed/g) ?? []).toHaveLength(1);
+        expect(t.stderr).toContain('not a map');
+        expect(t.stderr).not.toContain('does not parse');
+    });
+
+    it('a pre-scan finding is not a parse failure and hides no git finding', () => {
+        const root = freshRoot();
+        writeFixture(root, 'git:\n\tupdate_strategy: rebase\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.stderr).toMatch(/line:2 +tab in indent/);
+        expect(t.stderr.match(/git\.\S+ +malformed/g) ?? []).toHaveLength(1);
+    });
+
+    it('points a git finding at the git contract, a subset finding at the subset contract', () => {
+        const root = freshRoot();
+        writeFixture(root, 'git:\n  update_strategy: rebsae\n');
+        const git = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(git.stderr).toContain('1 git.* value(s) the convention refuses');
+        expect(git.stderr).toContain('ADR-283');
+        expect(git.stderr).not.toContain('outside the supported subset');
+        expect(git.stderr).not.toContain('settings-sync-yaml-subset');
+        writeFixture(root, 'foo: &anchor 1\nbar: *anchor\ngit:\n  update_strategy: rebsae\n');
+        const both = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(both.stderr).toContain('2 finding(s) outside the supported subset');
+        expect(both.stderr).toContain('settings-sync-yaml-subset');
+        expect(both.stderr).toContain('1 git.* value(s) the convention refuses');
+    });
+
+    it('reports a git finding beside a pre-scan finding, in one run', () => {
+        const root = freshRoot();
+        writeFixture(root, 'foo: &anchor 1\nbar: *anchor\ngit:\n  update_strategy: rebsae\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.status).toBe(1);
+        expect(t.stderr).toContain("2 finding(s) outside the supported subset");
+        expect(t.stderr).toContain("1 git.* value(s) the convention refuses");
+        expect(t.stderr).toMatch(/line:1 +anchor/);
+        expect(t.stderr).toMatch(/line:4 +git\.update_strategy/);
+    });
+
+    it('passes valid git keys', () => {
+        const root = freshRoot();
+        writeFixture(root, 'git:\n  branch_pattern: "{ticket}-{slug}"\n  update_strategy: rebase\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.status, t.stderr).toBe(0);
     });
 });

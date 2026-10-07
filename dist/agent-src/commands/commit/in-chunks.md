@@ -43,10 +43,14 @@ If there are no uncommitted changes (staged or unstaged), report
 
 ### 2. Determine the ticket number
 
-- Extract the ticket ID from the current branch name (e.g. `feat/DEV-1234/...`
-  → `DEV-1234`).
-- If no ticket ID is found, omit the scope from the messages — write
-  `chore: ...` not `chore(): ...`. Do **not** ask the user for one.
+- Read the ticket exactly as [`/commit`](../commit.md) step 2 does
+  (`agent-config git:convention ticket`, with the card's `ticket_keys` line as
+  `--keys`) and place it per the convention in force —
+  [`commit-subject`](../../../../skills/git-workflow/references/commit-subject.md),
+  including its area-scope clause. A candidate marked `unknown-key` is omitted,
+  never asked about.
+- If no ticket ID is found, omit it — write `chore: ...` not `chore(): ...`.
+  Do **not** ask the user for one.
 
 ### 3. Analyze and split
 
@@ -79,14 +83,16 @@ strip one.
 
 ### 4. Validate, then commit immediately
 
-Before staging anything, run the same `preview-on-error` validator as
-[`/commit`](../commit.md) step 5. Each generated message must match
-`^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`.
+Before staging anything, pipe every generated subject through
+`agent-config git:convention subject`, as [`/commit`](../commit.md) step 5 does.
 
-- **All valid** → proceed silently.
-- **Any invalid** → stop, print the failed message(s) + the regex,
-  hand back to the user. Do **not** auto-commit broken messages even
-  though confirmation is otherwise suppressed.
+- **Exit `0`** → proceed silently; a `note:` line naming a `commit-msg` hook
+  or a commitlint config is not a stop — that validator runs at commit, and a
+  rejection there stops the run like any failed commit.
+- **Exit `1`** → stop, print the verb's output (each failed subject and its
+  rule, or the format it could not read), hand back to the user.
+  Do **not** auto-commit broken messages even though confirmation is
+  otherwise suppressed.
 
 For each planned commit in order:
 

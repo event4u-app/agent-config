@@ -848,7 +848,7 @@ and none of them is a `blocked` outcome.
 
 | # | What the refresh found | Reaction |
 |---|---|---|
-| a | A PR touching my owned paths **merged** since the last refresh | Run `sync_pr_branch` now — already the documented resolution, only push-bound until this row existed. Re-read the current step's files, continue. |
+| a | A PR touching my owned paths **merged** since the last refresh | Run `agent-config git:convention sync --base origin/<this branch's PR base>` now — already the documented resolution, only push-bound until this row existed. Re-read the current step's files, continue. |
 | b | An **open** PR touches my owned paths | Continue. Name the collision in the PR description and in the final report. **Never rebase onto a foreign branch.** |
 | c | A peer session shows `PATH OVERLAP` | Take disjoint steps first if ordering allows; otherwise name it and continue. The register is advisory, never a lock. |
 | d | The roadmap itself was **archived on `origin/main`** | Stop. The same **selection error** as § 1, detected late — not a halt, and no checkbox is flipped to reach it. |

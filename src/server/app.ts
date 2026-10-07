@@ -291,7 +291,9 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
         discoveryRoute(opts.discoveryManifestPath ? { manifestPath: opts.discoveryManifestPath } : {}),
     );
     await app.register(schemaRoute());
-    await app.register(settingsRoute({ writeRoot, legacyReadRoot, packageRoot, dryRun, userGlobalReadRoot: userGlobalRead }));
+    await app.register(
+        settingsRoute({ writeRoot, legacyReadRoot, packageRoot, dryRun, userGlobalReadRoot: userGlobalRead, userGlobalWrite: mode === 'global' }),
+    );
     await app.register(settingsChangesRoute({ writeRoot, userGlobalReadRoot: userGlobalRead, dryRun }));
     await app.register(userMdRoute({ writeRoot, legacyReadRoot, dryRun, userGlobalReadRoot: userGlobalRead }));
     await app.register(installRoute(opts.installRouteOptions ?? {}));

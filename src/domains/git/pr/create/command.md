@@ -101,7 +101,7 @@ Run, in order:
 | Gate | Overlapping open PR touches same files? | Action |
 |---|---|---|
 | exit `0`, prints `branch is current` | — | Proceed to Step 2 |
-| exit `1` | No | **Merge the base in** — `git fetch origin && git merge origin/{resolved-base} --no-edit` — then run the regeneration set below, then proceed. No need to ask; state that you did it. |
+| exit `1` | No | **Bring the base in** per `git.update_strategy` ([`branch-update`](../../../../skills/git-workflow/references/branch-update.md)). `merge` (default): `git fetch origin && git merge origin/{resolved-base} --no-edit` — no need to ask; state that you did it. `rebase`: ask first unless `git-history-discipline` already authorises the rewrite (see `branch-update` for the three cases), never fall back to a merge, and on an already-pushed branch run `branch-update`'s pre-rewrite stop and push with its `--force-with-lease` form. Then run the regeneration set below, then proceed. |
 | exit `1` | **Yes** | STOP — surface the overlapping PR number, ask: stack on top of it / wait for it to land / proceed-anyway-and-accept-conflicts / cancel |
 | exit `0`, prints `NOT VERIFIED` | — | The base could not be reached, so freshness is **unknown** — not confirmed. Re-run once; if it persists, say the check did not run rather than reporting a pass. A base that `ls-remote` cannot resolve (deleted or renamed after the PR opened, or a fork base) lands here too. |
 | warns `could not ask the forge` | — | The **default** base was checked and an open PR against a different base was **not** ruled out. Say so; do not report it as a clean freshness pass. |
@@ -137,8 +137,19 @@ a generated-file conflict never is.
 
 The gate above is not creation-only. **Every subsequent push** to a branch with
 an open PR (a CI fix, a review response, a follow-up commit) re-runs the same
-sequence first: `check_branch_freshness` → on exit `1`, merge
-`origin/{resolved-base}` in → regenerate the derived files → verify → push.
+sequence first: `check_branch_freshness` → on exit `1`, bring
+`origin/{resolved-base}` in per `git.update_strategy` (merge by default; under
+`rebase` a rebase that is asked for, never a merge, and `sync_pr_branch` refuses
+a behind branch with exit 3)
+→ regenerate the derived files → verify → push (after a rebase:
+`git push --force-with-lease=refs/heads/<b>:<sha> <remote> HEAD:refs/heads/<b>`,
+never a plain push). A rebase runs only through § The rebase sequence in
+[`branch-update`](../../../../skills/git-workflow/references/branch-update.md):
+the ref the branch publishes is resolved from `@{push}` or the pull request's
+head repository — never `@{u}`, and an unresolved target means no rewrite — its
+SHA is pinned once after the fetch, must already be in `HEAD`, and is the lease
+unchanged — so a collaborator's push lands either before the pin and halts the
+stop, or after it and fails the lease, and is never overwritten.
 A PR that sits open while its base advances goes stale silently; keeping the
 base merged **at every touch** means it stays `mergeStateStatus: CLEAN` instead
 of accumulating conflicts for the moment the user wants to merge. If the gate
@@ -160,9 +171,11 @@ runner; the hook never merges, because a merge inside `pre-push` rewrites the
 tree at the moment you believe your work is finished.
 
 **The resolution is executable now, not just described.**
-`./scripts-run src/scripts/sync_pr_branch` resolves the base from the open PR
-(so a stacked or release-line PR is measured against what it actually merges
-into), fetches, and merges it in when the branch is behind. The base is a
+`agent-config git:convention sync --base origin/<base>`, `<base>` being the
+PR's `baseRefName` (`gh pr view --json baseRefName`), fetches and merges that
+base in when the branch is behind, so a stacked or release-line PR is measured
+against what it actually merges into. It never asks the forge itself: without
+`--base` the target is the default branch, which is right only for a PR into it. The base is a
 **set**: when the PR targets something other than the default branch, whether
 the default branch joins the set is a per-target policy read from the *target's
 own commit*, never from this branch — see `src/scripts/_lib/branch_convergence.ts`.

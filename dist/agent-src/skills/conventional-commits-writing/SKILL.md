@@ -46,9 +46,15 @@ imposing the shipped default there produces commits that read as foreign in
 | Tier | Source | Binding? |
 |---|---|---|
 | **1 — configured** | `commitlint.config.*` · `.gitmessage` · a `commit-msg` hook (husky / lefthook / `.git/hooks`) · `CONTRIBUTING.md` § Commits · a CI job that validates subjects · release automation that PARSES subjects (semantic-release, changesets, git-cliff, conventional-changelog) | yes — Class A, no approval needed |
+| **1b — declared** | `git.commit_format` in `.git-convention.yml`, the team's committed carrier at the repository root (ADR-283), where either value is a declaration — a team that commits `ticket-scope` chose it. Without the carrier, `git.commit_format: ticket-conventional` in a developer settings file, where only the non-default value declares anything: `ticket-scope` is also what a copied template carries, so it proves no choice. `agent-config git:convention show --key commit_format` names the file and the state; `malformed` or `invalid` declares nothing and is reported, never read as the default | yes — the user's own word, so no measurement and no ask |
 | **2 — measured + approved** | the consensus pass below, after the user says yes | yes, for this repository |
 | **3 — measured, unapproved** | the same pass before the user answers | **no — advisory**; report the mismatch, write Conventional |
 | **4 — default** | Conventional Commits | yes |
+
+`agent-config git:convention subject` validates against tiers 1b–4 only. A
+tier-1 commitlint config or `commit-msg` hook is named in a `note:` line as also
+running at commit, possibly stricter; the verb never infers what it accepts and
+never changes its exit for it.
 
 Release automation is the trap that makes tier 1 outrank tier 2 even when the
 history disagrees: a repo whose `git log` is 85 % `[JIRA-123] Fix thing` but
@@ -60,6 +66,7 @@ Check for the parser before you trust the prevalence.
 ### 1. Look for tier 1 before measuring anything
 
 ```bash
+agent-config git:convention show --key commit_format   # tier 1b: valid from .git-convention.yml (either value), or ticket-conventional from a settings file
 ls commitlint.config.* .commitlintrc* .gitmessage .czrc 2>/dev/null
 git config --get commit.template
 ls .husky/commit-msg .git/hooks/commit-msg 2>/dev/null
@@ -139,17 +146,8 @@ just its subject. Drop, from the sample:
 
 ### 3. Classify each surviving subject
 
-Match in order, first hit wins. These are POSIX extended regular expressions,
-given outside a table because a markdown cell would need the alternation pipes
-escaped and `\|` in ERE is a literal pipe, not an alternation:
-
-```
-conventional      ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
-ticket-prefix     ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
-gitmoji           ^:[a-z0-9_+-]+:[[:space:]]|^[^[:ascii:][:space:]]
-imperative-plain  ^[A-Z][a-z]+[[:space:]].*[^.]$
-other             everything else
-```
+Match in order, first hit wins: `conventional`, `ticket-conventional`, `ticket-prefix`, `gitmoji`, `imperative-plain`, else `other`.
+The patterns are the `family` rows of the generated grammar block in [`commit-subject`](../git-workflow/references/commit-subject.md) § The grammar.
 
 `imperative-plain` is deliberately mechanical — capitalised first word, no
 trailing period — and does **not** test for the imperative mood. Mood needs a
@@ -159,12 +157,14 @@ the classifier, not a gap to fill by guessing: a repo whose only distinction
 from Conventional is mood will read as `imperative-plain` either way, and the
 mood question belongs in the ask at step 6.
 
-`classifier_version` in step 7 names the revision of THIS section — the five
-patterns above plus the exclusions in step 2. It is a provenance stamp so a
-later measurement can be compared against a like one; it does not claim an
-executable classifier ships anywhere in the tree.
+`classifier_version` in step 7 names the revision of THIS section — the six families above (`ticket-conventional` added 2026-10-06; re-measure an older card) plus the exclusions in step 2.
+It is a provenance stamp so a later measurement can be compared against a like one. The patterns ship
+as code: `agent-config git:convention subject --family <family>` validates against them.
 
 Record the runner-up family too — a near-tie is itself the finding.
+
+`ticket-conventional` precedes `ticket-prefix`, which would otherwise swallow it as "ticket, then free text".
+A dominant `ticket-conventional` family maps to `git.commit_format: ticket-conventional`, the value named after it — propose that in the step-6 ask.
 
 ### 4. Aggregate, capped per author, per half
 
@@ -221,9 +221,9 @@ parsing.
 
 Write the measurement as a Class-B convention card under
 `agents/memory/curated/conventions/quarantine/commit-subject.md`; the user's
-approval is what moves it to `approved/`. Carry `observed_n`,
-`dominant_share`, `author_count`, `sample_window`, `classifier_version`, and
-`confirm_against` — aggregates only, never per-author identities. Re-measure
+approval is what moves it to `approved/`. Carry `observed_n`, `dominant_family`,
+`dominant_share`, `author_count`, `sample_window`, `classifier_version`, `confirm_against`
+and `ticket_keys` — aggregates only, never per-author identities. `ticket_keys` lists the approved project keys (`ticket_keys: [DEV, OPS]`): it is filled from the user's answer when `/commit` meets a key not on it, and a commitlint config's `issuePrefixes` are offered as the proposal, never written silently. Re-measure
 and re-review when the share falls below **70 %**, when a tier-1 source
 appears, or when the newer half's family changes.
 
@@ -274,18 +274,15 @@ If yes:
 - Suggest splitting into multiple commits
 - Or choose the dominant net effect for squash merge title
 
-### 3. Choose scope
+### 3. Place the ticket, then choose the scope
 
-Add a scope only if it improves clarity:
-
-- Jira ticket ID: `DEV-1234`
-- Module/area: `api`, `auth`, `skills`, `rules`, `ci`
+Read the ticket with `agent-config git:convention ticket` and place it per [`commit-subject`](../git-workflow/references/commit-subject.md) § Placing the ticket — under `ticket-conventional` **never in the scope**.
 
 ### 4. Write the description
 
 - State the intent clearly
 - Avoid generic filler (`update stuff`, `fix things`)
-- Stay concise — max 72 chars total for first line
+- Stay concise — max 72 chars total for first line (the ticket prefix counts)
 - Imperative mood: "add", "fix", "remove" — not "added", "fixed", "removed"
 
 ### 5. Check for breaking change
@@ -316,16 +313,18 @@ Or add `BREAKING CHANGE:` in the commit body/footer.
 
 ## Procedure: Generate squash merge title
 
+Only for a squash merge — rebase-and-merge keeps every commit (`/pr:merge` § 9 reads the method from the forge).
+
 1. Read all commits in the PR
 2. Identify the **net effect** — what does the PR accomplish overall?
-3. Write a single Conventional Commit message summarizing the net effect
+3. Write a single subject in the convention in force (ticket placed per § Place the ticket) summarizing the net effect
 4. Do not list every internal commit — summarize
 
 ## Output format
 
 1. The convention in force and the tier that established it — `configured
-   (commitlint.config.js)`, `approved (ticket-prefix, 84% of 137)`, or
-   `default (Conventional Commits)`
+   (commitlint.config.js)`, `declared (git.commit_format: ticket-conventional)`,
+   `approved (family ticket-prefix, 84% of 137)`, or `default (Conventional Commits)`
 2. Recommended commit message(s)
 3. Brief rationale for type choice
 4. Split suggestion if the change should be multiple commits
@@ -372,6 +371,7 @@ to every commit message you author.
   advisory, and silence is not approval
 - Do NOT let prevalence lift a `never` or `explicit-only` floor
 - Do NOT use vague messages: `update stuff`, `fix bug`, `changes`
+- Do NOT put a ticket id in the scope when `git.commit_format` is `ticket-conventional`
 - Do NOT use `refactor` for bug fixes
 - Do NOT use `chore` for meaningful behavior changes
 - Do NOT hide multiple unrelated concerns in one message

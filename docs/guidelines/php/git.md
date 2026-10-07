@@ -34,6 +34,11 @@ hotfix/DEV-999/critical-payment-bug
 - Always include the Jira ticket ID when one exists
 - Use kebab-case for the description part
 - Keep branch names short but descriptive
+- The shape above is this guideline's convention; the agent renders branches from `git.branch_pattern` per [`commit-subject`](../../../src/skills/git-workflow/references/commit-subject.md).
+- A team declares `git.branch_pattern`, `git.commit_format` and
+  `git.update_strategy` in `.git-convention.yml` at the repository root, committed
+  so every checkout, worktree and CI run reads the same value; there either value
+  is a declaration. `agent-config git:convention show` prints what is in force.
 
 ## Commit Messages
 
@@ -68,8 +73,13 @@ that is not better classified as `build`, `ci`, or `docs`.
 
 Use a scope when it adds clarity. Good scopes:
 
-- Jira ticket ID: `DEV-1234`
+- Jira ticket ID: placed per [`commit-subject`](../../../src/skills/git-workflow/references/commit-subject.md) § Placing the ticket
 - Module/area: `api`, `auth`, `skills`, `rules`, `ci`, `frontend`, `linter`
+
+Under `git.commit_format: ticket-conventional` the ticket leads the subject and is
+**never** in the scope (`DEV-1234 feat(exporter-models): …`); tooling that parses
+subjects (commitlint, release automation, changelog generators) must be
+configured for that prefixed form.
 
 Do not add a scope if it adds no value. `fix(core): fix typo` → just `fix: fix typo`.
 
@@ -157,7 +167,10 @@ Before writing the commit message:
 
 ## Pull Requests
 
-- PR title follows commit message format: `feat(DEV-1234): short description`
+- PR title per [`commit-subject`](../../../src/skills/git-workflow/references/commit-subject.md) § A title that becomes a commit
+- Bring the branch up to date per `git.update_strategy` — merge the base in
+  (default) or rebase onto `origin/main` and push with `--force-with-lease`;
+  see `git-workflow` › `references/branch-update.md`
 - Fill in the PR template (checklist, description, testing notes)
 - Link the Jira ticket in the PR description
 - Ensure all quality gates pass before requesting review

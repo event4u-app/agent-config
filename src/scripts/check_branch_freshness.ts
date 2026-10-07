@@ -67,6 +67,8 @@ import { fileURLToPath } from "node:url";
 
 import { runGateCli, runSelfTest, type SelfTestCase } from "./_lib/gate_self_test.js";
 import { workspaceIdentity } from "./_lib/git_common_dir.js";
+import { describeRefusal, isRefusal, type GitConventionReading } from "./_lib/git_convention.js";
+import { makeTargetDeps, parseExactHeadSha, readCommittedConvention } from "./_lib/git_convention_carrier.js";
 import { reportScanned } from "./_lib/scan_scope.js";
 
 // ledger-exempt: single remote-ref probe — the entire scope is ONE ls-remote answer (0 or 1 refs) resolved to one aggregate ancestor verdict, and every empty path already publishes its reason via reportScanned allowEmpty; there is no per-target collection to account.
@@ -321,12 +323,8 @@ export function describeBase(r: BaseResolution): string {
 
 /** The SHA the server reports for `<base>` right now — never a tracking ref. */
 export function remoteHead(base: string, remote = "origin"): string | null {
-  const out = git(["ls-remote", "--heads", remote, base]);
-  if (out === null || out === "") {
-    return null;
-  }
-  const sha = out.split(/\s+/)[0];
-  return sha !== undefined && /^[0-9a-f]{40}$/.test(sha) ? sha : null;
+  const out = git(["ls-remote", remote, `refs/heads/${base}`]);
+  return out === null ? null : parseExactHeadSha(out, base);
 }
 
 /**
@@ -526,6 +524,33 @@ function scanReport(scanned: number, allowEmpty?: string): void {
 }
 
 /**
+ * What to do about a behind branch. A merge command is printed only under
+ * `merge`: under any other strategy, or one that cannot be read, a merge of the
+ * base is the commit the declaration excludes.
+ */
+export function behindRemedy(base: string, strategy: GitConventionReading): string[] {
+  if (!isRefusal(strategy.state) && strategy.value === "merge") {
+    return [
+      `    git fetch origin && git merge origin/${base}`,
+      "    ./agent-config roadmap:progress   # regenerate AFTER every merge, not only on conflict",
+      "    then re-run the gates before pushing.",
+      "",
+      "    The dashboard line is not optional housekeeping: the roadmap dashboard is a",
+      "    GENERATED file, so a merge that lands cleanly still leaves it describing",
+      "    neither side's roadmap set. A clean auto-merge of a generated file is still wrong.",
+    ];
+  }
+  const why = isRefusal(strategy.state)
+    ? `    git.update_strategy cannot be read — ${describeRefusal(strategy)}`
+    : `    git.update_strategy is \`${strategy.value ?? "?"}\` — the base is not merged in.`;
+  return [
+    why,
+    "    Update the branch per the git-workflow skill's references/branch-update.md,",
+    "    then regenerate (./agent-config roadmap:progress) and re-run the gates before pushing.",
+  ];
+}
+
+/**
  * @param forge Seam for the forge lookup. Production passes nothing and gets the
  * real `gh`. Tests MUST pass a stub: without this parameter the only way to
  * reach the forge-unavailable branch was to not have `gh` installed, so the test
@@ -613,13 +638,16 @@ export function main(
   console.error("    Pushing now opens a PR that may conflict, and worse: another branch");
   console.error("    may already have shipped what this one is implementing.");
   console.error("");
-  console.error(`    git fetch origin && git merge origin/${base}`);
-  console.error("    ./agent-config roadmap:progress   # regenerate AFTER every merge, not only on conflict");
-  console.error("    then re-run the gates before pushing.");
-  console.error("");
-  console.error("    The dashboard line is not optional housekeeping: the roadmap dashboard is a");
-  console.error("    GENERATED file, so a merge that lands cleanly still leaves it describing");
-  console.error("    neither side's roadmap set. A clean auto-merge of a generated file is still wrong.");
+  // The base and the commit this run measured, not a second lookup: the remote
+  // can move between two ls-remote calls and the strategy would be read elsewhere.
+  const strategy = readCommittedConvention(process.cwd(), {
+    override: `origin/${base}`,
+    keys: ["update_strategy"],
+    deps: { ...makeTargetDeps(process.cwd()), remoteSha: () => sha },
+  }).readings.update_strategy as GitConventionReading;
+  for (const line of behindRemedy(base, strategy)) {
+    console.error(line);
+  }
   console.error("");
   console.error(
     "    This gate asks the REMOTE, not your tracking ref — a fetch from earlier in",

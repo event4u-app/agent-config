@@ -26,7 +26,7 @@ packs:
 
 Run `git branch --show-current` and extract ticket IDs:
 
-- Match pattern: `[A-Z]+-[0-9]+` (e.g., `DEV-1234`, `PROJ-567`)
+- Read it with `agent-config git:convention ticket` ([`commit-subject`](../../../../skills/git-workflow/references/commit-subject.md) § Reading the ticket; e.g. `DEV-1234`, `PROJ-567`)
 - Common branch formats: `fix/DEV-1234/description`, `hotfix/DEV-999`, `fix/bug-description`
 
 If a ticket ID is found:

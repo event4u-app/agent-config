@@ -79,6 +79,26 @@
         }
       }
     },
+    "git": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "commit_format": {
+          "type": "string",
+          "enum": ["ticket-scope", "ticket-conventional"],
+          "description": "Where a ticket id goes in a commit subject. ticket-scope (default) = `feat(DEV-1234): …`; ticket-conventional = `DEV-1234 feat(area): …`, a ticket is never a scope."
+        },
+        "branch_pattern": {
+          "type": "string",
+          "description": "Shape of a branch name the agent creates. Placeholders {type}, {ticket}, {slug}. Default {type}/{slug}."
+        },
+        "update_strategy": {
+          "type": "string",
+          "enum": ["merge", "rebase"],
+          "description": "How a feature branch is brought up to date with its base. merge (default) = merge the base in; rebase = rebase onto origin/<base> and push with --force-with-lease, still asked for each time per git-history-discipline."
+        }
+      }
+    },
     "design": {
       "type": "object",
       "additionalProperties": true,

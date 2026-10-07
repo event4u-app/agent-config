@@ -38,6 +38,8 @@ const memoryCadence = z.enum(['auto', 'always', 'never']);
 const projectAudience = z.enum(['self', 'internal', 'client', 'public']);
 const deliveryMerge = z.enum(['off', 'on-green']);
 const prTopology = z.enum(['single', 'stacked']);
+const gitCommitFormat = z.enum(['ticket-scope', 'ticket-conventional']);
+const gitUpdateStrategy = z.enum(['merge', 'rebase']);
 
 export const settingsSchema = z.object({
     agent_config_version: z.string().default('').describe(
@@ -158,6 +160,17 @@ export const settingsSchema = z.object({
             'Who this project is built for — read by the demand gate (§ 8-pre of docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md), whose L0-L4 ladder measures MARKET demand and is meaningless where no market is intended. self = a tool its maintainer builds for themselves; the gate is inert and work is classified L-self (build) instead of being deferred for lack of a user population nobody wants. internal = a team tool; only "what breaks without it?" survives. client = built for a named client, who is the requester rather than a market segment. public (default) = a product with an intended market; full three-question gate, behaviour unchanged from before this key existed.',
         ),
     }),
+    git: z.object({
+        commit_format: gitCommitFormat.default('ticket-scope').describe(
+            'Where a ticket id goes in a commit subject. ticket-scope (default) = the ticket is the Conventional-Commits scope, `feat(DEV-1234): add export filter` — the behaviour every install had before this key existed. ticket-conventional = the ticket leads the subject and the scope names the system area, `DEV-1234 feat(exporter): add export filter`; a ticket is then never a scope. Without a ticket both shapes are plain Conventional Commits. A commit-linting config in the repository (commitlint, a commit-msg hook) outranks this key.',
+        ),
+        branch_pattern: z.string().default('{type}/{slug}').describe(
+            'Shape of a branch name the agent creates. Placeholders: {type} (feat, fix, …), {ticket} (e.g. DEV-1234), {slug} (short kebab-case description). Default {type}/{slug}. {slug} is required, and characters outside the placeholders are limited to A-Z a-z 0-9 . _ / - so a rendered name is safe in a command; agent-config git:convention show reports anything else as invalid. A team that names branches after the ticket sets {ticket}-{slug}. A placeholder with no value is dropped together with the separator that follows it, or the one before it when it is last, so no name starts or ends with a separator ({type}/{ticket}-{slug} without a ticket gives feat/slug). Reading a ticket back out of an existing branch never depends on this pattern.',
+        ),
+        update_strategy: gitUpdateStrategy.default('merge').describe(
+            'How a feature branch is brought up to date with its base. merge (default) = merge the base into the branch, as before this key existed. rebase = rebase the branch onto origin/<base> and publish with --force-with-lease, never a merge of the base into the branch. Rebase rewrites history, so the agent still asks for it unless the git-history-discipline rule already authorises the rewrite (the user asked this turn, an unrevoked standing instruction, or a pull --rebase the user started); this key decides which operation is proposed, never whether one is authorised.',
+        ),
+    }).default({}),
     github: z.object({
         pr_reply_method: replyMethod.default('create_review_comment').describe(
             'How the agent replies to PR review comments. create_review_comment = post a new review comment (works on every GitHub plan). replies_endpoint = thread the reply under the original comment (needs the newer REST endpoint). auto = detect at runtime, prefer threaded replies when available.',

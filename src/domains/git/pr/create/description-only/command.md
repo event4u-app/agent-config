@@ -87,7 +87,15 @@ That's 6 round-trips for what should be 2.
 
 ### 3. Build the PR title
 
-- Format: `{TICKET-ID}: {summary}` (e.g. `DEV-4673: Fix absence working time calculation`).
+- **Squash merge** — the method `/pr:merge` § 9 reads
+  (`gh repo view --json mergeCommitAllowed,squashMergeAllowed,rebaseMergeAllowed`)
+  is squash: the title becomes the commit subject on the base, so build it as a
+  subject in the convention in force — `DEV-4673 fix(working-time): correct absence calculation`
+  under `ticket-conventional`, `fix(DEV-4673): correct absence calculation` under
+  the default — and pipe it through `agent-config git:convention subject`; act on
+  the exit code as `/commit` step 5 does.
+- **Any other method** — `{TICKET-ID}: {summary}` (e.g. `DEV-4673: Fix absence working time calculation`).
+- The rule: [`commit-subject`](../../../../../skills/git-workflow/references/commit-subject.md) § A title that becomes a commit.
 - Use the Jira ticket summary if available, otherwise derive from commits.
 - If no ticket: use the most descriptive commit message or ask the user.
 

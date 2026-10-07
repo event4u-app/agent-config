@@ -54,7 +54,7 @@ fix/DEV-5678/null-pointer         →  DEV-5678
 hotfix/DEV-999/critical-fix       →  DEV-999
 ```
 
-Pattern: `[A-Z]+-[0-9]+` anywhere in the branch name.
+Read it with `agent-config git:convention ticket` — [`commit-subject`](../git-workflow/references/commit-subject.md) § Reading the ticket.
 
 Use `git branch --show-current` to detect, then fetch the ticket:
 
@@ -147,8 +147,8 @@ POST /issue/DEV-1234/transitions
 ## Linking to PRs
 
 When creating PRs, include the Jira ticket in:
-- **Branch name:** `feat/DEV-1234/description`
-- **PR title:** `feat(DEV-1234): description`
+- **Branch name and PR title:** rendered by `agent-config git:convention branch` and
+  built per [`commit-subject`](../git-workflow/references/commit-subject.md)
 - **PR description:** Link to the ticket
 
 ## Related

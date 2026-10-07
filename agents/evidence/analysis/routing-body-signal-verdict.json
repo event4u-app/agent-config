@@ -3,7 +3,7 @@
   "step": "5.1",
   "roadmap": "road-to-governed-harness-evolution",
   "preregistration": "agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md",
-  "measured_at": "2026-10-06",
+  "measured_at": "2026-10-07",
   "proxy_to_real_fidelity": {
     "value": null,
     "status": "unmeasured-by-construction",
@@ -11,14 +11,14 @@
   },
   "body_signal": {
     "verdict": "harmful",
-    "reason": "false activation +6.91 pp breaches the +2.0 pp guard",
+    "reason": "false activation +6.79 pp breaches the +2.0 pp guard",
     "k": 5,
-    "delta_recall_pp": 4.082,
-    "delta_false_activation_pp": 6.912,
-    "p_value": 0.1172,
+    "delta_recall_pp": 3.786,
+    "delta_false_activation_pp": 6.787,
+    "p_value": 0.1455,
     "discordant_positive_pairs": {
-      "gained": 68,
-      "lost": 50
+      "gained": 69,
+      "lost": 52
     },
     "bars": {
       "recall_gain_pp": 5,
@@ -28,36 +28,36 @@
     },
     "arms": {
       "description": {
-        "positives": 441,
-        "positiveHits": 279,
-        "negatives": 434,
+        "positives": 449,
+        "positiveHits": 283,
+        "negatives": 442,
         "negativeHits": 65
       },
       "description+body": {
-        "positives": 441,
-        "positiveHits": 297,
-        "negatives": 434,
+        "positives": 449,
+        "positiveHits": 300,
+        "negatives": 442,
         "negativeHits": 95
       }
     },
     "recall_pp": {
-      "description": 63.265,
-      "description+body": 67.347
+      "description": 63.029,
+      "description+body": 66.815
     },
     "false_activation_pp": {
-      "description": 14.977,
-      "description+body": 21.889
+      "description": 14.706,
+      "description+body": 21.493
     }
   },
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "train_corpora": 90,
+    "train_corpora": 92,
     "legacy_shaped_corpora": [
       "brand-asset-generation",
       "estimate-ticket"
     ],
-    "cases": 875,
+    "cases": 891,
     "catalogue_size": 299
   }
 }

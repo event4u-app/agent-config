@@ -50,6 +50,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as path from 'node:path';
 
 import { parse as _rtParse } from '../sync_yaml_rt.js';
+import { GIT_CONVENTION_KEYS, fileSource, readGitConventionKey } from '../_lib/git_convention.js';
 
 const DEFAULT_PATH = '.agent-settings.yml';
 
@@ -203,7 +204,8 @@ const _PRESCAN_RULES: readonly PrescanRule[] = [
 ];
 
 interface Finding {
-    line: number;
+    /** null when no single line can be named, printed as `line:-`. */
+    line: number | null;
     kind: string;
     verdict: string;
     hint: string;
@@ -254,9 +256,53 @@ function _scan_text(text: string): Finding[] {
     return findings;
 }
 
+/**
+ * The schema enum and the branch-pattern alphabet, through the same reader
+ * `git:convention show` and `sync_pr_branch` use, so a value those refuse
+ * fails here first.
+ */
+function _git_convention_findings(target: string, text: string): Finding[] {
+    const findings: Finding[] = [];
+    const lines = _splitlines(text);
+    for (const key of GIT_CONVENTION_KEYS) {
+        const reading = readGitConventionKey(key, fileSource({ developer: [target] }), {});
+        if (reading.state !== 'invalid' && reading.state !== 'malformed') continue;
+        // `malformed` is a fact about the whole file, so it is one finding, not one per key.
+        if (reading.state === 'malformed') {
+            if (!findings.some((f) => f.verdict === 'malformed')) {
+                findings.push({ line: null, kind: 'git.*', verdict: 'malformed', hint: reading.detail ?? reading.state });
+            }
+            continue;
+        }
+        findings.push({
+            line: _gitKeyLine(lines, key),
+            kind: `git.${key}`,
+            verdict: reading.state,
+            hint: reading.detail ?? reading.state,
+        });
+    }
+    return findings;
+}
+
+/**
+ * The 1-based line of `key` inside a block-style `git:` section, or null: a
+ * same-named key elsewhere is not it, and an inline `git:` value has no line
+ * of its own to name.
+ */
+function _gitKeyLine(lines: readonly string[], key: string): number | null {
+    const start = lines.findIndex((l) => /^git\s*:\s*(#.*)?$/.test(l));
+    if (start === -1) return null;
+    for (let i = start + 1; i < lines.length; i++) {
+        const l = lines[i] as string;
+        if (/^\S/.test(l) && !l.startsWith('#')) return null;
+        if (new RegExp(`^\\s+${key}\\s*:`).test(l)) return i + 1;
+    }
+    return null;
+}
+
 function _format(finding: Finding): string {
     return (
-        `  ❌  line:${_ljust(String(finding.line), 4)}  ` +
+        `  ❌  line:${_ljust(finding.line === null ? '-' : String(finding.line), 4)}  ` +
         `${_ljust(finding.kind, 22)}  ${_ljust(finding.verdict, 14)}  ${finding.hint}`
     );
 }
@@ -370,7 +416,13 @@ export function main(argv: string[] | null = null, options: MainOptions = {}): n
         }
     }
 
-    if (findings.length === 0) {
+    // A parser finding already reports a file that does not parse; a `malformed`
+    // git reading would only repeat it. A pre-scan finding is not a parse
+    // failure, so it hides nothing.
+    const unparsed = findings.some((f) => f.kind === 'parser');
+    const git = _git_convention_findings(target, text).filter((f) => !(unparsed && f.verdict === 'malformed'));
+
+    if (findings.length === 0 && git.length === 0) {
         if (!opts.quiet) {
             _print(
                 out,
@@ -380,12 +432,18 @@ export function main(argv: string[] | null = null, options: MainOptions = {}): n
         }
         return 0;
     }
-    _print(err, `❌  ${target}: ${findings.length} finding(s) outside the supported subset.`);
-    for (const finding of findings) {
-        _print(err, _format(finding));
+    if (findings.length > 0) {
+        _print(err, `❌  ${target}: ${findings.length} finding(s) outside the supported subset.`);
+        for (const finding of findings) _print(err, _format(finding));
+        _print(err, '');
+        _print(err, '    Contract: docs/contracts/settings-sync-yaml-subset.md');
     }
-    _print(err, '');
-    _print(err, '    Contract: docs/contracts/settings-sync-yaml-subset.md');
+    if (git.length > 0) {
+        _print(err, `❌  ${target}: ${git.length} git.* value(s) the convention refuses.`);
+        for (const finding of git) _print(err, _format(finding));
+        _print(err, '');
+        _print(err, '    Contract: docs/decisions/ADR-283-git-convention-carrier.md (the git section of agent-settings.schema.json)');
+    }
     return 1;
 }
 

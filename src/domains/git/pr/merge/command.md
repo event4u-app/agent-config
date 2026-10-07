@@ -136,14 +136,94 @@ says what happens to it instead.
 
 ## 2. Sync with the base
 
+Check the PR out, read the strategy against its base, then let one script do
+the update, so the branch-convergence policy (the base SET a non-default target
+carries) is read on every path. `show` takes the same `--base` as `sync` and
+runs after the checkout: without `--base` both read the default branch, and a PR
+into any other base would be judged against the wrong commit. `--key
+update_strategy` limits `show`'s exit to the strategy, so a `commit_format` or
+`branch_pattern` the PR head breaks does not stop the update.
+
 ```bash
 git fetch origin
 gh pr checkout <N>
-git merge origin/<base> --no-edit
+agent-config git:convention show --key update_strategy --base origin/<base>   # value, source, state
+agent-config git:convention sync --base origin/<base>
 ```
 
-Merge the base **into** the branch. Never rebase a branch that is already
-pushed ([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
+A `git.update_strategy` whose state is `malformed`, `invalid`, `discarded` or
+`unresolvable` is not a strategy — `show` exits `1` on it and the script
+refuses it with exit 4, or with exit 1 when the target itself cannot be
+resolved — so stop on this PR and report the line `show` printed. A
+candidate in such a state (this checkout's uncommitted value) is a warning
+`show` prints with exit `0`; the script never reads it, so it does not stop
+the PR.
+The one narrowing: a base the server names whose commit could not be fetched is
+the `unverified` warning below (exit `0`, nothing merged); origin unreachable at
+the ref lookup is exit `1`. Otherwise
+the strategy decides what the script does — under `merge` it merges the base
+set in, under `rebase` it only checks, because a
+`Merge branch '<base>' into …` commit is what that setting excludes and the
+`/pr:merge` sentence authorises merging the named PRs, not rewriting their
+branches ([`git-history-discipline`](../../../../rules/git-history-discipline.md)).
+Read its exit and its line together:
+
+- exit `0` with a `✅` line → the PR is current with its base, or under `merge`
+  the base was merged in cleanly; go on to § 3.
+- exit `0` with a `⚠️` line reading `unverified` (the base commit or origin could not be fetched)
+  or `BYPASSED` (the convergence policy is disabled at the target) → **not
+  checked**: nothing is known about freshness. Stop on this PR and report the
+  line; it is never read as current.
+- exit `1` → a conflict report goes to § 3; a base that could not be resolved
+  (a `--base` the server does not know, no origin, origin unreachable) stops
+  this PR.
+- exit `3` → behind under a strategy other than `merge`. This run never
+  rebases a PR it did not author — the rebase is the author's, or a separate
+  request under
+  [`branch-update`](../../../../skills/git-workflow/references/branch-update.md).
+  What happens to the PR is an owner decision (recorded
+  2026-10-07), and it turns on one forge setting — whether the base requires an
+  up-to-date branch before merging:
+
+  ```bash
+  gh api repos/{owner}/{repo}/branches/<base>/protection \
+    --jq .required_status_checks.strict 2>&1; echo "exit=$?"
+  gh api repos/{owner}/{repo}/rules/branches/<base> \
+    --jq '.[] | select(.type == "required_status_checks") | .parameters.strict_required_status_checks_policy'; echo "exit=$?"
+  ```
+
+  Each read has three outcomes, told apart by the exit code and the message:
+
+  | Read | Absent | Value | Failed |
+  |---|---|---|---|
+  | classic protection | non-zero exit **and** the output contains `(HTTP 404)` (`Branch not protected`); or exit `0` with `null` — the branch is protected but requires no status checks | exit `0`: `true` or `false` | any other non-zero exit, or output that is not `true` / `false` / `null` |
+  | rulesets | exit `0` with empty output (no rule requiring status checks) | exit `0`: one or more lines, each `true` or `false` | non-zero exit, or a line that is not `true` / `false` |
+
+  A `404` from the classic endpoint is not a failed read: it is what a branch
+  protected only by rulesets, or not protected at all, returns; nor is `null`
+  from a `200`, which is a protected branch with no required status checks.
+  The rulesets read prints one line per ruleset on the base that requires
+  status checks, so a base covered by several prints several lines: **any**
+  `true` line reads as `true`; all lines `false` reads as `false`. Either reading
+  `true` means the forge requires an up-to-date branch; both absent or `false`
+  means it does not; a **failed** read is treated as required. A base
+  protected by rulesets alone is decided by the rulesets read.
+  - **The forge does not require an up-to-date branch**, and the PR is green
+    and conflict-free → it goes on to § 3–§ 9 and is merged behind its base;
+    the summary row says so (`merged behind <base>; the forge does not require
+    an up-to-date branch`). Its checks never ran against the current base, and
+    the summary is where that stays visible.
+  - **The forge requires an up-to-date branch** → disposition
+    `blocked-external`, the row naming that setting as the reason.
+  - **The line reads `TARGET_POLICY_STALE`** → the PR is current with its
+    non-default target and that target is itself behind its default branch:
+    `blocked-external`, reason "the target's update", whatever the forge
+    setting. A PR also behind its target gets the ordinary behind line instead,
+    with the target's lag as a note.
+- exit `4` → the strategy could not be read (the line names the reason code
+  and the file); nothing was checked or merged. Stop on this PR and report it.
+- any other exit → the check could not run (internal error); stop on this PR
+  and report the script's message.
 
 ## 3. Resolve conflicts by class, never by taste
 
@@ -284,6 +364,15 @@ single-PR selection, so two runs over the same queue agree.
 After each merge the base has moved, so the next PR is re-synced against the
 NEW base — that is the loop, and it is why pre-greening several PRs ahead of
 their merges is wasted work.
+
+**Under a strategy other than `merge`**, every PR after the first is behind the
+base the previous merge moved, and this run rebases none of them. Where the
+forge does not require an up-to-date branch, a green, conflict-free PR that is
+behind still merges (§ 2, exit `3`) — three green branches merge without three
+sequential rebases — and each such row says it merged behind its base. Where
+the forge requires an up-to-date branch, the first merge leaves every remaining
+PR `blocked-external`, and the summary names that setting rather than leaving
+the reader to find it.
 
 **Under `--no-merge` that loop does not turn**, and the paragraph above is
 written for the form that does. Nothing merges, so the base does not advance,
@@ -442,8 +531,11 @@ run, so it does not exist until one has happened): one row per PR with queue
 position, the `base_ref@base_sha` it was prepared against — without it a
 "prepared" row records nothing checkable, since mergeability is a fact about a
 base and not about a queue —
-conflict classes hit, CI iterations used, disposition, and any edits dropped in
-conflict resolution. The disposition set is closed:
+conflict classes hit, CI iterations used, disposition **with its reason** —
+`merged behind <base>` where § 2 merged a PR its forge let through behind,
+`requires an up-to-date branch` or `TARGET_POLICY_STALE` for a behind PR left
+blocked — and any edits dropped in conflict resolution. Every PR the run saw
+gets a row; none is summarised away. The disposition set is closed:
 
 `merged <sha>` · `superseded-closed` · `blocked-external` · `twice-exhausted` ·
 `unauthorized` · `arrived-after-cutoff`
@@ -463,7 +555,9 @@ ends this run prepared and unmerged.
   `--no-merge` is the explicit way to say stop before § 9.
 - **Never widen, patch, or rebuild-around the git guard.** Verification of the
   authorization window is read-only.
-- **Never rebase a pushed branch**; the base is merged in.
+- **The base comes in per `git.update_strategy`**: under `merge` it is merged
+  in; under `rebase` this command never rebases — a behind PR is reported
+  (exit 3) and the rewrite stays the author's, under `git-history-discipline`.
 - **Never hand-merge a generated artefact**; regenerate it.
 - **Never resolve a conflict outside the four classes**; halt instead.
 - **Never call CI green off a local run**; re-verify on the pushed head.

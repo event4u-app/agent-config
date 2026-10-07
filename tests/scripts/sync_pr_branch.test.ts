@@ -12,9 +12,14 @@
  * information that tells a reader what to do next.
  */
 
-import { describe, expect, it } from 'vitest';
+import { execFileSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
 
-import { classifyConflicts, isGenerated, isRemeasured, main, renderConflictReport } from "../../src/scripts/sync_pr_branch.js";
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
+import { classifyConflicts, isGenerated, isRemeasured, main, renderConflictReport, updateStrategy } from "../../src/scripts/sync_pr_branch.js";
 
 describe('generated vs authored', () => {
     it('recognises the generated artefacts a merge routinely conflicts on', () => {
@@ -342,5 +347,127 @@ describe('sync_pr_branch — generated paths added from the conflict census', ()
             'docs/CLAIMS.md',
             'internal/reports/exec-evidence-feasibility.json',
         ]);
+    });
+});
+
+describe('git.update_strategy', () => {
+    const made: string[] = [];
+    afterEach(() => {
+        for (const dir of made.splice(0)) fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    const tmp = (): string => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sync-pr-branch-'));
+        made.push(dir);
+        return dir;
+    };
+
+    const git = (cwd: string, ...args: string[]): string =>
+        execFileSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@example.com', '-c', 'commit.gpgsign=false', ...args], {
+            cwd,
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'pipe'],
+        });
+
+    /** A clone on a feature branch; `behind` advances origin/main past it. */
+    const checkout = (settings: string | null, behind: boolean): string => {
+        const root = tmp();
+        const remote = path.join(root, 'remote.git');
+        git(root, 'init', '--bare', '-b', 'main', remote);
+        const seed = path.join(root, 'seed');
+        git(root, 'clone', '-q', remote, seed);
+        fs.writeFileSync(path.join(seed, 'a.txt'), 'a\n');
+        git(seed, 'add', 'a.txt');
+        git(seed, 'commit', '-q', '-m', 'seed');
+        git(seed, 'push', '-q', 'origin', 'HEAD:main');
+        const work = path.join(root, 'work');
+        git(root, 'clone', '-q', remote, work);
+        git(work, 'switch', '-q', '-c', 'feature');
+        if (settings !== null) fs.writeFileSync(path.join(work, '.agent-settings.yml'), settings);
+        if (behind) {
+            fs.writeFileSync(path.join(seed, 'b.txt'), 'b\n');
+            git(seed, 'add', 'b.txt');
+            git(seed, 'commit', '-q', '-m', 'advance');
+            git(seed, 'push', '-q', 'origin', 'HEAD:main');
+        }
+        return work;
+    };
+
+    const run = (repo: string): { code: number; out: string; head: string } => {
+        const before = git(repo, 'rev-parse', 'HEAD').trim();
+        const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        try {
+            const code = main(['--repo', repo, '--base', 'origin/main']);
+            return { code, out: out.mock.calls.map((c) => String(c[0])).join(''), head: before };
+        } finally {
+            out.mockRestore();
+        }
+    };
+
+    it('reads `merge` when nothing declares a strategy, and refuses a padded one the schema refuses', () => {
+        expect(updateStrategy(tmp())).toMatchObject({ value: 'merge', state: 'absent' });
+        const dir = tmp();
+        fs.writeFileSync(path.join(dir, '.agent-settings.yml'), 'git:\n  update_strategy: " rebase "\n');
+        expect(updateStrategy(dir)).toMatchObject({ state: 'invalid' });
+    });
+
+    it('refuses with exit 3 and leaves HEAD untouched when a rebase-strategy branch is behind', () => {
+        const repo = checkout('git:\n  update_strategy: rebase\n', true);
+        const r = run(repo);
+        expect(r.code).toBe(3);
+        expect(r.out).toContain('git.update_strategy is `rebase`');
+        expect(git(repo, 'rev-parse', 'HEAD').trim()).toBe(r.head);
+    });
+
+    it('passes a rebase-strategy branch that is already current', () => {
+        const r = run(checkout('git:\n  update_strategy: rebase\n', false));
+        expect(r.code).toBe(0);
+        expect(r.out).not.toContain('refused');
+    });
+
+    it('refuses a typo with exit 4 naming the file, and merges nothing', () => {
+        const repo = checkout('git:\n  update_strategy: rebsae\n', true);
+        const r = run(repo);
+        expect(r.code).toBe(4);
+        expect(r.out).toContain('git-convention-invalid');
+        expect(r.out).toContain(path.join(repo, '.agent-settings.yml'));
+        expect(git(repo, 'rev-parse', 'HEAD').trim()).toBe(r.head);
+    });
+
+    it('refuses an unreadable settings file with exit 4 instead of merging', () => {
+        const repo = checkout('git:\n  update_strategy: rebase\nother: [unclosed\n', true);
+        const r = run(repo);
+        expect(r.code).toBe(4);
+        expect(r.out).toContain('git-convention-malformed');
+        expect(r.out).toContain(path.join(repo, '.agent-settings.yml'));
+        expect(git(repo, 'rev-parse', 'HEAD').trim()).toBe(r.head);
+    });
+
+    it('refuses a malformed top layer even when a lower layer is healthy', () => {
+        const repo = checkout('git:\n  update_strategy: merge\n', true);
+        fs.mkdirSync(path.join(repo, 'agents', 'settings'), { recursive: true });
+        fs.writeFileSync(path.join(repo, 'agents', 'settings', '.agent-settings.yml'), ':\n  - [\n');
+        const r = run(repo);
+        expect(r.code).toBe(4);
+        expect(r.out).toContain(path.join('agents', 'settings', '.agent-settings.yml'));
+        expect(git(repo, 'rev-parse', 'HEAD').trim()).toBe(r.head);
+    });
+
+    it('under rebase never rebases and never pushes', () => {
+        const repo = checkout('git:\n  update_strategy: rebase\n', true);
+        const remoteBefore = git(repo, 'ls-remote', 'origin').trim();
+        const reflogBefore = git(repo, 'reflog', '--format=%gs').trim();
+        const r = run(repo);
+        expect(r.code).toBe(3);
+        expect(git(repo, 'ls-remote', 'origin').trim()).toBe(remoteBefore);
+        expect(git(repo, 'reflog', '--format=%gs').trim()).toBe(reflogBefore);
+        expect(git(repo, 'reflog', '--format=%gs')).not.toMatch(/rebase/);
+    });
+
+    it('still merges the base in under the default strategy', () => {
+        const repo = checkout(null, true);
+        const r = run(repo);
+        expect(r.code).toBe(0);
+        expect(git(repo, 'rev-parse', 'HEAD').trim()).not.toBe(r.head);
     });
 });

@@ -24,6 +24,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { settingsSchema } from '../schemas/settings.js';
 import { parseYaml, mergeIntoTemplate, diffValues, deepMerge, TEMPLATE_PLACEHOLDER_DEFAULTS } from '../io/yamlIO.js';
 import { writeAtomic } from '../io/atomicWrite.js';
+import { WITHHELD_GIT_KEYS, WITHHELD_REASON, gitDiffBase, gitKeyWriteIssues, keepWithheldGit, withholdGitKeys } from '../gitKeysGate.js';
 import { sharedWriteTarget, resolveThroughSymlinks } from '../io/sharedWriteCheck.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
 import { buildSettingsClassIndex, guardedChangedKeys, parseSettingsClassRows, type SettingsClass } from '../../shared/settingsClasses.js';
@@ -143,6 +144,12 @@ export interface SettingsRouteOptions {
      * written; `null`/undefined → layer skipped.
      */
     userGlobalReadRoot?: string | null;
+    /**
+     * True when `writeRoot` is the user-global layer (global mode). The
+     * loader discards `git.*` keys from that file, so they are neither offered
+     * nor accepted with a non-default value.
+     */
+    userGlobalWrite?: boolean;
 }
 
 const SETTINGS_RELATIVE = join('settings', '.agent-settings.yml');
@@ -192,6 +199,10 @@ interface LayeredState {
      * which layer a value comes from (project overrides global).
      */
     sources: { global: string[]; project: string[] };
+    /** The write root's own file, unmerged; null when it does not exist. */
+    writeLayer: Record<string, unknown> | null;
+    /** That file's body; null when it does not exist. */
+    writeLayerRaw: string | null;
 }
 
 /**
@@ -340,6 +351,8 @@ async function readLayeredSettings(
             ])],
             project: projectLayer !== null ? dottedLeafPaths(projectLayer.values) : [],
         },
+        writeLayer: globalLayer?.values ?? null,
+        writeLayerRaw: globalLayer?.raw ?? null,
     };
 }
 
@@ -359,6 +372,10 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
         app.get('/api/v1/settings', async (_request, reply) => {
             try {
                 const state = await readLayeredSettings(packageRoot, opts.writeRoot, opts.legacyReadRoot, opts.userGlobalReadRoot);
+                const offered = opts.userGlobalWrite === true
+                    ? withholdGitKeys(state.values, SETTINGS_JSON_SCHEMA as { properties?: Record<string, unknown>; required?: string[] })
+                    : { values: state.values, schema: SETTINGS_JSON_SCHEMA };
+                const withheld = opts.userGlobalWrite === true ? { withheld: { keys: WITHHELD_GIT_KEYS, reason: WITHHELD_REASON } } : {};
                 if (!state.hasRealFile) {
                     // No on-disk file yet — the wizard creates it. Surface the
                     // template-defaults values + schema + path in the body so
@@ -367,19 +384,21 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                     // `{}` and the user's first save fails schema validation).
                     await reply.code(404).send({
                         error: { code: 'NOT_FOUND', message: 'settings file missing' },
-                        defaults: state.values,
+                        defaults: offered.values,
                         lastModified: 0,
                         path: SETTINGS_RELATIVE,
-                        schema: SETTINGS_JSON_SCHEMA,
+                        schema: offered.schema,
+                        ...withheld,
                     });
                     return reply;
                 }
                 const legacyHints = extractLegacyHints(state.values);
                 return {
-                    values: state.values,
+                    values: offered.values,
                     lastModified: state.mtimeMs,
                     path: SETTINGS_RELATIVE,
-                    schema: SETTINGS_JSON_SCHEMA,
+                    schema: offered.schema,
+                    ...withheld,
                     legacyHints,
                     // Phase 5.4 — per-layer provenance for the settings hub's
                     // "set globally / in this project" source badges.
@@ -418,7 +437,13 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 });
                 return reply;
             }
-            const changes = diffValues(current.values, parsed.data as Record<string, unknown>);
+            const candidate = opts.userGlobalWrite === true
+                ? keepWithheldGit(parsed.data as Record<string, unknown>, current.writeLayer ?? {})
+                : (parsed.data as Record<string, unknown>);
+            const before = opts.userGlobalWrite === true
+                ? gitDiffBase(current.values, current.writeLayer ?? {})
+                : current.values;
+            const changes = diffValues(before, candidate);
             return { changes };
         });
 
@@ -440,6 +465,15 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 });
                 return reply;
             }
+            const gitIssues = gitKeyWriteIssues(
+                parsed.data as Record<string, unknown>,
+                await loadDefaultSettings(packageRoot),
+                opts.userGlobalWrite === true,
+            );
+            if (gitIssues.length > 0) {
+                await reply.code(422).send({ error: { code: 'VALIDATION', message: 'invalid settings', fields: gitIssues } });
+                return reply;
+            }
             const current = await readLayeredSettings(packageRoot, opts.writeRoot, opts.legacyReadRoot, opts.userGlobalReadRoot);
             if (!current.hasRealFile) {
                 await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'settings file missing' } });
@@ -452,8 +486,16 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 });
                 return reply;
             }
+            const candidate = opts.userGlobalWrite === true
+                ? keepWithheldGit(parsed.data as Record<string, unknown>, current.writeLayer ?? {})
+                : (parsed.data as Record<string, unknown>);
             try {
-                const merged = mergeIntoTemplate(current.raw, parsed.data as Record<string, unknown>);
+                // In global mode the scaffold may be the project file, whose
+                // git section the candidate does not overwrite; the file being
+                // written is the base, so a section it lacks stays absent. An
+                // absent user-global file starts empty, never from the project.
+                const base = opts.userGlobalWrite === true ? (current.writeLayerRaw ?? '') : current.raw;
+                const merged = mergeIntoTemplate(base, candidate);
                 if (opts.dryRun === true) {
                     // No disk write, no Last-Modified bump — surface the
                     // rendered body so the maintainer sees what a real
@@ -485,8 +527,10 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                     const guarded = guardedChangedKeys(
                         classes,
                         diffValues(
-                            current.values as Record<string, unknown>,
-                            parsed.data as Record<string, unknown>,
+                            opts.userGlobalWrite === true
+                                ? gitDiffBase(current.values, current.writeLayer ?? {})
+                                : current.values,
+                            candidate,
                         ),
                     );
                     if (guarded.length > 0) {

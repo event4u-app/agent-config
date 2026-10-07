@@ -159,6 +159,51 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Added
 
+- **A team's git convention can be declared instead of measured — the new
+  `git:` settings block.** Three Class-C keys, each defaulting to the
+  behaviour every install had before, so an install that sets nothing is
+  unchanged. `git.commit_format: ticket-conventional` writes
+  `DEV-1234 feat(exporter): …` instead of `feat(DEV-1234): …` and treats a
+  ticket in the scope as a wrong subject; `/commit` and `/commit:in-chunks`
+  validate against the regex for the configured format, and the
+  conventional-commits-writing classifier gains a `ticket-conventional` family
+  so such a history is no longer misread as free-text ticket prefixes.
+  `git.branch_pattern` (`{type}`, `{ticket}`, `{slug}`) shapes the branches
+  `/worktree:create` proposes; reading a ticket back out of a branch now takes
+  the first `[A-Z][A-Z0-9]+-[0-9]+` token that is not a standard name (`UTF`,
+  `ISO`, `SHA`, `RFC` prefixes), so `DEV-1234-device-export` yields its ticket.
+  Under `git.update_strategy: rebase`, `/create-pr` asks for
+  `git rebase origin/<base>` plus `--force-with-lease`, and `/pr:merge`,
+  `/prepare-for-review` and `/review:changes` report a behind branch instead of
+  updating it; none of them merges the base into a feature branch — one git-workflow reference
+  (`references/branch-update.md`) now owns that decision, and
+  `sync_pr_branch` exits `3` instead of merging when such a branch is behind
+  (a current branch still exits `0`). **What it does not do:** the setting picks the operation and never
+  authorises it; git-history-discipline still requires the user's request for
+  every rebase, fixup or autosquash. A team declares the keys in
+  `.git-convention.yml`, a tracked file at the repository root that overrides
+  every developer settings file and where either value is a declaration
+  (ADR-283): `git.update_strategy` is read from it at the commit a pull request
+  is judged against, so a worktree, a fresh clone and CI agree and a pull
+  request cannot change the strategy its own update is judged by;
+  `git.commit_format` and `git.branch_pattern` are read at `HEAD`. Without the
+  carrier the keys come from the project settings files as before; the
+  user-global file does not carry them, and the settings GUI no longer offers
+  them while it writes there. `agent-config git:convention show` prints the
+  value in force, the commit it was read at and a differing checkout value as
+  a candidate; `show --key` judges only the named keys. The commit is the
+  `--base` given — a pull request passes `--base origin/<its base>` — else the
+  default branch; nothing asks the forge. A carrier that does not parse makes
+  `sync_pr_branch` exit `4`, a target that names no commit exit `1`, and a named
+  commit that cannot be fetched is `unverified`; none of them merges. A commit-linting config
+  in the repository still outranks `git.commit_format`. In a packed consumer
+  install `git:convention show` is the git surface that resolves, and the
+  consumer matrix proves it with a `git-convention` leg; `sync_pr_branch` and
+  `check_branch_freshness`, which `/pr:merge`, `/create-pr`, `/fix:ci` and
+  `/roadmap:next` run through `./scripts-run`, still need a source checkout of
+  this package.
+  The merge method is not a key: `/pr:merge` already reads it from the forge.
+
 - **A push no longer ships a branch whose tree contradicts its own commits.**
   `check_branch_work_committed` runs first in the pre-push hook, and it exists
   because this branch produced the defect it guards: a merge-reconciled baseline

@@ -53,7 +53,7 @@ Then, once that is answered:
 ### 2. Gather external context
 
 **Auto-detect ticket from branch:**
-Run `git branch --show-current` and extract ticket IDs (pattern: `[A-Z]+-[0-9]+`).
+Read the ticket ID from the current branch with `agent-config git:convention ticket` ([`commit-subject`](../../../../skills/git-workflow/references/commit-subject.md) § Reading the ticket).
 
 If a ticket ID is found:
 ```

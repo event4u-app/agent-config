@@ -1,12 +1,12 @@
 {
     "schema_version": 1,
     "_comment": "Written by src/scripts/record_evaluator_measurements.mjs, invoked from src/scripts/evaluator_umbrella.sh when UMBRELLA_RECORD=1 (the nightly). check_evaluator_budgets.ts --recorded compares a fresh measurement set against this file; a contradiction on a DETERMINISTIC metric warns on main and fails on release. Do not hand-edit — refresh it from a real run.",
-    "recorded_at": "2026-10-05T13:25:28.294Z",
-    "git_sha": "0d08876f7f39d3e2e25dbd5c5d7c5eec7916094f",
+    "recorded_at": "2026-10-07T06:42:26.735Z",
+    "git_sha": "f85539faf8f9d211c9705aa5a85b4ee693f6990d",
     "run_url": null,
-    "conditions": "Refresh for the 25 -> 26 mcp_public_tool_count move: graph_node shipped in 495880908 (#2159) as the sixth graph_* MCP tool, and the registering PR did not move the budget, so the release gate blocked 16.3.0 — the same shape as the 20 -> 25 move recorded above. Re-measured three times via the pinned method (tools/list length on a freshly built dist/mcp/server.mjs, npm run build:mcp-bundle on this tree): 26/26/26, the name set differing from the 25-tool set by exactly graph_node. cli_help_command_count carried forward unchanged at 110, re-measured via the pinned method (brace-name count in src/cli/registry.ts): 110. Measured locally on darwin/arm64 node v26.7.0 rather than in the umbrella container; both metrics are tree-derived and container-independent.",
+    "conditions": "Refresh for the 110 -> 111 cli_help_command_count move: the git:convention verb registers in the same PR that adds it. Re-measured via the pinned method (brace-name count in src/cli/registry.ts): 111. mcp_public_tool_count carried forward unchanged at 26 (no MCP surface touched). Measured locally on darwin/arm64 rather than in the umbrella container; both metrics are tree-derived and container-independent.",
     "measurements": {
-        "cli_help_command_count": 110,
+        "cli_help_command_count": 111,
         "mcp_public_tool_count": 26
     }
 }

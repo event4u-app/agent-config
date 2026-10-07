@@ -10,7 +10,11 @@
 The consumer matrix exercises the **published tarball** the way a consumer
 does — pack → fresh global install into an isolated prefix → `init` into a
 fresh project → `doctor` → `conformance` → MCP stdio handshake →
-`hooks:doctor` → projection presence (`validate`) → uninstall — plus an
+`hooks:doctor` → projection presence (`validate`) → `git:convention show` and
+`git:convention subject` in a repository that commits a `.git-convention.yml` and
+pushes it to an `origin` (the verb an installed command reads the git convention
+and validates a commit subject through) → uninstall —
+plus an
 upgrade leg (last published minor from the registry → packed tarball →
 `doctor` stays green) and pre-tag dry-runs of every release-adjacent
 workflow.

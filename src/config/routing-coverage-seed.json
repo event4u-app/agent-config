@@ -10,11 +10,11 @@
     },
     "seed": {
         "rules": 0.9626,
-        "skills": 0.3846
+        "skills": 0.398
     },
     "seed_provenance": {
         "rules": "103 covered of 107 routed rules on 2026-10-06; was 102 of 106 on 2026-09-13, 101 of 105 on 2026-09-08 and 94 of 105 (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
-        "skills": "115 of 299 skills carry evals/triggers.json on 2026-10-06 (second growth of the day); was 114 earlier that day, 112 on 2026-10-04, 111 on 2026-10-02, 107 on 2026-10-01, 103 earlier that day, 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
+        "skills": "119 of 299 skills carry evals/triggers.json on 2026-10-07; was 118 after the third growth of 2026-10-06, 115 after the second growth that day, 114 earlier that day, 112 on 2026-10-04, 111 on 2026-10-02, 107 on 2026-10-01, 103 earlier that day, 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
         "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is far lower and is covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4). The figure is deliberately not restated here (corrected 2026-10-01): it read `25%` against a seed that had since moved to 0.3445, which is the same count-drift this file's own history entries keep repairing one field away. The live value is `seed.skills`, two keys above."
     },
     "history": [
@@ -51,7 +51,7 @@
             "scope": "rules",
             "from": 0.9619,
             "to": 0.9623,
-            "reason": "road-to-adversarial-verification-and-long-runs Phase 1.1 added `test-first` as a routed rule, which moved the DENOMINATOR from 105 to 106 -- the ratio-falls-two-ways case this file's own _comment names, and the one that is a defect to record rather than repair. The repair is the corpus file, not the seed: `tests/eval/routing-matrix/test-first.yaml` landed in the same change (101 -> 102 of 106), so the ratio ROSE across a denominator increase rather than merely holding. The rule is trigger-less by design, so its positives describe the situations it governs rather than strings that summon it, and its near-misses are its own § Does NOT fire set. The seed follows the gain because this file's test asserts seed == live measurement in both directions; it may never be LOWERED."
+            "reason": "road-to-adversarial-verification-and-long-runs Phase 1.1 added `test-first` as a routed rule, which moved the DENOMINATOR from 105 to 106 -- the ratio-falls-two-ways case this file's own _comment names, and the one that is a defect to record rather than repair. The repair is the corpus file, not the seed: `tests/eval/routing-matrix/test-first.yaml` landed in the same change (101 -> 102 of 106), so the ratio ROSE across a denominator increase rather than merely holding. The rule is trigger-less by design, so its positives describe the situations it governs rather than strings that summon it, and its near-misses are its own \u00a7 Does NOT fire set. The seed follows the gain because this file's test asserts seed == live measurement in both directions; it may never be LOWERED."
         },
         {
             "date": "2026-09-19",
@@ -86,7 +86,7 @@
             "scope": "skills",
             "from": 0.3579,
             "to": 0.3712,
-            "reason": "road-to-stacks-beyond-php steps 1.2 and 1.4 authored FOUR corpus files (107 -> 111 of 299) for quality-tools, test-driven-development, api-testing and test-performance. Same shape as both 2026-10-01 entries and for the same reason: that lane adds one ecosystem-keyed paragraph to three skill bodies and two reference bodies under a fourth, and check_routing_coverage requires a corpus for every skill a diff touches — so the files are the gate's own remedy rather than a coverage push. Each carries exemplars in DE and EN, near-misses naming the neighbour that actually owns the adjacent job rather than easy negatives, and counterexamples for the two directions its vocabulary over-claims, with the case class declared per query. The seed rises so the gain cannot be given back silently; it may never be LOWERED. The partition split is 2 holdout / 2 train by name hash — quality-tools at 0x20 = 32 and test-performance at 0x10 = 16 seal; test-driven-development at 0x47 = 71 and api-testing at 0x67 = 103 train — so BOTH published train-side measurements are re-taken here on the terms the 2026-10-01 entries set for a train-side growth: routing-body-signal-verdict.json (verdict unchanged in kind, still `harmful`, false activation +7.35 pp against the +2.0 pp guard) and delivery-set-measurement-2026-08-31.json. The holdout pin gains two sealed rows with its ordering claim NOT extended to them, for the reason the 19th row already established: a row authored today predates nothing."
+            "reason": "road-to-stacks-beyond-php steps 1.2 and 1.4 authored FOUR corpus files (107 -> 111 of 299) for quality-tools, test-driven-development, api-testing and test-performance. Same shape as both 2026-10-01 entries and for the same reason: that lane adds one ecosystem-keyed paragraph to three skill bodies and two reference bodies under a fourth, and check_routing_coverage requires a corpus for every skill a diff touches \u2014 so the files are the gate's own remedy rather than a coverage push. Each carries exemplars in DE and EN, near-misses naming the neighbour that actually owns the adjacent job rather than easy negatives, and counterexamples for the two directions its vocabulary over-claims, with the case class declared per query. The seed rises so the gain cannot be given back silently; it may never be LOWERED. The partition split is 2 holdout / 2 train by name hash \u2014 quality-tools at 0x20 = 32 and test-performance at 0x10 = 16 seal; test-driven-development at 0x47 = 71 and api-testing at 0x67 = 103 train \u2014 so BOTH published train-side measurements are re-taken here on the terms the 2026-10-01 entries set for a train-side growth: routing-body-signal-verdict.json (verdict unchanged in kind, still `harmful`, false activation +7.35 pp against the +2.0 pp guard) and delivery-set-measurement-2026-08-31.json. The holdout pin gains two sealed rows with its ordering claim NOT extended to them, for the reason the 19th row already established: a row authored today predates nothing."
         },
         {
             "date": "2026-10-04",
@@ -108,6 +108,20 @@
             "from": 0.9623,
             "to": 0.9626,
             "reason": "road-to-neighbours-that-pull-their-weight step 2.1 added `neighbour-precedence` as a routed rule, moving the DENOMINATOR from 106 to 107. The repair is the corpus file, not the seed: `tests/eval/routing-matrix/neighbour-precedence.yaml` landed in the same change (102 -> 103 of 107), so the ratio rose across a denominator increase. The seed follows the gain because this file's test asserts seed == live measurement in both directions; it may never be LOWERED."
+        },
+        {
+            "date": "2026-10-06",
+            "scope": "skills",
+            "from": 0.3846,
+            "to": 0.3946,
+            "reason": "feat/git-convention-settings, which adds the git.* convention settings (commit_format, branch_pattern, update_strategy), authored THREE corpus files (115 -> 118 of 299) for conventional-commits-writing, jira-integration and merge-conflicts. Same shape as the 2026-10-01 four-corpus entry and for the same reason: the branch edits those three skill bodies, and check_routing_coverage requires a corpus for every skill a diff touches, so the files are the gate's own remedy rather than a coverage push. Each carries four exemplars including one German, three near-misses naming the neighbour that owns the adjacent job, and one counterexample, with the case class declared per query. The seed rises so the gain cannot be given back silently; it may never be LOWERED. The partition split is 2 holdout / 1 train by name hash -- conventional-commits-writing at 0x2f = 47 and merge-conflicts at 0x25 = 37 seal; jira-integration at 0x93 = 147 trains -- so BOTH published train-side measurements are re-taken here on the terms the 2026-10-04 entry sets for a train-side growth: routing-body-signal-verdict.json (verdict unchanged in kind, still `harmful`, false activation +6.85 pp against the +2.0 pp guard) and delivery-set-measurement-2026-08-31.json. The holdout pin gains two sealed rows and a new SET-SHA256, with its ordering claim NOT extended to them. THREE entries were removed from trigger_eval_grandfather.json (188 -> 185), none red on main beforehand: check_trigger_eval_presence fires only on an allowlist entry whose skill HAS a corpus, so each went stale the moment this change added one, and each red is created and removed in the same change."
+        },
+        {
+            "date": "2026-10-07",
+            "scope": "skills",
+            "from": 0.3946,
+            "to": 0.398,
+            "reason": "Correction of the 2026-10-06 entry above, which is right about its three files and silent about a fourth. The same branch (feat/git-convention-settings) later added `src/skills/using-git-worktrees/evals/triggers.json` in its own commit without moving the seed, so the tree held 119 corpus files against a seed of 118/299 and this file's own test (seed == live measurement) read red. Recounted on 2026-10-07: 119 of 299 (`src/skills/*/evals/triggers.json`), so the branch added FOUR corpus files in all (115 -> 119): conventional-commits-writing, jira-integration, merge-conflicts and using-git-worktrees. The seed rises to the live value; it may never be LOWERED. sha256('using-git-worktrees')[0:2] is 0xba = 186, above the holdout ceiling of 51, so the growth is TRAIN-side and both train-side measurements are re-taken in this change -- routing-body-signal-verdict.json (verdict unchanged in kind, still `harmful`, false activation +6.79 pp against the +2.0 pp guard, train corpora 91 -> 92) and delivery-set-measurement-2026-08-31.json -- while the holdout pin is untouched. ONE entry was removed from trigger_eval_grandfather.json: `using-git-worktrees` went stale when its corpus landed, a red this branch created and removes here."
         }
     ]
 }

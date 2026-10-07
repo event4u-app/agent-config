@@ -546,11 +546,58 @@ const HOST_LOWERING_TRIPLE: Triple = {
     },
 };
 
+const GRAMMAR_REFERENCE = 'src/skills/git-workflow/references/commit-subject.md';
+const GRAMMAR_GENERATOR = 'src/scripts/generate_git_convention_grammar.ts';
+
+/**
+ * The commit-subject reference is the fallback a command reads when the
+ * `agent-config` binary cannot run, so its grammar block has to be the grammar
+ * the binary runs. The page itself is a source too: a hand edit to the block is
+ * the drift this row exists to catch.
+ */
+const GIT_CONVENTION_GRAMMAR_TRIPLE: Triple = {
+    id: 'git-convention-grammar',
+    output: GRAMMAR_REFERENCE,
+    remedy: './scripts-run src/scripts/generate_git_convention_grammar',
+    why: 'the reference carries a grammar block rendered from the module the git:convention verb runs',
+    sourcesOf() {
+        return {
+            ok: true,
+            sources: [
+                { kind: 'file', value: 'src/scripts/_lib/git_convention_grammar.ts' },
+                { kind: 'file', value: GRAMMAR_GENERATOR },
+                { kind: 'file', value: GRAMMAR_REFERENCE },
+            ],
+        };
+    },
+    regenerate(root, workDir) {
+        const outFile = path.join(workDir, 'commit-subject.md');
+        const tsx = path.join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'tsx.cmd' : 'tsx');
+        if (!fs.existsSync(tsx)) {
+            return { ok: false, reason: `no tsx at ${path.relative(root, tsx)} — run \`npm ci\` before this gate` };
+        }
+        const res = spawnSync(tsx, [path.join(root, GRAMMAR_GENERATOR), '--out', outFile], {
+            cwd: root,
+            encoding: 'utf8',
+            maxBuffer: 64 * 1024 * 1024,
+        });
+        if (res.status !== 0) {
+            return { ok: false, reason: `generate_git_convention_grammar exited ${String(res.status)}: ${(res.stderr ?? '').trim()}` };
+        }
+        try {
+            return { ok: true, text: fs.readFileSync(outFile, 'utf8') };
+        } catch (e) {
+            return { ok: false, reason: `generate_git_convention_grammar reported success but wrote no readable file (${String(e)})` };
+        }
+    },
+};
+
 export const REGISTRY: readonly Triple[] = [
     CENSUS_TRIPLE,
     INSTALL_BUNDLE_TRIPLE,
     HOOK_MANIFEST_TRIPLE,
     HOST_LOWERING_TRIPLE,
+    GIT_CONVENTION_GRAMMAR_TRIPLE,
 ];
 
 // ---------------------------------------------------------------------------
