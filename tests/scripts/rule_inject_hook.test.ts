@@ -9,6 +9,7 @@ import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
 
+import { THIN_ENTRY_MARKER } from '../../src/scripts/_lib/thin_rules.js';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -667,7 +668,7 @@ describe('rule-inject — foreign-project resolution (1.1)', () => {
 function hostLayer(root: string, ids: string[]): void {
     const dir = path.join(root, '.claude', 'rules');
     fs.mkdirSync(dir, { recursive: true });
-    for (const id of ids) fs.writeFileSync(path.join(dir, `${id}.md`), 'INSTALLED STUB\n', 'utf-8');
+    for (const id of ids) fs.writeFileSync(path.join(dir, `${id}.md`), `INSTALLED STUB\n${THIN_ENTRY_MARKER}\n`, 'utf-8');
 }
 
 describe('rule-inject — delivery scope is what the install carries (1.3)', () => {
