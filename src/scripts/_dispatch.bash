@@ -283,6 +283,12 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   settings:get               Read one setting: its value, the file it came from, its
                              class, and whether "absent" differs from the default.
                              Usage: settings:get <key> [--json]
+  git:convention             The git convention (git.commit_format, git.branch_pattern,
+                             git.update_strategy): value, source file and state
+                             (valid|absent|malformed|invalid|discarded), and any
+                             repository commit-message validator that outranks it.
+                             Exit 1 on malformed or invalid.
+                             Usage: git:convention show [--json]
   settings:set               Set one setting in the global file. Refuses every class-C
                              (guarded) key from docs/contracts/settings-classes.md, and
                              refuses everything when that contract is unreadable.
@@ -794,6 +800,10 @@ cmd_packs_active() {
 
 cmd_settings_get() {
   exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_settings_get.ts" "$@"
+}
+
+cmd_git_convention() {
+  exec_ts "$PACKAGE_ROOT/src/scripts/_cli/cmd_git_convention.ts" "$@"
 }
 
 cmd_mcp_available() {
@@ -1561,6 +1571,7 @@ main() {
     session:recycle)         cmd_session_recycle "$@" ;;
     packs:active)            cmd_packs_active "$@" ;;
     settings:get)            cmd_settings_get "$@" ;;
+    git:convention)          cmd_git_convention "$@" ;;
     mcp:available)           cmd_mcp_available "$@" ;;
     brand:status)            cmd_brand_status "$@" ;;
     roadmap:context)         cmd_roadmap_context "$@" ;;

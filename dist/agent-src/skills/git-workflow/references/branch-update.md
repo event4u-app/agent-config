@@ -4,7 +4,9 @@ Detail for [`git-workflow`](../SKILL.md) § Live remote state and § Before
 opening a PR. The one place that
 decides how a feature branch takes in its base — `/create-pr` § 1b, `/pr:merge`
 § 2, `/prepare-for-review` and `/review:changes` defer here. Read
-`agent-config settings:get git.update_strategy`:
+`git.update_strategy` from `agent-config git:convention show` — a state of
+`malformed`, `invalid` or `discarded` (exit 1 for the first two) is not a
+strategy: stop and report the line it prints, never fall back to `merge`:
 
 | `git.update_strategy` | Operation | Asked first? |
 |---|---|---|

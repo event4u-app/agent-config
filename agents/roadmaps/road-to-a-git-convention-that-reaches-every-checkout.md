@@ -143,7 +143,7 @@ writes it into settings files and the rename becomes a migration.
       that under `rebase` the script never rebases and never pushes.
       `/fix:ci` and `/roadmap:next` map exit 4.
       verify: `test -f tests/scripts/_lib/git_convention_reader.test.ts && npx vitest run tests/scripts/_lib/git_convention_reader.test.ts tests/scripts/sync_pr_branch.test.ts && git grep -q -F 'exit 4' -- src/domains/engineering-base/fix/ci/command.md src/domains/product-basic/roadmap/next/command.md` -> 0
-- [ ] **1.2 One verb an installed command can call.**
+- [x] **1.2 One verb an installed command can call.**
       `agent-config git:convention show` prints the three keys with value,
       source and state, as text and as JSON, and exits non-zero on `malformed`
       or `invalid`. It names a repository commit-message validator (a

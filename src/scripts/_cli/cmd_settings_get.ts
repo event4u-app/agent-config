@@ -48,6 +48,7 @@ import {
     iter_setting_overrides,
     load_agent_settings,
     MERGEABLE_KEYS,
+    settings_layer_states,
     user_global_settings_paths,
     USER_GLOBAL_FILENAME,
 } from '../_lib/agent_settings.js';
@@ -236,6 +237,14 @@ export function runSettingsGet(opts: SettingsGetOptions): SettingsGetResult {
     const carveOut = carveOutFor(opts.key);
     const drop = userGlobalDrop(opts.key);
     const mission = missionResolutionFor(opts.key, merged);
+    // The loader reads a layer that does not parse as absent, so "not set" can
+    // be false; the exit code stays 0 because the read itself still answered.
+    const malformed = settings_layer_states({ cwd: opts.cwd }).filter((l) => l.state === 'malformed');
+    if (malformed.length > 0) {
+        err.push(
+            `⚠️  settings:get: ${malformed.map((l) => l.path).join(', ')} does not parse; every value it sets is read as absent.`,
+        );
+    }
 
     if (opts.json) {
         out.push(
