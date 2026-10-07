@@ -7,6 +7,11 @@
  * request's base: a PR into `release/1.x` was merged with `main` and then
  * checked against `release/1.x`. The base is now derived once, at the task
  * level, and handed to both; the resolvers stay forge-free.
+ *
+ * The base reaches a shell twice, in the derivation and in the step commands,
+ * and a git ref name may carry `$`, `(` and `;`. Both are rendered here the way
+ * Task renders them, so an unquoted substitution executes in the test exactly
+ * as it would in a real run.
  */
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -23,18 +28,26 @@ const DEV = parseYaml(fs.readFileSync(path.join(REPO, 'taskfiles', 'dev.yml'), '
 };
 const TASK = DEV.tasks['push-ready'];
 
+/** Task's `shellQuote`: one POSIX single-quoted word. */
+const shellQuote = (v: string): string => `'${v.split("'").join("'\\''")}'`;
+
+/** Substitute BASE as Task does, raw or through `shellQuote`. */
+const renderBase = (tpl: string, base: string): string => tpl.split('{{shellQuote .BASE}}').join(shellQuote(base)).split('{{.BASE}}').join(base);
+
 /** The task-level derivation, run as Task runs it, with BASE substituted and a stand-in `gh` on PATH. */
-function derive(base: string, ghOut: string | null): string {
+function deriveRun(base: string, ghOut: string | null): { out: string; status: number | null; err: string } {
     const spec = TASK?.vars?.['PR_BASE'] as { sh?: string } | undefined;
     if (spec?.sh === undefined) throw new Error('push-ready declares no PR_BASE derivation');
     const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'push-ready-gh-'));
-    const gh = ghOut === null ? 'exit 1' : `[ "$1 $2" = "pr view" ] && printf '%s\\n' '${ghOut}'`;
+    fs.writeFileSync(path.join(bin, 'answer'), ghOut === null ? '' : `${ghOut}\n`);
+    const gh = ghOut === null ? 'exit 1' : `[ "$1 $2" = "pr view" ] && cat '${path.join(bin, 'answer')}'`;
     fs.writeFileSync(path.join(bin, 'gh'), `#!/bin/sh\n${gh}\n`);
     fs.chmodSync(path.join(bin, 'gh'), 0o755);
-    const script = spec.sh.split('{{.BASE}}').join(base);
-    const r = spawnSync('sh', ['-c', script], { encoding: 'utf-8', env: { ...process.env, PATH: `${bin}:${process.env.PATH ?? ''}` } });
-    return r.stdout.trim();
+    const r = spawnSync('sh', ['-c', renderBase(spec.sh, base)], { cwd: REPO, encoding: 'utf-8', env: { ...process.env, PATH: `${bin}:${process.env.PATH ?? ''}` } });
+    return { out: r.stdout.trim(), status: r.status, err: r.stderr };
 }
+
+const derive = (base: string, ghOut: string | null): string => deriveRun(base, ghOut).out;
 
 describe('push-ready derives the pull request base once', () => {
     it('takes the open pull request base when BASE is not given', () => {
@@ -61,7 +74,7 @@ describe('push-ready derives the pull request base once', () => {
         expect(sync.length).toBeGreaterThan(0);
         expect(fresh.length).toBeGreaterThan(0);
         for (const c of [...sync, ...fresh]) {
-            expect(c).toContain('--base {{.PR_BASE}}');
+            expect(c).toContain('--base {{shellQuote .PR_BASE}}');
             expect(c).not.toContain('origin/{{.PR_BASE}}');
         }
         expect(cmds.join('\n')).not.toContain('{{.BASE}}');
@@ -70,5 +83,35 @@ describe('push-ready derives the pull request base once', () => {
     it('says in its description where the base comes from', () => {
         expect(TASK?.desc).toMatch(/gh pr view --json baseRefName/);
         expect(TASK?.desc).toMatch(/default branch only when there is no/);
+    });
+});
+
+describe('push-ready never executes a base name', () => {
+    const marker = (): string => path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'push-ready-marker-')), 'ran');
+    const hostile = (m: string): string => `m$(touch$IFS${m})`;
+
+    it('does not run a command substitution carried by BASE', () => {
+        const m = marker();
+        deriveRun(hostile(m), null);
+        expect(fs.existsSync(m)).toBe(false);
+    });
+
+    it('quotes the base wherever a step command or line echoes it', () => {
+        const cmds = (TASK?.cmds ?? []).map(String).join('\n');
+        expect(cmds).not.toMatch(/\{\{\s*\.PR_BASE\s*\}\}/);
+        expect(cmds).not.toMatch(/\{\{\s*\.BASE\s*\}\}/);
+        expect(cmds).toContain('{{shellQuote .PR_BASE}}');
+    });
+
+    it('rejects a BASE that is not a valid branch name', () => {
+        const r = deriveRun('bad..name', null);
+        expect(r.status).not.toBe(0);
+        expect(r.err).toContain('not a valid branch name');
+    });
+
+    it('rejects a forge answer that is not a valid branch name', () => {
+        const r = deriveRun('', 'bad..name');
+        expect(r.status).not.toBe(0);
+        expect(r.err).toContain('not a valid branch name');
     });
 });
