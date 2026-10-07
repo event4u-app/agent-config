@@ -70,4 +70,4 @@ jobs:
           name: gate-canary-ledger
           path: ${{ steps.canary.outputs.ledger }}
           if-no-files-found: error
-          retention-days: 400
+          retention-days: 90
