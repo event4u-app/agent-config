@@ -168,7 +168,7 @@ not. A criterion that says of itself that it is not met is not ticked. A
 - **Status:** open
 - **Owner:** implementer
 - **Blocks:** step 4.2
-- **What to do:** add a `relates:` row naming `road-to-a-kernel-that-guards-its-plumbing` to `agents/roadmaps/road-to-a-ratification-fence-that-follows-its-imports.md` (its step 4.1 is the receiver), then flip the archived AC-3 to `[~]` with `<!-- deferred-resolution: carried-to=road-to-a-ratification-fence-that-follows-its-imports -->` and a dated one-line note.
+- **What to do:** add a `relates:` row naming `road-to-a-kernel-that-guards-its-plumbing` to `agents/roadmaps/archive/road-to-a-ratification-fence-that-follows-its-imports.md` (its step 4.1 is the receiver), then flip the archived AC-3 to `[~]` with `<!-- deferred-resolution: carried-to=road-to-a-ratification-fence-that-follows-its-imports -->` and a dated one-line note.
 - **Resolved when:** the archived AC-3 reads `[~]`, `./scripts-run src/scripts/lint_deferral_integrity` exits 0 at its baseline of 243, and `./scripts-run src/scripts/lint_ticked_unmet_criteria` no longer lists it.
 - **Recommendation:** do it in the change that lands that roadmap's step 4.2, which already writes a line under the same AC-3 — one edit to the archived file instead of two racing ones.
 - **If you do nothing:** AC-3 stays ticked over its own "NOT met" and stays listed by the 4.1 lint.
