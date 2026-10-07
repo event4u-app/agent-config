@@ -141,18 +141,8 @@ just its subject. Drop, from the sample:
 
 ### 3. Classify each surviving subject
 
-Match in order, first hit wins. These are POSIX extended regular expressions,
-given outside a table because a markdown cell would need the alternation pipes
-escaped and `\|` in ERE is a literal pipe, not an alternation:
-
-```
-conventional          ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
-ticket-conventional   ^[A-Z][A-Z0-9]+-[0-9]+ (build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: 
-ticket-prefix         ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
-gitmoji           ^:[a-z0-9_+-]+:[[:space:]]|^[^[:ascii:][:space:]]
-imperative-plain  ^[A-Z][a-z]+[[:space:]].*[^.]$
-other             everything else
-```
+Match in order, first hit wins: `conventional`, `ticket-conventional`, `ticket-prefix`, `gitmoji`, `imperative-plain`, else `other`.
+The patterns are the `family` rows of the generated grammar block in [`commit-subject`](../git-workflow/references/commit-subject.md) § The grammar.
 
 `imperative-plain` is deliberately mechanical — capitalised first word, no
 trailing period — and does **not** test for the imperative mood. Mood needs a
@@ -162,9 +152,9 @@ the classifier, not a gap to fill by guessing: a repo whose only distinction
 from Conventional is mood will read as `imperative-plain` either way, and the
 mood question belongs in the ask at step 6.
 
-`classifier_version` in step 7 names the revision of THIS section — the six patterns above (`ticket-conventional` added 2026-10-06; re-measure an older card) plus the exclusions in step 2.
-It is a provenance stamp so a later measurement can be compared against a like one. The same patterns ship
-as code: `agent-config git:convention subject --family <family>` validates against them, and a test pins this block to that module.
+`classifier_version` in step 7 names the revision of THIS section — the six families above (`ticket-conventional` added 2026-10-06; re-measure an older card) plus the exclusions in step 2.
+It is a provenance stamp so a later measurement can be compared against a like one. The patterns ship
+as code: `agent-config git:convention subject --family <family>` validates against them.
 
 Record the runner-up family too — a near-tie is itself the finding.
 

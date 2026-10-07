@@ -153,7 +153,7 @@ surface cites one reference instead of restating a grammar.
       without a card.
 - [x] AC-2 — In a packed consumer install, `/commit` validates a subject through
       a call that resolves, and a ticket inside a compound scope is rejected.
-- [ ] AC-3 — No git command or skill restates a ticket grammar; the prose
+- [x] AC-3 — No git command or skill restates a ticket grammar; the prose
       grammar block is generated and checked by `check_generator_sync`.
 - [x] AC-4 — A branch name rendered by `/worktree:create` and one rendered by
       `git:convention branch` for the same inputs are identical.
@@ -166,6 +166,7 @@ surface cites one reference instead of restating a grammar.
 | D2 | reversible-technical | agent | Ticket keys sit on the card and are passed by the caller | Ticket prefixes are `approved-observation` (`SKILL.md:245`); a settings key would red the settings ratchet | A repository carries trackers the card cannot express |
 | D3 | deterministic | evidence | The renderer and the grammars are code reached through subcommands of one verb | A consumer project has no `node_modules`; the sibling roadmap's D4 | A second consumer-reachable carrier of code exists |
 | D4 | reversible-technical | agent | Suggester trigger metadata keeps its literal and is listed as exempt | It matches prompts, not branch names, and editing it changes when a command is suggested (Risk 1) | The suggester reads its triggers from the module |
+| D5 | reversible-technical | agent | The commit skill's § 3 names the families and links the generated grammar block; the `/fix:commit-messages` rewrite example reads the ticket through `git:convention ticket`, with no regex literal | AC-3 left two restatements after Phase 2; the generated block is the one checked copy | A measurement must run where the `agent-config` binary is unavailable |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-07 | reviewer: claude/host -->

@@ -92,13 +92,11 @@ describe('subject grammar per approved family', () => {
         expect(classifySubject('whatever.')).toBe('other');
     });
 
-    it('is the classifier the conventional-commits-writing skill prints', () => {
+    it('is the classifier the conventional-commits-writing skill names, without restating it', () => {
         const skill = fs.readFileSync(path.join(ROOT, 'src/skills/conventional-commits-writing/SKILL.md'), 'utf8');
-        for (const [family, ere] of FAMILY_ERE) {
-            const line = skill.split('\n').find((l) => l.startsWith(`${family} `));
-            expect(line, family).toBeDefined();
-            expect((line as string).slice(family.length).trim(), family).toBe(ere.trim());
-        }
+        expect(skill).not.toContain(TICKET_GRAMMAR);
+        expect(skill).toContain('](../git-workflow/references/commit-subject.md)');
+        for (const [family] of FAMILY_ERE) expect(skill, family).toContain(`\`${family}\``);
     });
 });
 

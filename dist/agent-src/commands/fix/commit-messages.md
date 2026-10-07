@@ -236,17 +236,21 @@ bracketed form:
 ```bash
 git filter-repo --force --refs "${BASE:+$BASE..}HEAD" \
   --commit-callback '
-    import re
+    import json, re, subprocess
     ME = {b"me@example.com"}                  # the step-5 address set, bare, no <>
-    PAT = re.compile(rb"^\[?([A-Z][A-Z0-9]+-[0-9]+)\]?[: ]\s*(.+)$")
     if len(commit.parents) > 1:
         return
     if commit.author_email not in ME:
         return
     subject, sep, body = commit.message.partition(b"\n")
-    m = PAT.match(subject)
-    if m:
-        commit.message = b"[" + m.group(1) + b"] " + m.group(2) + sep + body
+    out = subprocess.run(["agent-config", "git:convention", "ticket", subject.decode(), "--json"],
+                         capture_output=True, text=True, check=True).stdout
+    ticket = json.loads(out)["ticket"]
+    if ticket is None:
+        return
+    lead = re.compile(rb"^\[?" + re.escape(ticket.encode()) + rb"\]?[: ]\s*")
+    if lead.match(subject):
+        commit.message = b"[" + ticket.encode() + b"] " + lead.sub(b"", subject, count=1) + sep + body
   '
 ```
 
@@ -261,10 +265,12 @@ rewriting nothing:
   cross-wire precisely because they need opposite forms.
 - **Merges are skipped in the callback too**, or the rewrite touches commits the
   step-6 table did not list.
-- **`PAT` and the replacement are the step-3 pattern**, substituted for real.
-  A callback that references a helper nothing defines is not a callback that
-  failed loudly — Python evaluates the name only if control reaches it, so a
-  wrong author filter hides the missing helper completely.
+- **The ticket comes from `agent-config git:convention ticket`**, never a regex
+  literal, so the rewrite reads tickets exactly as `/commit` does — the verb must
+  be on `PATH`, and `check=True` makes a missing one fail loudly. A callback that
+  references a helper nothing defines is not a callback that failed loudly —
+  Python evaluates the name only if control reaches it, so a wrong author filter
+  hides the missing helper completely.
 
 `--refs` implies partial mode, which is what keeps the `origin` remote that
 plain `filter-repo` strips as a safety measure; `--partial` is not needed
