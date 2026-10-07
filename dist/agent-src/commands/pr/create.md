@@ -175,7 +175,9 @@ tree at the moment you believe your work is finished.
 
 **The resolution is executable now, not just described.**
 `agent-config git:convention sync --base origin/<base>`, `<base>` being the
-PR's `baseRefName` (`gh pr view --json baseRefName`), fetches and merges that
+`baseRefName` of the branch's `OPEN` pull request (`gh pr view --json
+state,baseRefName`; a closed or merged one does not count, and without an open
+one the base is the default branch), fetches and merges that
 base in when the branch is behind, so a stacked or release-line PR is measured
 against what it actually merges into. It never asks the forge itself: without
 `--base` the target is the default branch, which is right only for a PR into it. The base is a

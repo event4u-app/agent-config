@@ -138,3 +138,46 @@ describe('push-ready never executes a base name', () => {
         expect(r.err).toContain('not a valid branch name');
     });
 });
+
+/**
+ * A paragraph that passes `--base origin/<base>` with `<base>` taken from `baseRefName`
+ * resolves the current branch's pull request, and `gh pr view` answers for a
+ * closed or merged one too. Such a paragraph must read `state` and take the
+ * base only from an OPEN pull request, as push-ready does.
+ */
+export function unguardedBaseResolution(paragraph: string): boolean {
+    if (!paragraph.includes('`baseRefName`') || !paragraph.includes('--base origin/<base>')) return false;
+    const view = [...paragraph.matchAll(/gh pr view --json\s+([\w,]+)/g)].map((m) => m[1] ?? '');
+    if (view.some((fields) => fields.includes('baseRefName') && !fields.split(',').includes('state'))) return true;
+    return !paragraph.includes('`OPEN`');
+}
+
+describe('prose resolves the pull request base the way push-ready does', () => {
+    const TREES = ['src/domains', 'src/skills', 'src/agent-src', 'src/rules'];
+    const markdown = (dir: string): string[] => {
+        const abs = path.join(REPO, dir);
+        if (!fs.existsSync(abs)) return [];
+        return fs.readdirSync(abs, { recursive: true, encoding: 'utf8' }).filter((f) => f.endsWith('.md')).map((f) => path.join(dir, f));
+    };
+
+    it('the detector flags a base read without the OPEN check', () => {
+        expect(unguardedBaseResolution('`--base origin/<base>`, `<base>` being the PR\'s `baseRefName` (`gh pr view --json baseRefName`)')).toBe(true);
+        expect(unguardedBaseResolution('`--base origin/<base>` (`<base>` is the PR\'s `baseRefName`; without `--base` the default branch')).toBe(true);
+        expect(unguardedBaseResolution('`--base origin/<base>`, `<base>` being the `baseRefName` of an `OPEN` pull request (`gh pr view --json baseRefName`)')).toBe(true);
+        expect(unguardedBaseResolution('`--base origin/<base>`, `<base>` being the `baseRefName` of an `OPEN` pull request (`gh pr view --json state,baseRefName`)')).toBe(false);
+        expect(unguardedBaseResolution('§ 4 consumes `<base>` from the `baseRefName` of `gh pr list --state open`')).toBe(false);
+    });
+
+    it('no shipped paragraph derives <base> from baseRefName without reading state', () => {
+        const offenders: string[] = [];
+        let seen = 0;
+        for (const file of TREES.flatMap(markdown)) {
+            for (const para of fs.readFileSync(path.join(REPO, file), 'utf8').split(/\n\s*\n/)) {
+                if (para.includes('`baseRefName`') && para.includes('--base origin/<base>')) seen += 1;
+                if (unguardedBaseResolution(para)) offenders.push(`${file}: ${para.slice(0, 80)}`);
+            }
+        }
+        expect(seen).toBeGreaterThanOrEqual(3);
+        expect(offenders).toEqual([]);
+    });
+});
