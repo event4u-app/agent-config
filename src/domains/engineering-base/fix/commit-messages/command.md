@@ -64,7 +64,7 @@ Run `## Procedure: Establish the house convention` from
 verbatim: tier-1 sources first (opened and read, never taken from a grep hit),
 then the capped-weighted consensus pass with bots, merges, reverts and release
 automation excluded. When that tier-1 search found no configured source, a
-declared `git.commit_format: ticket-prefix` (the skill's tier 1b; `ticket-scope`
+declared `git.commit_format: ticket-conventional` (the skill's tier 1b; `ticket-scope`
 is the template default and declares nothing) is the target: report it as
 `Declared : git.commit_format: …`, skip step 3's style question, and keep the
 other authorisations. A configured source always outranks it — including step

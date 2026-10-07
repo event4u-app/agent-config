@@ -176,7 +176,7 @@ writes it into settings files and the rename becomes a migration.
       instead of a merge command under a strategy other than `merge`;
       `review/changes/command.md:361` says what its lines 44-47 say.
       verify: `test -f tests/scripts/check_branch_freshness_remedy.test.ts && npx vitest run tests/scripts/check_branch_freshness_remedy.test.ts` -> 0
-- [ ] **1.6 The setting value takes the family's name, before any release.**
+- [x] **1.6 The setting value takes the family's name, before any release.**
       The value `ticket-prefix` of `git.commit_format` becomes
       `ticket-conventional`, the family whose grammar it already is. The family
       `ticket-prefix` keeps its name, so no approved convention card changes

@@ -162,7 +162,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 - **A team's git convention can be declared instead of measured — the new
   `git:` settings block.** Three Class-C keys, each defaulting to the
   behaviour every install had before, so an install that sets nothing is
-  unchanged. `git.commit_format: ticket-prefix` writes
+  unchanged. `git.commit_format: ticket-conventional` writes
   `DEV-1234 feat(exporter): …` instead of `feat(DEV-1234): …` and treats a
   ticket in the scope as a wrong subject; `/commit` and `/commit:in-chunks`
   validate against the regex for the configured format, and the

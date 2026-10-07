@@ -424,11 +424,11 @@ project:
 # repository (commitlint, a commit-msg hook) outranks git.commit_format.
 git:
   # Where a ticket id goes in a commit subject.
-  #   ticket-scope  -> `feat(DEV-1234): add export filter` (default — the
-  #                    behaviour before this key existed)
-  #   ticket-prefix -> `DEV-1234 feat(exporter): add export filter` — the
-  #                    ticket leads, the scope names the system area, and a
-  #                    ticket is never a scope
+  #   ticket-scope        -> `feat(DEV-1234): add export filter` (default —
+  #                          the behaviour before this key existed)
+  #   ticket-conventional -> `DEV-1234 feat(exporter): add export filter` —
+  #                          the ticket leads, the scope names the system
+  #                          area, and a ticket is never a scope
   commit_format: ticket-scope
 
   # Shape of a branch name the agent creates. Placeholders: {type}, {ticket},

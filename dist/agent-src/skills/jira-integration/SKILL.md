@@ -153,7 +153,7 @@ When creating PRs, include the Jira ticket in:
   `{ticket}-{slug}`
 - **PR title:** as `/create-pr:description-only` § 3 builds it —
   `DEV-1234: description` by default, a full commit subject
-  (`DEV-1234 feat(area): description`) under `git.commit_format: ticket-prefix`
+  (`DEV-1234 feat(area): description`) under `git.commit_format: ticket-conventional`
 - **PR description:** Link to the ticket
 
 ## Related

@@ -172,3 +172,10 @@ describe('checkoutSource', () => {
         expect(readGitConventionKey('update_strategy', checkoutSource(repo)).state).toBe('malformed');
     });
 });
+
+describe('the commit_format value is named after its family', () => {
+    it('accepts ticket-conventional and no longer the family name ticket-prefix', () => {
+        expect(GIT_CONVENTION_ENUMS.commit_format).toContain('ticket-conventional');
+        expect(GIT_CONVENTION_ENUMS.commit_format).not.toContain('ticket-prefix');
+    });
+});

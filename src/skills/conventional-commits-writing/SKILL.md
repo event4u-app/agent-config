@@ -46,7 +46,7 @@ imposing the shipped default there produces commits that read as foreign in
 | Tier | Source | Binding? |
 |---|---|---|
 | **1 — configured** | `commitlint.config.*` · `.gitmessage` · a `commit-msg` hook (husky / lefthook / `.git/hooks`) · `CONTRIBUTING.md` § Commits · a CI job that validates subjects · release automation that PARSES subjects (semantic-release, changesets, git-cliff, conventional-changelog) | yes — Class A, no approval needed |
-| **1b — declared** | `git.commit_format: ticket-prefix` in the project settings — `agent-config git:convention show` names the file and the state; `malformed` or `invalid` declares nothing and is reported, never read as the default. Only the non-default value declares anything: `ticket-scope` is also what a copied template carries, so it proves no choice | yes — the user's own word, so no measurement and no ask |
+| **1b — declared** | `git.commit_format: ticket-conventional` in the project settings — `agent-config git:convention show` names the file and the state; `malformed` or `invalid` declares nothing and is reported, never read as the default. Only the non-default value declares anything: `ticket-scope` is also what a copied template carries, so it proves no choice | yes — the user's own word, so no measurement and no ask |
 | **2 — measured + approved** | the consensus pass below, after the user says yes | yes, for this repository |
 | **3 — measured, unapproved** | the same pass before the user answers | **no — advisory**; report the mismatch, write Conventional |
 | **4 — default** | Conventional Commits | yes |
@@ -61,7 +61,7 @@ Check for the parser before you trust the prevalence.
 ### 1. Look for tier 1 before measuring anything
 
 ```bash
-agent-config git:convention show   # tier 1b only when commit_format reads ticket-prefix, state valid
+agent-config git:convention show   # tier 1b only when commit_format reads ticket-conventional, state valid
 ls commitlint.config.* .commitlintrc* .gitmessage .czrc 2>/dev/null
 git config --get commit.template
 ls .husky/commit-msg .git/hooks/commit-msg 2>/dev/null
@@ -169,7 +169,7 @@ executable classifier ships anywhere in the tree.
 Record the runner-up family too — a near-tie is itself the finding.
 
 `ticket-conventional` precedes `ticket-prefix`, which would otherwise swallow it as "ticket, then free text".
-A dominant `ticket-conventional` family maps to `git.commit_format: ticket-prefix` — propose that in the step-6 ask.
+A dominant `ticket-conventional` family maps to `git.commit_format: ticket-conventional`, the value named after it — propose that in the step-6 ask.
 
 ### 4. Aggregate, capped per author, per half
 
@@ -285,9 +285,9 @@ Ticket id: the first `[A-Z][A-Z0-9]+-[0-9]+` token in the branch name whose pref
 | `git.commit_format` | With a ticket | Without a ticket |
 |---|---|---|
 | `ticket-scope` (default) | `feat(DEV-1234): add export filter` | `feat: add export filter` |
-| `ticket-prefix` | `DEV-1234 feat(exporter): add export filter` | `feat(exporter): add export filter` |
+| `ticket-conventional` | `DEV-1234 feat(exporter): add export filter` | `feat(exporter): add export filter` |
 
-Under `ticket-prefix` **a ticket is never a scope**; the scope names the system area (`api/audio`, `ci`), only if it adds clarity.
+Under `ticket-conventional` **a ticket is never a scope**; the scope names the system area (`api/audio`, `ci`), only if it adds clarity.
 
 ### 4. Write the description
 
@@ -334,7 +334,7 @@ Only for a squash merge — rebase-and-merge keeps every commit (`/pr:merge` § 
 ## Output format
 
 1. The convention in force and the tier that established it — `configured
-   (commitlint.config.js)`, `declared (git.commit_format: ticket-prefix)`,
+   (commitlint.config.js)`, `declared (git.commit_format: ticket-conventional)`,
    `approved (family ticket-prefix, 84% of 137)`, or `default (Conventional Commits)`
 2. Recommended commit message(s)
 3. Brief rationale for type choice
@@ -382,7 +382,7 @@ to every commit message you author.
   advisory, and silence is not approval
 - Do NOT let prevalence lift a `never` or `explicit-only` floor
 - Do NOT use vague messages: `update stuff`, `fix bug`, `changes`
-- Do NOT put a ticket id in the scope when `git.commit_format` is `ticket-prefix`
+- Do NOT put a ticket id in the scope when `git.commit_format` is `ticket-conventional`
 - Do NOT use `refactor` for bug fixes
 - Do NOT use `chore` for meaningful behavior changes
 - Do NOT hide multiple unrelated concerns in one message

@@ -85,8 +85,8 @@
       "properties": {
         "commit_format": {
           "type": "string",
-          "enum": ["ticket-scope", "ticket-prefix"],
-          "description": "Where a ticket id goes in a commit subject. ticket-scope (default) = `feat(DEV-1234): …`; ticket-prefix = `DEV-1234 feat(area): …`, a ticket is never a scope."
+          "enum": ["ticket-scope", "ticket-conventional"],
+          "description": "Where a ticket id goes in a commit subject. ticket-scope (default) = `feat(DEV-1234): …`; ticket-conventional = `DEV-1234 feat(area): …`, a ticket is never a scope."
         },
         "branch_pattern": {
           "type": "string",

@@ -38,7 +38,7 @@ const memoryCadence = z.enum(['auto', 'always', 'never']);
 const projectAudience = z.enum(['self', 'internal', 'client', 'public']);
 const deliveryMerge = z.enum(['off', 'on-green']);
 const prTopology = z.enum(['single', 'stacked']);
-const gitCommitFormat = z.enum(['ticket-scope', 'ticket-prefix']);
+const gitCommitFormat = z.enum(['ticket-scope', 'ticket-conventional']);
 const gitUpdateStrategy = z.enum(['merge', 'rebase']);
 
 export const settingsSchema = z.object({
@@ -162,7 +162,7 @@ export const settingsSchema = z.object({
     }),
     git: z.object({
         commit_format: gitCommitFormat.default('ticket-scope').describe(
-            'Where a ticket id goes in a commit subject. ticket-scope (default) = the ticket is the Conventional-Commits scope, `feat(DEV-1234): add export filter` — the behaviour every install had before this key existed. ticket-prefix = the ticket leads the subject and the scope names the system area, `DEV-1234 feat(exporter): add export filter`; a ticket is then never a scope. Without a ticket both shapes are plain Conventional Commits. A commit-linting config in the repository (commitlint, a commit-msg hook) outranks this key.',
+            'Where a ticket id goes in a commit subject. ticket-scope (default) = the ticket is the Conventional-Commits scope, `feat(DEV-1234): add export filter` — the behaviour every install had before this key existed. ticket-conventional = the ticket leads the subject and the scope names the system area, `DEV-1234 feat(exporter): add export filter`; a ticket is then never a scope. Without a ticket both shapes are plain Conventional Commits. A commit-linting config in the repository (commitlint, a commit-msg hook) outranks this key.',
         ),
         branch_pattern: z.string().default('{type}/{slug}').describe(
             'Shape of a branch name the agent creates. Placeholders: {type} (feat, fix, …), {ticket} (e.g. DEV-1234), {slug} (short kebab-case description). Default {type}/{slug}. {slug} is required, and characters outside the placeholders are limited to A-Z a-z 0-9 . _ / - so a rendered name is safe in a command; agent-config git:convention show reports anything else as invalid. A team that names branches after the ticket sets {ticket}-{slug}. A placeholder with no value is dropped together with the separator that follows it, or the one before it when it is last, so no name starts or ends with a separator ({type}/{ticket}-{slug} without a ticket gives feat/slug). Reading a ticket back out of an existing branch never depends on this pattern.',

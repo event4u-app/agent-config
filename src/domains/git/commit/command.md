@@ -66,7 +66,7 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
   skip it and take the next match.
 - Establish the convention in force once, per the conventional-commits-writing
   skill § Establish the house convention: a repository config (commitlint, a
-  `commit-msg` hook) first, then a declared `git.commit_format: ticket-prefix`,
+  `commit-msg` hook) first, then a declared `git.commit_format: ticket-conventional`,
   then an approved measured convention. `git.commit_format` decides where the
   ticket goes only where nothing above it applies.
 - If no ticket ID is found in the branch name, ask the user:
@@ -78,10 +78,10 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
   ```
 - If the user provides a ticket number, place it per the convention in force
   (above; where nothing outranks it, `git.commit_format`) in all commit messages: `ticket-scope` (default) → as the scope, `feat(DEV-1234): …`;
-  `ticket-prefix` → before the type, `DEV-1234 feat(<area>): …`, and the ticket
+  `ticket-conventional` → before the type, `DEV-1234 feat(<area>): …`, and the ticket
   is never the scope.
 - If skipped, omit the ticket entirely — under `ticket-scope` write `chore: ...`
-  not `chore(): ...`; under `ticket-prefix` keep any area scope.
+  not `chore(): ...`; under `ticket-conventional` keep any area scope.
 
 ### 3. Analyze the changes
 
@@ -133,7 +133,7 @@ from `.agent-settings.yml`. Both default to `false`.
    convention in force (step 2); a repository config's own rule replaces these:
    - `ticket-scope` (default):
      `^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`
-   - `ticket-prefix`:
+   - `ticket-conventional`:
      `^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(?!\([A-Z][A-Z0-9]+-[0-9]+\))(\([^)]+\))?!?: .+`
      — JavaScript/PCRE syntax; the lookahead rejects a ticket id standing in the scope.
 2. **All messages valid** → skip the preview block and the confirmation
@@ -160,7 +160,7 @@ Show the proposed commits as a numbered list, including which files go into each
 Proposed commits:
 
 (Laravel-project example, `git.commit_format: ticket-scope`; under
-`ticket-prefix` the first subject reads
+`ticket-conventional` the first subject reads
 `DEV-1234 feat(working-time): add absence type filter to working time report`)
 1. feat(DEV-1234): add absence type filter to working time report
    → app/Services/WorkingTimeService.php

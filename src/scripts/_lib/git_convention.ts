@@ -38,7 +38,7 @@ export type GitConventionState = 'valid' | 'absent' | 'malformed' | 'invalid' | 
 
 /** Mirrors the enums in `agent-settings.schema.json`; a test pins the parity. */
 export const GIT_CONVENTION_ENUMS: Partial<Record<GitConventionKey, readonly string[]>> = {
-    commit_format: ['ticket-scope', 'ticket-prefix'],
+    commit_format: ['ticket-scope', 'ticket-conventional'],
     update_strategy: ['merge', 'rebase'],
 };
 

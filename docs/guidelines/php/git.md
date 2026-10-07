@@ -76,7 +76,7 @@ Use a scope when it adds clarity. Good scopes:
   (default)
 - Module/area: `api`, `auth`, `skills`, `rules`, `ci`, `frontend`, `linter`
 
-Under `git.commit_format: ticket-prefix` the ticket leads the subject and is
+Under `git.commit_format: ticket-conventional` the ticket leads the subject and is
 **never** the scope:
 
 ```
@@ -176,7 +176,7 @@ Before writing the commit message:
 ## Pull Requests
 
 - PR title as `/create-pr:description-only` § 3 builds it — `DEV-1234: short
-  description` by default, a full commit subject under `ticket-prefix`
+  description` by default, a full commit subject under `ticket-conventional`
 - Bring the branch up to date per `git.update_strategy` — merge the base in
   (default) or rebase onto `origin/main` and push with `--force-with-lease`;
   see `git-workflow` › `references/branch-update.md`
