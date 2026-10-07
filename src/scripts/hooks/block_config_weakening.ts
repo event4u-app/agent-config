@@ -383,6 +383,10 @@ export interface Decision {
  * unreadable for the length of one tool call, which is a bypass with no
  * authorisation step in it.
  *
+ * The edit forms it models: `Write` (`content`), `Edit` (`old_string` /
+ * `new_string`, with `replace_all`) and `MultiEdit` (an `edits` list of those
+ * pairs, applied in order).
+ *
  * WHAT IT CANNOT SEE: an edit applied through a shell redirect rather than an
  * edit tool — `EDIT_TOOLS` is the corpus, and the shell shapes are
  * `block_plumbing_writes`' subject, not this one.
@@ -419,6 +423,20 @@ export function classCVerdict(
             );
         }
         afterText = all === true ? on_disk.split(oldStr).join(newStr) : on_disk.replace(oldStr, newStr);
+    } else if (Array.isArray(ti['edits']) && on_disk !== null) {
+        // MultiEdit applies its pairs in order and applies none when one misses.
+        let text = on_disk;
+        for (const e of ti['edits']) {
+            const o = _isObject(e) ? e['old_string'] : undefined;
+            const n = _isObject(e) ? e['new_string'] : undefined;
+            const a = _isObject(e) ? e['replace_all'] : undefined;
+            if (typeof o !== 'string' || typeof n !== 'string' || (a !== undefined && typeof a !== 'boolean')) {
+                return `${rel_path}: this MultiEdit carries an edit the guard cannot interpret, so the text it would produce is unknown and no key can be cleared. Re-send it as plain edits, or write the change through \`agent-config settings:set\`.`;
+            }
+            if (!text.includes(o)) return null;
+            text = a === true ? text.split(o).join(n) : text.replace(o, n);
+        }
+        afterText = text;
     }
     if (afterText === null) return null;
 

@@ -260,6 +260,43 @@ describe('block_config_weakening — class-c, the reviewed defects', () => {
         ).toBeNull();
     });
 
+    // MultiEdit carries its replacement pairs under `edits`, applied in order;
+    // reading only the top-level pair let every MultiEdit through.
+    it('models MultiEdit — a Class C change in any of the edits is caught', () => {
+        const before = [
+            'personal:',
+            '  play_by_play: false',
+            'hooks:',
+            '  injection_scan:',
+            '    enabled: false',
+            '',
+        ].join('\n');
+        const ti = {
+            file_path: '.agent-settings.yml',
+            edits: [
+                { old_string: 'play_by_play: false', new_string: 'play_by_play: true' },
+                { old_string: '    enabled: false', new_string: '    enabled: true' },
+            ],
+        };
+        const reason = classCVerdict(ti, before, '.agent-settings.yml', index);
+        expect(reason).not.toBeNull();
+        expect(reason).toContain('hooks.injection_scan.enabled');
+        expect(
+            classCVerdict({ edits: [{ old_string: 'play_by_play: false', new_string: 'play_by_play: true' }] }, before, '.agent-settings.yml', index),
+        ).toBeNull();
+    });
+
+    it('refuses a MultiEdit edits list it cannot interpret', () => {
+        const reason = classCVerdict(
+            { edits: [{ old_string: 'false' }] } as never,
+            'personal:\n  play_by_play: false\n',
+            '.agent-settings.yml',
+            index,
+        );
+        expect(reason).not.toBeNull();
+        expect(reason).toContain('cannot interpret');
+    });
+
     it('refuses a replace_all value it cannot interpret', () => {
         const reason = classCVerdict(
             { old_string: 'false', new_string: 'true', replace_all: 'yes' as unknown as boolean },
