@@ -282,7 +282,9 @@ this clause removes; the floor it keeps is the *unnamed* push.
 **Before every push to the open PR**, bring the branch up to its base with
 `./scripts-run src/scripts/sync_pr_branch` and regenerate afterwards (under
 `git.update_strategy: rebase` it refuses a behind branch with exit 3 — rebase on request instead, per
-[`branch-update`](../../../../skills/git-workflow/references/branch-update.md)). Measured on
+[`branch-update`](../../../../skills/git-workflow/references/branch-update.md); on exit 4 the
+strategy could not be read, the line names the reason code and the file, nothing
+was merged, and the run stops before the push until that file is fixed). Measured on
 this run: the base moved three times, the push was rejected twice for it, and the
 PR reached `CONFLICTING` in between. Verify the result afterwards with
 `./scripts-run src/scripts/check_pr_ci_current` — a green local gate says nothing

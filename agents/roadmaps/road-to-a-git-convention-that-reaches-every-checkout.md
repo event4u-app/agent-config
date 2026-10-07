@@ -81,7 +81,7 @@ authorises it.
   `src/domains/engineering-base/review/changes/command.md:361`.
 - `/fix:ci` and `/roadmap:next` map the script's exits
   (`src/domains/engineering-base/fix/ci/command.md:99-101`,
-  `src/domains/roadmap/next/command.md:283-284`); a new exit has no reader there.
+  `src/domains/product-basic/roadmap/next/command.md:283-284`); a new exit has no reader there.
 
 **2. The declaration does not travel.**
 
@@ -130,7 +130,7 @@ writes it into settings files and the rename becomes a migration.
 
 ## Phase 1 — A declaration that cannot be read is never the default
 
-- [ ] **1.1 One reader, and it knows five states.**
+- [x] **1.1 One reader, and it knows five states.**
       `src/scripts/_lib/git_convention.ts` returns, per key, the value, the
       source file and one of `valid`, `absent`, `malformed`, `invalid`,
       `discarded`. It is a new module because `agent_settings.ts` is 10 lines
@@ -142,7 +142,7 @@ writes it into settings files and the rename becomes a migration.
       typo'd value and a malformed top layer over a healthy lower one, and pins
       that under `rebase` the script never rebases and never pushes.
       `/fix:ci` and `/roadmap:next` map exit 4.
-      verify: `test -f tests/scripts/_lib/git_convention_reader.test.ts && npx vitest run tests/scripts/_lib/git_convention_reader.test.ts tests/scripts/sync_pr_branch.test.ts && git grep -q -F 'exit 4' -- src/domains/engineering-base/fix/ci/command.md src/domains/roadmap/next/command.md` -> 0
+      verify: `test -f tests/scripts/_lib/git_convention_reader.test.ts && npx vitest run tests/scripts/_lib/git_convention_reader.test.ts tests/scripts/sync_pr_branch.test.ts && git grep -q -F 'exit 4' -- src/domains/engineering-base/fix/ci/command.md src/domains/product-basic/roadmap/next/command.md` -> 0
 - [ ] **1.2 One verb an installed command can call.**
       `agent-config git:convention show` prints the three keys with value,
       source and state, as text and as JSON, and exits non-zero on `malformed`

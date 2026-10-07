@@ -28,8 +28,12 @@
  *
  * Exit codes: 0 = already current, or merged cleanly · 1 = conflict, or the base
  * could not be resolved · 2 = internal error · 3 = behind, and
- * `git.update_strategy` is not `merge`, so the merge was refused. `scanned:` on
- * every path.
+ * `git.update_strategy` is not `merge`, so the merge was refused · 4 =
+ * `git.update_strategy` cannot be read (a settings file that does not parse, a
+ * value outside the schema, or a value only a user-global file carries), so
+ * nothing was checked or merged; the line carries a stable reason code
+ * (`git-convention-malformed` / `-invalid` / `-discarded`) and the file.
+ * `scanned:` on every path.
  */
 
 import * as path from 'node:path';
@@ -42,7 +46,13 @@ import {
     loadPolicyAtSha,
     type ShaFileReader,
 } from './_lib/branch_convergence.js';
-import { load_agent_settings } from './_lib/agent_settings.js';
+import {
+    checkoutSource,
+    describeRefusal,
+    isRefusal,
+    readGitConventionKey,
+    type GitConventionReading,
+} from './_lib/git_convention.js';
 import { reportScanned } from './_lib/scan_scope.js';
 
 const NETWORK_TIMEOUT_MS = 8_000;
@@ -852,21 +862,13 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
 }
 
 /**
- * `git.update_strategy` for the repository, trimmed and lower-cased. Absent
- * reads as `merge`, the behaviour before the key existed, and so does a settings
- * file the loader cannot read at all — the same default every other key falls
- * back to. A readable value other than `merge`, a typo included, is returned
- * as-is and refuses the merge instead of silently performing it.
+ * `git.update_strategy` for the repository through the one convention reader.
+ * Absent reads as `merge`, the behaviour before the key existed; a file that
+ * does not parse, a typo and a user-global-only value are refusals the caller
+ * acts on, never a fallback to `merge`.
  */
-export function updateStrategy(repo: string): string {
-    let value: unknown;
-    try {
-        value = (load_agent_settings({ cwd: repo }).git as { update_strategy?: unknown } | undefined)?.update_strategy;
-    } catch {
-        return 'merge';
-    }
-    if (value === undefined || value === null) return 'merge';
-    return String(value).trim().toLowerCase();
+export function updateStrategy(repo: string): GitConventionReading {
+    return readGitConventionKey('update_strategy', checkoutSource(repo));
 }
 
 export function main(argv?: readonly string[]): number {
@@ -910,7 +912,8 @@ export function main(argv?: readonly string[]): number {
                     '  Merges the PR base into the current branch so the PR does not go stale.\n' +
                     '  Under a git.update_strategy other than merge it only checks: a current\n' +
                     '  branch exits 0, a behind one exits 3 and is never merged (--dry-run and\n' +
-                    '  --auto-resolve-generated have nothing to change there).\n' +
+                    '  --auto-resolve-generated have nothing to change there). A strategy that\n' +
+                    '  cannot be read (unparsable file, typo, user-global-only) exits 4.\n' +
                     '  Resolves the base from the open PR when there is one. A conflict is\n' +
                     '  reported and never auto-resolved; generated and authored conflicts are\n' +
                     '  listed separately because only the first has one correct resolution;\n' +
@@ -935,7 +938,13 @@ export function main(argv?: readonly string[]): number {
     // git-history-discipline — so the branch is only CHECKED (dry run), and a
     // branch that is behind is refused rather than merged. A current branch
     // passes, so an automated pre-push sync stays green when nothing is to do.
-    const strategy = updateStrategy(repo);
+    const reading = updateStrategy(repo);
+    if (isRefusal(reading.state)) {
+        process.stdout.write(`❌  sync_pr_branch: refused — ${describeRefusal(reading)}. Nothing was checked or merged.\n`);
+        reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'git.update_strategy unreadable' });
+        return 4;
+    }
+    const strategy = reading.value ?? 'merge';
     let plan: Plan;
     try {
         if (strategy !== 'merge') {

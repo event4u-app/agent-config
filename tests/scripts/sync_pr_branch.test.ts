@@ -405,10 +405,10 @@ describe('git.update_strategy', () => {
     };
 
     it('reads `merge` when nothing declares a strategy, and normalises a declared one', () => {
-        expect(updateStrategy(tmp())).toBe('merge');
+        expect(updateStrategy(tmp())).toMatchObject({ value: 'merge', state: 'absent' });
         const dir = tmp();
         fs.writeFileSync(path.join(dir, '.agent-settings.yml'), 'git:\n  update_strategy: " Rebase "\n');
-        expect(updateStrategy(dir)).toBe('rebase');
+        expect(updateStrategy(dir)).toMatchObject({ value: 'rebase', state: 'valid' });
     });
 
     it('refuses with exit 3 and leaves HEAD untouched when a rebase-strategy branch is behind', () => {
@@ -425,11 +425,43 @@ describe('git.update_strategy', () => {
         expect(r.out).not.toContain('refused');
     });
 
-    it('treats an unknown value as not-merge rather than merging', () => {
+    it('refuses a typo with exit 4 naming the file, and merges nothing', () => {
         const repo = checkout('git:\n  update_strategy: rebsae\n', true);
         const r = run(repo);
-        expect(r.code).toBe(3);
+        expect(r.code).toBe(4);
+        expect(r.out).toContain('git-convention-invalid');
+        expect(r.out).toContain(path.join(repo, '.agent-settings.yml'));
         expect(git(repo, 'rev-parse', 'HEAD').trim()).toBe(r.head);
+    });
+
+    it('refuses an unreadable settings file with exit 4 instead of merging', () => {
+        const repo = checkout('git:\n  update_strategy: rebase\nother: [unclosed\n', true);
+        const r = run(repo);
+        expect(r.code).toBe(4);
+        expect(r.out).toContain('git-convention-malformed');
+        expect(r.out).toContain(path.join(repo, '.agent-settings.yml'));
+        expect(git(repo, 'rev-parse', 'HEAD').trim()).toBe(r.head);
+    });
+
+    it('refuses a malformed top layer even when a lower layer is healthy', () => {
+        const repo = checkout('git:\n  update_strategy: merge\n', true);
+        fs.mkdirSync(path.join(repo, 'agents', 'settings'), { recursive: true });
+        fs.writeFileSync(path.join(repo, 'agents', 'settings', '.agent-settings.yml'), ':\n  - [\n');
+        const r = run(repo);
+        expect(r.code).toBe(4);
+        expect(r.out).toContain(path.join('agents', 'settings', '.agent-settings.yml'));
+        expect(git(repo, 'rev-parse', 'HEAD').trim()).toBe(r.head);
+    });
+
+    it('under rebase never rebases and never pushes', () => {
+        const repo = checkout('git:\n  update_strategy: rebase\n', true);
+        const remoteBefore = git(repo, 'ls-remote', 'origin').trim();
+        const reflogBefore = git(repo, 'reflog', '--format=%gs').trim();
+        const r = run(repo);
+        expect(r.code).toBe(3);
+        expect(git(repo, 'ls-remote', 'origin').trim()).toBe(remoteBefore);
+        expect(git(repo, 'reflog', '--format=%gs').trim()).toBe(reflogBefore);
+        expect(git(repo, 'reflog', '--format=%gs')).not.toMatch(/rebase/);
     });
 
     it('still merges the base in under the default strategy', () => {

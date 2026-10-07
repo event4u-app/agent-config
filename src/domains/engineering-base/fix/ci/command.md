@@ -100,7 +100,11 @@ branch** — that is what makes the deliverable remote. Then:
    the merge touched (`task sync && task generate-tools`). Under
    `git.update_strategy: rebase` the script refuses a behind branch (exit 3); rebase on the user's request
    instead ([`branch-update`](../../../../skills/git-workflow/references/branch-update.md)),
-   never merge the base in. A PR left behind its
+   never merge the base in. On exit 4 the strategy could not be read — a
+   settings file that does not parse, a value outside the schema, or a value
+   only a user-global file sets; the line names the reason code and the file.
+   Nothing was merged: stop, report that line, and do not push until the file
+   is fixed. A PR left behind its
    base accumulates conflicts for the moment someone wants to merge it, and a
    push against a moved base is rejected — both cost a round trip that this one
    call prevents.
