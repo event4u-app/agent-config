@@ -86,19 +86,13 @@ const FM_ROADMAP_RE = /^complexity:[ \t]*(lightweight|structural)[ \t]*$/m;
  * quoted example, so loosening this to `m` would create false positives of
  * its own.
  *
- * One existing consumer depends on that strictness as an INCIDENTAL
- * exemption rather than as a documented contract: every R2 review-input
- * roadmap snapshot this repository writes is prefixed, verbatim, with a
- * two-line HTML-comment header whose named purpose is a different gate's
- * file-level skip marker. That header's side effect is pushing this very
- * fence off offset 0, which is the entire reason this regex — and therefore
- * this whole detector — never matches those snapshots, even though each one
- * is a complete roadmap-shaped document sitting outside the one directory
- * this gate treats as home. See `REVIEW_INPUT_ROADMAP_HEADER` in
- * `dispatch_r2_reviewer.ts` for the full account and the two independent
- * ways to break it (drop the header, or add `m` here).
+ * The R2 review-input roadmap snapshots used to depend on that strictness as an
+ * INCIDENTAL exemption: their two-line HTML-comment header, written for a
+ * different gate, pushed this fence off offset 0. They are now exempt by path —
+ * see `isReviewInputRoadmapSnapshot` — so neither the header nor this regex's
+ * anchoring decides their fate any more.
  *
- * Regression-tested in `check_agent_artifact_location.test.ts`
+ * Tested in `check_agent_artifact_location.test.ts`
  * (describe: "review-input snapshot convention").
  */
 const FM_RE = /^---\n([\s\S]*?)\n---/;
@@ -167,6 +161,24 @@ function walkMarkdown(root: string): string[] {
     return out.sort();
 }
 
+/**
+ * The one declared exemption: an R2 review-input roadmap snapshot.
+ *
+ * `dispatch_r2_reviewer.ts` writes a verbatim roadmap copy to exactly this
+ * shape, and a file in it is non-authoritative evidence whoever wrote it —
+ * nothing reads it back as a roadmap. Decided by path, not by a marker an
+ * author could type anywhere (authority-routing roadmap 5.1, `## Decisions`):
+ * measured 2026-10-07, every roadmap-shaped file outside the root was one of
+ * these snapshots, so the path names the whole population and nothing else.
+ * Takes the repository-relative POSIX path the walker produces; the walker
+ * never follows a symlink, so a link cannot manufacture an exempt path.
+ */
+const REVIEW_INPUT_SNAPSHOT_PATH_RE = /^agents\/evidence\/(?:[^/]+\/)*[^/.][^/]*\.review-input\/roadmap\.md$/;
+
+export function isReviewInputRoadmapSnapshot(rel: string): boolean {
+    return REVIEW_INPUT_SNAPSHOT_PATH_RE.test(rel) && !rel.split('/').some((s) => s === '..' || s === '.');
+}
+
 /** `true` when `child` is at or below `root`. */
 function isUnder(child: string, root: string): boolean {
     const rel = path.relative(root, child);
@@ -179,6 +191,7 @@ export function scan(root: string): ScanResult {
     const findings: Finding[] = [];
     for (const f of files) {
         if (isUnder(f, roadmapRoot)) continue;
+        if (isReviewInputRoadmapSnapshot(path.relative(root, f).split(path.sep).join('/'))) continue;
         // Cheap name pre-filter first — the SHARED definition, imported, so the
         // roadmap corpus and this guard cannot drift apart.
         if (!isRoadmapCandidate(f)) continue;

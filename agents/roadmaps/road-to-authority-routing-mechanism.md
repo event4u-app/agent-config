@@ -101,7 +101,7 @@ re-derive or re-litigate them without the evidence that would justify it
 *Record, required sequencing, item 1: "Hold authority-expanding constitutional
 merges, or require an external bootstrap approval."*
 
-- [ ] **1.1 Run the council on the hold's mechanical form.** Does declaring,
+- [ ] <!-- blocked-by: break-glass-authority-and-bootstrap-approval | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body --> **1.1 Run the council on the hold's mechanical form.** Does declaring,
       in `docs/contracts/ratification-artifact.md`, that every gated-surface
       commit made by Phases 2–3 below lands through the EXISTING, unchanged
       ladder (ADR-268 § 4, narrowed for the self-modification surface by
@@ -111,7 +111,7 @@ merges, or require an external bootstrap approval."*
       scoped to the files Phases 2–3 will touch)? Record the verdict as a
       `## Decisions` row in this file.
       verify: `grep -c '^## Decisions' agents/roadmaps/road-to-authority-routing-mechanism.md` -> /^1$/
-- [ ] **1.2 Implement whichever hold 1.1 selects**, before Phase 2.3 (the
+- [ ] <!-- blocked-by: break-glass-authority-and-bootstrap-approval | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body; held transitively — implements the hold step 1.1 selects --> **1.2 Implement whichever hold 1.1 selects**, before Phase 2.3 (the
       verdict-field split) lands its first commit. A doc-only hold is
       recorded as a sentence in `docs/contracts/ratification-artifact.md`
       naming this roadmap; a CI-check hold ships with its own test.
@@ -125,17 +125,17 @@ gated-surface commit, so reverting loses nothing already relied upon.*
 
 *Record, required sequencing, item 2.*
 
-- [ ] **2.1 Run the council on the committed-contract question.** Where does
+- [ ] <!-- blocked-by: break-glass-authority-and-bootstrap-approval | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body; held transitively — the record sequences this step after Phase 1, whose first step this blocker holds --> **2.1 Run the council on the committed-contract question.** Where does
       the six-predicate dangerous-action test (record § 4) live — a new
       `docs/contracts/dangerous-action-predicates.md`, or a section appended
       to `docs/contracts/ratification-artifact.md`? Record the verdict as a
       `## Decisions` row.
-- [ ] **2.2 Commit the six-predicate test verbatim**, at the location 2.1
+- [ ] <!-- blocked-by: break-glass-authority-and-bootstrap-approval | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body; held transitively — the record sequences this step after Phase 1, whose first step this blocker holds --> **2.2 Commit the six-predicate test verbatim**, at the location 2.1
       chose, with the "uncertainty routes to council, a council finding a
       predicate applies routes authorisation to the user" rule (record § 4)
       stated beside it.
       verify: `grep -rc 'Non-trivial loss, disclosure, expenditure' docs/contracts/` -> /^[1-9]/
-- [ ] **2.3 Separate the collapsed verdict into three fields** in the same
+- [ ] <!-- blocked-by: ratification-approval-expiry-window | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body --> **2.3 Separate the collapsed verdict into three fields** in the same
       contract: `technical_outcome` (did the proposed change do what it
       claims), `authority_class` (dangerous / non-dangerous, per 2.2's test),
       `authorisation` (may it proceed — only ever set by the authority 2.2
@@ -145,7 +145,7 @@ gated-surface commit, so reverting loses nothing already relied upon.*
       during migration — this step documents the mapping, it does not change
       the consumers.
       verify: `grep -c 'authority_class' docs/contracts/ratification-artifact.md` -> /^[1-9]/
-- [ ] **2.4 Extend the `refused` vocabulary** to distinguish
+- [ ] <!-- blocked-by: review-attempt-bound | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body --> **2.4 Extend the `refused` vocabulary** to distinguish
       `refused-correctable` (names a concrete in-scope defect or asks for
       obtainable evidence — record § 6, "the agent remediates and
       re-submits"), `refused-non-convergent` (the existing `non-convergent`
@@ -155,7 +155,7 @@ gated-surface commit, so reverting loses nothing already relied upon.*
       `refused-correctable` retains the prior objection and shows its
       disposition (record § 6).
       verify: `grep -c 'refused-correctable' docs/contracts/ratification-artifact.md` -> /^[1-9]/
-- [ ] **2.5 Define the review-instance model**: a stable identity across
+- [ ] <!-- blocked-by: break-glass-authority-and-bootstrap-approval | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body; held transitively — the record sequences this step after Phase 1, whose first step this blocker holds --> **2.5 Define the review-instance model**: a stable identity across
       revisions of the same proposal, carrying its full history of prior
       objections and dispositions, so a remediation is provably the same
       review continuing rather than a fresh one laundering a prior refusal.
@@ -173,7 +173,7 @@ depends on them yet, because no consumer is wired until Phase 3.*
 `Blocks:` fields before assuming 3.2 can ship a working registry rather than
 a stub.*
 
-- [ ] **3.1 Run the council on the approver-registry identity mechanism**,
+- [ ] <!-- blocked-by: break-glass-authority-and-bootstrap-approval | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body; held transitively — the record sequences this step after Phase 1, whose first step this blocker holds --> **3.1 Run the council on the approver-registry identity mechanism**,
       explicitly excluding commit author/committer metadata and a
       `~/.gitconfig` comparison (record § 2 — "an agent able to run Git can
       generally set those values"). Candidates to evaluate: a signed
@@ -183,18 +183,18 @@ a stub.*
       layer (`check_platform_anchor`, `src/config/platform-anchor.json`) that
       `ratification-artifact.md` already trusts for branch integrity. Record
       the verdict as a `## Decisions` row.
-- [ ] **3.2 Implement the registry** per 3.1's verdict, as an additive layer
+- [ ] <!-- blocked-by: credential-custody-for-approver-registry | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body --> **3.2 Implement the registry** per 3.1's verdict, as an additive layer
       beside the existing platform-anchor trust stack — never a replacement
       for it without its own ratification (the contract's own rule: "a later
       change that removes the deny needs its own ratification and cannot cite
       this one").
       verify: `test -f src/config/approver-registry.json` -> 0
-- [ ] **3.3 Build the verifier** that checks a ratification record's bound
+- [ ] <!-- blocked-by: ratification-approval-expiry-window | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body --> **3.3 Build the verifier** that checks a ratification record's bound
       attestation against the registry from 3.2, read from the BASE revision
       only — mirroring `check_kernel_edit_ratified.ts`'s existing defence
       against a candidate diff supplying the code that judges it.
       verify: `npx vitest run tests/scripts/check_approver_registry.test.ts` -> 0
-- [ ] **3.4 Close the dealbreaker.** Choose exactly one, and record which:
+- [ ] <!-- blocked-by: break-glass-authority-and-bootstrap-approval | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body; held transitively — the record sequences this step after Phase 1, whose first step this blocker holds --> **3.4 Close the dealbreaker.** Choose exactly one, and record which:
       (a) the verifier and registry from 3.2–3.3 sit in a protected subset of
       the gated surface, needing the higher approval 2.1/3.1's council work
       defines; (b) they are externally verified (a mechanism outside this
@@ -215,16 +215,16 @@ is what activates it — so reverting 3.2–3.4 removes dead code, nothing live.
 sequenced before defect 1 (agent) — "fixing defect 1 first turns hidden
 markers into illegal ones."*
 
-- [ ] **4.1 Run the council on cross-file blocker-id semantics.** What legal
+- [x] **4.1 Run the council on cross-file blocker-id semantics.** What legal
       states can a blocker id referenced from a file other than the roadmap
       that declared it have — unresolved-local-only, resolved-elsewhere,
       orphaned, superseded? `lint_roadmap_blockers` has no notion of this
       today. Record the verdict as a `## Decisions` row.
-- [ ] **4.2 Encode the chosen semantics** in `lint_roadmap_blockers` (or the
+- [x] **4.2 Encode the chosen semantics** in `lint_roadmap_blockers` (or the
       contract it reads, `templates/roadmaps.md` rule 20), with a regression
       test for each new legal state.
       verify: `npx vitest run tests/scripts/lint_roadmap_blockers.test.ts` -> 0
-- [ ] **4.3 Fix the vacuous-clean report** (record defect 1 — agent-owned,
+- [x] **4.3 Fix the vacuous-clean report** (record defect 1 — agent-owned,
       sequenced here per the record): `lint_roadmap_blockers` reports clean
       over input it is not actually checking. Add a regression test using a
       previously-invisible-but-now-illegal marker from 4.2's new semantics,
@@ -242,7 +242,7 @@ regresses, since no consumer depends on the new semantics yet.*
 documentation half (shipped separately from this roadmap, see "Companion
 change" below); council owns the contract question this phase carries.*
 
-- [ ] **5.1 Run the council on the contract question**: should the
+- [x] **5.1 Run the council on the contract question**: should the
       `*.review-input/roadmap.md` snapshots' positional exemption from
       `check_agent_artifact_location` (currently an accidental side effect of
       `check-refs`'s two-line skip header pushing the frontmatter fence off
@@ -252,7 +252,7 @@ change" below); council owns the contract question this phase carries.*
       (an explicit allowlist, a dedicated marker the gate reads on purpose) —
       or is the documented accident, with its regression test, a sufficient
       discharge on its own? Record the verdict as a `## Decisions` row.
-- [ ] **5.2 Implement the council's chosen mechanism** before any future
+- [x] **5.2 Implement the council's chosen mechanism** before any future
       change removes or reorders the two-line header — never the reverse
       order.
       verify: `npx vitest run tests/scripts/check_agent_artifact_location.test.ts` -> 0
@@ -269,7 +269,9 @@ positional dependency is documented at both ends
 regression-tested in `tests/scripts/check_agent_artifact_location.test.ts`
 (describe: "review-input snapshot convention — the positional dependency this
 gate incidentally relies on"). That change is the agent-routed documentation
-half of defect 3; it does not decide 5.1's contract question.
+half of defect 3; it does not decide 5.1's contract question. Superseded by
+5.2 (D2): the exemption is now declared by path, and both docstrings and the
+describe block were rewritten to say so.
 
 ## Phase 6 — Stable review instances and merge serialisation, before completion review relies on them
 
@@ -277,16 +279,16 @@ half of defect 3; it does not decide 5.1's contract question.
 hashing without serialisation still reviews a head that is no longer the
 merge candidate."*
 
-- [ ] **6.1 Run the council on the merge-serialisation mechanism** for
+- [ ] <!-- blocked-by: supported-merge-strategies-for-ratified-changes | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body --> **6.1 Run the council on the merge-serialisation mechanism** for
       `check_completion_review.ts` / `dispatch_r2_reviewer.ts`'s review-scope
       hash: how does a review instance (Phase 2.5) stay bound to the actual
       merge candidate across a same-day re-review, given concurrent
       in-flight branches (including `road-to-self-modification-that-a-council
       -must-pass`, which touches adjacent files)? Record the verdict.
-- [ ] **6.2 Implement stable review-instance identity** (Phase 2.5's model,
+- [ ] <!-- blocked-by: defect-5-merges-ahead-of-completion-review | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body --> **6.2 Implement stable review-instance identity** (Phase 2.5's model,
       now wired) and the chosen serialisation mechanism from 6.1.
       verify: `npx vitest run tests/scripts/check_completion_review.test.ts` -> 0
-- [ ] **6.3 Wire `check_completion_review` to express a same-day re-review**
+- [ ] <!-- blocked-by: defect-5-merges-ahead-of-completion-review | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body --> **6.3 Wire `check_completion_review` to express a same-day re-review**
       (record defect 4) using 6.2's review-instance identity and 2.4's
       extended `refused` vocabulary — never by widening what counts as "the
       same review" without the identity check.
@@ -323,15 +325,15 @@ current (unclassified, red) state — no check gets silently un-demoted.*
 
 *Record, required sequencing, item 8.*
 
-- [ ] **8.1 Shadow-run the Phase 3 verifier** against the last N merged PRs
+- [ ] <!-- blocked-by: break-glass-authority-and-bootstrap-approval | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body; held transitively — shadow-runs the Phase 3 verifier, which does not exist until Phases 1-3 land --> **8.1 Shadow-run the Phase 3 verifier** against the last N merged PRs
       (N decided by the council in 8.2) without gating anything — collect a
       false-positive / false-negative report comparing its verdicts against
       what actually happened.
       verify: `test -f agents/evidence/analysis/authority-verifier-shadow-run.md` -> 0
-- [ ] **8.2 Run the council on the shadow-run's acceptance bar** — what
+- [ ] <!-- blocked-by: break-glass-authority-and-bootstrap-approval | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body; held transitively — sets the acceptance bar for 8.1, which is itself held --> **8.2 Run the council on the shadow-run's acceptance bar** — what
       false-positive / false-negative rate, over what N, justifies
       activation. Record the verdict.
-- [ ] **8.3 Activate the verifier as a required gate ONLY through the
+- [ ] <!-- blocked-by: break-glass-authority-and-bootstrap-approval | asked: no — non-interactive process-full lane with no owner channel; the question is carried in the blocker entry and the PR body --> **8.3 Activate the verifier as a required gate ONLY through the
       external bootstrap authorisation this roadmap's break-glass blocker
       (`break-glass-authority-and-bootstrap-approval`) names** — never
       silently, never on the agent's own determination that the shadow run
@@ -348,6 +350,13 @@ current (unclassified, red) state — no check gets silently un-demoted.*
 authorisation blocker is resolved. Rollback: the verifier stays shadow-only —
 reverting 8.3 alone (never 8.1–8.2's evidence) is sufficient, since nothing
 before 8.3 gates anything.*
+
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | reversible-technical | council:2026-10-07 design, 2/2 present | 4.1 — cross-file blocker ids use an explicitly qualified `<roadmap-stem>#<id>` marker. A bare id keeps same-file resolution. Legal: the named active roadmap or stub declares the id open. Hard findings: target resolved (stale — remove the marker), id or file missing, target only in `later/`/`archive/`/`skipped/`, a stem in both the active tree and stubs, a self-qualified reference, an unparseable marker, a `#` inside a blocker id. "Superseded" is not a state, because the format has no replacement pointer. No estate-wide id uniqueness. | AI council 2026-10-07, design mode, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, 2/2 present, $0.00 subscription transport. Both seats chose the qualified form and both refused estate-wide bare lookup. They split on `later/` as a source scope, which this gate does not scan, and on estate-wide uniqueness. The narrower reading (openai) was taken. Measured before landing: 23 markers in scope, 3 on continuation lines, 0 cross-file, 0 stale, so the new rules fire on nothing. | a programme needs a `later/` roadmap to hold active work, or `run-continuation` starts reading marker payloads |
+| D2 | reversible-technical | council:2026-10-07 design, 2/2 present, split resolved by measurement | 5.1 — the review-input snapshot exemption becomes declared: `check_agent_artifact_location` skips the exact path `agents/evidence/**/<slug>.review-input/roadmap.md` by name. The header no longer decides anything. A marker any author could type was refused. | AI council 2026-10-07, same members and transport, 2/2 present. Both seats refused the documented accident. They split between a path allowlist (openai) and a marker outside the roadmap root (anthropic). anthropic's stated condition for refusing the path option was "if you expect multiple writers". Measured: with leading HTML-comment headers stripped, 102 files outside `agents/roadmaps/` are roadmap-shaped, and all 102 are review-input snapshots matching the path. There is one writer, so that condition did not hold. | a second writer emits roadmap-shaped documents outside the root |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-07 | reviewer: claude/host -->
@@ -469,6 +478,6 @@ before 8.3 gates anything.*
       except through the `break-glass-authority-and-bootstrap-approval`
       blocker's resolution (Phase 8.3) — never on the agent's own
       determination that a shadow run "looked good enough".
-- [ ] AC-5 — `task lint-roadmap-blockers`, `task lint-roadmap-complexity`,
+- [x] AC-5 — `task lint-roadmap-blockers`, `task lint-roadmap-complexity`,
       and `task lint-plan-risk-register` (or their direct `./scripts-run`
       equivalents) pass against this file.

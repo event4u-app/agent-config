@@ -5,6 +5,13 @@ review_by: 2026-12-27
 
 # Stub: road to a blocker the parser can actually see
 
+> **Status 2026-10-07:** the `lint_roadmap_blockers` halves below are closed by
+> `road-to-authority-routing-mechanism` 4.1–4.3. That gate now reads markers on
+> continuation lines, resolves `<roadmap-stem>#<id>` across active roadmaps and
+> stubs, and refuses an unprefixed `### ` heading under `## Blockers`.
+> Still open: the same heading defect in `update_roadmap_progress.ts`'s
+> dashboard parser, and the `open_blockers` floor question.
+
 > **Stub — not active work.** Found 2026-08-27 while landing
 > `road-to-undeclared-obligation-disposition`, when the dashboard reported that
 > roadmap's blocker column as `0` and the roadmap plainly had a blocker. Two of

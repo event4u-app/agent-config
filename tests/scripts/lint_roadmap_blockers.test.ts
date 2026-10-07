@@ -21,6 +21,7 @@ import {
     _openBlockerIds,
     _scan,
     _scanBoth,
+    _targetIndex,
 } from '../../src/scripts/lint_roadmap_blockers.js';
 
 describe('lint_roadmap_blockers — the decidability half', () => {
@@ -360,6 +361,78 @@ describe('lint_roadmap_blockers — _scan', () => {
         expect(violations[0]!.message).toContain("blocker 'incomplete-one' missing");
     });
 });
+
+// road-to-authority-routing-mechanism 4.3 — the vacuous-clean report (the
+// authority-routing council record's defect 1). Each case is a file the gate
+// used to print clean while not reading the thing that makes it wrong.
+describe('lint_roadmap_blockers — no vacuous clean', () => {
+    const LOCAL_BLOCKER = [
+        '## Blockers',
+        '',
+        '### blocker: local-hold',
+        '- **Status:** open',
+        '- **Owner:** maintainer',
+        '- **Blocks:** Phase 1',
+        '- **What to do:** run `./scripts-run src/scripts/check_estate_count`',
+        '- **Resolved when:** done',
+        '',
+    ].join('\n');
+
+    it('a marker on a continuation line naming an undeclared id is refused', () => {
+        const text = [
+            '# Roadmap: X', // 1
+            '', // 2
+            '## Phase 1 — Ship', // 3
+            '- [ ] **1.1 A long step** whose text wraps onto a second line,', // 4
+            '      and carries its marker here. <!-- blocked-by: ghost-hold | asked: no — no TTY -->', // 5
+            '', // 6
+            LOCAL_BLOCKER,
+        ].join('\n');
+        const v = _scan(text);
+        expect(v).toHaveLength(1);
+        expect(v[0]!.line).toBe(5);
+        expect(v[0]!.message).toContain("unknown blocker id 'ghost-hold'");
+    });
+
+    it('a continuation-line marker on a user-decision blocker needs its asked: field', () => {
+        const text = [
+            '## Phase 1 — Ship',
+            '- [ ] **1.1 A long step** whose text wraps',
+            '      onto this line. <!-- blocked-by: local-hold -->',
+            '',
+            LOCAL_BLOCKER,
+        ].join('\n');
+        const v = _scan(text);
+        expect(v).toHaveLength(1);
+        expect(v[0]!.message).toMatch(/carries no asked: field/);
+    });
+
+    it('a well-formed continuation-line marker stays clean, so the widening is not a blanket red', () => {
+        const text = [
+            '## Phase 1 — Ship',
+            '- [ ] **1.1 A long step** whose text wraps',
+            '      onto this line. <!-- blocked-by: local-hold | asked: no — no TTY in CI -->',
+            '',
+            LOCAL_BLOCKER,
+        ].join('\n');
+        expect(_scan(text)).toEqual([]);
+    });
+
+    it('a heading under ## Blockers without the blocker: prefix is refused, not parsed to nothing', () => {
+        const text = [
+            '## Blockers', // 1
+            '', // 2
+            '### merge-authority', // 3
+            '- **Status:** open',
+            '- **Owner:** user',
+            '',
+        ].join('\n');
+        const v = _scan(text);
+        expect(v).toHaveLength(1);
+        expect(v[0]!.line).toBe(3);
+        expect(v[0]!.message).toContain("'### merge-authority'");
+    });
+});
 // The active-vs-archived open-blocker overlap assertion
 // (`road-to-a-blocker-that-cannot-hide-in-the-archive` Phase 1).
 //
@@ -626,5 +699,109 @@ describe('lint_roadmap_blockers — the scanned scope', () => {
         const overlap = _archiveOverlap(_globRoadmaps(tmp) as string[], [archived]);
         expect(overlap.map((o) => o.id)).toEqual(['b-contradiction']);
         expect(overlap[0]!.active).toEqual([path.relative(REPO_ROOT, stub)]);
+    });
+});
+
+// road-to-authority-routing-mechanism 4.2 — cross-file blocker-id semantics.
+// AI council 2026-10-07, 2/2 present, both on the qualified form: a bare id
+// resolves in its own file only, `<roadmap-stem>#<id>` resolves in the named
+// in-scope roadmap only, and every state that is not "held by an open blocker"
+// is a named error. One case per legal and illegal state.
+describe('lint_roadmap_blockers — qualified cross-file references', () => {
+    let tmp: string;
+    beforeEach(() => {
+        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lrb-xfile-'));
+    });
+    afterEach(() => {
+        fs.rmSync(tmp, { recursive: true, force: true });
+    });
+
+    const blocker = (id: string, status: string, owner = 'council'): string =>
+        [
+            `### blocker: ${id}`,
+            `- **Status:** ${status}`,
+            `- **Owner:** ${owner}`,
+            '- **Blocks:** lanes',
+            '- **What to do:** run `./scripts-run src/scripts/check_estate_count`',
+            '- **Resolved when:** done',
+            '',
+        ].join('\n');
+    const programme = (...entries: string[]): string =>
+        ['# Programme', '', '## Blockers', '', ...entries].join('\n');
+    const write = (rel: string, body: string): void => {
+        const fp = path.join(tmp, rel);
+        fs.mkdirSync(path.dirname(fp), { recursive: true });
+        fs.writeFileSync(fp, body, 'utf-8');
+    };
+    const lane = (marker: string): string => `# Lane\n\n## Phase 1 — Ship\n- [ ] ${marker} **1.1 Step**\n`;
+    const scanLane = (marker: string): string[] =>
+        _scan(lane(marker), { selfStem: 'lane', index: _targetIndex(tmp) }).map((v) => v.message);
+
+    it('HELD — an open blocker in another active roadmap holds the step', () => {
+        write('programme.md', programme(blocker('b6', 'open')));
+        expect(scanLane('<!-- blocked-by: programme#b6 -->')).toEqual([]);
+    });
+
+    it('HELD — a stub is an in-scope target too', () => {
+        write('stubs/parked-programme.md', programme(blocker('b6', 'open')));
+        expect(scanLane('<!-- blocked-by: parked-programme#b6 -->')).toEqual([]);
+    });
+
+    it('the asked: field follows the TARGET blocker owner', () => {
+        write('programme.md', programme(blocker('b6', 'open', 'user')));
+        expect(scanLane('<!-- blocked-by: programme#b6 -->')[0]).toMatch(/carries no asked: field/);
+        expect(scanLane('<!-- blocked-by: programme#b6 | asked: no — no TTY -->')).toEqual([]);
+    });
+
+    it('STALE — the target blocker is resolved', () => {
+        write('programme.md', programme(blocker('b6', 'resolved 2026-10-07 by the owner')));
+        expect(scanLane('<!-- blocked-by: programme#b6 -->')[0]).toMatch(/resolved in .*programme\.md/);
+    });
+
+    it('STALE — a bare id whose local blocker is resolved', () => {
+        const text = lane('<!-- blocked-by: local -->') + '\n' + programme(blocker('local', 'resolved'));
+        expect(_scan(text)[0]?.message).toMatch(/resolved in this file/);
+    });
+
+    it('ORPHANED — the target roadmap declares no such id', () => {
+        write('programme.md', programme(blocker('b6', 'open')));
+        expect(scanLane('<!-- blocked-by: programme#b7 -->')[0]).toMatch(/names no '### blocker: b7'/);
+    });
+
+    it('ORPHANED — no roadmap has that stem', () => {
+        expect(scanLane('<!-- blocked-by: nowhere#b6 -->')[0]).toMatch(/names no roadmap 'nowhere\.md'/);
+    });
+
+    it.each(['later', 'archive', 'skipped'])(
+        'OUT OF SCOPE — a target found only in %s/ is refused, never read as held or resolved',
+        (dir) => {
+            write(`${dir}/programme.md`, programme(blocker('b6', 'open')));
+            expect(scanLane('<!-- blocked-by: programme#b6 -->')[0]).toContain(`only found in ${dir}/`);
+        },
+    );
+
+    it('AMBIGUOUS — one stem in both the active tree and stubs', () => {
+        write('programme.md', programme(blocker('b6', 'open')));
+        write('stubs/programme.md', programme(blocker('b6', 'open')));
+        expect(scanLane('<!-- blocked-by: programme#b6 -->')[0]).toMatch(/is ambiguous/);
+    });
+
+    it('a qualified reference to the file itself is refused — the bare id is the one spelling', () => {
+        write('lane.md', programme(blocker('b6', 'open')));
+        expect(scanLane('<!-- blocked-by: lane#b6 -->')[0]).toMatch(/same file/);
+    });
+
+    it('a bare id never resolves across files, however the estate looks', () => {
+        write('programme.md', programme(blocker('b6', 'open')));
+        expect(scanLane('<!-- blocked-by: b6 -->')[0]).toMatch(/unknown blocker id 'b6'/);
+    });
+
+    it('a malformed marker is reported rather than skipped', () => {
+        expect(scanLane('<!-- blocked-by: programme# -->')[0]).toMatch(/does not parse/);
+    });
+
+    it('a blocker id containing # is refused at its declaration', () => {
+        const v = _scan(programme(blocker('b#6', 'open'))).map((x) => x.message);
+        expect(v.some((m) => m.includes("contains '#'"))).toBe(true);
     });
 });
