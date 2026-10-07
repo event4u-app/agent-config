@@ -48,9 +48,19 @@ describe('the five states', () => {
     it('valid: the deepest layer that sets the key wins and is named', () => {
         const dir = tmp();
         const low = file(dir, 'low.yml', 'git:\n  update_strategy: merge\n');
-        const high = file(dir, 'high.yml', 'git:\n  update_strategy: " rebase "\n');
+        const high = file(dir, 'high.yml', 'git:\n  update_strategy: rebase\n');
         const r = readGitConventionKey('update_strategy', fileSource({ developer: [low, high] }), DEFAULTS);
         expect(r).toMatchObject({ state: 'valid', value: 'rebase', source: high, reason: null });
+    });
+
+    it('invalid: a value with surrounding whitespace is not trimmed into validity, as the schema does not trim', () => {
+        const dir = tmp();
+        const high = file(dir, 'high.yml', 'git:\n  update_strategy: " rebase "\n  branch_pattern: " {type}/{slug}"\n');
+        for (const key of ['update_strategy', 'branch_pattern'] as const) {
+            const r = readGitConventionKey(key, fileSource({ developer: [high] }), DEFAULTS);
+            expect(r, key).toMatchObject({ state: 'invalid', reason: 'git-convention-invalid' });
+            expect(r.detail, key).toContain('whitespace');
+        }
     });
 
     it('invalid: an enum value is case-sensitive, as the schema is, and the reason says so', () => {

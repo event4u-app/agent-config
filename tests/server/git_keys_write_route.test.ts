@@ -235,6 +235,12 @@ describe('package-sandbox mode — the write root is the project layer', () => {
         expect(fields[0]?.message).toContain('outside [A-Za-z0-9._/-]');
     });
 
+    it('refuses a value with surrounding whitespace instead of trimming it into validity', async () => {
+        const r = await put(ctx, { branch_pattern: ' {type}/{slug} ' });
+        expect(r.status).toBe(422);
+        expect((r.body as ErrorBody).error.fields?.[0]?.message).toContain('whitespace');
+    });
+
     it('refuses a pattern without {slug}', async () => {
         const r = await put(ctx, { branch_pattern: '{type}/{ticket}' });
         expect(r.status).toBe(422);

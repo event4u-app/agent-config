@@ -135,11 +135,6 @@ function _lookup(data: unknown, key: GitConventionKey): Lookup {
     return { present: true, value };
 }
 
-/** Trimmed only: the JSON schema and the route's enums are case-sensitive, so this reader is too. */
-function _normalise(_key: GitConventionKey, value: string): string {
-    return value.trim();
-}
-
 const BRANCH_PLACEHOLDERS = ['type', 'ticket', 'slug'] as const;
 const BRANCH_SAMPLE: Record<(typeof BRANCH_PLACEHOLDERS)[number], string> = {
     type: 'feat',
@@ -180,6 +175,8 @@ function _branchPatternReason(pattern: string): string | null {
 
 /** Why `value` is not allowed for `key`, or null when it is. */
 export function invalidReason(key: GitConventionKey, value: string): string | null {
+    // The schema neither trims nor folds case, so neither does this check.
+    if (value !== value.trim()) return `\`${value}\` has leading or trailing whitespace`;
     const allowed = GIT_CONVENTION_ENUMS[key];
     if (allowed !== undefined) {
         if (allowed.includes(value)) return null;
@@ -231,15 +228,15 @@ export function readGitConventionKey(
         if (typeof found.value !== 'string') {
             return conventionReading(key, 'invalid', String(found.value), layer.path, 'the value is not a string');
         }
-        const value = _normalise(key, found.value);
+        const value = found.value;
         const why = invalidReason(key, value);
         return why === null ? conventionReading(key, 'valid', value, layer.path) : conventionReading(key, 'invalid', value, layer.path, why);
     }
     for (const layer of [...layers].reverse().filter((l) => !l.carries && l.parsed === 'valid')) {
         const found = _lookup(layer.data, key);
         if (!found.present || 'notAMap' in found) continue;
-        const value = typeof found.value === 'string' ? _normalise(key, found.value) : String(found.value);
-        if (fallback !== null && value === _normalise(key, fallback)) continue;
+        const value = typeof found.value === 'string' ? found.value : String(found.value);
+        if (fallback !== null && value === fallback) continue;
         return conventionReading(
             key,
             'discarded',

@@ -404,11 +404,11 @@ describe('git.update_strategy', () => {
         }
     };
 
-    it('reads `merge` when nothing declares a strategy, and trims a declared one', () => {
+    it('reads `merge` when nothing declares a strategy, and refuses a padded one the schema refuses', () => {
         expect(updateStrategy(tmp())).toMatchObject({ value: 'merge', state: 'absent' });
         const dir = tmp();
         fs.writeFileSync(path.join(dir, '.agent-settings.yml'), 'git:\n  update_strategy: " rebase "\n');
-        expect(updateStrategy(dir)).toMatchObject({ value: 'rebase', state: 'valid' });
+        expect(updateStrategy(dir)).toMatchObject({ state: 'invalid' });
     });
 
     it('refuses with exit 3 and leaves HEAD untouched when a rebase-strategy branch is behind', () => {

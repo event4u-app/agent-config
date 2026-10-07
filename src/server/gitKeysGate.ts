@@ -29,10 +29,6 @@ function _gitSection(values: Record<string, unknown>): Record<string, unknown> |
     return git !== null && typeof git === 'object' && !Array.isArray(git) ? (git as Record<string, unknown>) : null;
 }
 
-function _normalise(value: string): string {
-    return value.trim();
-}
-
 /** The values and the JSON schema with the `git` section removed. */
 export function withholdGitKeys<S extends { properties?: Record<string, unknown>; required?: string[] }>(
     values: Record<string, unknown>,
@@ -60,16 +56,15 @@ export function gitKeyWriteIssues(
     const fallback = _gitSection(defaults) ?? {};
     const issues: FieldIssue[] = [];
     for (const key of GIT_CONVENTION_KEYS) {
-        const raw = git[key];
-        if (typeof raw !== 'string') continue;
-        const value = _normalise(raw);
+        const value = git[key];
+        if (typeof value !== 'string') continue;
         const why = invalidReason(key, value);
         if (why !== null) {
             issues.push({ path: `git.${key}`, message: why });
             continue;
         }
         const def = fallback[key];
-        if (userGlobal && !(typeof def === 'string' && _normalise(def) === value)) {
+        if (userGlobal && !(typeof def === 'string' && def === value)) {
             issues.push({ path: `git.${key}`, message: WITHHELD_REASON });
         }
     }
