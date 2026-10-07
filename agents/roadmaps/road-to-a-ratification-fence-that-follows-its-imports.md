@@ -4,7 +4,7 @@ status: ready
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: "The kernel-edit ratification gate watches a hand-written list of plumbing paths, and the module that decides whether a crashed blocking concern refuses now sits outside it; no live roadmap owns the watched set. Archiving or parking another roadmap would free a slot without closing the gap, and merging into road-to-self-modification-that-a-council-must-pass was considered and rejected: it changes who may ratify and how, not which files need a record, and folding a path-set change into it would make one diff both widen the fence and redefine the gatekeeper."
-estate_growth_exempt: "Grows active_roadmaps by one: the owner asked on 2026-10-06 for this round's roadmaps to land as ready in one change; the watched path set has no other owner."
+estate_growth_exempt: "Grows open_blockers by one on 2026-10-07: the host refused the agent's write of release finding 21900086c1a0's disposition, so step 4.3 waits on the owner as blocker finding-disposition-write-refused-for-the-agent, and the refusal is recorded rather than routed around. Earlier, on 2026-10-06, this file grew active_roadmaps by one because the owner asked for that round's roadmaps to land as ready in one change."
 relates:
   - slug: road-to-self-modification-that-a-council-must-pass
     relation: disjoint
