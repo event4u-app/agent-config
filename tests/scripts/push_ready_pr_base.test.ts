@@ -6,7 +6,8 @@
  * default branch — while the re-check step's own resolver reads the open pull
  * request's base: a PR into `release/1.x` was merged with `main` and then
  * checked against `release/1.x`. The base is now derived once, at the task
- * level, and handed to both; the resolvers stay forge-free.
+ * level, and handed to both. Outside push-ready the resolvers still differ:
+ * `check_branch_freshness` asks the forge, `sync_pr_branch` does not.
  *
  * The base reaches a shell twice, in the derivation and in the step commands,
  * and a git ref name may carry `$`, `(` and `;`. Both are rendered here the way
@@ -83,6 +84,11 @@ describe('push-ready derives the pull request base once', () => {
     it('says in its description where the base comes from', () => {
         expect(TASK?.desc).toMatch(/gh pr view --json baseRefName/);
         expect(TASK?.desc).toMatch(/default branch only when there is no/);
+    });
+
+    it('does not claim the resolvers are forge-free: check_branch_freshness asks the forge', () => {
+        expect(TASK?.desc).not.toMatch(/never\s+ask the forge/);
+        expect(TASK?.desc).toMatch(/check_branch_freshness\s+asks the forge/);
     });
 });
 
