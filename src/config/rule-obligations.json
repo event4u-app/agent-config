@@ -423,6 +423,14 @@
                 "model-recommendation.route-to-tier-best-model"
             ]
         },
+        "neighbour-precedence": {
+            "obligations": [
+                "neighbour-precedence.authority-bands-first",
+                "neighbour-precedence.follow-source-order",
+                "neighbour-precedence.name-followed-instruction",
+                "neighbour-precedence.neighbour-done-is-not-completion"
+            ]
+        },
         "no-attribution-footers": {
             "obligations": [
                 "no-attribution-footers.no-attribution-footer"
