@@ -1,12 +1,12 @@
 # Findings: git-convention-review-findings
-<!-- completion-review: v1 | reviewed: 2026-10-07 | scope: 5cd79c73b0e461f5348facaf44c0106ca426a4036a7c37f6e7e21c1a7cab7758 | diff: 5840b15678d21191488f53824a04c425324700ad | reviewer: r2-fresh-subagent-git-convention-review-findings | prompt_hash: b78de1891bec9118b72a5e8e89e484b5bd19ace000dbac872c18c71db1bfe478 -->
+<!-- completion-review: v1 | reviewed: 2026-10-07 | scope: dbf6570ce51ac33384a39b68486f67225645f635fb12a5250a623b3f332233bf | diff: 5840b15678d21191488f53824a04c425324700ad | reviewer: r2-fresh-subagent-git-convention-review-findings | prompt_hash: b78de1891bec9118b72a5e8e89e484b5bd19ace000dbac872c18c71db1bfe478 -->
 <!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-git-convention-review-findings"]}} -->
 <!-- evidence-type: v1 | type: current-binding | declared: 2026-10-07 -->
 
 <!-- context-manifest: v1
 inputs:
   diff_sha: 5840b15678d21191488f53824a04c425324700ad
-  scope_hash: 5cd79c73b0e461f5348facaf44c0106ca426a4036a7c37f6e7e21c1a7cab7758
+  scope_hash: dbf6570ce51ac33384a39b68486f67225645f635fb12a5250a623b3f332233bf
   roadmap: none
   roadmap_hash: none
   ac_hash: none
@@ -24,3 +24,5 @@ dispatched: 2026-10-07T14:23:37Z
 | 5 | low | src/scripts/_cli/cmd_git_convention.ts:139 | `commitMessageValidators` locates the commit-msg hook with `git rev-parse --path-format=absolute`, which needs git 2.31 or later. On an older git the call fails, `_git` returns null, and `show` prints "commit-message validator: none in this repository" while a hook does run at commit. The doc's "named, never inferred" promise silently becomes a false negative. | accepted-risk | git older than 2.31 (released 2021-03) already breaks src/scripts/_lib/base_tree.ts, which uses --path-format on main; on such a git the hook is reported as absent and subject still validates against the convention itself, so nothing passes unchecked. Follow-up candidate: fall back to --git-path without --path-format. Accepted by: implementing agent, disclosed to the owner in the PR description |
 | 6 | low | src/scripts/_cli/cmd_git_convention.ts:521 | `_stdin` skips reading only when stdin is a TTY. Any other stdin that is never closed makes `git:convention subject` wait forever instead of reporting `NO_SUBJECTS`: an agent shell or CI step that runs the verb without piping or redirecting input, with an inherited open pipe. | accepted-risk | subject is documented as reading piped subjects; a caller that hands it an inherited, never-closed stdin is outside that contract, and every documented caller pipes a closed stream. Follow-up candidate: a read timeout that reports NO_SUBJECTS. Accepted by: implementing agent, disclosed to the owner in the PR description |
 <!-- reviewer fills the table; 0 findings => replace the table with the exact honest-null line per docs/contracts/plan-review-gates.md §2.3 AND change the evidence-type to `honest-null` per docs/contracts/evidence-artifact-types.md §4 -->
+
+<!-- re-bound 2026-10-07 in place: the content added after the reviewed scope is the base merge of origin/feat/git-convention-settings at c74f7cdc9 (a merge of main into the base) and 23fb35a0c, which joins two shell lines of the squash snapshot in src/skills/git-workflow/SKILL.md to keep the skill at its 400-line ceiling; no behaviour change, tests/scripts/rebase_lease_race.test.ts 34/34. -->
