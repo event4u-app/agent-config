@@ -92,11 +92,16 @@ ledger does not yet record it.
 `self_review_gate.ts` exposes pure, unit-tested:
 
 - `classifyBlocking(finding)` — a finding is merge-blocking **iff**
-  `kind ∈ {security, claim}` **and** `severity ∈ {critical, high}`. Style and
-  correctness findings, and low/medium security findings, advise only. (Council
+  `kind ∈ {security, claim}` **and** `severity ∈ {critical, high}`, **or**
+  it is `security`-affecting at `medium`. Style and correctness findings, low
+  security findings, and medium/low claim findings advise only. (Council
   2026-07-08, claude-sonnet-4-5 + gpt-4o: a 100 %-blocking gate at
   solo-maintainer token cost gets ignored or gamed — block only on the narrow
-  security/claim × high+ intersection.)
+  security/claim × high+ intersection. Council 2026-10-07, claude-sonnet-4-5 +
+  codex-default, 2/2 convergent: widened by exactly one cell, `security ×
+  medium` — `claim × medium` stays non-blocking, a deliberate asymmetry since
+  security findings are defects in what ships and claim findings are defects
+  in what the self-description says shipped.)
 - `gateVerdict(findings, {enforce})` — mirrors
   `check_quality_regression.gateVerdict`: `0` pass / `2` block. Shipped
   `enforce: false` (advisory always returns `0` and reports the would-block
@@ -123,7 +128,7 @@ and zero-spend; the multi-model run is the maintainer's run-time act.
    runner**, which has no vendor CLI. On a self-hosted runner, or locally, a
    logged-in `claude` CLI already serves and needs no secret (§ Transport).
 2. Pass `--enforce` in the live job to arm the teeth (block on
-   security/claim × high+).
+   security/claim × high+, or security × medium).
 3. Require the `Self-review gate` check in branch protection
    (`road-to-maintainer-bus-factor` Phase 2) so even solo merges pass the gate.
 4. Record the floor CLAIM on the proof page **once it is live** — not before

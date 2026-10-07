@@ -87,6 +87,10 @@ describe('renderReview', () => {
         expect(out).toContain('1 finding(s) WOULD block');
         expect((out.match(/\(Blocking\)/g) ?? []).length).toBe(1);
     });
+    it('enforced verdict line names the widened criterion when a medium-security finding is what blocks', () => {
+        const out = renderReview([f('medium', 'security')], true);
+        expect(out).toContain('merge-blocking finding(s) (security/claim × high+, or security × medium)');
+    });
 });
 
 describe('escalationReasons', () => {

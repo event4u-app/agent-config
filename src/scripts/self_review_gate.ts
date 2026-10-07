@@ -1002,7 +1002,7 @@ export function renderReview(findings: Finding[], enforce: boolean, escalation: 
         .join('\n');
     const verdictLine = blocking.length
         ? enforce
-            ? `❌ ${blocking.length} merge-blocking finding(s) (security/claim × high+).`
+            ? `❌ ${blocking.length} merge-blocking finding(s) (security/claim × high+, or security × medium).`
             : `⚠️ ${blocking.length} finding(s) WOULD block merge under an enforced gate (advisory now).`
         : '✅ No merge-blocking findings (style/correctness advise only).';
     // Three reviewers in the 2026-09 round searched the commit log for a finding
