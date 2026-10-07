@@ -559,12 +559,13 @@ const GIT_CONVENTION_GRAMMAR_TRIPLE: Triple = {
     id: 'git-convention-grammar',
     output: GRAMMAR_REFERENCE,
     remedy: './scripts-run src/scripts/generate_git_convention_grammar',
-    why: 'the reference carries a grammar block rendered from the module the git:convention verb runs',
+    why: 'the reference carries a grammar and measurement block rendered from the modules the git:convention verb runs',
     sourcesOf() {
         return {
             ok: true,
             sources: [
                 { kind: 'file', value: 'src/scripts/_lib/git_convention_grammar.ts' },
+                { kind: 'file', value: 'src/scripts/_lib/git_convention_measure.ts' },
                 { kind: 'file', value: GRAMMAR_GENERATOR },
                 { kind: 'file', value: GRAMMAR_REFERENCE },
             ],

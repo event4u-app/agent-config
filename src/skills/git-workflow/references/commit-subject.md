@@ -40,7 +40,7 @@ every candidate with its status:
 - **`unknown-key`** — `--keys` takes the `ticket_keys` line of the approved
   convention card (`agents/memory/curated/conventions/approved/commit-subject.md`,
   see the [`conventional-commits-writing`](../../conventional-commits-writing/SKILL.md)
-  skill § 7), as the caller reads it. A candidate whose key is not on it is
+  skill § 4), as the caller reads it. A candidate whose key is not on it is
   asked about by `/commit` — a yes adds the key to the card — and omitted by
   `/commit:in-chunks`. Without a card the grammar, the denylist and the
   version-like names decide alone.
@@ -77,6 +77,20 @@ resolves the convention in this order — the first that applies decides:
    value that counts.
 2. **An approved measurement** — the card's `dominant_family`.
 3. **The default** — Conventional Commits (`ticket-scope`).
+
+When the third case decides — no declaration and no approved card — `subject`
+and `show` add the line `no convention established — run git:convention measure`
+(`convention_established: false` under `--json`); the exit is unchanged.
+`agent-config git:convention measure [--limit N] [--family F] [--json]` then reads
+the history: it proposes a subject family when one clears the `measure bar` row
+of the block below, otherwise names the two strongest; it proposes a
+`branch_pattern` from the remote branch names, or `no clear pattern`; and it
+shows the observed update style, which is never adopted. Where the chosen family
+maps to a `git.commit_format` value or a pattern was proposed, it prints the
+ready-to-commit content of `.git-convention.yml` (`commit_format`,
+`branch_pattern`, never `update_strategy`); a human creates and commits that
+file, the verb writes nothing. `/commit` asks the user once and writes the answer
+to the approved card.
 
 A repository validator — a `commit-msg` hook, a commitlint config (any of its
 config files, or a `commitlint` key in the package manifest) — does not decide, and
@@ -124,7 +138,7 @@ describes a team habit; the name the agent creates follows the declared pattern.
 ## The grammar
 
 <!-- BEGIN GENERATED: git-convention-grammar -->
-<!-- Written by `./scripts-run src/scripts/generate_git_convention_grammar` from `src/scripts/_lib/git_convention_grammar.ts`; edit the module, never this block. -->
+<!-- Written by `./scripts-run src/scripts/generate_git_convention_grammar` from `src/scripts/_lib/git_convention_grammar.ts` and `src/scripts/_lib/git_convention_measure.ts`; edit the modules, never this block. -->
 
 ```
 ticket                      [A-Z][A-Z0-9]+-[0-9]+
@@ -138,6 +152,9 @@ family ticket-conventional  ^[A-Z][A-Z0-9]+-[0-9]+ (build|chore|ci|docs|feat|fix
 family ticket-prefix        ^\[[A-Z][A-Z0-9]+-[0-9]+\][: ]|^[A-Z][A-Z0-9]+-[0-9]+[: ]
 family gitmoji              ^:[a-z0-9_+-]+:[[:space:]]|^[^ -~[:cntrl:][:space:]]
 family imperative-plain     ^[A-Z][a-z]+[[:space:]].*[^.]$
+measure sample              newest 200 non-merge commits since 24 months ago; bots, automation subjects, commits over 500 files dropped
+measure bar                 n >= 30; >= 80 % capped at 20 per author per half (3+ authors), else >= 90 % uncapped; both halves agree
+measure branches            >= 10 remote branch names, top shape >= 80 %
 ```
 
 Formats are JavaScript / PCRE syntax; families are POSIX extended, matched in

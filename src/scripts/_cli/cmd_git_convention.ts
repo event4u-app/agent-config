@@ -65,6 +65,18 @@ import {
     type SubjectFamily,
     type SubjectRule,
 } from '../_lib/git_convention_grammar.js';
+import {
+    CLASSIFIER_VERSION,
+    MEASURE_LIMIT,
+    MEASURE_SINCE,
+    MIN_N,
+    measureBranches,
+    measureSubjects,
+    measureUpdateStyle,
+    pct,
+    readHistory,
+    teamFile,
+} from '../_lib/git_convention_measure.js';
 import { main as syncPrBranch } from '../sync_pr_branch.js';
 
 export interface GitConventionResult {
@@ -174,6 +186,7 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
     const validators = commitMessageValidators(cwd);
     const ok = !keys.some((k) => isRefusal(readings[k].state));
     const code: 0 | 1 = ok ? 0 : 1;
+    const established = keys.includes('commit_format') ? _established(readings.commit_format, read.root) : null;
     const warnings = fs.existsSync(path.join(read.root, IGNORED_CARRIER_PATH))
         ? [`${IGNORED_CARRIER_PATH} is ignored — the team declaration is read only from ${CARRIER_PATH}; rename it to ${CARRIER_PATH}`]
         : [];
@@ -191,7 +204,7 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
         }
         return {
             code,
-            out: [JSON.stringify({ ok, keys: entries, target: read.target, warnings, commit_message_validator: validators[0] ?? null, commit_message_validators: validators }, null, 2)],
+            out: [JSON.stringify({ ok, keys: entries, target: read.target, warnings, convention_established: established, commit_message_validator: validators[0] ?? null, commit_message_validators: validators }, null, 2)],
             err: [],
         };
     }
@@ -218,6 +231,7 @@ export function showConvention(args: readonly string[], cwd: string, deps?: Targ
         }
     }
     out.push(`team declaration: ${CARRIER_PATH} at the repository root (ADR-283)`);
+    if (established === false) out.push(NO_CONVENTION);
     for (const w of warnings) out.push(`⚠️  ${w}`);
     if (validators.length === 0) out.push('commit-message validator: none in this repository');
     for (const v of validators) out.push(`commit-message validator: ${v.kind} at ${v.path} — also runs at commit time and may be stricter than git.commit_format`);
@@ -254,8 +268,27 @@ function _cardFamily(root: string): string | null {
     return /^dominant_family:\s*["']?([a-z-]+)/m.exec(text)?.[1] ?? null;
 }
 
+/**
+ * A `git.commit_format` the user chose: any valid committed value, or a
+ * developer value other than the template default — `settings:sync` inserts the
+ * default into every project file, so the default there proves no choice.
+ */
+function _declares(reading: GitConventionReading): boolean {
+    if (reading.state !== 'valid') return false;
+    return (reading.source ?? '').startsWith(CARRIER_PATH) || reading.value !== conventionDefault('commit_format');
+}
+
+/** True with a declaration or an approved card, false with neither, null when the format cannot be read. */
+function _established(reading: GitConventionReading, root: string): boolean | null {
+    if (isRefusal(reading.state)) return null;
+    return _declares(reading) || _cardFamily(root) !== null;
+}
+
+/** Printed when neither a declaration nor an approved card exists. */
+export const NO_CONVENTION = 'no convention established — run git:convention measure';
+
 type SubjectPlan =
-    | { kind: 'rule'; rule: SubjectRule; tier: string; notes: string[] }
+    | { kind: 'rule'; rule: SubjectRule; tier: string; notes: string[]; established?: false }
     | { kind: 'stop'; code: 1; lines: string[] };
 
 function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan {
@@ -270,18 +303,14 @@ function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan 
     const read = readCommittedConvention(cwd, { keys: ['commit_format'] });
     const reading = read.readings.commit_format as GitConventionReading;
     if (isRefusal(reading.state)) return { kind: 'stop', code: 1, lines: [describeRefusal(reading)] };
-    const committed = reading.state === 'valid' && (reading.source ?? '').startsWith(CARRIER_PATH);
-    // A developer file holding the template default may only be `settings:sync`'s
-    // insert, so only a value other than the default is a developer's choice.
-    const declared = committed || (reading.state === 'valid' && reading.value !== conventionDefault('commit_format'));
     const notes = commitMessageValidators(cwd).map(_validatorNote);
-    if (declared) return { kind: 'rule', rule: { format: reading.value as CommitFormat }, tier: `declared in ${reading.source}`, notes };
+    if (_declares(reading)) return { kind: 'rule', rule: { format: reading.value as CommitFormat }, tier: `declared in ${reading.source}`, notes };
     const family = _cardFamily(read.root);
     if (family !== null) {
         if (!FAMILY_ERE.some(([f]) => f === family)) return { kind: 'stop', code: 1, lines: [`the approved family ${family} in ${APPROVED_CARD} has no grammar to validate against`] };
         return { kind: 'rule', rule: { family: family as SubjectFamily }, tier: `approved in ${APPROVED_CARD}`, notes };
     }
-    return { kind: 'rule', rule: { format: (reading.value ?? 'ticket-scope') as CommitFormat }, tier: 'default (Conventional Commits)', notes };
+    return { kind: 'rule', rule: { format: (reading.value ?? 'ticket-scope') as CommitFormat }, tier: 'default (Conventional Commits)', notes, established: false };
 }
 
 /** Under `--json` every exit prints one object carrying `ok`, `code` and the human `lines`. */
@@ -307,10 +336,12 @@ export function subjectCommand(args: readonly string[], cwd: string, stdin = '')
     const lines = failures.length === 0
         ? [`${subjects.length} subject(s) valid under ${ruleName(plan.rule)} (${plan.tier})`, ...plan.notes]
         : [...failures.map((x) => `✗ ${x.s}\n  ${x.v.ok ? '' : x.v.rule}`), ...plan.notes];
+    if (plan.established === false) lines.push(NO_CONVENTION);
     return _subjectResult(f.json, failures.length === 0 ? 0 : 1, lines, [], {
         rule: ruleName(plan.rule),
         tier: plan.tier,
         notes: plan.notes,
+        convention_established: plan.established === false ? false : plan.tier === 'passed by the caller' ? null : true,
         failures: failures.map((x) => ({ subject: x.s, rule: x.v.ok ? null : x.v.rule })),
     });
 }
@@ -364,11 +395,99 @@ export function branchCommand(args: readonly string[], cwd: string): GitConventi
     return { code: 0, out: f.json ? [JSON.stringify({ branch: r.name, pattern })] : [r.name], err: [] };
 }
 
+/** The convention card `/commit` writes under `approved/` once the user has answered. */
+export function cardText(m: { family: SubjectFamily; observedN: number; share: number; authors: number; trunk: string }): string {
+    return [
+        '---',
+        `dominant_family: ${m.family}`,
+        `observed_n: ${m.observedN}`,
+        `dominant_share: ${m.share.toFixed(2)}`,
+        `author_count: ${m.authors}`,
+        `sample_window: "${MEASURE_SINCE}, newest ${MEASURE_LIMIT} non-merge commits"`,
+        `classifier_version: ${CLASSIFIER_VERSION}`,
+        `confirm_against: ${m.trunk}`,
+        'ticket_keys: []',
+        '---',
+        '',
+        `Approved by the user from \`agent-config git:convention measure\`. Re-measure when a tier-1 source appears or the newer half's family changes.`,
+        '',
+    ].join('\n');
+}
+
+export function measureCommand(args: readonly string[], cwd: string): GitConventionResult {
+    const f = _flags(args, ['limit', 'family']);
+    const limit = f.values.limit === undefined ? MEASURE_LIMIT : Number(f.values.limit);
+    if (f.bad !== null || f.positional.length > 0 || !Number.isInteger(limit) || limit < 1) {
+        return { code: 2, out: [], err: [f.bad === null && f.positional.length === 0 ? `--limit must be a positive integer: ${f.values.limit}` : `unknown argument: ${f.bad ?? f.positional[0]}`, USAGE] };
+    }
+    const chosen = f.values.family;
+    if (chosen !== undefined && !FAMILY_ERE.some(([fam]) => fam === chosen)) return { code: 2, out: [], err: [`no grammar for family: ${chosen}`, USAGE] };
+    const history = readHistory(cwd, limit);
+    if (history === null) return { code: 1, out: [], err: ['not a git repository'] };
+    const m = measureSubjects(history.commits);
+    const b = measureBranches(history.branches);
+    const u = measureUpdateStyle(history.mergeSubjects, history.defaultBranch ?? 'main');
+    const read = readCommittedConvention(cwd, { keys: ['commit_format'] });
+    const established = _established(read.readings.commit_format as GitConventionReading, read.root);
+    const family = (chosen as SubjectFamily | undefined) ?? m.established;
+    const share = family === null ? 0 : (m.families.find((x) => x.family === family)?.share ?? 0);
+    const team = teamFile(family, b.pattern);
+    const card = family === null ? null : cardText({ family, observedN: m.eligible, share, authors: m.authors, trunk: history.trunk });
+
+    if (f.json) {
+        return {
+            code: 0,
+            out: [JSON.stringify({
+                convention_established: established,
+                classifier_version: CLASSIFIER_VERSION,
+                sample: { trunk: history.trunk, limit, since: MEASURE_SINCE, read: history.commits.length, eligible: m.eligible, excluded: m.excluded, authors: m.authors, capped: m.capped, capped_total: m.cappedTotal },
+                bar: { min_n: MIN_N, share: m.bar },
+                families: m.families,
+                halves: { newer: m.newer, older: m.older, agree: m.halvesAgree },
+                verdict: { established: m.established, migrating: m.migrating, reasons: m.reasons, strongest: m.strongest },
+                branches: { sampled: b.sampled, pattern: b.pattern, share: b.share, shapes: b.shapes },
+                update_style: { observed: u.observed, base_merges: u.baseMerges, merges: u.merges, adopted: false },
+                chosen: family,
+                team_file: team,
+                card,
+            }, null, 2)],
+            err: [],
+        };
+    }
+
+    const out = [
+        established === true ? 'convention: already established — a declaration or an approved card is in force; this measurement is advisory'
+            : established === null ? 'convention: git.commit_format cannot be read — see git:convention show' : 'convention: none established — /commit offers the result below once',
+        `sample    ${history.commits.length} commit(s) on ${history.trunk} since ${MEASURE_SINCE} · classifier ${CLASSIFIER_VERSION}`,
+        `          eligible ${m.eligible} (excluded: bots ${m.excluded.bots}, automation ${m.excluded.automation}, bulk ${m.excluded.bulk}) · authors ${m.authors}`
+            + (m.capped ? ` · capped per author per half → ${m.cappedTotal}` : ' · uncapped (fewer than three authors)'),
+        ...m.families.map((x) => `          ${x.family.padEnd(20)} ${String(x.count).padStart(4)}  ${pct(x.share)}`),
+        `halves    newer ${m.newer.family ?? '—'} ${pct(m.newer.share)} · older ${m.older.family ?? '—'} ${pct(m.older.share)} — ${m.halvesAgree ? 'agree' : 'disagree'}`,
+        m.established !== null
+            ? `verdict   established: ${m.established}${m.migrating ? ' (migrating — the newer half alone clears the bar)' : ''} — bar n ≥ ${MIN_N}, share ≥ ${pct(m.bar)}`
+            : `verdict   below the bar (${m.reasons.join('; ')}) — strongest: ${m.strongest.join(', ') || 'none with a grammar'}`,
+        b.pattern !== null
+            ? `branches  ${b.sampled} sampled — proposed branch_pattern "${b.pattern}" (${pct(b.share)})`
+            : `branches  ${b.sampled} sampled — no clear pattern`,
+        `update    observed ${u.observed} (${u.baseMerges} of ${u.merges} merge(s) bring the default branch into a topic branch) — shown, never adopted`,
+    ];
+    if (team !== null) {
+        out.push(`team file ${chosen === undefined ? 'for the measured result' : `for --family ${chosen}`} — a human creates and commits ${CARRIER_PATH}; this verb writes nothing:`);
+        out.push(...team.trimEnd().split('\n').map((l) => `  ${l}`));
+    }
+    if (chosen !== undefined && card !== null) {
+        out.push(`card      for ${APPROVED_CARD}:`);
+        out.push(...card.trimEnd().split('\n').map((l) => `  ${l}`));
+    }
+    return { code: 0, out, err: [] };
+}
+
 export const SUBCOMMANDS: Readonly<Record<string, (args: readonly string[], cwd: string, stdin?: string) => GitConventionResult>> = {
     show: (args, cwd) => showConvention(args, cwd),
     subject: (args, cwd, stdin) => subjectCommand(args, cwd, stdin),
     ticket: (args, cwd) => ticketCommand(args, cwd),
     branch: (args, cwd) => branchCommand(args, cwd),
+    measure: (args, cwd) => measureCommand(args, cwd),
     // Prints as it runs; a later `--repo` in `args` overrides the directory.
     sync: (args, cwd) => ({ code: syncPrBranch(['--repo', cwd, ...args]) as GitConventionResult['code'], out: [], err: [] }),
 };
@@ -378,6 +497,7 @@ const USAGE = [
     '       agent-config git:convention subject [--format F | --family F] [--json]   (subjects on stdin)',
     '       agent-config git:convention ticket [BRANCH] [--keys "DEV, OPS"] [--json]',
     '       agent-config git:convention branch --slug S [--type T] [--ticket K] [--pattern P] [--json]',
+    '       agent-config git:convention measure [--limit N] [--family F] [--json]   (proposes a convention from the history; writes nothing)',
     '       agent-config git:convention sync [--base REF] [--dry-run] [--auto-resolve-generated] [--quiet]   (without --base: the default branch)',
 ].join('\n');
 

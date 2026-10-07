@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { REFERENCE, refresh, renderBlock } from '../../src/scripts/generate_git_convention_grammar.js';
 import { REGISTRY } from '../../src/scripts/check_generator_sync.js';
 import { TICKET_GRAMMAR } from '../../src/scripts/_lib/git_convention_grammar.js';
+import { MIN_N, SHARE_BAR, SMALL_TEAM_SHARE_BAR, pct } from '../../src/scripts/_lib/git_convention_measure.js';
 
 const ROOT = path.resolve(__dirname, '..', '..');
 const committed = (): string => fs.readFileSync(path.join(ROOT, REFERENCE), 'utf8');
@@ -16,6 +17,13 @@ describe('the commit-subject reference grammar block', () => {
         expect(r.ok).toBe(true);
         expect(r.ok ? r.text : '').toBe(committed());
         expect(renderBlock()).toContain(TICKET_GRAMMAR);
+    });
+
+    it('renders the measurement bar from the constants git:convention measure applies', () => {
+        const bar = renderBlock().split('\n').find((l) => l.startsWith('measure bar')) ?? '';
+        expect(bar).toContain(`n >= ${MIN_N}`);
+        expect(bar).toContain(pct(SHARE_BAR));
+        expect(bar).toContain(pct(SMALL_TEAM_SHARE_BAR));
     });
 
     it('reds when the block is edited by hand', () => {
@@ -33,7 +41,7 @@ describe('the commit-subject reference grammar block', () => {
         expect(triple).toBeDefined();
         const s = triple?.sourcesOf(ROOT);
         expect(s?.ok ? s.sources.map((m) => m.value) : []).toEqual(
-            expect.arrayContaining(['src/scripts/_lib/git_convention_grammar.ts', 'src/scripts/generate_git_convention_grammar.ts', REFERENCE]),
+            expect.arrayContaining(['src/scripts/_lib/git_convention_grammar.ts', 'src/scripts/_lib/git_convention_measure.ts', 'src/scripts/generate_git_convention_grammar.ts', REFERENCE]),
         );
     });
 });

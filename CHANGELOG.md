@@ -159,6 +159,25 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Added
 
+- **An old project keeps its real commit format — `agent-config git:convention
+  measure`.** A repository with no declared convention and no approved card is
+  now measured instead of silently given Conventional Commits: the verb samples
+  the trunk's non-merge history, drops bots, automation and bulk imports, caps
+  each author per half, and names the established subject family or — below the
+  bar — the two strongest. It also proposes a `branch_pattern` from the remote
+  branch names (or reports no clear pattern) and shows the observed update style,
+  which it never adopts. The thresholds are constants of the module the verb
+  runs and are rendered into the commit-subject reference, not restated by hand.
+  `show` and `subject` print `no convention established — run git:convention
+  measure` in that state (`convention_established` under `--json`; exit codes
+  unchanged). An interactive `/commit` asks once — the established family or the
+  two strongest against Conventional Commits — and writes the answer to the
+  approved convention card, also when the answer is Conventional, so the question
+  is never repeated; `/commit:in-chunks` never asks and reports the measurement.
+  Where the choice maps to a setting, `measure` prints the ready-to-commit
+  `.git-convention.yml` (`commit_format`, `branch_pattern`, never
+  `update_strategy`); a human creates and commits it, the agent never writes it.
+
 - **A team's git convention can be declared instead of measured — the new
   `git:` settings block.** Three Class-C keys, each defaulting to the
   behaviour every install had before, so an install that sets nothing is
