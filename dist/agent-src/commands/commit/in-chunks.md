@@ -51,6 +51,8 @@ If there are no uncommitted changes (staged or unstaged), report
   never asked about.
 - If no ticket ID is found, omit it — write `chore: ...` not `chore(): ...`.
   Do **not** ask the user for one.
+  Under an approved convention card this is never a stop: the family's form
+  without the ticket part is valid (`commit-subject` § Placing the ticket).
 
 ### 3. Analyze and split
 
@@ -73,6 +75,12 @@ Splitting rules:
 
 Generate commit messages per [`commit-conventions`](../../rules/commit-conventions.md).
 
+**No convention established — never ask.** When `agent-config git:convention
+show --key commit_format` prints `no convention established`, run
+`agent-config git:convention measure`, carry its `verdict` line into the summary,
+and generate under the convention in force (the default). Asking and writing the
+card belong to the interactive [`/commit`](../commit.md) step 3c only.
+
 ### 3b. Secret-leak pre-flight — MANDATORY, not autonomy-lifted
 
 Run `./scripts-run src/scripts/check_secret_leak`. A high-confidence hit is a
@@ -93,6 +101,12 @@ Before staging anything, pipe every generated subject through
   rule, or the format it could not read), hand back to the user.
   Do **not** auto-commit broken messages even though confirmation is
   otherwise suppressed.
+
+An approved convention card an earlier [`/commit`](../commit.md) wrote and left
+uncommitted (`agents/memory/curated/conventions/approved/commit-subject.md`,
+unstaged or untracked) rides in the first chunk: add it with that chunk's files
+(`git add -- agents/memory/curated/conventions/approved/commit-subject.md`), so
+every worktree and clone reads the convention it was approved under.
 
 For each planned commit in order:
 
@@ -127,6 +141,10 @@ Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
   ```
 
   Include `git log --oneline -N` output for verification.
+
+At every level except `off`, a run that measured because no convention was
+established adds the verb's `verdict` line and `→ run /commit once to choose and
+record the convention`.
 
 ## Rules
 

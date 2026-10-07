@@ -473,7 +473,12 @@ A missing setting, a CI re-run, a protection flag, a rebase, a council call: do
 them, and say so in the PR body if it matters. The only mid-run interruptions
 that remain legitimate are a spend-ceiling crossing and an EXCLUDED-list action
 (production trunk, deploy, prod data/infra, an irreversible external action
-beyond the PR).
+beyond the PR). One carve-out from "do them": a rebase of a branch that is
+already pushed rewrites published history, and still needs the user's answer
+this turn per `git-history-discipline` § When rewrite is allowed — the
+invocation does not give it, and neither does `git.update_strategy: rebase`,
+which picks the operation and never authorises it. Without that answer the
+branch is left behind and the PR body says so.
 
 Report shape:
 

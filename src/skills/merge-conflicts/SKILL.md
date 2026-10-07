@@ -223,9 +223,13 @@ git add .
 | Approach | When to use |
 |---|---|
 | `git merge main` | Default (`git.update_strategy: merge`) — preserves history, safer for shared branches |
-| `git rebase origin/main` | `git.update_strategy: rebase`, or when explicitly asked — rewrites history, linear log |
+| `git rebase origin/main` | `git.update_strategy: rebase` picks it — rewrites history, linear log |
 
-Under `rebase` conflicts surface per commit, and the protocol — permission,
+The setting picks the operation; it never authorises it. A rebase of a branch
+that is already pushed still needs the user's answer this turn, per
+[`git-history-discipline`](../../rules/git-history-discipline.md) § When rewrite is
+allowed — an explicit ask, an unrevoked standing instruction, or a `pull
+--rebase` the user started. Under `rebase` conflicts surface per commit, and the protocol — permission,
 stops, recovery ref, the equivalence report afterwards — is
 [`git-workflow` › branch-update](../git-workflow/references/branch-update.md).
 

@@ -20,7 +20,15 @@ export const TICKET_TOKEN = `(?<![A-Za-z0-9])${TICKET_GRAMMAR}(?![0-9])`;
 /** Prefixes of standard names that share the ticket shape (`UTF-8`, `CVE-2026-1234`). */
 export const TICKET_DENYLIST = ['UTF', 'ISO', 'SHA', 'RFC', 'CVE', 'CWE', 'GHSA'] as const;
 
-export type TicketStatus = 'ticket' | 'standard-name' | 'unknown-key';
+/**
+ * Protocol and language names that branch names carry with a major version
+ * (`HTTP-2`, `PHP-8`). Without a card such a key with a one-digit number is
+ * `version-like`, not a ticket; a card that lists the key keeps it a ticket.
+ * Two or more digits read as a ticket number, which is how the two are told apart.
+ */
+export const VERSION_LIKE_KEYS = ['HTTP', 'HTTPS', 'TLS', 'SSL', 'OAUTH', 'PHP', 'PYTHON', 'JAVA', 'JDK', 'NODE', 'ES', 'HTML', 'CSS'] as const;
+
+export type TicketStatus = 'ticket' | 'standard-name' | 'version-like' | 'unknown-key';
 
 export interface TicketCandidate {
     token: string;
@@ -28,20 +36,30 @@ export interface TicketCandidate {
     status: TicketStatus;
 }
 
+/** The ticket token in either case, scanned only when a card names the keys. */
+const ANY_CASE_TOKEN = `(?<![A-Za-z0-9])[A-Za-z][A-Za-z0-9]+-[0-9]+(?![0-9])`;
+
 /**
  * Every ticket-shaped token in `text`, in order. With `keys`, a candidate whose
- * key is not listed is `unknown-key`; without, the grammar and the denylist
- * decide alone.
+ * key is not listed is `unknown-key`, and a key written in another case is
+ * matched against the list and returned upper-cased; a lower-case token whose
+ * key is not listed is not a candidate. Without `keys` only upper-case tokens
+ * count, and the grammar, the denylist and the version-like names decide.
  */
 export function ticketCandidates(text: string, keys?: readonly string[] | null): TicketCandidate[] {
+    const card = keys !== undefined && keys !== null && keys.length > 0 ? keys : null;
     const out: TicketCandidate[] = [];
-    for (const m of text.matchAll(new RegExp(TICKET_TOKEN, 'g'))) {
-        const token = m[0];
-        const key = token.slice(0, token.indexOf('-'));
+    for (const m of text.matchAll(new RegExp(card === null ? TICKET_TOKEN : ANY_CASE_TOKEN, 'g'))) {
+        const dash = m[0].indexOf('-');
+        const written = m[0].slice(0, dash);
+        const key = written.toUpperCase();
+        const number = m[0].slice(dash + 1);
+        if (written !== key && !card?.includes(key)) continue;
         let status: TicketStatus = 'ticket';
         if ((TICKET_DENYLIST as readonly string[]).includes(key)) status = 'standard-name';
-        else if (keys !== undefined && keys !== null && keys.length > 0 && !keys.includes(key)) status = 'unknown-key';
-        out.push({ token, key, status });
+        else if (card !== null) status = card.includes(key) ? 'ticket' : 'unknown-key';
+        else if (number.length === 1 && (VERSION_LIKE_KEYS as readonly string[]).includes(key)) status = 'version-like';
+        out.push({ token: `${key}-${number}`, key, status });
     }
     return out;
 }
@@ -123,8 +141,34 @@ export function ruleName(rule: SubjectRule): string {
     return 'format' in rule ? `git.commit_format: ${rule.format}` : `approved family ${rule.family}`;
 }
 
+/** Subjects git writes itself (`commit --fixup`, `--squash`, `--fixup=amend:`, `revert`), valid under every format and every approved family. */
+export const GIT_OWN_SUBJECT = '^((fixup|squash|amend)! .+|Revert ".+")$';
+
+/**
+ * A family's form without its ticket, for the families whose ticket is a
+ * leading part (owner decision 2026-10-07): the ticket is optional, as under
+ * the `ticket-conventional` setting value, and when present it leads.
+ */
+export const TICKETLESS_FORM: Readonly<Partial<Record<SubjectFamily, string>>> = {
+    'ticket-prefix': '^\\S.*',
+    'ticket-conventional': FAMILY_ERE[0]?.[1] ?? '',
+};
+
 export function checkSubject(subject: string, rule: SubjectRule): SubjectVerdict {
+    if (new RegExp(GIT_OWN_SUBJECT).test(subject)) return { ok: true };
     const grammar = 'format' in rule ? new RegExp(FORMAT_GRAMMAR[rule.format]) : (FAMILY_JS.find(([f]) => f === rule.family)?.[1] as RegExp);
+    const ticketless = 'family' in rule ? TICKETLESS_FORM[rule.family] : undefined;
+    if (!grammar.test(subject) && ticketless !== undefined) {
+        const family = (rule as { family: SubjectFamily }).family;
+        if (!_js(ticketless).test(subject)) {
+            return { ok: false, rule: `${ruleName(rule)} — does not match ${FAMILY_ERE.find(([f]) => f === family)?.[1] ?? ''}, nor its form without a ticket ${ticketless}` };
+        }
+        const stray = ticketCandidates(subject).find((c) => c.status === 'ticket');
+        if (stray !== undefined) {
+            return { ok: false, rule: `${ruleName(rule)} — the ticket \`${stray.token}\` stands outside the leading position; it leads the subject or is left out` };
+        }
+        return { ok: true };
+    }
     if (!grammar.test(subject)) {
         return { ok: false, rule: `${ruleName(rule)} — does not match ${'format' in rule ? FORMAT_GRAMMAR[rule.format] : (FAMILY_ERE.find(([f]) => f === rule.family)?.[1] ?? '')}` };
     }
@@ -135,7 +179,7 @@ export function checkSubject(subject: string, rule: SubjectRule): SubjectVerdict
         return { ok: false, rule: `${ruleName(rule)} — \`${lead}\` is a standard name, not a ticket` };
     }
     const scope = SCOPE.exec(lead === '' || leading === undefined ? subject : subject.slice(lead.length + 1))?.[1] ?? '';
-    const inScope = ticketCandidates(scope).find((c) => c.status !== 'standard-name');
+    const inScope = ticketCandidates(scope).find((c) => c.status === 'ticket');
     if (inScope !== undefined) {
         return { ok: false, rule: `${ruleName(rule)} — the ticket \`${inScope.token}\` stands inside the scope; it leads the subject, never the scope` };
     }

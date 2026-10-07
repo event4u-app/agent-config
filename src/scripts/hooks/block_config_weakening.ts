@@ -383,10 +383,25 @@ export interface Decision {
  * unreadable for the length of one tool call, which is a bypass with no
  * authorisation step in it.
  *
+ * The edit forms it models: `Write` (`content`), `Edit` (`old_string` /
+ * `new_string`, with `replace_all`) and `MultiEdit` (an `edits` list of those
+ * pairs, applied in order).
+ *
  * WHAT IT CANNOT SEE: an edit applied through a shell redirect rather than an
  * edit tool — `EDIT_TOOLS` is the corpus, and the shell shapes are
  * `block_plumbing_writes`' subject, not this one.
  */
+/** The host writes `new_string` verbatim; `String.replace` would expand `$&`-style tokens. */
+function _replaceFirstLiteral(text: string, from: string, to: string): string {
+    const at = text.indexOf(from);
+    return text.slice(0, at) + to + text.slice(at + from.length);
+}
+
+/** An empty `old_string` is the host's create form, which `split('')` does not model. */
+function _applyEdit(text: string, from: string, to: string, all: unknown): string {
+    return all === true && from !== '' ? text.split(from).join(to) : _replaceFirstLiteral(text, from, to);
+}
+
 export function classCVerdict(
     ti: JsonObject,
     on_disk: string | null,
@@ -398,11 +413,22 @@ export function classCVerdict(
     const content = ti['content'];
     const oldStr = ti['old_string'];
     const newStr = ti['new_string'];
+    const forms = [content !== undefined, oldStr !== undefined || newStr !== undefined, ti['edits'] !== undefined];
+    if (forms.filter(Boolean).length > 1) {
+        return (
+            `${rel_path}: this edit carries more than one edit form (content, old_string/new_string, edits), ` +
+            'so the guard cannot tell which one the host will run and no key can be cleared. ' +
+            'Re-send it as one form, or write the change through `agent-config settings:set`.'
+        );
+    }
+    // A file that does not exist yet is created by an edit with an empty
+    // `old_string`, so it is modelled as empty text rather than left unchecked.
+    const current = on_disk ?? '';
     let afterText: string | null = null;
     if (typeof content === 'string') {
         afterText = content;
-    } else if (typeof oldStr === 'string' && typeof newStr === 'string' && on_disk !== null) {
-        if (!on_disk.includes(oldStr)) return null; // the edit will not apply
+    } else if (typeof oldStr === 'string' && typeof newStr === 'string') {
+        if (!current.includes(oldStr)) return null; // the edit will not apply
         // `replace_all` is the host's own flag and it changes WHICH text the
         // edit produces. Modelling only the first occurrence let a
         // `replace_all` edit whose SECOND occurrence is the Class C one pass
@@ -418,7 +444,23 @@ export function classCVerdict(
                 '`agent-config settings:set`.'
             );
         }
-        afterText = all === true ? on_disk.split(oldStr).join(newStr) : on_disk.replace(oldStr, newStr);
+        afterText = _applyEdit(current, oldStr, newStr, all);
+    } else if (ti['edits'] !== undefined && !Array.isArray(ti['edits'])) {
+        return `${rel_path}: this MultiEdit carries an edit the guard cannot interpret, so the text it would produce is unknown and no key can be cleared. Re-send it as plain edits, or write the change through \`agent-config settings:set\`.`;
+    } else if (Array.isArray(ti['edits'])) {
+        // MultiEdit applies its pairs in order and applies none when one misses.
+        let text = current;
+        for (const e of ti['edits']) {
+            const o = _isObject(e) ? e['old_string'] : undefined;
+            const n = _isObject(e) ? e['new_string'] : undefined;
+            const a = _isObject(e) ? e['replace_all'] : undefined;
+            if (typeof o !== 'string' || typeof n !== 'string' || (a !== undefined && typeof a !== 'boolean')) {
+                return `${rel_path}: this MultiEdit carries an edit the guard cannot interpret, so the text it would produce is unknown and no key can be cleared. Re-send it as plain edits, or write the change through \`agent-config settings:set\`.`;
+            }
+            if (!text.includes(o)) return null;
+            text = _applyEdit(text, o, n, a);
+        }
+        afterText = text;
     }
     if (afterText === null) return null;
 

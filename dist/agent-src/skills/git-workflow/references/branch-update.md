@@ -19,7 +19,7 @@ branch, right only for a branch that targets it; nothing asks the forge:
 | `git.update_strategy` | Operation | Asked first? |
 |---|---|---|
 | `merge` (default) | `git fetch origin && git merge origin/<base> --no-edit` | no — a merge adds a commit and rewrites nothing |
-| `rebase` | § The rebase sequence below: resolve the ref the branch publishes, pin its SHA once, stop unless that SHA is already in `HEAD`, `git rebase origin/<base>`, then push in the same turn with `git push --force-with-lease=refs/heads/<b>:<sha> <remote> HEAD:refs/heads/<b>`, the pinned SHA as the lease | **yes**, unless [`git-history-discipline`](../../../rules/git-history-discipline.md) § When rewrite is allowed already covers it — the user asked this turn, an unrevoked standing instruction ("always rebase before pushing"), or a `pull --rebase` the user started. The setting picks the operation; it is never the authorisation |
+| `rebase` | § The rebase sequence below: resolve the ref the branch publishes, pin its SHA once, stop unless that SHA is already in `HEAD`, `git rebase origin/<base>`, report equivalence, regenerate and verify, then push in the same turn with `git push --force-with-lease=refs/heads/<b>:<sha> <remote> HEAD:refs/heads/<b>`, the pinned SHA as the lease | **yes**, unless [`git-history-discipline`](../../../rules/git-history-discipline.md) § When rewrite is allowed already covers it — the user asked this turn, an unrevoked standing instruction ("always rebase before pushing"), or a `pull --rebase` the user started. The setting picks the operation; it is never the authorisation |
 
 ## Under `rebase`
 
@@ -38,11 +38,12 @@ branch, right only for a branch that targets it; nothing asks the forge:
   (`gh pr list --base <branch> --json number,headRefName`) — show another branch
   built on this one, the `rebase` row does not run: rewriting the parent leaves
   every descendant carrying its old commits, and a later
-  `git rebase origin/<parent>` on the child replays them. Report the chain and
-  stop; restacking it is not this procedure, and an unasked `--onto` reseat
-  needs the question the skill's shared-branch protocol asks. Nothing is
-  inferred from branch names — only a pull request whose base is this branch
-  counts.
+  `git rebase origin/<parent>` on the child replays them. The sequence enforces
+  it: the caller supplies `DESCENDANTS` (input below) and step 2 stops on a
+  non-empty list, naming it. Restacking the chain is not this procedure, and an
+  unasked `--onto` reseat needs the question the skill's shared-branch protocol
+  asks. Nothing is inferred from branch names — only a pull request whose base
+  is this branch counts.
 - **Completion review** → rebase first, review after: the completion review
   binds after the last rebase, and one taken before a rebase is re-bound after
   it — the re-binding reviewer cites the post-rebase commits in a commit of its
@@ -62,8 +63,11 @@ branch, right only for a branch that targets it; nothing asks the forge:
 - **`sync_pr_branch` exits** — `0` with a `✅` line: current, or under `merge`
   merged cleanly; `0` with a `⚠️` `unverified` or `BYPASSED` line: **not
   checked** (the base commit or origin not fetched, or the convergence policy
-  disabled), never read as current; `1`: a conflict, or the base could not be
-  resolved; `3`: behind under a strategy other than `merge`, refused and
+  disabled), never read as current; `1`: a conflict, git refusing the merge
+  before it starts (a dirty tree, an untracked file in the way — git's line is
+  printed), the base could not be resolved, or the target moved before the merge onto a commit carrying another
+  strategy — nothing merged, run again; `2`: a blank `--base` (usage) or an
+  internal error; `3`: behind under a strategy other than `merge`, refused and
   never merged; `4`: the strategy itself cannot be read — the line names the
   reason code and the file, and nothing was checked. A current branch passes
   with exit 0, so automated pre-push syncs stay green when there is nothing to do.
@@ -86,16 +90,29 @@ read from `@{u}` checks the base and carries the base's SHA. `origin/<branch>`
 is not it either — `branch.<name>.pushRemote`, `remote.pushDefault` and a fork
 head publish elsewhere. The sequence therefore resolves the publish target,
 and an **unresolved target means no rewrite** — never "never pushed". Only a
-resolved target with no remote ref is a branch that was never pushed.
+resolved target with no remote ref is a branch that was never pushed. The
+remedy the stop names: set the upstream once with `git push -u <remote> <branch>`,
+then run the sequence again.
 
 **Inputs, set before step 1.** `BASE` is required: the pull request's base
-branch, bare (`main`, `release/1.x`). `PR_HEAD_REPO` and `PR_HEAD_REF` are set
-only with an open pull request (step 1). **The four blocks are one script** —
-run them in order, in ONE shell session, never as separate tool calls: they
-share `REMOTE`, `RB`, `EXPECTED`, `SAVE` and the `stop` / `keep` functions the
-first block defines. Each later block opens by checking that it shares that
-session and stops otherwise, because an undefined `stop` would be a command
-that is not found and lets the block run on.
+branch, bare (`main`, `release/1.x`). `DESCENDANTS` is required by step 2: the
+head branches of the open pull requests whose base is this branch, space
+separated — `gh pr list --base <branch> --json headRefName --jq '.[].headRefName'`
+— and set empty only when that list is empty; the sequence cannot ask the forge
+itself, so an unset value is a stop. `DESCENDANTS_STATUS` is required with it:
+the exit status of that `gh pr list`
+(`DESCENDANTS=$(gh pr list …); DESCENDANTS_STATUS=$?`), because a failed call
+also prints nothing, and anything but `0` is a stop. `PR_HEAD_REPO` and `PR_HEAD_REF` are set
+only with an open pull request (step 1). **Steps 1–3 are one script** — run
+them in order, in ONE shell session, never as separate tool calls: they share
+`REMOTE`, `RB`, `EXPECTED`, `SAVE` and the `stop` / `keep` functions the first
+block defines. Each later block opens by checking that it shares that session
+and stops otherwise, because an undefined `stop` would be a command that is not
+found and lets the block run on. **Step 4 is a separate run**: step 3 stops
+and prints the `SAVE` and `EXPECTED` it hands on; the caller regenerates the
+derived files and runs its own verification on the rebased tree, then, in one
+shell, runs step 1 again with those two set and runs step 4. Nothing is
+published before that verification.
 
 **1. Resolve.** `@{push}` names the publish target where the push
 configuration determines one; with an open pull request, its head repository and
@@ -127,7 +144,8 @@ if [ -n "${PR_HEAD_REPO:-}" ]; then
   fi
   REMOTE=$PR_REMOTE RB=$PR_HEAD_REF
 fi
-[ -n "$REMOTE" ] && [ -n "$RB" ] || { echo "STOP: publish target unresolved — no rewrite" >&2; exit 1; }
+[ -n "$REMOTE" ] && [ -n "$RB" ] \
+  || { echo "STOP: publish target unresolved — no rewrite; set the upstream once with git push -u <remote> $B, then run the sequence again" >&2; exit 1; }
 DEF=$(git ls-remote --symref "$REMOTE" HEAD | awk '$1 == "ref:" { sub("^refs/heads/", "", $2); print $2; exit }')
 for b in "${BASE:-}" "$DEF"; do
   [ -z "$b" ] || [ "$RB" != "$b" ] \
@@ -135,19 +153,33 @@ for b in "${BASE:-}" "$DEF"; do
 done
 ```
 
-**2. Stop, pin, rebase.** Three stops come first, before anything is
-rewritten: a dirty working tree; a merge commit in the topic range
+**2. Stop, pin, rebase.** The stops come first, before anything is
+rewritten: known descendants (`DESCENDANTS` non-empty, § Under `rebase`); a
+dirty working tree; a merge commit in the topic range
 (`git rev-list --merges origin/<base>..HEAD` is non-empty) — the default
 `merge` strategy and `/prepare-for-review` put them there, so a branch switched
-to `rebase` usually carries one, and a plain rebase silently drops it;
-`--rebase-merges` is a separate operation the user asks for, never a fallback;
+to `rebase` usually carries one, and a plain rebase silently drops it. When
+every such commit is a **base merge** — each parent after the first is
+reachable from `origin/<base>` — the stop names its remedy: a plain rebase that
+drops those merges, run only after the user confirms it this turn, which a run
+started with `DROP_BASE_MERGES=1` stands for; the recovery ref is written
+first, and conflicts resolved inside those merges may come back during the
+rebase. A base merge whose tree differs from the automatic merge of its two
+parents (`git merge-tree --write-tree`) carries changes of its own — a conflict
+resolution, or an edit made inside the merge — and is never dropped: the run
+stops naming it, and whenever merges were dropped step 3 reports "needs
+review". A merge of anything else is still refused even with
+`DROP_BASE_MERGES=1`; `--rebase-merges` is a separate operation the user asks
+for, never a fallback;
 and commits on the branch you did not author (§ Under `rebase`, shared branch)
 — any commit in `origin/<base>..HEAD` whose author email is not
 `git config user.email`. That stop lifts only for a run started with
 `ALLOW_FOREIGN=1`, which stands for the user's answer this turn that those
 commits may be rewritten; it is never set to get past the stop.
 Then the remote ref is read once; that literal is the stop (it must already be
-in `HEAD`) and, unchanged, the lease. A collaborator's push lands either before
+in `HEAD`) and, unchanged, the lease. A read that fails is a stop of its own,
+never an empty answer: an empty literal means "never pushed", which skips the
+stop. A collaborator's push lands either before
 the pin and halts the stop, or after it and fails the lease — it is never
 overwritten.
 
@@ -161,20 +193,44 @@ is printed. A kept ref is removed with `git update-ref -d <ref>`.
 ```bash
 # rebase-sequence: rebase
 declare -F keep >/dev/null && [ -n "${BASE:-}" ] && [ -n "${REMOTE:-}" ] \
-  || { echo "STOP: run the four blocks in one shell session, starting with step 1 — nothing was rewritten" >&2; exit 1; }
+  || { echo "STOP: run steps 1–3 in one shell session, starting with step 1 — nothing was rewritten" >&2; exit 1; }
+[ "${DESCENDANTS+set}" = set ] \
+  || stop "DESCENDANTS is required — the head branches of open pull requests whose base is this branch, empty when there are none; nothing was rewritten"
+[ "${DESCENDANTS_STATUS+set}" = set ] \
+  || stop "DESCENDANTS_STATUS is required — the exit status of the gh pr list that produced DESCENDANTS; nothing was rewritten"
+[ "$DESCENDANTS_STATUS" = 0 ] \
+  || stop "could not list the pull requests built on this branch (gh exited $DESCENDANTS_STATUS) — an unanswered question is not an empty list; nothing was rewritten"
+[ -z "$DESCENDANTS" ] \
+  || stop "pull requests are built on this branch ($DESCENDANTS) — rewriting it leaves them carrying its old commits; restacking is not this procedure, nothing was rewritten"
 [ -z "$(git status --porcelain --untracked-files=no)" ] || stop "the working tree is dirty — nothing was rewritten"
 git fetch -q origin "$BASE" || stop "could not fetch origin $BASE — nothing was rewritten"
 MERGES=$(git rev-list --merges "origin/$BASE..HEAD") \
   || stop "could not list the topic range origin/$BASE..HEAD — nothing was rewritten"
-[ -z "$MERGES" ] \
-  || stop "the topic range carries a merge commit, which a plain rebase drops — --rebase-merges is a separate operation the user asks for"
+if [ -n "$MERGES" ]; then
+  OTHER=
+  for m in $MERGES; do
+    for p in $(git rev-parse "$m^@" | tail -n +2); do
+      git merge-base --is-ancestor "$p" "origin/$BASE" || { OTHER="$OTHER $(git rev-parse --short "$m")"; break; }
+    done
+  done
+  [ -z "$OTHER" ] \
+    || stop "the topic range carries a merge commit that is not a merge of the base ($OTHER) — a plain rebase drops it; --rebase-merges is a separate operation the user asks for"
+  [ "${DROP_BASE_MERGES:-}" = 1 ] \
+    || stop "the topic range carries a merge commit from an earlier merge of the base, which a plain rebase drops — ask the user; set DROP_BASE_MERGES=1 only on their answer this turn (conflicts resolved inside those merges may come back); keeping them is --rebase-merges, a separate operation the user asks for"
+  for m in $MERGES; do
+    AUTO=$(git merge-tree --write-tree "$m^1" "$m^2" 2>/dev/null | head -n 1) && [ -z "$(git rev-parse -q --verify "$m^3")" ] \
+      && [ "$AUTO" = "$(git rev-parse "$m^{tree}")" ] \
+      || stop "the merge $(git rev-parse --short "$m") carries changes of its own (a conflict resolution or an edit) — dropping it loses them; nothing was rewritten"
+  done
+fi
 ME=$(git config user.email) || stop "git config user.email is unset, so your commits cannot be told from inherited ones — nothing was rewritten"
 AUTHORS=$(git log --format='%h %ae' "origin/$BASE..HEAD") \
   || stop "could not list the authors of origin/$BASE..HEAD — nothing was rewritten"
 FOREIGN=$(awk -v me="$ME" 'tolower($2) != tolower(me)' <<<"$AUTHORS")
 [ -z "$FOREIGN" ] || [ "${ALLOW_FOREIGN:-}" = 1 ] \
   || stop "the topic range carries commits you did not author ($(tr '\n' ' ' <<<"$FOREIGN")) — ask the user; set ALLOW_FOREIGN=1 only on their answer this turn"
-EXPECTED=$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)
+PUBLISHED=$(git ls-remote "$REMOTE" "refs/heads/$RB") || stop "could not read $REMOTE/$RB — nothing was rewritten"
+EXPECTED=$(cut -f1 <<<"$PUBLISHED")
 if [ -n "$EXPECTED" ]; then
   git fetch -q "$REMOTE" "refs/heads/$RB" || stop "could not fetch $REMOTE/$RB — nothing was rewritten"
   git merge-base --is-ancestor "$EXPECTED" HEAD || stop "$REMOTE/$RB has commits this branch lacks"
@@ -182,7 +238,7 @@ fi
 SAVE="refs/agent-config/rewrites/$(date -u +%Y%m%dT%H%M%SZ)-$$/before"
 git update-ref "$SAVE" HEAD
 git rebase "origin/$BASE" \
-  || keep "the rebase stopped on a conflict — resolve each commit and git rebase --continue, then in one shell run step 1, set SAVE=$SAVE EXPECTED=$EXPECTED, and run steps 3 and 4 (git rebase --abort first to give up)"
+  || keep "the rebase stopped on a conflict — resolve each commit and git rebase --continue, then in one shell run step 1, set SAVE=$SAVE EXPECTED=$EXPECTED, and run step 3 (git rebase --abort first to give up)"
 ```
 
 **3. Report equivalence from stable data.** The stable patch ids of the old
@@ -191,25 +247,33 @@ equivalent"; anything else means "needs review" and names the commits on each
 side that have no match — never a pair inferred from a subject or a position.
 Whenever the old head already contained the new base, the trees must also be
 equal. A conflict resolution changes a patch id, so a mismatch means "needs
-review", never "wrong". The verdict is a report, not a review: it binds nothing
+review", never "wrong". A non-empty range that yields no patch id at all — an
+empty commit, or diff output git could not read — is "needs review" too: an
+empty comparison is not an equal one. Colour is forced off, so a
+`color.ui=always` configuration cannot empty both sets. The verdict is a report, not a review: it binds nothing
 and approves nothing. `git range-diff` is shown to the human and never parsed —
 its manual says under OUTPUT STABILITY that the output is not for machines.
 
 ```bash
 # rebase-sequence: equivalence
 declare -F keep >/dev/null && [ -n "${SAVE:-}" ] && [ -n "${BASE:-}" ] \
-  || { echo "STOP: run the four blocks in one shell session, starting with step 1" >&2; exit 1; }
-pids() { git log -p --no-merges --format='commit %H' "$1" | git patch-id --stable | sort; }
+  || { echo "STOP: run steps 1–3 in one shell session, starting with step 1" >&2; exit 1; }
+pids() { git -c color.ui=never log -p --no-color --no-merges --format='commit %H' "$1" | git patch-id --stable | sort; }
 OLD_BASE=$(git merge-base "$SAVE" "origin/$BASE")
 OLD=$(pids "$OLD_BASE..$SAVE")
 NEW=$(pids "origin/$BASE..HEAD")
 VERDICT="mechanically equivalent"
 [ "$(cut -d' ' -f1 <<<"$OLD")" = "$(cut -d' ' -f1 <<<"$NEW")" ] || VERDICT="needs review"
+[ -n "$OLD" ] || [ "$(git rev-list --count --no-merges "$OLD_BASE..$SAVE")" = 0 ] || VERDICT="needs review"
+[ -n "$NEW" ] || [ "$(git rev-list --count --no-merges "origin/$BASE..HEAD")" = 0 ] || VERDICT="needs review"
+DROPPED=$(git rev-list --merges "$OLD_BASE..$SAVE")
+[ -z "$DROPPED" ] || VERDICT="needs review"
 if git merge-base --is-ancestor "origin/$BASE" "$SAVE" \
   && [ "$(git rev-parse "$SAVE^{tree}")" != "$(git rev-parse "HEAD^{tree}")" ]; then
   VERDICT="needs review"
 fi
 echo "EQUIVALENCE: $VERDICT"
+[ -z "$DROPPED" ] || echo "  dropped merge(s): $(git rev-parse --short $DROPPED | tr '\n' ' ')"
 if [ "$VERDICT" = "needs review" ]; then
   comm -3 <(cut -d' ' -f1 <<<"$OLD") <(cut -d' ' -f1 <<<"$NEW") | tr -d '\t' | sort -u | while read -r p; do
     [ -n "$p" ] || continue
@@ -218,15 +282,24 @@ if [ "$VERDICT" = "needs review" ]; then
   done
 fi
 git range-diff "$OLD_BASE..$SAVE" "origin/$BASE..HEAD"   # for the human; never parsed
+echo "PUBLISH AFTER VERIFY: SAVE=$SAVE EXPECTED=$EXPECTED — regenerate and verify, then in one shell run step 1 with these two set, then step 4"
 ```
 
-**4. Push in the same turn, then read the published ref back.** An empty
-`EXPECTED` (never pushed) makes the lease require that the ref does not exist.
+**4. Push in the same turn, then read the published ref back** — after the
+caller's regenerate and verify, in a fresh shell that ran step 1 with `SAVE`
+and `EXPECTED` from step 3. It refuses while a rebase is still in progress and when `HEAD` does
+not contain `origin/<base>`: a half-finished rebase is never published. An empty `EXPECTED` (never pushed) makes the lease
+require that the ref does not exist.
 
 ```bash
 # rebase-sequence: publish
-declare -F keep >/dev/null && [ -n "${SAVE:-}" ] && [ -n "${REMOTE:-}" ] && [ -n "${RB:-}" ] \
-  || { echo "STOP: run the four blocks in one shell session, starting with step 1 — nothing was pushed" >&2; exit 1; }
+declare -F keep >/dev/null && [ -n "${SAVE:-}" ] && [ "${EXPECTED+set}" = set ] && [ -n "${REMOTE:-}" ] && [ -n "${RB:-}" ] \
+  || { echo "STOP: run step 1 in this shell session, with SAVE and EXPECTED from step 3 — nothing was pushed" >&2; exit 1; }
+for d in rebase-merge rebase-apply; do
+  [ ! -e "$(git rev-parse --git-path "$d")" ] || keep "a rebase is in progress — finish it (git rebase --continue) or abort it, then verify again; nothing was pushed"
+done
+git merge-base --is-ancestor "origin/$BASE" HEAD \
+  || keep "HEAD does not contain origin/$BASE, the base it was rebased onto — nothing was pushed"
 git push --force-with-lease="refs/heads/$RB:$EXPECTED" "$REMOTE" "HEAD:refs/heads/$RB" \
   || keep "the lease was rejected — $REMOTE/$RB moved; refetch and report, never retry without the lease"
 [ "$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)" = "$(git rev-parse HEAD)" ] \

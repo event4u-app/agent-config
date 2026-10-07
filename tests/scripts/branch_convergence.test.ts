@@ -262,6 +262,19 @@ describe('branch-convergence — base resolution, carried over', () => {
         expect(r.entries[0]?.reason).toBe('explicit-base-override');
     });
 
+    it('a same-named branch on another remote is not the default target', () => {
+        const d: BaseDeps = {
+            ...deps({ remoteSha: (ref: string): string | null => (ref === 'origin/main' ? DEFAULT_SHA : ref === 'upstream/main' ? TARGET_SHA : null) }),
+            remotes: (): readonly string[] => ['origin', 'upstream'],
+        };
+        expect(() => resolveBase('/nowhere', 'upstream/main', d)).toThrow(MissingBranchConvergencePolicy);
+    });
+
+    it('refs/heads/main and origin/main are the same default target', () => {
+        const r = resolveBase('/nowhere', 'refs/heads/main', deps({ remoteSha: (): string | null => null }));
+        expect(r.policyStatus).toBe('not-required');
+    });
+
     it('a blank --base is not an override', () => {
         // Otherwise `--base ""` would pin the base to the empty string and every
         // rev-list against it would read as "already current".

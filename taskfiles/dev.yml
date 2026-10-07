@@ -202,8 +202,18 @@ tasks:
       DRY=1 runs steps 1, 2 and 5 read-only and prints what 3, 4 and 6
       would do, so a stale branch can be inspected without mutating it.
 
-      BASE names the PR's base branch; without it the target is the default
-      branch, which is wrong for a PR into any other base.
+      BASE names the PR's base branch. Without it the base is derived once,
+      here, from the open pull request (`gh pr view --json baseRefName`,
+      with `state` read too: a closed or merged pull request does not count),
+      and is the default branch only when there is no open pull request (or no
+      `gh`). push-ready resolves that base once, here, and passes the same
+      value to step 2 and step 5, so the branch is merged with and re-checked
+      against one base. Without push-ready the two resolvers differ:
+      check_branch_freshness asks the forge for the PR base, and
+      sync_pr_branch uses --base or the default branch. `BASE=main` and
+      `BASE=origin/main` name the same branch. A base that is not a valid
+      branch name (`git check-ref-format --branch`) stops the task, and the
+      base is shell-quoted wherever it reaches a command.
 
       Usage:
       task push-ready BASE=main
@@ -211,19 +221,22 @@ tasks:
     vars:
       DRY: '{{.DRY | default ""}}'
       BASE: '{{.BASE | default ""}}'
+      PR_BASE:
+        sh: 'b={{shellQuote .BASE}}; if [ -z "$b" ]; then s=$(gh pr view --json state,baseRefName --jq ''.state + " " + .baseRefName'' 2>/dev/null || true); case "$s" in "OPEN "*) b=${s#OPEN };; esac; fi; b=${b#origin/}; if [ -n "$b" ] && ! git check-ref-format --branch "$b" >/dev/null 2>&1; then printf "push-ready: base is not a valid branch name: %s\n" "$b" >&2; exit 1; fi; printf "%s" "$b"'
     cmds:
       - 'echo "── push-ready ──────────────────────────────────────────"'
+      - 'echo "  base: "{{if .PR_BASE}}{{shellQuote .PR_BASE}}{{else}}"the default branch (no BASE, no open pull request)"{{end}}'
       - 'echo "1 fetch"'
       - 'git fetch origin --prune && echo "  → origin fetched" || echo "  → FAILED: origin unreachable"'
       - 'echo "2 integrate the base set (default first, then target)"'
       # DRY reports the step's outcome and carries on, so all six steps are
       # visible in one pass. A real run stops on the first refusal.
-      - '{{if .DRY}}./scripts-run src/scripts/sync_pr_branch {{if .BASE}}--base origin/{{.BASE}} {{end}}--dry-run || echo "  → refused (see above); the real run would stop here"{{else}}./scripts-run src/scripts/sync_pr_branch{{if .BASE}} --base origin/{{.BASE}}{{end}}{{end}}'
+      - '{{if .DRY}}./scripts-run src/scripts/sync_pr_branch {{if .PR_BASE}}--base {{shellQuote .PR_BASE}} {{end}}--dry-run || echo "  → refused (see above); the real run would stop here"{{else}}./scripts-run src/scripts/sync_pr_branch{{if .PR_BASE}} --base {{shellQuote .PR_BASE}}{{end}}{{end}}'
       - 'echo "3 regenerate derived files"'
       - '{{if .DRY}}echo "  → would run: task sync && task generate-tools"{{else}}task sync && task generate-tools && echo "  → regenerated"{{end}}'
       - 'echo "4 verify (task consistency — the exact CI mirror)"'
       - '{{if .DRY}}echo "  → would run: task consistency"{{else}}task consistency && echo "  → consistent"{{end}}'
       - 'echo "5 re-check freshness after the merge"'
-      - '{{if .DRY}}./scripts-run src/scripts/check_branch_freshness || echo "  → not current (see above); the real run would stop here"{{else}}./scripts-run src/scripts/check_branch_freshness{{end}}'
+      - '{{if .DRY}}./scripts-run src/scripts/check_branch_freshness{{if .PR_BASE}} --base {{shellQuote .PR_BASE}}{{end}} || echo "  → not current (see above); the real run would stop here"{{else}}./scripts-run src/scripts/check_branch_freshness{{if .PR_BASE}} --base {{shellQuote .PR_BASE}}{{end}}{{end}}'
       - 'echo "6 push"'
       - 'echo "  → NOT run here. Review the merge, then push deliberately."'

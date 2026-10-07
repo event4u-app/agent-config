@@ -49,7 +49,7 @@ import { createRequire } from 'node:module';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolvePackageRoot } from './package_root.js';
 
 import * as user_global_paths from './user_global_paths.js';
 import { carveOutKeys } from '../../shared/settingsCarveOut.js';
@@ -322,11 +322,11 @@ export const MERGEABLE_KEYS: readonly string[] = [
 const TEMPLATE_RELATIVE = path.join('src', 'config', 'agent-settings.template.yml');
 
 /**
- * Package root: `src/scripts/_lib/agent_settings.ts` → three levels up.
- * Same idiom as `cli_wrapper.ts:28`, and it holds in an installed consumer
- * too because `src/config/` ships (`package.json` `files[]`).
+ * Package root, anchored on the package marker rather than on hop counts: this
+ * module is also inlined into `dist/cli-delegate/`, two levels below the root,
+ * where three hops land outside the package and every default is lost.
  */
-const _PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
+const _PACKAGE_ROOT = resolvePackageRoot(import.meta.url);
 
 /** Default template path — overridable per call for tests. */
 export function default_template_path(): string {

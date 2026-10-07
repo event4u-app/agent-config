@@ -31,6 +31,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { find_project_root } from './agent_settings.js';
+import { parseBaseRef, splitResolvedRef } from './git_base_ref.js';
 import {
     GIT_CONVENTION_KEYS,
     checkoutSource,
@@ -81,6 +82,10 @@ export interface TargetDeps {
     readonly defaultBranch: () => string | null;
     /** The SHA the server reports for a ref right now, or null. */
     readonly remoteSha: (ref: string) => string | null;
+    /** The configured remote names; without it only `origin/` marks a remote. */
+    readonly remotes?: () => readonly string[];
+    /** The default branch another remote's server names (`upstream/main`), or null. */
+    readonly defaultBranchOf?: (remote: string) => string | null;
 }
 
 export type TargetReason = 'explicit-base-override' | 'repository-default-branch';
@@ -95,7 +100,10 @@ export interface TargetRef {
  * `defaultRef` is passed by a caller that already asked for it.
  */
 export function resolveTarget(deps: TargetDeps, override: string | null, defaultRef?: string | null): TargetRef | null {
-    if (override !== null && override.trim() !== '') return { ref: override.trim(), reason: 'explicit-base-override' };
+    // A bare name is the branch on origin: the local branch of that name is a
+    // clone-time copy nothing keeps current.
+    const given = override === null ? null : parseBaseRef(override, deps.remotes?.() ?? []);
+    if (given !== null) return { ref: given.ref, reason: 'explicit-base-override' };
     const def = defaultRef === undefined ? deps.defaultBranch() : defaultRef;
     return def === null ? null : { ref: def, reason: 'repository-default-branch' };
 }
@@ -148,16 +156,25 @@ export function makeTargetDeps(repo: string, run: GitRunner = runGit): TargetDep
         // The server first, the local ref second: `refs/remotes/origin/HEAD` is
         // not set in every checkout (see `parseSymrefDefault`).
         defaultBranch: (): string | null => {
-            const remote = ask('git', ['ls-remote', '--symref', 'origin', 'HEAD']);
+            const remote = ask('git', ['ls-remote', '--symref', '--', 'origin', 'HEAD']);
             const fromServer = remote.ok ? parseSymrefDefault(remote.out) : null;
             if (fromServer !== null) return fromServer;
             const head = ask('git', ['symbolic-ref', '--short', 'refs/remotes/origin/HEAD']);
             return head.ok && head.out.trim() !== '' ? head.out.trim() : null;
         },
         remoteSha: (ref: string): string | null => {
-            const bare = ref.replace(/^origin\//, '');
-            const out = ask('git', ['ls-remote', 'origin', `refs/heads/${bare}`]);
-            return out.ok ? parseExactHeadSha(out.out, bare) : null;
+            const { remote, branch } = splitResolvedRef(ref);
+            const out = ask('git', ['ls-remote', '--', remote, `refs/heads/${branch}`]);
+            return out.ok ? parseExactHeadSha(out.out, branch) : null;
+        },
+        remotes: (): readonly string[] => {
+            const out = ask('git', ['remote']);
+            return out.ok ? out.out.split('\n').map((r) => r.trim()).filter((r) => r !== '') : [];
+        },
+        defaultBranchOf: (remote: string): string | null => {
+            const out = ask('git', ['ls-remote', '--symref', '--', remote, 'HEAD']);
+            const named = out.ok ? parseSymrefDefault(out.out) : null;
+            return named === null ? null : `${remote}/${named.slice('origin/'.length)}`;
         },
     };
 }
@@ -178,6 +195,10 @@ export function memoTargetDeps<T extends TargetDeps>(deps: T): T {
         ...deps,
         defaultBranch: (): string | null => once('default', () => deps.defaultBranch()),
         remoteSha: (ref: string): string | null => once(`sha ${ref}`, () => deps.remoteSha(ref)),
+        ...(deps.remotes === undefined ? {} : { remotes: (): readonly string[] => once('remotes', () => (deps.remotes as () => readonly string[])()) }),
+        ...(deps.defaultBranchOf === undefined
+            ? {}
+            : { defaultBranchOf: (remote: string): string | null => once(`default ${remote}`, () => (deps.defaultBranchOf as (r: string) => string | null)(remote)) }),
     };
 }
 
@@ -197,9 +218,8 @@ export function carrierBlobAt(repo: string, sha: string, fetchRef: string | null
     const local = (args: readonly string[]): GitRunResult => run('git', args, repo, NETWORK_TIMEOUT_MS);
     const has = (): boolean => local(['cat-file', '-e', `${sha}^{commit}`]).ok;
     if (!has()) {
-        const fetched = fetchRef === null
-            ? null
-            : run('git', ['fetch', '-q', 'origin', fetchRef.replace(/^origin\//, '')], repo, CARRIER_FETCH_TIMEOUT_MS);
+        const from = fetchRef === null ? null : splitResolvedRef(fetchRef);
+        const fetched = from === null ? null : run('git', ['fetch', '-q', '--', from.remote, from.branch], repo, CARRIER_FETCH_TIMEOUT_MS);
         if (fetched?.timedOut === true) return { kind: 'no-commit', timedOut: true };
         if (!has()) return { kind: 'no-commit' };
     }
@@ -210,9 +230,33 @@ export function carrierBlobAt(repo: string, sha: string, fetchRef: string | null
     return blob.ok ? { kind: 'present', text: blob.out } : { kind: 'no-commit' };
 }
 
+/** A filename a carrier is sometimes given that nothing reads. */
+export const IGNORED_CARRIER_PATH = '.git-convention.yaml';
+
+/** The warning every reader prints when `root` holds a carrier under the name nothing reads, or null. */
+export function ignoredCarrierWarning(root: string): string | null {
+    return fs.existsSync(path.join(root, IGNORED_CARRIER_PATH))
+        ? `${IGNORED_CARRIER_PATH} is ignored — the team declaration is read only from ${CARRIER_PATH}; rename it to ${CARRIER_PATH}`
+        : null;
+}
+
+/**
+ * The carrier holds its keys under `git:`, as the settings files do. Keys set at
+ * the top level are read by nothing, and reading them as absent would apply the
+ * default the file was written to replace.
+ */
+function _parseCarrier(text: string): Pick<GitConventionLayer, 'parsed' | 'data' | 'why' | 'shapeError'> {
+    const parsed = parseLayerText(text);
+    if (parsed.parsed !== 'valid') return parsed;
+    const top = Object.keys(parsed.data as Record<string, unknown>).filter((k) => (GIT_CONVENTION_KEYS as readonly string[]).includes(k));
+    if (top.length === 0) return parsed;
+    const listed = top.map((k) => `\`${k}\``).join(', ');
+    return { ...parsed, shapeError: `${listed} set at the top level; the carrier reads its keys under \`git:\` (\`git:\` on one line, then \`  ${top[0]}: <value>\` indented)` };
+}
+
 function _carrierLayer(label: string, blob: Exclude<CommitBlob, { kind: 'no-commit' }>): GitConventionLayer {
     if (blob.kind === 'absent') return { path: label, carries: true, parsed: 'absent', data: null };
-    return { path: label, carries: true, ...parseLayerText(blob.text) };
+    return { path: label, carries: true, ..._parseCarrier(blob.text) };
 }
 
 /** Read failures map as `git_convention.ts` maps them for the developer files. */
@@ -226,7 +270,7 @@ function _workingTreeLayer(root: string): GitConventionLayer {
         const parsed = (err as NodeJS.ErrnoException).code === 'ENOENT' ? 'absent' : 'malformed';
         return { path: p, carries: true, parsed, data: null };
     }
-    return { path: p, carries: true, ...parseLayerText(text) };
+    return { path: p, carries: true, ..._parseCarrier(text) };
 }
 
 /** The repository root, and whether it is a git repository at all. */
@@ -258,6 +302,8 @@ export interface CommittedOptions {
     readonly keys?: readonly GitConventionKey[];
     /** Runs the git calls that read the carrier at a commit. */
     readonly run?: GitRunner;
+    /** `false` reads only a commit already in this checkout; a missing one is `unresolvable`, never fetched. */
+    readonly fetch?: boolean;
 }
 
 function _short(sha: string): string {
@@ -313,11 +359,11 @@ export function readCommittedConvention(cwd: string, options: CommittedOptions =
                 CARRIER_PATH,
                 ref === null
                     ? 'no --base was given and origin names no default branch, so the target commit is unknown'
-                    : `the server reports no commit for ${ref.ref} (no such branch on origin, no origin, or origin unreachable)`,
+                    : `the server reports no commit for ${ref.ref} (no such branch on ${splitResolvedRef(ref.ref).remote}, no such remote, or it is unreachable)`,
             );
             continue;
         }
-        const blob = carrierBlobAt(root, sha, ref.ref, options.run);
+        const blob = carrierBlobAt(root, sha, options.fetch === false ? null : ref.ref, options.run);
         if (blob.kind === 'no-commit') {
             readings[key] = conventionReading(
                 key,

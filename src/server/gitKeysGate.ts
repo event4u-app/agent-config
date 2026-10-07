@@ -11,6 +11,11 @@
  * `settings:check` run, so a pattern that would reach a shell is refused here as
  * well.
  */
+import { promises as fs } from 'node:fs';
+import { join } from 'node:path';
+import type { FastifyReply } from 'fastify';
+import { parseYaml } from './io/yamlIO.js';
+
 import { GIT_CONVENTION_KEYS, invalidReason } from '../scripts/_lib/git_convention.js';
 
 export const WITHHELD_GIT_KEYS: readonly string[] = GIT_CONVENTION_KEYS.map((k) => `git.${k}`);
@@ -96,4 +101,27 @@ export function keepWithheldGit(candidate: Record<string, unknown>, fileValues: 
  */
 export function gitDiffBase(merged: Record<string, unknown>, fileValues: Record<string, unknown>): Record<string, unknown> {
     return keepWithheldGit(merged, fileValues);
+}
+
+/**
+ * The wizard's finish write through the same gate: a 422 is sent and true
+ * returned when a `git.*` value is refused. The template's `git` section holds
+ * no install placeholder, so it is parsed without substitution.
+ */
+export async function refuseGitKeys(
+    reply: FastifyReply,
+    values: Record<string, unknown>,
+    packageRoot: string,
+    userGlobal: boolean,
+): Promise<boolean> {
+    let defaults: Record<string, unknown> = {};
+    try {
+        defaults = parseYaml(await fs.readFile(join(packageRoot, 'src', 'config', 'agent-settings.template.yml'), 'utf8'));
+    } catch {
+        defaults = {};
+    }
+    const issues = gitKeyWriteIssues(values, defaults, userGlobal);
+    if (issues.length === 0) return false;
+    await reply.code(422).send({ error: { code: 'VALIDATION', message: 'invalid settings', fields: issues } });
+    return true;
 }

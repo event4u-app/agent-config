@@ -76,7 +76,7 @@ describe('git:convention subject', () => {
             'agents/memory/curated/conventions/approved/commit-subject.md': '---\ndominant_family: ticket-prefix\n---\n',
         });
         expect(subject(dir, '[DEV-1] Fix thing\n').code).toBe(0);
-        const r = subject(dir, 'feat: thing\n');
+        const r = subject(dir, 'feat: thing for DEV-1\n');
         expect(r.code).toBe(1);
         expect(r.out.join('\n')).toContain('approved family ticket-prefix');
     });
@@ -217,6 +217,6 @@ describe('git:convention branch', () => {
 
 describe('one verb', () => {
     it('hangs the subcommands off the existing table', () => {
-        expect(Object.keys(SUBCOMMANDS)).toEqual(['show', 'subject', 'ticket', 'branch', 'sync']);
+        expect(Object.keys(SUBCOMMANDS)).toEqual(['show', 'subject', 'ticket', 'branch', 'measure', 'init', 'sync']);
     });
 });

@@ -114,6 +114,18 @@ describe('update_strategy is read at the target commit', () => {
         expect(r.out).not.toContain('git-convention-malformed');
     });
 
+    it('a carrier that sets a git key at the top level, without git:, is invalid naming the shape, never absent', () => {
+        const f = fixture(tmp, { [CARRIER_PATH]: 'update_strategy: rebase\n' });
+        advanceMain(f);
+        const r = runSync(f.work);
+        expect(r.code).toBe(4);
+        expect(r.out).toContain('git-convention-invalid');
+        expect(r.out).toContain('git:');
+        const read = readCommittedConvention(f.work, { keys: ['commit_format'] });
+        expect(read.readings.commit_format?.state).toBe('invalid');
+        expect(read.readings.commit_format?.detail).toContain('under `git:`');
+    });
+
     it('a target the server does not know is exit 1, the base could not be resolved, never merge', () => {
         const f = fixture(tmp);
         advanceMain(f);

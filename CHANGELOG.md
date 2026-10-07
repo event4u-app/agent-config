@@ -159,6 +159,28 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Added
 
+- **An old project keeps its real commit format — `agent-config git:convention
+  measure`.** A repository with no declared convention and no approved card is
+  now measured instead of silently given Conventional Commits: the verb samples
+  the non-merge history of the default branch, resolved as the carrier resolves
+  it (the server's symref, then `refs/remotes/origin/HEAD`) — with no default
+  branch it says so and exits `1` rather than sampling `main`, `master` or the
+  current branch in its place — drops bots, automation and bulk imports, caps
+  each author per half, and names the established subject family or — below the
+  bar — the two strongest. It also proposes a `branch_pattern` from the remote
+  branch names (or reports no clear pattern) and shows the observed update style,
+  which it never adopts. The thresholds are constants of the module the verb
+  runs and are rendered into the commit-subject reference, not restated by hand.
+  `show` and `subject` print `no convention established — run git:convention
+  measure` in that state (`convention_established` under `--json`; exit codes
+  unchanged). An interactive `/commit` asks once — the established family or the
+  two strongest against Conventional Commits — and writes the answer to the
+  approved convention card, also when the answer is Conventional, so the question
+  is never repeated; `/commit:in-chunks` never asks and reports the measurement.
+  Where the choice maps to a setting, `measure` prints the ready-to-commit
+  `.git-convention.yml` (`commit_format`, `branch_pattern`, never
+  `update_strategy`); a human creates and commits it, the agent never writes it.
+
 - **A team's git convention can be declared instead of measured — the new
   `git:` settings block.** Three Class-C keys, each defaulting to the
   behaviour every install had before, so an install that sets nothing is
@@ -195,7 +217,13 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   `--base` given — a pull request passes `--base origin/<its base>` — else the
   default branch; nothing asks the forge. A carrier that does not parse makes
   `sync_pr_branch` exit `4`, a target that names no commit exit `1`, and a named
-  commit that cannot be fetched is `unverified`; none of them merges. A commit-linting config
+  commit that cannot be fetched is `unverified`; none of them merges. A target
+  that moves between the strategy read and the merge is read again at the
+  commit being merged, which is governed by the strategy it carries: the same
+  strategy goes on against it, another one exits `1` before anything is
+  merged. A blank `--base` is a usage error (exit `2`) in `sync_pr_branch`,
+  `git:convention show` and `sync`, and `check_branch_freshness`, never read
+  as no `--base`. A commit-linting config
   in the repository still outranks `git.commit_format`. In a packed consumer
   install `git:convention show` is the git surface that resolves, and the
   consumer matrix proves it with a `git-convention` leg; `sync_pr_branch` and

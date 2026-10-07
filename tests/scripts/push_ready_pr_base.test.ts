@@ -1,0 +1,183 @@
+/**
+ * `task push-ready` without BASE must judge the branch against its pull
+ * request's base, and both probing steps must judge the same one.
+ *
+ * Without BASE the integrate step ran `sync_pr_branch` with no `--base` — the
+ * default branch — while the re-check step's own resolver reads the open pull
+ * request's base: a PR into `release/1.x` was merged with `main` and then
+ * checked against `release/1.x`. The base is now derived once, at the task
+ * level, and handed to both. Outside push-ready the resolvers still differ:
+ * `check_branch_freshness` asks the forge, `sync_pr_branch` does not.
+ *
+ * The base reaches a shell twice, in the derivation and in the step commands,
+ * and a git ref name may carry `$`, `(` and `;`. Both are rendered here the way
+ * Task renders them, so an unquoted substitution executes in the test exactly
+ * as it would in a real run.
+ */
+import { spawnSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { parse as parseYaml } from 'yaml';
+import { describe, expect, it } from 'vitest';
+
+const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const DEV = parseYaml(fs.readFileSync(path.join(REPO, 'taskfiles', 'dev.yml'), 'utf8')) as {
+    tasks: Record<string, { vars?: Record<string, unknown>; cmds?: unknown[]; desc?: string }>;
+};
+const TASK = DEV.tasks['push-ready'];
+
+/** Task's `shellQuote`: one POSIX single-quoted word. */
+const shellQuote = (v: string): string => `'${v.split("'").join("'\\''")}'`;
+
+/** Substitute BASE as Task does, raw or through `shellQuote`. */
+const renderBase = (tpl: string, base: string): string => tpl.split('{{shellQuote .BASE}}').join(shellQuote(base)).split('{{.BASE}}').join(base);
+
+/** The task-level derivation, run as Task runs it, with BASE substituted and a stand-in `gh` on PATH. */
+function deriveRun(base: string, ghOut: string | null, state = 'OPEN'): { out: string; status: number | null; err: string } {
+    const spec = TASK?.vars?.['PR_BASE'] as { sh?: string } | undefined;
+    if (spec?.sh === undefined) throw new Error('push-ready declares no PR_BASE derivation');
+    const bin = fs.mkdtempSync(path.join(os.tmpdir(), 'push-ready-gh-'));
+    fs.writeFileSync(path.join(bin, 'answer'), ghOut === null ? '' : `${ghOut}\n`);
+    // `gh pr view` answers for the branch's latest pull request whatever its
+    // state: asked for the state it prints "<STATE> <base>", else the base alone.
+    const gh = ghOut === null
+        ? 'exit 1'
+        : `[ "$1 $2" = "pr view" ] || exit 1; case "$*" in *state*) printf '%s ' '${state}';; esac; cat '${path.join(bin, 'answer')}'`;
+    fs.writeFileSync(path.join(bin, 'gh'), `#!/bin/sh\n${gh}\n`);
+    fs.chmodSync(path.join(bin, 'gh'), 0o755);
+    const r = spawnSync('sh', ['-c', renderBase(spec.sh, base)], { cwd: REPO, encoding: 'utf-8', env: { ...process.env, PATH: `${bin}:${process.env.PATH ?? ''}` } });
+    return { out: r.stdout.trim(), status: r.status, err: r.stderr };
+}
+
+const derive = (base: string, ghOut: string | null, state?: string): string => deriveRun(base, ghOut, state).out;
+
+describe('push-ready derives the pull request base once', () => {
+    it('takes the open pull request base when BASE is not given', () => {
+        expect(derive('', 'release/1.x')).toBe('release/1.x');
+    });
+
+    it('takes the default branch when the branch\'s pull request is closed or merged', () => {
+        expect(derive('', 'release/1.x', 'CLOSED')).toBe('');
+        expect(derive('', 'release/1.x', 'MERGED')).toBe('');
+    });
+
+    it('falls back to the default branch (an empty base) when there is no pull request', () => {
+        expect(derive('', null)).toBe('');
+    });
+
+    it('accepts BASE=origin/<name> as the same base as BASE=<name>', () => {
+        expect(derive('origin/main', null)).toBe('main');
+        expect(derive('main', null)).toBe('main');
+    });
+
+    it('lets an explicit BASE win without asking the forge', () => {
+        expect(derive('hotfix/2', 'release/1.x')).toBe('hotfix/2');
+    });
+
+    it('hands the same base to the integrate step and the re-check step', () => {
+        const cmds = (TASK?.cmds ?? []).map(String);
+        const sync = cmds.filter((c) => c.includes('sync_pr_branch'));
+        const fresh = cmds.filter((c) => c.includes('check_branch_freshness'));
+        expect(sync.length).toBeGreaterThan(0);
+        expect(fresh.length).toBeGreaterThan(0);
+        for (const c of [...sync, ...fresh]) {
+            expect(c).toContain('--base {{shellQuote .PR_BASE}}');
+            expect(c).not.toContain('origin/{{.PR_BASE}}');
+        }
+        expect(cmds.join('\n')).not.toContain('{{.BASE}}');
+    });
+
+    it('says in its description where the base comes from', () => {
+        expect(TASK?.desc).toMatch(/gh pr view --json baseRefName/);
+        expect(TASK?.desc).toMatch(/default branch only when there is no/);
+    });
+
+    it('does not claim the resolvers are forge-free: check_branch_freshness asks the forge', () => {
+        expect(TASK?.desc).not.toMatch(/never\s+ask the forge/);
+        expect(TASK?.desc).toMatch(/check_branch_freshness\s+asks the forge/);
+    });
+});
+
+describe('the pre-push hook describes push-ready the way the task does', () => {
+    it('says the base comes from the open pull request, and the default branch only without one', () => {
+        const hook = fs.readFileSync(path.join(REPO, 'src', 'scripts', 'install-hooks.sh'), 'utf8');
+        expect(hook).not.toMatch(/Without BASE the sync targets the default branch/);
+        expect(hook).toMatch(/Without BASE the base comes from the\s+#\s+open pull request/);
+    });
+});
+
+describe('push-ready never executes a base name', () => {
+    const marker = (): string => path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'push-ready-marker-')), 'ran');
+    const hostile = (m: string): string => `m$(touch$IFS${m})`;
+
+    it('does not run a command substitution carried by BASE', () => {
+        const m = marker();
+        deriveRun(hostile(m), null);
+        expect(fs.existsSync(m)).toBe(false);
+    });
+
+    it('quotes the base wherever a step command or line echoes it', () => {
+        const cmds = (TASK?.cmds ?? []).map(String).join('\n');
+        expect(cmds).not.toMatch(/\{\{\s*\.PR_BASE\s*\}\}/);
+        expect(cmds).not.toMatch(/\{\{\s*\.BASE\s*\}\}/);
+        expect(cmds).toContain('{{shellQuote .PR_BASE}}');
+    });
+
+    it('rejects a BASE that is not a valid branch name', () => {
+        const r = deriveRun('bad..name', null);
+        expect(r.status).not.toBe(0);
+        expect(r.err).toContain('not a valid branch name');
+    });
+
+    it('rejects a forge answer that is not a valid branch name', () => {
+        const r = deriveRun('', 'bad..name');
+        expect(r.status).not.toBe(0);
+        expect(r.err).toContain('not a valid branch name');
+    });
+});
+
+/**
+ * A paragraph that passes `--base origin/<base>` with `<base>` taken from `baseRefName`
+ * resolves the current branch's pull request, and `gh pr view` answers for a
+ * closed or merged one too. Such a paragraph must read `state` and take the
+ * base only from an OPEN pull request, as push-ready does.
+ */
+export function unguardedBaseResolution(paragraph: string): boolean {
+    if (!paragraph.includes('`baseRefName`') || !paragraph.includes('--base origin/<base>')) return false;
+    const view = [...paragraph.matchAll(/gh pr view --json\s+([\w,]+)/g)].map((m) => m[1] ?? '');
+    if (view.some((fields) => fields.includes('baseRefName') && !fields.split(',').includes('state'))) return true;
+    return !paragraph.includes('`OPEN`');
+}
+
+describe('prose resolves the pull request base the way push-ready does', () => {
+    const TREES = ['src/domains', 'src/skills', 'src/agent-src', 'src/rules'];
+    const markdown = (dir: string): string[] => {
+        const abs = path.join(REPO, dir);
+        if (!fs.existsSync(abs)) return [];
+        return fs.readdirSync(abs, { recursive: true, encoding: 'utf8' }).filter((f) => f.endsWith('.md')).map((f) => path.join(dir, f));
+    };
+
+    it('the detector flags a base read without the OPEN check', () => {
+        expect(unguardedBaseResolution('`--base origin/<base>`, `<base>` being the PR\'s `baseRefName` (`gh pr view --json baseRefName`)')).toBe(true);
+        expect(unguardedBaseResolution('`--base origin/<base>` (`<base>` is the PR\'s `baseRefName`; without `--base` the default branch')).toBe(true);
+        expect(unguardedBaseResolution('`--base origin/<base>`, `<base>` being the `baseRefName` of an `OPEN` pull request (`gh pr view --json baseRefName`)')).toBe(true);
+        expect(unguardedBaseResolution('`--base origin/<base>`, `<base>` being the `baseRefName` of an `OPEN` pull request (`gh pr view --json state,baseRefName`)')).toBe(false);
+        expect(unguardedBaseResolution('§ 4 consumes `<base>` from the `baseRefName` of `gh pr list --state open`')).toBe(false);
+    });
+
+    it('no shipped paragraph derives <base> from baseRefName without reading state', () => {
+        const offenders: string[] = [];
+        let seen = 0;
+        for (const file of TREES.flatMap(markdown)) {
+            for (const para of fs.readFileSync(path.join(REPO, file), 'utf8').split(/\n\s*\n/)) {
+                if (para.includes('`baseRefName`') && para.includes('--base origin/<base>')) seen += 1;
+                if (unguardedBaseResolution(para)) offenders.push(`${file}: ${para.slice(0, 80)}`);
+            }
+        }
+        expect(seen).toBeGreaterThanOrEqual(3);
+        expect(offenders).toEqual([]);
+    });
+});
