@@ -301,6 +301,17 @@ describe('block_config_weakening — class-c, the reviewed defects', () => {
         ).toBeNull();
     });
 
+    // The host applies a MultiEdit atomically: when any pair misses, it writes
+    // none of them. A Class C change in an earlier pair is then never written,
+    // so the guard allows the payload rather than judging a text nobody wrote.
+    it('allows a MultiEdit whose Class C edit is followed by one that misses — the host applies none', () => {
+        const before = 'hooks:\n  injection_scan:\n    enabled: false\n';
+        const clear = { old_string: '  injection_scan:\n    enabled: false\n', new_string: '' };
+        expect(classCVerdict({ edits: [clear] }, before, '.agent-settings.yml', index)).toContain('hooks.injection_scan');
+        const miss = { old_string: 'no such text in the file', new_string: 'x' };
+        expect(classCVerdict({ edits: [clear, miss] }, before, '.agent-settings.yml', index)).toBeNull();
+    });
+
     it('refuses a MultiEdit edits list it cannot interpret', () => {
         const reason = classCVerdict(
             { edits: [{ old_string: 'false' }] } as never,
