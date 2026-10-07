@@ -141,7 +141,7 @@ export function ruleName(rule: SubjectRule): string {
     return 'format' in rule ? `git.commit_format: ${rule.format}` : `approved family ${rule.family}`;
 }
 
-/** Subjects git writes itself (`commit --fixup`, `--squash`, `--fixup=amend:`, `revert`), valid under every approved family. */
+/** Subjects git writes itself (`commit --fixup`, `--squash`, `--fixup=amend:`, `revert`), valid under every format and every approved family. */
 export const GIT_OWN_SUBJECT = '^((fixup|squash|amend)! .+|Revert ".+")$';
 
 /**
@@ -155,7 +155,7 @@ export const TICKETLESS_FORM: Readonly<Partial<Record<SubjectFamily, string>>> =
 };
 
 export function checkSubject(subject: string, rule: SubjectRule): SubjectVerdict {
-    if ('family' in rule && new RegExp(GIT_OWN_SUBJECT).test(subject)) return { ok: true };
+    if (new RegExp(GIT_OWN_SUBJECT).test(subject)) return { ok: true };
     const grammar = 'format' in rule ? new RegExp(FORMAT_GRAMMAR[rule.format]) : (FAMILY_JS.find(([f]) => f === rule.family)?.[1] as RegExp);
     const ticketless = 'family' in rule ? TICKETLESS_FORM[rule.family] : undefined;
     if (!grammar.test(subject) && ticketless !== undefined) {

@@ -62,9 +62,12 @@ the system area (`api/audio`, `ci`), only where it adds clarity.
 optional, as under `ticket-conventional`: with a ticket it stands in the
 family's leading position (`[DEV-1234] Add export filter`), without one the
 subject is the family's form without the ticket part (`Add export filter`), and
-a ticket anywhere else fails. Git's own `fixup!`, `squash!`, `amend!` and
-`Revert "…"` subjects are valid under every family. A branch without a ticket is
-therefore never a stop under a card.
+a ticket anywhere else fails. A branch without a ticket is therefore never a
+stop under a card.
+
+Git's own `fixup!`, `squash!`, `amend!` and `Revert "…"` subjects are valid under
+both `git.commit_format` values and under every family: git writes them itself,
+so the same rule holds everywhere a subject is checked.
 
 **Area scope under `/commit:in-chunks`.** Several commits on one branch carry the
 same ticket in front of each; the scope is chosen per commit from the area that
@@ -169,7 +172,7 @@ family gitmoji                         ^:[a-z0-9_+-]+:[[:space:]]|^[^ -~[:cntrl:
 family imperative-plain                ^[A-Z][a-z]+[[:space:]].*[^.]$
 family ticket-prefix, no ticket        ^\S.* (no ticket elsewhere in the subject)
 family ticket-conventional, no ticket  ^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?:  (no ticket elsewhere in the subject)
-any family                             ^((fixup|squash|amend)! .+|Revert ".+")$ (git's own subjects)
+any format or family                   ^((fixup|squash|amend)! .+|Revert ".+")$ (git's own subjects)
 measure sample                         newest 200 non-merge commits since 24 months ago, or regardless of age when that window yields fewer than 30; bots, automation subjects, commits over 500 files dropped
 measure bar                            n >= 30; >= 80 % capped at 20 per author per half (3+ authors), else >= 90 % uncapped; both halves agree
 measure migration                      the newer half, or the newest 30 commits, clearing the bar on another family than the dominant one: "migrating to <family>", and that family is proposed

@@ -109,6 +109,16 @@ describe('subject grammar per format', () => {
     it('rejects a standard name standing where the ticket goes', () => {
         expect(checkSubject('CVE-2026 fix: patch', { format: 'ticket-conventional' }).ok).toBe(false);
     });
+
+    it('accepts git\'s own subjects under every format, as under every family', () => {
+        for (const format of ['ticket-scope', 'ticket-conventional'] as const) {
+            for (const own of ['fixup! feat: add x', 'squash! DEV-1 feat(api): add x', 'amend! fix it', 'Revert "feat: add x"']) {
+                expect(checkSubject(own, { format }).ok, `${format}: ${own}`).toBe(true);
+            }
+            expect(checkSubject('fixup!feat: add x', { format }).ok, format).toBe(false);
+            expect(checkSubject('Revert feat: add x', { format }).ok, format).toBe(false);
+        }
+    });
 });
 
 describe('subject grammar per approved family', () => {

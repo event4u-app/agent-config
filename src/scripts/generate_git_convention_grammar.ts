@@ -50,7 +50,7 @@ export function renderBlock(): string {
         ...Object.entries(FORMAT_GRAMMAR).map(([f, re]) => [`format ${f}`, re] as [string, string]),
         ...FAMILY_ERE.map(([f, ere]) => [`family ${f}`, ere] as [string, string]),
         ...Object.entries(TICKETLESS_FORM).map(([f, ere]) => [`family ${f}, no ticket`, `${ere ?? ''} (no ticket elsewhere in the subject)`] as [string, string]),
-        ['any family', `${GIT_OWN_SUBJECT} (git's own subjects)`],
+        ['any format or family', `${GIT_OWN_SUBJECT} (git's own subjects)`],
         ['measure sample', `newest ${MEASURE_LIMIT} non-merge commits since ${MEASURE_SINCE}, or regardless of age when that window yields fewer than ${MIN_N}; bots, automation subjects, commits over ${BULK_IMPORT_FILES} files dropped`],
         ['measure bar', `n >= ${MIN_N}; >= ${pct(SHARE_BAR)} capped at ${AUTHOR_CAP_PER_HALF} per author per half (${MIN_CAPPED_AUTHORS}+ authors), else >= ${pct(SMALL_TEAM_SHARE_BAR)} uncapped; both halves agree`],
         ['measure migration', `the newer half, or the newest ${RECENT_WINDOW} commits, clearing the bar on another family than the dominant one: "migrating to <family>", and that family is proposed`],
