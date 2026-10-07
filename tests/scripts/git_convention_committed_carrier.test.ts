@@ -119,13 +119,48 @@ describe('update_strategy is read at the target commit', () => {
         expect(r.out).not.toContain('git-convention-malformed');
     });
 
-    it('a target the server does not know is exit 4, never merge', () => {
+    it('a target the server does not know is exit 1, the base could not be resolved, never merge', () => {
         const f = fixture(tmp);
         advanceMain(f);
         const r = runSync(f.work, 'origin/no-such-branch');
-        expect(r.code).toBe(4);
-        expect(r.out).toContain('git-convention-unresolvable');
+        expect(r.code).toBe(1);
+        expect(r.out).toContain('base could not be resolved');
+        expect(r.out).not.toContain('git-convention-unresolvable');
         expect(r.after).toBe(r.before);
+    });
+
+    it('no pull request and no default branch is exit 1, the base could not be resolved', () => {
+        const f = fixture(tmp);
+        const deps = { ...makeGitDeps(f.work), prBase: () => null, defaultBranch: () => null };
+        const spy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        let code: number;
+        let out: string;
+        try {
+            code = syncMain(['--repo', f.work], deps);
+            out = spy.mock.calls.map((c) => String(c[0])).join('');
+        } finally {
+            spy.mockRestore();
+        }
+        expect(code).toBe(1);
+        expect(out).toContain('base could not be resolved');
+        expect(out).not.toContain('git-convention-unresolvable');
+    });
+
+    it('a target that resolves to a commit the carrier cannot be read at is exit 4, not a base failure', () => {
+        const f = fixture(tmp);
+        const deps = { ...makeGitDeps(f.work), remoteSha: () => 'f'.repeat(40) };
+        const spy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        let code: number;
+        let out: string;
+        try {
+            code = syncMain(['--repo', f.work, '--base', 'origin/main'], deps);
+            out = spy.mock.calls.map((c) => String(c[0])).join('');
+        } finally {
+            spy.mockRestore();
+        }
+        expect(code).toBe(4);
+        expect(out).toContain('git-convention-unresolvable');
+        expect(out).not.toContain('base could not be resolved');
     });
 
     it('offline with nothing declared is the unverified warning, exit 0, nothing merged', () => {

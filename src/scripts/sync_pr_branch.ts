@@ -27,7 +27,8 @@
  * 2026-08-21, both seats; roadmap road-to-merge-hotspot-drawdown).
  *
  * Exit codes: 0 = already current, or merged cleanly · 1 = conflict, or the base
- * could not be resolved · 2 = internal error · 3 = behind, and
+ * could not be resolved (no PR base, no default branch, or a `--base` the
+ * server does not know) · 2 = internal error · 3 = behind, and
  * `git.update_strategy` is not `merge`, so the merge was refused (reason code
  * `TARGET_POLICY_STALE` when the branch is current with its non-default target
  * and that target is itself behind the default branch the policy adds — the
@@ -35,8 +36,9 @@
  * ordinary behind line first, naming the target's lag as a note) · 4 =
  * `git.update_strategy` cannot be read (a settings file or a committed
  * `.git-convention.yml` that does not parse, a value outside the schema, a
- * value only a user-global file carries, or a target commit that cannot be
- * resolved), so nothing was checked or merged; the line carries a stable reason
+ * value only a user-global file carries, a target commit whose carrier cannot
+ * be fetched, or a developer `rebase` that cannot be honoured offline), so
+ * nothing was checked or merged; the line carries a stable reason
  * code (`git-convention-malformed` / `-invalid` / `-discarded` /
  * `-unresolvable`) and the file.
  * `scanned:` on every path.
@@ -822,23 +824,50 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
  * `.git-convention.yml` at the target commit, over the developer layers
  * (ADR-282). Absent everywhere reads as `merge`, the behaviour before the key
  * existed; a file that does not parse, a typo, a user-global-only value and a
- * target commit that cannot be resolved are refusals here. `main` narrows one
- * of them: an unresolvable target with no developer value other than `merge`
- * becomes the offline `unverified` warning when the remote is unreachable.
+ * target commit that cannot be resolved are refusals here.
  */
 export function updateStrategy(repo: string, base: string | null = null, deps?: TargetDeps): GitConventionReading {
+    return readStrategy(repo, base, deps).reading;
+}
+
+function readStrategy(repo: string, base: string | null, deps?: TargetDeps): { reading: GitConventionReading; baseResolved: boolean } {
     const read = readCommittedConvention(repo, { override: base, keys: ['update_strategy'], ...(deps ? { deps } : {}) });
-    return read.readings.update_strategy as GitConventionReading;
+    return { reading: read.readings.update_strategy as GitConventionReading, baseResolved: read.target !== null && read.target.sha !== null };
+}
+
+export interface StrategyGate {
+    /** `null` — the strategy is readable, go on; otherwise the exit to return. */
+    exit: 0 | 1 | 4 | null;
+    line: string;
+    reading: GitConventionReading;
 }
 
 /**
- * True when the developer layers alone read as `merge` (absent included). A
- * developer `rebase`, or a developer file that does not parse, is a value the
- * run cannot honour without knowing the carrier, so it keeps the refusal.
+ * The one place that maps an unreadable `git.update_strategy` to an exit.
+ *
+ * A target that resolves to nothing — no pull request base, no default branch,
+ * a `--base` the server does not know — is the base failure, exit 1. A target
+ * that resolves but whose carrier cannot be read, parsed or accepted is exit 4.
+ * Offline the target's carrier is unread: with no developer value other than
+ * `merge` that is the `unverified` warning (exit 0, nothing touched), while a
+ * developer `rebase` cannot be honoured unread and stays exit 4. A developer
+ * file that is itself a refusal is exit 4 whatever the target does.
  */
-function developerStrategyIsMerge(repo: string): boolean {
+export function strategyGate(repo: string, base: string | null, targetDeps: BaseDeps): StrategyGate {
+    const { reading, baseResolved } = readStrategy(repo, base, targetDeps);
+    if (!isRefusal(reading.state)) return { exit: null, line: '', reading };
+    const refused: StrategyGate = { exit: 4, line: `❌  sync_pr_branch: refused — ${describeRefusal(reading)}. Nothing was checked or merged.`, reading };
+    if (reading.state !== 'unresolvable') return refused;
     const dev = readGitConventionKey('update_strategy', checkoutSource(conventionRoot(repo).root));
-    return (dev.state === 'absent' || dev.state === 'valid') && (dev.value ?? 'merge') === 'merge';
+    if (isRefusal(dev.state)) return refused;
+    const probe = sync(repo, base, true, false, targetDeps);
+    if (probe.message.startsWith('unverified')) {
+        return (dev.value ?? 'merge') === 'merge' ? { exit: 0, line: `⚠️  sync_pr_branch: ${probe.message}`, reading } : refused;
+    }
+    if (!baseResolved) {
+        return { exit: 1, line: `❌  sync_pr_branch: base could not be resolved — ${reading.detail ?? 'the target commit is unknown'}. Nothing was checked or merged.`, reading };
+    }
+    return refused;
 }
 
 /** `deps` answers the target questions; tests inject it, a run asks git and the forge. */
@@ -910,25 +939,14 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
     // branch that is behind is refused rather than merged. A current branch
     // passes, so an automated pre-push sync stays green when nothing is to do.
     const targetDeps = memoTargetDeps(deps ?? makeGitDeps(repo));
-    const reading = updateStrategy(repo, base, targetDeps);
-    if (reading.state === 'unresolvable' && developerStrategyIsMerge(repo)) {
-        // Offline the target's carrier is unread, but with no developer value
-        // other than `merge` nothing could ask this run for anything but the
-        // check below. Run as a dry run: an unreachable remote ends in the
-        // `unverified` warning and touches nothing; a remote that DOES answer
-        // means the carrier was unreadable for another reason, which refuses.
-        const probe = sync(repo, base, true, false, targetDeps);
-        if (probe.message.startsWith('unverified')) {
-            process.stdout.write(`⚠️  sync_pr_branch: ${probe.message}\n`);
-            reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'remote unreachable — stated above' });
-            return 0;
-        }
+    const gate = strategyGate(repo, base, targetDeps);
+    if (gate.exit !== null) {
+        process.stdout.write(`${gate.line}\n`);
+        const why = gate.exit === 0 ? 'remote unreachable — stated above' : gate.exit === 1 ? 'base unresolvable — stated above' : 'git.update_strategy unreadable';
+        reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: why });
+        return gate.exit;
     }
-    if (isRefusal(reading.state)) {
-        process.stdout.write(`❌  sync_pr_branch: refused — ${describeRefusal(reading)}. Nothing was checked or merged.\n`);
-        reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'git.update_strategy unreadable' });
-        return 4;
-    }
+    const reading = gate.reading;
     const strategy = reading.value ?? 'merge';
     let plan: Plan;
     try {
