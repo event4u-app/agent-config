@@ -64,7 +64,7 @@ export const FOREGROUND_CEILING_MIN = 9;
 /** What one poll told us. `unreadable` is deliberately not a verdict. */
 export type PollState =
     | { kind: 'unreadable'; reason: string }
-    | { kind: 'pending'; total: number; done: number }
+    | { kind: 'pending'; total: number; done: number; pendingNames?: string[] }
     | { kind: 'settled'; failing: string[]; total: number };
 
 /**
@@ -234,7 +234,8 @@ export function classifyPoll(stdout: string, stderr: string, status: number | nu
         typeof r.conclusion === 'string' && r.conclusion.length > 0;
     const done = rows.filter(terminal).length;
     if (done < rows.length) {
-        return { kind: 'pending', total: rows.length, done };
+        const pendingNames = rows.filter((r) => !terminal(r)).map((r) => String(r.name ?? '?'));
+        return { kind: 'pending', total: rows.length, done, pendingNames };
     }
     const bad = new Set(['FAILURE', 'TIMED_OUT', 'CANCELLED', 'ACTION_REQUIRED', 'STARTUP_FAILURE']);
     // A concurrency group that supersedes its own earlier run leaves TWO rows
@@ -262,6 +263,44 @@ export function classifyPoll(stdout: string, stderr: string, status: number | nu
         ),
     ];
     return { kind: 'settled', failing, total: rows.length };
+}
+
+const MAX_NAMED = 8;
+const MAX_NAME_CHARS = 80;
+
+/**
+ * The lines an expired wait prints, the `DID NOT SETTLE` line LAST because the
+ * last line is the one a caller reads as the outcome.
+ *
+ * WHY IT SAYS MORE THAN IT USED TO (`road-to-blocking-time-by-cause` 3.3,
+ * claim `turnaround-blocking-by-cause-targets`): in the 2026-10 reading 20 of
+ * 44 CI waits ended here and were re-run in the FOREGROUND, 184 of 261 ci-wait
+ * minutes. Naming what is still pending and that the next wait belongs in the
+ * background shortens the caller's blocking time without skipping a check: the
+ * forge still runs every one, and the verdict still comes from this waiter.
+ *
+ * Check names come from the forge and are DATA: control characters are
+ * stripped, each name is capped, and the list is bounded, so a name cannot
+ * forge a second `next wait:` line or a terminal escape.
+ */
+export function renderNoSettle(timeoutMin: number, last: PollState | null): string[] {
+    const lines: string[] = [];
+    let next = '';
+    if (last !== null && last.kind === 'pending' && last.total > 0) {
+        const names = (last.pendingNames ?? []).map((n) =>
+            n.replace(/[\u0000-\u001f\u007f-\u009f]/g, ' ').trim().slice(0, MAX_NAME_CHARS),
+        );
+        const shown = names.slice(0, MAX_NAMED).join(', ');
+        const more = names.length > MAX_NAMED ? ` (+${String(names.length - MAX_NAMED)} more)` : '';
+        lines.push(
+            `ci_settle: ${String(last.done)}/${String(last.total)} settled; still pending: ${shown}${more}`,
+        );
+        next =
+            ' Checks are still running, so next wait: background — re-run this waiter with the host\'s ' +
+            'background primitive; a second foreground wait repeats this one.';
+    }
+    lines.push(`ci_settle: DID NOT SETTLE within ${String(timeoutMin)} min — no verdict is claimed.${next}`);
+    return lines;
 }
 
 function poll(pr: string): PollState {
@@ -519,9 +558,7 @@ export function main(argv: readonly string[]): number {
             );
         }
         if (Date.now() >= deadline) {
-            process.stdout.write(
-                `ci_settle: DID NOT SETTLE within ${String(timeoutMin)} min — no verdict is claimed.\n`,
-            );
+            for (const line of renderNoSettle(timeoutMin, state)) process.stdout.write(`${line}\n`);
             return 2;
         }
         sleepSync(intervalSec);

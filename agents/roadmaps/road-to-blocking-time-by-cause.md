@@ -104,7 +104,7 @@ what grew. No baseline is moved.
 - [ ] **3.2 One mitigation for the first cause.** The change that addresses the
       largest cause lands with its own test, and its commit names the claim id.
       verify: `npx vitest run tests/scripts/probe_turnaround_causes.test.ts` -> 0
-- [ ] **3.3 One mitigation for the second cause.** Same shape as 3.2.
+- [x] **3.3 One mitigation for the second cause.** Same shape as 3.2.
       verify: `npx vitest run tests/scripts/probe_turnaround_causes.test.ts` -> 0
 - [ ] **3.4 Re-read against the targets.** A second window is read and the
       result is appended to the 2.1 page as met, missed, or underpowered —

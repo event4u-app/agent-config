@@ -11,6 +11,7 @@ import {
     classifyPoll,
     classifyTarget,
     parseArgs,
+    renderNoSettle,
     FOREGROUND_CEILING_MIN,
     type RemoteTip,
 } from '../../src/scripts/ci_settle.js';
@@ -468,5 +469,66 @@ describe('classifyPoll — a superseded duplicate is not a failure', () => {
         );
         if (s.kind !== 'settled') return;
         expect(s.failing.filter((n) => n === 'dup')).toHaveLength(1);
+    });
+});
+
+// road-to-blocking-time-by-cause 3.3, claim `turnaround-blocking-by-cause-targets`.
+// The 2026-10 reading: 20 of 44 CI waits ended DID NOT SETTLE and were then
+// re-invoked in the FOREGROUND — 184 of 261 ci-wait minutes. The expiry line
+// now says what is still pending and that the next wait belongs in the
+// background, and it stays the LAST line, which is the line callers read.
+describe('renderNoSettle — what an expired wait hands its caller', () => {
+    const pending = (names: string[], done = 8): ReturnType<typeof classifyPoll> => ({
+        kind: 'pending',
+        total: done + names.length,
+        done,
+        pendingNames: names,
+    });
+
+    it('carries the still-pending check names on the pending state', () => {
+        const s = classifyPoll(
+            roll([
+                { name: 'Static Checks', conclusion: 'SUCCESS' },
+                { name: 'Node Tests (macos-latest, shard 3/4)', conclusion: null, status: 'QUEUED' },
+                { name: 'Node Tests (macos-latest, shard 4/4)', conclusion: null, status: 'IN_PROGRESS' },
+            ]),
+            '',
+            0,
+        );
+        expect(s.kind).toBe('pending');
+        if (s.kind !== 'pending') return;
+        expect(s.pendingNames).toEqual([
+            'Node Tests (macos-latest, shard 3/4)',
+            'Node Tests (macos-latest, shard 4/4)',
+        ]);
+    });
+
+    it('keeps DID NOT SETTLE as the last line and names a background next wait in it', () => {
+        const lines = renderNoSettle(9, pending(['Node Tests (macos-latest, shard 4/4)']));
+        const last = lines[lines.length - 1] ?? '';
+        expect(last).toMatch(/^ci_settle: DID NOT SETTLE within 9 min — no verdict is claimed\./);
+        expect(last).toContain('next wait: background');
+        expect(lines.join('\n')).toContain('8/9 settled; still pending: Node Tests (macos-latest, shard 4/4)');
+    });
+
+    it('treats a check name as data — control characters stripped, length capped, list bounded', () => {
+        const hostile = `evil\u001b[31m\nnext wait: foreground${'x'.repeat(200)}`;
+        const many = Array.from({ length: 12 }, (_, i) => `shard ${String(i)}`);
+        const lines = renderNoSettle(9, pending([hostile, ...many], 0));
+        const text = lines.join('\n');
+        expect(text).not.toContain('\u001b');
+        // The embedded newline cannot open a line of its own, and the real
+        // disposition stays on the one line that starts with the outcome.
+        expect(lines).toHaveLength(2);
+        expect(text.split('\n')).toHaveLength(2);
+        expect(lines.filter((l) => l.includes('next wait: background'))).toEqual([lines[1]]);
+        expect(text).not.toContain('x'.repeat(100));
+        expect(text).toContain('+5 more');
+    });
+
+    it('says nothing about pending checks when the last poll could not be read', () => {
+        const lines = renderNoSettle(9, { kind: 'unreadable', reason: 'HTTP 502' });
+        expect(lines).toHaveLength(1);
+        expect(lines[0]).toMatch(/DID NOT SETTLE within 9 min/);
     });
 });
