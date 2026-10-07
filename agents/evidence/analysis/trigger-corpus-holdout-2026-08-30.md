@@ -60,7 +60,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  777fddd79cd0eff3c2fe8fe9fa55140d6c02c6cce1c316c44594dcb35a157247
+SET-SHA256  1e52ab319d611d3fc26ff8aa445b99d161f225338d3b604a2fb5fb30bfdc5f40
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -350,6 +350,21 @@ open and which this file does not settle.
 > unchanged in kind — `harmful`, on the same false-activation guard it already
 > failed. No bar was edited.
 
+> **+1 on 2026-10-07** (#2252, stacked on `feat/git-convention-settings`).
+> `using-git-worktrees` gained a corpus for the touched-skill reason: that change
+> edited the skill while moving the git convention into a committed carrier, and
+> `check_routing_coverage` requires every touched skill to carry one.
+> `sha256('using-git-worktrees')[0:2]` is 0xba = 186, above the ceiling of 51, so
+> it is **train**: no holdout row moves, the sealed set is the same 27, and the
+> ordering claim is untouched. `SET-SHA256` moves because it is computed over ALL
+> rows — `777fddd7…` -> `1e52ab31…`. Both train-side published measurements were
+> re-taken by #2252 itself: delta-recall moved 4.045 -> 3.786 pp (still below the
+> 5.0 pp bar) and delta-false-activation moved 6.849 -> 6.787 pp (still above the
+> 2.0 pp guard). The verdict is unchanged in kind — `harmful`, on the same
+> false-activation guard it already failed. No bar was edited. Recorded here in a
+> follow-up because #2252 re-took the measurements but not this pin, which is what
+> turned the holdout-pin test red.
+
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|
 | `adr-create` | `18995bba7bbdc905296f545a25c90cd94fa306909d78af8fc79e3d5621f313f6` |
@@ -440,6 +455,7 @@ open and which this file does not settle.
 | `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |
 | `ui-apply-generic` | `e3f02e3ba53fb96def30fca6752f400d15b6b63209072928bff9e239aaac7ec5` |
 | `ui-component-architect` | `a9b864a568aa32d2bccd96f524a69d24042f05cdd29b339d45bf9ff6b95b9da5` |
+| `using-git-worktrees` | `66f8a8709d975f3c98103341469ea0af34b909ce1ca7042170690707a61878da` |
 | `verify-repair-loop` | `0e66da5e7daac823b400f9493cc2865f9521a40dc7a01bf74ed81702680cb47b` |
 | `wireframe` | `a8d5417a0cdc00557cbc7e55db8184943d971f60d279b4d68eb549cb2ab6a77a` |
 | `workspace-link` | `b4733d41b6460c62cfb91bbbdaf6e764124d115035ee6d780f782ca4e3aae675` |
