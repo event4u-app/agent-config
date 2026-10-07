@@ -19,10 +19,11 @@
  * candidate for it, is `malformed` or `invalid` · `2` usage error. An
  * `unresolvable` target is reported, not an exit: `sync_pr_branch` refuses on it.
  *
- * `subject` reads subjects on stdin and exits `0` all valid, or a `commit-msg`
- * hook validates each commit instead · `1` a subject fails, or the format cannot
- * be read · `2` usage · `3` decided by a validator this verb does not run, or a
- * validator and the committed declaration disagree. `ticket` exits `0`; `branch`
+ * `subject` reads subjects on stdin and exits `0` all valid · `1` a subject
+ * fails, or the format cannot be read · `2` usage · `3` decided by a validator
+ * this verb does not run, or a validator and the committed declaration
+ * disagree. A `commit-msg` hook does not replace the check; it is named as
+ * also running at commit. `ticket` exits `0`; `branch`
  * prints the name and exits `0`, or `1` on a value it would have to rewrite.
  *
  * `sync` is `sync_pr_branch` run in-process, its arguments and exit codes
@@ -93,17 +94,15 @@ function _isExecutableFile(p: string): boolean {
 /**
  * A repository-level commit-message validator, which outranks
  * `git.commit_format` because it rejects the commit the setting would shape.
- * The hook path comes from git so `core.hooksPath` and worktrees resolve.
+ *
+ * A hook counts only where git will run it: the path comes from git, so
+ * `core.hooksPath` and worktrees resolve, and a `.husky/commit-msg` this clone
+ * never pointed `core.hooksPath` at is a file in the tree, not a hook.
  */
 export function commitMessageValidator(cwd: string): CommitMessageValidator | null {
     const top = _git(cwd, 'rev-parse', '--show-toplevel') ?? cwd;
-    const hook = _git(cwd, 'rev-parse', '--git-path', 'hooks/commit-msg');
-    if (hook !== null) {
-        const abs = path.resolve(cwd, hook);
-        if (_isExecutableFile(abs)) return { kind: 'commit-msg hook', path: abs };
-    }
-    const husky = path.join(top, '.husky', 'commit-msg');
-    if (fs.existsSync(husky)) return { kind: 'commit-msg hook', path: husky };
+    const hook = _git(cwd, 'rev-parse', '--path-format=absolute', '--git-path', 'hooks/commit-msg');
+    if (hook !== null && _isExecutableFile(hook)) return { kind: 'commit-msg hook', path: hook };
     for (const name of COMMITLINT_FILES) {
         const p = path.join(top, name);
         if (fs.existsSync(p)) return { kind: 'commitlint config', path: p };
@@ -233,17 +232,17 @@ function _commitlintRejectsTicketLead(configPath: string): boolean {
 }
 
 type SubjectPlan =
-    | { kind: 'rule'; rule: SubjectRule; tier: string }
+    | { kind: 'rule'; rule: SubjectRule; tier: string; notes: string[] }
     | { kind: 'stop'; code: 0 | 1 | 3; lines: string[] };
 
 function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan {
     if (values.format !== undefined) {
         if (!['ticket-scope', 'ticket-conventional'].includes(values.format)) return { kind: 'stop', code: 1, lines: [`unknown format: ${values.format}`] };
-        return { kind: 'rule', rule: { format: values.format as CommitFormat }, tier: 'passed by the caller' };
+        return { kind: 'rule', rule: { format: values.format as CommitFormat }, tier: 'passed by the caller', notes: [] };
     }
     if (values.family !== undefined) {
         if (!FAMILY_ERE.some(([f]) => f === values.family)) return { kind: 'stop', code: 1, lines: [`no grammar for family: ${values.family}`] };
-        return { kind: 'rule', rule: { family: values.family as SubjectFamily }, tier: 'passed by the caller' };
+        return { kind: 'rule', rule: { family: values.family as SubjectFamily }, tier: 'passed by the caller', notes: [] };
     }
     const read = readCommittedConvention(cwd, { keys: ['commit_format'] });
     const reading = read.readings.commit_format as GitConventionReading;
@@ -253,9 +252,9 @@ function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan 
     // insert, so only a value other than the default is a developer's choice.
     const declared = committed || (reading.state === 'valid' && reading.value !== conventionDefault('commit_format'));
     const validator = commitMessageValidator(cwd);
-    if (validator?.kind === 'commit-msg hook') {
-        return { kind: 'stop', code: 0, lines: [`the commit-msg hook at ${validator.path} validates each commit; nothing is validated here`] };
-    }
+    // A hook's existence says nothing about what it checks (a Change-Id or
+    // trailer hook checks nothing), so the subject is still checked here.
+    const notes = validator?.kind === 'commit-msg hook' ? [`note: the commit-msg hook at ${validator.path} also runs at commit`] : [];
     if (validator?.kind === 'commitlint config') {
         if (committed && reading.value === 'ticket-conventional' && _commitlintRejectsTicketLead(validator.path)) {
             return {
@@ -274,13 +273,13 @@ function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan 
             lines: [`the commitlint config at ${validator.path} outranks git.commit_format; no commit-msg hook runs it`, `run: printf '%s\n' "<subject>" | npx --no-install commitlint`],
         };
     }
-    if (declared) return { kind: 'rule', rule: { format: reading.value as CommitFormat }, tier: `declared in ${reading.source}` };
+    if (declared) return { kind: 'rule', rule: { format: reading.value as CommitFormat }, tier: `declared in ${reading.source}`, notes };
     const family = _cardFamily(read.root);
     if (family !== null) {
         if (!FAMILY_ERE.some(([f]) => f === family)) return { kind: 'stop', code: 3, lines: [`the approved family ${family} in ${APPROVED_CARD} has no grammar to validate against`] };
-        return { kind: 'rule', rule: { family: family as SubjectFamily }, tier: `approved in ${APPROVED_CARD}` };
+        return { kind: 'rule', rule: { family: family as SubjectFamily }, tier: `approved in ${APPROVED_CARD}`, notes };
     }
-    return { kind: 'rule', rule: { format: (reading.value ?? 'ticket-scope') as CommitFormat }, tier: 'default (Conventional Commits)' };
+    return { kind: 'rule', rule: { format: (reading.value ?? 'ticket-scope') as CommitFormat }, tier: 'default (Conventional Commits)', notes };
 }
 
 export function subjectCommand(args: readonly string[], cwd: string, stdin = ''): GitConventionResult {
@@ -292,11 +291,11 @@ export function subjectCommand(args: readonly string[], cwd: string, stdin = '')
     if (plan.kind === 'stop') return { code: plan.code, out: plan.lines, err: [] };
     const failures = subjects.map((s) => ({ s, v: checkSubject(s, plan.rule) })).filter((x) => !x.v.ok);
     if (f.json) {
-        const out = { ok: failures.length === 0, rule: ruleName(plan.rule), tier: plan.tier, failures: failures.map((x) => ({ subject: x.s, rule: x.v.ok ? null : x.v.rule })) };
+        const out = { ok: failures.length === 0, rule: ruleName(plan.rule), tier: plan.tier, notes: plan.notes, failures: failures.map((x) => ({ subject: x.s, rule: x.v.ok ? null : x.v.rule })) };
         return { code: failures.length === 0 ? 0 : 1, out: [JSON.stringify(out, null, 2)], err: [] };
     }
-    if (failures.length === 0) return { code: 0, out: [`${subjects.length} subject(s) valid under ${ruleName(plan.rule)} (${plan.tier})`], err: [] };
-    return { code: 1, out: failures.map((x) => `✗ ${x.s}\n  ${x.v.ok ? '' : x.v.rule}`), err: [] };
+    if (failures.length === 0) return { code: 0, out: [`${subjects.length} subject(s) valid under ${ruleName(plan.rule)} (${plan.tier})`, ...plan.notes], err: [] };
+    return { code: 1, out: [...failures.map((x) => `✗ ${x.s}\n  ${x.v.ok ? '' : x.v.rule}`), ...plan.notes], err: [] };
 }
 
 function _commitlintProposal(cwd: string): { keys: string[]; from: string } | null {

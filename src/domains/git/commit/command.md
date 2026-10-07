@@ -123,8 +123,8 @@ from `.agent-settings.yml`. Both default to `false`.
 
 1. Pipe every generated subject, one per line, through
    `agent-config git:convention subject` — it resolves the convention in force
-   and validates against it. Act on the exit code: `0` valid (or a `commit-msg`
-   hook validates each commit) · `1` the output lists each failure and its rule
+   and validates against it. Act on the exit code: `0` valid (a `commit-msg`
+   hook git runs is named as also running at commit) · `1` the output lists each failure and its rule
    → treat as invalid · `3` run the one printed command, or settle the printed
    disagreement, before committing → treat as invalid.
 2. **All messages valid** → skip the preview block and the confirmation

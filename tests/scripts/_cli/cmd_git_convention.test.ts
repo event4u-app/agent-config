@@ -105,6 +105,15 @@ describe('git:convention show', () => {
         expect(commitMessageValidator(dir)).toMatchObject({ kind: 'commit-msg hook' });
     });
 
+    it('counts .husky/commit-msg only when core.hooksPath points git at .husky', () => {
+        const dir = repo(null);
+        fs.mkdirSync(path.join(dir, '.husky'));
+        fs.writeFileSync(path.join(dir, '.husky', 'commit-msg'), '#!/bin/sh\n', { mode: 0o755 });
+        expect(commitMessageValidator(dir)).toBeNull();
+        git(dir, 'config', 'core.hooksPath', '.husky');
+        expect(commitMessageValidator(dir)).toMatchObject({ kind: 'commit-msg hook', path: path.join(dir, '.husky', 'commit-msg') });
+    });
+
     it('routes subcommands through one table and refuses an unknown one', () => {
         expect(Object.keys(SUBCOMMANDS)).toContain('show');
         const dir = repo(null);
@@ -127,5 +136,26 @@ describe('settings:get beside it', () => {
         const dir = repo('git:\n  update_strategy: rebase\n');
         const r = runSettingsGet({ key: 'git.update_strategy', cwd: dir, packageRoot: PACKAGE_ROOT, json: false });
         expect(r.err.filter((l) => l.includes('does not parse'))).toHaveLength(0);
+    });
+});
+
+describe('git:convention subject beside a commit-msg hook', () => {
+    function withHook(): string {
+        const dir = repo(null);
+        // A hook that validates nothing, as a Change-Id or trailer hook does.
+        fs.writeFileSync(path.join(dir, '.git', 'hooks', 'commit-msg'), '#!/bin/sh\nexit 0\n', { mode: 0o755 });
+        return dir;
+    }
+
+    it('still validates against the convention and fails a bad subject', () => {
+        const r = runGitConvention(['subject'], withHook(), 'not a conventional subject\n');
+        expect(r.code).toBe(1);
+    });
+
+    it('passes a valid subject and notes that the hook also runs at commit', () => {
+        const dir = withHook();
+        const r = runGitConvention(['subject'], dir, 'feat: add a thing\n');
+        expect(r.code, r.out.join('\n')).toBe(0);
+        expect(r.out.join('\n')).toContain(`the commit-msg hook at ${path.join(dir, '.git', 'hooks', 'commit-msg')} also runs at commit`);
     });
 });

@@ -57,22 +57,27 @@ another chunk's scope.
 `agent-config git:convention subject` reads subjects on stdin, one per line, and
 resolves the convention in this order — the first that applies decides:
 
-1. **A `commit-msg` hook** (`.git/hooks`, `core.hooksPath`, husky) — the commit is
-   the validator; the verb validates nothing and exits `0`.
-2. **A commitlint config without a hook** — it outranks `git.commit_format`; the
+1. **A commitlint config without a hook** — it outranks `git.commit_format`; the
    verb prints the one command that runs it and exits `3`. Where that config
    extends the conventional preset and the committed `.git-convention.yml`
    declares `ticket-conventional`, the two disagree: both are printed, neither
    is adopted, exit `3`.
-3. **A declaration** — `git.commit_format` in `.git-convention.yml` (either
+2. **A declaration** — `git.commit_format` in `.git-convention.yml` (either
    value; ADR-282), or a developer settings file value other than the template
    default. The rule is one for both values: `settings:sync` writes the
    template default into every project file, so a default there cannot be told
    apart from an insert and never outranks an approved card, whichever value
    the default is; today that makes `ticket-conventional` the only developer
    value that counts.
-4. **An approved measurement** — the card's `dominant_family`.
-5. **The default** — Conventional Commits (`ticket-scope`).
+3. **An approved measurement** — the card's `dominant_family`.
+4. **The default** — Conventional Commits (`ticket-scope`).
+
+A `commit-msg` hook does not decide. It counts only where git will run it —
+the path git resolves, so `core.hooksPath` is respected and `.husky/commit-msg`
+counts only when `core.hooksPath` points at `.husky` — and its existence says
+nothing about what it checks (a Change-Id or trailer hook checks nothing). The
+subject is still validated by the order above, and the output names the hook as
+also running at commit.
 
 A format that cannot be read (`malformed`, `invalid`, `discarded`) exits `1`
 with the line `git:convention show` prints; it is never read as the default.
