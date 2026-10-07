@@ -108,7 +108,7 @@ review, the conformance count, a merge run — is decided, not discovered.
       resolved target with no remote ref means never pushed.
       verify: `test -z "$(git grep -l -F -e '@{u}..HEAD' -e 'HEAD...@{u}' -e 'tag-before-rewrite' -- src/skills/git-workflow/references src/domains/git/pr/create)" && git grep -q -F '@{push}' -- src/skills/git-workflow/references/branch-update.md` -> 0
       Positive control: the first `git grep` prints two files at `2333b93d6`.
-- [ ] **1.2 The lease is fully qualified and its race is a test.** The push is
+- [x] **1.2 The lease is fully qualified and its race is a test.** The push is
       `git push --force-with-lease=refs/heads/<b>:<sha> <remote> HEAD:refs/heads/<b>`
       with remote and branch from 1.1; a rejected lease is a stop — refetch and
       report, never a bare `--force-with-lease`, never `--force`. The post-push
