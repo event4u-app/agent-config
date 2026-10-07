@@ -150,7 +150,7 @@ gets a step that can close it.
 - [x] AC-3 — A raised `max_bytes` without a matching `raise_log` entry fails.
 - [x] AC-4 — The spawn-path half of the archived AC-3 has a measurement page
       and the archive names it.
-- [ ] AC-5 — Finding `21900086c1a0` carries a terminal disposition. <!-- blocked-by: finding-disposition-write-refused-for-the-agent | asked: no — a background drain lane has no owner channel; recorded for the next owner-facing turn -->
+- [ ] AC-5 — Finding `21900086c1a0` carries a terminal disposition.
 
 ## Blockers
 
