@@ -90,14 +90,29 @@ function _parse(p: string): Pick<GitConventionLayer, 'parsed' | 'data' | 'why'> 
     return parseLayerText(text);
 }
 
+/**
+ * Where the parse failed. An unquoted pattern (`{ticket}-{slug}`) is a flow
+ * mapping to YAML, and the error says nothing about quoting.
+ */
+function _parseFailure(text: string, err: unknown): string {
+    const line = (err as { linePos?: { line: number }[] }).linePos?.[0]?.line;
+    if (line === undefined) return 'the file does not parse';
+    const quote = (text.split('\n')[line - 1] ?? '').includes('{') ? `; a value containing \`{\` must be quoted, e.g. ${_quoteExample('branch_pattern')}` : '';
+    return `the file does not parse at line ${line}${quote}`;
+}
+
+function _quoteExample(key: GitConventionKey): string {
+    return `${key}: "${key === 'branch_pattern' ? '{ticket}-{slug}' : (GIT_CONVENTION_ENUMS[key]?.[0] ?? '…')}"`;
+}
+
 /** One layer's text, parsed the way the settings loader parses a file. */
 export function parseLayerText(text: string): Pick<GitConventionLayer, 'parsed' | 'data' | 'why'> {
     let data: unknown;
     try {
         const YAML = _require('yaml') as typeof YamlModule;
         data = YAML.parse(text, { version: '1.1' });
-    } catch {
-        return { parsed: 'malformed', data: null, why: 'the file does not parse' };
+    } catch (err) {
+        return { parsed: 'malformed', data: null, why: _parseFailure(text, err) };
     }
     if (data === null || data === undefined) return { parsed: 'valid', data: {} };
     // The loader ignores a document that is not a map, which is the same silent
@@ -231,7 +246,8 @@ export function readGitConventionKey(
         if (!found.present) continue;
         if ('notAMap' in found) return conventionReading(key, 'invalid', null, layer.path, '`git:` is not a map');
         if (typeof found.value !== 'string') {
-            return conventionReading(key, 'invalid', String(found.value), layer.path, 'the value is not a string');
+            const shown = typeof found.value === 'object' && found.value !== null ? JSON.stringify(found.value) : String(found.value);
+            return conventionReading(key, 'invalid', shown, layer.path, `the value is not a string — quote the value, e.g. ${_quoteExample(key)}`);
         }
         const value = found.value;
         const why = invalidReason(key, value);
