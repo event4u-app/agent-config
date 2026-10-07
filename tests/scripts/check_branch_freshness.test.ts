@@ -182,6 +182,9 @@ describe("check_branch_freshness", () => {
     commit(other, "c.txt", "three");
     git(["push"], other);
     expect(main(["--quiet", "--base", "main"], noPr)).toBe(1);
+    // The task line is printed only where the checkout defines the task.
+    fs.mkdirSync(path.join(work, "taskfiles"));
+    fs.writeFileSync(path.join(work, "taskfiles", "dev.yml"), "tasks:\n  push-ready:\n    cmds: [echo]\n");
     const said = captureStderr(() => {
       expect(main(["--quiet", "--base", "origin/main"], noPr)).toBe(1);
     });

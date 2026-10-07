@@ -561,6 +561,17 @@ function scanReport(scanned: number, allowEmpty?: string): void {
   });
 }
 
+/** Whether this checkout's task runner defines `push-ready`, the remedy only this package ships. */
+function definesPushReady(): boolean {
+  const root = git(["rev-parse", "--show-toplevel"]);
+  if (root === null || root === "") return false;
+  try {
+    return /^ {2}push-ready:/m.test(fs.readFileSync(path.join(root, "taskfiles", "dev.yml"), "utf8"));
+  } catch {
+    return false;
+  }
+}
+
 /**
  * What to do about a behind branch. A merge command is printed only under
  * `merge`: under any other strategy, or one that cannot be read, a merge of the
@@ -707,9 +718,13 @@ export function main(
   // branch, so reading the strategy there would fetch inside the push budget.
   // Read it at that commit only if it is already local, else at the cached
   // remote-tracking commit; with neither, the remedy is the generic pointer.
-  // Read by the pre-push hook to print the exact BASE it refused for.
-  console.error(`    task push-ready BASE=${remote === "origin" ? base : shown}   # integrate the base set, regenerate, verify, re-check`);
-  console.error("");
+  // Read by the pre-push hook to print the exact BASE it refused for. Only a
+  // checkout that defines the task gets it: a consumer runs this script from
+  // node_modules, where the task does not exist and the line would not run.
+  if (definesPushReady()) {
+    console.error(`    task push-ready BASE=${remote === "origin" ? base : shown}   # integrate the base set, regenerate, verify, re-check`);
+    console.error("");
+  }
   const localAt = [sha, `refs/remotes/${remote}/${base}`]
     .map((ref) => git(["rev-parse", "--verify", "-q", `${ref}^{commit}`]))
     .find((found): found is string => found !== null && found !== "");

@@ -117,3 +117,32 @@ describe('behindRemedy without a reading', () => {
         expect(text).not.toContain('git merge');
     });
 });
+
+describe('the behind remedy prints only commands the checkout can run', () => {
+    function behindOutput(): string {
+        const other = path.join(dir, 'other');
+        git(['clone', '-q', path.join(dir, 'origin.git'), other], dir);
+        commit(other, 'c.txt', 'three');
+        git(['push', '-q'], other);
+        git(['fetch', '-q', 'origin'], process.cwd());
+        const said: string[] = [];
+        vi.spyOn(console, 'error').mockImplementation((...a: unknown[]) => {
+            said.push(a.map(String).join(' '));
+        });
+        expect(main(['--quiet'], noPr)).toBe(1);
+        return said.join('\n');
+    }
+
+    it('a consumer checkout without the push-ready task gets the merge command, not the task', () => {
+        const text = behindOutput();
+        expect(text).not.toContain('task push-ready');
+        expect(text).toContain('git fetch origin && git merge origin/main');
+    });
+
+    it('a checkout whose taskfiles/dev.yml defines push-ready gets the task line', () => {
+        fs.mkdirSync(path.join(process.cwd(), 'taskfiles'));
+        fs.writeFileSync(path.join(process.cwd(), 'taskfiles', 'dev.yml'), "version: '3'\ntasks:\n  push-ready:\n    cmds: [echo]\n");
+        const text = behindOutput();
+        expect(text).toMatch(/^ *task push-ready BASE=main(?: |$)/m);
+    });
+});
