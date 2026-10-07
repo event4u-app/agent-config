@@ -18,6 +18,12 @@ supersedes_scope: >-
   record. ADR-268 § 4's Iron Law, its tool-call-deny sentence, its soak
   retirement and every other section stand; ADR-118 § 3 rejections 1, 3, 4
   and 5 and the rest of that record stand.
+  AMENDED 2026-10-07 (see § Amendment): rejection 2 of ADR-118 § 3 becomes, for
+  a proposal scoped to the package, that a digest-bound council record is
+  REQUIRED and is a review rather than the authorization; a favourable verdict
+  is advisory until authenticated owner authorization is bound to the same
+  digest. The council is not the last rung below the user; it is the rung that
+  recommends.
 superseded_by: —
 phase: road-to-self-modification-that-a-council-must-pass · Phase 1
 type: structural
@@ -82,15 +88,18 @@ the text than in the reader.
 ### § 1 — Self-modification is a goal, not an exception
 
 A change the package makes to what governs it is a legitimate goal of a run. It
-is constrained by the record it must carry, never by a refusal to make it.
+is constrained by the record it must carry. It is always **legitimate to
+propose**; whether it passes is the record's question, and § 3's `refused`
+fails closed.
 
-### § 2 — The council is the lowest rung that can pass
+### § 2 — The council is the lowest rung that can recommend passage
 
 For a change to the **gated surface** — the paths `check_kernel_edit_ratified`
 watches — and for a change that **originates in the package's own learning
 lanes** (a proposal under `agents/proposals/` scoped to the package), the lowest
-rung that can pass is the AI council. An independent session alone no longer
-ratifies. The rest of ADR-268 § 4's ladder stands: a different provider, then
+rung that can **recommend passage** is the AI council. An independent session
+alone no longer reviews it. A council verdict is a review; it does not by
+itself authorize the change to pass the gate — see § Amendment. The rest of ADR-268 § 4's ladder stands: a different provider, then
 the owner — reached on non-convergence, on unavailable diversity for a critical
 expansion, or on an owner-reserved dimension. **A change to the reviewer
 itself** — the modules that compute the record's subject, write the record, ask
@@ -204,7 +213,63 @@ lines are unchanged.
 - `src/rules/decision-revisit-gate.md` — the owner-reserved row on quorum and
   escalation that makes §§ 3-4 the owner's to set.
 
+## Amendment — 2026-10-07, on the owner's direction
+
+This record was written the same day as a council decision it did not read, and
+that decision was written without reading this one. Put side by side by a
+second council, they were found to conflict: this record made a council verdict
+sufficient to pass the gate, while the other required human authority for a
+passing verdict. The owner directed the amendment below.
+
+**The combined rule, which replaces the conflicting halves of both:**
+
+> Every gated or learning-originated package self-modification requires a
+> digest-bound council review; a council refusal fails closed, while any
+> favourable council verdict is **advisory until authenticated owner
+> authorization is bound to the same digest**. Changes to the reviewer or its
+> trust chain are always owner-reserved. **Neither an agent nor a council may
+> waive that reservation.**
+
+What this record keeps, and why the amendment is narrow: its **mandatory review
+floor** (a council record is required, not optional) and its **reviewer
+reservation** (the modules that compute the subject, write the record, ask the
+questions and derive the verdict join the owner's list) were never in conflict.
+The reservation stands as a seventh owner-reserved category alongside the six
+danger predicates. What changed is only the claim that the council's record
+*is* the approval.
+
+**Three edits carry it**, each named so a reader can check them:
+
+1. `supersedes_scope` — the council record is required and is a review, not the
+   authorization.
+2. § 2's heading and its sentence — *"can pass"* became *"can recommend
+   passage"*.
+3. § 1 — *"never by a refusal to make it"* narrowed to *"legitimate to
+   propose"*, which the council found conflicted with § 3's fail-closed
+   `refused`.
+
+**Why the amendment was needed rather than a withdrawal.** This record's own
+Status section names the owner's review and merge as its authorising event, so
+marking itself `accepted` could not supply its own authority — the pre-existing
+rule governs the transition. The reviewing council put it plainly: a council
+*"can improve scrutiny without becoming a distinct authorization principal"*,
+because the proposal, the verdict record, the subject computation, the gate and
+the authorization assertion all sit inside one writable boundary. Provider
+diversity is not authorization independence.
+
+**What this amendment does not settle**, recorded rather than quietly carried:
+the authenticated attestation channel it now depends on does not exist yet; the
+reviewer reservation still rests on the reviewer correctly identifying its own
+surface; and a reviewer-code change can alter what an existing digest *means*,
+so digest binding is insufficient unless the reviewer version and policy
+version are bound into the attestation too. Those are the amended record's
+open edges, carried by `road-to-authority-routing-mechanism`.
+
 ## References
 
 - ADR-268 (§ 4 ladder sentence superseded by § 2) · ADR-118 (§ 3 rejection 2
   superseded by § 2) · ADR-201
+- `agents/evidence/council/authority-routing-20261007.md` — the decision this
+  record was reconciled with
+- `agents/evidence/council/adr281-vs-authority-routing-20261007.md` — the
+  council that found the conflict and proposed this amendment
