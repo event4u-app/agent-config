@@ -1037,7 +1037,7 @@ tasks:
 
   lint-workflow-security:
     silent: true
-    desc: "Audit of .github/workflows/* — a HIGH (pull_request_target untrusted checkout, write-all, install w/o --ignore-scripts) fails under --strict, as in CI; MEDIUM (mutable action pins, kept checkout credentials) stays advisory"
+    desc: "Audit of .github/workflows/* — a HIGH (pull_request_target/workflow_run untrusted checkout, write-all, install w/o --ignore-scripts inside a pull_request_target workflow) fails under --strict, as in CI; MEDIUM (mutable action pins, kept checkout credentials) stays advisory"
     cmd: ./scripts-run src/scripts/lint_workflow_security --strict {{.QUIET_FLAG}}
 
   lint-missions:

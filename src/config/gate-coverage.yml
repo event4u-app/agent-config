@@ -3278,10 +3278,41 @@ gates:
 
         # Canary
 
-        Links across an undeclared pack boundary into
-        [positioning-strategy](../positioning-strategy/SKILL.md), which one more
-        violation than the recorded baseline must turn red.
+        Twenty-five links across an undeclared pack boundary, into
+        `gtm-marketing`. Twenty-five rather than one because the gate is a
+        ratchet: a live count below the recorded baseline leaves headroom, and a
+        single planted link would then read as a dead gate.
+
+        - [positioning-strategy 1](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 2](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 3](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 4](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 5](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 6](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 7](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 8](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 9](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 10](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 11](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 12](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 13](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 14](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 15](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 16](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 17](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 18](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 19](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 20](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 21](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 22](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 23](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 24](../positioning-strategy/SKILL.md)
+        - [positioning-strategy 25](../positioning-strategy/SKILL.md)
     note: >-
+      The canary plants 25 violations, so it discriminates while the live count
+      sits within 24 of the baseline; the gate already reports a looser ratchet
+      as `improved` and asks for the baseline to be lowered, so a canary that
+      reads green here means that request went unanswered by 25 or more.
       road-to-gates-a-pull-request-can-hear 3.1. Until this row the gate ran only
       under the local `task ci`, which no workflow invokes, so a pull request that
       added a cross-pack link got no red check from anything. The step in
