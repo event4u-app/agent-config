@@ -159,7 +159,7 @@ describe('git:convention branch', () => {
 });
 
 describe('one verb', () => {
-    it('hangs the three subcommands off the existing table', () => {
-        expect(Object.keys(SUBCOMMANDS)).toEqual(['show', 'subject', 'ticket', 'branch']);
+    it('hangs the subcommands off the existing table', () => {
+        expect(Object.keys(SUBCOMMANDS)).toEqual(['show', 'subject', 'ticket', 'branch', 'sync']);
     });
 });
