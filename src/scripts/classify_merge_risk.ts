@@ -258,7 +258,7 @@ function failClosed(reason: string): Classification {
     return { verdict: 'needs-council', triggers: [{ id: 'diff-unreadable', rule: 'fail closed — ADR-282', paths: [reason] }] };
 }
 
-export function classifyTarget(root: string, target: { pr?: string; range?: string }): Classification {
+export function classifyTarget(root: string, target: { pr?: string | undefined; range?: string | undefined }): Classification {
     const resolved = target.pr !== undefined ? resolvePr(root, target.pr) : resolveRange(target.range ?? '');
     if (resolved === null) {
         return failClosed('could not resolve base and head');
