@@ -528,7 +528,15 @@ function scanReport(scanned: number, allowEmpty?: string): void {
  * `merge`: under any other strategy, or one that cannot be read, a merge of the
  * base is the commit the declaration excludes.
  */
-export function behindRemedy(base: string, strategy: GitConventionReading): string[] {
+export function behindRemedy(base: string, strategy: GitConventionReading | null): string[] {
+  if (strategy === null) {
+    return [
+      "    git.update_strategy was not read — the base's commit is not in this checkout, and",
+      "    this gate does not fetch to choose advice. Update the branch per the git-workflow",
+      "    skill's references/branch-update.md, then regenerate (./agent-config roadmap:progress)",
+      "    and re-run the gates before pushing.",
+    ];
+  }
   if (!isRefusal(strategy.state) && strategy.value === "merge") {
     return [
       `    git fetch origin && git merge origin/${base}`,
@@ -638,13 +646,21 @@ export function main(
   console.error("    Pushing now opens a PR that may conflict, and worse: another branch");
   console.error("    may already have shipped what this one is implementing.");
   console.error("");
-  // The base and the commit this run measured, not a second lookup: the remote
-  // can move between two ls-remote calls and the strategy would be read elsewhere.
-  const strategy = readCommittedConvention(process.cwd(), {
-    override: `origin/${base}`,
-    keys: ["update_strategy"],
-    deps: { ...makeTargetDeps(process.cwd()), remoteSha: () => sha },
-  }).readings.update_strategy as GitConventionReading;
+  // Advice text never pays for a fetch: the measured commit is new on a behind
+  // branch, so reading the strategy there would fetch inside the push budget.
+  // Read it at that commit only if it is already local, else at the cached
+  // remote-tracking commit; with neither, the remedy is the generic pointer.
+  const localAt = [sha, `refs/remotes/origin/${base}`]
+    .map((ref) => git(["rev-parse", "--verify", "-q", `${ref}^{commit}`]))
+    .find((found): found is string => found !== null && found !== "");
+  const strategy = localAt === undefined
+    ? null
+    : (readCommittedConvention(process.cwd(), {
+        override: `origin/${base}`,
+        keys: ["update_strategy"],
+        fetch: false,
+        deps: { ...makeTargetDeps(process.cwd()), remoteSha: () => localAt },
+      }).readings.update_strategy as GitConventionReading);
   for (const line of behindRemedy(base, strategy)) {
     console.error(line);
   }

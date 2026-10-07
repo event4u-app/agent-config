@@ -263,6 +263,8 @@ export interface CommittedOptions {
     readonly keys?: readonly GitConventionKey[];
     /** Runs the git calls that read the carrier at a commit. */
     readonly run?: GitRunner;
+    /** `false` reads only a commit already in this checkout; a missing one is `unresolvable`, never fetched. */
+    readonly fetch?: boolean;
 }
 
 function _short(sha: string): string {
@@ -322,7 +324,7 @@ export function readCommittedConvention(cwd: string, options: CommittedOptions =
             );
             continue;
         }
-        const blob = carrierBlobAt(root, sha, ref.ref, options.run);
+        const blob = carrierBlobAt(root, sha, options.fetch === false ? null : ref.ref, options.run);
         if (blob.kind === 'no-commit') {
             readings[key] = conventionReading(
                 key,
