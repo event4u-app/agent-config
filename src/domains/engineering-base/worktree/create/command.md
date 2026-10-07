@@ -39,13 +39,13 @@ Without a primitive, the skill's plain `git worktree add` path applies.
 
 ### 2. Branch naming — propose once
 
-Derive ONE branch name from the task — the shape `git.branch_pattern`
-declares (default `{type}/{slug}`; a ticket-named team sets `{ticket}-{slug}`;
-an empty placeholder drops with the separator after it, or before it when last),
-per the `commit-conventions` rule — state it, and proceed. The rendered name goes
-into every command double-quoted (`-b "<branch>"`); `git:convention show` reports a
-pattern outside `{type}`/`{ticket}`/`{slug}` and `[A-Za-z0-9._/-]` as `invalid`. Do not present a
-naming menu; the user can override by naming a branch in the same turn.
+Derive ONE type, slug and (if any) ticket from the task and render the name
+through `git.branch_pattern`:
+`agent-config git:convention branch --type <type> --slug <slug> [--ticket <ID>]`
+prints the name; exit `1` names the value or pattern it refused — fix the input,
+never hand-render. State the name and proceed. It goes into every command
+double-quoted (`-b "<branch>"`). Do not present a naming menu; the user can
+override by naming a branch in the same turn.
 
 ### 3. Write the scope-lock note
 

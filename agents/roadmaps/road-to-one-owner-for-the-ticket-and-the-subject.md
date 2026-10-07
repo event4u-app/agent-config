@@ -104,7 +104,7 @@ surface cites one reference instead of restating a grammar.
 
 ## Phase 2 — The surfaces call the module and cite one reference
 
-- [ ] **2.1 The commands validate by running.** `/commit` step 5 and
+- [x] **2.1 The commands validate by running.** `/commit` step 5 and
       `/commit:in-chunks` step 4 pipe the generated subjects through
       `agent-config git:convention subject` and act on the exit code;
       `/worktree:create` renders through `git:convention branch`. The regexes

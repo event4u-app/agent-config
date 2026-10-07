@@ -57,18 +57,13 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
 
 ### 2. Determine the ticket number
 
-- Extract the ticket ID from the current branch name — the first token matching
-  `[A-Z][A-Z0-9]+-[0-9]+`, wherever it sits (`feat/DEV-1234/...`,
-  `DEV-1234-device-export`, `fix/DEV-1234-quantity` → `DEV-1234`). The match
-  never depends on `git.branch_pattern`, so a branch named before the pattern
-  was set still yields its ticket. A token whose prefix is `UTF`, `ISO`, `SHA`
-  or `RFC` (`UTF-8`, `ISO-8601`, `SHA-256`) is a standard name, not a ticket —
-  skip it and take the next match.
-- Establish the convention in force once, per the conventional-commits-writing
-  skill § Establish the house convention: a repository config (commitlint, a
-  `commit-msg` hook) first, then a declared `git.commit_format: ticket-conventional`,
-  then an approved measured convention. `git.commit_format` decides where the
-  ticket goes only where nothing above it applies.
+- Read the ticket from the current branch name:
+  `agent-config git:convention ticket --keys "<the ticket_keys line of the approved convention card>"`
+  (no card → no `--keys`). The first line is `ticket <ID>` or `ticket none`
+  (`feat/DEV-1234/...`, `fix/DEV-1234-quantity` → `DEV-1234`; `fix/CVE-2026-12345-patch` → none).
+  A candidate marked `unknown-key` → ask the user whether it is a ticket; a yes
+  adds its key to the card's `ticket_keys`. A `proposal` line → offer it for the
+  card, never write it unasked.
 - If no ticket ID is found in the branch name, ask the user:
   ```
   > No Jira ticket found in branch name. Do you want to include one?
@@ -129,13 +124,12 @@ from `.agent-settings.yml`. Both default to `false`.
 
 **Terse path** — `preview_artifacts: false` AND `routine_confirmations: false`:
 
-1. Validate every generated commit message against the regex for the
-   convention in force (step 2); a repository config's own rule replaces these:
-   - `ticket-scope` (default):
-     `^(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(\([^)]+\))?!?: .+`
-   - `ticket-conventional`:
-     `^([A-Z][A-Z0-9]+-[0-9]+ )?(feat|fix|chore|docs|refactor|test|perf|style|build|ci|revert)(?!\([A-Z][A-Z0-9]+-[0-9]+\))(\([^)]+\))?!?: .+`
-     — JavaScript/PCRE syntax; the lookahead rejects a ticket id standing in the scope.
+1. Pipe every generated subject, one per line, through
+   `agent-config git:convention subject` — it resolves the convention in force
+   and validates against it. Act on the exit code: `0` valid (or a `commit-msg`
+   hook validates each commit) · `1` the output lists each failure and its rule
+   → treat as invalid · `3` run the one printed command, or settle the printed
+   disagreement, before committing → treat as invalid.
 2. **All messages valid** → skip the preview block and the confirmation
    prompt. Print one line summarising the plan and proceed to step 6:
 

@@ -43,11 +43,10 @@ If there are no uncommitted changes (staged or unstaged), report
 
 ### 2. Determine the ticket number
 
-- Extract the ticket ID from the current branch name exactly as
-  [`/commit`](../commit.md) step 2 does (first `[A-Z][A-Z0-9]+-[0-9]+` token),
-  and place it per the convention in force, established as in `/commit` step 2
-  (repository config, then a declared `git.commit_format: ticket-conventional`, then an approved
-  measured convention).
+- Read the ticket exactly as [`/commit`](../commit.md) step 2 does
+  (`agent-config git:convention ticket`, with the card's `ticket_keys` line as
+  `--keys`) and place it per the convention in force. A candidate marked
+  `unknown-key` is omitted, never asked about.
 - If no ticket ID is found, omit it — write `chore: ...` not `chore(): ...`.
   Do **not** ask the user for one.
 
@@ -82,15 +81,14 @@ strip one.
 
 ### 4. Validate, then commit immediately
 
-Before staging anything, run the same `preview-on-error` validator as
-[`/commit`](../commit.md) step 5 — the rule of the convention in force
-(step 2), with the two `git.commit_format` regexes listed there as its
-fallback.
+Before staging anything, pipe every generated subject through
+`agent-config git:convention subject`, as [`/commit`](../commit.md) step 5 does.
 
-- **All valid** → proceed silently.
-- **Any invalid** → stop, print the failed message(s) + the regex,
-  hand back to the user. Do **not** auto-commit broken messages even
-  though confirmation is otherwise suppressed.
+- **Exit `0`** → proceed silently.
+- **Exit `1` or `3`** → stop, print the verb's output (each failed subject and
+  its rule, or the command / disagreement it names), hand back to the user.
+  Do **not** auto-commit broken messages even though confirmation is
+  otherwise suppressed.
 
 For each planned commit in order:
 
