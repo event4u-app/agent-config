@@ -55,7 +55,7 @@ surface cites one reference instead of restating a grammar.
   validator at all; and `conventional-commits-writing/SKILL.md:166-167` states
   that no executable classifier ships.
 - **The branch renderer is prose.** The empty-placeholder rule lives in
-  `src/domains/git/worktree/create/command.md:44`; a ticket without a slot is
+  `src/domains/engineering-base/worktree/create/command.md:44`; a ticket without a slot is
   prefixed to the slug per `src/skills/jira-integration/SKILL.md:150-153`.
   `docs/guidelines/php/git.md:11` carries a fifth branch shape,
   `{type}/{ticket-id}/{short-description}`.
@@ -149,13 +149,13 @@ surface cites one reference instead of restating a grammar.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — The branch `fix/CVE-2026-12345-patch` yields no ticket, with or
+- [x] AC-1 — The branch `fix/CVE-2026-12345-patch` yields no ticket, with or
       without a card.
-- [ ] AC-2 — In a packed consumer install, `/commit` validates a subject through
+- [x] AC-2 — In a packed consumer install, `/commit` validates a subject through
       a call that resolves, and a ticket inside a compound scope is rejected.
 - [ ] AC-3 — No git command or skill restates a ticket grammar; the prose
       grammar block is generated and checked by `check_generator_sync`.
-- [ ] AC-4 — A branch name rendered by `/worktree:create` and one rendered by
+- [x] AC-4 — A branch name rendered by `/worktree:create` and one rendered by
       `git:convention branch` for the same inputs are identical.
 
 ## Decisions

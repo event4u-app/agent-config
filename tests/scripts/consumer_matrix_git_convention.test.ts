@@ -5,7 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 
-import { checkGitConventionShow } from '../../src/scripts/consumer_matrix.js';
+import { checkGitConventionShow, checkGitConventionSubject } from '../../src/scripts/consumer_matrix.js';
 
 function shown(overrides: Record<string, Record<string, unknown>> = {}): string {
     const base: Record<string, Record<string, unknown>> = {
@@ -40,5 +40,22 @@ describe('checkGitConventionShow', () => {
         expect(() =>
             checkGitConventionShow(0, shown({ commit_format: { value: 'ticket-scope', state: 'absent', source: null } })),
         ).toThrow(/commit_format/);
+    });
+});
+
+describe('checkGitConventionSubject', () => {
+    const valid = { status: 0, stdout: '1 subject(s) valid under git.commit_format: ticket-conventional' };
+    const rejected = { status: 1, stdout: '✗ DEV-1 feat(api,DEV-1): x\n  … the ticket `DEV-1` stands inside the scope …' };
+
+    it('passes when a valid subject resolves and a ticket inside a compound scope is rejected', () => {
+        expect(checkGitConventionSubject(valid, rejected)).toContain('compound scope');
+    });
+
+    it('fails when the valid subject does not exit 0', () => {
+        expect(() => checkGitConventionSubject({ status: 127, stdout: '' }, rejected)).toThrow(/valid subject/);
+    });
+
+    it('fails when the compound-scope ticket is accepted', () => {
+        expect(() => checkGitConventionSubject(valid, { status: 0, stdout: '1 subject(s) valid' })).toThrow(/compound scope/);
     });
 });

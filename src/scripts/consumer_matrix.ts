@@ -546,6 +546,24 @@ export function checkGitConventionShow(status: number, stdout: string, stderr = 
     return 'commit_format=ticket-conventional, update_strategy=rebase, both from the committed .git-convention.yml';
 }
 
+/**
+ * The verdict on `git:convention subject` from the packed install: a valid
+ * subject resolves (exit 0), and a ticket inside a compound scope is rejected
+ * (exit 1) under the committed `ticket-conventional`.
+ */
+export function checkGitConventionSubject(
+    valid: { status: number; stdout: string; stderr?: string },
+    compound: { status: number; stdout: string; stderr?: string },
+): string {
+    if (valid.status !== 0) {
+        throw new Error(`git:convention subject rejected a valid subject, exit ${valid.status}: ${(valid.stdout + (valid.stderr ?? '')).slice(-400)}`);
+    }
+    if (compound.status !== 1 || !compound.stdout.includes('inside the scope')) {
+        throw new Error(`git:convention subject did not reject a ticket inside a compound scope, exit ${compound.status}: ${compound.stdout.slice(-400)}`);
+    }
+    return 'a valid subject resolves; a ticket inside a compound scope is rejected';
+}
+
 function legGitConvention(ctx: Ctx): string {
     const env = binEnv(ctx);
     const remote = path.join(ctx.tmpRoot, 'git-convention-origin.git');
@@ -565,7 +583,9 @@ function legGitConvention(ctx: Ctx): string {
     git(repo, 'remote', 'add', 'origin', remote);
     git(repo, 'push', '-q', '-u', 'origin', 'main');
     const r = run(ctx.bin, ['git:convention', 'show', '--json', '--base', 'origin/main'], { cwd: repo, env });
-    return checkGitConventionShow(r.status, r.stdout, r.stderr);
+    const shown = checkGitConventionShow(r.status, r.stdout, r.stderr);
+    const subject = (line: string) => run(ctx.bin, ['git:convention', 'subject'], { cwd: repo, env, input: `${line}\n` });
+    return `${shown}; ${checkGitConventionSubject(subject('DEV-1 feat(api): add x'), subject('DEV-1 feat(api,DEV-1): add x'))}`;
 }
 
 function legUninstall(ctx: Ctx): string {
