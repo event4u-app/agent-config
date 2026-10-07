@@ -67,6 +67,13 @@ import { fileURLToPath } from "node:url";
 
 import { runGateCli, runSelfTest, type SelfTestCase } from "./_lib/gate_self_test.js";
 import { workspaceIdentity } from "./_lib/git_common_dir.js";
+import {
+  checkoutSource,
+  describeRefusal,
+  isRefusal,
+  readGitConventionKey,
+  type GitConventionReading,
+} from "./_lib/git_convention.js";
 import { reportScanned } from "./_lib/scan_scope.js";
 
 // ledger-exempt: single remote-ref probe — the entire scope is ONE ls-remote answer (0 or 1 refs) resolved to one aggregate ancestor verdict, and every empty path already publishes its reason via reportScanned allowEmpty; there is no per-target collection to account.
@@ -534,6 +541,33 @@ function scanReport(scanned: number, allowEmpty?: string): void {
  * against ambient credentials, where a `GH_REPO` override could return a real
  * PR base for a same-named branch and silently change the base under test.
  */
+/**
+ * What to do about a behind branch. A merge command is printed only under
+ * `merge`: under any other strategy, or one that cannot be read, a merge of the
+ * base is the commit the declaration excludes.
+ */
+export function behindRemedy(base: string, strategy: GitConventionReading): string[] {
+  if (!isRefusal(strategy.state) && strategy.value === "merge") {
+    return [
+      `    git fetch origin && git merge origin/${base}`,
+      "    ./agent-config roadmap:progress   # regenerate AFTER every merge, not only on conflict",
+      "    then re-run the gates before pushing.",
+      "",
+      "    The dashboard line is not optional housekeeping: the roadmap dashboard is a",
+      "    GENERATED file, so a merge that lands cleanly still leaves it describing",
+      "    neither side's roadmap set. A clean auto-merge of a generated file is still wrong.",
+    ];
+  }
+  const why = isRefusal(strategy.state)
+    ? `    git.update_strategy cannot be read — ${describeRefusal(strategy)}`
+    : `    git.update_strategy is \`${strategy.value ?? "?"}\` — the base is not merged in.`;
+  return [
+    why,
+    "    Update the branch per the git-workflow skill's references/branch-update.md,",
+    "    then regenerate (./agent-config roadmap:progress) and re-run the gates before pushing.",
+  ];
+}
+
 export function main(
   argv: string[] = process.argv.slice(2),
   forge?: (b: string) => ForgeAnswer,
@@ -613,13 +647,9 @@ export function main(
   console.error("    Pushing now opens a PR that may conflict, and worse: another branch");
   console.error("    may already have shipped what this one is implementing.");
   console.error("");
-  console.error(`    git fetch origin && git merge origin/${base}`);
-  console.error("    ./agent-config roadmap:progress   # regenerate AFTER every merge, not only on conflict");
-  console.error("    then re-run the gates before pushing.");
-  console.error("");
-  console.error("    The dashboard line is not optional housekeeping: the roadmap dashboard is a");
-  console.error("    GENERATED file, so a merge that lands cleanly still leaves it describing");
-  console.error("    neither side's roadmap set. A clean auto-merge of a generated file is still wrong.");
+  for (const line of behindRemedy(base, readGitConventionKey("update_strategy", checkoutSource(process.cwd())))) {
+    console.error(line);
+  }
   console.error("");
   console.error(
     "    This gate asks the REMOTE, not your tracking ref — a fetch from earlier in",

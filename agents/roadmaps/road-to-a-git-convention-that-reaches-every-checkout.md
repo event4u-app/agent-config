@@ -171,7 +171,7 @@ writes it into settings files and the rename becomes a migration.
       `branch-update.md:34-36` says the same.
       verify: `test -z "$(git grep -F -e 'Never rebase a pushed branch' -e 'invocation itself asked' -- src/domains/git/pr/merge/command.md)" && git grep -q -F 'exit 4' -- src/domains/git/pr/merge/command.md` -> 0
       Positive control: the first `git grep` prints two lines at `2333b93d6`.
-- [ ] **1.5 The two remaining remedies follow the strategy.**
+- [x] **1.5 The two remaining remedies follow the strategy.**
       `check_branch_freshness.ts:616` prints the pointer to `branch-update.md`
       instead of a merge command under a strategy other than `merge`;
       `review/changes/command.md:361` says what its lines 44-47 say.
