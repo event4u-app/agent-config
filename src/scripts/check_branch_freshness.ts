@@ -524,15 +524,6 @@ function scanReport(scanned: number, allowEmpty?: string): void {
 }
 
 /**
- * @param forge Seam for the forge lookup. Production passes nothing and gets the
- * real `gh`. Tests MUST pass a stub: without this parameter the only way to
- * reach the forge-unavailable branch was to not have `gh` installed, so the test
- * for it could only assert conditionally — i.e. it passed whether or not the
- * warning was emitted. It also stopped every fixture test from spawning `gh`
- * against ambient credentials, where a `GH_REPO` override could return a real
- * PR base for a same-named branch and silently change the base under test.
- */
-/**
  * What to do about a behind branch. A merge command is printed only under
  * `merge`: under any other strategy, or one that cannot be read, a merge of the
  * base is the commit the declaration excludes.
@@ -559,6 +550,15 @@ export function behindRemedy(base: string, strategy: GitConventionReading): stri
   ];
 }
 
+/**
+ * @param forge Seam for the forge lookup. Production passes nothing and gets the
+ * real `gh`. Tests MUST pass a stub: without this parameter the only way to
+ * reach the forge-unavailable branch was to not have `gh` installed, so the test
+ * for it could only assert conditionally — i.e. it passed whether or not the
+ * warning was emitted. It also stopped every fixture test from spawning `gh`
+ * against ambient credentials, where a `GH_REPO` override could return a real
+ * PR base for a same-named branch and silently change the base under test.
+ */
 export function main(
   argv: string[] = process.argv.slice(2),
   forge?: (b: string) => ForgeAnswer,
