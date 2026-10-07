@@ -1,0 +1,15 @@
+{
+  "skill": "using-git-worktrees",
+  "last_eval": "2026-10-07",
+  "description": "4 should-trigger + 4 should-not-trigger. Should-trigger covers starting isolated parallel work, trying something on the side without touching the current branch, a fresh workspace with a clean test baseline, and a German phrasing that never names worktrees. Should-not-trigger covers near-miss neighbors (cleaning up existing worktrees, a branch-naming convention question, switching the current branch) plus one unrelated counterexample (a database index question).",
+  "queries": [
+    {"q": "start this in a separate worktree so my current branch stays untouched", "trigger": true, "class": "exemplar"},
+    {"q": "try this approach on the side without disturbing what I'm working on", "trigger": true, "class": "exemplar"},
+    {"q": "spin up an isolated workspace for this fix and make sure the tests are green there first", "trigger": true, "class": "exemplar"},
+    {"q": "arbeite das parallel in einer isolierten Kopie ab, ohne meinen Branch anzufassen", "trigger": true, "class": "exemplar", "language": "de"},
+    {"q": "remove all the stale worktrees left over from last week", "trigger": false, "class": "near-miss", "note": "tearing down existing worktrees is /worktree:cleanup, not starting isolated work"},
+    {"q": "what should I name the branch for ticket DEV-1234?", "trigger": false, "class": "near-miss", "note": "branch naming is a convention question for git-workflow and the git convention, not workspace isolation"},
+    {"q": "switch my checkout over to the release branch", "trigger": false, "class": "near-miss", "note": "changing the current checkout is ordinary branch switching, no second workspace involved"},
+    {"q": "which columns should get an index for this slow query?", "trigger": false, "class": "counterexample"}
+  ]
+}
