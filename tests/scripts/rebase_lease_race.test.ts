@@ -233,6 +233,44 @@ describe('stops before anything is rewritten', () => {
         expect(kept).toBe(before);
     });
 
+    it('refuses to drop a base merge that carries changes of its own, even with DROP_BASE_MERGES=1', () => {
+        const f = fixture('upstream');
+        const origin = f.sb.git(f.me, 'remote', 'get-url', 'origin');
+        const base = path.join(f.sb.root, 'base-author');
+        f.sb.git(f.sb.root, 'clone', '-q', origin, base);
+        f.sb.commit(f.me, 'usage.txt', 'call foo()\n', 'use foo');
+        f.sb.commit(base, 'lib.txt', 'def bar\n', 'rename foo to bar');
+        f.sb.git(base, 'push', '-q', 'origin', 'main');
+        // The merge adapts the branch to the rename: an edit no parent carries.
+        f.sb.git(f.me, 'fetch', '-q', 'origin');
+        f.sb.git(f.me, 'merge', '-q', '--no-commit', 'origin/main');
+        fs.writeFileSync(path.join(f.me, 'usage.txt'), 'call bar()\n');
+        f.sb.git(f.me, 'add', 'usage.txt');
+        f.sb.git(f.me, 'commit', '-q', '--no-edit');
+        f.sb.git(f.me, 'push', '-q', 'origin', 'feat');
+        f.sb.commit(base, 'later.txt', 'later\n', 'base moves on');
+        f.sb.git(base, 'push', '-q', 'origin', 'main');
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const r = runSequence(f.sb, f.me, { ...f.env, DROP_BASE_MERGES: '1' });
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain(f.sb.git(f.me, 'rev-parse', '--short', 'HEAD'));
+        expect(r.stderr).toContain('carries changes of its own');
+        expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
+        expect(fs.readFileSync(path.join(f.me, 'usage.txt'), 'utf8')).toBe('call bar()\n');
+        expect(published(f)).toBe(before);
+    });
+
+    it('reports "needs review" whenever base merges were dropped', () => {
+        const f = fixture('upstream');
+        f.sb.git(f.me, 'fetch', '-q', 'origin');
+        f.sb.git(f.me, 'merge', '-q', '--no-edit', 'origin/main');
+        f.sb.git(f.me, 'push', '-q', 'origin', 'feat');
+        const r = runBlocks(f.sb, f.me, PREPARE_BLOCKS.map((b) => sequenceBlock(b)).join('\n'), { ...f.env, DROP_BASE_MERGES: '1' });
+        expect(r.status).toBe(0);
+        expect(r.stdout).toContain('EQUIVALENCE: needs review');
+        expect(r.stdout).not.toContain('mechanically equivalent');
+    });
+
     it('still refuses a merge commit that is not a base merge, even with DROP_BASE_MERGES=1', () => {
         const f = fixture('upstream');
         f.sb.git(f.me, 'switch', '-q', '-c', 'side', 'feat');

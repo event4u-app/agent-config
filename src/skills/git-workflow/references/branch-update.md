@@ -161,7 +161,11 @@ reachable from `origin/<base>` — the stop names its remedy: a plain rebase tha
 drops those merges, run only after the user confirms it this turn, which a run
 started with `DROP_BASE_MERGES=1` stands for; the recovery ref is written
 first, and conflicts resolved inside those merges may come back during the
-rebase. A merge of anything else is still refused even with
+rebase. A base merge whose tree differs from the automatic merge of its two
+parents (`git merge-tree --write-tree`) carries changes of its own — a conflict
+resolution, or an edit made inside the merge — and is never dropped: the run
+stops naming it, and whenever merges were dropped step 3 reports "needs
+review". A merge of anything else is still refused even with
 `DROP_BASE_MERGES=1`; `--rebase-merges` is a separate operation the user asks
 for, never a fallback;
 and commits on the branch you did not author (§ Under `rebase`, shared branch)
@@ -206,6 +210,11 @@ if [ -n "$MERGES" ]; then
     || stop "the topic range carries a merge commit that is not a merge of the base ($OTHER) — a plain rebase drops it; --rebase-merges is a separate operation the user asks for"
   [ "${DROP_BASE_MERGES:-}" = 1 ] \
     || stop "the topic range carries a merge commit from an earlier merge of the base, which a plain rebase drops — ask the user; set DROP_BASE_MERGES=1 only on their answer this turn (conflicts resolved inside those merges may come back); keeping them is --rebase-merges, a separate operation the user asks for"
+  for m in $MERGES; do
+    AUTO=$(git merge-tree --write-tree "$m^1" "$m^2" 2>/dev/null | head -n 1) && [ -z "$(git rev-parse -q --verify "$m^3")" ] \
+      && [ "$AUTO" = "$(git rev-parse "$m^{tree}")" ] \
+      || stop "the merge $(git rev-parse --short "$m") carries changes of its own (a conflict resolution or an edit) — dropping it loses them; nothing was rewritten"
+  done
 fi
 ME=$(git config user.email) || stop "git config user.email is unset, so your commits cannot be told from inherited ones — nothing was rewritten"
 AUTHORS=$(git log --format='%h %ae' "origin/$BASE..HEAD") \
@@ -250,11 +259,14 @@ VERDICT="mechanically equivalent"
 [ "$(cut -d' ' -f1 <<<"$OLD")" = "$(cut -d' ' -f1 <<<"$NEW")" ] || VERDICT="needs review"
 [ -n "$OLD" ] || [ "$(git rev-list --count --no-merges "$OLD_BASE..$SAVE")" = 0 ] || VERDICT="needs review"
 [ -n "$NEW" ] || [ "$(git rev-list --count --no-merges "origin/$BASE..HEAD")" = 0 ] || VERDICT="needs review"
+DROPPED=$(git rev-list --merges "$OLD_BASE..$SAVE")
+[ -z "$DROPPED" ] || VERDICT="needs review"
 if git merge-base --is-ancestor "origin/$BASE" "$SAVE" \
   && [ "$(git rev-parse "$SAVE^{tree}")" != "$(git rev-parse "HEAD^{tree}")" ]; then
   VERDICT="needs review"
 fi
 echo "EQUIVALENCE: $VERDICT"
+[ -z "$DROPPED" ] || echo "  dropped merge(s): $(git rev-parse --short $DROPPED | tr '\n' ' ')"
 if [ "$VERDICT" = "needs review" ]; then
   comm -3 <(cut -d' ' -f1 <<<"$OLD") <(cut -d' ' -f1 <<<"$NEW") | tr -d '\t' | sort -u | while read -r p; do
     [ -n "$p" ] || continue
