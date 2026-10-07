@@ -1,6 +1,7 @@
 /**
- * `measure` on a history the plain 24-month window misreads: one whose every
- * commit is older, so the window samples nothing.
+ * `measure` on histories the plain 24-month window misreads: one whose every
+ * commit is older (the window samples nothing), and the card `--family` prints,
+ * which the approved-card reader has to recognise when it is saved as printed.
  */
 import { execFileSync } from 'node:child_process';
 import * as fs from 'node:fs';
@@ -9,7 +10,7 @@ import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { runGitConvention } from '../../../src/scripts/_cli/cmd_git_convention.js';
+import { APPROVED_CARD, NO_CONVENTION, runGitConvention } from '../../../src/scripts/_cli/cmd_git_convention.js';
 import { MIN_N } from '../../../src/scripts/_lib/git_convention_measure.js';
 
 const made: string[] = [];
@@ -61,5 +62,27 @@ describe('measure when the 24-month window yields too few commits', () => {
         const dir = repo(conventional(MIN_N + 2), null);
         const m = JSON.parse(runGitConvention(['measure', '--json'], dir).out.join('\n')) as { sample: { window_extended: boolean } };
         expect(m.sample.window_extended).toBe(false);
+    });
+});
+
+describe('the card measure --family prints', () => {
+    it('is recognised by show when saved exactly as printed', () => {
+        const dir = repo(conventional(40), null);
+        const out = runGitConvention(['measure', '--family', 'conventional'], dir).out;
+        const at = out.findIndex((l) => l.startsWith('card '));
+        expect(at).toBeGreaterThan(-1);
+        const card = out.slice(at + 1).join('\n');
+        expect(card.startsWith('---\n')).toBe(true);
+        fs.mkdirSync(path.dirname(path.join(dir, APPROVED_CARD)), { recursive: true });
+        fs.writeFileSync(path.join(dir, APPROVED_CARD), `${card}\n`);
+        const show = runGitConvention(['show', '--key', 'commit_format'], dir).out.join('\n');
+        expect(show).not.toContain(NO_CONVENTION);
+    });
+
+    it('is recognised by show when saved with the two-space indent older output carried', () => {
+        const dir = repo(conventional(40), null);
+        fs.mkdirSync(path.dirname(path.join(dir, APPROVED_CARD)), { recursive: true });
+        fs.writeFileSync(path.join(dir, APPROVED_CARD), '  ---\n  dominant_family: conventional\n  ---\n');
+        expect(runGitConvention(['show', '--key', 'commit_format'], dir).out.join('\n')).not.toContain(NO_CONVENTION);
     });
 });

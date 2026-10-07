@@ -271,7 +271,7 @@ function _cardFamily(root: string): string | null {
     } catch {
         return null;
     }
-    return /^dominant_family:\s*["']?([a-z-]+)/m.exec(text)?.[1] ?? null;
+    return /^[ \t]*dominant_family:\s*["']?([a-z-]+)/m.exec(text)?.[1] ?? null;
 }
 
 /**
@@ -496,8 +496,9 @@ export function measureCommand(args: readonly string[], cwd: string): GitConvent
         out.push(...team.trimEnd().split('\n').map((l) => `  ${l}`));
     }
     if (chosen !== undefined && card !== null) {
-        out.push(`card      for ${APPROVED_CARD}:`);
-        out.push(...card.trimEnd().split('\n').map((l) => `  ${l}`));
+        // Unindented: the card is saved as printed, and its frontmatter must open the file.
+        out.push(`card      for ${APPROVED_CARD}, save the lines below as they are:`);
+        out.push(...card.trimEnd().split('\n'));
     }
     return { code: 0, out, err: [] };
 }
