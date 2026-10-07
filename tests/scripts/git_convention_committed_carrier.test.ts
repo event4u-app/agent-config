@@ -7,6 +7,7 @@
  * strategy its own update is judged by. `commit_format` and `branch_pattern`
  * are read at `HEAD`, at the repository root, over every developer layer.
  */
+import * as fs from 'node:fs';
 import * as path from 'node:path';
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -213,6 +214,19 @@ describe('commit_format and branch_pattern are read at HEAD, at the repository r
         const read = readCommittedConvention(f.work, { keys: ['commit_format', 'branch_pattern'], run: failTree });
         expect(read.readings.commit_format).toMatchObject({ state: 'unresolvable', value: null });
         expect(read.readings.branch_pattern).toMatchObject({ state: 'unresolvable', value: null });
+    });
+
+    it('a working-tree carrier that cannot be read is a malformed candidate, as the developer files are', () => {
+        const f = fixture(tmp, { [CARRIER_PATH]: 'git:\n  commit_format: ticket-scope\n' });
+        const file = path.join(f.work, CARRIER_PATH);
+        fs.chmodSync(file, 0o000);
+        try {
+            const read = readCommittedConvention(f.work, { keys: ['commit_format'] });
+            expect(read.readings.commit_format?.value).toBe('ticket-scope');
+            expect(read.candidates.commit_format).toMatchObject({ state: 'malformed', source: file });
+        } finally {
+            fs.chmodSync(file, 0o644);
+        }
     });
 });
 

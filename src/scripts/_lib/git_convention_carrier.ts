@@ -231,13 +231,16 @@ function _carrierLayer(label: string, blob: Exclude<CommitBlob, { kind: 'no-comm
     return { path: label, carries: true, ...parseLayerText(blob.text) };
 }
 
+/** Read failures map as `git_convention.ts` maps them for the developer files. */
 function _workingTreeLayer(root: string): GitConventionLayer {
     const p = path.join(root, CARRIER_PATH);
     let text: string;
     try {
+        if (!fs.statSync(p).isFile()) return { path: p, carries: true, parsed: 'absent', data: null };
         text = fs.readFileSync(p, 'utf-8');
-    } catch {
-        return { path: p, carries: true, parsed: 'absent', data: null };
+    } catch (err) {
+        const parsed = (err as NodeJS.ErrnoException).code === 'ENOENT' ? 'absent' : 'malformed';
+        return { path: p, carries: true, parsed, data: null };
     }
     return { path: p, carries: true, ...parseLayerText(text) };
 }
