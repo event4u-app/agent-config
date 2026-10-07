@@ -174,7 +174,7 @@ FOREIGN=$(awk -v me="$ME" 'tolower($2) != tolower(me)' <<<"$AUTHORS")
   || stop "the topic range carries commits you did not author ($(tr '\n' ' ' <<<"$FOREIGN")) — ask the user; set ALLOW_FOREIGN=1 only on their answer this turn"
 EXPECTED=$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)
 if [ -n "$EXPECTED" ]; then
-  git fetch -q "$REMOTE" "refs/heads/$RB"
+  git fetch -q "$REMOTE" "refs/heads/$RB" || stop "could not fetch $REMOTE/$RB — nothing was rewritten"
   git merge-base --is-ancestor "$EXPECTED" HEAD || stop "$REMOTE/$RB has commits this branch lacks"
 fi
 SAVE="refs/agent-config/rewrites/$(date -u +%Y%m%dT%H%M%SZ)-$$/before"
