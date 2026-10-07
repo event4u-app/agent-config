@@ -114,7 +114,7 @@ import {
     resolve_project_root,
     type TraceRecord,
 } from '../_lib/agent_settings.js';
-import { executionJson, forgeProtectionJsonFor } from './doctor_execution.js';
+import { executionJson, forgeDepsFor, forgeProtectionJsonFor, type ForgeDeps } from './doctor_execution.js';
 import { checkOfflineReadiness, trafficEnvironmentJson } from './doctor_network_posture.js';
 import * as ai_council_clients from '../ai_council/clients.js';
 import * as ai_council_config from '../ai_council/config.js';
@@ -2945,7 +2945,7 @@ function _run_no_manifest(
         checks.some((c) => c['id'] === opts.check && c['status'] === 'skipped');
 
     if (opts.json) {
-        _emit_json(project_root, [], [], [], [], checks, origin);
+        _emit_json(project_root, [], [], [], [], checks, origin, forgeDepsFor(opts));
     } else if (opts.check === null) {
         print(`  📍  project_root: ${project_root} (origin: ${origin})`);
         if (bridge_present) {
@@ -2998,7 +2998,7 @@ function _emit_json(
     foreign: Dict[],
     tag_drift: Dict[],
     checks: Dict[] | null = null,
-    origin: string | null = null,
+    origin: string | null = null, forge: ForgeDeps = {},
 ): void {
     const payload: Dict = {
         project_root: String(project_root),
@@ -3009,7 +3009,7 @@ function _emit_json(
     };
     if (origin !== null) payload['project_root_origin'] = origin;
     payload['execution'] = executionJson(() => iter_setting_overrides({ cwd: project_root }));
-    payload['forge_protection'] = forgeProtectionJsonFor(String(project_root)); // 3.2 · AC-5
+    payload['forge_protection'] = forgeProtectionJsonFor(String(project_root), forge); // 3.2 · AC-5
     payload['traffic_environment'] = trafficEnvironmentJson(process.env);
     if (checks !== null) {
         payload['checks'] = checks;
@@ -3066,7 +3066,7 @@ interface Options {
     ci: boolean;
     strict: boolean; strict_level: string; // see `_doctor_strict.ts`
     check: string | null;
-    trace_root: boolean;
+    trace_root: boolean; no_forge: boolean; // --no-forge / --offline
     context: boolean;
     anatomy: boolean;
     repair: string | null;
@@ -3080,14 +3080,14 @@ const PROG = 'agent-config doctor';
 const USAGE =
     `usage: ${PROG} [-h] [--project PROJECT] [--json] [--ci] [--check ID]\n` +
     STRICT_USAGE +
-    '                           [--trace-root] [--context] [--anatomy]\n' +
+    '                           [--trace-root] [--context] [--anatomy] [--no-forge]\n' +
     '                           [--repair ID]\n';
 
 const _STORE_TRUE_FLAGS: Record<string, keyof Options> = {
     '--json': 'json',
     '--ci': 'ci',
     ...STRICT_STORE_TRUE,
-    '--trace-root': 'trace_root',
+    '--trace-root': 'trace_root', '--no-forge': 'no_forge', '--offline': 'no_forge',
     '--context': 'context',
     '--anatomy': 'anatomy',
 };
@@ -3112,7 +3112,7 @@ function _parse(argv: string[]): Options {
         ci: false,
         ...STRICT_DEFAULTS,
         check: null,
-        trace_root: false,
+        trace_root: false, no_forge: false,
         context: false,
         anatomy: false,
         repair: null,
@@ -3390,7 +3390,7 @@ function main(argv: string[] | null = null): number {
     const fail_check = checks.some((c) => c['status'] === 'fail');
 
     if (opts.json) {
-        _emit_json(project_root, missing, modified, foreign, tag_drift, checks, origin);
+        _emit_json(project_root, missing, modified, foreign, tag_drift, checks, origin, forgeDepsFor(opts));
     } else {
         if (opts.check === null) {
             print(`  📍  project_root: ${project_root} (origin: ${origin})`);

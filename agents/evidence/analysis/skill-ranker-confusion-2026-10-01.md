@@ -338,6 +338,14 @@ skill's **body** alongside its description, pre-registered, over 406 positives
 and 404 negatives. Its verdict is **`harmful`** — recall +5.91 pp, but false
 activation +8.17 pp against a +2.0 pp guard.
 
+> **Correction, 2026-10-07 (release finding `4507566202f6`).** The four figures
+> above match no committed state of the verdict file: it read 396 / 398, +5.556
+> and +7.789 before this page landed and has been regenerated since. The file is
+> re-measured as its corpus grows, so it is the source and this paragraph is
+> not; at `measured_at` 2026-10-06 it reads 441 positives and 434 negatives,
+> recall +4.08 pp and false activation +6.91 pp. The verdict, **`harmful`**,
+> and the direction argued below are the same in every state.
+
 **The two are different instruments and they point the same way.** That one
 measures a routing harness with a false-activation guard; this one measures
 top-1 / top-3 / MRR over the labelled matrix. Neither is the other's

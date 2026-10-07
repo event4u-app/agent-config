@@ -18,9 +18,11 @@
 //    trailing `\n`), again with `mtime` normalised — exercises the
 //    indent-2 / sort-keys serialiser directly.
 import * as fs from 'node:fs';
+import fsModule from 'node:fs';
+import { syncBuiltinESMExports } from 'node:module';
 import * as os from 'node:os';
 import * as path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
     BEHAVIOR_UNKNOWN,
@@ -1353,5 +1355,32 @@ describe('stack/runner — latest_manifest_mtime', () => {
         expect(latest_manifest_mtime(tmp, ['pkg/a'])).toBeGreaterThan(0);
         // And the default walk does see `pkg/a`, which that scope list did not.
         expect(latest_manifest_mtime(tmp)).toBeGreaterThan(0);
+    });
+
+    it('a manifest that vanishes between the existence check and the stat does not throw', () => {
+        // Release finding e35624528060: the guard in `_stat_mtime` had no test,
+        // because the race cannot be produced deterministically. It can be
+        // INJECTED: `_is_file` stats without options and sees the file, the
+        // mtime stat (the only `bigint` one) then fails as a deleted file would.
+        // Remove the try/catch in `_stat_mtime` and this case throws ENOENT.
+        // The ESM namespace is not configurable, so the stub goes on the CJS
+        // module object and `syncBuiltinESMExports` pushes it to the named
+        // export the resolver reads.
+        write('composer.json', '{}');
+        const real = fsModule.statSync;
+        const spy = vi.spyOn(fsModule, 'statSync').mockImplementation(((p: fs.PathLike, o?: fs.StatSyncOptions) => {
+            if (o?.bigint === true) {
+                throw Object.assign(new Error(`ENOENT: ${String(p)}`), { code: 'ENOENT' });
+            }
+            return real(p, o);
+        }) as typeof fs.statSync);
+        syncBuiltinESMExports();
+        try {
+            expect(latest_manifest_mtime(tmp)).toBe(0.0);
+            expect(spy.mock.calls.some((c) => (c[1] as fs.StatSyncOptions | undefined)?.bigint === true)).toBe(true);
+        } finally {
+            spy.mockRestore();
+            syncBuiltinESMExports();
+        }
     });
 });
