@@ -87,7 +87,9 @@ owner, because it reverses a recorded supersession.
       (several already landed on `main` by `00612c1f2`, `fc1bdec4f` and
       `93a192bbd` before or during this roadmap's run — re-read and cited
       rather than re-done), 4 `accepted_risk` (a deliberate, disclosed
-      design choice each, with a revisit-if), 9 `still_open` (honestly
+      design choice each — 3 of the 4 carry a revisit-if; `1b661735687e`
+      is a frozen-historical-fact disclosure with none, correctly, since
+      nothing about a closed round will change), 9 `still_open` (honestly
       left open; 2 of the 9 name an owning roadmap — `2c9959f7262d` →
       road-to-release-evidence-that-reproduces,
       `ee95ff4aca5f` → road-to-blocking-time-by-cause — the other 7 are
@@ -167,7 +169,13 @@ owner, because it reverses a recorded supersession.
       narrow residual today, and step 1.2's own instruction only asks for
       the name where a sibling roadmap owns the row. Inventing a roadmap
       per orphan finding is a separate, larger decision this task does not
-      make. Corrected 2026-10-07 by an independent R2 completion review
+      make. The two named roadmaps are not equally "open": `road-to-
+      blocking-time-by-cause` is active, with a named gap the finding's
+      own rationale says still needs a ten-session window; `road-to-
+      release-evidence-that-reproduces` is archived with every step closed
+      — it dispositioned `2c9959f7262d` on its own narrower terms and will
+      not revisit it, so naming it an "owner" means "the finding was
+      already reasoned about there," not "there is open work tracking it." Corrected 2026-10-07 by an independent R2 completion review
       (finding 2): the first-pass text named `bfe1d6e6d8ca` as the second
       roadmap-owning row, but that finding is `status: fixed` (commit
       `93a192bbd`), landed by a parallel lane after this roadmap's own
