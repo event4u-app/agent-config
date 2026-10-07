@@ -55,6 +55,7 @@ import {
 import { describeRefusal, isRefusal, type GitConventionReading } from './_lib/git_convention.js';
 import {
     makeTargetDeps,
+    memoTargetDeps,
     parseSymrefDefault,
     readCommittedConvention,
     resolveTarget,
@@ -677,10 +678,10 @@ function gitRegenOps(repo: string): RegenOps {
     };
 }
 
-export function sync(repo: string, baseOverride: string | null, dryRun: boolean, autoResolve = false): Plan {
+export function sync(repo: string, baseOverride: string | null, dryRun: boolean, autoResolve = false, deps?: BaseDeps): Plan {
     let resolved: ResolveBaseResult;
     try {
-        resolved = resolveBase(repo, baseOverride);
+        resolved = resolveBase(repo, baseOverride, deps ?? makeGitDeps(repo));
     } catch (exc) {
         // A missing policy, an unresolvable target SHA and an unresolvable base
         // are all REFUSALS carrying their own typed message. None of them
@@ -813,7 +814,8 @@ export function updateStrategy(repo: string, base: string | null = null, deps?: 
     return read.readings.update_strategy as GitConventionReading;
 }
 
-export function main(argv?: readonly string[]): number {
+/** `deps` answers the target questions; tests inject it, a run asks git and the forge. */
+export function main(argv?: readonly string[], deps?: BaseDeps): number {
     const args = argv ?? process.argv.slice(2);
     let repo = process.cwd();
     let base: string | null = null;
@@ -880,7 +882,8 @@ export function main(argv?: readonly string[]): number {
     // git-history-discipline — so the branch is only CHECKED (dry run), and a
     // branch that is behind is refused rather than merged. A current branch
     // passes, so an automated pre-push sync stays green when nothing is to do.
-    const reading = updateStrategy(repo, base);
+    const targetDeps = memoTargetDeps(deps ?? makeGitDeps(repo));
+    const reading = updateStrategy(repo, base, targetDeps);
     if (isRefusal(reading.state)) {
         process.stdout.write(`❌  sync_pr_branch: refused — ${describeRefusal(reading)}. Nothing was checked or merged.\n`);
         reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'git.update_strategy unreadable' });
@@ -890,7 +893,7 @@ export function main(argv?: readonly string[]): number {
     let plan: Plan;
     try {
         if (strategy !== 'merge') {
-            plan = sync(repo, base, true, false);
+            plan = sync(repo, base, true, false, targetDeps);
             const t = plan.targetStale;
             if (plan.exit === 0 && t !== undefined && t.branchBehind === 0) {
                 process.stdout.write(
@@ -912,7 +915,7 @@ export function main(argv?: readonly string[]): number {
                 return 3;
             }
         } else {
-            plan = sync(repo, base, dryRun, autoResolve);
+            plan = sync(repo, base, dryRun, autoResolve, targetDeps);
         }
     } catch (exc) {
         reportScanned({ gate: 'sync_pr_branch', scanned: 0, units: 'base ref(s)', roots: ['origin'], allowEmpty: 'internal error' });

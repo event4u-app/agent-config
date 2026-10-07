@@ -153,6 +153,27 @@ export function makeTargetDeps(repo: string): TargetDeps {
     };
 }
 
+/**
+ * The same questions, each asked of git or the forge at most once. One run reads
+ * the strategy and then syncs; without this each step asked again, paying the
+ * network twice and able to judge the strategy against one target and sync
+ * against another when the pull request is retargeted in between.
+ */
+export function memoTargetDeps<T extends TargetDeps>(deps: T): T {
+    const cache = new Map<string, string | null>();
+    const once = (key: string, ask: () => string | null): string | null => {
+        if (!cache.has(key)) cache.set(key, ask());
+        return cache.get(key) as string | null;
+    };
+    return {
+        ...deps,
+        currentBranch: (): string => once('branch', () => deps.currentBranch()) ?? '',
+        prBase: (branch: string): string | null => once(`pr ${branch}`, () => deps.prBase(branch)),
+        defaultBranch: (): string | null => once('default', () => deps.defaultBranch()),
+        remoteSha: (ref: string): string | null => once(`sha ${ref}`, () => deps.remoteSha(ref)),
+    };
+}
+
 /** `absent` (the commit has no carrier) and `no-commit` (the commit itself is unknown) are different facts. */
 export type CommitBlob = { kind: 'absent' } | { kind: 'present'; text: string } | { kind: 'no-commit' };
 

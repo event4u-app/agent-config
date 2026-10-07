@@ -14,6 +14,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runGitConvention, showConvention } from '../../src/scripts/_cli/cmd_git_convention.js';
 import { CARRIER_PATH, makeTargetDeps, readCommittedConvention, type TargetDeps } from '../../src/scripts/_lib/git_convention_carrier.js';
 import { classify_target } from '../../src/scripts/hooks/block_config_weakening.js';
+import { main as syncMain, makeGitDeps } from '../../src/scripts/sync_pr_branch.js';
 
 import { TmpDirs, advanceMain, commitIn, fixture, git, isolateUserGlobal, runSync, write } from './_git_convention_repo.js';
 
@@ -222,6 +223,43 @@ describe('git:convention show', () => {
         const r = showConvention(['--base', 'origin/main'], f.work, noPr(f.work));
         expect(r.code).toBe(1);
         expect(r.out.join('\n')).not.toContain('git.update_strategy = merge');
+    });
+});
+
+describe('one run resolves its target once', () => {
+    it('the strategy and the sync are judged against the same answer, asked for once', () => {
+        const f = fixture(tmp, { [CARRIER_PATH]: REBASE });
+        advanceMain(f);
+        const calls: string[] = [];
+        // A forge whose answer changes between two questions: the PR is retargeted mid-run.
+        const bases = ['main', 'release'];
+        const real = makeGitDeps(f.work);
+        const deps = {
+            ...real,
+            prBase: (): string | null => {
+                calls.push('prBase');
+                return bases.shift() ?? null;
+            },
+            defaultBranch: (): string | null => {
+                calls.push('defaultBranch');
+                return real.defaultBranch();
+            },
+            remoteSha: (ref: string): string | null => {
+                calls.push(`remoteSha ${ref}`);
+                return real.remoteSha(ref);
+            },
+        };
+        const spy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+        let code: number;
+        try {
+            code = syncMain(['--repo', f.work], deps);
+        } finally {
+            spy.mockRestore();
+        }
+        expect(code).toBe(3);
+        expect(calls.filter((c) => c === 'prBase')).toHaveLength(1);
+        expect(calls.filter((c) => c === 'remoteSha origin/main')).toHaveLength(1);
+        expect(calls.filter((c) => c === 'defaultBranch').length).toBeLessThanOrEqual(1);
     });
 });
 
