@@ -48,9 +48,17 @@ describe('the five states', () => {
     it('valid: the deepest layer that sets the key wins and is named', () => {
         const dir = tmp();
         const low = file(dir, 'low.yml', 'git:\n  update_strategy: merge\n');
-        const high = file(dir, 'high.yml', 'git:\n  update_strategy: " Rebase "\n');
+        const high = file(dir, 'high.yml', 'git:\n  update_strategy: " rebase "\n');
         const r = readGitConventionKey('update_strategy', fileSource({ developer: [low, high] }), DEFAULTS);
         expect(r).toMatchObject({ state: 'valid', value: 'rebase', source: high, reason: null });
+    });
+
+    it('invalid: an enum value is case-sensitive, as the schema is, and the reason says so', () => {
+        const dir = tmp();
+        const high = file(dir, 'high.yml', 'git:\n  update_strategy: Rebase\n');
+        const r = readGitConventionKey('update_strategy', fileSource({ developer: [high] }), DEFAULTS);
+        expect(r).toMatchObject({ state: 'invalid', value: 'Rebase', reason: 'git-convention-invalid' });
+        expect(r.detail).toContain('case-sensitive');
     });
 
     it('malformed: an unreadable file is never the default', () => {

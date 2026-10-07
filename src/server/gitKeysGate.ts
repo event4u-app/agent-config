@@ -11,7 +11,7 @@
  * `settings:check` run, so a pattern that would reach a shell is refused here as
  * well.
  */
-import { GIT_CONVENTION_KEYS, invalidReason, type GitConventionKey } from '../scripts/_lib/git_convention.js';
+import { GIT_CONVENTION_KEYS, invalidReason } from '../scripts/_lib/git_convention.js';
 
 export const WITHHELD_GIT_KEYS: readonly string[] = GIT_CONVENTION_KEYS.map((k) => `git.${k}`);
 
@@ -29,8 +29,8 @@ function _gitSection(values: Record<string, unknown>): Record<string, unknown> |
     return git !== null && typeof git === 'object' && !Array.isArray(git) ? (git as Record<string, unknown>) : null;
 }
 
-function _normalise(key: GitConventionKey, value: string): string {
-    return key === 'branch_pattern' ? value.trim() : value.trim().toLowerCase();
+function _normalise(value: string): string {
+    return value.trim();
 }
 
 /** The values and the JSON schema with the `git` section removed. */
@@ -62,14 +62,14 @@ export function gitKeyWriteIssues(
     for (const key of GIT_CONVENTION_KEYS) {
         const raw = git[key];
         if (typeof raw !== 'string') continue;
-        const value = _normalise(key, raw);
+        const value = _normalise(raw);
         const why = invalidReason(key, value);
         if (why !== null) {
             issues.push({ path: `git.${key}`, message: why });
             continue;
         }
         const def = fallback[key];
-        if (userGlobal && !(typeof def === 'string' && _normalise(key, def) === value)) {
+        if (userGlobal && !(typeof def === 'string' && _normalise(def) === value)) {
             issues.push({ path: `git.${key}`, message: WITHHELD_REASON });
         }
     }

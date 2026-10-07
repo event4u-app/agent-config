@@ -135,9 +135,9 @@ function _lookup(data: unknown, key: GitConventionKey): Lookup {
     return { present: true, value };
 }
 
-function _normalise(key: GitConventionKey, value: string): string {
-    const trimmed = value.trim();
-    return GIT_CONVENTION_ENUMS[key] === undefined ? trimmed : trimmed.toLowerCase();
+/** Trimmed only: the JSON schema and the route's enums are case-sensitive, so this reader is too. */
+function _normalise(_key: GitConventionKey, value: string): string {
+    return value.trim();
 }
 
 const BRANCH_PLACEHOLDERS = ['type', 'ticket', 'slug'] as const;
@@ -182,7 +182,9 @@ function _branchPatternReason(pattern: string): string | null {
 export function invalidReason(key: GitConventionKey, value: string): string | null {
     const allowed = GIT_CONVENTION_ENUMS[key];
     if (allowed !== undefined) {
-        return allowed.includes(value) ? null : `\`${value}\` is not one of ${allowed.map((v) => `\`${v}\``).join(', ')}`;
+        if (allowed.includes(value)) return null;
+        const caseOnly = allowed.includes(value.toLowerCase()) ? ' (values are case-sensitive)' : '';
+        return `\`${value}\` is not one of ${allowed.map((v) => `\`${v}\``).join(', ')}${caseOnly}`;
     }
     return _branchPatternReason(value);
 }
