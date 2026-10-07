@@ -136,12 +136,13 @@ concurrent machine load and the build difference are both possible causes and
 neither was measured. The `--repo` mode times the feeder alone, so the
 hook-arm ordering change is not one of them.
 
-A one-off split, taken during the first reading with a scratch probe and not
+A one-off split, taken during the first-instrument reading (the third table
+row, p50 884 ms) with a scratch probe and not
 shipped as an instrument (11 rounds, medians): `graphState` **≈ 195 ms** — the
 git freshness probes over a 3,768-file tree — and source pick plus `loadGraph`
 **≈ 634 ms**, which is parsing the 59 MB JSON cache. The `untested` walk itself
 is the small remainder. The load term dominating is the finding; the absolute
-figures belong to the slower of the two conditions above.
+figures belong to that third row's slower conditions, not to the others.
 
 ## What it means
 
