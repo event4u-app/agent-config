@@ -151,6 +151,15 @@ export interface RankOptions {
      * exists to prevent.
      */
     idfWeighting?: boolean;
+    /**
+     * Order equal INTEGER scores by the unrounded score before the name.
+     *
+     * Changes no score — `scoreSkill` still returns the rounded integer — only
+     * the order inside a block of equal integers, which is otherwise decided by
+     * the alphabet (`road-to-a-ranker-whose-ties-break-on-signal` D4). Off, the
+     * comparator is the Python-parity `(-score, name)` one, unchanged.
+     */
+    tieBreakUnrounded?: boolean;
 }
 
 /** The indexed term set for one skill, under the given options. */
@@ -226,6 +235,20 @@ export function scoreSkill(
     opts: RankOptions = {},
     stats?: TermStats,
 ): number {
+    return roundHalfToEven(rawSkillScore(taskTerms, skill, terms, opts, stats));
+}
+
+/**
+ * The score before `roundHalfToEven` — what {@link scoreSkill} rounds. Exposed
+ * only so `tieBreakUnrounded` can order a block of equal integers by it.
+ */
+export function rawSkillScore(
+    taskTerms: ReadonlySet<string>,
+    skill: RankableSkill,
+    terms: ReadonlySet<string>,
+    opts: RankOptions = {},
+    stats?: TermStats,
+): number {
     if (opts.idfWeighting && !stats) {
         throw new Error(
             'scoreSkill: idfWeighting is set but no TermStats was passed — scoring unweighted here ' +
@@ -257,7 +280,7 @@ export function scoreSkill(
             break;
         }
     }
-    return roundHalfToEven(overlap * 70 + personaHit * 30);
+    return overlap * 70 + personaHit * 30;
 }
 
 export interface RankedSkill {
@@ -279,11 +302,37 @@ export function rankSkills(
     const termSets = skills.map((s) => skillTerms(s, opts));
     const stats = opts.idfWeighting ? buildTermStats(skills, termSets) : undefined;
     const rows: RankedSkill[] = [];
+    const raw = new Map<string, number>();
     for (let i = 0; i < skills.length; i += 1) {
         const skill = skills[i] as RankableSkill;
-        const score = scoreSkill(taskTerms, skill, termSets[i] as ReadonlySet<string>, opts, stats);
-        if (score > 0) rows.push({ name: skill.name, score, personas: [...(skill.personas ?? [])] });
+        const unrounded = rawSkillScore(taskTerms, skill, termSets[i] as ReadonlySet<string>, opts, stats);
+        const score = roundHalfToEven(unrounded);
+        if (score > 0) {
+            rows.push({ name: skill.name, score, personas: [...(skill.personas ?? [])] });
+            raw.set(skill.name, unrounded);
+        }
     }
-    rows.sort((a, b) => (b.score - a.score) || (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    rows.sort((a, b) => compareRanked(a.name, a.score, b.name, b.score, opts, raw));
     return rows;
+}
+
+/**
+ * The ranking order: score descending, then — only under `tieBreakUnrounded` —
+ * the unrounded score descending, then the name. One comparator for both
+ * rankers, so the flag cannot mean two orders in two places.
+ */
+export function compareRanked(
+    aName: string,
+    aScore: number,
+    bName: string,
+    bScore: number,
+    opts: RankOptions,
+    raw: ReadonlyMap<string, number>,
+): number {
+    if (bScore !== aScore) return bScore - aScore;
+    if (opts.tieBreakUnrounded) {
+        const d = (raw.get(bName) ?? 0) - (raw.get(aName) ?? 0);
+        if (d !== 0) return d;
+    }
+    return aName < bName ? -1 : aName > bName ? 1 : 0;
 }

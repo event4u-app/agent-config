@@ -40,7 +40,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // the disk half — globbing, frontmatter, the CLI — which stays here.
 import {
     buildTermStats,
-    scoreSkill,
+    compareRanked,
+    rawSkillScore,
+    roundHalfToEven,
     skillTerms as _sharedSkillTerms,
     tokenize as _sharedTokenize,
     triggerTextFromFlatLines,
@@ -510,15 +512,15 @@ function _terms(skill: Skill, opts: RankOptions): ReadonlySet<string> {
     return widensTermSource(opts) ? _sharedSkillTerms(_rankable(skill), opts) : skill.terms;
 }
 
-function _score(
+function _rawScore(
     taskTerms: Set<string>,
     skill: Skill,
     terms: ReadonlySet<string>,
     opts: RankOptions = {},
     stats?: TermStats,
 ): number {
-    // Single-sourced in `src/shared/skillRanking.ts`.
-    return scoreSkill(taskTerms, _rankable(skill), terms, opts, stats);
+    // Single-sourced in `src/shared/skillRanking.ts`; `scoreSkill` rounds this.
+    return rawSkillScore(taskTerms, _rankable(skill), terms, opts, stats);
 }
 
 export type RankRow = [string, number, string[]];
@@ -538,6 +540,20 @@ export function rank(
     opts: RankOptions = {},
     ctx?: NeighbourContext,
 ): RankRow[] {
+    return rankDetailed(task, skillsDir, opts, ctx).rows;
+}
+
+/**
+ * {@link rank}, plus each ranked skill's unrounded score. The tie metrics of
+ * `report_skill_ranker_confusion` need the second half to tell a tie the
+ * ordering key still cannot break from one the unrounded score already broke.
+ */
+export function rankDetailed(
+    task: string,
+    skillsDir: string | readonly string[],
+    opts: RankOptions = {},
+    ctx?: NeighbourContext,
+): { rows: RankRow[]; raw: ReadonlyMap<string, number> } {
     const taskTerms = _tokenize(task);
     const skills = _load_skills_across(
         typeof skillsDir === 'string' ? [skillsDir] : skillsDir,
@@ -549,27 +565,20 @@ export function rank(
     const termSets = skills.map((s) => _terms(s, opts));
     const stats = opts.idfWeighting ? buildTermStats(skills.map(_rankable), termSets) : undefined;
     const rows: RankRow[] = [];
+    const raw = new Map<string, number>();
     for (let i = 0; i < skills.length; i += 1) {
         const s = skills[i] as Skill;
-        const score = _score(taskTerms, s, termSets[i] as ReadonlySet<string>, opts, stats);
+        const unrounded = _rawScore(taskTerms, s, termSets[i] as ReadonlySet<string>, opts, stats);
+        const score = roundHalfToEven(unrounded);
         if (score > 0) {
             rows.push([s.qualified, score, [...s.personas]]);
+            raw.set(s.qualified, unrounded);
         }
     }
-    // rows.sort(key=lambda r: (-r[1], r[0])) — Python stable tuple sort.
-    rows.sort((a, b) => {
-        if (b[1] !== a[1]) {
-            return b[1] - a[1];
-        }
-        if (a[0] < b[0]) {
-            return -1;
-        }
-        if (a[0] > b[0]) {
-            return 1;
-        }
-        return 0;
-    });
-    return rows;
+    // rows.sort(key=lambda r: (-r[1], r[0])) — Python stable tuple sort, with
+    // the opt-in unrounded tie-break between the two keys.
+    rows.sort((a, b) => compareRanked(a[0], a[1], b[0], b[1], opts, raw));
+    return { rows, raw };
 }
 
 /** Mirror Python `f"{s:<{w}}"` (left-justify) over code-point width. */
