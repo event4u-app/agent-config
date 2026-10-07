@@ -14,7 +14,8 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { load_agent_settings } from '../../src/scripts/_lib/agent_settings.js';
-import { TEMPLATE_PLACEHOLDER_DEFAULTS } from '../../src/server/io/yamlIO.js';
+import { TEMPLATE_PLACEHOLDER_DEFAULTS, parseYaml } from '../../src/server/io/yamlIO.js';
+import { carveOutKeys } from '../../src/shared/settingsCarveOut.js';
 
 import { authHeaders, bootTestApp, fixtureSettings, type TestApp } from './helpers.js';
 
@@ -223,7 +224,10 @@ describe('global mode with a project layer above the user-global file', () => {
         const written = readFileSync(file, 'utf8');
         expect(written).not.toMatch(/update_strategy/);
         expect(written).not.toMatch(/^git:/m);
-        expect(readBack(file)['personal']).toMatchObject({ autonomy: (form['personal'] as Record<string, unknown>)['autonomy'] });
+        // A value equal to its default is not written; it resolves through the template.
+        const template = join(process.cwd(), 'src', 'config', 'agent-settings.template.yml');
+        const resolved = load_agent_settings({ user_global_path: file, project_path: join(home, 'absent.yml'), template_path: template });
+        expect(resolved['personal']).toMatchObject({ autonomy: (form['personal'] as Record<string, unknown>)['autonomy'] });
     });
 
     it('the first save into an absent user-global file is read back by the settings loader', async () => {
@@ -244,6 +248,29 @@ describe('global mode with a project layer above the user-global file', () => {
         expect(written).not.toMatch(/^git:/m);
         expect((readBack(file)['personal'] as Record<string, unknown>)['autonomy']).toBe('on');
         expect(readBack(file)['git']).toBeUndefined();
+    });
+
+    it('the first save into an absent user-global file records decisions, never a copy of the defaults', async () => {
+        const file = join(ctx.projectRoot, 'settings', '.agent-settings.yml');
+        rmSync(file);
+        const shown = await get(ctx);
+        const { git: _withheld, ...rest } = shown.values;
+        const form = { ...rest, personal: { ...(rest['personal'] as Record<string, unknown>), autonomy: 'on' } };
+        const res = await ctx.app.inject({
+            method: 'PUT',
+            url: '/api/v1/settings',
+            headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json', 'if-unmodified-since': String(shown.lastModified + 5) },
+            payload: { values: form, confirmGuarded: true },
+        });
+        expect(res.statusCode, res.body).toBe(200);
+        const leaves = (o: unknown, at = ''): string[] =>
+            o !== null && typeof o === 'object' && !Array.isArray(o)
+                ? Object.entries(o as Record<string, unknown>).flatMap(([k, v]) => leaves(v, at === '' ? k : `${at}.${k}`))
+                : [at];
+        const allowed = new Set([...carveOutKeys(), 'personal.autonomy']);
+        const written = leaves(parseYaml(readFileSync(file, 'utf8')));
+        expect(written).toContain('personal.autonomy');
+        expect(written.filter((k) => !allowed.has(k))).toEqual([]);
     });
 
     it('a user-global file without a git section stays without one under a project git value', async () => {

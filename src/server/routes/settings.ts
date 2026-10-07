@@ -19,16 +19,39 @@ import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { promises as fs } from 'node:fs';
 import type { Stats } from 'node:fs';
 import { dirname, join } from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import type { ZodIssue } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { settingsSchema } from '../schemas/settings.js';
-import { parseYaml, mergeIntoTemplate, diffValues, deepMerge, renderSparseSettings, TEMPLATE_PLACEHOLDER_DEFAULTS } from '../io/yamlIO.js';
+import { parseYaml, mergeIntoTemplate, diffValues, deepMerge, renderSparseSettings, substituteTemplatePlaceholders, TEMPLATE_PLACEHOLDER_DEFAULTS } from '../io/yamlIO.js';
 import { sparseSettingsValues } from './wizard.js';
 import { writeAtomic } from '../io/atomicWrite.js';
 import { WITHHELD_GIT_KEYS, WITHHELD_REASON, gitDiffBase, gitKeyWriteIssues, keepWithheldGit, withholdGitKeys } from '../gitKeysGate.js';
 import { sharedWriteTarget, resolveThroughSymlinks } from '../io/sharedWriteCheck.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
 import { buildSettingsClassIndex, guardedChangedKeys, parseSettingsClassRows, type SettingsClass } from '../../shared/settingsClasses.js';
+
+/**
+ * A fresh user-global file records decisions, not the defaults: the form posts
+ * every value, and a copy of the template's would freeze each default at today's
+ * value. Only leaves that differ from the template are kept, over the carve-outs.
+ */
+async function freshUserGlobalValues(packageRoot: string, candidate: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const templateBody = await fs.readFile(join(packageRoot, 'src', 'config', 'agent-settings.template.yml'), 'utf8');
+    const template = parseYaml(substituteTemplatePlaceholders(templateBody));
+    const decided = (value: unknown, dflt: unknown): unknown => {
+        if (value !== null && typeof value === 'object' && !Array.isArray(value)) {
+            const base = dflt !== null && typeof dflt === 'object' && !Array.isArray(dflt) ? (dflt as Record<string, unknown>) : {};
+            const kept = Object.entries(value as Record<string, unknown>)
+                .map(([k, v]) => [k, decided(v, base[k])] as const)
+                .filter(([, v]) => v !== undefined);
+            return kept.length === 0 ? undefined : Object.fromEntries(kept);
+        }
+        return isDeepStrictEqual(value, dflt) ? undefined : value;
+    };
+    const own = (decided(candidate, template) ?? {}) as Record<string, unknown>;
+    return deepMerge(sparseSettingsValues(templateBody, {}), own);
+}
 
 /** Sidecar written by `settings:set`, keyed by dotted path. */
 const PROVENANCE_RELATIVE = join('settings', '.agent-settings.provenance.json');
@@ -502,10 +525,7 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                     ? mergeIntoTemplate(current.raw, candidate)
                     : ownRaw !== null
                         ? mergeIntoTemplate(ownRaw, candidate)
-                        : renderSparseSettings(sparseSettingsValues(
-                            await fs.readFile(join(packageRoot, 'src', 'config', 'agent-settings.template.yml'), 'utf8'),
-                            candidate,
-                        ));
+                        : renderSparseSettings(await freshUserGlobalValues(packageRoot, candidate));
                 if (opts.dryRun === true) {
                     // No disk write, no Last-Modified bump — surface the
                     // rendered body so the maintainer sees what a real
