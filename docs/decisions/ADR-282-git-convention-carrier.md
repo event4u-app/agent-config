@@ -18,7 +18,7 @@ evidence:
   strength: E1
   basis:
     - agents/evidence/council/git-convention-carrier-2026-10.md
-    - agents/roadmaps/road-to-a-git-convention-that-reaches-every-checkout.md
+    - agents/roadmaps/archive/road-to-a-git-convention-that-reaches-every-checkout.md
     - src/scripts/_lib/branch_convergence.ts
     - src/scripts/_lib/git_convention.ts
     - src/scripts/_lib/git_convention_carrier.ts
