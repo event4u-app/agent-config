@@ -70,6 +70,18 @@ describe('measureSubjects', () => {
         expect(m.excluded).toEqual({ bots: 1, automation: 1, bulk: 1 });
     });
 
+    it('judges a migrating newer half by its capped sample, not its raw count', () => {
+        // 40 newer commits by one author cap to 20, below MIN_N, so the newer half alone cannot clear.
+        const newer = many(40, (i) => `feat: add ${i}`, () => 'solo');
+        const older = many(40, (i) => `[DEV-${i}] Old ${i}`, (i) => `old${i % 2}`);
+        const m = measureSubjects([...newer, ...older]);
+        expect(m.capped).toBe(true);
+        expect(m.newer.n).toBe(AUTHOR_CAP_PER_HALF);
+        expect(m.newer.n).toBeLessThan(MIN_N);
+        expect(m.migrating).toBe(false);
+        expect(m.established).toBeNull();
+    });
+
     it('reads a migrating history from the newer half alone when it clears the bar', () => {
         const commits = [...many(40, (i) => `DEV-${i + 1} feat: n${i}`, (i) => `n${i % 3}`), ...many(40, (i) => `[DEV-${i + 1}] o${i}`, (i) => `o${i % 3}`)];
         const m = measureSubjects(commits);

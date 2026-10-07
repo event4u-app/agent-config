@@ -144,7 +144,7 @@ export function measureSubjects(commits: readonly HistoryCommit[]): SubjectMeasu
     else if (top.share < bar) reasons.push(`${top.family} at ${pct(top.share)} < ${pct(bar)}`);
     if (!halvesAgree && eligible.length > 0) reasons.push(`the halves disagree (newer ${newer.family ?? '—'}, older ${older.family ?? '—'})`);
     if (reasons.length === 0 && top !== undefined) established = top.family as SubjectFamily;
-    else if (!halvesAgree && _clears(newerRaw.length, newer, bar)) {
+    else if (!halvesAgree && _clears(newer.n, newer, bar)) {
         established = newer.family as SubjectFamily;
         migrating = true;
     }
