@@ -32,6 +32,12 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Changed
 
+- **A medium security finding now needs a disposition before a release
+  ships.** `check_finding_dispositions` treats `security × medium` as blocking
+  (council 2026-10-07, 2/2): such a row must carry `fixed`, `false_positive` or
+  `accepted_risk` with a rationale, and `still_open` keeps the release red. The
+  merge gate (`self_review_gate.classifyBlocking`) is unchanged, so the finding
+  still only advises on a pull request. `claim × medium` stays advisory in both.
 - **No spend bound applies unless you set one.** Owner directive, 2026-10-05,
   recorded as **ADR-279** and accepted on the owner's own answer (option (a))
   on 2026-10-06. With nothing configured, no USD or token ceiling this package

@@ -96,7 +96,11 @@ ledger does not yet record it.
   correctness findings, and low/medium security findings, advise only. (Council
   2026-07-08, claude-sonnet-4-5 + gpt-4o: a 100 %-blocking gate at
   solo-maintainer token cost gets ignored or gamed — block only on the narrow
-  security/claim × high+ intersection.)
+  security/claim × high+ intersection.) The release-disposition gate
+  (`check_finding_dispositions.isBlocking`) is stricter by one cell: a
+  **medium security** finding needs a disposition before a release ships, while
+  it stays advisory at merge (council 2026-10-07, 2/2). `accepted_risk` with a
+  rationale satisfies it; `still_open` does not.
 - `gateVerdict(findings, {enforce})` — mirrors
   `check_quality_regression.gateVerdict`: `0` pass / `2` block. Shipped
   `enforce: false` (advisory always returns `0` and reports the would-block

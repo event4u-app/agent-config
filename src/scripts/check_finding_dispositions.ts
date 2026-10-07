@@ -8,8 +8,8 @@
  *
  * The record is a COMMITTED ledger — `agents/evidence/release-findings/
  * <version>.json` — never the PR comment (council 2026-08-03: a comment is
- * mutable and unaudited; it is transport, not a record). Every blocking/high
- * finding in the ledger must carry a complete disposition
+ * mutable and unaudited; it is transport, not a record). Every blocking
+ * finding in the ledger (see `isBlocking`) must carry a complete disposition
  * `{status: fixed|false_positive|accepted_risk, commit (when fixed),
  * rationale, verified_by}`; the release workflow is red while one does not.
  *
@@ -273,19 +273,34 @@ function _clean_review_reason(artifact: Record<string, unknown>): string {
 }
 
 /**
- * Mirrors self_review_gate.classifyBlocking — security/claim × critical/high,
- * MINUS anything the tree disproved.
+ * self_review_gate.classifyBlocking (security/claim × critical/high) PLUS
+ * security × medium, MINUS anything the tree disproved.
  *
- * The `contradicted` clause is not a second policy; it is the same one, and
- * the mirror has to carry it or the two gates disagree: the review would stop
- * counting a disproved deletion claim as blocking while the release kept
- * demanding a disposition for it. A `contradicted` value is written only by
- * `annotateContradicted`, which checks the claim against
- * `git diff --name-status base...HEAD` AND the working tree.
+ * Deliberately STRICTER than the merge gate, and the asymmetry is load-bearing
+ * rather than drift — do not re-mirror it. The merge gate asks whether a change
+ * may enter trunk while work is still integrating; this gate asks whether a
+ * known risk may ship to users without an accountable decision. 16.3.0 shipped
+ * a medium security finding that had already been open in 16.2.0 with nobody
+ * required to decide it, so a medium security finding needs a disposition here
+ * while it stays advisory at merge. `accepted_risk` with a rationale satisfies
+ * it; `still_open` does not. `claim × medium` stays advisory in both.
+ * Council 2026-10-07 (claude-sonnet-4-5 + codex, 2/2 concluded, option a,
+ * release gate only). Revisit if medium security findings routinely receive
+ * formulaic `accepted_risk` over three consecutive releases, or exceed about
+ * ten per release.
+ *
+ * The `contradicted` clause is shared with the merge gate, and has to be or the
+ * two disagree: the review would stop counting a disproved deletion claim as
+ * blocking while the release kept demanding a disposition for it. A
+ * `contradicted` value is written only by `annotateContradicted`, which checks
+ * the claim against `git diff --name-status base...HEAD` AND the working tree.
  */
 export function isBlocking(f: Pick<LedgerFinding, 'kind' | 'severity' | 'contradicted'>): boolean {
     if ((f.contradicted ?? '').trim() !== '') {
         return false;
+    }
+    if (f.kind === 'security' && f.severity === 'medium') {
+        return true;
     }
     return (
         (f.kind === 'security' || f.kind === 'claim') &&
