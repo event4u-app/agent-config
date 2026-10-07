@@ -933,8 +933,8 @@ export function main(argv?: readonly string[], deps?: BaseDeps): number {
                     '  --auto-resolve-generated have nothing to change there). A strategy that\n' +
                     '  cannot be read (unparsable file, typo, user-global-only) exits 4.\n' +
                     '  The base is --base; without it the default branch, so a PR into any other\n' +
-                    '  base must pass --base <its base>; a branch name means origin/<name>, and\n' +
-                    '  <remote>/<name> or refs/heads/<name> are used as given.\n' +
+                    '  base must pass --base <its base>; a branch name and refs/heads/<name> mean\n' +
+                    '  origin/<name>, and <remote>/<name> is used as given.\n' +
                     '  A base that cannot be resolved or counted exits 1; one whose commit\n' +
                     '  cannot be fetched is unverified, exit 0. A conflict is\n' +
                     '  reported and never auto-resolved; generated and authored conflicts are\n' +

@@ -34,6 +34,16 @@ describe('sync_pr_branch counts against the remote base', () => {
         expect(r.after).not.toBe(r.before);
     });
 
+    it('reads --base refs/heads/main as the fetched origin/main, not the stale local main', () => {
+        const f = fixture(tmp);
+        advanceMain(f);
+        const r = runSync(f.work, 'refs/heads/main');
+        expect(r.out).not.toContain('already current');
+        expect(r.out).toContain('refs/remotes/origin/main');
+        expect(r.after).not.toBe(r.before);
+        expect(git(f.work, 'merge-base', '--is-ancestor', git(f.seed, 'rev-parse', 'HEAD').trim(), 'HEAD')).toBe('');
+    });
+
     it('refuses rather than reporting current when the base ref was never fetched', () => {
         const f = fixture(tmp);
         git(f.work, 'push', '-q', 'origin', 'feature');

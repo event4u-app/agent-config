@@ -8,10 +8,13 @@
  * ref nobody has (`origin/origin/main`, `refs/heads/origin/main`), and the
  * freshness gate read that absent ref as an unreachable remote and passed.
  *
- * A value that already names where it lives is kept as given: a full ref
- * (`refs/heads/x`) and `<remote>/x` for a configured remote. Anything else is a
- * branch name on origin, slashes included, because `release/1.x` is a branch
- * name and not a remote called `release`.
+ * A value that already names where it lives is kept as given: a
+ * remote-tracking ref and `<remote>/x` for a configured remote. `refs/heads/x`
+ * names the branch on origin, so it maps to `refs/remotes/origin/x`: the local
+ * branch of that name is the same clone-time copy a bare name avoids, and a
+ * fetch never updates it. Anything else is a branch name on origin, slashes
+ * included, because `release/1.x` is a branch name and not a remote called
+ * `release`.
  */
 
 export interface BaseRef {
@@ -30,6 +33,10 @@ const LOCAL_HEADS = 'refs/heads/';
 export function parseBaseRef(value: string, remotes: readonly string[] = []): BaseRef | null {
     const v = value.trim();
     if (v === '') return null;
+    if (v.startsWith(LOCAL_HEADS) && v.length > LOCAL_HEADS.length) {
+        const branch = v.slice(LOCAL_HEADS.length);
+        return { remote: 'origin', branch, ref: `${REMOTE_TRACKING}origin/${branch}` };
+    }
     if (v.startsWith('refs/')) return splitResolvedRef(v);
     const slash = v.indexOf('/');
     const known = new Set(['origin', ...remotes]);

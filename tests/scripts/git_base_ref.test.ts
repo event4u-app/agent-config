@@ -20,7 +20,7 @@ describe('resolveTarget keeps a base that already names where it lives', () => {
         ['origin/main', 'origin/main'],
         ['release/1.x', 'origin/release/1.x'],
         ['upstream/main', 'upstream/main'],
-        ['refs/heads/main', 'refs/heads/main'],
+        ['refs/heads/main', 'refs/remotes/origin/main'],
     ];
     for (const [given, ref] of cases) {
         it(`${given} → ${ref}`, () => {
