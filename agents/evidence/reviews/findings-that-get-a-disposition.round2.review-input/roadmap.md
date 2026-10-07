@@ -1,3 +1,5 @@
+<!-- check-refs: skip -->
+<!-- verbatim roadmap snapshot for the R2 reviewer; the live roadmap layer is excluded from check_references, and a snapshot must not fail a gate its source is exempt from -->
 ---
 complexity: lightweight
 status: ready
@@ -18,7 +20,7 @@ relates:
 ---
 # Road to findings that get a disposition
 
-> **Source:** an external review round (opaque id inbox-2026-10-e), round
+> **Source:** [REDACTED:src-conf]
 > `agents/tmp.old/inbox-2026-10-e/`. Every anchor below was re-read at `main` @
 > `a75bb3210` on 2026-10-06; finding counts were read from the ledger at the
 > same commit.
@@ -96,7 +98,6 @@ owner, because it reverses a recorded supersession.
       blocking row and for `claim × medium` staying non-blocking. Under (b),
       the decision and its reason are recorded as a row in this file's
       `## Decisions` table and nothing in the gate changes.
-      Outcome: (a), release gate only, binding releases after 16.3.0 (D3, D5).
       verify: `npx vitest run tests/scripts/check_finding_dispositions.test.ts` -> 0
 
 ## Phase 3 — A doctor that can stay offline
@@ -145,8 +146,8 @@ owner, because it reverses a recorded supersession.
 | D1 | reversible-technical | agent | `still_open` with a named roadmap is preferred over `accepted_risk` for unfinished work | The gate's own comment warns that `accepted_risk` is the cheapest way to make a count reach zero (`check_finding_dispositions.ts:91-99`) | — |
 | D2 | reversible-technical | agent | The offline flag ships before the default question is answered | Additive; it changes nothing for anyone who does not pass it | The owner chooses (a) and the flag becomes redundant |
 | D3 | reversible-technical | council:2026-10-07 medium-security-is-blocking | Option (a) of `medium-security-is-blocking`, release gate only: `check_finding_dispositions.isBlocking` admits `security × medium`; `self_review_gate.classifyBlocking` keeps the 2026-07-08 predicate, and the two now differ by exactly that cell, pinned by a matrix test | Council 2026-10-07, claude-sonnet-4-5 + codex, 2 rounds, 2/2 concluded, $0 (subscription seats). Deciding reason: a medium security finding crossed 16.2.0 and 16.3.0 with nobody required to decide it, and `accepted_risk` keeps the gate answerable without a fix. Both seats rejected moving the merge gate: merge asks whether a change may enter trunk, release whether a known risk may ship | Medium security findings routinely get formulaic `accepted_risk` over three consecutive releases, or exceed about ten per release |
+| D5 | reversible-technical | agent | `eff3d4ed3fee` is `accepted_risk` until the owner answers `doctor-network-default`, and the two symlink rows are `still_open`, not `fixed` | The R2 completion review of this branch found that `fixed` on the first overstated a default nobody changed, and on the second a fix that leaves the finding's outcome reachable. `accepted_risk` names the owner blocker and the mitigations that make the interim state answerable; `still_open` would keep the widened gate red on a row whose only open half is the owner's | The owner answers `doctor-network-default`: step 3.3 rewrites the row |
 | D4 | reversible-technical | agent | Sixteen rows that are real, unfixed and had no carrier (thirteen read in 1.1 and 1.2, three a council had already read `still_open`) name a new stub, `road-to-the-16-3-0-findings-residue`, rather than being fixed here | Fixing them is outside this roadmap's scope, and D1 forbids `accepted_risk` for unfinished work; each item there names its evidence and what closes it | A live roadmap adopts one of the five groups; its rows then name that roadmap |
-| D5 | reversible-technical | agent | The medium-security widening binds releases after 16.3.0 only (`MEDIUM_SECURITY_BLOCKS_AFTER`); `eff3d4ed3fee` is `still_open`, carried by step 3.3, and the two symlink rows are `still_open`, carried by the residue stub | Two R2 rounds on this branch: round 1 found `fixed` overstated all three rows, round 2 found that `accepted_risk` on `eff3d4ed3fee` was a relabel to keep the widened gate green, against D1. A retroactive widening leaves only those two outcomes or a red trunk for an already-shipped release; a prospective one lets the row say what is true. The council's stated purpose was an accountable decision before publication, which a shipped release can no longer give | The owner answers `doctor-network-default`: step 3.3 rewrites the row; or a shipped release must be re-gated after the fact |
 
 ## Blockers
 
@@ -178,4 +179,4 @@ owner, because it reverses a recorded supersession.
 | 2 | A wider blocking predicate stalls a release | product | Option (a) turns a medium security finding into a release blocker. | The disposition vocabulary already admits `accepted_risk`; a release can answer, not wait. | Phase 2 — Whether a medium security finding blocks |
 | 3 | The offline test passes on a stub | implementation | A test that injects a runner may not exercise the real composition root. | `forgeProtectionJsonFor` already takes `deps`; the test goes through it, not below it. | Phase 3 — A doctor that can stay offline |
 | 4 | Reversing a council-reached default without the owner | product | The default was set by a recorded supersession. | The default change sits behind an owner blocker; only the additive flag ships without it. | Context |
-| 5 | The wider predicate reds an older ledger | implementation | Ledgers 14.21.0 to 16.2.0 hold medium security rows with no status, written while those rows were advisory. | The widening is prospective: `isBlocking` takes the ledger's release and admits `security × medium` only after 16.3.0, pinned by tests. The gate runs for the package.json version in `.github/workflows/consistency.yml` and for the release branch in `release-validation.yml` and `self-review-gate.yml`. | Phase 2 — Whether a medium security finding blocks |
+| 5 | The wider predicate reds an older ledger | implementation | Ledgers 14.21.0 to 16.2.0 hold medium security rows with no status, written while those rows were advisory; `--release <old>` now reds on them. | CI runs the gate only for the version in package.json and for a new release branch, so no shipped release is re-gated; an explicit `--release` on an old version reports the gap, which is the true reading. | Phase 2 — Whether a medium security finding blocks |
