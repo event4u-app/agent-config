@@ -52,6 +52,15 @@ describe('commitlint issue prefixes as a proposal', () => {
         expect(fs.readdirSync(dir).sort()).toEqual(before);
     });
 
+    it('offers them when a commit-msg hook is listed before the config', () => {
+        const dir = repo({ 'commitlint.config.js': "module.exports = { parserPreset: { parserOpts: { issuePrefixes: ['DEV-'] } } };\n" });
+        fs.mkdirSync(path.join(dir, '.husky'));
+        fs.writeFileSync(path.join(dir, '.husky', 'commit-msg'), '#!/bin/sh\nnpx --no -- commitlint --edit "$1"\n', { mode: 0o755 });
+        execFileSync('git', ['config', 'core.hooksPath', '.husky'], { cwd: dir });
+        const r = runGitConvention(['ticket', 'feat/DEV-1-x'], dir);
+        expect(r.out.join('\n')).toMatch(/proposal +ticket_keys: DEV \(issuePrefixes in .*commitlint\.config\.js\)/);
+    });
+
     it('offers nothing once the caller passes the card line', () => {
         const dir = repo({ 'commitlint.config.js': "module.exports = { parserPreset: { parserOpts: { issuePrefixes: ['DEV-'] } } };\n" });
         const r = runGitConvention(['ticket', 'feat/DEV-1-x', '--keys', 'ticket_keys: [DEV]'], dir);

@@ -289,8 +289,9 @@ export function subjectCommand(args: readonly string[], cwd: string, stdin = '')
 }
 
 function _commitlintProposal(cwd: string): { keys: string[]; from: string } | null {
-    const v = commitMessageValidator(cwd);
-    if (v?.kind !== 'commitlint config') return null;
+    // A husky setup lists its commit-msg hook first, ahead of the config.
+    const v = commitMessageValidators(cwd).find((c) => c.kind === 'commitlint config');
+    if (v === undefined) return null;
     try {
         const keys = commitlintIssuePrefixes(fs.readFileSync(v.path, 'utf-8'));
         return keys.length === 0 ? null : { keys, from: v.path };
