@@ -8,8 +8,8 @@ review_by: 2026-12-31
 > **Stub — not active work.** Written 2026-10-07 by
 > `road-to-findings-that-get-a-disposition` step 1.2, which re-read every row
 > of `agents/evidence/release-findings/16.3.0.json` against `main` @
-> `6051d3744`. Sixteen rows were real, unfixed and carried by no roadmap —
-> thirteen read in steps 1.1 and 1.2, three a council had already read `still_open`.
+> `6051d3744`. Seventeen rows were real, unfixed and carried by no roadmap —
+> fourteen read in steps 1.1 and 1.2, three a council had already read `still_open`.
 > That roadmap only records dispositions, so fixing them there would be scope
 > creep; each one is named here with its evidence and what closes it, and its
 > ledger row is `still_open` with this file's slug.
@@ -93,6 +93,15 @@ the named historical artefacts and one missing mechanism.
 The last two close when the reader re-reads merged artefacts too, or when each
 header is corrected with a dated note that keeps the original value visible.
 Either is a governance-surface edit and needs its own ratification.
+
+## 6. Completion reviews dispatched without their roadmap
+
+- **1b661735687e** — rounds 10 to 21 of the behaviour-vocabulary close record
+  `roadmap: none`, and two rounds received an empty acceptance-criteria input,
+  although the roadmap was in the changed set. The records stay as they are;
+  they are what each reviewer was given. Closes when `dispatch_r2_reviewer`
+  refuses, or warns loudly, when a roadmap is in the changed set but none was
+  passed.
 
 ## Not here
 

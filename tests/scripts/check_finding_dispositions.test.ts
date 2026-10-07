@@ -168,6 +168,10 @@ describe('the medium-security widening is prospective', () => {
         expect(isBlocking({ severity: 'critical', kind: 'claim' }, MEDIUM_SECURITY_BLOCKS_AFTER)).toBe(true);
     });
 
+    it('orders by version, so a later patch on an older line stays exempt', () => {
+        expect(isBlocking(medium, `${maj}.${Math.max(0, min - 1)}.99`)).toBe(false);
+    });
+
     it('an unparseable release falls to the wider rule', () => {
         expect(isBlocking(medium, 'not-a-version')).toBe(true);
     });

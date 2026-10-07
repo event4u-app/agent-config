@@ -95,10 +95,9 @@ export type DispositionStatus = (typeof DISPOSITION_STATUSES)[number];
  * to satisfy the requirement and the one that destroys it.
  *
  * It is deliberately NOT in {@link DISPOSITION_STATUSES}: a BLOCKING row may
- * never pass on it. `missing_dispositions` reads only the three, so a blocking
- * finding marked `still_open` reports as an unknown status and the gate stays
- * red — which is the behaviour a blocking finding that is still open should
- * have.
+ * never pass on it. `missing_dispositions` reports a blocking finding marked
+ * `still_open` with its own message and the gate stays red — which is the
+ * behaviour a blocking finding that is still open should have.
  *
  * `open` from the schema is absent on purpose. The schema documents it as the
  * INITIAL state, so counting it would make the tally reachable without anyone
@@ -317,6 +316,12 @@ export function mediumSecurityBinds(release: string | null): boolean {
  * still open — a red trunk, or an `accepted_risk` written only to turn it
  * green, which is the relabelling this gate exists to refuse. Without a release
  * (a reported finding, a test) the wider rule applies.
+ *
+ * The cutoff orders by version, not by publication date: a maintenance release
+ * on an older line (a 16.2.x cut after the decision) sits at or before the
+ * cutoff and is exempt. This package ships from one line, so no such release
+ * exists; one that is cut is a reason to revisit this, not to read it as
+ * covered.
  *
  * The `contradicted` clause is shared with the merge gate, and has to be or the
  * two disagree: the review would stop counting a disproved deletion claim as
