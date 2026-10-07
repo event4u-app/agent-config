@@ -139,7 +139,11 @@ rewritten: a dirty working tree; a merge commit in the topic range
 `merge` strategy and `/prepare-for-review` put them there, so a branch switched
 to `rebase` usually carries one, and a plain rebase silently drops it;
 `--rebase-merges` is a separate operation the user asks for, never a fallback;
-and commits on the branch you did not author (§ Under `rebase`, shared branch).
+and commits on the branch you did not author (§ Under `rebase`, shared branch)
+— any commit in `origin/<base>..HEAD` whose author email is not
+`git config user.email`. That stop lifts only for a run started with
+`ALLOW_FOREIGN=1`, which stands for the user's answer this turn that those
+commits may be rewritten; it is never set to get past the stop.
 Then the remote ref is read once; that literal is the stop (it must already be
 in `HEAD`) and, unchanged, the lease. A collaborator's push lands either before
 the pin and halts the stop, or after it and fails the lease — it is never
@@ -162,6 +166,12 @@ MERGES=$(git rev-list --merges "origin/$BASE..HEAD") \
   || stop "could not list the topic range origin/$BASE..HEAD — nothing was rewritten"
 [ -z "$MERGES" ] \
   || stop "the topic range carries a merge commit, which a plain rebase drops — --rebase-merges is a separate operation the user asks for"
+ME=$(git config user.email) || stop "git config user.email is unset, so your commits cannot be told from inherited ones — nothing was rewritten"
+AUTHORS=$(git log --format='%h %ae' "origin/$BASE..HEAD") \
+  || stop "could not list the authors of origin/$BASE..HEAD — nothing was rewritten"
+FOREIGN=$(awk -v me="$ME" 'tolower($2) != tolower(me)' <<<"$AUTHORS")
+[ -z "$FOREIGN" ] || [ "${ALLOW_FOREIGN:-}" = 1 ] \
+  || stop "the topic range carries commits you did not author ($(tr '\n' ' ' <<<"$FOREIGN")) — ask the user; set ALLOW_FOREIGN=1 only on their answer this turn"
 EXPECTED=$(git ls-remote "$REMOTE" "refs/heads/$RB" | cut -f1)
 if [ -n "$EXPECTED" ]; then
   git fetch -q "$REMOTE" "refs/heads/$RB"

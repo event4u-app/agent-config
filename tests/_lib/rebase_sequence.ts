@@ -42,7 +42,7 @@ export function sandbox(): Sandbox {
         GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@example.com',
         GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@example.com',
     };
-    fs.writeFileSync(env.GIT_CONFIG_GLOBAL as string, '[init]\n\tdefaultBranch = main\n[advice]\n\tdetachedHead = false\n');
+    fs.writeFileSync(env.GIT_CONFIG_GLOBAL as string, '[init]\n\tdefaultBranch = main\n[advice]\n\tdetachedHead = false\n[user]\n\tname = t\n\temail = t@example.com\n');
     const git = (cwd: string, ...args: string[]): string =>
         execFileSync('git', args, { cwd, env, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
     const commit = (cwd: string, file: string, content: string, message: string): string => {

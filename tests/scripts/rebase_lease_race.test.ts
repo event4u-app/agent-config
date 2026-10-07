@@ -214,6 +214,26 @@ describe('stops before anything is rewritten', () => {
         expect(published(f)).toBe(before);
     });
 
+    it('refuses a topic range carrying a commit another author made, unless the user allowed it this turn', () => {
+        const f = fixture('upstream');
+        fs.writeFileSync(path.join(f.me, 'theirs.txt'), 'theirs\n');
+        f.sb.git(f.me, 'add', 'theirs.txt');
+        f.sb.git(f.me, 'commit', '-q', '--author', 'Other <other@example.com>', '-m', 'inherited');
+        f.sb.git(f.me, 'push', '-q', 'origin', 'feat');
+        const before = f.sb.git(f.me, 'rev-parse', 'HEAD');
+        const r = runBlocks(f.sb, f.me, SEQUENCE, f.env);
+        expect(r.status).not.toBe(0);
+        expect(r.stderr).toContain('commits you did not author');
+        expect(r.stderr).toContain('other@example.com');
+        expect(f.sb.git(f.me, 'rev-parse', 'HEAD')).toBe(before);
+        expect(published(f)).toBe(before);
+
+        const allowed = runBlocks(f.sb, f.me, SEQUENCE, { ...f.env, ALLOW_FOREIGN: '1' });
+        expect(allowed.stderr).not.toContain('STOP');
+        expect(allowed.status).toBe(0);
+        expect(published(f)).toBe(f.sb.git(f.me, 'rev-parse', 'HEAD'));
+    });
+
     it('refuses a dirty working tree', () => {
         const f = fixture('upstream');
         fs.writeFileSync(path.join(f.me, 'feat.txt'), 'edited, not committed\n');
