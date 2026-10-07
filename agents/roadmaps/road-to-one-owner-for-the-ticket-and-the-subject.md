@@ -111,7 +111,7 @@ surface cites one reference instead of restating a grammar.
       and the precedence paragraph (`commit/command.md:67-70`, `:134-138`) leave.
       verify: `test -z "$(git grep -l -F '[A-Z][A-Z0-9]+-[0-9]+' -- src/domains/git)"` -> 0
       Positive control: the same `git grep` prints two files at `2333b93d6`.
-- [ ] **2.2 One reference owns the prose.**
+- [x] **2.2 One reference owns the prose.**
       `src/skills/git-workflow/references/commit-subject.md` holds ticket
       reading, placement, precedence, the area-scope clause `/commit:in-chunks`
       needs, and the title rule of 2.4. Its grammar block is generated from the

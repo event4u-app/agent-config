@@ -70,6 +70,8 @@ is the template default and declares nothing) is the target: report it as
 other authorisations. A configured source always outranks it — including step
 3's tier-1 veto.
 
+Ticket reading, placement and precedence: [`commit-subject`](../../../../skills/git-workflow/references/commit-subject.md).
+
 Report what it found, in one block, before offering anything:
 
 ```

@@ -71,12 +71,9 @@ If there are no uncommitted changes (staged or unstaged), report "Nothing to com
   > 1. Yes — I'll provide the ticket number
   > 2. No — skip ticket number
   ```
-- If the user provides a ticket number, place it per the convention in force
-  (above; where nothing outranks it, `git.commit_format`) in all commit messages: `ticket-scope` (default) → as the scope, `feat(DEV-1234): …`;
-  `ticket-conventional` → before the type, `DEV-1234 feat(<area>): …`, and the ticket
-  is never the scope.
-- If skipped, omit the ticket entirely — under `ticket-scope` write `chore: ...`
-  not `chore(): ...`; under `ticket-conventional` keep any area scope.
+- Place the ticket (given or read) in every message per the convention in force —
+  [`commit-subject`](../../../skills/git-workflow/references/commit-subject.md) § Placing the ticket;
+  skipped → omit it, never `chore(): …`.
 
 ### 3. Analyze the changes
 

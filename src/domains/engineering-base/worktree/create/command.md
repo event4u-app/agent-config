@@ -43,7 +43,7 @@ Derive ONE type, slug and (if any) ticket from the task and render the name
 through `git.branch_pattern`:
 `agent-config git:convention branch --type <type> --slug <slug> [--ticket <ID>]`
 prints the name; exit `1` names the value or pattern it refused — fix the input,
-never hand-render. State the name and proceed. It goes into every command
+never hand-render ([`commit-subject`](../../../skills/git-workflow/references/commit-subject.md) § Rendering a branch name). State the name and proceed. It goes into every command
 double-quoted (`-b "<branch>"`). Do not present a naming menu; the user can
 override by naming a branch in the same turn.
 

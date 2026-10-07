@@ -45,8 +45,10 @@ If there are no uncommitted changes (staged or unstaged), report
 
 - Read the ticket exactly as [`/commit`](../commit.md) step 2 does
   (`agent-config git:convention ticket`, with the card's `ticket_keys` line as
-  `--keys`) and place it per the convention in force. A candidate marked
-  `unknown-key` is omitted, never asked about.
+  `--keys`) and place it per the convention in force —
+  [`commit-subject`](../../../../skills/git-workflow/references/commit-subject.md),
+  including its area-scope clause. A candidate marked `unknown-key` is omitted,
+  never asked about.
 - If no ticket ID is found, omit it — write `chore: ...` not `chore(): ...`.
   Do **not** ask the user for one.
 

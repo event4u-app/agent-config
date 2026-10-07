@@ -163,8 +163,8 @@ from Conventional is mood will read as `imperative-plain` either way, and the
 mood question belongs in the ask at step 6.
 
 `classifier_version` in step 7 names the revision of THIS section — the six patterns above (`ticket-conventional` added 2026-10-06; re-measure an older card) plus the exclusions in step 2.
-It is a provenance stamp so a later measurement can be compared against a like one; it does not claim an
-executable classifier ships anywhere in the tree.
+It is a provenance stamp so a later measurement can be compared against a like one. The same patterns ship
+as code: `agent-config git:convention subject --family <family>` validates against them, and a test pins this block to that module.
 
 Record the runner-up family too — a near-tie is itself the finding.
 
@@ -281,13 +281,7 @@ If yes:
 
 ### 3. Place the ticket, then choose the scope
 
-Ticket id: the first `[A-Z][A-Z0-9]+-[0-9]+` token in the branch name whose prefix is not `UTF`, `ISO`, `SHA` or `RFC`, or the user; `git.commit_format` places it:
-| `git.commit_format` | With a ticket | Without a ticket |
-|---|---|---|
-| `ticket-scope` (default) | `feat(DEV-1234): add export filter` | `feat: add export filter` |
-| `ticket-conventional` | `DEV-1234 feat(exporter): add export filter` | `feat(exporter): add export filter` |
-
-Under `ticket-conventional` **a ticket is never a scope**; the scope names the system area (`api/audio`, `ci`), only if it adds clarity.
+Read the ticket with `agent-config git:convention ticket` and place it per [`commit-subject`](../git-workflow/references/commit-subject.md) § Placing the ticket — under `ticket-conventional` **never in the scope**.
 
 ### 4. Write the description
 
