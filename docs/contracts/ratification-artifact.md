@@ -213,7 +213,12 @@ bypass leaves a trace, not that it be impossible.
 
 1. **Trigger:** an active incident where an enforced control blocks time-critical
    restoration or containment. Ordinary work, release pressure, convenience, and
-   *"the check is red"* are **not** emergencies.
+   *"the check is red"* are **not** emergencies — with one exception, by
+   ADR-281 § 5: a red ratification check caused by a **recorded
+   non-convergence** of a modification review, after the agent asked the owner
+   in-session. That is the owner-permission-route (§ The ratification ladder),
+   and it follows steps 2 to 6 here. The bypass is per case and restored; a
+   standing unconditional bypass actor stays a failure of the platform anchor.
 2. **Record** — before acting if feasible, immediately after if not: the
    incident, the control changed, the reason, the affected revision, the
    timestamp.
@@ -490,10 +495,45 @@ list, so it reds the gate without its own ratification.
 
 ## The ratification ladder
 
-Per ADR-268 § 4, in order: an independent session or agent → the AI council,
-CLI-first → a different provider → the owner. The owner is reached only on
-non-convergence, on unavailable diversity for a critical expansion, or on an
-owner-reserved dimension.
+Per ADR-268 § 4 as amended by ADR-281 § 2, in order: the AI council,
+CLI-first → a different provider → the owner. For a change to the gated
+surface, and for a change the package's own learning lanes originate, the
+council is the lowest rung that can pass; an independent session alone no
+longer ratifies.
+
+### When the user decides — the conditions, once
+
+In the order of ADR-268 § 4 (ADR-281 § 4), the user decides when:
+
+1. the record is `non-convergent` after a different provider was tried;
+2. provider diversity is unavailable for a critical expansion;
+3. the change touches a row of the owner-reserved table in
+   `decision-revisit-gate`;
+4. the change is to the reviewer itself — the modules that compute the
+   record's `subject`, write the record, ask the questions and derive the
+   verdict, and this contract.
+
+In those cases the run stops with the change open and labelled, the
+non-passing record in it, and one question for the user: the council's
+recommendation, the dissent, the exact change, what it is expected to gain,
+what it risks, and how it is undone. A run never decides such a case alone,
+and a subagent fan-out is never a substitute for the council here.
+
+### The owner-permission-route
+
+Where the council cannot conclude, the owner's permission is **his own
+recorded bypass on the forge, restored afterwards** (ADR-281 § 5). It is
+preceded by an ask: on non-convergence, or on the red check it causes, the
+agent tells the owner at once and asks in-session with options. A yes is then
+given as the forge act, never as a chat answer — a chat answer reaches the tree
+only as text an agent wrote. Nothing an agent writes passes the gate in this
+case; a `non-convergent` or `refused` record stays red.
+
+**What this route cannot prove.** The gate cannot see a forge bypass, so
+nothing in the tree distinguishes the owner's act from any other
+administrator's, and nothing proves the ask preceded it. The trace is the
+bypass record § Emergency use requires, committed beside the non-passing
+record.
 
 ## What the artifact does NOT decide
 
