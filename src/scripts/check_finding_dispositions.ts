@@ -272,6 +272,27 @@ function _clean_review_reason(artifact: Record<string, unknown>): string {
     );
 }
 
+export const MEDIUM_SECURITY_BLOCKS_AFTER = '16.3.0';
+
+function semverParts(v: string): [number, number, number] | null {
+    const m = /^v?(\d+)\.(\d+)\.(\d+)/.exec(v.trim());
+    return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null;
+}
+
+/** True unless `release` parses and is at or before the cutoff. */
+export function mediumSecurityBinds(release: string | null): boolean {
+    if (release === null) return true;
+    const r = semverParts(release);
+    const cut = semverParts(MEDIUM_SECURITY_BLOCKS_AFTER) as [number, number, number];
+    if (r === null) return true;
+    for (let i = 0; i < 3; i++) {
+        const a = r[i] as number;
+        const b = cut[i] as number;
+        if (a !== b) return a > b;
+    }
+    return false;
+}
+
 /**
  * self_review_gate.classifyBlocking (security/claim × critical/high) PLUS
  * security × medium, MINUS anything the tree disproved.
@@ -289,17 +310,28 @@ function _clean_review_reason(artifact: Record<string, unknown>): string {
  * formulaic `accepted_risk` over three consecutive releases, or exceed about
  * ten per release.
  *
+ * The widening is prospective: it binds releases after
+ * {@link MEDIUM_SECURITY_BLOCKS_AFTER}, the last one published before the
+ * decision. A release already shipped cannot be made to wait, and re-gating it
+ * would leave exactly two outcomes for a medium security row that is genuinely
+ * still open — a red trunk, or an `accepted_risk` written only to turn it
+ * green, which is the relabelling this gate exists to refuse. Without a release
+ * (a reported finding, a test) the wider rule applies.
+ *
  * The `contradicted` clause is shared with the merge gate, and has to be or the
  * two disagree: the review would stop counting a disproved deletion claim as
  * blocking while the release kept demanding a disposition for it. A
  * `contradicted` value is written only by `annotateContradicted`, which checks
  * the claim against `git diff --name-status base...HEAD` AND the working tree.
  */
-export function isBlocking(f: Pick<LedgerFinding, 'kind' | 'severity' | 'contradicted'>): boolean {
+export function isBlocking(
+    f: Pick<LedgerFinding, 'kind' | 'severity' | 'contradicted'>,
+    release: string | null = null,
+): boolean {
     if ((f.contradicted ?? '').trim() !== '') {
         return false;
     }
-    if (f.kind === 'security' && f.severity === 'medium') {
+    if (f.kind === 'security' && f.severity === 'medium' && mediumSecurityBinds(release)) {
         return true;
     }
     return (
@@ -314,16 +346,23 @@ export function isBlocking(f: Pick<LedgerFinding, 'kind' | 'severity' | 'contrad
  * Empty rationale / verified_by is a hygiene violation (waiver precedent:
  * "empty string = hygiene violation"); status `fixed` requires a commit.
  */
-export function missing_dispositions(findings: readonly LedgerFinding[]): string[] {
+export function missing_dispositions(
+    findings: readonly LedgerFinding[],
+    release: string | null = null,
+): string[] {
     const problems: string[] = [];
     for (const f of findings) {
-        if (!isBlocking(f)) {
+        if (!isBlocking(f, release)) {
             continue;
         }
         const label = `${f.finding_id} (${f.severity} ${f.kind}: ${f.title})`;
         const status = (f.status ?? '').trim();
         if (!status) {
             problems.push(`${label}: no disposition status`);
+            continue;
+        }
+        if (status === 'still_open') {
+            problems.push(`${label}: still_open does not satisfy a blocking finding — fix it, disprove it, or accept the risk with a reason`);
             continue;
         }
         if (!(DISPOSITION_STATUSES as readonly string[]).includes(status)) {
@@ -374,15 +413,18 @@ export interface DispositionTally {
  * direction: a typo surfaces as a row the line says is unadjudicated, rather
  * than disappearing into a count that reads as finished.
  */
-export function disposition_tally(findings: readonly LedgerFinding[]): DispositionTally {
+export function disposition_tally(
+    findings: readonly LedgerFinding[],
+    release: string | null = null,
+): DispositionTally {
     let blockingTotal = 0;
     let blockingDispositioned = 0;
     let nonBlockingTotal = 0;
     let nonBlockingTerminal = 0;
     for (const f of findings) {
-        if (isBlocking(f)) {
+        if (isBlocking(f, release)) {
             blockingTotal++;
-            if (missing_dispositions([f]).length === 0) {
+            if (missing_dispositions([f], release).length === 0) {
                 blockingDispositioned++;
             }
             continue;
@@ -555,10 +597,11 @@ export function resolve_release_status(release: string): ReleaseStatus {
 export function unrecorded_findings(
     reported: ReadonlyArray<Pick<LedgerFinding, 'finding_id' | 'severity' | 'kind' | 'title' | 'contradicted'>>,
     ledger: readonly LedgerFinding[],
+    release: string | null = null,
 ): string[] {
     const known = new Set(ledger.map((f) => f.finding_id));
     return reported
-        .filter((f) => isBlocking(f) && !known.has(f.finding_id))
+        .filter((f) => isBlocking(f, release) && !known.has(f.finding_id))
         .map((f) => `${f.finding_id} (${f.severity} ${f.kind}: ${f.title}) reported by the self-review but not in the ledger`);
 }
 
@@ -788,10 +831,10 @@ function main(argv: readonly string[]): number {
         throw exc;
     }
 
-    const problems = missing_dispositions(ledger.findings);
+    const problems = missing_dispositions(ledger.findings, release);
     if (pr) {
         const reported = parse_comment_findings(_gh_comment_bodies(pr));
-        problems.push(...unrecorded_findings(reported, ledger.findings));
+        problems.push(...unrecorded_findings(reported, ledger.findings, release));
     }
 
     if (problems.length === 0) {
@@ -805,7 +848,7 @@ function main(argv: readonly string[]): number {
             n === 0
                 ? `✅  no recorded findings for ${release} (ledger ${fs.existsSync(ledgerPath) ? 'empty' : 'absent'})${suffix}\n`
                 : `✅  ${String(n)} recorded finding(s) for ${release} — ` +
-                      `${disposition_summary(disposition_tally(ledger.findings))}${suffix}\n`,
+                      `${disposition_summary(disposition_tally(ledger.findings, release))}${suffix}\n`,
         );
         return 0;
     }

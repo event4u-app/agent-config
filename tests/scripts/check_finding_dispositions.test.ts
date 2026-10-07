@@ -20,6 +20,7 @@ import {
     disposition_tally,
     empty_ledger_problem,
     isBlocking,
+    MEDIUM_SECURITY_BLOCKS_AFTER,
     localTagHit,
     merge_ingest,
     releaseStatus,
@@ -131,6 +132,50 @@ describe('blocking classification against self_review_gate', () => {
 
     it('a tree-disproved medium security finding does not block', () => {
         expect(isBlocking({ severity: 'medium', kind: 'security', contradicted: 'present at HEAD' })).toBe(false);
+    });
+
+    it('a still_open blocking row names why it fails, not an unknown status', () => {
+        const medium = { severity: 'medium' as const, kind: 'security' as const };
+        const { commit: _commit, ...uncommitted } = COMPLETE;
+        const [problem] = missing_dispositions([finding({ ...medium, ...uncommitted, status: 'still_open' })]);
+        expect(problem).toContain('still_open does not satisfy a blocking finding');
+        expect(problem).not.toContain('unknown status');
+    });
+});
+
+describe('the medium-security widening is prospective', () => {
+    const medium = { severity: 'medium' as const, kind: 'security' as const };
+    const [maj, min, pat] = MEDIUM_SECURITY_BLOCKS_AFTER.split('.').map(Number) as [number, number, number];
+    const next = `${maj}.${min + 1}.0`;
+    const nextPatch = `${maj}.${min}.${pat + 1}`;
+    const earlier = `${maj}.${Math.max(0, min - 1)}.0`;
+
+    it('binds every release after the cutoff, and binds with no release at all', () => {
+        expect(isBlocking(medium, next)).toBe(true);
+        expect(isBlocking(medium, nextPatch)).toBe(true);
+        expect(isBlocking(medium, `${maj + 1}.0.0`)).toBe(true);
+        expect(isBlocking(medium)).toBe(true);
+    });
+
+    it('leaves the cutoff release and every earlier one as they shipped', () => {
+        expect(isBlocking(medium, MEDIUM_SECURITY_BLOCKS_AFTER)).toBe(false);
+        expect(isBlocking(medium, earlier)).toBe(false);
+        expect(missing_dispositions([finding(medium)], MEDIUM_SECURITY_BLOCKS_AFTER)).toEqual([]);
+    });
+
+    it('never touches the high/critical floor, whatever the release', () => {
+        expect(isBlocking({ severity: 'high', kind: 'security' }, earlier)).toBe(true);
+        expect(isBlocking({ severity: 'critical', kind: 'claim' }, MEDIUM_SECURITY_BLOCKS_AFTER)).toBe(true);
+    });
+
+    it('an unparseable release falls to the wider rule', () => {
+        expect(isBlocking(medium, 'not-a-version')).toBe(true);
+    });
+
+    it('widens unrecorded_findings for a release after the cutoff only', () => {
+        const reported = [{ finding_id: 'abc123abc123', title: 't', ...medium }];
+        expect(unrecorded_findings(reported, [], next)).toHaveLength(1);
+        expect(unrecorded_findings(reported, [], MEDIUM_SECURITY_BLOCKS_AFTER)).toEqual([]);
     });
 });
 

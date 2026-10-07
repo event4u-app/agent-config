@@ -317,7 +317,7 @@ function blockingWithoutDisposition(ledgerAbs: string): number {
     }
     try {
         const ledger = parse_ledger(fs.readFileSync(ledgerAbs, 'utf-8'), ledgerAbs);
-        return ledger.findings.filter((f) => isBlocking(f) && !f.status).length;
+        return ledger.findings.filter((f) => isBlocking(f, ledger.release) && !f.status).length;
     } catch {
         return 0;
     }
