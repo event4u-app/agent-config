@@ -116,12 +116,30 @@ export function gateVerdict(findings: readonly Finding[], opts: { enforce: boole
 const SKIP_PREFIXES = ['dist/agent-src/', '.augment/', '.claude/', '.cursor/', '.clinerules/'];
 const SKIP_EXACT = new Set(['.windsurfrules', 'GEMINI.md', 'package-lock.json']);
 
+/**
+ * Review artefacts, `.review-input/` copies included: a copy of a diff that was
+ * already reviewed. The R2 reviewer excludes the same tree
+ * (`REVIEW_SCOPE_EXCLUDES` in `dispatch_r2_reviewer.ts`); here they used to
+ * compete for `MAX_REVIEW_CHUNKS` — 154 of 16.3.0's 603 unreviewed paths sat
+ * under it. Counted separately in the coverage record, never as unreviewed.
+ */
+export const REVIEW_COPY_PREFIX = 'agents/evidence/reviews/';
+
+export function isReviewCopyPath(p: string): boolean {
+    return p.startsWith(REVIEW_COPY_PREFIX);
+}
+
 export function isReviewablePath(p: string): boolean {
     if (SKIP_EXACT.has(p)) return false;
+    if (isReviewCopyPath(p)) return false;
     return !SKIP_PREFIXES.some((pre) => p.startsWith(pre));
 }
 
 function changedFiles(baseRef: string, cwd: string = REPO_ROOT): string[] {
+    return allChangedFiles(baseRef, cwd).filter(isReviewablePath);
+}
+
+function allChangedFiles(baseRef: string, cwd: string = REPO_ROOT): string[] {
     // `-c core.quotePath=false`: by default git renders a non-ASCII path as an
     // escaped, QUOTED string (`"gr\303\274e.ts"`), which then matches no
     // pathspec when fed back to `git diff`. The file was silently skipped by
@@ -138,8 +156,7 @@ function changedFiles(baseRef: string, cwd: string = REPO_ROOT): string[] {
     return (r.stdout ?? '')
         .split('\n')
         .map((s) => s.trim())
-        .filter(Boolean)
-        .filter(isReviewablePath);
+        .filter(Boolean);
 }
 
 /**
@@ -758,6 +775,8 @@ export interface ReviewPlan {
     requests: number;
     /** Files no request will carry, with the reason. */
     unreviewed: { path: string; reason: string }[];
+    /** Changed paths under `REVIEW_COPY_PREFIX` — copies of a reviewed diff, sent to no request. */
+    reviewCopies: string[];
     promptChars: number;
     note: string;
     escalation: string[];
@@ -787,6 +806,7 @@ export function buildPlan(baseRef: string, cwd: string = REPO_ROOT): ReviewPlan 
     }
 
     const files = analysisBase === baseRef ? packagingFiles : changedFiles(analysisBase, cwd);
+    const reviewCopies = allChangedFiles(analysisBase, cwd).filter(isReviewCopyPath);
     const diff = diffText(analysisBase, files, cwd);
     const escalation = escalationReasons(files, changedLineCount(analysisBase, files, cwd));
     const systemPrompt = buildSystemPrompt(release, baseRef);
@@ -810,6 +830,7 @@ export function buildPlan(baseRef: string, cwd: string = REPO_ROOT): ReviewPlan 
         facts,
         requests: partition.chunks.length,
         unreviewed: partition.unreviewed,
+        reviewCopies,
         skills: [...REVIEW_SKILLS],
         files,
         analysisBase,
@@ -904,6 +925,12 @@ export function coverageBlock(coverage?: ReviewCoverage): string {
         `\n\n**Coverage.** ${String(coverage.chunks)} request(s) over ` +
             `${String(coverage.filesReviewed)} of ${String(coverage.filesTotal)} changed file(s).`,
     ];
+    if ((coverage.reviewCopies ?? 0) > 0) {
+        parts.push(
+            ` ${String(coverage.reviewCopies)} further path(s) under \`${REVIEW_COPY_PREFIX}\` are ` +
+                'copies of an already-reviewed diff and were not re-read.',
+        );
+    }
     if (coverage.unreviewed.length > 0) {
         parts.push(
             ` **NOT reviewed (${String(coverage.unreviewed.length)}):**\n` +
@@ -927,6 +954,12 @@ export interface ReviewCoverage {
     /** Files the span changed, so the reader sees the fraction, not a bare count. */
     filesTotal: number;
     unreviewed: { path: string; reason: string }[];
+    /**
+     * Changed paths under `REVIEW_COPY_PREFIX`, not re-read because each is a
+     * copy of a diff already reviewed. Neither reviewed nor unreviewed, and not
+     * in `filesTotal`. Optional: a record written before this field has none.
+     */
+    reviewCopies?: number;
 }
 
 export function renderReview(findings: Finding[], enforce: boolean, escalation: readonly string[] = [], coverage?: ReviewCoverage): string {
@@ -1089,6 +1122,9 @@ export function main(argv: string[]): 0 | 2 {
                       `packaging diff ${plan.release.packagingFiles.length} file(s))\n`
                     : '') +
                 `  files:  ${plan.files.length}\n` +
+                (plan.reviewCopies.length > 0
+                    ? `  review copies (not re-read): ${String(plan.reviewCopies.length)}\n`
+                    : '') +
                 `  calls:  ${plan.requests} (budget ${String(PROMPT_BUDGET_CHARS)} chars/request, ` +
                 `ceiling ${String(MAX_REVIEW_CHUNKS)})\n` +
                 (plan.unreviewed.length > 0
@@ -1242,6 +1278,7 @@ export function main(argv: string[]): 0 | 2 {
             filesReviewed: filesRead,
             filesTotal: plan.files.length,
             unreviewed,
+            reviewCopies: plan.reviewCopies.length,
         };
         // Ground-truth pass, ONCE, before anything reads the finding set. A
         // deletion claim the range and the tree both disprove is annotated
