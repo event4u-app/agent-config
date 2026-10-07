@@ -265,18 +265,18 @@ writes it into settings files and the rename becomes a migration.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — With a settings file or carrier that does not parse, neither
+- [x] AC-1 — With a settings file or carrier that does not parse, neither
       `sync_pr_branch` nor `git:convention show` yields `merge`.
-- [ ] AC-2 — A value or pattern outside the schema is reported as invalid by
+- [x] AC-2 — A value or pattern outside the schema is reported as invalid by
       `settings:check` and by `git:convention show`.
-- [ ] AC-3 — A worktree and a fresh clone of a repository that declares
+- [x] AC-3 — A worktree and a fresh clone of a repository that declares
       `rebase` resolve `rebase`, and `sync_pr_branch` creates no merge commit in
       either.
-- [ ] AC-4 — A pull request cannot change the strategy its own update is judged
+- [x] AC-4 — A pull request cannot change the strategy its own update is judged
       by, and `show` names the value in force and the branch-local candidate.
-- [ ] AC-5 — In a packed consumer install, `/pr:merge` reads the strategy
+- [x] AC-5 — In a packed consumer install, `/pr:merge` reads the strategy
       through a call that resolves.
-- [ ] AC-6 — The setting value and the classifier family have different names
+- [x] AC-6 — The setting value and the classifier family have different names
       in every schema, and no approved card changes meaning.
 
 ## Decisions
