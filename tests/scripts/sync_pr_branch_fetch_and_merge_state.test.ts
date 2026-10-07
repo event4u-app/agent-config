@@ -84,6 +84,9 @@ describe('a merge that outlives its timeout', () => {
         const { root, remote, seed } = fixture('sync-merge-timeout-');
         const work = path.join(root, 'work');
         git(root, 'clone', '-q', remote, work);
+        // The script's own merge commits as the clone's configured identity; CI has no global one.
+        git(work, 'config', 'user.name', 't');
+        git(work, 'config', 'user.email', 't@example.com');
         git(work, 'switch', '-q', '-c', 'feature');
         commitFile(work, 'f.txt', 'feature\n');
         commitFile(seed, 'b.txt', 'from main\n');

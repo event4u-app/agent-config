@@ -48,6 +48,9 @@ function forkLayout(): { work: string; upstreamHead: string } {
     git(seed, 'push', '-q', fork, 'HEAD:main');
     const work = path.join(root, 'work');
     git(root, 'clone', '-q', fork, work);
+    // The script's own merge commits as the clone's configured identity; CI has no global one.
+    git(work, 'config', 'user.name', 't');
+    git(work, 'config', 'user.email', 't@example.com');
     git(work, 'remote', 'add', 'upstream', upstream);
     git(work, 'fetch', '-q', 'upstream');
     git(work, 'switch', '-q', '-c', 'feature');
