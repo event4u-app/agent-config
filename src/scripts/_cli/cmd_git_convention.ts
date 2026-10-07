@@ -286,20 +286,32 @@ function _planSubject(values: Record<string, string>, cwd: string): SubjectPlan 
     return { kind: 'rule', rule: { format: (reading.value ?? 'ticket-scope') as CommitFormat }, tier: 'default (Conventional Commits)', notes };
 }
 
+/** Under `--json` every exit prints one object carrying `ok`, `code` and the human `lines`. */
+function _subjectResult(json: boolean, code: number, lines: string[], err: string[] = [], extra: Record<string, unknown> = {}): GitConventionResult {
+    if (!json) return { code, out: lines, err };
+    return { code, out: [JSON.stringify({ ok: code === 0, code, lines, ...extra }, null, 2)], err };
+}
+
 export function subjectCommand(args: readonly string[], cwd: string, stdin = ''): GitConventionResult {
     const f = _flags(args, ['format', 'family']);
-    if (f.bad !== null || f.positional.length > 0) return { code: 2, out: [], err: [`unknown argument: ${f.bad ?? f.positional[0]}`, USAGE] };
-    const subjects = stdin.split('\n').map((l) => l.trimEnd()).filter((l) => l !== '');
-    if (subjects.length === 0) return { code: 2, out: [], err: ['no subjects on stdin', USAGE] };
-    const plan = _planSubject(f.values, cwd);
-    if (plan.kind === 'stop') return { code: plan.code, out: plan.lines, err: [] };
-    const failures = subjects.map((s) => ({ s, v: checkSubject(s, plan.rule) })).filter((x) => !x.v.ok);
-    if (f.json) {
-        const out = { ok: failures.length === 0, rule: ruleName(plan.rule), tier: plan.tier, notes: plan.notes, failures: failures.map((x) => ({ subject: x.s, rule: x.v.ok ? null : x.v.rule })) };
-        return { code: failures.length === 0 ? 0 : 1, out: [JSON.stringify(out, null, 2)], err: [] };
+    if (f.bad !== null || f.positional.length > 0) {
+        const why = `unknown argument: ${f.bad ?? f.positional[0]}`;
+        return _subjectResult(f.json, 2, f.json ? [why] : [], [why, USAGE]);
     }
-    if (failures.length === 0) return { code: 0, out: [`${subjects.length} subject(s) valid under ${ruleName(plan.rule)} (${plan.tier})`, ...plan.notes], err: [] };
-    return { code: 1, out: [...failures.map((x) => `✗ ${x.s}\n  ${x.v.ok ? '' : x.v.rule}`), ...plan.notes], err: [] };
+    const subjects = stdin.split('\n').map((l) => l.trimEnd()).filter((l) => l !== '');
+    if (subjects.length === 0) return _subjectResult(f.json, 2, f.json ? ['no subjects on stdin'] : [], ['no subjects on stdin', USAGE]);
+    const plan = _planSubject(f.values, cwd);
+    if (plan.kind === 'stop') return _subjectResult(f.json, plan.code, plan.lines);
+    const failures = subjects.map((s) => ({ s, v: checkSubject(s, plan.rule) })).filter((x) => !x.v.ok);
+    const lines = failures.length === 0
+        ? [`${subjects.length} subject(s) valid under ${ruleName(plan.rule)} (${plan.tier})`, ...plan.notes]
+        : [...failures.map((x) => `✗ ${x.s}\n  ${x.v.ok ? '' : x.v.rule}`), ...plan.notes];
+    return _subjectResult(f.json, failures.length === 0 ? 0 : 1, lines, [], {
+        rule: ruleName(plan.rule),
+        tier: plan.tier,
+        notes: plan.notes,
+        failures: failures.map((x) => ({ subject: x.s, rule: x.v.ok ? null : x.v.rule })),
+    });
 }
 
 function _commitlintProposal(cwd: string): { keys: string[]; from: string } | null {

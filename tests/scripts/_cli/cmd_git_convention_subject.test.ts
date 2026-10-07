@@ -133,6 +133,28 @@ describe('git:convention subject', () => {
     });
 });
 
+describe('git:convention subject --json', () => {
+    const parsed = (r: { code: number; out: string[] }): { ok: boolean; code: number; lines: string[] } =>
+        JSON.parse(r.out.join('\n')) as { ok: boolean; code: number; lines: string[] };
+
+    it.each([
+        ['a commitlint config (exit 3)', () => subject(repo({ '.commitlintrc.json': '{"extends":["@commitlint/config-conventional"]}\n' }), 'feat: x\n', '--json'), 3],
+        ['an unknown format (exit 1)', () => subject(repo(), 'feat: x\n', '--json', '--format', 'nope'), 1],
+        ['an unknown family (exit 1)', () => subject(repo(), 'feat: x\n', '--json', '--family', 'nope'), 1],
+        ['an unreadable format (exit 1)', () => subject(repo({}, 'git:\n  commit_format: nonsense\n'), 'feat: x\n', '--json'), 1],
+        ['an empty stdin (exit 2)', () => subject(repo(), '', '--json'), 2],
+        ['a valid subject (exit 0)', () => subject(repo(), 'feat: x\n', '--json'), 0],
+        ['an invalid subject (exit 1)', () => subject(repo(), 'wip\n', '--json'), 1],
+    ] as const)('prints JSON with ok, code and lines on %s', (_name, run, code) => {
+        const r = run();
+        expect(r.code).toBe(code);
+        const j = parsed(r);
+        expect(j).toMatchObject({ ok: code === 0, code });
+        expect(Array.isArray(j.lines)).toBe(true);
+        if (code !== 0) expect(j.lines.length).toBeGreaterThan(0);
+    });
+});
+
 describe('git:convention ticket', () => {
     it('prints the first ticket and every candidate', () => {
         const r = runGitConvention(['ticket', 'feat/DEV-12-OPS-7-x'], repo());
