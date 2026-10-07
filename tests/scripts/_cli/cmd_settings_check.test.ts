@@ -196,3 +196,29 @@ describe('cmd_settings_check — round-trip parser gate', () => {
         expectParity(['--path', p], root);
     });
 });
+
+describe('cmd_settings_check — the git convention keys', () => {
+    it('fails a typo in git.update_strategy, naming the key and the line', () => {
+        const root = freshRoot();
+        writeFixture(root, 'git:\n  commit_format: ticket-scope\n  update_strategy: rebsae\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.status).toBe(1);
+        expect(t.stderr).toContain('git.update_strategy');
+        expect(t.stderr).toContain('line:3');
+    });
+
+    it('fails a branch pattern that could reach a shell', () => {
+        const root = freshRoot();
+        writeFixture(root, 'git:\n  branch_pattern: "a;b/{slug}"\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.status).toBe(1);
+        expect(t.stderr).toContain('git.branch_pattern');
+    });
+
+    it('passes valid git keys', () => {
+        const root = freshRoot();
+        writeFixture(root, 'git:\n  branch_pattern: "{ticket}-{slug}"\n  update_strategy: rebase\n');
+        const t = runTs(['--path', path.join(root, '.agent-settings.yml')], root);
+        expect(t.status, t.stderr).toBe(0);
+    });
+});

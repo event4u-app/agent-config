@@ -42,7 +42,9 @@ Without a primitive, the skill's plain `git worktree add` path applies.
 Derive ONE branch name from the task — the shape `git.branch_pattern`
 declares (default `{type}/{slug}`; a ticket-named team sets `{ticket}-{slug}`;
 an empty placeholder drops with the separator after it, or before it when last),
-per the `commit-conventions` rule — state it, and proceed. Do not present a
+per the `commit-conventions` rule — state it, and proceed. The rendered name goes
+into every command double-quoted (`-b "<branch>"`); `git:convention show` reports a
+pattern outside `{type}`/`{ticket}`/`{slug}` and `[A-Za-z0-9._/-]` as `invalid`. Do not present a
 naming menu; the user can override by naming a branch in the same turn.
 
 ### 3. Write the scope-lock note

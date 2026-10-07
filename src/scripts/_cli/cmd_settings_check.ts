@@ -50,6 +50,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as path from 'node:path';
 
 import { parse as _rtParse } from '../sync_yaml_rt.js';
+import { GIT_CONVENTION_KEYS, fileSource, readGitConventionKey } from '../_lib/git_convention.js';
 
 const DEFAULT_PATH = '.agent-settings.yml';
 
@@ -254,6 +255,28 @@ function _scan_text(text: string): Finding[] {
     return findings;
 }
 
+/**
+ * The schema enum and the branch-pattern alphabet, through the same reader
+ * `git:convention show` and `sync_pr_branch` use, so a value those refuse
+ * fails here first.
+ */
+function _git_convention_findings(target: string, text: string): Finding[] {
+    const findings: Finding[] = [];
+    const lines = _splitlines(text);
+    for (const key of GIT_CONVENTION_KEYS) {
+        const reading = readGitConventionKey(key, fileSource({ developer: [target] }), {});
+        if (reading.state !== 'invalid' && reading.state !== 'malformed') continue;
+        const keyLine = lines.findIndex((l) => new RegExp(`^\\s+${key}\\s*:`).test(l));
+        findings.push({
+            line: keyLine + 1,
+            kind: `git.${key}`,
+            verdict: reading.state,
+            hint: reading.detail ?? reading.state,
+        });
+    }
+    return findings;
+}
+
 function _format(finding: Finding): string {
     return (
         `  ❌  line:${_ljust(String(finding.line), 4)}  ` +
@@ -368,6 +391,10 @@ export function main(argv: string[] | null = null, options: MainOptions = {}): n
                 hint: String((exc as Error).message),
             });
         }
+    }
+
+    if (findings.length === 0) {
+        findings.push(..._git_convention_findings(target, text));
     }
 
     if (findings.length === 0) {

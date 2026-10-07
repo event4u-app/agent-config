@@ -21,6 +21,7 @@
  * committed declaration can replace the checkout cascade without touching the
  * state logic.
  */
+import { spawnSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import * as fs from 'node:fs';
 
@@ -128,13 +129,51 @@ function _normalise(key: GitConventionKey, value: string): string {
     return GIT_CONVENTION_ENUMS[key] === undefined ? trimmed : trimmed.toLowerCase();
 }
 
+const BRANCH_PLACEHOLDERS = ['type', 'ticket', 'slug'] as const;
+const BRANCH_SAMPLE: Record<(typeof BRANCH_PLACEHOLDERS)[number], string> = {
+    type: 'feat',
+    ticket: 'DEV-1234',
+    slug: 'sample-change',
+};
+/** A rendered name reaches shell commands, so the literal alphabet is closed. */
+const BRANCH_LITERAL = /^[A-Za-z0-9._/-]*$/;
+
+/** The pattern with every placeholder filled from a fixed sample. */
+export function renderBranchSample(pattern: string): string {
+    return pattern.replace(/\{(type|ticket|slug)\}/g, (_m, name: keyof typeof BRANCH_SAMPLE) => BRANCH_SAMPLE[name]);
+}
+
+function _branchPatternReason(pattern: string): string | null {
+    if (pattern === '') return 'the pattern is empty';
+    const literal = pattern.replace(/\{([^{}]*)\}/g, (match, name: string) => {
+        return (BRANCH_PLACEHOLDERS as readonly string[]).includes(name) ? '' : `\u0000${match}`;
+    });
+    const unknown = /\u0000(\{[^{}]*\})/.exec(literal);
+    if (unknown !== null) {
+        return `unknown placeholder ${unknown[1]}; allowed: ${BRANCH_PLACEHOLDERS.map((p) => `{${p}}`).join(', ')}`;
+    }
+    if (/[{}]/.test(literal)) return 'an unbalanced brace';
+    if (!BRANCH_LITERAL.test(literal)) {
+        const bad = [...new Set(literal.replace(/[A-Za-z0-9._/-]/g, ''))].join('');
+        return `literal character(s) ${JSON.stringify(bad)} outside [A-Za-z0-9._/-]`;
+    }
+    if (!pattern.includes('{slug}')) return 'the pattern must contain {slug}';
+    const sample = renderBranchSample(pattern);
+    const check = spawnSync('git', ['check-ref-format', '--branch', sample], { encoding: 'utf8' });
+    // Without git the closed alphabet above is the whole check.
+    if (check.error === undefined && check.status !== 0) {
+        return `the sample \`${sample}\` fails git check-ref-format --branch`;
+    }
+    return null;
+}
+
 /** Why `value` is not allowed for `key`, or null when it is. */
 export function invalidReason(key: GitConventionKey, value: string): string | null {
     const allowed = GIT_CONVENTION_ENUMS[key];
     if (allowed !== undefined) {
         return allowed.includes(value) ? null : `\`${value}\` is not one of ${allowed.map((v) => `\`${v}\``).join(', ')}`;
     }
-    return value === '' ? 'the pattern is empty' : null;
+    return _branchPatternReason(value);
 }
 
 function _defaults(): GitConventionDefaults {

@@ -432,7 +432,8 @@ git:
   commit_format: ticket-scope
 
   # Shape of a branch name the agent creates. Placeholders: {type}, {ticket},
-  # {slug}. Ticket-named branches: "{ticket}-{slug}". An empty placeholder is
+  # {slug}; {slug} is required and other characters are limited to
+  # A-Z a-z 0-9 . _ / -. Ticket-named branches: "{ticket}-{slug}". An empty placeholder is
   # dropped with the separator after it (before it, when last).
   branch_pattern: "{type}/{slug}"
 

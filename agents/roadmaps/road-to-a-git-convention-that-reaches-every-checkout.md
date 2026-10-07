@@ -154,7 +154,7 @@ writes it into settings files and the rename becomes a migration.
       that reads a `git.*` key calls `show`. `settings:get` keeps its exit
       contract and gains one warning line when a layer is malformed.
       verify: `test -f tests/scripts/_cli/cmd_git_convention.test.ts && npx vitest run tests/cli/registry.test.ts tests/scripts/_cli/cmd_git_convention.test.ts && ./scripts-run src/scripts/check_cli_registry_budget_sync` -> 0
-- [ ] **1.3 A value and a pattern are checked where a consumer can see it.**
+- [x] **1.3 A value and a pattern are checked where a consumer can see it.**
       The reader accepts the placeholders `{type}`, `{ticket}` and `{slug}`
       only, requires `{slug}`, restricts literal characters to
       `[A-Za-z0-9._/-]`, and renders a sample that must pass
