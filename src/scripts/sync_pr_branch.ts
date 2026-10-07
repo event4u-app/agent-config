@@ -28,7 +28,9 @@
  *
  * Exit codes: 0 = already current, or merged cleanly · 1 = conflict, or the base
  * could not be resolved · 2 = internal error · 3 = behind, and
- * `git.update_strategy` is not `merge`, so the merge was refused · 4 =
+ * `git.update_strategy` is not `merge`, so the merge was refused (reason code
+ * `TARGET_POLICY_STALE` when the non-default target is itself behind the
+ * default branch the policy adds — the target's update, not this branch's) · 4 =
  * `git.update_strategy` cannot be read (a settings file or a committed
  * `.git-convention.yml` that does not parse, a value outside the schema, a
  * value only a user-global file carries, or a target commit that cannot be
@@ -252,6 +254,12 @@ export interface Plan {
     scanned: number;
     /** Base refs the branch is behind — set by a dry run, so a caller can decide without parsing `message`. */
     behind?: number;
+    /**
+     * Set when the policy added the default branch and the TARGET itself is
+     * behind it: updating the branch onto the target cannot make it current, so
+     * the update a reader needs is the target's, not this branch's.
+     */
+    targetStale?: { target: string; defaultRef: string; behind: number };
 }
 
 /**
@@ -713,7 +721,13 @@ export function sync(repo: string, baseOverride: string | null, dryRun: boolean,
     }
     if (dryRun) {
         const detail = stale.map((b) => `${b.ref} (${String(b.behind)} behind)`).join(', ');
+        const added = resolved.entries.find((e) => e.reason === 'branch-convergence-policy:include-default');
+        const target = resolved.entries[0].ref;
+        const targetBehind = added === undefined
+            ? 0
+            : Number(sh('git', ['rev-list', '--count', `${target}..${added.ref}`], repo).out.trim() || '0');
         return {
+            ...(targetBehind > 0 && added !== undefined ? { targetStale: { target, defaultRef: added.ref, behind: targetBehind } } : {}),
             exit: 0,
             message: `${summary}. Behind: ${detail} — would merge in that order. Dry run, nothing changed.`,
             generated: [],
@@ -872,6 +886,16 @@ export function main(argv?: readonly string[]): number {
     try {
         if (strategy !== 'merge') {
             plan = sync(repo, base, true, false);
+            if (plan.exit === 0 && plan.targetStale !== undefined) {
+                const t = plan.targetStale;
+                process.stdout.write(
+                    `⚠️  sync_pr_branch: refused — TARGET_POLICY_STALE: the target ${t.target} is itself ${String(t.behind)} commit(s) behind ${t.defaultRef}, ` +
+                        `which the branch-convergence policy requires; updating this branch onto the target cannot make it current. ` +
+                        `The target needs updating first; this branch has nothing to do until then.\n`,
+                );
+                reportScanned({ gate: 'sync_pr_branch', scanned: plan.scanned, units: 'base ref(s)', roots: ['origin'] });
+                return 3;
+            }
             if (plan.exit === 0 && (plan.behind ?? 0) > 0) {
                 process.stdout.write(
                     `⚠️  sync_pr_branch: refused — the branch is behind and git.update_strategy is \`${strategy}\`; this script only merges. ` +

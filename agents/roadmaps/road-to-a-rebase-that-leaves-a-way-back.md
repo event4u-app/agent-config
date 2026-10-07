@@ -149,7 +149,7 @@ review, the conformance count, a merge run — is decided, not discovered.
 
 ## Phase 3 — What a rebase breaks outside the branch
 
-- [ ] **3.1 A target behind its own default is told apart.** `sync_pr_branch`
+- [x] **3.1 A target behind its own default is told apart.** `sync_pr_branch`
       refuses that case with the reason code `TARGET_POLICY_STALE` instead of the
       ordinary behind message, and `/fix:ci` and `/roadmap:next` name it.
       verify: `test -f tests/scripts/sync_pr_branch_target_behind_default.test.ts && npx vitest run tests/scripts/sync_pr_branch_target_behind_default.test.ts && git grep -q TARGET_POLICY_STALE -- src/domains/engineering-base/fix/ci/command.md` -> 0

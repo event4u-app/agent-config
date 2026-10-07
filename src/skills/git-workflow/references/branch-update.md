@@ -45,9 +45,10 @@ could not be read, and it is not a strategy either:
   Re-run the relevant tests afterwards — a conflict-free tree is not a correct
   one. Detail: [`merge-conflicts`](../../merge-conflicts/SKILL.md).
 - **A base SET** (a non-default target whose branch-convergence policy also
-  carries the default branch): rebase onto the target. If `sync_pr_branch` then
-  still names the default branch as behind, the target itself is behind its
-  default — that is the target's update, not this branch's; report it.
+  carries the default branch): rebase onto the target. When the target itself
+  is behind its default, `sync_pr_branch` exits 3 with the reason code
+  `TARGET_POLICY_STALE` — that is the target's update, not this branch's;
+  report it and do not rebase.
 - **`sync_pr_branch` exits** — `0` with a `✅` line: current, or under `merge`
   merged cleanly; `0` with a `⚠️` `unverified` or `BYPASSED` line: **not
   checked** (origin not fetched, or the convergence policy disabled), never
