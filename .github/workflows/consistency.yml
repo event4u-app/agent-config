@@ -292,6 +292,14 @@ jobs:
       - name: Audit workflow security (warn-only)
         run: ./scripts-run src/scripts/lint_workflow_security
 
+      # Pack boundaries ran only in `task ci`, which no workflow invokes, so a
+      # pull request that added a cross-pack link got no red check from
+      # anything. Run here as a script, with the argv the `lint_pack_boundaries`
+      # row in src/config/gate-coverage.yml pins: a count above the baseline in
+      # src/config/gate-violation-baselines.json exits 1 and fails this job.
+      - name: Enforce cross-pack reference boundaries
+        run: ./scripts-run src/scripts/lint_pack_boundaries --quiet
+
       - name: Block readable external inspiration/harvest source names
         run: task check-no-external-sources
 

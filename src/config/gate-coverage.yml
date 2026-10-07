@@ -3257,3 +3257,30 @@ gates:
       tier so a canary becomes expressible is a separate decision, recorded
       unresolved in
       agents/evidence/analysis/workflow-security-net-degraded-decision.md.
+  - id: lint_pack_boundaries
+    argv: ["--quiet"]
+    min_scanned: 600
+    corpus: "source artefacts the shared resolver yields (`_lib/agent_src.iter_artefacts` over skills, rules, agent-src and domains), counted as FILES — 830 on 2026-10-07, of which 139 sit outside any pack's scope and are still counted because they were read. The floor is 600 because artefacts are merged and retired routinely, while a resolver that stopped yielding a root drops by hundreds at once: skills alone are over half the corpus. The violation COUNT is not what this floor guards; that is the ratchet in src/config/gate-violation-baselines.json, which fails the run when it rises above the recorded baseline."
+    status: enforced
+    ci_invocation: .github/workflows/consistency.yml
+    canary:
+      class: contract-violation
+      path: src/skills/zz-canary-pack-boundary/SKILL.md
+      content: |
+        ---
+        name: zz-canary-pack-boundary
+        description: Canary planted by check_gate_coverage --canary; never ships.
+        packs: [founder-strategy]
+        ---
+
+        # Canary
+
+        Links across an undeclared pack boundary into
+        [positioning-strategy](../positioning-strategy/SKILL.md), which one more
+        violation than the recorded baseline must turn red.
+    note: >-
+      road-to-gates-a-pull-request-can-hear 3.1. Until this row the gate ran only
+      under the local `task ci`, which no workflow invokes, so a pull request that
+      added a cross-pack link got no red check from anything. The step in
+      consistency.yml runs it with this argv; `--self-test` proves the CLI still
+      rejects an undeclared link, an unresolved pack and an empty corpus.
