@@ -183,11 +183,13 @@ Read its exit and its line together:
 
   | Read | Absent | Value | Failed |
   |---|---|---|---|
-  | classic protection | non-zero exit **and** the output contains `(HTTP 404)` (`Branch not protected`) | exit `0`: `true` or `false` | any other non-zero exit, or output that is not `true` / `false` |
+  | classic protection | non-zero exit **and** the output contains `(HTTP 404)` (`Branch not protected`); or exit `0` with `null` — the branch is protected but requires no status checks | exit `0`: `true` or `false` | any other non-zero exit, or output that is not `true` / `false` / `null` |
   | rulesets | exit `0` with empty output (no rule requiring status checks) | exit `0`: `true` or `false` | non-zero exit |
 
   A `404` from the classic endpoint is not a failed read: it is what a branch
-  protected only by rulesets, or not protected at all, returns. Either reading
+  protected only by rulesets, or not protected at all, returns; nor is `null`
+  from a `200`, which is a protected branch with no required status checks.
+  Either reading
   `true` means the forge requires an up-to-date branch; both absent or `false`
   means it does not; a **failed** read is treated as required. A base
   protected by rulesets alone is decided by the rulesets read.
