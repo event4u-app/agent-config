@@ -32,7 +32,10 @@ Engine provenance: ported from `nextlevelbuilder/ui-ux-pro-max-skill`
 @ `b7e3af80f6e331f6fb456667b82b12cade7c9d35` (MIT, last checked
 2026-06-07) — BM25 de-duplicated, slide-only paths stripped, every
 frontend-hardcoded axis moved into the manifest. Full license obligations:
-[`design-intelligence/ATTRIBUTION.md`](../design-intelligence/ATTRIBUTION.md).
+[`design-intelligence/ATTRIBUTION.md`](../design-intelligence/ATTRIBUTION.md),
+which ships with the `frontend-design` pack — the obligations attach to that
+pack's corpus, so an install without it carries neither the corpus nor the
+obligation.
 
 ## When to use
 

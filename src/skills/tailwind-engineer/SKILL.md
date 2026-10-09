@@ -97,7 +97,9 @@ Token authoring (DTCG 3-layer model, CSS-var/Tailwind generation) lives
 in [`design-tokens`](../design-tokens/SKILL.md); its
 `tokens.ts validate --dir <path>` is the **single token-discipline
 linter** — the mechanical check behind this rule (no hardcoded hex / px /
-rem outside the token files). Greenfield Tailwind config: bundled
+rem outside the token files). That skill ships with the `frontend-design`
+pack: without it the rule above still binds and is checked by reading,
+not by a linter. Greenfield Tailwind config: bundled
 `scripts/tailwind_config_gen.ts` (Apache-2.0-derived, pure templating)
 scaffolds `tailwind.config.{js,ts}` per framework.
 
