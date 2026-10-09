@@ -21,8 +21,8 @@ Senior-engineer review of the branch diff. Search grid — hunt for:
 
 ## Inputs
 
-- diff: `diff.patch` — the review scope (branch head 56b5fa8754f50aabd79e89841df6304c65c8dfa5, review
-  artefacts excluded), scope hash `bcab17f1fd0007b34617dbd20cee66decaa54481cb268f333e32db09e34ff91b`
+- diff: `diff.patch` — the review scope (branch head e6029108fec76033a3a0dc3511922125ed07a739, review
+  artefacts excluded), scope hash `714cf7e6e36116324e57553476953dbfadf80989f72e32704717fc457f70cd21`
 - roadmap under review: none (`acceptance-criteria.md` is empty)
 
 Changed files:
@@ -30,13 +30,18 @@ Changed files:
 - agents/evidence/analysis/pack-boundary-link-classification-2026-10-09.md
 - agents/roadmaps/archive/road-to-gates-a-pull-request-can-hear.md
 - agents/roadmaps/road-to-gates-a-pull-request-can-hear.md
+- dist/agent-src/skills/corpus-grounding/ATTRIBUTION.md
 - dist/agent-src/skills/corpus-grounding/SKILL.md
 - dist/agent-src/skills/tailwind-engineer/SKILL.md
+- docs/contracts/capability-packs.md
 - src/config/discovery/packs.yml
+- src/config/gate-coverage.yml
 - src/config/gate-violation-baselines.json
 - src/domains/engineering-base/pack.yaml
 - src/packs/finance-basic/pack.yaml
 - src/scripts/lint_pack_boundaries.ts
+- src/scripts/lint_rule_skill_pack_reach.ts
+- src/skills/corpus-grounding/ATTRIBUTION.md
 - src/skills/corpus-grounding/SKILL.md
 - src/skills/tailwind-engineer/SKILL.md
 - tests/scripts/lint_pack_boundaries_base_narrow.test.ts
@@ -61,7 +66,7 @@ Fill the findings table in `pack-boundary-suggests-edge.findings.md`:
   (contract §2.3):
 
 ```markdown
-**Honest-null:** 0 findings, scope bcab17f1fd0007b34617dbd20cee66decaa54481cb268f333e32db09e34ff91b, reviewed <YYYY-MM-DD>
+**Honest-null:** 0 findings, scope 714cf7e6e36116324e57553476953dbfadf80989f72e32704717fc457f70cd21, reviewed <YYYY-MM-DD>
 ```
 
 ## Return channel
