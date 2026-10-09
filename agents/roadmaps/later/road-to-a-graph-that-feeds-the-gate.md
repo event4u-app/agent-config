@@ -1,9 +1,36 @@
 ---
 complexity: lightweight
-status: ready
+status: later
+review_by: 2026-12-15
 execution:
   mode: phase-checkpoints
-estate_growth_exempt: "one blocker, discovered by doing the work rather than by planning it. Step 3.3's whole content is a measurement, and taking it is what revealed that its corpus has no positive class and that one of its two arms had been recording a path-shape defect instead of a verdict. The alternative to opening b1-labelled-positives-unreachable was to flip an open box on an undefined recall, which is the condition D5 already names as its own revisit trigger. The estate is one blocker larger because the tree now knows something it did not, and the two amendment options inside that blocker are owner-reserved precisely because the party that saw the counts may not choose between them."
+entry_condition:
+  what: >
+    The pre-registered corpus gains a non-zero POSITIVE stratum. Concretely:
+    `agents/evidence/analysis/graph-feeder-recall-2026-Q4.md` carries a
+    `Current reading` table whose `positives in corpus` column is non-zero for
+    at least one arm. Re-measured 2026-10-09 and it is still 0 on all three
+    (F, graph, union), so recall stays 0/0 and the Wilson interval stays
+    `[0, 1]`. Nothing else in this roadmap is open: the instrument is repaired,
+    the accrual bar of 50 is met at 84 rows over 5 sessions, and the labelling
+    machinery ran end to end at council quorum 2/2. What is missing is a class,
+    not a step.
+  when: >
+    After the two consumer repositories the owner nominated on 2026-10-06
+    (option (a) of blocker `b1-labelled-positives-unreachable`, recorded as
+    `ENC1:` tokens in D8) have produced 25 stop records carrying an untested
+    production edit. This repository cannot produce them: its own sessions are
+    governance work on a suite whose gates refuse exactly that edit, so the
+    base rate of the positive class here is the thing that is zero and no
+    further accrual here moves it.
+  who: >
+    No one has to act for the accrual itself — it happens under ordinary
+    feature work in those repositories. The owner acts only if the design is
+    to change instead: options (b) amend the pre-registration with the counts
+    in hand, and (c) close the step and record that F's recall will not be
+    measured. Both are owner-reserved because the party that has seen the
+    counts may not choose between them.
+estate_growth_exempt: "Moves one roadmap from the active tree into `later/`: active_roadmaps 10 -> 9, later_roadmaps 102 -> 103. The estate is one file larger in the parked column and one smaller in the column that gates work, which is the direction this disposition exists to produce — a roadmap whose only open step waits on an accrual this repository cannot produce is backlog the dashboard and `/roadmap:process-*` would otherwise try to execute. The wait is measured, not assumed: `graph-feeder-recall-2026-Q4.md` still reads 0 positives on all three arms at 2026-10-09, and the owner already chose option (a) on 2026-10-06, so no decision is pending either. Archiving instead would be wrong — the work resumes when the corpus fills."
 estate_offset_exempt: "lane of road-to-leading-every-row; the set's growth is declared there. later/road-to-a-graph-that-wins cannot absorb it — its Phase 3 is edge policy and new detectors, not this detector-F feeder, and its wake condition (two benchmark subject names) gates nothing here."
 relates:
   - slug: road-to-leading-every-row

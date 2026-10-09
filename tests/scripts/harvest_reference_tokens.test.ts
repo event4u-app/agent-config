@@ -344,6 +344,14 @@ describe('4.1 census — the estate figures the roadmap pinned', () => {
     // `active: 0` was a measured fact at pin time, never a policy that an active
     // roadmap may carry no token - the script's whole job is to find `ENC1:`
     // tokens, and the estate's convention puts them in tracked, active files.
+    //
+    // Re-derived 2026-10-09: the same file was PARKED into `later/` on its
+    // accrual wait, so its two tokens moved with it - `later` 6 -> 7 and
+    // `active` 1 -> 0, while `occurrences`, `uniqueTokens` and `files` are
+    // unchanged because nothing was added or removed. The census is a level
+    // census; a disposition change moves a file between levels and must move
+    // these two numbers together. A revision that changed only one of them
+    // would be describing an estate that does not exist.
     // Updating this block costs no sensitivity: per the header above, the census
     // is NOT the sensitive test of the extraction bound; the fixtures are, and
     // none of them is touched here.
@@ -353,8 +361,8 @@ describe('4.1 census — the estate figures the roadmap pinned', () => {
         expect(c.uniqueTokens).toBe(119);
         expect(c.files).toBe(64);
         expect(c.byLevel.archive).toBe(57);
-        expect(c.byLevel.later).toBe(6);
-        expect(c.byLevel.active).toBe(1);
+        expect(c.byLevel.later).toBe(7);
+        expect(c.byLevel.active).toBe(0);
     });
 });
 
