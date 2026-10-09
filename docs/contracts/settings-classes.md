@@ -245,13 +245,13 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 
 | Class | Keys |
 |---|---|
-| A — preference | 21 |
+| A — preference | 20 |
 | B — consent | 3 |
-| C — guarded | 115 |
-| **Total** | **139** |
+| C — guarded | 114 |
+| **Total** | **137** |
 
 <!-- derivable-retirement-2026-10-09 -->
-It fell to 139 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 19 `derivable` keys (5 A, 14 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behaviour, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`; 2.2 reasoning protocol switches — `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
+It fell to 137 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 21 `derivable` keys (6 A, 15 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behaviour, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`; 2.2 reasoning protocol switches — `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`; 2.3 roadmap cadence — `roadmap.skip_pre_run_gate`, `roadmap.dashboard_regen_cadence`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
 <!-- /derivable-retirement-2026-10-09 -->
 
 It rose to 158 on 2026-10-06 when the `git:` section added three C keys —
@@ -391,11 +391,11 @@ the template, which is the drift this contract exists to prevent.
 
 | Disposition | Keys |
 |---|---|
-| derivable | 64 |
+| derivable | 62 |
 | un-inferrable | 10 |
 | consent | 48 |
 | policy | 17 |
-| **Total** | **139** |
+| **Total** | **137** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -539,9 +539,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `chat_history.text_limits.phase` | C | `200` | cap on how much phase text is written to disk | consent |
 | `pipelines.skill_improvement` | A | `true` | proposes a capture; the user still decides | derivable — the pipeline's own trigger condition; the capture is already a user-confirmed proposal |
 | `reasoning.enabled` | C | `true` | master switch for the agent's own reasoning discipline | derivable — the RDP gate's own task-triviality and host self-assessment signals already decide per turn |
-| `roadmap.skip_pre_run_gate` | C | `true` | disables a pre-run confirmation gate | derivable — the pre-run gate's own ambiguity condition; a genuine ambiguity prompts regardless |
-| `roadmap.quality_cadence` | C | `end_of_roadmap` | governs when verification runs | derivable — `quality.local_auto_run` decides whether local verification runs, and the `verify-before-complete` evidence gate decides the moment |
-| `roadmap.dashboard_regen_cadence` | A | `every_5_steps` | beat of a derived view | derivable — the dashboard is derived: `roadmap:progress` regenerates deterministically from the roadmap files |
+| `roadmap.quality_cadence` | C | `per_phase` | governs when verification runs. Two defaults: the template and the schema ship `per_phase` (since 2026-09-13), while the reader's prose fallback (`roadmap-process-loop` § 4) and the reference page still say `end_of_roadmap` — which is why the 2026-10-09 retirement left it in the queue | derivable — `quality.local_auto_run` decides whether local verification runs, and the `verify-before-complete` evidence gate decides the moment |
 | `roadmap.horizon_weeks` | C | `0` | a non-zero value relaxes a lint's plate-token ban | policy |
 | `roadmap.gate_budget.max_cost_per_run_usd` | C | `null` | per-run spend ceiling on class-1 gate execution; `null` = none (ADR-279) | consent |
 | `roadmap.gate_budget.max_cost_per_rolling_7d_usd` | C | `null` | rolling spend ceiling on class-1 gate execution; `null` = none (ADR-279) | consent |

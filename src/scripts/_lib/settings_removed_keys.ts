@@ -105,6 +105,9 @@ export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     ['reasoning.components.prediction_tracking', 'the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off'],
     ['reasoning.components.decision_ledger', 'the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off'],
     ['reasoning.components.uncertainty_budget', 'the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off'],
+    // 2026-10-09 — roadmap cadence
+    ['roadmap.skip_pre_run_gate', 'the command name names the scope; only an ambiguous roadmap or an unresolvable conflict shows the gate'],
+    ['roadmap.dashboard_regen_cadence', 'a fixed cadence: every 5th closed step, every phase boundary, reply end and any file-shape touch'],
 ]);
 
 /** Keys already warned about in THIS process — the "once per run" dedupe. */

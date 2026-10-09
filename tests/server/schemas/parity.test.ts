@@ -217,6 +217,8 @@ const RETIRED_2026_10_09: readonly (readonly [string, string, Json])[] = [
     ['reasoning.components', 'prediction_tracking', false],
     ['reasoning.components', 'decision_ledger', false],
     ['reasoning.components', 'uncertainty_budget', false],
+    ['roadmap', 'skip_pre_run_gate', false],
+    ['roadmap', 'dashboard_regen_cadence', 'per_step'],
 ] as const;
 
 describe('deleted settings keys cannot be honoured again', () => {

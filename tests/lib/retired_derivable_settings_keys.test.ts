@@ -51,6 +51,9 @@ const RETIRED: ReadonlyArray<{ key: string; hostile: unknown }> = [
     { key: 'reasoning.components.prediction_tracking', hostile: false },
     { key: 'reasoning.components.decision_ledger', hostile: false },
     { key: 'reasoning.components.uncertainty_budget', hostile: false },
+    // 2.3 — roadmap cadence (`roadmap.quality_cadence` moved back to the queue)
+    { key: 'roadmap.skip_pre_run_gate', hostile: false },
+    { key: 'roadmap.dashboard_regen_cadence', hostile: 'per_step' },
 ];
 
 const TEMPLATE_PATH = path.resolve(process.cwd(), 'src/config/agent-settings.template.yml');

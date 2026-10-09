@@ -87,8 +87,21 @@ table is a measurement of one commit, not a licence.
       components keep running exactly as before: every switch defaulted
       `true`, and the gate's task and host signals now decide alone.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
-- [ ] **2.3 Roadmap cadence (3).** `roadmap.skip_pre_run_gate`,
+- [x] **2.3 Roadmap cadence (3).** `roadmap.skip_pre_run_gate`,
       `roadmap.quality_cadence`, `roadmap.dashboard_regen_cadence`.
+      Retired two (count 64 → 62): `roadmap.skip_pre_run_gate` and
+      `roadmap.dashboard_regen_cadence`. Both had prose readers only
+      (`roadmap-process-loop` § 2, § 4 and step 6; `roadmap-progress-sync`
+      pre-send step 3; `roadmap-progress-mechanics`), each stating the same
+      default as the template; they now state the fixed behaviour.
+      **Moved back to the queue: `roadmap.quality_cadence`.** The audit read
+      the reader fallback (`end_of_roadmap`) as equal to the template value,
+      but the template and the Zod schema have shipped `per_phase` since
+      2026-09-13 while `roadmap-process-loop` § 4, the reference page and the
+      class contract still said `end_of_roadmap`. Two defaults: retiring the
+      key fixes one of them as the behaviour and silently changes it for
+      whoever relied on the other. The contract row now records both; which
+      one wins is the decision that would let the key go.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
 - [ ] **2.4 Command suggestion and PR creation (8).** `commands.auto_detect`,
       `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`,

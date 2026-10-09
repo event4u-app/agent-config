@@ -225,22 +225,6 @@ pipelines:
 # response — that cadence is governed by `roadmap-progress-sync` and
 # is non-negotiable. This setting only governs *quality tool runs*.
 roadmap:
-  # Skip the pre-run confirmation gate when /roadmap:process-step|phase|full
-  # is invoked (true, false).
-  #   true  = default. The command name itself names the scope; if a
-  #           single active roadmap is discoverable (or the user named
-  #           one), the loop starts immediately. The resolved roadmap /
-  #           cadence / council setting are surfaced inline as a one-shot
-  #           note so an unwanted pick can still be aborted mid-stream.
-  #   false = legacy. The loop shows the pre-run summary with numbered
-  #           options (Go / Different roadmap / Different scope / Toggle
-  #           council / Abort) and waits for input.
-  # The gate is still shown — regardless of this flag — when the roadmap
-  # is ambiguous (multiple active, none named) or a scope / cadence
-  # conflict has no sensible default. The flag suppresses the
-  # confirmation, never a genuine "which roadmap?" question.
-  skip_pre_run_gate: true
-
   # When to run quality tools during /roadmap:process-step|phase|full.
   #   end_of_roadmap = once, before archiving (default — fastest, fewest tokens)
   #   per_phase      = once after every completed phase
@@ -585,7 +569,6 @@ the canonical narrative lives in
 | `hooks.rtk_wrap.enabled` | `true`, `false` | `false` | PreToolUse RTK-wrap nudge: when `rtk` is on PATH, warns (exit 2, never blocks) to re-run a verbose CLI command wrapped with rtk. |
 | `hooks.design_slop.enabled` | `true`, `false` | `false` | PreToolUse anti-slop nudge: runs the `lint_design_slop` registry against about-to-be-written UI content and warns (exit 2, never blocks) on P0/P1 aesthetic tells. |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
-| `roadmap.skip_pre_run_gate` | `true`, `false` | `true` | When `true` (default): `/roadmap:process-step\|phase\|full` skips the interactive pre-run summary and starts the loop immediately — the resolved roadmap, cadence, and council are surfaced inline so an unwanted pick can still be aborted. When `false`: the loop shows the pre-run summary with numbered options (Go / Different roadmap / Different scope / Toggle council / Abort) and waits. The gate is always shown — regardless of this flag — when the roadmap is ambiguous (multiple active, none named) or a scope / cadence conflict has no sensible default. |
 | `roadmap.quality_cadence` | `end_of_roadmap`, `per_phase`, `per_step` | `end_of_roadmap` | When `/roadmap:process-step|phase|full` runs the project's quality pipeline — only relevant when `quality.local_auto_run` is `true`; when it is `false` (the default) local pipeline runs are suppressed at every cadence and remote CI is the gate. Default skips per-step / per-phase runs and gates only the final archival. `per_phase` runs once after every phase; `per_step` is the legacy verbose mode. Step checkboxes and the dashboard are always updated regardless. |
 | `quality.local_auto_run` | `true`, `false` | `false` | When `false` (default): agent NEVER runs the project's quality pipeline (`task ci`, `make test`, `npm run check`, PHPStan, ECS, Rector, test suites) proactively — and does not ask. The user runs quality tools manually; remote CI is the authoritative gate. The agent runs one only on (1) an explicit ask this turn, (2) a concrete CI failure (run exactly that failing check), or (3) the new-gate carve-out. When `true`: opt-in legacy — agent runs the pipeline autonomously when work is ready for verification. **Carve-out**: NEW CI gates / smoke tests / test files MUST run locally regardless of this flag — without execution the new gate is unverified evidence. Iron Law `verify-before-complete` still applies; suppressed runs are surfaced ("quality gates delegated to remote CI"), never claimed as passing. |
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
@@ -672,6 +655,8 @@ silence it.
 | `telegraph.speak` | the telegraph-speak rule does not ship (bench verdict, ADR telegraph/0002) |
 | `tokens.rich_skills` | `token_budget_class: rich` skills load in full (`token-budget-discipline`) |
 | `reasoning.auto_gate`, `reasoning.components.*` (nine switches) | every RDP component follows the gate's task and host signals (`rdp-gate`); `reasoning.enabled` stays the hard off |
+| `roadmap.skip_pre_run_gate` | no pre-run confirmation; only an ambiguous roadmap or an unresolvable conflict shows the gate |
+| `roadmap.dashboard_regen_cadence` | dashboard regen every 5th closed step, at phase boundaries, at reply end and on any file-shape touch |
 
 ## Cost profiles
 

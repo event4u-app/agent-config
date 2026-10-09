@@ -22,7 +22,6 @@ const profileId = z.enum(['developer', 'content_creator', 'founder', 'agency', '
 const accessStyle = z.enum(['getters_setters', 'get_attribute', 'magic_properties']);
 const chatFreq = z.enum(['per_turn', 'per_phase', 'per_tool']);
 const qualityCadence = z.enum(['end_of_roadmap', 'per_phase', 'per_step']);
-const regenCadence = z.enum(['per_step', 'every_5_steps', 'phase_boundary']);
 const fidelityMode = z.enum(['strict', 'structural', 'hard-floor']);
 const crossSourceMode = z.enum(['on', 'auto', 'off']);
 const replyMethod = z.enum(['replies_endpoint', 'create_review_comment', 'auto']);
@@ -246,14 +245,8 @@ export const settingsSchema = z.object({
         ),
     }),
     roadmap: z.object({
-        skip_pre_run_gate: z.boolean().default(true).describe(
-            'Skip the /roadmap:process-* pre-run confirmation gate. true (default) starts processing immediately and surfaces the resolved config inline; false shows the numbered-options gate and waits. A genuine "which roadmap?" ambiguity always prompts regardless.',
-        ),
         quality_cadence: qualityCadence.default('per_phase').describe(
             'When the agent runs the full quality / test suite during /roadmap:process-* runs. per_phase = after each phase boundary (default since 2026-09-13 — end_of_roadmap lets errors compound across phases, which is expensive in a multi-phase autonomous run nobody is watching). end_of_roadmap = once, after the last step (fastest). per_step = after every single step (slowest, highest confidence).',
-        ),
-        dashboard_regen_cadence: regenCadence.default('every_5_steps').describe(
-            'How often the agent regenerates agents/roadmaps/dashboard.md during a roadmap run. every_5_steps = batch the regen (default). per_step = after every step (freshest dashboard, highest subprocess overhead). phase_boundary = only at phase edges. A rename, phase add, or archive always regenerates immediately regardless.',
         ),
         horizon_weeks: z.number().int().min(0).default(0).describe(
             'Optional planning horizon (weeks) the agent shows in roadmap framing ("next 4 weeks"). Set 0 to omit the horizon — most teams prefer to ship without a hardcoded window.',

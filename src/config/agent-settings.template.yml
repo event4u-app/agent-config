@@ -542,8 +542,8 @@ roadmap:
   # templates/roadmaps.md rule 18) changes ONLY the run's interaction
   # pattern: which asks are batched into the run-start execution
   # contract and where checkpoint prompts fire. It overrides NONE of
-  # the keys below — `skip_pre_run_gate`, `quality_cadence`, and
-  # `dashboard_regen_cadence` keep their global meaning in every mode.
+  # the keys below — `quality_cadence` keeps its global meaning in
+  # every mode.
   #
   # WHAT NO MODE LIFTS, NAMED. This sentence used to read "no mode lifts a
   # safety floor", which is unfalsifiable: it never says which floor or how
@@ -561,17 +561,6 @@ roadmap:
   # reach and this comment as the authority on what a MODE can change: nothing.
   # See contexts/execution/roadmap-execution-contract.md.
 
-  # Skip the /roadmap:process-* pre-run confirmation gate (true, false).
-  #   true  = default. The command name names the scope; a discoverable
-  #           single active roadmap (or a named one) starts the loop
-  #           immediately, resolved config surfaced inline so a wrong
-  #           pick can still be aborted mid-stream.
-  #   false = legacy. Shows the pre-run summary with numbered options
-  #           and waits. The gate is still shown regardless when the
-  #           roadmap is ambiguous or a scope / cadence conflict has no
-  #           sensible default. See rules/autonomous-execution.md.
-  skip_pre_run_gate: true
-
   # When to run quality tools during /roadmap execute.
   #   end_of_roadmap = once, before archiving the completed roadmap (fastest, fewest tokens)
   #   per_phase      = once after every completed phase (default since 2026-09-13)
@@ -586,35 +575,6 @@ roadmap:
   # (a mission) decide WHETHER local pipeline runs happen at all; this
   # knob only decides WHEN, and is inert wherever both resolve false.
   quality_cadence: per_phase
-
-  # Dashboard regen cadence inside autonomous runs (process-step /
-  # process-phase / process-full). Controls how often
-  # `./agent-config roadmap:progress` runs **between** steps in a
-  # single session. The dashboard is always regenerated at the start
-  # of the run, at every phase boundary, and at run end — this knob
-  # only affects the inter-step beat.
-  #
-  #   per_step         = regen after every checkbox flip. Safest for
-  #                      crash recovery; highest subprocess overhead.
-  #                      Use when a session may be killed mid-roadmap
-  #                      and a fresh dashboard must always reflect the
-  #                      last-saved step.
-  #   every_5_steps    = default: batch flips, regen every 5 closed
-  #                      steps + at every phase boundary. Balanced
-  #                      cost/freshness for runs of 20–100 steps.
-  #   phase_boundary   = regen only at phase boundaries + run end.
-  #                      Cheapest for long roadmaps (100+ steps).
-  #                      The checkbox flip itself is still inline per
-  #                      Iron Law 2 — only the subprocess regen batches.
-  #
-  # `process-step` ignores this knob (single-step runs always regen
-  # at the end of the step). The Iron Law 1 mandate to regen on any
-  # file-shape touch (rename / phase add / archive) still fires
-  # immediately regardless of this setting — so the dashboard is never
-  # stale across a rename, a phase add, or an archive, whatever the
-  # inter-step beat is.
-  dashboard_regen_cadence: every_5_steps
-
 
   # Visible-horizon framing in roadmap authoring (integer weeks, default 0).
   # 0  = off (default). Time-boxed plate / horizon framing is forbidden:

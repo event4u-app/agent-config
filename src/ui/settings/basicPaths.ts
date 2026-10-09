@@ -34,7 +34,6 @@ export const BASIC_PATHS: ReadonlySet<string> = new Set([
     'model.auto_switch',
     // Cadence
     'roadmap.quality_cadence',
-    'roadmap.dashboard_regen_cadence',
     'quality.local_auto_run',
     // Memory
     'memory.review_threshold',

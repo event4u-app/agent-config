@@ -144,7 +144,6 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
             'cost.enforcement',
             'model.auto_switch',
             'roadmap.quality_cadence',
-            'roadmap.dashboard_regen_cadence',
             'quality.local_auto_run',
             'memory.review_threshold',
             'memory.redact_patterns',
