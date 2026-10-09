@@ -75,9 +75,10 @@ estate_offset_exempt: >-
 > **0** deferrals and **0** open blockers (`901e8bc4e`, a pure `git mv`). This file
 > differs on all three axes.
 >
-> **Hand-over.** (a) `agents/roadmaps/road-to-trigger-eval-freshness-has-no-writer.md:3`,
-> currently `status: draft` → `status: ready`, which also needs the `check_estate_count`
-> growth claimed or offset; the frontmatter reserves that act to a maintainer. (b) `D3`
+> **Hand-over.** (a) `agents/roadmaps/later/road-to-trigger-eval-freshness-has-no-writer.md:3`,
+> currently `status: later` (parked 2026-10-09) → `status: ready` plus a move back out of
+> `later/`, which also needs the `check_estate_count` growth claimed or offset; the
+> frontmatter reserves that act to a maintainer. (b) `D3`
 > answered — the row at `## Decisions` currently opens `| D3 | business-owned | owner |
 > **OPEN.**` — which is the `business-owned`, `Class: 3 — human-only` spend decision the
 > blocker prices. (c) Then either resolution of `freshness-mechanism-is-owner-owned`, or
@@ -511,7 +512,7 @@ returns. D2's **decision** is untouched — only the condition for revisiting it
   now carries a second question. Growth is also not a one-off — 102 → 111 in
   four days — so a decision deferred further is decided against a larger
   number again.
-- **Resolved when:** `grep -c 'OPEN' agents/roadmaps/road-to-trigger-eval-freshness-has-no-writer.md`
+- **Resolved when:** `grep -c 'OPEN' agents/roadmaps/later/road-to-trigger-eval-freshness-has-no-writer.md`
   no longer matches the `D3` row — that row names one of the four options — and
   the tree agrees with it: either a mechanism writes what the gate reads, or
   `check_trigger_evals.ts` no longer reads a date nothing writes.
