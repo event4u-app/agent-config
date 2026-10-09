@@ -1,6 +1,8 @@
 ---
 complexity: lightweight
 status: ready
+estate_growth_exempt: "Re-opened from the archive on the owner's instruction of 2026-10-09 to carry Phase 2, the retirement of 47 settings keys the owner selected from the retirement audit; the work belongs to this roadmap's own ratchet and no live roadmap covers it."
+estate_offset_exempt: "No active roadmap is finished or parkable in this change: every other active (ready) roadmap still holds at least one open step (measured 2026-10-09), so archiving one to offset this re-opening would bury live work."
 execution:
   mode: phase-checkpoints
 ---
@@ -33,6 +35,63 @@ meaning each of the 83 was actually re-read, not merely re-stamped.
       `src/config/gate-violation-baselines.json` stating what was checked and
       why none are yet repairable. A reaffirmation written without re-reading
       the population is the same laundering the ratchet exists to catch.
+      verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
+
+## Phase 2 — Retire the 47 keys whose absence changes no default
+
+The 2026-10-09 retirement audit
+(`agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`)
+asked the question the reaffirm in 1.1 did not: does retiring a key **together
+with every reader of it** change an effective default? For 51 of 83 it does not —
+the key has no reader, or every reader's fallback, rule or code default already
+equals the template value. The reaffirm's "0 of 83" stands for its own question
+(no key is deletable while its readers remain); the two readings do not conflict.
+
+The owner selected 47 of the 51 (D1). Each step below retires one group: remove
+the key from `src/config/agent-settings.template.yml`, its row from
+`docs/contracts/settings-classes.md`, every reader (code, schema, wizard, rule
+and command prose) so behaviour equals the old default, then lower the
+`lint_settings_classes:derivable-surface` count by the group's size in
+`src/config/gate-violation-baselines.json`. A reader the audit missed that turns
+out to change behaviour moves its key back to the queue instead of being
+retired. Re-verify each key against the audit table before deleting it — the
+table is a measurement of one commit, not a licence.
+
+- [ ] **2.1 Output and tone (9).** `personal.minimal_output`,
+      `personal.play_by_play`, `personal.pr_comment_bot_icon`,
+      `verbosity.intent_announcements`, `verbosity.preview_artifacts`,
+      `verbosity.routine_confirmations`, `verbosity.post_action_reports`,
+      `telegraph.speak`, `tokens.rich_skills`.
+      verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
+- [ ] **2.2 Reasoning protocol switches (10).** `reasoning.auto_gate` and the
+      nine `reasoning.components.*` (orchestrator, notes_first, grounding,
+      intent, complexity_first, verifier_default, prediction_tracking,
+      decision_ledger, uncertainty_budget). `reasoning.enabled` is NOT in this
+      group: the audit left it `unclear` because `bench_ab_clone.ts` uses it as
+      the without-RDP arm of an A/B benchmark.
+      verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
+- [ ] **2.3 Roadmap cadence (3).** `roadmap.skip_pre_run_gate`,
+      `roadmap.quality_cadence`, `roadmap.dashboard_regen_cadence`.
+      verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
+- [ ] **2.4 Command suggestion and PR creation (8).** `commands.auto_detect`,
+      `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`,
+      `commands.suggestion.cooldown_seconds`, `commands.suggestion.max_options`,
+      `commands.create_pr.api_examples`, `commands.create_pr.ui_paths`,
+      `commands.create_pr.api_paths`.
+      verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
+- [ ] **2.5 Memory and knowledge sharing (7).** `memory.cadence`,
+      `memory.review_threshold` and the five `knowledge.global_sharing.*`
+      leaves (`redaction.enabled`, `redaction.halt_on_trigger`,
+      `auto_promote_threshold`, `freshness.hypothesis_after_days`,
+      `freshness.stale_after_days`).
+      verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
+- [ ] **2.6 Hooks and engine (5).** `hooks.concern_budget.max_per_event`,
+      `hooks.concern_budget.hard_fail`, `decision_engine.surface_traces`,
+      `decision_engine.on_block_fallback`, `explain.enable_last`.
+      verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
+- [ ] **2.7 Remaining (5).** `project.pr_template`,
+      `pipelines.skill_improvement`, `consistency.cross_source`,
+      `subagents.downshift`, `ai_team.suppress_setup_hint`.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
 
 <!-- Release holds — emitted commented out, because the default is that there is
@@ -90,12 +149,19 @@ meaning each of the 83 was actually re-read, not merely re-stamped.
   consumers name the key only in prose, so a zero from that grep is a property of
   the grep.
 
+## Decisions
+
+| ID | ownership | resolved by | decision | evidence | revisit if |
+|---|---|---|---|---|---|
+| D1 | product-owned | owner | Retire 47 of the 51 keys the 2026-10-09 audit found default-neutral. Kept: `hooks.code_graph.enabled`, because `docs/MIGRATION.md` publicly promises the key stays registered, and `planning.closure_pass`, `planning.risk_review`, `planning.completion_review`, because they are the only off-switches for those gates. | Owner answer 2026-10-09 (option 2 of a numbered choice that also offered all 51, 37 without the reasoning switches, or none). Audit: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`. | the MIGRATION promise is withdrawn, or a planning gate gains a different off-switch |
+
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-08 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-09 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | A reaffirm is written without re-reading the 83 entries | implementation | Re-stamping the date without checking is the exact laundering the 56-day clause exists to catch | Step 1.1's `verify:` is the gate itself passing, and the `reaffirmed.reason` must name what was actually checked | Phase 1 — Decide how to spend this debt |
+| 2 | A retired key silently changes behaviour for a consumer who had set it | product | "Default-neutral" covers the shipped default only; a consumer who set a non-default value loses that setting | Each Phase 2 step re-verifies its keys against the audit table and moves back any key a reader turns out to depend on; the release notes name the retired keys | Phase 2 — Retire the 47 keys whose absence changes no default |
 
 ## Acceptance Criteria
 
@@ -105,4 +171,8 @@ meaning each of the 83 was actually re-read, not merely re-stamped.
       Measured after `6d603d93e` merged: `lint_settings_classes` reports
       `158 settings key(s) classified — A=26 B=3 C=129`, exit 0. The disposition
       was recorded first, in the `reaffirmed.reason` the same commit added.
+      verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
+- [ ] AC-2 — the `lint_settings_classes:derivable-surface` count stands at 36
+      (83 − 47), every retired key is absent from the template, the contract
+      and every reader, and the settings-classes lint passes.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
