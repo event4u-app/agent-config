@@ -129,6 +129,15 @@ zero after, observe-only was chosen"; it now reads "zero, and the chosen slot
 cannot even observe". A later reader must not cite the binding as pending
 authorization. It is pending an input.
 
+**Re-probed 2026-10-08** (carried roadmap
+[`road-to-neighbours-that-pull-their-weight-carried`](../archive/road-to-neighbours-that-pull-their-weight-carried.md)
+step 3.2, closed as merged here per council verdict claude-sonnet-4-5 + codex,
+2 rounds, 2/2 concluded, $0): `grep -rn 'inputSchema\|McpToolDefinition'
+src/scripts/` still finds only this package's own MCP-server and catalog
+code (`mcp_server/server.ts`, `mcp_server/tools.ts`,
+`audit_initial_context.ts`'s own-catalog pricing) — no module reads a third
+party's tool definition. D1's revisit-if still does not fire.
+
 ## Trigger — and why it is not "the first non-test import"
 
 The obvious trigger was proposed and **rejected in review as circular**: the
