@@ -118,11 +118,20 @@ table is a measurement of one commit, not a licence.
       `create_pr` keys were read only by `/create-pr` prose, whose default
       path (grounded examples, light heuristic) is now the only path.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
-- [ ] **2.5 Memory and knowledge sharing (7).** `memory.cadence`,
+- [x] **2.5 Memory and knowledge sharing (7).** `memory.cadence`,
       `memory.review_threshold` and the five `knowledge.global_sharing.*`
       leaves (`redaction.enabled`, `redaction.halt_on_trigger`,
       `auto_promote_threshold`, `freshness.hypothesis_after_days`,
       `freshness.stale_after_days`).
+      Retired, all seven (count 54 → 47). Re-verified: `memory.cadence` was
+      read by the work-engine hook settings loader (fallback `always`, the
+      template value), which no longer reads it; the hook's own default
+      stays `always`. `memory.review_threshold` had one prose reader
+      (`/memory load`), now a fixed 10. The five `knowledge.global_sharing`
+      leaves were read through `load_global_sharing_config`, whose code
+      defaults equal the template; it now merges only `enabled` and
+      `allowed_tiers`. All six left the user-global whitelist in both
+      loader copies.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
 - [ ] **2.6 Hooks and engine (5).** `hooks.concern_budget.max_per_event`,
       `hooks.concern_budget.hard_fail`, `decision_engine.surface_traces`,

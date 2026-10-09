@@ -32,7 +32,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Changed
 
-- **29 settings keys are retired; an install that never changed them sees no
+- **36 settings keys are retired; an install that never changed them sees no
   difference.** Each key's shipped default is now fixed behaviour: every reader
   of it — code, rule and command prose, the wizard — was rewritten to that
   default in the same change. **If your `.agent-settings.yml` still sets one,
@@ -44,6 +44,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   - Reasoning protocol switches: `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`.
   - Roadmap cadence: `roadmap.skip_pre_run_gate`, `roadmap.dashboard_regen_cadence`.
   - Command suggestion and PR creation: `commands.auto_detect`, `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`, `commands.suggestion.cooldown_seconds`, `commands.suggestion.max_options`, `commands.create_pr.api_examples`, `commands.create_pr.ui_paths`, `commands.create_pr.api_paths`.
+  - Memory and knowledge sharing: `memory.cadence`, `memory.review_threshold`, `knowledge.global_sharing.redaction.enabled`, `knowledge.global_sharing.redaction.halt_on_trigger`, `knowledge.global_sharing.auto_promote_threshold`, `knowledge.global_sharing.freshness.hypothesis_after_days`, `knowledge.global_sharing.freshness.stale_after_days`.
   The reference page lists each key with the behaviour that replaces it
   (`templates/agent-settings.md` § Retired keys).
 

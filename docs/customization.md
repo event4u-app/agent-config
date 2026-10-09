@@ -212,7 +212,7 @@ the sourced rationale lives in the design dossier
 > | Concept | What it controls | What it's a lever for |
 > |---|---|---|
 > | `rule_loading_tier` *(this setting)* | How many behavioural rule tiers load each session | Token footprint of the rule layer (small, ~once per session) |
-> | `memory.cadence` | Whether the `🧠 Memory: …` visibility line renders (`auto`/`always`/`never`) | Output noise — **not** spend |
+> | `memory.visibility` | Whether the `🧠 Memory: …` visibility line renders (`off` silences it; the `memory.cadence` key that tuned it was retired 2026-10-09) | Output noise — **not** spend |
 > | `model.auto_switch` + a skill's `model_tier` | Which Claude model runs a skill (lite/medium/high → haiku/sonnet/opus) | The **dominant** per-turn spend lever (~10× delta) |
 > | `/cost:report` + `cost.budgets` | Tracking actual token/USD spend + optional ceilings | Budget enforcement |
 >

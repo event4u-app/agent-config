@@ -38,7 +38,7 @@ describe('wizard step plan (consolidated)', () => {
             'personal.ide', 'personal.open_edited_files', 'personal.autonomy',
         ]));
         expect(byId.get('cost')?.paths).toEqual(expect.arrayContaining([
-            'rule_loading_tier', 'roadmap.quality_cadence', 'memory.review_threshold',
+            'rule_loading_tier', 'roadmap.quality_cadence', 'memory.redact_patterns',
         ]));
     });
 });

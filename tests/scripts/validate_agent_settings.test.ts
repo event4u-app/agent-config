@@ -44,9 +44,9 @@ describe('validate_agent_settings — schema enum contract', () => {
         expect(errors({ cost_profile: 'minimal' })).toEqual([]);
     });
 
-    it('enforces nested enums (memory.cadence, model.auto_switch, worktrees.mode)', () => {
-        expect(errors({ memory: { cadence: 'always' } })).toEqual([]);
-        expect(errors({ memory: { cadence: 'bogus' } })[0]!.path).toEqual(['memory', 'cadence']);
+    it('enforces nested enums (cost.enforcement, model.auto_switch, worktrees.mode)', () => {
+        expect(errors({ cost: { enforcement: 'advisory' } })).toEqual([]);
+        expect(errors({ cost: { enforcement: 'bogus' } })[0]!.path).toEqual(['cost', 'enforcement']);
         expect(errors({ model: { auto_switch: 'suggest' } })).toEqual([]);
         expect(errors({ worktrees: { mode: 'ask' } })).toEqual([]);
     });

@@ -324,15 +324,9 @@ describe('MERGEABLE_KEYS', () => {
             'ide',
             'personal.ide',
             'rule_loading_tier',
-            'memory.cadence',
             'personal.autonomy',
             'knowledge.global_sharing.enabled',
             'knowledge.global_sharing.allowed_tiers',
-            'knowledge.global_sharing.redaction.enabled',
-            'knowledge.global_sharing.redaction.halt_on_trigger',
-            'knowledge.global_sharing.auto_promote_threshold',
-            'knowledge.global_sharing.freshness.hypothesis_after_days',
-            'knowledge.global_sharing.freshness.stale_after_days',
             // ADR-271: `design-fidelity.md` tells the reader to resolve this
             // key through the cascade, and the cascade then filtered it out.
             'design.fidelity_mode',

@@ -196,12 +196,7 @@ explanation lives now that the file no longer carries it as comments.
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
 | `knowledge.global_sharing.allowed_tiers` | C | array | `["public"]` |  | Origin tiers auto-eligible to cross a project boundary. proprietary is manual-only regardless (the gate hard-codes it), so an in-house schema never auto-shares. |
-| `knowledge.global_sharing.auto_promote_threshold` | C | integer | `2` |  | Distinct-repo count at which a public/vendor card triggers a promotion suggestion (never a silent write). |
 | `knowledge.global_sharing.enabled` | C | boolean | `true` |  | Master switch for the file-first global knowledge-card store (ADR-100; default-ON per ADR-119, the validated bounded-downside flip superseding ADR-103 — write-time redaction incl. hidden-unicode hardening, narrowest tier default, pre-registered demotion trigger). User-global setting — keep in ~/.event4u/agent-config/agent-settings.yml. false fully no-ops the layer (single-key revert); project-local cards (v1) are unaffected. |
-| `knowledge.global_sharing.freshness.hypothesis_after_days` | A | integer | `90` |  | A global card older than this is lead-only (positive structure must be re-confirmed before use). |
-| `knowledge.global_sharing.freshness.stale_after_days` | A | integer | `180` |  | A global card older than this is skipped until re-verified. |
-| `knowledge.global_sharing.redaction.enabled` | C | boolean | `true` |  | Run the privacy-floor + source-confidentiality scan before any card goes global. |
-| `knowledge.global_sharing.redaction.halt_on_trigger` | C | boolean | `true` |  | Halt-and-surface on a confidential-pattern hit; never silent-share, never auto-rewrite. |
 
 ## lean_projection
 
@@ -221,10 +216,8 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `memory.cadence` | C | string | `"always"` | `auto` · `always` · `never` | Cadence of the 🧠 memory-visibility line after a memory-consulting step. always (default) = show whenever a memory type was asked; auto = show only when 3+ types were consulted (less noise); never = suppress. Distinct from rule_loading_tier — owns its own key since the 2026-06-01 untangle. |
 | `memory.learn_on_session_end` | B | boolean | `false` |  | session_end learning-sidecar aggregation (road-to-reachable-code-memory P4). true = the session_end hook aggregates agents/memory/intake/*.jsonl through the learning sidecar into the gitignored .agent-learning.json + LESSONS.md (local-only, 2 s budget, fail-open; promotion stays human via /memory:propose). false (default, council 2026-07-27) = no-op; the flip is proposed only after the 30-day dogfood shows non-trivial signal AND session-end p95 < 2 s. |
 | `memory.redact_patterns` | C | array | `[]` |  | Regex patterns (one per line) that scrub matches from chat-history transcripts and memory before they hit disk. Use for secrets, customer names, internal URLs. Patterns are anchored and case-insensitive. |
-| `memory.review_threshold` | A | integer | `10` |  | Maximum number of memory entries /memory:load surfaces inline before falling back to a summary view. Default 10 keeps the chat readable. Raise to see more candidates, lower to keep the context tight. |
 | `memory.session_index` | A | string | `"off"` | `on` · `off` | Opt-in compact memory index at session start (road-to-memory-retrieval-economy P5). on = inject a compact id + title + ~tokens index of curated entries (hard cap 30 rows, bodies never included) through the hot-context hook; the agent fetches full entries via memory_get on demand. off (default) = no injection — the ship-criterion (measured hit-rate gain) is unproven, so off unless proven. |
 
 ## model

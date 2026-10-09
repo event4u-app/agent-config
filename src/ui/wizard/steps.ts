@@ -134,7 +134,7 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
         id: 'cost',
         title: 'Budgets, rules & cadence',
         navLabel: 'Budgets & cadence',
-        subtitle: 'Independent levers: rule_loading_tier (how many behavioural rules load — token footprint), cost.budgets (optional USD ceilings), model.auto_switch (per-skill model tier), plus quality/roadmap cadence and memory thresholds.',
+        subtitle: 'Independent levers: rule_loading_tier (how many behavioural rules load — token footprint), cost.budgets (optional USD ceilings), model.auto_switch (per-skill model tier), plus quality/roadmap cadence and memory redaction patterns.',
         kind: 'form',
         paths: [
             'rule_loading_tier',
@@ -145,7 +145,6 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
             'model.auto_switch',
             'roadmap.quality_cadence',
             'quality.local_auto_run',
-            'memory.review_threshold',
             'memory.redact_patterns',
         ],
     },

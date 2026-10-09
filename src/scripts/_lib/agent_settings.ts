@@ -282,18 +282,12 @@ export const MERGEABLE_KEYS: readonly string[] = [
     'ide',
     'personal.ide',
     'rule_loading_tier',
-    'memory.cadence',
     'personal.autonomy',
     // Knowledge-card global cross-project sharing is a USER-GLOBAL setting
     // (ADR-100 / road-to-structure-grounding-v2). Whitelisted so the
     // ~/.event4u/agent-config/agent-settings.yml values are honoured.
     'knowledge.global_sharing.enabled',
     'knowledge.global_sharing.allowed_tiers',
-    'knowledge.global_sharing.redaction.enabled',
-    'knowledge.global_sharing.redaction.halt_on_trigger',
-    'knowledge.global_sharing.auto_promote_threshold',
-    'knowledge.global_sharing.freshness.hypothesis_after_days',
-    'knowledge.global_sharing.freshness.stale_after_days',
     // `design.fidelity_mode` is a per-DEVELOPER working preference, not a
     // per-project one: whether an agent may deviate from a handed-over design
     // is a property of how that person works, and a designer who sets it once

@@ -82,9 +82,9 @@ describe('template_defaults — the layer itself', () => {
         for (const key of [
             'subagents.max_parallel',
             'model.auto_switch',
-            'memory.cadence',
+            'memory.redact_patterns',
             'update_check.enabled',
-            'commands.suggestion.confidence_floor',
+            'commands.create_pr.detail_level',
             'emergency.orchestration_halt',
         ]) {
             expect(leaf(merged, key), `${key} should resolve from the template`).toEqual(

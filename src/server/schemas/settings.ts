@@ -32,7 +32,6 @@ const modelAutoSwitch = z.enum(['auto', 'suggest', 'off']);
 const leanProjectionMode = z.enum(['eager-all', 'thin', 'delivery']);
 const leanProjectionHost = z.enum(['claude-code', 'cursor', 'cline']);
 const projectionMode = z.enum(['legacy-all', 'scoped']);
-const memoryCadence = z.enum(['auto', 'always', 'never']);
 const projectAudience = z.enum(['self', 'internal', 'client', 'public']);
 const deliveryMerge = z.enum(['off', 'on-green']);
 const prTopology = z.enum(['single', 'stacked']);
@@ -458,12 +457,6 @@ export const settingsSchema = z.object({
         ),
     }),
     memory: z.object({
-        cadence: memoryCadence.default('always').describe(
-            'Cadence of the 🧠 memory-visibility line after a memory-consulting step. always (default) = show whenever a memory type was asked; auto = show only when 3+ types were consulted (less noise); never = suppress. Distinct from rule_loading_tier — owns its own key since the 2026-06-01 untangle.',
-        ),
-        review_threshold: z.number().int().min(0).default(10).describe(
-            'Maximum number of memory entries /memory:load surfaces inline before falling back to a summary view. Default 10 keeps the chat readable. Raise to see more candidates, lower to keep the context tight.',
-        ),
         redact_patterns: z.array(z.string()).default([]).describe(
             'Regex patterns (one per line) that scrub matches from chat-history transcripts and memory before they hit disk. Use for secrets, customer names, internal URLs. Patterns are anchored and case-insensitive.',
         ),
@@ -482,25 +475,6 @@ export const settingsSchema = z.object({
             allowed_tiers: z.array(z.string()).default(['public']).describe(
                 'Origin tiers auto-eligible to cross a project boundary. proprietary is manual-only regardless (the gate hard-codes it), so an in-house schema never auto-shares.',
             ),
-            redaction: z.object({
-                enabled: z.boolean().default(true).describe(
-                    'Run the privacy-floor + source-confidentiality scan before any card goes global.',
-                ),
-                halt_on_trigger: z.boolean().default(true).describe(
-                    'Halt-and-surface on a confidential-pattern hit; never silent-share, never auto-rewrite.',
-                ),
-            }).default({}),
-            auto_promote_threshold: z.number().int().min(1).default(2).describe(
-                'Distinct-repo count at which a public/vendor card triggers a promotion suggestion (never a silent write).',
-            ),
-            freshness: z.object({
-                hypothesis_after_days: z.number().int().min(0).default(90).describe(
-                    'A global card older than this is lead-only (positive structure must be re-confirmed before use).',
-                ),
-                stale_after_days: z.number().int().min(0).default(180).describe(
-                    'A global card older than this is skipped until re-verified.',
-                ),
-            }).default({}),
         }).default({}),
     }).default({}),
     hooks: z.object({

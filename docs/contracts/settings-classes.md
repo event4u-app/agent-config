@@ -247,13 +247,13 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 
 | Class | Keys |
 |---|---|
-| A — preference | 15 |
+| A — preference | 12 |
 | B — consent | 3 |
-| C — guarded | 111 |
-| **Total** | **129** |
+| C — guarded | 107 |
+| **Total** | **122** |
 
 <!-- derivable-retirement-2026-10-09 -->
-It fell to 129 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 29 `derivable` keys (11 A, 18 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behaviour, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`; 2.2 reasoning protocol switches — `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`; 2.3 roadmap cadence — `roadmap.skip_pre_run_gate`, `roadmap.dashboard_regen_cadence`; 2.4 command suggestion and PR creation — `commands.auto_detect`, `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`, `commands.suggestion.cooldown_seconds`, `commands.suggestion.max_options`, `commands.create_pr.api_examples`, `commands.create_pr.ui_paths`, `commands.create_pr.api_paths`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
+It fell to 122 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 36 `derivable` keys (14 A, 22 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behaviour, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`; 2.2 reasoning protocol switches — `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`; 2.3 roadmap cadence — `roadmap.skip_pre_run_gate`, `roadmap.dashboard_regen_cadence`; 2.4 command suggestion and PR creation — `commands.auto_detect`, `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`, `commands.suggestion.cooldown_seconds`, `commands.suggestion.max_options`, `commands.create_pr.api_examples`, `commands.create_pr.ui_paths`, `commands.create_pr.api_paths`; 2.5 memory and knowledge sharing — `memory.cadence`, `memory.review_threshold`, `knowledge.global_sharing.redaction.enabled`, `knowledge.global_sharing.redaction.halt_on_trigger`, `knowledge.global_sharing.auto_promote_threshold`, `knowledge.global_sharing.freshness.hypothesis_after_days`, `knowledge.global_sharing.freshness.stale_after_days`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
 <!-- /derivable-retirement-2026-10-09 -->
 
 It rose to 158 on 2026-10-06 when the `git:` section added three C keys —
@@ -393,11 +393,11 @@ the template, which is the drift this contract exists to prevent.
 
 | Disposition | Keys |
 |---|---|
-| derivable | 54 |
+| derivable | 47 |
 | un-inferrable | 10 |
 | consent | 48 |
 | policy | 17 |
-| **Total** | **129** |
+| **Total** | **122** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -587,18 +587,11 @@ Rows follow template order, so a diff against the template reads straight down.
 | `commands.create_pr.screenshots` | C | `false` | puts captured screenshots into a published PR body | consent |
 | `continuity.auto_record` | C | `"on"` | arms an automatic producer on the normal session-end path | consent |
 | `continuity.run_checkpoints` | C | `"on"` | disabling it removes a recovery artifact a killed run resumes from | consent |
-| `memory.cadence` | C | `always` | suppressing the visibility line hides what the agent learned from the user | derivable — the hits/asks count the memory-visibility summary already computes; the line only exists when memory was consulted |
-| `memory.review_threshold` | A | `10` | when a review preview surfaces; governs no gate | derivable — the unreviewed-intake count `/memory load` already computes before rendering its preview |
 | `memory.redact_patterns` | C | `[]` | deny-list of secret and PII regexes | policy |
 | `memory.session_index` | A | `"off"` | injects a compact index at session start | derivable — the row cap and index cost the mechanism already computes; the flag only holds an unproven ship-criterion open |
 | `memory.learn_on_session_end` | B | `false` | turns on automatic memory writes at session end | consent |
 | `knowledge.global_sharing.enabled` | C | `true` | kill-switch over cross-project egress | consent |
 | `knowledge.global_sharing.allowed_tiers` | C | `[public]` | allowlist for that egress | consent |
-| `knowledge.global_sharing.redaction.enabled` | C | `true` | disabling it removes the redaction floor | derivable — the redaction scan's own match result; no violation means no-op, so the flag can only remove a floor on an already-authorised path |
-| `knowledge.global_sharing.redaction.halt_on_trigger` | C | `true` | disabling it removes halt-and-prompt | derivable — the violations list the redaction scan already returns; a non-empty list IS the halt condition |
-| `knowledge.global_sharing.auto_promote_threshold` | C | `2` | threshold governing that egress | derivable — the distinct-repo count the promotion candidates already compute; promotion stays suggest-only and human-confirmed |
-| `knowledge.global_sharing.freshness.hypothesis_after_days` | A | `90` | freshness heuristic on a card already shared | derivable — the age computation over the card's own `last_verified` provenance footer |
-| `knowledge.global_sharing.freshness.stale_after_days` | A | `180` | freshness heuristic on a card already shared | derivable — the same age computation; the cut-point is advisory because the card is a cache, never a source of truth |
 | `hooks.concern_budget.max_per_event` | C | `8` | budget cap on hook concerns | derivable — the gate's own constant over `hook_manifest.yaml`, with no consumer-situational input to read |
 | `hooks.concern_budget.tier1_concerns` | C | `[]` | allowlist of concerns permitted to fail closed | policy |
 | `hooks.concern_budget.hard_fail` | C | `false` | weakens the budget gate to warn-only | derivable — the gate's own `--strict` argv, which CI already passes to sibling gates |

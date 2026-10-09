@@ -582,11 +582,6 @@ the canonical narrative lives in
 | `linked_projects_max_files` | integer | `20000` | File-count ceiling above which a detected sibling is flagged `large` (awareness only). Never excludes. |
 | `knowledge.global_sharing.enabled` | `true`, `false` | `true` | **User-global** (keep in `~/.event4u/agent-config/agent-settings.yml`). Master switch for the file-first global knowledge-card store (ADR-100; default-ON per ADR-119, the council-validated bounded-downside flip superseding ADR-103 — adversarially spot-checked redaction incl. hidden-unicode hardening, narrowest tier default, pre-registered demotion trigger). `false` fully no-ops the layer (single-key revert); v1 project-local cards unaffected. |
 | `knowledge.global_sharing.allowed_tiers` | list of `public`,`vendor`,`proprietary` | `[public]` | Origin tiers auto-eligible to cross a project boundary. Narrowest default per ADR-119; `vendor` is a deliberate opt-in widening. `proprietary` is manual-only regardless (the gate hard-codes it). |
-| `knowledge.global_sharing.redaction.enabled` | `true`, `false` | `true` | Run the privacy-floor + source-confidentiality scan before any card goes global. |
-| `knowledge.global_sharing.redaction.halt_on_trigger` | `true`, `false` | `true` | Halt-and-surface on a confidential-pattern hit; never silent-share, never auto-rewrite. |
-| `knowledge.global_sharing.auto_promote_threshold` | integer | `2` | Distinct-repo count that triggers a promotion **suggestion** (never a silent write). |
-| `knowledge.global_sharing.freshness.hypothesis_after_days` | integer | `90` | Global card older than this is lead-only (positive structure re-confirmed before use). |
-| `knowledge.global_sharing.freshness.stale_after_days` | integer | `180` | Global card older than this is skipped until re-verified. |
 
 ### Rename-Map (migration)
 
@@ -634,6 +629,9 @@ silence it.
 | `commands.auto_detect` | orchestrators auto-detect; opt one out with `auto_detect: false` in its front-matter or one run with `--no-auto-detect` |
 | `commands.suggestion.enabled`, `.confidence_floor`, `.cooldown_seconds`, `.max_options` | suggestion layer always on, floor 0.6, cooldown 600 s, at most 4 options; `blocklist` and per-command frontmatter still apply |
 | `commands.create_pr.api_examples`, `.ui_paths`, `.api_paths` | grounded API examples always added; frontend / API detection by the light heuristic |
+| `memory.cadence` | the 🧠 memory line renders whenever a memory type was asked; `memory.visibility: off` still silences it |
+| `memory.review_threshold` | `/memory load` previews intake signals above a fixed 10 |
+| `knowledge.global_sharing.redaction.*`, `.auto_promote_threshold`, `.freshness.*` | redaction always runs and halts on a hit; promotion suggested at 2 repos; lead-only after 90 days, skipped after 180 |
 
 ## Cost profiles
 

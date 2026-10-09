@@ -40,7 +40,7 @@ leads the flow (the cost / rule tier is a secondary knob further down).
 | 4 | Personality | `personal.autonomy` |
 | 5 | Cost & rules | `rule_loading_tier`, `cost.budgets`, `model.auto_switch` (secondary to the experience choice) |
 | 6 | Roadmap & quality | `roadmap.quality_cadence`, `quality.*` |
-| 7 | Memory | `memory.review_threshold`, redaction patterns |
+| 7 | Memory | redaction patterns |
 | 8 | `.agent-user.yml` | Optional long-form persona / preferences |
 | 9 | Review | Read-only diff of every change, plus a `Finish` button |
 

@@ -87,11 +87,13 @@ describe('work_engine.hooks.settings — TS unit checks', () => {
         expect(snapshotTs(onlyHook)['chat_history_enabled']).toBe(false);
     });
 
-    it('memory.visibility: off flips memory_visibility_off', () => {
+    it('memory.visibility: off flips memory_visibility_off; a leftover cadence is ignored', () => {
+        // `memory.cadence` was retired with `always` as the fixed cadence, so an
+        // older install's `cadence: AUTO` no longer reaches the hook.
         const p = writeYaml('hooks:\n  enabled: true\nmemory:\n  visibility: off\n  cadence: AUTO\n');
         const snap = snapshotTs(p);
         expect(snap['memory_visibility_off']).toBe(true);
-        expect(snap['memory_cadence']).toBe('auto');
+        expect(snap['memory_cadence']).toBe('always');
     });
 
     it('decision_engine.surface_traces mirrors into decision_trace', () => {

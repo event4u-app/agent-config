@@ -157,7 +157,6 @@ function _settings_from_raw(data: SettingsDict): HookSettings {
 
     const memory_section = data['memory'];
     let visibility_off = false;
-    let memory_cadence = 'always';
     if (_isPlainDict(memory_section)) {
         const ms = memory_section as Record<string, Any>;
         const rawVis = ms['visibility'];
@@ -165,10 +164,6 @@ function _settings_from_raw(data: SettingsDict): HookSettings {
             visibility_off = true;
         } else if (typeof rawVis === 'boolean' && rawVis === false) {
             visibility_off = true;
-        }
-        const cadence_raw = ms['cadence'];
-        if (cadence_raw !== null && cadence_raw !== undefined) {
-            memory_cadence = String(cadence_raw).trim().toLowerCase() || 'always';
         }
     }
 
@@ -192,7 +187,6 @@ function _settings_from_raw(data: SettingsDict): HookSettings {
         decision_trace: decision_trace_on,
         memory_visibility: memory_visibility_on,
         memory_visibility_off: visibility_off,
-        memory_cadence,
         chat_history_enabled: chat_block_enabled && global_chat_on,
         chat_history_script: chat_script,
         decision_engine: decision_engine_settings,

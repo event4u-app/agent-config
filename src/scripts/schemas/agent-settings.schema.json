@@ -11,17 +11,6 @@
       "enum": ["minimal", "balanced", "full", "custom"],
       "description": "Rule-tier loading footprint. See docs/contracts/cost-profile-defaults.md and docs/contracts/rule-router.md. NOT a memory or model lever."
     },
-    "memory": {
-      "type": "object",
-      "additionalProperties": true,
-      "properties": {
-        "cadence": {
-          "type": "string",
-          "enum": ["auto", "always", "never"],
-          "description": "Cadence of the 🧠 memory-visibility line. See docs/contracts/memory-visibility-v1.md. Owns its own key since the 2026-06-01 untangle; previously collided with rule_loading_tier."
-        }
-      }
-    },
     "model": {
       "type": "object",
       "additionalProperties": true,

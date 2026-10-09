@@ -117,6 +117,14 @@ export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     ['commands.create_pr.api_examples', "/create-pr's grounding rule: an example only from a real source, otherwise a one-line pointer"],
     ['commands.create_pr.ui_paths', "/create-pr's light frontend heuristic, which fails open"],
     ['commands.create_pr.api_paths', "/create-pr's light API-endpoint heuristic, which fails open"],
+    // 2026-10-09 — memory and knowledge sharing
+    ['memory.cadence', 'a fixed cadence: the memory line renders whenever a memory type was asked; memory.visibility: off still silences it'],
+    ['memory.review_threshold', "/memory load's fixed preview threshold of 10 unreviewed intake signals"],
+    ['knowledge.global_sharing.redaction.enabled', 'the write-time redaction scan, which always runs before a card goes global'],
+    ['knowledge.global_sharing.redaction.halt_on_trigger', 'the redaction gate, which always halts on a confidential-pattern hit'],
+    ['knowledge.global_sharing.auto_promote_threshold', 'the fixed two-repo sighting count that triggers a promotion suggestion'],
+    ['knowledge.global_sharing.freshness.hypothesis_after_days', "the card's age over last_verified against the fixed 90-day lead-only window"],
+    ['knowledge.global_sharing.freshness.stale_after_days', "the card's age over last_verified against the fixed 180-day skip window"],
 ]);
 
 /** Keys already warned about in THIS process — the "once per run" dedupe. */

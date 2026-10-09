@@ -1222,21 +1222,6 @@ continuity:
 # for the retrieval contract and .augment/skills/memory-consolidation/ for
 # the four-phase loop.
 memory:
-  # Cadence for the "🧠 Memory: <hits>/<asks>" visibility line emitted
-  # after a memory-consulting step (see docs/contracts/memory-visibility-v1.md).
-  #   always = (default) emit whenever at least one memory type was asked.
-  #   auto   = emit only when ≥ 3 memory types were consulted (less noise
-  #            on shallow-retrieval steps).
-  #   never  = suppress the line entirely.
-  # The legacy `memory.visibility: off` master switch still wins over this.
-  cadence: always
-
-  # Inline-review threshold for /memory load.
-  # When the unreviewed intake stream contains more than this many
-  # entries, /memory load surfaces a top-3 preview block before the
-  # full curated load. Set to 0 to disable the inline review entirely.
-  review_threshold: 10
-
   # Patterns redacted from transcripts before mining.
   # The TranscriptAdapter applies these as a regex blocklist on every
   # yielded turn. Add personal identifiers, project-internal tokens,
@@ -1298,8 +1283,8 @@ knowledge:
     # and the layer fully no-ops.
     #
     # Turning sharing on does NOT make promotion automatic — promotion is always
-    # suggest-then-confirm (auto_promote_threshold gates the *suggestion*, never
-    # a silent write). v1 (project-local discipline + cards) is byte-for-byte
+    # suggest-then-confirm (a card seen in two distinct repos triggers the
+    # *suggestion*, never a silent write). v1 (project-local discipline + cards) is byte-for-byte
     # unaffected by this default; only the cross-project store is gated off.
     enabled: true
 
@@ -1312,26 +1297,11 @@ knowledge:
     # deliberate opt-in widening, not the shipped default.
     allowed_tiers: [public]
 
-    # Write-time redaction before any card is eligible to go global. Runs the
-    # low-impact-corpus-privacy-floor + source-confidentiality pattern set
-    # (API keys, internal hostnames, emails, blocklisted field/table names).
-    redaction:
-      enabled: true
-      # halt-and-prompt on a trigger; never silent-share, never auto-rewrite.
-      halt_on_trigger: true
-
-    # A `public`/`vendor` card seen in >= this many distinct repos triggers a
-    # promotion SUGGESTION (one-tap confirm). It never auto-promotes.
-    auto_promote_threshold: 2
-
-    # Freshness flip thresholds (days) for the untracked global store. A global
-    # card whose newest observed_at is older than `hypothesis_after_days` is
-    # lead-only (positive structure must be re-confirmed); older than
-    # `stale_after_days` it is skipped until re-verified. Negative facts +
-    # pointers stay usable as leads regardless.
-    freshness:
-      hypothesis_after_days: 90
-      stale_after_days: 180
+    # Fixed, not settings: write-time redaction (the privacy-floor +
+    # source-confidentiality pattern set) always runs and halts on a trigger;
+    # a card seen in >= 2 distinct repos triggers a promotion SUGGESTION; a
+    # global card older than 90 days is lead-only and older than 180 days is
+    # skipped until re-verified.
 
 # --- Hooks ---
 #

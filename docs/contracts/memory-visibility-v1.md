@@ -84,24 +84,20 @@ Off-mode does not silence the underlying memory calls; it only stops
 the line from rendering. The decision-trace JSON still records the
 counts and ids for downstream metrics.
 
-## Cadence interaction
+## Cadence
 
-| `memory.cadence` | Visibility line |
-|---|---|
-| `auto` | suppress unless `asks ≥ 3` |
-| `always` | always when `asks ≥ 1` |
-| `never` | suppress entirely |
-
-Cadence lookup respects `.agent-settings.yml`'s `memory.cadence` key.
-Default is `always`. The legacy `memory.visibility: off` master switch
-(above) still wins over any `memory.cadence` value.
+The line renders whenever `asks ≥ 1`. That is a fixed cadence: the
+`memory.cadence` key that also offered `auto` (only when `asks ≥ 3`) and
+`never` was retired on 2026-10-09 with its default, `always`, as the
+behaviour. The `memory.visibility: off` master switch (above) still
+suppresses the line entirely.
 
 > **History.** Before the 2026-06-01 `cost_profile` untangle this
 > cadence was keyed off `cost_profile` with the values
 > `lean | standard | verbose` — a collision with the rule-loading
 > `cost_profile` (`minimal | balanced | full`) that made the `lean`
-> branch unreachable on every real install. The cadence now owns its
-> own `memory.cadence` key.
+> branch unreachable on every real install. The untangle gave the
+> cadence its own `memory.cadence` key, which was later retired (2026-10-09).
 
 ## End-of-run "Memory changed decisions" block
 

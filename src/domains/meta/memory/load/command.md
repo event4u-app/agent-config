@@ -134,15 +134,15 @@ After step 4, count unreviewed intake entries for the same type:
   node -e "const d = []; process.stdin.on('data', c => d.push(c)); process.stdin.on('end', () => console.log(JSON.parse(d.join('')).length))"
 ```
 
-Read `memory.review_threshold` from `.agent-settings.yml` (default 10).
-If the count is **0** or **≤ threshold**, skip this step silently. If
-**> threshold**, surface a numbered preview of the top-3 highest-
+The threshold is a fixed **10** (the `memory.review_threshold` key was retired
+on 2026-10-09 with that default as the behaviour). If the count is **≤ 10**,
+skip this step silently. If **> 10**, surface a numbered preview of the top-3 highest-
 confidence intake signals (see
 [`memory-consolidation`](../../skills/memory-consolidation/SKILL.md)
 § Phase 3 for the consolidation contract):
 
 ```
-> ⚠️  {N} unreviewed intake signals for `{type}` (threshold {T}).
+> ⚠️  {N} unreviewed intake signals for `{type}` (threshold 10).
 >     Top 3 by confidence:
 >
 >     1. [conf=high] {sig-id} — {one-line observation}
@@ -156,8 +156,7 @@ confidence intake signals (see
 ```
 
 Default action is **skip** — the load completes regardless. This is a
-nudge, not a gate. If `memory.review_threshold` is `0`, skip this
-step entirely (feature off). Never auto-promote.
+nudge, not a gate. Never auto-promote.
 
 ## When to reject
 

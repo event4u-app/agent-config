@@ -36,9 +36,7 @@ export const BASIC_PATHS: ReadonlySet<string> = new Set([
     'roadmap.quality_cadence',
     'quality.local_auto_run',
     // Memory
-    'memory.review_threshold',
     'memory.redact_patterns',
-    'memory.cadence',
     // Runtime comfort
     'chat_history.enabled',
     'update_check.enabled',

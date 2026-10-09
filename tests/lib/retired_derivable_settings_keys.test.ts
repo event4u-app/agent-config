@@ -63,6 +63,14 @@ const RETIRED: ReadonlyArray<{ key: string; hostile: unknown }> = [
     { key: 'commands.create_pr.api_examples', hostile: false },
     { key: 'commands.create_pr.ui_paths', hostile: ['resources/views/**'] },
     { key: 'commands.create_pr.api_paths', hostile: ['app/Http/Controllers/Api/**'] },
+    // 2.5 — memory and knowledge sharing
+    { key: 'memory.cadence', hostile: 'never' },
+    { key: 'memory.review_threshold', hostile: 0 },
+    { key: 'knowledge.global_sharing.redaction.enabled', hostile: false },
+    { key: 'knowledge.global_sharing.redaction.halt_on_trigger', hostile: false },
+    { key: 'knowledge.global_sharing.auto_promote_threshold', hostile: 5 },
+    { key: 'knowledge.global_sharing.freshness.hypothesis_after_days', hostile: 7 },
+    { key: 'knowledge.global_sharing.freshness.stale_after_days', hostile: 14 },
 ];
 
 const TEMPLATE_PATH = path.resolve(process.cwd(), 'src/config/agent-settings.template.yml');
