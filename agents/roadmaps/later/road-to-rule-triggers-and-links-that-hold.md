@@ -1,9 +1,36 @@
 ---
 complexity: lightweight
-status: ready
+status: later
+review_by: 2026-12-15
 execution:
   mode: autonomous
-estate_growth_exempt: "Two blockers, +2 open_blockers, and both are decisions this run correctly did not take rather than work it failed to finish. `rule-link-targets-change-the-frozen-install-abi` records that the 1.2 repair — measured, decided, two lines — changes `GLOBAL_DEPLOY_SOURCES`, which is frozen install ABI: it owes an `install_layout_version` bump and a deprecation window shipping old and new shape side by side for a minor cycle, which is a release commitment and owner-reserved. `forty-seven-links-name-files-the-package-does-not-ship` records the links no deploy entry can reach. 22 of them were repaired on 2026-10-03 — the repo-tree link form, which the blocker's own recommendation named as the group to take first; a 23rd was repaired, caught by an independent review as a link augment actually resolves, and reverted. A further 21 were repaired on 2026-10-06 — the `docs/` group, after the council reopened the hold recorded against it and found its foreclosure claim unsound (D7). What is held is now three links: one `docs/` link and one climb-out, both in kernel rules, which owe their own PR and a 24 h soak, and that one augment-resolving `templates/` link, whose only correct repair is a deploy row — and which, as the remainder blocker's own `Resolved when` correction records, therefore routes through the ABI blocker's owner gate rather than closing independently of it. Each carries the exact edit, what it owes, a recommendation and a falsifiable `Resolved when`, so neither is a park wearing a blocker's clothes. The alternative to recording them was to execute an ABI change without its deprecation window, or to leave the measurement with no statement of what it implies — the first is forbidden, the second is the silence this estate ratchet exists to prevent."
+entry_condition:
+  what: >
+    AC-2 — a link check over an installed rule directory reporting ZERO
+    unresolved links. Re-measured 2026-10-06:
+    `./scripts-run src/scripts/report_installed_rule_links` reads 115 unresolved
+    for `claude-code` against 502 links. Every STEP on this roadmap is closed;
+    the two blockers hold the split: `rule-link-targets-change-the-frozen-install-abi`
+    holds 112, `forty-seven-links-name-files-the-package-does-not-ship` holds
+    the other 3. Both must close before AC-2 does.
+  when: >
+    Two independent events, neither of which a session can bring about.
+    (1) The next minor that already carries an install-layout change — the ABI
+    repair owes an `install_layout_version` bump and a deprecation window
+    shipping the old and new shape side by side for a cycle, which the owner
+    chose on 2026-10-06 to fold into such a release rather than spend alone.
+    (2) A maintainer-authored kernel PR carrying two one-line edits.
+  who: >
+    A MAINTAINER, for the kernel half, and this is the correction the roadmap
+    records against its own earlier wording: the gate is not the 24 h soak but
+    the `block-kernel-rule-writes` `pre_tool_use` concern, which refuses EVERY
+    agent write to a kernel rule in `src/rules/` and in every projection.
+    `direct-answers` and `ask-when-uncertain` are both kernel rules, so the two
+    remaining links are human-gated, not agent-gated — probed rather than
+    assumed. Its only bypasses are the override exception registry or removing
+    the manifest entry, both human acts outside a session. The owner, for the
+    release that carries the ABI half.
+estate_growth_exempt: "Moves one roadmap from the active tree into `later/`: active_roadmaps falls by one, later_roadmaps rises by one. Every STEP here is closed; what is open is AC-2, and both blockers holding it were probed on 2026-10-09 and are externally impossible for a session. The kernel half is refused by `block-kernel-rule-writes` for any agent, whose only bypasses are human acts outside a session; the ABI half waits on a release the owner chose to fold it into. Leaving it in the active tree is what the `later/` disposition exists to stop — it reads as workable backlog to the dashboard and to `/roadmap:process-*`, which would pick it up and find nothing it may do. Archiving would be wrong: the work resumes when either event lands."
 estate_offset_exempt: "Round inbox-2026-10-c verified a live defect no roadmap owns: `_has_non_path_trigger` ignores `command` triggers, so `roadmap-progress-sync` reaches Claude with an exclusive `paths:` and loses three command triggers today, before any thinning. The two held objects that own the neighbouring question both misclassify that rule, so folding this into either would carry their error with it. The other steps are small residue whose absence would make the installed-layer flip ship broken links."
 relates:
   - slug: road-to-a-path-route-under-delivery
