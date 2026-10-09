@@ -219,10 +219,11 @@
       "title": "16.3.0 ships `doctor --json` network egress by default with open findings and no migration note",
       "detail": "The 16.2.0 findings ledger now marks three findings `still_open`: c6367568cb1a, 77e3912664b9 and 8605e9fc59cd. `doctor --json`, including `--check <id>`, still spawns `git` and several `gh` calls unconditionally. It can block for up to 15 s, and there is no CLI opt-out flag. The only escape is an environment variable. `docs/MIGRATION.md` is not among the changed files and carries no entry naming `doctor`. Consumers who scripted `doctor` as an offline diagnostic silently inherit network and credential dependence. The ledger itself says the closing action is known and cheap.",
       "file": "agents/evidence/release-findings/16.2.0.json",
-      "status": "still_open",
-      "rationale": "Carried by road-to-findings-that-get-a-disposition, step 3.3, which waits on the owner's answer to blocker doctor-network-default. Re-read against the tree: every gap the finding lists apart from the default is closed by fc1bdec4f (#2243) — `doctor --no-forge` (alias --offline) is a CLI opt-out, a `--check <id>` run skips the read because no check id reads the forge block, an injected-runner test asserts no git or gh call on either path, and docs/MIGRATION.md names the network read, both environment switches and the flag. What the title is about is not closed: `doctor --json` still reaches the network by default. Recorded open rather than accepted because nobody has decided to keep that default; the medium-security widening of the release gate binds releases after 16.3.0 only, so this row does not hold the shipped release hostage to the owner's answer.",
+      "status": "fixed",
+      "rationale": "Fixed. The finding named three things: egress by default, open findings, and no migration note. All three are closed here — the default is offline, the three 16.2.0 findings above carry terminal dispositions in this same change, and docs/MIGRATION.md gains a 16.4.0 section covering the reversal, what a scripted caller must do, and the `not_checked` value table.",
       "verified_by": "npx vitest run tests/scripts/doctor_offline_flag.test.ts; grep -c 'no-forge' docs/MIGRATION.md; grep -n 'forgeDepsFor' src/scripts/_cli/doctor_execution.ts",
-      "date": "2026-10-07"
+      "date": "2026-10-07",
+      "commit": "0ba6fd727"
     },
     {
       "finding_id": "de29dcc6b5d8",

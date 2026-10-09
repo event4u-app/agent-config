@@ -114,12 +114,27 @@ owner, because it reverses a recorded supersession.
       the network read, the two environment switches and the new flag.
       verify: `grep -c 'no-forge' docs/MIGRATION.md` -> /^[1-9]/
       Landed in fc1bdec4f (#2243) before this run.
-- [ ] **3.3 Implement the decision of `doctor-network-default`, then close
+- [x] **3.3 Implement the decision of `doctor-network-default`, then close
       the four rows.** Under (a), offline becomes the default and `--online`
       opts in; under (b), the default stays. Either way `c6367568cb1a`,
       `77e3912664b9`, `8605e9fc59cd` (16.2.0) and `eff3d4ed3fee` (16.3.0)
       gain a terminal status that matches the decision.
-      verify: `npx vitest run tests/scripts/doctor_network_posture.test.ts` -> 0
+      verify: `npx vitest run tests/scripts/doctor_offline_default.test.ts` -> 0
+      **The verify command was WRONG and is corrected here rather than
+      satisfied.** It named `doctor_network_posture.test.ts`, which covers the
+      `traffic_environment` block and the `offline-readiness` check — a
+      different concern that was already green and could never have gone red
+      for this step. A verify clause that passes before the work starts proves
+      nothing, which is the defect class this whole roadmap exists to catch, so
+      finding it on this roadmap's own last step is recorded rather than
+      quietly fixed.
+      Done 2026-10-09 under (a): the default reverses, `--online` opts in, and
+      the council's condition ships with it — the block carries `not_checked`
+      on every run (`online_not_requested` / `offline_flag` / `single_check`,
+      `null` when the read happened), so five `unread` rows can no longer read
+      as a block that passed. Phase 3.1's suite was re-pointed, not relaxed:
+      its control now passes `--online`, because a no-spawn assertion with no
+      spawning control passes against a build that stopped spawning entirely.
 
 ## What this roadmap deliberately does not do
 
@@ -137,8 +152,10 @@ owner, because it reverses a recorded supersession.
       gate's tests reflect it.
 - [x] AC-4 — A `doctor` invocation with the offline flag spawns no forge or
       remote read, shown by an injected-runner test.
-- [ ] AC-5 — The four forge findings carry a status consistent with the
-      recorded default.
+- [x] AC-5 — The four forge findings carry a status consistent with the
+      recorded default. All four are `fixed` against `0ba6fd727`, each with a
+      rationale naming which half of its finding the reversal closes;
+      `check_finding_dispositions` reads 45/45 terminal.
 
 ## Decisions
 

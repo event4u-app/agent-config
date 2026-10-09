@@ -74,10 +74,36 @@ describe('argv', () => {
         expect(_parse(['--json', '--offline']).no_forge).toBe(true);
     });
 
-    it('derives the posture from the flag and from --check, and from nothing else', () => {
-        expect(forgeDepsFor({ no_forge: false, check: null })).toEqual({ offline: false });
-        expect(forgeDepsFor({ no_forge: true, check: null })).toEqual({ offline: true });
-        expect(forgeDepsFor({ no_forge: false, check: 'scope' })).toEqual({ offline: true });
+    // Re-pointed 2026-10-09 by step 3.3 of
+    // `road-to-findings-that-get-a-disposition`: offline is now the DEFAULT and
+    // `--online` opts in (blocker `doctor-network-default`, option (a)). The
+    // first row below inverted — it is the only assertion the decision changes,
+    // and it is re-pointed rather than deleted so the posture stays pinned from
+    // both sides. The reason field is asserted alongside each posture, because
+    // a posture with no stated reason is the shape the council's condition
+    // rejects.
+    it('derives the posture from --online, the opt-out flag and --check, and from nothing else', () => {
+        expect(forgeDepsFor({ no_forge: false, check: null })).toEqual({
+            offline: true,
+            not_checked: 'online_not_requested',
+        });
+        expect(forgeDepsFor({ online: true, no_forge: false, check: null })).toEqual({
+            offline: false,
+            not_checked: null,
+        });
+        expect(forgeDepsFor({ no_forge: true, check: null })).toEqual({
+            offline: true,
+            not_checked: 'offline_flag',
+        });
+        expect(forgeDepsFor({ no_forge: false, check: 'scope' })).toEqual({
+            offline: true,
+            not_checked: 'single_check',
+        });
+        // The opt-out is the more specific instruction and beats the opt-in.
+        expect(forgeDepsFor({ online: true, no_forge: true, check: null })).toEqual({
+            offline: true,
+            not_checked: 'offline_flag',
+        });
     });
 });
 
@@ -92,11 +118,24 @@ describe('doctor --json spawns nothing on either offline path', () => {
         vi.unstubAllEnvs();
     });
 
-    it('control: the default run reaches the runner with git ls-remote', () => {
-        const { calls } = emit(['--json']);
+    // The control carries the same weight it did before and now needs the
+    // opt-in to do it: without a run that DOES reach the runner, every
+    // no-spawn assertion below would pass against a build that stopped
+    // spawning entirely. `--online` is what makes the control a control.
+    it('control: an --online run reaches the runner with git ls-remote', () => {
+        const { calls } = emit(['--json', '--online']);
         expect(calls.length).toBeGreaterThan(0);
         expect(calls[0]?.cmd).toBe('git');
         expect(calls[0]?.args).toEqual(['ls-remote', '--get-url', 'origin']);
+    });
+
+    // The flip itself, asserted where the old control stood: a bare `--json`
+    // run is now one of the no-spawn paths.
+    it('the default run makes no git and no gh call, and says why', () => {
+        const { payload, calls } = emit(['--json']);
+        expect(calls).toEqual([]);
+        expect(forgeBlock(payload)['read_from_forge']).toBe(false);
+        expect(forgeBlock(payload)['not_checked']).toBe('online_not_requested');
     });
 
     it('--no-forge makes no git and no gh call', () => {

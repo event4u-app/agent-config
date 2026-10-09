@@ -66,6 +66,49 @@ an entry here; this section is that entry, written after the fact.
   environment switches that existed before the flag; both are read as the
   literal `1` only.
 
+## 16.4.0 — the default reverses: `doctor` is offline, `--online` opts in
+
+⚠️ behavioural · ✋ manual if you relied on `doctor --json` filling
+`forge_protection` without passing a flag.
+
+### What changed
+
+`agent-config doctor` no longer reaches the network by default. The
+`forge_protection` block is filled only when **`--online`** is passed; without
+it the block keeps the shape a failed read produces — five `unread` rows,
+`repository: null` — and nothing spawns.
+
+The reasoning, recorded in blocker `doctor-network-default` of
+`road-to-findings-that-get-a-disposition` (AI council 2026-10-07, anthropic +
+openai, 2/2; adopted 2026-10-08): a health command that reaches the network on
+every run, including a single-check run, is the surprising default, and
+`--online` costs one word to anyone who wants the read.
+
+### What you have to do
+
+- **Scripted `doctor --json` and read `forge_protection` rows?** Add
+  **`--online`**. Nothing else changes.
+- **Scripted it as an offline diagnostic?** Nothing to do — and you may now
+  drop `--no-forge` / `--offline` if you only ever passed it for that reason.
+  Both still work and are still the more specific instruction: they beat
+  `--online` when both are given.
+
+### How to tell the two apart in the output
+
+The block gained a **`not_checked`** key, present on every run, so a consumer
+can distinguish *nobody asked* from *asked and it failed*. Five `unread` rows
+and no failures otherwise reads as a clean bill of health to anything summing
+row states, which is the misreading this key exists to prevent.
+
+| value | meaning |
+|---|---|
+| `null` | the read happened — the rows are a real measurement |
+| `"online_not_requested"` | the new default; pass `--online` to read |
+| `"offline_flag"` | `--no-forge` / `--offline` was passed |
+| `"single_check"` | a `--check <id>` run; no check id reads this block |
+
+`read_from_forge` keeps its meaning and is unchanged.
+
 The flag is additive: a run that passes none of these reads the forge exactly
 as before. Whether offline becomes the default is an open owner decision
 (`road-to-findings-that-get-a-disposition`, blocker `doctor-network-default`).
