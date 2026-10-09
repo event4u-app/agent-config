@@ -339,18 +339,15 @@ user request.
 - **Head branch**: EXACT output of `git branch --show-current` from step 1.
 - **Base branch**: default branch (`main` / `master`).
 
-**Behavior change vs. legacy:** with `verbosity.routine_confirmations:
-false` (default), `/create-pr` creates the PR as draft silently. Override
-per-invocation with `:ready` / `:final` / `:draft`. Restore the prompt
-by flipping `routine_confirmations: true`. See
-[`docs/customization.md` § Verbosity](../../docs/customization.md#verbosity).
+`/create-pr` creates the PR as draft silently — draft-or-ready is a routine
+confirmation with one obvious answer, so it is never asked. Override
+per-invocation with `:ready` / `:final` / `:draft`.
 
 Resolve `"draft"` (first match wins):
 
 1. `:ready` / `:final` arg → `false`.
 2. `:draft` arg → `true`.
-3. `routine_confirmations: true` → ask `1. draft / 2. ready`.
-4. Default → `true` (silent draft).
+3. Default → `true` (silent draft).
 
 #### 3a. Tool selection — single-call mandate
 
@@ -400,7 +397,7 @@ gh pr view {number} --json isDraft --jq '.isDraft'
 # returns true → gh pr ready {number}
 ```
 
-**Silent-draft postscript** (rule 4) → see step 4b.
+**Silent-draft postscript** (rule 3) → see step 4b.
 
 ### 4. After creation
 
@@ -438,14 +435,10 @@ Run this strip-pass **after PR creation and after every body PATCH**:
    the line entirely when nothing was stripped — silence is the
    expected path, not "no footers found").
 
-#### 4b. Show the PR URL (verbosity-gated)
+#### 4b. Show the PR URL
 
-Per `verbosity.post_action_reports` (default `minimal`):
-
-- `off` → nothing.
-- `minimal` → `→ #N opened: <url>`. Append `→ created as draft — run
-  \`gh pr ready N\` to flip` when silent-draft (rule 4); omit on ready.
-- `full` → multi-line: PR number, URL, draft state, base/head, ready-reminder.
+`→ #N opened: <url>`. Append `→ created as draft — run \`gh pr ready N\` to
+flip` when silent-draft (rule 3); omit on ready.
 
 #### 4c. Status claims — verified facts only (MANDATORY)
 
@@ -590,7 +583,6 @@ an actual Jira API call succeeded** — never announce "skipped".
 
 #### 4f. Settings short-circuit — single read per run
 
-`verbosity.routine_confirmations`, `verbosity.post_action_reports`,
 `commands.create_pr.preview_description`, `commands.create_pr.detail_level`,
 `commands.create_pr.api_examples`, `commands.create_pr.screenshots`,
 `commands.create_pr.ui_paths`, and `commands.create_pr.api_paths` are read
@@ -601,8 +593,8 @@ every branch resolves from the cached values from step 1. The content flags
 consumed by the `/create-pr:description-only` generation step (Step 2); the
 confirmation/report flags by steps 3–4.
 
-When all three resolve to their silent defaults (`false` / `minimal` /
-`false`), steps 4b + 4e collapse to the single `→ #N opened: <url>` line
+When `preview_description` resolves to its silent default (`false`), steps
+4b + 4e collapse to the single `→ #N opened: <url>` line
 from 4b and a silent 4e. No extra file reads, no "checking settings…"
 narration, no confirmation prompts. Step 4c is never collapsed — status
 claims always carry evidence.

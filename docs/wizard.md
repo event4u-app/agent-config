@@ -37,7 +37,7 @@ leads the flow (the cost / rule tier is a secondary knob further down).
 | 1 | Welcome | `personal.user_name`, language |
 | 2 | Experience | `profile.id` — which experience (developer · content_creator · founder · agency · finance · ops) |
 | 3 | Identity | `personal.ide`, `personal.open_edited_files` |
-| 4 | Personality | `personal.autonomy`, `personal.minimal_output`, `personal.play_by_play` |
+| 4 | Personality | `personal.autonomy` |
 | 5 | Cost & rules | `rule_loading_tier`, `cost.budgets`, `model.auto_switch` (secondary to the experience choice) |
 | 6 | Roadmap & quality | `roadmap.quality_cadence`, `roadmap.dashboard_regen_cadence`, `quality.*` |
 | 7 | Memory | `memory.review_threshold`, redaction patterns |

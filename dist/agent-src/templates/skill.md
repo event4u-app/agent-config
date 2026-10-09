@@ -163,7 +163,7 @@ Do NOT use when:
   2. Are numbered options absent unless options differ in *consequence*?
   3. Is every cited rule linked, not restated?
   4. {artifact-specific question — e.g., for `command-writing`:
-     "Does the command honor `verbosity.routine_confirmations: false`?"}
+     "Does the command skip confirmation on routine one-answer steps?"}
   5. {artifact-specific question — e.g., for `rule-writing`:
      "Does the rule body open with the Iron Law, no preamble?"}
 -->

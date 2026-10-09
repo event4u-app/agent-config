@@ -216,12 +216,16 @@ describe('the key lists are DERIVED from the class contract, not snapshotted', (
         // asserted — the survivors, and the absence of the deleted key. A
         // deletion checked only by "the rule no longer mentions it" would pass
         // with the key still live in the template.
-        for (const key of ['tokens.rich_skills', 'subagents.adversarial_council', 'decision_engine.on_block']) {
+        for (const key of ['subagents.adversarial_council', 'decision_engine.on_block']) {
             expect(declaredDefault(key), `${key} default cell`).not.toMatch(/ask/);
         }
-        expect(declaredDefault('worktrees.mode'), 'gone from the class table').toBeUndefined();
-        expect(keysOfClass('C'), 'gone from the C list').not.toContain('worktrees.mode');
-        expect(REMOVED_KEYS.has('worktrees.mode'), 'recorded as a removed key').toBe(true);
+        // `tokens.rich_skills` left the same way on 2026-10-09 (retired with its
+        // `on` default as the fixed behaviour), so it is asserted gone too.
+        for (const gone of ['worktrees.mode', 'tokens.rich_skills']) {
+            expect(declaredDefault(gone), `${gone} gone from the class table`).toBeUndefined();
+            expect(keysOfClass('C'), `${gone} gone from the C list`).not.toContain(gone);
+            expect(REMOVED_KEYS.has(gone), `${gone} recorded as a removed key`).toBe(true);
+        }
     });
 
     it('every B key ships a conservative default, so absent never reads as yes', () => {
@@ -485,16 +489,16 @@ describe('the migration — every ask-shaped setting routes to the protocol', ()
     // which deleted `subagents.auto` and `subagents.budget_routing` — the two
     // sites that used to own them, `delegation-policy.md` and
     // `subagent-routing.md`, no longer need to defer an ask-shaped setting
-    // that does not exist any more). The migration was performed and pinned
-    // by nothing: a rewrite of either of these two remaining files could
+    // that does not exist any more; `token-budget-discipline.md` left the
+    // list on 2026-10-09 when `tokens.rich_skills` was retired). The migration
+    // was performed and pinned by nothing: a rewrite of the remaining file could
     // restore its bespoke ask prose and no gate would notice, which is how a
     // universalised pattern quietly re-fragments. The two absences at the end
     // are the load-bearing half — without them this suite would also pass if
     // someone "migrated" the two keys the rule deliberately routes elsewhere.
 
-    /** The two sites the protocol owns, and the key each one carries. */
+    /** The site the protocol owns, and the key it carries. */
     const MIGRATED: ReadonlyArray<readonly [string, string]> = [
-        ['src/rules/token-budget-discipline.md', 'tokens.rich_skills'],
         [
             'src/domains/engineering-base/review/changes/command.md',
             'subagents.adversarial_council',
@@ -514,8 +518,8 @@ describe('the migration — every ask-shaped setting routes to the protocol', ()
      * `null` rather than `lines.length`, because the two cases need different
      * assertions and collapsing them is how this check silently weakens: with
      * no boundary, "in the body" degenerates to plain presence — exactly the
-     * check the block rejects as insufficient. Both remaining MIGRATED files
-     * carry a `## See also` section today, so the `null` branch is currently
+     * check the block rejects as insufficient. The remaining MIGRATED file
+     * carries a `## See also` section today, so the `null` branch is currently
      * unexercised by this corpus — kept for the file that had none
      * (`subagent-routing.md`, removed from MIGRATED when its ask-shaped
      * setting was deleted) and for whichever file next joins the list without

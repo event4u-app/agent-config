@@ -41,7 +41,7 @@ const DELETED: ReadonlyArray<{ key: string; leftover: string; reason: string }> 
     {
         key: 'telegraph.speak_scope',
         leftover: 'telegraph:\n  speak_scope: "aggressive"\n',
-        reason: 'the rule body states its own scope; compile_router gates on telegraph.speak alone',
+        reason: 'the rule body states its own scope; compile_time_toggles decides whether the rule ships',
     },
     {
         key: 'chat_history.max_size_kb',
@@ -136,7 +136,7 @@ describe('road-to-zero-settings Phase 2.1 — the five unread `derivable` keys',
     it('the path walker is not vacuously true — a surviving sibling still resolves', () => {
         // Without this, a broken `schemaHasPath` would report every key absent
         // and the five assertions above would pass for the wrong reason.
-        expect(schemaHasPath('telegraph.speak')).toBe(true);
+        expect(schemaHasPath('personal.autonomy')).toBe(true);
         expect(schemaHasPath('chat_history.enabled')).toBe(true);
         expect(schemaHasPath('quality.local_auto_run')).toBe(true);
         expect(schemaHasPath('legal_review_prep.acknowledged')).toBe(true);
@@ -167,7 +167,6 @@ describe('road-to-zero-settings Phase 2.1 — the five unread `derivable` keys',
         expect(readDotted(template, 'chat_history.enabled')).toBe(true);
         expect(readDotted(template, 'legal_review_prep.acknowledged')).toBe(false);
         expect(readDotted(template, 'legal_review_prep.require_council')).toBe(true);
-        expect(readDotted(template, 'telegraph.speak')).toBe(false);
         expect(readDotted(template, 'quality.local_auto_run')).toBe(false);
     });
 });

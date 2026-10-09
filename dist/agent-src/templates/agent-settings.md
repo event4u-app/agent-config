@@ -111,20 +111,6 @@ personal:
   # Detected and set by /onboard on first run.
   rtk_installed: false
 
-  # Minimal output mode (true, false)
-  # true  = short bullet points during work, concise summary at the end
-  # false = verbose explanations and reasoning
-  minimal_output: true
-
-  # Play-by-play mode (true, false)
-  # true  = briefly share intermediate findings as you go
-  # false = silently investigate, only report the conclusion
-  play_by_play: false
-
-  # Prefix PR comment replies with a bot icon 🤖 (true, false)
-  # Personal preference — each developer decides for themselves.
-  pr_comment_bot_icon: false
-
   # Autonomous execution — suppress trivial workflow questions (on, off, auto)
   # on   = act on the obvious next step; never ask "Step 2 or 3?", "should I commit?", etc.
   # off  = ask trivial workflow questions (legacy behavior)
@@ -427,35 +413,19 @@ commands:
 # (once Phase 3 of road-to-artifact-engagement-telemetry lands).
 # --- Verbosity (token frugality) ---
 #
-# Five toggles controlling what the agent shows after acting.
-# Default = terse. Flip to true to restore legacy verbose output.
+# What the agent shows after acting. Default = terse. Four former toggles
+# (preview_artifacts, routine_confirmations, post_action_reports,
+# intent_announcements) were retired on 2026-10-09 with the terse default
+# as fixed behaviour.
 # See agents/roadmaps/road-to-token-frugality.md for the full rationale
 # and the contexts/contracts/frugality-charter.md for the writer-side
 # standard.
 verbosity:
-  # Show generated commit messages, PR titles/bodies, branch names
-  # before acting. false = use generated content directly.
-  preview_artifacts: false
-
-  # Confirmation prompts for routine workflow steps when there is
-  # one obvious answer ("looks good — commit?"). Iron-Law gates
-  # (commit-policy, scope-control git-ops, non-destructive) ALWAYS
-  # ask regardless of this flag.
-  routine_confirmations: false
-
   # Offer "run AI Council on this?" inside delivery commands
   # (/feature-plan, /review-changes, /roadmap-create). Council
   # commands themselves (/council, /create-pr → already excluded)
   # are unaffected.
   offer_council_in_delivery: false
-
-  # Multi-line status / summary blocks after a successful action.
-  # off | minimal | full — default minimal (one-line confirmation).
-  post_action_reports: minimal
-
-  # Intent announcements ("Let me check…", "Now I will…", "Found
-  # it") in skill bodies. false = act and emit the result.
-  intent_announcements: false
 
   # Script stdout chatter from `scripts/*.ts`, `scripts/*.sh`, and
   # `.augment/scripts/`. Read by the helper module
@@ -473,19 +443,6 @@ verbosity:
   # behaviour). true = the Taskfile sets `silent: true` on every
   # safe task per Phase 10.3.
   taskfile_command_echo: false
-
-# --- Telegraph condensation (output-side) ---
-#
-# One lever, deliberately: whether the telegraph-speak rule ships at all.
-# The rule body states its own grammar scope — which carve-outs (numbered
-# options, Iron-Law literals, code, paths) stay full prose — so there is no
-# separate scope key to pin.
-telegraph:
-  # speak: false = DORMANT (the shipped default). The rule is omitted from
-  # dist/router.json entirely, so its body never reaches a host. That
-  # omission is what stops the cost. Set true only after an output-side
-  # bench clears the kill-criterion bar.
-  speak: false
 
 telemetry:
   artifact_engagement:
@@ -613,9 +570,6 @@ the canonical narrative lives in
 | `personal.open_edited_files` | `true`, `false` | `false` | Auto-open edited files in the IDE after edits |
 | `personal.canary_name` | first name | _(empty)_ | Per-project OVERRIDE of the name the agent addresses the user with (session-canary). The name itself lives user-globally: `identity.name` in the wizard's `settings/.agent-user.yml`, fallback `personal.canary_name` in the user-global settings. See `rules/session-canary.md`. |
 | `personal.rtk_installed` | `true`, `false` | `false` | Whether rtk (Rust Token Killer) is installed. Detected and set by `/onboard`. |
-| `personal.minimal_output` | `true`, `false` | `true` | When `true`: short bullet points during work, concise summary at end. When `false`: verbose explanations. |
-| `personal.play_by_play` | `true`, `false` | `false` | When `true`: share intermediate findings during investigation. When `false`: work silently, report only the conclusion. |
-| `personal.pr_comment_bot_icon` | `true`, `false` | `false` | Prefix PR comment replies with 🤖 to indicate bot-authored replies. Personal preference — each developer decides. |
 | `personal.autonomy` | `on`, `off`, `auto` | `auto` | Suppress trivial workflow questions and act on the obvious next step. `auto` (default) defaults to `off` but flips to `on` after a prose opt-in like "arbeite selbstständig". `on` suppresses trivial questions unconditionally. `off` is the legacy ask-everything mode. Blocking decisions (security, scope expansion, push/merge/branch/PR/tag) are never suppressed. See `rules/autonomous-execution.md`. |
 | `project.pr_template` | file path | `.github/pull_request_template.md` | Path to PR template file. Read this instead of searching for it. |
 | `project.upstream_repo` | `org/repo` | _(empty)_ | Target repository for universal improvement PRs (e.g., `org/agent-config`). |
@@ -653,12 +607,7 @@ the canonical narrative lives in
 | `commands.create_pr.screenshots` | `true`, `false` | `false` | Capability-gated frontend screenshots. `true` attempts capture when browser/preview tooling is present; notes-and-skips otherwise, never blocks the PR. Before/after is best-effort. |
 | `commands.create_pr.ui_paths` | glob list | `[]` | Optional globs pinning frontend detection; empty = light heuristic, fail-open. |
 | `commands.create_pr.api_paths` | glob list | `[]` | Optional globs pinning API-endpoint detection; empty = light heuristic, fail-open. |
-| `verbosity.preview_artifacts` | `true`, `false` | `false` | Show generated commit messages, PR titles/bodies, branch names before acting. `false` = use generated content directly. See the token-frugality plate under `agents/roadmaps/` (Phase 2/3). |
-| `verbosity.routine_confirmations` | `true`, `false` | `false` | Confirmation prompts for routine workflow steps when there is one obvious answer ("looks good — commit?"). Iron-Law gates (`commit-policy`, `scope-control` git-ops, `non-destructive-by-default`) ALWAYS ask regardless. |
 | `verbosity.offer_council_in_delivery` | `true`, `false` | `false` | Offer "run AI Council on this?" inside delivery commands (`/feature-plan`, `/review-changes`). Council commands themselves are unaffected. `/roadmap:create` no longer reads it — under a mission the council is a step, resolved from `agent-config council:status`, never an offer. |
-| `verbosity.post_action_reports` | `off`, `minimal`, `full` | `minimal` | Multi-line status / summary blocks after a successful action. `off` = no report; `minimal` = one-line confirmation; `full` = bullet list. |
-| `verbosity.intent_announcements` | `true`, `false` | `false` | Intent announcements ("Let me check…", "Now I will…", "Found it") in skill bodies. `false` = act and emit the result. |
-| `telegraph.speak` | `true`, `false` | `false` | Whether the telegraph-speak rule ships at all. `false` (default) = dormant: the projector omits the rule from `dist/router.json`, so its body never reaches a host. The rule body states its own grammar scope and carve-outs (numbered options, Iron-Law literals, code, paths), so this is the only lever. |
 | `telemetry.artifact_engagement.enabled` | `true`, `false` | `false` | Master switch for the artefact engagement log. Not in the shipped template — a missing `telemetry:` section means disabled (the recording rule no-ops). Default-off; zero file IO and zero token cost when `false`. Maintainer-targeted; consumers leave it off. |
 | `telemetry.artifact_engagement.granularity` | `task`, `phase-step`, `tool-call` | `task` | Boundary at which events are recorded. `tool-call` is expensive — opt-in only. |
 | `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |
@@ -694,9 +643,6 @@ Applied automatically when `scripts/install` finds a legacy `.agent-settings`
 | `open_edited_files` | `personal.open_edited_files` |
 | `user_name` | `personal.user_name` |
 | `rtk_installed` | `personal.rtk_installed` |
-| `minimal_output` | `personal.minimal_output` |
-| `play_by_play` | `personal.play_by_play` |
-| `pr_comment_bot_icon` | `personal.pr_comment_bot_icon` |
 | `pr_template` | `project.pr_template` |
 | `upstream_repo` | `project.upstream_repo` |
 | `improvement_pr_branch_prefix` | `project.improvement_pr_branch_prefix` |
@@ -709,6 +655,22 @@ Applied automatically when `scripts/install` finds a legacy `.agent-settings`
 
 Unknown keys in the legacy file are preserved under a `_legacy:` section
 so nothing is silently dropped; the migration log points them out.
+
+### Retired keys
+
+These keys were removed because their shipped default is the only behaviour
+the package supports; the behaviour they described is unchanged. A leftover
+value in an older `.agent-settings.yml` is ignored with one stderr line per key
+(`<key> was removed (<what decides instead>); ignored.`) — the registry is
+`REMOVED_KEYS` in `scripts/_lib/settings_removed_keys.ts`. Delete the line to
+silence it.
+
+| Retired 2026-10-09 | Fixed behaviour |
+|---|---|
+| `personal.minimal_output`, `personal.play_by_play`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`, `verbosity.intent_announcements` | terse replies, no narration, no preview, no routine confirmation, one-line post-action report (`direct-answers` Iron Law 3) |
+| `personal.pr_comment_bot_icon` | no 🤖 prefix (`no-decorative-emojis-in-git-surfaces`) |
+| `telegraph.speak` | the telegraph-speak rule does not ship (bench verdict, ADR telegraph/0002) |
+| `tokens.rich_skills` | `token_budget_class: rich` skills load in full (`token-budget-discipline`) |
 
 ## Cost profiles
 

@@ -189,8 +189,28 @@ const DELETED_2026_08_12: readonly (readonly [string, string, Json])[] = [
     // that has not happened.
 ] as const;
 
+/**
+ * The `derivable` keys retired on 2026-10-09
+ * (road-to-settings-classes-derivable-surface-stagnation Phase 2): each one's
+ * shipped default became the only behaviour. `section` is the dotted parent, so
+ * a nested leaf (`commands.suggestion.enabled`) is stripped from the object that
+ * actually owns it. The hostile value is the non-default one an opted-in install
+ * would carry.
+ */
+const RETIRED_2026_10_09: readonly (readonly [string, string, Json])[] = [
+    ['personal', 'minimal_output', false],
+    ['personal', 'play_by_play', true],
+    ['personal', 'pr_comment_bot_icon', true],
+    ['verbosity', 'intent_announcements', true],
+    ['verbosity', 'preview_artifacts', true],
+    ['verbosity', 'routine_confirmations', true],
+    ['verbosity', 'post_action_reports', 'full'],
+    ['telegraph', 'speak', true],
+    ['tokens', 'rich_skills', 'off'],
+] as const;
+
 describe('deleted settings keys cannot be honoured again', () => {
-    for (const [section, leaf, hostileValue] of DELETED_2026_08_12) {
+    for (const [section, leaf, hostileValue] of [...DELETED_2026_08_12, ...RETIRED_2026_10_09]) {
         const dotted = `${section}.${leaf}`;
 
         it(`${dotted} is stripped rather than honoured when a stale file still carries it`, () => {
@@ -204,7 +224,20 @@ describe('deleted settings keys cannot be honoured again', () => {
             // tree nor a one-key fragment of it parses. `.partial()` isolates the
             // property under test — zod's unknown-key stripping — from every
             // unrelated required leaf.
-            const sectionSchema = unwrapOptional(getSchemaAt(settingsSchema, section) as z.ZodTypeAny);
+            const owner = getSchemaAt(settingsSchema, section);
+            if (owner === null) {
+                // The whole section left with its last leaf (`telegraph`,
+                // `tokens`): zod strips the unknown top-level key, so the value
+                // cannot survive a parse. Asserted on the parent's shape, because
+                // the parent is the object that would have to re-admit it.
+                const parentPath = section.split('.').slice(0, -1).join('.');
+                const parent = parentPath === '' ? settingsSchema : getSchemaAt(settingsSchema, parentPath);
+                expect(parent, `${parentPath || '<root>'} still exists`).not.toBeNull();
+                const parentShape = (unwrapOptional(parent as z.ZodTypeAny) as z.ZodObject<z.ZodRawShape>).shape;
+                expect(Object.keys(parentShape)).not.toContain(section.split('.').pop());
+                return;
+            }
+            const sectionSchema = unwrapOptional(owner);
             expect(sectionSchema).toBeInstanceOf(z.ZodObject);
             const parsed = (sectionSchema as z.ZodObject<z.ZodRawShape>)
                 .partial()

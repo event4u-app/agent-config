@@ -25,9 +25,6 @@ export const BASIC_PATHS: ReadonlySet<string> = new Set([
     'personal.ide',
     'personal.open_edited_files',
     'personal.autonomy',
-    'personal.minimal_output',
-    'personal.play_by_play',
-    'personal.pr_comment_bot_icon',
     'personal.pr_progress_comments',
     // Cost / model
     'cost.budgets.daily',
@@ -35,7 +32,6 @@ export const BASIC_PATHS: ReadonlySet<string> = new Set([
     'cost.budgets.monthly',
     'cost.enforcement',
     'model.auto_switch',
-    'tokens.rich_skills',
     // Cadence
     'roadmap.quality_cadence',
     'roadmap.dashboard_regen_cadence',

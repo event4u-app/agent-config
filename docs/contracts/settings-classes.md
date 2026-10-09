@@ -55,10 +55,10 @@ verbatim, and this class must not become the precedent that erodes it.
 **It governs writes, not reads.** Every class is readable by everything. A C
 class does not hide a value; it refuses to let a non-human change it.
 
-**It governs writes, not asks.** Three settings ship an `ask` value in their own
-enum (`tokens.rich_skills`, `subagents.adversarial_council`,
-`decision_engine.on_block`). It was four until ADR-229 deleted
-`worktrees.mode`.
+**It governs writes, not asks.** Two settings ship an `ask` value in their own
+enum (`subagents.adversarial_council`, `decision_engine.on_block`). It was four
+until ADR-229 deleted `worktrees.mode`, and three until `tokens.rich_skills` was
+retired on 2026-10-09.
 Those are C-class here, and that is not a contradiction: the class says who may
 *persist* a new value; the `ask` value says what happens *at runtime* when the
 setting is already set to `ask`. A C-class key set to `ask` still produces a
@@ -212,7 +212,7 @@ could **soak** before it bound, and a concern that is off does not run, so the
 switch made the soak it was protecting impossible. What decides whether that
 gate fires is now what should have decided it from the start — each detector's
 own trigger conditions. A leftover block warns once and is ignored
-(`REMOVED_KEYS`, `src/scripts/_lib/agent_settings.ts`).
+(`REMOVED_KEYS`, `src/scripts/_lib/settings_removed_keys.ts`).
 
 One switch survives these deletions on purpose, and it is not the same shape
 wearing a different name.
@@ -245,10 +245,14 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 
 | Class | Keys |
 |---|---|
-| A — preference | 26 |
+| A — preference | 21 |
 | B — consent | 3 |
-| C — guarded | 129 |
-| **Total** | **158** |
+| C — guarded | 125 |
+| **Total** | **149** |
+
+<!-- derivable-retirement-2026-10-09 -->
+It fell to 149 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 9 `derivable` keys (5 A, 4 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behaviour, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
+<!-- /derivable-retirement-2026-10-09 -->
 
 It rose to 158 on 2026-10-06 when the `git:` section added three C keys —
 `commit_format`, `branch_pattern`, `update_strategy` — so a team's commit
@@ -387,11 +391,11 @@ the template, which is the drift this contract exists to prevent.
 
 | Disposition | Keys |
 |---|---|
-| derivable | 83 |
+| derivable | 74 |
 | un-inferrable | 10 |
 | consent | 48 |
 | policy | 17 |
-| **Total** | **158** |
+| **Total** | **149** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -402,8 +406,8 @@ keys were deleted the same day, which is where the −5 `derivable` comes from;
 held open rather than deleted.
 
 `derivable` is the **deletion queue, not a deletion**: a row stays until the
-mechanism it names actually exists, so 83 measures work outstanding, not keys
-about to disappear. The count is expected to fall while `un-inferrable` does not
+mechanism it names actually exists, so its count measures work outstanding, not
+keys about to disappear. The count is expected to fall while `un-inferrable` does not
 — those 9 plus whatever survives re-examination in `consent` are the floor this
 surface has, and stating it is the point. `policy` is the smallest class and the
 only one whose action is a *move* rather than a keep or a delete: seven keys carry
@@ -496,8 +500,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `rule_loading_tier` | C | `__RULE_LOADING_TIER__` | legacy master switch for rule loading | derivable — `discipline_profile` supersedes it with a documented mapping (minimal→off, balanced→essential, full→full) |
 | `lean_projection.mode` | C | `delivery` | `thin` and `delivery` remove rule bodies from the agent's standing context. Two defaults, and this column carries the template one: the shipped template has said `delivery` since ADR-267, while the parser fallback for a value that resolves from no layer stays `eager-all` (ADR-267 decision 4) | derivable — `probe_host_compliance.ts` already computes the per-host thin/eager recommendation |
 | `lean_projection.hosts` | C | `[claude-code]` | decides WHICH hosts a thinning mode may thin, so an added id removes rule bodies from that host's context | policy — the value is a package-level decision the tree already holds: ADR-267 scopes the shipped `delivery` flip to `claude-code` alone. NOT `derivable`, and the distinction is the whole reason for this row: the mechanism that would compute an admissible host set, `admissibleUnderE3` in `src/scripts/_lib/injection_effect.ts`, admits **nothing** today — `src/config/host-injection-effect.json` carries 1 `observed-false` and 8 `unobserved` rows and no `observed-true` — so a derivation would yield `[]` rather than the shipped `[claude-code]`. Naming a mechanism that returns empty as the replacement would put a key in the deletion queue whose deletion would silently change the default. Move target: the ADR plus that census, once a host earns an `observed-true` row |
-| `telegraph.speak` | C | `false` | ships a rule body; a token-cost lever in both directions | derivable — the telegraph kill-criterion bench verdict is a package-level decision, not a per-install one |
-| `tokens.rich_skills` | C | `"on"` | token-spend lever | derivable — the skill's own `token_budget_class: rich` declaration plus the CI ceiling in `lint_token_budget_discipline.ts` |
 | `cost.budgets.daily` | C | `0` | rolling spend ceiling | consent |
 | `cost.budgets.weekly` | C | `0` | rolling spend ceiling | consent |
 | `cost.budgets.monthly` | C | `0` | rolling spend ceiling | consent |
@@ -509,18 +511,11 @@ Rows follow template order, so a diff against the template reads straight down.
 | `personal.ide` | C | `""` | names a binary the agent would execute | un-inferrable |
 | `personal.open_edited_files` | B | `false` | starts invoking that binary on every edit | consent |
 | `personal.rtk_installed` | A | `false` | auto-detected machine fact | derivable — the wizard's own two-stage PATH probe (`which rtk` plus an identity check), which already overwrites the key |
-| `personal.minimal_output` | A | `true` | reply-shape preference | derivable — `direct-answers` Iron Law 3 already fixes reply length per reply |
-| `personal.play_by_play` | A | `false` | narration preference | derivable — `direct-answers`' narration ban is the standing default; an in-turn request is the only thing that lifts it |
 | `personal.canary_name` | B | `""` | arms the session-degradation canary | un-inferrable |
-| `personal.pr_comment_bot_icon` | A | `false` | comment cosmetics | derivable — `no-decorative-emojis-in-git-surfaces` already forbids the icon in PR comments |
 | `personal.pr_progress_comments` | C | `false` | authorises unsolicited outbound comments on a PR | consent |
 | `personal.autonomy` | C | `auto` | suppresses confirmation questions | derivable — `no-cheap-questions`' mode-independent Pre-Send Self-Check decides per question |
 | `personal.user_type` | C | `"__USER_TYPE__"` | master axis filtering the projected surface | derivable — `profile.id` already carries the persona axis over a near-identical value set |
-| `verbosity.intent_announcements` | A | `false` | narration preference | derivable — `personal.play_by_play` already gates the narration carve-out this key sits under |
-| `verbosity.preview_artifacts` | C | `false` | removes pre-action review of commits, PRs, and branches | derivable — the Iron-Law gates already decide which artefacts need a pre-action look |
-| `verbosity.routine_confirmations` | C | `false` | removes confirmation prompts | derivable — `no-cheap-questions`' Pre-Send Self-Check already decides whether a confirmation carries a real trade-off |
 | `verbosity.offer_council_in_delivery` | A | `false` | offers a paid step; never takes it | derivable — `agent-config council:status`, which answers whether there is anything to offer |
-| `verbosity.post_action_reports` | A | `minimal` | size of a status block | derivable — `direct-answers` Iron Law 3 and the reply-close contract already fix the status block to ONE end-summary |
 | `project.pr_template` | C | `.github/pull_request_template.md` | filesystem path whose contents reach an outbound PR | derivable — GitHub's own PR-template resolution order; the key only caches a filesystem lookup |
 | `project.upstream_repo` | C | `""` | destination of outbound improvement PRs | derivable — the installed package's own `package.json` repository field |
 | `project.improvement_pr_branch_prefix` | A | `improve/agent-` | branch-name cosmetics | derivable — the repo's own branch-naming convention, observable from `git branch -r` |

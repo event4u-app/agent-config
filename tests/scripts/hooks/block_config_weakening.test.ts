@@ -172,10 +172,10 @@ describe('block_config_weakening — class-c', () => {
     });
 
     it('allows an edit that changes only a Class A key in the same file', () => {
-        const before = 'personal:\n  play_by_play: false\n  minimal_output: true\n';
+        const before = 'personal:\n  rtk_installed: false\n  ide: code\n';
         expect(
             classCVerdict(
-                { old_string: 'play_by_play: false', new_string: 'play_by_play: true' },
+                { old_string: 'rtk_installed: false', new_string: 'rtk_installed: true' },
                 before,
                 '.agent-settings.yml',
                 index,
@@ -193,8 +193,8 @@ describe('block_config_weakening — class-c', () => {
     // authorisation: make one file unreadable for the length of one tool call.
     it('refuses every changed key when the class contract cannot be read', () => {
         const reason = classCVerdict(
-            { old_string: 'play_by_play: false', new_string: 'play_by_play: true' },
-            'personal:\n  play_by_play: false\n',
+            { old_string: 'rtk_installed: false', new_string: 'rtk_installed: true' },
+            'personal:\n  rtk_installed: false\n',
             '.agent-settings.yml',
             null,
         );
@@ -223,7 +223,7 @@ describe('block_config_weakening — class-c', () => {
     });
 
     it('allows creating a settings file that sets only Class A keys', () => {
-        const create = { old_string: '', new_string: 'personal:\n  play_by_play: true\n' };
+        const create = { old_string: '', new_string: 'personal:\n  rtk_installed: true\n' };
         expect(classCVerdict(create, null, '.agent-settings.yml', index)).toBeNull();
         expect(classCVerdict({ edits: [create] }, null, '.agent-settings.yml', index)).toBeNull();
     });
@@ -232,7 +232,7 @@ describe('block_config_weakening — class-c', () => {
         expect(
             classCVerdict(
                 { old_string: 'not present anywhere', new_string: 'x' },
-                'personal:\n  play_by_play: false\n',
+                'personal:\n  rtk_installed: false\n',
                 '.agent-settings.yml',
                 index,
             ),
@@ -256,7 +256,7 @@ describe('block_config_weakening — class-c, the reviewed defects', () => {
     it('models replace_all — a later occurrence being the Class C one is caught', () => {
         const before = [
             'personal:',
-            '  play_by_play: false',
+            '  rtk_installed: false',
             'hooks:',
             '  injection_scan:',
             '    enabled: false',
@@ -280,7 +280,7 @@ describe('block_config_weakening — class-c, the reviewed defects', () => {
     it('models MultiEdit — a Class C change in any of the edits is caught', () => {
         const before = [
             'personal:',
-            '  play_by_play: false',
+            '  rtk_installed: false',
             'hooks:',
             '  injection_scan:',
             '    enabled: false',
@@ -289,7 +289,7 @@ describe('block_config_weakening — class-c, the reviewed defects', () => {
         const ti = {
             file_path: '.agent-settings.yml',
             edits: [
-                { old_string: 'play_by_play: false', new_string: 'play_by_play: true' },
+                { old_string: 'rtk_installed: false', new_string: 'rtk_installed: true' },
                 { old_string: '    enabled: false', new_string: '    enabled: true' },
             ],
         };
@@ -297,7 +297,7 @@ describe('block_config_weakening — class-c, the reviewed defects', () => {
         expect(reason).not.toBeNull();
         expect(reason).toContain('hooks.injection_scan.enabled');
         expect(
-            classCVerdict({ edits: [{ old_string: 'play_by_play: false', new_string: 'play_by_play: true' }] }, before, '.agent-settings.yml', index),
+            classCVerdict({ edits: [{ old_string: 'rtk_installed: false', new_string: 'rtk_installed: true' }] }, before, '.agent-settings.yml', index),
         ).toBeNull();
     });
 
@@ -315,7 +315,7 @@ describe('block_config_weakening — class-c, the reviewed defects', () => {
     it('refuses a MultiEdit edits list it cannot interpret', () => {
         const reason = classCVerdict(
             { edits: [{ old_string: 'false' }] } as never,
-            'personal:\n  play_by_play: false\n',
+            'personal:\n  rtk_installed: false\n',
             '.agent-settings.yml',
             index,
         );
@@ -362,7 +362,7 @@ describe('block_config_weakening — class-c, the reviewed defects', () => {
     it('refuses a replace_all value it cannot interpret', () => {
         const reason = classCVerdict(
             { old_string: 'false', new_string: 'true', replace_all: 'yes' as unknown as boolean },
-            'personal:\n  play_by_play: false\n',
+            'personal:\n  rtk_installed: false\n',
             '.agent-settings.yml',
             index,
         );
@@ -571,7 +571,7 @@ describe('block_config_weakening — differential: the two readers refuse the sa
         'k: "q"\n', "k: 'q'\n", 'k: |\n  block\n', 'k: >\n  folded\n',
         'a:\n  b:\n    c: 1\n', 'a:\n  - 1\n  - 2\n',
         // a realistic settings shape
-        'personal:\n  play_by_play: false\nhooks:\n  injection_scan:\n    enabled: false\n',
+        'personal:\n  rtk_installed: false\nhooks:\n  injection_scan:\n    enabled: false\n',
     ];
 
     it('agrees with the old reader on every entry of the corpus', () => {

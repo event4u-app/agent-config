@@ -35,7 +35,7 @@ describe('wizard step plan (consolidated)', () => {
     it('merged steps carry the union of the former per-step paths', () => {
         const byId = new Map(getWizardSteps().map((s) => [s.id, s]));
         expect(byId.get('identity')?.paths).toEqual(expect.arrayContaining([
-            'personal.ide', 'personal.autonomy', 'personal.minimal_output',
+            'personal.ide', 'personal.open_edited_files', 'personal.autonomy',
         ]));
         expect(byId.get('cost')?.paths).toEqual(expect.arrayContaining([
             'rule_loading_tier', 'roadmap.quality_cadence', 'memory.review_threshold',

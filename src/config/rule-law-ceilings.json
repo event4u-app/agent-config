@@ -99,7 +99,7 @@
             "chars": 8058,
             "owner": "agent-config-maintainer",
             "review": "2026-12-01",
-            "reason": "Carries the four slots, the seven keys, the non-interactive rule and the consent-verdict contract. The key inventory is reference material and is the load_context candidate."
+            "reason": "Carries the four slots, the five keys, the non-interactive rule and the consent-verdict contract. The key inventory is reference material and is the load_context candidate."
         }
     }
 }

@@ -57,11 +57,22 @@ out to change behaviour moves its key back to the queue instead of being
 retired. Re-verify each key against the audit table before deleting it — the
 table is a measurement of one commit, not a licence.
 
-- [ ] **2.1 Output and tone (9).** `personal.minimal_output`,
+- [x] **2.1 Output and tone (9).** `personal.minimal_output`,
       `personal.play_by_play`, `personal.pr_comment_bot_icon`,
       `verbosity.intent_announcements`, `verbosity.preview_artifacts`,
       `verbosity.routine_confirmations`, `verbosity.post_action_reports`,
       `telegraph.speak`, `tokens.rich_skills`.
+      Retired, all nine (count 83 → 74). Re-verified against the tree: the
+      only code reader was `compile_time_toggles.ts` (`telegraph.speak`, now a
+      fixed `false`); every other reader was rule, command or context prose,
+      rewritten to state the old default. `personal.pr_comment_bot_icon` had a
+      prose reader claiming default `true` (`fix/pr-comments`), contradicted by
+      the template's `false` and by the universal 🤖 ban — the retirement keeps
+      the template value. One reader could not be edited here: the kernel rule
+      `direct-answers` § Narration carve-out names `personal.play_by_play` and
+      `verbosity.intent_announcements`. Its behaviour is unchanged (the
+      carve-out needs both `true`, which can no longer happen), but its text is
+      stale; a kernel edit ships in its own PR, so it is step 2.8.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
 - [ ] **2.2 Reasoning protocol switches (10).** `reasoning.auto_gate` and the
       nine `reasoning.components.*` (orchestrator, notes_first, grounding,
@@ -93,6 +104,17 @@ table is a measurement of one commit, not a licence.
       `pipelines.skill_improvement`, `consistency.cross_source`,
       `subagents.downshift`, `ai_team.suppress_setup_hint`.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
+- [ ] **2.8 Kernel follow-up — the `direct-answers` narration carve-out.**
+      The kernel rule `src/rules/direct-answers.md` § Iron Law 3 still names
+      the retired `personal.play_by_play` and `verbosity.intent_announcements`
+      ("Narration carve-out: only when both … are `true`"). Behaviour is
+      already the old default — both keys are gone, so the carve-out cannot
+      fire — but the sentence tells a reader to set two keys the loader now
+      ignores. Rewrite it to state the behaviour (narration only when the user
+      asks for it in the turn). A kernel edit ships in its own PR with the
+      24-hour soak (`scope-control` § Kernel-rule edits), so it cannot ride in
+      the Phase 2 PR.
+      verify: `grep -c "personal.play_by_play" src/rules/direct-answers.md` -> 0
 
 <!-- Release holds — emitted commented out, because the default is that there is
      not one. Uncomment ONLY if an intermediate tree state of this roadmap must

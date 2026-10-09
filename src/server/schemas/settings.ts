@@ -25,7 +25,6 @@ const qualityCadence = z.enum(['end_of_roadmap', 'per_phase', 'per_step']);
 const regenCadence = z.enum(['per_step', 'every_5_steps', 'phase_boundary']);
 const fidelityMode = z.enum(['strict', 'structural', 'hard-floor']);
 const crossSourceMode = z.enum(['on', 'auto', 'off']);
-const richSkillsMode = z.enum(['on', 'ask', 'off']);
 const replyMethod = z.enum(['replies_endpoint', 'create_review_comment', 'auto']);
 const confidenceBand = z.enum(['off', 'low', 'medium', 'high']);
 const onBlock = z.enum(['stop', 'ask', 'warn']);
@@ -124,17 +123,8 @@ export const settingsSchema = z.object({
         rtk_installed: z.boolean().default(false).describe(
             'Does this machine have rtk (Rust Token Killer, a third-party Apache-2.0 tool: https://github.com/rtk-ai/rtk) on PATH — verified as the real Token Killer, not the unrelated Rust Type Kit that shares the binary name? When true the agent wraps verbose CLI output (git, tests, linters, docker, npm, composer) with rtk (upstream reports 60-90% token savings — their estimate). Leave false if rtk is missing — the agent falls back to tail / grep. The wizard overwrites this from a live two-stage probe (PATH presence + `rtk gain` identity check).',
         ),
-        minimal_output: z.boolean().default(true).describe(
-            'Prefer short bullets and tables (true, default) vs verbose prose with rationale (false). Affects every chat reply; flip to false during debugging when you want the agent to think out loud.',
-        ),
         canary_name: z.string().default('').describe(
             'Session canary — the name the agent addresses you with at the start of every new task (e.g. "Alex"). When the greeting silently disappears, the context window is degrading: start a fresh conversation. Also keeps the reply-close markers (end-summary, PR URL as literal last line) alive. Empty = fall back to the user-global canary_name, then to identity.name from the setup wizard; no name anywhere = off. See rules/session-canary.md.',
-        ),
-        play_by_play: z.boolean().default(false).describe(
-            'Narrate intermediate findings between tool calls ("Found it.", "Let me check Y."). Off by default — most users find it noisy. Turn on when you want to follow the agent\'s reasoning step by step.',
-        ),
-        pr_comment_bot_icon: z.boolean().default(false).describe(
-            'Prefix every PR review-comment reply with 🤖 so humans can tell agent-authored comments apart from teammate comments at a glance. Cosmetic only; the comment body itself never changes.',
         ),
         pr_progress_comments: z.boolean().default(false).describe(
             'Permit the agent to post unsolicited progress / status comments on an open PR (e.g. "CI fix iteration #2", "still blocked on workflow scope"). Default off — most teammates find them noisy. User-invoked flows (/fix:pr-comments, /create-pr, /code-review, explicit "post a comment that …") are NOT gated by this setting. See rules/no-pr-progress-comments.md.',
@@ -365,39 +355,11 @@ export const settingsSchema = z.object({
             'Consumed by the doc-screenshot-hygiene rule. on (default) = a data-bearing screenshot embed is gated behind this-turn human confirmation; uncertain/unresolved regions redact-or-refuse, never ship-and-hope; illustrative/no-data screenshots may embed with a stated justification. off = no data-bearing gate (the anonymization taxonomy still applies).',
         ),
     }).default({ identity_allowlist: [], forbid_terminal_capture: true, data_bearing_gate: 'on' }),
-    telegraph: z.object({
-        speak: z.boolean().default(false).describe(
-            'Whether the telegraph-speak rule ships at all. false (default) = DORMANT: compile_router omits the rule from dist/router.json entirely, so its body never reaches a host. This is the only lever that stops the cost. Set true only after an output-side bench clears the kill-criterion bar (docs/adrs/telegraph/0002).',
-        ),
-    }).default({ speak: false }),
-    tokens: z.object({
-        rich_skills: richSkillsMode.default('on').describe(
-            'Whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak + thin-projector trimming), consumed by the token-budget-discipline rule. on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask once per session before loading.',
-        ),
-    }).default({ rich_skills: 'on' }),
     verbosity: z.object({
-        intent_announcements: z.boolean().default(false).describe(
-            'Intent narration before tool batches ("Let me check X…"). Only honored when personal.play_by_play is ALSO true (the direct-answers narration carve-out requires both). false (default) = act and emit the result.',
-        ),
-        preview_artifacts: z.boolean().default(false).describe(
-            'Show generated commit messages, PR titles/bodies, branch names before acting. false (default) = use generated content directly (/commit terse path).',
-        ),
-        routine_confirmations: z.boolean().default(false).describe(
-            'Confirmation prompts for routine workflow steps with one obvious answer. Iron-Law gates (commit-policy, scope-control git-ops, Hard Floor) ALWAYS ask regardless.',
-        ),
         offer_council_in_delivery: z.boolean().default(false).describe(
             'Offer "run AI Council on this?" inside delivery commands (/feature-plan, /review-changes, /roadmap-create). Council commands themselves are unaffected.',
         ),
-        post_action_reports: z.enum(['off', 'minimal', 'full']).default('minimal').describe(
-            'Status blocks after a successful action. off = errors only; minimal (default) = one-line confirmation; full = bullet list.',
-        ),
-    }).default({
-        intent_announcements: false,
-        preview_artifacts: false,
-        routine_confirmations: false,
-        offer_council_in_delivery: false,
-        post_action_reports: 'minimal',
-    }),
+    }).default({ offer_council_in_delivery: false }),
     code_style: z.object({
         docblocks: z.enum(['minimal', 'full']).default('minimal').describe(
             'Consumed by the code-comment-discipline rule. minimal (default) = no signature-mirroring docblocks; docblocks only for machine-relevant precision (generics, array shapes) or genuine why-context. full = the exported public surface of a library package may carry one-line summary docblocks; the redundancy ban still holds.',
@@ -666,7 +628,7 @@ export const settingsSchema = z.object({
         // fires is decided by each detector's own trigger conditions, not by a
         // flag. A leftover `hooks.turn_end_gate.*` block from an older install
         // warns once on stderr and is ignored — see REMOVED_KEYS in
-        // `src/scripts/_lib/agent_settings.ts`.
+        // `src/scripts/_lib/settings_removed_keys.ts`.
     }),
     decision_engine: z.object({
         surface_traces: z.boolean().default(false).describe(

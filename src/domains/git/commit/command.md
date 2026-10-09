@@ -151,12 +151,9 @@ Rules for splitting:
 - **Style-only changes** (formatter / auto-refactor output — ECS, Prettier, Ruff) may get their own `style:` or `chore:` commit
   if they are large and mixed with logic changes.
 
-### 5. Present the commit plan (verbosity-gated)
+### 5. Present the commit plan
 
-Read `verbosity.preview_artifacts` and `verbosity.routine_confirmations`
-from `.agent-settings.yml`. Both default to `false`.
-
-**Terse path** — `preview_artifacts: false` AND `routine_confirmations: false`:
+**Terse path** — the default; there is no setting that turns it off:
 
 1. Pipe every generated subject, one per line, through
    `agent-config git:convention subject` — it resolves the convention in force
@@ -172,15 +169,15 @@ from `.agent-settings.yml`. Both default to `false`.
    ```
 
 3. **Any message invalid** → `preview-on-error` safety net fires:
-   force the full preview block below + the numbered confirm prompt,
-   regardless of the two flags. The user must approve before step 6.
+   force the full preview block below + the numbered confirm prompt.
+   The user must approve before step 6.
 4. **Hard-Floor diff** (bulk deletion ≥5 unrelated files, infra changes
    touching Terraform / Pulumi / k8s / Ansible / cloud-config) →
-   ALWAYS preview + confirm regardless of flags, per
+   ALWAYS preview + confirm, per
    [`non-destructive-by-default`](../rules/non-destructive-by-default.md).
 
-**Preview path** — `preview_artifacts: true` OR `routine_confirmations: true`
-(or `preview-on-error` triggered):
+**Preview path** — `preview-on-error` or a Hard-Floor diff triggered it, or the
+user asked for the preview (override below):
 
 Show the proposed commits as a numbered list, including which files go into each:
 
@@ -212,8 +209,8 @@ Then ask:
 Wait for the user's response before doing anything.
 
 **Override:** the user may force the preview at any time with
-*"show me the commit plan first"* / *"preview commits"* — treat as a
-one-shot `preview_artifacts: true` for this invocation.
+*"show me the commit plan first"* / *"preview commits"* — take the preview
+path for this invocation.
 
 ### 6. Commit
 
@@ -224,20 +221,13 @@ For each planned commit in order:
 1. Stage only the files for that commit: `git add {files...}`
 2. Commit: `git commit -m "{message}"`
 
-### 7. Report (verbosity-gated)
+### 7. Report
 
-Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
-`minimal`).
+One line:
 
-- `off` → emit nothing.
-- `minimal` (default) → one line:
-
-  ```
-  → 3 commits created
-  ```
-
-- `full` → multi-line summary: number of commits + commit messages
-  (one per line).
+```
+→ 3 commits created
+```
 
 ## Rules
 

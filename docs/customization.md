@@ -170,8 +170,6 @@ is recovered on the next server boot.
 | `agent_config_version` | *(empty)* | Exact semver pin of the agent-config release (see above). Empty = unpinned. |
 | `rule_loading_tier` | `balanced` | Token budget (`minimal`, `balanced`, `full`, `custom`) — rationale: [`docs/contracts/cost-profile-defaults.md`](contracts/cost-profile-defaults.md) |
 | `personal.user_name` | *(empty)* | User's first name for personalized responses |
-| `personal.minimal_output` | `true` | Suppress intermediate output |
-| `personal.play_by_play` | `false` | Share intermediate findings during analysis |
 | `personal.open_edited_files` | `false` | Open edited files in IDE |
 | `personal.ide` | *(empty)* | IDE for file opening (`cursor`, `code`, `phpstorm`) |
 | `pipelines.skill_improvement` | `true` | Post-task learning capture. Included in every profile except `custom`. |
@@ -280,18 +278,21 @@ behavior — the per-profile table is just the initial default.
 ### Verbosity
 
 The `verbosity:` block controls how much narration the agent emits around
-routine actions. Defaults are tuned for token frugality — flip values to
-`true` (or higher tier) to restore legacy verbose output. Iron-Law gates
+routine actions. Defaults are tuned for token frugality. Iron-Law gates
 (`commit-policy`, `scope-control` git-ops, `non-destructive-by-default`)
 ALWAYS confirm regardless of these flags.
 
+Four former leaves were retired on 2026-10-09 with their terse defaults as the
+only behaviour — `preview_artifacts`, `routine_confirmations`,
+`post_action_reports` and `intent_announcements`: generated commit messages,
+PR titles and branch names are used directly, a routine step with one obvious
+answer is never confirmed, a successful action reports in one line, and skill
+bodies emit no "Let me check…" openers. A leftover value warns once and is
+ignored.
+
 | Setting | Values | Default | Description |
 |---|---|---|---|
-| `verbosity.preview_artifacts` | `true`, `false` | `false` | Show generated commit messages, PR titles/bodies, and branch names before acting. `false` = use the generated content directly. |
-| `verbosity.routine_confirmations` | `true`, `false` | `false` | Confirmation prompts for routine workflow steps when there is one obvious answer ("looks good — commit?"). Iron-Law gates always ask regardless. |
 | `verbosity.offer_council_in_delivery` | `true`, `false` | `false` | Offer "run AI Council on this?" inside delivery commands (`/feature-plan`, `/review-changes`, `/roadmap-create`). The `/council` command itself is unaffected. |
-| `verbosity.post_action_reports` | `off`, `minimal`, `full` | `minimal` | Multi-line status / summary blocks after a successful action. `off` = no report; `minimal` = one-line confirmation; `full` = bullet list. |
-| `verbosity.intent_announcements` | `true`, `false` | `false` | Intent announcements ("Let me check…", "Now I will…", "Found it") in skill bodies. `false` = act and emit the result. |
 | `verbosity.script_output` | `silent`, `minimal`, `verbose` | `minimal` | Stdout chatter from `scripts/*.py`, `scripts/*.sh`, and `.augment/scripts/`. `silent` = stderr only; `minimal` = one summary line per script; `verbose` = pre-Phase-10 per-step prints. Iron-Law surfaces (release confirms, install secrets prompts, error markers) ignore this key. |
 | `verbosity.taskfile_command_echo` | `true`, `false` | `false` | Suppress the `task: [name] cmd...` echo Taskfile prints before each task body. `true` = echoes preserved (legacy behaviour); `false` = `silent: true` is set on every Phase-10 safe task. |
 
@@ -303,9 +304,8 @@ Writer skills (`skill-writing`, `rule-writing`, `command-writing`,
 `readme-writing`, `readme-writing-package`, `adr-create`) cite the charter
 under their `## Frugality Standards` section.
 
-#### Behavior change vs. legacy — `/create-pr` silent draft default
+#### `/create-pr` silent draft default
 
-When `verbosity.routine_confirmations: false` (the new default),
 `/create-pr` creates the PR as a **draft silently** instead of asking
 "draft or ready?". A one-line postscript surfaces the override:
 
@@ -320,7 +320,6 @@ Per-invocation overrides (no settings change required):
 |---|---|
 | Ready-for-review immediately | `/create-pr:ready` or `/create-pr:final` |
 | Explicit draft (no postscript change) | `/create-pr:draft` |
-| Numbered prompt restored | set `verbosity.routine_confirmations: true` |
 
 `/create-pr` still skips the AI council prompt unconditionally per the
 existing carve-out — `verbosity.offer_council_in_delivery` does not

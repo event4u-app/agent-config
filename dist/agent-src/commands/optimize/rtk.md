@@ -125,32 +125,10 @@ Run a quick test to confirm rtk picks up the filters:
 rtk config 2>&1 | tail -5
 ```
 
-### 7. Present results (verbosity-gated)
+### 7. Present results
 
-Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
-`minimal`).
-
-- `off` → emit nothing on success; surface errors only.
-- `minimal` (default) → one line: `→ N filters configured in .rtk/rtk.toml`.
-- `full` → multi-line summary table:
-
-  ```
-  | #   | Filter       | Match                                                         | Max  |
-  |-----|--------------|---------------------------------------------------------------|------|
-  | 1   | phpstan      | phpstan\|quality:phpstan\|vendor/bin/phpstan                  | 80   |
-  | 2   | pest         | pest\|phpunit\|artisan test                                   | 60   |
-  | 3   | tsc          | tsc\|tsc --noEmit                                             | 60   |
-  | 4   | eslint       | eslint\|next lint                                             | 50   |
-  | 5   | vitest       | vitest\|jest                                                  | 50   |
-  | 6   | playwright   | playwright\|@playwright/test                                  | 40   |
-  | 7   | ruff         | ruff check\|ruff format                                       | 60   |
-  | 8   | mypy         | mypy\|pyright                                                 | 50   |
-  | 9   | pytest       | pytest\|python -m pytest                                      | 50   |
-  | 10  | golangci     | golangci-lint\|go vet                                         | 50   |
-  | 11  | gotest       | go test                                                       | 40   |
-  | 12  | cargo        | cargo build\|cargo check\|cargo clippy\|cargo test\|cargo fmt | 50   |
-  | ... | ...          | (add per project as the toolchain grows)                      | ...  |
-  ```
+One line on success: `→ N filters configured in .rtk/rtk.toml`. Errors are
+always surfaced.
 
 ### Rules
 

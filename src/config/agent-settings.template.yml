@@ -214,46 +214,6 @@ lean_projection:
   mode: delivery
   hosts: [claude-code]
 
-# --- Telegraph condensation (output-side) ---
-#
-# `speak: false` is the shipped default per
-# docs/adrs/telegraph/0001-default-off-until-bench.md (Status: accepted) and
-# docs/contracts/condensation-default-kill-criterion.md.
-# Reason it is off: the only output-side bench (telegraph-v1, n=10, 2026-05-16)
-# measured median vs_terse -9.27% (API counts) / -5.47% (exact cl100k_base
-# re-analysis) — telegraph emits MORE tokens than a plain "be terse" instruction.
-# The kill-criterion table therefore lands on "criterion not met — defer" and the
-# telemetry multiplier stays suspended (0.9155 < 1.0).
-#
-# Stated explicitly here because until 2026-07-29 this default existed only in
-# prose — and two prose sources disagreed. Do not flip without a passing
-# output-side bench.
-telegraph:
-  # speak: false = DORMANT (the shipped default per docs/adrs/telegraph/0002).
-  # The rule is omitted from dist/router.json entirely, so its ~982-token body
-  # never ships. This is the only lever that stops the cost: compile_router
-  # gates on `speak` and on nothing else.
-  # Set true only after an output-side bench clears the kill-criterion bar.
-  speak: false
-
-# --- Token-rich skills governance ---
-#
-# Skills marked `token_budget_class: rich` in their frontmatter are exempt
-# from telegraph-speak condensation and thin-projector trimming. They load
-# their full content (examples, tables, code blocks) to maximize design-output
-# quality. This setting controls whether that extra spend is allowed globally.
-#
-# Values:
-#   on   — rich skills load in full (default; recommended for design-intensive workflows)
-#   off  — rich skills fall back to standard condensed behavior
-#   ask  — before loading a rich skill, the agent surfaces an estimated token
-#          delta (≈ file size in chars / 4, reported in tokens not dollars) and
-#          asks the user once; the answer is cached for the session
-#
-# Configurable in the browser setup wizard (Setup → Skills → Token budget).
-tokens:
-  rich_skills: "on"
-
 # --- Cost tracking + budget enforcement ---
 #
 # USD budgets evaluated against `agents/cost-tracking/sessions.jsonl` by
@@ -313,16 +273,6 @@ personal:
   # Agent will auto-detect and ask once, then store the result
   rtk_installed: false
 
-  # Minimal output mode (true, false)
-  # true  = short bullet points during work, concise summary at the end
-  # false = verbose explanations and reasoning
-  minimal_output: true
-
-  # Play-by-play mode (true, false)
-  # true  = briefly share intermediate findings as you go
-  # false = silently investigate, only report the conclusion
-  play_by_play: false
-
   # Session canary — the name the agent addresses you with at the start of
   # every new task (e.g. "Alex"). Like a canary in a coal mine: when the
   # greeting silently disappears, the context window is degrading and it is
@@ -334,10 +284,6 @@ personal:
   # the global name per project. No name on any layer = feature off.
   # See rules/session-canary.md.
   canary_name: ""
-
-  # Prefix PR comment replies with a bot icon 🤖 (true, false)
-  # Personal preference — each developer decides for themselves.
-  pr_comment_bot_icon: false
 
   # Allow the agent to post unsolicited progress / status comments on
   # an open PR (e.g. "CI fix iteration #2", "blocked on workflow scope").
@@ -366,25 +312,8 @@ personal:
 
 # --- Reply verbosity ---
 verbosity:
-  # Announce intent before tool batches ("Let me check X…") — only honored
-  # when personal.play_by_play is ALSO true (the direct-answers narration
-  # carve-out requires both). Default false = no intent narration.
-  intent_announcements: false
-
-  # Show generated commit messages, PR titles/bodies, branch names before
-  # acting. false = use generated content directly (/commit terse path).
-  preview_artifacts: false
-
-  # Confirmation prompts for routine workflow steps with one obvious answer.
-  # Iron-Law gates (commit-policy, scope-control git-ops, Hard Floor) ALWAYS
-  # ask regardless of this setting.
-  routine_confirmations: false
-
   # Offer "run AI Council on this?" inside delivery commands.
   offer_council_in_delivery: false
-
-  # Status blocks after a successful action: off | minimal | full.
-  post_action_reports: minimal
 
 # --- Project / team preferences ---
 project:
@@ -1134,7 +1063,7 @@ subagents:
 # let the agent start parallel work on its own, and `off` was the behaviour
 # everyone actually wanted — so the setting's only real value was hardcoded and
 # the other two values removed. A leftover key from an older install is ignored
-# with one deprecation line (see `REMOVED_KEYS` in `_lib/agent_settings.ts`).
+# with one deprecation line (see `REMOVED_KEYS` in `_lib/settings_removed_keys.ts`).
 #
 # The Iron-Law gates on creation (ignore-safety check, clean baseline) are
 # unchanged and still run on every explicitly-requested worktree.

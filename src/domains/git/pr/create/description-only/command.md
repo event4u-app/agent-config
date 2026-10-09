@@ -22,11 +22,10 @@ packs:
 
 > **Carve-out:** this command's *purpose* is the copyable preview of
 > the PR description. It therefore **ignores**
-> `verbosity.preview_artifacts` and `commands.create_pr.preview_description`
-> — both flags govern only the bare `/create-pr` flow's preview-and-
-> adjust loop. Removing the preview here would make the command a
-> no-op. Do not "fix" this; the suppression flags only apply when the
-> PR is actually being created.
+> `commands.create_pr.preview_description` — that flag governs only the
+> bare `/create-pr` flow's preview-and-adjust loop. Removing the preview
+> here would make the command a no-op. Do not "fix" this; the suppression
+> flag only applies when the PR is actually being created.
 
 ## Input
 

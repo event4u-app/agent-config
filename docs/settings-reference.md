@@ -254,10 +254,7 @@ explanation lives now that the file no longer carries it as comments.
 | `personal.autonomy` | C | string | `"auto"` | `on` · `off` · `auto` | How aggressively the agent suppresses trivial workflow questions ("commit now?", "open PR?"). on = silently pick the sensible default. off = always ask. auto (default) = decide per project, on for solo / off when collaborators are involved. The Hard Floor (prod, deploys, bulk deletes) ignores this setting and always asks. |
 | `personal.canary_name` | B | string | `""` |  | Session canary — the name the agent addresses you with at the start of every new task (e.g. "Alex"). When the greeting silently disappears, the context window is degrading: start a fresh conversation. Also keeps the reply-close markers (end-summary, PR URL as literal last line) alive. Empty = fall back to the user-global canary_name, then to identity.name from the setup wizard; no name anywhere = off. See rules/session-canary.md. |
 | `personal.ide` | C | string | `""` |  | CLI binary your IDE registers (code, code-insiders, phpstorm, cursor, windsurf, idea, subl, …). Used by the file-editor skill to open edited files. Leave empty to disable IDE integration. |
-| `personal.minimal_output` | A | boolean | `true` |  | Prefer short bullets and tables (true, default) vs verbose prose with rationale (false). Affects every chat reply; flip to false during debugging when you want the agent to think out loud. |
 | `personal.open_edited_files` | B | boolean | `false` |  | After the agent edits a file, run `<ide> <path>` to surface it in your editor immediately. Off by default to avoid window-stealing during long agent runs. |
-| `personal.play_by_play` | A | boolean | `false` |  | Narrate intermediate findings between tool calls ("Found it.", "Let me check Y."). Off by default — most users find it noisy. Turn on when you want to follow the agent's reasoning step by step. |
-| `personal.pr_comment_bot_icon` | A | boolean | `false` |  | Prefix every PR review-comment reply with 🤖 so humans can tell agent-authored comments apart from teammate comments at a glance. Cosmetic only; the comment body itself never changes. |
 | `personal.pr_progress_comments` | C | boolean | `false` |  | Permit the agent to post unsolicited progress / status comments on an open PR (e.g. "CI fix iteration #2", "still blocked on workflow scope"). Default off — most teammates find them noisy. User-invoked flows (/fix:pr-comments, /create-pr, /code-review, explicit "post a comment that …") are NOT gated by this setting. See rules/no-pr-progress-comments.md. |
 | `personal.rtk_installed` | A | boolean | `false` |  | Does this machine have rtk (Rust Token Killer, a third-party Apache-2.0 tool: https://github.com/rtk-ai/rtk) on PATH — verified as the real Token Killer, not the unrelated Rust Type Kit that shares the binary name? When true the agent wraps verbose CLI output (git, tests, linters, docker, npm, composer) with rtk (upstream reports 60-90% token savings — their estimate). Leave false if rtk is missing — the agent falls back to tail / grep. The wizard overwrites this from a live two-stage probe (PATH presence + `rtk gain` identity check). |
 | `personal.user_type` | C | string | `""` | `` · `consultant` · `creator` · `developer` · `finance` · `founder` · `gtm` · `ops` | Optional persona axis used by the skill-suggester to surface the relevant subset (consultant / creator / developer / finance / founder / gtm / ops). Empty = no filter, all skills available. You can change this any time without re-running setup. |
@@ -356,18 +353,6 @@ explanation lives now that the file no longer carries it as comments.
 | `subagents.model_map.medium` | C | string | `""` |  | Model alias for medium-tier sub-tasks. Empty = the tier runtime default. |
 | `subagents.quota_arbitrage` | C | boolean | `true` |  | Prefer a separate quota-pool model for delegable sub-tasks where the host manifest reports one. Optional bonus only — identical behaviour (minus the quota win) where unsupported. Never load-bearing. |
 
-## telegraph
-
-| Key | Class | Type | Default | Allowed values | What it does |
-|---|---|---|---|---|---|
-| `telegraph.speak` | C | boolean | `false` |  | Whether the telegraph-speak rule ships at all. false (default) = DORMANT: compile_router omits the rule from dist/router.json entirely, so its body never reaches a host. This is the only lever that stops the cost. Set true only after an output-side bench clears the kill-criterion bar (docs/adrs/telegraph/0002). |
-
-## tokens
-
-| Key | Class | Type | Default | Allowed values | What it does |
-|---|---|---|---|---|---|
-| `tokens.rich_skills` | C | string | `"on"` | `on` · `ask` · `off` | Whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak + thin-projector trimming), consumed by the token-budget-discipline rule. on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask once per session before loading. |
-
 ## update_check
 
 | Key | Class | Type | Default | Allowed values | What it does |
@@ -378,11 +363,7 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `verbosity.intent_announcements` | A | boolean | `false` |  | Intent narration before tool batches ("Let me check X…"). Only honored when personal.play_by_play is ALSO true (the direct-answers narration carve-out requires both). false (default) = act and emit the result. |
 | `verbosity.offer_council_in_delivery` | A | boolean | `false` |  | Offer "run AI Council on this?" inside delivery commands (/feature-plan, /review-changes, /roadmap-create). Council commands themselves are unaffected. |
-| `verbosity.post_action_reports` | A | string | `"minimal"` | `off` · `minimal` · `full` | Status blocks after a successful action. off = errors only; minimal (default) = one-line confirmation; full = bullet list. |
-| `verbosity.preview_artifacts` | C | boolean | `false` |  | Show generated commit messages, PR titles/bodies, branch names before acting. false (default) = use generated content directly (/commit terse path). |
-| `verbosity.routine_confirmations` | C | boolean | `false` |  | Confirmation prompts for routine workflow steps with one obvious answer. Iron-Law gates (commit-policy, scope-control git-ops, Hard Floor) ALWAYS ask regardless. |
 
 ## See also
 

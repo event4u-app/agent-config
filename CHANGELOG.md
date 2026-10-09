@@ -32,6 +32,18 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Changed
 
+- **9 settings keys are retired; an install that never changed them sees no
+  difference.** Each key's shipped default is now fixed behaviour: every reader
+  of it — code, rule and command prose, the wizard — was rewritten to that
+  default in the same change. **If your `.agent-settings.yml` still sets one,
+  that value is ignored** and the loader prints one line per key —
+  `<key> was removed (<what decides instead>); ignored.` — so a non-default
+  value you chose is lost visibly, never silently. Delete the line to silence
+  it. The keys:
+  - Output and tone: `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`.
+  The reference page lists each key with the behaviour that replaces it
+  (`templates/agent-settings.md` § Retired keys).
+
 - **A medium security finding now needs a disposition before a release
   ships.** `check_finding_dispositions` treats `security × medium` as blocking
   for every release after 16.3.0 (council 2026-10-07, 2/2). Such a row must

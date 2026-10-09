@@ -14,8 +14,8 @@
  * as "project instructions", never having consulted the router.
  *
  * Two surfaces, one switch. Sharing the definition is what lets the projector honour
- * it, so `speak: false` means what the ADR assumed instead of the ADR being weakened
- * to match a partial implementation.
+ * it, so dormancy means what the ADR assumed instead of the ADR being weakened to
+ * match a partial implementation.
  */
 
 /**
@@ -51,25 +51,16 @@ export type ToggleSettings = Record<string, unknown>;
 /** rule-id → predicate. A rule is emitted (router AND projection) only when its
  * predicate returns true. A rule absent from this map is always emitted. */
 export const COMPILE_TIME_TOGGLES: Record<string, (s: ToggleSettings) => boolean> = {
-    // `speak` defaults FALSE (dormant) per docs/adrs/telegraph/0002 — the absent-key
-    // fallback used to be `true`, which silently contradicted ADR 0001 (accepted,
-    // "default off until bench"). Measured basis: median vs_terse −9.27% (API) /
-    // −5.47% (exact cl100k_base) — telegraph emits MORE than a plain "be terse".
-    // Opt back in with an explicit `telegraph.speak: true` once an output-side bench
-    // clears the kill-criterion bar. `enabled` keeps its true default: it is the
-    // family master switch, and flipping it would silence sibling telegraph settings
-    // that were never measured negative.
-    //
-    // The predicate gates on `telegraph.speak` because that is the only lever that
-    // removes the rule's ~982-token body from the router and the projection. A knob
-    // that merely narrowed the grammar at runtime would leave the token cost in place
-    // — the trap the measurement exposed.
-    'telegraph-speak': (s: ToggleSettings): boolean => {
-        const tg = (s['telegraph'] as ToggleSettings | undefined) ?? {};
-        const enabled = tg['enabled'] === undefined ? true : tg['enabled'];
-        const speak = tg['speak'] === undefined ? false : tg['speak'];
-        return Boolean(enabled) && Boolean(speak);
-    },
+    // DORMANT, unconditionally. `speak` defaulted FALSE per docs/adrs/telegraph/0002
+    // (measured basis: median vs_terse −9.27% API / −5.47% exact cl100k_base —
+    // telegraph emits MORE than a plain "be terse"), and on 2026-10-09 the
+    // `telegraph.speak` key was retired with that default as the fixed value
+    // (road-to-settings-classes-derivable-surface-stagnation Phase 2.1). Whether
+    // the rule ships is the kill-criterion bench verdict, a package-level decision
+    // rather than a per-install one, so re-enabling it is a change to this
+    // predicate, made when an output-side bench clears the bar — never a setting.
+    // A leftover `telegraph.speak: true` is warned about by the loader and ignored.
+    'telegraph-speak': (): boolean => false,
 };
 
 /** True when the rule may be emitted. Unknown ids are always emitted — the map is an

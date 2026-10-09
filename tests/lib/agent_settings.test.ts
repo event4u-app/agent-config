@@ -200,14 +200,14 @@ describe('load_agent_settings — whitelist filtering', () => {
         const tmp = make_tmp();
         const user = write_file(
             path.join(tmp, 'user.yml'),
-            "personal:\n  bot_icon: '🤖'\n  autonomy: medium\n  theme: dark\n",
+            "personal:\n  ide: code\n  autonomy: medium\n  theme: dark\n",
         );
         const result = ags.load_agent_settings({
             template_path: NO_TEMPLATE,
             project_path: path.join(tmp, 'missing.yml'),
             user_global_path: user,
         });
-        expect(result).toEqual({ personal: { bot_icon: '🤖', autonomy: 'medium' } });
+        expect(result).toEqual({ personal: { ide: 'code', autonomy: 'medium' } });
         expect('theme' in (result['personal'] as Record<string, unknown>)).toBe(false);
     });
 });
@@ -234,13 +234,13 @@ describe('load_agent_settings — merge precedence', () => {
 
     it('nested dicts merge per key', () => {
         const tmp = make_tmp();
-        const project = write_file(path.join(tmp, 'project.yml'), "personal:\n  bot_icon: '🦊'\n");
+        const project = write_file(path.join(tmp, 'project.yml'), "personal:\n  ide: phpstorm\n");
         const user = write_file(
             path.join(tmp, 'user.yml'),
-            "personal:\n  bot_icon: '🤖'\n  autonomy: high\n",
+            "personal:\n  ide: code\n  autonomy: high\n",
         );
         const result = ags.load_agent_settings({ project_path: project, user_global_path: user, template_path: NO_TEMPLATE });
-        expect(result['personal']).toEqual({ bot_icon: '🦊', autonomy: 'high' });
+        expect(result['personal']).toEqual({ ide: 'phpstorm', autonomy: 'high' });
     });
 });
 
@@ -309,7 +309,8 @@ describe('MERGEABLE_KEYS', () => {
     it('is the documented exact list', () => {
         // Exact-list pin: widening the user-global surface requires an ADR, and
         // this assertion is that requirement in executable form. `personal.ide`
-        // and `personal.pr_comment_bot_icon` were added by ADR-219 — the list had
+        // and `personal.pr_comment_bot_icon` were added by ADR-219 (the latter
+        // left again with its key on 2026-10-09) — the list had
         // frozen at the PRE-migration spellings (`ide`, `personal.bot_icon`),
         // so it whitelisted names the template does not have while filtering out
         // the names it does.
@@ -324,8 +325,6 @@ describe('MERGEABLE_KEYS', () => {
             'personal.ide',
             'rule_loading_tier',
             'memory.cadence',
-            'personal.bot_icon',
-            'personal.pr_comment_bot_icon',
             'personal.autonomy',
             'knowledge.global_sharing.enabled',
             'knowledge.global_sharing.allowed_tiers',
@@ -359,10 +358,7 @@ describe('MERGEABLE_KEYS', () => {
     it('keeps the legacy spelling beside every migrated one (ADR-219 is additive)', () => {
         // The repair must not become a regression for a user-global file that
         // still uses the pre-migration name.
-        for (const [legacy, current] of [
-            ['ide', 'personal.ide'],
-            ['personal.bot_icon', 'personal.pr_comment_bot_icon'],
-        ] as const) {
+        for (const [legacy, current] of [['ide', 'personal.ide']] as const) {
             expect(ags.MERGEABLE_KEYS).toContain(legacy);
             expect(ags.MERGEABLE_KEYS).toContain(current);
         }
