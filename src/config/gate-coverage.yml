@@ -3263,7 +3263,7 @@ gates:
   - id: lint_pack_boundaries
     argv: ["--quiet"]
     min_scanned: 600
-    corpus: "source artefacts the shared resolver yields (`_lib/agent_src.iter_artefacts` over skills, rules, agent-src and domains), counted as FILES — 830 on 2026-10-07, of which 139 sit outside any pack's scope and are still counted because they were read. The floor is 600 because artefacts are merged and retired routinely, while a resolver that stopped yielding a root drops by hundreds at once: skills alone are over half the corpus. The violation COUNT is not what this floor guards; that is the ratchet in src/config/gate-violation-baselines.json, which fails the run when it rises above the recorded baseline."
+    corpus: "source artefacts the shared resolver yields (`_lib/agent_src.iter_artefacts` over skills, rules, agent-src and domains), counted as FILES — 833 on 2026-10-09, of which 139 sit outside any pack's scope and are still counted because they were read. The floor is 600 because artefacts are merged and retired routinely, while a resolver that stopped yielding a root drops by hundreds at once: skills alone are over half the corpus. The violation COUNT is not what this floor guards; that is the ratchet in src/config/gate-violation-baselines.json, which fails the run when it rises above the recorded baseline."
     status: enforced
     ci_invocation: .github/workflows/consistency.yml
     no_canary_reason: >-
@@ -3274,12 +3274,24 @@ gates:
       plant smaller than that headroom reads green and the ledger would call a
       live gate dead. Measured once by hand on 2026-10-07 at count == baseline
       (203): one planted `founder-strategy` -> `gtm-marketing` link read 204 and
-      exited 1. Discrimination is proven instead by `--self-test` (5 cases, 3
-      rejecting), which runs the real CLI over fixture roots where the ratchet is
-      not consulted, so any violation exits 1 whatever the repository's headroom:
-      an undeclared cross-pack link and an artefact with no resolvable pack exit
-      1, an empty corpus exits 2, and a link declared through `requires` and a
-      link inside one pack pass. Seen red deliberately on 2026-10-07 by making the
+      exited 1. That reading is kept as the historical record and is NO LONGER
+      REPRODUCIBLE as written: the baseline is 120 since 2026-10-09, so a reader
+      re-running it measures against a number that no longer exists. Re-measured
+      on 2026-10-09 at count == baseline (120): one planted
+      `founder-strategy` -> `gtm-marketing` link reads 121 and exits 1. The same
+      pass found the ratchet's second blind spot and it is named here rather
+      than left to the next reader: a link on a pack pair joined by an advisory
+      `suggests` edge is PERMITTED, so it does not raise the count at all and
+      exits 0 at any headroom. The permitted COUNT prints on every run,
+      `--quiet` included, which is the signal that set is growing; there is no
+      ratchet on it. Discrimination is proven instead by `--self-test` (7 cases,
+      4 rejecting), which runs the real CLI over fixture roots where the ratchet
+      is not consulted, so any violation exits 1 whatever the repository's
+      headroom: an undeclared cross-pack link and an artefact with no resolvable
+      pack exit 1, an empty corpus exits 2, and a link declared through
+      `requires`, a link inside one pack, and a link an advisory `suggests` edge
+      permits all pass — the last paired with its denial, the same link without
+      the edge, which exits 1. Seen red deliberately on 2026-10-07 by making the
       allow rule accept every link: the cross-pack case alone fails, 4/5.
     note: >-
       road-to-gates-a-pull-request-can-hear 3.1. Until this row the gate ran only

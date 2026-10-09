@@ -15,7 +15,8 @@ owner:
 - founder
 requires: []
 size_class: medium
-suggests: []
+suggests:
+- finance-advanced
 surface_tier: core
 token_passport:
   basis: chars/4

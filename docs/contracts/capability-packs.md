@@ -76,7 +76,7 @@ three new fields below; the existing fields keep their ADR-013 meaning.
 | `size_class` | enum | in-use | **NEW.** `core` / `small` / `medium` / `large` / `platform`. The input the 6.0.0-C per-pack **visible-command** budget lint reads. Co-required with `domain`. Required for every in-use pack; absent on reserved vocab ids with zero artefacts (assigning it would fail the orphan-manifest determinism check). |
 | `always_on` | bool | no | **NEW.** When `true`, the pack loader (6.0.0-B Phase 3) includes this pack's artefacts in **every** projection, regardless of the selected profile / workspace / pack set. Default `false` (absent). See "Always-on packs" below. |
 | `requires` | list[id] | no | **NEW.** Hard dependency edges — packs whose artefacts must be present for this pack to function (e.g. `laravel.requires = [php, engineering-base]`). Formalizes the advisory `requires_hint` from ADR-013; once a manifest carries `requires`, `requires_hint` is the deprecated alias. Default `[]`. |
-| `suggests` | list[id] | no | **NEW.** Soft companion edges — packs commonly installed together but not mandatory (e.g. `laravel.suggests = [api, ui]`). Advisory; the resolver MAY surface them, never auto-installs. Default `[]`. |
+| `suggests` | list[id] | no | **NEW.** Soft companion edges — packs commonly installed together but not mandatory (e.g. `laravel.suggests = [api, ui]`). Advisory; the resolver MAY surface them, never auto-installs. Default `[]`. **A `suggests` edge is not inert: since 2026-10-09 it also carries a GATE effect** — see § The gate effect of `suggests` below. |
 
 `cluster:` and `onboarding:` (ADR-013) remain valid optional fields and are
 out of scope for this contract.
@@ -177,6 +177,38 @@ base is missing" gap).
    advisory and never expanded transitively).
 3. `requires` is transitive (resolver expands the full closure); `suggests` is
    non-transitive (one hop, surfaced not installed).
+
+## The gate effect of `suggests`
+
+```
+ADDING A `suggests` EDGE IS NOT A METADATA-ONLY CHANGE.
+IT SWITCHES OFF `lint_pack_boundaries` BETWEEN THOSE TWO PACKS, ONE-WAY.
+```
+
+Recorded because the field's description above reads as pure advisory metadata
+and that is no longer the whole truth. Since D5 of
+`road-to-gates-a-pull-request-can-hear` (AI council 2026-10-07, adopted
+2026-10-08), `src/scripts/lint_pack_boundaries.ts` reads a `suggests` edge as
+PERMITTING a markdown link from the declaring pack into the target. The
+resolver still never installs it, and the edge stays one-hop and one-way — but
+an author who adds a "harmless companion edge" after reading only the field
+table will also stop that gate reporting dangling links on it.
+
+What this means in practice:
+
+- **Declare the edge where the relationship is real**, not to silence a
+  finding. The permit is per EDGE, not per link: every future link on it is
+  permitted too, and nobody re-checks that those degrade safely.
+- The permitted **count** prints on every `lint_pack_boundaries` run,
+  `--quiet` included, and `--show-permitted` lists each link with its
+  permitting edge. That is the standing signal; there is no ratchet on it.
+- The sibling gate `lint_rule_skill_pack_reach` reads `suggests` the OPPOSITE
+  way and always will: it asserts a route *will resolve*, so counting an
+  advisory edge there would assert resolution on installs that may not exist.
+  **Adding a `suggests` edge never clears an `unreachable-route` finding.**
+- `pack.yaml` is not the place to declare one. The boundary gate consults a
+  pack home only for a pack the vocabulary does not list, so an edge added
+  only to a generated manifest has no effect.
 
 ## Determinism
 

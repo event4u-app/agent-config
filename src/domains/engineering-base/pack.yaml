@@ -11,7 +11,15 @@ owner:
 - engineering
 requires: []
 size_class: core
-suggests: []
+suggests:
+- php
+- laravel
+- symfony
+- nextjs
+- react
+- frontend-design
+- brand
+- product-basic
 surface_tier: core
 token_passport:
   basis: chars/4
