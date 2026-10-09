@@ -604,7 +604,7 @@ function main(): number {
     for (const [removedKey, reason] of REMOVED_KEYS) {
         if (reason.trim() === '') {
             findings.push(
-                `src/scripts/_lib/agent_settings.ts  \`${removedKey}\` is in REMOVED_KEYS with an empty ` +
+                `src/scripts/_lib/settings_removed_keys.ts  \`${removedKey}\` is in REMOVED_KEYS with an empty ` +
                     'reason — name what decides instead, not that it is gone.',
             );
         }

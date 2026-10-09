@@ -33,7 +33,6 @@ explanation lives now that the file no longer carries it as comments.
 | `ai_team.model` | C | string | `"auto"` |  | Model handed to the codex CLI. 'auto' (default) = pass no --model flag so the CLI's own default applies — tracks the subscription's current strongest model instead of pinning a stale ID. Any other value passes through verbatim as `--model <value>`. |
 | `ai_team.review_gate.managed` | C | boolean | `false` |  | Managed governance of the codex plugin's Stop-hook Review Gate (road-to-team-mode Phase 4). false (default) = byte-identical pre-Phase-4 behavior: no counting, no circuit breaker. true = count consecutive BLOCK verdicts per session and trip the circuit breaker at max_consecutive_blocks. |
 | `ai_team.review_gate.max_consecutive_blocks` | C | integer | `3` |  | Circuit-breaker bound: after this many CONSECUTIVE BLOCK verdicts in one session, a visible notice is injected exactly once and the managed layer stops re-blocking — the user decides, never an infinite Claude↔Codex loop. An ALLOW verdict resets the counter. Positive integer. |
-| `ai_team.suppress_setup_hint` | A | boolean | `false` |  | Suppress the one-line wizard/init recommendation to set up the codex plugin on Claude-Code hosts. Cosmetic only — never changes behavior. |
 
 ## augment
 
@@ -68,24 +67,10 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `commands.auto_detect` | C | string | `"enabled"` | `enabled` · `warn` · `disabled` | Global kill-switch for orchestrator auto-detection (6.1.0 non-interactive-contract). enabled (default) = /judge, /fix, /analytics, /tests, /override auto-detect their sub-command per a confidence-tiered table; warn = detect but always confirm before routing; disabled = never auto-detect (always show the menu interactively, require an explicit sub-command in CI). Per-orchestrator override: auto_detect:false in front-matter. Per-invocation: --no-auto-detect. |
-| `commands.create_pr.api_examples` | A | boolean | `true` |  | JSON request/response examples for API-endpoint changes. true (default) = include a fenced example ONLY when grounded in a real source (response DTO/resource, OpenAPI/schema, test fixture, or an actual probe); no grounded source → a one-line pointer, never an invented example. false = never add API examples. |
-| `commands.create_pr.api_paths` | C | array | `[]` |  | Optional glob list that makes API-endpoint detection explicit instead of heuristic (e.g. ["app/Http/Controllers/Api/**", "src/pages/api/**"]). Empty (default) = a light path/extension heuristic that fails open. |
 | `commands.create_pr.detail_level` | A | string | `"min"` | `min` · `med` · `max` | Verbosity tier for the generated PR description body. min (default) = title + 2-3 sentence what/why/impact + linked ticket (token-frugal); med = min + grouped changes + tests note; max = med + how-to-test + edge cases + reviewer guidance. Critical info (breaking changes, migrations, security, rollback) is ALWAYS included at every tier — the tier governs explanatory depth, never whether a critical callout appears. |
 | `commands.create_pr.preview_description` | C | boolean | `false` |  | When /create-pr runs, show the generated title and body and wait for confirmation before opening the PR. Off by default (zero-friction PR creation); turn on if you want a last-look gate. |
 | `commands.create_pr.screenshots` | C | boolean | `false` |  | Screenshots for frontend changes. false (default) = never attempt. true = attempt when the host has browser/preview tooling and the diff touches a frontend surface; capability-gated (emits a one-line note and leaves the placeholder when tooling is absent, never fails or blocks the PR). Before/after + changed-region highlighting is best-effort. |
-| `commands.create_pr.ui_paths` | C | array | `[]` |  | Optional glob list that makes frontend detection explicit instead of heuristic (e.g. ["resources/views/**", "src/pages/**"]). Empty (default) = a light path/extension heuristic that fails open (no false enrichment when the surface is ambiguous). |
 | `commands.suggestion.blocklist` | C | array | `[]` |  | Slash-command names that should never be suggested, one per line (e.g. "commit", "create-pr"). Useful if a command misfires on your common phrasing. |
-| `commands.suggestion.confidence_floor` | A | number | `0.6` |  | Minimum semantic-match score (0.0–1.0) before a command is offered as a suggestion. 0.6 (default) balances precision and recall. Raise toward 0.8 for fewer false positives, lower for broader hints. |
-| `commands.suggestion.cooldown_seconds` | A | integer | `600` |  | How long (seconds) the suggester waits before offering the same command again after you ignored it. Default 600s (10 min) keeps the agent from nagging. Set 0 to disable the cooldown. |
-| `commands.suggestion.enabled` | A | boolean | `true` |  | Master switch for the slash-command suggestion layer. When on, the agent offers numbered options ("did you mean /commit?") instead of guessing. Turn off if you prefer to type every command yourself. |
-| `commands.suggestion.max_options` | A | integer | `4` |  | Maximum number of command suggestions shown in a single numbered-options block, before the "Proceed as-is" escape. Lower for terser prompts, raise if you regularly want broader fan-out. |
-
-## consistency
-
-| Key | Class | Type | Default | Allowed values | What it does |
-|---|---|---|---|---|---|
-| `consistency.cross_source` | C | string | `"on"` | `on` · `auto` · `off` | Consumed by the cross-source-consistency rule. When the agent works from multiple sources (ticket text, an attached image/mockup, the spec, the codebase) it checks them against each other and asks before proceeding on a discrepancy — instead of silently guessing. on (default) = surface every real cross-source contradiction / silent-scope-expansion as one question; auto = surface only high-confidence contradictions, state low-confidence as an assumption; off = no cross-source checking. |
 
 ## continuity
 
@@ -110,13 +95,11 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `decision_engine.ask_timeout_seconds` | C | integer | `30` |  | Non-TTY timeout (seconds) for decision_engine.on_block = ask. After this elapses without input, decision_engine.on_block_fallback takes over. Default 30s; raise for slow human review, 0 = wait forever. |
+| `decision_engine.ask_timeout_seconds` | C | integer | `30` |  | Non-TTY timeout (seconds) for decision_engine.on_block = ask. After this elapses without input, the engine stops (fail-safe). Default 30s; raise for slow human review, 0 = wait forever. |
 | `decision_engine.block_on_risk` | C | string | `"off"` | `off` · `low` · `medium` · `high` | During Phase=Implement, refuse to act when the risk class meets or exceeds this band. off (default) = no gate. low / medium / high = stricter ceilings; pairs with decision_engine.on_block. |
 | `decision_engine.min_confidence` | C | string | `"off"` | `off` · `low` · `medium` · `high` | During Phase=Plan, refuse to advance to Phase=Implement if confidence is below this band. off (default) = no gate. low / medium / high = raise the floor; on miss, decision_engine.on_block decides what happens. |
 | `decision_engine.on_block` | C | string | `"stop"` | `stop` · `ask` · `warn` | What the decision engine does when a gate (min_confidence / block_on_risk / require_memory_hits) fires. stop (default) = halt and surface the reason. ask = present numbered options. warn = log and continue. |
-| `decision_engine.on_block_fallback` | C | string | `"stop"` | `stop` · `warn` | Resolution when decision_engine.on_block = ask times out (see decision_engine.ask_timeout_seconds). stop (default) = halt the run. warn = log and continue with the agent's best guess. |
 | `decision_engine.require_memory_hits` | C | boolean | `false` |  | During Phase=Refine, require at least one relevant memory hit (skill, ADR, past decision) before the agent proceeds. Off by default; turn on for highly conventional codebases where memory should always inform decisions. |
-| `decision_engine.surface_traces` | C | boolean | `false` |  | Emit DecisionTraceHook events that surface why the agent picked one option over another. Useful when debugging unexpected choices; off by default to keep chat noise low. |
 
 ## delivery
 
@@ -155,12 +138,6 @@ explanation lives now that the file no longer carries it as comments.
 | `execution.escalation` | C | array | `["independent","council","team","owner_owned_check"]` |  | The escalation rungs, in order, walked when the fix-loop bound is reached: independent (another session or a provider-diverse reviewer), council, team, then owner_owned_check — which asks whether the residue is owner-owned, not whether to ask the owner now. |
 | `execution.fix_loop_max` | C | integer | `10` |  | Consecutive failed fix attempts against one validation target before the escalation ladder reaches its terminal rung. Reaching the bound triggers a strategy change, never a question. Overridable globally, per project and per prompt. |
 
-## explain
-
-| Key | Class | Type | Default | Allowed values | What it does |
-|---|---|---|---|---|---|
-| `explain.enable_last` | A | boolean | `true` |  | Enable the `agent-config explain last` command, which prints the reasoning behind the agent's most recent decision (last tool call, last suggestion). Disable if you never use it and want a smaller CLI surface. |
-
 ## git
 
 | Key | Class | Type | Default | Allowed values | What it does |
@@ -180,8 +157,6 @@ explanation lives now that the file no longer carries it as comments.
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
 | `hooks.code_graph.enabled` | C | boolean | `false` |  | PreToolUse code-graph nudge (ADR-124 Phase 4). Default off. When on AND a native code-graph cache or a consumer-shipped graph.json/SCIP index is present, warns once per session (never blocks) as the agent is about to Grep/Glob or Read a source file — query the graph first for who-calls/where-used/impact questions (or rebuild if stale, build if absent). Source G’s strict block-first-read mode is deliberately un-ported. |
-| `hooks.concern_budget.hard_fail` | C | boolean | `false` |  | When a hook exceeds hooks.concern_budget.max_per_event, fail the run (true) instead of warning and continuing (false, default). Turn on in CI when you want hook quality to gate merges. |
-| `hooks.concern_budget.max_per_event` | C | integer | `8` |  | Maximum number of concerns (issues / warnings) a single hook may raise per (platform, event) pair before the hook is rate-limited. Default 8 prevents noisy hooks from drowning out high-signal ones. |
 | `hooks.concern_budget.tier1_concerns` | C | array | `[]` |  | Concern IDs (one per line) that are allowed to block the run on failure rather than warn. Reserved for high-confidence guards — leave empty unless you maintain custom hooks. |
 | `hooks.design_pass.enabled` | C | boolean | `false` |  | PostToolUse + stop design pass (road-to-frontend-power E1.1/E1.2/E1.3). Default off. One concern on two slots: on post_tool_use a write to a UI surface delivers the design findings as context and never blocks; on stop the same pass runs over every UI file touched this session, deduped against what the post pass surfaced, and a P0 objective floor (contrast, font size, heading skip, focus) blocks with a continuation. P1-P3 never block. post_tool_use rather than pre_tool_use for two measured reasons: pre_tool_use is declared by three hosts and honoured by one while post_tool_use is declared by six, and _lib/ui_surface.ts is a path predicate, so a pre-write gate cannot fire on the first write of a new surface. A pass that could not fully run reports verification: degraded with a reason rather than passing silently. Does not replace design_slop: two design keys is the honest state until the tiering experiment has a number. |
 | `hooks.design_slop.enabled` | C | boolean | `false` |  | PreToolUse anti-slop nudge (road-to-anti-slop-detector Phase 3). Default off. When on, runs the lint_design_slop registry against about-to-be-written UI content and WARNS (never blocks) on P0/P1 aesthetic tells (side-stripe, gradient-text, magic z-index, …). Flags are rebuttable via DESIGN.md / design-slop-disable. Anti-loop: a file::rule signature surfaced 3x goes silent. Host-limited convenience layer; the universal gate is the lint_design_slop linter/CI. |
@@ -204,12 +179,7 @@ explanation lives now that the file no longer carries it as comments.
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
 | `knowledge.global_sharing.allowed_tiers` | C | array | `["public"]` |  | Origin tiers auto-eligible to cross a project boundary. proprietary is manual-only regardless (the gate hard-codes it), so an in-house schema never auto-shares. |
-| `knowledge.global_sharing.auto_promote_threshold` | C | integer | `2` |  | Distinct-repo count at which a public/vendor card triggers a promotion suggestion (never a silent write). |
 | `knowledge.global_sharing.enabled` | C | boolean | `true` |  | Master switch for the file-first global knowledge-card store (ADR-100; default-ON per ADR-119, the validated bounded-downside flip superseding ADR-103 — write-time redaction incl. hidden-unicode hardening, narrowest tier default, pre-registered demotion trigger). User-global setting — keep in ~/.event4u/agent-config/agent-settings.yml. false fully no-ops the layer (single-key revert); project-local cards (v1) are unaffected. |
-| `knowledge.global_sharing.freshness.hypothesis_after_days` | A | integer | `90` |  | A global card older than this is lead-only (positive structure must be re-confirmed before use). |
-| `knowledge.global_sharing.freshness.stale_after_days` | A | integer | `180` |  | A global card older than this is skipped until re-verified. |
-| `knowledge.global_sharing.redaction.enabled` | C | boolean | `true` |  | Run the privacy-floor + source-confidentiality scan before any card goes global. |
-| `knowledge.global_sharing.redaction.halt_on_trigger` | C | boolean | `true` |  | Halt-and-surface on a confidential-pattern hit; never silent-share, never auto-rewrite. |
 
 ## lean_projection
 
@@ -229,10 +199,8 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `memory.cadence` | C | string | `"always"` | `auto` · `always` · `never` | Cadence of the 🧠 memory-visibility line after a memory-consulting step. always (default) = show whenever a memory type was asked; auto = show only when 3+ types were consulted (less noise); never = suppress. Distinct from rule_loading_tier — owns its own key since the 2026-06-01 untangle. |
 | `memory.learn_on_session_end` | B | boolean | `false` |  | session_end learning-sidecar aggregation (road-to-reachable-code-memory P4). true = the session_end hook aggregates agents/memory/intake/*.jsonl through the learning sidecar into the gitignored .agent-learning.json + LESSONS.md (local-only, 2 s budget, fail-open; promotion stays human via /memory:propose). false (default, council 2026-07-27) = no-op; the flip is proposed only after the 30-day dogfood shows non-trivial signal AND session-end p95 < 2 s. |
 | `memory.redact_patterns` | C | array | `[]` |  | Regex patterns (one per line) that scrub matches from chat-history transcripts and memory before they hit disk. Use for secrets, customer names, internal URLs. Patterns are anchored and case-insensitive. |
-| `memory.review_threshold` | A | integer | `10` |  | Maximum number of memory entries /memory:load surfaces inline before falling back to a summary view. Default 10 keeps the chat readable. Raise to see more candidates, lower to keep the context tight. |
 | `memory.session_index` | A | string | `"off"` | `on` · `off` | Opt-in compact memory index at session start (road-to-memory-retrieval-economy P5). on = inject a compact id + title + ~tokens index of curated entries (hard cap 30 rows, bodies never included) through the hot-context hook; the agent fetches full entries via memory_get on demand. off (default) = no injection — the ship-criterion (measured hit-rate gain) is unproven, so off unless proven. |
 
 ## model
@@ -254,19 +222,10 @@ explanation lives now that the file no longer carries it as comments.
 | `personal.autonomy` | C | string | `"auto"` | `on` · `off` · `auto` | How aggressively the agent suppresses trivial workflow questions ("commit now?", "open PR?"). on = silently pick the sensible default. off = always ask. auto (default) = decide per project, on for solo / off when collaborators are involved. The Hard Floor (prod, deploys, bulk deletes) ignores this setting and always asks. |
 | `personal.canary_name` | B | string | `""` |  | Session canary — the name the agent addresses you with at the start of every new task (e.g. "Alex"). When the greeting silently disappears, the context window is degrading: start a fresh conversation. Also keeps the reply-close markers (end-summary, PR URL as literal last line) alive. Empty = fall back to the user-global canary_name, then to identity.name from the setup wizard; no name anywhere = off. See rules/session-canary.md. |
 | `personal.ide` | C | string | `""` |  | CLI binary your IDE registers (code, code-insiders, phpstorm, cursor, windsurf, idea, subl, …). Used by the file-editor skill to open edited files. Leave empty to disable IDE integration. |
-| `personal.minimal_output` | A | boolean | `true` |  | Prefer short bullets and tables (true, default) vs verbose prose with rationale (false). Affects every chat reply; flip to false during debugging when you want the agent to think out loud. |
 | `personal.open_edited_files` | B | boolean | `false` |  | After the agent edits a file, run `<ide> <path>` to surface it in your editor immediately. Off by default to avoid window-stealing during long agent runs. |
-| `personal.play_by_play` | A | boolean | `false` |  | Narrate intermediate findings between tool calls ("Found it.", "Let me check Y."). Off by default — most users find it noisy. Turn on when you want to follow the agent's reasoning step by step. |
-| `personal.pr_comment_bot_icon` | A | boolean | `false` |  | Prefix every PR review-comment reply with 🤖 so humans can tell agent-authored comments apart from teammate comments at a glance. Cosmetic only; the comment body itself never changes. |
 | `personal.pr_progress_comments` | C | boolean | `false` |  | Permit the agent to post unsolicited progress / status comments on an open PR (e.g. "CI fix iteration #2", "still blocked on workflow scope"). Default off — most teammates find them noisy. User-invoked flows (/fix:pr-comments, /create-pr, /code-review, explicit "post a comment that …") are NOT gated by this setting. See rules/no-pr-progress-comments.md. |
 | `personal.rtk_installed` | A | boolean | `false` |  | Does this machine have rtk (Rust Token Killer, a third-party Apache-2.0 tool: https://github.com/rtk-ai/rtk) on PATH — verified as the real Token Killer, not the unrelated Rust Type Kit that shares the binary name? When true the agent wraps verbose CLI output (git, tests, linters, docker, npm, composer) with rtk (upstream reports 60-90% token savings — their estimate). Leave false if rtk is missing — the agent falls back to tail / grep. The wizard overwrites this from a live two-stage probe (PATH presence + `rtk gain` identity check). |
 | `personal.user_type` | C | string | `""` | `` · `consultant` · `creator` · `developer` · `finance` · `founder` · `gtm` · `ops` | Optional persona axis used by the skill-suggester to surface the relevant subset (consultant / creator / developer / finance / founder / gtm / ops). Empty = no filter, all skills available. You can change this any time without re-running setup. |
-
-## pipelines
-
-| Key | Class | Type | Default | Allowed values | What it does |
-|---|---|---|---|---|---|
-| `pipelines.skill_improvement` | A | boolean | `true` |  | After a meaningful task the agent proposes a learning-capture turn (new skill, rule tweak, guideline). Turn off if you find the prompts noisy — you can still run /memory:promote manually. |
 
 ## planning
 
@@ -288,7 +247,6 @@ explanation lives now that the file no longer carries it as comments.
 |---|---|---|---|---|---|
 | `project.audience` | C | string | `"public"` | `self` · `internal` · `client` · `public` | Who this project is built for — read by the demand gate (§ 8-pre of docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md), whose L0-L4 ladder measures MARKET demand and is meaningless where no market is intended. self = a tool its maintainer builds for themselves; the gate is inert and work is classified L-self (build) instead of being deferred for lack of a user population nobody wants. internal = a team tool; only "what breaks without it?" survives. client = built for a named client, who is the requester rather than a market segment. public (default) = a product with an intended market; full three-question gate, behaviour unchanged from before this key existed. |
 | `project.improvement_pr_branch_prefix` | A | string | `"improve/agent-"` |  | Branch-name prefix for improvement PRs the agent opens against project.upstream_repo (e.g. "improve/agent-add-react-skill"). Pick a prefix your repo conventions allow. |
-| `project.pr_template` | C | string | `".github/pull_request_template.md"` |  | Path (relative to project root) to the PR-description template the agent fills in before opening a pull request. Override only if your repo keeps the template somewhere non-standard. |
 | `project.upstream_repo` | C | string | `""` |  | GitHub slug (owner/repo) the upstream-contribute skill targets when you ask the agent to push a learning back to the shared agent-config package. Empty = improvement PRs are disabled. |
 
 ## projection
@@ -310,28 +268,16 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `reasoning.auto_gate` | C | boolean | `true` |  | Engage the discipline only where it pays, using table-free signals (task triviality + agent-self-assessed host reasoning strength; no runtime model->band lookup, per ADR-035). false = gate on task-signal + the component toggles only. |
-| `reasoning.components.complexity_first` | C | boolean | `true` |  | Risk-first: resolve the load-bearing unknown before the easy parts (RDP derivation, not a Fable-documented behavior). |
-| `reasoning.components.decision_ledger` | C | boolean | `true` |  | Log decision + alternatives + reason + revisit-if; escalates to decision-record/ADR when durable. |
-| `reasoning.components.grounding` | C | boolean | `true` |  | Explore the environment / close info-gaps before designing. |
-| `reasoning.components.intent` | C | boolean | `true` |  | Infer the underlying goal before solving the literal ask (standard host only). |
-| `reasoning.components.notes_first` | C | boolean | `true` |  | Keep hypotheses/predictions/decisions in session notes; the response carries conclusions + evidence only. |
-| `reasoning.components.orchestrator` | C | boolean | `true` |  | Sequence the reasoning chain (ground->intent->notes->gather->audit->verify) as one system; the single coordination point. |
-| `reasoning.components.prediction_tracking` | C | boolean | `true` |  | Log prediction + confidence + outcome + lesson (calibration loop). |
-| `reasoning.components.uncertainty_budget` | C | boolean | `true` |  | Per-dimension uncertainty score that feeds adaptive effort. |
-| `reasoning.components.verifier_default` | C | boolean | `true` |  | Run a fresh-context verifier on the structural-complexity gate (branching/constraints/stateful/irreversible + token floor). |
 | `reasoning.enabled` | C | boolean | `true` |  | Master switch for the Reasoning Discipline Protocol (RDP). false = the whole layer is inert (zero overhead). |
 
 ## roadmap
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `roadmap.dashboard_regen_cadence` | A | string | `"every_5_steps"` | `per_step` · `every_5_steps` · `phase_boundary` | How often the agent regenerates agents/roadmaps/dashboard.md during a roadmap run. every_5_steps = batch the regen (default). per_step = after every step (freshest dashboard, highest subprocess overhead). phase_boundary = only at phase edges. A rename, phase add, or archive always regenerates immediately regardless. |
 | `roadmap.gate_budget.max_cost_per_rolling_7d_usd` | C | unknown | `null` |  | Rolling 7-day USD ceiling for class-1 gate execution, summed from the append-only receipt ledger at agents/runtime/state/gate-budget-ledger.jsonl. A run whose estimate would cross it renders instead of running. null (default) = no rolling ceiling, per ADR-279. A per-run cap alone bounds one mistake, not a week of them, which is why option (a) of b-gate-budget-preauth carries two numbers — but each cap now bounds on its own, so setting one and leaving the other null is supported. |
 | `roadmap.gate_budget.max_cost_per_run_usd` | C | unknown | `null` |  | Per-run USD ceiling for a CLASS-1 roadmap blocker executed via `agent-config gates --execute`. A class-1 entry whose **Budget:** field states a larger figure renders its consent line instead of running. null (default) = no per-run ceiling, per ADR-279: a spend bound applies only where one was set, and the absence of a bound is not a refusal. Bounds the size of an authorised spend; never supplies the authorisation — `--confirm` is still required on every class-1 run, set or unset. |
 | `roadmap.horizon_weeks` | C | integer | `0` |  | Optional planning horizon (weeks) the agent shows in roadmap framing ("next 4 weeks"). Set 0 to omit the horizon — most teams prefer to ship without a hardcoded window. |
 | `roadmap.quality_cadence` | C | string | `"per_phase"` | `end_of_roadmap` · `per_phase` · `per_step` | When the agent runs the full quality / test suite during /roadmap:process-* runs. per_phase = after each phase boundary (default since 2026-09-13 — end_of_roadmap lets errors compound across phases, which is expensive in a multi-phase autonomous run nobody is watching). end_of_roadmap = once, after the last step (fastest). per_step = after every single step (slowest, highest confidence). |
-| `roadmap.skip_pre_run_gate` | C | boolean | `true` |  | Skip the /roadmap:process-* pre-run confirmation gate. true (default) starts processing immediately and surfaces the resolved config inline; false shows the numbered-options gate and waits. A genuine "which roadmap?" ambiguity always prompts regardless. |
 
 ## screenshots
 
@@ -346,7 +292,6 @@ explanation lives now that the file no longer carries it as comments.
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
 | `subagents.adversarial_council` | C | string | `"off"` | `off` · `ask` · `on` | Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only — a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed. |
-| `subagents.downshift` | C | boolean | `true` |  | Route delegable sub-tasks to the lowest-capable model tier (cost + speed via model downshift). false = every subagent runs on the session tier. |
 | `subagents.implementer_model` | C | string | `""` |  | Override the model the orchestrator dispatches to subagents that write code (e.g. claude-sonnet-4, gpt-5). Empty (default) = inherit the session's primary model — cheapest and usually right. |
 | `subagents.judge_model` | C | string | `""` |  | Override the model used for review / judge subagents that critique implementer output. Empty (default) = one tier above the implementer model — picks up nuance the implementer missed. |
 | `subagents.max_parallel` | C | integer | `3` |  | Limit on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs — a value the model reads from settings; no code counts spawns against it. Raise for faster fan-out, lower if you hit rate limits or want lower token spend. |
@@ -355,18 +300,6 @@ explanation lives now that the file no longer carries it as comments.
 | `subagents.model_map.lite` | C | string | `""` |  | Model alias for lite-tier sub-tasks. Empty = the tier runtime default. |
 | `subagents.model_map.medium` | C | string | `""` |  | Model alias for medium-tier sub-tasks. Empty = the tier runtime default. |
 | `subagents.quota_arbitrage` | C | boolean | `true` |  | Prefer a separate quota-pool model for delegable sub-tasks where the host manifest reports one. Optional bonus only — identical behaviour (minus the quota win) where unsupported. Never load-bearing. |
-
-## telegraph
-
-| Key | Class | Type | Default | Allowed values | What it does |
-|---|---|---|---|---|---|
-| `telegraph.speak` | C | boolean | `false` |  | Whether the telegraph-speak rule ships at all. false (default) = DORMANT: compile_router omits the rule from dist/router.json entirely, so its body never reaches a host. This is the only lever that stops the cost. Set true only after an output-side bench clears the kill-criterion bar (docs/adrs/telegraph/0002). |
-
-## tokens
-
-| Key | Class | Type | Default | Allowed values | What it does |
-|---|---|---|---|---|---|
-| `tokens.rich_skills` | C | string | `"on"` | `on` · `ask` · `off` | Whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak + thin-projector trimming), consumed by the token-budget-discipline rule. on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask once per session before loading. |
 
 ## update_check
 
@@ -378,11 +311,7 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `verbosity.intent_announcements` | A | boolean | `false` |  | Intent narration before tool batches ("Let me check X…"). Only honored when personal.play_by_play is ALSO true (the direct-answers narration carve-out requires both). false (default) = act and emit the result. |
 | `verbosity.offer_council_in_delivery` | A | boolean | `false` |  | Offer "run AI Council on this?" inside delivery commands (/feature-plan, /review-changes, /roadmap-create). Council commands themselves are unaffected. |
-| `verbosity.post_action_reports` | A | string | `"minimal"` | `off` · `minimal` · `full` | Status blocks after a successful action. off = errors only; minimal (default) = one-line confirmation; full = bullet list. |
-| `verbosity.preview_artifacts` | C | boolean | `false` |  | Show generated commit messages, PR titles/bodies, branch names before acting. false (default) = use generated content directly (/commit terse path). |
-| `verbosity.routine_confirmations` | C | boolean | `false` |  | Confirmation prompts for routine workflow steps with one obvious answer. Iron-Law gates (commit-policy, scope-control git-ops, Hard Floor) ALWAYS ask regardless. |
 
 ## See also
 

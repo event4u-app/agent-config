@@ -33,7 +33,7 @@ CLOSE THE LOOP WITH ONE END-SUMMARY. NEVER MAKE THE USER RE-DERIVE WHERE THINGS 
 ## When NOT to over-apply
 
 - A one-shot answer or trivial reply needs no plan-anchor or end-summary (`direct-answers` brevity wins).
-- Don't narrate for its own sake — the thread is orientation, not play-by-play (respect `personal.play_by_play`).
+- Don't narrate for its own sake — the thread is orientation, not play-by-play.
 - Never let the through-line inflate a reply past what the task needs; brevity and the one-recommendation rule win on conflict.
 
 ## See also

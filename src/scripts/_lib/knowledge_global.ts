@@ -207,6 +207,11 @@ function _deep_default_merge(base: SettingsDict, override: SettingsValue): Setti
  * Reads the full settings cascade (project + user-global whitelist) via
  * {@link load_agent_settings}. Missing block → defaults (sharing ON for the
  * safe tiers). Tolerant: any read failure returns the hard defaults.
+ *
+ * Only `enabled` and `allowed_tiers` are settings. Redaction, the promotion
+ * threshold and the freshness windows are the fixed values in
+ * {@link DEFAULT_CONFIG}: their keys were retired, so a leftover value is
+ * never merged here — the settings loader warns about it instead.
  */
 export function load_global_sharing_config(
     options: { cwd?: string | null; env?: user_global_paths.EnvMap | null } = {},
@@ -221,7 +226,15 @@ export function load_global_sharing_config(
     }
     let block: SettingsValue = (settings ?? {})['knowledge'] ?? {};
     block = _is_plain_dict(block) ? (block['global_sharing'] ?? {}) : {};
-    return _deep_default_merge(DEFAULT_CONFIG, block);
+    const live: SettingsDict = {};
+    if (_is_plain_dict(block)) {
+        for (const key of ['enabled', 'allowed_tiers']) {
+            if (key in block) {
+                live[key] = block[key];
+            }
+        }
+    }
+    return _deep_default_merge(DEFAULT_CONFIG, live);
 }
 
 /** True when the global-sharing layer is active. `enabled: false` no-ops. */

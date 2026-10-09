@@ -183,13 +183,10 @@ already live.
   `"The fallback covers legacy data where getTime() returns a string."`
 - Never start multiple replies with "Fixed". Mix it up: "Done", "Good catch", "Yep", etc.
 
-### Bot icon prefix
+### No bot icon prefix
 
-Read `personal.pr_comment_bot_icon` from `.agent-settings.yml`. If `true` (default),
-prefix every reply with `🤖 ` so reviewers can see at a glance that the reply was
-bot-authored.
-
-Example: `🤖 Good catch, fixed.`
+Never prefix a reply with `🤖 ` — it is on the universal blacklist of
+[`no-decorative-emojis-in-git-surfaces`](../../../rules/no-decorative-emojis-in-git-surfaces.md).
 
 If `false` or `.agent-settings.yml` doesn't exist, do NOT add the prefix.
 

@@ -306,7 +306,7 @@
     },
     "auto_detect": {
       "type": "boolean",
-      "description": "6.1.0 orchestrator auto-detection opt-in (Step 1, non-interactive-contract). When true, the orchestrator auto-detects its sub-command per the confidence-tiered detection table instead of always showing the menu, honoring the non-interactive-contract (TTY/CI detection, --yes/--json, abort schemas). Per-orchestrator kill-switch: set false to always show the menu; overridable globally via commands.auto_detect in .agent-settings.yml and per-invocation via --no-auto-detect. Only orchestrators (type: orchestrator) carry it."
+      "description": "6.1.0 orchestrator auto-detection opt-in (Step 1, non-interactive-contract). When true, the orchestrator auto-detects its sub-command per the confidence-tiered detection table instead of always showing the menu, honoring the non-interactive-contract (TTY/CI detection, --yes/--json, abort schemas). Per-orchestrator kill-switch: set false to always show the menu; per-invocation override via --no-auto-detect (there is no global settings switch). Only orchestrators (type: orchestrator) carry it."
     }
   }
 }

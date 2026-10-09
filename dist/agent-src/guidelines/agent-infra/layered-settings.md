@@ -18,7 +18,7 @@ on user request.
 | File | Git | Scope | Owner | Example values |
 |---|---|---|---|---|
 | `.agent-project-settings.yml` | **committed** | team / repo | lead maintainer | `project.stack`, `quality.php.tools`, `memory.dogfood` |
-| `~/.event4u/agent-config/agent-settings.yml` | **n/a** (outside repo) | individual developer · cross-project | individual | `name`, `ide`, `rule_loading_tier`, `personal.bot_icon`, `personal.autonomy`, `memory.cadence` (legacy `~/.config/agent-config/agent-settings.yml` read as fallback) |
+| `~/.event4u/agent-config/agent-settings.yml` | **n/a** (outside repo) | individual developer · cross-project | individual | `name`, `ide`, `rule_loading_tier`, `personal.autonomy` — the full whitelist is `MERGEABLE_KEYS` in `scripts/_lib/agent_settings.ts` (legacy `~/.config/agent-config/agent-settings.yml` read as fallback) |
 | `agents/settings/.agent-settings.yml` | **gitignored** | individual developer · this project | individual | `personal.ide`, `personal.user_name`, `subagents.max_parallel`, `onboarding.onboarded` | <!-- ref-ignore -->
 
 > **Canonical location (ADR-038):** the developer file lives in the settings

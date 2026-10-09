@@ -96,18 +96,11 @@ Once all merges succeed:
 git checkout {head-branch-of-target-PR}
 ```
 
-### 7. Report (verbosity-gated)
+### 7. Report
 
-Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
-`minimal`).
-
-- `off` → emit nothing on success; surface warnings/errors only.
-- `minimal` (default) → one line:
-  `→ {branch} ready · {N} branches merged · {warnings or "clean"}`.
-- `full` → multi-line block listing:
-  - Which branch chain was processed (in order)
-  - That the target branch is now checked out and up to date
-  - Any warnings (e.g. branch was already up to date)
+One line on success:
+`→ {branch} ready · {N} branches merged · {warnings or "clean"}`.
+Warnings and errors are always surfaced.
 
 ## Rules
 

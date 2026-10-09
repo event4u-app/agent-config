@@ -60,7 +60,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  1e52ab319d611d3fc26ff8aa445b99d161f225338d3b604a2fb5fb30bfdc5f40
+SET-SHA256  3b3ccbe1fb950849124714bd67a0c6c800a24b8f63270d5afebc8ed59547c62b
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -365,6 +365,20 @@ open and which this file does not settle.
 > follow-up because #2252 re-took the measurements but not this pin, which is what
 > turned the holdout-pin test red.
 
+> **+4 on 2026-10-09** (#2274, the retirement of 46 derivable settings keys).
+> `command-routing`, `feature-planning`, `po-discovery` and `source-discovery`
+> gained a corpus for the touched-skill reason: the change removed prose about
+> retired settings keys from each, and `check_routing_coverage` requires every
+> touched skill to carry one. Their name hashes are 0xb5 = 181, 0x46 = 70,
+> 0x60 = 96 and 0xe4 = 228, all above the ceiling of 51, so all four are
+> **train**: no holdout row moves, the sealed set is the same 27, and the ordering
+> claim is untouched. `SET-SHA256` moves because it is computed over ALL rows —
+> `1e52ab31…` -> `3b3ccbe1…`. Both train-side published measurements are re-taken
+> in the same change: delta-recall moved 3.786 -> 2.386 pp (still below the
+> 5.0 pp bar) and delta-false-activation moved 6.787 -> 6.608 pp (still above the
+> 2.0 pp guard). The verdict is unchanged in kind — `harmful`, on the same
+> false-activation guard it already failed. No bar was edited.
+
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|
 | `adr-create` | `18995bba7bbdc905296f545a25c90cd94fa306909d78af8fc79e3d5621f313f6` |
@@ -387,6 +401,7 @@ open and which this file does not settle.
 | `bug-analyzer` | `c2eb95aada033854401cdb6a951fac9b7cac633b0ee4142f126eece78b1953eb` |
 | `code-refactoring` | `a6147167bd6c11a4c4f2b0a4bae924f403f54d16aa0334b089b6bba744d66f77` |
 | `code-review` | `68dfc344a28c8d4b7bf79ff57c57642b6904ad25cc3f1815d34a1ab73de99224` |
+| `command-routing` | `8fdb24b80711a22212c9c31913630e2b06a5fade150f9de87b3ecdde6f23d0d4` |
 | `competitive-moat-analysis` | `e149d75967c3d407ba74512527934b77fb3ede128c1bbcdecdd88e3c51448b67` |
 | `complexity-first-planning` | `7377795a8aca39c574ed4a1bc2074f7da451bf1ce7095bdb0ccdc50e60b9757b` |
 | `contract-review` | `9b5e4a70563ed2e07e463d59a1f179b79f44d37f38323b23013227bbd5aec73b` |
@@ -405,6 +420,7 @@ open and which this file does not settle.
 | `evaluate-llm-feature` | `0208ae44de28e4a96ebc116d329250e4a6006b00cbb0b2d638aaf4a005423f13` |
 | `existing-ui-audit` | `1cec11b0fc1696d5186a30c8a73fe3b10efa7ccb9a956d17a995e7415180a35e` |
 | `experiment-loop` | `7b64978277e8b29b2e58080914329d14274375f0195b59119cad7cede6ec55c0` |
+| `feature-planning` | `53747ead011ed29c480d407f66ff3803b43e585f390916ce0e5187340973142c` |
 | `forensics-report` | `ae4a0a37cd21eeb99b798839d99195e580dbd5bdb017642ace5e462db0593234` |
 | `frontend-render-security` | `a881e51be1fb62289f71f02ae53177629734e23e5fd5aa3a4a43c972fb23b7f1` |
 | `gated-reach` | `8d39468e75ff725b8e4454fc3a783c2490447ac3f8658ec91e62dbc48352c8a1` |
@@ -435,6 +451,7 @@ open and which this file does not settle.
 | `operational-readiness` | `da1b223e882ce0a02637befb436d97df4264f96003ce1c55425c75ec62535322` |
 | `pdf-tools` | `3f7814305369b9e2b5d367fa0253caf2448aa93435989e2dfa9f2149241e90bc` |
 | `persona-improvement` | `510402b135807db3ead05e2e6ab3c315d86caeb55b7bf45b4919d2ba69e56804` |
+| `po-discovery` | `ac9cf914b69004d4d351272fbaf790126ff6dd255263f8020213bded6226b8b5` |
 | `prediction-pool-optimizer` | `5eab312a114476b7fc8dc1ef3846b40d759c0db580c75e14b7abbdc541bc2b7f` |
 | `prompt-engineering-image` | `d00e1aeb325be93ad2b510e3438f54368b9130eb0688f177dd5c68e473f87237` |
 | `prompt-engineering-patterns` | `4c7db08fbc25fdca01a72f2175785d5b8e0d805c1479a7b18bd972968e6d4240` |
@@ -447,6 +464,7 @@ open and which this file does not settle.
 | `security-maturity-assessment` | `071894293d4c9a1997843d9bfc78f69b2fc64c0e5306544756cb6853bfd31b30` |
 | `server-hardening` | `8301bedcbcd9129f8c55d3640e66164baec4753e92a55a8b56df54449e3f3f46` |
 | `skill-writing` | `d2beba3976f5918450cc4fa5c96f7fdae488ef5ffebe1f3b05fe3519acbb8a26` |
+| `source-discovery` | `e32a41fdd41414cc4734ebf440a253f592775046f603c9daeec6a28f1b05eee3` |
 | `spreadsheet-authoring` | `959466aba0e7f34aae0d8eb69ee427d94049627d905410b322045ac6be0a1599` |
 | `storybook-workshop` | `3aff4c3fddd06e0e265ca4afbb02cdbce16b000dd2d3fd6405504d015a1efd27` |
 | `supply-chain-intake` | `e61b2fcb6409cf0817ea8527a1fda3b1cdabb35e28264146a0d449991e9fe87c` |

@@ -496,7 +496,26 @@ describe('settings', () => {
         expect(out.equals(new Settings())).toBe(true);
     });
 
-    it('full block', () => {
+    it('a partial section keeps every unset field at its default', () => {
+        const p = writeSettings(
+            tmpPath(),
+            'commands:\n  suggestion:\n    blocklist:\n      - /commit\n',
+        );
+        const out = load_settings(p);
+        const defaults = new Settings();
+        expect(out.enabled).toBe(defaults.enabled);
+        expect(out.confidence_floor).toBe(defaults.confidence_floor);
+        expect(out.cooldown_seconds).toBe(defaults.cooldown_seconds);
+        expect(out.max_options).toBe(defaults.max_options);
+        expect(out.blocklist).toEqual(['/commit']);
+    });
+
+    it('the retired knobs are ignored, the blocklist is read', () => {
+        // `enabled`, `confidence_floor`, `cooldown_seconds` and `max_options`
+        // were retired with their defaults as fixed behavior. An older install
+        // that still carries non-default values gets the defaults, not its
+        // values — the loader warns about each one — while `blocklist`, which
+        // stays a setting, is still honoured.
         const p = writeSettings(
             tmpPath(),
             'commands:\n' +
@@ -510,40 +529,20 @@ describe('settings', () => {
                 '      - /create-pr\n',
         );
         const out = load_settings(p);
-        expect(out.enabled).toBe(false);
-        expect(out.confidence_floor).toBeCloseTo(0.75);
-        expect(out.cooldown_seconds).toBe(120);
-        expect(out.max_options).toBe(3);
+        const defaults = new Settings();
+        expect(out.enabled).toBe(true);
+        expect(out.confidence_floor).toBe(defaults.confidence_floor);
+        expect(out.cooldown_seconds).toBe(defaults.cooldown_seconds);
+        expect(out.max_options).toBe(defaults.max_options);
         expect(out.blocklist).toEqual(['/commit', '/create-pr']);
     });
 
-    it('partial keeps defaults', () => {
-        const p = writeSettings(tmpPath(), 'commands:\n  suggestion:\n    enabled: false\n');
-        const out = load_settings(p);
-        expect(out.enabled).toBe(false);
-        expect(out.confidence_floor).toBe(new Settings().confidence_floor);
-        expect(out.max_options).toBe(new Settings().max_options);
-        expect(out.blocklist).toEqual([]);
-    });
-
-    it('floor clamped (high)', () => {
-        const p = writeSettings(tmpPath(), 'commands:\n  suggestion:\n    confidence_floor: 1.5\n');
-        expect(load_settings(p).confidence_floor).toBe(1.0);
-    });
-
-    it('negative floor clamped', () => {
-        const p = writeSettings(tmpPath(), 'commands:\n  suggestion:\n    confidence_floor: -0.2\n');
-        expect(load_settings(p).confidence_floor).toBe(0.0);
-    });
-
-    it('garbage int falls back', () => {
-        const p = writeSettings(
-            tmpPath(),
-            'commands:\n  suggestion:\n    cooldown_seconds: not-a-number\n    max_options: nope\n',
-        );
-        const out = load_settings(p);
-        expect(out.cooldown_seconds).toBe(new Settings().cooldown_seconds);
-        expect(out.max_options).toBe(new Settings().max_options);
+    it('the fixed knobs are the shipped defaults', () => {
+        const defaults = new Settings();
+        expect(defaults.enabled).toBe(true);
+        expect(defaults.confidence_floor).toBe(0.6);
+        expect(defaults.cooldown_seconds).toBe(600);
+        expect(defaults.max_options).toBe(4);
     });
 
     it('blocklist filters non-strings', () => {
@@ -580,7 +579,7 @@ describe('settings', () => {
         expect(out.map((m) => m.command)).toEqual(['fix-ci']);
     });
 
-    it('disabled short-circuits rank', () => {
+    it('a leftover enabled: false no longer silences rank', () => {
         const specs_by_name = makeSpecsByName(makeSpecs());
         const p = writeSettings(tmpPath(), 'commands:\n  suggestion:\n    enabled: false\n');
         const settings = load_settings(p);
@@ -590,7 +589,7 @@ describe('settings', () => {
         const out = rank(raw, settings, specs_by_name, {
             raw_message: 'commit my changes please now',
         });
-        expect(out).toEqual([]);
+        expect(out.map((m) => m.command)).toEqual(['commit']);
     });
 });
 

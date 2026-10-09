@@ -1,0 +1,13 @@
+{
+    "skill": "po-discovery",
+    "last_eval": "2026-10-09",
+    "description": "3 exemplars + 2 near-misses + 1 counterexample. Authored 2026-10-09 when the settings-key retirement touched this skill. Exemplars shape a fuzzy ask into a backlog item, including the German form. Near-misses are sizing a ticket and planning a feature's architecture, both downstream of a refined item.",
+    "queries": [
+        { "q": "help me write this ticket — customers say the dashboard is slow", "trigger": true, "class": "exemplar" },
+        { "q": "turn this vague request into a user story with clear acceptance criteria", "trigger": true, "class": "exemplar" },
+        { "q": "mach aus dieser groben Anfrage ein sauberes Backlog-Item mit Problem und Akzeptanzkriterien", "trigger": true, "class": "exemplar", "language": "de" },
+        { "q": "how many story points is this ticket?", "trigger": false, "class": "near-miss", "note": "sizing an already-shaped item → estimate-ticket" },
+        { "q": "plan the architecture and phases for the new billing feature", "trigger": false, "class": "near-miss", "note": "planning a feature end to end rather than framing one backlog item → feature-planning" },
+        { "q": "deploy the staging environment", "trigger": false, "class": "counterexample" }
+    ]
+}

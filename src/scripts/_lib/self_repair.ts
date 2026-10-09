@@ -322,7 +322,7 @@ function stemOf(token: string): string {
     return base.replace(/\.md$/, '');
 }
 
-/** Dotted settings-key shape — `personal.autonomy`, `tokens.rich_skills`, … */
+/** Dotted settings-key shape — `personal.autonomy`, `memory.redact_patterns`, … */
 const DOTTED_KEY_RE = /^[a-z0-9_]+(\.[a-z0-9_]+)+$/;
 
 /**

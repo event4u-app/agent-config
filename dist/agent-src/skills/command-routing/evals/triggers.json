@@ -1,0 +1,13 @@
+{
+    "skill": "command-routing",
+    "last_eval": "2026-10-09",
+    "description": "3 exemplars + 2 near-misses + 1 counterexample. Authored 2026-10-09 when the settings-key retirement touched this skill. Exemplars are a slash-command invocation, a pasted command body, and the German form. Near-misses share the command vocabulary but ask to author a command or to explain git, not to route one.",
+    "queries": [
+        { "q": "/create-pr", "trigger": true, "class": "exemplar" },
+        { "q": "here is the body of the fix-ci command file — run it for this branch", "trigger": true, "class": "exemplar" },
+        { "q": "führ /commit für die aktuellen Änderungen aus", "trigger": true, "class": "exemplar", "language": "de" },
+        { "q": "write a new slash command that summarizes open PRs", "trigger": false, "class": "near-miss", "note": "authoring a command file, not routing an invocation → command-writing" },
+        { "q": "what is the difference between git rebase and git merge?", "trigger": false, "class": "near-miss", "note": "git vocabulary without a command invocation → git-workflow" },
+        { "q": "rename this variable to something clearer", "trigger": false, "class": "counterexample" }
+    ]
+}

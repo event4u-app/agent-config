@@ -87,18 +87,22 @@ describe('work_engine.hooks.settings — TS unit checks', () => {
         expect(snapshotTs(onlyHook)['chat_history_enabled']).toBe(false);
     });
 
-    it('memory.visibility: off flips memory_visibility_off', () => {
+    it('memory.visibility: off flips memory_visibility_off; a leftover cadence is ignored', () => {
+        // `memory.cadence` was retired with `always` as the fixed cadence, so an
+        // older install's `cadence: AUTO` no longer reaches the hook.
         const p = writeYaml('hooks:\n  enabled: true\nmemory:\n  visibility: off\n  cadence: AUTO\n');
         const snap = snapshotTs(p);
         expect(snap['memory_visibility_off']).toBe(true);
-        expect(snap['memory_cadence']).toBe('auto');
+        expect(snap['memory_cadence']).toBe('always');
     });
 
-    it('decision_engine.surface_traces mirrors into decision_trace', () => {
+    it('a leftover decision_engine.surface_traces is ignored and the trace stays off', () => {
+        // Retired with its default (false) as the fixed behavior. The key is
+        // still accepted so the rest of the block parses.
         const p = writeYaml('hooks:\n  enabled: true\ndecision_engine:\n  surface_traces: true\n');
         const snap = snapshotTs(p);
-        expect(snap['de_surface_traces']).toBe(true);
-        expect(snap['decision_trace']).toBe(true);
+        expect(snap['de_surface_traces']).toBe(false);
+        expect(snap['decision_trace']).toBe(false);
     });
 });
 
@@ -141,10 +145,10 @@ describe('work_engine.hooks.settings — full-resolution contract', () => {
             "de_block_on_risk": "high",
             "de_min_confidence": "medium",
             "de_on_block": "ask",
-            "de_on_block_fallback": "warn",
+            "de_on_block_fallback": "stop",
             "de_require_memory_hits": false,
-            "de_surface_traces": true,
-            "decision_trace": true,
+            "de_surface_traces": false,
+            "decision_trace": false,
             "directive_set_guard": true,
             "enabled": true,
             "halt_surface_audit": true,

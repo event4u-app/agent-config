@@ -55,10 +55,10 @@ verbatim, and this class must not become the precedent that erodes it.
 **It governs writes, not reads.** Every class is readable by everything. A C
 class does not hide a value; it refuses to let a non-human change it.
 
-**It governs writes, not asks.** Three settings ship an `ask` value in their own
-enum (`tokens.rich_skills`, `subagents.adversarial_council`,
-`decision_engine.on_block`). It was four until ADR-229 deleted
-`worktrees.mode`.
+**It governs writes, not asks.** Two settings ship an `ask` value in their own
+enum (`subagents.adversarial_council`, `decision_engine.on_block`). It was four
+until ADR-229 deleted `worktrees.mode`, and three until `tokens.rich_skills` was
+retired on 2026-10-09.
 Those are C-class here, and that is not a contradiction: the class says who may
 *persist* a new value; the `ask` value says what happens *at runtime* when the
 setting is already set to `ask`. A C-class key set to `ask` still produces a
@@ -95,9 +95,11 @@ backwards. Tests 1–7 ask *what can the attacker do*; test 8 asks *what can the
 attacker hide*. A settings write that erases the trail is not less severe than
 one that raises a budget — it is the one that makes the other invisible.
 
-`commands.suggestion.enabled` is the worked counter-example: it is a master
-switch, and it is **A**, because switching it off removes no gate, no spend, no
-authority, and no audit trail — it removes a convenience.
+`commands.suggestion.enabled` is the worked counter-example: it was a master
+switch, and it was **A**, because switching it off removed no gate, no spend, no
+authority, and no audit trail — it removed a convenience. (The key itself was
+retired on 2026-10-09 with its default as the fixed behavior; the reasoning
+about its class is what this paragraph keeps.)
 
 ## B eligibility — the invariant
 
@@ -212,7 +214,7 @@ could **soak** before it bound, and a concern that is off does not run, so the
 switch made the soak it was protecting impossible. What decides whether that
 gate fires is now what should have decided it from the start — each detector's
 own trigger conditions. A leftover block warns once and is ignored
-(`REMOVED_KEYS`, `src/scripts/_lib/agent_settings.ts`).
+(`REMOVED_KEYS`, `src/scripts/_lib/settings_removed_keys.ts`).
 
 One switch survives these deletions on purpose, and it is not the same shape
 wearing a different name.
@@ -245,10 +247,14 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 
 | Class | Keys |
 |---|---|
-| A — preference | 26 |
+| A — preference | 9 |
 | B — consent | 3 |
-| C — guarded | 129 |
-| **Total** | **158** |
+| C — guarded | 100 |
+| **Total** | **112** |
+
+<!-- derivable-retirement-2026-10-09 -->
+It fell to 112 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 46 `derivable` keys (17 A, 29 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behavior, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`; 2.2 reasoning protocol switches — `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`; 2.3 roadmap cadence — `roadmap.skip_pre_run_gate`, `roadmap.dashboard_regen_cadence`; 2.4 command suggestion and PR creation — `commands.auto_detect`, `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`, `commands.suggestion.cooldown_seconds`, `commands.suggestion.max_options`, `commands.create_pr.api_examples`, `commands.create_pr.ui_paths`, `commands.create_pr.api_paths`; 2.5 memory and knowledge sharing — `memory.cadence`, `memory.review_threshold`, `knowledge.global_sharing.redaction.enabled`, `knowledge.global_sharing.redaction.halt_on_trigger`, `knowledge.global_sharing.auto_promote_threshold`, `knowledge.global_sharing.freshness.hypothesis_after_days`, `knowledge.global_sharing.freshness.stale_after_days`; 2.6 hooks and engine — `hooks.concern_budget.max_per_event`, `hooks.concern_budget.hard_fail`, `decision_engine.surface_traces`, `decision_engine.on_block_fallback`, `explain.enable_last`; 2.7 remaining — `project.pr_template`, `pipelines.skill_improvement`, `consistency.cross_source`, `subagents.downshift`, `ai_team.suppress_setup_hint`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
+<!-- /derivable-retirement-2026-10-09 -->
 
 It rose to 158 on 2026-10-06 when the `git:` section added three C keys —
 `commit_format`, `branch_pattern`, `update_strategy` — so a team's commit
@@ -387,11 +393,11 @@ the template, which is the drift this contract exists to prevent.
 
 | Disposition | Keys |
 |---|---|
-| derivable | 83 |
+| derivable | 37 |
 | un-inferrable | 10 |
 | consent | 48 |
 | policy | 17 |
-| **Total** | **158** |
+| **Total** | **112** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -402,8 +408,8 @@ keys were deleted the same day, which is where the −5 `derivable` comes from;
 held open rather than deleted.
 
 `derivable` is the **deletion queue, not a deletion**: a row stays until the
-mechanism it names actually exists, so 83 measures work outstanding, not keys
-about to disappear. The count is expected to fall while `un-inferrable` does not
+mechanism it names actually exists, so its count measures work outstanding, not
+keys about to disappear. The count is expected to fall while `un-inferrable` does not
 — those 9 plus whatever survives re-examination in `consent` are the floor this
 surface has, and stating it is the point. `policy` is the smallest class and the
 only one whose action is a *move* rather than a keep or a delete: seven keys carry
@@ -496,8 +502,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `rule_loading_tier` | C | `__RULE_LOADING_TIER__` | legacy master switch for rule loading | derivable — `discipline_profile` supersedes it with a documented mapping (minimal→off, balanced→essential, full→full) |
 | `lean_projection.mode` | C | `delivery` | `thin` and `delivery` remove rule bodies from the agent's standing context. Two defaults, and this column carries the template one: the shipped template has said `delivery` since ADR-267, while the parser fallback for a value that resolves from no layer stays `eager-all` (ADR-267 decision 4) | derivable — `probe_host_compliance.ts` already computes the per-host thin/eager recommendation |
 | `lean_projection.hosts` | C | `[claude-code]` | decides WHICH hosts a thinning mode may thin, so an added id removes rule bodies from that host's context | policy — the value is a package-level decision the tree already holds: ADR-267 scopes the shipped `delivery` flip to `claude-code` alone. NOT `derivable`, and the distinction is the whole reason for this row: the mechanism that would compute an admissible host set, `admissibleUnderE3` in `src/scripts/_lib/injection_effect.ts`, admits **nothing** today — `src/config/host-injection-effect.json` carries 1 `observed-false` and 8 `unobserved` rows and no `observed-true` — so a derivation would yield `[]` rather than the shipped `[claude-code]`. Naming a mechanism that returns empty as the replacement would put a key in the deletion queue whose deletion would silently change the default. Move target: the ADR plus that census, once a host earns an `observed-true` row |
-| `telegraph.speak` | C | `false` | ships a rule body; a token-cost lever in both directions | derivable — the telegraph kill-criterion bench verdict is a package-level decision, not a per-install one |
-| `tokens.rich_skills` | C | `"on"` | token-spend lever | derivable — the skill's own `token_budget_class: rich` declaration plus the CI ceiling in `lint_token_budget_discipline.ts` |
 | `cost.budgets.daily` | C | `0` | rolling spend ceiling | consent |
 | `cost.budgets.weekly` | C | `0` | rolling spend ceiling | consent |
 | `cost.budgets.monthly` | C | `0` | rolling spend ceiling | consent |
@@ -509,19 +513,11 @@ Rows follow template order, so a diff against the template reads straight down.
 | `personal.ide` | C | `""` | names a binary the agent would execute | un-inferrable |
 | `personal.open_edited_files` | B | `false` | starts invoking that binary on every edit | consent |
 | `personal.rtk_installed` | A | `false` | auto-detected machine fact | derivable — the wizard's own two-stage PATH probe (`which rtk` plus an identity check), which already overwrites the key |
-| `personal.minimal_output` | A | `true` | reply-shape preference | derivable — `direct-answers` Iron Law 3 already fixes reply length per reply |
-| `personal.play_by_play` | A | `false` | narration preference | derivable — `direct-answers`' narration ban is the standing default; an in-turn request is the only thing that lifts it |
 | `personal.canary_name` | B | `""` | arms the session-degradation canary | un-inferrable |
-| `personal.pr_comment_bot_icon` | A | `false` | comment cosmetics | derivable — `no-decorative-emojis-in-git-surfaces` already forbids the icon in PR comments |
 | `personal.pr_progress_comments` | C | `false` | authorises unsolicited outbound comments on a PR | consent |
 | `personal.autonomy` | C | `auto` | suppresses confirmation questions | derivable — `no-cheap-questions`' mode-independent Pre-Send Self-Check decides per question |
 | `personal.user_type` | C | `"__USER_TYPE__"` | master axis filtering the projected surface | derivable — `profile.id` already carries the persona axis over a near-identical value set |
-| `verbosity.intent_announcements` | A | `false` | narration preference | derivable — `personal.play_by_play` already gates the narration carve-out this key sits under |
-| `verbosity.preview_artifacts` | C | `false` | removes pre-action review of commits, PRs, and branches | derivable — the Iron-Law gates already decide which artefacts need a pre-action look |
-| `verbosity.routine_confirmations` | C | `false` | removes confirmation prompts | derivable — `no-cheap-questions`' Pre-Send Self-Check already decides whether a confirmation carries a real trade-off |
 | `verbosity.offer_council_in_delivery` | A | `false` | offers a paid step; never takes it | derivable — `agent-config council:status`, which answers whether there is anything to offer |
-| `verbosity.post_action_reports` | A | `minimal` | size of a status block | derivable — `direct-answers` Iron Law 3 and the reply-close contract already fix the status block to ONE end-summary |
-| `project.pr_template` | C | `.github/pull_request_template.md` | filesystem path whose contents reach an outbound PR | derivable — GitHub's own PR-template resolution order; the key only caches a filesystem lookup |
 | `project.upstream_repo` | C | `""` | destination of outbound improvement PRs | derivable — the installed package's own `package.json` repository field |
 | `project.improvement_pr_branch_prefix` | A | `improve/agent-` | branch-name cosmetics | derivable — the repo's own branch-naming convention, observable from `git branch -r` |
 | `project.audience` | C | `public` | C-test 4 — it governs the agent's own reasoning discipline: `self` makes the § 8-pre demand gate inert. Who a project is built for is a fact only its maintainer knows, so the agent never infers it and never asks; hand-edit or the GUI write route. The default is today's behaviour, so an install that never sets it is unchanged | policy |
@@ -542,21 +538,8 @@ Rows follow template order, so a diff against the template reads straight down.
 | `chat_history.text_limits.agent` | C | `5000` | cap on how much agent text is written to disk | consent |
 | `chat_history.text_limits.tool` | C | `200` | cap on how much tool payload is written to disk | consent |
 | `chat_history.text_limits.phase` | C | `200` | cap on how much phase text is written to disk | consent |
-| `pipelines.skill_improvement` | A | `true` | proposes a capture; the user still decides | derivable — the pipeline's own trigger condition; the capture is already a user-confirmed proposal |
 | `reasoning.enabled` | C | `true` | master switch for the agent's own reasoning discipline | derivable — the RDP gate's own task-triviality and host self-assessment signals already decide per turn |
-| `reasoning.auto_gate` | C | `true` | decides when that discipline engages | derivable — it only removes the RDP gate's host self-assessment signal, its cheapest and most situational input |
-| `reasoning.components.orchestrator` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal (complex / multi-component vs trivial) |
-| `reasoning.components.notes_first` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal; the notes file only exists once the gate engaged |
-| `reasoning.components.grounding` | C | `true` | a component of the agent's own discipline | derivable — `think-before-action`'s own info-gap condition, which `source-discovery-gate` already tests |
-| `reasoning.components.intent` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's host self-assessment signal |
-| `reasoning.components.complexity_first` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal (a load-bearing unknown exists or it does not) |
-| `reasoning.components.verifier_default` | C | `true` | disabling it removes a verification step | derivable — the verifier's own structural-complexity gate |
-| `reasoning.components.prediction_tracking` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal; a turn with no prediction to log produces no entry |
-| `reasoning.components.decision_ledger` | C | `true` | a component of the agent's own discipline | derivable — the escalation litmus in `notes-first-reasoning` (tactical to notes, durable to ADR) |
-| `reasoning.components.uncertainty_budget` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal; the score feeds adaptive effort only where the gate already engaged |
-| `roadmap.skip_pre_run_gate` | C | `true` | disables a pre-run confirmation gate | derivable — the pre-run gate's own ambiguity condition; a genuine ambiguity prompts regardless |
-| `roadmap.quality_cadence` | C | `end_of_roadmap` | governs when verification runs | derivable — `quality.local_auto_run` decides whether local verification runs, and the `verify-before-complete` evidence gate decides the moment |
-| `roadmap.dashboard_regen_cadence` | A | `every_5_steps` | beat of a derived view | derivable — the dashboard is derived: `roadmap:progress` regenerates deterministically from the roadmap files |
+| `roadmap.quality_cadence` | C | `per_phase` | governs when verification runs. Two defaults: the template and the schema ship `per_phase` (since 2026-09-13), while the reader's prose fallback (`roadmap-process-loop` § 4) and the reference page still say `end_of_roadmap` — which is why the 2026-10-09 retirement left it in the queue | derivable — `quality.local_auto_run` decides whether local verification runs, and the `verify-before-complete` evidence gate decides the moment |
 | `roadmap.horizon_weeks` | C | `0` | a non-zero value relaxes a lint's plate-token ban | policy |
 | `roadmap.gate_budget.max_cost_per_run_usd` | C | `null` | per-run spend ceiling on class-1 gate execution; `null` = none (ADR-279) | consent |
 | `roadmap.gate_budget.max_cost_per_rolling_7d_usd` | C | `null` | rolling spend ceiling on class-1 gate execution; `null` = none (ADR-279) | consent |
@@ -571,13 +554,11 @@ Rows follow template order, so a diff against the template reads straight down.
 | `design.approximation.enabled` | C | `false` | lets a value change without a per-value confirmation; enabling it is a consumer-facing default flip | consent |
 | `design.approximation.tolerance.color` | C | `null` | decides which colour deviations may be taken silently | policy |
 | `design.approximation.tolerance.length` | C | `null` | decides which length deviations may be taken silently | policy |
-| `consistency.cross_source` | C | `"on"` | disables the cross-source discrepancy gate | derivable — the rule's own trigger condition; a discrepancy exists only when two present sources contradict |
 | `code_graph.consumer_index_paths` | C | `[]` | names where this project's OTHER tool writes a code-graph index, so it widens what the graph reader will load and trust | un-inferrable — the path belongs to a tool this package does not ship and cannot probe for; the built-in list is deliberately vendor-neutral, so only the operator knows where their index lands |
 | `screenshots.identity_allowlist` | C | `[]` | allowlist of identities that ship unredacted | consent |
 | `screenshots.forbid_terminal_capture` | C | `true` | kill-switch over the highest-leak capture path | consent |
 | `screenshots.data_bearing_gate` | C | `"on"` | the human-confirmation gate over a published egress | consent |
 | `code_style.docblocks` | A | `minimal` | code convention | derivable — the project's own linter/style config and the docblock density of the touched file, which `standards-from-config` reads off the tree |
-| `subagents.downshift` | C | `true` | routes to another model tier, which is spend and quality | derivable — the per-slice tier assignment in `auto-dispatch-classification`, which the orchestrator already computes per dispatch |
 | `subagents.quota_arbitrage` | C | `true` | spends from a separate quota pool | consent |
 | `subagents.model_map.lite` | C | `""` | names an external model endpoint | un-inferrable |
 | `subagents.model_map.medium` | C | `""` | names an external model endpoint | un-inferrable |
@@ -590,41 +571,23 @@ Rows follow template order, so a diff against the template reads straight down.
 | `ai_team.model` | C | `auto` | names an external model | un-inferrable |
 | `ai_team.allow_delegate` | C | `false` | grants an external tool write access to the repository | consent |
 | `ai_team.max_calls_per_day` | C | `50` | quota cap on a shared budget | consent |
-| `ai_team.suppress_setup_hint` | A | `false` | hint cosmetics | derivable — the hint's own precondition; `agent-config doctor --check team` already knows whether team mode is configured |
 | `ai_team.review_gate.managed` | C | `false` | governs an upstream review gate | consent |
 | `ai_team.review_gate.max_consecutive_blocks` | C | `3` | circuit-breaker threshold | derivable — the existing N=3 validation-loop budget in `autonomous-execution`, which already bounds consecutive failed attempts on one target |
 | `emergency.orchestration_halt` | C | `false` | the one audited incident switch over the always-on orchestration stack — see § The one exception above | consent |
 | `emergency.orchestration_halt_justification` | C | `""` | required non-empty before the halt may be lifted; an audit-trail field | consent |
 | `onboarding.onboarded` | C | `false` | flipping it bypasses the onboarding gate | derivable — the wizard's own completion artefacts; the onboarding hook can read whether setup actually ran instead of trusting a self-reported flag |
-| `commands.auto_detect` | C | `enabled` | kill-switch for orchestrator auto-detection | derivable — the orchestrator's own confidence-tiered detection table plus the non-interactive TTY/CI probe |
-| `commands.suggestion.enabled` | A | `true` | a convenience layer; governs no gate and no spend | derivable — the suggester's own match-score threshold and cooldown; a prompt that matches nothing already produces silence |
-| `commands.suggestion.confidence_floor` | A | `0.6` | tuning of that convenience layer | derivable — the suggester's calibrated constant, with the existing per-command frontmatter override where one command needs a different bar |
-| `commands.suggestion.cooldown_seconds` | A | `600` | tuning of that convenience layer | derivable — the per-command cooldown tracker, which already reads session behaviour |
-| `commands.suggestion.max_options` | A | `4` | tuning of that convenience layer | derivable — the number of matches that clear the confidence floor, bounded by the numbered-options shape `user-interaction` fixes |
 | `commands.suggestion.blocklist` | C | `[]` | a deny-list | derivable — the same cooldown tracker that reads whether the user picks a suggestion; repeated non-selection is the signal a hand-maintained deny-list stands in for |
 | `commands.create_pr.preview_description` | C | `false` | removes pre-publish review of an outbound artefact | consent |
 | `commands.create_pr.detail_level` | A | `min` | verbosity of a generated body | derivable — the diff the command already reads (changed-file count and risk surface) |
-| `commands.create_pr.api_examples` | A | `true` | verbosity of a generated body | derivable — the command's own API-surface detection plus its grounded-source requirement |
 | `commands.create_pr.screenshots` | C | `false` | puts captured screenshots into a published PR body | consent |
-| `commands.create_pr.ui_paths` | C | `[]` | glob allowlist | derivable — the frontend-surface heuristic the PR-description flow already applies when the glob list is empty |
-| `commands.create_pr.api_paths` | C | `[]` | glob allowlist | derivable — the API-endpoint heuristic the same flow already applies as its documented empty-list fallback |
 | `continuity.auto_record` | C | `"on"` | arms an automatic producer on the normal session-end path | consent |
 | `continuity.run_checkpoints` | C | `"on"` | disabling it removes a recovery artifact a killed run resumes from | consent |
-| `memory.cadence` | C | `always` | suppressing the visibility line hides what the agent learned from the user | derivable — the hits/asks count the memory-visibility summary already computes; the line only exists when memory was consulted |
-| `memory.review_threshold` | A | `10` | when a review preview surfaces; governs no gate | derivable — the unreviewed-intake count `/memory load` already computes before rendering its preview |
 | `memory.redact_patterns` | C | `[]` | deny-list of secret and PII regexes | policy |
 | `memory.session_index` | A | `"off"` | injects a compact index at session start | derivable — the row cap and index cost the mechanism already computes; the flag only holds an unproven ship-criterion open |
 | `memory.learn_on_session_end` | B | `false` | turns on automatic memory writes at session end | consent |
 | `knowledge.global_sharing.enabled` | C | `true` | kill-switch over cross-project egress | consent |
 | `knowledge.global_sharing.allowed_tiers` | C | `[public]` | allowlist for that egress | consent |
-| `knowledge.global_sharing.redaction.enabled` | C | `true` | disabling it removes the redaction floor | derivable — the redaction scan's own match result; no violation means no-op, so the flag can only remove a floor on an already-authorised path |
-| `knowledge.global_sharing.redaction.halt_on_trigger` | C | `true` | disabling it removes halt-and-prompt | derivable — the violations list the redaction scan already returns; a non-empty list IS the halt condition |
-| `knowledge.global_sharing.auto_promote_threshold` | C | `2` | threshold governing that egress | derivable — the distinct-repo count the promotion candidates already compute; promotion stays suggest-only and human-confirmed |
-| `knowledge.global_sharing.freshness.hypothesis_after_days` | A | `90` | freshness heuristic on a card already shared | derivable — the age computation over the card's own `last_verified` provenance footer |
-| `knowledge.global_sharing.freshness.stale_after_days` | A | `180` | freshness heuristic on a card already shared | derivable — the same age computation; the cut-point is advisory because the card is a cache, never a source of truth |
-| `hooks.concern_budget.max_per_event` | C | `8` | budget cap on hook concerns | derivable — the gate's own constant over `hook_manifest.yaml`, with no consumer-situational input to read |
 | `hooks.concern_budget.tier1_concerns` | C | `[]` | allowlist of concerns permitted to fail closed | policy |
-| `hooks.concern_budget.hard_fail` | C | `false` | weakens the budget gate to warn-only | derivable — the gate's own `--strict` argv, which CI already passes to sibling gates |
 | `hooks.injection_scan.enabled` | C | `false` | the prompt-injection scanner | derivable — the scanner's own signature match on the tool envelope; warn-only and silent on no hit |
 | `hooks.rtk_wrap.enabled` | C | `false` | configures code that runs on every tool call | derivable — the live PATH and identity probe the hook already runs; silent when rtk is absent |
 | `hooks.design_slop.enabled` | C | `false` | configures code that runs on every tool call | derivable — the rule-registry match plus the hook's own per-signature silence cap |
@@ -634,15 +597,12 @@ Rows follow template order, so a diff against the template reads straight down.
 | `hooks.code_graph.enabled` | C | `false` | INERT since 2026-09-07 — the nudge it gated was replaced by `code-graph-context`, which reads no flag. The KEY stays registered because `docs/MIGRATION.md` commits to exactly that ("the surfaces stay registered and disabled"): removing it is a breaking change for any consumer who set it, and the row was briefly marked REMOVED, which left the template's own leaf unclassified. Classified, not deleted. | derivable — the index-detection probe the replacement hook already runs; no index means silence |
 | `hooks.suggestion_capture.enabled` | C | `false` | configures code that runs at every turn end and every prompt | consent |
 | `hooks.verify_before_complete.touched_file_quality` | C | `"off"` | C-test 1 — it decides whether the stop hook SPAWNS the project's own quality commands over the turn's edited files, so the cost it authorises is other people's processes on the operator's machine | consent — running a consumer's toolchain against their working tree is a thing to be permitted, not a fact the tree can derive. The three values are not a severity ladder the agent may climb: `shadow` records, `warn` adds one advisory line, and the flip from one to the other is the owner decision `road-to-touched-files-that-pass-their-own-tools` 2.3 defers |
-| `decision_engine.surface_traces` | C | `false` | the decision engine’s own black box; the agent must not be able to close it | derivable — the engine's own active-gate state; there is nothing to surface when no gate fired |
 | `decision_engine.min_confidence` | C | `"off"` | the confidence gate | derivable — the confidence band the scoring engine already computes at the plan phase |
 | `decision_engine.block_on_risk` | C | `"off"` | the risk-class gate | derivable — the risk class the engine already computes at the implement phase; the Hard Floor covers the irreversible end unconditionally |
 | `decision_engine.require_memory_hits` | C | `false` | a phase gate | derivable — the memory-hit count at the refine phase; its own template comment says the flag delays that soak |
 | `decision_engine.on_block` | C | `stop` | `warn` advances past a gate that fired | derivable — the non-interactive probe decides ask-versus-stop, and the fired gate's own action decides the rest |
 | `decision_engine.ask_timeout_seconds` | C | `30` | how long a fired gate waits before falling back | derivable — the same non-interactive probe: where nobody can answer there is nothing to wait for |
-| `decision_engine.on_block_fallback` | C | `stop` | fail-safe versus fail-open after that timeout | derivable — the same non-interactive detection; a gate that fires with no one to answer resolves fail-safe by construction |
 | `update_check.enabled` | C | `true` | a background safety check; disabling it pins the user to known-vulnerable code | consent |
-| `explain.enable_last` | A | `true` | a read-only diagnostics surface | derivable — the presence of a work-state trace to render; with no trace the command is already a no-op |
 | `legal_review_prep.acknowledged` | C | `false` | the consent gate; the safety floor requires the wizard checkbox | consent |
 | `legal_review_prep.require_council` | C | `true` | a fail-closed defence-in-depth gate | consent |
 

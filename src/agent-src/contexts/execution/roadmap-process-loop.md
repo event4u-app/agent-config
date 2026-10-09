@@ -125,25 +125,24 @@ that is already done — the exact failure this clause prevents. This is the
 
 ## 2. Pre-run summary — gate or inline note
 
-Read `roadmap.skip_pre_run_gate` from `.agent-settings.yml` (default
-`true`). The command name already names the scope; asking "Go /
-Different roadmap / …" on every run is the noise the gate-skip removes.
+The command name already names the scope; asking "Go / Different
+roadmap / …" on every run is noise, so there is no confirmation gate and
+no setting to bring one back (the `roadmap.skip_pre_run_gate` key was
+retired on 2026-10-09 with its default, `true`, as fixed behavior).
 
-- `true` **and** the roadmap is unambiguous (user named it, or exactly
-  one active roadmap exists) → **skip the interactive gate.** Emit the
-  summary block below as a one-shot inline note (no numbered options,
-  no wait) so the user can still abort mid-stream if the wrong file was
-  picked, then continue straight into § 3.
-- `false`, **or** the roadmap is ambiguous (multiple active roadmaps and
-  none named), **or** an unresolvable cadence / scope conflict is
-  detected → show the gate with numbered options and wait for input.
+- The roadmap is unambiguous (user named it, or exactly one active
+  roadmap exists) → **no interactive gate.** Emit the summary block
+  below as a one-shot inline note (no numbered options, no wait) so the
+  user can still abort mid-stream if the wrong file was picked, then
+  continue straight into § 3.
+- The roadmap is ambiguous (multiple active roadmaps and none named),
+  **or** an unresolvable cadence / scope conflict is detected → show the
+  gate with numbered options and wait for input.
 
-The gate is **always** shown — regardless of the flag — when the
-roadmap is ambiguous or a scope / cadence conflict has no sensible
-default. The flag suppresses the confirmation, never a genuine
-"which roadmap?" question.
+The gate is shown only for a genuine "which roadmap?" or an unresolvable
+conflict — never as a routine confirmation.
 
-Summary block (shown in both modes; gate-mode appends the numbered
+Summary block (shown in both cases; the gate appends the numbered
 options + wait):
 
 > Roadmap: `<resolved-path>`
@@ -159,10 +158,6 @@ options + wait):
 > 1. Go — start processing autonomously
 > 2. Different roadmap · 3. Different scope · 4. Toggle council · 5. Abort
 
-The invocation-level skip still applies under `skip_pre_run_gate: false`:
-when scope, roadmap, and council are all unambiguous in the invocation
-(e.g. `/roadmap:process-phase road-to-X.md with council`), the gate
-does not fire.
 
 ## 3. Pre-scan — execution contract or commit-step ask
 
@@ -509,8 +504,8 @@ so the shape is settled before the runs rather than designed under pressure:
 
 ## 4. Resolve cadences — read once, cache for the run
 
-Read both keys from `.agent-settings.yml` once and cache for the whole
-run. Do **not** re-read inside the step loop.
+Read `roadmap.quality_cadence` from `.agent-settings.yml` once and cache
+it for the whole run. Do **not** re-read inside the step loop.
 
 **`roadmap.quality_cadence`** — when to run the quality pipeline.
 Only relevant when `quality.local_auto_run` is `true`; when it is
@@ -529,17 +524,12 @@ Missing / unreadable / unknown → fall back to `end_of_roadmap`.
 The Iron Law [`verify-before-complete`](../../rules/verify-before-complete.md)
 still forbids claiming quality output that was not produced.
 
-**`roadmap.dashboard_regen_cadence`** — when to run the dashboard
-subprocess between steps:
+**Dashboard regen cadence** — fixed, not a setting (the
+`roadmap.dashboard_regen_cadence` key was retired on 2026-10-09 with its
+default as the behavior): `./agent-config roadmap:progress` runs every
+5th closed step, at every phase boundary and at reply end.
 
-| Value | `./agent-config roadmap:progress` runs |
-|---|---|
-| `per_step` | After every checkbox flip |
-| `every_5_steps` (default) | Every 5th closed step + at phase boundary + at reply end |
-| `phase_boundary` | Only at phase boundaries + run end |
-
-`process-step` ignores this — single-step runs always regen at step
-end. Any file-shape touch (rename / phase add / archive — Iron Law 1
+`process-step` always regens at step end. Any file-shape touch (rename / phase add / archive — Iron Law 1
 of [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md))
 forces an immediate regen regardless of cadence. The checkbox flip
 itself is **never** batchable — only the subprocess.
@@ -777,16 +767,13 @@ Per-class routing, why parking is not deferring, and the scope-growth pointer:
    above unchanged (agent-decidable exit/acceptance criteria remain the
    default; `verify:` is the opt-in machine-checkable tightening).
 
-6. **Dashboard regen — cadence-gated.** Run
-   `./agent-config roadmap:progress` when due per
-   `roadmap.dashboard_regen_cadence` (resolved in § 4; default
-   `every_5_steps`):
-   - `per_step` → always after the flip.
-   - `every_5_steps` → after the 5th, 10th, … closed step **of this
-     run**, or when the reply ends with closed steps pending regen.
-   - `phase_boundary` → skip; the boundary handler in § 5 wrapper /
-     § 6 runs the regen.
-   - Any file-shape touch (rename / phase add / archive — Iron Law 1)
+6. **Dashboard regen — fixed cadence** (§ 4). Run
+   `./agent-config roadmap:progress`:
+   - after the 5th, 10th, … closed step **of this run**, or when the
+     reply ends with closed steps pending regen;
+   - at a phase boundary — the boundary handler in § 5 wrapper / § 6
+     runs it;
+   - on any file-shape touch (rename / phase add / archive — Iron Law 1)
      → run immediately regardless of cadence.
 
    Skipped regens accumulate into the next due regen — the markdown

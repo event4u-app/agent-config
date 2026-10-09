@@ -54,6 +54,8 @@ import { resolvePackageRoot } from './package_root.js';
 import * as user_global_paths from './user_global_paths.js';
 import { carveOutKeys } from '../../shared/settingsCarveOut.js';
 import { applyRenamedKeys } from './settings_renamed_keys.js';
+import { warnRemovedKeys } from './settings_removed_keys.js';
+export { REMOVED_KEYS } from './settings_removed_keys.js';
 import type * as YamlModule from 'yaml';
 
 // ESM has no `require`; `createRequire(import.meta.url)` restores it so the
@@ -264,13 +266,13 @@ function _resolve_user_global_file(): string {
  * the user-global file. Adding a key requires an ADR.
  */
 export const MERGEABLE_KEYS: readonly string[] = [
-    // `name`, `ide` and `personal.bot_icon` are the PRE-MIGRATION spellings.
-    // `install.ts` migrates `ide` → `personal.ide` and `pr_comment_bot_icon`
-    // into its `personal.` home, and this list was never moved with them — so
-    // the whitelist named keys the template does not have while the keys it
-    // does have were filtered out silently. A user setting either preference
-    // user-globally got no error, no warning, and no effect
-    // (road-to-capability-answerability 4.3, ADR-219).
+    // `name` and `ide` are the PRE-MIGRATION spellings. `install.ts` migrates
+    // `ide` → `personal.ide`, and this list was never moved with it — so the
+    // whitelist named a key the template does not have while the key it does
+    // have was filtered out silently (road-to-capability-answerability 4.3,
+    // ADR-219). `personal.bot_icon` / `personal.pr_comment_bot_icon` left with
+    // the key itself (2026-10-09): a whitelisted key nothing reads would carry a
+    // user-global value into a tree that ignores it.
     //
     // Both spellings are listed rather than replaced: a legacy file that still
     // uses the old name keeps working, and nothing that resolved before
@@ -280,20 +282,12 @@ export const MERGEABLE_KEYS: readonly string[] = [
     'ide',
     'personal.ide',
     'rule_loading_tier',
-    'memory.cadence',
-    'personal.bot_icon',
-    'personal.pr_comment_bot_icon',
     'personal.autonomy',
     // Knowledge-card global cross-project sharing is a USER-GLOBAL setting
     // (ADR-100 / road-to-structure-grounding-v2). Whitelisted so the
     // ~/.event4u/agent-config/agent-settings.yml values are honoured.
     'knowledge.global_sharing.enabled',
     'knowledge.global_sharing.allowed_tiers',
-    'knowledge.global_sharing.redaction.enabled',
-    'knowledge.global_sharing.redaction.halt_on_trigger',
-    'knowledge.global_sharing.auto_promote_threshold',
-    'knowledge.global_sharing.freshness.hypothesis_after_days',
-    'knowledge.global_sharing.freshness.stale_after_days',
     // `design.fidelity_mode` is a per-DEVELOPER working preference, not a
     // per-project one: whether an agent may deviate from a handed-over design
     // is a property of how that person works, and a designer who sets it once
@@ -975,113 +969,10 @@ export function load_agent_settings(
             _deep_merge(merged, layer);
         }
     }
-    _warn_removed_always_on_keys(merged);
+    warnRemovedKeys(merged);
     return merged;
 }
 
-
-/**
- * Settings keys this package has DELETED. A leftover value from an older
- * install is ignored — never applied by any reader — and surfaced with ONE
- * deprecation line per key per process run (stderr; the exit code never
- * changes).
- *
- * The map carries a per-key REASON rather than one shared sentence, because
- * the list now spans more than one deletion doctrine and a single blanket
- * phrase would mis-attribute every future entry. A reader who hits the line
- * should learn why the key went, not just that it did.
- *
- * `subagents.*` — the always-on-orchestration doctrine
- * (road-to-always-on-orchestration Phase 1): the layer has no per-layer
- * on/off setting any more. `ai_team.enabled` joined in Step 1.3 — the
- * `/team` family's availability is a codex-CLI/auth FACT
- * (`src/scripts/ai_team/availability.ts`), not a flag; the `ai_team` config
- * loader (`src/scripts/ai_team/config.ts`) separately accepts a leftover
- * `enabled` key without failing closed, so this warning is the only surfaced
- * signal of that deletion.
- *
- * `hooks.turn_end_gate.*` — the turn-end gate is always armed (2026-08-12).
- * A default-off safety gate cannot soak, so the switch protecting the soak
- * made the soak impossible; whether the gate fires is now decided by each
- * detector's own trigger conditions. See `turn_end_gate_hook.ts` § "Always
- * armed".
- *
- * The five `derivable` leaves below (2026-08-12, road-to-zero-settings Phase
- * 2.1) are a different case from every entry above them, and the difference is
- * the whole safety argument: no code path ever *consulted* them. Each appeared
- * in the template, the schema and the reference page, and several in the setup
- * wizard, while the decision they looked like they governed was taken
- * elsewhere. A key nothing reads cannot change a default by leaving — so this
- * is the one deletion batch that needs no replacement mechanism, only the
- * per-key statement of what already decides.
- *
- * A sixth unread key, `screenshots.data_bearing_gate`, was found in the same
- * pass and deliberately NOT deleted — it is `consent`, and the open question is
- * whether the repair is to build its missing reader or to delete a promise a
- * Hard Floor can never honour. See `settings-classes.md` § The six unread keys.
- *
- * `worktrees.mode` (2026-08-13, ADR-229) is a third doctrine again: not
- * always-on, not unread. It WAS read, and the reader honoured all three values —
- * the deletion says the decision was never the agent's to make. `ask` bought a
- * round trip per spawn, `on` let the agent start parallel work unprompted, and
- * `off` described the wanted behaviour, so `off` became the hardcoded rule and
- * the switch went. What decides instead is the user's own sentence in the chat.
- *
- * Every reason string must name what decides INSTEAD, never just "removed".
- * Exported so `lint_settings_classes` can check the deletion side of the
- * surface: a reason that names no replacement, or an entry whose key is live in
- * the template again, is a contradiction the loader itself cannot notice.
- */
-export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
-    ['subagents.enabled', 'always-on orchestration'],
-    ['subagents.auto', 'always-on orchestration'],
-    ['subagents.host_capabilities', 'always-on orchestration'],
-    ['subagents.budget_routing', 'always-on orchestration'],
-    ['ai_team.enabled', 'always-on orchestration'],
-    ['hooks.turn_end_gate.enabled', 'the turn-end gate is always armed'],
-    ['hooks.turn_end_gate.promissory', 'the turn-end gate is always armed'],
-    ['hooks.turn_end_gate.language', 'the turn-end gate is always armed'],
-    ['hooks.turn_end_gate.verification', 'the turn-end gate is always armed'],
-    ['telegraph.speak_scope', 'the rule body states its own scope; compile_router gates on telegraph.speak alone'],
-    ['chat_history.max_size_kb', 'the rotate command takes --max-kb from argv; session-count pruning bounds the file'],
-    ['chat_history.on_overflow', 'the overflow mode comes from the rotate command --mode argv'],
-    ['quality.wait_for_remote_ci', 'whether to poll follows from the push plus a detectable remote pipeline'],
-    ['legal_review_prep.consented_at', 'the provenance sidecar settings:set writes and consentVerdict reads'],
-    ['worktrees.mode', 'the user asking for a worktree in the chat; creation is instruction-only and hardcoded'],
-]);
-
-/** Keys already warned about in THIS process — the "once per run" dedupe. */
-const _warnedRemovedKeys = new Set<string>();
-
-/** Read one dotted path out of a merged settings tree; `undefined` when absent. */
-function _readDottedSettingsPath(root: SettingsDict, dotted: string): SettingsValue {
-    let node: SettingsValue = root;
-    for (const part of dotted.split('.')) {
-        if (typeof node !== 'object' || node === null || Array.isArray(node)) {
-            return undefined;
-        }
-        node = (node as SettingsDict)[part];
-    }
-    return node;
-}
-
-/**
- * Warn once per process, on stderr, for every {@link REMOVED_KEYS} entry still
- * present in a resolved settings tree. Never throws, never changes what the
- * caller does with `merged` — a pure notification side effect.
- */
-function _warn_removed_always_on_keys(merged: SettingsDict): void {
-    for (const [key, reason] of REMOVED_KEYS) {
-        if (_warnedRemovedKeys.has(key)) {
-            continue;
-        }
-        if (_readDottedSettingsPath(merged, key) === undefined) {
-            continue;
-        }
-        _warnedRemovedKeys.add(key);
-        process.stderr.write(`${key} was removed (${reason}); ignored.\n`);
-    }
-}
 
 /**
  * Return the merged `modules:` configuration with defaults applied.

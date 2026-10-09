@@ -29,7 +29,7 @@ const TSX_BIN = path.join(
 
 // --- Layer 1: build() shape + serialization ---------------------------------
 
-describe('COMPILE_TIME_TOGGLES.telegraph-speak — dormant by default (ADR telegraph/0002)', () => {
+describe('COMPILE_TIME_TOGGLES.telegraph-speak — dormant, and no longer a setting', () => {
     const toggle = cr.COMPILE_TIME_TOGGLES['telegraph-speak'];
 
     it('an ABSENT telegraph key means DORMANT — the rule is omitted from the router', () => {
@@ -40,22 +40,15 @@ describe('COMPILE_TIME_TOGGLES.telegraph-speak — dormant by default (ADR teleg
         expect(toggle?.({ telegraph: {} })).toBe(false);
     });
 
-    it('opting in requires an EXPLICIT telegraph.speak: true', () => {
-        expect(toggle?.({ telegraph: { speak: true } })).toBe(true);
-    });
-
-    it('the family master switch still wins over an explicit opt-in', () => {
-        expect(toggle?.({ telegraph: { enabled: false, speak: true } })).toBe(false);
-    });
-
-    it('a LEFTOVER speak_scope cannot move router membership — the inverted invariant', () => {
-        // The key was deleted in road-to-zero-settings Phase 2.1 because nothing
-        // read it. This assertion used to prove that with the key still shipped;
-        // it now proves the deletion did not hand the key power it never had.
-        // An older install still carrying either value gets the same membership
-        // it would get with the section empty — `speak` decides, alone.
-        expect(toggle?.({ telegraph: { speak: true, speak_scope: 'off' } })).toBe(true);
-        expect(toggle?.({ telegraph: { speak_scope: 'aggressive' } })).toBe(false);
+    it('a LEFTOVER telegraph.speak: true cannot move router membership — the key is retired', () => {
+        // `telegraph.speak` was retired on 2026-10-09 with its shipped default
+        // (false) as the fixed value: whether the rule ships is the bench verdict,
+        // a package-level decision. An older install still carrying the opt-in
+        // gets the same membership as one with the section empty; the loader
+        // warns once that the value is ignored.
+        expect(toggle?.({ telegraph: { speak: true } })).toBe(false);
+        expect(toggle?.({ telegraph: { enabled: true, speak: true } })).toBe(false);
+        expect(toggle?.({ telegraph: { speak: true, speak_scope: 'off' } })).toBe(false);
     });
 });
 

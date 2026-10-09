@@ -119,7 +119,7 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
         id: 'identity',
         title: 'Editor & behaviour',
         navLabel: 'Preferences',
-        subtitle: 'Your IDE plus how the agent behaves: autonomy, output verbosity, PR-comment style. rtk presence is auto-detected (see the rtk row). Your name lives in .agent-user.yml (later step).',
+        subtitle: 'Your IDE plus how autonomously the agent works. rtk presence is auto-detected (see the rtk row). Your name lives in .agent-user.yml (later step).',
         kind: 'form',
         // `personal.rtk_installed` is NOT a form field — it is auto-detected at
         // runtime (road-to-wizard-ux-improvements § Phase 7) and rendered by a
@@ -128,16 +128,13 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
             'personal.ide',
             'personal.open_edited_files',
             'personal.autonomy',
-            'personal.minimal_output',
-            'personal.play_by_play',
-            'personal.pr_comment_bot_icon',
         ],
     },
     {
         id: 'cost',
         title: 'Budgets, rules & cadence',
         navLabel: 'Budgets & cadence',
-        subtitle: 'Independent levers: rule_loading_tier (how many behavioural rules load — token footprint), cost.budgets (optional USD ceilings), model.auto_switch (per-skill model tier), plus quality/roadmap cadence and memory thresholds.',
+        subtitle: 'Independent levers: rule_loading_tier (how many behavioural rules load — token footprint), cost.budgets (optional USD ceilings), model.auto_switch (per-skill model tier), plus quality/roadmap cadence and memory redaction patterns.',
         kind: 'form',
         paths: [
             'rule_loading_tier',
@@ -146,11 +143,8 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
             'cost.budgets.monthly',
             'cost.enforcement',
             'model.auto_switch',
-            'tokens.rich_skills',
             'roadmap.quality_cadence',
-            'roadmap.dashboard_regen_cadence',
             'quality.local_auto_run',
-            'memory.review_threshold',
             'memory.redact_patterns',
         ],
     },

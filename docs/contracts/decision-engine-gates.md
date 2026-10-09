@@ -27,13 +27,13 @@ All keys optional. Unknown keys are rejected hard by
 
 | Key                    | Type            | Default | Notes |
 |------------------------|-----------------|---------|-------|
-| `surface_traces`       | bool            | `false` | Mirrored to `DecisionTraceHook`. Predates the gates; lives here so the block has one schema. |
+| `surface_traces`       | —               | —       | Retired 2026-10-09, accepted and ignored: the trace hook stays off. Kept in the allowed set so a leftover key does not reject the whole block. |
 | `min_confidence`       | enum            | `off`   | `low` \| `medium` \| `high` \| `off`. Phase=Plan floor. |
 | `block_on_risk`        | enum            | `off`   | `low` \| `medium` \| `high` \| `off`. Phase=Implement ceiling. |
 | `require_memory_hits`  | bool            | `false` | Phase=Refine demands `memory_hits >= 1`. |
 | `on_block`             | enum            | `stop`  | `stop` \| `ask` \| `warn`. Action when a gate fires. |
-| `ask_timeout_seconds`  | int (>= 0)      | `30`    | Non-TTY wait before applying `on_block_fallback`. |
-| `on_block_fallback`    | enum            | `stop`  | `stop` \| `warn`. Resolution after `ask_timeout`. |
+| `ask_timeout_seconds`  | int (>= 0)      | `30`    | Non-TTY wait before the engine stops. |
+| `on_block_fallback`    | —               | —       | Retired 2026-10-09, accepted and ignored: the resolution after `ask_timeout` is always `stop`. |
 
 ## Gate-to-phase mapping
 
@@ -92,13 +92,13 @@ When non-interactive, `on_block=ask` collapses to action `ask_timeout`.
 The consumer (CLI / dispatcher) is expected to:
 
 1. wait `ask_timeout_seconds` for a stdin response;
-2. apply `on_block_fallback` (`stop` or `warn`) when the timeout
-   elapses or stdin is closed;
+2. stop when the timeout elapses or stdin is closed;
 3. surface `block_reason=ask_timeout` on the decision trace so the
    reason is replay-visible.
 
-Default fallback is `stop` (fail-safe). Flip to `warn` only when CI
-explicitly wants advisory gates.
+The fallback is always `stop` (fail-safe); the `on_block_fallback` key
+that could flip it to `warn` was retired on 2026-10-09. CI that wants
+advisory gates sets `on_block: warn` instead.
 
 ## Rollback
 

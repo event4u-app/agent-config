@@ -3,8 +3,9 @@
  *
  * TypeScript twin of `work_engine/hooks/builtin/decision_trace.py` (ADR-200
  * py2ts — work_engine.hooks.builtin subpackage). Implements the v1 envelope
- * from `docs/contracts/decision-trace-v1.md`. Default-off; opt-in via
- * `.agent-settings.yml` `decision_engine.surface_traces: true`.
+ * from `docs/contracts/decision-trace-v1.md`. Off: the settings key that
+ * registered it was retired, so only a caller that builds the registry
+ * directly enables it.
  *
  * The hook is purely observational — it never mutates `DeliveryState`, never
  * raises terminal errors. Stream / disk failures surface as {@link HookError}

@@ -58,7 +58,7 @@ Universal coding posture — applies to every team regardless of stack.
 | `improve-before-implement` | T2 | as-is | Challenge weak requirements before implementing |
 | `language-and-tone` | T2 | degraded | Keep mirroring + tone; strip "all `.md` docs must be English" clause (no `.md` files on Linear) |
 | `missing-tool-handling` | T2 | as-is | Don't install silently |
-| `token-efficiency` | T2 | degraded | Strip `.agent-settings.yml` references (`personal.minimal_output`, `personal.play_by_play`) |
+| `token-efficiency` | T2 | degraded | Keep the minimal-output discipline as stated; it reads no `.agent-settings.yml` key since `personal.minimal_output` / `personal.play_by_play` were retired (2026-10-09) |
 | `user-interaction` | T3-S | degraded | Numbered-options Iron Law, single-source recommendation; strip `scripts/check_reply_consistency.py` reference |
 
 ## Team digest (4 rules)

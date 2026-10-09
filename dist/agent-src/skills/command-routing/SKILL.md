@@ -99,11 +99,10 @@ Read `github.pr_reply_method` from `.agent-settings.yml`:
 | `create_review_comment` | `POST /repos/{owner}/{repo}/pulls/{number}/comments` with `{"body": "...", "in_reply_to": comment_id}` |
 | `auto` | Try `replies_endpoint` first. If it works → update setting. If 404/error → try `create_review_comment`. |
 
-### 2. Bot icon prefix
+### 2. No bot icon prefix
 
-Read `personal.pr_comment_bot_icon` from `.agent-settings.yml`:
-- `true` → prefix reply body with `🤖 `.
-- `false` or not set → no prefix.
+Never prefix the reply body with `🤖 ` — `🤖` is on the universal blacklist of
+[`no-decorative-emojis-in-git-surfaces`](../../rules/no-decorative-emojis-in-git-surfaces.md).
 
 ### 3. API call rules
 

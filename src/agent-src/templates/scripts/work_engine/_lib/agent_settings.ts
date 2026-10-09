@@ -207,7 +207,6 @@ export const MERGEABLE_KEYS: readonly string[] = [
     // weak-host-lift-tiering + token-program-integration verdicts; ADR
     // records the whitelist addition). Wins over rule_loading_tier.
     'discipline_profile',
-    'memory.cadence',
     'personal.bot_icon',
     'personal.autonomy',
     // Knowledge-card global cross-project sharing is a USER-GLOBAL setting
@@ -215,11 +214,6 @@ export const MERGEABLE_KEYS: readonly string[] = [
     // ~/.event4u/agent-config/agent-settings.yml values are honoured.
     'knowledge.global_sharing.enabled',
     'knowledge.global_sharing.allowed_tiers',
-    'knowledge.global_sharing.redaction.enabled',
-    'knowledge.global_sharing.redaction.halt_on_trigger',
-    'knowledge.global_sharing.auto_promote_threshold',
-    'knowledge.global_sharing.freshness.hypothesis_after_days',
-    'knowledge.global_sharing.freshness.stale_after_days',
 ];
 
 const _DEFAULTS: SettingsDict = {};

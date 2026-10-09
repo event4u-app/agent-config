@@ -235,11 +235,11 @@ describe('sync_non_md', () => {
         expect(fs.existsSync(path.join(target, 'rules', 'telegraph-speak.md'))).toBe(false);
     });
 
-    it('an ENABLED rule is emitted — the gate opts in, it does not allowlist', () => {
+    it('a leftover opt-in setting is ignored — the retired key no longer reaches the gate', () => {
         write(path.join(source, 'rules', 'telegraph-speak.md'), '# Telegraph\n');
         withSettings('telegraph:\n  speak: true\n');
         condense.sync_non_md(source, target);
-        expect(fs.existsSync(path.join(target, 'rules', 'telegraph-speak.md'))).toBe(true);
+        expect(fs.existsSync(path.join(target, 'rules', 'telegraph-speak.md'))).toBe(false);
     });
 
     it('an ungated rule is unaffected by the toggle map', () => {

@@ -111,20 +111,6 @@ personal:
   # Detected and set by /onboard on first run.
   rtk_installed: false
 
-  # Minimal output mode (true, false)
-  # true  = short bullet points during work, concise summary at the end
-  # false = verbose explanations and reasoning
-  minimal_output: true
-
-  # Play-by-play mode (true, false)
-  # true  = briefly share intermediate findings as you go
-  # false = silently investigate, only report the conclusion
-  play_by_play: false
-
-  # Prefix PR comment replies with a bot icon 🤖 (true, false)
-  # Personal preference — each developer decides for themselves.
-  pr_comment_bot_icon: false
-
   # Autonomous execution — suppress trivial workflow questions (on, off, auto)
   # on   = act on the obvious next step; never ask "Step 2 or 3?", "should I commit?", etc.
   # off  = ask trivial workflow questions (legacy behavior)
@@ -136,9 +122,6 @@ personal:
 
 # --- Project / team preferences ---
 project:
-  # Path to the PR template file (relative to project root)
-  pr_template: .github/pull_request_template.md
-
   # Target repository for universal improvement PRs (e.g. org/agent-config)
   upstream_repo: ""
 
@@ -224,14 +207,6 @@ hooks:
     # outside the standard location.
     # script: scripts/chat_history.ts
 
-# --- Optional pipelines ---
-pipelines:
-  # Skill improvement pipeline (true, false)
-  # true  = after meaningful tasks, propose learning capture and improvements (default)
-  # false = silent, no post-task analysis
-  # Included by every rule_loading_tier except `custom`.
-  skill_improvement: true
-
 # --- Roadmap execution ---
 #
 # Controls when /roadmap:process-* runs the project's quality pipeline.
@@ -239,22 +214,6 @@ pipelines:
 # response — that cadence is governed by `roadmap-progress-sync` and
 # is non-negotiable. This setting only governs *quality tool runs*.
 roadmap:
-  # Skip the pre-run confirmation gate when /roadmap:process-step|phase|full
-  # is invoked (true, false).
-  #   true  = default. The command name itself names the scope; if a
-  #           single active roadmap is discoverable (or the user named
-  #           one), the loop starts immediately. The resolved roadmap /
-  #           cadence / council setting are surfaced inline as a one-shot
-  #           note so an unwanted pick can still be aborted mid-stream.
-  #   false = legacy. The loop shows the pre-run summary with numbered
-  #           options (Go / Different roadmap / Different scope / Toggle
-  #           council / Abort) and waits for input.
-  # The gate is still shown — regardless of this flag — when the roadmap
-  # is ambiguous (multiple active, none named) or a scope / cadence
-  # conflict has no sensible default. The flag suppresses the
-  # confirmation, never a genuine "which roadmap?" question.
-  skip_pre_run_gate: true
-
   # When to run quality tools during /roadmap:process-step|phase|full.
   #   end_of_roadmap = once, before archiving (default — fastest, fewest tokens)
   #   per_phase      = once after every completed phase
@@ -370,17 +329,8 @@ onboarding:
 # never auto-executes — the user picks. See `rules/command-suggestion-policy.md`.
 commands:
   suggestion:
-    # Master switch (true, false). `false` = the layer is silent;
-    # explicit `/commands` still work as today.
-    enabled: true
-    # Minimum match score (0.0–1.0) before a suggestion surfaces.
-    confidence_floor: 0.6
-    # Cooldown in seconds between re-suggestions of the same
-    # (command, evidence) pair. Default 600 = 10m.
-    cooldown_seconds: 600
-    # Max number of command suggestions before the as-is option.
-    # The as-is option is always extra (total rendered = max_options + 1).
-    max_options: 4
+    # The layer is always on; floor 0.6, cooldown 600s and a cap of 4
+    # options (plus the as-is option) are fixed.
     # Commands to never suggest. Still work when typed explicitly.
     blocklist: []
 
@@ -399,23 +349,13 @@ commands:
   # Critical info (breaking changes, migrations, security, rollback) is
   # ALWAYS included at every tier — the tier governs explanatory depth only.
   #
-  # api_examples (default true): add a fenced JSON example for API-endpoint
-  #   changes ONLY when grounded in a real source (DTO/resource, OpenAPI,
-  #   fixture, probe); else a one-line pointer, never an invented example.
-  #
   # screenshots (default false): capability-gated frontend screenshots.
   #   true attempts capture only when the host has browser/preview tooling;
   #   emits a note and leaves the placeholder when absent — never blocks the PR.
-  #
-  # ui_paths / api_paths: optional globs to make frontend / API detection
-  #   explicit; empty = a light heuristic that fails open.
   create_pr:
     preview_description: false
     detail_level: min
-    api_examples: true
     screenshots: false
-    ui_paths: []
-    api_paths: []
 
 # --- Telemetry (artefact engagement, default-off) ---
 #
@@ -427,35 +367,19 @@ commands:
 # (once Phase 3 of road-to-artifact-engagement-telemetry lands).
 # --- Verbosity (token frugality) ---
 #
-# Five toggles controlling what the agent shows after acting.
-# Default = terse. Flip to true to restore legacy verbose output.
+# What the agent shows after acting. Default = terse. Four former toggles
+# (preview_artifacts, routine_confirmations, post_action_reports,
+# intent_announcements) were retired on 2026-10-09 with the terse default
+# as fixed behavior.
 # See agents/roadmaps/road-to-token-frugality.md for the full rationale
 # and the contexts/contracts/frugality-charter.md for the writer-side
 # standard.
 verbosity:
-  # Show generated commit messages, PR titles/bodies, branch names
-  # before acting. false = use generated content directly.
-  preview_artifacts: false
-
-  # Confirmation prompts for routine workflow steps when there is
-  # one obvious answer ("looks good — commit?"). Iron-Law gates
-  # (commit-policy, scope-control git-ops, non-destructive) ALWAYS
-  # ask regardless of this flag.
-  routine_confirmations: false
-
   # Offer "run AI Council on this?" inside delivery commands
   # (/feature-plan, /review-changes, /roadmap-create). Council
   # commands themselves (/council, /create-pr → already excluded)
   # are unaffected.
   offer_council_in_delivery: false
-
-  # Multi-line status / summary blocks after a successful action.
-  # off | minimal | full — default minimal (one-line confirmation).
-  post_action_reports: minimal
-
-  # Intent announcements ("Let me check…", "Now I will…", "Found
-  # it") in skill bodies. false = act and emit the result.
-  intent_announcements: false
 
   # Script stdout chatter from `scripts/*.ts`, `scripts/*.sh`, and
   # `.augment/scripts/`. Read by the helper module
@@ -473,19 +397,6 @@ verbosity:
   # behaviour). true = the Taskfile sets `silent: true` on every
   # safe task per Phase 10.3.
   taskfile_command_echo: false
-
-# --- Telegraph condensation (output-side) ---
-#
-# One lever, deliberately: whether the telegraph-speak rule ships at all.
-# The rule body states its own grammar scope — which carve-outs (numbered
-# options, Iron-Law literals, code, paths) stay full prose — so there is no
-# separate scope key to pin.
-telegraph:
-  # speak: false = DORMANT (the shipped default). The rule is omitted from
-  # dist/router.json entirely, so its body never reaches a host. That
-  # omission is what stops the cost. Set true only after an output-side
-  # bench clears the kill-criterion bar.
-  speak: false
 
 telemetry:
   artifact_engagement:
@@ -613,11 +524,7 @@ the canonical narrative lives in
 | `personal.open_edited_files` | `true`, `false` | `false` | Auto-open edited files in the IDE after edits |
 | `personal.canary_name` | first name | _(empty)_ | Per-project OVERRIDE of the name the agent addresses the user with (session-canary). The name itself lives user-globally: `identity.name` in the wizard's `settings/.agent-user.yml`, fallback `personal.canary_name` in the user-global settings. See `rules/session-canary.md`. |
 | `personal.rtk_installed` | `true`, `false` | `false` | Whether rtk (Rust Token Killer) is installed. Detected and set by `/onboard`. |
-| `personal.minimal_output` | `true`, `false` | `true` | When `true`: short bullet points during work, concise summary at end. When `false`: verbose explanations. |
-| `personal.play_by_play` | `true`, `false` | `false` | When `true`: share intermediate findings during investigation. When `false`: work silently, report only the conclusion. |
-| `personal.pr_comment_bot_icon` | `true`, `false` | `false` | Prefix PR comment replies with 🤖 to indicate bot-authored replies. Personal preference — each developer decides. |
 | `personal.autonomy` | `on`, `off`, `auto` | `auto` | Suppress trivial workflow questions and act on the obvious next step. `auto` (default) defaults to `off` but flips to `on` after a prose opt-in like "arbeite selbstständig". `on` suppresses trivial questions unconditionally. `off` is the legacy ask-everything mode. Blocking decisions (security, scope expansion, push/merge/branch/PR/tag) are never suppressed. See `rules/autonomous-execution.md`. |
-| `project.pr_template` | file path | `.github/pull_request_template.md` | Path to PR template file. Read this instead of searching for it. |
 | `project.upstream_repo` | `org/repo` | _(empty)_ | Target repository for universal improvement PRs (e.g., `org/agent-config`). |
 | `project.improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
 | `github.pr_reply_method` | `replies_endpoint`, `create_review_comment`, `auto` | `create_review_comment` | GitHub API method for replying to PR review comments. `auto` detects on first use. |
@@ -626,12 +533,10 @@ the canonical narrative lives in
 | `chat_history.enabled` | `true`, `false` | `true` | Persist chat events to `agents/runtime/.agent-chat-history` (JSONL) for crash recovery. |
 | `chat_history.frequency` | `per_turn`, `per_phase`, `per_tool` | per profile | Logging granularity. Defaults: `minimal`→`per_turn`, `balanced`→`per_phase`, `full`→`per_tool`. |
 | `chat_history.text_limits.{user,agent,tool,phase}` | integer (chars) | `user=0`, `agent=5000`, `tool=200`, `phase=200` | Per-entry-type text-length cap. `0` = verbatim, no slice. `N > 0` = collapse whitespace, slice to N chars, append `" … [+K chars]"` so the log self-reports truncation. Defaults match `DEFAULT_TEXT_LIMITS` in `scripts/chat_history.ts`. |
-| `hooks.concern_budget.{max_per_event,tier1_concerns,hard_fail}` | integer / list / `true`,`false` | `8` / `[]` / `false` | Concern budget gate for the hook dispatcher (`lint_hook_concern_budget`): caps concerns per (platform, event) cell, restricts `fail_closed: true` to the `tier1_concerns` allowlist, and `hard_fail: false` keeps the gate warn-only. |
+| `hooks.concern_budget.tier1_concerns` | list | `[]` | Concern budget gate for the hook dispatcher (`lint_hook_concern_budget`): restricts `fail_closed: true` to this allowlist. The per-cell cap (8) is fixed and the gate is warn-only unless run with `--strict`. |
 | `hooks.injection_scan.enabled` | `true`, `false` | `false` | PostToolUse prompt-injection scanner: scans tool output for injection signatures and warns in context (exit 2) — never blocks. |
 | `hooks.rtk_wrap.enabled` | `true`, `false` | `false` | PreToolUse RTK-wrap nudge: when `rtk` is on PATH, warns (exit 2, never blocks) to re-run a verbose CLI command wrapped with rtk. |
 | `hooks.design_slop.enabled` | `true`, `false` | `false` | PreToolUse anti-slop nudge: runs the `lint_design_slop` registry against about-to-be-written UI content and warns (exit 2, never blocks) on P0/P1 aesthetic tells. |
-| `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
-| `roadmap.skip_pre_run_gate` | `true`, `false` | `true` | When `true` (default): `/roadmap:process-step\|phase\|full` skips the interactive pre-run summary and starts the loop immediately — the resolved roadmap, cadence, and council are surfaced inline so an unwanted pick can still be aborted. When `false`: the loop shows the pre-run summary with numbered options (Go / Different roadmap / Different scope / Toggle council / Abort) and waits. The gate is always shown — regardless of this flag — when the roadmap is ambiguous (multiple active, none named) or a scope / cadence conflict has no sensible default. |
 | `roadmap.quality_cadence` | `end_of_roadmap`, `per_phase`, `per_step` | `end_of_roadmap` | When `/roadmap:process-step|phase|full` runs the project's quality pipeline — only relevant when `quality.local_auto_run` is `true`; when it is `false` (the default) local pipeline runs are suppressed at every cadence and remote CI is the gate. Default skips per-step / per-phase runs and gates only the final archival. `per_phase` runs once after every phase; `per_step` is the legacy verbose mode. Step checkboxes and the dashboard are always updated regardless. |
 | `quality.local_auto_run` | `true`, `false` | `false` | When `false` (default): agent NEVER runs the project's quality pipeline (`task ci`, `make test`, `npm run check`, PHPStan, ECS, Rector, test suites) proactively — and does not ask. The user runs quality tools manually; remote CI is the authoritative gate. The agent runs one only on (1) an explicit ask this turn, (2) a concrete CI failure (run exactly that failing check), or (3) the new-gate carve-out. When `true`: opt-in legacy — agent runs the pipeline autonomously when work is ready for verification. **Carve-out**: NEW CI gates / smoke tests / test files MUST run locally regardless of this flag — without execution the new gate is unverified evidence. Iron Law `verify-before-complete` still applies; suppressed runs are surfaced ("quality gates delegated to remote CI"), never claimed as passing. |
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
@@ -642,23 +547,11 @@ the canonical narrative lives in
 | `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast (not in the shipped personal template — add the block when needed). Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md). |
 | `personas.ignore` | list of persona ids | `[]` | Persona ids dropped from the default cast locally. Ignored personas stay invokable via `--personas=<id>`. |
 | `onboarding.onboarded` | `true`, `false` | `false` | Whether `/onboard` has run on this project. The `onboarding-gate` rule prompts for `/onboard` when this is `false`. Missing entirely = legacy project, treated as onboarded. |
-| `commands.suggestion.enabled` | `true`, `false` | `true` | Master switch for the command-suggestion layer. `false` = the layer is silent; explicit `/commands` still work. See `rules/command-suggestion-policy.md`. |
-| `commands.suggestion.confidence_floor` | `0.0`–`1.0` | `0.6` | Minimum match score before a suggestion surfaces. Per-command frontmatter (`suggestion.confidence_floor`) overrides this global floor. |
-| `commands.suggestion.cooldown_seconds` | integer | `600` | Cooldown between re-suggestions of the same `(command, evidence)` pair. `600` = 10m. |
-| `commands.suggestion.max_options` | integer | `4` | Max number of command suggestions before the always-present "run as-is" option (total rendered = `max_options + 1`). |
 | `commands.suggestion.blocklist` | list of command names | `[]` | Commands that never appear as a suggestion. They still work when typed explicitly. |
 | `commands.create_pr.preview_description` | `true`, `false` | `false` | When `false`: `/create-pr` skips the title/body preview + adjust loop and uses the generated content directly. Saves agent tokens. When `true`: show title and body before creating and ask for adjustments. `/create-pr:description-only` always previews regardless of this setting. |
 | `commands.create_pr.detail_level` | `min`, `med`, `max` | `min` | Verbosity tier of the PR Description body. `min` = title + 2-3 sentence what/why/impact + ticket; `med` = + grouped changes + tests note; `max` = + how-to-test + edge cases + reviewer guidance. Critical info (breaking / migration / security / rollback) is included at every tier. |
-| `commands.create_pr.api_examples` | `true`, `false` | `true` | Add a grounded JSON example for API-endpoint changes; `true` includes one only from a real source (DTO/OpenAPI/fixture/probe), else a pointer, never invented; `false` = never. |
 | `commands.create_pr.screenshots` | `true`, `false` | `false` | Capability-gated frontend screenshots. `true` attempts capture when browser/preview tooling is present; notes-and-skips otherwise, never blocks the PR. Before/after is best-effort. |
-| `commands.create_pr.ui_paths` | glob list | `[]` | Optional globs pinning frontend detection; empty = light heuristic, fail-open. |
-| `commands.create_pr.api_paths` | glob list | `[]` | Optional globs pinning API-endpoint detection; empty = light heuristic, fail-open. |
-| `verbosity.preview_artifacts` | `true`, `false` | `false` | Show generated commit messages, PR titles/bodies, branch names before acting. `false` = use generated content directly. See the token-frugality plate under `agents/roadmaps/` (Phase 2/3). |
-| `verbosity.routine_confirmations` | `true`, `false` | `false` | Confirmation prompts for routine workflow steps when there is one obvious answer ("looks good — commit?"). Iron-Law gates (`commit-policy`, `scope-control` git-ops, `non-destructive-by-default`) ALWAYS ask regardless. |
 | `verbosity.offer_council_in_delivery` | `true`, `false` | `false` | Offer "run AI Council on this?" inside delivery commands (`/feature-plan`, `/review-changes`). Council commands themselves are unaffected. `/roadmap:create` no longer reads it — under a mission the council is a step, resolved from `agent-config council:status`, never an offer. |
-| `verbosity.post_action_reports` | `off`, `minimal`, `full` | `minimal` | Multi-line status / summary blocks after a successful action. `off` = no report; `minimal` = one-line confirmation; `full` = bullet list. |
-| `verbosity.intent_announcements` | `true`, `false` | `false` | Intent announcements ("Let me check…", "Now I will…", "Found it") in skill bodies. `false` = act and emit the result. |
-| `telegraph.speak` | `true`, `false` | `false` | Whether the telegraph-speak rule ships at all. `false` (default) = dormant: the projector omits the rule from `dist/router.json`, so its body never reaches a host. The rule body states its own grammar scope and carve-outs (numbered options, Iron-Law literals, code, paths), so this is the only lever. |
 | `telemetry.artifact_engagement.enabled` | `true`, `false` | `false` | Master switch for the artefact engagement log. Not in the shipped template — a missing `telemetry:` section means disabled (the recording rule no-ops). Default-off; zero file IO and zero token cost when `false`. Maintainer-targeted; consumers leave it off. |
 | `telemetry.artifact_engagement.granularity` | `task`, `phase-step`, `tool-call` | `task` | Boundary at which events are recorded. `tool-call` is expensive — opt-in only. |
 | `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |
@@ -676,11 +569,6 @@ the canonical narrative lives in
 | `linked_projects_max_files` | integer | `20000` | File-count ceiling above which a detected sibling is flagged `large` (awareness only). Never excludes. |
 | `knowledge.global_sharing.enabled` | `true`, `false` | `true` | **User-global** (keep in `~/.event4u/agent-config/agent-settings.yml`). Master switch for the file-first global knowledge-card store (ADR-100; default-ON per ADR-119, the council-validated bounded-downside flip superseding ADR-103 — adversarially spot-checked redaction incl. hidden-unicode hardening, narrowest tier default, pre-registered demotion trigger). `false` fully no-ops the layer (single-key revert); v1 project-local cards unaffected. |
 | `knowledge.global_sharing.allowed_tiers` | list of `public`,`vendor`,`proprietary` | `[public]` | Origin tiers auto-eligible to cross a project boundary. Narrowest default per ADR-119; `vendor` is a deliberate opt-in widening. `proprietary` is manual-only regardless (the gate hard-codes it). |
-| `knowledge.global_sharing.redaction.enabled` | `true`, `false` | `true` | Run the privacy-floor + source-confidentiality scan before any card goes global. |
-| `knowledge.global_sharing.redaction.halt_on_trigger` | `true`, `false` | `true` | Halt-and-surface on a confidential-pattern hit; never silent-share, never auto-rewrite. |
-| `knowledge.global_sharing.auto_promote_threshold` | integer | `2` | Distinct-repo count that triggers a promotion **suggestion** (never a silent write). |
-| `knowledge.global_sharing.freshness.hypothesis_after_days` | integer | `90` | Global card older than this is lead-only (positive structure re-confirmed before use). |
-| `knowledge.global_sharing.freshness.stale_after_days` | integer | `180` | Global card older than this is skipped until re-verified. |
 
 ### Rename-Map (migration)
 
@@ -694,21 +582,50 @@ Applied automatically when `scripts/install` finds a legacy `.agent-settings`
 | `open_edited_files` | `personal.open_edited_files` |
 | `user_name` | `personal.user_name` |
 | `rtk_installed` | `personal.rtk_installed` |
-| `minimal_output` | `personal.minimal_output` |
-| `play_by_play` | `personal.play_by_play` |
-| `pr_comment_bot_icon` | `personal.pr_comment_bot_icon` |
-| `pr_template` | `project.pr_template` |
 | `upstream_repo` | `project.upstream_repo` |
 | `improvement_pr_branch_prefix` | `project.improvement_pr_branch_prefix` |
 | `github_pr_reply_method` | `github.pr_reply_method` |
 | `eloquent_access_style` | `eloquent.access_style` |
-| `skill_improvement_pipeline` | `pipelines.skill_improvement` |
 | `subagent_implementer_model` | `subagents.implementer_model` |
 | `subagent_judge_model` | `subagents.judge_model` |
 | `subagent_max_parallel` | `subagents.max_parallel` |
 
 Unknown keys in the legacy file are preserved under a `_legacy:` section
 so nothing is silently dropped; the migration log points them out.
+
+### Retired keys
+
+These keys were removed because their shipped default is the only behavior
+the package supports; the behavior they described is unchanged. A leftover
+value in an older `.agent-settings.yml` is ignored with one stderr line per key
+(`<key> was removed (<what decides instead>); ignored.`) — the registry is
+`REMOVED_KEYS` in `scripts/_lib/settings_removed_keys.ts`. Delete the line to
+silence it.
+
+| Retired 2026-10-09 | Fixed behavior |
+|---|---|
+| `personal.minimal_output`, `personal.play_by_play`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`, `verbosity.intent_announcements` | terse replies, no narration, no preview, no routine confirmation, one-line post-action report (`direct-answers` Iron Law 3) |
+| `personal.pr_comment_bot_icon` | no 🤖 prefix (`no-decorative-emojis-in-git-surfaces`) |
+| `telegraph.speak` | the telegraph-speak rule does not ship (bench verdict, ADR telegraph/0002) |
+| `tokens.rich_skills` | `token_budget_class: rich` skills load in full (`token-budget-discipline`) |
+| `reasoning.auto_gate`, `reasoning.components.*` (nine switches) | every RDP component follows the gate's task and host signals (`rdp-gate`); `reasoning.enabled` stays the hard off |
+| `roadmap.skip_pre_run_gate` | no pre-run confirmation; only an ambiguous roadmap or an unresolvable conflict shows the gate |
+| `roadmap.dashboard_regen_cadence` | dashboard regen every 5th closed step, at phase boundaries, at reply end and on any file-shape touch |
+| `commands.auto_detect` | orchestrators auto-detect; opt one out with `auto_detect: false` in its front-matter or one run with `--no-auto-detect` |
+| `commands.suggestion.enabled`, `.confidence_floor`, `.cooldown_seconds`, `.max_options` | suggestion layer always on, floor 0.6, cooldown 600 s, at most 4 options; `blocklist` and per-command frontmatter still apply |
+| `commands.create_pr.api_examples`, `.ui_paths`, `.api_paths` | grounded API examples always added; frontend / API detection by the light heuristic |
+| `memory.cadence` | the 🧠 memory line renders whenever a memory type was asked; `memory.visibility: off` still silences it |
+| `memory.review_threshold` | `/memory load` previews intake signals above a fixed 10 |
+| `knowledge.global_sharing.redaction.*`, `.auto_promote_threshold`, `.freshness.*` | redaction always runs and halts on a hit; promotion suggested at 2 repos; lead-only after 90 days, skipped after 180 |
+| `hooks.concern_budget.max_per_event`, `.hard_fail` | at most 8 concerns per (platform, event) cell; warn-only unless the gate runs with `--strict` |
+| `decision_engine.surface_traces` | no per-phase decision-trace file (accepted in the `decision_engine:` block and ignored) |
+| `decision_engine.on_block_fallback` | an `on_block: ask` that times out stops (accepted and ignored) |
+| `explain.enable_last` | `agent-config explain last` always renders the trace |
+| `project.pr_template` | `/create-pr` reads `.github/pull_request_template.md` |
+| `pipelines.skill_improvement` | post-task learning capture is always proposed (`skill-improvement-trigger`) |
+| `consistency.cross_source` | cross-source discrepancies are always surfaced and asked, batched into one question |
+| `subagents.downshift` | delegable sub-tasks always run on the lowest-capable tier they declare |
+| `ai_team.suppress_setup_hint` | the one-line team-mode setup hint is always shown (accepted and ignored in the `ai_team:` block) |
 
 ## Cost profiles
 
@@ -722,10 +639,9 @@ The `rule_loading_tier` setting selects which agent surfaces are active. See
 | `full` | `balanced` + Tool adapters (GitHub / Jira, read-only, opt-in). |
 | `custom` | Ignore profile — every matrix value must be set explicitly. |
 
-**Learning loop:** `pipelines.skill_improvement` is `true` by default and is
-included in every profile except `custom`. It triggers post-task learning
-capture via the `skill-improvement-trigger` rule. Flip to `false` in the
-settings file if you want a silent agent without touching the profile.
+**Learning loop:** post-task learning capture runs in every profile via the
+`skill-improvement-trigger` rule. It is a proposal the user confirms, not a
+setting (`pipelines.skill_improvement` was retired on 2026-10-09).
 
 Other per-feature toggles may be added in future releases; when they land,
 they ship with a live consumer in code and get documented here, not before.

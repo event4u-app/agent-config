@@ -30,9 +30,6 @@ execution:
 > **This skill captures *usage decisions*:** "we use 8px radius for
 > elevated surfaces", "all destructive actions require typed confirmation".
 > They are complementary, not redundant.
->
-> Gated by `tokens.rich_skills` in `.agent-settings.yml` (default `on`).
-> If `off`, skip rich context loading and work from brief alone.
 
 ## Why this skill is rich
 

@@ -11,17 +11,6 @@
       "enum": ["minimal", "balanced", "full", "custom"],
       "description": "Rule-tier loading footprint. See docs/contracts/cost-profile-defaults.md and docs/contracts/rule-router.md. NOT a memory or model lever."
     },
-    "memory": {
-      "type": "object",
-      "additionalProperties": true,
-      "properties": {
-        "cadence": {
-          "type": "string",
-          "enum": ["auto", "always", "never"],
-          "description": "Cadence of the 🧠 memory-visibility line. See docs/contracts/memory-visibility-v1.md. Owns its own key since the 2026-06-01 untangle; previously collided with rule_loading_tier."
-        }
-      }
-    },
     "model": {
       "type": "object",
       "additionalProperties": true,
@@ -110,17 +99,6 @@
         }
       }
     },
-    "consistency": {
-      "type": "object",
-      "additionalProperties": true,
-      "properties": {
-        "cross_source": {
-          "type": "string",
-          "enum": ["on", "auto", "off"],
-          "description": "Consumed by the cross-source-consistency rule. When the agent works from multiple sources (ticket text, an attached image/mockup, the spec, the codebase) it checks them against each other and asks before proceeding on a discrepancy. on (default) = surface every real cross-source contradiction / silent-scope-expansion as one question; auto = surface only high-confidence contradictions, state low-confidence as an assumption; off = no cross-source checking."
-        }
-      }
-    },
     "delivery": {
       "type": "object",
       "additionalProperties": true,
@@ -175,18 +153,6 @@
           "type": "string",
           "enum": ["minimal", "full"],
           "description": "Consumed by the code-comment-discipline rule. minimal (default) = no signature-mirroring docblocks; docblocks only for machine-relevant precision (generics, array shapes) or genuine why-context. full = exported public library surface may carry one-line summary docblocks; the redundancy ban still holds."
-        }
-      }
-    },
-    "tokens": {
-      "type": "object",
-      "additionalProperties": true,
-      "description": "Token-spend governance for skills marked token_budget_class: rich. See token-budget-discipline rule.",
-      "properties": {
-        "rich_skills": {
-          "type": "string",
-          "enum": ["on", "ask", "off"],
-          "description": "Controls whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak and thin-projector trimming). on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask the user once per session before loading."
         }
       }
     },

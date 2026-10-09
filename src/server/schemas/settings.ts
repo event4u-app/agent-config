@@ -22,19 +22,14 @@ const profileId = z.enum(['developer', 'content_creator', 'founder', 'agency', '
 const accessStyle = z.enum(['getters_setters', 'get_attribute', 'magic_properties']);
 const chatFreq = z.enum(['per_turn', 'per_phase', 'per_tool']);
 const qualityCadence = z.enum(['end_of_roadmap', 'per_phase', 'per_step']);
-const regenCadence = z.enum(['per_step', 'every_5_steps', 'phase_boundary']);
 const fidelityMode = z.enum(['strict', 'structural', 'hard-floor']);
-const crossSourceMode = z.enum(['on', 'auto', 'off']);
-const richSkillsMode = z.enum(['on', 'ask', 'off']);
 const replyMethod = z.enum(['replies_endpoint', 'create_review_comment', 'auto']);
 const confidenceBand = z.enum(['off', 'low', 'medium', 'high']);
 const onBlock = z.enum(['stop', 'ask', 'warn']);
-const onBlockFallback = z.enum(['stop', 'warn']);
 const modelAutoSwitch = z.enum(['auto', 'suggest', 'off']);
 const leanProjectionMode = z.enum(['eager-all', 'thin', 'delivery']);
 const leanProjectionHost = z.enum(['claude-code', 'cursor', 'cline']);
 const projectionMode = z.enum(['legacy-all', 'scoped']);
-const memoryCadence = z.enum(['auto', 'always', 'never']);
 const projectAudience = z.enum(['self', 'internal', 'client', 'public']);
 const deliveryMerge = z.enum(['off', 'on-green']);
 const prTopology = z.enum(['single', 'stacked']);
@@ -124,17 +119,8 @@ export const settingsSchema = z.object({
         rtk_installed: z.boolean().default(false).describe(
             'Does this machine have rtk (Rust Token Killer, a third-party Apache-2.0 tool: https://github.com/rtk-ai/rtk) on PATH — verified as the real Token Killer, not the unrelated Rust Type Kit that shares the binary name? When true the agent wraps verbose CLI output (git, tests, linters, docker, npm, composer) with rtk (upstream reports 60-90% token savings — their estimate). Leave false if rtk is missing — the agent falls back to tail / grep. The wizard overwrites this from a live two-stage probe (PATH presence + `rtk gain` identity check).',
         ),
-        minimal_output: z.boolean().default(true).describe(
-            'Prefer short bullets and tables (true, default) vs verbose prose with rationale (false). Affects every chat reply; flip to false during debugging when you want the agent to think out loud.',
-        ),
         canary_name: z.string().default('').describe(
             'Session canary — the name the agent addresses you with at the start of every new task (e.g. "Alex"). When the greeting silently disappears, the context window is degrading: start a fresh conversation. Also keeps the reply-close markers (end-summary, PR URL as literal last line) alive. Empty = fall back to the user-global canary_name, then to identity.name from the setup wizard; no name anywhere = off. See rules/session-canary.md.',
-        ),
-        play_by_play: z.boolean().default(false).describe(
-            'Narrate intermediate findings between tool calls ("Found it.", "Let me check Y."). Off by default — most users find it noisy. Turn on when you want to follow the agent\'s reasoning step by step.',
-        ),
-        pr_comment_bot_icon: z.boolean().default(false).describe(
-            'Prefix every PR review-comment reply with 🤖 so humans can tell agent-authored comments apart from teammate comments at a glance. Cosmetic only; the comment body itself never changes.',
         ),
         pr_progress_comments: z.boolean().default(false).describe(
             'Permit the agent to post unsolicited progress / status comments on an open PR (e.g. "CI fix iteration #2", "still blocked on workflow scope"). Default off — most teammates find them noisy. User-invoked flows (/fix:pr-comments, /create-pr, /code-review, explicit "post a comment that …") are NOT gated by this setting. See rules/no-pr-progress-comments.md.',
@@ -147,9 +133,6 @@ export const settingsSchema = z.object({
         ),
     }),
     project: z.object({
-        pr_template: z.string().default('.github/pull_request_template.md').describe(
-            'Path (relative to project root) to the PR-description template the agent fills in before opening a pull request. Override only if your repo keeps the template somewhere non-standard.',
-        ),
         upstream_repo: z.string().default('').describe(
             'GitHub slug (owner/repo) the upstream-contribute skill targets when you ask the agent to push a learning back to the shared agent-config package. Empty = improvement PRs are disabled.',
         ),
@@ -250,20 +233,9 @@ export const settingsSchema = z.object({
             ),
         }),
     }),
-    pipelines: z.object({
-        skill_improvement: z.boolean().default(true).describe(
-            'After a meaningful task the agent proposes a learning-capture turn (new skill, rule tweak, guideline). Turn off if you find the prompts noisy — you can still run /memory:promote manually.',
-        ),
-    }),
     roadmap: z.object({
-        skip_pre_run_gate: z.boolean().default(true).describe(
-            'Skip the /roadmap:process-* pre-run confirmation gate. true (default) starts processing immediately and surfaces the resolved config inline; false shows the numbered-options gate and waits. A genuine "which roadmap?" ambiguity always prompts regardless.',
-        ),
         quality_cadence: qualityCadence.default('per_phase').describe(
             'When the agent runs the full quality / test suite during /roadmap:process-* runs. per_phase = after each phase boundary (default since 2026-09-13 — end_of_roadmap lets errors compound across phases, which is expensive in a multi-phase autonomous run nobody is watching). end_of_roadmap = once, after the last step (fastest). per_step = after every single step (slowest, highest confidence).',
-        ),
-        dashboard_regen_cadence: regenCadence.default('every_5_steps').describe(
-            'How often the agent regenerates agents/roadmaps/dashboard.md during a roadmap run. every_5_steps = batch the regen (default). per_step = after every step (freshest dashboard, highest subprocess overhead). phase_boundary = only at phase edges. A rename, phase add, or archive always regenerates immediately regardless.',
         ),
         horizon_weeks: z.number().int().min(0).default(0).describe(
             'Optional planning horizon (weeks) the agent shows in roadmap framing ("next 4 weeks"). Set 0 to omit the horizon — most teams prefer to ship without a hardcoded window.',
@@ -349,11 +321,6 @@ export const settingsSchema = z.object({
             "Extra project-relative paths where THIS project keeps a code-graph index another tool wrote. The built-in list is deliberately vendor-neutral (graph.json, code-graph.json, .code-graph/graph.json) and names no tool, so a tool that writes its index elsewhere is named here rather than waited for. A graph found this way LOADS and answers query and explain with every edge tagged read-from-elsewhere; the gate verbs (impact, untested, dead) refuse a graph made only of such edges and say so, because an empty answer from a gate must not read as 'nothing found' when it means 'nothing trusted'. Absolute paths and paths escaping the project root are ignored.",
         ),
     }).default({}),
-    consistency: z.object({
-        cross_source: crossSourceMode.default('on').describe(
-            'Consumed by the cross-source-consistency rule. When the agent works from multiple sources (ticket text, an attached image/mockup, the spec, the codebase) it checks them against each other and asks before proceeding on a discrepancy — instead of silently guessing. on (default) = surface every real cross-source contradiction / silent-scope-expansion as one question; auto = surface only high-confidence contradictions, state low-confidence as an assumption; off = no cross-source checking.',
-        ),
-    }).default({ cross_source: 'on' }),
     screenshots: z.object({
         identity_allowlist: z.array(z.string()).default([]).describe(
             "Consumed by the doc-screenshot-hygiene rule and screenshot-hygiene skill. Public identity tokens SAFE to show unredacted in a documentation screenshot — the maintainer's own public handles plus well-known fake-data tokens. Not a general fake-data dictionary and not identity-resolution: everything not listed is treated as sensitive by default, and a public handle co-located with a real name does not whitelist the real name. Default [] = nothing auto-allowed.",
@@ -365,39 +332,11 @@ export const settingsSchema = z.object({
             'Consumed by the doc-screenshot-hygiene rule. on (default) = a data-bearing screenshot embed is gated behind this-turn human confirmation; uncertain/unresolved regions redact-or-refuse, never ship-and-hope; illustrative/no-data screenshots may embed with a stated justification. off = no data-bearing gate (the anonymization taxonomy still applies).',
         ),
     }).default({ identity_allowlist: [], forbid_terminal_capture: true, data_bearing_gate: 'on' }),
-    telegraph: z.object({
-        speak: z.boolean().default(false).describe(
-            'Whether the telegraph-speak rule ships at all. false (default) = DORMANT: compile_router omits the rule from dist/router.json entirely, so its body never reaches a host. This is the only lever that stops the cost. Set true only after an output-side bench clears the kill-criterion bar (docs/adrs/telegraph/0002).',
-        ),
-    }).default({ speak: false }),
-    tokens: z.object({
-        rich_skills: richSkillsMode.default('on').describe(
-            'Whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak + thin-projector trimming), consumed by the token-budget-discipline rule. on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask once per session before loading.',
-        ),
-    }).default({ rich_skills: 'on' }),
     verbosity: z.object({
-        intent_announcements: z.boolean().default(false).describe(
-            'Intent narration before tool batches ("Let me check X…"). Only honored when personal.play_by_play is ALSO true (the direct-answers narration carve-out requires both). false (default) = act and emit the result.',
-        ),
-        preview_artifacts: z.boolean().default(false).describe(
-            'Show generated commit messages, PR titles/bodies, branch names before acting. false (default) = use generated content directly (/commit terse path).',
-        ),
-        routine_confirmations: z.boolean().default(false).describe(
-            'Confirmation prompts for routine workflow steps with one obvious answer. Iron-Law gates (commit-policy, scope-control git-ops, Hard Floor) ALWAYS ask regardless.',
-        ),
         offer_council_in_delivery: z.boolean().default(false).describe(
             'Offer "run AI Council on this?" inside delivery commands (/feature-plan, /review-changes, /roadmap-create). Council commands themselves are unaffected.',
         ),
-        post_action_reports: z.enum(['off', 'minimal', 'full']).default('minimal').describe(
-            'Status blocks after a successful action. off = errors only; minimal (default) = one-line confirmation; full = bullet list.',
-        ),
-    }).default({
-        intent_announcements: false,
-        preview_artifacts: false,
-        routine_confirmations: false,
-        offer_council_in_delivery: false,
-        post_action_reports: 'minimal',
-    }),
+    }).default({ offer_council_in_delivery: false }),
     code_style: z.object({
         docblocks: z.enum(['minimal', 'full']).default('minimal').describe(
             'Consumed by the code-comment-discipline rule. minimal (default) = no signature-mirroring docblocks; docblocks only for machine-relevant precision (generics, array shapes) or genuine why-context. full = the exported public surface of a library package may carry one-line summary docblocks; the redundancy ban still holds.',
@@ -407,43 +346,8 @@ export const settingsSchema = z.object({
         enabled: z.boolean().default(true).describe(
             'Master switch for the Reasoning Discipline Protocol (RDP). false = the whole layer is inert (zero overhead).',
         ),
-        auto_gate: z.boolean().default(true).describe(
-            'Engage the discipline only where it pays, using table-free signals (task triviality + agent-self-assessed host reasoning strength; no runtime model->band lookup, per ADR-035). false = gate on task-signal + the component toggles only.',
-        ),
-        components: z.object({
-            orchestrator: z.boolean().default(true).describe(
-                'Sequence the reasoning chain (ground->intent->notes->gather->audit->verify) as one system; the single coordination point.',
-            ),
-            notes_first: z.boolean().default(true).describe(
-                'Keep hypotheses/predictions/decisions in session notes; the response carries conclusions + evidence only.',
-            ),
-            grounding: z.boolean().default(true).describe(
-                'Explore the environment / close info-gaps before designing.',
-            ),
-            intent: z.boolean().default(true).describe(
-                'Infer the underlying goal before solving the literal ask (standard host only).',
-            ),
-            complexity_first: z.boolean().default(true).describe(
-                'Risk-first: resolve the load-bearing unknown before the easy parts (RDP derivation, not a Fable-documented behavior).',
-            ),
-            verifier_default: z.boolean().default(true).describe(
-                'Run a fresh-context verifier on the structural-complexity gate (branching/constraints/stateful/irreversible + token floor).',
-            ),
-            prediction_tracking: z.boolean().default(true).describe(
-                'Log prediction + confidence + outcome + lesson (calibration loop).',
-            ),
-            decision_ledger: z.boolean().default(true).describe(
-                'Log decision + alternatives + reason + revisit-if; escalates to decision-record/ADR when durable.',
-            ),
-            uncertainty_budget: z.boolean().default(true).describe(
-                'Per-dimension uncertainty score that feeds adaptive effort.',
-            ),
-        }).default({}),
     }).default({}),
     subagents: z.object({
-        downshift: z.boolean().default(true).describe(
-            'Route delegable sub-tasks to the lowest-capable model tier (cost + speed via model downshift). false = every subagent runs on the session tier.',
-        ),
         quota_arbitrage: z.boolean().default(true).describe(
             'Prefer a separate quota-pool model for delegable sub-tasks where the host manifest reports one. Optional bonus only — identical behaviour (minus the quota win) where unsupported. Never load-bearing.',
         ),
@@ -483,9 +387,6 @@ export const settingsSchema = z.object({
         max_calls_per_day: z.number().int().min(0).default(50).describe(
             'Per-day cap on team calls, read against the EXISTING cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json, daily UTC reset) — one subscription, one counter, never a parallel count. 0 = block all team calls.',
         ),
-        suppress_setup_hint: z.boolean().default(false).describe(
-            'Suppress the one-line wizard/init recommendation to set up the codex plugin on Claude-Code hosts. Cosmetic only — never changes behavior.',
-        ),
         review_gate: z.object({
             managed: z.boolean().default(false).describe(
                 "Managed governance of the codex plugin's Stop-hook Review Gate (road-to-team-mode Phase 4). false (default) = byte-identical pre-Phase-4 behavior: no counting, no circuit breaker. true = count consecutive BLOCK verdicts per session and trip the circuit breaker at max_consecutive_blocks.",
@@ -494,7 +395,7 @@ export const settingsSchema = z.object({
                 'Circuit-breaker bound: after this many CONSECUTIVE BLOCK verdicts in one session, a visible notice is injected exactly once and the managed layer stops re-blocking — the user decides, never an infinite Claude↔Codex loop. An ALLOW verdict resets the counter. Positive integer.',
             ),
         }).default({ managed: false, max_consecutive_blocks: 3 }),
-    }).default({ model: 'auto', allow_delegate: false, max_calls_per_day: 50, suppress_setup_hint: false, review_gate: { managed: false, max_consecutive_blocks: 3 } }),
+    }).default({ model: 'auto', allow_delegate: false, max_calls_per_day: 50, review_gate: { managed: false, max_consecutive_blocks: 3 } }),
     emergency: z.object({
         orchestration_halt: z.boolean().default(false).describe(
             'The one audited incident switch over the always-on orchestration stack (subagents, council, team). NOT an activation gate: false (default) = the stack runs normally. true = halted; arming requires no ceremony. Disarming (returning to false) requires orchestration_halt_justification to be a non-empty string. Both transitions emit one telemetry line.',
@@ -509,22 +410,7 @@ export const settingsSchema = z.object({
         ),
     }),
     commands: z.object({
-        auto_detect: z.enum(['enabled', 'warn', 'disabled']).default('enabled').describe(
-            'Global kill-switch for orchestrator auto-detection (6.1.0 non-interactive-contract). enabled (default) = /judge, /fix, /analytics, /tests, /override auto-detect their sub-command per a confidence-tiered table; warn = detect but always confirm before routing; disabled = never auto-detect (always show the menu interactively, require an explicit sub-command in CI). Per-orchestrator override: auto_detect:false in front-matter. Per-invocation: --no-auto-detect.',
-        ),
         suggestion: z.object({
-            enabled: z.boolean().default(true).describe(
-                'Master switch for the slash-command suggestion layer. When on, the agent offers numbered options ("did you mean /commit?") instead of guessing. Turn off if you prefer to type every command yourself.',
-            ),
-            confidence_floor: z.number().min(0).max(1).default(0.6).describe(
-                'Minimum semantic-match score (0.0–1.0) before a command is offered as a suggestion. 0.6 (default) balances precision and recall. Raise toward 0.8 for fewer false positives, lower for broader hints.',
-            ),
-            cooldown_seconds: z.number().int().min(0).default(600).describe(
-                'How long (seconds) the suggester waits before offering the same command again after you ignored it. Default 600s (10 min) keeps the agent from nagging. Set 0 to disable the cooldown.',
-            ),
-            max_options: z.number().int().min(0).default(4).describe(
-                'Maximum number of command suggestions shown in a single numbered-options block, before the "Proceed as-is" escape. Lower for terser prompts, raise if you regularly want broader fan-out.',
-            ),
             blocklist: z.array(z.string()).default([]).describe(
                 'Slash-command names that should never be suggested, one per line (e.g. "commit", "create-pr"). Useful if a command misfires on your common phrasing.',
             ),
@@ -536,17 +422,8 @@ export const settingsSchema = z.object({
             detail_level: z.enum(['min', 'med', 'max']).default('min').describe(
                 'Verbosity tier for the generated PR description body. min (default) = title + 2-3 sentence what/why/impact + linked ticket (token-frugal); med = min + grouped changes + tests note; max = med + how-to-test + edge cases + reviewer guidance. Critical info (breaking changes, migrations, security, rollback) is ALWAYS included at every tier — the tier governs explanatory depth, never whether a critical callout appears.',
             ),
-            api_examples: z.boolean().default(true).describe(
-                'JSON request/response examples for API-endpoint changes. true (default) = include a fenced example ONLY when grounded in a real source (response DTO/resource, OpenAPI/schema, test fixture, or an actual probe); no grounded source → a one-line pointer, never an invented example. false = never add API examples.',
-            ),
             screenshots: z.boolean().default(false).describe(
                 'Screenshots for frontend changes. false (default) = never attempt. true = attempt when the host has browser/preview tooling and the diff touches a frontend surface; capability-gated (emits a one-line note and leaves the placeholder when tooling is absent, never fails or blocks the PR). Before/after + changed-region highlighting is best-effort.',
-            ),
-            ui_paths: z.array(z.string()).default([]).describe(
-                'Optional glob list that makes frontend detection explicit instead of heuristic (e.g. ["resources/views/**", "src/pages/**"]). Empty (default) = a light path/extension heuristic that fails open (no false enrichment when the surface is ambiguous).',
-            ),
-            api_paths: z.array(z.string()).default([]).describe(
-                'Optional glob list that makes API-endpoint detection explicit instead of heuristic (e.g. ["app/Http/Controllers/Api/**", "src/pages/api/**"]). Empty (default) = a light path/extension heuristic that fails open.',
             ),
         }),
     }),
@@ -559,12 +436,6 @@ export const settingsSchema = z.object({
         ),
     }),
     memory: z.object({
-        cadence: memoryCadence.default('always').describe(
-            'Cadence of the 🧠 memory-visibility line after a memory-consulting step. always (default) = show whenever a memory type was asked; auto = show only when 3+ types were consulted (less noise); never = suppress. Distinct from rule_loading_tier — owns its own key since the 2026-06-01 untangle.',
-        ),
-        review_threshold: z.number().int().min(0).default(10).describe(
-            'Maximum number of memory entries /memory:load surfaces inline before falling back to a summary view. Default 10 keeps the chat readable. Raise to see more candidates, lower to keep the context tight.',
-        ),
         redact_patterns: z.array(z.string()).default([]).describe(
             'Regex patterns (one per line) that scrub matches from chat-history transcripts and memory before they hit disk. Use for secrets, customer names, internal URLs. Patterns are anchored and case-insensitive.',
         ),
@@ -583,37 +454,12 @@ export const settingsSchema = z.object({
             allowed_tiers: z.array(z.string()).default(['public']).describe(
                 'Origin tiers auto-eligible to cross a project boundary. proprietary is manual-only regardless (the gate hard-codes it), so an in-house schema never auto-shares.',
             ),
-            redaction: z.object({
-                enabled: z.boolean().default(true).describe(
-                    'Run the privacy-floor + source-confidentiality scan before any card goes global.',
-                ),
-                halt_on_trigger: z.boolean().default(true).describe(
-                    'Halt-and-surface on a confidential-pattern hit; never silent-share, never auto-rewrite.',
-                ),
-            }).default({}),
-            auto_promote_threshold: z.number().int().min(1).default(2).describe(
-                'Distinct-repo count at which a public/vendor card triggers a promotion suggestion (never a silent write).',
-            ),
-            freshness: z.object({
-                hypothesis_after_days: z.number().int().min(0).default(90).describe(
-                    'A global card older than this is lead-only (positive structure must be re-confirmed before use).',
-                ),
-                stale_after_days: z.number().int().min(0).default(180).describe(
-                    'A global card older than this is skipped until re-verified.',
-                ),
-            }).default({}),
         }).default({}),
     }).default({}),
     hooks: z.object({
         concern_budget: z.object({
-            max_per_event: z.number().int().min(1).default(8).describe(
-                'Maximum number of concerns (issues / warnings) a single hook may raise per (platform, event) pair before the hook is rate-limited. Default 8 prevents noisy hooks from drowning out high-signal ones.',
-            ),
             tier1_concerns: z.array(z.string()).default([]).describe(
                 'Concern IDs (one per line) that are allowed to block the run on failure rather than warn. Reserved for high-confidence guards — leave empty unless you maintain custom hooks.',
-            ),
-            hard_fail: z.boolean().default(false).describe(
-                'When a hook exceeds hooks.concern_budget.max_per_event, fail the run (true) instead of warning and continuing (false, default). Turn on in CI when you want hook quality to gate merges.',
             ),
         }),
         verify_before_complete: z.object({
@@ -666,12 +512,9 @@ export const settingsSchema = z.object({
         // fires is decided by each detector's own trigger conditions, not by a
         // flag. A leftover `hooks.turn_end_gate.*` block from an older install
         // warns once on stderr and is ignored — see REMOVED_KEYS in
-        // `src/scripts/_lib/agent_settings.ts`.
+        // `src/scripts/_lib/settings_removed_keys.ts`.
     }),
     decision_engine: z.object({
-        surface_traces: z.boolean().default(false).describe(
-            'Emit DecisionTraceHook events that surface why the agent picked one option over another. Useful when debugging unexpected choices; off by default to keep chat noise low.',
-        ),
         min_confidence: confidenceBand.default('off').describe(
             'During Phase=Plan, refuse to advance to Phase=Implement if confidence is below this band. off (default) = no gate. low / medium / high = raise the floor; on miss, decision_engine.on_block decides what happens.',
         ),
@@ -685,20 +528,12 @@ export const settingsSchema = z.object({
             'What the decision engine does when a gate (min_confidence / block_on_risk / require_memory_hits) fires. stop (default) = halt and surface the reason. ask = present numbered options. warn = log and continue.',
         ),
         ask_timeout_seconds: z.number().int().min(0).default(30).describe(
-            'Non-TTY timeout (seconds) for decision_engine.on_block = ask. After this elapses without input, decision_engine.on_block_fallback takes over. Default 30s; raise for slow human review, 0 = wait forever.',
-        ),
-        on_block_fallback: onBlockFallback.default('stop').describe(
-            'Resolution when decision_engine.on_block = ask times out (see decision_engine.ask_timeout_seconds). stop (default) = halt the run. warn = log and continue with the agent\'s best guess.',
+            'Non-TTY timeout (seconds) for decision_engine.on_block = ask. After this elapses without input, the engine stops (fail-safe). Default 30s; raise for slow human review, 0 = wait forever.',
         ),
     }),
     update_check: z.object({
         enabled: z.boolean().default(true).describe(
             'Once per day the agent checks the npm registry for a newer agent-config release and surfaces a one-line banner if one exists. Turn off in air-gapped environments or to silence the banner.',
-        ),
-    }),
-    explain: z.object({
-        enable_last: z.boolean().default(true).describe(
-            'Enable the `agent-config explain last` command, which prints the reasoning behind the agent\'s most recent decision (last tool call, last suggestion). Disable if you never use it and want a smaller CLI surface.',
         ),
     }),
     legal_review_prep: z.object({

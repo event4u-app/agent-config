@@ -37,19 +37,17 @@ from a ticket/spec that carries a second source:
 4. **Classify confidence.** High = the sources plainly disagree, or the missing
    behavior is clearly load-bearing. Low = the "conflict" is a plausible
    re-reading, or the missing behavior may be intentionally out of scope.
-5. **Decide per the setting** (below), then **batch** every surviving discrepancy
-   into ONE question folded into this turn's single `ask-when-uncertain` prompt.
+5. **Batch** every surviving discrepancy into ONE question folded into this
+   turn's single `ask-when-uncertain` prompt.
 
-## Confidence-tiered noise control (`consistency.cross_source`)
+## Noise control
 
 The rule fires only under a real trade-off (it must pass the
-`no-cheap-questions` Pre-Send Self-Check). The setting tunes how aggressively:
-
-| Value | High-confidence discrepancy | Low-confidence discrepancy |
-|---|---|---|
-| `on` (default) | Surface + ask before proceeding. | Surface + ask (batched into the same question). |
-| `auto` | Surface + ask. | State as an explicit assumption and proceed (no question). |
-| `off` | No cross-source checking — legacy behavior. | No cross-source checking. |
+`no-cheap-questions` Pre-Send Self-Check). Every real discrepancy, high- or
+low-confidence, is surfaced and asked — batched into the same question. That
+is the fixed behavior since the `consistency.cross_source` key (which offered
+`auto` and `off`) was retired on 2026-10-09 with this, its default, as the only
+mode.
 
 Batching is the anti-noise mechanism: N discrepancies for one artefact become
 one numbered-options block, never N prompts. Plain vagueness (a single unclear

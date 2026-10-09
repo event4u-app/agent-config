@@ -141,8 +141,9 @@ is therefore **agent self-assessed**, never looked up (roadmap L10/L17):
 **One** constraint-light scaffold ships — no heavy/light content variants, since
 two variants would be a hidden model→band table. A standard host **expands it on
 request**. Two gates, both default-on: automatic (task signal + agent
-self-assessment) + the user `reasoning:` settings toggle (global + per-component
-+ hard off).
+self-assessment) + the user's `reasoning.enabled` hard off. The per-component
+toggles and `reasoning.auto_gate` were retired on 2026-10-09; the automatic gate
+decides per component.
 
 ## Notes template grounding
 

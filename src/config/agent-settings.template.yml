@@ -214,46 +214,6 @@ lean_projection:
   mode: delivery
   hosts: [claude-code]
 
-# --- Telegraph condensation (output-side) ---
-#
-# `speak: false` is the shipped default per
-# docs/adrs/telegraph/0001-default-off-until-bench.md (Status: accepted) and
-# docs/contracts/condensation-default-kill-criterion.md.
-# Reason it is off: the only output-side bench (telegraph-v1, n=10, 2026-05-16)
-# measured median vs_terse -9.27% (API counts) / -5.47% (exact cl100k_base
-# re-analysis) — telegraph emits MORE tokens than a plain "be terse" instruction.
-# The kill-criterion table therefore lands on "criterion not met — defer" and the
-# telemetry multiplier stays suspended (0.9155 < 1.0).
-#
-# Stated explicitly here because until 2026-07-29 this default existed only in
-# prose — and two prose sources disagreed. Do not flip without a passing
-# output-side bench.
-telegraph:
-  # speak: false = DORMANT (the shipped default per docs/adrs/telegraph/0002).
-  # The rule is omitted from dist/router.json entirely, so its ~982-token body
-  # never ships. This is the only lever that stops the cost: compile_router
-  # gates on `speak` and on nothing else.
-  # Set true only after an output-side bench clears the kill-criterion bar.
-  speak: false
-
-# --- Token-rich skills governance ---
-#
-# Skills marked `token_budget_class: rich` in their frontmatter are exempt
-# from telegraph-speak condensation and thin-projector trimming. They load
-# their full content (examples, tables, code blocks) to maximize design-output
-# quality. This setting controls whether that extra spend is allowed globally.
-#
-# Values:
-#   on   — rich skills load in full (default; recommended for design-intensive workflows)
-#   off  — rich skills fall back to standard condensed behavior
-#   ask  — before loading a rich skill, the agent surfaces an estimated token
-#          delta (≈ file size in chars / 4, reported in tokens not dollars) and
-#          asks the user once; the answer is cached for the session
-#
-# Configurable in the browser setup wizard (Setup → Skills → Token budget).
-tokens:
-  rich_skills: "on"
-
 # --- Cost tracking + budget enforcement ---
 #
 # USD budgets evaluated against `agents/cost-tracking/sessions.jsonl` by
@@ -313,16 +273,6 @@ personal:
   # Agent will auto-detect and ask once, then store the result
   rtk_installed: false
 
-  # Minimal output mode (true, false)
-  # true  = short bullet points during work, concise summary at the end
-  # false = verbose explanations and reasoning
-  minimal_output: true
-
-  # Play-by-play mode (true, false)
-  # true  = briefly share intermediate findings as you go
-  # false = silently investigate, only report the conclusion
-  play_by_play: false
-
   # Session canary — the name the agent addresses you with at the start of
   # every new task (e.g. "Alex"). Like a canary in a coal mine: when the
   # greeting silently disappears, the context window is degrading and it is
@@ -334,10 +284,6 @@ personal:
   # the global name per project. No name on any layer = feature off.
   # See rules/session-canary.md.
   canary_name: ""
-
-  # Prefix PR comment replies with a bot icon 🤖 (true, false)
-  # Personal preference — each developer decides for themselves.
-  pr_comment_bot_icon: false
 
   # Allow the agent to post unsolicited progress / status comments on
   # an open PR (e.g. "CI fix iteration #2", "blocked on workflow scope").
@@ -366,31 +312,11 @@ personal:
 
 # --- Reply verbosity ---
 verbosity:
-  # Announce intent before tool batches ("Let me check X…") — only honored
-  # when personal.play_by_play is ALSO true (the direct-answers narration
-  # carve-out requires both). Default false = no intent narration.
-  intent_announcements: false
-
-  # Show generated commit messages, PR titles/bodies, branch names before
-  # acting. false = use generated content directly (/commit terse path).
-  preview_artifacts: false
-
-  # Confirmation prompts for routine workflow steps with one obvious answer.
-  # Iron-Law gates (commit-policy, scope-control git-ops, Hard Floor) ALWAYS
-  # ask regardless of this setting.
-  routine_confirmations: false
-
   # Offer "run AI Council on this?" inside delivery commands.
   offer_council_in_delivery: false
 
-  # Status blocks after a successful action: off | minimal | full.
-  post_action_reports: minimal
-
 # --- Project / team preferences ---
 project:
-  # Path to the PR template file (relative to project root)
-  pr_template: .github/pull_request_template.md
-
   # Target repository for universal improvement PRs (e.g. org/agent-config)
   upstream_repo: ""
 
@@ -576,15 +502,6 @@ chat_history:
     tool: 200
     phase: 200
 
-# --- Optional pipelines ---
-pipelines:
-  # Skill improvement pipeline (true, false)
-  # true  = after meaningful tasks, propose learning capture and improvements (default)
-  # false = silent, no post-task analysis
-  # Included by every rule_loading_tier except `custom`. Flip to false here if you
-  # want a silent agent; `custom` profile ignores this default entirely.
-  skill_improvement: true
-
 # --- Reasoning Discipline Protocol (RDP) ---
 #
 # Transplants the *operating discipline* of a frontier reasoning model
@@ -595,29 +512,10 @@ pipelines:
 # Rationale + sources: docs/guidelines/agent-infra/frontier-reasoning-operating-profile.md
 reasoning:
   # Master switch (true, false). false = the whole layer is inert (zero overhead).
+  # When on, the discipline engages per task through the RDP gate's own signals
+  # (task triviality + the host's self-assessed reasoning strength, ADR-035) —
+  # there is no per-component switch; every component follows those signals.
   enabled: true
-
-  # Auto benefit-gating (true, false). Engages only where it pays, using
-  # table-free signals (ADR-035 forbids any runtime model->band lookup table):
-  #   - task signal: trivial / short / fully-specified tasks -> OFF
-  #   - host reasoning strength (agent self-assessed, no maintained list): a
-  #     strong-reasoning host applies the discipline lightly / as suggestion;
-  #     a standard host applies it fully.
-  # One constraint-light scaffold ships; standard hosts expand it on request.
-  # false = gate on task-signal + toggles only (skip the self-assessment touch).
-  auto_gate: true
-
-  # Per-component switches. Each fires only when `enabled` AND the auto_gate test passes.
-  components:
-    orchestrator: true       # sequences the chain; the single coordination point
-    notes_first: true        # reasoning in session notes, never echoed in the response
-    grounding: true          # explore environment / close info-gaps before designing
-    intent: true             # infer the underlying goal before solving the literal ask
-    complexity_first: true   # risk-first: resolve the load-bearing unknown first (RDP derivation, not Fable-documented)
-    verifier_default: true   # fresh-context verifier on the structural-complexity gate (branching/constraints/stateful/irreversible + token floor)
-    prediction_tracking: true # log prediction + confidence + outcome + lesson (calibration loop)
-    decision_ledger: true    # log decision + alternatives + reason + revisit-if; escalates to decision-record/ADR when durable
-    uncertainty_budget: true # per-dimension uncertainty score; feeds adaptive effort
 
 # --- Roadmap execution ---
 #
@@ -632,8 +530,8 @@ roadmap:
   # templates/roadmaps.md rule 18) changes ONLY the run's interaction
   # pattern: which asks are batched into the run-start execution
   # contract and where checkpoint prompts fire. It overrides NONE of
-  # the keys below — `skip_pre_run_gate`, `quality_cadence`, and
-  # `dashboard_regen_cadence` keep their global meaning in every mode.
+  # the keys below — `quality_cadence` keeps its global meaning in
+  # every mode.
   #
   # WHAT NO MODE LIFTS, NAMED. This sentence used to read "no mode lifts a
   # safety floor", which is unfalsifiable: it never says which floor or how
@@ -651,17 +549,6 @@ roadmap:
   # reach and this comment as the authority on what a MODE can change: nothing.
   # See contexts/execution/roadmap-execution-contract.md.
 
-  # Skip the /roadmap:process-* pre-run confirmation gate (true, false).
-  #   true  = default. The command name names the scope; a discoverable
-  #           single active roadmap (or a named one) starts the loop
-  #           immediately, resolved config surfaced inline so a wrong
-  #           pick can still be aborted mid-stream.
-  #   false = legacy. Shows the pre-run summary with numbered options
-  #           and waits. The gate is still shown regardless when the
-  #           roadmap is ambiguous or a scope / cadence conflict has no
-  #           sensible default. See rules/autonomous-execution.md.
-  skip_pre_run_gate: true
-
   # When to run quality tools during /roadmap execute.
   #   end_of_roadmap = once, before archiving the completed roadmap (fastest, fewest tokens)
   #   per_phase      = once after every completed phase (default since 2026-09-13)
@@ -676,35 +563,6 @@ roadmap:
   # (a mission) decide WHETHER local pipeline runs happen at all; this
   # knob only decides WHEN, and is inert wherever both resolve false.
   quality_cadence: per_phase
-
-  # Dashboard regen cadence inside autonomous runs (process-step /
-  # process-phase / process-full). Controls how often
-  # `./agent-config roadmap:progress` runs **between** steps in a
-  # single session. The dashboard is always regenerated at the start
-  # of the run, at every phase boundary, and at run end — this knob
-  # only affects the inter-step beat.
-  #
-  #   per_step         = regen after every checkbox flip. Safest for
-  #                      crash recovery; highest subprocess overhead.
-  #                      Use when a session may be killed mid-roadmap
-  #                      and a fresh dashboard must always reflect the
-  #                      last-saved step.
-  #   every_5_steps    = default: batch flips, regen every 5 closed
-  #                      steps + at every phase boundary. Balanced
-  #                      cost/freshness for runs of 20–100 steps.
-  #   phase_boundary   = regen only at phase boundaries + run end.
-  #                      Cheapest for long roadmaps (100+ steps).
-  #                      The checkbox flip itself is still inline per
-  #                      Iron Law 2 — only the subprocess regen batches.
-  #
-  # `process-step` ignores this knob (single-step runs always regen
-  # at the end of the step). The Iron Law 1 mandate to regen on any
-  # file-shape touch (rename / phase add / archive) still fires
-  # immediately regardless of this setting — so the dashboard is never
-  # stale across a rename, a phase add, or an archive, whatever the
-  # inter-step beat is.
-  dashboard_regen_cadence: every_5_steps
-
 
   # Visible-horizon framing in roadmap authoring (integer weeks, default 0).
   # 0  = off (default). Time-boxed plate / horizon framing is forbidden:
@@ -954,34 +812,6 @@ design:
       # at large dimensions with no evidence that this is wanted.
       length: null
 
-# --- Cross-source consistency ---
-#
-# When the agent plans, refines, roadmaps, or implements from multiple
-# sources — ticket text, an attached image / mockup / screenshot, the spec,
-# the codebase — it actively checks them AGAINST each other and STOPS to ask
-# before proceeding on a detected discrepancy, instead of silently guessing
-# (even a correct guess). Consumed by the `cross-source-consistency` rule.
-# Catches: (a) ticket text vs an attached image/mockup, (b) a spec silent on
-# a clearly-needed behavior (weekend/holiday shifting, empty/error states),
-# (c) spec vs the codebase, (d) intra-ticket contradiction (AC vs description).
-#
-# The discipline is deliberately subordinate to `ask-when-uncertain` (it folds
-# a detected discrepancy into the same turn's single question — never a second
-# prompt) and defers to `scope-control` for the permission to expand scope.
-consistency:
-  # on | auto | off  (default: on)
-  #
-  # on   = default. Detect discrepancies across sources and surface ONE
-  #        numbered-options question before proceeding. A silent guess on a
-  #        real contradiction is a rule violation, even when the guess is
-  #        correct. An inferred-but-unspecified behavior is a scope expansion:
-  #        ask before implementing it.
-  # auto = detect + surface only HIGH-confidence contradictions; low-confidence
-  #        ones are stated as an assumption and proceed (noise control).
-  # off  = no cross-source checking (legacy: the agent may proceed on its own
-  #        reading of whichever source it happened to read).
-  cross_source: "on"
-
 # --- Documentation screenshots ---
 #
 # When the agent creates screenshots for documentation (e.g. generating a docs
@@ -1068,10 +898,8 @@ code_style:
 # .augment/contexts/subagent-configuration.md and
 # .augment/contexts/execution/auto-orchestration-activation.md.
 subagents:
-  # Route delegable sub-tasks to the lowest-capable model tier (cost + speed
-  # via model downshift). true (default) = downshift per declared model_tier;
-  # false = every subagent runs on the session tier.
-  downshift: true
+  # Delegable sub-tasks always run on the lowest-capable model tier they
+  # declare (cost + speed via model downshift); this is fixed, not a key.
 
   # Prefer a separate-quota-pool model for delegable sub-tasks WHERE the host
   # manifest reports `separate_quota_pool: true` (e.g. a subscription whose
@@ -1134,7 +962,7 @@ subagents:
 # let the agent start parallel work on its own, and `off` was the behaviour
 # everyone actually wanted — so the setting's only real value was hardcoded and
 # the other two values removed. A leftover key from an older install is ignored
-# with one deprecation line (see `REMOVED_KEYS` in `_lib/agent_settings.ts`).
+# with one deprecation line (see `REMOVED_KEYS` in `_lib/settings_removed_keys.ts`).
 #
 # The Iron-Law gates on creation (ignore-safety check, clean baseline) are
 # unchanged and still run on every explicitly-requested worktree.
@@ -1194,10 +1022,6 @@ ai_team:
   # raise if you review heavily.
   max_calls_per_day: 50
 
-  # Suppress the one-line wizard/init recommendation to set up the codex
-  # plugin on Claude-Code hosts. Cosmetic only — never changes behavior.
-  suppress_setup_hint: false
-
   # Managed governance of the codex plugin's Stop-hook Review Gate
   # (road-to-team-mode Phase 4). The gate itself stays upstream's; these
   # keys only govern it. Upstream's own warning: "The review gate can
@@ -1253,39 +1077,16 @@ onboarding:
 # plus an always-present "run as-is" option. The suggestion layer
 # never auto-executes — the user picks. See rules/command-suggestion-policy.md.
 commands:
-  # --- Orchestrator auto-detection (6.1.0 non-interactive-contract) ---
-  #
-  # Global kill-switch for the auto-detection layer on cluster
-  # orchestrators (/judge, /fix, /analytics, /tests, /override).
-  #   enabled  = (default) orchestrators auto-detect the sub-command per
-  #              their confidence-tiered detection table.
-  #   warn     = detect, but always confirm the detected sub-command
-  #              before routing (never silent, even on HIGH confidence).
-  #   disabled = never auto-detect; orchestrators always show the menu
-  #              (interactive) or require an explicit sub-command (CI).
-  # Per-orchestrator override: auto_detect: false in a command's
-  # front-matter. Per-invocation override: --no-auto-detect.
-  # See src/agent-src/contexts/execution/non-interactive-contract.md.
-  auto_detect: enabled
-
+  # Orchestrator auto-detection (/judge, /fix, /analytics, /tests,
+  # /override) has no global switch: opt one orchestrator out with
+  # `auto_detect: false` in its front-matter, or one invocation with
+  # --no-auto-detect. See
+  # src/agent-src/contexts/execution/non-interactive-contract.md.
   suggestion:
-    # Master switch (true, false). false = the layer is silent; explicit
-    # /commands still work as today.
-    enabled: true
-
-    # Minimum match score (0.0–1.0) before a suggestion surfaces.
-    # 0.6 = default; raise to 0.7 for stricter behaviour, lower to 0.5
-    # if too many useful suggestions are being suppressed.
-    confidence_floor: 0.6
-
-    # Cooldown in seconds between re-suggestions of the same
-    # (command, evidence) pair. Default 600s = 10m.
-    cooldown_seconds: 600
-
-    # Max number of command suggestions before the as-is option.
-    # The as-is option is always extra (so total = max_options + 1).
-    max_options: 4
-
+    # The layer is always on; its score floor (0.6), cooldown (600s) and
+    # option cap (4, plus the always-present as-is option) are fixed. A
+    # command's own `suggestion:` frontmatter may still tighten its floor.
+    # To silence one conversation, use the /command-suggestion-off directive.
     # Commands to never suggest. Still work when typed explicitly.
     # Example: ["/refine-ticket", "/work"]
     blocklist: []
@@ -1313,16 +1114,6 @@ commands:
     #                   reviewer guidance (the richest, ~legacy output).
     detail_level: min
 
-    # JSON request/response examples for API-endpoint changes.
-    #   true (default) = include a fenced example ONLY when it can be
-    #                    grounded in a real source (response DTO/resource,
-    #                    OpenAPI/schema, test fixture, or an actual probe).
-    #                    No grounded source → a one-line pointer, never an
-    #                    invented example (a hallucinated contract misleads
-    #                    reviewers, so it is worse than none).
-    #   false          = never add API examples.
-    api_examples: true
-
     # Screenshots for frontend changes. Default false (off). Capability-gated:
     # requires the host to have browser/preview tooling (Playwright / a
     # dev-server URL). When true + a frontend change + no such tooling, the
@@ -1333,13 +1124,9 @@ commands:
     #   true            = attempt when capable (see command contract).
     screenshots: false
 
-    # Optional glob lists that make frontend / API-endpoint detection
-    # explicit instead of heuristic. Empty (default) = the command uses a
-    # light path/extension heuristic and fails open (no false enrichment
-    # when the surface is ambiguous). Populate to pin your project's paths,
-    # e.g. ui_paths: ["resources/views/**", "src/pages/**"].
-    ui_paths: []
-    api_paths: []
+    # API examples (grounded only, never invented) and frontend / API
+    # detection (a light path heuristic that fails open) are fixed
+    # behavior, not settings — see the /create-pr command contract.
 
 # --- Continuity ---
 #
@@ -1389,21 +1176,6 @@ continuity:
 # for the retrieval contract and .augment/skills/memory-consolidation/ for
 # the four-phase loop.
 memory:
-  # Cadence for the "🧠 Memory: <hits>/<asks>" visibility line emitted
-  # after a memory-consulting step (see docs/contracts/memory-visibility-v1.md).
-  #   always = (default) emit whenever at least one memory type was asked.
-  #   auto   = emit only when ≥ 3 memory types were consulted (less noise
-  #            on shallow-retrieval steps).
-  #   never  = suppress the line entirely.
-  # The legacy `memory.visibility: off` master switch still wins over this.
-  cadence: always
-
-  # Inline-review threshold for /memory load.
-  # When the unreviewed intake stream contains more than this many
-  # entries, /memory load surfaces a top-3 preview block before the
-  # full curated load. Set to 0 to disable the inline review entirely.
-  review_threshold: 10
-
   # Patterns redacted from transcripts before mining.
   # The TranscriptAdapter applies these as a regex blocklist on every
   # yielded turn. Add personal identifiers, project-internal tokens,
@@ -1465,8 +1237,8 @@ knowledge:
     # and the layer fully no-ops.
     #
     # Turning sharing on does NOT make promotion automatic — promotion is always
-    # suggest-then-confirm (auto_promote_threshold gates the *suggestion*, never
-    # a silent write). v1 (project-local discipline + cards) is byte-for-byte
+    # suggest-then-confirm (a card seen in two distinct repos triggers the
+    # *suggestion*, never a silent write). v1 (project-local discipline + cards) is byte-for-byte
     # unaffected by this default; only the cross-project store is gated off.
     enabled: true
 
@@ -1479,26 +1251,11 @@ knowledge:
     # deliberate opt-in widening, not the shipped default.
     allowed_tiers: [public]
 
-    # Write-time redaction before any card is eligible to go global. Runs the
-    # low-impact-corpus-privacy-floor + source-confidentiality pattern set
-    # (API keys, internal hostnames, emails, blocklisted field/table names).
-    redaction:
-      enabled: true
-      # halt-and-prompt on a trigger; never silent-share, never auto-rewrite.
-      halt_on_trigger: true
-
-    # A `public`/`vendor` card seen in >= this many distinct repos triggers a
-    # promotion SUGGESTION (one-tap confirm). It never auto-promotes.
-    auto_promote_threshold: 2
-
-    # Freshness flip thresholds (days) for the untracked global store. A global
-    # card whose newest observed_at is older than `hypothesis_after_days` is
-    # lead-only (positive structure must be re-confirmed); older than
-    # `stale_after_days` it is skipped until re-verified. Negative facts +
-    # pointers stay usable as leads regardless.
-    freshness:
-      hypothesis_after_days: 90
-      stale_after_days: 180
+    # Fixed, not settings: write-time redaction (the privacy-floor +
+    # source-confidentiality pattern set) always runs and halts on a trigger;
+    # a card seen in >= 2 distinct repos triggers a promotion SUGGESTION; a
+    # global card older than 90 days is lead-only and older than 180 days is
+    # skipped until re-verified.
 
 # --- Hooks ---
 #
@@ -1507,26 +1264,16 @@ knowledge:
 # concern script under scripts/hooks/ or scripts/. Defaults are safe;
 # tune only when CI surfaces a real signal.
 hooks:
-  # Concern budget gate (P3.3, lint_hook_concern_budget.py). Caps how
-  # many concerns may bind to a single (platform, event) cell and
-  # restricts fail_closed=true to an explicit Tier-1 allowlist.
-  #
-  # max_per_event — placeholder until Phase 1 of
-  # road-to-proof-not-features.md captures real session evidence.
-  # Threshold rule per roadmap: max(observed-in-Phase-1) × 1.5, rounded
-  # up. 8 = current-observed-max (5) × 1.5 = 7.5 → 8.
+  # Concern budget gate (P3.3, lint_hook_concern_budget). Caps how
+  # many concerns may bind to a single (platform, event) cell — a fixed
+  # 8 — and restricts fail_closed=true to an explicit Tier-1 allowlist.
+  # The gate is warn-only unless run with --strict.
   #
   # tier1_concerns — concerns allowed to block agent execution on
   # failure (fail_closed: true in the manifest). Promotion is explicit
   # opt-in; keep empty until Phase 1 evidence justifies an entry.
-  #
-  # hard_fail — false = warn-only (default). Flip to true after ≥10
-  # captured sessions across host agents per
-  # road-to-distribution-and-adoption.md.
   concern_budget:
-    max_per_event: 8
     tier1_concerns: []
-    hard_fail: false
 
   # PostToolUse prompt-injection scanner (road-to-security-pillar.md P3.2).
   # Default-OFF. When enabled, scans tool output (file reads, web fetches, MCP
@@ -1719,10 +1466,6 @@ hooks:
 # Unknown keys are rejected hard by scripts/validate_decision_engine.py
 # (wired into `task ci`). Removing the entire block restores observe-only.
 decision_engine:
-  # Opt-in for DecisionTraceHook (default false). Mirrored into
-  # hooks.decision_trace.enabled by work_engine.hooks.settings.
-  surface_traces: false
-
   # Confidence-band floor for Phase=Plan.
   #   off    = no floor (default)
   #   low    = refuse to advance when band is below low
@@ -1745,19 +1488,14 @@ decision_engine:
 
   # What happens when a gate fires.
   #   stop = halt the engine with reason on the trace (default)
-  #   ask  = prompt the user; falls back to on_block_fallback in CI
+  #   ask  = prompt the user; stops after ask_timeout_seconds in CI
   #   warn = log the reason but advance
   on_block: stop
 
   # Non-TTY timeout (seconds) when on_block=ask runs without a TTY
   # (CI=true env or stdin not a TTY). After the timeout, the engine
-  # applies on_block_fallback and surfaces block_reason=ask_timeout.
+  # stops (fail-safe) and surfaces block_reason=ask_timeout.
   ask_timeout_seconds: 30
-
-  # Resolution after ask_timeout fires.
-  #   stop = halt the engine (default — fail-safe)
-  #   warn = log and advance
-  on_block_fallback: stop
 
 # --- Update check ---
 #
@@ -1772,16 +1510,6 @@ decision_engine:
 # matrix and the road-to-portable-runtime-and-update-check roadmap (P2).
 update_check:
   enabled: true
-
-# ─── explain ──────────────────────────────────────────────────────────────
-# `agent-config explain last` renders the read-only execution trace for the
-# most recent /work run (state file `.work-state.json`). Trace output is
-# PII-scrubbed before emission; the command never makes network calls and
-# never writes to state. Set `enable_last: false` to suppress the subcommand
-# (the call still exits 0 with a one-line notice — used by air-gapped
-# tenants that disable diagnostics surface-wide).
-explain:
-  enable_last: true
 
 # ─── legal-review-prep consent gate ──────────────────────────────────────────
 # The legal-review-prep pack is high-risk (EU/DE legal review-prep, NOT legal

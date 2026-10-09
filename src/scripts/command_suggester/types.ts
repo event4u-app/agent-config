@@ -98,11 +98,10 @@ export class Match {
 }
 
 /**
- * Runtime knobs read from `.agent-settings.yml`.
- *
- * Defaults match the "open decisions" leans in the roadmap.
- * Per-command frontmatter values override the global floor /
- * cooldown.
+ * Engine knobs. Only `blocklist` comes from `.agent-settings.yml`; the
+ * other four are fixed defaults (their settings keys were retired), still
+ * overridable by a caller that constructs `Settings` directly.
+ * Per-command frontmatter values override the floor / cooldown.
  *
  * Mirrors `@dataclass(frozen=True)`. The Python default `blocklist`
  * is an empty tuple; here it is a readonly string array, canonicalized

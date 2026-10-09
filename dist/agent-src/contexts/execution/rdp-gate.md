@@ -23,11 +23,11 @@ maintain a model list, and never ship heavy/light content variants (two variants
 
 ## Three signals (all table-free)
 
-1. **User settings** — read the `reasoning:` block in `.agent-settings.yml`:
+1. **User settings** — read `reasoning.enabled` in `.agent-settings.yml`:
    - `enabled: false` → the whole layer is inert. Stop here.
-   - per-component switch off (e.g. `components.verifier_default: false`) → that
-     component never fires.
-   - `auto_gate: false` → skip signal 3 (self-assessment); gate on signal 2 only.
+   - There is no per-component switch and no switch for signal 3: both were
+     retired on 2026-10-09 with their default (`true`) as the fixed behavior,
+     so every component follows signals 2 and 3 below.
 2. **Task signal** (knowable per turn, no model lookup):
    - **Skip** RDP when the task is trivial / short / fully-specified (rename,
      typo, format, one-line edit, list files, bump a version).

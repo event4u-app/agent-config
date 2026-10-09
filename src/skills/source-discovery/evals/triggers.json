@@ -1,0 +1,13 @@
+{
+    "skill": "source-discovery",
+    "last_eval": "2026-10-09",
+    "description": "3 exemplars + 2 near-misses + 1 counterexample. Authored 2026-10-09 when the settings-key retirement touched this skill. Exemplars are coding against a structure that must be read first (schema, API shape, vendor package), including the German form. Near-misses share the vocabulary but write SQL against a known schema or design a new API rather than discover an existing one.",
+    "queries": [
+        { "q": "add a filter on the orders table by status — check which columns actually exist first", "trigger": true, "class": "exemplar" },
+        { "q": "call the payments provider's GraphQL API to fetch refunds; I'm not sure what fields it returns", "trigger": true, "class": "exemplar" },
+        { "q": "bevor du das DTO baust: lies erst nach, welche Felder die API wirklich liefert", "trigger": true, "class": "exemplar", "language": "de" },
+        { "q": "write an efficient SQL query that joins these two tables I pasted", "trigger": false, "class": "near-miss", "note": "the schema is already given; this is query writing → sql-writing" },
+        { "q": "design a REST API for our new notifications service", "trigger": false, "class": "near-miss", "note": "designing a new surface, not discovering an existing one → api-design" },
+        { "q": "translate this README into German", "trigger": false, "class": "counterexample" }
+    ]
+}

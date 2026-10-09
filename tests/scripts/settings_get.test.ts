@@ -40,9 +40,9 @@ describe('settings:get argv', () => {
 
 describe('settings:get resolution', () => {
     it('names the file a value came from, not just the value', () => {
-        const root = scratchProject('personal:\n  play_by_play: true\n');
+        const root = scratchProject('personal:\n  rtk_installed: true\n');
         const payload = JSON.parse(
-            runSettingsGet({ key: 'personal.play_by_play', cwd: root, packageRoot: PACKAGE_ROOT, json: true })
+            runSettingsGet({ key: 'personal.rtk_installed', cwd: root, packageRoot: PACKAGE_ROOT, json: true })
                 .out.join('\n'),
         ) as { value: unknown; set: boolean; source: string | null };
 
@@ -54,9 +54,9 @@ describe('settings:get resolution', () => {
     });
 
     it('reports an unset key as unset rather than inventing the default as the value', () => {
-        const root = scratchProject('personal:\n  play_by_play: true\n');
+        const root = scratchProject('personal:\n  rtk_installed: true\n');
         const payload = JSON.parse(
-            runSettingsGet({ key: 'personal.minimal_output', cwd: root, packageRoot: PACKAGE_ROOT, json: true })
+            runSettingsGet({ key: 'verbosity.offer_council_in_delivery', cwd: root, packageRoot: PACKAGE_ROOT, json: true })
                 .out.join('\n'),
         ) as { set: boolean; source: string | null; template_default: unknown };
 
@@ -68,7 +68,7 @@ describe('settings:get resolution', () => {
     });
 
     it('warns that absent is not the default for every carved-out key', () => {
-        const root = scratchProject('personal:\n  play_by_play: true\n');
+        const root = scratchProject('personal:\n  rtk_installed: true\n');
         // Derived from the carve-out module rather than hardcoded to one key,
         // so a new carved-out key is covered the day it is added.
         for (const entry of ['quality.local_auto_run', 'onboarding.onboarded']) {
@@ -81,8 +81,8 @@ describe('settings:get resolution', () => {
     });
 
     it('does not warn about absent-vs-default for an ordinary key', () => {
-        const root = scratchProject('personal:\n  play_by_play: true\n');
-        const text = runSettingsGet({ key: 'personal.minimal_output', cwd: root, packageRoot: PACKAGE_ROOT, json: false })
+        const root = scratchProject('personal:\n  rtk_installed: true\n');
+        const text = runSettingsGet({ key: 'verbosity.offer_council_in_delivery', cwd: root, packageRoot: PACKAGE_ROOT, json: false })
             .out.join('\n');
         expect(text).not.toContain('Absent is NOT the template default');
     });

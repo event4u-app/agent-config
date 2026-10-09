@@ -129,15 +129,8 @@ LEGACY CHECK (indicators):
 ═══════════════════════════════════════════════
 ```
 
-Per `verbosity.routine_confirmations` (default `false`):
-
-- `false` → continue to Phase 2 silently (user invoked `/project-analyze`
-  for the full pass; "continue" is dominant).
-- `true` → ask:
-  ```
-  > 1. Continue with Phase 2 — architecture analysis
-  > 2. Stop here — keep the overview only
-  ```
+Continue to Phase 2 silently — the user invoked `/project-analyze` for the
+full pass, so "continue" is dominant and asking is a routine confirmation.
 
 ### 2. Architecture mapping
 
@@ -249,15 +242,8 @@ BUSINESS DOMAINS:
 ═══════════════════════════════════════════════
 ```
 
-Per `verbosity.routine_confirmations` (default `false`):
-
-- `false` → create domain analysis files silently (user invoked
-  `/project-analyze`; "yes, create" is dominant).
-- `true` → ask:
-  ```
-  > 1. Yes — create domain analysis files
-  > 2. Skip — continue with next phase
-  ```
+Create the domain analysis files silently — the user invoked
+`/project-analyze`, so "yes, create" is dominant.
 
 For each confirmed domain, create `agents/evidence/analysis/domains/{domain}.md` using the template
 from the `project-analyzer` skill.
@@ -286,14 +272,7 @@ SERVICE MAP:
 ═══════════════════════════════════════════════
 ```
 
-Per `verbosity.routine_confirmations` (default `false`):
-
-- `false` → create API + service analysis files silently.
-- `true` → ask:
-  ```
-  > 1. Yes — create API and service analysis files
-  > 2. Skip — continue with next phase
-  ```
+Create the API + service analysis files silently.
 
 Create:
 - `agents/evidence/analysis/api/endpoints-v1.md`
@@ -315,15 +294,8 @@ Write all remaining analysis files that haven't been created yet:
 - `agents/evidence/analysis/modules/{module}.md` — one per module
 - `agents/evidence/analysis/testing/test-map.md` — test suites, coverage, strategy
 
-Per `verbosity.routine_confirmations` (default `false`):
-
-- `false` → create all listed files silently (per-file picker is pure
-  noise once the user invoked `/project-analyze`).
-- `true` → for each file, ask:
-  ```
-  > 1. Create — {filename}
-  > 2. Skip
-  ```
+Create all listed files silently — a per-file picker is pure noise once the
+user invoked `/project-analyze`.
 
 ### 8. Gap analysis & action plan
 

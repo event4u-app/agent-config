@@ -104,25 +104,22 @@ black box):
 
 ## 7. Kill-switch — disable auto-detection without a rollback
 
-Three override layers, narrowest wins:
+Two override layers, narrowest wins:
 
 1. **Per-invocation:** `--no-auto-detect` → fall back to the menu
    (interactive) or `missing_sub_command` (CI).
 2. **Per-orchestrator:** `auto_detect: false` in the command's
    front-matter → that orchestrator always shows the menu.
-3. **Global:** `commands.auto_detect: disabled | warn | enabled` in
-   `.agent-settings.yml` (default `enabled`; `warn` = detect but always
-   confirm).
 
-A misbehaving heuristic is disabled by config, not by reverting 6.1.0.
+There is no global switch: the `commands.auto_detect` settings key was retired
+on 2026-10-09 with its default (`enabled`) as the fixed behavior, so a
+misbehaving heuristic is disabled per orchestrator, not by reverting 6.1.0.
 
 ## 8. Rollback procedure (every orchestrator references this)
 
 1. Re-run with the explicit sub-command (`/judge solo`) — detection is
    skipped.
-2. Disable globally: `commands.auto_detect: disabled` in
-   `.agent-settings.yml`.
-3. Disable one orchestrator: set `auto_detect: false` in its
+2. Disable one orchestrator: set `auto_detect: false` in its
    front-matter — the change takes effect on the next projection/sync.
 
 ## See also
