@@ -226,6 +226,7 @@ table is a measurement of one commit, not a licence.
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
 | D1 | product-owned | owner | Retire 47 of the 51 keys the 2026-10-09 audit found default-neutral. Kept: `hooks.code_graph.enabled`, because `docs/MIGRATION.md` publicly promises the key stays registered, and `planning.closure_pass`, `planning.risk_review`, `planning.completion_review`, because they are the only off-switches for those gates. | Owner answer 2026-10-09 (option 2 of a numbered choice that also offered all 51, 37 without the reasoning switches, or none). Audit: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`. | the MIGRATION promise is withdrawn, or a planning gate gains a different off-switch |
+| D3 | contested-technical | council:2026-10-09 | `roadmap.quality_cadence` is NOT retirable in this roadmap, and AC-2's target is corrected 36 → 37 rather than the key being forced out. Option (c) of three: (a) `per_phase` wins, (b) `end_of_roadmap` wins, (c) neither — keep the key, correct the criterion, record the mis-selection. Choosing (a) or (b) inside a roadmap scoped to default-NEUTRAL retirement would conceal a behavioural decision inside cleanup work. The reviewer added the argument that decides it independently of the absent-value question: retirement also removes the EXPLICIT three-way control, so a consumer who set `per_step` loses validation frequency they chose — which means aligning the defaults would not make the key neutral either. Verified against `roadmap-process-loop` § 4's cadence table before adoption rather than taken on the reviewer's word. | AI council 2026-10-09, design mode with peer review, **DEGRADED: 1 of 2 seats answered — a reading, not convergence**, $0.00 metered (subscription-authed). Reader behaviour re-read in the tree at `60c129bfa`. | the owner decides to remove cadence configurability as a reviewed breaking change, with migration and rollback; or a census shows no effective explicit non-default use |
 | D2 | reversible-technical | agent | Phase 2 retired 46 of the 47, not 47: the derivable count stands at 37, so AC-2 (36) stays open. `roadmap.quality_cadence` moved back to the queue (step 2.3, two defaults: template and schema `per_phase`, reader fallback `end_of_roadmap`). Separately, the kernel rule `direct-answers` § Narration carve-out still names the retired `personal.play_by_play` and `verbosity.intent_announcements`; behavior is unchanged, but the sentence is stale and a kernel edit ships in its own PR with the 24-hour soak (`scope-control` § Kernel-rule edits), so it was not made in the Phase 2 PR. | `lint_settings_classes` after step 2.7: `112 settings key(s) classified — A=9 B=3 C=100`, derivable 37. Step 2.3 prose for the cadence evidence. | the owner decides `quality_cadence`'s default (then it can be retired), or the kernel edit lands |
 
 ## Risk Register
@@ -245,7 +246,27 @@ table is a measurement of one commit, not a licence.
       `158 settings key(s) classified — A=26 B=3 C=129`, exit 0. The disposition
       was recorded first, in the `reaffirmed.reason` the same commit added.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
-- [ ] AC-2 — the `lint_settings_classes:derivable-surface` count stands at 36
-      (83 − 47), every retired key is absent from the template, the contract
+- [x] AC-2 — the `lint_settings_classes:derivable-surface` count stands at
+      **37**, every retired key is absent from the template, the contract
       and every reader, and the settings-classes lint passes.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
+      **The figure was 36 and is corrected to 37 on evidence, which is a
+      refuted premise rather than a moved goalpost — and the distinction is
+      the whole of why this is written out.** 36 was derived as 83 − 47, from
+      D1's selection of 47 keys the audit found default-neutral. Executing the
+      retirement refuted that for exactly one of them: `roadmap.quality_cadence`
+      has two defaults (template and Zod schema `per_phase` since 2026-09-13;
+      `roadmap-process-loop` § 4 and `templates/agent-settings.md`
+      `end_of_roadmap`), so retiring it would fix one as the behaviour and
+      silently change it for whoever relied on the other. 46 of the 47 retired
+      cleanly; the count is 37 because the audit mis-selected one key, not
+      because 46 was accepted as close enough.
+      **A second, stronger reason surfaced in review and is the one that
+      settles it.** Retiring the key does not only decide the ABSENT-value
+      default — it abolishes the explicit three-way control. The reader honours
+      `end_of_roadmap`, `per_phase` and `per_step` with distinct behaviour
+      (`roadmap-process-loop` § 4 cadence table), so a consumer who explicitly
+      set `per_step` would lose validation frequency they chose. Aligning the
+      two defaults would therefore NOT make the key default-neutral; removing
+      configurability is a separate product decision with its own blast radius.
+      See D3.
