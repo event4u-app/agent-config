@@ -15,7 +15,7 @@ provider's model or billing rule.
 - `subagents.quota_arbitrage`, `subagents.model_map`
   (see [`auto-orchestration-activation`](auto-orchestration-activation.md)).
   Downshift itself is always on — the `subagents.downshift` key was retired on
-  2026-10-09 with its default as the fixed behaviour.
+  2026-10-09 with its default as the fixed behavior.
 - The host-capability manifest's `separate_quota_pool`
   ([`host-capability-manifest`](host-capability-manifest.md)).
 

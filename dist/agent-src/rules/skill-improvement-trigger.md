@@ -15,7 +15,7 @@ obligation_frequency: "per-task"
 
 # Skill Improvement Trigger
 
-**Iron Law.** After a meaningful task, trigger the post-task learning capture. It is always on — the capture is a proposal the user confirms, so there is no setting to silence it.
+**Iron Law.** After a meaningful task, trigger the post-task learning capture — always on; it is a proposal the user confirms.
 
 Body migrated to `skill:skill-improvement-pipeline` (per P4 of `road-to-kernel-and-router.md`).
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

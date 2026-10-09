@@ -60,7 +60,7 @@ OBVIOUS-TO-THE-AGENT ≠ IN-SCOPE.
 a ticket/spec that carries a second source (an attachment, a code reality, or an
 internal contradiction). It is always on: the `consistency.cross_source` key that
 offered `auto` (high-confidence only) and `off` was retired on 2026-10-09 with its
-default, `on`, as the fixed behaviour. The noise control is the batching and the
+default, `on`, as the fixed behavior. The noise control is the batching and the
 `no-cheap-questions` floor below, not a setting.
 
 **Does NOT fire** on a single clear source with no second source to compare

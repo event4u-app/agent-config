@@ -84,7 +84,7 @@ settings):
 A component fires only when `reasoning.enabled` is `true` **and** the task and
 host signals above engage it. The per-component switches
 (`reasoning.components.*`) and `reasoning.auto_gate` were retired on 2026-10-09
-with their default (`true`) as the fixed behaviour: the signals already decide
+with their default (`true`) as the fixed behavior: the signals already decide
 where each component pays, so a second, static off-switch per component only
 let a setting disagree with them. A leftover value warns once and is ignored.
 

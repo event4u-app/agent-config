@@ -135,7 +135,7 @@ After step 4, count unreviewed intake entries for the same type:
 ```
 
 The threshold is a fixed **10** (the `memory.review_threshold` key was retired
-on 2026-10-09 with that default as the behaviour). If the count is **≤ 10**,
+on 2026-10-09 with that default as the behavior). If the count is **≤ 10**,
 skip this step silently. If **> 10**, surface a numbered preview of the top-3 highest-
 confidence intake signals (see
 [`memory-consolidation`](../../skills/memory-consolidation/SKILL.md)

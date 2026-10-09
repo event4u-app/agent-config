@@ -370,7 +370,7 @@ commands:
 # What the agent shows after acting. Default = terse. Four former toggles
 # (preview_artifacts, routine_confirmations, post_action_reports,
 # intent_announcements) were retired on 2026-10-09 with the terse default
-# as fixed behaviour.
+# as fixed behavior.
 # See agents/roadmaps/road-to-token-frugality.md for the full rationale
 # and the contexts/contracts/frugality-charter.md for the writer-side
 # standard.
@@ -595,14 +595,14 @@ so nothing is silently dropped; the migration log points them out.
 
 ### Retired keys
 
-These keys were removed because their shipped default is the only behaviour
-the package supports; the behaviour they described is unchanged. A leftover
+These keys were removed because their shipped default is the only behavior
+the package supports; the behavior they described is unchanged. A leftover
 value in an older `.agent-settings.yml` is ignored with one stderr line per key
 (`<key> was removed (<what decides instead>); ignored.`) — the registry is
 `REMOVED_KEYS` in `scripts/_lib/settings_removed_keys.ts`. Delete the line to
 silence it.
 
-| Retired 2026-10-09 | Fixed behaviour |
+| Retired 2026-10-09 | Fixed behavior |
 |---|---|
 | `personal.minimal_output`, `personal.play_by_play`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`, `verbosity.intent_announcements` | terse replies, no narration, no preview, no routine confirmation, one-line post-action report (`direct-answers` Iron Law 3) |
 | `personal.pr_comment_bot_icon` | no 🤖 prefix (`no-decorative-emojis-in-git-surfaces`) |

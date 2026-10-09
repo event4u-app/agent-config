@@ -112,7 +112,7 @@ Two override layers, narrowest wins:
    front-matter → that orchestrator always shows the menu.
 
 There is no global switch: the `commands.auto_detect` settings key was retired
-on 2026-10-09 with its default (`enabled`) as the fixed behaviour, so a
+on 2026-10-09 with its default (`enabled`) as the fixed behavior, so a
 misbehaving heuristic is disabled per orchestrator, not by reverting 6.1.0.
 
 ## 8. Rollback procedure (every orchestrator references this)

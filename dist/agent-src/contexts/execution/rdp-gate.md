@@ -26,7 +26,7 @@ maintain a model list, and never ship heavy/light content variants (two variants
 1. **User settings** — read `reasoning.enabled` in `.agent-settings.yml`:
    - `enabled: false` → the whole layer is inert. Stop here.
    - There is no per-component switch and no switch for signal 3: both were
-     retired on 2026-10-09 with their default (`true`) as the fixed behaviour,
+     retired on 2026-10-09 with their default (`true`) as the fixed behavior,
      so every component follows signals 2 and 3 below.
 2. **Task signal** (knowable per turn, no model lookup):
    - **Skip** RDP when the task is trivial / short / fully-specified (rename,

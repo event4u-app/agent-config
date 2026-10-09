@@ -45,7 +45,7 @@ describe('lint_hook_concern_budget._read_settings_block', () => {
     });
     it('ignores the retired max_per_event + hard_fail keys', () => {
         // Both were retired with their defaults (8, warn-only) as fixed
-        // behaviour; `--strict` is the only way to hard-fail now.
+        // behavior; `--strict` is the only way to hard-fail now.
         const p = write('hooks:\n  concern_budget:\n    max_per_event: 5\n    hard_fail: true\n');
         expect(hcb._read_settings_block(p)).toEqual({});
     });

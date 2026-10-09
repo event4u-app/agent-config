@@ -89,7 +89,7 @@ counts and ids for downstream metrics.
 The line renders whenever `asks ≥ 1`. That is a fixed cadence: the
 `memory.cadence` key that also offered `auto` (only when `asks ≥ 3`) and
 `never` was retired on 2026-10-09 with its default, `always`, as the
-behaviour. The `memory.visibility: off` master switch (above) still
+behavior. The `memory.visibility: off` master switch (above) still
 suppresses the line entirely.
 
 > **History.** Before the 2026-06-01 `cost_profile` untangle this

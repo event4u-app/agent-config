@@ -253,7 +253,7 @@ the router compiles them into `dist/router.json` deterministically.
 The agent proposes a learning capture after meaningful tasks in every
 profile. The capture is a proposal the user confirms, so it is not a
 setting: the `pipelines.skill_improvement` key that could silence it was
-retired on 2026-10-09 with its default (`true`) as the fixed behaviour.
+retired on 2026-10-09 with its default (`true`) as the fixed behavior.
 
 The authoritative matrix of all matrix-controlled settings lives in
 [`src/agent-src/templates/agent-settings.md`](../src/agent-src/templates/agent-settings.md).
@@ -280,7 +280,7 @@ routine actions. Defaults are tuned for token frugality. Iron-Law gates
 ALWAYS confirm regardless of these flags.
 
 Four former leaves were retired on 2026-10-09 with their terse defaults as the
-only behaviour — `preview_artifacts`, `routine_confirmations`,
+only behavior — `preview_artifacts`, `routine_confirmations`,
 `post_action_reports` and `intent_announcements`: generated commit messages,
 PR titles and branch names are used directly, a routine step with one obvious
 answer is never confirmed, a successful action reports in one line, and skill

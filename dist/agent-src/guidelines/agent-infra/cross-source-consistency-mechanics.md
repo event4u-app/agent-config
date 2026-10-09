@@ -45,7 +45,7 @@ from a ticket/spec that carries a second source:
 The rule fires only under a real trade-off (it must pass the
 `no-cheap-questions` Pre-Send Self-Check). Every real discrepancy, high- or
 low-confidence, is surfaced and asked — batched into the same question. That
-is the fixed behaviour since the `consistency.cross_source` key (which offered
+is the fixed behavior since the `consistency.cross_source` key (which offered
 `auto` and `off`) was retired on 2026-10-09 with this, its default, as the only
 mode.
 

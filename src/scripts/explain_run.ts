@@ -720,7 +720,7 @@ function renderParkedSection(): string[] {
         '   persisted. The per-phase decision-trace file that once carried',
         '   `memory.ids` is no longer written: its opt-in key,',
         '   `decision_engine.surface_traces`, was retired (2026-10-09) with its',
-        '   default (off) as the fixed behaviour.',
+        '   default (off) as the fixed behavior.',
         '4. **Why a given subagent primitive was/wasn\'t available on this host**',
         '   — the host-capability manifest is resolved in-session by the agent',
         '   from its own knowledge (+ an optional settings override) and is never',

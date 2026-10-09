@@ -128,7 +128,7 @@ that is already done — the exact failure this clause prevents. This is the
 The command name already names the scope; asking "Go / Different
 roadmap / …" on every run is noise, so there is no confirmation gate and
 no setting to bring one back (the `roadmap.skip_pre_run_gate` key was
-retired on 2026-10-09 with its default, `true`, as fixed behaviour).
+retired on 2026-10-09 with its default, `true`, as fixed behavior).
 
 - The roadmap is unambiguous (user named it, or exactly one active
   roadmap exists) → **no interactive gate.** Emit the summary block
@@ -526,7 +526,7 @@ still forbids claiming quality output that was not produced.
 
 **Dashboard regen cadence** — fixed, not a setting (the
 `roadmap.dashboard_regen_cadence` key was retired on 2026-10-09 with its
-default as the behaviour): `./agent-config roadmap:progress` runs every
+default as the behavior): `./agent-config roadmap:progress` runs every
 5th closed step, at every phase boundary and at reply end.
 
 `process-step` always regens at step end. Any file-shape touch (rename / phase add / archive — Iron Law 1

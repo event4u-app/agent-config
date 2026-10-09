@@ -111,7 +111,7 @@ the contract end-to-end.
 ## Two opt-out paths
 
 The third, a project-wide `commands.suggestion.enabled: false`, was retired on
-2026-10-09 with its default (on) as the fixed behaviour.
+2026-10-09 with its default (on) as the fixed behavior.
 
 | Path | Mechanism | Scope |
 |---|---|---|

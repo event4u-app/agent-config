@@ -33,7 +33,7 @@ TO THE FULL FRUGALITY CANON (telegraph-speak, thin-projector).
 
 Rich skills always load in full — there is no setting to read. The
 `tokens.rich_skills` key that once allowed `off` / `ask` was retired on 2026-10-09
-with its default (`on`) as the fixed behaviour; the skill's own
+with its default (`on`) as the fixed behavior; the skill's own
 `token_budget_class: rich` declaration plus the CI ceiling below is what decides.
 
 ## Requirements for `token_budget_class: rich`

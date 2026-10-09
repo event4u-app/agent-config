@@ -52,14 +52,14 @@ type SettingsDict = Record<string, unknown>;
  * always-on, not unread. It WAS read, and the reader honoured all three values —
  * the deletion says the decision was never the agent's to make. `ask` bought a
  * round trip per spawn, `on` let the agent start parallel work unprompted, and
- * `off` described the wanted behaviour, so `off` became the hardcoded rule and
+ * `off` described the wanted behavior, so `off` became the hardcoded rule and
  * the switch went. What decides instead is the user's own sentence in the chat.
  *
  * The 2026-10-09 batch (road-to-settings-classes-derivable-surface-stagnation
  * Phase 2) is a fourth doctrine: `derivable` keys whose shipped default is the
- * only behaviour the package supports. Each WAS read — by code or by rule and
+ * only behavior the package supports. Each WAS read — by code or by rule and
  * command prose — and every reader was rewritten to state the old default as
- * fixed behaviour in the same change, so retiring the key changes no effective
+ * fixed behavior in the same change, so retiring the key changes no effective
  * default; what a consumer who had set a non-default value loses is named by
  * the reason.
  *

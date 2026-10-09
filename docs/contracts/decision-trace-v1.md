@@ -23,7 +23,7 @@ Last refreshed: 2026-05-04.
 
 Off, and no longer a setting. The `decision_engine.surface_traces` key
 that used to turn it on was retired on 2026-10-09 with its default (off)
-as the fixed behaviour, so the work-engine hook settings never register
+as the fixed behavior, so the work-engine hook settings never register
 `DecisionTraceHook`; a leftover key is accepted by the
 `decision_engine:` parser and ignored. The envelope below stays the
 contract for a caller that registers the hook directly.

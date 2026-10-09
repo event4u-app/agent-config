@@ -220,7 +220,7 @@ describe('the key lists are DERIVED from the class contract, not snapshotted', (
             expect(declaredDefault(key), `${key} default cell`).not.toMatch(/ask/);
         }
         // `tokens.rich_skills` left the same way on 2026-10-09 (retired with its
-        // `on` default as the fixed behaviour), so it is asserted gone too.
+        // `on` default as the fixed behavior), so it is asserted gone too.
         for (const gone of ['worktrees.mode', 'tokens.rich_skills']) {
             expect(declaredDefault(gone), `${gone} gone from the class table`).toBeUndefined();
             expect(keysOfClass('C'), `${gone} gone from the C list`).not.toContain(gone);

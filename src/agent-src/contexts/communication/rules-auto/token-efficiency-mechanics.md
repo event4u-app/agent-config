@@ -61,7 +61,7 @@ command says "ask the user", you ask.
 
 ### Keep intermediate output minimal
 
-Not a setting — this is the behaviour
+Not a setting — this is the behavior
 [`direct-answers`](../../../rules/direct-answers.md) Iron Law 3 already
 mandates:
 

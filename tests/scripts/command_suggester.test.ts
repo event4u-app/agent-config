@@ -496,9 +496,23 @@ describe('settings', () => {
         expect(out.equals(new Settings())).toBe(true);
     });
 
+    it('a partial section keeps every unset field at its default', () => {
+        const p = writeSettings(
+            tmpPath(),
+            'commands:\n  suggestion:\n    blocklist:\n      - /commit\n',
+        );
+        const out = load_settings(p);
+        const defaults = new Settings();
+        expect(out.enabled).toBe(defaults.enabled);
+        expect(out.confidence_floor).toBe(defaults.confidence_floor);
+        expect(out.cooldown_seconds).toBe(defaults.cooldown_seconds);
+        expect(out.max_options).toBe(defaults.max_options);
+        expect(out.blocklist).toEqual(['/commit']);
+    });
+
     it('the retired knobs are ignored, the blocklist is read', () => {
         // `enabled`, `confidence_floor`, `cooldown_seconds` and `max_options`
-        // were retired with their defaults as fixed behaviour. An older install
+        // were retired with their defaults as fixed behavior. An older install
         // that still carries non-default values gets the defaults, not its
         // values — the loader warns about each one — while `blocklist`, which
         // stays a setting, is still honoured.

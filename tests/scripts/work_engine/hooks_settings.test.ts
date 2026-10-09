@@ -97,7 +97,7 @@ describe('work_engine.hooks.settings — TS unit checks', () => {
     });
 
     it('a leftover decision_engine.surface_traces is ignored and the trace stays off', () => {
-        // Retired with its default (false) as the fixed behaviour. The key is
+        // Retired with its default (false) as the fixed behavior. The key is
         // still accepted so the rest of the block parses.
         const p = writeYaml('hooks:\n  enabled: true\ndecision_engine:\n  surface_traces: true\n');
         const snap = snapshotTs(p);

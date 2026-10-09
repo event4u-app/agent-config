@@ -7,7 +7,7 @@
  *  - The blocklist is the only suggestion key a project still sets. The
  *    master switch, floor, cooldown and option cap are engine constants in
  *    `Settings`: their keys were retired with those defaults as the fixed
- *    behaviour, so a leftover value is warned about by the loader and never
+ *    behavior, so a leftover value is warned about by the loader and never
  *    read here.
  *  - Malformed YAML / unreadable file → defaults; the suggester degrades
  *    silently rather than crashing the turn.

@@ -36,7 +36,7 @@ Live Phase 1 schema (see [`templates/agent-settings.md`](../../templates/agent-s
 | `verbosity.offer_council_in_delivery` | When `false`, delivery commands skip the optional "run Council on this?" offer. |
 
 Five former hooks were retired on 2026-10-09 with their defaults as the fixed
-behaviour, so writers state the behaviour instead of citing a key: no preview of
+behavior, so writers state the behavior instead of citing a key: no preview of
 generated commit messages / PR titles / branch names before acting; no
 "looks good?" gate on a routine step with one obvious answer (Iron-Law gates
 always ask); after a successful action, a one-line confirmation, never a

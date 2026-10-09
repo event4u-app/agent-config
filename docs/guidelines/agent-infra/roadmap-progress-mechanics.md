@@ -224,7 +224,7 @@ Keep aligned with the dashboard counter in `scripts/update_roadmap_progress.ts` 
 
 See [`guarded-baseline`](guarded-baseline.md).
 
-**Dashboard regen cadence — fixed batching.** The checkbox flip is non-batchable. The **subprocess regen** (`./agent-config roadmap:progress`) batches to every 5th closed step — a fixed cadence since the `roadmap.dashboard_regen_cadence` key was retired on 2026-10-09 with that default as the behaviour. Run end, phase boundary, and any file-shape touch (rename / phase add / archive — Iron Law 1) always force an immediate regen.
+**Dashboard regen cadence — fixed batching.** The checkbox flip is non-batchable. The **subprocess regen** (`./agent-config roadmap:progress`) batches to every 5th closed step — a fixed cadence since the `roadmap.dashboard_regen_cadence` key was retired on 2026-10-09 with that default as the behavior. Run end, phase boundary, and any file-shape touch (rename / phase add / archive — Iron Law 1) always force an immediate regen.
 
 **Blockers follow the same cadence as checkboxes.** Clearing a `## Blockers` entry (per `templates/roadmaps.md` rule 20) flips its `Status: resolved` and regenerates the dashboard in the same reply — Iron Law 1's "same response" obligation applies to blocker resolution exactly as it applies to a checkbox flip.
 

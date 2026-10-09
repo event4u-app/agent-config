@@ -128,7 +128,7 @@ track separately.
 
 There is no project-wide off switch: `commands.suggestion.enabled` and the
 global floor / cooldown / option-cap keys were retired on 2026-10-09 with their
-defaults (on · `0.6` · 600 s · 4) as fixed behaviour. Per-command frontmatter
+defaults (on · `0.6` · 600 s · 4) as fixed behavior. Per-command frontmatter
 still overrides the floor and cooldown for that command:
 
 ```yaml

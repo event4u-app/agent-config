@@ -4,7 +4,7 @@
  *
  * Unlike the 2026-08-12 batch, every key here WAS read — by code or by rule and
  * command prose — and each reader was rewritten so the shipped default is the
- * only behaviour left. What stays falsifiable after that, and what each block
+ * only behavior left. What stays falsifiable after that, and what each block
  * below pins:
  *
  *   1. The key cannot come back by the front door: it is gone from the shipped

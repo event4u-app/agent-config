@@ -192,7 +192,7 @@ const DELETED_2026_08_12: readonly (readonly [string, string, Json])[] = [
 /**
  * The `derivable` keys retired on 2026-10-09
  * (road-to-settings-classes-derivable-surface-stagnation Phase 2): each one's
- * shipped default became the only behaviour. `section` is the dotted parent, so
+ * shipped default became the only behavior. `section` is the dotted parent, so
  * a nested leaf (`commands.suggestion.enabled`) is stripped from the object that
  * actually owns it. The hostile value is the non-default one an opted-in install
  * would carry.

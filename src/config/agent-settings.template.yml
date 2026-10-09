@@ -1126,7 +1126,7 @@ commands:
 
     # API examples (grounded only, never invented) and frontend / API
     # detection (a light path heuristic that fails open) are fixed
-    # behaviour, not settings — see the /create-pr command contract.
+    # behavior, not settings — see the /create-pr command contract.
 
 # --- Continuity ---
 #

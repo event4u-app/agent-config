@@ -1,6 +1,6 @@
 // Pure-TS coverage for what became of the `explain.enable_last: false`
 // short-circuit of `agent-config explain last` (ADR-200 py2ts). The key was
-// retired with its default (on) as the fixed behaviour, so the inverted
+// retired with its default (on) as the fixed behavior, so the inverted
 // invariant is pinned here: a leftover `false` no longer suppresses the trace.
 //
 // Drives the exported `main(argv)` directly and captures `process.stdout`
@@ -82,6 +82,6 @@ describe('cmd_explain — a leftover explain.enable_last: false is ignored', () 
         const rc = main(['last', '--project', tmp]);
         expect(rc).toBe(0);
         expect(captured).not.toContain('disabled by settings');
-        expect(captured.trim().length).toBeGreaterThan(0);
+        expect(captured).toContain('# explain last — run run-success-001');
     });
 });
