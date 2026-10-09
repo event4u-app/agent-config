@@ -58,10 +58,11 @@
       "title": "AC-5 network reach not gated on network classification",
       "detail": "AC-5's implementation adds live forge reads to 'doctor --json' (a command previously offline by design per Phase 3.2's lock) with degradation to 'unread' on failure. The opt-out is AGENT_CONFIG_DOCTOR_NO_FORGE but the default is now network-reaching. Per the council review quoted: Phase 3.2 established 'doctor does not reach the network' and 'the reading is injected'; this reverses both. The amendment records conditions under which this is acceptable but does not register the change as a capability expansion in the packaging diff or consumer-facing MIGRATION.md section. Consumers who scripted 'doctor' as a non-blocking diagnostic now invoke a 15s-budget network operation by default.",
       "file": "agents/evidence/reviews/drain-adversarial-verification-close-round2.review-input/acceptance-criteria.md",
-      "status": "still_open",
-      "rationale": "Half landed, half did not, and the half that did not is the half the finding is about. The behaviour change IS now recorded: the Phase 3.2 supersession is written into the roadmap and into both docblocks that previously argued the opposite, and docs/troubleshooting.md documents the network read, its call count, its budget and the opt-out. What is still absent is the consumer-facing registration the finding asks for: docs/MIGRATION.md carries no entry naming doctor at all, and `doctor --json` still reaches the network BY DEFAULT with an environment variable as the only escape. A consumer who scripted `doctor` as an offline diagnostic still inherits a network operation without having read anything. Recorded open rather than accepted because the closing action is known and cheap (a MIGRATION.md note, or a CLI opt-out flag) and nobody has decided against it. Same root as c6367568cb1a and 77e3912664b9.",
+      "status": "fixed",
+      "rationale": "Fixed. The network reach is now gated on an explicit `--online` rather than on a classification, and the skipped read is reported rather than inferred: `not_checked` is present on every run with three distinct reasons, so an aggregate verdict cannot read five `unread` rows as a block that passed. That reporting requirement was the condition the AI council attached to option (a) on 2026-10-07.",
       "verified_by": "grep -c doctor docs/MIGRATION.md; grep -n 'forgeProtectionJsonFor' src/scripts/_cli/cmd_doctor.ts",
-      "date": "2026-10-01"
+      "date": "2026-10-01",
+      "commit": "0ba6fd727"
     },
     {
       "finding_id": "ddd4eacd8b0f",
@@ -148,10 +149,11 @@
       "title": "doctor --json unconditionally spawns subprocesses before any output",
       "detail": "src/scripts/_cli/cmd_doctor.ts:3065 — `_emit_json` now calls `forgeProtectionJsonFor` unconditionally, so every `doctor --json` invocation — including the early-return call site at line 3006 — starts subprocesses and can add roughly 15 s before any output. The only escape is an environment variable: no `--no-forge` flag was added and nothing defaults the read off for non-interactive or programmatic callers. A diagnostic people run when something is already wrong is also the one tooling is most likely to shell out to, and those callers silently inherit network dependence, credential dependence and the latency.",
       "file": "src/scripts/_cli/cmd_doctor.ts:3065",
-      "status": "still_open",
-      "rationale": "Re-read against the tree, not the review text, and it still holds exactly as written. `_emit_json` calls `forgeProtectionJsonFor(String(project_root))` unconditionally at cmd_doctor.ts:3065, which is also the early-return single-check path; no `--no-forge` or equivalent CLI flag exists anywhere in cmd_doctor.ts or forge_reader.ts; and the only escape remains the two environment switches in NO_FORGE_ENV (AGENT_CONFIG_DOCTOR_NO_FORGE, AGENT_CONFIG_OFFLINE), neither of which a programmatic caller sets by accident. Recorded open rather than accepted: adding a flag and gating the read on the requested check set is ordinary work nobody has decided against, and this ledger is not the place to decide it.",
+      "status": "fixed",
+      "rationale": "Fixed by reversing the default. `doctor --json` no longer spawns anything without `--online`: the opt-in is the only path that reaches `git ls-remote` or `gh`, asserted with an injected runner in tests/scripts/doctor_offline_default.test.ts (no-spawn on the default path, paired with a control that DOES reach the runner under `--online`, so the assertion cannot pass against a build that stopped spawning entirely).",
       "verified_by": "grep -n 'forgeProtectionJsonFor' src/scripts/_cli/cmd_doctor.ts; grep -rn 'no-forge' src/scripts/_cli/cmd_doctor.ts",
-      "date": "2026-10-01"
+      "date": "2026-10-01",
+      "commit": "0ba6fd727"
     },
     {
       "finding_id": "b9d00a01c9b9",
@@ -251,10 +253,11 @@
       "title": "Single-check JSON path now spawns unconditionally",
       "detail": "src/scripts/_cli/cmd_doctor.ts:3065 — `forgeProtectionJsonFor` is called unconditionally from `_emit_json`, which is also the single-check JSON path reached from line 3006 (`doctor --json --check <id>`). A previously pure-local command now spawns one `git` plus three or more `gh` processes and can block for the full 15 s budget on every `--json` invocation, including one that asked for a single unrelated check, and including any scripted or GUI consumer of the payload. The only scope control is an environment variable — there is no CLI flag, and the read is not gated on the requested check set.",
       "file": "src/scripts/_cli/cmd_doctor.ts",
-      "status": "still_open",
-      "rationale": "The sibling of c6367568cb1a, re-read on the same evidence and open for the same reason. `doctor --json --check <id>` still reaches `_emit_json`, which still calls `forgeProtectionJsonFor` unconditionally, so a request for one unrelated check still spawns `git` plus the `gh` calls and can block for the whole 15 s budget. The read is not gated on the requested check set and there is no CLI scope control. Closing this closes c6367568cb1a with it.",
+      "status": "fixed",
+      "rationale": "Fixed by the same reversal. A `--check <id>` run was already offline since Phase 3.1; it now reports WHY — `not_checked: \"single_check\"` — and stays offline even under `--online`, since no check id reads the forge block. Pinned by a no-spawn test on the single-check path.",
       "verified_by": "sed -n '3000,3010p;3060,3068p' src/scripts/_cli/cmd_doctor.ts",
-      "date": "2026-10-01"
+      "date": "2026-10-01",
+      "commit": "0ba6fd727"
     }
   ],
   "review_independence": "single-member",
