@@ -72,7 +72,8 @@ table is a measurement of one commit, not a licence.
       `direct-answers` § Narration carve-out names `personal.play_by_play` and
       `verbosity.intent_announcements`. Its behaviour is unchanged (the
       carve-out needs both `true`, which can no longer happen), but its text is
-      stale; a kernel edit ships in its own PR, so it is step 2.8.
+      stale; a kernel edit ships in its own PR — recorded as D2 and the reason
+      AC-2 stays open.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
 - [x] **2.2 Reasoning protocol switches (10).** `reasoning.auto_gate` and the
       nine `reasoning.components.*` (orchestrator, notes_first, grounding,
@@ -164,17 +165,6 @@ table is a measurement of one commit, not a licence.
       moved to its accepted-and-ignored set rather than out of it, or every
       wizard-made settings file would have broken `/team`.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
-- [ ] **2.8 Kernel follow-up — the `direct-answers` narration carve-out.**
-      The kernel rule `src/rules/direct-answers.md` § Iron Law 3 still names
-      the retired `personal.play_by_play` and `verbosity.intent_announcements`
-      ("Narration carve-out: only when both … are `true`"). Behaviour is
-      already the old default — both keys are gone, so the carve-out cannot
-      fire — but the sentence tells a reader to set two keys the loader now
-      ignores. Rewrite it to state the behaviour (narration only when the user
-      asks for it in the turn). A kernel edit ships in its own PR with the
-      24-hour soak (`scope-control` § Kernel-rule edits), so it cannot ride in
-      the Phase 2 PR.
-      verify: `grep -c "personal.play_by_play" src/rules/direct-answers.md` -> 0
 
 <!-- Release holds — emitted commented out, because the default is that there is
      not one. Uncomment ONLY if an intermediate tree state of this roadmap must
@@ -236,6 +226,7 @@ table is a measurement of one commit, not a licence.
 | ID | ownership | resolved by | decision | evidence | revisit if |
 |---|---|---|---|---|---|
 | D1 | product-owned | owner | Retire 47 of the 51 keys the 2026-10-09 audit found default-neutral. Kept: `hooks.code_graph.enabled`, because `docs/MIGRATION.md` publicly promises the key stays registered, and `planning.closure_pass`, `planning.risk_review`, `planning.completion_review`, because they are the only off-switches for those gates. | Owner answer 2026-10-09 (option 2 of a numbered choice that also offered all 51, 37 without the reasoning switches, or none). Audit: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`. | the MIGRATION promise is withdrawn, or a planning gate gains a different off-switch |
+| D2 | reversible-technical | agent | Phase 2 retired 46 of the 47, not 47: the derivable count stands at 37, so AC-2 (36) stays open. `roadmap.quality_cadence` moved back to the queue (step 2.3, two defaults: template and schema `per_phase`, reader fallback `end_of_roadmap`). Separately, the kernel rule `direct-answers` § Narration carve-out still names the retired `personal.play_by_play` and `verbosity.intent_announcements`; behaviour is unchanged, but the sentence is stale and a kernel edit ships in its own PR with the 24-hour soak (`scope-control` § Kernel-rule edits), so it was not made in the Phase 2 PR. | `lint_settings_classes` after step 2.7: `112 settings key(s) classified — A=9 B=3 C=100`, derivable 37. Step 2.3 prose for the cadence evidence. | the owner decides `quality_cadence`'s default (then it can be retired), or the kernel edit lands |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-09 | reviewer: claude/host -->
@@ -257,12 +248,4 @@ table is a measurement of one commit, not a licence.
 - [ ] AC-2 — the `lint_settings_classes:derivable-surface` count stands at 36
       (83 − 47), every retired key is absent from the template, the contract
       and every reader, and the settings-classes lint passes.
-      Measured after step 2.7: count **37**, not 36, and the lint passes
-      (`112 settings key(s) classified — A=9 B=3 C=100`). Two things keep this
-      open, both recorded rather than worked around: `roadmap.quality_cadence`
-      moved back to the queue in 2.3 (two defaults), so 46 of the 47 were
-      retired; and the kernel rule `direct-answers` still names two retired
-      keys (step 2.8, its own PR). The criterion's 36 assumed all 47 would
-      prove default-neutral — whether 37 satisfies it, or `quality_cadence`
-      gets its default decided and retired, is the owner's call.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
