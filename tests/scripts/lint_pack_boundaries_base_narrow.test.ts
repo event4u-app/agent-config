@@ -56,8 +56,25 @@ describe('lint_pack_boundaries — the advisory `suggests` edge', () => {
     // --- The edge stays one-way and one-hop. ---
 
     it('is one-way: the target suggesting the source does not permit the link', () => {
-        // `narrow -> base` is permitted only if NARROW declares the edge.
-        expect(lpb._is_allowed('narrow', 'base', [], ALWAYS, [])).toBe(false);
+        // Asserted through `_link_permit_reason`, because that is the only
+        // place two-wayness could be implemented — `_is_allowed`'s 5th
+        // argument is by construction the SOURCE pack's own list, so passing
+        // `[]` there would merely repeat the denial above and would stay green
+        // if the lookup started reading the target's list too.
+        const direct = new Map<string, string[]>([
+            ['base', []],
+            ['narrow', []],
+        ]);
+        const closureOf = (p: string): Set<string> => lpb._requires_closure(p, direct);
+        // ONLY `base` declares the edge.
+        const suggestsOf = (p: string): readonly string[] => (p === 'base' ? ['narrow'] : []);
+
+        expect(lpb._link_permit_reason(['base'], ['narrow'], closureOf, ALWAYS, suggestsOf)).toBe(
+            'suggests',
+        );
+        expect(
+            lpb._link_permit_reason(['narrow'], ['base'], closureOf, ALWAYS, suggestsOf),
+        ).toBeNull();
     });
 
     it('is one-hop: `suggests` is never expanded transitively', () => {
@@ -106,6 +123,49 @@ describe('lint_pack_boundaries — the advisory `suggests` edge', () => {
         ).toBeNull();
     });
 
+    // --- The multi-pack aggregation, which a mutation survived. ---
+    //
+    // An adversarial review replaced the `PERMIT_RANK[best] > PERMIT_RANK[weakest]`
+    // comparison with a bare `weakest = best` — "last source pack wins" — and all
+    // 33 tests stayed green while the real corpus silently reported 81 permits
+    // instead of 83. Every case above uses a SINGLE source pack, so none of them
+    // reaches the loop. These two do.
+
+    it('reports the WEAKEST edge across a multi-pack source, not the last one', () => {
+        const direct = new Map<string, string[]>([
+            ['wide', []],
+            ['narrow', []],
+        ]);
+        const closureOf = (p: string): Set<string> => lpb._requires_closure(p, direct);
+        // `narrow` reaches the target by being it; `wide` only by the advisory
+        // edge. The link is as weak as its weakest source pack.
+        const suggestsOf = (p: string): readonly string[] => (p === 'wide' ? ['narrow'] : []);
+
+        expect(
+            lpb._link_permit_reason(['wide', 'narrow'], ['narrow'], closureOf, ALWAYS, suggestsOf),
+        ).toBe('suggests');
+        // Order must not decide it: the same two packs the other way round.
+        expect(
+            lpb._link_permit_reason(['narrow', 'wide'], ['narrow'], closureOf, ALWAYS, suggestsOf),
+        ).toBe('suggests');
+    });
+
+    it('refuses the link when ANY source pack cannot reach the target', () => {
+        const direct = new Map<string, string[]>([
+            ['wide', []],
+            ['other', []],
+            ['narrow', []],
+        ]);
+        const closureOf = (p: string): Set<string> => lpb._requires_closure(p, direct);
+        const suggestsOf = (p: string): readonly string[] => (p === 'wide' ? ['narrow'] : []);
+
+        // `other` declares nothing, so the artefact is dead in that install
+        // even though `wide` is covered.
+        expect(
+            lpb._link_permit_reason(['wide', 'other'], ['narrow'], closureOf, ALWAYS, suggestsOf),
+        ).toBeNull();
+    });
+
     // --- End to end over a planted corpus, both polarities. ---
 
     const skill = (name: string, pack: string, body: string): [string, string] => [
@@ -127,15 +187,26 @@ describe('lint_pack_boundaries — the advisory `suggests` edge', () => {
         return fs.realpathSync(dir);
     }
 
-    function run(dir: string, extra: string[] = []): { code: number; out: string } {
+    interface Run {
+        code: number;
+        out: string;
+        stdout: string;
+    }
+
+    function runWith(dir: string, argv: string[]): Run {
         lpb._set_paths_for_test({ root: dir });
         try {
-            const r = runInProc(lpb.main, ['--quiet', ...extra]);
-            return { code: r.status, out: r.stdout + r.stderr };
+            const r = runInProc(lpb.main, argv);
+            return { code: r.status, out: r.stdout + r.stderr, stdout: r.stdout };
         } finally {
             lpb._set_paths_for_test({ root: REAL_ROOT });
         }
     }
+
+    const run = (dir: string, extra: string[] = []): Run => runWith(dir, ['--quiet', ...extra]);
+
+    /** The ordinary CI path — no `--quiet`, so the summary lines are visible. */
+    const runVerbose = (dir: string, extra: string[] = []): Run => runWith(dir, extra);
 
     const corpus = (packsYml: string): Record<string, string> => ({
         'packs.yml': packsYml,
@@ -172,5 +243,44 @@ describe('lint_pack_boundaries — the advisory `suggests` edge', () => {
             corpus('- id: base\n  requires: []\n  suggests: [narrow]\n- id: narrow\n  requires: []\n'),
         );
         expect(run(dir).out).not.toContain('base -> narrow');
+    });
+
+    // The permit is per EDGE, so the set it carries grows without anyone
+    // re-checking it. The count is the only thing that makes that growth
+    // visible to a reader who did not pass a flag, so it is pinned on the
+    // ordinary path — and pinned as a COUNT, not as the list.
+    it('prints how many links the advisory edge carries on an ordinary run', () => {
+        const dir = plant(
+            corpus('- id: base\n  requires: []\n  suggests: [narrow]\n- id: narrow\n  requires: []\n'),
+        );
+        const { out } = runVerbose(dir);
+        expect(out).toContain('1 link(s) permitted by an advisory `suggests` edge');
+        expect(out).not.toContain('base -> narrow');
+    });
+
+    it('reports zero rather than staying silent when no edge carries anything', () => {
+        const dir = plant(
+            corpus('- id: base\n  requires: [narrow]\n- id: narrow\n  requires: []\n'),
+        );
+        expect(runVerbose(dir).out).toContain('0 link(s) permitted by an advisory `suggests` edge');
+    });
+
+    // `--format json` carries the permitted set unconditionally: a machine
+    // consumer cannot pass a flag it does not know about, and the array is
+    // additive. Pinned so the two output modes cannot drift apart silently.
+    it('always carries permitted_by_suggests in the JSON payload', () => {
+        const dir = plant(
+            corpus('- id: base\n  requires: []\n  suggests: [narrow]\n- id: narrow\n  requires: []\n'),
+        );
+        // stdout only: the `scanned:` line goes to stderr under --format json
+        // precisely so the payload stays parseable, and a test that reads both
+        // would stop pinning that split.
+        const { stdout } = run(dir, ['--format', 'json']);
+        const payload = JSON.parse(stdout) as {
+            permitted_by_suggests: { reason: string; source_pack: string }[];
+        };
+        expect(payload.permitted_by_suggests).toHaveLength(1);
+        expect(payload.permitted_by_suggests[0]?.reason).toBe('suggests');
+        expect(payload.permitted_by_suggests[0]?.source_pack).toBe('base');
     });
 });

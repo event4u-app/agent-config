@@ -53,6 +53,26 @@
  *   `--self-test`, which runs this CLI against planted fixture trees. Both are
  *   what `src/config/gate-coverage.yml` asks of a gate a pull request runs.
  *
+ * ## The advisory `suggests` edge, and the sibling gate that refuses it
+ *
+ * Since D5 of `road-to-gates-a-pull-request-can-hear` (AI council 2026-10-07)
+ * this gate reads `suggests` as PERMITTING a cross-pack link: advisory,
+ * non-installing, one-hop, one-way. `lint_rule_skill_pack_reach` states in its
+ * own header that `suggests` is deliberately NOT followed. Both are correct,
+ * and the discriminator is the direction of the claim:
+ *
+ * - THAT gate asserts a route WILL RESOLVE. Counting an advisory edge would
+ *   assert resolution on installs that may not exist.
+ * - THIS gate reports a link that MAY DANGLE. An advisory edge is the author
+ *   stating they accept the dangle for a consumer who declines the companion,
+ *   so reading it downgrades a finding the author has already answered.
+ *
+ * The permit is per EDGE, not per link. The council's condition — only
+ * safely-degrading links may be permitted — was verified once, by hand, over
+ * the 203 links at the 2026-10-09 baseline; nothing re-verifies it for links
+ * added later. That is why the permitted COUNT prints on every run including
+ * `--quiet`: it is the only standing signal that the set is growing.
+ *
  * ## Where the `requires` graph is read from
  *
  * `src/config/discovery/packs.yml` is the source of truth for the pack
@@ -373,42 +393,36 @@ function _pack_home_dirs(): string[] {
  * manifests as an overlay for pack homes the vocabulary does not list.
  */
 function _pack_requires(): Map<string, string[]> {
-    const out = new Map<string, string[]>();
-    const asList = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : []);
-
-    if (_exists(VOCAB)) {
-        const vocab = parseYaml(fs.readFileSync(VOCAB, 'utf-8'), { version: '1.1' });
-        if (Array.isArray(vocab)) {
-            for (const entry of vocab) {
-                if (entry !== null && typeof entry === 'object' && !Array.isArray(entry)) {
-                    const e = entry as Record<string, unknown>;
-                    if (typeof e['id'] === 'string') {
-                        out.set(e['id'], asList(e['requires']));
-                    }
-                }
-            }
-        }
-    }
-    for (const dir of _pack_home_dirs()) {
-        const meta = _load_pack_meta(dir);
-        const id = typeof meta['id'] === 'string' ? meta['id'] : path.basename(dir);
-        if (!out.has(id)) {
-            out.set(id, asList(meta['requires']));
-        }
-    }
-    return out;
+    return _pack_edges().requires;
 }
 
 /**
  * `pack id -> direct suggests`.
  *
- * Read from the same two sources as `_pack_requires`, and deliberately NOT
- * expanded: `suggests` is one-hop. Transitive expansion would give the
- * advisory edge the same reach as the install-forcing one, which is the
+ * Deliberately NOT expanded: `suggests` is one-hop. Transitive expansion would
+ * give the advisory edge the install-forcing reach `requires` has, which is the
  * property the base-into-narrow decision depends on it not having.
  */
 function _pack_suggests(): Map<string, string[]> {
-    const out = new Map<string, string[]>();
+    return _pack_edges().suggests;
+}
+
+/**
+ * Both edge maps, from ONE read of the vocabulary and one walk of the pack
+ * homes.
+ *
+ * One reader rather than two near-identical ones, so the VOCAB-wins precedence
+ * below exists in a single place: two copies would have to be kept in step by
+ * hand, and a `requires` map that fell out of step with a `suggests` map read
+ * from the same file is a drift nothing reports.
+ *
+ * NOTE for anyone adding an edge: a `pack.yaml` is only consulted for a pack
+ * the vocabulary does not list, so declaring `suggests` there alone has no
+ * effect on this gate. `packs.yml` is where an edge has to go.
+ */
+function _pack_edges(): { requires: Map<string, string[]>; suggests: Map<string, string[]> } {
+    const requires = new Map<string, string[]>();
+    const suggests = new Map<string, string[]>();
     const asList = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : []);
 
     if (_exists(VOCAB)) {
@@ -418,7 +432,8 @@ function _pack_suggests(): Map<string, string[]> {
                 if (entry !== null && typeof entry === 'object' && !Array.isArray(entry)) {
                     const e = entry as Record<string, unknown>;
                     if (typeof e['id'] === 'string') {
-                        out.set(e['id'], asList(e['suggests']));
+                        requires.set(e['id'], asList(e['requires']));
+                        suggests.set(e['id'], asList(e['suggests']));
                     }
                 }
             }
@@ -427,11 +442,12 @@ function _pack_suggests(): Map<string, string[]> {
     for (const dir of _pack_home_dirs()) {
         const meta = _load_pack_meta(dir);
         const id = typeof meta['id'] === 'string' ? meta['id'] : path.basename(dir);
-        if (!out.has(id)) {
-            out.set(id, asList(meta['suggests']));
+        if (!requires.has(id)) {
+            requires.set(id, asList(meta['requires']));
+            suggests.set(id, asList(meta['suggests']));
         }
     }
-    return out;
+    return { requires, suggests };
 }
 
 /** Transitive expansion of `requires`, cycle-safe. */
@@ -828,8 +844,8 @@ function selfTest(): number {
 
     return runSelfTest({
         gate: 'lint_pack_boundaries',
-        minCases: 5,
-        minRejectCases: 3,
+        minCases: 7,
+        minRejectCases: 4,
         cases: [
             {
                 name: 'an undeclared cross-pack link is rejected with exit 1',
@@ -889,6 +905,38 @@ function selfTest(): number {
                         }),
                     ),
             },
+            {
+                name: 'a link an advisory `suggests` edge permits passes',
+                expect: 'accept',
+                run: () =>
+                    run(
+                        plant('suggests-permit', {
+                            'packs.yml':
+                                '- id: alpha\n  requires: []\n  suggests: [beta]\n' +
+                                '- id: beta\n  requires: []\n',
+                            ...Object.fromEntries([
+                                skill('a-one', 'alpha', 'reaches [b](../b-one/SKILL.md)'),
+                                skill('b-one', 'beta', 'leaf'),
+                            ]),
+                        }),
+                    ),
+            },
+            {
+                // The denial half. Without it the case above cannot tell a
+                // working permit from a gate that stopped reporting at all.
+                name: 'the same link without the `suggests` edge is still rejected with exit 1',
+                expect: 'reject',
+                run: () =>
+                    rejectsWith(1, run(
+                        plant('suggests-absent', {
+                            'packs.yml': twoPacks,
+                            ...Object.fromEntries([
+                                skill('a-one', 'alpha', 'reaches [b](../b-one/SKILL.md)'),
+                                skill('b-one', 'beta', 'leaf'),
+                            ]),
+                        }),
+                    )),
+            },
         ],
     });
 }
@@ -929,8 +977,7 @@ function main(argv?: readonly string[]): number {
         return 2;
     }
 
-    const pack_requires = _pack_requires();
-    const pack_suggests = _pack_suggests();
+    const { requires: pack_requires, suggests: pack_suggests } = _pack_edges();
     const suggestsOf = (pack: string): readonly string[] => pack_suggests.get(pack) ?? [];
     const always_installed = _always_installed_packs();
     const closureCache = new Map<string, Set<string>>();
@@ -1036,10 +1083,24 @@ function main(argv?: readonly string[]): number {
                 `${pack_requires.size} packs (${unassigned.length} outside pack scope)\n`,
         );
     }
-    // The advisory edge is reported only when asked for. It permits a link
-    // rather than excusing one, so printing it next to the violations on every
-    // run would read as a finding; printing it never would hide which links a
-    // non-installing edge is carrying.
+    // Two different questions, so two different defaults.
+    //
+    // HOW MANY links an advisory edge is carrying prints on EVERY run,
+    // `--quiet` included. The permit is granted per EDGE, not per link: once an
+    // edge is declared, every future link on it is permitted without anyone
+    // re-checking that it degrades safely. An adversarial review demonstrated
+    // that by planting a link on a declared edge and watching this gate exit 0
+    // where it would previously have failed the pull request. `--quiet` is what
+    // CI passes, so a count visible only without it would miss the one log that
+    // matters.
+    //
+    // WHICH links they are stays behind `--show-permitted`. A permit is not a
+    // finding, and printing dozens of lines beside the violations reads as one.
+    process.stdout.write(
+        `${permitted.length} link(s) permitted by an advisory \`suggests\` edge` +
+            (args.show_permitted ? '' : ' (--show-permitted lists them)') +
+            '\n',
+    );
     if (args.show_permitted) {
         for (const p of permitted) {
             process.stdout.write(
@@ -1047,9 +1108,6 @@ function main(argv?: readonly string[]): number {
                     `(link: ${p.link}) — permitted by \`${p.reason}\`\n`,
             );
         }
-        process.stdout.write(
-            `${permitted.length} link(s) permitted by an advisory \`suggests\` edge\n`,
-        );
     }
     for (const v of violations) {
         if (v.kind === 'unresolved-pack') {
@@ -1066,8 +1124,8 @@ function main(argv?: readonly string[]): number {
     }
     if (violations.length > 0) {
         process.stdout.write(
-            `\n${violations.length} cross-pack violation(s) — declare 'requires' in ` +
-                'pack.yaml or move the artefact\n',
+            `\n${violations.length} cross-pack violation(s) — declare 'requires' or an ` +
+                "advisory 'suggests' edge in packs.yml, or move the artefact\n",
         );
         if (verdict !== null) {
             if (verdict.ok) {
@@ -1124,6 +1182,7 @@ export {
     _pack_suggests,
     _permit_reason,
     _load_pack_meta,
+    _pack_edges,
     _pack_requires,
     _requires_closure,
     _packs_of,
