@@ -94,6 +94,17 @@ export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     ['verbosity.post_action_reports', 'direct-answers Iron Law 3: a one-line confirmation and one end-summary'],
     ['telegraph.speak', 'the telegraph-speak predicate in compile_time_toggles.ts; the bench verdict is package-level (ADR telegraph/0002)'],
     ['tokens.rich_skills', "the skill's own token_budget_class: rich plus the lint_token_budget_discipline ceiling"],
+    // 2026-10-09 — reasoning protocol switches
+    ['reasoning.auto_gate', 'the RDP gate task signal plus the host self-assessment in rdp-gate.md'],
+    ['reasoning.components.orchestrator', 'the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off'],
+    ['reasoning.components.notes_first', 'the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off'],
+    ['reasoning.components.grounding', 'the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off'],
+    ['reasoning.components.intent', 'the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off'],
+    ['reasoning.components.complexity_first', 'the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off'],
+    ['reasoning.components.verifier_default', 'the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off'],
+    ['reasoning.components.prediction_tracking', 'the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off'],
+    ['reasoning.components.decision_ledger', 'the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off'],
+    ['reasoning.components.uncertainty_budget', 'the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off'],
 ]);
 
 /** Keys already warned about in THIS process — the "once per run" dedupe. */

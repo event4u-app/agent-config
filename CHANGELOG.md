@@ -32,7 +32,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Changed
 
-- **9 settings keys are retired; an install that never changed them sees no
+- **19 settings keys are retired; an install that never changed them sees no
   difference.** Each key's shipped default is now fixed behaviour: every reader
   of it — code, rule and command prose, the wizard — was rewritten to that
   default in the same change. **If your `.agent-settings.yml` still sets one,
@@ -41,6 +41,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   value you chose is lost visibly, never silently. Delete the line to silence
   it. The keys:
   - Output and tone: `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`.
+  - Reasoning protocol switches: `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`.
   The reference page lists each key with the behaviour that replaces it
   (`templates/agent-settings.md` § Retired keys).
 

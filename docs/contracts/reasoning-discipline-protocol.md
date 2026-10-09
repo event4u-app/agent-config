@@ -58,7 +58,7 @@ prompt closes the weights gap.
 RDP never runs on every turn. It engages only where it pays, decided by three
 **table-free** signals (there is no runtime model→band lookup — ADR-035):
 
-1. **Settings** — your `reasoning:` block (below). `enabled: false` stops here.
+1. **Settings** — `reasoning.enabled` (below). `false` stops here.
 2. **Task signal** — skips trivial / short / fully-specified tasks (rename, typo,
    one-line edit, list files); engages on complex / ambiguous / multi-component /
    long-horizon / stateful / irreversible work.
@@ -73,18 +73,20 @@ it).
 
 ## How to turn it off
 
-All switches live in the `reasoning:` block of `.agent-settings.yml` (repo root;
+One switch lives in the `reasoning:` block of `.agent-settings.yml` (repo root;
 full schema in [`docs/customization.md`](../customization.md) § Available
 settings):
 
 | Goal | Setting |
 |---|---|
 | Disable the whole layer (zero overhead) | `reasoning.enabled: false` |
-| Keep the layer, drop the host self-assessment | `reasoning.auto_gate: false` (gate on task-signal + toggles only) |
-| Disable one behaviour | `reasoning.components.<name>: false` (e.g. `verifier_default`) |
 
-A component fires only when `reasoning.enabled` is `true` **and** the `auto_gate`
-test passes.
+A component fires only when `reasoning.enabled` is `true` **and** the task and
+host signals above engage it. The per-component switches
+(`reasoning.components.*`) and `reasoning.auto_gate` were retired on 2026-10-09
+with their default (`true`) as the fixed behaviour: the signals already decide
+where each component pays, so a second, static off-switch per component only
+let a setting disagree with them. A leftover value warns once and is ignored.
 
 ## Why it is not a Fable / Mythos copy
 

@@ -369,38 +369,6 @@ export const settingsSchema = z.object({
         enabled: z.boolean().default(true).describe(
             'Master switch for the Reasoning Discipline Protocol (RDP). false = the whole layer is inert (zero overhead).',
         ),
-        auto_gate: z.boolean().default(true).describe(
-            'Engage the discipline only where it pays, using table-free signals (task triviality + agent-self-assessed host reasoning strength; no runtime model->band lookup, per ADR-035). false = gate on task-signal + the component toggles only.',
-        ),
-        components: z.object({
-            orchestrator: z.boolean().default(true).describe(
-                'Sequence the reasoning chain (ground->intent->notes->gather->audit->verify) as one system; the single coordination point.',
-            ),
-            notes_first: z.boolean().default(true).describe(
-                'Keep hypotheses/predictions/decisions in session notes; the response carries conclusions + evidence only.',
-            ),
-            grounding: z.boolean().default(true).describe(
-                'Explore the environment / close info-gaps before designing.',
-            ),
-            intent: z.boolean().default(true).describe(
-                'Infer the underlying goal before solving the literal ask (standard host only).',
-            ),
-            complexity_first: z.boolean().default(true).describe(
-                'Risk-first: resolve the load-bearing unknown before the easy parts (RDP derivation, not a Fable-documented behavior).',
-            ),
-            verifier_default: z.boolean().default(true).describe(
-                'Run a fresh-context verifier on the structural-complexity gate (branching/constraints/stateful/irreversible + token floor).',
-            ),
-            prediction_tracking: z.boolean().default(true).describe(
-                'Log prediction + confidence + outcome + lesson (calibration loop).',
-            ),
-            decision_ledger: z.boolean().default(true).describe(
-                'Log decision + alternatives + reason + revisit-if; escalates to decision-record/ADR when durable.',
-            ),
-            uncertainty_budget: z.boolean().default(true).describe(
-                'Per-dimension uncertainty score that feeds adaptive effort.',
-            ),
-        }).default({}),
     }).default({}),
     subagents: z.object({
         downshift: z.boolean().default(true).describe(

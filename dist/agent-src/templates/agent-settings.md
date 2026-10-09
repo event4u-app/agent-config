@@ -671,6 +671,7 @@ silence it.
 | `personal.pr_comment_bot_icon` | no 🤖 prefix (`no-decorative-emojis-in-git-surfaces`) |
 | `telegraph.speak` | the telegraph-speak rule does not ship (bench verdict, ADR telegraph/0002) |
 | `tokens.rich_skills` | `token_budget_class: rich` skills load in full (`token-budget-discipline`) |
+| `reasoning.auto_gate`, `reasoning.components.*` (nine switches) | every RDP component follows the gate's task and host signals (`rdp-gate`); `reasoning.enabled` stays the hard off |
 
 ## Cost profiles
 

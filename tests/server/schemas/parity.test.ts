@@ -207,6 +207,16 @@ const RETIRED_2026_10_09: readonly (readonly [string, string, Json])[] = [
     ['verbosity', 'post_action_reports', 'full'],
     ['telegraph', 'speak', true],
     ['tokens', 'rich_skills', 'off'],
+    ['reasoning', 'auto_gate', false],
+    ['reasoning.components', 'orchestrator', false],
+    ['reasoning.components', 'notes_first', false],
+    ['reasoning.components', 'grounding', false],
+    ['reasoning.components', 'intent', false],
+    ['reasoning.components', 'complexity_first', false],
+    ['reasoning.components', 'verifier_default', false],
+    ['reasoning.components', 'prediction_tracking', false],
+    ['reasoning.components', 'decision_ledger', false],
+    ['reasoning.components', 'uncertainty_budget', false],
 ] as const;
 
 describe('deleted settings keys cannot be honoured again', () => {

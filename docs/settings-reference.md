@@ -307,16 +307,6 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `reasoning.auto_gate` | C | boolean | `true` |  | Engage the discipline only where it pays, using table-free signals (task triviality + agent-self-assessed host reasoning strength; no runtime model->band lookup, per ADR-035). false = gate on task-signal + the component toggles only. |
-| `reasoning.components.complexity_first` | C | boolean | `true` |  | Risk-first: resolve the load-bearing unknown before the easy parts (RDP derivation, not a Fable-documented behavior). |
-| `reasoning.components.decision_ledger` | C | boolean | `true` |  | Log decision + alternatives + reason + revisit-if; escalates to decision-record/ADR when durable. |
-| `reasoning.components.grounding` | C | boolean | `true` |  | Explore the environment / close info-gaps before designing. |
-| `reasoning.components.intent` | C | boolean | `true` |  | Infer the underlying goal before solving the literal ask (standard host only). |
-| `reasoning.components.notes_first` | C | boolean | `true` |  | Keep hypotheses/predictions/decisions in session notes; the response carries conclusions + evidence only. |
-| `reasoning.components.orchestrator` | C | boolean | `true` |  | Sequence the reasoning chain (ground->intent->notes->gather->audit->verify) as one system; the single coordination point. |
-| `reasoning.components.prediction_tracking` | C | boolean | `true` |  | Log prediction + confidence + outcome + lesson (calibration loop). |
-| `reasoning.components.uncertainty_budget` | C | boolean | `true` |  | Per-dimension uncertainty score that feeds adaptive effort. |
-| `reasoning.components.verifier_default` | C | boolean | `true` |  | Run a fresh-context verifier on the structural-complexity gate (branching/constraints/stateful/irreversible + token floor). |
 | `reasoning.enabled` | C | boolean | `true` |  | Master switch for the Reasoning Discipline Protocol (RDP). false = the whole layer is inert (zero overhead). |
 
 ## roadmap

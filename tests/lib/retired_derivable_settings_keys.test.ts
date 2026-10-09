@@ -40,6 +40,17 @@ const RETIRED: ReadonlyArray<{ key: string; hostile: unknown }> = [
     { key: 'verbosity.post_action_reports', hostile: 'full' },
     { key: 'telegraph.speak', hostile: true },
     { key: 'tokens.rich_skills', hostile: 'off' },
+    // 2.2 — reasoning protocol switches
+    { key: 'reasoning.auto_gate', hostile: false },
+    { key: 'reasoning.components.orchestrator', hostile: false },
+    { key: 'reasoning.components.notes_first', hostile: false },
+    { key: 'reasoning.components.grounding', hostile: false },
+    { key: 'reasoning.components.intent', hostile: false },
+    { key: 'reasoning.components.complexity_first', hostile: false },
+    { key: 'reasoning.components.verifier_default', hostile: false },
+    { key: 'reasoning.components.prediction_tracking', hostile: false },
+    { key: 'reasoning.components.decision_ledger', hostile: false },
+    { key: 'reasoning.components.uncertainty_budget', hostile: false },
 ];
 
 const TEMPLATE_PATH = path.resolve(process.cwd(), 'src/config/agent-settings.template.yml');

@@ -74,12 +74,18 @@ table is a measurement of one commit, not a licence.
       carve-out needs both `true`, which can no longer happen), but its text is
       stale; a kernel edit ships in its own PR, so it is step 2.8.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
-- [ ] **2.2 Reasoning protocol switches (10).** `reasoning.auto_gate` and the
+- [x] **2.2 Reasoning protocol switches (10).** `reasoning.auto_gate` and the
       nine `reasoning.components.*` (orchestrator, notes_first, grounding,
       intent, complexity_first, verifier_default, prediction_tracking,
       decision_ledger, uncertainty_budget). `reasoning.enabled` is NOT in this
       group: the audit left it `unclear` because `bench_ab_clone.ts` uses it as
       the without-RDP arm of an A/B benchmark.
+      Retired, all ten (count 74 → 64). Re-verified: no code reader; the
+      only reader was `rdp-gate.md` signal 1, plus `bench_ab_clone.ts`, which
+      wrote `auto_gate: true` (the default) into its benchmark settings and now
+      writes `reasoning.enabled` alone — the A/B lever it exists for. The
+      components keep running exactly as before: every switch defaulted
+      `true`, and the gate's task and host signals now decide alone.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
 - [ ] **2.3 Roadmap cadence (3).** `roadmap.skip_pre_run_gate`,
       `roadmap.quality_cadence`, `roadmap.dashboard_regen_cadence`.

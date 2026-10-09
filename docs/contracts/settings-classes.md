@@ -247,11 +247,11 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 |---|---|
 | A — preference | 21 |
 | B — consent | 3 |
-| C — guarded | 125 |
-| **Total** | **149** |
+| C — guarded | 115 |
+| **Total** | **139** |
 
 <!-- derivable-retirement-2026-10-09 -->
-It fell to 149 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 9 `derivable` keys (5 A, 4 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behaviour, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
+It fell to 139 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 19 `derivable` keys (5 A, 14 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behaviour, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`; 2.2 reasoning protocol switches — `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
 <!-- /derivable-retirement-2026-10-09 -->
 
 It rose to 158 on 2026-10-06 when the `git:` section added three C keys —
@@ -391,11 +391,11 @@ the template, which is the drift this contract exists to prevent.
 
 | Disposition | Keys |
 |---|---|
-| derivable | 74 |
+| derivable | 64 |
 | un-inferrable | 10 |
 | consent | 48 |
 | policy | 17 |
-| **Total** | **149** |
+| **Total** | **139** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -539,16 +539,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `chat_history.text_limits.phase` | C | `200` | cap on how much phase text is written to disk | consent |
 | `pipelines.skill_improvement` | A | `true` | proposes a capture; the user still decides | derivable — the pipeline's own trigger condition; the capture is already a user-confirmed proposal |
 | `reasoning.enabled` | C | `true` | master switch for the agent's own reasoning discipline | derivable — the RDP gate's own task-triviality and host self-assessment signals already decide per turn |
-| `reasoning.auto_gate` | C | `true` | decides when that discipline engages | derivable — it only removes the RDP gate's host self-assessment signal, its cheapest and most situational input |
-| `reasoning.components.orchestrator` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal (complex / multi-component vs trivial) |
-| `reasoning.components.notes_first` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal; the notes file only exists once the gate engaged |
-| `reasoning.components.grounding` | C | `true` | a component of the agent's own discipline | derivable — `think-before-action`'s own info-gap condition, which `source-discovery-gate` already tests |
-| `reasoning.components.intent` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's host self-assessment signal |
-| `reasoning.components.complexity_first` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal (a load-bearing unknown exists or it does not) |
-| `reasoning.components.verifier_default` | C | `true` | disabling it removes a verification step | derivable — the verifier's own structural-complexity gate |
-| `reasoning.components.prediction_tracking` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal; a turn with no prediction to log produces no entry |
-| `reasoning.components.decision_ledger` | C | `true` | a component of the agent's own discipline | derivable — the escalation litmus in `notes-first-reasoning` (tactical to notes, durable to ADR) |
-| `reasoning.components.uncertainty_budget` | C | `true` | a component of the agent's own discipline | derivable — the RDP gate's task signal; the score feeds adaptive effort only where the gate already engaged |
 | `roadmap.skip_pre_run_gate` | C | `true` | disables a pre-run confirmation gate | derivable — the pre-run gate's own ambiguity condition; a genuine ambiguity prompts regardless |
 | `roadmap.quality_cadence` | C | `end_of_roadmap` | governs when verification runs | derivable — `quality.local_auto_run` decides whether local verification runs, and the `verify-before-complete` evidence gate decides the moment |
 | `roadmap.dashboard_regen_cadence` | A | `every_5_steps` | beat of a derived view | derivable — the dashboard is derived: `roadmap:progress` regenerates deterministically from the roadmap files |
