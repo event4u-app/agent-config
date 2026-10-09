@@ -100,7 +100,7 @@ checks agrees with the ruleset, and a report says so when it does not.
       with the argv a new gate-coverage row declares, so a new violation above
       the 203 baseline fails the PR that adds it.
       verify: `grep -c 'lint_pack_boundaries' .github/workflows/consistency.yml` -> /^[1-9]/
-- [ ] <!-- blocked-by: pack-boundary-base-narrow-edge | asked: no — authored from an inbox round with no owner turn; the question is carried by the blocker below for /roadmap:resolve-blockers --> **3.2 Re-baseline
+- [ ] **3.2 Re-baseline
       under the decided rule.** The gate reads the chosen edge or exemption;
       the baseline count in `src/config/gate-violation-baselines.json` drops
       by the links that rule now admits, and the note names the decision.
@@ -166,6 +166,7 @@ checks agrees with the ruleset, and a report says so when it does not.
 | D2 | reversible-technical | agent | Pack boundaries join `consistency.yml` rather than a new workflow | That workflow already hosts the audits moved out of `task ci` for the same reason (`:274-277`) | The step's runtime pushes the job past its timeout |
 | D3 | reversible-technical | agent | The canary is scheduled, never per-PR | It plants real files; the gate's own prose keeps it off the per-PR path (`check_gate_coverage.ts:397-399`) | The canary is rewritten to plant only in a temp tree |
 | D4 | reversible-technical | agent | The ruleset comparator is a report, not a required check | `print_required_checks` is contractually offline; a network read cannot sit in its place | The comparator is wanted as a gate after one release of reports |
+| D5 | contested-technical | council:2026-10-07 resolve-blockers | `pack-boundary-base-narrow-edge` (a): `packs.yml` gains an advisory, non-installing `suggests` edge that `lint_pack_boundaries.ts` reads as allowing a base-to-narrow link. Before 3.2 re-baselines, the 203 baselined links are classified (documentation reference / optional integration / load-bearing); only links that degrade safely when the target pack is absent may be permitted, and the linter reports the permitting edge. | AI council 2026-10-07, anthropic + openai, 2/2 present, both (a) with the classification condition, $0.00. Adopted 2026-10-08 under the owner's delegation of council-decidable questions. | the classification finds a meaningful share load-bearing (one seat named >20 %) — then neither option, and the links stay prose until they degrade safely |
 
 ## Blockers
 
@@ -180,7 +181,7 @@ checks agrees with the ruleset, and a report says so when it does not.
 - **Resolution (2026-10-07):** option (a), AI council 2/2 (anthropic + openai, one round with peer review, $0.00 metered), recorded as a decision-revisit in `agents/evidence/analysis/workflow-security-net-degraded-decision.md` § Revisited 2026-10-07. The step runs `--strict`, the gate-coverage row's `argv` is `["--strict"]` with a canary recipe in place of `no_canary_reason`; tiers unchanged.
 
 ### blocker: pack-boundary-base-narrow-edge
-- **Status:** open
+- **Status:** resolved 2026-10-08 — option (a), an advisory `suggests` edge (council 2026-10-07, anthropic + openai, 2/2, $0.00; adopted under the owner's 2026-10-08 delegation of council-decidable questions; D5), on the condition that the 203 baselined links are classified before 3.2 re-baselines (documentation reference / optional integration / load-bearing) and every link `suggests` permits degrades safely when the target pack is absent; both seats would choose neither option if a meaningful share is load-bearing. Owner confirmation pending.
 - **Owner:** owner (product call), council advises
 - **Blocks:** step 3.2
 - **What to do:** pick exactly one — (a) add an advisory `suggests` edge to `packs.yml` that `src/scripts/lint_pack_boundaries.ts` reads as allowing a link, or (b) exempt base packs from the boundary rule in `src/scripts/lint_pack_boundaries.ts` and name them in the baseline note of `src/config/gate-violation-baselines.json`.

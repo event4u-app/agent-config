@@ -71,7 +71,7 @@ not. A criterion that says of itself that it is not met is not ticked. A
 
 ## Phase 2 — Whether parked blockers are in scope
 
-- [ ] <!-- blocked-by: later-blockers-in-scope | asked: no — the council split on 2026-10-07, which escalates to the owner; put in the owner-residue list of this roadmap's PR --> **2.1 The scope follows the
+- [ ] **2.1 The scope follows the
       decision.** Under (a): `/roadmap:resolve-blockers` gains a `later/`
       bucket that lists only entries with `Owner:` owner and `Status:` open, and
       the lint's scope and its pinning test stay unchanged. Under (b): the lint
@@ -160,11 +160,12 @@ not. A criterion that says of itself that it is not met is not ticked. A
 | D3 | reversible-technical | agent | Line citations get a baseline, not a hard fail | Line numbers move with every edit above them; an existing miss is drift, not a new defect | The baseline reaches zero |
 | D4 | reversible-technical | agent | The 4.1 and 5.1 lints ship as runnable checks with tests, not wired into `task ci` or a workflow | No step asks for wiring; registering a gate touches `src/config/gate-coverage.yml` and a workflow, which needs a ratification record by a reviewer other than this session | A follow-up asks for either check to block a merge |
 | D5 | reversible-technical | evidence | 4.2's progress half needed no code change, only a pinning test | `update_roadmap_progress` excludes `archive/` from `collect()`; the live pressure on the AC-3 flip is `lint_deferral_integrity`'s unannotated ratchet | The progress check starts reading `archive/` |
+| D6 | reversible-technical | council:2026-10-08 resolve-blockers-batch | `later-blockers-in-scope` (b′): `lint_roadmap_blockers` validates `later/*-carried.md` and its pinning test flips for that pattern; `/roadmap:resolve-blockers` keeps its scope, so validation never activates a parked question. 2.1 adds a regression test proving the widened lint puts nothing in front of the owner before the roadmap resumes (a seat's condition). | Round 1 (2026-10-07) split (b) vs keep-exclusion; the (b) seat's condition — 7 of 7 carried files lint-clean — was measured true. Round 2 (2026-10-08, input changed: narrowed option (b′) and the owner's delegation of council-decidable questions), anthropic + openai, 2/2 present, both (b′), both "not owner-reserved", $0.00. The first round-2 attempt lost the openai seat to a local transport error (ENOBUFS); one transport retry produced both seats. | carried blockers turn out time-sensitive, so waiting for resumption causes harm — then full (b) |
 
 ## Blockers
 
 ### blocker: later-blockers-in-scope
-- **Status:** open — the council ran 2026-10-07 (anthropic + openai, 2 of 2 present, $0 metered) and SPLIT: (a) rejected by both seats; anthropic for (b) on the condition the seven carried files pass the lint, which was then measured true (7 of 7, 0 hard findings); openai for keeping the exclusion unchanged with report-only observability. A split escalates to the owner. Record: `agents/evidence/analysis/parked-blockers-2026-10-council.md`.
+- **Status:** resolved 2026-10-08 — option (b′): widen only the `lint_roadmap_blockers` glob to `later/*-carried.md` and flip its pinning test; `/roadmap:resolve-blockers` scope unchanged (council round 2, 2026-10-08, anthropic + openai, 2/2, $0.00, both (b′), owner-reserved: no; D6). Round 1, kept for the record: the council ran 2026-10-07 (anthropic + openai, 2 of 2 present, $0 metered) and SPLIT: (a) rejected by both seats; anthropic for (b) on the condition the seven carried files pass the lint, which was then measured true (7 of 7, 0 hard findings); openai for keeping the exclusion unchanged with report-only observability. A split escalates to the owner. Record: `agents/evidence/analysis/parked-blockers-2026-10-council.md`.
 - **Owner:** owner — escalated from council on a split verdict
 - **Blocks:** step 2.1, AC-2
 - **What to do:** pick exactly one — (b) widen the glob in `src/scripts/lint_roadmap_blockers.ts` to `later/*-carried.md`, flip its pinning test for that pattern, and let `/roadmap:resolve-blockers` follow; (b′) widen only the lint glob and leave `/roadmap:resolve-blockers` scoped as today, so carried files are validated but nothing is put to you before their roadmap resumes; or (c) keep the exclusion unchanged and rely on `report_parked_blockers` for visibility. Option (a) is off the table: both seats rejected it.
