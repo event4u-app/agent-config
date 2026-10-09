@@ -2,6 +2,7 @@
 complexity: lightweight
 status: ready
 estate_growth_exempt: "Re-opened from the archive on the owner's instruction of 2026-10-09 to carry Phase 2, the retirement of 47 settings keys the owner selected from the retirement audit; the work belongs to this roadmap's own ratchet and no live roadmap covers it."
+estate_offset_exempt: "No active roadmap is finished or parkable in this change: every other active (ready) roadmap still holds at least one open step (measured 2026-10-09), so archiving one to offset this re-opening would bury live work."
 execution:
   mode: phase-checkpoints
 ---
