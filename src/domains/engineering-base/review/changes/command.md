@@ -328,23 +328,12 @@ before re-review, hand off to
 generate→run→revise→re-run loop gated by a numeric threshold, then a judge
 confirms. Surface it as a single follow-up line; do not auto-invoke.
 
-### 7. Quality tools (verbosity-gated)
+### 7. Quality tools
 
-Per `verbosity.routine_confirmations` (default `false`):
-
-- `false` (default) → emit `→ run /quality-fix to format + lint` as a
-  single follow-up line; do not auto-invoke. User runs explicitly.
-- `true` → ask:
-  ```
-  > 1. Yes — run quality tools (formatter, static analyzer, linters)
-  > 2. No — review done
-  ```
-  If yes, hand off to the project's quality workflow (e.g.
-  `/quality-fix` or the equivalent configured command). The quality and
-  test runners are resolved per-stack via the
-  [`toolchain-resolver`](../../contexts/execution/toolchain-resolver.md), so
-  the hand-off adapts to PHP / JS-TS / Python / Go / Rust rather than
-  assuming one stack.
+Emit `→ run /quality-fix to format + lint` as a single follow-up line; do not
+auto-invoke and do not ask. The user runs it explicitly; its quality and test
+runners are resolved per-stack via the
+[`toolchain-resolver`](../../contexts/execution/toolchain-resolver.md).
 
 ## Backward compatibility
 

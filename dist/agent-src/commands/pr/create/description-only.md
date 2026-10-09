@@ -22,11 +22,10 @@ packs:
 
 > **Carve-out:** this command's *purpose* is the copyable preview of
 > the PR description. It therefore **ignores**
-> `verbosity.preview_artifacts` and `commands.create_pr.preview_description`
-> — both flags govern only the bare `/create-pr` flow's preview-and-
-> adjust loop. Removing the preview here would make the command a
-> no-op. Do not "fix" this; the suppression flags only apply when the
-> PR is actually being created.
+> `commands.create_pr.preview_description` — that flag governs only the
+> bare `/create-pr` flow's preview-and-adjust loop. Removing the preview
+> here would make the command a no-op. Do not "fix" this; the suppression
+> flag only applies when the PR is actually being created.
 
 ## Input
 
@@ -181,13 +180,12 @@ summary and `## How to test` is omitted):
 
 #### 4.3 API response examples (evidence-grounded)
 
-Read `commands.create_pr.api_examples` (default `true`). When `true` **and**
-the diff touches an API endpoint, add a fenced request/response example under
-the Description.
+When the diff touches an API endpoint, add a fenced request/response example
+under the Description. This is not a setting — it always applies, and the
+grounding rule below is what keeps it honest.
 
 **Detect an API-endpoint change** (fail-open — no false enrichment when
-ambiguous): a changed file matches `commands.create_pr.api_paths` (if set), or
-the light heuristic — a route file (`routes/`, `**/api/**`, `*Controller*`,
+ambiguous) with the light heuristic — a route file (`routes/`, `**/api/**`, `*Controller*`,
 resource/serializer classes) whose diff adds or changes an endpoint or its
 request/response shape. No confident match → skip silently.
 
@@ -220,8 +218,6 @@ Response `201`:
 ```
 ~~~
 
-`api_examples: false` → skip this step entirely.
-
 #### 4.4 Screenshots for frontend changes (capability-gated)
 
 Read `commands.create_pr.screenshots` (default `false`). `false` → skip this
@@ -231,8 +227,7 @@ When `true`, this is a **capability-gated contract, never a runtime
 orchestrator** — the package ships instructions, the host provides the tools:
 
 1. **Frontend-change gate.** Only proceed if the diff touches a frontend
-   surface — a changed file matches `commands.create_pr.ui_paths` (if set), or
-   the light heuristic (`.vue` / `.tsx` / `.jsx` / `.blade.php` / `.svelte`,
+   surface by the light heuristic (`.vue` / `.tsx` / `.jsx` / `.blade.php` / `.svelte`,
    component/view/page/template dirs, CSS/Tailwind). No match → skip silently.
 2. **Capability gate — explicit, never silent.** Screenshots need host
    browser/preview tooling (a Playwright/browser MCP **and** a reachable dev-server

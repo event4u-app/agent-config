@@ -12,8 +12,10 @@ provider's model or billing rule.
   inherit`, per [`model-recommendations`](../model-recommendations.md)).
   `frontier` (ADR-232) is declarable and opt-in; it is never the resolution of
   `inherit` — see the top-band invariant below.
-- `subagents.downshift`, `subagents.quota_arbitrage`, `subagents.model_map`
+- `subagents.quota_arbitrage`, `subagents.model_map`
   (see [`auto-orchestration-activation`](auto-orchestration-activation.md)).
+  Downshift itself is always on — the `subagents.downshift` key was retired on
+  2026-10-09 with its default as the fixed behavior.
 - The host-capability manifest's `separate_quota_pool`
   ([`host-capability-manifest`](host-capability-manifest.md)).
 
@@ -26,21 +28,19 @@ QUOTA ARBITRAGE IS A BONUS, NEVER LOAD-BEARING — REMOVE IT AND ROUTING IS
 THE SAME MINUS THE QUOTA WIN.
 ```
 
-1. **Downshift off** (`downshift: false`) → every sub-task runs on the session
-   tier. No routing change.
-2. **Downshift on** → a sub-task runs on its declared tier; an `inherit` task
+1. **Downshift** (always on) → a sub-task runs on its declared tier; an `inherit` task
    runs on the session tier, **bounded by the top-band invariant below**. The
    tier resolves to a model alias via `model_map`; an empty entry means "use
    the tier's runtime default" — never a baked-in provider model name.
-3. **Quota arbitrage** → prefer the **separate** quota pool for the sub-task
+2. **Quota arbitrage** → prefer the **separate** quota pool for the sub-task
    **only when** `subagents.quota_arbitrage == true` **and**
    `manifest.separate_quota_pool == true`. Otherwise the shared pool is used and
    the tier/model choice is unchanged. This is the only place the
    "Sonnet-has-its-own-allowance" idea lives, and it lives as a runtime-detected
    flag, never as portable prose.
-4. **Budget routing — ARCHIVED 2026-08-16, there is no fourth step.** This
+3. **Budget routing — ARCHIVED 2026-08-16, there is no third step.** This
    position used to describe a budget relation applied after the tier resolves
-   per 1–3: cheapest classifier-adequate tier WITH available budget, an atomic
+   per 1–2: cheapest classifier-adequate tier WITH available budget, an atomic
    pre-dispatch reserve, a cool-down on quota errors. None of it exists any
    more. A converged AI-council verdict (anthropic + openai, 2 of 2) archived
    `pickTier` and the permit lifecycle, because the `routing_switch` they
@@ -196,7 +196,7 @@ rule, or context asserts "model X is free".
 Tier vocabulary + cool-down state:
 [`src/scripts/_lib/tier_budget_routing.ts`](../../../../src/scripts/_lib/tier_budget_routing.ts)
 (`TIER_ORDER`, `readCooldowns` — the budget decision layer that used to live
-there is archived, see step 4), covered by
+there is archived, see step 3), covered by
 [`tests/scripts/tier_budget_routing.test.ts`](../../../../tests/scripts/tier_budget_routing.test.ts);
 live state: `agent-config routing:doctor` (orchestration section).
 

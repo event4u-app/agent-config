@@ -22,7 +22,8 @@ keep-beta-until: 2026-08-15
 The **active** flag gates whether the multiplier is applied to runtime
 telemetry. While `false`, `scripts/telegraph_stats.py` reports
 `telegraph_delta_tokens = 0` regardless of whether the rule ships
-(`telegraph.speak`).
+(the `telegraph-speak` predicate in `src/scripts/_lib/compile_time_toggles.ts`;
+the `telegraph.speak` key was retired on 2026-10-09).
 
 ## How the multiplier is interpreted
 

@@ -149,11 +149,9 @@ Before sending any reply that landed roadmap work:
    line at `agents/tmp.old/<name>`. A consumed inbox file left in
    `agents/tmp/` is a rule violation, not tidiness. Move ONLY the file(s)
    explicitly named as input — never sweep the rest of the inbox.
-3. Is regen due now per `roadmap.dashboard_regen_cadence`?
-   - `per_step` → yes, always.
-   - `every_5_steps` → yes when this is the 5th, 10th, … closed step in the run, or the last step of the reply.
-   - `phase_boundary` → only when this reply closes the phase or run.
-   - Any file-shape touch (rename / phase add / archive) → yes, regardless of cadence.
+3. Is regen due now? The cadence is fixed: yes when this is the 5th, 10th, … closed
+   step in the run, the last step of the reply, or a phase boundary — and on any
+   file-shape touch (rename / phase add / archive), regardless.
    If yes and not run yet → run `./agent-config roadmap:progress`, then continue.
 4. Did `count_open` reach 0?
    - **No (real open work remains)** → continue normally.

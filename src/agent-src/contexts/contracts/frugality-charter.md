@@ -33,12 +33,15 @@ Live Phase 1 schema (see [`templates/agent-settings.md`](../../templates/agent-s
 
 | Key | One-line semantics |
 |---|---|
-| `verbosity.preview_artifacts` | When `false`, skip generated commit messages / PR titles / branch names preview before acting. |
-| `verbosity.routine_confirmations` | When `false`, skip "looks good?" gates on routine workflow steps. Iron-Law gates always ask. |
 | `verbosity.offer_council_in_delivery` | When `false`, delivery commands skip the optional "run Council on this?" offer. |
-| `verbosity.post_action_reports` | `off` / `minimal` / `full` — multi-line status blocks after a successful action. |
-| `verbosity.intent_announcements` | When `false`, writers must not generate "Let me…", "Now I will…", "Found it" openers. |
-| `telegraph.speak` | When `false` (the shipped default) the telegraph-speak rule does not ship at all; when `true` its own carve-out list states the grammar's scope — options blocks, Iron-Law literals, code, and paths stay byte-stable. |
+
+Five former hooks were retired on 2026-10-09 with their defaults as the fixed
+behavior, so writers state the behavior instead of citing a key: no preview of
+generated commit messages / PR titles / branch names before acting; no
+"looks good?" gate on a routine step with one obvious answer (Iron-Law gates
+always ask); after a successful action, a one-line confirmation, never a
+multi-line status block; no "Let me…", "Now I will…", "Found it" openers; and
+the telegraph-speak rule does not ship.
 
 Phase 10 adds `verbosity.script_output` (`silent` / `minimal` / `verbose`) and `verbosity.taskfile_command_echo` (`true` / `false`); writer artifacts cite this row when those land.
 

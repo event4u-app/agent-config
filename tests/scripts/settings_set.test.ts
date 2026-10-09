@@ -36,7 +36,7 @@ describe('settings:set', () => {
 
     function run(over: Partial<SettingsSetOptions> = {}) {
         return runSettingsSet({
-            key: 'personal.play_by_play',
+            key: 'personal.rtk_installed',
             rawValue: 'true',
             source: 'manual',
             root,
@@ -55,9 +55,9 @@ describe('settings:set', () => {
         const res = run();
         expect(res.code).toBe(0);
         expect(res.out).toHaveLength(1);
-        expect(res.out[0]).toContain('personal.play_by_play');
+        expect(res.out[0]).toContain('personal.rtk_installed');
         expect(res.out[0]).toContain('class A');
-        expect((readSettings()['personal'] as Record<string, unknown>)['play_by_play']).toBe(true);
+        expect((readSettings()['personal'] as Record<string, unknown>)['rtk_installed']).toBe(true);
     });
 
     it('stamps provenance in a sidecar, leaving the settings file schema-clean', () => {
@@ -66,7 +66,7 @@ describe('settings:set', () => {
             string,
             { source: string; at: string }
         >;
-        expect(sidecar['personal.play_by_play']).toEqual({ source: 'jit-answer', at: NOW });
+        expect(sidecar['personal.rtk_installed']).toEqual({ source: 'jit-answer', at: NOW });
         // The stamp must NOT leak into the settings file — that file has a
         // leaf-for-leaf parity test against the zod schema, and a bookkeeping
         // key there would mean relaxing the one gate keeping the GUI honest.
@@ -121,20 +121,20 @@ describe('settings:set', () => {
 
     it('preserves values written by an earlier call', () => {
         run();
-        run({ key: 'personal.minimal_output', rawValue: 'false' });
-        const personal = readSettings()['personal'] as Record<string, unknown>;
-        expect(personal['play_by_play']).toBe(true);
-        expect(personal['minimal_output']).toBe(false);
+        run({ key: 'verbosity.offer_council_in_delivery', rawValue: 'true' });
+        const after = readSettings();
+        expect((after['personal'] as Record<string, unknown>)['rtk_installed']).toBe(true);
+        expect((after['verbosity'] as Record<string, unknown>)['offer_council_in_delivery']).toBe(true);
     });
 
     it('rebuilds a corrupt provenance sidecar instead of refusing the write', () => {
         run();
         fs.writeFileSync(provenanceFilePath(root), 'not json at all', 'utf-8');
-        const res = run({ key: 'personal.minimal_output', rawValue: 'false' });
+        const res = run({ key: 'verbosity.offer_council_in_delivery', rawValue: 'true' });
         expect(res.code).toBe(0);
         const sidecar = JSON.parse(fs.readFileSync(provenanceFilePath(root), 'utf-8')) as Record<string, unknown>;
         // Provenance is a record ABOUT a decision, never a gate ON one.
-        expect(sidecar['personal.minimal_output']).toBeDefined();
+        expect(sidecar['verbosity.offer_council_in_delivery']).toBeDefined();
     });
 });
 
@@ -155,7 +155,7 @@ describe('settings:set — the existing file', () => {
 
     function run(over: Partial<SettingsSetOptions> = {}) {
         return runSettingsSet({
-            key: 'personal.play_by_play',
+            key: 'personal.rtk_installed',
             rawValue: 'true',
             source: 'manual',
             root,
@@ -170,24 +170,24 @@ describe('settings:set — the existing file', () => {
         // The file this writes to IS the commented template the wizard lays
         // down; a dump-based write would strip ~1,200 lines of explanation to
         // set one boolean.
-        seed('# top comment\npersonal:\n  # keep me\n  play_by_play: false\n');
+        seed('# top comment\npersonal:\n  # keep me\n  rtk_installed: false\n');
         expect(run().code).toBe(0);
         const after = fs.readFileSync(settingsFilePath(root), 'utf-8');
         expect(after).toContain('# top comment');
         expect(after).toContain('# keep me');
-        expect(after).toMatch(/play_by_play:\s*true/);
+        expect(after).toMatch(/rtk_installed:\s*true/);
     });
 
     it('says so when it had to rewrite a file that lacked the key', () => {
-        seed('personal:\n  minimal_output: true\n');
+        seed('personal:\n  ide: code\n');
         const res = run();
         expect(res.code).toBe(0);
         // Losing comments is bad; losing them silently is worse, and emitting a
         // flat dotted key the next read cannot see would be worse still.
         expect(res.out.join('\n')).toContain('comments are gone');
         const after = parseYaml(fs.readFileSync(settingsFilePath(root), 'utf-8')) as Record<string, unknown>;
-        expect((after['personal'] as Record<string, unknown>)['play_by_play']).toBe(true);
-        expect((after['personal'] as Record<string, unknown>)['minimal_output']).toBe(true);
+        expect((after['personal'] as Record<string, unknown>)['rtk_installed']).toBe(true);
+        expect((after['personal'] as Record<string, unknown>)['ide']).toBe('code');
     });
 
     it('refuses a file that is not a settings map instead of replacing it', () => {
@@ -201,7 +201,7 @@ describe('settings:set — the existing file', () => {
     });
 
     it('refuses malformed YAML with an exit code, not a stack trace', () => {
-        seed('personal:\n  play_by_play: [unclosed\n');
+        seed('personal:\n  rtk_installed: [unclosed\n');
         const res = run();
         expect(res.code).toBe(1);
         expect(res.err.join('\n')).toContain('not a settings map');
@@ -211,7 +211,7 @@ describe('settings:set — the existing file', () => {
         seed('# nothing decided yet\n');
         expect(run().code).toBe(0);
         const after = parseYaml(fs.readFileSync(settingsFilePath(root), 'utf-8')) as Record<string, unknown>;
-        expect((after['personal'] as Record<string, unknown>)['play_by_play']).toBe(true);
+        expect((after['personal'] as Record<string, unknown>)['rtk_installed']).toBe(true);
     });
 
     it('does not pollute Object.prototype through a dotted key', () => {
@@ -230,7 +230,7 @@ describe('settings:set — helpers', () => {
     });
 
     it('leafSchemaAt walks to a leaf and returns null off the schema', () => {
-        expect(leafSchemaAt(settingsSchema, 'personal.play_by_play')).not.toBeNull();
+        expect(leafSchemaAt(settingsSchema, 'personal.rtk_installed')).not.toBeNull();
         expect(leafSchemaAt(settingsSchema, 'personal.nope')).toBeNull();
         expect(leafSchemaAt(settingsSchema, 'nope')).toBeNull();
     });
@@ -239,7 +239,7 @@ describe('settings:set — helpers', () => {
         const index = loadClassIndex(PACKAGE_ROOT);
         expect(index).not.toBeNull();
         expect(index?.get('personal.autonomy')).toBe('C');
-        expect(index?.get('personal.play_by_play')).toBe('A');
+        expect(index?.get('personal.rtk_installed')).toBe('A');
     });
 
     it('globalRoot honours EVENT4U_CONFIG_HOME', () => {

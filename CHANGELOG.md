@@ -32,6 +32,24 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Changed
 
+- **46 settings keys are retired; an install that never changed them sees no
+  difference.** Each key's shipped default is now fixed behavior: every reader
+  of it — code, rule and command prose, the wizard — was rewritten to that
+  default in the same change. **If your `.agent-settings.yml` still sets one,
+  that value is ignored** and the loader prints one line per key —
+  `<key> was removed (<what decides instead>); ignored.` — so a non-default
+  value you chose is lost visibly, never silently. Delete the line to silence
+  it. The keys:
+  - Output and tone: `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`.
+  - Reasoning protocol switches: `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`.
+  - Roadmap cadence: `roadmap.skip_pre_run_gate`, `roadmap.dashboard_regen_cadence`.
+  - Command suggestion and PR creation: `commands.auto_detect`, `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`, `commands.suggestion.cooldown_seconds`, `commands.suggestion.max_options`, `commands.create_pr.api_examples`, `commands.create_pr.ui_paths`, `commands.create_pr.api_paths`.
+  - Memory and knowledge sharing: `memory.cadence`, `memory.review_threshold`, `knowledge.global_sharing.redaction.enabled`, `knowledge.global_sharing.redaction.halt_on_trigger`, `knowledge.global_sharing.auto_promote_threshold`, `knowledge.global_sharing.freshness.hypothesis_after_days`, `knowledge.global_sharing.freshness.stale_after_days`.
+  - Hooks and engine: `hooks.concern_budget.max_per_event`, `hooks.concern_budget.hard_fail`, `decision_engine.surface_traces`, `decision_engine.on_block_fallback`, `explain.enable_last`.
+  - Remaining: `project.pr_template`, `pipelines.skill_improvement`, `consistency.cross_source`, `subagents.downshift`, `ai_team.suppress_setup_hint`.
+  The reference page lists each key with the behavior that replaces it
+  (`templates/agent-settings.md` § Retired keys).
+
 - **A medium security finding now needs a disposition before a release
   ships.** `check_finding_dispositions` treats `security × medium` as blocking
   for every release after 16.3.0 (council 2026-10-07, 2/2). Such a row must

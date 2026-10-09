@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "telegraph.speak on — telegraph the prose; carve-outs (options, Iron-Law, code, paths) stay byte-stable"
+description: "When shipped (package-level, bench-gated) — telegraph the prose; carve-outs (options, Iron-Law, code, paths) stay byte-stable"
 self_contained: true
 workspaces: [agent-config-maintainer]
 packs: [meta]
@@ -24,12 +24,15 @@ BENCH, NEVER A PREFERENCE.
 
 ## Scope
 
-One switch decides whether this rule exists at all, and there is no second one:
-
-| Key | Default | Effect |
-|---|---|---|
-| `telegraph.enabled` | `true` | Master — `false` forces every sub-switch off. |
-| `telegraph.speak` | `false` | **Compile-time.** `false` omits this rule from `dist/router.json` entirely — the only lever that stops the ~982-token body from shipping. |
+One lever decides whether this rule exists at all, and it is not a setting: the
+`telegraph-speak` predicate in `src/scripts/_lib/compile_time_toggles.ts`, which
+returns `false` — the rule is omitted from `dist/router.json` and from every
+projection, the only lever that stops the ~982-token body from shipping. The
+`telegraph.speak` key that used to carry it was retired on 2026-10-09 with that
+default as the fixed value: whether the rule ships is the bench verdict, a
+package-level decision rather than a per-install one, so turning it on is a change
+to the predicate. A leftover `telegraph.speak` in a settings file warns once and
+is ignored.
 
 **The scope of the grammar is this rule's own business, not a setting's.** A
 `telegraph.speak_scope` key shipped until 2026-08-12 and no code path ever read
@@ -98,7 +101,7 @@ Example: *"I will now check the file and see if it exists"* →
 ## See also
 
 - Input-side memory condensation (shrinking always-loaded memory files like `AGENTS.md` / `CLAUDE.md` / `.cursorrules` rather than the reply stream) runs independently of this rule — see [`condense-memory`](../skills/condense-memory/SKILL.md) for the script wrapper, sensitive-path refusal contract, and `.original.md` round-trip.
-- Skills marked `token_budget_class: rich` are **exempt** from telegraph condensation + thin-projector trimming (gated by `tokens.rich_skills`, default `on`) — full model in [`token-budget-discipline`](token-budget-discipline.md).
+- Skills marked `token_budget_class: rich` are **exempt** from telegraph condensation + thin-projector trimming — full model in [`token-budget-discipline`](token-budget-discipline.md).
 - Any telegraph/trim decision that would drop a net-positive change purely on budget grounds routes to [`token-budget-discipline § Value-over-budget escalation`](token-budget-discipline.md#value-over-budget-escalation) — surface the trade-off, don't auto-reject.
 
 Cross-rule index: [`frugality-charter § cross-references`](../contexts/contracts/frugality-charter.md#cross-references--frugality-canon-rules).

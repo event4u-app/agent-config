@@ -89,15 +89,9 @@ Must show ✅ (`dist/agent-src/` in sync with source).
 Must show **zero 🔴 errors**. Warnings (🟡) are acceptable.
 If any 🔴 errors remain: go back and fix those files before finishing.
 
-## Step 5: Summary (verbosity-gated)
+## Step 5: Summary
 
-Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
-`minimal`).
-
-- `off` → emit nothing on success; surface errors only.
-- `minimal` (default) → one line: `→ N files synced`.
-- `full` → multi-line table with per-category stats (files synced,
-  stale files reaped).
+One line on success: `→ N files synced`. Errors are always surfaced.
 
 ## Iron Laws — preserved by construction
 

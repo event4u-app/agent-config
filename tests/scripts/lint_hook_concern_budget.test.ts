@@ -43,9 +43,11 @@ describe('lint_hook_concern_budget._read_settings_block', () => {
     it('returns {} when there is no hooks block', () => {
         expect(hcb._read_settings_block(write('other:\n  x: 1\n'))).toEqual({});
     });
-    it('reads max_per_event + hard_fail', () => {
+    it('ignores the retired max_per_event + hard_fail keys', () => {
+        // Both were retired with their defaults (8, warn-only) as fixed
+        // behavior; `--strict` is the only way to hard-fail now.
         const p = write('hooks:\n  concern_budget:\n    max_per_event: 5\n    hard_fail: true\n');
-        expect(hcb._read_settings_block(p)).toEqual({ max_per_event: 5, hard_fail: true });
+        expect(hcb._read_settings_block(p)).toEqual({});
     });
     it('reads an empty tier1_concerns list', () => {
         const p = write('hooks:\n  concern_budget:\n    tier1_concerns: []\n');
@@ -59,9 +61,9 @@ describe('lint_hook_concern_budget._read_settings_block', () => {
     });
     it('stops the hooks block at the next top-level key', () => {
         const p = write(
-            'hooks:\n  concern_budget:\n    max_per_event: 3\nother:\n  concern_budget:\n    max_per_event: 99\n',
+            'hooks:\n  concern_budget:\n    tier1_concerns: [ ]\nother:\n  concern_budget:\n    tier1_concerns:\n      - zeta\n',
         );
-        expect(hcb._read_settings_block(p)).toEqual({ max_per_event: 3 });
+        expect(hcb._read_settings_block(p)).toEqual({ tier1_concerns: [] });
     });
 });
 

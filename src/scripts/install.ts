@@ -334,15 +334,10 @@ const LEGACY_RENAME_MAP: Record<string, string> = {
     open_edited_files: 'personal.open_edited_files',
     user_name: 'personal.user_name',
     rtk_installed: 'personal.rtk_installed',
-    minimal_output: 'personal.minimal_output',
-    play_by_play: 'personal.play_by_play',
-    pr_comment_bot_icon: 'project.pr_comment_bot_icon',
-    pr_template: 'project.pr_template',
     upstream_repo: 'project.upstream_repo',
     improvement_pr_branch_prefix: 'project.improvement_pr_branch_prefix',
     github_pr_reply_method: 'github.pr_reply_method',
     eloquent_access_style: 'eloquent.access_style',
-    skill_improvement_pipeline: 'pipelines.skill_improvement',
     subagent_implementer_model: 'subagents.implementer_model',
     subagent_judge_model: 'subagents.judge_model',
     subagent_max_parallel: 'subagents.max_parallel',
@@ -4773,27 +4768,11 @@ function _read_consumer_auto_switch(project_root: string): string {
 /**
  * Team-mode setup hint (road-to-team-mode Phase 1 Step 2) — a one-line
  * recommendation printed after a claude-code install/init pointing at the
- * doctor `team` section. Returns null when suppressed via
- * `ai_team.suppress_setup_hint: true` in `.agent-settings.yml` (default
- * false; the `ai_team` block may not exist in the schema yet — read
- * leniently). Pointer only: never auto-installs, never modifies
- * `~/.claude/plugins`.
+ * doctor `team` section. Always shown: the `ai_team.suppress_setup_hint` key
+ * that could silence it was retired with its default (false). Pointer only:
+ * never auto-installs, never modifies `~/.claude/plugins`.
  */
-function _team_setup_hint_line(project_root: string): string | null {
-    let data: Record<string, unknown>;
-    try {
-        data = load_agent_settings({ project_path: _resolve_settings_read(project_root) });
-    } catch {
-        data = {};
-    }
-    const ai_team = _isPlainObject(data) ? data['ai_team'] : null;
-    const flag = _isPlainObject(ai_team)
-        ? (ai_team as Record<string, unknown>)['suppress_setup_hint']
-        : null;
-    const suppressed =
-        flag === true ||
-        (typeof flag === 'string' && ['true', 'yes', 'on', '1'].includes(flag.trim().toLowerCase()));
-    if (suppressed) return null;
+function _team_setup_hint_line(): string {
     return (
         '  • Claude Code team mode (optional cross-model review via the official ' +
         'codex plugin): run `agent-config doctor --check team` for setup status.'
@@ -5006,11 +4985,8 @@ function _main_project_install(
         }
         mcp_consent.printResiduals(tools, state.QUIET);
         if (_is_tool_enabled(tools, 'claude-code')) {
-            const team_hint = _team_setup_hint_line(project_root);
-            if (team_hint !== null) {
-                process.stdout.write(team_hint + '\n');
-                process.stdout.write('\n');
-            }
+            process.stdout.write(_team_setup_hint_line() + '\n');
+            process.stdout.write('\n');
         }
     }
 

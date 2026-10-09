@@ -32,6 +32,6 @@ options:
   --quiet              suppress the trailing tip footer
 
 exit codes:
-  0  trace rendered, or disabled by settings (explain.enable_last)
+  0  trace rendered
   1  no recent run found (state file missing or unreadable)
   2  invocation error (bad project root, bad --state-file path)

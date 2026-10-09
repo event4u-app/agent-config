@@ -74,8 +74,8 @@ suggestion:
      [Frugality Charter](../contexts/contracts/frugality-charter.md):
      no preview-then-confirm pair, no "Ready to proceed?" gate, no
      numbered options unless options differ in *consequence* (per
-     `no-cheap-questions § Pre-Send Self-Check`). Routine confirmations
-     are governed by `verbosity.routine_confirmations: false` (default).
+     `no-cheap-questions § Pre-Send Self-Check`). A routine step with one
+     obvious answer is never confirmed.
 
      Only emit a numbered-options block when ALL of:
        1. Two or more options carry distinct consequences (not sequencing/format),

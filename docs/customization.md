@@ -170,11 +170,8 @@ is recovered on the next server boot.
 | `agent_config_version` | *(empty)* | Exact semver pin of the agent-config release (see above). Empty = unpinned. |
 | `rule_loading_tier` | `balanced` | Token budget (`minimal`, `balanced`, `full`, `custom`) — rationale: [`docs/contracts/cost-profile-defaults.md`](contracts/cost-profile-defaults.md) |
 | `personal.user_name` | *(empty)* | User's first name for personalized responses |
-| `personal.minimal_output` | `true` | Suppress intermediate output |
-| `personal.play_by_play` | `false` | Share intermediate findings during analysis |
 | `personal.open_edited_files` | `false` | Open edited files in IDE |
 | `personal.ide` | *(empty)* | IDE for file opening (`cursor`, `code`, `phpstorm`) |
-| `pipelines.skill_improvement` | `true` | Post-task learning capture. Included in every profile except `custom`. |
 | `chat_history.enabled` | `true` | Persistent JSONL log at `agents/runtime/.agent-chat-history` for crash recovery. |
 | `chat_history.frequency` | per profile | Logging granularity: `per_turn`, `per_phase`, or `per_tool` (see matrix below). |
 | `onboarding.onboarded` | `false` | Whether the setup wizard has run. The `onboarding-gate` rule prompts for `agent-config setup` while this is `false`. |
@@ -188,8 +185,6 @@ is recovered on the next server boot.
 | `ai_council.cost_budget.daily_limit_usd` | `0.0` | Rolling 24h USD ceiling across all `/council` calls. `0` disables. Ledger lives at `~/.event4u/agent-config/council-spend.jsonl` (mode 0600). |
 | `ai_council.session_retention_days` | `14` | Auto-prune for `agents/runtime/council/sessions/` audit folders. Older session directories are removed on the next `save()`. `0` disables (keep forever). |
 | `reasoning.enabled` | `true` | Master switch for the Reasoning Discipline Protocol (RDP). `false` = the whole layer is inert (zero overhead). See [`docs/contracts/reasoning-discipline-protocol.md`](contracts/reasoning-discipline-protocol.md). |
-| `reasoning.auto_gate` | `true` | Benefit-gates RDP on table-free signals (task signal + host self-assessment) so it engages only where it pays. `false` = gate on task-signal + toggles only (skip the host self-assessment). |
-| `reasoning.components.<name>` | `true` | Per-component switches — `orchestrator`, `notes_first`, `grounding`, `intent`, `complexity_first`, `verifier_default`, `prediction_tracking`, `decision_ledger`, `uncertainty_budget`. Each fires only when `reasoning.enabled` **and** the `auto_gate` test passes. |
 
 > **Experimental.** AI Council is not yet validated by external users. API costs apply per consultation.
 
@@ -216,7 +211,7 @@ the sourced rationale lives in the design dossier
 > | Concept | What it controls | What it's a lever for |
 > |---|---|---|
 > | `rule_loading_tier` *(this setting)* | How many behavioural rule tiers load each session | Token footprint of the rule layer (small, ~once per session) |
-> | `memory.cadence` | Whether the `🧠 Memory: …` visibility line renders (`auto`/`always`/`never`) | Output noise — **not** spend |
+> | `memory.visibility` | Whether the `🧠 Memory: …` visibility line renders (`off` silences it; the `memory.cadence` key that tuned it was retired 2026-10-09) | Output noise — **not** spend |
 > | `model.auto_switch` + a skill's `model_tier` | Which Claude model runs a skill (lite/medium/high → haiku/sonnet/opus) | The **dominant** per-turn spend lever (~10× delta) |
 > | `/cost:report` + `cost.budgets` | Tracking actual token/USD spend + optional ceilings | Budget enforcement |
 >
@@ -255,10 +250,10 @@ The kernel-and-router architecture is documented in
 Tier flags live in each rule's frontmatter (`tier: kernel | tier-1 | tier-2`);
 the router compiles them into `dist/router.json` deterministically.
 
-All profiles except `custom` ship with `pipelines.skill_improvement: true`,
-so the agent captures learnings after meaningful tasks by default. Set it
-to `false` in `.agent-settings.yml` to silence post-task analysis without
-changing the profile.
+The agent proposes a learning capture after meaningful tasks in every
+profile. The capture is a proposal the user confirms, so it is not a
+setting: the `pipelines.skill_improvement` key that could silence it was
+retired on 2026-10-09 with its default (`true`) as the fixed behavior.
 
 The authoritative matrix of all matrix-controlled settings lives in
 [`src/agent-src/templates/agent-settings.md`](../src/agent-src/templates/agent-settings.md).
@@ -280,18 +275,21 @@ behavior — the per-profile table is just the initial default.
 ### Verbosity
 
 The `verbosity:` block controls how much narration the agent emits around
-routine actions. Defaults are tuned for token frugality — flip values to
-`true` (or higher tier) to restore legacy verbose output. Iron-Law gates
+routine actions. Defaults are tuned for token frugality. Iron-Law gates
 (`commit-policy`, `scope-control` git-ops, `non-destructive-by-default`)
 ALWAYS confirm regardless of these flags.
 
+Four former leaves were retired on 2026-10-09 with their terse defaults as the
+only behavior — `preview_artifacts`, `routine_confirmations`,
+`post_action_reports` and `intent_announcements`: generated commit messages,
+PR titles and branch names are used directly, a routine step with one obvious
+answer is never confirmed, a successful action reports in one line, and skill
+bodies emit no "Let me check…" openers. A leftover value warns once and is
+ignored.
+
 | Setting | Values | Default | Description |
 |---|---|---|---|
-| `verbosity.preview_artifacts` | `true`, `false` | `false` | Show generated commit messages, PR titles/bodies, and branch names before acting. `false` = use the generated content directly. |
-| `verbosity.routine_confirmations` | `true`, `false` | `false` | Confirmation prompts for routine workflow steps when there is one obvious answer ("looks good — commit?"). Iron-Law gates always ask regardless. |
 | `verbosity.offer_council_in_delivery` | `true`, `false` | `false` | Offer "run AI Council on this?" inside delivery commands (`/feature-plan`, `/review-changes`, `/roadmap-create`). The `/council` command itself is unaffected. |
-| `verbosity.post_action_reports` | `off`, `minimal`, `full` | `minimal` | Multi-line status / summary blocks after a successful action. `off` = no report; `minimal` = one-line confirmation; `full` = bullet list. |
-| `verbosity.intent_announcements` | `true`, `false` | `false` | Intent announcements ("Let me check…", "Now I will…", "Found it") in skill bodies. `false` = act and emit the result. |
 | `verbosity.script_output` | `silent`, `minimal`, `verbose` | `minimal` | Stdout chatter from `scripts/*.py`, `scripts/*.sh`, and `.augment/scripts/`. `silent` = stderr only; `minimal` = one summary line per script; `verbose` = pre-Phase-10 per-step prints. Iron-Law surfaces (release confirms, install secrets prompts, error markers) ignore this key. |
 | `verbosity.taskfile_command_echo` | `true`, `false` | `false` | Suppress the `task: [name] cmd...` echo Taskfile prints before each task body. `true` = echoes preserved (legacy behaviour); `false` = `silent: true` is set on every Phase-10 safe task. |
 
@@ -303,9 +301,8 @@ Writer skills (`skill-writing`, `rule-writing`, `command-writing`,
 `readme-writing`, `readme-writing-package`, `adr-create`) cite the charter
 under their `## Frugality Standards` section.
 
-#### Behavior change vs. legacy — `/create-pr` silent draft default
+#### `/create-pr` silent draft default
 
-When `verbosity.routine_confirmations: false` (the new default),
 `/create-pr` creates the PR as a **draft silently** instead of asking
 "draft or ready?". A one-line postscript surfaces the override:
 
@@ -320,7 +317,6 @@ Per-invocation overrides (no settings change required):
 |---|---|
 | Ready-for-review immediately | `/create-pr:ready` or `/create-pr:final` |
 | Explicit draft (no postscript change) | `/create-pr:draft` |
-| Numbered prompt restored | set `verbosity.routine_confirmations: true` |
 
 `/create-pr` still skips the AI council prompt unconditionally per the
 existing carve-out — `verbosity.offer_council_in_delivery` does not
@@ -337,10 +333,7 @@ minimal without ever dropping a critical callout.
 | Setting | Values | Default | Description |
 |---|---|---|---|
 | `commands.create_pr.detail_level` | `min`, `med`, `max` | `min` | Verbosity tier of the Description section. `min` = title + 2-3 sentence what/why/impact + linked ticket; `med` = `min` + grouped changes + tests note; `max` = `med` + how-to-test + edge cases + reviewer guidance. Critical info (breaking changes, migrations, security, rollback) is included at **every** tier — the tier governs explanatory depth, never whether a critical callout appears. |
-| `commands.create_pr.api_examples` | `true`, `false` | `true` | Add a fenced JSON request/response example for API-endpoint changes. `true` = include **only** when grounded in a real source (DTO/resource, OpenAPI, test fixture, or an actual probe); otherwise a one-line pointer, never an invented example. `false` = never. |
 | `commands.create_pr.screenshots` | `true`, `false` | `false` | Capture frontend screenshots for UI changes. `false` = never. `true` = attempt when the host has browser/preview tooling and the diff touches a frontend surface; capability-gated (emits a one-line note and leaves the placeholder when tooling is absent, never fails or blocks the PR). Before/after + region-highlighting is best-effort; byte-embedding into the PR body is not possible via the GitHub API (host image-upload or manual attach). |
-| `commands.create_pr.ui_paths` | glob list | `[]` | Optional globs that make frontend detection explicit (e.g. `["resources/views/**", "src/pages/**"]`). Empty = a light path/extension heuristic that fails open. |
-| `commands.create_pr.api_paths` | glob list | `[]` | Optional globs that make API-endpoint detection explicit (e.g. `["app/Http/Controllers/Api/**", "src/pages/api/**"]`). Empty = a light heuristic that fails open. |
 
 These flags are read once at the top of the `/create-pr` run and cached; the
 content flags feed `/create-pr:description-only` generation. `min` is the

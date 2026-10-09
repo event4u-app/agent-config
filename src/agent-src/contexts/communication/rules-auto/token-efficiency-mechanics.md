@@ -61,17 +61,14 @@ command says "ask the user", you ask.
 
 ### Keep intermediate output minimal
 
-Read `personal.minimal_output` (default: `true`) and
-`personal.play_by_play` (default: `false`) from `.agent-settings.yml`.
-
-When `personal.minimal_output: true`:
+Not a setting — this is the behavior
+[`direct-answers`](../../../rules/direct-answers.md) Iron Law 3 already
+mandates:
 
 - Multi-step work: short bullet points only, no paragraphs.
 - No thinking out loud — user doesn't need your reasoning.
-- `personal.play_by_play: false` → silently investigate, report
-  conclusion only.
-- `personal.play_by_play: true` → briefly share intermediate
-  findings.
+- Silently investigate, report the conclusion only. Share intermediate
+  findings only when the user asks for them in the turn.
 - At the end: concise summary — what changed, what user needs to
   know.
 

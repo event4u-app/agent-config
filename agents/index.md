@@ -415,7 +415,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`session-canary`](../src/rules/session-canary.md) | auto | personal.canary_name set — open every new task by name (liveness canary); keep the reply-close markers alive (ONE end-summary, PR URL last) |
 | rule | [`settings-ask-protocol`](../src/rules/settings-ask-protocol.md) | auto | Asking the user about a setting — one question per command execution, a fixed four-slot shape, and the key's class decides where the answer goes |
 | rule | [`size-enforcement`](../src/rules/size-enforcement.md) | manual | Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits |
-| rule | [`skill-improvement-trigger`](../src/rules/skill-improvement-trigger.md) | auto | After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled |
+| rule | [`skill-improvement-trigger`](../src/rules/skill-improvement-trigger.md) | auto | After a meaningful task — trigger the post-task learning capture; it proposes, the user confirms |
 | rule | [`skill-quality`](../src/rules/skill-quality.md) | auto | Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained |
 | rule | [`slash-command-routing-policy`](../src/rules/slash-command-routing-policy.md) | auto | User types a slash command like /create-pr, /commit, or pastes command file content |
 | rule | [`source-confidentiality`](../src/rules/source-confidentiality.md) | auto | Naming an external repo this package copied/harvested/compared against — keep the tracked tree source-anonymous |

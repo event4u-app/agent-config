@@ -320,11 +320,10 @@ export function resolveActivation(
   const emergency = (settings["emergency"] ?? {}) as Record<string, unknown>;
   const halted = emergency["orchestration_halt"] === true;
   const host_manifest = probeHostCapabilities(hostId);
-  const sub = (settings["subagents"] ?? {}) as Record<string, unknown>;
-  const downshift = sub["downshift"] !== false;
   return {
     activation: { halted, subagent_spawn: host_manifest.subagent_spawn },
-    downshift,
+    // Fixed on: the `subagents.downshift` key was retired with this default.
+    downshift: true,
     separate_quota_pool: host_manifest.separate_quota_pool,
     agentTeams: host_manifest.agent_teams,
   };

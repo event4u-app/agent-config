@@ -80,7 +80,7 @@ If the ticket scores low on estimability (vague AC, no out-of-scope,
 no mention of dependencies), set `uncertainty = Underspecified` and
 emit a single-line redirect to `/refine-ticket` at the top of the output.
 
-A **cross-source discrepancy** (per [`cross-source-consistency`](../../rules/cross-source-consistency.md), gated by `consistency.cross_source`) — ticket text contradicting an attached mockup, or a clearly-needed-but-unstated behavior (weekend/holiday shift) — is not estimable as-is: it hides an open scope decision. Raise `uncertainty` and name the discrepancy in the redirect rather than sizing over a contradiction.
+A **cross-source discrepancy** (per [`cross-source-consistency`](../../rules/cross-source-consistency.md)) — ticket text contradicting an attached mockup, or a clearly-needed-but-unstated behavior (weekend/holiday shift) — is not estimable as-is: it hides an open scope decision. Raise `uncertainty` and name the discrepancy in the redirect rather than sizing over a contradiction.
 
 ### 3. Apply sizing heuristics
 

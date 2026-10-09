@@ -11,9 +11,10 @@
  *
  * Schema (all keys optional; the parser rejects unknown keys hard):
  *
- * - `surface_traces` (bool, default `false`) — opt-in for
- *   `DecisionTraceHook`. Predates the gates; lives here so the
- *   `decision_engine:` block has one source-of-truth schema.
+ * - `surface_traces` — RETIRED, accepted and ignored. The trace hook stays
+ *   off (the old default). Still in `ALLOWED_KEYS` so a block that carries
+ *   the leftover key is not rejected wholesale, which would drop the gates
+ *   it configures alongside it.
  * - `min_confidence` (`low`/`medium`/`high`/`off`, default
  *   `off`) — confidence-band floor; Phase=Plan refuses to advance
  *   when the band is below.
@@ -27,8 +28,9 @@
  * - `ask_timeout_seconds` (int, default `30`) — timeout when
  *   `on_block=ask` runs in a non-interactive context (no TTY, or
  *   `CI=true`).
- * - `on_block_fallback` (`stop`/`warn`, default `stop`) —
- *   resolution after `ask_timeout` elapses.
+ * - `on_block_fallback` — RETIRED, accepted and ignored for the same
+ *   reason; the resolution after `ask_timeout` is always `stop`, the
+ *   fail-safe value.
  *
  * Gate-conflict resolution (first match wins, only one gate fires per
  * phase):
@@ -57,7 +59,6 @@ export const ALLOWED_KEYS: ReadonlySet<string> = new Set([
 const _LEVEL_VALUES: ReadonlySet<string> = new Set(['low', 'medium', 'high', 'off']);
 const _LEVEL_RANK: Record<string, number> = { low: 1, medium: 2, high: 3 };
 const _ON_BLOCK_VALUES: ReadonlySet<string> = new Set(['stop', 'ask', 'warn']);
-const _FALLBACK_VALUES: ReadonlySet<string> = new Set(['stop', 'warn']);
 
 /**
  * Conflict-resolution order. Highest-impact gate first; the first
@@ -177,17 +178,13 @@ export function parse(data: Any): DecisionEngineSettings {
         );
     }
     return new DecisionEngineSettings({
-        surface_traces: _coerce_bool(_get(d, 'surface_traces', undefined), false),
+        surface_traces: false,
         min_confidence: _coerce_level(_get(d, 'min_confidence', 'off'), 'min_confidence'),
         block_on_risk: _coerce_level(_get(d, 'block_on_risk', 'off'), 'block_on_risk'),
         require_memory_hits: _coerce_bool(_get(d, 'require_memory_hits', undefined), false),
         on_block: _coerce_choice(_get(d, 'on_block', 'stop'), 'on_block', _ON_BLOCK_VALUES),
         ask_timeout_seconds: _coerce_int(_get(d, 'ask_timeout_seconds', 30), 'ask_timeout_seconds'),
-        on_block_fallback: _coerce_choice(
-            _get(d, 'on_block_fallback', 'stop'),
-            'on_block_fallback',
-            _FALLBACK_VALUES,
-        ),
+        on_block_fallback: 'stop',
     });
 }
 

@@ -117,7 +117,7 @@ card may exist in the per-user file-first store
   `evidence_report.ts add --bucket assumed --origin global …` and **re-confirm it
   against the live source this session** before use (version skew / schema drift
   across projects). Never "Verified" on the global card alone.
-- A `public`/`vendor` card seen in ≥ `auto_promote_threshold` distinct repos
+- A `public`/`vendor` card seen in ≥ 2 distinct repos
   triggers a one-tap promotion **suggestion** (never silent). `proprietary` cards
   are manual-only and never auto-shared. Record sightings via
   `_lib/knowledge_global_promote.ts record-seen`.

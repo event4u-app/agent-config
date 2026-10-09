@@ -204,8 +204,14 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // 118 -> 119 on 2026-10-07: the same branch's fourth corpus,
         // `using-git-worktrees` (0xba = 186), trains, moving the train count
         // 91 -> 92; the holdout is unchanged.
+        //
+        // 119 -> 123 on 2026-10-09: the settings-key retirement touched four
+        // corpus-less skills. `command-routing` (0xb5 = 181), `feature-planning`
+        // (0x46 = 70), `po-discovery` (0x60 = 96) and `source-discovery`
+        // (0xe4 = 228) all train, moving the train count 92 -> 96; the holdout
+        // is unchanged.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(119);
+        expect(all.length).toBe(123);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(27);
     });
 });
@@ -237,7 +243,9 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // trains; `conventional-commits-writing` and `merge-conflicts` sealed
         // and are absent here. See the partition note above.
         // 91 -> 92 on 2026-10-07: `using-git-worktrees` trains.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(92);
+        // 92 -> 96 on 2026-10-09: `command-routing`, `feature-planning`,
+        // `po-discovery` and `source-discovery` train.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(96);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

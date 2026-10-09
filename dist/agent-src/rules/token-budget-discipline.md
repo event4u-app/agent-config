@@ -31,15 +31,10 @@ TO THE FULL FRUGALITY CANON (telegraph-speak, thin-projector).
 | `standard` | — | Balanced condensation | Not trimmed if priority ≥ 60 | 500–2000 tokens |
 | `rich` | Must be declared + justified | **Exempt** | **Never trimmed** | 2000–3500 tokens |
 
-Read `tokens.rich_skills` from `.agent-settings.yml` (default `on`) — the project
-layer of a cascade that starts user-global, so `agent-config settings:get
-tokens.rich_skills` is the read that answers it, file included — to determine
-whether rich skills may load in full. If `off`, treat them as `standard`. If
-`ask`, the question's shape is
-[`settings-ask-protocol`](settings-ask-protocol.md)'s, not this rule's; what only
-this rule knows is the number to put in it — the estimated token delta, ≈ skill
-file size in chars / 4. The answer is cached for the session and never persisted
-(`tokens.rich_skills` is class C).
+Rich skills always load in full — there is no setting to read. The
+`tokens.rich_skills` key that once allowed `off` / `ask` was retired on 2026-10-09
+with its default (`on`) as the fixed behavior; the skill's own
+`token_budget_class: rich` declaration plus the CI ceiling below is what decides.
 
 ## Requirements for `token_budget_class: rich`
 
@@ -62,9 +57,9 @@ A skill claiming `rich` MUST satisfy ALL three:
 
 ## Telegraph-speak amendment
 
-The telegraph-speak rule is **dormant by default** — absent
-`telegraph.speak` it does not project at all, so there is nothing to exempt
-from. Where a consumer has enabled it, it **exempts** skills marked
+The telegraph-speak rule is **dormant** — it does not project at all (a
+package-level decision in `compile_time_toggles.ts`), so there is nothing to
+exempt from. If it ever ships again, it **exempts** skills marked
 `token_budget_class: rich`. When such a skill is active:
 
 - Do not apply telegraph-speak condensation to its guidance prose
@@ -74,8 +69,7 @@ from. Where a consumer has enabled it, it **exempts** skills marked
 
 This exemption is limited to the skill's guidance content; reply prose from the
 *agent* (not from the skill body) remains subject to telegraph-speak wherever
-that rule ships at all (`telegraph.speak`), within the carve-outs the rule
-itself names.
+that rule ships at all, within the carve-outs the rule itself names.
 
 ## Value-over-budget escalation
 
@@ -134,12 +128,10 @@ list: `guideline:agent-infra/size-and-scope` § Rich-class size band.
 
 ## Governed by
 
-- `tokens.rich_skills` setting in `.agent-settings.yml` (consumer override)
 - `lint_token_budget_discipline.ts` (cap + justification + ceiling CI check)
 - the telegraph-speak rule, where enabled (amended to except rich-tagged skills)
 
 ## See also
 
 - `token_budget_class` key in `src/scripts/schemas/skill.schema.json`
-- `tokens.rich_skills` in `src/config/agent-settings.template.yml`
 - the telegraph-speak rule, where enabled — the frugality canon this rule amends

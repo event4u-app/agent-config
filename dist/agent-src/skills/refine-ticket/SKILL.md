@@ -144,7 +144,7 @@ Check the loaded ticket for clarity signals before orchestrating:
 - Is the scope one feature, or multiple tangled together?
 - Any sentence that references an existing module name, feature flag, or domain concept?
 
-**Cross-source discrepancy scan** (per [`cross-source-consistency`](../../rules/cross-source-consistency.md), gated by `consistency.cross_source`): the ticket is rarely a single source. Compare every source against the others and surface any conflict as an *Open question* — never resolve it silently:
+**Cross-source discrepancy scan** (per [`cross-source-consistency`](../../rules/cross-source-consistency.md)): the ticket is rarely a single source. Compare every source against the others and surface any conflict as an *Open question* — never resolve it silently:
 - **text ↔ attachment** — does the ticket text agree with every attached mockup / screenshot / diagram? (Canonical miss: text says "birthdays **today**", the mockup shows a birthday from two days ago.) If an attachment cannot be read, say so — do not assume it agrees.
 - **silent-but-needed** — is the spec silent on a clearly-needed behavior (weekend/holiday shift, empty state, error path, timezone, permissions)? Surface it and ask before it becomes an implementation assumption — an inferred behavior is a scope expansion, not a given.
 - **intra-ticket** — do the AC, description, and comments contradict each other?

@@ -31,7 +31,8 @@ type Any = unknown;
 /**
  * Thread the `🧠 Memory: <hits>/<asks> · ids=[…]` line into the report.
  *
- * `memory_cadence` is the `memory.cadence` cadence key. `visibility_off`
+ * `memory_cadence` is the cadence the hook was built with; settings always
+ * yield `always` since the `memory.cadence` key was retired. `visibility_off`
  * mirrors `memory.visibility: off`. `asked_types` overrides the list of
  * memory types treated as `asks` in the visibility line.
  */

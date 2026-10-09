@@ -36,7 +36,7 @@ match()    →  raw scored matches per eligible command
    │
    ▼
 rank()     →  apply floor, drop blocklisted, anti-noise heuristics,
-              cap at max_options, stable tie-break
+              cap at 4 options, stable tie-break
    │
    ▼
 apply_cooldown()  →  drop (command, evidence) pairs shown in window
@@ -123,11 +123,13 @@ track separately.
 
 | Scope | Key | Effect |
 |---|---|---|
-| Whole project | `commands.suggestion.enabled: false` | Layer fully silent; explicit slashes still work |
 | Specific command | `commands.suggestion.blocklist: [cmd1, cmd2]` | Those commands never appear; still callable |
 | Specific conversation | User types `/command-suggestion-off` | Disabled until user types `/command-suggestion-on` or chat ends |
 
-Per-command frontmatter overrides the global floor and cooldown:
+There is no project-wide off switch: `commands.suggestion.enabled` and the
+global floor / cooldown / option-cap keys were retired on 2026-10-09 with their
+defaults (on · `0.6` · 600 s · 4) as fixed behavior. Per-command frontmatter
+still overrides the floor and cooldown for that command:
 
 ```yaml
 suggestion:
@@ -195,8 +197,8 @@ Together they enforce:
 
 On Claude.ai Web / Skills API, the suggester package is **not** part
 of the standard bundle (T2 ZIPs ship rules + skills, not Python
-helpers). Treat `commands.suggestion.enabled` as `false` — degrade
-silently, never crash the turn. Local agents (Augment, Claude Code,
+helpers). Treat the layer as absent there — degrade silently, never crash
+the turn. Local agents (Augment, Claude Code,
 Cursor, Cline, Windsurf) get the engine via `scripts/`.
 
 ## See also
@@ -204,4 +206,4 @@ Cursor, Cline, Windsurf) get the engine via `scripts/`.
 - [`command-suggestion`](../../rules/command-suggestion-policy.md) — runtime rule
 - [`adr-command-suggestion.md`](adr-command-suggestion.md) — architectural decision
 - [`command-suggestion-eligibility.md`](command-suggestion-eligibility.md) — locked eligibility table
-- [`agent-settings`](../../templates/agent-settings.md) — `commands.suggestion.*` reference
+- [`agent-settings`](../../templates/agent-settings.md) — `commands.suggestion.blocklist` reference

@@ -164,8 +164,8 @@ explicitly and the default flips back only on a positive reuse signal).
 - **Redaction on write.** Promotion runs the `low-impact-corpus-privacy-floor`
   + `source-confidentiality` pattern set and **halts** on any hit — never
   silent-shares, never auto-rewrites.
-- **Promotion is hybrid.** A `public`/`vendor` card seen in ≥`auto_promote_threshold`
-  distinct repos triggers a one-tap **suggestion**; never a silent write.
+- **Promotion is hybrid.** A `public`/`vendor` card seen in ≥2 distinct repos
+  triggers a one-tap **suggestion**; never a silent write.
 
 ## Evidence v2 rollback target (Phase 0)
 

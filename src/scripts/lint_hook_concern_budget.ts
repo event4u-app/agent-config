@@ -52,8 +52,6 @@ function _load_manifest(p: string): Manifest {
 }
 
 interface SettingsBlock {
-    max_per_event?: number;
-    hard_fail?: boolean;
     tier1_concerns?: string[];
 }
 
@@ -66,9 +64,11 @@ function _isFile(p: string): boolean {
 }
 
 /**
- * Minimal YAML walk for `hooks.concern_budget.*`. Mirrors the Python
- * `_read_settings_block` line walker verbatim — no YAML dependency,
- * tolerant of missing keys / blocks.
+ * Minimal YAML walk for `hooks.concern_budget.tier1_concerns`. Mirrors the
+ * Python `_read_settings_block` line walker — no YAML dependency, tolerant of
+ * missing keys / blocks. `max_per_event` and `hard_fail` are not read: those
+ * keys were retired, the cap is {@link DEFAULT_MAX_PER_EVENT} and hard-fail is
+ * the `--strict` argv alone.
  */
 function _read_settings_block(settings_path: string): SettingsBlock {
     const out: SettingsBlock = {};
@@ -107,18 +107,7 @@ function _read_settings_block(settings_path: string): SettingsBlock {
             in_tier1 = false;
         }
         if (in_budget) {
-            let m = /^\s{4}max_per_event\s*:\s*(\d+)/.exec(line);
-            if (m) {
-                out.max_per_event = Number.parseInt(m[1] as string, 10);
-                in_tier1 = false;
-                continue;
-            }
-            m = /^\s{4}hard_fail\s*:\s*(true|false)/.exec(line);
-            if (m) {
-                out.hard_fail = m[1] === 'true';
-                in_tier1 = false;
-                continue;
-            }
+            let m: RegExpExecArray | null;
             if (/^\s{4}tier1_concerns\s*:\s*\[\s*\]/.test(line)) {
                 out.tier1_concerns = [];
                 in_tier1 = false;
@@ -173,8 +162,8 @@ function _check_concern_counts(
             if (count > max_per_event) {
                 warnings.push(
                     `platforms.${plat}.${event}: ${count} concerns ` +
-                        `(threshold ${max_per_event}). Trim or raise ` +
-                        'hooks.concern_budget.max_per_event in .agent-settings.yml.',
+                        `(threshold ${max_per_event}). Trim the cell; the cap is ` +
+                        'a fixed constant in lint_hook_concern_budget.ts.',
                 );
             }
         }
@@ -230,9 +219,9 @@ export function lint(
     }
 
     const settings = _read_settings_block(settings_path);
-    const max_per_event = settings.max_per_event ?? DEFAULT_MAX_PER_EVENT;
+    const max_per_event = DEFAULT_MAX_PER_EVENT;
     const tier1 = settings.tier1_concerns ?? DEFAULT_TIER1;
-    const hard_fail = (settings.hard_fail ?? DEFAULT_HARD_FAIL) || strict;
+    const hard_fail = DEFAULT_HARD_FAIL || strict;
 
     const warnings: string[] = [];
     const errors: string[] = [];

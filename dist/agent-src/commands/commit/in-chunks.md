@@ -118,31 +118,16 @@ git commit -m "{message}"
 No "looks good?" prompt. No confirmation step. The user invoked this
 command knowing the plan would be executed.
 
-### 5. Report (verbosity-gated)
+### 5. Report
 
-Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
-`minimal`). Same contract as [`/commit`](../commit.md) step 7.
+Same contract as [`/commit`](../commit.md) step 7 — one line (run
+`git log --oneline -N` silently for the agent's own verification):
 
-- `off` → emit nothing (still run `git log --oneline -N` silently for
-  the agent's own verification).
-- `minimal` (default) → one line:
+```
+→ N commits created
+```
 
-  ```
-  → N commits created
-  ```
-
-- `full` → full summary:
-
-  ```
-  Created N commits:
-  1. {sha1}  feat(DEV-1234): {summary}
-  2. {sha2}  test(DEV-1234): {summary}
-  3. {sha3}  chore: {summary}
-  ```
-
-  Include `git log --oneline -N` output for verification.
-
-At every level except `off`, a run that measured because no convention was
+A run that measured because no convention was
 established adds the verb's `verdict` line and `→ run /commit once to choose and
 record the convention`.
 

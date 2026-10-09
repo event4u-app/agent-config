@@ -97,8 +97,8 @@ surface changes.
    - **Delete** — preview file, confirm, delete, scrub references.
    - **Update** — apply explicit content changes (remove stale refs, refresh sections, add missing info).
    - **Create context** — hand off to `/context create` with area pre-selected.
-4. **Update roadmap progress** — flip `[ ]` → `[x]` after each action; show progress bar. Per `verbosity.routine_confirmations`: `false` → continue silently, user can interrupt; `true` → confirm next.
-5. **Summary** — gated by `verbosity.post_action_reports` (`off` / `minimal` / `full`); minimal = one line counts (moved · merged · deleted · updated · remaining).
+4. **Update roadmap progress** — flip `[ ]` → `[x]` after each action; show progress bar. Continue silently to the next action — the user can interrupt; a routine "next?" confirmation is never asked.
+5. **Summary** — one line of counts (moved · merged · deleted · updated · remaining).
 
 **Rules:** confirm before every destructive action; always update references when moving/renaming; update the roadmap after each completed action; show file content before delete; check `.augment/` references too.
 

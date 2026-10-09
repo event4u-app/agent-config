@@ -17,8 +17,10 @@ DEFAULT STAYS OFF UNTIL `task bench -- --telegraph` PRODUCES A POSITIVE vs_terse
 DECISION OWNED BY THE NEXT BENCH CLOSEOUT, NOT BY THIS DOC.
 ```
 
-1. **Current state.** `telegraph.speak` defaults `false`, so the rule does not
-   ship at all. (Until 2026-08-12 this line named `telegraph.speak_scope`, a
+1. **Current state.** The `telegraph-speak` predicate in
+   `src/scripts/_lib/compile_time_toggles.ts` returns `false`, so the rule does
+   not ship at all; the per-install `telegraph.speak` key that carried this
+   default was retired on 2026-10-09. (Until 2026-08-12 this line named `telegraph.speak_scope`, a
    second key that defaulted `off` and that no code path read; it was deleted,
    and the scope of the grammar is now stated by the rule body itself.) Carve-outs
    (security · destructive · multi-step · code blocks · paths · numbered
@@ -40,7 +42,7 @@ DECISION OWNED BY THE NEXT BENCH CLOSEOUT, NOT BY THIS DOC.
    |---|---|---|
    | < 0 % | any | **Criterion not met — defer.** Keep default `off`. No telemetry multiplier. Next move owned by the corpus-widening / methodology-revision step that produces `telegraph-v<N+1>`. |
    | 0 % – < 30 % | any | **Hold.** Keep default `off`. Authorised follow-up: widen corpus or tune carve-out share; no default flip. |
-   | ≥ 30 % | < 5 % | **Flip default on** — `telegraph.speak` defaults `true` (separate roadmap), carve-outs stay, statusline surfaces lifetime tokens saved. |
+   | ≥ 30 % | < 5 % | **Flip default on** — the `telegraph-speak` predicate returns `true` (separate roadmap), carve-outs stay, statusline surfaces lifetime tokens saved. |
    | ≥ 30 % | ≥ 5 % | **Hold** — repeat the window once with tuned intensity ladder; second hold → deprecate. |
 
    "Quality regression" = host-side rubric on the corpus per
@@ -110,8 +112,8 @@ re-litigating condensation on every PR.
 - [`telegraph-telemetry`](telegraph-telemetry.md)
   — multiplier contract; records the suspended state v2 must lift.
 - [`telegraph-speak`](../../.agent-src.uncondensed/rules/telegraph-speak.md)
-  — runtime rule; states its own grammar scope and carve-outs. The only
-    settings input is `telegraph.speak`, which decides whether it ships.
+  — runtime rule; states its own grammar scope and carve-outs. Whether it
+    ships is the `compile_time_toggles.ts` predicate — no setting decides it.
 
 ## Done
 
