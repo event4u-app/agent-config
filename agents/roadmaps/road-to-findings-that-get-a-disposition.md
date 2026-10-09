@@ -174,12 +174,12 @@ owner, because it reverses a recorded supersession.
 - **If you do nothing:** the four forge findings stay open and 3.3 stays blocked; 3.1 still ships.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-07 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-09 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Dispositions written to empty the ledger | product | A row marked `false_positive` or `accepted_risk` without a reading hides real work. | 1.2 requires a rationale per row; D1 prefers `still_open` with a roadmap. | Phase 1 — Every 16.3.0 finding ends somewhere |
 | 2 | A wider blocking predicate stalls a release | product | Option (a) turns a medium security finding into a release blocker. | The disposition vocabulary already admits `accepted_risk`; a release can answer, not wait. | Phase 2 — Whether a medium security finding blocks |
 | 3 | The offline test passes on a stub | implementation | A test that injects a runner may not exercise the real composition root. | `forgeProtectionJsonFor` already takes `deps`; the test goes through it, not below it. | Phase 3 — A doctor that can stay offline |
-| 4 | Reversing a council-reached default without the owner | product | The default was set by a recorded supersession. | The default change sits behind an owner blocker; only the additive flag ships without it. | Context |
+| 4 | Reversing a council-reached default without the owner | product | The default was set by a recorded supersession. | The default change sat behind an owner blocker until 2026-10-08, when the owner delegated council-decidable questions and the council chose (a) 2/2 (D7); 3.3 ships it with an explicit `not_checked` state and a migration note, so no caller reads a skipped read as passed. | Context |
 | 5 | The wider predicate reds an older ledger | implementation | Ledgers 14.21.0 to 16.2.0 hold medium security rows with no status, written while those rows were advisory. | The widening is prospective: `isBlocking` takes the ledger's release and admits `security × medium` only after 16.3.0, pinned by tests. The gate runs for the package.json version in `.github/workflows/consistency.yml` and for the release branch in `release-validation.yml` and `self-review-gate.yml`. | Phase 2 — Whether a medium security finding blocks |

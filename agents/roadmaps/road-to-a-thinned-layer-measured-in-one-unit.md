@@ -470,7 +470,7 @@ price list rather than from a survey.
 | K8 | A blocker that waits on the sibling proposal's decision record | The drafting rule's batch clause already names who decides; a second owner question for the same four changes | Same |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-09 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
