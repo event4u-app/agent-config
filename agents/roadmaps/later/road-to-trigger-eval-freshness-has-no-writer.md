@@ -2,6 +2,7 @@
 complexity: lightweight
 status: later
 review_by: 2027-01-08
+estate_growth_exempt: "open_blockers 59 to 61 — parking this file and road-to-adversarial-verification-and-long-runs moves two roadmaps out of status draft, which collect() hides from every count, into later/, which laterRoadmaps() counts. Neither blocker is new: freshness-mechanism-is-owner-owned and daemon-host-kill-switch both predate this change and both are Class 3, human-only. Nothing was archived to offset it because neither roadmap is finished — that is why they park instead."
 entry_condition:
   what: >-
     the owner picks one of the four priced options under the blocker
