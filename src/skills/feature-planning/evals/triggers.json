@@ -1,0 +1,13 @@
+{
+    "skill": "feature-planning",
+    "last_eval": "2026-10-09",
+    "description": "3 exemplars + 2 near-misses + 1 counterexample. Authored 2026-10-09 when the settings-key retirement touched this skill. Exemplars go from an idea to a structured plan, including the German phrasing. Near-misses are the neighbours a plan feeds: writing the roadmap file itself, and tightening one ticket's acceptance criteria.",
+    "queries": [
+        { "q": "plan a feature that lets users export their invoices as CSV", "trigger": true, "class": "exemplar" },
+        { "q": "let's brainstorm how offline mode could work in the mobile app", "trigger": true, "class": "exemplar" },
+        { "q": "ich habe eine Idee für Team-Workspaces — lass uns das als Feature durchplanen", "trigger": true, "class": "exemplar", "language": "de" },
+        { "q": "write the roadmap file for this plan with phases and acceptance criteria", "trigger": false, "class": "near-miss", "note": "authoring the roadmap artifact once the plan exists → roadmap-writing" },
+        { "q": "tighten the acceptance criteria on ticket ABC-123", "trigger": false, "class": "near-miss", "note": "refining one existing ticket rather than shaping a feature → refine-ticket" },
+        { "q": "fix the failing unit test in the auth module", "trigger": false, "class": "counterexample" }
+    ]
+}
