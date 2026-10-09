@@ -3066,7 +3066,7 @@ interface Options {
     ci: boolean;
     strict: boolean; strict_level: string; // see `_doctor_strict.ts`
     check: string | null;
-    trace_root: boolean; no_forge: boolean; // --no-forge / --offline
+    trace_root: boolean; no_forge: boolean; online: boolean; // opt-out / opt-in; `forgeDepsFor`
     context: boolean;
     anatomy: boolean;
     repair: string | null;
@@ -3081,13 +3081,13 @@ const USAGE =
     `usage: ${PROG} [-h] [--project PROJECT] [--json] [--ci] [--check ID]\n` +
     STRICT_USAGE +
     '                           [--trace-root] [--context] [--anatomy] [--no-forge]\n' +
-    '                           [--repair ID]\n';
+    '                           [--online] [--repair ID]\n';
 
 const _STORE_TRUE_FLAGS: Record<string, keyof Options> = {
     '--json': 'json',
     '--ci': 'ci',
     ...STRICT_STORE_TRUE,
-    '--trace-root': 'trace_root', '--no-forge': 'no_forge', '--offline': 'no_forge',
+    '--trace-root': 'trace_root', '--no-forge': 'no_forge', '--offline': 'no_forge', '--online': 'online',
     '--context': 'context',
     '--anatomy': 'anatomy',
 };
@@ -3112,7 +3112,7 @@ function _parse(argv: string[]): Options {
         ci: false,
         ...STRICT_DEFAULTS,
         check: null,
-        trace_root: false, no_forge: false,
+        trace_root: false, no_forge: false, online: false,
         context: false,
         anatomy: false,
         repair: null,

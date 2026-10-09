@@ -82,7 +82,11 @@ export function executionJson(overrides: () => OverrideStream): Dict {
  * `actions` carries the human ACTION lines — the step's own words are that a
  * missing row is a blocker entry and NOT a halt, so this reports and returns.
  */
-export function forgeProtectionJson(reading: ForgeReading, repo: string | null = null): Dict {
+export function forgeProtectionJson(
+    reading: ForgeReading,
+    repo: string | null = null,
+    not_checked: NotCheckedReason = null,
+): Dict {
     const rows = forgeProtectionRows(reading);
     const readFromForge = rows.some((r) => r.state !== 'unread');
     // **The slug is reported only when something was actually read, and that
@@ -108,6 +112,11 @@ export function forgeProtectionJson(reading: ForgeReading, repo: string | null =
         })),
         actions: protectionActions(rows).map(name),
         read_from_forge: readFromForge,
+        // Present on every run, `null` when the read happened. A key that
+        // appeared only on the skipped path would make its absence carry the
+        // meaning, and absence is exactly what a schema-validating consumer
+        // reads as "this build does not report it".
+        not_checked,
     };
 }
 
@@ -149,24 +158,63 @@ export interface ForgeDeps {
     /** The subprocess runner for both `git` and `gh`. */
     readonly run?: Runner;
     /**
-     * Skip the read before anything spawns — `--no-forge` / `--offline`, and a
-     * `--check <id>` run, since no check id reads this block. The block keeps
-     * its shape: five `unread` rows, exactly what a failed read produces.
+     * Skip the read before anything spawns. The block keeps its shape: five
+     * `unread` rows, exactly what a failed read produces.
      */
     readonly offline?: boolean;
+    /**
+     * WHY the read was skipped, or `null` when it happened.
+     *
+     * Five `unread` rows and no failures is what "everything is fine" looks
+     * like to a consumer summing row states, so `read_from_forge: false` alone
+     * did not carry the distinction. This names it, which is the condition the
+     * council attached to making offline the default.
+     */
+    readonly not_checked?: NotCheckedReason;
 }
 
 /**
- * Whether a `doctor` run reads the forge. Additive: a run that passes neither
- * `--no-forge` nor `--check` reads it exactly as before. The default itself is
- * an owner decision (`road-to-findings-that-get-a-disposition`, blocker
- * `doctor-network-default`), so this function does not decide it.
+ * Why a `doctor` run did not read the forge. `null` means it did.
+ *
+ * Three reasons rather than a boolean, because the repairs differ: pass
+ * `--online`, drop `--no-forge`, or run without `--check`.
+ */
+export type NotCheckedReason = 'online_not_requested' | 'offline_flag' | 'single_check' | null;
+
+/**
+ * Whether a `doctor` run reads the forge — and why not, when it does not.
+ *
+ * **OFFLINE IS THE DEFAULT since 2026-10-09.** Blocker
+ * `doctor-network-default` of `road-to-findings-that-get-a-disposition`,
+ * option (a): AI council 2026-10-07 (anthropic + openai, 2/2), adopted
+ * 2026-10-08 under the owner's delegation of council-decidable questions. The
+ * recorded reasoning is that a health command reaching the network on every
+ * run — including a single-check run — is the surprising default, and that
+ * `--online` costs one word to anyone who wants the read.
+ *
+ * Phase 3.1 shipped the opt-OUT and this function's earlier header said the
+ * default "is an owner decision, so this function does not decide it". That is
+ * now decided, and the header says so rather than leaving the next reader to
+ * infer it from the expression.
+ *
+ * Precedence is narrowest-first, so the reason names the repair: a `--check`
+ * run reads no forge row at all, an explicit `--no-forge` beats `--online`
+ * because it is the more specific instruction, and the bare default is last.
  */
 export function forgeDepsFor(opts: {
-    readonly no_forge: boolean;
+    readonly online?: boolean;
+    readonly no_forge?: boolean;
     readonly check: string | null;
 }): ForgeDeps {
-    return { offline: opts.no_forge || opts.check !== null };
+    const not_checked: NotCheckedReason =
+        opts.check !== null
+            ? 'single_check'
+            : opts.no_forge === true
+              ? 'offline_flag'
+              : opts.online === true
+                ? null
+                : 'online_not_requested';
+    return { offline: not_checked !== null, not_checked };
 }
 
 export function forgeProtectionJsonFor(root: string, deps: ForgeDeps = {}): Dict {
@@ -175,7 +223,9 @@ export function forgeProtectionJsonFor(root: string, deps: ForgeDeps = {}): Dict
     // binding were asserted one layer down against fakes while a regression in
     // the real wiring stayed invisible. `deps` is that seam; production passes
     // nothing and gets `process.env` plus the real spawn.
-    if (deps.offline === true) return forgeProtectionJson(UNREAD_FORGE, null);
+    if (deps.offline === true) {
+        return forgeProtectionJson(UNREAD_FORGE, null, deps.not_checked ?? null);
+    }
     const env = deps.env ?? process.env;
     const run = deps.run;
     const remaining = budgetOf(FORGE_TOTAL_BUDGET_MS);
