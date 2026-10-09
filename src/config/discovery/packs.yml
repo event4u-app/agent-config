@@ -25,6 +25,14 @@
   label: Engineering Base
   description: Framework-neutral engineering hygiene — git, tests, reviews.
   workspaces: [engineering]
+  # Companion stacks and layers, never dependencies. This pack's skills are
+  # framework-neutral by contract and carry stack carve-out pointers ("Laravel
+  # → laravel-validation", "Next.js → nextjs-patterns") plus hand-offs into the
+  # design and product layers. `requires` is transitive and install-forcing, so
+  # declaring any of them would push the whole set into every engineering
+  # install; advisory is what the relationship actually is.
+  # D5 of road-to-gates-a-pull-request-can-hear (AI council 2026-10-07).
+  suggests: [php, laravel, symfony, nextjs, react, frontend-design, brand, product-basic]
   trust_level_default: core
   domain: engineering
   size_class: core
@@ -125,7 +133,9 @@
   description: Grounded design intelligence — design-knowledge corpus + BM25 grounding engine, design tokens, stack best-practice and chart/typography knowledge.
   workspaces: [engineering]
   requires: [engineering-base]
-  suggests: [react, nextjs]
+  # `brand` requires this pack, so the reverse edge can only be advisory: the
+  # design skills defer to a registered brand token where one exists.
+  suggests: [react, nextjs, brand]
   trust_level_default: professional
   domain: engineering
   size_class: medium
@@ -145,6 +155,9 @@
   description: Scale-safe persistence — index parity, bounded reads, migration safety, growth budgets, thin request path, durable async; deterministic pattern lints gate, heuristics advise.
   workspaces: [engineering]
   requires: [engineering-base]
+  # Sibling pack floor: audit tables fall under this pack's growth budget, so
+  # the two rules cross-reference. Advisory — either installs without the other.
+  suggests: [history-discipline]
   trust_level_default: experimental
   surface_tier: lab
   domain: engineering
@@ -205,6 +218,9 @@
   label: Finance Basic
   description: Cashflow, runway, basic forecasting.
   workspaces: [finance, founder]
+  # `finance-advanced` requires this pack; the reverse pointers (runway hands
+  # off to scenario modelling, unit economics to DCF) are therefore advisory.
+  suggests: [finance-advanced]
   trust_level_default: professional
   domain: finance
   risk_class: medium   # advisory (finance-safety-floor): not-financial-advice disclaimer

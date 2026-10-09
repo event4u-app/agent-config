@@ -1,0 +1,1946 @@
+diff --git a/agents/evidence/analysis/pack-boundary-link-classification-2026-10-09.md b/agents/evidence/analysis/pack-boundary-link-classification-2026-10-09.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..5b846a814f69367d2db4296744a271fe4017e94f
+--- /dev/null
++++ b/agents/evidence/analysis/pack-boundary-link-classification-2026-10-09.md
+@@ -0,0 +1,414 @@
++# Pack-boundary link classification — which of the 203 degrade safely
++
++<!-- evidence-type: analysis -->
++
++> **Scope:** every one of the 203 links `lint_pack_boundaries` reported at
++> baseline on `958257418`, classified against the condition the AI council
++> attached to D5 of `road-to-gates-a-pull-request-can-hear` (2026-10-07,
++> anthropic + openai, 2/2): an advisory `suggests` edge may permit a link only
++> where that link **degrades safely** when the target pack is absent, and the
++> whole option is withdrawn if a meaningful share turns out to be load-bearing
++> — one seat named **> 20 %** as the figure.
++
++## The question, stated so it can be answered wrongly
++
++For a consumer who installs the SOURCE pack and not the target's, does this
++artefact stay correct and executable?
++
++| class | definition | degrades safely |
++|---|---|---|
++| documentation-reference | a See-also / Related / provenance pointer, or sample output inside a worked example; unlinked, the sentence stays true | yes |
++| optional-integration | reached only under a condition the reader may not meet — a stack they do not use, a different task they are not doing, a depth pointer, a hand-back to out-of-scope work, or a path the artefact itself names a fallback for | yes |
++| load-bearing | a step of THIS artefact's own procedure cannot be completed without the target, and no in-pack substitute exists | **no** |
++
++The second class carries the weight of the argument, so it is worth being
++explicit about why it is safe rather than asserting it. A link of the form
++*"Do NOT use for X — route to `laravel-validation`"* disappears together with
++the need it serves: a consumer without the `laravel` pack is not doing Laravel
++validation. The pointer is not a step of the procedure; it is a statement about
++where the boundary of the procedure lies, and the boundary is still true when
++the neighbour is absent.
++
++## Result
++
++| class | occurrences | share |
++|---|---|---|
++| documentation-reference | 126 | 62.1 % |
++| optional-integration | 73 | 36.0 % |
++| load-bearing, remediated in this change | 2 | 1.0 % |
++| **load-bearing, still open** | **2** | **1.0 %** |
++
++**4 of 203 = 2.0 %, under the 20 % abort threshold, so option (a) stands.**
++Neither of the two still-open load-bearing links is on a permitted edge.
++
++## Three readings, because two of them were wrong
++
++This page records the method's failures as well as its result. A classification
++that was revised until it cleared a threshold is indistinguishable from one
++that was corrected — unless every revision and its cause are visible.
++
++**Pass 1 — 33.5 % load-bearing.** Would have aborted the option. It treated any
++`route to [X]` as an imperative step, including inside a **negative**, which is
++the construction where it occurs most. Three sites were read in full before the
++rule changed:
++
++- `src/skills/error-handling-patterns/SKILL.md:29` — under `Do NOT use when:`
++- `src/skills/bug-analyzer/SKILL.md:22` — under `Do NOT use when:`
++- `src/skills/code-refactoring/SKILL.md:110` — under `Carve-out routing:`,
++  a stack-conditional list (`Laravel: …` / `Next.js: …` / `Symfony: …`)
++
++In all three the sentence tells the reader this is the **wrong** artefact for
++their task. It cannot be a required step of a procedure it is excluding itself
++from. Pass 2 therefore reads a negative or stack-conditional context as
++`optional-integration`.
++
++**Pass 2 — 3.0 % load-bearing, and the line numbers were wrong.** Caught by an
++independent adversarial review, not by the author. The locator took the **first**
++textual match of each link in its source file and gave that line — and that
++line's enclosing heading — to **every** reported occurrence of the pair. 27
++(file, link) pairs are reported more than once, so 34 rows carried a line number
++that was not theirs and a basis copied from a different sentence. Worked
++example: `content-funnel-design` links `funnel-analysis` at lines 62, 126 and
++142; all three rows read `:62` and all three inherited that line's
++`load-bearing` verdict, while line 142 reads *"Quantitative funnel-stage
++diagnostics and leak detection — route to …"*, which pass 2's own rule classes
++as `optional-integration`.
++
++**Pass 3 — 2.0 %, the reading above.** Each of the 203 reported occurrences is
++mapped to its own match, in file order: 190 distinct sites, 0 unlocated, and
++every (file, link) pair's reported count equals its textual match count. Where a
++pair is reported more often than it appears — a multi-pack artefact is counted
++once per source pack — the extra rows share the last match, and that is stated
++rather than papered over with an invented line.
++
++The corrections move the number in one direction only: **33.5 % → 3.0 % → 2.0 %**,
++and the manual review below moved occurrences **down** and **none up**. That is
++worth noticing rather than treating as reassurance: a method whose every error
++has pointed the same way has not been shown to be unbiased, only to have been
++wrong consistently. What makes the result checkable is the per-link table, not
++the direction of its corrections.
++
++## What was checked by hand
++
++**All 22 occurrences pass 3 flagged load-bearing** were read with their
++surrounding context; 18 were reclassified down. The per-site basis is in the
++table below, prefixed `manual review:`. The 4 survivors:
++
++| source:line | edge | class | why |
++|---|---|---|---|
++| `src/skills/content-funnel-design/SKILL.md`:62 | `gtm-marketing -> product-basic` | load-bearing | Step 0 is *"Identify the leaking stage from `funnel-analysis`"* — a mandatory input, and the skill states it is "a *response* to a diagnosed leak". **Not on a permitted edge.** |
++| `src/rules/architecture.md`:45 | `meta -> frontend-design` | load-bearing | *"audit existing first, per `ui-audit-gate`"* — the obligation is carried by the target. **Not on a permitted edge.** |
++| `src/skills/corpus-grounding/SKILL.md`:40 | `engineering-base -> frontend-design` | load-bearing, remediated | names where the full licence obligations live; see below |
++| `src/skills/tailwind-engineer/SKILL.md`:97 | `engineering-base -> frontend-design` | load-bearing, remediated | the target carries the single token-discipline linter; see below |
++
++**A 12-occurrence random sample (seed 37) of the links pass 2 called safe** was
++read the same way: **0 reclassified**. At n = 12 that bounds the false-negative
++rate loosely, not tightly — the honest reading is that the sample found
++nothing, not that nothing is there. The sampled sites were See-also indexes
++(`legal-safety-floor`, `pdf-tools`, `doc-screenshot-hygiene`,
++`ui-apply-generic`) and `route to … instead` disambiguation rows
++(`unit-economics-modeling`, `vision-articulation`, `rice-prioritization`,
++`build-buy-partner`, `runway-cognition`, `livewire-architect`, `code-review`).
++
++## What the permit actually covers
++
++83 of the 203 are permitted after the change — not the 120 that remain, and not
++all 203. Permission follows the **declared edge**, not the classification: a
++link is permitted when its source pack declares `suggests` on the target, so a
++safely-degrading link on an edge nobody declared is still a violation, by
++design.
++
++Of the 83, **73 sit on edges this change added and 10 on edges that already
++existed** and that the gate simply did not read (`laravel -> frontend-design` 3,
++`product-basic -> product-discovery` 3, `brand -> ai-image` 2,
++`react -> frontend-design` 1, `frontend-design -> react` 1).
++
++Two load-bearing links sat on an edge the change permits. Both were remediated
++**before the edge was declared** rather than permitted as they stood, so no
++permitted link is load-bearing as it stands:
++
++- `corpus-grounding` gained an **engine-scoped `ATTRIBUTION.md`** beside the
++  code the MIT notice covers. The split is the point: the vendored corpus ships
++  with `frontend-design`, the ported engine sources under `scripts/` ship with
++  this skill in `engineering-base`, and the obligation is "retain this notice",
++  so an `engineering-base`-only install needs the notice locally. The first
++  attempt at this remediation asserted the obligation did not travel at all —
++  false for the engine half, and caught in review.
++- `tailwind-engineer` now states that without `frontend-design` its
++  no-hardcoded-values rule still binds and is checked by reading rather than by
++  a linter.
++
++## The residual: the permit is per EDGE, not per link
++
++This classification is a **one-time hand pass**. Once an edge is declared,
++every future link on it is permitted without anyone re-checking that it
++degrades safely — and `engineering-base` alone now carries 8 of the declared
++edges and most of the 83 permits. The gate's guarantee on those edges weakens
++from *this link cannot dangle* to *this link may dangle, advisedly*.
++
++The adversarial review demonstrated this rather than arguing it: a planted link
++from `code-review` (`engineering-base`) to `laravel-horizon` (`laravel`) left
++the count at 120, the ratchet `within`, and the CI argv at exit 0 — where before
++the change it would have read 204 against a 203 baseline and failed the pull
++request.
++
++What ships against that, and what does not:
++
++- **Ships:** the permitted **count** prints on every run, `--quiet` included,
++  because `--quiet` is exactly what CI passes — a mitigation only visible
++  without it would not have reached the one log that matters.
++  `--show-permitted` names each link and its edge; `--format json` carries
++  `permitted_by_suggests` unconditionally for machine consumers.
++- **Does not ship:** a per-link classification marker, a ratchet on the
++  permitted count, or a recurring re-classification. A reviewer who wants the
++  condition re-verified has to re-run the hand pass.
++
++Stated here rather than left implicit, because a reader of the baseline drop
++would otherwise have to infer it from the mechanism.
++
++## The sibling gate reads `suggests` the other way, deliberately
++
++`src/scripts/lint_rule_skill_pack_reach.ts` states in its header that
++`suggests` is **not** followed, "because it is advisory, the wizard may offer
++it and the user may decline, so an invariant that counted it would pass on
++installs that do not exist". This gate now does follow it. The two are not in
++conflict, and the reason is the direction of the claim each one makes:
++
++- the **reach** gate asserts a route *will resolve* on the installs it covers.
++  Counting an advisory edge there would assert resolution on installs that may
++  not exist, which is a false positive in the dangerous direction.
++- the **boundary** gate reports a link that *may dangle*. An advisory edge is a
++  statement that the author accepts the dangle for a declining consumer — so
++  reading it here downgrades a finding the author has already answered.
++
++Both headers now carry this paragraph, so the next reader meets the distinction
++where they meet the behaviour rather than having to find this page.
++
++## Reproduction
++
++```bash
++./scripts-run src/scripts/lint_pack_boundaries --quiet --show-permitted
++```
++
++The `~` lines are the permitted set with the permitting edge named; the `✗`
++lines are the 120 that remain.
++
++**Sensitivity check, measured rather than derived:** reverting only this
++change's `suggests` additions in `src/config/discovery/packs.yml` yields
++**193** — the 120 plus the 73 that sat on added edges. It does **not** yield
++203: the other 10 permits sit on pre-existing edges a revert does not touch,
++and 203 returns only if the gate also stops reading `suggests` at all. An
++earlier revision of this page claimed 203 here, which would have told a
++reviewer who ran it that either the change or the page was broken.
++
++## The full table
++
++`permitted now` is read from the gate's own `--show-permitted` output on this
++branch, not inferred from the edge. `source:line` is the occurrence's own line,
++corrected in pass 3.
++
++| # | edge | source:line | target | class | permitted now | basis |
++|---|---|---|---|---|---|---|
++| 1 | `ai-video -> engineering-base` | `src/rules/media-sync-ground-truth.md`:76 | `src/rules/non-destructive-by-default.md` | documentation-reference | no | reference section: see also |
++| 2 | `ai-video -> frontend-design` | `src/skills/canvas-design/SKILL.md`:151 | `src/skills/html-deck/SKILL.md` | documentation-reference | no | reference section: see also |
++| 3 | `brand -> ai-image` | `src/skills/brand-identity/SKILL.md`:103 | `src/skills/logo-generation/SKILL.md` | documentation-reference | yes | reference section: see also |
++| 4 | `brand -> ai-image` | `src/skills/brand-to-tokens/SKILL.md`:114 | `src/skills/logo-generation/SKILL.md` | optional-integration | yes | disambiguation / routing section: do not |
++| 5 | `engineering-base -> ai-video` | `src/skills/evaluate-llm-feature/SKILL.md`:41 | `src/skills/prompt-validator/SKILL.md` | optional-integration | no | disambiguation / routing section: when to use |
++| 6 | `engineering-base -> ai-video` | `src/skills/evaluate-llm-feature/SKILL.md`:141 | `src/skills/prompt-validator/SKILL.md` | documentation-reference | no | reference section: see also |
++| 7 | `engineering-base -> brand` | `src/skills/accessibility-auditor/SKILL.md`:180 | `src/rules/brand-consistency.md` | optional-integration | yes | manual review: same sentence as :179 |
++| 8 | `engineering-base -> brand` | `src/skills/existing-ui-audit/SKILL.md`:151 | `src/rules/brand-source-of-truth.md` | documentation-reference | yes | manual review: parenthetical "— see …" after the rule it cites |
++| 9 | `engineering-base -> founder-strategy` | `src/rules/engineering-safety-floor.md`:96 | `src/skills/launch-readiness/SKILL.md` | documentation-reference | no | reference section: see also |
++| 10 | `engineering-base -> frontend-design` | `src/skills/accessibility-auditor/SKILL.md`:63 | `src/skills/design-intelligence/SKILL.md` | optional-integration | yes | manual review: the sentence states the WCAG method stays this skill’s own checklists; the target only enriches it |
++| 11 | `engineering-base -> frontend-design` | `src/skills/accessibility-auditor/SKILL.md`:179 | `src/skills/design-tokens/SKILL.md` | optional-integration | yes | manual review: "this procedure sits beside that authority, it does not duplicate the values" — the self-test runs against whatever ramp exists |
++| 12 | `engineering-base -> frontend-design` | `src/skills/corpus-grounding/SKILL.md`:26 | `src/skills/design-intelligence/SKILL.md` | documentation-reference | yes | index-shaped entry |
++| 13 | `engineering-base -> frontend-design` | `src/skills/corpus-grounding/SKILL.md`:40 | `src/skills/design-intelligence/ATTRIBUTION.md` | load-bearing (remediated) | yes | manual review: classified load-bearing on the PRE-remediation text: it named where the full licence obligations live, and the MIT notice covers the ported engine that ships in this pack. Remediated before the edge was declared — an engine-scoped `ATTRIBUTION.md` now sits beside the code it covers |
++| 14 | `engineering-base -> frontend-design` | `src/skills/corpus-grounding/SKILL.md`:231 | `src/skills/design-intelligence/SKILL.md` | documentation-reference | yes | reference section: see also |
++| 15 | `engineering-base -> frontend-design` | `src/skills/dashboard-design/SKILL.md`:36 | `src/skills/design-intelligence/SKILL.md` | documentation-reference | yes | manual review: parenthetical "(see …)" after a recommendation the row already states |
++| 16 | `engineering-base -> frontend-design` | `src/skills/existing-ui-audit/SKILL.md`:18 | `src/skills/design-intelligence/SKILL.md` | documentation-reference | yes | index-shaped entry |
++| 17 | `engineering-base -> frontend-design` | `src/skills/fe-design/SKILL.md`:149 | `src/skills/design-intelligence/SKILL.md` | optional-integration | yes | disambiguation / routing section: positioning — reference inside the engine, executor outside it |
++| 18 | `engineering-base -> frontend-design` | `src/skills/fe-design/SKILL.md`:187 | `src/skills/design-intelligence/SKILL.md` | optional-integration | yes | manual review: the sentence names its own degraded path: "fall back to the heuristics in this reference … where the corpus reports an evidence gap" |
++| 19 | `engineering-base -> frontend-design` | `src/skills/tailwind-engineer/SKILL.md`:97 | `src/skills/design-tokens/SKILL.md` | load-bearing (remediated) | yes | manual review: classified load-bearing on the PRE-remediation text: the target carries the single token-discipline linter. Remediated before the edge was declared — the skill now states that without `frontend-design` the rule still binds and is checked by reading rather than by a linter |
++| 20 | `engineering-base -> frontend-design` | `src/skills/ui-apply-generic/SKILL.md`:171 | `src/skills/design-intelligence/SKILL.md` | documentation-reference | yes | reference section: see also |
++| 21 | `engineering-base -> frontend-design` | `src/skills/ui-apply-generic/SKILL.md`:175 | `src/skills/design-tokens/SKILL.md` | documentation-reference | yes | reference section: see also |
++| 22 | `engineering-base -> laravel` | `src/skills/api-endpoint/SKILL.md`:35 | `src/skills/laravel-api-endpoint/SKILL.md` | optional-integration | yes | disambiguation / routing section: stack routing |
++| 23 | `engineering-base -> laravel` | `src/skills/api-endpoint/SKILL.md`:69 | `src/skills/laravel-api-endpoint/SKILL.md` | optional-integration | yes | conditional, stack-gated or depth pointer |
++| 24 | `engineering-base -> laravel` | `src/skills/code-refactoring/SKILL.md`:110 | `src/skills/laravel-api-endpoint/SKILL.md` | optional-integration | yes | conditional, stack-gated or depth pointer |
++| 25 | `engineering-base -> laravel` | `src/skills/code-review/SKILL.md`:127 | `src/skills/laravel/SKILL.md` | optional-integration | yes | disambiguation / routing section: change-type routing — load only the checklist the diff needs |
++| 26 | `engineering-base -> laravel` | `src/skills/code-review/SKILL.md`:127 | `src/skills/laravel-validation/SKILL.md` | optional-integration | yes | disambiguation / routing section: change-type routing — load only the checklist the diff needs |
++| 27 | `engineering-base -> laravel` | `src/skills/code-review/SKILL.md`:128 | `src/skills/eloquent/SKILL.md` | optional-integration | yes | disambiguation / routing section: change-type routing — load only the checklist the diff needs |
++| 28 | `engineering-base -> laravel` | `src/skills/code-review/SKILL.md`:128 | `src/skills/pest-testing/SKILL.md` | optional-integration | yes | disambiguation / routing section: change-type routing — load only the checklist the diff needs |
++| 29 | `engineering-base -> laravel` | `src/skills/code-review/SKILL.md`:129 | `src/skills/blade-ui/SKILL.md` | optional-integration | yes | disambiguation / routing section: change-type routing — load only the checklist the diff needs |
++| 30 | `engineering-base -> laravel` | `src/skills/defense-in-depth/SKILL.md`:26 | `src/skills/laravel-validation/SKILL.md` | optional-integration | yes | disambiguation / routing section: when to use |
++| 31 | `engineering-base -> laravel` | `src/skills/error-handling-patterns/SKILL.md`:29 | `src/skills/laravel-validation/SKILL.md` | optional-integration | yes | disambiguation / routing section: when to use |
++| 32 | `engineering-base -> laravel` | `src/skills/error-handling-patterns/SKILL.md`:146 | `src/skills/laravel-validation/SKILL.md` | documentation-reference | yes | reference section: provenance |
++| 33 | `engineering-base -> laravel` | `src/skills/fe-design/SKILL.md`:234 | `src/skills/blade-ui/SKILL.md` | documentation-reference | yes | reference section: related |
++| 34 | `engineering-base -> laravel` | `src/skills/fe-design/SKILL.md`:235 | `src/skills/livewire/SKILL.md` | documentation-reference | yes | reference section: related |
++| 35 | `engineering-base -> laravel` | `src/skills/fe-design/SKILL.md`:236 | `src/skills/flux/SKILL.md` | documentation-reference | yes | reference section: related |
++| 36 | `engineering-base -> laravel` | `src/skills/form-handler/SKILL.md`:20 | `src/skills/laravel-validation/SKILL.md` | documentation-reference | yes | index-shaped entry |
++| 37 | `engineering-base -> laravel` | `src/skills/form-handler/SKILL.md`:39 | `src/skills/laravel-validation/SKILL.md` | optional-integration | yes | disambiguation / routing section: when to use |
++| 38 | `engineering-base -> laravel` | `src/skills/migration-architect/SKILL.md`:21 | `src/skills/laravel-migration/SKILL.md` | optional-integration | yes | conditional, stack-gated or depth pointer |
++| 39 | `engineering-base -> laravel` | `src/skills/migration-architect/SKILL.md`:36 | `src/skills/laravel-migration/SKILL.md` | optional-integration | yes | disambiguation / routing section: when to use |
++| 40 | `engineering-base -> laravel` | `src/skills/migration-architect/SKILL.md`:121 | `src/skills/laravel-migration/SKILL.md` | optional-integration | yes | disambiguation / routing section: do not |
++| 41 | `engineering-base -> laravel` | `src/skills/security-audit/SKILL.md`:136 | `src/skills/laravel/SKILL.md` | optional-integration | yes | conditional, stack-gated or depth pointer |
++| 42 | `engineering-base -> laravel` | `src/skills/security/SKILL.md`:20 | `src/skills/laravel-validation/SKILL.md` | optional-integration | yes | disambiguation / routing section: when to use |
++| 43 | `engineering-base -> laravel` | `src/skills/security/SKILL.md`:31 | `src/skills/laravel/SKILL.md` | optional-integration | yes | disambiguation / routing section: stack-specific carve-outs |
++| 44 | `engineering-base -> laravel` | `src/skills/security/SKILL.md`:31 | `src/skills/laravel-validation/SKILL.md` | optional-integration | yes | disambiguation / routing section: stack-specific carve-outs |
++| 45 | `engineering-base -> laravel` | `src/skills/security/SKILL.md`:31 | `src/skills/laravel-middleware/SKILL.md` | optional-integration | yes | disambiguation / routing section: stack-specific carve-outs |
++| 46 | `engineering-base -> laravel` | `src/skills/test-case-discovery/SKILL.md`:165 | `src/skills/pest-testing/SKILL.md` | optional-integration | yes | manual review: the violating link is the stack alternative in "… or to the stack skill (…)" |
++| 47 | `engineering-base -> laravel` | `src/skills/test-case-discovery/SKILL.md`:208 | `src/skills/pest-testing/SKILL.md` | documentation-reference | yes | reference section: see also |
++| 48 | `engineering-base -> laravel` | `src/skills/test-driven-development/SKILL.md`:370 | `src/skills/pest-testing/SKILL.md` | optional-integration | yes | manual review: routing list row: "Full Pest conventions and Laravel test helpers → …" |
++| 49 | `engineering-base -> laravel` | `src/skills/testing-anti-patterns/SKILL.md`:33 | `src/skills/pest-testing/SKILL.md` | optional-integration | yes | disambiguation / routing section: when to use |
++| 50 | `engineering-base -> laravel` | `src/skills/testing-anti-patterns/SKILL.md`:297 | `src/skills/pest-testing/SKILL.md` | documentation-reference | yes | reference section: provenance |
++| 51 | `engineering-base -> laravel` | `src/skills/testing-anti-patterns/process-anti-patterns.md`:96 | `src/skills/pest-testing/SKILL.md` | documentation-reference | yes | reference section: cross-references |
++| 52 | `engineering-base -> laravel` | `src/skills/threat-modeling/SKILL.md`:107 | `src/skills/laravel-validation/SKILL.md` | optional-integration | yes | manual review: STRIDE table: the control is named inline, the link is the stack-specific deepening |
++| 53 | `engineering-base -> nextjs` | `src/skills/api-endpoint/SKILL.md`:37 | `src/skills/nextjs-patterns/SKILL.md` | optional-integration | yes | disambiguation / routing section: stack routing |
++| 54 | `engineering-base -> nextjs` | `src/skills/code-refactoring/SKILL.md`:111 | `src/skills/nextjs-patterns/SKILL.md` | optional-integration | yes | conditional, stack-gated or depth pointer |
++| 55 | `engineering-base -> nextjs` | `src/skills/code-review/SKILL.md`:131 | `src/skills/nextjs-patterns/SKILL.md` | optional-integration | yes | disambiguation / routing section: change-type routing — load only the checklist the diff needs |
++| 56 | `engineering-base -> nextjs` | `src/skills/security/SKILL.md`:33 | `src/skills/nextjs-patterns/SKILL.md` | optional-integration | yes | disambiguation / routing section: stack-specific carve-outs |
++| 57 | `engineering-base -> ops-people` | `src/skills/data-handling-judgment/SKILL.md`:118 | `src/skills/contracts-cognition/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 58 | `engineering-base -> ops-people` | `src/skills/privacy-review/SKILL.md`:124 | `src/skills/contracts-cognition/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 59 | `engineering-base -> php` | `src/skills/bug-analyzer/SKILL.md`:208 | `src/skills/php-debugging/SKILL.md` | optional-integration | yes | conditional, stack-gated or depth pointer |
++| 60 | `engineering-base -> php` | `src/skills/code-review/SKILL.md`:129 | `src/skills/php-coder/SKILL.md` | optional-integration | yes | disambiguation / routing section: change-type routing — load only the checklist the diff needs |
++| 61 | `engineering-base -> php` | `src/skills/systematic-debugging/SKILL.md`:222 | `src/skills/php-debugging/SKILL.md` | documentation-reference | yes | index-shaped entry |
++| 62 | `engineering-base -> php` | `src/skills/systematic-debugging/SKILL.md`:351 | `src/skills/php-debugging/SKILL.md` | documentation-reference | yes | index-shaped entry |
++| 63 | `engineering-base -> product-basic` | `src/skills/bug-analyzer/SKILL.md`:22 | `src/skills/feature-planning/SKILL.md` | optional-integration | yes | disambiguation / routing section: when to use |
++| 64 | `engineering-base -> react` | `src/skills/code-review/SKILL.md`:131 | `src/skills/react-shadcn-ui/SKILL.md` | optional-integration | yes | disambiguation / routing section: change-type routing — load only the checklist the diff needs |
++| 65 | `engineering-base -> react` | `src/skills/fe-design/SKILL.md`:237 | `src/skills/react-shadcn-ui/SKILL.md` | documentation-reference | yes | reference section: related |
++| 66 | `engineering-base -> symfony` | `src/skills/api-endpoint/SKILL.md`:36 | `src/skills/symfony-workflow/SKILL.md` | optional-integration | yes | disambiguation / routing section: stack routing |
++| 67 | `engineering-base -> symfony` | `src/skills/code-refactoring/SKILL.md`:112 | `src/skills/symfony-workflow/SKILL.md` | optional-integration | yes | conditional, stack-gated or depth pointer |
++| 68 | `engineering-base -> symfony` | `src/skills/code-review/SKILL.md`:130 | `src/skills/symfony-workflow/SKILL.md` | optional-integration | yes | disambiguation / routing section: change-type routing — load only the checklist the diff needs |
++| 69 | `engineering-base -> symfony` | `src/skills/security/SKILL.md`:32 | `src/skills/symfony-workflow/SKILL.md` | optional-integration | yes | disambiguation / routing section: stack-specific carve-outs |
++| 70 | `engineering-base+frontend-design -> brand` | `src/rules/design-fidelity.md`:51 | `src/rules/brand-source-of-truth.md` | documentation-reference | yes | manual review: "This rule mirrors …" — analogy |
++| 71 | `engineering-base+frontend-design -> brand` | `src/rules/design-fidelity.md`:177 | `src/rules/brand-source-of-truth.md` | documentation-reference | yes | reference section: see also |
++| 72 | `engineering-base+frontend-design -> brand` | `src/rules/design-fidelity.md`:177 | `src/rules/brand-consistency.md` | documentation-reference | yes | reference section: see also |
++| 73 | `engineering-base+frontend-design -> frontend-design` | `src/rules/design-fidelity.md`:144 | `src/skills/design-intelligence/SKILL.md` | optional-integration | yes | disambiguation / routing section: when not to fire |
++| 74 | `engineering-base+frontend-design -> frontend-design` | `src/rules/design-fidelity.md`:179 | `src/rules/ui-audit-gate.md` | documentation-reference | yes | reference section: see also |
++| 75 | `finance-advanced -> founder-strategy` | `src/skills/dcf-modeling/SKILL.md`:83 | `src/skills/okr-tree-modeling/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 76 | `finance-advanced -> founder-strategy` | `src/skills/scenario-modeling/SKILL.md`:103 | `src/skills/build-buy-partner/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 77 | `finance-advanced -> product-basic` | `src/skills/dcf-modeling/SKILL.md`:82 | `src/skills/rice-prioritization/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 78 | `finance-basic -> finance-advanced` | `src/skills/forecasting/SKILL.md`:130 | `src/skills/scenario-modeling/SKILL.md` | documentation-reference | yes | reference section: related skills |
++| 79 | `finance-basic -> finance-advanced` | `src/skills/runway-cognition/SKILL.md`:102 | `src/skills/scenario-modeling/SKILL.md` | documentation-reference | yes | reference section: related skills |
++| 80 | `finance-basic -> finance-advanced` | `src/skills/unit-economics-modeling/SKILL.md`:135 | `src/skills/dcf-modeling/SKILL.md` | documentation-reference | yes | reference section: related skills |
++| 81 | `finance-basic -> finance-advanced` | `src/skills/unit-economics-modeling/SKILL.md`:140 | `src/skills/scenario-modeling/SKILL.md` | documentation-reference | yes | reference section: related skills |
++| 82 | `finance-basic -> founder-strategy` | `src/skills/runway-cognition/SKILL.md`:103 | `src/skills/fundraising-narrative/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 83 | `finance-basic -> founder-strategy` | `src/skills/unit-economics-modeling/SKILL.md`:138 | `src/skills/okr-tree-modeling/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 84 | `finance-basic -> gtm-sales` | `src/skills/forecasting/SKILL.md`:127 | `src/skills/deal-qualification-meddic/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 85 | `finance-basic -> gtm-sales` | `src/skills/forecasting/SKILL.md`:128 | `src/skills/forecast-accuracy/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 86 | `finance-basic -> ops-people` | `src/skills/runway-cognition/SKILL.md`:104 | `src/skills/org-design/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 87 | `finance-basic -> product-basic` | `src/skills/unit-economics-modeling/SKILL.md`:136 | `src/skills/funnel-analysis/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 88 | `finance-basic -> product-basic` | `src/skills/unit-economics-modeling/SKILL.md`:137 | `src/skills/rice-prioritization/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 89 | `founder-strategy -> engineering-base` | `src/skills/launch-readiness/SKILL.md`:27 | `src/skills/finishing-a-development-branch/SKILL.md` | optional-integration | no | disambiguation / routing section: when to use |
++| 90 | `founder-strategy -> engineering-base` | `src/skills/launch-readiness/SKILL.md`:176 | `src/skills/finishing-a-development-branch/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 91 | `founder-strategy -> finance-advanced` | `src/skills/build-buy-partner/SKILL.md`:109 | `src/skills/scenario-modeling/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 92 | `founder-strategy -> finance-advanced` | `src/skills/okr-tree-modeling/SKILL.md`:87 | `src/skills/dcf-modeling/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 93 | `founder-strategy -> finance-basic` | `src/skills/market-entry-analysis/SKILL.md`:111 | `src/skills/unit-economics-modeling/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 94 | `founder-strategy -> gtm-marketing` | `src/rules/strategy-safety-floor.md`:107 | `src/skills/positioning-strategy/SKILL.md` | documentation-reference | no | reference section: see also |
++| 95 | `founder-strategy -> gtm-marketing` | `src/skills/competitive-moat-analysis/SKILL.md`:115 | `src/skills/positioning-strategy/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 96 | `founder-strategy -> gtm-marketing` | `src/skills/competitive-moat-analysis/SKILL.md`:116 | `src/skills/competitive-positioning/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 97 | `founder-strategy -> gtm-marketing` | `src/skills/fundraising-narrative/SKILL.md`:65 | `src/skills/positioning-strategy/SKILL.md` | optional-integration | no | disambiguation / routing section: step 0: inherit the positioning frame and vision anchor |
++| 98 | `founder-strategy -> gtm-marketing` | `src/skills/fundraising-narrative/SKILL.md`:156 | `src/skills/messaging-architecture/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 99 | `founder-strategy -> gtm-marketing` | `src/skills/fundraising-narrative/SKILL.md`:157 | `src/skills/positioning-strategy/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 100 | `founder-strategy -> gtm-marketing` | `src/skills/launch-readiness/SKILL.md`:28 | `src/skills/release-comms/SKILL.md` | optional-integration | no | disambiguation / routing section: when to use |
++| 101 | `founder-strategy -> gtm-marketing` | `src/skills/launch-readiness/SKILL.md`:65 | `src/skills/release-comms/SKILL.md` | optional-integration | no | manual review: parenthetical hand-off "(hand off to … for the prose)"; the checklist row stands without it |
++| 102 | `founder-strategy -> gtm-marketing` | `src/skills/launch-readiness/SKILL.md`:161 | `src/skills/release-comms/SKILL.md` | optional-integration | no | disambiguation / routing section: 6. hand back |
++| 103 | `founder-strategy -> gtm-marketing` | `src/skills/launch-readiness/SKILL.md`:178 | `src/skills/release-comms/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 104 | `founder-strategy -> gtm-marketing` | `src/skills/market-entry-analysis/SKILL.md`:110 | `src/skills/competitive-positioning/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 105 | `founder-strategy -> gtm-marketing` | `src/skills/market-entry-analysis/SKILL.md`:112 | `src/skills/content-funnel-design/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 106 | `founder-strategy -> gtm-marketing` | `src/skills/vision-articulation/SKILL.md`:111 | `src/skills/positioning-strategy/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 107 | `founder-strategy -> gtm-marketing` | `src/skills/vision-articulation/SKILL.md`:111 | `src/skills/messaging-architecture/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 108 | `founder-strategy -> ops-people` | `src/skills/build-buy-partner/SKILL.md`:110 | `src/skills/org-design/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 109 | `founder-strategy -> product-basic` | `src/skills/launch-readiness/SKILL.md`:180 | `src/skills/stakeholder-tradeoff/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 110 | `founder-strategy -> product-basic` | `src/skills/market-entry-analysis/SKILL.md`:112 | `src/skills/funnel-analysis/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 111 | `founder-strategy -> product-basic` | `src/skills/okr-tree-modeling/SKILL.md`:85 | `src/skills/rice-prioritization/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 112 | `founder-strategy -> product-basic` | `src/skills/okr-tree-modeling/SKILL.md`:86 | `src/skills/funnel-analysis/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 113 | `frontend-design -> ai-video` | `src/skills/html-deck/SKILL.md`:40 | `src/skills/canvas-design/SKILL.md` | optional-integration | no | disambiguation / routing section: when to use |
++| 114 | `frontend-design -> ai-video` | `src/skills/html-deck/SKILL.md`:149 | `src/skills/canvas-design/SKILL.md` | documentation-reference | no | reference section: see also |
++| 115 | `frontend-design -> brand` | `src/skills/html-deck/SKILL.md`:151 | `src/skills/brand-to-tokens/SKILL.md` | documentation-reference | yes | reference section: see also |
++| 116 | `frontend-design -> brand` | `src/skills/typography-system/SKILL.md`:98 | `src/rules/brand-source-of-truth.md` | optional-integration | yes | manual review: "— if the brand already registers fonts" — conditional |
++| 117 | `frontend-design -> brand` | `src/skills/typography-system/SKILL.md`:186 | `src/skills/brand/SKILL.md` | documentation-reference | yes | reference section: see also |
++| 118 | `frontend-design -> react` | `src/skills/design-tokens/SKILL.md`:174 | `src/skills/react-shadcn-ui/SKILL.md` | documentation-reference | yes | reference section: see also |
++| 119 | `gtm-marketing -> ai-image+ai-video` | `src/skills/humanizer/SKILL.md`:132 | `src/rules/media-governance-routing.md` | documentation-reference | no | manual review: parenthetical citation of the floors the paragraph already names |
++| 120 | `gtm-marketing -> engineering-base` | `src/skills/humanizer/SKILL.md`:45 | `src/rules/untrusted-input-defense.md` | documentation-reference | no | manual review: parenthetical citation; the injection rule is stated inline in the same bullet |
++| 121 | `gtm-marketing -> engineering-base` | `src/skills/release-comms/SKILL.md`:91 | `src/skills/incident-commander/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 122 | `gtm-marketing -> finance-advanced` | `src/skills/competitive-positioning/SKILL.md`:122 | `src/skills/dcf-modeling/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 123 | `gtm-marketing -> finance-basic` | `src/skills/positioning-strategy/SKILL.md`:125 | `src/skills/unit-economics-modeling/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 124 | `gtm-marketing -> founder-strategy` | `src/skills/gtm-launch/SKILL.md`:123 | `src/skills/launch-readiness/SKILL.md` | optional-integration | no | disambiguation / routing section: step 6: hand back |
++| 125 | `gtm-marketing -> founder-strategy` | `src/skills/gtm-launch/SKILL.md`:138 | `src/skills/launch-readiness/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 126 | `gtm-marketing -> founder-strategy` | `src/skills/messaging-architecture/SKILL.md`:111 | `src/skills/fundraising-narrative/SKILL.md` | optional-integration | no | disambiguation / routing section: step 5: hand back |
++| 127 | `gtm-marketing -> founder-strategy` | `src/skills/positioning-strategy/SKILL.md`:123 | `src/skills/fundraising-narrative/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 128 | `gtm-marketing -> product-basic` | `src/skills/competitive-positioning/SKILL.md`:124 | `src/skills/stakeholder-tradeoff/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 129 | `gtm-marketing -> product-basic` | `src/skills/content-funnel-design/SKILL.md`:62 | `src/skills/funnel-analysis/SKILL.md` | load-bearing | no | inline prose, no conditional or reference marker |
++| 130 | `gtm-marketing -> product-basic` | `src/skills/content-funnel-design/SKILL.md`:126 | `src/skills/funnel-analysis/SKILL.md` | optional-integration | no | disambiguation / routing section: step 6: hand back |
++| 131 | `gtm-marketing -> product-basic` | `src/skills/content-funnel-design/SKILL.md`:142 | `src/skills/funnel-analysis/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 132 | `gtm-marketing -> product-basic` | `src/skills/gtm-launch/SKILL.md`:139 | `src/skills/retention-loops/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 133 | `gtm-marketing -> product-basic` | `src/skills/release-comms/SKILL.md`:93 | `src/skills/funnel-analysis/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 134 | `gtm-marketing -> product-basic` | `src/skills/release-comms/SKILL.md`:94 | `src/skills/rice-prioritization/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 135 | `gtm-marketing -> product-discovery` | `src/skills/content-funnel-design/SKILL.md`:128 | `src/skills/activation-design/SKILL.md` | optional-integration | no | disambiguation / routing section: step 6: hand back |
++| 136 | `gtm-marketing -> product-discovery` | `src/skills/content-funnel-design/SKILL.md`:143 | `src/skills/activation-design/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 137 | `gtm-marketing -> product-discovery` | `src/skills/positioning-strategy/SKILL.md`:55 | `src/skills/customer-research/SKILL.md` | optional-integration | no | manual review: "If you cannot finish the sentence, route to …" — conditional; the marker sits on the preceding line |
++| 138 | `gtm-marketing -> product-discovery` | `src/skills/release-comms/SKILL.md`:60 | `src/skills/customer-research/SKILL.md` | optional-integration | no | manual review: "(cite … if a switch-event surfaced)" — conditional |
++| 139 | `gtm-marketing -> product-discovery` | `src/skills/release-comms/SKILL.md`:92 | `src/skills/customer-research/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 140 | `gtm-marketing -> product-discovery` | `src/skills/release-comms/SKILL.md`:130 | `src/skills/customer-research/SKILL.md` | documentation-reference | no | manual review: inside a worked example ("Sprint 47 ships …"); sample output, not a step |
++| 141 | `gtm-sales -> product-basic` | `src/skills/deal-qualification-meddic/SKILL.md`:140 | `src/skills/funnel-analysis/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 142 | `gtm-sales -> product-basic` | `src/skills/expansion-playbook/SKILL.md`:141 | `src/skills/churn-prevention/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 143 | `gtm-sales -> product-basic` | `src/skills/expansion-playbook/SKILL.md`:143 | `src/skills/onboarding-design/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 144 | `gtm-sales -> product-basic` | `src/skills/expansion-playbook/SKILL.md`:145 | `src/skills/retention-loops/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 145 | `gtm-sales -> product-basic` | `src/skills/pipeline-strategy/SKILL.md`:133 | `src/skills/funnel-analysis/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 146 | `laravel -> frontend-design` | `src/skills/blade-ui/SKILL.md`:24 | `src/skills/design-intelligence/SKILL.md` | documentation-reference | yes | index-shaped entry |
++| 147 | `laravel -> frontend-design` | `src/skills/flux/SKILL.md`:23 | `src/skills/design-intelligence/SKILL.md` | documentation-reference | yes | index-shaped entry |
++| 148 | `laravel -> frontend-design` | `src/skills/livewire/SKILL.md`:23 | `src/skills/design-intelligence/SKILL.md` | documentation-reference | yes | index-shaped entry |
++| 149 | `laravel -> react` | `src/skills/livewire-architect/SKILL.md`:44 | `src/skills/react-shadcn-ui/SKILL.md` | optional-integration | no | disambiguation / routing section: when to use |
++| 150 | `legal-review-prep -> engineering-base` | `src/rules/legal-safety-floor.md`:139 | `src/skills/privacy-review/SKILL.md` | documentation-reference | no | reference section: see also |
++| 151 | `legal-review-prep -> engineering-base` | `src/skills/dpa-review/SKILL.md`:28 | `src/skills/privacy-review/SKILL.md` | optional-integration | no | disambiguation / routing section: when to use |
++| 152 | `legal-review-prep -> engineering-base` | `src/skills/dpa-review/SKILL.md`:28 | `src/skills/data-handling-judgment/SKILL.md` | optional-integration | no | disambiguation / routing section: when to use |
++| 153 | `legal-review-prep -> engineering-base` | `src/skills/dpa-review/SKILL.md`:82 | `src/skills/privacy-review/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 154 | `legal-review-prep -> engineering-base` | `src/skills/dpa-review/SKILL.md`:83 | `src/skills/data-handling-judgment/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 155 | `legal-review-prep -> ops-people` | `src/rules/legal-safety-floor.md`:138 | `src/skills/contracts-cognition/SKILL.md` | documentation-reference | no | reference section: see also |
++| 156 | `legal-review-prep -> ops-people` | `src/skills/contract-review/SKILL.md`:28 | `src/skills/contracts-cognition/SKILL.md` | optional-integration | no | disambiguation / routing section: when to use |
++| 157 | `legal-review-prep -> ops-people` | `src/skills/contract-review/SKILL.md`:82 | `src/skills/contracts-cognition/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 158 | `legal-review-prep -> ops-people` | `src/skills/nda-triage/SKILL.md`:73 | `src/skills/contracts-cognition/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 159 | `meta -> ai-image` | `src/rules/doc-screenshot-hygiene.md`:101 | `src/skills/image-editing/SKILL.md` | documentation-reference | no | reference section: see also |
++| 160 | `meta -> ai-image` | `src/skills/screenshot-hygiene/SKILL.md`:170 | `src/skills/image-editing/SKILL.md` | documentation-reference | no | reference section: see also |
++| 161 | `meta -> ai-video` | `src/rules/doc-screenshot-hygiene.md`:101 | `src/skills/image-analyser/SKILL.md` | documentation-reference | no | reference section: see also |
++| 162 | `meta -> ai-video` | `src/skills/screenshot-hygiene/SKILL.md`:169 | `src/skills/image-analyser/SKILL.md` | documentation-reference | no | reference section: see also |
++| 163 | `meta -> finance-basic` | `src/skills/docx-authoring/SKILL.md`:89 | `src/skills/spreadsheet-authoring/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 164 | `meta -> finance-basic` | `src/skills/pdf-tools/SKILL.md`:89 | `src/skills/spreadsheet-authoring/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 165 | `meta -> frontend-design` | `src/rules/architecture.md`:45 | `src/rules/ui-audit-gate.md` | load-bearing | no | inline prose, no conditional or reference marker |
++| 166 | `meta -> frontend-design` | `src/skills/docx-authoring/SKILL.md`:89 | `src/skills/html-deck/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 167 | `meta -> gtm-marketing` | `src/skills/doc-coauthoring/SKILL.md`:162 | `src/skills/humanizer/SKILL.md` | optional-integration | no | disambiguation / routing section: do not |
++| 168 | `meta -> gtm-marketing` | `src/skills/readme-writing-package/SKILL.md`:355 | `src/skills/humanizer/SKILL.md` | optional-integration | no | disambiguation / routing section: do not |
++| 169 | `meta -> gtm-marketing` | `src/skills/readme-writing/SKILL.md`:250 | `src/skills/humanizer/SKILL.md` | optional-integration | no | disambiguation / routing section: do not |
++| 170 | `meta -> laravel` | `src/rules/architecture.md`:39 | `src/skills/laravel/SKILL.md` | optional-integration | no | disambiguation / routing section: general principles |
++| 171 | `meta -> laravel` | `src/rules/architecture.md`:39 | `src/skills/laravel-validation/SKILL.md` | optional-integration | no | disambiguation / routing section: general principles |
++| 172 | `meta -> nextjs` | `src/rules/architecture.md`:41 | `src/skills/nextjs-patterns/SKILL.md` | optional-integration | no | disambiguation / routing section: general principles |
++| 173 | `meta -> product-basic` | `src/skills/complexity-first-planning/SKILL.md`:122 | `src/skills/feature-planning/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 174 | `meta -> product-basic` | `src/skills/decision-record/SKILL.md`:222 | `src/skills/stakeholder-tradeoff/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 175 | `meta -> product-basic` | `src/skills/decision-record/SKILL.md`:230 | `src/skills/rice-prioritization/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 176 | `meta -> product-basic` | `src/skills/reasoning-orchestrator/SKILL.md`:24 | `src/skills/feature-planning/SKILL.md` | documentation-reference | no | manual review: analogy ("like X and Y"), not an instruction |
++| 177 | `meta -> product-basic` | `src/skills/refine-prompt/SKILL.md`:30 | `src/skills/refine-ticket/SKILL.md` | optional-integration | no | conditional, stack-gated or depth pointer |
++| 178 | `meta -> product-basic` | `src/skills/refine-prompt/SKILL.md`:46 | `src/skills/refine-ticket/SKILL.md` | optional-integration | no | disambiguation / routing section: when not to use (near-misses) |
++| 179 | `meta -> product-basic` | `src/skills/refine-prompt/SKILL.md`:264 | `src/skills/refine-ticket/SKILL.md` | optional-integration | no | disambiguation / routing section: do not |
++| 180 | `meta -> product-basic` | `src/skills/refine-prompt/SKILL.md`:288 | `src/skills/refine-ticket/SKILL.md` | documentation-reference | no | reference section: see also |
++| 181 | `meta -> python` | `src/skills/prompt-engineering-patterns/SKILL.md`:148 | `src/skills/async-python-patterns/SKILL.md` | documentation-reference | no | reference section: provenance |
++| 182 | `meta -> symfony` | `src/rules/architecture.md`:40 | `src/skills/symfony-workflow/SKILL.md` | optional-integration | no | disambiguation / routing section: general principles |
++| 183 | `ops-people -> engineering-base` | `src/skills/contracts-cognition/SKILL.md`:113 | `src/skills/privacy-review/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 184 | `ops-people -> engineering-base` | `src/skills/contracts-cognition/SKILL.md`:114 | `src/skills/data-handling-judgment/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 185 | `ops-people -> finance-basic` | `src/skills/throughput-vs-morale-tradeoff/SKILL.md`:131 | `src/skills/runway-cognition/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 186 | `ops-people -> founder-strategy` | `src/skills/contracts-cognition/SKILL.md`:115 | `src/skills/build-buy-partner/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 187 | `ops-people -> product-basic` | `src/skills/onboarding-program/SKILL.md`:27 | `src/skills/onboarding-design/SKILL.md` | optional-integration | no | disambiguation / routing section: when to use |
++| 188 | `ops-people -> product-basic` | `src/skills/onboarding-program/SKILL.md`:121 | `src/skills/onboarding-design/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 189 | `product-basic -> finance-advanced` | `src/skills/funnel-analysis/SKILL.md`:119 | `src/skills/dcf-modeling/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 190 | `product-basic -> finance-advanced` | `src/skills/rice-prioritization/SKILL.md`:95 | `src/skills/dcf-modeling/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 191 | `product-basic -> finance-basic` | `src/skills/funnel-analysis/SKILL.md`:116 | `src/skills/unit-economics-modeling/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 192 | `product-basic -> finance-basic` | `src/skills/rice-prioritization/SKILL.md`:96 | `src/skills/unit-economics-modeling/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 193 | `product-basic -> founder-strategy` | `src/skills/funnel-analysis/SKILL.md`:118 | `src/skills/okr-tree-modeling/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 194 | `product-basic -> founder-strategy` | `src/skills/rice-prioritization/SKILL.md`:93 | `src/skills/okr-tree-modeling/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 195 | `product-basic -> gtm-sales` | `src/skills/churn-prevention/SKILL.md`:112 | `src/skills/expansion-playbook/SKILL.md` | optional-integration | no | disambiguation / routing section: step 5: hand back |
++| 196 | `product-basic -> gtm-sales` | `src/skills/churn-prevention/SKILL.md`:128 | `src/skills/expansion-playbook/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 197 | `product-basic -> gtm-sales` | `src/skills/onboarding-design/SKILL.md`:128 | `src/skills/expansion-playbook/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 198 | `product-basic -> gtm-sales` | `src/skills/retention-loops/SKILL.md`:132 | `src/skills/expansion-playbook/SKILL.md` | documentation-reference | no | reference section: related skills |
++| 199 | `product-basic -> product-discovery` | `src/skills/onboarding-design/SKILL.md`:132 | `src/skills/activation-design/SKILL.md` | documentation-reference | yes | reference section: related skills |
++| 200 | `product-basic -> product-discovery` | `src/skills/retention-loops/SKILL.md`:113 | `src/skills/activation-design/SKILL.md` | optional-integration | yes | disambiguation / routing section: step 5: hand back |
++| 201 | `product-basic -> product-discovery` | `src/skills/retention-loops/SKILL.md`:134 | `src/skills/activation-design/SKILL.md` | documentation-reference | yes | reference section: related skills |
++| 202 | `react -> frontend-design` | `src/skills/react-shadcn-ui/SKILL.md`:36 | `src/skills/design-intelligence/SKILL.md` | documentation-reference | yes | index-shaped entry |
++| 203 | `scale-discipline -> history-discipline` | `src/rules/scale-discipline.md`:112 | `src/rules/history-discipline.md` | documentation-reference | yes | reference section: see also |
+diff --git a/agents/roadmaps/archive/road-to-gates-a-pull-request-can-hear.md b/agents/roadmaps/archive/road-to-gates-a-pull-request-can-hear.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1d8b2ad6ccdbf64a644d153ecec4f8f1c5affbf2
+--- /dev/null
++++ b/agents/roadmaps/archive/road-to-gates-a-pull-request-can-hear.md
+@@ -0,0 +1,200 @@
++---
++complexity: lightweight
++status: ready
++execution:
++  mode: phase-checkpoints
++estate_offset_exempt: "Five gates run somewhere other than where a pull request can hear them: one runs on every PR and cannot fail it, one runs in no workflow at all, one writes a tracked file on every read, one has no caller, and one contract names a required-check set the ruleset no longer has. Archiving or parking a roadmap does not buy this — each item is open and measured today. Merging into the nearest owner, stubs/road-to-main-protection-ruleset-changes, was rejected: that stub holds repository-admin writes to the ruleset, and every step here is a tree change that reads the ruleset and never writes it."
++estate_growth_exempt: "Grows active_roadmaps by one: the owner asked on 2026-10-06 for this round's roadmaps to land as ready in one change; no live roadmap owns the gap between where a gate runs and where a pull request is decided."
++relates:
++  - slug: road-to-main-protection-ruleset-changes
++    relation: disjoint
++    note: "Stub. Owns every admin write to the `main protection` ruleset; Phase 5 here reads that ruleset and compares, and changes nothing on it."
++---
++# Road to gates a pull request can hear
++
++> **Source:** an external review round (opaque id inbox-2026-10-e), consumed
++> into `agents/tmp.old/inbox-2026-10-e/`. Every anchor below was re-read at
++> `main` @ `a75bb3210` on 2026-10-06, and the line numbers are the ones that
++> commit carries.
++
++## Goal
++
++A gate this tree treats as protection either can change the outcome of the
++pull request that would break it, or says in its own prose that it cannot.
++Nothing that only reads writes a tracked file. The one mutating proof run has
++a caller that records when it last ran. The contract that lists the required
++checks agrees with the ruleset, and a report says so when it does not.
++
++## Context
++
++- The workflow-security audit runs on every pull request and cannot fail one.
++  `.github/workflows/consistency.yml:292-293` runs
++  `./scripts-run src/scripts/lint_workflow_security` with no `--strict`; the
++  comment above it (`:279-284`) says only `--strict` turns a HIGH into exit 1,
++  that the severity model is council-locked (2026-06-13), and that promotion is
++  "recorded unresolved". The record is
++  `agents/evidence/analysis/workflow-security-net-degraded-decision.md`, titled
++  "a decision taken with no council seat available" (`:2`). The gate-coverage
++  row pins `argv: []` and states that a planted HIGH "would be REPORTED and the
++  gate would still exit 0" (`src/config/gate-coverage.yml:3232-3244`). The
++  16.3.0 release review filed it as finding `f733a2f9e542`
++  (`agents/evidence/release-findings/16.3.0.json:46-51`).
++- Pack boundaries run in no workflow. `grep -l lint_pack_boundaries
++  .github/workflows/*.yml` returns nothing; the only caller is the
++  `lint-pack-boundaries` task (`taskfiles/content.yml:439-442`) listed under
++  `task ci` (`Taskfile.yml:379`), and the workflows themselves record that no
++  workflow invokes `task ci` (`.github/workflows/skill-lint.yml:95`). It is green
++  over a baseline of 203 violations
++  (`src/config/gate-violation-baselines.json:77-80`), whose note ends: closing
++  the base-into-narrow mismatch "needs a schema decision — an advisory edge this
++  gate reads, or an exemption for base packs — and that is a product call, not
++  cleanup."
++- A read writes. `src/scripts/audit_user_type_axis.ts:271-272` writes
++  `agents/reports/user-type-axis-audit.md` (`REPORT_PATH`, `:52`) on every run,
++  unconditionally; the file is tracked, and the task `lint-user-type-axis`
++  (`taskfiles/ci-fast.yml:779-782`) calls it as a lint.
++- The mutating proof has no caller. `check_gate_coverage --canary`
++  (`src/scripts/check_gate_coverage.ts:40`) is named by no task, workflow or
++  `package.json` script; the gate itself prints "declared, not run — the
++  mutating --canary path is operator-invoked and off the per-PR workflow"
++  (`:418`). The last ledger is
++  `agents/evidence/reviews/canary/gate-surface-2026-08-c1.md`, dated 2026-08-02.
++- The required-check list disagrees with the ruleset it describes.
++  `docs/contracts/branch-protection-policy.md:79` marks
++  `Sync + Generate Tools Consistency` as "the only required one"; commit
++  `540ee7a0b` (#2169) records that `main protection` requires two contexts, that
++  one and `Standing payload delta + budget gate`.
++  `src/scripts/print_required_checks.ts:132` hard-codes the one-element list and
++  is contractually offline (`:126-130`), so nothing compares it to the live
++  ruleset.
++
++## Phase 1 — Control readings
++
++- [x] **1.1 An injected HIGH, read under both argvs.** A test plants a fixture
++      workflow carrying a `pull_request_target` untrusted checkout in a temp
++      tree and runs the gate twice: under the argv
++      `.github/workflows/consistency.yml` runs it exits 0 with the HIGH in its
++      output; under `--strict` it exits 1. This is the reading every later
++      step argues from.
++      verify: `npx vitest run tests/scripts/workflow_security_argv_control.test.ts` -> 0
++- [x] **1.2 Pack boundaries are run by no workflow, as a recorded fact.** The
++      grep result and the `task ci` chain that holds the only caller are
++      written to `agents/evidence/analysis/gates-a-pr-can-hear-2026-10.md`
++      with its `evidence-type` marker, beside 1.1's two exit codes.
++      verify: `grep -c 'lint_pack_boundaries' agents/evidence/analysis/gates-a-pr-can-hear-2026-10.md` -> /^[1-9]/
++
++## Phase 2 — The workflow-security severity
++
++- [x] **2.1 The step follows
++      the decision.** Under (a): the CI step gains `--strict`, the
++      gate-coverage row's `argv` becomes `["--strict"]` and its
++      `no_canary_reason` is replaced by a canary recipe. Under (b): the step
++      name and comment keep warn-only, and every sentence in `docs/` or
++      `README.md` that says the audit can fail a pull request is corrected.
++      verify: `npx vitest run tests/scripts/workflow_security_argv_control.test.ts` -> 0
++
++## Phase 3 — Pack boundaries a pull request runs
++
++- [x] **3.1 A pull-request step with the manifest's argv.** `consistency.yml`
++      gains a step running `./scripts-run src/scripts/lint_pack_boundaries`
++      with the argv a new gate-coverage row declares, so a new violation above
++      the 203 baseline fails the PR that adds it.
++      verify: `grep -c 'lint_pack_boundaries' .github/workflows/consistency.yml` -> /^[1-9]/
++- [x] **3.2 Re-baseline
++      under the decided rule.** The gate reads the chosen edge or exemption;
++      the baseline count in `src/config/gate-violation-baselines.json` drops
++      by the links that rule now admits, and the note names the decision.
++      verify: `npx vitest run tests/scripts/lint_pack_boundaries_base_narrow.test.ts` -> 0
++
++## Phase 4 — Reads that do not write, and a canary that runs
++
++- [x] **4.1 The audit writes only when asked.**
++      `audit_user_type_axis` writes `REPORT_PATH` only under `--write`; the
++      `lint-user-type-axis` task keeps reading, and a regeneration task passes
++      `--write`.
++      A test runs it in a temp copy and asserts `git status --porcelain
++      agents/reports/` is empty afterwards.
++      verify: `npx vitest run tests/scripts/audit_user_type_axis_no_write.test.ts` -> 0
++- [x] **4.2 A scheduled caller for the canary.** A scheduled workflow runs
++      `./scripts-run src/scripts/check_gate_coverage --canary --ledger <file>`
++      from `.github/workflows/gate-canary.yml`, at least as often as
++      `adversarial-review-protocol` § 6 requires, and
++      uploads the ledger as a run artifact, so "last run" is a date a reader
++      can find. It is not a required check.
++      verify: `grep -c 'check_gate_coverage --canary' .github/workflows/gate-canary.yml` -> /^[1-9]/
++
++## Phase 5 — The required checks the contract names
++
++- [x] **5.1 The contract names both contexts.**
++      `branch-protection-policy.md` and `print_required_checks.ts:132` list
++      the two contexts #2169 recorded, with the date the ruleset was read.
++      verify: `grep -c 'Standing payload delta + budget gate' src/scripts/print_required_checks.ts` -> /^[1-9]/
++- [x] **5.2 A read-only comparator.** A `report_` script reads
++      `gh api repos/{owner}/{repo}/rulesets`, extracts the required status
++      contexts of `main protection`, compares them to the contract's list and
++      exits non-zero on a mismatch. It is run by hand or on a schedule, and is
++      not wired as a required check; it writes nothing.
++      verify: `npx vitest run tests/scripts/report_required_checks_drift.test.ts` -> 0
++
++## What this roadmap deliberately does not do
++
++- No write to the ruleset, no new required check, no merge-queue change — the
++  stub in `relates` owns admin writes.
++- No re-tiering of the workflow-security severity model by agent judgement;
++  Phase 2 waits for the council.
++- No pack-schema change chosen here; 3.2 waits for the product call.
++- No full-pipeline local run as a step.
++
++## Acceptance Criteria
++
++- [x] AC-1 — A test shows, for the argv CI runs, whether an injected HIGH
++      fails the job, and the CI comment states the same outcome.
++- [x] AC-2 — A pull request that adds a pack-boundary violation above the
++      recorded baseline gets a red check from a workflow.
++- [x] AC-3 — Running `audit_user_type_axis` without `--write` leaves the
++      working tree clean.
++- [x] AC-4 — The canary path has a scheduled caller whose ledger carries a
++      date.
++- [x] AC-5 — The contract's required-check list matches the ruleset, and the
++      comparator exits non-zero on a fixture where they differ.
++
++## Decisions
++
++| ID | ownership | resolved by | decision | evidence | revisit if |
++|---|---|---|---|---|---|
++| D1 | reversible-technical | evidence | Control reading before any argv change | The gate-coverage row already predicts exit 0; 1.1 turns the prediction into a test | — |
++| D2 | reversible-technical | agent | Pack boundaries join `consistency.yml` rather than a new workflow | That workflow already hosts the audits moved out of `task ci` for the same reason (`:274-277`) | The step's runtime pushes the job past its timeout |
++| D3 | reversible-technical | agent | The canary is scheduled, never per-PR | It plants real files; the gate's own prose keeps it off the per-PR path (`check_gate_coverage.ts:397-399`) | The canary is rewritten to plant only in a temp tree |
++| D4 | reversible-technical | agent | The ruleset comparator is a report, not a required check | `print_required_checks` is contractually offline; a network read cannot sit in its place | The comparator is wanted as a gate after one release of reports |
++| D5 | contested-technical | council:2026-10-07 resolve-blockers | `pack-boundary-base-narrow-edge` (a): `packs.yml` gains an advisory, non-installing `suggests` edge that `lint_pack_boundaries.ts` reads as allowing a base-to-narrow link. Before 3.2 re-baselines, the 203 baselined links are classified (documentation reference / optional integration / load-bearing); only links that degrade safely when the target pack is absent may be permitted, and the linter reports the permitting edge. | AI council 2026-10-07, anthropic + openai, 2/2 present, both (a) with the classification condition, $0.00. Adopted 2026-10-08 under the owner's delegation of council-decidable questions. | the classification finds a meaningful share load-bearing (one seat named >20 %) — then neither option, and the links stay prose until they degrade safely |
++
++## Blockers
++
++### blocker: workflow-security-severity
++- **Status:** resolved
++- **Owner:** council
++- **Blocks:** step 2.1, AC-1
++- **What to do:** pick exactly one — (a) add `--strict` to the step in `.github/workflows/consistency.yml` and set `argv: ["--strict"]` on the `lint_workflow_security` row of `src/config/gate-coverage.yml`, or (b) keep warn-only and correct every sentence that claims the audit can fail a pull request, recording the reasoning in `agents/evidence/analysis/workflow-security-net-degraded-decision.md`.
++- **Resolved when:** a council verdict with two seats is recorded in `agents/evidence/analysis/workflow-security-net-degraded-decision.md` naming (a) or (b), as a decision-revisit of the 2026-06-13 lock.
++- **Recommendation:** (a) — the decision page records that the only reason not to was that no council seat was available, and `agent-config council:status` is the check that answers whether that still holds.
++- **If you do nothing:** the audit stays a log line; a HIGH in a workflow change merges with a green check.
++- **Resolution (2026-10-07):** option (a), AI council 2/2 (anthropic + openai, one round with peer review, $0.00 metered), recorded as a decision-revisit in `agents/evidence/analysis/workflow-security-net-degraded-decision.md` § Revisited 2026-10-07. The step runs `--strict`, the gate-coverage row's `argv` is `["--strict"]` with a canary recipe in place of `no_canary_reason`; tiers unchanged.
++
++### blocker: pack-boundary-base-narrow-edge
++- **Status:** resolved 2026-10-09 — option (a), an advisory `suggests` edge (council 2026-10-07, anthropic + openai, 2/2, $0.00; adopted under the owner's 2026-10-08 delegation of council-decidable questions; D5), on the condition that the 203 baselined links are classified before 3.2 re-baselines (documentation reference / optional integration / load-bearing) and every link `suggests` permits degrades safely when the target pack is absent; both seats would choose neither option if a meaningful share is load-bearing. **The condition was met and the option stands:** 126 documentation-reference, 73 optional-integration, 4 load-bearing (2.0 %, against the > 20 % abort figure one seat named); the two load-bearing links that sat on a now-permitted edge were remediated before the edge was declared rather than permitted as they stood, and the other two are not on a permitted edge. The 2.0 % is the third reading — an independent adversarial review found the second pass attributing repeated link occurrences to the wrong line, and the page records all three passes with the cause of each correction. Classification, both classifier readings and the per-link table: `agents/evidence/analysis/pack-boundary-link-classification-2026-10-09.md`. **What the prior `Owner confirmation pending` marker covered, stated rather than deleted:** the council's technical condition is what the classification answers, and that is the only thing answered here. The option itself was adopted on 2026-10-08 under the owner's standing delegation of council-decidable questions, which is why the status moved; no separate owner sign-off on the schema choice was obtained or is claimed. A reader who reads the delegation as not reaching a `packs.yml` schema field should treat this edge as reversible and reopen it — reverting the `suggests` additions restores the gate to 193 and the mechanism costs nothing to carry meanwhile.
++- **Owner:** owner (product call), council advises
++- **Blocks:** step 3.2
++- **What to do:** pick exactly one — (a) add an advisory `suggests` edge to `packs.yml` that `src/scripts/lint_pack_boundaries.ts` reads as allowing a link, or (b) exempt base packs from the boundary rule in `src/scripts/lint_pack_boundaries.ts` and name them in the baseline note of `src/config/gate-violation-baselines.json`.
++- **Resolved when:** the choice is recorded in the `lint_pack_boundaries` baseline note with its date and decider.
++- **Recommendation:** (a) — it keeps the rule one-way and adds no install-forcing edge, which is the property the baseline note says `requires` lacks.
++- **If you do nothing:** 3.1 still lands; base-into-narrow links stay de-linked to prose and stay inside the 203.
++
++## Risk Register
++<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
++
++| Rank | Item | Risk type | Description | Mitigation | Anchored under |
++|------|------|-----------|-------------|------------|----------------|
++| 1 | `--strict` reds a PR on a pre-existing HIGH | implementation | Promotion turns every existing HIGH into a failure on unrelated PRs. | The step's last recorded verdict was 0 HIGH over 34 files; 1.1 re-reads it before 2.1. | Phase 2 — The workflow-security severity |
++| 2 | The pack step lengthens the consistency job | implementation | One more full-corpus scan on every PR. | D2 names the timeout as the revisit trigger. | Phase 3 — Pack boundaries a pull request runs |
++| 3 | A scheduled canary leaves a plant behind | implementation | The gate refuses to overwrite and asks for manual removal on failure (`check_gate_coverage.ts:839`, `:899`). | The job runs in a throwaway checkout and uploads only the ledger. | Phase 4 — Reads that do not write, and a canary that runs |
++| 4 | The comparator needs a token the tree does not hold | product | Reading rulesets needs repository read access. | It is a report run by hand or by a scheduled job with that scope; nothing gates on it. | Phase 5 — The required checks the contract names |
+diff --git a/agents/roadmaps/road-to-gates-a-pull-request-can-hear.md b/agents/roadmaps/road-to-gates-a-pull-request-can-hear.md
+deleted file mode 100644
+index 01eca5eb6be366b87d20425d041fca56e83c9395..0000000000000000000000000000000000000000
+--- a/agents/roadmaps/road-to-gates-a-pull-request-can-hear.md
++++ /dev/null
+@@ -1,200 +0,0 @@
+----
+-complexity: lightweight
+-status: ready
+-execution:
+-  mode: phase-checkpoints
+-estate_offset_exempt: "Five gates run somewhere other than where a pull request can hear them: one runs on every PR and cannot fail it, one runs in no workflow at all, one writes a tracked file on every read, one has no caller, and one contract names a required-check set the ruleset no longer has. Archiving or parking a roadmap does not buy this — each item is open and measured today. Merging into the nearest owner, stubs/road-to-main-protection-ruleset-changes, was rejected: that stub holds repository-admin writes to the ruleset, and every step here is a tree change that reads the ruleset and never writes it."
+-estate_growth_exempt: "Grows active_roadmaps by one: the owner asked on 2026-10-06 for this round's roadmaps to land as ready in one change; no live roadmap owns the gap between where a gate runs and where a pull request is decided."
+-relates:
+-  - slug: road-to-main-protection-ruleset-changes
+-    relation: disjoint
+-    note: "Stub. Owns every admin write to the `main protection` ruleset; Phase 5 here reads that ruleset and compares, and changes nothing on it."
+----
+-# Road to gates a pull request can hear
+-
+-> **Source:** an external review round (opaque id inbox-2026-10-e), consumed
+-> into `agents/tmp.old/inbox-2026-10-e/`. Every anchor below was re-read at
+-> `main` @ `a75bb3210` on 2026-10-06, and the line numbers are the ones that
+-> commit carries.
+-
+-## Goal
+-
+-A gate this tree treats as protection either can change the outcome of the
+-pull request that would break it, or says in its own prose that it cannot.
+-Nothing that only reads writes a tracked file. The one mutating proof run has
+-a caller that records when it last ran. The contract that lists the required
+-checks agrees with the ruleset, and a report says so when it does not.
+-
+-## Context
+-
+-- The workflow-security audit runs on every pull request and cannot fail one.
+-  `.github/workflows/consistency.yml:292-293` runs
+-  `./scripts-run src/scripts/lint_workflow_security` with no `--strict`; the
+-  comment above it (`:279-284`) says only `--strict` turns a HIGH into exit 1,
+-  that the severity model is council-locked (2026-06-13), and that promotion is
+-  "recorded unresolved". The record is
+-  `agents/evidence/analysis/workflow-security-net-degraded-decision.md`, titled
+-  "a decision taken with no council seat available" (`:2`). The gate-coverage
+-  row pins `argv: []` and states that a planted HIGH "would be REPORTED and the
+-  gate would still exit 0" (`src/config/gate-coverage.yml:3232-3244`). The
+-  16.3.0 release review filed it as finding `f733a2f9e542`
+-  (`agents/evidence/release-findings/16.3.0.json:46-51`).
+-- Pack boundaries run in no workflow. `grep -l lint_pack_boundaries
+-  .github/workflows/*.yml` returns nothing; the only caller is the
+-  `lint-pack-boundaries` task (`taskfiles/content.yml:439-442`) listed under
+-  `task ci` (`Taskfile.yml:379`), and the workflows themselves record that no
+-  workflow invokes `task ci` (`.github/workflows/skill-lint.yml:95`). It is green
+-  over a baseline of 203 violations
+-  (`src/config/gate-violation-baselines.json:77-80`), whose note ends: closing
+-  the base-into-narrow mismatch "needs a schema decision — an advisory edge this
+-  gate reads, or an exemption for base packs — and that is a product call, not
+-  cleanup."
+-- A read writes. `src/scripts/audit_user_type_axis.ts:271-272` writes
+-  `agents/reports/user-type-axis-audit.md` (`REPORT_PATH`, `:52`) on every run,
+-  unconditionally; the file is tracked, and the task `lint-user-type-axis`
+-  (`taskfiles/ci-fast.yml:779-782`) calls it as a lint.
+-- The mutating proof has no caller. `check_gate_coverage --canary`
+-  (`src/scripts/check_gate_coverage.ts:40`) is named by no task, workflow or
+-  `package.json` script; the gate itself prints "declared, not run — the
+-  mutating --canary path is operator-invoked and off the per-PR workflow"
+-  (`:418`). The last ledger is
+-  `agents/evidence/reviews/canary/gate-surface-2026-08-c1.md`, dated 2026-08-02.
+-- The required-check list disagrees with the ruleset it describes.
+-  `docs/contracts/branch-protection-policy.md:79` marks
+-  `Sync + Generate Tools Consistency` as "the only required one"; commit
+-  `540ee7a0b` (#2169) records that `main protection` requires two contexts, that
+-  one and `Standing payload delta + budget gate`.
+-  `src/scripts/print_required_checks.ts:132` hard-codes the one-element list and
+-  is contractually offline (`:126-130`), so nothing compares it to the live
+-  ruleset.
+-
+-## Phase 1 — Control readings
+-
+-- [x] **1.1 An injected HIGH, read under both argvs.** A test plants a fixture
+-      workflow carrying a `pull_request_target` untrusted checkout in a temp
+-      tree and runs the gate twice: under the argv
+-      `.github/workflows/consistency.yml` runs it exits 0 with the HIGH in its
+-      output; under `--strict` it exits 1. This is the reading every later
+-      step argues from.
+-      verify: `npx vitest run tests/scripts/workflow_security_argv_control.test.ts` -> 0
+-- [x] **1.2 Pack boundaries are run by no workflow, as a recorded fact.** The
+-      grep result and the `task ci` chain that holds the only caller are
+-      written to `agents/evidence/analysis/gates-a-pr-can-hear-2026-10.md`
+-      with its `evidence-type` marker, beside 1.1's two exit codes.
+-      verify: `grep -c 'lint_pack_boundaries' agents/evidence/analysis/gates-a-pr-can-hear-2026-10.md` -> /^[1-9]/
+-
+-## Phase 2 — The workflow-security severity
+-
+-- [x] **2.1 The step follows
+-      the decision.** Under (a): the CI step gains `--strict`, the
+-      gate-coverage row's `argv` becomes `["--strict"]` and its
+-      `no_canary_reason` is replaced by a canary recipe. Under (b): the step
+-      name and comment keep warn-only, and every sentence in `docs/` or
+-      `README.md` that says the audit can fail a pull request is corrected.
+-      verify: `npx vitest run tests/scripts/workflow_security_argv_control.test.ts` -> 0
+-
+-## Phase 3 — Pack boundaries a pull request runs
+-
+-- [x] **3.1 A pull-request step with the manifest's argv.** `consistency.yml`
+-      gains a step running `./scripts-run src/scripts/lint_pack_boundaries`
+-      with the argv a new gate-coverage row declares, so a new violation above
+-      the 203 baseline fails the PR that adds it.
+-      verify: `grep -c 'lint_pack_boundaries' .github/workflows/consistency.yml` -> /^[1-9]/
+-- [ ] **3.2 Re-baseline
+-      under the decided rule.** The gate reads the chosen edge or exemption;
+-      the baseline count in `src/config/gate-violation-baselines.json` drops
+-      by the links that rule now admits, and the note names the decision.
+-      verify: `npx vitest run tests/scripts/lint_pack_boundaries_base_narrow.test.ts` -> 0
+-
+-## Phase 4 — Reads that do not write, and a canary that runs
+-
+-- [x] **4.1 The audit writes only when asked.**
+-      `audit_user_type_axis` writes `REPORT_PATH` only under `--write`; the
+-      `lint-user-type-axis` task keeps reading, and a regeneration task passes
+-      `--write`.
+-      A test runs it in a temp copy and asserts `git status --porcelain
+-      agents/reports/` is empty afterwards.
+-      verify: `npx vitest run tests/scripts/audit_user_type_axis_no_write.test.ts` -> 0
+-- [x] **4.2 A scheduled caller for the canary.** A scheduled workflow runs
+-      `./scripts-run src/scripts/check_gate_coverage --canary --ledger <file>`
+-      from `.github/workflows/gate-canary.yml`, at least as often as
+-      `adversarial-review-protocol` § 6 requires, and
+-      uploads the ledger as a run artifact, so "last run" is a date a reader
+-      can find. It is not a required check.
+-      verify: `grep -c 'check_gate_coverage --canary' .github/workflows/gate-canary.yml` -> /^[1-9]/
+-
+-## Phase 5 — The required checks the contract names
+-
+-- [x] **5.1 The contract names both contexts.**
+-      `branch-protection-policy.md` and `print_required_checks.ts:132` list
+-      the two contexts #2169 recorded, with the date the ruleset was read.
+-      verify: `grep -c 'Standing payload delta + budget gate' src/scripts/print_required_checks.ts` -> /^[1-9]/
+-- [x] **5.2 A read-only comparator.** A `report_` script reads
+-      `gh api repos/{owner}/{repo}/rulesets`, extracts the required status
+-      contexts of `main protection`, compares them to the contract's list and
+-      exits non-zero on a mismatch. It is run by hand or on a schedule, and is
+-      not wired as a required check; it writes nothing.
+-      verify: `npx vitest run tests/scripts/report_required_checks_drift.test.ts` -> 0
+-
+-## What this roadmap deliberately does not do
+-
+-- No write to the ruleset, no new required check, no merge-queue change — the
+-  stub in `relates` owns admin writes.
+-- No re-tiering of the workflow-security severity model by agent judgement;
+-  Phase 2 waits for the council.
+-- No pack-schema change chosen here; 3.2 waits for the product call.
+-- No full-pipeline local run as a step.
+-
+-## Acceptance Criteria
+-
+-- [x] AC-1 — A test shows, for the argv CI runs, whether an injected HIGH
+-      fails the job, and the CI comment states the same outcome.
+-- [x] AC-2 — A pull request that adds a pack-boundary violation above the
+-      recorded baseline gets a red check from a workflow.
+-- [x] AC-3 — Running `audit_user_type_axis` without `--write` leaves the
+-      working tree clean.
+-- [x] AC-4 — The canary path has a scheduled caller whose ledger carries a
+-      date.
+-- [x] AC-5 — The contract's required-check list matches the ruleset, and the
+-      comparator exits non-zero on a fixture where they differ.
+-
+-## Decisions
+-
+-| ID | ownership | resolved by | decision | evidence | revisit if |
+-|---|---|---|---|---|---|
+-| D1 | reversible-technical | evidence | Control reading before any argv change | The gate-coverage row already predicts exit 0; 1.1 turns the prediction into a test | — |
+-| D2 | reversible-technical | agent | Pack boundaries join `consistency.yml` rather than a new workflow | That workflow already hosts the audits moved out of `task ci` for the same reason (`:274-277`) | The step's runtime pushes the job past its timeout |
+-| D3 | reversible-technical | agent | The canary is scheduled, never per-PR | It plants real files; the gate's own prose keeps it off the per-PR path (`check_gate_coverage.ts:397-399`) | The canary is rewritten to plant only in a temp tree |
+-| D4 | reversible-technical | agent | The ruleset comparator is a report, not a required check | `print_required_checks` is contractually offline; a network read cannot sit in its place | The comparator is wanted as a gate after one release of reports |
+-| D5 | contested-technical | council:2026-10-07 resolve-blockers | `pack-boundary-base-narrow-edge` (a): `packs.yml` gains an advisory, non-installing `suggests` edge that `lint_pack_boundaries.ts` reads as allowing a base-to-narrow link. Before 3.2 re-baselines, the 203 baselined links are classified (documentation reference / optional integration / load-bearing); only links that degrade safely when the target pack is absent may be permitted, and the linter reports the permitting edge. | AI council 2026-10-07, anthropic + openai, 2/2 present, both (a) with the classification condition, $0.00. Adopted 2026-10-08 under the owner's delegation of council-decidable questions. | the classification finds a meaningful share load-bearing (one seat named >20 %) — then neither option, and the links stay prose until they degrade safely |
+-
+-## Blockers
+-
+-### blocker: workflow-security-severity
+-- **Status:** resolved
+-- **Owner:** council
+-- **Blocks:** step 2.1, AC-1
+-- **What to do:** pick exactly one — (a) add `--strict` to the step in `.github/workflows/consistency.yml` and set `argv: ["--strict"]` on the `lint_workflow_security` row of `src/config/gate-coverage.yml`, or (b) keep warn-only and correct every sentence that claims the audit can fail a pull request, recording the reasoning in `agents/evidence/analysis/workflow-security-net-degraded-decision.md`.
+-- **Resolved when:** a council verdict with two seats is recorded in `agents/evidence/analysis/workflow-security-net-degraded-decision.md` naming (a) or (b), as a decision-revisit of the 2026-06-13 lock.
+-- **Recommendation:** (a) — the decision page records that the only reason not to was that no council seat was available, and `agent-config council:status` is the check that answers whether that still holds.
+-- **If you do nothing:** the audit stays a log line; a HIGH in a workflow change merges with a green check.
+-- **Resolution (2026-10-07):** option (a), AI council 2/2 (anthropic + openai, one round with peer review, $0.00 metered), recorded as a decision-revisit in `agents/evidence/analysis/workflow-security-net-degraded-decision.md` § Revisited 2026-10-07. The step runs `--strict`, the gate-coverage row's `argv` is `["--strict"]` with a canary recipe in place of `no_canary_reason`; tiers unchanged.
+-
+-### blocker: pack-boundary-base-narrow-edge
+-- **Status:** resolved 2026-10-08 — option (a), an advisory `suggests` edge (council 2026-10-07, anthropic + openai, 2/2, $0.00; adopted under the owner's 2026-10-08 delegation of council-decidable questions; D5), on the condition that the 203 baselined links are classified before 3.2 re-baselines (documentation reference / optional integration / load-bearing) and every link `suggests` permits degrades safely when the target pack is absent; both seats would choose neither option if a meaningful share is load-bearing. Owner confirmation pending.
+-- **Owner:** owner (product call), council advises
+-- **Blocks:** step 3.2
+-- **What to do:** pick exactly one — (a) add an advisory `suggests` edge to `packs.yml` that `src/scripts/lint_pack_boundaries.ts` reads as allowing a link, or (b) exempt base packs from the boundary rule in `src/scripts/lint_pack_boundaries.ts` and name them in the baseline note of `src/config/gate-violation-baselines.json`.
+-- **Resolved when:** the choice is recorded in the `lint_pack_boundaries` baseline note with its date and decider.
+-- **Recommendation:** (a) — it keeps the rule one-way and adds no install-forcing edge, which is the property the baseline note says `requires` lacks.
+-- **If you do nothing:** 3.1 still lands; base-into-narrow links stay de-linked to prose and stay inside the 203.
+-
+-## Risk Register
+-<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
+-
+-| Rank | Item | Risk type | Description | Mitigation | Anchored under |
+-|------|------|-----------|-------------|------------|----------------|
+-| 1 | `--strict` reds a PR on a pre-existing HIGH | implementation | Promotion turns every existing HIGH into a failure on unrelated PRs. | The step's last recorded verdict was 0 HIGH over 34 files; 1.1 re-reads it before 2.1. | Phase 2 — The workflow-security severity |
+-| 2 | The pack step lengthens the consistency job | implementation | One more full-corpus scan on every PR. | D2 names the timeout as the revisit trigger. | Phase 3 — Pack boundaries a pull request runs |
+-| 3 | A scheduled canary leaves a plant behind | implementation | The gate refuses to overwrite and asks for manual removal on failure (`check_gate_coverage.ts:839`, `:899`). | The job runs in a throwaway checkout and uploads only the ledger. | Phase 4 — Reads that do not write, and a canary that runs |
+-| 4 | The comparator needs a token the tree does not hold | product | Reading rulesets needs repository read access. | It is a report run by hand or by a scheduled job with that scope; nothing gates on it. | Phase 5 — The required checks the contract names |
+diff --git a/dist/agent-src/skills/corpus-grounding/ATTRIBUTION.md b/dist/agent-src/skills/corpus-grounding/ATTRIBUTION.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..c2eb30b05cd6ca8e34d8f5b8e46b33b4336f211d
+--- /dev/null
++++ b/dist/agent-src/skills/corpus-grounding/ATTRIBUTION.md
+@@ -0,0 +1,39 @@
++# Attribution — the ported grounding engine
++
++This file exists because of where the code ships, not because the obligation
++is new. `src/skills/design-intelligence/ATTRIBUTION.md` already covered both
++the vendored corpus **and** the ported engine. The corpus travels with the
++`frontend-design` pack; the engine sources below travel with **this** skill, in
++`engineering-base`. An install that takes `engineering-base` without
++`frontend-design` therefore carried MIT-derived code and no notice, which is
++the one thing the MIT obligation forbids. The notice is reproduced here so it
++travels with the files it covers.
++
++## Covered files
++
++- `scripts/bm25_search.ts`
++- `scripts/decision_engine.ts`
++- `scripts/ground.ts`
++- `scripts/schema_validator.ts`
++
++Ported from `[REDACTED:src-conf]/[REDACTED:src-conf]-skill` @
++`b7e3af80f6e331f6fb456667b82b12cade7c9d35` (Python sources `core.py`,
++`search.py`, `design_system.py`), de-duplicated and with slide-only paths
++stripped.
++
++## MIT
++
++Copyright (c) 2024 **Next Level Builder**.
++
++The Python engine sources (`core.py`, `search.py`, `design_system.py`) this
++skill's scripts are ported from are MIT-licensed. Obligation: **retain this
++notice**.
++
++## Not covered here
++
++The tabular design-knowledge corpus (`ui-reasoning`, `products`, `colors`,
++`styles`, `typography`, `charts`, `landing`, `icons`, `ux-guidelines`,
++`react-performance`, `app-interface`, `motion`, `stacks/*`), the Apache-2.0
++`ui-styling`-derived material, and the running modifications log stay in
++`design-intelligence/ATTRIBUTION.md` — they ship with that pack, and this file
++does not duplicate them.
+diff --git a/dist/agent-src/skills/corpus-grounding/SKILL.md b/dist/agent-src/skills/corpus-grounding/SKILL.md
+index 06985c6c5195f5a05bbb0ba63095b308deb962ce..0af75e2e397958a6da7bf02e9beb5e938542e3b2 100644
+--- a/dist/agent-src/skills/corpus-grounding/SKILL.md
++++ b/dist/agent-src/skills/corpus-grounding/SKILL.md
+@@ -31,8 +31,14 @@ execution:
+ Engine provenance: ported from `[REDACTED:src-conf]/[REDACTED:src-conf]-skill`
+ @ `b7e3af80f6e331f6fb456667b82b12cade7c9d35` (MIT, last checked
+ 2026-06-07) — BM25 de-duplicated, slide-only paths stripped, every
+-frontend-hardcoded axis moved into the manifest. Full license obligations:
+-[`design-intelligence/ATTRIBUTION.md`](../design-intelligence/ATTRIBUTION.md).
++frontend-hardcoded axis moved into the manifest. The obligations split by what
++ships where: the MIT notice for the **engine sources under `scripts/`** travels
++with this skill, in [`ATTRIBUTION.md`](ATTRIBUTION.md) beside it, so an install
++that takes `engineering-base` without `frontend-design` still carries the
++notice its code is under. The vendored **corpus** and the Apache-2.0
++`ui-styling` material travel with `frontend-design`, in
++[`design-intelligence/ATTRIBUTION.md`](../design-intelligence/ATTRIBUTION.md),
++which remains the full record.
+ 
+ ## When to use
+ 
+diff --git a/dist/agent-src/skills/tailwind-engineer/SKILL.md b/dist/agent-src/skills/tailwind-engineer/SKILL.md
+index 85c381a22f389d42f5c680816d2a50f389ff6d3a..3deb853f7d0f53efcbbce7830ce81c7a743245f9 100644
+--- a/dist/agent-src/skills/tailwind-engineer/SKILL.md
++++ b/dist/agent-src/skills/tailwind-engineer/SKILL.md
+@@ -97,7 +97,9 @@ Token authoring (DTCG 3-layer model, CSS-var/Tailwind generation) lives
+ in [`design-tokens`](../design-tokens/SKILL.md); its
+ `tokens.ts validate --dir <path>` is the **single token-discipline
+ linter** — the mechanical check behind this rule (no hardcoded hex / px /
+-rem outside the token files). Greenfield Tailwind config: bundled
++rem outside the token files). That skill ships with the `frontend-design`
++pack: without it the rule above still binds and is checked by reading,
++not by a linter. Greenfield Tailwind config: bundled
+ `scripts/tailwind_config_gen.ts` (Apache-2.0-derived, pure templating)
+ scaffolds `tailwind.config.{js,ts}` per framework.
+ 
+diff --git a/docs/contracts/capability-packs.md b/docs/contracts/capability-packs.md
+index fc1e904f2b3e38e83abf950fe62d402fe4d57a65..e9367d4d6de24c749a1daef4b72ce23196ebc08d 100644
+--- a/docs/contracts/capability-packs.md
++++ b/docs/contracts/capability-packs.md
+@@ -76,7 +76,7 @@ three new fields below; the existing fields keep their ADR-013 meaning.
+ | `size_class` | enum | in-use | **NEW.** `core` / `small` / `medium` / `large` / `platform`. The input the 6.0.0-C per-pack **visible-command** budget lint reads. Co-required with `domain`. Required for every in-use pack; absent on reserved vocab ids with zero artefacts (assigning it would fail the orphan-manifest determinism check). |
+ | `always_on` | bool | no | **NEW.** When `true`, the pack loader (6.0.0-B Phase 3) includes this pack's artefacts in **every** projection, regardless of the selected profile / workspace / pack set. Default `false` (absent). See "Always-on packs" below. |
+ | `requires` | list[id] | no | **NEW.** Hard dependency edges — packs whose artefacts must be present for this pack to function (e.g. `laravel.requires = [php, engineering-base]`). Formalizes the advisory `requires_hint` from ADR-013; once a manifest carries `requires`, `requires_hint` is the deprecated alias. Default `[]`. |
+-| `suggests` | list[id] | no | **NEW.** Soft companion edges — packs commonly installed together but not mandatory (e.g. `laravel.suggests = [api, ui]`). Advisory; the resolver MAY surface them, never auto-installs. Default `[]`. |
++| `suggests` | list[id] | no | **NEW.** Soft companion edges — packs commonly installed together but not mandatory (e.g. `laravel.suggests = [api, ui]`). Advisory; the resolver MAY surface them, never auto-installs. Default `[]`. **A `suggests` edge is not inert: since 2026-10-09 it also carries a GATE effect** — see § The gate effect of `suggests` below. |
+ 
+ `cluster:` and `onboarding:` (ADR-013) remain valid optional fields and are
+ out of scope for this contract.
+@@ -178,6 +178,38 @@ base is missing" gap).
+ 3. `requires` is transitive (resolver expands the full closure); `suggests` is
+    non-transitive (one hop, surfaced not installed).
+ 
++## The gate effect of `suggests`
++
++```
++ADDING A `suggests` EDGE IS NOT A METADATA-ONLY CHANGE.
++IT SWITCHES OFF `lint_pack_boundaries` BETWEEN THOSE TWO PACKS, ONE-WAY.
++```
++
++Recorded because the field's description above reads as pure advisory metadata
++and that is no longer the whole truth. Since D5 of
++`road-to-gates-a-pull-request-can-hear` (AI council 2026-10-07, adopted
++2026-10-08), `src/scripts/lint_pack_boundaries.ts` reads a `suggests` edge as
++PERMITTING a markdown link from the declaring pack into the target. The
++resolver still never installs it, and the edge stays one-hop and one-way — but
++an author who adds a "harmless companion edge" after reading only the field
++table will also stop that gate reporting dangling links on it.
++
++What this means in practice:
++
++- **Declare the edge where the relationship is real**, not to silence a
++  finding. The permit is per EDGE, not per link: every future link on it is
++  permitted too, and nobody re-checks that those degrade safely.
++- The permitted **count** prints on every `lint_pack_boundaries` run,
++  `--quiet` included, and `--show-permitted` lists each link with its
++  permitting edge. That is the standing signal; there is no ratchet on it.
++- The sibling gate `lint_rule_skill_pack_reach` reads `suggests` the OPPOSITE
++  way and always will: it asserts a route *will resolve*, so counting an
++  advisory edge there would assert resolution on installs that may not exist.
++  **Adding a `suggests` edge never clears an `unreachable-route` finding.**
++- `pack.yaml` is not the place to declare one. The boundary gate consults a
++  pack home only for a pack the vocabulary does not list, so an edge added
++  only to a generated manifest has no effect.
++
+ ## Determinism
+ 
+ The capability-pack registry is release-time data, not runtime state. Two
+diff --git a/src/config/discovery/packs.yml b/src/config/discovery/packs.yml
+index 671be1a95b7827b9d0cb005eb7a05eede8384cbc..43bc80928f85e9036cc180781d2fbb1b328af610 100644
+--- a/src/config/discovery/packs.yml
++++ b/src/config/discovery/packs.yml
+@@ -25,6 +25,14 @@
+   label: Engineering Base
+   description: Framework-neutral engineering hygiene — git, tests, reviews.
+   workspaces: [engineering]
++  # Companion stacks and layers, never dependencies. This pack's skills are
++  # framework-neutral by contract and carry stack carve-out pointers ("Laravel
++  # → laravel-validation", "Next.js → nextjs-patterns") plus hand-offs into the
++  # design and product layers. `requires` is transitive and install-forcing, so
++  # declaring any of them would push the whole set into every engineering
++  # install; advisory is what the relationship actually is.
++  # D5 of road-to-gates-a-pull-request-can-hear (AI council 2026-10-07).
++  suggests: [php, laravel, symfony, nextjs, react, frontend-design, brand, product-basic]
+   trust_level_default: core
+   domain: engineering
+   size_class: core
+@@ -125,7 +133,9 @@
+   description: Grounded design intelligence — design-knowledge corpus + BM25 grounding engine, design tokens, stack best-practice and chart/typography knowledge.
+   workspaces: [engineering]
+   requires: [engineering-base]
+-  suggests: [react, nextjs]
++  # `brand` requires this pack, so the reverse edge can only be advisory: the
++  # design skills defer to a registered brand token where one exists.
++  suggests: [react, nextjs, brand]
+   trust_level_default: professional
+   domain: engineering
+   size_class: medium
+@@ -145,6 +155,9 @@
+   description: Scale-safe persistence — index parity, bounded reads, migration safety, growth budgets, thin request path, durable async; deterministic pattern lints gate, heuristics advise.
+   workspaces: [engineering]
+   requires: [engineering-base]
++  # Sibling pack floor: audit tables fall under this pack's growth budget, so
++  # the two rules cross-reference. Advisory — either installs without the other.
++  suggests: [history-discipline]
+   trust_level_default: experimental
+   surface_tier: lab
+   domain: engineering
+@@ -205,6 +218,9 @@
+   label: Finance Basic
+   description: Cashflow, runway, basic forecasting.
+   workspaces: [finance, founder]
++  # `finance-advanced` requires this pack; the reverse pointers (runway hands
++  # off to scenario modelling, unit economics to DCF) are therefore advisory.
++  suggests: [finance-advanced]
+   trust_level_default: professional
+   domain: finance
+   risk_class: medium   # advisory (finance-safety-floor): not-financial-advice disclaimer
+diff --git a/src/config/gate-coverage.yml b/src/config/gate-coverage.yml
+index b7dfcd57a8c008ca03f7b93305f72d12f662c7db..ffc6c6e9b4fd1f5ccc90b91cdbfb5bf7037e605e 100644
+--- a/src/config/gate-coverage.yml
++++ b/src/config/gate-coverage.yml
+@@ -3263,7 +3263,7 @@ gates:
+   - id: lint_pack_boundaries
+     argv: ["--quiet"]
+     min_scanned: 600
+-    corpus: "source artefacts the shared resolver yields (`_lib/agent_src.iter_artefacts` over skills, rules, agent-src and domains), counted as FILES — 830 on 2026-10-07, of which 139 sit outside any pack's scope and are still counted because they were read. The floor is 600 because artefacts are merged and retired routinely, while a resolver that stopped yielding a root drops by hundreds at once: skills alone are over half the corpus. The violation COUNT is not what this floor guards; that is the ratchet in src/config/gate-violation-baselines.json, which fails the run when it rises above the recorded baseline."
++    corpus: "source artefacts the shared resolver yields (`_lib/agent_src.iter_artefacts` over skills, rules, agent-src and domains), counted as FILES — 833 on 2026-10-09, of which 139 sit outside any pack's scope and are still counted because they were read. The floor is 600 because artefacts are merged and retired routinely, while a resolver that stopped yielding a root drops by hundreds at once: skills alone are over half the corpus. The violation COUNT is not what this floor guards; that is the ratchet in src/config/gate-violation-baselines.json, which fails the run when it rises above the recorded baseline."
+     status: enforced
+     ci_invocation: .github/workflows/consistency.yml
+     no_canary_reason: >-
+@@ -3274,12 +3274,24 @@ gates:
+       plant smaller than that headroom reads green and the ledger would call a
+       live gate dead. Measured once by hand on 2026-10-07 at count == baseline
+       (203): one planted `founder-strategy` -> `gtm-marketing` link read 204 and
+-      exited 1. Discrimination is proven instead by `--self-test` (5 cases, 3
+-      rejecting), which runs the real CLI over fixture roots where the ratchet is
+-      not consulted, so any violation exits 1 whatever the repository's headroom:
+-      an undeclared cross-pack link and an artefact with no resolvable pack exit
+-      1, an empty corpus exits 2, and a link declared through `requires` and a
+-      link inside one pack pass. Seen red deliberately on 2026-10-07 by making the
++      exited 1. That reading is kept as the historical record and is NO LONGER
++      REPRODUCIBLE as written: the baseline is 120 since 2026-10-09, so a reader
++      re-running it measures against a number that no longer exists. Re-measured
++      on 2026-10-09 at count == baseline (120): one planted
++      `founder-strategy` -> `gtm-marketing` link reads 121 and exits 1. The same
++      pass found the ratchet's second blind spot and it is named here rather
++      than left to the next reader: a link on a pack pair joined by an advisory
++      `suggests` edge is PERMITTED, so it does not raise the count at all and
++      exits 0 at any headroom. The permitted COUNT prints on every run,
++      `--quiet` included, which is the signal that set is growing; there is no
++      ratchet on it. Discrimination is proven instead by `--self-test` (7 cases,
++      4 rejecting), which runs the real CLI over fixture roots where the ratchet
++      is not consulted, so any violation exits 1 whatever the repository's
++      headroom: an undeclared cross-pack link and an artefact with no resolvable
++      pack exit 1, an empty corpus exits 2, and a link declared through
++      `requires`, a link inside one pack, and a link an advisory `suggests` edge
++      permits all pass — the last paired with its denial, the same link without
++      the edge, which exits 1. Seen red deliberately on 2026-10-07 by making the
+       allow rule accept every link: the cross-pack case alone fails, 4/5.
+     note: >-
+       road-to-gates-a-pull-request-can-hear 3.1. Until this row the gate ran only
+diff --git a/src/config/gate-violation-baselines.json b/src/config/gate-violation-baselines.json
+index bbd0275833dfcd187ef8e9a2cd4de6d9f56b5410..346fdc34d474f53ae18c41ab551de2d7dd57719d 100644
+--- a/src/config/gate-violation-baselines.json
++++ b/src/config/gate-violation-baselines.json
+@@ -81,9 +81,9 @@
+       "note": "All 18 are `handoff_tier_mismatch`: a senior-tier skill links to a peer whose frontmatter carries no `tier` (reported as tier='unset') — e.g. build-buy-partner → adr-create, customer-research → po-discovery, gated-reach → threat-modeling. This is a tier-metadata backfill backlog on the LINKED-TO skills, not a broken link. The one genuinely dangling link revealed by the same repair (competitive-positioning → a non-existent ../analyze-reference-repo/SKILL.md; it is a command, not a skill) was FIXED in the repairing commit rather than baselined. Clearing this entry means backfilling `tier` on the linked-to skills, or deciding that `tier: unset` on a link target is not a violation and narrowing the rule."
+     },
+     "lint_pack_boundaries": {
+-      "count": 203,
+-      "landed": "2026-10-01",
+-      "note": "Markdown links between source artefacts that cross a pack boundary the source pack's `requires` graph does not reach — revealed when the scan root moved off the deleted packages/ tree to the live corpus (0 -> 753 artefacts scanned). Each is a link that dangles for a consumer who installs the source pack without the target's. Judged real drift rather than an over-strict gate because it is long-tailed — no single systematic cause — unlike the lint_artefact_frontmatter case, where one required shape had 0-of-288 adoption. Fix per finding: add the edge to packs.yml requires, retarget the link, or move the artefact; where none of the three fits because the edge would run from a base pack into a narrower one, drop the link and keep the artefact name as prose. 2026-10-01, 337 -> 203 and `landed` refreshed: the gate's largest recorded class (engineering-base -> meta, 73 at the time) was never drift. `meta` is `always_on: true`, which `config/packs.resolve_active_packs` seeds into every projection before expanding any selection, so a link into it cannot dangle and the premise above does not hold for it. The allow rule now reads `core` plus every always-on pack rather than the hard-coded `core` alone — one-way, a link OUT of an always-on pack is still reported. That removed 141 of 379; a further 35 occurrences were de-linked at source, clearing every link added since the 2026-08-02 baseline. Delta, per-link introducing commits and the five readings: agents/evidence/analysis/pack-boundary-delta-2026-10-01.md. KNOWN LIMITATION, named rather than left behind the numeric drop (council review 2026-10-01, the reviewer's highest-leverage ask): for a link that runs from a BASE pack into a NARROWER one — engineering-base -> react, meta -> git, frontend-design -> brand — none of the three fixes above is available, and that is a mismatch between this gate's rule and the pack schema rather than a backlog. `requires` is the only edge type the resolver expands, and it is transitive and install-forcing, so declaring base -> narrow would push the narrow pack into every install of the base; `suggests` is advisory and this gate does not read it. Retargeting needs an in-pack equivalent that does not exist, and moving the artefact changes which install ships it. So the cross-reference is dropped and the artefact named in prose, which is why a reader will find named-but-unlinked siblings in these files. Closing the mismatch properly needs a schema decision — an advisory edge this gate reads, or an exemption for base packs — and that is a product call, not cleanup."
++      "count": 120,
++      "landed": "2026-10-09",
++      "note": "Markdown links between source artefacts that cross a pack boundary the source pack's `requires` graph does not reach — revealed when the scan root moved off the deleted packages/ tree to the live corpus (0 -> 753 artefacts scanned). Each is a link that dangles for a consumer who installs the source pack without the target's. Judged real drift rather than an over-strict gate because it is long-tailed — no single systematic cause — unlike the lint_artefact_frontmatter case, where one required shape had 0-of-288 adoption. Fix per finding: add the edge to packs.yml requires, retarget the link, or move the artefact; where none of the three fits because the edge would run from a base pack into a narrower one, drop the link and keep the artefact name as prose. 2026-10-01, 337 -> 203 and `landed` refreshed: the gate's largest recorded class (engineering-base -> meta, 73 at the time) was never drift. `meta` is `always_on: true`, which `config/packs.resolve_active_packs` seeds into every projection before expanding any selection, so a link into it cannot dangle and the premise above does not hold for it. The allow rule now reads `core` plus every always-on pack rather than the hard-coded `core` alone — one-way, a link OUT of an always-on pack is still reported. That removed 141 of 379; a further 35 occurrences were de-linked at source, clearing every link added since the 2026-08-02 baseline. Delta, per-link introducing commits and the five readings: agents/evidence/analysis/pack-boundary-delta-2026-10-01.md. KNOWN LIMITATION, named rather than left behind the numeric drop (council review 2026-10-01, the reviewer's highest-leverage ask): for a link that runs from a BASE pack into a NARROWER one — engineering-base -> react, meta -> git, frontend-design -> brand — none of the three fixes above is available, and that is a mismatch between this gate's rule and the pack schema rather than a backlog. `requires` is the only edge type the resolver expands, and it is transitive and install-forcing, so declaring base -> narrow would push the narrow pack into every install of the base; `suggests` is advisory and this gate does not read it. Retargeting needs an in-pack equivalent that does not exist, and moving the artefact changes which install ships it. So the cross-reference is dropped and the artefact named in prose, which is why a reader will find named-but-unlinked siblings in these files. Closing the mismatch properly needs a schema decision — an advisory edge this gate reads, or an exemption for base packs — and that is a product call, not cleanup. 2026-10-01 -> 2026-10-09, 203 -> 120: the KNOWN LIMITATION named above is closed rather than carried. D5 of road-to-gates-a-pull-request-can-hear (AI council 2026-10-07, anthropic + openai, 2/2, $0.00; adopted 2026-10-08 under the owner's delegation of council-decidable questions) chose option (a): `suggests` in packs.yml is an advisory, non-installing, ONE-HOP, ONE-WAY edge that this gate now reads as permitting a link. It is never expanded transitively — that would give it the install-forcing reach `requires` has, which is the property the decision depends on it not having. 83 links are permitted by it, and the split is MEASURED rather than enumerated by hand — an earlier revision of this note enumerated it and got both halves wrong, which is why the number below is the gate's own output. 73 sit on edges this change ADDED: engineering-base -> laravel 31, -> frontend-design 12, -> symfony 4, -> php 4, -> nextjs 4, -> react 2, -> brand 2, -> product-basic 1; the multi-pack source engineering-base+frontend-design -> brand 3 and -> frontend-design 2; frontend-design -> brand 3; finance-basic -> finance-advanced 4; scale-discipline -> history-discipline 1. The other 10 sit on `suggests` edges that ALREADY EXISTED and that the gate simply did not read: laravel -> frontend-design 3, product-basic -> product-discovery 3, brand -> ai-image 2, react -> frontend-design 1, frontend-design -> react 1. Reverting only this change's packs.yml additions therefore yields 193, not 203 — measured, not derived; 203 returns only if the gate also stops reading `suggests` at all. `--show-permitted` lists them with the permitting edge named, so an advisory permit is visible rather than silent. THE CONDITION THE COUNCIL ATTACHED WAS MET BEFORE THE DROP: all 203 links were classified documentation-reference / optional-integration / load-bearing, and only safely-degrading ones are permitted. 4 of 203 (2.0%) are load-bearing, under the >20% figure one seat named as the abort threshold. That figure is the THIRD reading: a second pass said 3.0%, and an independent adversarial review found its line attribution wrong — the locator gave every repeated occurrence of a link the FIRST match's line and basis, so 34 rows cited a sentence that was not theirs. Re-located per occurrence, one of the six fell away under the page's own rule. Every correction has moved the number down, which is worth stating plainly rather than treating as reassurance. 2 of the 4 sat on a now-permitted edge (corpus-grounding, tailwind-engineer) and were remediated BEFORE the edge was declared, so no permitted link is load-bearing as it stands: corpus-grounding gained an engine-scoped ATTRIBUTION.md beside the code the MIT notice covers, because that engine ships in engineering-base while the corpus ships in frontend-design, and tailwind-engineer now states that without frontend-design its rule is checked by reading rather than by a linter. The classification table marks both rows `load-bearing (remediated)` with the basis, so the evidence and the claim agree. The other 2 are NOT permitted and remain inside the 120. KNOWN BLIND SPOT, measured on 2026-10-09 rather than reasoned about: a link planted on a pack pair joined by an advisory edge leaves the count at 120 and exits 0 at any headroom — the permit is per EDGE, so the ratchet cannot see it. The permitted COUNT therefore prints on every run including `--quiet` (the planted link moved it 83 -> 84), which is the only standing signal that the set is growing. There is no ratchet on it. A link on an UNDECLARED pair still reads 121 and exits 1, measured the same day. Per-link table, both classifier readings and the sampling error rate: agents/evidence/analysis/pack-boundary-link-classification-2026-10-09.md."
+     },
+     "lint_provenance_vocabulary:permanence-language": {
+       "count": 5,
+diff --git a/src/domains/engineering-base/pack.yaml b/src/domains/engineering-base/pack.yaml
+index 66893a96f98c23866f1aad4d9947fee62d391801..fb82fe37468d9969bf0602d631c3127133f6d7d2 100644
+--- a/src/domains/engineering-base/pack.yaml
++++ b/src/domains/engineering-base/pack.yaml
+@@ -11,7 +11,15 @@ owner:
+ - engineering
+ requires: []
+ size_class: core
+-suggests: []
++suggests:
++- php
++- laravel
++- symfony
++- nextjs
++- react
++- frontend-design
++- brand
++- product-basic
+ surface_tier: core
+ token_passport:
+   basis: chars/4
+diff --git a/src/packs/finance-basic/pack.yaml b/src/packs/finance-basic/pack.yaml
+index b64e73979803aa2944a1dc649cbec58f3bd50495..fb5f770afb0f7909e1516cb12887f700e0fc8e9a 100644
+--- a/src/packs/finance-basic/pack.yaml
++++ b/src/packs/finance-basic/pack.yaml
+@@ -15,7 +15,8 @@ owner:
+ - founder
+ requires: []
+ size_class: medium
+-suggests: []
++suggests:
++- finance-advanced
+ surface_tier: core
+ token_passport:
+   basis: chars/4
+diff --git a/src/scripts/lint_pack_boundaries.ts b/src/scripts/lint_pack_boundaries.ts
+index 8f7552afaf8f765d678b2b0d2b72e74ca1772305..bf92b1df841dd874bb6f6d9e4ae35f76c5fee424 100644
+--- a/src/scripts/lint_pack_boundaries.ts
++++ b/src/scripts/lint_pack_boundaries.ts
+@@ -53,6 +53,26 @@
+  *   `--self-test`, which runs this CLI against planted fixture trees. Both are
+  *   what `src/config/gate-coverage.yml` asks of a gate a pull request runs.
+  *
++ * ## The advisory `suggests` edge, and the sibling gate that refuses it
++ *
++ * Since D5 of `road-to-gates-a-pull-request-can-hear` (AI council 2026-10-07)
++ * this gate reads `suggests` as PERMITTING a cross-pack link: advisory,
++ * non-installing, one-hop, one-way. `lint_rule_skill_pack_reach` states in its
++ * own header that `suggests` is deliberately NOT followed. Both are correct,
++ * and the discriminator is the direction of the claim:
++ *
++ * - THAT gate asserts a route WILL RESOLVE. Counting an advisory edge would
++ *   assert resolution on installs that may not exist.
++ * - THIS gate reports a link that MAY DANGLE. An advisory edge is the author
++ *   stating they accept the dangle for a consumer who declines the companion,
++ *   so reading it downgrades a finding the author has already answered.
++ *
++ * The permit is per EDGE, not per link. The council's condition — only
++ * safely-degrading links may be permitted — was verified once, by hand, over
++ * the 203 links at the 2026-10-09 baseline; nothing re-verifies it for links
++ * added later. That is why the permitted COUNT prints on every run including
++ * `--quiet`: it is the only standing signal that the set is growing.
++ *
+  * ## Where the `requires` graph is read from
+  *
+  * `src/config/discovery/packs.yml` is the source of truth for the pack
+@@ -199,6 +219,35 @@ interface ViolationRecord {
+     link: string;
+ }
+ 
++/**
++ * Which edge permits a cross-pack link. `null` is the violation case.
++ *
++ * `suggests` is the advisory, non-installing edge added for the base-into-
++ * narrow class (D5 of `road-to-gates-a-pull-request-can-hear`, AI council
++ * 2026-10-07). It is the WEAKEST promise in the list, which is why the ranking
++ * below exists: a link that needs it is reported as needing it, never as a
++ * `requires` link that happens to also hold.
++ */
++type PermitReason = 'same-pack' | 'always-installed' | 'requires' | 'suggests' | null;
++
++/** Strength order — lower is a stronger guarantee that the target is present. */
++const PERMIT_RANK: Record<Exclude<PermitReason, null>, number> = {
++    'same-pack': 0,
++    'always-installed': 1,
++    requires: 2,
++    suggests: 3,
++};
++
++/** A link permitted only by `suggests`, kept for the `--show-permitted` report. */
++interface PermittedRecord {
++    source_pack: string;
++    target_pack: string;
++    source: string;
++    target: string;
++    link: string;
++    reason: Exclude<PermitReason, null>;
++}
++
+ /** Mirror Python `Path.resolve()`: canonicalize existing prefix, append rest. */
+ function _realpath(p: string): string {
+     try {
+@@ -344,7 +393,36 @@ function _pack_home_dirs(): string[] {
+  * manifests as an overlay for pack homes the vocabulary does not list.
+  */
+ function _pack_requires(): Map<string, string[]> {
+-    const out = new Map<string, string[]>();
++    return _pack_edges().requires;
++}
++
++/**
++ * `pack id -> direct suggests`.
++ *
++ * Deliberately NOT expanded: `suggests` is one-hop. Transitive expansion would
++ * give the advisory edge the install-forcing reach `requires` has, which is the
++ * property the base-into-narrow decision depends on it not having.
++ */
++function _pack_suggests(): Map<string, string[]> {
++    return _pack_edges().suggests;
++}
++
++/**
++ * Both edge maps, from ONE read of the vocabulary and one walk of the pack
++ * homes.
++ *
++ * One reader rather than two near-identical ones, so the VOCAB-wins precedence
++ * below exists in a single place: two copies would have to be kept in step by
++ * hand, and a `requires` map that fell out of step with a `suggests` map read
++ * from the same file is a drift nothing reports.
++ *
++ * NOTE for anyone adding an edge: a `pack.yaml` is only consulted for a pack
++ * the vocabulary does not list, so declaring `suggests` there alone has no
++ * effect on this gate. `packs.yml` is where an edge has to go.
++ */
++function _pack_edges(): { requires: Map<string, string[]>; suggests: Map<string, string[]> } {
++    const requires = new Map<string, string[]>();
++    const suggests = new Map<string, string[]>();
+     const asList = (v: unknown): string[] => (Array.isArray(v) ? v.map(String) : []);
+ 
+     if (_exists(VOCAB)) {
+@@ -354,7 +432,8 @@ function _pack_requires(): Map<string, string[]> {
+                 if (entry !== null && typeof entry === 'object' && !Array.isArray(entry)) {
+                     const e = entry as Record<string, unknown>;
+                     if (typeof e['id'] === 'string') {
+-                        out.set(e['id'], asList(e['requires']));
++                        requires.set(e['id'], asList(e['requires']));
++                        suggests.set(e['id'], asList(e['suggests']));
+                     }
+                 }
+             }
+@@ -363,11 +442,12 @@ function _pack_requires(): Map<string, string[]> {
+     for (const dir of _pack_home_dirs()) {
+         const meta = _load_pack_meta(dir);
+         const id = typeof meta['id'] === 'string' ? meta['id'] : path.basename(dir);
+-        if (!out.has(id)) {
+-            out.set(id, asList(meta['requires']));
++        if (!requires.has(id)) {
++            requires.set(id, asList(meta['requires']));
++            suggests.set(id, asList(meta['suggests']));
+         }
+     }
+-    return out;
++    return { requires, suggests };
+ }
+ 
+ /** Transitive expansion of `requires`, cycle-safe. */
+@@ -548,19 +628,45 @@ function _scan_file(p: string): string[] {
+     return out;
+ }
+ 
+-function _is_allowed(
++/**
++ * Which edge, if any, lets a link out of `source_pack` reach `target_pack`.
++ *
++ * `null` is the violation case. The reason is returned rather than a bare
++ * boolean because `suggests` is advisory: a reader who sees a permitted
++ * base-into-narrow link needs to know it was permitted by an edge that does
++ * NOT install the target, which is a different promise from `requires`.
++ */
++function _permit_reason(
+     source_pack: string,
+     target_pack: string,
+     requires: string[],
+     always_installed: ReadonlySet<string> = new Set([ALWAYS_INSTALLED]),
+-): boolean {
++    suggests: readonly string[] = [],
++): PermitReason {
+     if (source_pack === target_pack) {
+-        return true;
++        return 'same-pack';
+     }
+     if (always_installed.has(target_pack)) {
+-        return true;
++        return 'always-installed';
++    }
++    if ((requires || []).includes(target_pack)) {
++        return 'requires';
+     }
+-    return (requires || []).includes(target_pack);
++    // One-hop and one-way by construction: the caller passes the SOURCE pack's
++    // own direct `suggests` list, never a closure over it. A transitive
++    // advisory edge would re-create the install-forcing reach `requires` has,
++    // which is the property this edge exists not to have.
++    return suggests.includes(target_pack) ? 'suggests' : null;
++}
++
++function _is_allowed(
++    source_pack: string,
++    target_pack: string,
++    requires: string[],
++    always_installed: ReadonlySet<string> = new Set([ALWAYS_INSTALLED]),
++    suggests: readonly string[] = [],
++): boolean {
++    return _permit_reason(source_pack, target_pack, requires, always_installed, suggests) !== null;
+ }
+ 
+ /**
+@@ -576,11 +682,47 @@ function _link_allowed(
+     target_packs: readonly string[],
+     closureOf: (pack: string) => Set<string>,
+     always_installed: ReadonlySet<string> = new Set([ALWAYS_INSTALLED]),
++    suggestsOf: (pack: string) => readonly string[] = () => [],
+ ): boolean {
+-    return source_packs.every((s) => {
++    return (
++        _link_permit_reason(source_packs, target_packs, closureOf, always_installed, suggestsOf) !==
++        null
++    );
++}
++
++/**
++ * The weakest edge the link relies on, or `null` when nothing permits it.
++ *
++ * Weakest, not first: a link permitted for one source pack by `requires` and
++ * for another only by `suggests` is reported as `suggests`, because that is
++ * the promise a consumer actually gets.
++ */
++function _link_permit_reason(
++    source_packs: readonly string[],
++    target_packs: readonly string[],
++    closureOf: (pack: string) => Set<string>,
++    always_installed: ReadonlySet<string> = new Set([ALWAYS_INSTALLED]),
++    suggestsOf: (pack: string) => readonly string[] = () => [],
++): PermitReason {
++    let weakest: PermitReason = 'same-pack';
++    for (const s of source_packs) {
+         const reach = [...closureOf(s)];
+-        return target_packs.some((t) => _is_allowed(s, t, reach, always_installed));
+-    });
++        const sug = suggestsOf(s);
++        let best: PermitReason = null;
++        for (const t of target_packs) {
++            const r = _permit_reason(s, t, reach, always_installed, sug);
++            if (r !== null && (best === null || PERMIT_RANK[r] < PERMIT_RANK[best])) {
++                best = r;
++            }
++        }
++        if (best === null) {
++            return null;
++        }
++        if (PERMIT_RANK[best] > PERMIT_RANK[weakest]) {
++            weakest = best;
++        }
++    }
++    return weakest;
+ }
+ 
+ /** Mirror Python `json.dump(obj, indent=2)` with `ensure_ascii=True`. */
+@@ -603,11 +745,14 @@ function _json_dumps_ascii(obj: unknown): string {
+ interface ParsedArgs {
+     format: 'text' | 'json';
+     quiet: boolean;
++    /** List the links permitted only by an advisory `suggests` edge. */
++    show_permitted: boolean;
+ }
+ 
+ function parse_args(argv: readonly string[]): ParsedArgs {
+     let format: 'text' | 'json' = 'text';
+     let quiet = false;
++    let show_permitted = false;
+     for (let i = 0; i < argv.length; i++) {
+         const arg = argv[i] as string;
+         if (arg === '--format') {
+@@ -631,16 +776,19 @@ function parse_args(argv: readonly string[]): ParsedArgs {
+             format = v;
+         } else if (arg === '--quiet') {
+             quiet = true;
++        } else if (arg === '--show-permitted') {
++            show_permitted = true;
+         } else if (arg === '-h' || arg === '--help') {
+             process.stdout.write(
+-                'usage: lint_pack_boundaries [-h] [--format {text,json}] [--quiet] [--self-test]\n',
++                'usage: lint_pack_boundaries [-h] [--format {text,json}] [--quiet] ' +
++                    '[--show-permitted] [--self-test]\n',
+             );
+             process.exit(0);
+         } else {
+             _argparse_error(`unrecognized arguments: ${arg}`);
+         }
+     }
+-    return { format, quiet };
++    return { format, quiet, show_permitted };
+ }
+ 
+ function _argparse_error(message: string): never {
+@@ -696,8 +844,8 @@ function selfTest(): number {
+ 
+     return runSelfTest({
+         gate: 'lint_pack_boundaries',
+-        minCases: 5,
+-        minRejectCases: 3,
++        minCases: 7,
++        minRejectCases: 4,
+         cases: [
+             {
+                 name: 'an undeclared cross-pack link is rejected with exit 1',
+@@ -757,6 +905,38 @@ function selfTest(): number {
+                         }),
+                     ),
+             },
++            {
++                name: 'a link an advisory `suggests` edge permits passes',
++                expect: 'accept',
++                run: () =>
++                    run(
++                        plant('suggests-permit', {
++                            'packs.yml':
++                                '- id: alpha\n  requires: []\n  suggests: [beta]\n' +
++                                '- id: beta\n  requires: []\n',
++                            ...Object.fromEntries([
++                                skill('a-one', 'alpha', 'reaches [b](../b-one/SKILL.md)'),
++                                skill('b-one', 'beta', 'leaf'),
++                            ]),
++                        }),
++                    ),
++            },
++            {
++                // The denial half. Without it the case above cannot tell a
++                // working permit from a gate that stopped reporting at all.
++                name: 'the same link without the `suggests` edge is still rejected with exit 1',
++                expect: 'reject',
++                run: () =>
++                    rejectsWith(1, run(
++                        plant('suggests-absent', {
++                            'packs.yml': twoPacks,
++                            ...Object.fromEntries([
++                                skill('a-one', 'alpha', 'reaches [b](../b-one/SKILL.md)'),
++                                skill('b-one', 'beta', 'leaf'),
++                            ]),
++                        }),
++                    )),
++            },
+         ],
+     });
+ }
+@@ -797,7 +977,8 @@ function main(argv?: readonly string[]): number {
+         return 2;
+     }
+ 
+-    const pack_requires = _pack_requires();
++    const { requires: pack_requires, suggests: pack_suggests } = _pack_edges();
++    const suggestsOf = (pack: string): readonly string[] => pack_suggests.get(pack) ?? [];
+     const always_installed = _always_installed_packs();
+     const closureCache = new Map<string, Set<string>>();
+     const closureOf = (pack: string): Set<string> => {
+@@ -810,6 +991,7 @@ function main(argv?: readonly string[]): number {
+     };
+ 
+     const violations: ViolationRecord[] = [];
++    const permitted: PermittedRecord[] = [];
+ 
+     // Fail-safe: a unit-defining artefact with no resolvable pack cannot be
+     // boundary-checked, so it is a finding rather than a silent exclusion.
+@@ -837,7 +1019,27 @@ function main(argv?: readonly string[]): number {
+             if (target_packs === undefined) {
+                 continue; // docs/, scripts/, root files, unassigned — not pack-scoped
+             }
+-            if (_link_allowed(src_packs, target_packs, closureOf, always_installed)) {
++            const reason = _link_permit_reason(
++                src_packs,
++                target_packs,
++                closureOf,
++                always_installed,
++                suggestsOf,
++            );
++            if (reason !== null) {
++                // Only the advisory edge is worth reporting: the other three
++                // mean the target is installed, so there is nothing a reader
++                // has to weigh.
++                if (reason === 'suggests') {
++                    permitted.push({
++                        source_pack: src_packs.join('+'),
++                        target_pack: target_packs.join('+'),
++                        source: rel_path,
++                        target: target_rel,
++                        link: raw,
++                        reason,
++                    });
++                }
+                 continue;
+             }
+             violations.push({
+@@ -867,6 +1069,7 @@ function main(argv?: readonly string[]): number {
+                 count: violations.length,
+                 scanned,
+                 unassigned: unassigned.length,
++                permitted_by_suggests: permitted,
+                 ratchet:
+                     verdict === null ? null : { status: verdict.status, baseline: verdict.baseline },
+             }) + '\n',
+@@ -880,6 +1083,32 @@ function main(argv?: readonly string[]): number {
+                 `${pack_requires.size} packs (${unassigned.length} outside pack scope)\n`,
+         );
+     }
++    // Two different questions, so two different defaults.
++    //
++    // HOW MANY links an advisory edge is carrying prints on EVERY run,
++    // `--quiet` included. The permit is granted per EDGE, not per link: once an
++    // edge is declared, every future link on it is permitted without anyone
++    // re-checking that it degrades safely. An adversarial review demonstrated
++    // that by planting a link on a declared edge and watching this gate exit 0
++    // where it would previously have failed the pull request. `--quiet` is what
++    // CI passes, so a count visible only without it would miss the one log that
++    // matters.
++    //
++    // WHICH links they are stays behind `--show-permitted`. A permit is not a
++    // finding, and printing dozens of lines beside the violations reads as one.
++    process.stdout.write(
++        `${permitted.length} link(s) permitted by an advisory \`suggests\` edge` +
++            (args.show_permitted ? '' : ' (--show-permitted lists them)') +
++            '\n',
++    );
++    if (args.show_permitted) {
++        for (const p of permitted) {
++            process.stdout.write(
++                `  ~ ${p.source_pack} -> ${p.target_pack} : ${p.source} \u2192 ${p.target} ` +
++                    `(link: ${p.link}) — permitted by \`${p.reason}\`\n`,
++            );
++        }
++    }
+     for (const v of violations) {
+         if (v.kind === 'unresolved-pack') {
+             process.stdout.write(
+@@ -895,8 +1124,8 @@ function main(argv?: readonly string[]): number {
+     }
+     if (violations.length > 0) {
+         process.stdout.write(
+-            `\n${violations.length} cross-pack violation(s) — declare 'requires' in ` +
+-                'pack.yaml or move the artefact\n',
++            `\n${violations.length} cross-pack violation(s) — declare 'requires' or an ` +
++                "advisory 'suggests' edge in packs.yml, or move the artefact\n",
+         );
+         if (verdict !== null) {
+             if (verdict.ok) {
+@@ -946,9 +1175,14 @@ export {
+     _resolve_link,
+     _scan_file,
+     _always_installed_packs,
++    type PermitReason,
+     _is_allowed,
+     _link_allowed,
++    _link_permit_reason,
++    _pack_suggests,
++    _permit_reason,
+     _load_pack_meta,
++    _pack_edges,
+     _pack_requires,
+     _requires_closure,
+     _packs_of,
+diff --git a/src/scripts/lint_rule_skill_pack_reach.ts b/src/scripts/lint_rule_skill_pack_reach.ts
+index 9cb99379a96fae331e9136b5152b44be0b943fd5..8417c7d6cdf7ed772c75a3f9c03860610fa03ec8 100644
+--- a/src/scripts/lint_rule_skill_pack_reach.ts
++++ b/src/scripts/lint_rule_skill_pack_reach.ts
+@@ -35,6 +35,23 @@
+  * the wizard may offer it and the user may decline, so an invariant that
+  * counted it would pass on installs that do not exist.
+  *
++ * SIBLING GATE, OPPOSITE READING, SAME REASONING (2026-10-09). Since D5 of
++ * `road-to-gates-a-pull-request-can-hear`, `lint_pack_boundaries` DOES read
++ * `suggests` — as permitting a cross-pack link. That is not a contradiction of
++ * the paragraph above, and the discriminator is the direction of the claim
++ * each gate makes:
++ *
++ *   - THIS gate asserts a route WILL RESOLVE on the installs it covers.
++ *     Counting an advisory edge would assert resolution on installs that may
++ *     not exist — a false negative in the dangerous direction.
++ *   - The boundary gate reports a link that MAY DANGLE. An advisory edge is
++ *     the author stating they accept the dangle for a declining consumer, so
++ *     reading it there downgrades a finding the author has already answered.
++ *
++ * Practical consequence, stated because it is the mistake the asymmetry
++ * invites: adding a `suggests` edge does NOT clear an `unreachable-route`
++ * finding here. It never will. Fix the route or accept the finding.
++ *
+  * ADVISORY UNTIL ITS FINDING SET IS EMPTY, AND THE FIRST RUN SAYS WHY.
+  * Measured on introduction: 12 `unreachable-route` and 14 `unrouted-skill`
+  * findings across 116 rules. The UI pair is one instance of an estate-wide
+diff --git a/src/skills/corpus-grounding/ATTRIBUTION.md b/src/skills/corpus-grounding/ATTRIBUTION.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..c2eb30b05cd6ca8e34d8f5b8e46b33b4336f211d
+--- /dev/null
++++ b/src/skills/corpus-grounding/ATTRIBUTION.md
+@@ -0,0 +1,39 @@
++# Attribution — the ported grounding engine
++
++This file exists because of where the code ships, not because the obligation
++is new. `src/skills/design-intelligence/ATTRIBUTION.md` already covered both
++the vendored corpus **and** the ported engine. The corpus travels with the
++`frontend-design` pack; the engine sources below travel with **this** skill, in
++`engineering-base`. An install that takes `engineering-base` without
++`frontend-design` therefore carried MIT-derived code and no notice, which is
++the one thing the MIT obligation forbids. The notice is reproduced here so it
++travels with the files it covers.
++
++## Covered files
++
++- `scripts/bm25_search.ts`
++- `scripts/decision_engine.ts`
++- `scripts/ground.ts`
++- `scripts/schema_validator.ts`
++
++Ported from `[REDACTED:src-conf]/[REDACTED:src-conf]-skill` @
++`b7e3af80f6e331f6fb456667b82b12cade7c9d35` (Python sources `core.py`,
++`search.py`, `design_system.py`), de-duplicated and with slide-only paths
++stripped.
++
++## MIT
++
++Copyright (c) 2024 **Next Level Builder**.
++
++The Python engine sources (`core.py`, `search.py`, `design_system.py`) this
++skill's scripts are ported from are MIT-licensed. Obligation: **retain this
++notice**.
++
++## Not covered here
++
++The tabular design-knowledge corpus (`ui-reasoning`, `products`, `colors`,
++`styles`, `typography`, `charts`, `landing`, `icons`, `ux-guidelines`,
++`react-performance`, `app-interface`, `motion`, `stacks/*`), the Apache-2.0
++`ui-styling`-derived material, and the running modifications log stay in
++`design-intelligence/ATTRIBUTION.md` — they ship with that pack, and this file
++does not duplicate them.
+diff --git a/src/skills/corpus-grounding/SKILL.md b/src/skills/corpus-grounding/SKILL.md
+index c99a36589ba8ad85db28da449ee1217dad0fe3aa..e266e43a1c45ba5bafac4fe0a6dfa1906b633fff 100644
+--- a/src/skills/corpus-grounding/SKILL.md
++++ b/src/skills/corpus-grounding/SKILL.md
+@@ -31,8 +31,14 @@ execution:
+ Engine provenance: ported from `[REDACTED:src-conf]/[REDACTED:src-conf]-skill`
+ @ `b7e3af80f6e331f6fb456667b82b12cade7c9d35` (MIT, last checked
+ 2026-06-07) — BM25 de-duplicated, slide-only paths stripped, every
+-frontend-hardcoded axis moved into the manifest. Full license obligations:
+-[`design-intelligence/ATTRIBUTION.md`](../design-intelligence/ATTRIBUTION.md).
++frontend-hardcoded axis moved into the manifest. The obligations split by what
++ships where: the MIT notice for the **engine sources under `scripts/`** travels
++with this skill, in [`ATTRIBUTION.md`](ATTRIBUTION.md) beside it, so an install
++that takes `engineering-base` without `frontend-design` still carries the
++notice its code is under. The vendored **corpus** and the Apache-2.0
++`ui-styling` material travel with `frontend-design`, in
++[`design-intelligence/ATTRIBUTION.md`](../design-intelligence/ATTRIBUTION.md),
++which remains the full record.
+ 
+ ## When to use
+ 
+diff --git a/src/skills/tailwind-engineer/SKILL.md b/src/skills/tailwind-engineer/SKILL.md
+index d1e1c93a02fcdb5c1f06fe4670d197d293929f78..4b91e9cd54eca74d434a9184f5f2cc6ba6ee97ce 100644
+--- a/src/skills/tailwind-engineer/SKILL.md
++++ b/src/skills/tailwind-engineer/SKILL.md
+@@ -97,7 +97,9 @@ Token authoring (DTCG 3-layer model, CSS-var/Tailwind generation) lives
+ in [`design-tokens`](../design-tokens/SKILL.md); its
+ `tokens.ts validate --dir <path>` is the **single token-discipline
+ linter** — the mechanical check behind this rule (no hardcoded hex / px /
+-rem outside the token files). Greenfield Tailwind config: bundled
++rem outside the token files). That skill ships with the `frontend-design`
++pack: without it the rule above still binds and is checked by reading,
++not by a linter. Greenfield Tailwind config: bundled
+ `scripts/tailwind_config_gen.ts` (Apache-2.0-derived, pure templating)
+ scaffolds `tailwind.config.{js,ts}` per framework.
+ 
+diff --git a/tests/scripts/lint_pack_boundaries_base_narrow.test.ts b/tests/scripts/lint_pack_boundaries_base_narrow.test.ts
+new file mode 100644
+index 0000000000000000000000000000000000000000..329c50037c13ae8ca2f8f134de4ec98fe0830a6c
+--- /dev/null
++++ b/tests/scripts/lint_pack_boundaries_base_narrow.test.ts
+@@ -0,0 +1,286 @@
++// Tests for the base-into-narrow edge of src/scripts/lint_pack_boundaries.ts.
++//
++// The gate's own baseline note recorded a mismatch rather than a backlog: for
++// a link running from a BASE pack into a NARROWER one — `engineering-base ->
++// react`, `meta -> git`, `frontend-design -> brand` — none of the three
++// documented fixes applies. `requires` is transitive and install-forcing, so
++// declaring it would push the narrow pack into every install of the base;
++// retargeting needs an in-pack equivalent that does not exist; moving the
++// artefact changes which install ships it.
++//
++// D5 of `road-to-gates-a-pull-request-can-hear` (AI council 2026-10-07,
++// anthropic + openai, 2/2) chose option (a): `packs.yml` gains an advisory,
++// non-installing `suggests` edge that this gate reads as permitting the link,
++// on the condition that every link such an edge permits degrades safely when
++// the target pack is absent.
++//
++// Every acceptance below is paired with its denial. A gate tested only on the
++// case it should permit cannot distinguish "the edge works" from "the rule is
++// gone".
++import * as fs from 'node:fs';
++import * as os from 'node:os';
++import * as path from 'node:path';
++import { afterEach, beforeEach, describe, expect, it } from 'vitest';
++
++import * as lpb from '../../src/scripts/lint_pack_boundaries.js';
++import { runInProc } from '../_lib/run_in_process.js';
++
++/** Captured before any test repoints it (ESM live binding of a `let`). */
++const REAL_ROOT = lpb.ROOT;
++
++describe('lint_pack_boundaries — the advisory `suggests` edge', () => {
++    let tmp: string;
++    beforeEach(() => {
++        tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'lpb-bn-'));
++    });
++    afterEach(() => {
++        fs.rmSync(tmp, { recursive: true, force: true });
++    });
++
++    const ALWAYS = new Set(['core']);
++
++    // --- The unit rule, both polarities. ---
++
++    it('permits a base -> narrow link when the base declares `suggests`', () => {
++        expect(lpb._is_allowed('base', 'narrow', [], ALWAYS, ['narrow'])).toBe(true);
++    });
++
++    it('still rejects the same link when the base declares no `suggests`', () => {
++        expect(lpb._is_allowed('base', 'narrow', [], ALWAYS, [])).toBe(false);
++    });
++
++    it('rejects a `suggests` edge that names a different pack', () => {
++        expect(lpb._is_allowed('base', 'narrow', [], ALWAYS, ['other'])).toBe(false);
++    });
++
++    // --- The edge stays one-way and one-hop. ---
++
++    it('is one-way: the target suggesting the source does not permit the link', () => {
++        // Asserted through `_link_permit_reason`, because that is the only
++        // place two-wayness could be implemented — `_is_allowed`'s 5th
++        // argument is by construction the SOURCE pack's own list, so passing
++        // `[]` there would merely repeat the denial above and would stay green
++        // if the lookup started reading the target's list too.
++        const direct = new Map<string, string[]>([
++            ['base', []],
++            ['narrow', []],
++        ]);
++        const closureOf = (p: string): Set<string> => lpb._requires_closure(p, direct);
++        // ONLY `base` declares the edge.
++        const suggestsOf = (p: string): readonly string[] => (p === 'base' ? ['narrow'] : []);
++
++        expect(lpb._link_permit_reason(['base'], ['narrow'], closureOf, ALWAYS, suggestsOf)).toBe(
++            'suggests',
++        );
++        expect(
++            lpb._link_permit_reason(['narrow'], ['base'], closureOf, ALWAYS, suggestsOf),
++        ).toBeNull();
++    });
++
++    it('is one-hop: `suggests` is never expanded transitively', () => {
++        const direct = new Map<string, string[]>([
++            ['base', []],
++            ['mid', []],
++            ['leaf', []],
++        ]);
++        const suggests = new Map<string, string[]>([
++            ['base', ['mid']],
++            ['mid', ['leaf']],
++        ]);
++        const closureOf = (p: string): Set<string> => lpb._requires_closure(p, direct);
++        const suggestsOf = (p: string): readonly string[] => suggests.get(p) ?? [];
++
++        expect(lpb._link_allowed(['base'], ['mid'], closureOf, ALWAYS, suggestsOf)).toBe(true);
++        expect(lpb._link_allowed(['base'], ['leaf'], closureOf, ALWAYS, suggestsOf)).toBe(false);
++    });
++
++    // --- The permitting edge is named, not merely applied. ---
++
++    it('names which edge permitted the link', () => {
++        const direct = new Map<string, string[]>([
++            ['base', ['dep']],
++            ['dep', []],
++            ['narrow', []],
++        ]);
++        const closureOf = (p: string): Set<string> => lpb._requires_closure(p, direct);
++        const suggestsOf = (p: string): readonly string[] =>
++            p === 'base' ? ['narrow'] : [];
++
++        expect(lpb._link_permit_reason(['base'], ['base'], closureOf, ALWAYS, suggestsOf)).toBe(
++            'same-pack',
++        );
++        expect(lpb._link_permit_reason(['base'], ['core'], closureOf, ALWAYS, suggestsOf)).toBe(
++            'always-installed',
++        );
++        expect(lpb._link_permit_reason(['base'], ['dep'], closureOf, ALWAYS, suggestsOf)).toBe(
++            'requires',
++        );
++        expect(lpb._link_permit_reason(['base'], ['narrow'], closureOf, ALWAYS, suggestsOf)).toBe(
++            'suggests',
++        );
++        expect(
++            lpb._link_permit_reason(['narrow'], ['dep'], closureOf, ALWAYS, suggestsOf),
++        ).toBeNull();
++    });
++
++    // --- The multi-pack aggregation, which a mutation survived. ---
++    //
++    // An adversarial review replaced the `PERMIT_RANK[best] > PERMIT_RANK[weakest]`
++    // comparison with a bare `weakest = best` — "last source pack wins" — and all
++    // 33 tests stayed green while the real corpus silently reported 81 permits
++    // instead of 83. Every case above uses a SINGLE source pack, so none of them
++    // reaches the loop. These two do.
++
++    it('reports the WEAKEST edge across a multi-pack source, not the last one', () => {
++        const direct = new Map<string, string[]>([
++            ['wide', []],
++            ['narrow', []],
++        ]);
++        const closureOf = (p: string): Set<string> => lpb._requires_closure(p, direct);
++        // `narrow` reaches the target by being it; `wide` only by the advisory
++        // edge. The link is as weak as its weakest source pack.
++        const suggestsOf = (p: string): readonly string[] => (p === 'wide' ? ['narrow'] : []);
++
++        expect(
++            lpb._link_permit_reason(['wide', 'narrow'], ['narrow'], closureOf, ALWAYS, suggestsOf),
++        ).toBe('suggests');
++        // Order must not decide it: the same two packs the other way round.
++        expect(
++            lpb._link_permit_reason(['narrow', 'wide'], ['narrow'], closureOf, ALWAYS, suggestsOf),
++        ).toBe('suggests');
++    });
++
++    it('refuses the link when ANY source pack cannot reach the target', () => {
++        const direct = new Map<string, string[]>([
++            ['wide', []],
++            ['other', []],
++            ['narrow', []],
++        ]);
++        const closureOf = (p: string): Set<string> => lpb._requires_closure(p, direct);
++        const suggestsOf = (p: string): readonly string[] => (p === 'wide' ? ['narrow'] : []);
++
++        // `other` declares nothing, so the artefact is dead in that install
++        // even though `wide` is covered.
++        expect(
++            lpb._link_permit_reason(['wide', 'other'], ['narrow'], closureOf, ALWAYS, suggestsOf),
++        ).toBeNull();
++    });
++
++    // --- End to end over a planted corpus, both polarities. ---
++
++    const skill = (name: string, pack: string, body: string): [string, string] => [
++        `skills/${name}/SKILL.md`,
++        `---\nname: ${name}\npacks: [${pack}]\n---\n\n${body}\n`,
++    ];
++
++    function plant(files: Record<string, string>): string {
++        const dir = fs.mkdtempSync(path.join(tmp, 'corpus-'));
++        for (const [rel, content] of Object.entries(files)) {
++            const p = path.join(dir, rel);
++            fs.mkdirSync(path.dirname(p), { recursive: true });
++            fs.writeFileSync(p, content, 'utf-8');
++        }
++        // Realpath, not the mkdtemp path: on macOS `os.tmpdir()` is a symlink
++        // (`/var` -> `/private/var`), and link resolution canonicalises the
++        // target while the root would not — the relative keys then miss the
++        // index and every link reads as out-of-tree, i.e. a silent green.
++        return fs.realpathSync(dir);
++    }
++
++    interface Run {
++        code: number;
++        out: string;
++        stdout: string;
++    }
++
++    function runWith(dir: string, argv: string[]): Run {
++        lpb._set_paths_for_test({ root: dir });
++        try {
++            const r = runInProc(lpb.main, argv);
++            return { code: r.status, out: r.stdout + r.stderr, stdout: r.stdout };
++        } finally {
++            lpb._set_paths_for_test({ root: REAL_ROOT });
++        }
++    }
++
++    const run = (dir: string, extra: string[] = []): Run => runWith(dir, ['--quiet', ...extra]);
++
++    /** The ordinary CI path — no `--quiet`, so the summary lines are visible. */
++    const runVerbose = (dir: string, extra: string[] = []): Run => runWith(dir, extra);
++
++    const corpus = (packsYml: string): Record<string, string> => ({
++        'packs.yml': packsYml,
++        ...Object.fromEntries([
++            skill('base-one', 'base', 'reaches [n](../narrow-one/SKILL.md)'),
++            skill('narrow-one', 'narrow', 'leaf'),
++        ]),
++    });
++
++    it('exits 0 on a corpus whose only cross-pack link a `suggests` edge permits', () => {
++        const dir = plant(
++            corpus('- id: base\n  requires: []\n  suggests: [narrow]\n- id: narrow\n  requires: []\n'),
++        );
++        expect(run(dir).code).toBe(0);
++    });
++
++    it('exits 1 on the same corpus with the `suggests` edge removed', () => {
++        const dir = plant(corpus('- id: base\n  requires: []\n- id: narrow\n  requires: []\n'));
++        expect(run(dir).code).toBe(1);
++    });
++
++    it('reports the permitting edge under --show-permitted', () => {
++        const dir = plant(
++            corpus('- id: base\n  requires: []\n  suggests: [narrow]\n- id: narrow\n  requires: []\n'),
++        );
++        const { code, out } = run(dir, ['--show-permitted']);
++        expect(code).toBe(0);
++        expect(out).toContain('suggests');
++        expect(out).toContain('base -> narrow');
++    });
++
++    it('says nothing about a permitted link without --show-permitted', () => {
++        const dir = plant(
++            corpus('- id: base\n  requires: []\n  suggests: [narrow]\n- id: narrow\n  requires: []\n'),
++        );
++        expect(run(dir).out).not.toContain('base -> narrow');
++    });
++
++    // The permit is per EDGE, so the set it carries grows without anyone
++    // re-checking it. The count is the only thing that makes that growth
++    // visible to a reader who did not pass a flag, so it is pinned on the
++    // ordinary path — and pinned as a COUNT, not as the list.
++    it('prints how many links the advisory edge carries on an ordinary run', () => {
++        const dir = plant(
++            corpus('- id: base\n  requires: []\n  suggests: [narrow]\n- id: narrow\n  requires: []\n'),
++        );
++        const { out } = runVerbose(dir);
++        expect(out).toContain('1 link(s) permitted by an advisory `suggests` edge');
++        expect(out).not.toContain('base -> narrow');
++    });
++
++    it('reports zero rather than staying silent when no edge carries anything', () => {
++        const dir = plant(
++            corpus('- id: base\n  requires: [narrow]\n- id: narrow\n  requires: []\n'),
++        );
++        expect(runVerbose(dir).out).toContain('0 link(s) permitted by an advisory `suggests` edge');
++    });
++
++    // `--format json` carries the permitted set unconditionally: a machine
++    // consumer cannot pass a flag it does not know about, and the array is
++    // additive. Pinned so the two output modes cannot drift apart silently.
++    it('always carries permitted_by_suggests in the JSON payload', () => {
++        const dir = plant(
++            corpus('- id: base\n  requires: []\n  suggests: [narrow]\n- id: narrow\n  requires: []\n'),
++        );
++        // stdout only: the `scanned:` line goes to stderr under --format json
++        // precisely so the payload stays parseable, and a test that reads both
++        // would stop pinning that split.
++        const { stdout } = run(dir, ['--format', 'json']);
++        const payload = JSON.parse(stdout) as {
++            permitted_by_suggests: { reason: string; source_pack: string }[];
++        };
++        expect(payload.permitted_by_suggests).toHaveLength(1);
++        expect(payload.permitted_by_suggests[0]?.reason).toBe('suggests');
++        expect(payload.permitted_by_suggests[0]?.source_pack).toBe('base');
++    });
++});

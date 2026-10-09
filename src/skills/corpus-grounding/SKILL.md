@@ -31,8 +31,14 @@ execution:
 Engine provenance: ported from `nextlevelbuilder/ui-ux-pro-max-skill`
 @ `b7e3af80f6e331f6fb456667b82b12cade7c9d35` (MIT, last checked
 2026-06-07) — BM25 de-duplicated, slide-only paths stripped, every
-frontend-hardcoded axis moved into the manifest. Full license obligations:
-[`design-intelligence/ATTRIBUTION.md`](../design-intelligence/ATTRIBUTION.md).
+frontend-hardcoded axis moved into the manifest. The obligations split by what
+ships where: the MIT notice for the **engine sources under `scripts/`** travels
+with this skill, in [`ATTRIBUTION.md`](ATTRIBUTION.md) beside it, so an install
+that takes `engineering-base` without `frontend-design` still carries the
+notice its code is under. The vendored **corpus** and the Apache-2.0
+`ui-styling` material travel with `frontend-design`, in
+[`design-intelligence/ATTRIBUTION.md`](../design-intelligence/ATTRIBUTION.md),
+which remains the full record.
 
 ## When to use
 

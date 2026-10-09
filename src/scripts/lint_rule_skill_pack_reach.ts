@@ -35,6 +35,23 @@
  * the wizard may offer it and the user may decline, so an invariant that
  * counted it would pass on installs that do not exist.
  *
+ * SIBLING GATE, OPPOSITE READING, SAME REASONING (2026-10-09). Since D5 of
+ * `road-to-gates-a-pull-request-can-hear`, `lint_pack_boundaries` DOES read
+ * `suggests` — as permitting a cross-pack link. That is not a contradiction of
+ * the paragraph above, and the discriminator is the direction of the claim
+ * each gate makes:
+ *
+ *   - THIS gate asserts a route WILL RESOLVE on the installs it covers.
+ *     Counting an advisory edge would assert resolution on installs that may
+ *     not exist — a false negative in the dangerous direction.
+ *   - The boundary gate reports a link that MAY DANGLE. An advisory edge is
+ *     the author stating they accept the dangle for a declining consumer, so
+ *     reading it there downgrades a finding the author has already answered.
+ *
+ * Practical consequence, stated because it is the mistake the asymmetry
+ * invites: adding a `suggests` edge does NOT clear an `unreachable-route`
+ * finding here. It never will. Fix the route or accept the finding.
+ *
  * ADVISORY UNTIL ITS FINDING SET IS EMPTY, AND THE FIRST RUN SAYS WHY.
  * Measured on introduction: 12 `unreachable-route` and 14 `unrouted-skill`
  * findings across 116 rules. The UI pair is one instance of an estate-wide
