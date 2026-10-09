@@ -1,6 +1,22 @@
 ---
 complexity: lightweight
-status: draft
+status: later
+review_by: 2027-01-08
+estate_growth_exempt: "open_blockers 59 to 61 — parking this file and road-to-adversarial-verification-and-long-runs moves two roadmaps out of status draft, which collect() hides from every count, into later/, which laterRoadmaps() counts. Neither blocker is new: freshness-mechanism-is-owner-owned and daemon-host-kill-switch both predate this change and both are Class 3, human-only. Nothing was archived to offset it because neither roadmap is finished — that is why they park instead."
+entry_condition:
+  what: >-
+    the owner picks one of the four priced options under the blocker
+    `freshness-mechanism-is-owner-owned` — durable rotation results, CI writing
+    `last_eval`, retiring the freshness dimension, or widening the window. Step
+    1.1 and AC-1 are the only open work and both are that choice.
+  when: >-
+    whenever the owner weighs the measured ~1020 provider queries per full pass
+    (~85/week sustained) against losing the trigger-regression lock. No external
+    event moves the number; only the suite count or the window does.
+  who: >-
+    maintainer — the blocker is Class 3, human-only and business-owned, and two of
+    the four options additionally need a CI write path into a protected branch,
+    which is Hard Floor under non-destructive-by-default.
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: >-
@@ -60,9 +76,10 @@ estate_offset_exempt: >-
 > **0** deferrals and **0** open blockers (`901e8bc4e`, a pure `git mv`). This file
 > differs on all three axes.
 >
-> **Hand-over.** (a) `agents/roadmaps/road-to-trigger-eval-freshness-has-no-writer.md:3`,
-> currently `status: draft` → `status: ready`, which also needs the `check_estate_count`
-> growth claimed or offset; the frontmatter reserves that act to a maintainer. (b) `D3`
+> **Hand-over.** (a) `agents/roadmaps/later/road-to-trigger-eval-freshness-has-no-writer.md:3`,
+> currently `status: later` (parked 2026-10-09) → `status: ready` plus a move back out of
+> `later/`, which also needs the `check_estate_count` growth claimed or offset; the
+> frontmatter reserves that act to a maintainer. (b) `D3`
 > answered — the row at `## Decisions` currently opens `| D3 | business-owned | owner |
 > **OPEN.**` — which is the `business-owned`, `Class: 3 — human-only` spend decision the
 > blocker prices. (c) Then either resolution of `freshness-mechanism-is-owner-owned`, or
@@ -496,7 +513,7 @@ returns. D2's **decision** is untouched — only the condition for revisiting it
   now carries a second question. Growth is also not a one-off — 102 → 111 in
   four days — so a decision deferred further is decided against a larger
   number again.
-- **Resolved when:** `grep -c 'OPEN' agents/roadmaps/road-to-trigger-eval-freshness-has-no-writer.md`
+- **Resolved when:** `grep -c 'OPEN' agents/roadmaps/later/road-to-trigger-eval-freshness-has-no-writer.md`
   no longer matches the `D3` row — that row names one of the four options — and
   the tree agrees with it: either a mechanism writes what the gate reads, or
   `check_trigger_evals.ts` no longer reads a date nothing writes.

@@ -1,6 +1,23 @@
 ---
 complexity: structural
-status: draft
+status: later
+review_by: 2027-01-08
+entry_condition:
+  what: >-
+    the two remaining `[~]` criteria both need an owner action no agent path can
+    perform. AC-4 needs three characters removed from the kernel rule
+    `verify-before-complete`, which `block-kernel-rule-writes` refuses
+    deterministically — the attempt and its verbatim refusal are recorded at the
+    criterion. AC-6 needs the blocker `daemon-host-kill-switch` decided: either
+    `destructive: manual-only` on a host with no process-level stop, or no
+    autonomous mode there at all.
+  when: >-
+    whenever a maintainer takes the kernel edit through the override exception
+    registry and records the kill-switch fallback in `docs/enforcement-by-host.md`.
+    Neither waits on an external event; both wait on a human.
+  who: >-
+    maintainer — `daemon-host-kill-switch` is Class 3, human-only, and the kernel
+    edit is barred to agents by a fail-closed guard rather than by convention.
 execution:
   mode: phase-checkpoints
 owner: maintainer
