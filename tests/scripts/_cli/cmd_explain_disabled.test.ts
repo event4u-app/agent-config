@@ -1,9 +1,7 @@
-// Pure-TS coverage for the `explain.enable_last: false` short-circuit of
-// `agent-config explain last` (ADR-200 py2ts). The golden-parity suite in
-// `cmd_explain.test.ts` exercises happy-path / quiet / json / missing-state /
-// v0-skew but NOT the disabled-by-settings exit gate; this twin closes that
-// gap, porting tests/cli/explain_last/test_cli.py
-// (`test_disabled_by_settings_exits_zero` + `test_disabled_via_in_process_returns_zero`).
+// Pure-TS coverage for what became of the `explain.enable_last: false`
+// short-circuit of `agent-config explain last` (ADR-200 py2ts). The key was
+// retired with its default (on) as the fixed behaviour, so the inverted
+// invariant is pinned here: a leftover `false` no longer suppresses the trace.
 //
 // Drives the exported `main(argv)` directly and captures `process.stdout`
 // (the command's `print` helper writes there) — no python, no subprocess.
@@ -21,8 +19,7 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 let tmp: string;
 
 // Minimal seeded project root (router + preset + profile) — same shape the
-// explain_last conftest builds, so the resolvers don't fall over before the
-// disabled gate fires.
+// explain_last conftest builds, so the resolvers don't fall over.
 const ROUTER = JSON.stringify({
     schema_version: 1,
     kernel: ['direct-answers', 'no-cheap-questions'],
@@ -73,8 +70,8 @@ afterEach(() => {
     fs.rmSync(tmp, { recursive: true, force: true });
 });
 
-describe('cmd_explain — explain.enable_last: false short-circuit', () => {
-    it('disabled-by-settings exits 0 with the disabled-by-settings message', () => {
+describe('cmd_explain — a leftover explain.enable_last: false is ignored', () => {
+    it('renders the trace anyway — the switch was retired with its default (on)', () => {
         copyState(tmp, 'work-state.success.json');
         fs.writeFileSync(
             path.join(tmp, '.agent-settings.yml'),
@@ -84,9 +81,7 @@ describe('cmd_explain — explain.enable_last: false short-circuit', () => {
 
         const rc = main(['last', '--project', tmp]);
         expect(rc).toBe(0);
-        // Same surface the python CLI test asserts: "disabled by settings"
-        // wording + the `explain.enable_last` key name, both on stdout.
-        expect(captured).toContain('disabled by settings');
-        expect(captured).toContain('explain.enable_last');
+        expect(captured).not.toContain('disabled by settings');
+        expect(captured.trim().length).toBeGreaterThan(0);
     });
 });

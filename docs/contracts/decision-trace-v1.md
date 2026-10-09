@@ -12,8 +12,8 @@ audit substrate for the rule-interaction matrix
 showcase-session capture pipeline
 ([`outcome-baseline.md`](../../agents/settings/contexts/outcome-baseline.md)).
 
-**Scope.** Defines the JSON envelope written next to a `WorkState`
-file when `decision_engine.surface_traces: true`. Does **not**
+**Scope.** Defines the JSON envelope a `WorkState` run writes when
+`DecisionTraceHook` is registered. Does **not**
 specify how individual rules detect their own activation — that is
 the rule's own responsibility — only the shape of the report.
 
@@ -21,15 +21,12 @@ Last refreshed: 2026-05-04.
 
 ## Opt-in
 
-Off by default. Toggled in `.agent-settings.yml`:
-
-```yaml
-decision_engine:
-  surface_traces: true
-```
-
-The `/work` and `/implement-ticket` engines check this flag at phase
-boundaries and emit one trace file per phase when set.
+Off, and no longer a setting. The `decision_engine.surface_traces` key
+that used to turn it on was retired on 2026-10-09 with its default (off)
+as the fixed behaviour, so the work-engine hook settings never register
+`DecisionTraceHook`; a leftover key is accepted by the
+`decision_engine:` parser and ignored. The envelope below stays the
+contract for a caller that registers the hook directly.
 
 ## File location
 

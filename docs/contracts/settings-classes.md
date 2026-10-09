@@ -247,13 +247,13 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 
 | Class | Keys |
 |---|---|
-| A — preference | 12 |
+| A — preference | 11 |
 | B — consent | 3 |
-| C — guarded | 107 |
-| **Total** | **122** |
+| C — guarded | 103 |
+| **Total** | **117** |
 
 <!-- derivable-retirement-2026-10-09 -->
-It fell to 122 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 36 `derivable` keys (14 A, 22 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behaviour, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`; 2.2 reasoning protocol switches — `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`; 2.3 roadmap cadence — `roadmap.skip_pre_run_gate`, `roadmap.dashboard_regen_cadence`; 2.4 command suggestion and PR creation — `commands.auto_detect`, `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`, `commands.suggestion.cooldown_seconds`, `commands.suggestion.max_options`, `commands.create_pr.api_examples`, `commands.create_pr.ui_paths`, `commands.create_pr.api_paths`; 2.5 memory and knowledge sharing — `memory.cadence`, `memory.review_threshold`, `knowledge.global_sharing.redaction.enabled`, `knowledge.global_sharing.redaction.halt_on_trigger`, `knowledge.global_sharing.auto_promote_threshold`, `knowledge.global_sharing.freshness.hypothesis_after_days`, `knowledge.global_sharing.freshness.stale_after_days`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
+It fell to 117 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 41 `derivable` keys (15 A, 26 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behaviour, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`; 2.2 reasoning protocol switches — `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`; 2.3 roadmap cadence — `roadmap.skip_pre_run_gate`, `roadmap.dashboard_regen_cadence`; 2.4 command suggestion and PR creation — `commands.auto_detect`, `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`, `commands.suggestion.cooldown_seconds`, `commands.suggestion.max_options`, `commands.create_pr.api_examples`, `commands.create_pr.ui_paths`, `commands.create_pr.api_paths`; 2.5 memory and knowledge sharing — `memory.cadence`, `memory.review_threshold`, `knowledge.global_sharing.redaction.enabled`, `knowledge.global_sharing.redaction.halt_on_trigger`, `knowledge.global_sharing.auto_promote_threshold`, `knowledge.global_sharing.freshness.hypothesis_after_days`, `knowledge.global_sharing.freshness.stale_after_days`; 2.6 hooks and engine — `hooks.concern_budget.max_per_event`, `hooks.concern_budget.hard_fail`, `decision_engine.surface_traces`, `decision_engine.on_block_fallback`, `explain.enable_last`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
 <!-- /derivable-retirement-2026-10-09 -->
 
 It rose to 158 on 2026-10-06 when the `git:` section added three C keys —
@@ -393,11 +393,11 @@ the template, which is the drift this contract exists to prevent.
 
 | Disposition | Keys |
 |---|---|
-| derivable | 47 |
+| derivable | 42 |
 | un-inferrable | 10 |
 | consent | 48 |
 | policy | 17 |
-| **Total** | **122** |
+| **Total** | **117** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -592,9 +592,7 @@ Rows follow template order, so a diff against the template reads straight down.
 | `memory.learn_on_session_end` | B | `false` | turns on automatic memory writes at session end | consent |
 | `knowledge.global_sharing.enabled` | C | `true` | kill-switch over cross-project egress | consent |
 | `knowledge.global_sharing.allowed_tiers` | C | `[public]` | allowlist for that egress | consent |
-| `hooks.concern_budget.max_per_event` | C | `8` | budget cap on hook concerns | derivable — the gate's own constant over `hook_manifest.yaml`, with no consumer-situational input to read |
 | `hooks.concern_budget.tier1_concerns` | C | `[]` | allowlist of concerns permitted to fail closed | policy |
-| `hooks.concern_budget.hard_fail` | C | `false` | weakens the budget gate to warn-only | derivable — the gate's own `--strict` argv, which CI already passes to sibling gates |
 | `hooks.injection_scan.enabled` | C | `false` | the prompt-injection scanner | derivable — the scanner's own signature match on the tool envelope; warn-only and silent on no hit |
 | `hooks.rtk_wrap.enabled` | C | `false` | configures code that runs on every tool call | derivable — the live PATH and identity probe the hook already runs; silent when rtk is absent |
 | `hooks.design_slop.enabled` | C | `false` | configures code that runs on every tool call | derivable — the rule-registry match plus the hook's own per-signature silence cap |
@@ -604,15 +602,12 @@ Rows follow template order, so a diff against the template reads straight down.
 | `hooks.code_graph.enabled` | C | `false` | INERT since 2026-09-07 — the nudge it gated was replaced by `code-graph-context`, which reads no flag. The KEY stays registered because `docs/MIGRATION.md` commits to exactly that ("the surfaces stay registered and disabled"): removing it is a breaking change for any consumer who set it, and the row was briefly marked REMOVED, which left the template's own leaf unclassified. Classified, not deleted. | derivable — the index-detection probe the replacement hook already runs; no index means silence |
 | `hooks.suggestion_capture.enabled` | C | `false` | configures code that runs at every turn end and every prompt | consent |
 | `hooks.verify_before_complete.touched_file_quality` | C | `"off"` | C-test 1 — it decides whether the stop hook SPAWNS the project's own quality commands over the turn's edited files, so the cost it authorises is other people's processes on the operator's machine | consent — running a consumer's toolchain against their working tree is a thing to be permitted, not a fact the tree can derive. The three values are not a severity ladder the agent may climb: `shadow` records, `warn` adds one advisory line, and the flip from one to the other is the owner decision `road-to-touched-files-that-pass-their-own-tools` 2.3 defers |
-| `decision_engine.surface_traces` | C | `false` | the decision engine’s own black box; the agent must not be able to close it | derivable — the engine's own active-gate state; there is nothing to surface when no gate fired |
 | `decision_engine.min_confidence` | C | `"off"` | the confidence gate | derivable — the confidence band the scoring engine already computes at the plan phase |
 | `decision_engine.block_on_risk` | C | `"off"` | the risk-class gate | derivable — the risk class the engine already computes at the implement phase; the Hard Floor covers the irreversible end unconditionally |
 | `decision_engine.require_memory_hits` | C | `false` | a phase gate | derivable — the memory-hit count at the refine phase; its own template comment says the flag delays that soak |
 | `decision_engine.on_block` | C | `stop` | `warn` advances past a gate that fired | derivable — the non-interactive probe decides ask-versus-stop, and the fired gate's own action decides the rest |
 | `decision_engine.ask_timeout_seconds` | C | `30` | how long a fired gate waits before falling back | derivable — the same non-interactive probe: where nobody can answer there is nothing to wait for |
-| `decision_engine.on_block_fallback` | C | `stop` | fail-safe versus fail-open after that timeout | derivable — the same non-interactive detection; a gate that fires with no one to answer resolves fail-safe by construction |
 | `update_check.enabled` | C | `true` | a background safety check; disabling it pins the user to known-vulnerable code | consent |
-| `explain.enable_last` | A | `true` | a read-only diagnostics surface | derivable — the presence of a work-state trace to render; with no trace the command is already a no-op |
 | `legal_review_prep.acknowledged` | C | `false` | the consent gate; the safety floor requires the wizard checkbox | consent |
 | `legal_review_prep.require_council` | C | `true` | a fail-closed defence-in-depth gate | consent |
 

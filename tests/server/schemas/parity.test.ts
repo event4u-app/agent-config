@@ -232,6 +232,11 @@ const RETIRED_2026_10_09: readonly (readonly [string, string, Json])[] = [
     ['knowledge.global_sharing', 'redaction', { enabled: false, halt_on_trigger: false }],
     ['knowledge.global_sharing', 'auto_promote_threshold', 5],
     ['knowledge.global_sharing', 'freshness', { hypothesis_after_days: 7, stale_after_days: 14 }],
+    ['hooks.concern_budget', 'max_per_event', 3],
+    ['hooks.concern_budget', 'hard_fail', true],
+    ['decision_engine', 'surface_traces', true],
+    ['decision_engine', 'on_block_fallback', 'warn'],
+    ['explain', 'enable_last', false],
 ] as const;
 
 describe('deleted settings keys cannot be honoured again', () => {

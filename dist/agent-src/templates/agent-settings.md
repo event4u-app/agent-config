@@ -545,7 +545,7 @@ the canonical narrative lives in
 | `chat_history.enabled` | `true`, `false` | `true` | Persist chat events to `agents/runtime/.agent-chat-history` (JSONL) for crash recovery. |
 | `chat_history.frequency` | `per_turn`, `per_phase`, `per_tool` | per profile | Logging granularity. Defaults: `minimal`→`per_turn`, `balanced`→`per_phase`, `full`→`per_tool`. |
 | `chat_history.text_limits.{user,agent,tool,phase}` | integer (chars) | `user=0`, `agent=5000`, `tool=200`, `phase=200` | Per-entry-type text-length cap. `0` = verbatim, no slice. `N > 0` = collapse whitespace, slice to N chars, append `" … [+K chars]"` so the log self-reports truncation. Defaults match `DEFAULT_TEXT_LIMITS` in `scripts/chat_history.ts`. |
-| `hooks.concern_budget.{max_per_event,tier1_concerns,hard_fail}` | integer / list / `true`,`false` | `8` / `[]` / `false` | Concern budget gate for the hook dispatcher (`lint_hook_concern_budget`): caps concerns per (platform, event) cell, restricts `fail_closed: true` to the `tier1_concerns` allowlist, and `hard_fail: false` keeps the gate warn-only. |
+| `hooks.concern_budget.tier1_concerns` | list | `[]` | Concern budget gate for the hook dispatcher (`lint_hook_concern_budget`): restricts `fail_closed: true` to this allowlist. The per-cell cap (8) is fixed and the gate is warn-only unless run with `--strict`. |
 | `hooks.injection_scan.enabled` | `true`, `false` | `false` | PostToolUse prompt-injection scanner: scans tool output for injection signatures and warns in context (exit 2) — never blocks. |
 | `hooks.rtk_wrap.enabled` | `true`, `false` | `false` | PreToolUse RTK-wrap nudge: when `rtk` is on PATH, warns (exit 2, never blocks) to re-run a verbose CLI command wrapped with rtk. |
 | `hooks.design_slop.enabled` | `true`, `false` | `false` | PreToolUse anti-slop nudge: runs the `lint_design_slop` registry against about-to-be-written UI content and warns (exit 2, never blocks) on P0/P1 aesthetic tells. |
@@ -632,6 +632,10 @@ silence it.
 | `memory.cadence` | the 🧠 memory line renders whenever a memory type was asked; `memory.visibility: off` still silences it |
 | `memory.review_threshold` | `/memory load` previews intake signals above a fixed 10 |
 | `knowledge.global_sharing.redaction.*`, `.auto_promote_threshold`, `.freshness.*` | redaction always runs and halts on a hit; promotion suggested at 2 repos; lead-only after 90 days, skipped after 180 |
+| `hooks.concern_budget.max_per_event`, `.hard_fail` | at most 8 concerns per (platform, event) cell; warn-only unless the gate runs with `--strict` |
+| `decision_engine.surface_traces` | no per-phase decision-trace file (accepted in the `decision_engine:` block and ignored) |
+| `decision_engine.on_block_fallback` | an `on_block: ask` that times out stops (accepted and ignored) |
+| `explain.enable_last` | `agent-config explain last` always renders the trace |
 
 ## Cost profiles
 

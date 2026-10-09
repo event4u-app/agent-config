@@ -27,7 +27,6 @@ const crossSourceMode = z.enum(['on', 'auto', 'off']);
 const replyMethod = z.enum(['replies_endpoint', 'create_review_comment', 'auto']);
 const confidenceBand = z.enum(['off', 'low', 'medium', 'high']);
 const onBlock = z.enum(['stop', 'ask', 'warn']);
-const onBlockFallback = z.enum(['stop', 'warn']);
 const modelAutoSwitch = z.enum(['auto', 'suggest', 'off']);
 const leanProjectionMode = z.enum(['eager-all', 'thin', 'delivery']);
 const leanProjectionHost = z.enum(['claude-code', 'cursor', 'cline']);
@@ -479,14 +478,8 @@ export const settingsSchema = z.object({
     }).default({}),
     hooks: z.object({
         concern_budget: z.object({
-            max_per_event: z.number().int().min(1).default(8).describe(
-                'Maximum number of concerns (issues / warnings) a single hook may raise per (platform, event) pair before the hook is rate-limited. Default 8 prevents noisy hooks from drowning out high-signal ones.',
-            ),
             tier1_concerns: z.array(z.string()).default([]).describe(
                 'Concern IDs (one per line) that are allowed to block the run on failure rather than warn. Reserved for high-confidence guards — leave empty unless you maintain custom hooks.',
-            ),
-            hard_fail: z.boolean().default(false).describe(
-                'When a hook exceeds hooks.concern_budget.max_per_event, fail the run (true) instead of warning and continuing (false, default). Turn on in CI when you want hook quality to gate merges.',
             ),
         }),
         verify_before_complete: z.object({
@@ -542,9 +535,6 @@ export const settingsSchema = z.object({
         // `src/scripts/_lib/settings_removed_keys.ts`.
     }),
     decision_engine: z.object({
-        surface_traces: z.boolean().default(false).describe(
-            'Emit DecisionTraceHook events that surface why the agent picked one option over another. Useful when debugging unexpected choices; off by default to keep chat noise low.',
-        ),
         min_confidence: confidenceBand.default('off').describe(
             'During Phase=Plan, refuse to advance to Phase=Implement if confidence is below this band. off (default) = no gate. low / medium / high = raise the floor; on miss, decision_engine.on_block decides what happens.',
         ),
@@ -558,20 +548,12 @@ export const settingsSchema = z.object({
             'What the decision engine does when a gate (min_confidence / block_on_risk / require_memory_hits) fires. stop (default) = halt and surface the reason. ask = present numbered options. warn = log and continue.',
         ),
         ask_timeout_seconds: z.number().int().min(0).default(30).describe(
-            'Non-TTY timeout (seconds) for decision_engine.on_block = ask. After this elapses without input, decision_engine.on_block_fallback takes over. Default 30s; raise for slow human review, 0 = wait forever.',
-        ),
-        on_block_fallback: onBlockFallback.default('stop').describe(
-            'Resolution when decision_engine.on_block = ask times out (see decision_engine.ask_timeout_seconds). stop (default) = halt the run. warn = log and continue with the agent\'s best guess.',
+            'Non-TTY timeout (seconds) for decision_engine.on_block = ask. After this elapses without input, the engine stops (fail-safe). Default 30s; raise for slow human review, 0 = wait forever.',
         ),
     }),
     update_check: z.object({
         enabled: z.boolean().default(true).describe(
             'Once per day the agent checks the npm registry for a newer agent-config release and surfaces a one-line banner if one exists. Turn off in air-gapped environments or to silence the banner.',
-        ),
-    }),
-    explain: z.object({
-        enable_last: z.boolean().default(true).describe(
-            'Enable the `agent-config explain last` command, which prints the reasoning behind the agent\'s most recent decision (last tool call, last suggestion). Disable if you never use it and want a smaller CLI surface.',
         ),
     }),
     legal_review_prep: z.object({

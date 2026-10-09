@@ -71,6 +71,12 @@ const RETIRED: ReadonlyArray<{ key: string; hostile: unknown }> = [
     { key: 'knowledge.global_sharing.auto_promote_threshold', hostile: 5 },
     { key: 'knowledge.global_sharing.freshness.hypothesis_after_days', hostile: 7 },
     { key: 'knowledge.global_sharing.freshness.stale_after_days', hostile: 14 },
+    // 2.6 — hooks and engine
+    { key: 'hooks.concern_budget.max_per_event', hostile: 3 },
+    { key: 'hooks.concern_budget.hard_fail', hostile: true },
+    { key: 'decision_engine.surface_traces', hostile: true },
+    { key: 'decision_engine.on_block_fallback', hostile: 'warn' },
+    { key: 'explain.enable_last', hostile: false },
 ];
 
 const TEMPLATE_PATH = path.resolve(process.cwd(), 'src/config/agent-settings.template.yml');

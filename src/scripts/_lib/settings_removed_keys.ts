@@ -125,6 +125,12 @@ export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     ['knowledge.global_sharing.auto_promote_threshold', 'the fixed two-repo sighting count that triggers a promotion suggestion'],
     ['knowledge.global_sharing.freshness.hypothesis_after_days', "the card's age over last_verified against the fixed 90-day lead-only window"],
     ['knowledge.global_sharing.freshness.stale_after_days', "the card's age over last_verified against the fixed 180-day skip window"],
+    // 2026-10-09 — hooks and engine
+    ['hooks.concern_budget.max_per_event', "the concern-budget gate's own constant of 8 per (platform, event) cell"],
+    ['hooks.concern_budget.hard_fail', "the concern-budget gate's --strict argv; without it the gate warns"],
+    ['decision_engine.surface_traces', 'nothing: the per-phase decision trace stays off, the old default'],
+    ['decision_engine.on_block_fallback', 'the fail-safe: an on_block ask that times out always stops'],
+    ['explain.enable_last', 'the presence of a work-state trace; explain last always renders it'],
 ]);
 
 /** Keys already warned about in THIS process — the "once per run" dedupe. */

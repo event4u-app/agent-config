@@ -133,9 +133,22 @@ table is a measurement of one commit, not a licence.
       `allowed_tiers`. All six left the user-global whitelist in both
       loader copies.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
-- [ ] **2.6 Hooks and engine (5).** `hooks.concern_budget.max_per_event`,
+- [x] **2.6 Hooks and engine (5).** `hooks.concern_budget.max_per_event`,
       `hooks.concern_budget.hard_fail`, `decision_engine.surface_traces`,
       `decision_engine.on_block_fallback`, `explain.enable_last`.
+      Retired, all five (count 47 → 42). Re-verified: `lint_hook_concern_budget`
+      read the two budget keys through its own line walker with defaults equal
+      to the template (8, warn-only) and now reads only `tier1_concerns`;
+      `--strict` stays the hard-fail lever. The work-engine `decision_engine:`
+      parser read `surface_traces` and `on_block_fallback` (defaults `false`,
+      `stop`); it now fixes both, and keeps accepting the two keys because it
+      rejects unknown keys hard — dropping them from the allowed set would
+      have thrown away every gate a consumer configured next to the template's
+      leftover lines. `cmd_explain` read `enable_last` (`=== false` disables)
+      and now always renders. Consequence worth knowing: with
+      `surface_traces` gone, nothing in settings registers
+      `DecisionTraceHook`, so the per-phase decision-trace file is not written
+      — the default it always had.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
 - [ ] **2.7 Remaining (5).** `project.pr_template`,
       `pipelines.skill_improvement`, `consistency.cross_source`,

@@ -102,13 +102,11 @@ explanation lives now that the file no longer carries it as comments.
 
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
-| `decision_engine.ask_timeout_seconds` | C | integer | `30` |  | Non-TTY timeout (seconds) for decision_engine.on_block = ask. After this elapses without input, decision_engine.on_block_fallback takes over. Default 30s; raise for slow human review, 0 = wait forever. |
+| `decision_engine.ask_timeout_seconds` | C | integer | `30` |  | Non-TTY timeout (seconds) for decision_engine.on_block = ask. After this elapses without input, the engine stops (fail-safe). Default 30s; raise for slow human review, 0 = wait forever. |
 | `decision_engine.block_on_risk` | C | string | `"off"` | `off` · `low` · `medium` · `high` | During Phase=Implement, refuse to act when the risk class meets or exceeds this band. off (default) = no gate. low / medium / high = stricter ceilings; pairs with decision_engine.on_block. |
 | `decision_engine.min_confidence` | C | string | `"off"` | `off` · `low` · `medium` · `high` | During Phase=Plan, refuse to advance to Phase=Implement if confidence is below this band. off (default) = no gate. low / medium / high = raise the floor; on miss, decision_engine.on_block decides what happens. |
 | `decision_engine.on_block` | C | string | `"stop"` | `stop` · `ask` · `warn` | What the decision engine does when a gate (min_confidence / block_on_risk / require_memory_hits) fires. stop (default) = halt and surface the reason. ask = present numbered options. warn = log and continue. |
-| `decision_engine.on_block_fallback` | C | string | `"stop"` | `stop` · `warn` | Resolution when decision_engine.on_block = ask times out (see decision_engine.ask_timeout_seconds). stop (default) = halt the run. warn = log and continue with the agent's best guess. |
 | `decision_engine.require_memory_hits` | C | boolean | `false` |  | During Phase=Refine, require at least one relevant memory hit (skill, ADR, past decision) before the agent proceeds. Off by default; turn on for highly conventional codebases where memory should always inform decisions. |
-| `decision_engine.surface_traces` | C | boolean | `false` |  | Emit DecisionTraceHook events that surface why the agent picked one option over another. Useful when debugging unexpected choices; off by default to keep chat noise low. |
 
 ## delivery
 
@@ -147,12 +145,6 @@ explanation lives now that the file no longer carries it as comments.
 | `execution.escalation` | C | array | `["independent","council","team","owner_owned_check"]` |  | The escalation rungs, in order, walked when the fix-loop bound is reached: independent (another session or a provider-diverse reviewer), council, team, then owner_owned_check — which asks whether the residue is owner-owned, not whether to ask the owner now. |
 | `execution.fix_loop_max` | C | integer | `10` |  | Consecutive failed fix attempts against one validation target before the escalation ladder reaches its terminal rung. Reaching the bound triggers a strategy change, never a question. Overridable globally, per project and per prompt. |
 
-## explain
-
-| Key | Class | Type | Default | Allowed values | What it does |
-|---|---|---|---|---|---|
-| `explain.enable_last` | A | boolean | `true` |  | Enable the `agent-config explain last` command, which prints the reasoning behind the agent's most recent decision (last tool call, last suggestion). Disable if you never use it and want a smaller CLI surface. |
-
 ## git
 
 | Key | Class | Type | Default | Allowed values | What it does |
@@ -172,8 +164,6 @@ explanation lives now that the file no longer carries it as comments.
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
 | `hooks.code_graph.enabled` | C | boolean | `false` |  | PreToolUse code-graph nudge (ADR-124 Phase 4). Default off. When on AND a native code-graph cache or a consumer-shipped graph.json/SCIP index is present, warns once per session (never blocks) as the agent is about to Grep/Glob or Read a source file — query the graph first for who-calls/where-used/impact questions (or rebuild if stale, build if absent). Source G’s strict block-first-read mode is deliberately un-ported. |
-| `hooks.concern_budget.hard_fail` | C | boolean | `false` |  | When a hook exceeds hooks.concern_budget.max_per_event, fail the run (true) instead of warning and continuing (false, default). Turn on in CI when you want hook quality to gate merges. |
-| `hooks.concern_budget.max_per_event` | C | integer | `8` |  | Maximum number of concerns (issues / warnings) a single hook may raise per (platform, event) pair before the hook is rate-limited. Default 8 prevents noisy hooks from drowning out high-signal ones. |
 | `hooks.concern_budget.tier1_concerns` | C | array | `[]` |  | Concern IDs (one per line) that are allowed to block the run on failure rather than warn. Reserved for high-confidence guards — leave empty unless you maintain custom hooks. |
 | `hooks.design_pass.enabled` | C | boolean | `false` |  | PostToolUse + stop design pass (road-to-frontend-power E1.1/E1.2/E1.3). Default off. One concern on two slots: on post_tool_use a write to a UI surface delivers the design findings as context and never blocks; on stop the same pass runs over every UI file touched this session, deduped against what the post pass surfaced, and a P0 objective floor (contrast, font size, heading skip, focus) blocks with a continuation. P1-P3 never block. post_tool_use rather than pre_tool_use for two measured reasons: pre_tool_use is declared by three hosts and honoured by one while post_tool_use is declared by six, and _lib/ui_surface.ts is a path predicate, so a pre-write gate cannot fire on the first write of a new surface. A pass that could not fully run reports verification: degraded with a reason rather than passing silently. Does not replace design_slop: two design keys is the honest state until the tiering experiment has a number. |
 | `hooks.design_slop.enabled` | C | boolean | `false` |  | PreToolUse anti-slop nudge (road-to-anti-slop-detector Phase 3). Default off. When on, runs the lint_design_slop registry against about-to-be-written UI content and WARNS (never blocks) on P0/P1 aesthetic tells (side-stripe, gradient-text, magic z-index, …). Flags are rebuttable via DESIGN.md / design-slop-disable. Anti-loop: a file::rule signature surfaced 3x goes silent. Host-limited convenience layer; the universal gate is the lint_design_slop linter/CI. |

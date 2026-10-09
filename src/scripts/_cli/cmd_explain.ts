@@ -552,13 +552,6 @@ function _explain_last(
     as_json: boolean,
     quiet: boolean,
 ): number {
-    const settings = _load_user_settings(project_root);
-    const explain_raw = settings['explain'];
-    const explain_cfg = isPlainObject(explain_raw) ? (explain_raw as Dict) : {};
-    if (explain_cfg['enable_last'] === false) {
-        print('explain last disabled by settings (explain.enable_last)');
-        return 0;
-    }
     const target_state = state_file || path.join(project_root, '.work-state.json');
     let trace: Dict;
     try {
@@ -633,7 +626,7 @@ options:
   --quiet              suppress the trailing tip footer
 
 exit codes:
-  0  trace rendered, or disabled by settings (explain.enable_last)
+  0  trace rendered
   1  no recent run found (state file missing or unreadable)
   2  invocation error (bad project root, bad --state-file path)
 `;
