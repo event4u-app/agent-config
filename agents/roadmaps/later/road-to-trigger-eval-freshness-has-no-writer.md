@@ -1,6 +1,21 @@
 ---
 complexity: lightweight
-status: draft
+status: later
+review_by: 2027-01-08
+entry_condition:
+  what: >-
+    the owner picks one of the four priced options under the blocker
+    `freshness-mechanism-is-owner-owned` — durable rotation results, CI writing
+    `last_eval`, retiring the freshness dimension, or widening the window. Step
+    1.1 and AC-1 are the only open work and both are that choice.
+  when: >-
+    whenever the owner weighs the measured ~1020 provider queries per full pass
+    (~85/week sustained) against losing the trigger-regression lock. No external
+    event moves the number; only the suite count or the window does.
+  who: >-
+    maintainer — the blocker is Class 3, human-only and business-owned, and two of
+    the four options additionally need a CI write path into a protected branch,
+    which is Hard Floor under non-destructive-by-default.
 execution:
   mode: phase-checkpoints
 estate_offset_exempt: >-
