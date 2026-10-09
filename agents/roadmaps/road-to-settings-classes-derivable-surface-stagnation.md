@@ -25,7 +25,7 @@ meaning each of the 83 was actually re-read, not merely re-stamped.
 
 ## Phase 1 — Decide how to spend this debt
 
-- [ ] <!-- blocked-by: settings-derivable-audit-scope | asked: no — a background process-full drain lane has no owner channel; the question is carried in the blocker entry and the PR body --> **1.1 Pick a disposition for the stalled `derivable`
+- [x] **1.1 Pick a disposition for the stalled `derivable`
       queue.** Either (a) begin draining it — implement the mechanism a batch
       of entries names and delete those keys — or (b) re-read all 83 entries
       against the current tree and add a `reaffirmed: {date, reason}` block to
@@ -33,7 +33,7 @@ meaning each of the 83 was actually re-read, not merely re-stamped.
       `src/config/gate-violation-baselines.json` stating what was checked and
       why none are yet repairable. A reaffirmation written without re-reading
       the population is the same laundering the ratchet exists to catch.
-      verify: `task lint-settings-classes` exits 0
+      verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
 
 <!-- Release holds — emitted commented out, because the default is that there is
      not one. Uncomment ONLY if an intermediate tree state of this roadmap must
@@ -68,13 +68,27 @@ meaning each of the 83 was actually re-read, not merely re-stamped.
 ## Blockers
 
 ### blocker: settings-derivable-audit-scope
-- **Status:** open
+- **Status:** resolved
 - **Owner:** owner
 - **Blocks:** 1.1
 - **What to do:** pick exactly one — (a) authorize draining the 83-key queue (likely several PRs, since each key names a distinct replacement mechanism), or (b) authorize a one-time re-audit-and-reaffirm pass now, recorded with the keys actually checked.
 - **Resolved when:** the owner's answer is recorded under this blocker with date.
 - **Recommendation:** (b) first — a reaffirm costs one audit pass and buys 56 more days without a CI-wide red; draining 83 keys is real engineering work better scoped into its own roadmap once the audit shows which ones are cheap.
 - **If you do nothing:** every PR touching no settings file at all keeps tripping this gate until someone reads and reaffirms or drains it.
+- **Answer (2026-10-09):** the owner chose **(b)**, the one-time re-audit-and-reaffirm
+  pass, which is also what this entry recommended. Carried out and merged as
+  `6d603d93e` (#2268).
+
+  The audit ran **before** the stamp and is the reason in the block, which is the
+  order Risk 1 asks for: a drain was attempted first and yielded **0 of 83**. The
+  cause is the same in every row — the named replacement mechanism was built and
+  the old key was never retired from its original consumer, so the replacement is
+  additive rather than substitutive. Worth recording because it nearly went the
+  other way: a grep for the dotted literal suggested about 25 drainable keys, and
+  every one of those 25 had a real reader once checked against its owning module.
+  TypeScript consumers read nested settings by object access and rule or command
+  consumers name the key only in prose, so a zero from that grep is a property of
+  the grep.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-08 | reviewer: claude/host -->
@@ -85,6 +99,10 @@ meaning each of the 83 was actually re-read, not merely re-stamped.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — `task lint-settings-classes` passes on `main` without the
+- [x] AC-1 — the settings-classes lint passes on `main` without the
       `derivable-surface` finding appearing again before this roadmap's own
       disposition (drain or honest reaffirm) is recorded.
+      Measured after `6d603d93e` merged: `lint_settings_classes` reports
+      `158 settings key(s) classified — A=26 B=3 C=129`, exit 0. The disposition
+      was recorded first, in the `reaffirmed.reason` the same commit added.
+      verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
