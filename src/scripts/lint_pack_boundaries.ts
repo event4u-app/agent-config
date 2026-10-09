@@ -53,8 +53,7 @@
  *   `--self-test`, which runs this CLI against planted fixture trees. Both are
  *   what `src/config/gate-coverage.yml` asks of a gate a pull request runs.
  *
- * ## The advisory `suggests` edge, and the sibling gate that refuses it
- *
+ * THE ADVISORY `suggests` EDGE, AND THE SIBLING GATE THAT REFUSES IT.
  * Since D5 of `road-to-gates-a-pull-request-can-hear` (AI council 2026-10-07)
  * this gate reads `suggests` as PERMITTING a cross-pack link: advisory,
  * non-installing, one-hop, one-way. `lint_rule_skill_pack_reach` states in its
@@ -73,7 +72,7 @@
  * added later. That is why the permitted COUNT prints on every run including
  * `--quiet`: it is the only standing signal that the set is growing.
  *
- * ## Where the `requires` graph is read from
+ * WHERE THE `requires` GRAPH IS READ FROM.
  *
  * `src/config/discovery/packs.yml` is the source of truth for the pack
  * vocabulary and its `requires` edges — `generate_pack_manifests.ts` DERIVES
