@@ -284,7 +284,8 @@ export function format_changed_decisions_block(
 /**
  * Apply the cadence + opt-out gates from the contract.
  *
- * `memory_cadence` is the `memory.cadence` cadence key:
+ * `memory_cadence` is the cadence the hook was built with (the
+ * `memory.cadence` settings key is retired; settings always yield `always`):
  *
  *   - `always` (default) — emit whenever `asks >= 1`.
  *   - `auto` — emit only when `asks >= 3` (reduces noise on

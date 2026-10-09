@@ -45,7 +45,6 @@ ai_team:
   model: <string>                 # default 'auto'
   allow_delegate: <bool>          # second opt-in for the write path, default false
   max_calls_per_day: <int >= 0>   # default 50; counts into the shared openai bucket
-  suppress_setup_hint: <bool>     # default false; cosmetic wizard-hint suppression
   review_gate:                    # managed governance of the plugin's Stop-hook Review Gate
     managed: <bool>               # default false = byte-identical pre-Phase-4 behavior
     max_consecutive_blocks: <int >= 1>  # default 3; circuit-breaker loop bound
@@ -79,7 +78,6 @@ ai_team:
 | `model` | string | `'auto'` | Model handed to the codex CLI. `'auto'` = pass **no** `--model` flag; the codex CLI's own default applies. Any other value passes through **verbatim** as `--model <value>`. |
 | `allow_delegate` | bool | `false` | Second opt-in for the **only** wrapper that delegates write access (`/team:delegate`). Refuses until BOTH `/team` is available (codex CLI installed + authenticated, not halted) AND `allow_delegate` is `true`. |
 | `max_calls_per_day` | int ≥ 0 | `50` | Per-day ceiling on team calls, read against the **shared** `cli_call_budget` openai bucket (see § Quota). `0` blocks all team calls. |
-| `suppress_setup_hint` | bool | `false` | Suppress the one-line wizard/init recommendation to install the codex plugin on Claude-Code hosts. Cosmetic only. |
 | `review_gate.managed` | bool | `false` | Managed governance of the codex plugin's Stop-hook Review Gate (Phase 4). `false` = no counting, no circuit breaker — the Stop path is byte-identical to pre-Phase-4 dispatch. `true` = consecutive BLOCK verdicts are counted per session (first-line `ALLOW:`/`BLOCK:` contract of the gate transcript; anything else is honestly `UNKNOWN` and never counted) and the circuit breaker trips at the bound. Independent of `/team`'s own availability — governs the codex PLUGIN's own Stop-hook loop, which upstream runs regardless of our codex-CLI-availability check. |
 | `review_gate.max_consecutive_blocks` | int ≥ 1 | `3` | Circuit-breaker bound. At this many CONSECUTIVE BLOCKs in one session a visible notice is injected **exactly once** and the managed layer stops re-blocking — the user decides, never an infinite Claude↔Codex loop. An ALLOW verdict resets the counter. Unknown keys inside `review_gate` are rejected fail-closed, same as the parent block. |
 
@@ -215,9 +213,11 @@ Plugin text is summarized INTO the envelope and preserved verbatim beneath — n
 
 1. `ai_team` is present but not a mapping,
 2. any **unknown key** appears under `ai_team` (a typo must never
-   silently disable a gate) — `enabled` is the one deliberate exception:
-   a deleted key, accepted and ignored (see § Availability above),
-3. `allow_delegate` / `suppress_setup_hint` is not a boolean,
+   silently disable a gate) — `enabled` and `suppress_setup_hint` are the
+   deliberate exceptions: deleted keys, accepted and ignored (see
+   § Availability above; `suppress_setup_hint` was retired on 2026-10-09
+   and the setup hint is always shown),
+3. `allow_delegate` is not a boolean,
 4. `model` is not a non-empty string,
 5. `max_calls_per_day` is not a non-negative integer (booleans rejected).
 
@@ -229,8 +229,8 @@ An **absent** `ai_team` block is not an error — it yields the defaults
 `/team`'s availability is a codex-CLI/auth fact, not a setting (see
 § Availability above). With the codex CLI absent or unauthenticated, or
 `emergency.orchestration_halt: true`, every path degrades to a one-line
-refusal — no wrapper execution, no quota consumption. Wizard nagging is
-independently suppressible via `suppress_setup_hint`. `/team:delegate` is
+refusal — no wrapper execution, no quota consumption. The one-line setup
+hint after a Claude-Code install is always shown. `/team:delegate` is
 doubly gated: `/team` must be AVAILABLE, and `allow_delegate` must be
 `true`.
 

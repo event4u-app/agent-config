@@ -100,8 +100,8 @@ roadmaps.
 When the roadmap originates from a ticket/spec that carries a second
 source — an attached mockup/screenshot, a code reality, or an internal
 contradiction — run the **cross-source discrepancy scan** (per
-[`cross-source-consistency`](../../rules/cross-source-consistency.md),
-gated by `consistency.cross_source`) before writing phases. A phase plan
+[`cross-source-consistency`](../../rules/cross-source-consistency.md))
+before writing phases. A phase plan
 built over a text↔image contradiction or a silent-but-needed behavior
 (weekend/holiday shift, empty/error state) bakes the wrong assumption into
 every downstream step. Surface each discrepancy as one batched open

@@ -237,6 +237,11 @@ const RETIRED_2026_10_09: readonly (readonly [string, string, Json])[] = [
     ['decision_engine', 'surface_traces', true],
     ['decision_engine', 'on_block_fallback', 'warn'],
     ['explain', 'enable_last', false],
+    ['project', 'pr_template', 'docs/PR_TEMPLATE.md'],
+    ['pipelines', 'skill_improvement', false],
+    ['consistency', 'cross_source', 'off'],
+    ['subagents', 'downshift', false],
+    ['ai_team', 'suppress_setup_hint', true],
 ] as const;
 
 describe('deleted settings keys cannot be honoured again', () => {

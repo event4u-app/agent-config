@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled"
+description: "After a meaningful task — trigger the post-task learning capture; it proposes, the user confirms"
 triggers:
   - phrase: "after completing"
   - keyword: "improvement"
@@ -15,7 +15,7 @@ obligation_frequency: "per-task"
 
 # Skill Improvement Trigger
 
-**Iron Law.** After a meaningful task, trigger the post-task learning capture if `pipelines.skill_improvement` is enabled.
+**Iron Law.** After a meaningful task, trigger the post-task learning capture. It is always on — the capture is a proposal the user confirms, so there is no setting to silence it.
 
 Body migrated to `skill:skill-improvement-pipeline` (per P4 of `road-to-kernel-and-router.md`).
 Trigger-set above activates this routing on demand, independent of the discipline profile (ADR-110).

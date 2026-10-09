@@ -247,13 +247,13 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 
 | Class | Keys |
 |---|---|
-| A — preference | 11 |
+| A — preference | 9 |
 | B — consent | 3 |
-| C — guarded | 103 |
-| **Total** | **117** |
+| C — guarded | 100 |
+| **Total** | **112** |
 
 <!-- derivable-retirement-2026-10-09 -->
-It fell to 117 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 41 `derivable` keys (15 A, 26 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behaviour, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`; 2.2 reasoning protocol switches — `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`; 2.3 roadmap cadence — `roadmap.skip_pre_run_gate`, `roadmap.dashboard_regen_cadence`; 2.4 command suggestion and PR creation — `commands.auto_detect`, `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`, `commands.suggestion.cooldown_seconds`, `commands.suggestion.max_options`, `commands.create_pr.api_examples`, `commands.create_pr.ui_paths`, `commands.create_pr.api_paths`; 2.5 memory and knowledge sharing — `memory.cadence`, `memory.review_threshold`, `knowledge.global_sharing.redaction.enabled`, `knowledge.global_sharing.redaction.halt_on_trigger`, `knowledge.global_sharing.auto_promote_threshold`, `knowledge.global_sharing.freshness.hypothesis_after_days`, `knowledge.global_sharing.freshness.stale_after_days`; 2.6 hooks and engine — `hooks.concern_budget.max_per_event`, `hooks.concern_budget.hard_fail`, `decision_engine.surface_traces`, `decision_engine.on_block_fallback`, `explain.enable_last`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
+It fell to 112 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 46 `derivable` keys (17 A, 29 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behaviour, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`; 2.2 reasoning protocol switches — `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`; 2.3 roadmap cadence — `roadmap.skip_pre_run_gate`, `roadmap.dashboard_regen_cadence`; 2.4 command suggestion and PR creation — `commands.auto_detect`, `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`, `commands.suggestion.cooldown_seconds`, `commands.suggestion.max_options`, `commands.create_pr.api_examples`, `commands.create_pr.ui_paths`, `commands.create_pr.api_paths`; 2.5 memory and knowledge sharing — `memory.cadence`, `memory.review_threshold`, `knowledge.global_sharing.redaction.enabled`, `knowledge.global_sharing.redaction.halt_on_trigger`, `knowledge.global_sharing.auto_promote_threshold`, `knowledge.global_sharing.freshness.hypothesis_after_days`, `knowledge.global_sharing.freshness.stale_after_days`; 2.6 hooks and engine — `hooks.concern_budget.max_per_event`, `hooks.concern_budget.hard_fail`, `decision_engine.surface_traces`, `decision_engine.on_block_fallback`, `explain.enable_last`; 2.7 remaining — `project.pr_template`, `pipelines.skill_improvement`, `consistency.cross_source`, `subagents.downshift`, `ai_team.suppress_setup_hint`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
 <!-- /derivable-retirement-2026-10-09 -->
 
 It rose to 158 on 2026-10-06 when the `git:` section added three C keys —
@@ -393,11 +393,11 @@ the template, which is the drift this contract exists to prevent.
 
 | Disposition | Keys |
 |---|---|
-| derivable | 42 |
+| derivable | 37 |
 | un-inferrable | 10 |
 | consent | 48 |
 | policy | 17 |
-| **Total** | **117** |
+| **Total** | **112** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -518,7 +518,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `personal.autonomy` | C | `auto` | suppresses confirmation questions | derivable — `no-cheap-questions`' mode-independent Pre-Send Self-Check decides per question |
 | `personal.user_type` | C | `"__USER_TYPE__"` | master axis filtering the projected surface | derivable — `profile.id` already carries the persona axis over a near-identical value set |
 | `verbosity.offer_council_in_delivery` | A | `false` | offers a paid step; never takes it | derivable — `agent-config council:status`, which answers whether there is anything to offer |
-| `project.pr_template` | C | `.github/pull_request_template.md` | filesystem path whose contents reach an outbound PR | derivable — GitHub's own PR-template resolution order; the key only caches a filesystem lookup |
 | `project.upstream_repo` | C | `""` | destination of outbound improvement PRs | derivable — the installed package's own `package.json` repository field |
 | `project.improvement_pr_branch_prefix` | A | `improve/agent-` | branch-name cosmetics | derivable — the repo's own branch-naming convention, observable from `git branch -r` |
 | `project.audience` | C | `public` | C-test 4 — it governs the agent's own reasoning discipline: `self` makes the § 8-pre demand gate inert. Who a project is built for is a fact only its maintainer knows, so the agent never infers it and never asks; hand-edit or the GUI write route. The default is today's behaviour, so an install that never sets it is unchanged | policy |
@@ -539,7 +538,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `chat_history.text_limits.agent` | C | `5000` | cap on how much agent text is written to disk | consent |
 | `chat_history.text_limits.tool` | C | `200` | cap on how much tool payload is written to disk | consent |
 | `chat_history.text_limits.phase` | C | `200` | cap on how much phase text is written to disk | consent |
-| `pipelines.skill_improvement` | A | `true` | proposes a capture; the user still decides | derivable — the pipeline's own trigger condition; the capture is already a user-confirmed proposal |
 | `reasoning.enabled` | C | `true` | master switch for the agent's own reasoning discipline | derivable — the RDP gate's own task-triviality and host self-assessment signals already decide per turn |
 | `roadmap.quality_cadence` | C | `per_phase` | governs when verification runs. Two defaults: the template and the schema ship `per_phase` (since 2026-09-13), while the reader's prose fallback (`roadmap-process-loop` § 4) and the reference page still say `end_of_roadmap` — which is why the 2026-10-09 retirement left it in the queue | derivable — `quality.local_auto_run` decides whether local verification runs, and the `verify-before-complete` evidence gate decides the moment |
 | `roadmap.horizon_weeks` | C | `0` | a non-zero value relaxes a lint's plate-token ban | policy |
@@ -556,13 +554,11 @@ Rows follow template order, so a diff against the template reads straight down.
 | `design.approximation.enabled` | C | `false` | lets a value change without a per-value confirmation; enabling it is a consumer-facing default flip | consent |
 | `design.approximation.tolerance.color` | C | `null` | decides which colour deviations may be taken silently | policy |
 | `design.approximation.tolerance.length` | C | `null` | decides which length deviations may be taken silently | policy |
-| `consistency.cross_source` | C | `"on"` | disables the cross-source discrepancy gate | derivable — the rule's own trigger condition; a discrepancy exists only when two present sources contradict |
 | `code_graph.consumer_index_paths` | C | `[]` | names where this project's OTHER tool writes a code-graph index, so it widens what the graph reader will load and trust | un-inferrable — the path belongs to a tool this package does not ship and cannot probe for; the built-in list is deliberately vendor-neutral, so only the operator knows where their index lands |
 | `screenshots.identity_allowlist` | C | `[]` | allowlist of identities that ship unredacted | consent |
 | `screenshots.forbid_terminal_capture` | C | `true` | kill-switch over the highest-leak capture path | consent |
 | `screenshots.data_bearing_gate` | C | `"on"` | the human-confirmation gate over a published egress | consent |
 | `code_style.docblocks` | A | `minimal` | code convention | derivable — the project's own linter/style config and the docblock density of the touched file, which `standards-from-config` reads off the tree |
-| `subagents.downshift` | C | `true` | routes to another model tier, which is spend and quality | derivable — the per-slice tier assignment in `auto-dispatch-classification`, which the orchestrator already computes per dispatch |
 | `subagents.quota_arbitrage` | C | `true` | spends from a separate quota pool | consent |
 | `subagents.model_map.lite` | C | `""` | names an external model endpoint | un-inferrable |
 | `subagents.model_map.medium` | C | `""` | names an external model endpoint | un-inferrable |
@@ -575,7 +571,6 @@ Rows follow template order, so a diff against the template reads straight down.
 | `ai_team.model` | C | `auto` | names an external model | un-inferrable |
 | `ai_team.allow_delegate` | C | `false` | grants an external tool write access to the repository | consent |
 | `ai_team.max_calls_per_day` | C | `50` | quota cap on a shared budget | consent |
-| `ai_team.suppress_setup_hint` | A | `false` | hint cosmetics | derivable — the hint's own precondition; `agent-config doctor --check team` already knows whether team mode is configured |
 | `ai_team.review_gate.managed` | C | `false` | governs an upstream review gate | consent |
 | `ai_team.review_gate.max_consecutive_blocks` | C | `3` | circuit-breaker threshold | derivable — the existing N=3 validation-loop budget in `autonomous-execution`, which already bounds consecutive failed attempts on one target |
 | `emergency.orchestration_halt` | C | `false` | the one audited incident switch over the always-on orchestration stack — see § The one exception above | consent |

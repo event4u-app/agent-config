@@ -31,9 +31,10 @@
  * 1. `ai_team` absent → defaults. Non-mapping → error.
  * 2. Unknown keys under `ai_team` are rejected — a typo must never
  *    silently disable a gate (`allow_delegate` misspelled = delegation
- *    stays off AND the load fails loudly). `enabled` is the one
- *    deliberate exception: accepted, untyped, ignored (see above).
- * 3. `allow_delegate`, `suppress_setup_hint` are booleans.
+ *    stays off AND the load fails loudly). `enabled` and
+ *    `suppress_setup_hint` are the deliberate exceptions: retired keys,
+ *    accepted, untyped, ignored, so a leftover line never fails `/team`.
+ * 3. `allow_delegate` is a boolean.
  * 4. `model` is a non-empty string. `'auto'` = pass no `--model` flag
  *    (the codex CLI default applies); any other value passes through
  *    verbatim.
@@ -63,7 +64,6 @@ export interface AiTeamConfig {
     readonly model: string;
     readonly allow_delegate: boolean;
     readonly max_calls_per_day: number;
-    readonly suppress_setup_hint: boolean;
     readonly review_gate: AiTeamReviewGateConfig;
 }
 
@@ -78,7 +78,6 @@ export const AI_TEAM_DEFAULTS: AiTeamConfig = Object.freeze({
     model: 'auto',
     allow_delegate: false,
     max_calls_per_day: 50,
-    suppress_setup_hint: false,
     review_gate: AI_TEAM_REVIEW_GATE_DEFAULTS,
 });
 
@@ -93,17 +92,18 @@ const _KNOWN_KEYS: ReadonlySet<string> = new Set([
     'model',
     'allow_delegate',
     'max_calls_per_day',
-    'suppress_setup_hint',
     'review_gate',
 ]);
 
 /**
- * Deleted key accepted-and-ignored for migration grace (see module docstring).
- * Never added to `_KNOWN_KEYS` — it carries no validated type and is never
- * read into `AiTeamConfig`; it exists in this set only so the unknown-key
+ * Deleted keys accepted-and-ignored for migration grace (see module docstring).
+ * Never added to `_KNOWN_KEYS` — they carry no validated type and are never
+ * read into `AiTeamConfig`; they exist in this set only so the unknown-key
  * loop below does not fail-closed an existing project's leftover value.
+ * `suppress_setup_hint` is the shipped template's own line, so every install
+ * that ran the wizard carries it.
  */
-const _DELETED_KEYS: ReadonlySet<string> = new Set(['enabled']);
+const _DELETED_KEYS: ReadonlySet<string> = new Set(['enabled', 'suppress_setup_hint']);
 
 const _KNOWN_REVIEW_GATE_KEYS: ReadonlySet<string> = new Set([
     'managed',
@@ -205,11 +205,6 @@ export function build_ai_team_config(raw: unknown): AiTeamConfig {
     }
 
     const allow_delegate = _requireBool(raw, 'allow_delegate', AI_TEAM_DEFAULTS.allow_delegate);
-    const suppress_setup_hint = _requireBool(
-        raw,
-        'suppress_setup_hint',
-        AI_TEAM_DEFAULTS.suppress_setup_hint,
-    );
 
     let model = AI_TEAM_DEFAULTS.model;
     if ('model' in raw) {
@@ -236,7 +231,7 @@ export function build_ai_team_config(raw: unknown): AiTeamConfig {
 
     const review_gate = _build_review_gate('review_gate' in raw ? raw['review_gate'] : undefined);
 
-    return { model, allow_delegate, max_calls_per_day, suppress_setup_hint, review_gate };
+    return { model, allow_delegate, max_calls_per_day, review_gate };
 }
 
 /**

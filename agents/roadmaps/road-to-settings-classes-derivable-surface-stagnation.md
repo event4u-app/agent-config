@@ -150,9 +150,19 @@ table is a measurement of one commit, not a licence.
       `DecisionTraceHook`, so the per-phase decision-trace file is not written
       — the default it always had.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
-- [ ] **2.7 Remaining (5).** `project.pr_template`,
+- [x] **2.7 Remaining (5).** `project.pr_template`,
       `pipelines.skill_improvement`, `consistency.cross_source`,
       `subagents.downshift`, `ai_team.suppress_setup_hint`.
+      Retired, all five (count 42 → 37). Re-verified: `project.pr_template`
+      had no reader (`/create-pr` reads the GitHub path itself); the two
+      readers of `subagents.downshift` (`routing_doctor`, `delegation_nudge_hook`,
+      both `!== false`) now fix it on; `consistency.cross_source` and
+      `pipelines.skill_improvement` had rule and skill prose readers only,
+      rewritten to the always-on default. `ai_team.suppress_setup_hint`
+      had two readers: the installer hint (now unconditional) and the
+      `ai_team` loader, which rejects unknown keys fail-closed — so the key
+      moved to its accepted-and-ignored set rather than out of it, or every
+      wizard-made settings file would have broken `/team`.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
 - [ ] **2.8 Kernel follow-up — the `direct-answers` narration carve-out.**
       The kernel rule `src/rules/direct-answers.md` § Iron Law 3 still names
@@ -247,4 +257,12 @@ table is a measurement of one commit, not a licence.
 - [ ] AC-2 — the `lint_settings_classes:derivable-surface` count stands at 36
       (83 − 47), every retired key is absent from the template, the contract
       and every reader, and the settings-classes lint passes.
+      Measured after step 2.7: count **37**, not 36, and the lint passes
+      (`112 settings key(s) classified — A=9 B=3 C=100`). Two things keep this
+      open, both recorded rather than worked around: `roadmap.quality_cadence`
+      moved back to the queue in 2.3 (two defaults), so 46 of the 47 were
+      retired; and the kernel rule `direct-answers` still names two retired
+      keys (step 2.8, its own PR). The criterion's 36 assumed all 47 would
+      prove default-neutral — whether 37 satisfies it, or `quality_cadence`
+      gets its default decided and retired, is the owner's call.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0

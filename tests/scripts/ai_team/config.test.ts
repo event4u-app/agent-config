@@ -38,7 +38,6 @@ describe('build_ai_team_config — defaults', () => {
         expect(c.model).toBe(AI_TEAM_MODEL_AUTO);
         expect(c.allow_delegate).toBe(false);
         expect(c.max_calls_per_day).toBe(50);
-        expect(c.suppress_setup_hint).toBe(false);
         expect(c.review_gate.managed).toBe(false);
         expect(c.review_gate.max_consecutive_blocks).toBe(3);
     });
@@ -56,7 +55,6 @@ describe('build_ai_team_config — defaults', () => {
         expect(c.model).toBe('auto');
         expect(c.allow_delegate).toBe(true);
         expect(c.max_calls_per_day).toBe(50);
-        expect(c.suppress_setup_hint).toBe(false);
         expect(c.review_gate).toEqual({ managed: false, max_consecutive_blocks: 3 });
     });
 
@@ -71,19 +69,28 @@ describe('build_ai_team_config — defaults', () => {
         expect(c.model).toBe('auto');
     });
 
+    it('a leftover `suppress_setup_hint` is accepted and has zero effect — retired 2026-10-09', () => {
+        // The shipped template wrote this line into every wizard-made settings
+        // file, so rejecting it as unknown would fail-close `/team` for every
+        // existing install. Any shape is ignored.
+        for (const value of [true, false, 'yes', 1, null]) {
+            const c = build_ai_team_config({ suppress_setup_hint: value, allow_delegate: true });
+            expect(c).not.toHaveProperty('suppress_setup_hint');
+            expect(c.allow_delegate).toBe(true);
+        }
+    });
+
     it('full valid block round-trips', () => {
         const c = build_ai_team_config({
             model: 'gpt-5.5',
             allow_delegate: true,
             max_calls_per_day: 7,
-            suppress_setup_hint: true,
             review_gate: { managed: true, max_consecutive_blocks: 5 },
         });
         expect(c).toEqual({
             model: 'gpt-5.5',
             allow_delegate: true,
             max_calls_per_day: 7,
-            suppress_setup_hint: true,
             review_gate: { managed: true, max_consecutive_blocks: 5 },
         });
     });
@@ -100,7 +107,7 @@ describe('build_ai_team_config — defaults', () => {
         expect(template).toMatch(/^ {2}model: auto$/m);
         expect(template).toMatch(/^ {2}allow_delegate: false$/m);
         expect(template).toMatch(/^ {2}max_calls_per_day: 50$/m);
-        expect(template).toMatch(/^ {2}suppress_setup_hint: false$/m);
+        expect(template).not.toMatch(/^ {2}suppress_setup_hint:/m);
         expect(template).toMatch(/^ {2}review_gate:$/m);
         expect(template).toMatch(/^ {4}managed: false$/m);
         expect(template).toMatch(/^ {4}max_consecutive_blocks: 3$/m);
@@ -222,7 +229,7 @@ describe('build_ai_team_config — type errors', () => {
         expect(() => build_ai_team_config(true)).toThrow(TeamConfigError);
     });
 
-    it.each(['allow_delegate', 'suppress_setup_hint'] as const)(
+    it.each(['allow_delegate'] as const)(
         '%s must be a boolean',
         (key) => {
             expect(() => build_ai_team_config({ [key]: 'true' })).toThrow(

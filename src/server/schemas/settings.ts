@@ -23,7 +23,6 @@ const accessStyle = z.enum(['getters_setters', 'get_attribute', 'magic_propertie
 const chatFreq = z.enum(['per_turn', 'per_phase', 'per_tool']);
 const qualityCadence = z.enum(['end_of_roadmap', 'per_phase', 'per_step']);
 const fidelityMode = z.enum(['strict', 'structural', 'hard-floor']);
-const crossSourceMode = z.enum(['on', 'auto', 'off']);
 const replyMethod = z.enum(['replies_endpoint', 'create_review_comment', 'auto']);
 const confidenceBand = z.enum(['off', 'low', 'medium', 'high']);
 const onBlock = z.enum(['stop', 'ask', 'warn']);
@@ -134,9 +133,6 @@ export const settingsSchema = z.object({
         ),
     }),
     project: z.object({
-        pr_template: z.string().default('.github/pull_request_template.md').describe(
-            'Path (relative to project root) to the PR-description template the agent fills in before opening a pull request. Override only if your repo keeps the template somewhere non-standard.',
-        ),
         upstream_repo: z.string().default('').describe(
             'GitHub slug (owner/repo) the upstream-contribute skill targets when you ask the agent to push a learning back to the shared agent-config package. Empty = improvement PRs are disabled.',
         ),
@@ -237,11 +233,6 @@ export const settingsSchema = z.object({
             ),
         }),
     }),
-    pipelines: z.object({
-        skill_improvement: z.boolean().default(true).describe(
-            'After a meaningful task the agent proposes a learning-capture turn (new skill, rule tweak, guideline). Turn off if you find the prompts noisy — you can still run /memory:promote manually.',
-        ),
-    }),
     roadmap: z.object({
         quality_cadence: qualityCadence.default('per_phase').describe(
             'When the agent runs the full quality / test suite during /roadmap:process-* runs. per_phase = after each phase boundary (default since 2026-09-13 — end_of_roadmap lets errors compound across phases, which is expensive in a multi-phase autonomous run nobody is watching). end_of_roadmap = once, after the last step (fastest). per_step = after every single step (slowest, highest confidence).',
@@ -330,11 +321,6 @@ export const settingsSchema = z.object({
             "Extra project-relative paths where THIS project keeps a code-graph index another tool wrote. The built-in list is deliberately vendor-neutral (graph.json, code-graph.json, .code-graph/graph.json) and names no tool, so a tool that writes its index elsewhere is named here rather than waited for. A graph found this way LOADS and answers query and explain with every edge tagged read-from-elsewhere; the gate verbs (impact, untested, dead) refuse a graph made only of such edges and say so, because an empty answer from a gate must not read as 'nothing found' when it means 'nothing trusted'. Absolute paths and paths escaping the project root are ignored.",
         ),
     }).default({}),
-    consistency: z.object({
-        cross_source: crossSourceMode.default('on').describe(
-            'Consumed by the cross-source-consistency rule. When the agent works from multiple sources (ticket text, an attached image/mockup, the spec, the codebase) it checks them against each other and asks before proceeding on a discrepancy — instead of silently guessing. on (default) = surface every real cross-source contradiction / silent-scope-expansion as one question; auto = surface only high-confidence contradictions, state low-confidence as an assumption; off = no cross-source checking.',
-        ),
-    }).default({ cross_source: 'on' }),
     screenshots: z.object({
         identity_allowlist: z.array(z.string()).default([]).describe(
             "Consumed by the doc-screenshot-hygiene rule and screenshot-hygiene skill. Public identity tokens SAFE to show unredacted in a documentation screenshot — the maintainer's own public handles plus well-known fake-data tokens. Not a general fake-data dictionary and not identity-resolution: everything not listed is treated as sensitive by default, and a public handle co-located with a real name does not whitelist the real name. Default [] = nothing auto-allowed.",
@@ -362,9 +348,6 @@ export const settingsSchema = z.object({
         ),
     }).default({}),
     subagents: z.object({
-        downshift: z.boolean().default(true).describe(
-            'Route delegable sub-tasks to the lowest-capable model tier (cost + speed via model downshift). false = every subagent runs on the session tier.',
-        ),
         quota_arbitrage: z.boolean().default(true).describe(
             'Prefer a separate quota-pool model for delegable sub-tasks where the host manifest reports one. Optional bonus only — identical behaviour (minus the quota win) where unsupported. Never load-bearing.',
         ),
@@ -404,9 +387,6 @@ export const settingsSchema = z.object({
         max_calls_per_day: z.number().int().min(0).default(50).describe(
             'Per-day cap on team calls, read against the EXISTING cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json, daily UTC reset) — one subscription, one counter, never a parallel count. 0 = block all team calls.',
         ),
-        suppress_setup_hint: z.boolean().default(false).describe(
-            'Suppress the one-line wizard/init recommendation to set up the codex plugin on Claude-Code hosts. Cosmetic only — never changes behavior.',
-        ),
         review_gate: z.object({
             managed: z.boolean().default(false).describe(
                 "Managed governance of the codex plugin's Stop-hook Review Gate (road-to-team-mode Phase 4). false (default) = byte-identical pre-Phase-4 behavior: no counting, no circuit breaker. true = count consecutive BLOCK verdicts per session and trip the circuit breaker at max_consecutive_blocks.",
@@ -415,7 +395,7 @@ export const settingsSchema = z.object({
                 'Circuit-breaker bound: after this many CONSECUTIVE BLOCK verdicts in one session, a visible notice is injected exactly once and the managed layer stops re-blocking — the user decides, never an infinite Claude↔Codex loop. An ALLOW verdict resets the counter. Positive integer.',
             ),
         }).default({ managed: false, max_consecutive_blocks: 3 }),
-    }).default({ model: 'auto', allow_delegate: false, max_calls_per_day: 50, suppress_setup_hint: false, review_gate: { managed: false, max_consecutive_blocks: 3 } }),
+    }).default({ model: 'auto', allow_delegate: false, max_calls_per_day: 50, review_gate: { managed: false, max_consecutive_blocks: 3 } }),
     emergency: z.object({
         orchestration_halt: z.boolean().default(false).describe(
             'The one audited incident switch over the always-on orchestration stack (subagents, council, team). NOT an activation gate: false (default) = the stack runs normally. true = halted; arming requires no ceremony. Disarming (returning to false) requires orchestration_halt_justification to be a non-empty string. Both transitions emit one telemetry line.',

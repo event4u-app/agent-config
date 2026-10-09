@@ -172,7 +172,6 @@ is recovered on the next server boot.
 | `personal.user_name` | *(empty)* | User's first name for personalized responses |
 | `personal.open_edited_files` | `false` | Open edited files in IDE |
 | `personal.ide` | *(empty)* | IDE for file opening (`cursor`, `code`, `phpstorm`) |
-| `pipelines.skill_improvement` | `true` | Post-task learning capture. Included in every profile except `custom`. |
 | `chat_history.enabled` | `true` | Persistent JSONL log at `agents/runtime/.agent-chat-history` for crash recovery. |
 | `chat_history.frequency` | per profile | Logging granularity: `per_turn`, `per_phase`, or `per_tool` (see matrix below). |
 | `onboarding.onboarded` | `false` | Whether the setup wizard has run. The `onboarding-gate` rule prompts for `agent-config setup` while this is `false`. |
@@ -251,10 +250,10 @@ The kernel-and-router architecture is documented in
 Tier flags live in each rule's frontmatter (`tier: kernel | tier-1 | tier-2`);
 the router compiles them into `dist/router.json` deterministically.
 
-All profiles except `custom` ship with `pipelines.skill_improvement: true`,
-so the agent captures learnings after meaningful tasks by default. Set it
-to `false` in `.agent-settings.yml` to silence post-task analysis without
-changing the profile.
+The agent proposes a learning capture after meaningful tasks in every
+profile. The capture is a proposal the user confirms, so it is not a
+setting: the `pipelines.skill_improvement` key that could silence it was
+retired on 2026-10-09 with its default (`true`) as the fixed behaviour.
 
 The authoritative matrix of all matrix-controlled settings lives in
 [`src/agent-src/templates/agent-settings.md`](../src/agent-src/templates/agent-settings.md).

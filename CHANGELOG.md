@@ -32,7 +32,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ### Changed
 
-- **41 settings keys are retired; an install that never changed them sees no
+- **46 settings keys are retired; an install that never changed them sees no
   difference.** Each key's shipped default is now fixed behaviour: every reader
   of it — code, rule and command prose, the wizard — was rewritten to that
   default in the same change. **If your `.agent-settings.yml` still sets one,
@@ -46,6 +46,7 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
   - Command suggestion and PR creation: `commands.auto_detect`, `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`, `commands.suggestion.cooldown_seconds`, `commands.suggestion.max_options`, `commands.create_pr.api_examples`, `commands.create_pr.ui_paths`, `commands.create_pr.api_paths`.
   - Memory and knowledge sharing: `memory.cadence`, `memory.review_threshold`, `knowledge.global_sharing.redaction.enabled`, `knowledge.global_sharing.redaction.halt_on_trigger`, `knowledge.global_sharing.auto_promote_threshold`, `knowledge.global_sharing.freshness.hypothesis_after_days`, `knowledge.global_sharing.freshness.stale_after_days`.
   - Hooks and engine: `hooks.concern_budget.max_per_event`, `hooks.concern_budget.hard_fail`, `decision_engine.surface_traces`, `decision_engine.on_block_fallback`, `explain.enable_last`.
+  - Remaining: `project.pr_template`, `pipelines.skill_improvement`, `consistency.cross_source`, `subagents.downshift`, `ai_team.suppress_setup_hint`.
   The reference page lists each key with the behaviour that replaces it
   (`templates/agent-settings.md` § Retired keys).
 

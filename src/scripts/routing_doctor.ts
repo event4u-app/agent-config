@@ -355,10 +355,10 @@ export function collect_orchestration(
   platform_assumed: boolean,
 ): OrchestrationReport {
   const settings = load_agent_settings({ cwd: workspace_root });
-  const sub = (settings["subagents"] ?? {}) as Record<string, unknown>;
   const emergency = (settings["emergency"] ?? {}) as Record<string, unknown>;
   const halted = emergency["orchestration_halt"] === true;
-  const downshift = sub["downshift"] !== false;
+  // Fixed on: the `subagents.downshift` key was retired with this default.
+  const downshift = true;
   const { manifest: host_manifest, sources: host_manifest_sources } =
     describeHostCapabilities(platform);
   const activationInputs: ActivationInputs = {

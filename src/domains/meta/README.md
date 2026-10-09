@@ -230,7 +230,7 @@ Artefacts that maintain this package (agent-config itself).
 - **`session-canary`** — personal.canary_name set — open every new task by name (liveness canary); keep the reply-close markers alive (ONE end-summary, PR URL last)
 - **`settings-ask-protocol`** — Asking the user about a setting — one question per command execution, a fixed four-slot shape, and the key's class decides where the answer goes
 - **`size-enforcement`** — Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits
-- **`skill-improvement-trigger`** — After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled
+- **`skill-improvement-trigger`** — After a meaningful task — trigger the post-task learning capture; it proposes, the user confirms
 - **`skill-quality`** — Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained
 - **`slash-command-routing-policy`** — User types a slash command like /create-pr, /commit, or pastes command file content
 - **`source-confidentiality`** — Naming an external repo this package copied/harvested/compared against — keep the tracked tree source-anonymous

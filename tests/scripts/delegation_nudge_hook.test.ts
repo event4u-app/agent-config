@@ -412,10 +412,15 @@ describe("resolveActivation + recommendSliceTier", () => {
     expect(recommendSliceTier(downshift, separate_quota_pool)).toBe("lite");
   });
 
-  it("downshift explicitly off recommends the session (high) tier", () => {
+  it("a leftover downshift: false is ignored — the key was retired, lite stays the recommendation", () => {
     const root = makeWorkspace(["subagents:", "  downshift: false", ""].join("\n"));
     const { downshift, separate_quota_pool } = resolveActivation(root, "claude");
-    expect(recommendSliceTier(downshift, separate_quota_pool)).toBe("high");
+    expect(downshift).toBe(true);
+    expect(recommendSliceTier(downshift, separate_quota_pool)).toBe("lite");
+  });
+
+  it("the tier function itself still honours a downshift-off caller (session tier)", () => {
+    expect(recommendSliceTier(false, false)).toBe("high");
   });
 });
 

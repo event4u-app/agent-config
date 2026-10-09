@@ -33,7 +33,6 @@ explanation lives now that the file no longer carries it as comments.
 | `ai_team.model` | C | string | `"auto"` |  | Model handed to the codex CLI. 'auto' (default) = pass no --model flag so the CLI's own default applies — tracks the subscription's current strongest model instead of pinning a stale ID. Any other value passes through verbatim as `--model <value>`. |
 | `ai_team.review_gate.managed` | C | boolean | `false` |  | Managed governance of the codex plugin's Stop-hook Review Gate (road-to-team-mode Phase 4). false (default) = byte-identical pre-Phase-4 behavior: no counting, no circuit breaker. true = count consecutive BLOCK verdicts per session and trip the circuit breaker at max_consecutive_blocks. |
 | `ai_team.review_gate.max_consecutive_blocks` | C | integer | `3` |  | Circuit-breaker bound: after this many CONSECUTIVE BLOCK verdicts in one session, a visible notice is injected exactly once and the managed layer stops re-blocking — the user decides, never an infinite Claude↔Codex loop. An ALLOW verdict resets the counter. Positive integer. |
-| `ai_team.suppress_setup_hint` | A | boolean | `false` |  | Suppress the one-line wizard/init recommendation to set up the codex plugin on Claude-Code hosts. Cosmetic only — never changes behavior. |
 
 ## augment
 
@@ -72,12 +71,6 @@ explanation lives now that the file no longer carries it as comments.
 | `commands.create_pr.preview_description` | C | boolean | `false` |  | When /create-pr runs, show the generated title and body and wait for confirmation before opening the PR. Off by default (zero-friction PR creation); turn on if you want a last-look gate. |
 | `commands.create_pr.screenshots` | C | boolean | `false` |  | Screenshots for frontend changes. false (default) = never attempt. true = attempt when the host has browser/preview tooling and the diff touches a frontend surface; capability-gated (emits a one-line note and leaves the placeholder when tooling is absent, never fails or blocks the PR). Before/after + changed-region highlighting is best-effort. |
 | `commands.suggestion.blocklist` | C | array | `[]` |  | Slash-command names that should never be suggested, one per line (e.g. "commit", "create-pr"). Useful if a command misfires on your common phrasing. |
-
-## consistency
-
-| Key | Class | Type | Default | Allowed values | What it does |
-|---|---|---|---|---|---|
-| `consistency.cross_source` | C | string | `"on"` | `on` · `auto` · `off` | Consumed by the cross-source-consistency rule. When the agent works from multiple sources (ticket text, an attached image/mockup, the spec, the codebase) it checks them against each other and asks before proceeding on a discrepancy — instead of silently guessing. on (default) = surface every real cross-source contradiction / silent-scope-expansion as one question; auto = surface only high-confidence contradictions, state low-confidence as an assumption; off = no cross-source checking. |
 
 ## continuity
 
@@ -234,12 +227,6 @@ explanation lives now that the file no longer carries it as comments.
 | `personal.rtk_installed` | A | boolean | `false` |  | Does this machine have rtk (Rust Token Killer, a third-party Apache-2.0 tool: https://github.com/rtk-ai/rtk) on PATH — verified as the real Token Killer, not the unrelated Rust Type Kit that shares the binary name? When true the agent wraps verbose CLI output (git, tests, linters, docker, npm, composer) with rtk (upstream reports 60-90% token savings — their estimate). Leave false if rtk is missing — the agent falls back to tail / grep. The wizard overwrites this from a live two-stage probe (PATH presence + `rtk gain` identity check). |
 | `personal.user_type` | C | string | `""` | `` · `consultant` · `creator` · `developer` · `finance` · `founder` · `gtm` · `ops` | Optional persona axis used by the skill-suggester to surface the relevant subset (consultant / creator / developer / finance / founder / gtm / ops). Empty = no filter, all skills available. You can change this any time without re-running setup. |
 
-## pipelines
-
-| Key | Class | Type | Default | Allowed values | What it does |
-|---|---|---|---|---|---|
-| `pipelines.skill_improvement` | A | boolean | `true` |  | After a meaningful task the agent proposes a learning-capture turn (new skill, rule tweak, guideline). Turn off if you find the prompts noisy — you can still run /memory:promote manually. |
-
 ## planning
 
 | Key | Class | Type | Default | Allowed values | What it does |
@@ -260,7 +247,6 @@ explanation lives now that the file no longer carries it as comments.
 |---|---|---|---|---|---|
 | `project.audience` | C | string | `"public"` | `self` · `internal` · `client` · `public` | Who this project is built for — read by the demand gate (§ 8-pre of docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md), whose L0-L4 ladder measures MARKET demand and is meaningless where no market is intended. self = a tool its maintainer builds for themselves; the gate is inert and work is classified L-self (build) instead of being deferred for lack of a user population nobody wants. internal = a team tool; only "what breaks without it?" survives. client = built for a named client, who is the requester rather than a market segment. public (default) = a product with an intended market; full three-question gate, behaviour unchanged from before this key existed. |
 | `project.improvement_pr_branch_prefix` | A | string | `"improve/agent-"` |  | Branch-name prefix for improvement PRs the agent opens against project.upstream_repo (e.g. "improve/agent-add-react-skill"). Pick a prefix your repo conventions allow. |
-| `project.pr_template` | C | string | `".github/pull_request_template.md"` |  | Path (relative to project root) to the PR-description template the agent fills in before opening a pull request. Override only if your repo keeps the template somewhere non-standard. |
 | `project.upstream_repo` | C | string | `""` |  | GitHub slug (owner/repo) the upstream-contribute skill targets when you ask the agent to push a learning back to the shared agent-config package. Empty = improvement PRs are disabled. |
 
 ## projection
@@ -306,7 +292,6 @@ explanation lives now that the file no longer carries it as comments.
 | Key | Class | Type | Default | Allowed values | What it does |
 |---|---|---|---|---|---|
 | `subagents.adversarial_council` | C | string | `"off"` | `off` · `ask` · `on` | Opt-in adversarial-verification-council mode (subagent-orchestration Mode 9, ADR-122). off (default) = never runs; ask = offer it on an explicit high-risk change; on = auto-run on high-risk changes. Advisory only — a panel of distinct-model skeptics red-teams a real change for defect FINDING coverage and NEVER auto-gates it (Hard Floor). Stays default-off until the adversarial-council-finding-coverage claim is backed. |
-| `subagents.downshift` | C | boolean | `true` |  | Route delegable sub-tasks to the lowest-capable model tier (cost + speed via model downshift). false = every subagent runs on the session tier. |
 | `subagents.implementer_model` | C | string | `""` |  | Override the model the orchestrator dispatches to subagents that write code (e.g. claude-sonnet-4, gpt-5). Empty (default) = inherit the session's primary model — cheapest and usually right. |
 | `subagents.judge_model` | C | string | `""` |  | Override the model used for review / judge subagents that critique implementer output. Empty (default) = one tier above the implementer model — picks up nuance the implementer missed. |
 | `subagents.max_parallel` | C | integer | `3` |  | Limit on subagents running in parallel during /do-in-parallel, /do-competitively, and /judge runs — a value the model reads from settings; no code counts spawns against it. Raise for faster fan-out, lower if you hit rate limits or want lower token spend. |

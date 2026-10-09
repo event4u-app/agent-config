@@ -317,9 +317,6 @@ verbosity:
 
 # --- Project / team preferences ---
 project:
-  # Path to the PR template file (relative to project root)
-  pr_template: .github/pull_request_template.md
-
   # Target repository for universal improvement PRs (e.g. org/agent-config)
   upstream_repo: ""
 
@@ -504,15 +501,6 @@ chat_history:
     agent: 5000
     tool: 200
     phase: 200
-
-# --- Optional pipelines ---
-pipelines:
-  # Skill improvement pipeline (true, false)
-  # true  = after meaningful tasks, propose learning capture and improvements (default)
-  # false = silent, no post-task analysis
-  # Included by every rule_loading_tier except `custom`. Flip to false here if you
-  # want a silent agent; `custom` profile ignores this default entirely.
-  skill_improvement: true
 
 # --- Reasoning Discipline Protocol (RDP) ---
 #
@@ -824,34 +812,6 @@ design:
       # at large dimensions with no evidence that this is wanted.
       length: null
 
-# --- Cross-source consistency ---
-#
-# When the agent plans, refines, roadmaps, or implements from multiple
-# sources — ticket text, an attached image / mockup / screenshot, the spec,
-# the codebase — it actively checks them AGAINST each other and STOPS to ask
-# before proceeding on a detected discrepancy, instead of silently guessing
-# (even a correct guess). Consumed by the `cross-source-consistency` rule.
-# Catches: (a) ticket text vs an attached image/mockup, (b) a spec silent on
-# a clearly-needed behavior (weekend/holiday shifting, empty/error states),
-# (c) spec vs the codebase, (d) intra-ticket contradiction (AC vs description).
-#
-# The discipline is deliberately subordinate to `ask-when-uncertain` (it folds
-# a detected discrepancy into the same turn's single question — never a second
-# prompt) and defers to `scope-control` for the permission to expand scope.
-consistency:
-  # on | auto | off  (default: on)
-  #
-  # on   = default. Detect discrepancies across sources and surface ONE
-  #        numbered-options question before proceeding. A silent guess on a
-  #        real contradiction is a rule violation, even when the guess is
-  #        correct. An inferred-but-unspecified behavior is a scope expansion:
-  #        ask before implementing it.
-  # auto = detect + surface only HIGH-confidence contradictions; low-confidence
-  #        ones are stated as an assumption and proceed (noise control).
-  # off  = no cross-source checking (legacy: the agent may proceed on its own
-  #        reading of whichever source it happened to read).
-  cross_source: "on"
-
 # --- Documentation screenshots ---
 #
 # When the agent creates screenshots for documentation (e.g. generating a docs
@@ -938,10 +898,8 @@ code_style:
 # .augment/contexts/subagent-configuration.md and
 # .augment/contexts/execution/auto-orchestration-activation.md.
 subagents:
-  # Route delegable sub-tasks to the lowest-capable model tier (cost + speed
-  # via model downshift). true (default) = downshift per declared model_tier;
-  # false = every subagent runs on the session tier.
-  downshift: true
+  # Delegable sub-tasks always run on the lowest-capable model tier they
+  # declare (cost + speed via model downshift); this is fixed, not a key.
 
   # Prefer a separate-quota-pool model for delegable sub-tasks WHERE the host
   # manifest reports `separate_quota_pool: true` (e.g. a subscription whose
@@ -1063,10 +1021,6 @@ ai_team:
   # ceiling read against that shared bucket. 0 = block all team calls;
   # raise if you review heavily.
   max_calls_per_day: 50
-
-  # Suppress the one-line wizard/init recommendation to set up the codex
-  # plugin on Claude-Code hosts. Cosmetic only — never changes behavior.
-  suppress_setup_hint: false
 
   # Managed governance of the codex plugin's Stop-hook Review Gate
   # (road-to-team-mode Phase 4). The gate itself stays upstream's; these

@@ -77,6 +77,12 @@ const RETIRED: ReadonlyArray<{ key: string; hostile: unknown }> = [
     { key: 'decision_engine.surface_traces', hostile: true },
     { key: 'decision_engine.on_block_fallback', hostile: 'warn' },
     { key: 'explain.enable_last', hostile: false },
+    // 2.7 — remaining
+    { key: 'project.pr_template', hostile: 'docs/PR_TEMPLATE.md' },
+    { key: 'pipelines.skill_improvement', hostile: false },
+    { key: 'consistency.cross_source', hostile: 'off' },
+    { key: 'subagents.downshift', hostile: false },
+    { key: 'ai_team.suppress_setup_hint', hostile: true },
 ];
 
 const TEMPLATE_PATH = path.resolve(process.cwd(), 'src/config/agent-settings.template.yml');

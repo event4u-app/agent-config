@@ -131,6 +131,12 @@ export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     ['decision_engine.surface_traces', 'nothing: the per-phase decision trace stays off, the old default'],
     ['decision_engine.on_block_fallback', 'the fail-safe: an on_block ask that times out always stops'],
     ['explain.enable_last', 'the presence of a work-state trace; explain last always renders it'],
+    // 2026-10-09 — remaining
+    ['project.pr_template', '/create-pr, which reads .github/pull_request_template.md'],
+    ['pipelines.skill_improvement', 'the skill-improvement-trigger rule; the capture is a proposal the user confirms'],
+    ['consistency.cross_source', 'the cross-source-consistency rule, always on; batching and the no-cheap-questions floor bound the noise'],
+    ['subagents.downshift', 'the model_tier each sub-task declares; downshift is always on'],
+    ['ai_team.suppress_setup_hint', 'nothing: the one-line team-mode setup hint is always shown'],
 ]);
 
 /** Keys already warned about in THIS process — the "once per run" dedupe. */

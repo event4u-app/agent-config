@@ -122,9 +122,6 @@ personal:
 
 # --- Project / team preferences ---
 project:
-  # Path to the PR template file (relative to project root)
-  pr_template: .github/pull_request_template.md
-
   # Target repository for universal improvement PRs (e.g. org/agent-config)
   upstream_repo: ""
 
@@ -209,14 +206,6 @@ hooks:
     # scripts/chat_history.ts). Only set this when the script lives
     # outside the standard location.
     # script: scripts/chat_history.ts
-
-# --- Optional pipelines ---
-pipelines:
-  # Skill improvement pipeline (true, false)
-  # true  = after meaningful tasks, propose learning capture and improvements (default)
-  # false = silent, no post-task analysis
-  # Included by every rule_loading_tier except `custom`.
-  skill_improvement: true
 
 # --- Roadmap execution ---
 #
@@ -536,7 +525,6 @@ the canonical narrative lives in
 | `personal.canary_name` | first name | _(empty)_ | Per-project OVERRIDE of the name the agent addresses the user with (session-canary). The name itself lives user-globally: `identity.name` in the wizard's `settings/.agent-user.yml`, fallback `personal.canary_name` in the user-global settings. See `rules/session-canary.md`. |
 | `personal.rtk_installed` | `true`, `false` | `false` | Whether rtk (Rust Token Killer) is installed. Detected and set by `/onboard`. |
 | `personal.autonomy` | `on`, `off`, `auto` | `auto` | Suppress trivial workflow questions and act on the obvious next step. `auto` (default) defaults to `off` but flips to `on` after a prose opt-in like "arbeite selbstständig". `on` suppresses trivial questions unconditionally. `off` is the legacy ask-everything mode. Blocking decisions (security, scope expansion, push/merge/branch/PR/tag) are never suppressed. See `rules/autonomous-execution.md`. |
-| `project.pr_template` | file path | `.github/pull_request_template.md` | Path to PR template file. Read this instead of searching for it. |
 | `project.upstream_repo` | `org/repo` | _(empty)_ | Target repository for universal improvement PRs (e.g., `org/agent-config`). |
 | `project.improvement_pr_branch_prefix` | string | `improve/agent-` | Branch prefix for agent improvement PRs. |
 | `github.pr_reply_method` | `replies_endpoint`, `create_review_comment`, `auto` | `create_review_comment` | GitHub API method for replying to PR review comments. `auto` detects on first use. |
@@ -549,7 +537,6 @@ the canonical narrative lives in
 | `hooks.injection_scan.enabled` | `true`, `false` | `false` | PostToolUse prompt-injection scanner: scans tool output for injection signatures and warns in context (exit 2) — never blocks. |
 | `hooks.rtk_wrap.enabled` | `true`, `false` | `false` | PreToolUse RTK-wrap nudge: when `rtk` is on PATH, warns (exit 2, never blocks) to re-run a verbose CLI command wrapped with rtk. |
 | `hooks.design_slop.enabled` | `true`, `false` | `false` | PreToolUse anti-slop nudge: runs the `lint_design_slop` registry against about-to-be-written UI content and warns (exit 2, never blocks) on P0/P1 aesthetic tells. |
-| `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `roadmap.quality_cadence` | `end_of_roadmap`, `per_phase`, `per_step` | `end_of_roadmap` | When `/roadmap:process-step|phase|full` runs the project's quality pipeline — only relevant when `quality.local_auto_run` is `true`; when it is `false` (the default) local pipeline runs are suppressed at every cadence and remote CI is the gate. Default skips per-step / per-phase runs and gates only the final archival. `per_phase` runs once after every phase; `per_step` is the legacy verbose mode. Step checkboxes and the dashboard are always updated regardless. |
 | `quality.local_auto_run` | `true`, `false` | `false` | When `false` (default): agent NEVER runs the project's quality pipeline (`task ci`, `make test`, `npm run check`, PHPStan, ECS, Rector, test suites) proactively — and does not ask. The user runs quality tools manually; remote CI is the authoritative gate. The agent runs one only on (1) an explicit ask this turn, (2) a concrete CI failure (run exactly that failing check), or (3) the new-gate carve-out. When `true`: opt-in legacy — agent runs the pipeline autonomously when work is ready for verification. **Carve-out**: NEW CI gates / smoke tests / test files MUST run locally regardless of this flag — without execution the new gate is unverified evidence. Iron Law `verify-before-complete` still applies; suppressed runs are surfaced ("quality gates delegated to remote CI"), never claimed as passing. |
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
@@ -595,12 +582,10 @@ Applied automatically when `scripts/install` finds a legacy `.agent-settings`
 | `open_edited_files` | `personal.open_edited_files` |
 | `user_name` | `personal.user_name` |
 | `rtk_installed` | `personal.rtk_installed` |
-| `pr_template` | `project.pr_template` |
 | `upstream_repo` | `project.upstream_repo` |
 | `improvement_pr_branch_prefix` | `project.improvement_pr_branch_prefix` |
 | `github_pr_reply_method` | `github.pr_reply_method` |
 | `eloquent_access_style` | `eloquent.access_style` |
-| `skill_improvement_pipeline` | `pipelines.skill_improvement` |
 | `subagent_implementer_model` | `subagents.implementer_model` |
 | `subagent_judge_model` | `subagents.judge_model` |
 | `subagent_max_parallel` | `subagents.max_parallel` |
@@ -636,6 +621,11 @@ silence it.
 | `decision_engine.surface_traces` | no per-phase decision-trace file (accepted in the `decision_engine:` block and ignored) |
 | `decision_engine.on_block_fallback` | an `on_block: ask` that times out stops (accepted and ignored) |
 | `explain.enable_last` | `agent-config explain last` always renders the trace |
+| `project.pr_template` | `/create-pr` reads `.github/pull_request_template.md` |
+| `pipelines.skill_improvement` | post-task learning capture is always proposed (`skill-improvement-trigger`) |
+| `consistency.cross_source` | cross-source discrepancies are always surfaced and asked, batched into one question |
+| `subagents.downshift` | delegable sub-tasks always run on the lowest-capable tier they declare |
+| `ai_team.suppress_setup_hint` | the one-line team-mode setup hint is always shown (accepted and ignored in the `ai_team:` block) |
 
 ## Cost profiles
 
@@ -649,10 +639,9 @@ The `rule_loading_tier` setting selects which agent surfaces are active. See
 | `full` | `balanced` + Tool adapters (GitHub / Jira, read-only, opt-in). |
 | `custom` | Ignore profile — every matrix value must be set explicitly. |
 
-**Learning loop:** `pipelines.skill_improvement` is `true` by default and is
-included in every profile except `custom`. It triggers post-task learning
-capture via the `skill-improvement-trigger` rule. Flip to `false` in the
-settings file if you want a silent agent without touching the profile.
+**Learning loop:** post-task learning capture runs in every profile via the
+`skill-improvement-trigger` rule. It is a proposal the user confirms, not a
+setting (`pipelines.skill_improvement` was retired on 2026-10-09).
 
 Other per-feature toggles may be added in future releases; when they land,
 they ship with a live consumer in code and get documented here, not before.
