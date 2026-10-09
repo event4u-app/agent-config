@@ -101,7 +101,7 @@ what grew. No baseline is moved.
       same shape, and what counts as a miss. Then
       `./scripts-run src/scripts/build_proof` runs in the same change.
       verify: `grep -c '^### claim: turnaround-blocking-by-cause-targets' docs/CLAIMS.md` -> /^1$/
-- [ ] <!-- blocked-by: user-wait-has-no-avoidable-minutes | asked: no — non-interactive drain run, which reports once at the end and cannot put a question; the ask is carried in the PR body and in the blocker below --> **3.2 One mitigation for the first cause.** The change that addresses the
+- [ ] **3.2 One mitigation for the first cause.** The change that addresses the
       largest cause lands with its own test, and its commit names the claim id.
       verify: `npx vitest run tests/scripts/probe_turnaround_causes.test.ts` -> 0
 - [x] **3.3 One mitigation for the second cause.** Same shape as 3.2.
@@ -160,11 +160,12 @@ what grew. No baseline is moved.
 | D5 | reversible-technical | agent | 2.2 added a `user-wait` cause (question tools that return only on a human answer), read council runs as `network`, and read past `do` / `then` / `else` into a loop body | The first pass left 393 of 802 blocking minutes `unknown`, 353 of them questions to the human (`turnaround-blocking-by-cause-2026-10.md` § First pass) | A later window's `unknown` exceeds its largest named cause again |
 | D6 | contested-technical | council:2026-10-07, recorded in claim turnaround-blocking-by-cause-targets | The literal top two by minutes carry the targets; each target measures the part an agent controls — avoidable questions, and CI waits that end with no verdict — with per-cause underpowered floors | AI council 2026-10-07, two rounds, 2/2 seats both; round 1 rested on an unverified premise about where the questions were asked, so round 2 re-asked with it corrected; recorded in claim `turnaround-blocking-by-cause-targets` | Two windows show aggregate `user-wait` minutes stable and mostly avoidable |
 | D7 | reversible-technical | council:2026-10-07, recorded in claim turnaround-blocking-by-cause-targets | The ci-wait mitigation names the still-pending checks and a background next wait on the waiter's last line, rather than failing fast on the first red | 20 of 44 CI waits ended with no verdict (184 min); 3 ended red (20 min), so fail-fast reaches little and needs check-attempt identity it does not have — both seats | The second window shows foreground re-invocations after an expiry not falling |
+| D8 | reversible-technical | council:2026-10-08 resolve-blockers-batch | `user-wait-has-no-avoidable-minutes` (a): step 3.2 closes as "no mitigation: the cause holds no avoidable minutes", recorded against claim `turnaround-blocking-by-cause-targets`; no advisory is built and the pre-registration is not amended. The entry's `product-owned` label was put to the owner-reserved test; both seats found the decision itself not owner-reserved (closing a target already met at baseline lowers no floor). | Read question by question, none of the four `user-wait` calls (353 of 802 min) was avoidable; the target is met at baseline. AI council 2026-10-08, anthropic + openai, 2/2 present, both (a), $0.00. | a larger sample shows avoidable `user-wait`, or a continuity advisory would have shortened an observed wait without answering an owner-reserved question for the owner |
 
 ## Blockers
 
 ### blocker: user-wait-has-no-avoidable-minutes
-- **Status:** open — raised 2026-10-07 by the drain run that closed 2.1, 3.1 and 3.3
+- **Status:** resolved 2026-10-08 — option (a): step 3.2 is re-scoped to "no mitigation: the cause holds no avoidable minutes", recorded against claim `turnaround-blocking-by-cause-targets` (council 2026-10-08, anthropic + openai, 2/2, $0.00, both (a), owner-reserved: no; D8). Raised 2026-10-07 by the drain run that closed 2.1, 3.1 and 3.3
 - **Ownership:** product-owned
 - **Owner:** user
 - **Blocks:** step 3.2 — One mitigation for the first cause
@@ -188,7 +189,7 @@ what grew. No baseline is moved.
 - **If you do nothing:** step 3.4 stays open and this roadmap cannot archive.
   Nothing breaks, and no reading goes stale — the 2.1 page keeps its first-window
   section and simply carries no second one.
-- **Resolved when:** the 2.1 page carries a second-window section with a verdict per cause, and `grep -c -E 'met|missed|underpowered' agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md` counts it.
+- **Resolved when:** `grep -c '^## Second window' agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md` returns 1, and every cause row under that heading ends in `met`, `missed` or `underpowered`. Rewritten 2026-10-07 by `/roadmap:resolve-blockers`: the earlier check counted `met|missed|underpowered` anywhere on the page and already returned 1 from the method text at line 118, so it read `met` with no second window present.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->

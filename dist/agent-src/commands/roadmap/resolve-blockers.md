@@ -36,6 +36,10 @@ AS A CHECK BEFORE TREATING IT AS OPEN.
 RESOLVE AT THE LOWEST RUNG THAT OWNS THE DECISION: EVIDENCE → RECORDED RULE →
 EXECUTION → AGENT → INDEPENDENT SESSION → COUNCIL → OWNER.
 THE OWNER IS THE LAST RUNG, NEVER THE FIRST, AND NEVER FOR A TECHNICAL DECISION.
+NO OWNER QUESTION IS PUT BEFORE ONE BATCHED COUNCIL PASS HAS RUN OVER EVERY
+UNDECIDED BLOCKER OF THE RUN — OWNER-LABELLED ONES INCLUDED. A BLOCKER'S
+`Owner:`, `Ownership:` OR "YOURS TO SET" IS ITS AUTHOR'S GUESS; THE COUNCIL'S
+OWNER-RESERVED TEST DECIDES WHO MUST ANSWER.
 NEVER PASS `--confirm` OR BUY METERED COUNCIL SPEND WITHOUT THE OWNER'S YES.
 THE OWNER IS ASKED ONE QUESTION PER TURN, WITH OPTIONS AND ONE RECOMMENDATION,
 AND THE ANSWER IS WRITTEN DOWN BEFORE THE NEXT QUESTION IS PUT.
@@ -87,7 +91,10 @@ at all. Re-classifying a technical `3` to `2` is a legitimate outcome of this
 run, recorded on the entry (`Class: 2 — council-decidable. Corrected from 3 on
 YYYY-MM-DD`), written as the bold field `- **Class:** 2 — …` the lint reads.
 Read each entry's `- **Ownership:**` too: `product-owned`, `business-owned` and
-`destructive-owned` are locked to the owner whatever the class says.
+`destructive-owned` are the author's routing claim, written when nobody had run
+the test. They mark a candidate for the owner, never a destination: the
+blocker still goes into the council batch, whose owner-reserved test (§ Running
+the council) decides whether it reaches the owner.
 
 `unblocksSteps` is the open-step count of the whole roadmap the blocker sits in,
 the same number for every blocker of that roadmap. Order by the steps a blocker
@@ -151,11 +158,14 @@ uses, with one blocker-specific rung added (execution):
    (`decision-revisit-gate` sends those council-first). See § Running the
    council. Where no council is available, the **team** rung (`ai_team`) takes
    its place.
-7. **The owner** — **only** `product-owned`, `business-owned` and
-   `destructive-owned` decisions, and the transitions `decision-revisit-gate`
-   reserves (lowering a safety floor, an irreversible or external commitment,
-   spend above a delegated threshold). A technical decision never reaches here
-   by being hard. One exception, from the ownership contract: a
+7. **The owner** — **only** what the council's batch pass marked
+   owner-reserved (either seat), or split on with the split surviving a
+   measurement: `product-owned`, `business-owned` and `destructive-owned`
+   decisions, and the transitions `decision-revisit-gate` reserves (lowering a
+   safety floor, an irreversible or external commitment, spend above a
+   delegated threshold, governance self-amendment). A technical decision never
+   reaches here by being hard, and an owner-labelled one never reaches here
+   without the council's pass. One exception, from the ownership contract: a
    `critical-technical` question with a single provider present degrades to
    **owner-confirm of the agent's proposal**, never to one model reviewing
    itself. See § Asking the owner.
@@ -182,10 +192,31 @@ Council availability is the resolver's answer, never the project tree's:
 agent-config council:status
 ```
 
-1. **Batch the questions.** All council-owned blockers of a run go into **one**
-   question file under `agents/runtime/council/questions/` — one numbered
+1. **Batch the questions — all of them, before any owner question.** Every
+   blocker rungs 1–4 did not close goes into **one** question file under
+   `agents/runtime/council/questions/`, including those labelled `Owner: user`,
+   `product-owned`, `business-owned` or `destructive-owned` — one numbered
    section per blocker, each carrying the blocker's five fields, the Phase-2
-   evidence and the candidate options. One run, not one per blocker.
+   evidence and the candidate options. One run, not one per blocker. The file
+   opens with the owner-reserved test, quoted from `decision-revisit-gate`'s
+   owner-reserved table: the chosen option would change the project's purpose
+   or a declared non-negotiable outcome; **lower** or remove a recorded
+   security / privacy / safety / data-handling floor; be irreversible or
+   materially destructive; spend or carry liability above a delegated
+   threshold; create, remove or weaken a legal, contractual, licensing,
+   compatibility or public commitment; or amend governance itself (reopening
+   authority, quorum, escalation, the owner-reserved set). Strengthening a
+   floor, or anything reversible inside these bounds, is council-decidable.
+   Each section then asks for three answers, in this order:
+   1. **Owner-reserved?** — yes / no, naming the clause, per option where the
+      options differ (one option can be reserved while another is not);
+   2. **Choice** — the option the seat takes if it is council-decidable, and
+      the option it would recommend to the owner if it is not;
+   3. **The fact that would change the answer.**
+   A recorded decision that reserved the question to the owner (a `## Decisions`
+   row, an ADR) is put to the same test, as a reopening per
+   `decision-revisit-gate` — the council says whether the reservation still
+   holds; it never lifts one on its own authority.
 2. **Write the question neutrally** — scope, evidence, options. No
    recommendation and no expected verdict, in either direction: the council is
    judging a decision the agent would otherwise take, so the agent's lean stays
@@ -205,7 +236,13 @@ agent-config council:status
    checkout that has run a council first — without it every seat reads as
    unavailable. `--output` must sit under `agents/runtime/council/responses/`;
    any other directory is refused. A failed run still spends quota, so never
-   re-run an unchanged question.
+   re-run an unchanged question — with one exception: a seat that is absent
+   for a **transport** reason (the response's `absent_members[].detail` names
+   an OS, network or process error, not a refusal or a verdict) allows **one**
+   transport retry of the unchanged file under a new `--output` name. The
+   retry is recorded as such, and if a seat that answered both times changed
+   its answer, both readings are reported. A second retry, or a retry after an
+   unwelcome verdict, is verdict shopping.
 
    **Exhausted quota is `spend-exhaustion`: pause and report** — which questions
    needed the council, the quota reading, `estimate --mode-override api`'s cost,
@@ -215,7 +252,10 @@ agent-config council:status
    owner has said yes to the metered rung, `agent-config council:grant-billing
    <run_id>` records that yes for one run, and only then does
    `--mode-override api` run.
-4. **Read the verdict honestly.** 2/2 agreeing → decided. 1/2 present is a
+4. **Read the verdict honestly.** Route first: a blocker both seats call **not**
+   owner-reserved is decided by the council's choice and never reaches the
+   owner; one that either seat calls owner-reserved goes to the owner, carrying
+   the seats' recommended option. Then the choice: 2/2 agreeing → decided. 1/2 present is a
    single-seat reading (`DEGRADED`), never a convergence: accept it for a
    `reversible-technical` or `contested-technical` question and say so; for a
    `critical-technical` one it degrades to owner-confirm of the proposal.
@@ -239,12 +279,18 @@ EVERY QUESTION IS ANSWERABLE WITH ONE NUMBER.
 THE ANSWER IS RECORDED AND APPLIED BEFORE THE NEXT QUESTION IS PUT.
 ```
 
+The queue holds only what the council's batch pass routed here (§ Running the
+council, step 4) — never a blocker the pass did not see, and never one both
+seats called council-decidable. With `--no-council`, or when no seat is
+available, say so in the queue line: the routing is then the agent's, unchecked.
+
 Before the first question, one short line says how many owner questions the run
 has left after the council (`3 decisions need you — here is the first`), so the
 owner knows the length of the queue. Then, per question:
 
 - **Context in two sentences** — what is blocked and what it unblocks.
-- **What the council said**, if it ran: verdict or the split.
+- **What the council said** — why it is owner-reserved (the clause each seat
+  named), and the option each seat would recommend, or the split.
 - **What exactly you do**, if the answer needs an act only the owner can
   perform — a repository setting, a ruleset toggle, a credential, a tag: the
   literal step (the page, the field, the command), so nothing has to be looked
@@ -345,11 +391,15 @@ council's to answer. The ledger and the inline council record are the control.
 - Mark a blocker resolved because its status is old, or because a sibling PR
   looks related. The condition, executed, is the only evidence.
 - Ask the owner what the tree, a recorded decision or the council can answer —
-  *"Owner: user"* in the file is not a reason.
+  *"Owner: user"*, `Ownership: product-owned` or *"yours to set"* in the file
+  is not a reason.
+- Put the first owner question before the council's batch pass has run over
+  every undecided blocker, or classify a blocker as owner-reserved yourself
+  when a council seat is available to run the test.
 - Ask more than one question per turn, or hand back *"four decisions are open in
   file X"*.
 - Run the council once per blocker, or re-run an unchanged question after a
-  failure.
+  failure — beyond the single transport retry § Running the council allows.
 - Pass `--confirm` or switch to metered council spend without the owner's yes.
 - Cite `agents/runtime/council/` from a roadmap.
 - Execute the work a resolved blocker unblocks — this command authorizes

@@ -114,7 +114,7 @@ owner, because it reverses a recorded supersession.
       the network read, the two environment switches and the new flag.
       verify: `grep -c 'no-forge' docs/MIGRATION.md` -> /^[1-9]/
       Landed in fc1bdec4f (#2243) before this run.
-- [ ] <!-- blocked-by: doctor-network-default | asked: no — a background process-full drain lane has no owner channel; the question is carried in the blocker entry and the PR body --> **3.3 Implement the decision of `doctor-network-default`, then close
+- [ ] **3.3 Implement the decision of `doctor-network-default`, then close
       the four rows.** Under (a), offline becomes the default and `--online`
       opts in; under (b), the default stays. Either way `c6367568cb1a`,
       `77e3912664b9`, `8605e9fc59cd` (16.2.0) and `eff3d4ed3fee` (16.3.0)
@@ -137,7 +137,7 @@ owner, because it reverses a recorded supersession.
       gate's tests reflect it.
 - [x] AC-4 — A `doctor` invocation with the offline flag spawns no forge or
       remote read, shown by an injected-runner test.
-- [ ] <!-- blocked-by: doctor-network-default | asked: no — a background process-full drain lane has no owner channel; the question is carried in the blocker entry and the PR body --> AC-5 — The four forge findings carry a status consistent with the
+- [ ] AC-5 — The four forge findings carry a status consistent with the
       recorded default.
 
 ## Decisions
@@ -150,6 +150,7 @@ owner, because it reverses a recorded supersession.
 | D4 | reversible-technical | agent | Seventeen rows that are real, unfixed and had no carrier (fourteen read in 1.1 and 1.2, three a council had already read `still_open`) name a new stub, `road-to-the-16-3-0-findings-residue`, rather than being fixed here | Fixing them is outside this roadmap's scope, and D1 forbids `accepted_risk` for unfinished work; each item there names its evidence and what closes it | A live roadmap adopts one of the six groups; its rows then name that roadmap |
 | D5 | reversible-technical | council:2026-10-07 medium-security-cutoff-and-carry | The medium-security widening binds releases after 16.3.0 only (`MEDIUM_SECURITY_BLOCKS_AFTER`); `eff3d4ed3fee` is `still_open`, carried by step 3.3, and the two symlink rows are `still_open`, carried by the residue stub | Two R2 rounds on this branch: round 1 found `fixed` overstated all three rows, round 2 found that `accepted_risk` on `eff3d4ed3fee` was a relabel to keep the widened gate green, against D1. A retroactive widening leaves only those two outcomes or a red trunk for an already-shipped release; a prospective one lets the row say what is true. The council's stated purpose was an accountable decision before publication, which a shipped release can no longer give | The owner answers `doctor-network-default`: step 3.3 rewrites the row; or a shipped release must be re-gated after the fact |
 | D6 | reversible-technical | owner | Open: whether the gate for a release must also require a disposition for `security × medium` rows still open in EARLIER ledgers (carry-forward). Not implemented; carried by `road-to-the-16-3-0-findings-residue` item 7 | Council 2026-10-07 (claude-sonnet-4-5 + codex, 2/2 present) ratified the prospective cutoff and the documented semver exemption, and SPLIT on carry-forward: one seat rejects it as a compounding multi-ledger burden for a triage failure, the other requires it, resolved in the new ledger by finding id. A split is an escalation condition, so the choice is the owner's | The owner answers; or an open medium security row crosses another release |
+| D7 | contested-technical | council:2026-10-07 resolve-blockers | `doctor-network-default` (a): `agent-config doctor --json` is offline by default; `--online` opts in to the forge read. A skipped forge read is reported explicitly (`not_checked`, reason `online_not_requested`) so no aggregate verdict reads it as passed; no-network tests cover full and single-check runs; the change ships with a migration note. | AI council 2026-10-07, anthropic + openai, 2/2 present, both (a), $0.00. Adopted 2026-10-08 under the owner's delegation: council-decidable questions are settled by the council and only owner-reserved ones reach the owner. | callers demonstrably depend on the forge read by default and break, or the `not_checked` state is read as a pass anywhere |
 
 ## Blockers
 
@@ -164,7 +165,7 @@ owner, because it reverses a recorded supersession.
 - **Verdict (2026-10-07):** (a), release gate only — council claude-sonnet-4-5 + codex, two rounds, 2/2 concluded, no spend. Recorded as D3; implemented in step 2.1.
 
 ### blocker: doctor-network-default
-- **Status:** open
+- **Status:** resolved 2026-10-08 — option (a), offline by default with `--online` to opt in (council 2026-10-07, anthropic + openai, 2/2, $0.00; adopted under the owner's 2026-10-08 delegation of council-decidable questions; D7). Conditions carried into 3.3: the skipped forge read reported explicitly in the JSON (`not_checked`, reason `online_not_requested`) so an aggregate verdict cannot read it as passed, no-network tests for full and single-check runs, and a migration note (add `--online`).
 - **Owner:** owner
 - **Blocks:** 3.3
 - **What to do:** pick exactly one — (a) make `agent-config doctor --json` offline by default with `--online` to opt in, or (b) keep the forge read on by default and record why in this file's `## Decisions` table.
@@ -173,12 +174,12 @@ owner, because it reverses a recorded supersession.
 - **If you do nothing:** the four forge findings stay open and 3.3 stays blocked; 3.1 still ships.
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-07 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-09 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
 | 1 | Dispositions written to empty the ledger | product | A row marked `false_positive` or `accepted_risk` without a reading hides real work. | 1.2 requires a rationale per row; D1 prefers `still_open` with a roadmap. | Phase 1 — Every 16.3.0 finding ends somewhere |
 | 2 | A wider blocking predicate stalls a release | product | Option (a) turns a medium security finding into a release blocker. | The disposition vocabulary already admits `accepted_risk`; a release can answer, not wait. | Phase 2 — Whether a medium security finding blocks |
 | 3 | The offline test passes on a stub | implementation | A test that injects a runner may not exercise the real composition root. | `forgeProtectionJsonFor` already takes `deps`; the test goes through it, not below it. | Phase 3 — A doctor that can stay offline |
-| 4 | Reversing a council-reached default without the owner | product | The default was set by a recorded supersession. | The default change sits behind an owner blocker; only the additive flag ships without it. | Context |
+| 4 | Reversing a council-reached default without the owner | product | The default was set by a recorded supersession. | The default change sat behind an owner blocker until 2026-10-08, when the owner delegated council-decidable questions and the council chose (a) 2/2 (D7); 3.3 ships it with an explicit `not_checked` state and a migration note, so no caller reads a skipped read as passed. | Context |
 | 5 | The wider predicate reds an older ledger | implementation | Ledgers 14.21.0 to 16.2.0 hold medium security rows with no status, written while those rows were advisory. | The widening is prospective: `isBlocking` takes the ledger's release and admits `security × medium` only after 16.3.0, pinned by tests. The gate runs for the package.json version in `.github/workflows/consistency.yml` and for the release branch in `release-validation.yml` and `self-review-gate.yml`. | Phase 2 — Whether a medium security finding blocks |

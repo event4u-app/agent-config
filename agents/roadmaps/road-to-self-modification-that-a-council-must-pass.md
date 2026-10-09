@@ -364,7 +364,8 @@ At `df377ca64`:
 ## Blockers
 
 ### blocker: self-modification-directive-reading-confirmed
-- **Status:** open — owner answered (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D10); closes when step 1.1's record lands accepted, which is agent work and no longer a question
+- **Status:** resolved 2026-10-07 — option (a) on record (evidence: `docs/decisions/ADR-281-council-confirmed-self-modification.md` is `status: accepted`, `adr_cite_check` read 2026-10-07; owner choice D10)
+- **Note (2026-10-07):** ADR-281 carries an amendment of 2026-10-07 making a council verdict advisory until an authenticated owner authorisation is bound to the same digest. Steps 3.4, 5.3 and 6.1 assume the council record itself passes the gate; that premise is re-read when those steps are worked, not by this blocker.
 - **Owner:** owner
 - **Blocks:** 1.2, 1.3, 3.1, 3.2, 3.3, 3.4, 4.1, 4.2, 5.1, 5.2, 5.3, 6.1, 6.2
 - **What to do:** pick exactly one — (a) accept the proposed record of step
@@ -385,7 +386,7 @@ At `df377ca64`:
   of the three.
 
 ### blocker: owner-permission-route
-- **Status:** open — owner chose (b) on 2026-10-06 via `/roadmap:resolve-blockers` (D11), with the ask-first condition recorded there; closes when the record of step 1.1 names it and is accepted, which is agent work and no longer a question
+- **Status:** resolved 2026-10-07 — option (b) on record (evidence: ADR-281 is `status: accepted` and names `owner-permission-route` in § 5, `grep -c` = 4; owner choice D11)
 - **Owner:** owner
 - **Blocks:** 5.3
 - **What to do:** pick exactly one, and have the record of step 1.1 name it —

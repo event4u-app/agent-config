@@ -239,7 +239,7 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
       recorded at `agents/evidence/council/thinned-ceiling-unit-2026-10.md`
       with its `evidence-type` marker and named beside the sums of 3.2.
       verify: `grep -c 'unconditional' agents/evidence/council/thinned-ceiling-unit-2026-10.md` -> /^[1-9]/
-- [ ] **4.2 Four law headings, each on a verdict about that heading.** <!-- blocked-by: law-heading-authoring-not-named-in-this-contract | asked: no — a background drain lane has no owner channel; the decision is recorded for the next owner-facing turn --> In
+- [ ] **4.2 Four law headings, each on a verdict about that heading.** In
       `src/rules/tool-safety.md`, `src/rules/runtime-safety.md`,
       `src/rules/question-not-instruction.md` and
       `src/rules/autonomous-execution.md`, a law section is written from
@@ -258,7 +258,7 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
       owner with that record and does not land here. A landed heading thins that rule in every
       projection that thins, not only in the measured install.
       verify: `grep -l '^verdict:' agents/evidence/council/law-heading-*.md | wc -l` -> /^4$/
-- [ ] **4.3 The reading after the moves.** <!-- blocked-by: law-heading-authoring-not-named-in-this-contract | asked: no — a background drain lane has no owner channel; the decision is recorded for the next owner-facing turn --> Re-run the measurement and append
+- [ ] **4.3 The reading after the moves.** Re-run the measurement and append
       it to the page beside the verdict of 4.1, with the number of headings
       that landed. Expected from the measured layer with all four: 75,900 to
       77,900 unconditional.
@@ -345,7 +345,7 @@ this section deleted.
 ## Blockers
 
 ### blocker: law-heading-authoring-not-named-in-this-contract
-- **Status:** open — raised 2026-10-06 by the run that closed Phases 1-3 and step 4.1
+- **Status:** resolved 2026-10-09 — option (a): the owner names `src/rules/tool-safety.md`, `src/rules/runtime-safety.md`, `src/rules/question-not-instruction.md` and `src/rules/autonomous-execution.md` as confirmed for law-heading authoring; 4.2 runs with one council diff review per rule and routes to the owner any heading that would leave a duty out of the law (owner, via `/roadmap:resolve-blockers`, after a council round 2026-10-08 in which both seats held the decision owner-reserved; D8). Raised 2026-10-06 by the run that closed Phases 1-3 and step 4.1
 - **Owner:** owner
 - **Blocks:** 4.2, 4.3
 - **What to do:** pick exactly one — (a) confirm an execution contract that
@@ -441,7 +441,7 @@ price list rather than from a survey.
 - [ ] AC-5 — Each of the four rules has a council record about its law
       heading, every member that left `no_stub` did so in the change that
       record is about, and the page states the reading after those changes in
-      the unit the council named. <!-- blocked-by: law-heading-authoring-not-named-in-this-contract | asked: no — a background drain lane has no owner channel; the decision is recorded for the next owner-facing turn -->
+      the unit the council named.
 
 ## Decisions
 
@@ -454,6 +454,7 @@ price list rather than from a survey.
 | D7 | product-owned | owner | Whether the four law sections are authored is decided when the owner confirms the execution contract of the run that takes Phase 4 | The drafting rule's batch clause (`artifact-drafting-protocol.md:52-54`) and what it means by contract (`roadmap-execution-contract.md:15-24`); the archived decision that named that rule as governor (`road-to-rule-laws-that-can-stand.md:114`) | — |
 | D5 | product-owned | owner | The pointer directory and any change to what an install deploys stay with the install-layout blocker | `docs/contracts/install-layout.md:16-22`; the open blocker | — |
 | D6 | product-owned | owner | `legal-safety-floor` keeps its law as it stands; for the four, the whole law they state keeps standing and only the body moves behind its trigger, as it does for the 21 members that are law stubs already | "Lowers or removes a recorded security / privacy / safety / data-handling floor" is an owner-reserved row (`src/rules/decision-revisit-gate.md`); the legal floor's move would cut its law text itself | A council record under 4.2 finds a duty left out of a law |
+| D8 | product-owned | owner | D7's reservation is discharged: the owner names the four rule files — `tool-safety`, `runtime-safety`, `question-not-instruction`, `autonomous-execution` — as confirmed for law-heading authoring. The run that takes Phase 4 carries these four names in its execution contract; 4.2's per-rule council diff review and its owner route for a dropped duty stay in force. | Owner answer 2026-10-09 via `/roadmap:resolve-blockers` (option (a)). AI council 2026-10-08, anthropic + openai, 2/2 present, $0.00: both held the decision owner-reserved under D7 and would have chosen interactive drafting absent the owner's naming. | A council record under 4.2 finds a duty left out of a law, or the owner withdraws a file |
 
 ## Kill register
 
@@ -469,7 +470,7 @@ price list rather than from a survey.
 | K8 | A blocker that waits on the sibling proposal's decision record | The drafting rule's batch clause already names who decides; a second owner question for the same four changes | Same |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-09 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
