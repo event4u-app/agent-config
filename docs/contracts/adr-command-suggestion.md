@@ -108,15 +108,17 @@ binds the engine to five non-negotiables, mirrored as goldens:
 GT-CS1 through GT-CS9 (`tests/test_command_suggester_goldens.py`) lock
 the contract end-to-end.
 
-## Three opt-out paths
+## Two opt-out paths
+
+The third, a project-wide `commands.suggestion.enabled: false`, was retired on
+2026-10-09 with its default (on) as the fixed behaviour.
 
 | Path | Mechanism | Scope |
 |---|---|---|
-| Global | `commands.suggestion.enabled: false` in `.agent-settings.yml` | Whole project |
 | Per-command | `commands.suggestion.blocklist: [/cmd]` | Specific command stays as-is |
 | Per-conversation | `/command-suggestion-off` directive | Until user re-enables or chat ends |
 
-All three are deterministic and tested. `/command-suggestion-on`
+Both are deterministic and tested. `/command-suggestion-on`
 re-enables mid-conversation.
 
 ## Consequences
@@ -141,4 +143,4 @@ retirement candidates without a hard SLA.
 - [`command-suggestion`](../../.agent-src.uncondensed/rules/command-suggestion-policy.md) — runtime rule
 - [`command-suggestion-eligibility.md`](command-suggestion-eligibility.md) — locked eligibility table
 - [`adr-prompt-driven-execution.md`](adr-prompt-driven-execution.md) — `/work` entrypoint that explicit slash invocations route to
-- [`agent-settings`](../../.agent-src.uncondensed/templates/agent-settings.md) — `commands.suggestion.*` reference
+- [`agent-settings`](../../.agent-src.uncondensed/templates/agent-settings.md) — `commands.suggestion.blocklist` reference

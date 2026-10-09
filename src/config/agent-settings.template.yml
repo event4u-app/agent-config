@@ -1123,39 +1123,16 @@ onboarding:
 # plus an always-present "run as-is" option. The suggestion layer
 # never auto-executes — the user picks. See rules/command-suggestion-policy.md.
 commands:
-  # --- Orchestrator auto-detection (6.1.0 non-interactive-contract) ---
-  #
-  # Global kill-switch for the auto-detection layer on cluster
-  # orchestrators (/judge, /fix, /analytics, /tests, /override).
-  #   enabled  = (default) orchestrators auto-detect the sub-command per
-  #              their confidence-tiered detection table.
-  #   warn     = detect, but always confirm the detected sub-command
-  #              before routing (never silent, even on HIGH confidence).
-  #   disabled = never auto-detect; orchestrators always show the menu
-  #              (interactive) or require an explicit sub-command (CI).
-  # Per-orchestrator override: auto_detect: false in a command's
-  # front-matter. Per-invocation override: --no-auto-detect.
-  # See src/agent-src/contexts/execution/non-interactive-contract.md.
-  auto_detect: enabled
-
+  # Orchestrator auto-detection (/judge, /fix, /analytics, /tests,
+  # /override) has no global switch: opt one orchestrator out with
+  # `auto_detect: false` in its front-matter, or one invocation with
+  # --no-auto-detect. See
+  # src/agent-src/contexts/execution/non-interactive-contract.md.
   suggestion:
-    # Master switch (true, false). false = the layer is silent; explicit
-    # /commands still work as today.
-    enabled: true
-
-    # Minimum match score (0.0–1.0) before a suggestion surfaces.
-    # 0.6 = default; raise to 0.7 for stricter behaviour, lower to 0.5
-    # if too many useful suggestions are being suppressed.
-    confidence_floor: 0.6
-
-    # Cooldown in seconds between re-suggestions of the same
-    # (command, evidence) pair. Default 600s = 10m.
-    cooldown_seconds: 600
-
-    # Max number of command suggestions before the as-is option.
-    # The as-is option is always extra (so total = max_options + 1).
-    max_options: 4
-
+    # The layer is always on; its score floor (0.6), cooldown (600s) and
+    # option cap (4, plus the always-present as-is option) are fixed. A
+    # command's own `suggestion:` frontmatter may still tighten its floor.
+    # To silence one conversation, use the /command-suggestion-off directive.
     # Commands to never suggest. Still work when typed explicitly.
     # Example: ["/refine-ticket", "/work"]
     blocklist: []
@@ -1183,16 +1160,6 @@ commands:
     #                   reviewer guidance (the richest, ~legacy output).
     detail_level: min
 
-    # JSON request/response examples for API-endpoint changes.
-    #   true (default) = include a fenced example ONLY when it can be
-    #                    grounded in a real source (response DTO/resource,
-    #                    OpenAPI/schema, test fixture, or an actual probe).
-    #                    No grounded source → a one-line pointer, never an
-    #                    invented example (a hallucinated contract misleads
-    #                    reviewers, so it is worse than none).
-    #   false          = never add API examples.
-    api_examples: true
-
     # Screenshots for frontend changes. Default false (off). Capability-gated:
     # requires the host to have browser/preview tooling (Playwright / a
     # dev-server URL). When true + a frontend change + no such tooling, the
@@ -1203,13 +1170,9 @@ commands:
     #   true            = attempt when capable (see command contract).
     screenshots: false
 
-    # Optional glob lists that make frontend / API-endpoint detection
-    # explicit instead of heuristic. Empty (default) = the command uses a
-    # light path/extension heuristic and fails open (no false enrichment
-    # when the surface is ambiguous). Populate to pin your project's paths,
-    # e.g. ui_paths: ["resources/views/**", "src/pages/**"].
-    ui_paths: []
-    api_paths: []
+    # API examples (grounded only, never invented) and frontend / API
+    # detection (a light path heuristic that fails open) are fixed
+    # behaviour, not settings — see the /create-pr command contract.
 
 # --- Continuity ---
 #

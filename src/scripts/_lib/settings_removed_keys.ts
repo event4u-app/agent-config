@@ -108,6 +108,15 @@ export const REMOVED_KEYS: ReadonlyMap<string, string> = new Map([
     // 2026-10-09 — roadmap cadence
     ['roadmap.skip_pre_run_gate', 'the command name names the scope; only an ambiguous roadmap or an unresolvable conflict shows the gate'],
     ['roadmap.dashboard_regen_cadence', 'a fixed cadence: every 5th closed step, every phase boundary, reply end and any file-shape touch'],
+    // 2026-10-09 — command suggestion and PR creation
+    ['commands.auto_detect', "an orchestrator's own auto_detect front-matter and the --no-auto-detect flag"],
+    ['commands.suggestion.enabled', 'the suggester match-score floor and cooldown; /command-suggestion-off silences one conversation'],
+    ['commands.suggestion.confidence_floor', "the suggester's fixed 0.6 floor; a command's own suggestion frontmatter can tighten it"],
+    ['commands.suggestion.cooldown_seconds', "the suggester's fixed 600-second cooldown; a command's own suggestion frontmatter can lengthen it"],
+    ['commands.suggestion.max_options', 'the fixed cap of 4 suggestions plus the always-present as-is option'],
+    ['commands.create_pr.api_examples', "/create-pr's grounding rule: an example only from a real source, otherwise a one-line pointer"],
+    ['commands.create_pr.ui_paths', "/create-pr's light frontend heuristic, which fails open"],
+    ['commands.create_pr.api_paths', "/create-pr's light API-endpoint heuristic, which fails open"],
 ]);
 
 /** Keys already warned about in THIS process — the "once per run" dedupe. */

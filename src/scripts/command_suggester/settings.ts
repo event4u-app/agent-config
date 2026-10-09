@@ -1,16 +1,17 @@
 /**
- * Read `commands.suggestion.*` from `.agent-settings.yml` into `Settings`.
+ * Read `commands.suggestion.blocklist` from `.agent-settings.yml` into `Settings`.
  *
  * Ported from the retired Python `src/scripts/command_suggester/settings.py`
  * (ADR-200 py2ts). Mirror of the chat-history pattern:
  *
- *  - Default-permissive: a missing file or missing section returns
- *    `Settings()` defaults (suggestion layer enabled). Only an explicit
- *    `enabled: false` flips the master switch off.
+ *  - The blocklist is the only suggestion key a project still sets. The
+ *    master switch, floor, cooldown and option cap are engine constants in
+ *    `Settings`: their keys were retired with those defaults as the fixed
+ *    behaviour, so a leftover value is warned about by the loader and never
+ *    read here.
  *  - Malformed YAML / unreadable file → defaults; the suggester degrades
  *    silently rather than crashing the turn.
- *  - Type-coerces with bounded fallbacks (floors clamped 0.0-1.0, ints
- *    non-negative, blocklist forced to an array of strings).
+ *  - The blocklist is forced to an array of non-empty strings.
  *
  * The Python module reads the YAML via the shared `agent_settings`
  * loader; this twin delegates to the ported `agent_settings.ts`.
@@ -61,54 +62,7 @@ function _read_section(path: string): Record<string, unknown> | null {
 }
 
 function _settings_from_raw(raw: Record<string, unknown>): Settings {
-    return new Settings({
-        enabled: _coerce_bool(raw.enabled, _DEFAULT.enabled),
-        confidence_floor: _coerce_floor(raw.confidence_floor, _DEFAULT.confidence_floor),
-        cooldown_seconds: _coerce_nonneg_int(raw.cooldown_seconds, _DEFAULT.cooldown_seconds),
-        max_options: _coerce_nonneg_int(raw.max_options, _DEFAULT.max_options),
-        blocklist: _coerce_str_tuple(raw.blocklist),
-    });
-}
-
-function _coerce_bool(value: unknown, defaultValue: boolean): boolean {
-    if (typeof value === 'boolean') {
-        return value;
-    }
-    if (value === null || value === undefined) {
-        return defaultValue;
-    }
-    if (typeof value === 'string') {
-        const s = value.trim().toLowerCase();
-        if (['true', 'yes', 'on', '1'].includes(s)) {
-            return true;
-        }
-        if (['false', 'no', 'off', '0'].includes(s)) {
-            return false;
-        }
-    }
-    return defaultValue;
-}
-
-function _coerce_floor(value: unknown, defaultValue: number): number {
-    const f = _pyFloat(value);
-    if (f === null) {
-        return defaultValue;
-    }
-    if (f < 0.0) {
-        return 0.0;
-    }
-    if (f > 1.0) {
-        return 1.0;
-    }
-    return f;
-}
-
-function _coerce_nonneg_int(value: unknown, defaultValue: number): number {
-    const i = _pyInt(value);
-    if (i === null) {
-        return defaultValue;
-    }
-    return i >= 0 ? i : defaultValue;
+    return new Settings({ blocklist: _coerce_str_tuple(raw.blocklist) });
 }
 
 function _coerce_str_tuple(value: unknown): string[] {
@@ -125,60 +79,6 @@ function _coerce_str_tuple(value: unknown): string[] {
         }
     }
     return out;
-}
-
-/**
- * Mirror of Python `float(value)`, returning null where Python raises
- * `TypeError` / `ValueError` (the coercion catches those and falls
- * back to the default).
- */
-function _pyFloat(value: unknown): number | null {
-    if (typeof value === 'boolean') {
-        return value ? 1.0 : 0.0;
-    }
-    if (typeof value === 'number') {
-        return value;
-    }
-    if (typeof value === 'string') {
-        const s = value.trim();
-        if (s === '') {
-            return null;
-        }
-        const n = Number(s);
-        return Number.isNaN(n) ? null : n;
-    }
-    return null;
-}
-
-/**
- * Mirror of Python `int(value)` for the YAML scalar types, returning
- * null where Python raises.
- *
- *  - bool → 1 / 0.
- *  - int  → itself.
- *  - float → truncated toward zero (Python `int(3.9) == 3`).
- *  - string → `int(str, 10)` semantics: an optional sign + digits,
- *    surrounding whitespace allowed; a float-shaped string raises in
- *    Python, so it maps to null.
- */
-function _pyInt(value: unknown): number | null {
-    if (typeof value === 'boolean') {
-        return value ? 1 : 0;
-    }
-    if (typeof value === 'number') {
-        if (Number.isNaN(value) || !Number.isFinite(value)) {
-            return null;
-        }
-        return Math.trunc(value);
-    }
-    if (typeof value === 'string') {
-        const s = value.trim();
-        if (!/^[+-]?\d+$/.test(s)) {
-            return null;
-        }
-        return parseInt(s, 10);
-    }
-    return null;
 }
 
 function _isPlainObject(value: unknown): value is Record<string, unknown> {

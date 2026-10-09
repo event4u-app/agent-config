@@ -273,9 +273,9 @@ Run `/create-pr:description-only` Steps 1–4 to generate the PR title and body.
 This handles: Jira ticket extraction, diff analysis, commit messages, **PR template filling**.
 
 The generation honors the cached content flags from step 1 (§4f):
-`detail_level` sets the Description tier (default `min`), `api_examples`
-adds a grounded JSON block for API-endpoint changes, and `screenshots`
-(capability-gated) adds frontend screenshots. Critical-info callouts
+`detail_level` sets the Description tier (default `min`) and `screenshots`
+(capability-gated) adds frontend screenshots; a grounded JSON block for
+API-endpoint changes is always added (`/create-pr:description-only` § 4.3). Critical-info callouts
 (breaking changes / migrations / security / rollback) appear at every tier.
 
 **CRITICAL**: The PR body MUST use the project's PR template (`.github/pull_request_template.md`).
@@ -583,14 +583,11 @@ an actual Jira API call succeeded** — never announce "skipped".
 
 #### 4f. Settings short-circuit — single read per run
 
-`commands.create_pr.preview_description`, `commands.create_pr.detail_level`,
-`commands.create_pr.api_examples`, `commands.create_pr.screenshots`,
-`commands.create_pr.ui_paths`, and `commands.create_pr.api_paths` are read
-**once** at the top of the run and cached for the whole `/create-pr`
+`commands.create_pr.preview_description`, `commands.create_pr.detail_level`
+and `commands.create_pr.screenshots` are read **once** at the top of the run and cached for the whole `/create-pr`
 invocation. Do **not** re-read `.agent-settings.yml` in Step 2 or 4b / 4e —
 every branch resolves from the cached values from step 1. The content flags
-(`detail_level`, `api_examples`, `screenshots`, `ui_paths`, `api_paths`) are
-consumed by the `/create-pr:description-only` generation step (Step 2); the
+(`detail_level`, `screenshots`) are consumed by the `/create-pr:description-only` generation step (Step 2); the
 confirmation/report flags by steps 3–4.
 
 When `preview_description` resolves to its silent default (`false`), steps

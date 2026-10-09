@@ -219,6 +219,14 @@ const RETIRED_2026_10_09: readonly (readonly [string, string, Json])[] = [
     ['reasoning.components', 'uncertainty_budget', false],
     ['roadmap', 'skip_pre_run_gate', false],
     ['roadmap', 'dashboard_regen_cadence', 'per_step'],
+    ['commands', 'auto_detect', 'disabled'],
+    ['commands.suggestion', 'enabled', false],
+    ['commands.suggestion', 'confidence_floor', 0.8],
+    ['commands.suggestion', 'cooldown_seconds', 30],
+    ['commands.suggestion', 'max_options', 2],
+    ['commands.create_pr', 'api_examples', false],
+    ['commands.create_pr', 'ui_paths', ['resources/views/**']],
+    ['commands.create_pr', 'api_paths', ['app/Http/Controllers/Api/**']],
 ] as const;
 
 describe('deleted settings keys cannot be honoured again', () => {

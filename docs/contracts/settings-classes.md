@@ -95,9 +95,11 @@ backwards. Tests 1–7 ask *what can the attacker do*; test 8 asks *what can the
 attacker hide*. A settings write that erases the trail is not less severe than
 one that raises a budget — it is the one that makes the other invisible.
 
-`commands.suggestion.enabled` is the worked counter-example: it is a master
-switch, and it is **A**, because switching it off removes no gate, no spend, no
-authority, and no audit trail — it removes a convenience.
+`commands.suggestion.enabled` is the worked counter-example: it was a master
+switch, and it was **A**, because switching it off removed no gate, no spend, no
+authority, and no audit trail — it removed a convenience. (The key itself was
+retired on 2026-10-09 with its default as the fixed behaviour; the reasoning
+about its class is what this paragraph keeps.)
 
 ## B eligibility — the invariant
 
@@ -245,13 +247,13 @@ dispatch runs, not WHETHER the layer exists, so they keep their own C rows.
 
 | Class | Keys |
 |---|---|
-| A — preference | 20 |
+| A — preference | 15 |
 | B — consent | 3 |
-| C — guarded | 114 |
-| **Total** | **137** |
+| C — guarded | 111 |
+| **Total** | **129** |
 
 <!-- derivable-retirement-2026-10-09 -->
-It fell to 137 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 21 `derivable` keys (6 A, 15 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behaviour, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`; 2.2 reasoning protocol switches — `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`; 2.3 roadmap cadence — `roadmap.skip_pre_run_gate`, `roadmap.dashboard_regen_cadence`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
+It fell to 129 on 2026-10-09 when `road-to-settings-classes-derivable-surface-stagnation` Phase 2 retired 29 `derivable` keys (11 A, 18 C) whose absence changes no effective default: every reader was removed with the key and left the old default as the only behaviour, and each key carries a `REMOVED_KEYS` reason, so an older install that still sets one warns once and boots unchanged. By group: 2.1 output and tone — `telegraph.speak`, `tokens.rich_skills`, `personal.minimal_output`, `personal.play_by_play`, `personal.pr_comment_bot_icon`, `verbosity.intent_announcements`, `verbosity.preview_artifacts`, `verbosity.routine_confirmations`, `verbosity.post_action_reports`; 2.2 reasoning protocol switches — `reasoning.auto_gate`, `reasoning.components.orchestrator`, `reasoning.components.notes_first`, `reasoning.components.grounding`, `reasoning.components.intent`, `reasoning.components.complexity_first`, `reasoning.components.verifier_default`, `reasoning.components.prediction_tracking`, `reasoning.components.decision_ledger`, `reasoning.components.uncertainty_budget`; 2.3 roadmap cadence — `roadmap.skip_pre_run_gate`, `roadmap.dashboard_regen_cadence`; 2.4 command suggestion and PR creation — `commands.auto_detect`, `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`, `commands.suggestion.cooldown_seconds`, `commands.suggestion.max_options`, `commands.create_pr.api_examples`, `commands.create_pr.ui_paths`, `commands.create_pr.api_paths`. Selection and per-key evidence: `agents/evidence/analysis/settings-derivable-retirement-audit-2026-10-09.md`.
 <!-- /derivable-retirement-2026-10-09 -->
 
 It rose to 158 on 2026-10-06 when the `git:` section added three C keys —
@@ -391,11 +393,11 @@ the template, which is the drift this contract exists to prevent.
 
 | Disposition | Keys |
 |---|---|
-| derivable | 62 |
+| derivable | 54 |
 | un-inferrable | 10 |
 | consent | 48 |
 | policy | 17 |
-| **Total** | **137** |
+| **Total** | **129** |
 
 First measured 2026-08-12 at 140 leaves (derivable 88 · consent 38 ·
 un-inferrable 9 · policy 5), from the table below rather than predicted — the
@@ -579,18 +581,10 @@ Rows follow template order, so a diff against the template reads straight down.
 | `emergency.orchestration_halt` | C | `false` | the one audited incident switch over the always-on orchestration stack — see § The one exception above | consent |
 | `emergency.orchestration_halt_justification` | C | `""` | required non-empty before the halt may be lifted; an audit-trail field | consent |
 | `onboarding.onboarded` | C | `false` | flipping it bypasses the onboarding gate | derivable — the wizard's own completion artefacts; the onboarding hook can read whether setup actually ran instead of trusting a self-reported flag |
-| `commands.auto_detect` | C | `enabled` | kill-switch for orchestrator auto-detection | derivable — the orchestrator's own confidence-tiered detection table plus the non-interactive TTY/CI probe |
-| `commands.suggestion.enabled` | A | `true` | a convenience layer; governs no gate and no spend | derivable — the suggester's own match-score threshold and cooldown; a prompt that matches nothing already produces silence |
-| `commands.suggestion.confidence_floor` | A | `0.6` | tuning of that convenience layer | derivable — the suggester's calibrated constant, with the existing per-command frontmatter override where one command needs a different bar |
-| `commands.suggestion.cooldown_seconds` | A | `600` | tuning of that convenience layer | derivable — the per-command cooldown tracker, which already reads session behaviour |
-| `commands.suggestion.max_options` | A | `4` | tuning of that convenience layer | derivable — the number of matches that clear the confidence floor, bounded by the numbered-options shape `user-interaction` fixes |
 | `commands.suggestion.blocklist` | C | `[]` | a deny-list | derivable — the same cooldown tracker that reads whether the user picks a suggestion; repeated non-selection is the signal a hand-maintained deny-list stands in for |
 | `commands.create_pr.preview_description` | C | `false` | removes pre-publish review of an outbound artefact | consent |
 | `commands.create_pr.detail_level` | A | `min` | verbosity of a generated body | derivable — the diff the command already reads (changed-file count and risk surface) |
-| `commands.create_pr.api_examples` | A | `true` | verbosity of a generated body | derivable — the command's own API-surface detection plus its grounded-source requirement |
 | `commands.create_pr.screenshots` | C | `false` | puts captured screenshots into a published PR body | consent |
-| `commands.create_pr.ui_paths` | C | `[]` | glob allowlist | derivable — the frontend-surface heuristic the PR-description flow already applies when the glob list is empty |
-| `commands.create_pr.api_paths` | C | `[]` | glob allowlist | derivable — the API-endpoint heuristic the same flow already applies as its documented empty-list fallback |
 | `continuity.auto_record` | C | `"on"` | arms an automatic producer on the normal session-end path | consent |
 | `continuity.run_checkpoints` | C | `"on"` | disabling it removes a recovery artifact a killed run resumes from | consent |
 | `memory.cadence` | C | `always` | suppressing the visibility line hides what the agent learned from the user | derivable — the hits/asks count the memory-visibility summary already computes; the line only exists when memory was consulted |

@@ -432,22 +432,7 @@ export const settingsSchema = z.object({
         ),
     }),
     commands: z.object({
-        auto_detect: z.enum(['enabled', 'warn', 'disabled']).default('enabled').describe(
-            'Global kill-switch for orchestrator auto-detection (6.1.0 non-interactive-contract). enabled (default) = /judge, /fix, /analytics, /tests, /override auto-detect their sub-command per a confidence-tiered table; warn = detect but always confirm before routing; disabled = never auto-detect (always show the menu interactively, require an explicit sub-command in CI). Per-orchestrator override: auto_detect:false in front-matter. Per-invocation: --no-auto-detect.',
-        ),
         suggestion: z.object({
-            enabled: z.boolean().default(true).describe(
-                'Master switch for the slash-command suggestion layer. When on, the agent offers numbered options ("did you mean /commit?") instead of guessing. Turn off if you prefer to type every command yourself.',
-            ),
-            confidence_floor: z.number().min(0).max(1).default(0.6).describe(
-                'Minimum semantic-match score (0.0–1.0) before a command is offered as a suggestion. 0.6 (default) balances precision and recall. Raise toward 0.8 for fewer false positives, lower for broader hints.',
-            ),
-            cooldown_seconds: z.number().int().min(0).default(600).describe(
-                'How long (seconds) the suggester waits before offering the same command again after you ignored it. Default 600s (10 min) keeps the agent from nagging. Set 0 to disable the cooldown.',
-            ),
-            max_options: z.number().int().min(0).default(4).describe(
-                'Maximum number of command suggestions shown in a single numbered-options block, before the "Proceed as-is" escape. Lower for terser prompts, raise if you regularly want broader fan-out.',
-            ),
             blocklist: z.array(z.string()).default([]).describe(
                 'Slash-command names that should never be suggested, one per line (e.g. "commit", "create-pr"). Useful if a command misfires on your common phrasing.',
             ),
@@ -459,17 +444,8 @@ export const settingsSchema = z.object({
             detail_level: z.enum(['min', 'med', 'max']).default('min').describe(
                 'Verbosity tier for the generated PR description body. min (default) = title + 2-3 sentence what/why/impact + linked ticket (token-frugal); med = min + grouped changes + tests note; max = med + how-to-test + edge cases + reviewer guidance. Critical info (breaking changes, migrations, security, rollback) is ALWAYS included at every tier — the tier governs explanatory depth, never whether a critical callout appears.',
             ),
-            api_examples: z.boolean().default(true).describe(
-                'JSON request/response examples for API-endpoint changes. true (default) = include a fenced example ONLY when grounded in a real source (response DTO/resource, OpenAPI/schema, test fixture, or an actual probe); no grounded source → a one-line pointer, never an invented example. false = never add API examples.',
-            ),
             screenshots: z.boolean().default(false).describe(
                 'Screenshots for frontend changes. false (default) = never attempt. true = attempt when the host has browser/preview tooling and the diff touches a frontend surface; capability-gated (emits a one-line note and leaves the placeholder when tooling is absent, never fails or blocks the PR). Before/after + changed-region highlighting is best-effort.',
-            ),
-            ui_paths: z.array(z.string()).default([]).describe(
-                'Optional glob list that makes frontend detection explicit instead of heuristic (e.g. ["resources/views/**", "src/pages/**"]). Empty (default) = a light path/extension heuristic that fails open (no false enrichment when the surface is ambiguous).',
-            ),
-            api_paths: z.array(z.string()).default([]).describe(
-                'Optional glob list that makes API-endpoint detection explicit instead of heuristic (e.g. ["app/Http/Controllers/Api/**", "src/pages/api/**"]). Empty (default) = a light path/extension heuristic that fails open.',
             ),
         }),
     }),

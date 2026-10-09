@@ -103,11 +103,20 @@ table is a measurement of one commit, not a licence.
       whoever relied on the other. The contract row now records both; which
       one wins is the decision that would let the key go.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
-- [ ] **2.4 Command suggestion and PR creation (8).** `commands.auto_detect`,
+- [x] **2.4 Command suggestion and PR creation (8).** `commands.auto_detect`,
       `commands.suggestion.enabled`, `commands.suggestion.confidence_floor`,
       `commands.suggestion.cooldown_seconds`, `commands.suggestion.max_options`,
       `commands.create_pr.api_examples`, `commands.create_pr.ui_paths`,
       `commands.create_pr.api_paths`.
+      Retired, all eight (count 62 → 54). Re-verified: the one code reader
+      was `command_suggester/settings.ts`, which read the four suggestion
+      knobs with the same defaults the template shipped (`true` · 0.6 ·
+      600 · 4); it now reads only `blocklist`, and the four values stay as
+      `Settings` engine constants. `commands.auto_detect` had a prose reader
+      only (`non-interactive-contract` § 7–8); the per-orchestrator
+      front-matter switch and `--no-auto-detect` remain. The three
+      `create_pr` keys were read only by `/create-pr` prose, whose default
+      path (grounded examples, light heuristic) is now the only path.
       verify: `./scripts-run src/scripts/lint_settings_classes` -> 0
 - [ ] **2.5 Memory and knowledge sharing (7).** `memory.cadence`,
       `memory.review_threshold` and the five `knowledge.global_sharing.*`

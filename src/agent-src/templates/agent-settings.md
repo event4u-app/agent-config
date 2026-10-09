@@ -340,17 +340,8 @@ onboarding:
 # never auto-executes — the user picks. See `rules/command-suggestion-policy.md`.
 commands:
   suggestion:
-    # Master switch (true, false). `false` = the layer is silent;
-    # explicit `/commands` still work as today.
-    enabled: true
-    # Minimum match score (0.0–1.0) before a suggestion surfaces.
-    confidence_floor: 0.6
-    # Cooldown in seconds between re-suggestions of the same
-    # (command, evidence) pair. Default 600 = 10m.
-    cooldown_seconds: 600
-    # Max number of command suggestions before the as-is option.
-    # The as-is option is always extra (total rendered = max_options + 1).
-    max_options: 4
+    # The layer is always on; floor 0.6, cooldown 600s and a cap of 4
+    # options (plus the as-is option) are fixed.
     # Commands to never suggest. Still work when typed explicitly.
     blocklist: []
 
@@ -369,23 +360,13 @@ commands:
   # Critical info (breaking changes, migrations, security, rollback) is
   # ALWAYS included at every tier — the tier governs explanatory depth only.
   #
-  # api_examples (default true): add a fenced JSON example for API-endpoint
-  #   changes ONLY when grounded in a real source (DTO/resource, OpenAPI,
-  #   fixture, probe); else a one-line pointer, never an invented example.
-  #
   # screenshots (default false): capability-gated frontend screenshots.
   #   true attempts capture only when the host has browser/preview tooling;
   #   emits a note and leaves the placeholder when absent — never blocks the PR.
-  #
-  # ui_paths / api_paths: optional globs to make frontend / API detection
-  #   explicit; empty = a light heuristic that fails open.
   create_pr:
     preview_description: false
     detail_level: min
-    api_examples: true
     screenshots: false
-    ui_paths: []
-    api_paths: []
 
 # --- Telemetry (artefact engagement, default-off) ---
 #
@@ -579,17 +560,10 @@ the canonical narrative lives in
 | `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast (not in the shipped personal template — add the block when needed). Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md). |
 | `personas.ignore` | list of persona ids | `[]` | Persona ids dropped from the default cast locally. Ignored personas stay invokable via `--personas=<id>`. |
 | `onboarding.onboarded` | `true`, `false` | `false` | Whether `/onboard` has run on this project. The `onboarding-gate` rule prompts for `/onboard` when this is `false`. Missing entirely = legacy project, treated as onboarded. |
-| `commands.suggestion.enabled` | `true`, `false` | `true` | Master switch for the command-suggestion layer. `false` = the layer is silent; explicit `/commands` still work. See `rules/command-suggestion-policy.md`. |
-| `commands.suggestion.confidence_floor` | `0.0`–`1.0` | `0.6` | Minimum match score before a suggestion surfaces. Per-command frontmatter (`suggestion.confidence_floor`) overrides this global floor. |
-| `commands.suggestion.cooldown_seconds` | integer | `600` | Cooldown between re-suggestions of the same `(command, evidence)` pair. `600` = 10m. |
-| `commands.suggestion.max_options` | integer | `4` | Max number of command suggestions before the always-present "run as-is" option (total rendered = `max_options + 1`). |
 | `commands.suggestion.blocklist` | list of command names | `[]` | Commands that never appear as a suggestion. They still work when typed explicitly. |
 | `commands.create_pr.preview_description` | `true`, `false` | `false` | When `false`: `/create-pr` skips the title/body preview + adjust loop and uses the generated content directly. Saves agent tokens. When `true`: show title and body before creating and ask for adjustments. `/create-pr:description-only` always previews regardless of this setting. |
 | `commands.create_pr.detail_level` | `min`, `med`, `max` | `min` | Verbosity tier of the PR Description body. `min` = title + 2-3 sentence what/why/impact + ticket; `med` = + grouped changes + tests note; `max` = + how-to-test + edge cases + reviewer guidance. Critical info (breaking / migration / security / rollback) is included at every tier. |
-| `commands.create_pr.api_examples` | `true`, `false` | `true` | Add a grounded JSON example for API-endpoint changes; `true` includes one only from a real source (DTO/OpenAPI/fixture/probe), else a pointer, never invented; `false` = never. |
 | `commands.create_pr.screenshots` | `true`, `false` | `false` | Capability-gated frontend screenshots. `true` attempts capture when browser/preview tooling is present; notes-and-skips otherwise, never blocks the PR. Before/after is best-effort. |
-| `commands.create_pr.ui_paths` | glob list | `[]` | Optional globs pinning frontend detection; empty = light heuristic, fail-open. |
-| `commands.create_pr.api_paths` | glob list | `[]` | Optional globs pinning API-endpoint detection; empty = light heuristic, fail-open. |
 | `verbosity.offer_council_in_delivery` | `true`, `false` | `false` | Offer "run AI Council on this?" inside delivery commands (`/feature-plan`, `/review-changes`). Council commands themselves are unaffected. `/roadmap:create` no longer reads it — under a mission the council is a step, resolved from `agent-config council:status`, never an offer. |
 | `telemetry.artifact_engagement.enabled` | `true`, `false` | `false` | Master switch for the artefact engagement log. Not in the shipped template — a missing `telemetry:` section means disabled (the recording rule no-ops). Default-off; zero file IO and zero token cost when `false`. Maintainer-targeted; consumers leave it off. |
 | `telemetry.artifact_engagement.granularity` | `task`, `phase-step`, `tool-call` | `task` | Boundary at which events are recorded. `tool-call` is expensive — opt-in only. |
@@ -657,6 +631,9 @@ silence it.
 | `reasoning.auto_gate`, `reasoning.components.*` (nine switches) | every RDP component follows the gate's task and host signals (`rdp-gate`); `reasoning.enabled` stays the hard off |
 | `roadmap.skip_pre_run_gate` | no pre-run confirmation; only an ambiguous roadmap or an unresolvable conflict shows the gate |
 | `roadmap.dashboard_regen_cadence` | dashboard regen every 5th closed step, at phase boundaries, at reply end and on any file-shape touch |
+| `commands.auto_detect` | orchestrators auto-detect; opt one out with `auto_detect: false` in its front-matter or one run with `--no-auto-detect` |
+| `commands.suggestion.enabled`, `.confidence_floor`, `.cooldown_seconds`, `.max_options` | suggestion layer always on, floor 0.6, cooldown 600 s, at most 4 options; `blocklist` and per-command frontmatter still apply |
+| `commands.create_pr.api_examples`, `.ui_paths`, `.api_paths` | grounded API examples always added; frontend / API detection by the light heuristic |
 
 ## Cost profiles
 

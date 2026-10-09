@@ -180,13 +180,12 @@ summary and `## How to test` is omitted):
 
 #### 4.3 API response examples (evidence-grounded)
 
-Read `commands.create_pr.api_examples` (default `true`). When `true` **and**
-the diff touches an API endpoint, add a fenced request/response example under
-the Description.
+When the diff touches an API endpoint, add a fenced request/response example
+under the Description. This is not a setting — it always applies, and the
+grounding rule below is what keeps it honest.
 
 **Detect an API-endpoint change** (fail-open — no false enrichment when
-ambiguous): a changed file matches `commands.create_pr.api_paths` (if set), or
-the light heuristic — a route file (`routes/`, `**/api/**`, `*Controller*`,
+ambiguous) with the light heuristic — a route file (`routes/`, `**/api/**`, `*Controller*`,
 resource/serializer classes) whose diff adds or changes an endpoint or its
 request/response shape. No confident match → skip silently.
 
@@ -219,8 +218,6 @@ Response `201`:
 ```
 ~~~
 
-`api_examples: false` → skip this step entirely.
-
 #### 4.4 Screenshots for frontend changes (capability-gated)
 
 Read `commands.create_pr.screenshots` (default `false`). `false` → skip this
@@ -230,8 +227,7 @@ When `true`, this is a **capability-gated contract, never a runtime
 orchestrator** — the package ships instructions, the host provides the tools:
 
 1. **Frontend-change gate.** Only proceed if the diff touches a frontend
-   surface — a changed file matches `commands.create_pr.ui_paths` (if set), or
-   the light heuristic (`.vue` / `.tsx` / `.jsx` / `.blade.php` / `.svelte`,
+   surface by the light heuristic (`.vue` / `.tsx` / `.jsx` / `.blade.php` / `.svelte`,
    component/view/page/template dirs, CSS/Tailwind). No match → skip silently.
 2. **Capability gate — explicit, never silent.** Screenshots need host
    browser/preview tooling (a Playwright/browser MCP **and** a reachable dev-server

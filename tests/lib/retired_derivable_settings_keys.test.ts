@@ -54,6 +54,15 @@ const RETIRED: ReadonlyArray<{ key: string; hostile: unknown }> = [
     // 2.3 — roadmap cadence (`roadmap.quality_cadence` moved back to the queue)
     { key: 'roadmap.skip_pre_run_gate', hostile: false },
     { key: 'roadmap.dashboard_regen_cadence', hostile: 'per_step' },
+    // 2.4 — command suggestion and PR creation
+    { key: 'commands.auto_detect', hostile: 'disabled' },
+    { key: 'commands.suggestion.enabled', hostile: false },
+    { key: 'commands.suggestion.confidence_floor', hostile: 0.8 },
+    { key: 'commands.suggestion.cooldown_seconds', hostile: 30 },
+    { key: 'commands.suggestion.max_options', hostile: 2 },
+    { key: 'commands.create_pr.api_examples', hostile: false },
+    { key: 'commands.create_pr.ui_paths', hostile: ['resources/views/**'] },
+    { key: 'commands.create_pr.api_paths', hostile: ['app/Http/Controllers/Api/**'] },
 ];
 
 const TEMPLATE_PATH = path.resolve(process.cwd(), 'src/config/agent-settings.template.yml');
