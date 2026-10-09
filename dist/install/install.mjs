@@ -11503,6 +11503,102 @@ function applyRenamedKeys(layer) {
   return layer;
 }
 
+// src/scripts/_lib/settings_removed_keys.ts
+var REMOVED_KEYS = /* @__PURE__ */ new Map([
+  ["subagents.enabled", "always-on orchestration"],
+  ["subagents.auto", "always-on orchestration"],
+  ["subagents.host_capabilities", "always-on orchestration"],
+  ["subagents.budget_routing", "always-on orchestration"],
+  ["ai_team.enabled", "always-on orchestration"],
+  ["hooks.turn_end_gate.enabled", "the turn-end gate is always armed"],
+  ["hooks.turn_end_gate.promissory", "the turn-end gate is always armed"],
+  ["hooks.turn_end_gate.language", "the turn-end gate is always armed"],
+  ["hooks.turn_end_gate.verification", "the turn-end gate is always armed"],
+  ["telegraph.speak_scope", "the rule body states its own scope; compile_time_toggles decides whether the rule ships"],
+  ["chat_history.max_size_kb", "the rotate command takes --max-kb from argv; session-count pruning bounds the file"],
+  ["chat_history.on_overflow", "the overflow mode comes from the rotate command --mode argv"],
+  ["quality.wait_for_remote_ci", "whether to poll follows from the push plus a detectable remote pipeline"],
+  ["legal_review_prep.consented_at", "the provenance sidecar settings:set writes and consentVerdict reads"],
+  ["worktrees.mode", "the user asking for a worktree in the chat; creation is instruction-only and hardcoded"],
+  // 2026-10-09 — output and tone
+  ["personal.minimal_output", "direct-answers Iron Law 3 mandates terse replies; there is no verbose mode"],
+  ["personal.play_by_play", "direct-answers: no narration unless the user asks for it in the turn"],
+  ["personal.pr_comment_bot_icon", "no-decorative-emojis-in-git-surfaces forbids the \u{1F916} prefix"],
+  ["verbosity.intent_announcements", 'direct-answers: act and emit the result, no "Let me\u2026" openers'],
+  ["verbosity.preview_artifacts", "generated content is used directly; preview-on-error and the Iron-Law gates decide when a preview shows"],
+  ["verbosity.routine_confirmations", "the no-cheap-questions Pre-Send Self-Check; Iron-Law gates always ask"],
+  ["verbosity.post_action_reports", "direct-answers Iron Law 3: a one-line confirmation and one end-summary"],
+  ["telegraph.speak", "the telegraph-speak predicate in compile_time_toggles.ts; the bench verdict is package-level (ADR telegraph/0002)"],
+  ["tokens.rich_skills", "the skill's own token_budget_class: rich plus the lint_token_budget_discipline ceiling"],
+  // 2026-10-09 — reasoning protocol switches
+  ["reasoning.auto_gate", "the RDP gate task signal plus the host self-assessment in rdp-gate.md"],
+  ["reasoning.components.orchestrator", "the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off"],
+  ["reasoning.components.notes_first", "the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off"],
+  ["reasoning.components.grounding", "the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off"],
+  ["reasoning.components.intent", "the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off"],
+  ["reasoning.components.complexity_first", "the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off"],
+  ["reasoning.components.verifier_default", "the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off"],
+  ["reasoning.components.prediction_tracking", "the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off"],
+  ["reasoning.components.decision_ledger", "the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off"],
+  ["reasoning.components.uncertainty_budget", "the RDP gate task and host signals decide per component; reasoning.enabled stays the hard off"],
+  // 2026-10-09 — roadmap cadence
+  ["roadmap.skip_pre_run_gate", "the command name names the scope; only an ambiguous roadmap or an unresolvable conflict shows the gate"],
+  ["roadmap.dashboard_regen_cadence", "a fixed cadence: every 5th closed step, every phase boundary, reply end and any file-shape touch"],
+  // 2026-10-09 — command suggestion and PR creation
+  ["commands.auto_detect", "an orchestrator's own auto_detect front-matter and the --no-auto-detect flag"],
+  ["commands.suggestion.enabled", "the suggester match-score floor and cooldown; /command-suggestion-off silences one conversation"],
+  ["commands.suggestion.confidence_floor", "the suggester's fixed 0.6 floor; a command's own suggestion frontmatter can tighten it"],
+  ["commands.suggestion.cooldown_seconds", "the suggester's fixed 600-second cooldown; a command's own suggestion frontmatter can lengthen it"],
+  ["commands.suggestion.max_options", "the fixed cap of 4 suggestions plus the always-present as-is option"],
+  ["commands.create_pr.api_examples", "/create-pr's grounding rule: an example only from a real source, otherwise a one-line pointer"],
+  ["commands.create_pr.ui_paths", "/create-pr's light frontend heuristic, which fails open"],
+  ["commands.create_pr.api_paths", "/create-pr's light API-endpoint heuristic, which fails open"],
+  // 2026-10-09 — memory and knowledge sharing
+  ["memory.cadence", "a fixed cadence: the memory line renders whenever a memory type was asked; memory.visibility: off still silences it"],
+  ["memory.review_threshold", "/memory load's fixed preview threshold of 10 unreviewed intake signals"],
+  ["knowledge.global_sharing.redaction.enabled", "the write-time redaction scan, which always runs before a card goes global"],
+  ["knowledge.global_sharing.redaction.halt_on_trigger", "the redaction gate, which always halts on a confidential-pattern hit"],
+  ["knowledge.global_sharing.auto_promote_threshold", "the fixed two-repo sighting count that triggers a promotion suggestion"],
+  ["knowledge.global_sharing.freshness.hypothesis_after_days", "the card's age over last_verified against the fixed 90-day lead-only window"],
+  ["knowledge.global_sharing.freshness.stale_after_days", "the card's age over last_verified against the fixed 180-day skip window"],
+  // 2026-10-09 — hooks and engine
+  ["hooks.concern_budget.max_per_event", "the concern-budget gate's own constant of 8 per (platform, event) cell"],
+  ["hooks.concern_budget.hard_fail", "the concern-budget gate's --strict argv; without it the gate warns"],
+  ["decision_engine.surface_traces", "nothing: the per-phase decision trace stays off, the old default"],
+  ["decision_engine.on_block_fallback", "the fail-safe: an on_block ask that times out always stops"],
+  ["explain.enable_last", "the presence of a work-state trace; explain last always renders it"],
+  // 2026-10-09 — remaining
+  ["project.pr_template", "/create-pr, which reads .github/pull_request_template.md"],
+  ["pipelines.skill_improvement", "the skill-improvement-trigger rule; the capture is a proposal the user confirms"],
+  ["consistency.cross_source", "the cross-source-consistency rule, always on; batching and the no-cheap-questions floor bound the noise"],
+  ["subagents.downshift", "the model_tier each sub-task declares; downshift is always on"],
+  ["ai_team.suppress_setup_hint", "nothing: the one-line team-mode setup hint is always shown"]
+]);
+var _warnedRemovedKeys = /* @__PURE__ */ new Set();
+function _readDotted(root, dotted) {
+  let node = root;
+  for (const part of dotted.split(".")) {
+    if (typeof node !== "object" || node === null || Array.isArray(node)) {
+      return void 0;
+    }
+    node = node[part];
+  }
+  return node;
+}
+function warnRemovedKeys(merged) {
+  for (const [key, reason] of REMOVED_KEYS) {
+    if (_warnedRemovedKeys.has(key)) {
+      continue;
+    }
+    if (_readDotted(merged, key) === void 0) {
+      continue;
+    }
+    _warnedRemovedKeys.add(key);
+    process.stderr.write(`${key} was removed (${reason}); ignored.
+`);
+  }
+}
+
 // src/scripts/_lib/agent_settings.ts
 var _require2 = createRequire2(import.meta.url);
 var Logger = class {
@@ -11569,13 +11665,13 @@ function user_global_settings_paths() {
   return paths;
 }
 var MERGEABLE_KEYS = [
-  // `name`, `ide` and `personal.bot_icon` are the PRE-MIGRATION spellings.
-  // `install.ts` migrates `ide` → `personal.ide` and `pr_comment_bot_icon`
-  // into its `personal.` home, and this list was never moved with them — so
-  // the whitelist named keys the template does not have while the keys it
-  // does have were filtered out silently. A user setting either preference
-  // user-globally got no error, no warning, and no effect
-  // (road-to-capability-answerability 4.3, ADR-219).
+  // `name` and `ide` are the PRE-MIGRATION spellings. `install.ts` migrates
+  // `ide` → `personal.ide`, and this list was never moved with it — so the
+  // whitelist named a key the template does not have while the key it does
+  // have was filtered out silently (road-to-capability-answerability 4.3,
+  // ADR-219). `personal.bot_icon` / `personal.pr_comment_bot_icon` left with
+  // the key itself (2026-10-09): a whitelisted key nothing reads would carry a
+  // user-global value into a tree that ignores it.
   //
   // Both spellings are listed rather than replaced: a legacy file that still
   // uses the old name keeps working, and nothing that resolved before
@@ -11585,20 +11681,12 @@ var MERGEABLE_KEYS = [
   "ide",
   "personal.ide",
   "rule_loading_tier",
-  "memory.cadence",
-  "personal.bot_icon",
-  "personal.pr_comment_bot_icon",
   "personal.autonomy",
   // Knowledge-card global cross-project sharing is a USER-GLOBAL setting
   // (ADR-100 / road-to-structure-grounding-v2). Whitelisted so the
   // ~/.event4u/agent-config/agent-settings.yml values are honoured.
   "knowledge.global_sharing.enabled",
   "knowledge.global_sharing.allowed_tiers",
-  "knowledge.global_sharing.redaction.enabled",
-  "knowledge.global_sharing.redaction.halt_on_trigger",
-  "knowledge.global_sharing.auto_promote_threshold",
-  "knowledge.global_sharing.freshness.hypothesis_after_days",
-  "knowledge.global_sharing.freshness.stale_after_days",
   // `design.fidelity_mode` is a per-DEVELOPER working preference, not a
   // per-project one: whether an agent may deviate from a handed-over design
   // is a property of how that person works, and a designer who sets it once
@@ -11881,49 +11969,8 @@ function load_agent_settings(options = {}) {
       _deep_merge(merged, layer);
     }
   }
-  _warn_removed_always_on_keys(merged);
+  warnRemovedKeys(merged);
   return merged;
-}
-var REMOVED_KEYS = /* @__PURE__ */ new Map([
-  ["subagents.enabled", "always-on orchestration"],
-  ["subagents.auto", "always-on orchestration"],
-  ["subagents.host_capabilities", "always-on orchestration"],
-  ["subagents.budget_routing", "always-on orchestration"],
-  ["ai_team.enabled", "always-on orchestration"],
-  ["hooks.turn_end_gate.enabled", "the turn-end gate is always armed"],
-  ["hooks.turn_end_gate.promissory", "the turn-end gate is always armed"],
-  ["hooks.turn_end_gate.language", "the turn-end gate is always armed"],
-  ["hooks.turn_end_gate.verification", "the turn-end gate is always armed"],
-  ["telegraph.speak_scope", "the rule body states its own scope; compile_router gates on telegraph.speak alone"],
-  ["chat_history.max_size_kb", "the rotate command takes --max-kb from argv; session-count pruning bounds the file"],
-  ["chat_history.on_overflow", "the overflow mode comes from the rotate command --mode argv"],
-  ["quality.wait_for_remote_ci", "whether to poll follows from the push plus a detectable remote pipeline"],
-  ["legal_review_prep.consented_at", "the provenance sidecar settings:set writes and consentVerdict reads"],
-  ["worktrees.mode", "the user asking for a worktree in the chat; creation is instruction-only and hardcoded"]
-]);
-var _warnedRemovedKeys = /* @__PURE__ */ new Set();
-function _readDottedSettingsPath(root, dotted) {
-  let node = root;
-  for (const part of dotted.split(".")) {
-    if (typeof node !== "object" || node === null || Array.isArray(node)) {
-      return void 0;
-    }
-    node = node[part];
-  }
-  return node;
-}
-function _warn_removed_always_on_keys(merged) {
-  for (const [key, reason] of REMOVED_KEYS) {
-    if (_warnedRemovedKeys.has(key)) {
-      continue;
-    }
-    if (_readDottedSettingsPath(merged, key) === void 0) {
-      continue;
-    }
-    _warnedRemovedKeys.add(key);
-    process.stderr.write(`${key} was removed (${reason}); ignored.
-`);
-  }
 }
 function _read_yaml(p) {
   if (!_is_file(p)) {
@@ -17480,19 +17527,14 @@ var profileId = external_exports.enum(["developer", "content_creator", "founder"
 var accessStyle = external_exports.enum(["getters_setters", "get_attribute", "magic_properties"]);
 var chatFreq = external_exports.enum(["per_turn", "per_phase", "per_tool"]);
 var qualityCadence = external_exports.enum(["end_of_roadmap", "per_phase", "per_step"]);
-var regenCadence = external_exports.enum(["per_step", "every_5_steps", "phase_boundary"]);
 var fidelityMode = external_exports.enum(["strict", "structural", "hard-floor"]);
-var crossSourceMode = external_exports.enum(["on", "auto", "off"]);
-var richSkillsMode = external_exports.enum(["on", "ask", "off"]);
 var replyMethod = external_exports.enum(["replies_endpoint", "create_review_comment", "auto"]);
 var confidenceBand = external_exports.enum(["off", "low", "medium", "high"]);
 var onBlock = external_exports.enum(["stop", "ask", "warn"]);
-var onBlockFallback = external_exports.enum(["stop", "warn"]);
 var modelAutoSwitch = external_exports.enum(["auto", "suggest", "off"]);
 var leanProjectionMode = external_exports.enum(["eager-all", "thin", "delivery"]);
 var leanProjectionHost = external_exports.enum(["claude-code", "cursor", "cline"]);
 var projectionMode = external_exports.enum(["legacy-all", "scoped"]);
-var memoryCadence = external_exports.enum(["auto", "always", "never"]);
 var projectAudience = external_exports.enum(["self", "internal", "client", "public"]);
 var deliveryMerge = external_exports.enum(["off", "on-green"]);
 var prTopology = external_exports.enum(["single", "stacked"]);
@@ -17574,17 +17616,8 @@ var settingsSchema = external_exports.object({
     rtk_installed: external_exports.boolean().default(false).describe(
       "Does this machine have rtk (Rust Token Killer, a third-party Apache-2.0 tool: https://github.com/rtk-ai/rtk) on PATH \u2014 verified as the real Token Killer, not the unrelated Rust Type Kit that shares the binary name? When true the agent wraps verbose CLI output (git, tests, linters, docker, npm, composer) with rtk (upstream reports 60-90% token savings \u2014 their estimate). Leave false if rtk is missing \u2014 the agent falls back to tail / grep. The wizard overwrites this from a live two-stage probe (PATH presence + `rtk gain` identity check)."
     ),
-    minimal_output: external_exports.boolean().default(true).describe(
-      "Prefer short bullets and tables (true, default) vs verbose prose with rationale (false). Affects every chat reply; flip to false during debugging when you want the agent to think out loud."
-    ),
     canary_name: external_exports.string().default("").describe(
       'Session canary \u2014 the name the agent addresses you with at the start of every new task (e.g. "Alex"). When the greeting silently disappears, the context window is degrading: start a fresh conversation. Also keeps the reply-close markers (end-summary, PR URL as literal last line) alive. Empty = fall back to the user-global canary_name, then to identity.name from the setup wizard; no name anywhere = off. See rules/session-canary.md.'
-    ),
-    play_by_play: external_exports.boolean().default(false).describe(
-      `Narrate intermediate findings between tool calls ("Found it.", "Let me check Y."). Off by default \u2014 most users find it noisy. Turn on when you want to follow the agent's reasoning step by step.`
-    ),
-    pr_comment_bot_icon: external_exports.boolean().default(false).describe(
-      "Prefix every PR review-comment reply with \u{1F916} so humans can tell agent-authored comments apart from teammate comments at a glance. Cosmetic only; the comment body itself never changes."
     ),
     pr_progress_comments: external_exports.boolean().default(false).describe(
       'Permit the agent to post unsolicited progress / status comments on an open PR (e.g. "CI fix iteration #2", "still blocked on workflow scope"). Default off \u2014 most teammates find them noisy. User-invoked flows (/fix:pr-comments, /create-pr, /code-review, explicit "post a comment that \u2026") are NOT gated by this setting. See rules/no-pr-progress-comments.md.'
@@ -17597,9 +17630,6 @@ var settingsSchema = external_exports.object({
     )
   }),
   project: external_exports.object({
-    pr_template: external_exports.string().default(".github/pull_request_template.md").describe(
-      "Path (relative to project root) to the PR-description template the agent fills in before opening a pull request. Override only if your repo keeps the template somewhere non-standard."
-    ),
     upstream_repo: external_exports.string().default("").describe(
       "GitHub slug (owner/repo) the upstream-contribute skill targets when you ask the agent to push a learning back to the shared agent-config package. Empty = improvement PRs are disabled."
     ),
@@ -17700,20 +17730,9 @@ var settingsSchema = external_exports.object({
       )
     })
   }),
-  pipelines: external_exports.object({
-    skill_improvement: external_exports.boolean().default(true).describe(
-      "After a meaningful task the agent proposes a learning-capture turn (new skill, rule tweak, guideline). Turn off if you find the prompts noisy \u2014 you can still run /memory:promote manually."
-    )
-  }),
   roadmap: external_exports.object({
-    skip_pre_run_gate: external_exports.boolean().default(true).describe(
-      'Skip the /roadmap:process-* pre-run confirmation gate. true (default) starts processing immediately and surfaces the resolved config inline; false shows the numbered-options gate and waits. A genuine "which roadmap?" ambiguity always prompts regardless.'
-    ),
     quality_cadence: qualityCadence.default("per_phase").describe(
       "When the agent runs the full quality / test suite during /roadmap:process-* runs. per_phase = after each phase boundary (default since 2026-09-13 \u2014 end_of_roadmap lets errors compound across phases, which is expensive in a multi-phase autonomous run nobody is watching). end_of_roadmap = once, after the last step (fastest). per_step = after every single step (slowest, highest confidence)."
-    ),
-    dashboard_regen_cadence: regenCadence.default("every_5_steps").describe(
-      "How often the agent regenerates agents/roadmaps/dashboard.md during a roadmap run. every_5_steps = batch the regen (default). per_step = after every step (freshest dashboard, highest subprocess overhead). phase_boundary = only at phase edges. A rename, phase add, or archive always regenerates immediately regardless."
     ),
     horizon_weeks: external_exports.number().int().min(0).default(0).describe(
       'Optional planning horizon (weeks) the agent shows in roadmap framing ("next 4 weeks"). Set 0 to omit the horizon \u2014 most teams prefer to ship without a hardcoded window.'
@@ -17788,11 +17807,6 @@ var settingsSchema = external_exports.object({
       "Extra project-relative paths where THIS project keeps a code-graph index another tool wrote. The built-in list is deliberately vendor-neutral (graph.json, code-graph.json, .code-graph/graph.json) and names no tool, so a tool that writes its index elsewhere is named here rather than waited for. A graph found this way LOADS and answers query and explain with every edge tagged read-from-elsewhere; the gate verbs (impact, untested, dead) refuse a graph made only of such edges and say so, because an empty answer from a gate must not read as 'nothing found' when it means 'nothing trusted'. Absolute paths and paths escaping the project root are ignored."
     )
   }).default({}),
-  consistency: external_exports.object({
-    cross_source: crossSourceMode.default("on").describe(
-      "Consumed by the cross-source-consistency rule. When the agent works from multiple sources (ticket text, an attached image/mockup, the spec, the codebase) it checks them against each other and asks before proceeding on a discrepancy \u2014 instead of silently guessing. on (default) = surface every real cross-source contradiction / silent-scope-expansion as one question; auto = surface only high-confidence contradictions, state low-confidence as an assumption; off = no cross-source checking."
-    )
-  }).default({ cross_source: "on" }),
   screenshots: external_exports.object({
     identity_allowlist: external_exports.array(external_exports.string()).default([]).describe(
       "Consumed by the doc-screenshot-hygiene rule and screenshot-hygiene skill. Public identity tokens SAFE to show unredacted in a documentation screenshot \u2014 the maintainer's own public handles plus well-known fake-data tokens. Not a general fake-data dictionary and not identity-resolution: everything not listed is treated as sensitive by default, and a public handle co-located with a real name does not whitelist the real name. Default [] = nothing auto-allowed."
@@ -17804,39 +17818,11 @@ var settingsSchema = external_exports.object({
       "Consumed by the doc-screenshot-hygiene rule. on (default) = a data-bearing screenshot embed is gated behind this-turn human confirmation; uncertain/unresolved regions redact-or-refuse, never ship-and-hope; illustrative/no-data screenshots may embed with a stated justification. off = no data-bearing gate (the anonymization taxonomy still applies)."
     )
   }).default({ identity_allowlist: [], forbid_terminal_capture: true, data_bearing_gate: "on" }),
-  telegraph: external_exports.object({
-    speak: external_exports.boolean().default(false).describe(
-      "Whether the telegraph-speak rule ships at all. false (default) = DORMANT: compile_router omits the rule from dist/router.json entirely, so its body never reaches a host. This is the only lever that stops the cost. Set true only after an output-side bench clears the kill-criterion bar (docs/adrs/telegraph/0002)."
-    )
-  }).default({ speak: false }),
-  tokens: external_exports.object({
-    rich_skills: richSkillsMode.default("on").describe(
-      "Whether skills marked token_budget_class: rich may load in full (exempt from telegraph-speak + thin-projector trimming), consumed by the token-budget-discipline rule. on = allowed (default); off = fall back to standard condensed behavior; ask = surface an estimated token delta (tokens, not dollars) and ask once per session before loading."
-    )
-  }).default({ rich_skills: "on" }),
   verbosity: external_exports.object({
-    intent_announcements: external_exports.boolean().default(false).describe(
-      'Intent narration before tool batches ("Let me check X\u2026"). Only honored when personal.play_by_play is ALSO true (the direct-answers narration carve-out requires both). false (default) = act and emit the result.'
-    ),
-    preview_artifacts: external_exports.boolean().default(false).describe(
-      "Show generated commit messages, PR titles/bodies, branch names before acting. false (default) = use generated content directly (/commit terse path)."
-    ),
-    routine_confirmations: external_exports.boolean().default(false).describe(
-      "Confirmation prompts for routine workflow steps with one obvious answer. Iron-Law gates (commit-policy, scope-control git-ops, Hard Floor) ALWAYS ask regardless."
-    ),
     offer_council_in_delivery: external_exports.boolean().default(false).describe(
       'Offer "run AI Council on this?" inside delivery commands (/feature-plan, /review-changes, /roadmap-create). Council commands themselves are unaffected.'
-    ),
-    post_action_reports: external_exports.enum(["off", "minimal", "full"]).default("minimal").describe(
-      "Status blocks after a successful action. off = errors only; minimal (default) = one-line confirmation; full = bullet list."
     )
-  }).default({
-    intent_announcements: false,
-    preview_artifacts: false,
-    routine_confirmations: false,
-    offer_council_in_delivery: false,
-    post_action_reports: "minimal"
-  }),
+  }).default({ offer_council_in_delivery: false }),
   code_style: external_exports.object({
     docblocks: external_exports.enum(["minimal", "full"]).default("minimal").describe(
       "Consumed by the code-comment-discipline rule. minimal (default) = no signature-mirroring docblocks; docblocks only for machine-relevant precision (generics, array shapes) or genuine why-context. full = the exported public surface of a library package may carry one-line summary docblocks; the redundancy ban still holds."
@@ -17845,44 +17831,9 @@ var settingsSchema = external_exports.object({
   reasoning: external_exports.object({
     enabled: external_exports.boolean().default(true).describe(
       "Master switch for the Reasoning Discipline Protocol (RDP). false = the whole layer is inert (zero overhead)."
-    ),
-    auto_gate: external_exports.boolean().default(true).describe(
-      "Engage the discipline only where it pays, using table-free signals (task triviality + agent-self-assessed host reasoning strength; no runtime model->band lookup, per ADR-035). false = gate on task-signal + the component toggles only."
-    ),
-    components: external_exports.object({
-      orchestrator: external_exports.boolean().default(true).describe(
-        "Sequence the reasoning chain (ground->intent->notes->gather->audit->verify) as one system; the single coordination point."
-      ),
-      notes_first: external_exports.boolean().default(true).describe(
-        "Keep hypotheses/predictions/decisions in session notes; the response carries conclusions + evidence only."
-      ),
-      grounding: external_exports.boolean().default(true).describe(
-        "Explore the environment / close info-gaps before designing."
-      ),
-      intent: external_exports.boolean().default(true).describe(
-        "Infer the underlying goal before solving the literal ask (standard host only)."
-      ),
-      complexity_first: external_exports.boolean().default(true).describe(
-        "Risk-first: resolve the load-bearing unknown before the easy parts (RDP derivation, not a Fable-documented behavior)."
-      ),
-      verifier_default: external_exports.boolean().default(true).describe(
-        "Run a fresh-context verifier on the structural-complexity gate (branching/constraints/stateful/irreversible + token floor)."
-      ),
-      prediction_tracking: external_exports.boolean().default(true).describe(
-        "Log prediction + confidence + outcome + lesson (calibration loop)."
-      ),
-      decision_ledger: external_exports.boolean().default(true).describe(
-        "Log decision + alternatives + reason + revisit-if; escalates to decision-record/ADR when durable."
-      ),
-      uncertainty_budget: external_exports.boolean().default(true).describe(
-        "Per-dimension uncertainty score that feeds adaptive effort."
-      )
-    }).default({})
+    )
   }).default({}),
   subagents: external_exports.object({
-    downshift: external_exports.boolean().default(true).describe(
-      "Route delegable sub-tasks to the lowest-capable model tier (cost + speed via model downshift). false = every subagent runs on the session tier."
-    ),
     quota_arbitrage: external_exports.boolean().default(true).describe(
       "Prefer a separate quota-pool model for delegable sub-tasks where the host manifest reports one. Optional bonus only \u2014 identical behaviour (minus the quota win) where unsupported. Never load-bearing."
     ),
@@ -17922,9 +17873,6 @@ var settingsSchema = external_exports.object({
     max_calls_per_day: external_exports.number().int().min(0).default(50).describe(
       "Per-day cap on team calls, read against the EXISTING cli_call_budget openai bucket (~/.event4u/agent-config/cli-calls.json, daily UTC reset) \u2014 one subscription, one counter, never a parallel count. 0 = block all team calls."
     ),
-    suppress_setup_hint: external_exports.boolean().default(false).describe(
-      "Suppress the one-line wizard/init recommendation to set up the codex plugin on Claude-Code hosts. Cosmetic only \u2014 never changes behavior."
-    ),
     review_gate: external_exports.object({
       managed: external_exports.boolean().default(false).describe(
         "Managed governance of the codex plugin's Stop-hook Review Gate (road-to-team-mode Phase 4). false (default) = byte-identical pre-Phase-4 behavior: no counting, no circuit breaker. true = count consecutive BLOCK verdicts per session and trip the circuit breaker at max_consecutive_blocks."
@@ -17933,7 +17881,7 @@ var settingsSchema = external_exports.object({
         "Circuit-breaker bound: after this many CONSECUTIVE BLOCK verdicts in one session, a visible notice is injected exactly once and the managed layer stops re-blocking \u2014 the user decides, never an infinite Claude\u2194Codex loop. An ALLOW verdict resets the counter. Positive integer."
       )
     }).default({ managed: false, max_consecutive_blocks: 3 })
-  }).default({ model: "auto", allow_delegate: false, max_calls_per_day: 50, suppress_setup_hint: false, review_gate: { managed: false, max_consecutive_blocks: 3 } }),
+  }).default({ model: "auto", allow_delegate: false, max_calls_per_day: 50, review_gate: { managed: false, max_consecutive_blocks: 3 } }),
   emergency: external_exports.object({
     orchestration_halt: external_exports.boolean().default(false).describe(
       "The one audited incident switch over the always-on orchestration stack (subagents, council, team). NOT an activation gate: false (default) = the stack runs normally. true = halted; arming requires no ceremony. Disarming (returning to false) requires orchestration_halt_justification to be a non-empty string. Both transitions emit one telemetry line."
@@ -17948,22 +17896,7 @@ var settingsSchema = external_exports.object({
     )
   }),
   commands: external_exports.object({
-    auto_detect: external_exports.enum(["enabled", "warn", "disabled"]).default("enabled").describe(
-      "Global kill-switch for orchestrator auto-detection (6.1.0 non-interactive-contract). enabled (default) = /judge, /fix, /analytics, /tests, /override auto-detect their sub-command per a confidence-tiered table; warn = detect but always confirm before routing; disabled = never auto-detect (always show the menu interactively, require an explicit sub-command in CI). Per-orchestrator override: auto_detect:false in front-matter. Per-invocation: --no-auto-detect."
-    ),
     suggestion: external_exports.object({
-      enabled: external_exports.boolean().default(true).describe(
-        'Master switch for the slash-command suggestion layer. When on, the agent offers numbered options ("did you mean /commit?") instead of guessing. Turn off if you prefer to type every command yourself.'
-      ),
-      confidence_floor: external_exports.number().min(0).max(1).default(0.6).describe(
-        "Minimum semantic-match score (0.0\u20131.0) before a command is offered as a suggestion. 0.6 (default) balances precision and recall. Raise toward 0.8 for fewer false positives, lower for broader hints."
-      ),
-      cooldown_seconds: external_exports.number().int().min(0).default(600).describe(
-        "How long (seconds) the suggester waits before offering the same command again after you ignored it. Default 600s (10 min) keeps the agent from nagging. Set 0 to disable the cooldown."
-      ),
-      max_options: external_exports.number().int().min(0).default(4).describe(
-        'Maximum number of command suggestions shown in a single numbered-options block, before the "Proceed as-is" escape. Lower for terser prompts, raise if you regularly want broader fan-out.'
-      ),
       blocklist: external_exports.array(external_exports.string()).default([]).describe(
         'Slash-command names that should never be suggested, one per line (e.g. "commit", "create-pr"). Useful if a command misfires on your common phrasing.'
       )
@@ -17975,17 +17908,8 @@ var settingsSchema = external_exports.object({
       detail_level: external_exports.enum(["min", "med", "max"]).default("min").describe(
         "Verbosity tier for the generated PR description body. min (default) = title + 2-3 sentence what/why/impact + linked ticket (token-frugal); med = min + grouped changes + tests note; max = med + how-to-test + edge cases + reviewer guidance. Critical info (breaking changes, migrations, security, rollback) is ALWAYS included at every tier \u2014 the tier governs explanatory depth, never whether a critical callout appears."
       ),
-      api_examples: external_exports.boolean().default(true).describe(
-        "JSON request/response examples for API-endpoint changes. true (default) = include a fenced example ONLY when grounded in a real source (response DTO/resource, OpenAPI/schema, test fixture, or an actual probe); no grounded source \u2192 a one-line pointer, never an invented example. false = never add API examples."
-      ),
       screenshots: external_exports.boolean().default(false).describe(
         "Screenshots for frontend changes. false (default) = never attempt. true = attempt when the host has browser/preview tooling and the diff touches a frontend surface; capability-gated (emits a one-line note and leaves the placeholder when tooling is absent, never fails or blocks the PR). Before/after + changed-region highlighting is best-effort."
-      ),
-      ui_paths: external_exports.array(external_exports.string()).default([]).describe(
-        'Optional glob list that makes frontend detection explicit instead of heuristic (e.g. ["resources/views/**", "src/pages/**"]). Empty (default) = a light path/extension heuristic that fails open (no false enrichment when the surface is ambiguous).'
-      ),
-      api_paths: external_exports.array(external_exports.string()).default([]).describe(
-        'Optional glob list that makes API-endpoint detection explicit instead of heuristic (e.g. ["app/Http/Controllers/Api/**", "src/pages/api/**"]). Empty (default) = a light path/extension heuristic that fails open.'
       )
     })
   }),
@@ -17998,12 +17922,6 @@ var settingsSchema = external_exports.object({
     )
   }),
   memory: external_exports.object({
-    cadence: memoryCadence.default("always").describe(
-      "Cadence of the \u{1F9E0} memory-visibility line after a memory-consulting step. always (default) = show whenever a memory type was asked; auto = show only when 3+ types were consulted (less noise); never = suppress. Distinct from rule_loading_tier \u2014 owns its own key since the 2026-06-01 untangle."
-    ),
-    review_threshold: external_exports.number().int().min(0).default(10).describe(
-      "Maximum number of memory entries /memory:load surfaces inline before falling back to a summary view. Default 10 keeps the chat readable. Raise to see more candidates, lower to keep the context tight."
-    ),
     redact_patterns: external_exports.array(external_exports.string()).default([]).describe(
       "Regex patterns (one per line) that scrub matches from chat-history transcripts and memory before they hit disk. Use for secrets, customer names, internal URLs. Patterns are anchored and case-insensitive."
     ),
@@ -18021,38 +17939,13 @@ var settingsSchema = external_exports.object({
       ),
       allowed_tiers: external_exports.array(external_exports.string()).default(["public"]).describe(
         "Origin tiers auto-eligible to cross a project boundary. proprietary is manual-only regardless (the gate hard-codes it), so an in-house schema never auto-shares."
-      ),
-      redaction: external_exports.object({
-        enabled: external_exports.boolean().default(true).describe(
-          "Run the privacy-floor + source-confidentiality scan before any card goes global."
-        ),
-        halt_on_trigger: external_exports.boolean().default(true).describe(
-          "Halt-and-surface on a confidential-pattern hit; never silent-share, never auto-rewrite."
-        )
-      }).default({}),
-      auto_promote_threshold: external_exports.number().int().min(1).default(2).describe(
-        "Distinct-repo count at which a public/vendor card triggers a promotion suggestion (never a silent write)."
-      ),
-      freshness: external_exports.object({
-        hypothesis_after_days: external_exports.number().int().min(0).default(90).describe(
-          "A global card older than this is lead-only (positive structure must be re-confirmed before use)."
-        ),
-        stale_after_days: external_exports.number().int().min(0).default(180).describe(
-          "A global card older than this is skipped until re-verified."
-        )
-      }).default({})
+      )
     }).default({})
   }).default({}),
   hooks: external_exports.object({
     concern_budget: external_exports.object({
-      max_per_event: external_exports.number().int().min(1).default(8).describe(
-        "Maximum number of concerns (issues / warnings) a single hook may raise per (platform, event) pair before the hook is rate-limited. Default 8 prevents noisy hooks from drowning out high-signal ones."
-      ),
       tier1_concerns: external_exports.array(external_exports.string()).default([]).describe(
         "Concern IDs (one per line) that are allowed to block the run on failure rather than warn. Reserved for high-confidence guards \u2014 leave empty unless you maintain custom hooks."
-      ),
-      hard_fail: external_exports.boolean().default(false).describe(
-        "When a hook exceeds hooks.concern_budget.max_per_event, fail the run (true) instead of warning and continuing (false, default). Turn on in CI when you want hook quality to gate merges."
       )
     }),
     verify_before_complete: external_exports.object({
@@ -18105,12 +17998,9 @@ var settingsSchema = external_exports.object({
     // fires is decided by each detector's own trigger conditions, not by a
     // flag. A leftover `hooks.turn_end_gate.*` block from an older install
     // warns once on stderr and is ignored — see REMOVED_KEYS in
-    // `src/scripts/_lib/agent_settings.ts`.
+    // `src/scripts/_lib/settings_removed_keys.ts`.
   }),
   decision_engine: external_exports.object({
-    surface_traces: external_exports.boolean().default(false).describe(
-      "Emit DecisionTraceHook events that surface why the agent picked one option over another. Useful when debugging unexpected choices; off by default to keep chat noise low."
-    ),
     min_confidence: confidenceBand.default("off").describe(
       "During Phase=Plan, refuse to advance to Phase=Implement if confidence is below this band. off (default) = no gate. low / medium / high = raise the floor; on miss, decision_engine.on_block decides what happens."
     ),
@@ -18124,20 +18014,12 @@ var settingsSchema = external_exports.object({
       "What the decision engine does when a gate (min_confidence / block_on_risk / require_memory_hits) fires. stop (default) = halt and surface the reason. ask = present numbered options. warn = log and continue."
     ),
     ask_timeout_seconds: external_exports.number().int().min(0).default(30).describe(
-      "Non-TTY timeout (seconds) for decision_engine.on_block = ask. After this elapses without input, decision_engine.on_block_fallback takes over. Default 30s; raise for slow human review, 0 = wait forever."
-    ),
-    on_block_fallback: onBlockFallback.default("stop").describe(
-      "Resolution when decision_engine.on_block = ask times out (see decision_engine.ask_timeout_seconds). stop (default) = halt the run. warn = log and continue with the agent's best guess."
+      "Non-TTY timeout (seconds) for decision_engine.on_block = ask. After this elapses without input, the engine stops (fail-safe). Default 30s; raise for slow human review, 0 = wait forever."
     )
   }),
   update_check: external_exports.object({
     enabled: external_exports.boolean().default(true).describe(
       "Once per day the agent checks the npm registry for a newer agent-config release and surfaces a one-line banner if one exists. Turn off in air-gapped environments or to silence the banner."
-    )
-  }),
-  explain: external_exports.object({
-    enable_last: external_exports.boolean().default(true).describe(
-      "Enable the `agent-config explain last` command, which prints the reasoning behind the agent's most recent decision (last tool call, last suggestion). Disable if you never use it and want a smaller CLI surface."
     )
   }),
   legal_review_prep: external_exports.object({
@@ -20542,15 +20424,10 @@ var LEGACY_RENAME_MAP = {
   open_edited_files: "personal.open_edited_files",
   user_name: "personal.user_name",
   rtk_installed: "personal.rtk_installed",
-  minimal_output: "personal.minimal_output",
-  play_by_play: "personal.play_by_play",
-  pr_comment_bot_icon: "project.pr_comment_bot_icon",
-  pr_template: "project.pr_template",
   upstream_repo: "project.upstream_repo",
   improvement_pr_branch_prefix: "project.improvement_pr_branch_prefix",
   github_pr_reply_method: "github.pr_reply_method",
   eloquent_access_style: "eloquent.access_style",
-  skill_improvement_pipeline: "pipelines.skill_improvement",
   subagent_implementer_model: "subagents.implementer_model",
   subagent_judge_model: "subagents.judge_model",
   subagent_max_parallel: "subagents.max_parallel"
@@ -23864,17 +23741,7 @@ function _read_consumer_auto_switch(project_root) {
   }
   return "suggest";
 }
-function _team_setup_hint_line(project_root) {
-  let data;
-  try {
-    data = load_agent_settings({ project_path: _resolve_settings_read(project_root) });
-  } catch {
-    data = {};
-  }
-  const ai_team = isPlainObject(data) ? data["ai_team"] : null;
-  const flag = isPlainObject(ai_team) ? ai_team["suppress_setup_hint"] : null;
-  const suppressed = flag === true || typeof flag === "string" && ["true", "yes", "on", "1"].includes(flag.trim().toLowerCase());
-  if (suppressed) return null;
+function _team_setup_hint_line() {
   return "  \u2022 Claude Code team mode (optional cross-model review via the official codex plugin): run `agent-config doctor --check team` for setup status.";
 }
 function finalize_claude_model_tiers(project_root) {
@@ -24055,11 +23922,8 @@ function _main_project_install(opts, project_root, parsed_tools, is_first_run) {
     }
     printResiduals(tools, state.QUIET);
     if (_is_tool_enabled(tools, "claude-code")) {
-      const team_hint = _team_setup_hint_line(project_root);
-      if (team_hint !== null) {
-        process4.stdout.write(team_hint + "\n");
-        process4.stdout.write("\n");
-      }
+      process4.stdout.write(_team_setup_hint_line() + "\n");
+      process4.stdout.write("\n");
     }
   }
   _propose_modules_config(project_root, is_first_run);
