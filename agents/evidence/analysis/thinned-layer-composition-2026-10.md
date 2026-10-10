@@ -584,3 +584,77 @@ untouched here rather than fixed in passing. It is recorded because the receipt
 is one of the two readers this roadmap makes agree, and a reader comparing the
 receipt against this page would otherwise find a missing warning and no reason
 for it.
+
+## The reading after the law moves — one heading landed, not four
+
+> Step 4.3 of `road-to-a-thinned-layer-measured-in-one-unit`, 2026-10-10. The
+> step expected 75,900–77,900 unconditional *"from the measured layer with all
+> four"*. That premise did not hold, so the figure below is not a worse version
+> of the prediction — it is the arithmetic for a different input.
+
+**One of the four law headings landed.** Each went to a council, one verdict
+per rule, as step 4.2 and D4 require. Three were refused and their headings
+reverted; the records are at `agents/evidence/council/law-heading-<rule>.md`,
+each carrying its `verdict:` line.
+
+| Rule | Verdict | Rounds | Why |
+|---|---|---|---|
+| `runtime-safety` | **land** | 2 | one omission (the handler allowlist values), repaired; round 2 found no second |
+| `tool-safety` | owner | 3 | four different omitted conditional duties across three rounds — the rule's duties do not compress |
+| `autonomous-execution` | owner | 2 | three omissions, then a *contradiction*: the law said the validation bound is "NEVER A QUESTION" where the body permits one native ask |
+| `question-not-instruction` | owner | 2 | the fence contradicts the rule's own carve-outs once it stands alone — and this one changed no law text at all, only added the heading |
+
+### What Row 1 is actually worth now
+
+Row 1 priced the four together at **9,349–10,225**. With one landing it is a
+single row, and the landed law is longer than the candidate Row 1 assumed —
+697 characters against 554, because the council required the handler allowlist
+values to be carried:
+
+| Rule | Full body | Plain stub | Law as landed | Saving |
+|---|---|---|---|---|
+| `runtime-safety` | 1,131 | 361 | 697 | **73** |
+
+**73 characters, against a row that was priced at 9,349–10,225.** Row 1
+delivers 0.7–0.8 % of what it was expected to.
+
+This is arithmetic over this page's own Row 1 figures, not a fresh measurement
+of the installed layer. `installed_layer_report` reads the layer installed on
+the machine, not a branch, so it cannot show a source-tree change before that
+change ships — stated because a reader is entitled to know which numbers were
+measured and which were derived.
+
+### What that does to the sums, and what it does not
+
+Sum 3 read 67,614–68,490 unconditional at the row-5 ceiling and 69,038–69,914
+realistic. Both included Row 1 in full. Remove 9,276–10,152 of unrealised
+saving and the realistic unconditional reading returns to roughly
+**78,300–80,100** — above 75,000 on the bare reading, and far above it on the
+recorded reading of *75,000 with ≥10 % headroom*.
+
+So the conclusion of the sums section is unchanged and is now unchanged for a
+second, independent reason: it was already true that no combination reached the
+ceiling as recorded. Row 1 was not what stood between the layer and the
+ceiling, and now it cannot be.
+
+### The finding worth keeping
+
+The four rules were not a random sample — they are the four the owner confirmed
+for law-heading authoring on 2026-10-09. Three failed independent review, and
+the failure mode was the same each time: a duty that lives in a carve-out, a
+conditional clause or a second fenced block does not survive compression into
+one standing section, and **the author cannot see it**. All four sections looked
+faithful when written. One survived.
+
+The discriminator is not rule length. `runtime-safety` is the shortest at 1,553
+characters, but `question-not-instruction` is 3,200 and failed — on a section
+that changed not one character of the existing law and only added a heading
+above it. What distinguishes the one that landed is that its duties were
+already a single coherent list under one heading, with no carve-out elsewhere
+in the file contradicting them.
+
+For the thinning programme this is the load-bearing result: the stub-plus-law
+form is available to rules whose law is already one block, and the rest need
+either a deliberate rewrite of the rule or no thinning at all. Pricing a thinning
+row by counting candidate blocks overstates it, because it assumes every
+candidate survives review, and three of four did not.
