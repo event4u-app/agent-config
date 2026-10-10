@@ -227,6 +227,23 @@ At `df377ca64`:
       and expects red, and writes and judges a change that widens the gated
       set.
       verify: `npx vitest run tests/scripts/ratification_subject_binding.test.ts` -> 0
+      **Half shipped 2026-10-10, and the half that is missing is the gated one.**
+      `src/scripts/_lib/ratification_subject.ts` is the module of its own this step
+      asks for: `subjectDigest` hashes each gated file's PATH alongside its content,
+      so identical bytes at two paths do not collide and a rename moves the digest,
+      and a deleted gated file is entered via `DELETED_MARKER` rather than skipped —
+      skipping would make "this hook was removed" digest-identical to "this hook was
+      never gated", which is the change a record most needs to be bound to. It takes
+      no base diff, so it reads the same on a branch and on the merged checkout.
+      It **re-assembles** the gated list from the gate's own exported constants
+      rather than restating the membership rule, because `classifyPaths` reports the
+      self surface as a boolean and the list cannot be read back out of it; a second
+      definition of "gated" would be a second thing to keep in step. Verified ungated
+      by running the gate against it: nothing to ratify. 10 tests.
+      **What is NOT shipped:** the gate recomputing it and refusing a record whose
+      `subject` is absent or different, and the two suites' fixtures gaining the
+      field. Both edit `check_kernel_edit_ratified.ts` and
+      `_lib/ratification_artifact.ts`, so the step stays open.
 - [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **2.2 Each record answers for its own change.** A record validates a
       diff only when its `subject` matches that diff's gated content; a second
       valid record for something else no longer carries it. The 23 records on
@@ -238,7 +255,7 @@ At `df377ca64`:
 
 ## Phase 3 — The council reviews a modification as one
 
-- [ ] **3.1 A fixed set of questions, in a module of its own.** When the
+- [x] **3.1 A fixed set of questions, in a module of its own.** When the
       bundle of a diff review contains a gated path, every seat is asked, and
       answers one by one: what behaviour changes, including what follows from
       it; which authority or safety boundary becomes wider or narrower;
@@ -252,7 +269,17 @@ At `df377ca64`:
       evaluator rule on weakened assertions, the synthesis prompt on kill
       criteria — that wording is used.
       verify: `npx vitest run tests/scripts/ai_council/modification_review_questions.test.ts` -> 0
-- [ ] **3.2 Each seat closes on the stance line, read by the parser that
+      **Done 2026-10-10.** `src/scripts/ai_council/modification_review_questions.ts`
+      carries the nine as one constant, each with a stable id so the record's body
+      can key a seat's answer by it and a skipped question is visible. Two quote the
+      tree verbatim rather than paraphrasing, and each carries its `source`:
+      question 3 is `evaluator-independence`'s weakening clause ("silently weakens
+      an assertion … lowers a threshold"), question 6 the synthesis prompt's
+      kill-switch criteria. The contract quotes the list under
+      § The modification review asks a fixed set, and the test asserts every
+      question appears there verbatim — so a question edited in the constant and
+      not in the contract reds rather than leaving the two disagreeing. 7 tests.
+- [x] **3.2 Each seat closes on the stance line, read by the parser that
       exists.** The review asks every seat for the existing closing line with
       one of three labels — `ratified`, `confirmed-non-expanding`, `refused` —
       and reads it with the existing seat-line parser. The option tally and
@@ -264,7 +291,21 @@ At `df377ca64`:
       (`src/config/evaluator-budgets.json`, `cli_help_command_count`); the council command, which is over the line
       ratchet, is not edited.
       verify: `npx vitest run tests/scripts/ai_council/modification_review_stance.test.ts` -> 0
-- [ ] **3.3 The record's verdict is derived, by one rule.** A seat concludes
+      **Done 2026-10-10, and one tension in the step's own text is recorded rather
+      than resolved silently.** `src/scripts/ai_council/modification_review.ts` is
+      the module of its own: `seatConclusion` reads a reply through the EXISTING
+      `stance_tally.parse_stance_line`, accepts only the three labels, and returns
+      null for a missing line, an abstention or any other label — including a label
+      in prose without the stance grammar. The option tally and the synthesis
+      verdict line are not used. **What is NOT done is the dispatch wiring, because
+      this step forbids it in the same sentence that asks for it:** it says the verb
+      sits "inside `council_cli`'s dispatch" and then that "the council command,
+      which is over the line ratchet, is not edited". `council_cli.ts` is 3,954
+      lines against a 1,500 ceiling, so wiring would grow the worst offender in the
+      tree and raise a shrink-only baseline. The module is the deliverable; the
+      verb has no dispatch entry, and a reader looking for one will not find it.
+      9 tests.
+- [x] **3.3 The record's verdict is derived, by one rule.** A seat concludes
       when its line parses to one of the three labels; a missing line, an
       abstention or any other label is a seat that did not conclude. Then, in
       this order: any concluding seat on `refused` gives `refused`; fewer
@@ -272,7 +313,13 @@ At `df377ca64`:
       policy gives `non-convergent`; otherwise `ratified` if any seat said so
       and `confirmed-non-expanding` if all did.
       verify: `npx vitest run tests/scripts/ai_council/modification_review_verdict_rule.test.ts` -> 0
-- [ ] **3.4 The record is written from the run, not typed.** One writer, in
+      **Done 2026-10-10.** `deriveModificationVerdict` applies the four steps in
+      the stated order, and the order is pinned by its own case: a lone refusing
+      seat gives `refused`, NOT `non-convergent`, because letting the quorum rule
+      fire first would turn "one reviewer said no" into "not enough reviewers
+      answered" — a retryable condition rather than the objection it is.
+      `required_providers` is a parameter, not baked in. 7 tests.
+- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> **3.4 The record is written from the run, not typed.** One writer, in
       the module of 2.1, turns the session record of such a review into the
       artifact: `reviewed_by` in one spelling, `providers` from the seats that
       concluded, the derived verdict, `subject` for the tree the bundle was
@@ -281,6 +328,26 @@ At `df377ca64`:
       precedes the review, because any later edit to a gated file moves the
       digest.
       verify: `npx vitest run tests/scripts/ratification_record_writer.test.ts` -> 0
+      **Attempted 2026-10-10 and stopped on a measured contradiction, which is
+      worth more than a writer that papered over it.** The writer's inputs now all
+      exist — the questions (3.1), the seat conclusions (3.2), the verdict rule
+      (3.3) and the `subject` digest (2.1's module above). What does not work is
+      emitting a record both rules accept.
+      **The shipped reader and this roadmap's step 3.3 disagree on the
+      quorum-short case, and the disagreement was measured rather than read:** for
+      seats `{anthropic: ratified, openai: no-final-verdict}`,
+      `deriveRatificationHeader` returns **`ratified`** while
+      `deriveModificationVerdict({anthropic: 'ratified', openai: null}, 2)` returns
+      **`non-convergent`**. The shipped reader has no quorum count at all — it
+      leaves provider diversity to catch a one-seat record separately — and 3.3
+      folds the count into the verdict.
+      A record carrying 3.3's verdict is therefore rejected by the gate's own
+      `header-not-derived` check, which requires the recorded verdict to equal the
+      derived one. Reconciling them means editing
+      `_lib/ratification_artifact.ts` — `READER_PATH`, gated — so 3.4 waits on the
+      same forge act as its neighbours, plus a decision about WHICH rule is right.
+      That decision is not this file's to take: 3.3's rule is what the roadmap
+      specifies, the reader's is what ships, and both are defensible.
 
 ## Phase 4 — The reviewer and the consequence class are inside the gate
 
@@ -322,12 +389,22 @@ At `df377ca64`:
       change, what it is expected to gain, what it risks, and how it is
       undone.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_escalation_message.test.ts` -> 0
-- [ ] **5.3 The user's permission takes the route the owner chose.** At the
+- [x] **5.3 The user's permission takes the route the owner chose.** At the
       pin there is none: only a council record with two providers passes, the
       check is required, and the contract's bypass procedure is for incidents.
       This step implements the option the second blocker's answer names, and
       whatever it builds states in the contract what it cannot prove.
       verify: `npx vitest run tests/scripts/ratification_owner_route.test.ts` -> 0
+      **Done 2026-10-10 — the substance was already shipped and had no test.** The
+      second blocker closed on option (b), ADR-281 § 5, and
+      `ratification-artifact.md` § The owner-permission-route already carried both
+      halves: the route is the owner's own recorded forge bypass, a chat answer is
+      refused by name, a `non-convergent` or `refused` record stays red — and
+      § What this route cannot prove states the limit, that the gate cannot see a
+      bypass and nothing proves the ask preceded it. What was missing is the pin.
+      The test carries its OWN sensitivity case rather than asserting over a file
+      that happens to be right: it strips the section and asserts every claim
+      falls, so it has been seen red for the intended reason. 5 tests.
 
 > **Screened 2026-10-10 — six steps are gated, and the gate said so itself.**
 > Step 4.3 was attempted as the cheapest possible probe: a comment-only
@@ -448,19 +525,47 @@ At `df377ca64`:
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A gated file edited after its review turns the gate red until a
+- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> AC-1 — A gated file edited after its review turns the gate red until a
       new review exists, and a base that moved on other files does not.
-- [ ] AC-2 — A modification review with one provider concluding produces a
+      **Measured 2026-10-10: not yet possible.** It is step 2.1's `subject` digest
+      that makes a post-review edit visible, and 2.1 edits the gate and its reader.
+- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> AC-2 — A modification review with one provider concluding produces a
       record that does not pass.
-- [ ] AC-3 — A change to the question list, the verdict rule or the writer is
+      **Half shipped 2026-10-10, and the half that is missing is named.** The RULE
+      is implemented and pinned: `deriveModificationVerdict` with one concluding
+      provider against `required_providers: 2` returns `non-convergent`, which the
+      policy's `verdicts_that_pass` excludes. What does not exist is the WRITER
+      that turns that into a record — step 3.4, which lives in 2.1's module.
+- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> AC-3 — A change to the question list, the verdict rule or the writer is
       refused without a passing record.
-- [ ] AC-4 — The contract names the route by which the owner permits a change
+      **Measured 2026-10-10: the three modules are NOT yet watched.**
+      `check_kernel_edit_ratified --files src/scripts/ai_council/modification_review.ts`
+      reports nothing to ratify, which is correct today and is exactly what step 4.1
+      changes. Until 4.1 lands, this criterion is false by construction.
+- [x] AC-4 — The contract names the route by which the owner permits a change
       the council could not pass, and what that route cannot prove.
-- [ ] AC-5 — One proposal under `agents/proposals/` names a change that
+      **MET 2026-10-10, both limbs measured rather than read.**
+      `ratification-artifact.md` carries § The owner-permission-route (the owner's
+      own recorded forge bypass, ADR-281 § 5; a chat answer refused by name) and
+      § What this route cannot prove at `:532` (the gate cannot see a forge bypass;
+      nothing proves the ask preceded it). Step 5.3's test pins both and carries its
+      own sensitivity case.
+- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — registered on that roadmap and already addressed to the owner; this marker records that the criterion shares its gate --> AC-5 — One proposal under `agents/proposals/` names a change that
       passes the gate and the record that passed it.
-- [ ] AC-6 — No instruction file shipped to a consumer says kernel rules
+      **Measured 2026-10-10: no such proposal exists, and none can yet.** It needs
+      a record that passed, which needs the writer (3.4) and the `subject` (2.1).
+- [x] AC-6 — No instruction file shipped to a consumer says kernel rules
       cannot be changed.
-- [ ] AC-7 — The count of gate scripts is unchanged.
+      **MET 2026-10-10.** The four-pattern grep over the consumer template, its
+      projected copy, the threat model and the pipeline guideline returns **0**
+      against a stated positive control of 4. Closed by step 1.2, whose corrections
+      landed with ADR-281; this is the criterion re-measured at `0fd09ebe3` rather
+      than inherited from that step.
+- [x] AC-7 — The count of gate scripts is unchanged.
+      **MET 2026-10-10: 173 on `origin/main`, 173 in this tree.** The Phase 3
+      modules are library modules under `src/scripts/ai_council/`, not
+      `check_*.ts` gates — which is the point of the criterion: this roadmap adds
+      a review, not a new thing that can fail a build.
 
 ## Decisions
 
@@ -495,7 +600,7 @@ At `df377ca64`:
 | K11 | Automated promotion of learnings | `road-to-leading-every-row.md:231`; `later/road-to-ac-deep-capabilities.md:163-192` | The directive is noted there by 1.3 and decided by its owner |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-05 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-10 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|

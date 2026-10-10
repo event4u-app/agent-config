@@ -535,6 +535,56 @@ administrator's, and nothing proves the ask preceded it. The trace is the
 bypass record § Emergency use requires, committed beside the non-passing
 record.
 
+## The modification review asks a fixed set
+
+A diff whose bundle contains a gated path is reviewed by the council as a
+**modification review**, and every seat is asked the same list, one question at
+a time. The list is one constant —
+`src/scripts/ai_council/modification_review_questions.ts` — and is quoted here
+rather than restated, so a prompt and a contract cannot drift apart silently:
+
+1. What behaviour changes, including what follows from it that the diff does not state?
+2. Which authority or safety boundary becomes wider or narrower, and in which direction?
+3. Does the change weaken anything that judges it — a test, a gate, a threshold, this review? The standard is quoted rather than paraphrased: the implementer never silently weakens an assertion, deletes, skips or xfails a failing test, lowers a threshold, or changes fixture semantics to fit the code. Does this change do any of those?
+4. Is another host or projection left as a way around the control this change touches?
+5. Can it be undone, and how — by whom, with what authority, and against which revision?
+6. What observation would show the claimed benefit to be false, and what rollback / kill-switch criteria does the change omit?
+7. Would a smaller change do, and what does the larger one buy that the smaller one does not?
+8. What does it add to standing instruction weight that every later session pays?
+9. Could untrusted content steer the path this change opens, and what bounds it if so?
+
+Two of the nine quote the tree's own wording rather than paraphrasing it, and
+each carries its source in the constant: question 3 is
+[`evaluator-independence`](../../src/rules/evaluator-independence.md)'s
+weakening clause, and question 6 is the synthesis prompt's kill-switch
+criteria. A paraphrase would be a second, slightly different standard for the
+same thing.
+
+**A council merely asked for an opinion produces an opinion.** The fixed list
+is what lets a reader see which question a seat skipped — the record's body
+keys each seat's answer by the question's id.
+
+**How a seat closes, and how the verdict follows.** Each seat closes on the
+existing stance line with one of three labels — `ratified`,
+`confirmed-non-expanding`, `refused` — read by the parser that already exists
+(`stance_tally.parse_stance_line`). The option tally and the synthesis verdict
+line are deliberately not used: they answer which *option* wins a
+deliberation, not whether each *seat* passed a change. A missing line, an
+abstention or any other label is a seat that did not conclude.
+
+The record's verdict is then derived by one rule, and the ORDER is the rule
+(`modification_review.deriveModificationVerdict`):
+
+1. any concluding seat on `refused` gives `refused`;
+2. fewer concluding providers than `required_providers` gives `non-convergent`;
+3. any concluding seat on `ratified` gives `ratified`;
+4. otherwise, all concluded and all non-expanding, `confirmed-non-expanding`.
+
+Step 1 precedes step 2 deliberately. A single refusing seat is a refusal even
+when it is the only seat that concluded; letting the quorum rule fire first
+would turn *one reviewer said no* into *not enough reviewers answered*, which
+reads as a retryable condition rather than as the objection it is.
+
 ## What the artifact does NOT decide
 
 Whether the diff is authority-**expanding**. That is a judgement over rule
