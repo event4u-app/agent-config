@@ -988,6 +988,14 @@ item. Phases 1-6 may run once 0.2 is chosen.
   does, verified 2026-09-08.
 
 ### blocker: ratification-platform-anchor
+
+> **Note 2026-10-10, `road-to-self-modification-that-a-council-must-pass` step 1.3.**
+> `docs/decisions/ADR-281-council-confirmed-self-modification.md` is accepted. For a
+> change to the gated surface, and for a change originating in this package's own
+> learning lanes, the lowest rung that can pass is now the **council** — an
+> independent session alone no longer ratifies — and a change to the reviewer itself
+> joins the owner's list. Nothing in this blocker is edited by that note; it is
+> recorded here because this blocker's resolution will be read against the new ladder.
 - **Status:** open — **the criterion itself changed on 2026-09-10 by owner ruling, and what
   is left is the CI wiring plus an unrehearsed recovery path.** The owner ruled that a mandatory
   approving review is not wanted on this repository: *"I am the only maintainer, or the main
@@ -1419,6 +1427,14 @@ item. Phases 1-6 may run once 0.2 is chosen.
   was falsifiable rather than merely repeated.
 
 ### blocker: kernel-guard-first-crossing
+
+> **Note 2026-10-10, `road-to-self-modification-that-a-council-must-pass` step 1.3.**
+> `docs/decisions/ADR-281-council-confirmed-self-modification.md` is accepted. For a
+> change to the gated surface, and for a change originating in this package's own
+> learning lanes, the lowest rung that can pass is now the **council** — an
+> independent session alone no longer ratifies — and a change to the reviewer itself
+> joins the owner's list. Nothing in this blocker is edited by that note; it is
+> recorded here because this blocker's resolution will be read against the new ladder.
 - **Status:** open
 - **Owner:** maintainer
 - **Class:** 3 — human-only
