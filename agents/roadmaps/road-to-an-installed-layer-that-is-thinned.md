@@ -5,7 +5,7 @@ execution:
   mode: phase-checkpoints
 depends: [road-to-a-rule-carrier-that-works-outside-the-repo, road-to-rule-laws-that-can-stand]
 estate_offset_exempt: "Round inbox-2026-10-c reproduced the host's 150k notice on a fresh install: 102 unconditional files and 338,225 chars under ~/.claude/rules, because install.ts has zero references to lean_projection and the delivery flip ADR-267 shipped thins only the project tree consumers do not get. The subject has arrived in at least 22 consumed rounds and no active roadmap owns the installed layer; this file is the only one whose done state removes the notice."
-estate_growth_exempt: "+1 open_blockers for `default-flip-of-the-installed-layer`. Newly discovered, not a repaired undercount: changing what every consumer's default install writes is a consumer-facing default flip, which an agent may prepare and measure but not take, so the owner decision has to exist as a blocker before Phase 3 can be scheduled."
+estate_growth_exempt: "+1 open_blockers for `arrival-record-needs-a-cancelled-observer`. Discovered 2026-10-10 while screening Phase 2, not a repaired undercount: step 2.1 named the carrier roadmap's step 0.2 as its data source, and that step was cancelled by owner answer D10 on 2026-10-06, moving the instruction-load observer into an unscheduled stub. The entry closes no box and changes no behaviour; it makes three steps read as blocked to run-continuation, which decides open-vs-blocked from the inline marker alone, and it records that the owner's already-given (a) on the default flip is stranded behind an instrument no scheduled file owns. The superseded claim it replaces was spent on `default-flip-of-the-installed-layer`, which is registered and still open."
 relates:
   - slug: road-to-a-rule-carrier-that-works-outside-the-repo
     relation: depends
@@ -95,8 +95,11 @@ Reproduced on 2026-10-01:
 
 ## Phase 2 — Records from opted-in machines
 
-- [ ] **2.1 An arrival record per host version.** From the instruction-load
-      observer of the carrier roadmap's step 0.2, one real session per supported
+- [ ] <!-- blocked-by: arrival-record-needs-a-cancelled-observer | asked: no — discovered mid-drain under `/roadmap:process-full --all`; the run's mandate is processing and merging, not taking an owner-reserved estate decision, so it is put to the owner in that run's end report instead of halting the queue --> **2.1 An arrival record per host version.** From the instruction-load
+      observer — step 3.0 of `stubs/road-to-instructions-loaded-observer.md`,
+      NOT the carrier roadmap's step 0.2, which the owner cancelled on
+      2026-10-06 (D10 there) and which moved the observer to that stub — one
+      real session per supported
       host version: which stubs and standing laws loaded at start and after
       compaction; whether a user-layer `paths:` rule loads on `Read`, `Edit`, a
       `Write` that creates the file and a Bash-first edit; every matched
@@ -106,13 +109,13 @@ Reproduced on 2026-10-01:
       text of an opted-in install contains every consequence-class law
       byte-equal to its source section.
       verify: `npx vitest run tests/scripts/install_thin_layer.test.ts -t standing-only` -> 0
-- [ ] **2.3 Does a stub get used?** Per session, reads of a rule body path that
+- [ ] <!-- blocked-by: arrival-record-needs-a-cancelled-observer | asked: no — discovered mid-drain under `/roadmap:process-full --all`; the run's mandate is processing and merging, not taking an owner-reserved estate decision, so it is put to the owner in that run's end report instead of halting the queue --> **2.3 Does a stub get used?** Per session, reads of a rule body path that
       were not preceded by a delivery of that rule, from records the dispatcher
       already writes; and per rule, deliveries against the characters it stands
       at, zeros included. A rule never delivered and never read is a candidate
       for the owner, not an automatic removal.
       verify: `grep -c 'self-served' agents/evidence/analysis/stub-use-*.md` -> /^[1-9]/
-- [ ] **2.4 The injection-effect row, on its own terms.** After the opt-in, the
+- [ ] <!-- blocked-by: arrival-record-needs-a-cancelled-observer | asked: no — discovered mid-drain under `/roadmap:process-full --all`; the run's mandate is processing and merging, not taking an owner-reserved estate decision, so it is put to the owner in that run's end report instead of halting the queue --> **2.4 The injection-effect row, on its own terms.** After the opt-in, the
       injected copy is the only copy for the thinned rules; record the new
       exposure state beside `src/config/host-injection-effect.json:8` without
       changing that file's verdict, which `road-to-delivery-on-hook-hosts` owns.
@@ -121,6 +124,31 @@ Reproduced on 2026-10-01:
 > produce: each one's verify greps an `agents/evidence/analysis/` record written
 > from a live session after an install has actually been opted in. 2.2 is the
 > exception and is closed — it is a fixture, not a session record.
+>
+> **Re-read 2026-10-10 — the gate is narrower than "a machine", and it strands
+> an answer the owner has already given.** 2.1 named the carrier roadmap's step
+> 0.2 as the source of its data. That step is `[-]` **cancelled**, by owner
+> answer D10 of 2026-10-06, and the observer travels instead as step 3.0 of
+> `stubs/road-to-instructions-loaded-observer.md` — a stub, so no active
+> roadmap owns it and nothing schedules it. The tree says the same thing in
+> code: `src/scripts/check_standing_rule_delivery.ts:289` calls the
+> `InstructionsLoaded` hook "a host feature this suite does not yet bind", and
+> `instructionsLoadedRecord()` exists only to report the record's absence.
+>
+> So the three steps are not waiting on someone opting a machine in. They are
+> waiting on an instrument that an owner decision moved out of every scheduled
+> file. That matters beyond Phase 2, because blocker
+> `default-flip-of-the-installed-layer` is **already answered** — (a), 2026-10-06
+> — and closes only "when the ADR of step 3.3 records (a) with the arrival
+> record it relied on". The arrival record is 2.1. The owner's answer is
+> therefore stranded behind the cancelled observer, and until this re-read
+> nothing in the tree said so.
+>
+> The three steps now carry an inline `<!-- blocked-by: ... -->` marker. That is
+> the same repair the carrier roadmap documented for its own 0.2: `run-continuation`
+> decides open-vs-blocked from the inline annotation alone and never parses
+> `## Blockers`, so without it an impossible step reads as runnable work to the
+> one mechanism that acts on it, and every stop fire re-engages an agent into it.
 
 ## Phase 3 — The default, decided
 
@@ -197,8 +225,20 @@ Reproduced on 2026-10-01:
 
 ## Blockers
 
+### blocker: arrival-record-needs-a-cancelled-observer
+
+- **Status:** open — discovered 2026-10-10. The instrument steps 2.1, 2.3 and 2.4 read from was cancelled by owner answer D10 of `road-to-a-rule-carrier-that-works-outside-the-repo` on 2026-10-06 and now travels only as step 3.0 of `stubs/road-to-instructions-loaded-observer.md`, which no active roadmap owns
+- **Owner:** owner — scheduling a stub is an estate decision, and the stub's own text records that the host observation does not close its 3.0
+- **Class:** 3
+- **Ownership:** product-owned
+- **Blocks:** steps 2.1, 2.3 and 2.4 — and, through 2.1, the closing condition of `default-flip-of-the-installed-layer`, whose answer the owner has already given
+- **What to do:** pick exactly one — (a) promote `stubs/road-to-instructions-loaded-observer.md` to an active roadmap so its step 3.0 can land the observer, accepting the estate cost; (b) re-scope 2.1 to a record obtainable WITHOUT the host event, naming in the same change which of its five claims — stubs loaded at start, laws loaded at start, both after compaction, the `paths:` rule on four edit shapes, every matched delivery under 8,000 — survive that narrowing and which are dropped; or (c) accept that Phase 2 and the already-answered default flip wait indefinitely, and record that beside D4 so the owner's (a) is not read as pending work.
+- **Resolved when:** the stub is an active roadmap with step 3.0 open, or steps 2.1 / 2.3 / 2.4 carry re-scoped text naming what is no longer claimed, or a line beside D4 records that the flip waits on an unscheduled stub.
+- **Recommendation:** (b) — but only for the part that is genuinely reachable, and the recommendation is deliberately weaker than it looks. `check_standing_rule_delivery.ts` already produces a filesystem-projection reading and labels it "not host-confirmed", so a narrowed 2.1 could be satisfied today for the delivery-budget claim and the `paths:` claim. What it cannot produce is "loaded at start and after compaction" — those are the host's own event, and dropping them silently would turn a projection into a claim about arrival, which is the exact substitution the stub refuses. (a) is the only option that keeps all five claims, and it costs an active roadmap.
+- **If you do nothing:** 2.1, 2.3 and 2.4 stay open and now read as blocked rather than as runnable, so an autonomous run stops re-entering them. The default flip stays opt-in indefinitely, every non-opted-in install keeps loading 338,225 characters, and the owner's (a) answer of 2026-10-06 keeps looking like a pending decision when it is in fact a decision waiting on an instrument.
+
 ### blocker: default-flip-of-the-installed-layer
-- **Status:** open — owner answered (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D5); closes when the ADR of step 3.3 records (a) with the arrival record it relied on, which waits on that record and the step 2.2 fixture, not on a question
+- **Status:** open — owner answered (a) on 2026-10-06 via `/roadmap:resolve-blockers` (D5); closes when the ADR of step 3.3 records (a) with the arrival record it relied on, which waits on that record and the step 2.2 fixture, not on a question. **Re-read 2026-10-10:** that arrival record is step 2.1, and 2.1's instrument was cancelled by owner answer D10 elsewhere on the same day this one was answered — see `arrival-record-needs-a-cancelled-observer`. The answer is given; what it waits on is not obtainable in any scheduled file.
 - **Owner:** owner
 - **Blocks:** 3.1
 - **What to do:** pick exactly one — (a) flip the default for `claude-code`
