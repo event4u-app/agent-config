@@ -14,7 +14,21 @@ verdict: land
 ## Verdict
 
 **land** — AI council 2026-10-10, two rounds, anthropic + openai, 2/2 both
-rounds, $0.00 metered (subscription-authed). The law section stays.
+rounds, $0.00 metered (subscription-authed).
+
+**The verdict stands and the heading did NOT ship.** It was refused afterwards
+by a second, independent gate the roadmap had not priced:
+`check_preamble_payload_budget` measured +203 tokens per subagent spawn against
+a ratchet with zero headroom. A law section is a cost in the PROJECT layer and
+a saving in the INSTALLED one — thinning is applied by `installThinLayer`, so
+this repository pays the characters and removes none. Taking the rule out of
+`no_stub` was tried and moved the measurement by zero.
+
+This record is kept at **land** rather than downgraded, because the council
+answered the question it was asked: the section is faithful. A future change
+that pairs the heading with its offset — deleting from the SOURCE the body
+sections the law restates, which is a reviewed rule rewrite rather than a
+projection change — can rely on this verdict without re-running the review.
 
 ## Round 1 — owner, one omission, both seats naming the same one
 

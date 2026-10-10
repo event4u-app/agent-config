@@ -263,16 +263,21 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
       that landed. Expected from the measured layer with all four: 75,900 to
       77,900 unconditional.
       verify: `grep -c 'after the law moves' agents/evidence/analysis/thinned-layer-composition-2026-10.md` -> /^[1-9]/
-      **Done 2026-10-10, and the expectation in this step's own text did not
-      hold.** It predicted 75,900–77,900 unconditional "from the measured layer
-      with all four". ONE of the four landed. Row 1 was priced at 9,349–10,225
-      and delivers **73** characters — 0.7–0.8 % — because the one surviving
-      rule is also the cheapest of the four and its landed law is longer than
-      Row 1 assumed (697 against 554; the council required the handler
-      allowlist values). The realistic unconditional reading returns to roughly
-      78,300–80,100. The sums section's conclusion is unchanged and now holds
-      for a second independent reason: no combination reached the ceiling as
-      recorded anyway, and Row 1 was never what stood between the layer and it.
+      **Done 2026-10-10, and this step's own expectation did not hold.** It
+      predicted 75,900-77,900 unconditional "from the measured layer with all
+      four". NONE of the four shipped, for two independent reasons. Three were
+      refused by their councils. The fourth, `runtime-safety`, PASSED its
+      council 2/2 and was then refused by `check_preamble_payload_budget`:
+      +203 tokens per subagent spawn against a ratchet measured at the base
+      ref, with no number to edit and an owner-owned break-glass. Row 1 prices
+      a saving in the INSTALLED layer (`installThinLayer`); the ratchet
+      measures the PROJECT layer, where a law section is pure growth. Taking
+      the rule out of `no_stub` was tried and moved the measurement by zero.
+      Row 1 therefore delivers 0 of its 9,349-10,225, and the realistic
+      unconditional reading returns to roughly 78,400-80,100. The sums
+      section's conclusion is unchanged and now holds for a second independent
+      reason: no combination reached the ceiling as recorded anyway, so Row 1
+      was never what stood between the layer and it.
 
 ## Closure-evidence corrections
 
@@ -455,10 +460,17 @@ price list rather than from a survey.
       Four records at `agents/evidence/council/law-heading-<rule>.md`, each
       with its `verdict:` line: `runtime-safety` **land**, `tool-safety`
       **owner**, `autonomous-execution` **owner**, `question-not-instruction`
-      **owner**. Exactly one id left `missing` — `runtime-safety` — and it left
-      it in this change. The three refused headings are REVERTED, which is what
-      this step prescribes for a heading that would leave a duty out of the
-      standing law, so their rules ship full-bodied and their ids stay.
+      **owner**. **No id left `no_stub` or `missing`, so the second clause is
+      satisfied vacuously rather than by a landing** — stated plainly because a
+      reader who sees `[x]` is entitled to know nothing shipped. Three headings
+      were refused by their councils and are REVERTED, which is what this step
+      prescribes for a heading that would leave a duty out of the standing law.
+      The fourth was reverted for a reason the roadmap had not priced: a law
+      section costs standing payload in the project layer while its saving
+      accrues in the installed one, and the per-spawn ratchet has zero
+      headroom. `runtime-safety`'s record keeps its **land** verdict, because
+      the council's finding stands and is reusable by a future change that
+      pairs the heading with its offset.
 
 ## Decisions
 
