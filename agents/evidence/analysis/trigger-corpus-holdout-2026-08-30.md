@@ -60,7 +60,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  3b3ccbe1fb950849124714bd67a0c6c800a24b8f63270d5afebc8ed59547c62b
+SET-SHA256  88b547804787ae73feb971e69bf2232baee942ff04e07387fc6d93895c15fd12
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -140,6 +140,7 @@ today — `git diff 34318f7f..HEAD` over the three paths is empty:
 | Row | Was (pre-edit, stale) | Now (frozen bytes) |
 |---|---|---|
 | `SET-SHA256` | `7e091dfc…` | `0667fbd9…` |
+| `database` | `07b320a1bcde1f8565aa1cae12d383b765fd1a9d0289703fccfa79f7486b5688` |
 | `threat-modeling` | `0cc498c5…` | `6bdb1d3b…` |
 | `markitdown` | `ccaac56a…` | `663ee4c4…` |
 | `security-audit` | `8005676c…` | `27ccbdcd…` |
@@ -378,6 +379,29 @@ open and which this file does not settle.
 > 5.0 pp bar) and delta-false-activation moved 6.787 -> 6.608 pp (still above the
 > 2.0 pp guard). The verdict is unchanged in kind — `harmful`, on the same
 > false-activation guard it already failed. No bar was edited.
+
+> **+1 on 2026-10-10** (`road-to-corpus-refresh-cadence-shape` step 1.2c, the
+> third of its four dated corpus re-checks). `database` gained a corpus for the
+> touched-skill reason: the step re-checked that skill's grounding corpus against
+> PostgreSQL 18 and MySQL 9.7 reference documentation, which edited
+> `src/skills/database/data/`, and `check_routing_coverage` requires every
+> touched skill to carry one. `sha256('database')[0:2]` is 0x35 = 53, above the
+> ceiling of 51, so it is **train**: no holdout row moves, the sealed set is the
+> same 27, and the ordering claim is untouched. `SET-SHA256` moves because it is
+> computed over ALL rows — `3b3ccbe1…` -> `88b54780…`. Both train-side published
+> measurements are re-taken in the same change: delta-recall moved 2.386 -> 2.360
+> pp (still below the 5.0 pp bar) and delta-false-activation moved 6.608 -> 6.751
+> pp (still above the 2.0 pp guard). The verdict is unchanged in kind —
+> `harmful`, on the same false-activation guard it already failed. No bar was
+> edited.
+>
+> **Recorded against a reading error worth keeping.** The first fix pass on this
+> branch wrote "holdout pin untouched" into a commit message, taking the
+> 2026-10-04 entry's "the holdout pin is NOT touched" at face value. The
+> 2026-10-06 entry says the precise thing — "NOT touched **beyond its
+> SET-SHA256**" — and the set hash is computed over every row, so a train-side
+> growth moves it every time. The pin test is what caught it.
+
 
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|

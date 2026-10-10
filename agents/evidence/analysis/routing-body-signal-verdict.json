@@ -3,7 +3,7 @@
   "step": "5.1",
   "roadmap": "road-to-governed-harness-evolution",
   "preregistration": "agents/evidence/analysis/routing-signal-preregistration-2026-08-31.md",
-  "measured_at": "2026-10-09",
+  "measured_at": "2026-10-10",
   "proxy_to_real_fidelity": {
     "value": null,
     "status": "unmeasured-by-construction",
@@ -11,14 +11,14 @@
   },
   "body_signal": {
     "verdict": "harmful",
-    "reason": "false activation +6.61 pp breaches the +2.0 pp guard",
+    "reason": "false activation +6.75 pp breaches the +2.0 pp guard",
     "k": 5,
-    "delta_recall_pp": 2.386,
-    "delta_false_activation_pp": 6.608,
-    "p_value": 0.3787,
+    "delta_recall_pp": 2.361,
+    "delta_false_activation_pp": 6.754,
+    "p_value": 0.3824,
     "discordant_positive_pairs": {
-      "gained": 70,
-      "lost": 59
+      "gained": 71,
+      "lost": 60
     },
     "bars": {
       "recall_gain_pp": 5,
@@ -28,36 +28,36 @@
     },
     "arms": {
       "description": {
-        "positives": 461,
-        "positiveHits": 291,
-        "negatives": 454,
+        "positives": 466,
+        "positiveHits": 293,
+        "negatives": 459,
         "negativeHits": 68
       },
       "description+body": {
-        "positives": 461,
-        "positiveHits": 302,
-        "negatives": 454,
-        "negativeHits": 98
+        "positives": 466,
+        "positiveHits": 304,
+        "negatives": 459,
+        "negativeHits": 99
       }
     },
     "recall_pp": {
-      "description": 63.124,
-      "description+body": 65.51
+      "description": 62.876,
+      "description+body": 65.236
     },
     "false_activation_pp": {
-      "description": 14.978,
-      "description+body": 21.586
+      "description": 14.815,
+      "description+body": 21.569
     }
   },
   "corpus": {
     "partition": "train",
     "holdout_sealed": true,
-    "train_corpora": 96,
+    "train_corpora": 97,
     "legacy_shaped_corpora": [
       "brand-asset-generation",
       "estimate-ticket"
     ],
-    "cases": 915,
+    "cases": 925,
     "catalogue_size": 299
   }
 }

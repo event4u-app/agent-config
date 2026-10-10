@@ -1,0 +1,64 @@
+{
+    "skill": "database",
+    "last_eval": "2026-10-10",
+    "description": "5 exemplars + 3 near-misses + 2 counterexamples. Authored 2026-10-10 under road-to-corpus-refresh-cadence-shape 1.2c, which stamped this skill's grounding corpus and so brought it into check_routing_coverage's touched-skill scope. `last_eval` carries the authoring date, not a live eval result — the convention this tree already follows (see 1.2a's and 1.2b's notes on the same field); no live trigger eval ran for this file. Exemplars cover the explicit tuning request and the implicit one this skill's own description names verbatim ('this query is slow'), plus indexing strategy, a multi-connection question, and the German equivalent. Near-misses are three neighbours that share database vocabulary and are still somebody else's job: two are named in this skill's SKILL.md 'Do NOT use when' block — ORM model work and a migration-only ask — and the third, schema review against the persistence rule surface, is included because it reads as a database question and routes to schema-review. Counterexamples guard the 'database' homonym: a vector store used as an embedding index rather than a relational engine, and a hosting/billing question that names the database without asking anything about its behaviour.",
+    "queries": [
+        {
+            "q": "this query is slow",
+            "trigger": true,
+            "class": "exemplar",
+            "note": "the implicit form this skill's own description names verbatim"
+        },
+        {
+            "q": "EXPLAIN shows a seq scan on a 40M row table even though the WHERE is selective — what index do I need?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "we paginate with OFFSET and page 8000 takes four seconds — how should this actually be done?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "should the read replica get its own connection pool, or share the primary's?",
+            "trigger": true,
+            "class": "exemplar"
+        },
+        {
+            "q": "die Abfrage auf der Bestelltabelle ist viel zu langsam — welcher Index fehlt da?",
+            "trigger": true,
+            "class": "exemplar",
+            "language": "de"
+        },
+        {
+            "q": "add a hasMany relation to the Order model and set up the inverse",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "ORM model work, which this skill's SKILL.md names in its 'Do NOT use when' block → the framework's own skill (eloquent / symfony-workflow / framework-native)"
+        },
+        {
+            "q": "write the migration that adds the status column to orders",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "migration-only, named in the same 'Do NOT use when' block → the framework-specific migration skill"
+        },
+        {
+            "q": "review this schema change against the persistence rules before it ships",
+            "trigger": false,
+            "class": "near-miss",
+            "note": "reads as a database question and is a review against the scale-discipline rule surface → schema-review, which runs lint_persistence and emits the gap table"
+        },
+        {
+            "q": "which vector database should we use for the embedding index — pgvector, Qdrant or Pinecone?",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "the 'database' homonym: a vector store chosen as an embedding index, not relational architecture or query behaviour"
+        },
+        {
+            "q": "our managed database bill doubled this month — can you work out which plan we are on?",
+            "trigger": false,
+            "class": "counterexample",
+            "note": "names the database and asks nothing about its behaviour; this is a hosting and billing question"
+        }
+    ]
+}
