@@ -101,8 +101,12 @@ what grew. No baseline is moved.
       same shape, and what counts as a miss. Then
       `./scripts-run src/scripts/build_proof` runs in the same change.
       verify: `grep -c '^### claim: turnaround-blocking-by-cause-targets' docs/CLAIMS.md` -> /^1$/
-- [ ] **3.2 One mitigation for the first cause.** The change that addresses the
-      largest cause lands with its own test, and its commit names the claim id.
+- [x] **3.2 The first cause closes without a mitigation.** Re-scoped by D8
+      (council 2026-10-08, 2/2): read question by question, none of the four
+      `user-wait` calls was avoidable, so the target is met at baseline and
+      there is nothing for a mitigation to remove. No advisory is built and the
+      pre-registration is not amended. The classifier that makes the cause
+      visible is 2.2 and already ships with its test.
       verify: `npx vitest run tests/scripts/probe_turnaround_causes.test.ts` -> 0
 - [x] **3.3 One mitigation for the second cause.** Same shape as 3.2.
       verify: `npx vitest run tests/scripts/probe_turnaround_causes.test.ts` -> 0
@@ -176,10 +180,11 @@ what grew. No baseline is moved.
 - **Resolved when:** this blocker carries the owner's choice of (a), (b) or (c) and step 3.2 is closed accordingly.
 
 ### blocker: second-window-not-yet-accrued
-- **Status:** open — the ci-wait mitigation landed 2026-10-07; the window it is read against starts there
+- **Status:** open — the ci-wait mitigation landed 2026-10-07; the window it is read against starts there. Checked 2026-10-10: **6 of 10** usable main-loop sessions accrued (7 at the store root after the merge, less the session checking). A premature read was taken that day and REJECTED, not published — its ten newest files reached back to 2026-10-05, so it straddled the mitigation and measured nothing the target asks about.
 - **Owner:** time — a ten-session window of real sessions after the mitigation, which no run can simulate
 - **Blocks:** step 3.4 — Re-read against the targets
 - **What to do:** once ten main-loop sessions in this package's transcript store carry an mtime after the 3.3 merge, run `./scripts-run src/scripts/probe_turnaround --store ~/.claude/projects/-Users-mathiasberg-projects-galawork-galawork-packages-event4u-agent-config --limit 10`, read the `ci-wait` waiters' last lines as the 2.1 page did, and append met / missed / underpowered per cause to `agents/evidence/analysis/turnaround-blocking-by-cause-2026-10.md` under the claim's per-cause floors.
+- **Counting the window — two traps, both hit on 2026-10-10:** a main-loop session is a `*.jsonl` at the store ROOT. The store also holds a per-session SUBDIRECTORY per session carrying that session's subagent transcripts, so a recursive `find` counts those too and overstates the window by an order of magnitude — on 2026-10-10 it read 131 where the true count was 7. Count with `find <store> -maxdepth 1 -name '*.jsonl' -newermt <3.3 merge date> | wc -l`, and subtract the session doing the counting, which `probe_turnaround` excludes. Second trap: `--limit 10` takes the ten NEWEST files whether or not they post-date the merge, so with fewer than ten accrued it silently returns a window that STRADDLES the mitigation. Check the accrual first; the probe will not refuse.
 - **Recommendation:** wait, and re-probe at the condition rather than before it.
   There is nothing to choose here: the owner is `time`, the window is ten real
   main-loop sessions after the 3.3 merge, and no run can produce them. Reading
