@@ -157,7 +157,7 @@ At `df377ca64`:
 
 ## Phase 1 — The directive is a decision on record
 
-- [ ] **1.1 One decision record, drafted as proposed.** A new ADR with
+- [x] **1.1 One decision record, drafted as proposed.** A new ADR with
       `status: proposed`, numbered with the next free number and carrying
       `council-confirmed-self-modification` in its file name, quotes the
       directive with its date and states three things. Self-modification is a goal, not an exception. For a change to
@@ -174,8 +174,13 @@ At `df377ca64`:
       standing, and carries the scoped-supersession fields and the
       `## Not reopened` and `## Evidence` sections the ADR gates require.
       While it is proposed, the two records it would amend are not touched.
+      **Closed 2026-10-10 at `status: accepted`, not at `proposed`.** The record is
+      `ADR-281-council-confirmed-self-modification.md`; it was drafted proposed, the
+      owner accepted it, and 1.2's corrections followed — which is why 1.2's verify
+      already returns 0. The step's own text anticipated that sequence; only the
+      checkbox lagged it.
       verify: `grep -l 'supersedes_scope' docs/decisions/*council-confirmed-self-modification* | wc -l` -> /^1$/
-- [ ] **1.2 On acceptance, the sentences that say otherwise are corrected.**
+- [x] **1.2 On acceptance, the sentences that say otherwise are corrected.**
       The two amended records gain their reciprocal field and the index is
       regenerated. The consumer template, its tracked copy and the threat
       model state what ADR-268 and the new record state: kernel rules change only through a ratified edit,
@@ -193,7 +198,7 @@ At `df377ca64`:
       Positive control: without the projected copy the command returns 4 at
       `df377ca64` and `975d03d01`; the projected template is listed so the
       shipped file is checked, not only its source.
-- [ ] **1.3 The owners of the neighbouring work are told.** One dated note
+- [x] **1.3 The owners of the neighbouring work are told.** One dated note
       beside the blockers `ratification-platform-anchor` and
       `kernel-guard-first-crossing` in `road-to-typed-grants-that-persist`,
       and one beside step C3 of the parked draft, name the new record. No

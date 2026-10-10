@@ -190,6 +190,13 @@ rules/skills/config). Learning never silently edits foundation.
       canonical corpus; the null route is terminal (evidence memory ships,
       promotion stays manual, row closes `measured-null`).
 
+> **Note 2026-10-10, `road-to-self-modification-that-a-council-must-pass` step 1.3.**
+> `docs/decisions/ADR-281-council-confirmed-self-modification.md` is accepted. A change
+> originating in this package's own learning lanes — which is what C3 promotes — now
+> passes the **council** as its lowest rung, not an independent session. C3's substrate
+> and its null route are unchanged; only what approves a promotion is.
+
+
 ## Cross-workstream promotion gate
 
 - [ ] **Step X1:** No deep capability becomes default from its internal
