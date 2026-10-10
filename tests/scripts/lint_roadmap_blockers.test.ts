@@ -651,6 +651,50 @@ describe('lint_roadmap_blockers — the scanned scope', () => {
         expect(violations).toEqual([]);
     });
 
+    // D6 / blocker `later-blockers-in-scope`, option (b'): council round 2,
+    // 2026-10-08, anthropic + openai, 2/2. The widening is a FILENAME pattern
+    // inside `later/`, not a second directory — a carried file is open work
+    // that was moved, not a decision already taken — the same distinction the
+    // gate draws between a stub and a parked roadmap.
+    it("a malformed blocker in a later/ *-carried.md file IS caught", () => {
+        write('active.md', '# Active\n');
+        write('later/road-to-x-carried.md', MALFORMED);
+
+        expect(seen(tmp)).toContain('later/road-to-x-carried.md');
+        const violations = (_globRoadmaps(tmp) as string[]).flatMap((f) =>
+            _scan(fs.readFileSync(f, 'utf-8')),
+        );
+        expect(violations).toHaveLength(1);
+        expect(violations[0]!.message).toContain("blocker 'b-malformed' missing required field(s): Resolved when");
+    });
+
+    it('an ordinary later/ roadmap stays OUT even beside a carried one', () => {
+        // The denial half of the pattern: without it, the suffix check could be
+        // dropped and the whole directory would come into scope unnoticed.
+        write('later/road-to-x-carried.md', '# Carried\n');
+        write('later/parked.md', MALFORMED);
+
+        expect(seen(tmp)).toEqual(['later/road-to-x-carried.md']);
+        const violations = (_globRoadmaps(tmp) as string[]).flatMap((f) =>
+            _scan(fs.readFileSync(f, 'utf-8')),
+        );
+        expect(violations).toEqual([]);
+    });
+
+    it('the -carried suffix widens later/ only, never archive/ or skipped/', () => {
+        // The suffix is not a tree-wide escape: a carried name in a directory
+        // that records a decision already taken stays history, not debt.
+        write('active.md', '# Active\n');
+        write('archive/road-to-y-carried.md', MALFORMED);
+        write('skipped/road-to-z-carried.md', MALFORMED);
+
+        expect(seen(tmp)).toEqual(['active.md']);
+        const violations = (_globRoadmaps(tmp) as string[]).flatMap((f) =>
+            _scan(fs.readFileSync(f, 'utf-8')),
+        );
+        expect(violations).toEqual([]);
+    });
+
     it('a well-formed stub passes, so the scope is not a blanket failure', () => {
         write(
             'stubs/clean.md',
