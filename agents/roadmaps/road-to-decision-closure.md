@@ -634,6 +634,14 @@ is inlined instead.
   moved. The **What to do** above is therefore still necessary and no longer sufficient, and
   3.1 now carries the anchor line and the verbatim paragraph so the maintainer act is a
   decision rather than a re-derivation.
+  **Sixth reproduction, 2026-10-10**, both clauses again, at `55360bb87`, by feeding the
+  envelope to the guard rather than by reading this note: an `Edit` envelope targeting
+  `src/rules/ask-when-uncertain.md` still prints `BLOCKED — kernel rule ask-when-uncertain is
+  immutable`, and `grep -niE 'AskUserQuestion|native|primitive' src/rules/ask-when-uncertain.md`
+  still returns **0** hits. The recommendation is unchanged and its reason is now stronger:
+  `kernel-guard-first-crossing` in `road-to-typed-grants-that-persist` is still `open`, so
+  crossing the guard for this one paragraph would still spend the first crossing on the
+  smallest of the six.
 
 ### blocker: grant-object-undelivered
 - **Status:** open
@@ -665,6 +673,13 @@ is inlined instead.
   **The sibling moved away from delivering it, not toward it.** Its Phase 2 steps 2.1 and 2.2
   and its 3.1 — the steps this entry names as the object's builders — all read `[~]` on
   2026-10-04, deferred. The blocker holds for a slightly stronger reason than before.
+  **Sixth reading, 2026-10-10 at `55360bb87`, and nothing moved in either direction.**
+  `grep -rln granted_by src tests` returns **0**. The widened sweep returns the same seven
+  prose files as 2026-10-04 — this roadmap, the sibling, two files under
+  `agents/evidence/reviews/`, and ADR-260, ADR-266, ADR-268 — so the set did not grow either.
+  The sibling's 2.1, 2.2 and 3.1 still read `[~]`. Six readings, six times nothing under
+  `src` or `tests`: this is a stable negative, not a pending one, and the entry is
+  unchanged rather than stale.
 
 ### blocker: interrupt-classes-owned-by-sibling
 - **Status:** resolved
@@ -801,6 +816,24 @@ resumed with the grant and decisions intact.
       nothing to execute over it, and the only agent that could run it is the one that would
       then read its own transcript. This run did not attempt it either, for that second reason.
       Unchanged, not stalled.
+      **Re-verified 2026-10-10 at `55360bb87`, by running the census rather than citing the
+      note above.** `./scripts-run src/scripts/ask_block_census` now reads **637** files —
+      four more than the 633 of 2026-10-04 — and reports *zero technical owner asks in
+      execution* **MET**, *zero commit/push/CI/conflict asks* **MET**, and *zero repeats of an
+      answered question* **NOT MEASURED (transcript axis)**. The ask-shape breakdown is
+      **unchanged at 184 single, 74 batch, 0 count-only, 0 file-parked, 21 bypass** — the
+      corpus grew and the distribution did not move, which is the useful content of a fourth
+      consecutive re-run.
+      **One substitution was considered this run and rejected, which is worth recording
+      because it is the attractive wrong answer.** A `/roadmap:process-full --all` drain ran
+      over the active estate on this date and made zero owner asks during execution, routing
+      every owner-reserved item into a registered blocker instead. That is NOT AC-5: the
+      criterion asks for a `process-full` execution over **`F1`**, and `F1` is a detector
+      fixture rather than a roadmap, so a drain over a different corpus answers a different
+      question. Reading it as AC-5 would be exactly the substitution this roadmap's census
+      axis exists to catch — and the drain was also its own runner, so its reading of its own
+      transcript is the self-commissioned evidence `evaluator-independence` forbids. Both
+      reasons are unchanged. Unchanged, not stalled.
 - [ ] AC-6 — on a host with a native ask primitive, every owner ask used it; on a host without
       one, `hooks:status` says so.
       **HALF PROVEN, 2026-09-13.** The second clause holds: `ask: native | text` is a manifest
