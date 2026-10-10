@@ -227,6 +227,23 @@ At `df377ca64`:
       and expects red, and writes and judges a change that widens the gated
       set.
       verify: `npx vitest run tests/scripts/ratification_subject_binding.test.ts` -> 0
+      **Half shipped 2026-10-10, and the half that is missing is the gated one.**
+      `src/scripts/_lib/ratification_subject.ts` is the module of its own this step
+      asks for: `subjectDigest` hashes each gated file's PATH alongside its content,
+      so identical bytes at two paths do not collide and a rename moves the digest,
+      and a deleted gated file is entered via `DELETED_MARKER` rather than skipped —
+      skipping would make "this hook was removed" digest-identical to "this hook was
+      never gated", which is the change a record most needs to be bound to. It takes
+      no base diff, so it reads the same on a branch and on the merged checkout.
+      It **re-assembles** the gated list from the gate's own exported constants
+      rather than restating the membership rule, because `classifyPaths` reports the
+      self surface as a boolean and the list cannot be read back out of it; a second
+      definition of "gated" would be a second thing to keep in step. Verified ungated
+      by running the gate against it: nothing to ratify. 10 tests.
+      **What is NOT shipped:** the gate recomputing it and refusing a record whose
+      `subject` is absent or different, and the two suites' fixtures gaining the
+      field. Both edit `check_kernel_edit_ratified.ts` and
+      `_lib/ratification_artifact.ts`, so the step stays open.
 - [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **2.2 Each record answers for its own change.** A record validates a
       diff only when its `subject` matches that diff's gated content; a second
       valid record for something else no longer carries it. The 23 records on
@@ -311,6 +328,26 @@ At `df377ca64`:
       precedes the review, because any later edit to a gated file moves the
       digest.
       verify: `npx vitest run tests/scripts/ratification_record_writer.test.ts` -> 0
+      **Attempted 2026-10-10 and stopped on a measured contradiction, which is
+      worth more than a writer that papered over it.** The writer's inputs now all
+      exist — the questions (3.1), the seat conclusions (3.2), the verdict rule
+      (3.3) and the `subject` digest (2.1's module above). What does not work is
+      emitting a record both rules accept.
+      **The shipped reader and this roadmap's step 3.3 disagree on the
+      quorum-short case, and the disagreement was measured rather than read:** for
+      seats `{anthropic: ratified, openai: no-final-verdict}`,
+      `deriveRatificationHeader` returns **`ratified`** while
+      `deriveModificationVerdict({anthropic: 'ratified', openai: null}, 2)` returns
+      **`non-convergent`**. The shipped reader has no quorum count at all — it
+      leaves provider diversity to catch a one-seat record separately — and 3.3
+      folds the count into the verdict.
+      A record carrying 3.3's verdict is therefore rejected by the gate's own
+      `header-not-derived` check, which requires the recorded verdict to equal the
+      derived one. Reconciling them means editing
+      `_lib/ratification_artifact.ts` — `READER_PATH`, gated — so 3.4 waits on the
+      same forge act as its neighbours, plus a decision about WHICH rule is right.
+      That decision is not this file's to take: 3.3's rule is what the roadmap
+      specifies, the reader's is what ships, and both are defensible.
 
 ## Phase 4 — The reviewer and the consequence class are inside the gate
 
