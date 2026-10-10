@@ -584,3 +584,122 @@ untouched here rather than fixed in passing. It is recorded because the receipt
 is one of the two readers this roadmap makes agree, and a reader comparing the
 receipt against this page would otherwise find a missing warning and no reason
 for it.
+
+## The reading after the law moves — none landed, and the second reason is the point
+
+> Step 4.3 of `road-to-a-thinned-layer-measured-in-one-unit`, 2026-10-10. The
+> step expected 75,900–77,900 unconditional *"from the measured layer with all
+> four"*. That premise did not hold, so the figure below is not a worse version
+> of the prediction — it is the arithmetic for a different input.
+
+**None of the four law headings shipped, and they failed for TWO independent
+reasons.** Each went to a council, one verdict per rule, as step 4.2 and D4
+require. Three were refused there. The fourth PASSED its council and was then
+refused by a gate nobody had priced — see the second reason below. The records
+are at `agents/evidence/council/law-heading-<rule>.md`, each carrying its
+`verdict:` line; `runtime-safety`'s records a council verdict of **land** that
+did not ship, which is the honest state rather than a refusal.
+
+| Rule | Verdict | Rounds | Why |
+|---|---|---|---|
+| `runtime-safety` | **land** | 2 | one omission (the handler allowlist values), repaired; round 2 found no second |
+| `tool-safety` | owner | 3 | four different omitted conditional duties across three rounds — the rule's duties do not compress |
+| `autonomous-execution` | owner | 2 | three omissions, then a *contradiction*: the law said the validation bound is "NEVER A QUESTION" where the body permits one native ask |
+| `question-not-instruction` | owner | 2 | the fence contradicts the rule's own carve-outs once it stands alone — and this one changed no law text at all, only added the heading |
+
+### The second reason — the saving and the cost sit in different layers
+
+`runtime-safety` passed its council 2/2. It was then refused by
+`check_preamble_payload_budget`:
+
+```
+per-spawn preamble payload grew past the ratchet: 136155 > 135980 tok
+net delivered-token change: +203 tok
+     +203 tok  runtime-safety (rule, grew)
+```
+
+**Row 1 prices a saving in the INSTALLED layer; the standing-payload ratchet
+measures the PROJECT layer, where the same change is pure growth.** Thinning is
+applied by `installThinLayer`, at install time, to a consumer's layer. This
+repository's own project-scope rules are not thinned, so a law section adds its
+characters here and removes nothing. Taking `runtime-safety` out of `no_stub`
+was tried and moved the measurement by zero, for that reason.
+
+The ceiling is MEASURED at the base ref, so there is no number to edit, and the
+break-glass grant in `preamble-payload-exceptions.json` is empty, owner-owned,
+and documented as expected to stay empty — 96.8 % of the last 250 merged pull
+requests moved this payload by zero or less.
+
+Three ways forward, and two were deliberately NOT taken:
+
+1. **Offset by deleting the body sections the law restates.** The council
+   verified the law carries `## Core principle`, `## Constraints`,
+   `## Allowed handler values` and `## Escalation` faithfully — but it verified
+   that *for a thinned consumer*. Deleting them from the source changes what a
+   FULL-BODIED consumer reads, which is a different population and an
+   unreviewed widening: the exact class of error the three refusals caught.
+2. **Take a grant.** Owner-reserved, and the file's own comment reserves it for
+   the tail of the tail.
+3. **Revert and record.** Taken.
+
+### What Row 1 is actually worth
+
+Row 1 priced the four together at **9,349–10,225** in the installed layer. It
+delivers **zero**, because nothing shipped. Had `runtime-safety` shipped alone
+it would have been **73** — 0.7–0.8 % — since it is the cheapest of the four
+(213 as priced) and its council-mandated law is longer than Row 1 assumed (697
+characters against 554, the allowlist values being required).
+
+This is arithmetic over this page's own Row 1 figures, not a fresh measurement
+of the installed layer. `installed_layer_report` reads the layer installed on
+the machine, not a branch, so it cannot show a source-tree change before that
+change ships — stated because a reader is entitled to know which numbers were
+measured and which were derived.
+
+### What that does to the sums, and what it does not
+
+Sum 3 read 67,614–68,490 unconditional at the row-5 ceiling and 69,038–69,914
+realistic. Both included Row 1 in full. Remove all of it as unrealised and the
+realistic unconditional reading returns to roughly **78,400–80,100** — above 75,000 on the bare reading, and far above it on the
+recorded reading of *75,000 with ≥10 % headroom*.
+
+So the conclusion of the sums section is unchanged and is now unchanged for a
+second, independent reason: it was already true that no combination reached the
+ceiling as recorded. Row 1 was not what stood between the layer and the
+ceiling, and now it cannot be.
+
+### The finding worth keeping
+
+The four rules were not a random sample — they are the four the owner confirmed
+for law-heading authoring on 2026-10-09. Three failed independent review, and
+the failure mode was the same each time: a duty that lives in a carve-out, a
+conditional clause or a second fenced block does not survive compression into
+one standing section, and **the author cannot see it**. All four sections looked
+faithful when written. One survived review, and it still did not ship.
+
+The discriminator is not rule length. `runtime-safety` is the shortest at 1,553
+characters, but `question-not-instruction` is 3,200 and failed — on a section
+that changed not one character of the existing law and only added a heading
+above it. What distinguishes the one that landed is that its duties were
+already a single coherent list under one heading, with no carve-out elsewhere
+in the file contradicting them. That is a property of the rule, not of the
+author's care — which is why it is not discoverable without an independent
+reader.
+
+For the thinning programme there are two load-bearing results, and the second
+was not visible before this step ran.
+
+**Second: a law section cannot land on its own under a zero-growth standing
+ratchet.** It is a cost in the project layer and a saving in the installed one,
+and the two are measured by different instruments. Any future attempt must pair
+the heading with its offset in the SAME change — which means deciding, with
+review, that the body sections the law restates are deleted from the source and
+not merely from the projection. That is a rule rewrite, not a projection change,
+and it is the same decision the three refusals were pointing at from the other
+side.
+
+First: the stub-plus-law
+form is available to rules whose law is already one block, and the rest need
+either a deliberate rewrite of the rule or no thinning at all. Pricing a thinning
+row by counting candidate blocks overstates it, because it assumes every
+candidate survives review, and three of four did not.
