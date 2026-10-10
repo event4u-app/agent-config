@@ -331,6 +331,36 @@ merge candidate."*
       merge candidate across a same-day re-review, given concurrent
       in-flight branches (including `road-to-self-modification-that-a-council
       -must-pass`, which touches adjacent files)? Record the verdict.
+      **Done 2026-10-10 — convergent, recorded as D15.** The predicate is a
+      TARGET-ENTRY FINGERPRINT over the touched files: the attempt records each
+      touched file's blob hash ON THE TARGET at review time, and a CI-side check
+      re-reads them at merge time. Any differs -> stale, a new attempt under the
+      same instance; all match -> valid even though the target advanced
+      elsewhere. That is precisely the separation the three-dot scope hash
+      cannot make on its own. First-valid-wins ordering, no owner decision in
+      the common path, and the check never runs as the agent — the party gaining
+      the merge does not attest that its own review still binds. Record:
+      `agents/evidence/council/merge-serialisation-20261010.md`.
+      **The verdict is recorded and the box is NOT ticked, and the reason is a
+      second instance of the defect this very step is about.**
+      `lint_plan_risk_register` marks a plan stale when its `reviewed:` stamp
+      "predates the last substantial change", and the baseline it compares
+      against is the commit that INTRODUCED the current stamp value. The stamp
+      already reads `2026-10-10` — set earlier today by the Phase 7 change — so
+      a second substantive change on the same date cannot be re-stamped: the
+      grammar is date-only (`\d{4}-\d{2}-\d{2}`), `reviewer` is not part of the
+      comparison, and moving the date forward would be back-dating into the
+      future. Measured, not inferred: reverting ONLY the two checkbox flips and
+      keeping every note and decision turns the gate green, so it is closing a
+      step — not recording a verdict — that it forbids.
+      **The gate was deliberately NOT patched.** The obvious fix, treating a
+      same-day stamp as fresh, cannot tell a re-reviewed same-day change from an
+      un-reviewed one — which is the silent weakening this roadmap exists to
+      prevent, and exactly what review-instance identity (2.5) plus 6.3 are for.
+      So this is a THIRD data point for defect 4, in a sibling gate:
+      `check_completion_review` cannot express a same-day re-review, and neither
+      can `lint_plan_risk_register`. The box ticks on the next calendar day, or
+      when 6.3 ships identity.
 - [ ] **6.2 Implement stable review-instance identity** (Phase 2.5's model,
       now wired) and the chosen serialisation mechanism from 6.1.
       verify: `npx vitest run tests/scripts/check_completion_review.test.ts` -> 0
@@ -420,6 +450,26 @@ authorisation blocker is resolved. Rollback: the verifier stays shadow-only —
 reverting 8.3 alone (never 8.1–8.2's evidence) is sufficient, since nothing
 before 8.3 gates anything.*
 
+
+> **Known defect, 2026-10-10 — two decisions share the id `D13`, and the repair
+> is deliberately NOT in this change.** PR #2293 numbered the Phase 7
+> classification `D13`, which PR #2286 had already used for the 2.1 split. The
+> two rows are **not** byte-identical, so deduplicating on the assumption they
+> are copies would delete a real record; the repair is to renumber the Phase 7
+> row and follow its one inbound reference.
+>
+> That reference sits inside `## Acceptance Criteria`, and
+> `lint_plan_risk_register` hashes the whole AC body — so the repair cannot land
+> on the same calendar day as the stamp it would have to re-date. It is held
+> here rather than worked around, for the reason step 6.1's note gives at
+> length: the obvious patch to that gate cannot distinguish a re-reviewed
+> same-day change from an un-reviewed one.
+>
+> **`D14` is deliberately left free**, and the gap is not an accident: it is
+> the id the Phase 7 row takes when the renumber lands. The merge-serialisation
+> decision below is `D15` for that reason, so the repair is a one-row rename
+> with no second collision behind it.
+
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
@@ -436,8 +486,9 @@ before 8.3 gates anything.*
 | D10 | contested-technical | council:2026-10-08 resolve-blockers-batch | `supported-merge-strategies-for-ratified-changes` (a): a PR carrying a ratification artifact lands by merge commit only; every other PR keeps the repository's current strategies. 6.1 designs serialisation against this constraint and documents when a PR carries an artifact. Recorded in `docs/contracts/ratification-artifact.md` § Supported merge strategies when 6.1 lands. | AI council 2026-10-08, anthropic + openai, 2/2 present, both (a), $0.00. Both: (c) accepting provenance loss would be owner-reserved; (b) only council-decidable if re-derivation keeps the authorisation valid for the exact resulting tree. | a deterministic, auditable post-squash re-derivation is shown to preserve provenance with no information loss |
 | D11 | destructive-owned | council:2026-10-10 design, 2/2 present, peer review | 1.1 — the hold is **(c)**: a forge-side approval administered by a separately authorised principal, outside the candidate branch, required before the first Phase 2 authority-expanding merge and covering Phase 3. Neither shape the step anticipated was selected: a doc-only sentence is a description, not a hold, and a candidate-branch CI check is inside the write boundary the record's dealbreaker names. Condition 4 of `ratification-artifact.md` routes **Phase 2** to the owner (both seats) but does **not** conclusively reach Phase 3's verifier or approver registry (both seats) — the enumeration names computing a subject, writing a record, asking questions and deriving a verdict, and a verifier checks an attestation instead. | AI council 2026-10-10, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, peer review, 2/2 present, $0.00 subscription transport. Record and prompt: `agents/evidence/council/authority-routing-hold-form-20261010.md` and its `.question.md`. Split on scope: anthropic anchors Phase 3 only (Phase 2 already condition-4 routed, conf. 0.85); openai anchors both (Phase 2 defines the semantics Phase 3 will later bind, conf. 0.91). The stronger reading was taken on the parent record's own precedent — condition 4 routes a decision to a person, it does not prevent a merge. | condition 4's enumeration is amended to reach verification machinery explicitly, or the external control proves to block all constitutional maintenance |
 | D12 | reversible-technical | council:2026-10-10, same run | Phase 3 does not begin until the external approval path is **active and tested against an attempted bypass**. Designing or documenting it does not unblock implementation. | openai, unprompted and not in step 1.1's text; anthropic's § what-it-does-not-guarantee reaches the same place from the audit side | the bypass test proves unconstructible without production credentials |
-| D13 | contested-technical | council:2026-10-10 design, 2/2 present, peer review — **classification convergent, step completion WITHHELD** | 7.1 — of the 16 checks genuinely red on the trunk: `check_gate_completeness` is a **governed snapshot** (refresh only on a reviewed change to population, scope, counting semantics or partition that makes the old count non-comparable; the agent may calculate and propose, a gate-policy CODEOWNER or the authority-record owner approves, never the agent that calculated it; refreshing because violations rose is forbidden, and it is blocked NOW until the 23 new violations are enumerated by rule); **12 are invariants**; **3 are unclassified** pending their predicates. **Zero tolerances, zero observations.** | AI council 2026-10-10, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, peer review, 2/2, $0.00. Both tables agree on all 16. Population measured at `bbe5b73be` after a first sweep was discarded for a harness fault (no `timeout(1)` on macOS) and two controls proved the rerun. Record and prompt: `agents/evidence/council/live-tree-check-classification-20261010.md`. openai's dissent: #1 holds TWO objects — the numeric baseline is a snapshot, the prohibition on unjustified new debt is an invariant, and one class field cannot carry both. anthropic's dissent: the step conflates classification with gate membership. | the three abstentions gain their predicates, or a per-check contract registry exists from which class, prerequisites, gate membership and refresh authority derive mechanically |
 | D13 | contested-technical | council:2026-10-10 design, 2/2 present, peer review — **SPLIT, escalates** | 2.1 — the LOCATION of the six-predicate test is **not decided**: anthropic (b), a section of `ratification-artifact.md`, conditional on the forge blocker being resolvable (conf. 0.78); openai (a), a new `docs/contracts/dangerous-action-predicates.md` added atomically to the gate's watch list (conf. 0.88). What IS decided, both seats: whichever file holds the predicates **joins the gate's watch list in the same change**, references point at one canonical file and no second document restates them, and the sequence is contract-plus-watch-list-entry atomically → negative regression test that weakening it without a record is caught → only then may downstream routing depend on it. Fail closed: a trusted gate that cannot load the file or establish its comparison base stops authority routing; there is no temporarily-unwatched state. | AI council 2026-10-10, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, peer review, 2/2, $0.00. Record and prompt: `agents/evidence/council/dangerous-action-predicates-home-20261010.md` and its `.question.md`. openai's unrefuted pushback: being on the watch list is not yet a security boundary, because the evidence shows the file is watched and not that the watcher runs from a revision the candidate cannot alter — the contract says the same ("THE GATE ADDS A REFUSAL. IT DOES NOT ADD AN ANCHOR"). Both seats' conditions reduce to `external-bootstrap-boundary-for-phases-2-3`. | the blocker is shown permanent (moves anthropic to (a)), a second consumer needs versioned independence (same), or trusted forge-side tooling is shown able to validate only an embedded definition atomically (moves openai to (b)) | <!-- ref-ignore -->
+| D13 | contested-technical | council:2026-10-10 design, 2/2 present, peer review — **classification convergent, step completion WITHHELD** | 7.1 — of the 16 checks genuinely red on the trunk: `check_gate_completeness` is a **governed snapshot** (refresh only on a reviewed change to population, scope, counting semantics or partition that makes the old count non-comparable; the agent may calculate and propose, a gate-policy CODEOWNER or the authority-record owner approves, never the agent that calculated it; refreshing because violations rose is forbidden, and it is blocked NOW until the 23 new violations are enumerated by rule); **12 are invariants**; **3 are unclassified** pending their predicates. **Zero tolerances, zero observations.** | AI council 2026-10-10, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, peer review, 2/2, $0.00. Both tables agree on all 16. Population measured at `bbe5b73be` after a first sweep was discarded for a harness fault (no `timeout(1)` on macOS) and two controls proved the rerun. Record and prompt: `agents/evidence/council/live-tree-check-classification-20261010.md`. openai's dissent: #1 holds TWO objects — the numeric baseline is a snapshot, the prohibition on unjustified new debt is an invariant, and one class field cannot carry both. anthropic's dissent: the step conflates classification with gate membership. | the three abstentions gain their predicates, or a per-check contract registry exists from which class, prerequisites, gate membership and refresh authority derive mechanically |
+| D15 | contested-technical | council:2026-10-10 design, 2/2 present, peer review — convergent | 6.1 — a review instance is stable per branch; an ATTEMPT is immutable and records the scope hash, the target sha and, per touched file, that file's blob hash ON THE TARGET. At merge time a CI-side check re-reads those fingerprints: any differs -> **stale**, a new attempt under the same instance carrying unresolved objections forward; all match -> **valid**, even if the target advanced on other files. Ordering is **first-valid-wins** — non-overlapping branches retry mechanically, overlapping ones go stale. No owner decision in the common path, and the check is never run by the agent. openai adds, undisputed: a compare-and-swap on a sole protected writer, a policy hash per attempt so changing exclusions / diff flags / merge strategy / reviewer authorization / validator code revokes affected attempts mechanically, and fail-closed criteria when attestation, branch protection or lease history cannot be confirmed. | AI council 2026-10-10, anthropic + openai, 2 rounds, peer review, 2/2, $0.00. Record and prompt: `agents/evidence/council/merge-serialisation-20261010.md`. **The limit is recorded as a limit, not a caveat** — openai: "This mechanism establishes atomic, SYNTACTIC continuity of an explicitly defined review projection. It does not prove semantic equivalence, and the architecture must not describe it as doing so." Out of reach: semantic conflicts between non-overlapping changes, anything inside the configured exclusions, generated state, environment-dependent merge behaviour, an administrator bypass. anthropic's dissent: the instance/attempt split adds complexity justified only by Phase 2.5's objection retention, and the mechanism must fail closed when branch protection is disabled. | objection retention proves unnecessary (a flat attempt model then suffices), or a normalized review projection is defined that the landing authority can reconstruct from the prospective result |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-10 | reviewer: claude/host -->
