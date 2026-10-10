@@ -239,7 +239,7 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
       recorded at `agents/evidence/council/thinned-ceiling-unit-2026-10.md`
       with its `evidence-type` marker and named beside the sums of 3.2.
       verify: `grep -c 'unconditional' agents/evidence/council/thinned-ceiling-unit-2026-10.md` -> /^[1-9]/
-- [ ] **4.2 Four law headings, each on a verdict about that heading.** In
+- [x] **4.2 Four law headings, each on a verdict about that heading.** In
       `src/rules/tool-safety.md`, `src/rules/runtime-safety.md`,
       `src/rules/question-not-instruction.md` and
       `src/rules/autonomous-execution.md`, a law section is written from
@@ -258,11 +258,21 @@ five is a kernel rule, and no hook or gate at the pin stops the edit.
       owner with that record and does not land here. A landed heading thins that rule in every
       projection that thins, not only in the measured install.
       verify: `grep -l '^verdict:' agents/evidence/council/law-heading-*.md | wc -l` -> /^4$/
-- [ ] **4.3 The reading after the moves.** Re-run the measurement and append
+- [x] **4.3 The reading after the moves.** Re-run the measurement and append
       it to the page beside the verdict of 4.1, with the number of headings
       that landed. Expected from the measured layer with all four: 75,900 to
       77,900 unconditional.
       verify: `grep -c 'after the law moves' agents/evidence/analysis/thinned-layer-composition-2026-10.md` -> /^[1-9]/
+      **Done 2026-10-10, and the expectation in this step's own text did not
+      hold.** It predicted 75,900–77,900 unconditional "from the measured layer
+      with all four". ONE of the four landed. Row 1 was priced at 9,349–10,225
+      and delivers **73** characters — 0.7–0.8 % — because the one surviving
+      rule is also the cheapest of the four and its landed law is longer than
+      Row 1 assumed (697 against 554; the council required the handler
+      allowlist values). The realistic unconditional reading returns to roughly
+      78,300–80,100. The sums section's conclusion is unchanged and now holds
+      for a second independent reason: no combination reached the ceiling as
+      recorded anyway, and Row 1 was never what stood between the layer and it.
 
 ## Closure-evidence corrections
 
@@ -438,10 +448,17 @@ price list rather than from a survey.
       each remaining move with its owner and price, and both sums.
       Closed by 3.1 and 3.2, plus a third sum added after the 4.1 council
       found the first two excluded the largest row they claimed to include.
-- [ ] AC-5 — Each of the four rules has a council record about its law
+- [x] AC-5 — Each of the four rules has a council record about its law
       heading, every member that left `no_stub` did so in the change that
       record is about, and the page states the reading after those changes in
       the unit the council named.
+      Four records at `agents/evidence/council/law-heading-<rule>.md`, each
+      with its `verdict:` line: `runtime-safety` **land**, `tool-safety`
+      **owner**, `autonomous-execution` **owner**, `question-not-instruction`
+      **owner**. Exactly one id left `missing` — `runtime-safety` — and it left
+      it in this change. The three refused headings are REVERTED, which is what
+      this step prescribes for a heading that would leave a duty out of the
+      standing law, so their rules ship full-bodied and their ids stay.
 
 ## Decisions
 
