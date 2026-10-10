@@ -10,11 +10,11 @@
     },
     "seed": {
         "rules": 0.9626,
-        "skills": 0.4114
+        "skills": 0.4147
     },
     "seed_provenance": {
         "rules": "103 covered of 107 routed rules on 2026-10-06; was 102 of 106 on 2026-09-13, 101 of 105 on 2026-09-08 and 94 of 105 (tier-1 21/24, tier-2 73/81) on 2026-08-25.",
-        "skills": "123 of 299 skills carry evals/triggers.json on 2026-10-09; was 119 on 2026-10-07, 118 after the third growth of 2026-10-06, 115 after the second growth that day, 114 earlier that day, 112 on 2026-10-04, 111 on 2026-10-02, 107 on 2026-10-01, 103 earlier that day, 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
+        "skills": "124 of 299 skills carry evals/triggers.json on 2026-10-10; was 123 on 2026-10-09, 119 on 2026-10-07, 118 after the third growth of 2026-10-06, 115 after the second growth that day, 114 earlier that day, 112 on 2026-10-04, 111 on 2026-10-02, 107 on 2026-10-01, 103 earlier that day, 102 on 2026-09-30, 101 on 2026-09-19 and 100 on 2026-08-30.",
         "finding": "The gap between the two seeds IS the roadmap defect D1, quantified. The rules surface is ~90% covered by a deterministic corpus that can fail a PR; the skills surface -- the one production routes on -- is far lower and is covered only by a harness that is advisory only, never gating (rule_trigger_eval.ts:4). The figure is deliberately not restated here (corrected 2026-10-01): it read `25%` against a seed that had since moved to 0.3445, which is the same count-drift this file's own history entries keep repairing one field away. The live value is `seed.skills`, two keys above."
     },
     "history": [
@@ -129,6 +129,13 @@
             "from": 0.398,
             "to": 0.4114,
             "reason": "The settings-key retirement (#2274) edited four corpus-less skills -- command-routing, feature-planning, po-discovery and source-discovery -- and check_routing_coverage requires every touched skill to carry a corpus, so each gained evals/triggers.json (119 -> 123 of 299). The seed rises to the live value; it may never be LOWERED. All four name hashes are above the holdout ceiling of 51, so the growth is TRAIN-side and both train-side measurements are re-taken in this change -- routing-body-signal-verdict.json (verdict unchanged in kind, still `harmful`, false activation +6.61 pp against the +2.0 pp guard, train corpora 92 -> 96) and delivery-set-measurement-2026-08-31.json -- while the holdout pin's sealed set is untouched. FOUR entries were removed from trigger_eval_grandfather.json: each went stale when its corpus landed."
+        },
+        {
+            "date": "2026-10-10",
+            "scope": "skills",
+            "from": 0.4114,
+            "to": 0.4147,
+            "reason": "road-to-corpus-refresh-cadence-shape step 1.2c re-checked the `database` grounding corpus against PostgreSQL 18 and MySQL 9.7 reference documentation, which edited src/skills/database/data/, and check_routing_coverage requires a corpus for every skill a diff touches (123 -> 124 of 299). Same shape as the 2026-10-01 and 2026-10-04 entries this roadmap's 1.2a and 1.2b wrote, and for the same reason: the file is the gate's own remedy rather than a coverage push. Ten cases: five exemplars including the bare 'this query is slow' phrasing the skill's own description names verbatim and one German, three near-misses -- ORM model work and a migration-only ask, both named in that skill's 'Do NOT use when' block, plus schema-review for a persistence-rule review, which it does not name and which is included because it reads as a database question -- and two counterexamples guarding the 'database' homonym (a vector store as an embedding index, and a hosting/billing question). The seed rises to the live value; it may never be LOWERED. The partition is TRAIN, not holdout: sha256('database')[0:2] is 0x35 = 53, above the holdout ceiling of 51, so BOTH published train-side measurements are re-taken here on the terms the 2026-10-04 and 2026-10-09 entries set -- routing-body-signal-verdict.json (verdict unchanged in kind, still `harmful`, false activation +6.75 pp against the +2.0 pp guard, train corpora 96 -> 97) and delivery-set-measurement-2026-08-31.json -- while the holdout pin's sealed set is untouched, because re-taking it would publish the same measurement under a newer date. ONE entry was removed from trigger_eval_grandfather.json: `database` was NOT red on main -- on main it ships no corpus at all, and check_trigger_eval_presence fires only on an allowlist entry whose skill HAS one, so its entry went stale the moment this change added the corpus. That red is created here and removed here."
         }
     ]
 }
