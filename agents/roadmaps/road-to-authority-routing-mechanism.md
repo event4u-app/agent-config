@@ -351,6 +351,29 @@ behaviour, which is the status quo, not a regression.*
 what the gate attests."*
 
 - [ ] **7.1 Run the council to classify each live-tree measurement check**
+      **Round run 2026-10-10 — 13 of 16 classified identically by both seats,
+      3 honest abstentions, and BOTH SEATS WITHHOLD GREENLIGHT on the step. It
+      therefore stays open.** The population was measured rather than recalled:
+      every `check_*`/`lint_*` run against a clean `origin/main` worktree, the
+      first sweep DISCARDED (macOS ships no `timeout(1)`, so exit 127 on all
+      ~300 meant nothing had run), two controls used to prove the harness, then
+      the projections built — which moved three checks green and identified them
+      as worktree artefacts. Ten more were excluded as called-wrong (a usage
+      line) and eight as build-order reds. **16 are genuinely red on the trunk.**
+      Verdict: **1 governed snapshot** (`check_gate_completeness`, 237 against a
+      baseline of 214), **12 invariants**, **3 unclassified**
+      (`check_council_layout`, `check_knowledge_cards`, `check_composite_arming`),
+      **zero tolerances and zero observations** — a tolerance needs a stated
+      bound AND a named party accepting the risk, and none has either.
+      **Why it does not close:** both seats refuse to let a check's semantics be
+      derived from its observed failure, because that grants the classifier
+      discretion exactly when a red trunk creates pressure to weaken enforcement.
+      They want a stable per-check contract first. Two findings neither was asked
+      for: the step's own taxonomy contradicts the record (*"refresh clearly
+      observational data"* vs observations being the NON-refreshable class), and
+      classification is not gate membership — a decision this round did not take.
+      Record: `agents/evidence/council/live-tree-check-classification-20261010.md`
+      and its `.question.md`.
       currently pinned red on the trunk: invariant (must always hold),
       snapshot (a point-in-time reading, refreshable), tolerance (a bounded
       range with an accepted-risk waiver, per `ratification-artifact.md`'s
@@ -413,10 +436,11 @@ before 8.3 gates anything.*
 | D10 | contested-technical | council:2026-10-08 resolve-blockers-batch | `supported-merge-strategies-for-ratified-changes` (a): a PR carrying a ratification artifact lands by merge commit only; every other PR keeps the repository's current strategies. 6.1 designs serialisation against this constraint and documents when a PR carries an artifact. Recorded in `docs/contracts/ratification-artifact.md` § Supported merge strategies when 6.1 lands. | AI council 2026-10-08, anthropic + openai, 2/2 present, both (a), $0.00. Both: (c) accepting provenance loss would be owner-reserved; (b) only council-decidable if re-derivation keeps the authorisation valid for the exact resulting tree. | a deterministic, auditable post-squash re-derivation is shown to preserve provenance with no information loss |
 | D11 | destructive-owned | council:2026-10-10 design, 2/2 present, peer review | 1.1 — the hold is **(c)**: a forge-side approval administered by a separately authorised principal, outside the candidate branch, required before the first Phase 2 authority-expanding merge and covering Phase 3. Neither shape the step anticipated was selected: a doc-only sentence is a description, not a hold, and a candidate-branch CI check is inside the write boundary the record's dealbreaker names. Condition 4 of `ratification-artifact.md` routes **Phase 2** to the owner (both seats) but does **not** conclusively reach Phase 3's verifier or approver registry (both seats) — the enumeration names computing a subject, writing a record, asking questions and deriving a verdict, and a verifier checks an attestation instead. | AI council 2026-10-10, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, peer review, 2/2 present, $0.00 subscription transport. Record and prompt: `agents/evidence/council/authority-routing-hold-form-20261010.md` and its `.question.md`. Split on scope: anthropic anchors Phase 3 only (Phase 2 already condition-4 routed, conf. 0.85); openai anchors both (Phase 2 defines the semantics Phase 3 will later bind, conf. 0.91). The stronger reading was taken on the parent record's own precedent — condition 4 routes a decision to a person, it does not prevent a merge. | condition 4's enumeration is amended to reach verification machinery explicitly, or the external control proves to block all constitutional maintenance |
 | D12 | reversible-technical | council:2026-10-10, same run | Phase 3 does not begin until the external approval path is **active and tested against an attempted bypass**. Designing or documenting it does not unblock implementation. | openai, unprompted and not in step 1.1's text; anthropic's § what-it-does-not-guarantee reaches the same place from the audit side | the bypass test proves unconstructible without production credentials |
+| D13 | contested-technical | council:2026-10-10 design, 2/2 present, peer review — **classification convergent, step completion WITHHELD** | 7.1 — of the 16 checks genuinely red on the trunk: `check_gate_completeness` is a **governed snapshot** (refresh only on a reviewed change to population, scope, counting semantics or partition that makes the old count non-comparable; the agent may calculate and propose, a gate-policy CODEOWNER or the authority-record owner approves, never the agent that calculated it; refreshing because violations rose is forbidden, and it is blocked NOW until the 23 new violations are enumerated by rule); **12 are invariants**; **3 are unclassified** pending their predicates. **Zero tolerances, zero observations.** | AI council 2026-10-10, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, peer review, 2/2, $0.00. Both tables agree on all 16. Population measured at `bbe5b73be` after a first sweep was discarded for a harness fault (no `timeout(1)` on macOS) and two controls proved the rerun. Record and prompt: `agents/evidence/council/live-tree-check-classification-20261010.md`. openai's dissent: #1 holds TWO objects — the numeric baseline is a snapshot, the prohibition on unjustified new debt is an invariant, and one class field cannot carry both. anthropic's dissent: the step conflates classification with gate membership. | the three abstentions gain their predicates, or a per-check contract registry exists from which class, prerequisites, gate membership and refresh authority derive mechanically |
 | D13 | contested-technical | council:2026-10-10 design, 2/2 present, peer review — **SPLIT, escalates** | 2.1 — the LOCATION of the six-predicate test is **not decided**: anthropic (b), a section of `ratification-artifact.md`, conditional on the forge blocker being resolvable (conf. 0.78); openai (a), a new `docs/contracts/dangerous-action-predicates.md` added atomically to the gate's watch list (conf. 0.88). What IS decided, both seats: whichever file holds the predicates **joins the gate's watch list in the same change**, references point at one canonical file and no second document restates them, and the sequence is contract-plus-watch-list-entry atomically → negative regression test that weakening it without a record is caught → only then may downstream routing depend on it. Fail closed: a trusted gate that cannot load the file or establish its comparison base stops authority routing; there is no temporarily-unwatched state. | AI council 2026-10-10, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, peer review, 2/2, $0.00. Record and prompt: `agents/evidence/council/dangerous-action-predicates-home-20261010.md` and its `.question.md`. openai's unrefuted pushback: being on the watch list is not yet a security boundary, because the evidence shows the file is watched and not that the watcher runs from a revision the candidate cannot alter — the contract says the same ("THE GATE ADDS A REFUSAL. IT DOES NOT ADD AN ANCHOR"). Both seats' conditions reduce to `external-bootstrap-boundary-for-phases-2-3`. | the blocker is shown permanent (moves anthropic to (a)), a second consumer needs versioned independence (same), or trusted forge-side tooling is shown able to validate only an embedded definition atomically (moves openai to (b)) | <!-- ref-ignore -->
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-07 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-10 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -534,6 +558,18 @@ before 8.3 gates anything.*
       surfaced has a disposition traceable to a specific phase step or
       blocker in this file (agent-fixed, council-decided-and-recorded, or an
       owner-routed blocker resolved).
+      **Measured 2026-10-10 — 5 of 6, and the sixth is one council round away.**
+      Each defect was traced to its named disposition rather than counted:
+      defect 1 → step 4.3 `[x]`, agent-fixed; defect 2 → D1,
+      council-decided-and-recorded; defect 3 → steps 5.1/5.2 `[x]` plus D2, both
+      forms; defect 5 → blocker `defect-5-merges-ahead-of-completion-review`,
+      **resolved** 2026-10-08 by the owner, plus D9; defect 6 → D13, recorded
+      this date by the Phase 7 round.
+      **Defect 4 is the one outstanding.** It is routed to Phase 6 — the file
+      names it at the phase header and again at step 6.3 — but routing is not a
+      disposition in any of the three forms this criterion lists, and no council
+      has decided it. **Step 6.1 is that round.** The criterion closes when 6.1
+      records its verdict; nothing else is missing.
 - [ ] AC-2 — The three collapsed authorities (technical outcome, authority
       classification, authorisation to proceed) exist as separated,
       committed fields before Phase 3's verifier is built against them.
