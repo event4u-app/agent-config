@@ -71,13 +71,31 @@ not. A criterion that says of itself that it is not met is not ticked. A
 
 ## Phase 2 — Whether parked blockers are in scope
 
-- [ ] **2.1 The scope follows the
+- [x] **2.1 The scope follows the
       decision.** Under (a): `/roadmap:resolve-blockers` gains a `later/`
       bucket that lists only entries with `Owner:` owner and `Status:` open, and
       the lint's scope and its pinning test stay unchanged. Under (b): the lint
       glob adds `later/*-carried.md`, the pinning test flips for that pattern
       only, and the command follows the lint.
       verify: `npx vitest run tests/scripts/lint_roadmap_blockers.test.ts` -> 0
+      **Done 2026-10-10 under (b′).** The glob gains `later/*-carried.md` — a
+      FILENAME pattern inside one directory, not a second directory — and the
+      pinning test flips for that pattern only. `/roadmap:resolve-blockers`
+      keeps its scope, which is the whole of what separates (b′) from (b): a
+      gate that reports is a different commitment from a command that asks an
+      owner to decide.
+      The polarity is pinned in three directions, so the widening cannot creep:
+      a carried file IS judged, an ordinary `later/` roadmap beside it is NOT,
+      and the suffix does not reach `archive/` or `skipped/`.
+      **The widening surfaced one real defect, which is the point of it.** All
+      7 carried files pass the hard checks, as the council's condition required
+      and as was measured on 2026-10-08. But `upst-timeout-witness` in
+      `road-to-host-claims-the-tree-contradicts-carried.md` read as not
+      decidable: its `Recommendation` and `If you do nothing` were written as
+      standalone paragraphs rather than list items, so the scanner could not
+      see them. Both were already present in full — this was a shape defect,
+      not a missing decision, and the fix reformats and invents nothing. The
+      decidability ratchet is back at 0 with no baseline needed.
 
 ## Phase 3 — The prose question becomes a blocker
 
@@ -143,8 +161,13 @@ not. A criterion that says of itself that it is not met is not ticked. A
 
 - [x] AC-1 — One command lists every open blocker under `later/`, split by
       owner-wait and agent-wait.
-- [ ] AC-2 — The council's verdict on the `later/` exclusion is recorded, and
+- [x] AC-2 — The council's verdict on the `later/` exclusion is recorded, and
       the readers' scope matches it.
+      D6 records option (b′) — council round 2, 2026-10-08, anthropic + openai,
+      2/2, with round 1's split kept beside it. The readers now match it in
+      both halves: `lint_roadmap_blockers` scans `later/*-carried.md` and
+      `/roadmap:resolve-blockers` does not, which is what (b′) says rather than
+      what (b) would have said.
 - [x] AC-3 — The release-ordering owner question is a `### blocker:` entry
       that `lint_roadmap_blockers` validates when its file is in scope.
 - [x] AC-4 — A `[x]` criterion whose text contains `NOT met` is reported.

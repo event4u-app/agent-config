@@ -261,19 +261,17 @@ left to read as finished.
   `docs/enforcement-by-host.md` § "What the host documents", **or** the channel
   question is settled and recorded, so a zero from that command is known to mean
   "no timeout occurred" rather than "timeouts are not recorded there".
-
-**Recommendation:** (a). It is the only option that makes the step's own exit
-condition falsifiable, it is bounded to a single throwaway session, and it does
-not depend on an external event arriving. (b) buys back a measurement whose
-meaning is still unknown; (c) is honest but leaves a condition that may never
-fire for reasons unrelated to whether the thing being waited for happens.
-
-**If you do nothing:** the roadmap stays parked under `later/` and comes back on
-`review_by: 2027-01-06`. Nothing degrades and nothing is lost — the three
-figures the hand-over depends on re-executed green on 2026-10-06, so the row
-still has somewhere to go the moment a witness exists. The cost of doing nothing
-is that the condition may be unfalsifiable, so the wait could be indefinite
-whether or not timeouts actually occur.
+- **Recommendation:** (a). It is the only option that makes the step's own exit
+  condition falsifiable, it is bounded to a single throwaway session, and it does
+  not depend on an external event arriving. (b) buys back a measurement whose
+  meaning is still unknown; (c) is honest but leaves a condition that may never
+  fire for reasons unrelated to whether the thing being waited for happens.
+- **If you do nothing:** the roadmap stays parked under `later/` and comes back on
+  `review_by: 2027-01-06`. Nothing degrades and nothing is lost — the three
+  figures the hand-over depends on re-executed green on 2026-10-06, so the row
+  still has somewhere to go the moment a witness exists. The cost of doing nothing
+  is that the condition may be unfalsifiable, so the wait could be indefinite
+  whether or not timeouts actually occur.
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-02 | reviewer: archive-sweep/auto-carry -->

@@ -79,12 +79,33 @@
  * and not WHAT it can parse; the second half is the sibling defect recorded in
  * `stubs/road-to-blocker-parse-visibility.md`, and it is untouched here.
  *
- * `later/`, `archive/` and `skipped/` stay OUT, and the reason is not symmetry:
- * those record decisions already taken (parked, closed, dropped), so a blocker
- * left unresolved there is history rather than debt. A stub records a decision
- * still to take. The polarity is pinned in both directions by
- * `tests/scripts/lint_roadmap_blockers.test.ts` § the scanned scope, so
- * widening further cannot happen by accident.
+ * `archive/` and `skipped/` stay OUT, and so does `later/` with ONE exception.
+ * The reason is not symmetry: those record decisions already taken (parked,
+ * closed, dropped), so a blocker left unresolved there is history rather than
+ * debt. A stub records a decision still to take.
+ *
+ * THE EXCEPTION — `later/*-carried.md`, added 2026-10-10 by D6 of
+ * `road-to-parked-blockers-that-get-asked`, blocker `later-blockers-in-scope`,
+ * option (b'). AI council round 2, 2026-10-08, anthropic + openai, 2/2.
+ * A `-carried` file holds steps a closing roadmap could not finish: that is
+ * open work which was MOVED, not a decision taken, so the argument excluding
+ * the rest of `later/` does not reach it. Round 1 had SPLIT — one seat for the
+ * widening on the condition the carried files already pass, one for keeping
+ * the exclusion with report-only observability — and the condition was then
+ * measured true: 7 of 7 carried files, 0 hard findings. So this lands on
+ * nothing, the same "no backlog to grandfather" argument the `stubs/` widening
+ * made.
+ *
+ * Deliberately NOT widened with it: `/roadmap:resolve-blockers` keeps its
+ * scope. Option (b) would have moved both together; (b') moves the gate and
+ * leaves the command, because a gate that reports is a different commitment
+ * from a command that asks an owner to decide.
+ *
+ * The polarity is pinned in BOTH directions by
+ * `tests/scripts/lint_roadmap_blockers.test.ts` § the scanned scope — a
+ * carried file is judged, an ordinary `later/` roadmap beside it is not, and
+ * the suffix does not leak into `archive/` or `skipped/` — so widening further
+ * cannot happen by accident.
  *
  * One consequence worth naming rather than discovering: `_archiveOverlap`
  * defaults its ACTIVE corpus to this glob, so a stub declaring a blocker open
@@ -114,9 +135,20 @@ const REPO_ROOT = path.resolve(path.dirname(_HERE), '..', '..');
  * expression: nothing globs with this string, and a `{,stubs/}` empty
  * alternative is bash-only syntax that would mislead anyone who tried.
  */
-const ROADMAP_GLOB = 'agents/roadmaps/*.md + agents/roadmaps/stubs/*.md';
-/** The one subdirectory inside the glob. See § SCOPE for why only this one. */
+const ROADMAP_GLOB =
+    'agents/roadmaps/*.md + agents/roadmaps/stubs/*.md + agents/roadmaps/later/*-carried.md';
+/** The one subdirectory wholly inside the glob; the scope section says why only this one. */
 const SCANNED_SUBDIRS: readonly string[] = ['stubs'];
+/**
+ * `later/` is in scope for ONE filename shape and no other.
+ *
+ * A `-carried` file holds steps a closing roadmap could not finish, so it is
+ * open work that was moved — not a decision already taken, which is what the
+ * rest of `later/` records. It is the same distinction the scope section above
+ * draws for `stubs/`, applied to a file rather than a directory.
+ */
+const CARRIED_DIR = 'later';
+const CARRIED_SUFFIX = '-carried.md';
 /** Roadmap directories a qualified reference may NAME but never resolve into. */
 const OUT_OF_SCOPE_SUBDIRS: readonly string[] = ['later', 'archive', 'skipped'];
 
@@ -663,6 +695,13 @@ function _globRoadmaps(roadmapRoot: string = path.join(REPO_ROOT, 'agents', 'roa
     for (const sub of SCANNED_SUBDIRS) {
         out.push(..._globFlat(path.join(roadmapRoot, sub)));
     }
+    // The suffix is checked against `later/` alone, never applied tree-wide: a
+    // carried name under `archive/` or `skipped/` is still a decision taken.
+    out.push(
+        ..._globFlat(path.join(roadmapRoot, CARRIED_DIR)).filter((f) =>
+            path.basename(f).endsWith(CARRIED_SUFFIX),
+        ),
+    );
     return out;
 }
 
