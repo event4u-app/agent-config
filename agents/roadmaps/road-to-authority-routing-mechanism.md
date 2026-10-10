@@ -32,17 +32,40 @@ addressed to the owner.
 
 ## Prerequisites
 
-- [ ] Read `agents/evidence/council/authority-routing-20261007.md` in full —
+- [x] Read `agents/evidence/council/authority-routing-20261007.md` in full —
       it is the specification this roadmap executes, not a reference to
       summarise from memory.
-- [ ] Read `docs/contracts/ratification-artifact.md` — the existing,
+      **Done 2026-10-10**, whole file, not a summary: the owner's frame, the
+      six-predicate test, the council-substitution conditions, the dealbreaker
+      as given, the three collapsed authorities, the six-defect disposition
+      table, the required sequencing and the break-glass section. Two steps
+      that session cited it from the read rather than from memory — 1.1's
+      council question quoted its sequencing item 1 and its dealbreaker
+      verbatim, and 3.1 closed on its § 2 exclusion of commit-author metadata.
+- [x] Read `docs/contracts/ratification-artifact.md` — the existing,
       already-shipped mechanism (verdict vocabulary, `seats:` field, provider
       diversity, platform-anchor trust layer, emergency-use procedure) this
       roadmap generalises and hardens. No phase below re-invents a verdict
       vocabulary, a provider-diversity check, or an emergency procedure the
       contract already has; each phase amends or extends it.
-- [ ] Confirm `agent-config council:status` reports a configured, two-provider
+      **Done 2026-10-10**, all five named surfaces read: the six required
+      frontmatter fields and the closed four-value verdict vocabulary; the
+      `seats:` map with its derived-header check and its honest limit (the
+      entries are the author's, and gitignored council responses mean no runner
+      can check them); provider diversity failing closed on
+      `ratification-policy.json`, which is itself gated; the three trust layers
+      and the bootstrap exception that is sound exactly once; and the
+      emergency-use procedure with its ADR-281 § 5 carve-out. **One thing the
+      read changed:** § When the user decides condition 4 turned out to name
+      this roadmap's own Phase 2 almost word for word, which is what step 1.1's
+      council question was built on.
+- [x] Confirm `agent-config council:status` reports a configured, two-provider
       council before executing any "run the council" step below —
+      **Done 2026-10-10, BEFORE the first round rather than after it:**
+      `CONFIGURED`, resolved from user-global
+      `~/.event4u/agent-config/settings/.ai-council.yml`, 2 enabled members
+      (anthropic, openai), transport `cli · subscription`. Both rounds run that
+      day concluded 2/2 at $0.00. —
       [`council-availability`](../../src/rules/council-availability.md).
 
 ## Context
