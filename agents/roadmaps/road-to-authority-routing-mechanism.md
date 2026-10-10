@@ -8,7 +8,7 @@ relates:
     relation: extends
     note: "open PR #2251 / ADR-281 narrows who may ratify a change to the gated self-modification surface; this roadmap generalises the same verifier, registry and verdict-vocabulary questions to the full dangerous-action test the council record defines, and hardens the existing docs/contracts/ratification-artifact.md mechanism rather than replacing it. No file this roadmap's phases touch is owned by that PR."
 estate_offset_exempt: "No active roadmap could be archived, parked, or merged to offset this addition: archiving an open roadmap to make room was rejected because none of the 14 active roadmaps covers authority-routing, dangerous-action classification, or the ratification-artifact hardening this plan executes; parking an unrelated roadmap in later/ to offset a net-new scope was rejected because that would misrepresent a roadmap that is not blocked as blocked; and merging into the nearest neighbour (road-to-self-modification-that-a-council-must-pass) was rejected because that roadmap is scoped to the gated self-modification surface only, not the general six-predicate dangerous-action test this one carries."
-estate_growth_exempt: "The eight new blockers are the owner-reserved items the authority-routing council record (agents/evidence/council/authority-routing-20261007.md) and this roadmap's own blocker-contract routing require: credential custody, revocation, approval expiry, merge strategy, break-glass authority, the review-attempt bound, refusal finality, and whether trunk changes may land ahead of completion review. Each is a governance decision the record explicitly withholds from both the agent and the council (record's dangerous-action test, predicates 3 and 5), so none can be resolved by writing code instead of asking — closing this roadmap's own disposition table required naming all eight in the same change rather than discovering them piecemeal across later changes."
+estate_growth_exempt: "+1 open_blockers for `external-bootstrap-boundary-for-phases-2-3`. Opened 2026-10-10 by the step 1.1 council verdict, which selected neither of the two hold shapes the step anticipated: both seats rejected a doc-only sentence as a description rather than a hold, and a candidate-branch CI check as ceremony inside the write boundary the parent record's dealbreaker names. What they selected is a forge-side approval outside the candidate branch, and turning that on is an owner act under D3, so the blocker could not be avoided by writing code instead of asking. It closes no box and changes no behaviour; it makes step 1.2 read as blocked to run-continuation, which decides open-vs-blocked from the inline marker alone. The prior claim this replaces was spent on the eight blockers the authority-routing record itself required."
 ---
 
 # Road to a routed authority — who may authorise what, and how it is checked
@@ -101,7 +101,7 @@ re-derive or re-litigate them without the evidence that would justify it
 *Record, required sequencing, item 1: "Hold authority-expanding constitutional
 merges, or require an external bootstrap approval."*
 
-- [ ] **1.1 Run the council on the hold's mechanical form.** Does declaring,
+- [x] **1.1 Run the council on the hold's mechanical form.** Does declaring,
       in `docs/contracts/ratification-artifact.md`, that every gated-surface
       commit made by Phases 2–3 below lands through the EXISTING, unchanged
       ladder (ADR-268 § 4, narrowed for the self-modification surface by
@@ -111,10 +111,16 @@ merges, or require an external bootstrap approval."*
       scoped to the files Phases 2–3 will touch)? Record the verdict as a
       `## Decisions` row in this file.
       verify: `grep -c '^## Decisions' agents/roadmaps/road-to-authority-routing-mechanism.md` -> /^1$/
-- [ ] **1.2 Implement whichever hold 1.1 selects**, before Phase 2.3 (the
-      verdict-field split) lands its first commit. A doc-only hold is
-      recorded as a sentence in `docs/contracts/ratification-artifact.md`
-      naming this roadmap; a CI-check hold ships with its own test.
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — discovered mid-drain under `/roadmap:process-full --all`; turning on a forge-side protection is an owner act the run may not perform, and it is put to the owner in that run's end report rather than halting the queue --> **1.2 Implement whichever hold 1.1 selects**, before Phase 2.3 (the
+      verdict-field split) lands its first commit. **1.1 selected neither of the
+      two shapes this step anticipated.** Both seats rejected a doc-only sentence
+      as a description rather than a hold, and a candidate-branch CI check as
+      ceremony inside the write boundary the record's dealbreaker names. The
+      selected hold is a forge-side approval administered outside the candidate
+      branch — the mechanism D7 already chose — and turning it on is an owner
+      act, not an agent one: a protection an agent can add is one an agent can
+      remove, and both seats required the protection configuration itself to stay
+      subject to the higher approval.
 
 *Exit: 1.1 is recorded and 1.2's hold is in place (doc sentence or CI check,
 whichever 1.1 chose) before any Phase 2 commit lands. Rollback: revert 1.2;
@@ -365,6 +371,8 @@ before 8.3 gates anything.*
 | D8 | destructive-owned | owner | Approver revocation: triggers are departure, credential compromise and role change. Revocation means removing the account or team from the required reviewers on the forge (per D7). The verifier reads that membership live from the forge at merge time, so a revoked identity can never approve again and propagation delay is zero; `src/config/platform-anchor.json` is brought in line the same day. What the verifier does when the live read is unavailable is not decided here; step 3.2 surfaces it. | owner answer 2026-10-08, `/roadmap:resolve-blockers` | the live forge read proves too slow or rate-limited at merge time, or D7's revisit condition fires |
 | D9 | contested-technical | council:2026-10-08 resolve-blockers-batch | `defect-5-merges-ahead-of-completion-review` (a): a trunk change never lands without a completed completion review; Phase 6.3 implements a hard merge-block on an incomplete review, with a failure message naming what must complete first. | AI council 2026-10-08, anthropic + openai, 2/2 present, both (a), $0.00; both found (a) not owner-reserved because it strengthens a floor (one seat noted (b)/(c) would be owner-reserved only if pre-merge review were already a recorded floor). | the hard block demonstrably stalls an emergency fix the break-glass path (D3) does not cover |
 | D10 | contested-technical | council:2026-10-08 resolve-blockers-batch | `supported-merge-strategies-for-ratified-changes` (a): a PR carrying a ratification artifact lands by merge commit only; every other PR keeps the repository's current strategies. 6.1 designs serialisation against this constraint and documents when a PR carries an artifact. Recorded in `docs/contracts/ratification-artifact.md` § Supported merge strategies when 6.1 lands. | AI council 2026-10-08, anthropic + openai, 2/2 present, both (a), $0.00. Both: (c) accepting provenance loss would be owner-reserved; (b) only council-decidable if re-derivation keeps the authorisation valid for the exact resulting tree. | a deterministic, auditable post-squash re-derivation is shown to preserve provenance with no information loss |
+| D11 | destructive-owned | council:2026-10-10 design, 2/2 present, peer review | 1.1 — the hold is **(c)**: a forge-side approval administered by a separately authorised principal, outside the candidate branch, required before the first Phase 2 authority-expanding merge and covering Phase 3. Neither shape the step anticipated was selected: a doc-only sentence is a description, not a hold, and a candidate-branch CI check is inside the write boundary the record's dealbreaker names. Condition 4 of `ratification-artifact.md` routes **Phase 2** to the owner (both seats) but does **not** conclusively reach Phase 3's verifier or approver registry (both seats) — the enumeration names computing a subject, writing a record, asking questions and deriving a verdict, and a verifier checks an attestation instead. | AI council 2026-10-10, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, peer review, 2/2 present, $0.00 subscription transport. Record and prompt: `agents/evidence/council/authority-routing-hold-form-20261010.md` and its `.question.md`. Split on scope: anthropic anchors Phase 3 only (Phase 2 already condition-4 routed, conf. 0.85); openai anchors both (Phase 2 defines the semantics Phase 3 will later bind, conf. 0.91). The stronger reading was taken on the parent record's own precedent — condition 4 routes a decision to a person, it does not prevent a merge. | condition 4's enumeration is amended to reach verification machinery explicitly, or the external control proves to block all constitutional maintenance |
+| D12 | reversible-technical | council:2026-10-10, same run | Phase 3 does not begin until the external approval path is **active and tested against an attempted bypass**. Designing or documenting it does not unblock implementation. | openai, unprompted and not in step 1.1's text; anthropic's § what-it-does-not-guarantee reaches the same place from the audit side | the bypass test proves unconstructible without production credentials |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-07 | reviewer: claude/host -->
@@ -376,6 +384,18 @@ before 8.3 gates anything.*
 | 3 | Activation without the full break-glass set | product | Flipping the verifier to a required gate (step 8.3) before all six break-glass stop conditions are implemented would recreate the dealbreaker the whole roadmap exists to close — a silent-fail-open path. | Step 8.3's own checklist names all six conditions and requires a passing test per condition before activation; the break-glass blocker is a structured, owner-routed gate, not a step the agent can self-clear. | Phase 8 |
 
 ## Blockers
+
+### blocker: external-bootstrap-boundary-for-phases-2-3
+
+- **Status:** open — opened 2026-10-10 by the step 1.1 council verdict (D11). The hold that verdict selected is a forge-side approval outside the candidate branch; the agent may prepare everything around it and may not turn it on
+- **Owner:** owner — D3 reserves bootstrap approval to the owner, and both seats required the protection configuration itself to stay subject to that same higher approval. A protection an agent can add is one an agent can remove, which is not a boundary
+- **Class:** 3
+- **Ownership:** destructive-owned
+- **Blocks:** step 1.2, and through it every Phase 2 and Phase 3 step — 2.3 is the first commit the hold must precede
+- **What to do:** on the forge, require review from the approver identity D7 already chose (a GitHub account or team, declared through `src/config/platform-anchor.json`) for merges touching the Phase 2–3 surface: `docs/contracts/ratification-artifact.md`, `src/scripts/check_kernel_edit_ratified.ts`, `src/scripts/_lib/ratification_artifact.ts`, `src/config/platform-anchor.json`, and the ruleset configuration itself. Then confirm the identity is the one named, and say so here. Branch protection on this repository is a **ruleset**, not classic protection — the control is a ruleset rule, not a branch-protection setting.
+- **Resolved when:** this blocker's `Status:` is `resolved` naming the ruleset and the approver identity, and `agent-config doctor --online --json` reports that identity under `forge_protection` for the Phase 2–3 paths.
+- **Recommendation:** turn it on before Phase 2.3 rather than before Phase 3. anthropic held that condition 4 already routes Phase 2 to the owner and that only Phase 3 needs the anchor; openai held that Phase 2 defines the semantics Phase 3 will later bind, so letting them bootstrap under the old boundary leaves Phase 3 binding an internally authorised constitutional change. The stronger reading was taken because condition 4 routes a *decision* to a person — it does not prevent a *merge*. If anthropic is right the extra coverage costs nothing; if openai is right and it was skipped, the gap is invisible until the verifier is already binding it.
+- **If you do nothing:** step 1.2 stays open and Phases 2 through 8 stay unstartable, which is the safe default and is exactly what the record's required-sequencing item 1 asks for. Nothing degrades; the whole mechanism simply stays unbuilt, and `check_kernel_edit_ratified` keeps running beside `block_kernel_rule_writes` as it does today.
 
 ### blocker: defect-5-merges-ahead-of-completion-review
 - **Status:** resolved 2026-10-08 — option (a): no trunk change lands without a completed completion review; Phase 6.3 implements the hard merge-block (council 2026-10-08, anthropic + openai, 2/2, $0.00, both (a), owner-reserved: no — it strengthens a floor; D9)
