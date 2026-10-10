@@ -28,7 +28,7 @@ execution.
 
 ## The two options the step names
 
-- **(a)** a new `docs/contracts/dangerous-action-predicates.md`
+- **(a)** a new `docs/contracts/dangerous-action-predicates.md` <!-- ref-ignore -->
 - **(b)** a section appended to `docs/contracts/ratification-artifact.md`
 
 ## Four facts that bear on it, all verified today

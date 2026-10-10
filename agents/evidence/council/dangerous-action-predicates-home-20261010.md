@@ -8,7 +8,7 @@
 
 Executes step 2.1 of `road-to-authority-routing-mechanism`: does the
 six-predicate dangerous-action test live in a new
-`docs/contracts/dangerous-action-predicates.md` **(a)**, or as a section of
+`docs/contracts/dangerous-action-predicates.md` **(a)**, or as a section of <!-- ref-ignore -->
 `docs/contracts/ratification-artifact.md` **(b)**?
 
 | Seat | Pick | Core reason | Confidence |
