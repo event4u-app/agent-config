@@ -152,7 +152,7 @@ Reproduced on 2026-10-01:
 
 ## Phase 3 — The default, decided
 
-- [ ] **3.1 Flip the default.** Only after blocker
+- [ ] <!-- blocked-by: default-flip-of-the-installed-layer | asked: no — the blocker is registered in this file, already answered (a) by the owner on 2026-10-06, and waits on the arrival record rather than on a new question --> **3.1 Flip the default.** Only after blocker
       `default-flip-of-the-installed-layer` is resolved: the installer thins by
       default for `claude-code`, the receipt announces both numbers, and the
       rollback of 1.2 stays one setting.
@@ -176,7 +176,12 @@ Reproduced on 2026-10-01:
       subsequent PR on a problem outside this file's scope; the step stays open
       until the full-bodied set is small enough for a hard ceiling to mean
       something.
-- [ ] **3.3 The decision record.** An ADR extends ADR-267 decision 2 from the
+      **Deliberately NOT marked blocked, 2026-10-10.** Every other open Phase 3 step
+      now carries `default-flip-of-the-installed-layer`'s inline marker, and this one
+      does not belong with them: it waits on the FULL-BODIED SET SHRINKING, which no
+      registered blocker in this file gates and which the flip would not change. A
+      marker naming the flip would misstate what this step is waiting for.
+- [ ] <!-- blocked-by: default-flip-of-the-installed-layer | asked: no — the blocker is registered in this file, already answered (a) by the owner on 2026-10-06, and waits on the arrival record rather than on a new question --> **3.3 The decision record.** An ADR extends ADR-267 decision 2 from the
       projector to the installer, records why the template value is not a
       consent, and marks ADR-228's global-layer statement superseded.
       verify: `./scripts-run src/scripts/check_adr_frontmatter` -> 0
@@ -203,7 +208,7 @@ Reproduced on 2026-10-01:
       `check_`/`lint_` step today, same as before this change — its enforcement
       is the `is clean over the real tree` vitest case, already part of
       `task ci`.
-- [ ] **3.5 No other host worse.** `check_host_tree_parity` is unchanged, and
+- [ ] <!-- blocked-by: default-flip-of-the-installed-layer | asked: no — the blocker is registered in this file, already answered (a) by the owner on 2026-10-06, and waits on the arrival record rather than on a new question --> **3.5 No other host worse.** `check_host_tree_parity` is unchanged, and
       the installed-layer report adds one row per host with a published limit.
       verify: `./scripts-run src/scripts/check_host_tree_parity` -> 0
       > Both limbs already hold as of 2026-10-05 — `check_host_tree_parity`
@@ -266,7 +271,7 @@ Reproduced on 2026-10-01:
 | D6 | reversible-technical | agent | 3.2's ceiling stays a reported finding, not a hard CI gate, until the real total is reachable | `installed-layer-ceiling-measurement-2026-10-06.md`: a real opt-in install reads 111,197 chars, 48 % over the 75,000 hard target this step would enforce; a hard gate at that number would be red on `main` on landing, over a corpus (16 full-bodied kernel/path-only/trigger-less rules) this roadmap does not touch | the full-bodied set shrinks enough that 111,197 (or its current re-measurement) sits at or under 75,000 |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-06 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-10 | reviewer: claude/host -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -278,13 +283,27 @@ Reproduced on 2026-10-01:
 
 - [ ] AC-1 — An opted-in install into an empty `HOME` stands under 75,000
       package-owned characters, read by the installed-layer report.
-- [ ] AC-2 — One committed arrival record per supported host version.
+      **NOT MET, and deliberately NOT marked blocked, 2026-10-10.** The figure was
+      measured on 2026-10-06 against a real opt-in install: **111,197** characters —
+      89 thinned stubs (52,925) plus 16 rules `project_thin_rules` keeps full by its
+      own predicate (58,272). Not re-measured today: an isolated-`HOME` install is the
+      only honest way to read it and nothing in this change moves the corpus. Like 3.2,
+      this waits on the full-bodied set shrinking rather than on the flip, so no marker
+      is written — the gate it needs is not one this file registers.
+- [ ] <!-- blocked-by: arrival-record-needs-a-cancelled-observer | asked: no — registered in this file on 2026-10-10 and already addressed to the owner; this marker records that the criterion shares its gate --> AC-2 — One committed arrival record per supported host version.
+      **Measured 2026-10-10: zero records exist.** `ls agents/evidence/analysis/installed-arrival-*.md`
+      matches nothing. Its producer is step 2.1, whose instrument the owner cancelled on
+      2026-10-06 — see `arrival-record-needs-a-cancelled-observer`.
 - [x] AC-3 — The standing-only fixture shows every consequence-class law loaded
       with the carrier off. Closed by step 2.2, re-verified 2026-10-06:
       `npx vitest run tests/scripts/install_thin_layer.test.ts -t standing-only`
       -> 0, both cases (byte-equal law; no law leaks into an out-of-class stub).
-- [ ] AC-4 — The default changed only through the resolved blocker, and every
+- [ ] <!-- blocked-by: default-flip-of-the-installed-layer | asked: no — the blocker is registered in this file, already answered (a) by the owner on 2026-10-06, and waits on the arrival record rather than on a new question --> AC-4 — The default changed only through the resolved blocker, and every
       non-Claude host tree is unchanged.
+      **Second limb measured 2026-10-10 and already holds**: `check_host_tree_parity`
+      exits 0 (2 non-delivery host trees byte-identical to eager-all). The first limb
+      cannot be evaluated because no flip has happened, so the criterion waits on 3.1
+      rather than on work of its own.
 
 ## Dated readings
 
