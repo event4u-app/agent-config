@@ -131,17 +131,24 @@ gated-surface commit, so reverting loses nothing already relied upon.*
 
 *Record, required sequencing, item 2.*
 
-- [ ] **2.1 Run the council on the committed-contract question.** Where does
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **2.1 Run the council on the committed-contract question.**
+      **Round run 2026-10-10 — SPLIT 1/1, which escalates (D13).** anthropic picked
+      (b) conditional on the forge blocker being resolvable; openai picked (a) with an
+      atomic watch-list entry. The convergent half is recorded and binding; the
+      location is not re-run, because a second round against the same evidence is
+      verdict shopping and the evidence that would move either seat does not exist
+      today. Record:
+      `agents/evidence/council/dangerous-action-predicates-home-20261010.md`. Where does
       the six-predicate dangerous-action test (record § 4) live — a new
       `docs/contracts/dangerous-action-predicates.md`, or a section appended
       to `docs/contracts/ratification-artifact.md`? Record the verdict as a
       `## Decisions` row.
-- [ ] **2.2 Commit the six-predicate test verbatim**, at the location 2.1
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **2.2 Commit the six-predicate test verbatim**, at the location 2.1
       chose, with the "uncertainty routes to council, a council finding a
       predicate applies routes authorisation to the user" rule (record § 4)
       stated beside it.
       verify: `grep -rc 'Non-trivial loss, disclosure, expenditure' docs/contracts/` -> /^[1-9]/
-- [ ] **2.3 Separate the collapsed verdict into three fields** in the same
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **2.3 Separate the collapsed verdict into three fields** in the same
       contract: `technical_outcome` (did the proposed change do what it
       claims), `authority_class` (dangerous / non-dangerous, per 2.2's test),
       `authorisation` (may it proceed — only ever set by the authority 2.2
@@ -151,7 +158,7 @@ gated-surface commit, so reverting loses nothing already relied upon.*
       during migration — this step documents the mapping, it does not change
       the consumers.
       verify: `grep -c 'authority_class' docs/contracts/ratification-artifact.md` -> /^[1-9]/
-- [ ] **2.4 Extend the `refused` vocabulary** to distinguish
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **2.4 Extend the `refused` vocabulary** to distinguish
       `refused-correctable` (names a concrete in-scope defect or asks for
       obtainable evidence — record § 6, "the agent remediates and
       re-submits"), `refused-non-convergent` (the existing `non-convergent`
@@ -161,7 +168,7 @@ gated-surface commit, so reverting loses nothing already relied upon.*
       `refused-correctable` retains the prior objection and shows its
       disposition (record § 6).
       verify: `grep -c 'refused-correctable' docs/contracts/ratification-artifact.md` -> /^[1-9]/
-- [ ] **2.5 Define the review-instance model**: a stable identity across
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **2.5 Define the review-instance model**: a stable identity across
       revisions of the same proposal, carrying its full history of prior
       objections and dispositions, so a remediation is provably the same
       review continuing rather than a fresh one laundering a prior refusal.
@@ -179,7 +186,17 @@ depends on them yet, because no consumer is wired until Phase 3.*
 `Blocks:` fields before assuming 3.2 can ship a working registry rather than
 a stub.*
 
-- [ ] **3.1 Run the council on the approver-registry identity mechanism**,
+- [x] **3.1 Run the council on the approver-registry identity mechanism**,
+      **Closed 2026-10-10 without a round: D7 already answers it.** The owner
+      chose on 2026-10-08, via `/roadmap:resolve-blockers`, exactly one of the two
+      candidates this step names — binding to the existing platform-anchor layer,
+      as a GitHub required-reviewer account or team declared through
+      `src/config/platform-anchor.json`, so no credential sits where an agent
+      could reach it. Running a council on a question the owner has decided would
+      re-litigate an owner call, which `decision-revisit-gate`'s owner-reserved
+      table forbids. The excluded candidates stay excluded: commit author metadata
+      and a `~/.gitconfig` comparison were rejected by the record and are not
+      reopened here. Original text:
       explicitly excluding commit author/committer metadata and a
       `~/.gitconfig` comparison (record § 2 — "an agent able to run Git can
       generally set those values"). Candidates to evaluate: a signed
@@ -189,18 +206,18 @@ a stub.*
       layer (`check_platform_anchor`, `src/config/platform-anchor.json`) that
       `ratification-artifact.md` already trusts for branch integrity. Record
       the verdict as a `## Decisions` row.
-- [ ] **3.2 Implement the registry** per 3.1's verdict, as an additive layer
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **3.2 Implement the registry** per 3.1's verdict, as an additive layer
       beside the existing platform-anchor trust stack — never a replacement
       for it without its own ratification (the contract's own rule: "a later
       change that removes the deny needs its own ratification and cannot cite
       this one").
       verify: `test -f src/config/approver-registry.json` -> 0
-- [ ] **3.3 Build the verifier** that checks a ratification record's bound
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **3.3 Build the verifier** that checks a ratification record's bound
       attestation against the registry from 3.2, read from the BASE revision
       only — mirroring `check_kernel_edit_ratified.ts`'s existing defence
       against a candidate diff supplying the code that judges it.
       verify: `npx vitest run tests/scripts/check_approver_registry.test.ts` -> 0
-- [ ] **3.4 Close the dealbreaker.** Choose exactly one, and record which:
+- [ ] <!-- blocked-by: external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is already registered on this roadmap and goes to the owner in the drain run's end report; these markers record which steps share its gate and ask nothing new --> **3.4 Close the dealbreaker.** Choose exactly one, and record which:
       (a) the verifier and registry from 3.2–3.3 sit in a protected subset of
       the gated surface, needing the higher approval 2.1/3.1's council work
       defines; (b) they are externally verified (a mechanism outside this
@@ -373,6 +390,7 @@ before 8.3 gates anything.*
 | D10 | contested-technical | council:2026-10-08 resolve-blockers-batch | `supported-merge-strategies-for-ratified-changes` (a): a PR carrying a ratification artifact lands by merge commit only; every other PR keeps the repository's current strategies. 6.1 designs serialisation against this constraint and documents when a PR carries an artifact. Recorded in `docs/contracts/ratification-artifact.md` § Supported merge strategies when 6.1 lands. | AI council 2026-10-08, anthropic + openai, 2/2 present, both (a), $0.00. Both: (c) accepting provenance loss would be owner-reserved; (b) only council-decidable if re-derivation keeps the authorisation valid for the exact resulting tree. | a deterministic, auditable post-squash re-derivation is shown to preserve provenance with no information loss |
 | D11 | destructive-owned | council:2026-10-10 design, 2/2 present, peer review | 1.1 — the hold is **(c)**: a forge-side approval administered by a separately authorised principal, outside the candidate branch, required before the first Phase 2 authority-expanding merge and covering Phase 3. Neither shape the step anticipated was selected: a doc-only sentence is a description, not a hold, and a candidate-branch CI check is inside the write boundary the record's dealbreaker names. Condition 4 of `ratification-artifact.md` routes **Phase 2** to the owner (both seats) but does **not** conclusively reach Phase 3's verifier or approver registry (both seats) — the enumeration names computing a subject, writing a record, asking questions and deriving a verdict, and a verifier checks an attestation instead. | AI council 2026-10-10, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, peer review, 2/2 present, $0.00 subscription transport. Record and prompt: `agents/evidence/council/authority-routing-hold-form-20261010.md` and its `.question.md`. Split on scope: anthropic anchors Phase 3 only (Phase 2 already condition-4 routed, conf. 0.85); openai anchors both (Phase 2 defines the semantics Phase 3 will later bind, conf. 0.91). The stronger reading was taken on the parent record's own precedent — condition 4 routes a decision to a person, it does not prevent a merge. | condition 4's enumeration is amended to reach verification machinery explicitly, or the external control proves to block all constitutional maintenance |
 | D12 | reversible-technical | council:2026-10-10, same run | Phase 3 does not begin until the external approval path is **active and tested against an attempted bypass**. Designing or documenting it does not unblock implementation. | openai, unprompted and not in step 1.1's text; anthropic's § what-it-does-not-guarantee reaches the same place from the audit side | the bypass test proves unconstructible without production credentials |
+| D13 | contested-technical | council:2026-10-10 design, 2/2 present, peer review — **SPLIT, escalates** | 2.1 — the LOCATION of the six-predicate test is **not decided**: anthropic (b), a section of `ratification-artifact.md`, conditional on the forge blocker being resolvable (conf. 0.78); openai (a), a new `docs/contracts/dangerous-action-predicates.md` added atomically to the gate's watch list (conf. 0.88). What IS decided, both seats: whichever file holds the predicates **joins the gate's watch list in the same change**, references point at one canonical file and no second document restates them, and the sequence is contract-plus-watch-list-entry atomically → negative regression test that weakening it without a record is caught → only then may downstream routing depend on it. Fail closed: a trusted gate that cannot load the file or establish its comparison base stops authority routing; there is no temporarily-unwatched state. | AI council 2026-10-10, `anthropic/claude-sonnet-4-5` + `openai/codex-default`, 2 rounds, peer review, 2/2, $0.00. Record and prompt: `agents/evidence/council/dangerous-action-predicates-home-20261010.md` and its `.question.md`. openai's unrefuted pushback: being on the watch list is not yet a security boundary, because the evidence shows the file is watched and not that the watcher runs from a revision the candidate cannot alter — the contract says the same ("THE GATE ADDS A REFUSAL. IT DOES NOT ADD AN ANCHOR"). Both seats' conditions reduce to `external-bootstrap-boundary-for-phases-2-3`. | the blocker is shown permanent (moves anthropic to (a)), a second consumer needs versioned independence (same), or trusted forge-side tooling is shown able to validate only an embedded definition atomically (moves openai to (b)) | <!-- ref-ignore -->
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-07 | reviewer: claude/host -->
