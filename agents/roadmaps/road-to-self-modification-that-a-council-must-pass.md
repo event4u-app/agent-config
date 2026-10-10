@@ -208,7 +208,7 @@ At `df377ca64`:
 
 ## Phase 2 — An approval is bound to what it approved
 
-- [ ] **2.1 The record carries a digest of the gated content it reviewed.**
+- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **2.1 The record carries a digest of the gated content it reviewed.**
       The artifact gains a `subject` field: one digest over the sorted paths
       and contents of every file of the change that the gate classifies as
       gated, with a deleted file entered as deleted. One function in a module
@@ -227,7 +227,7 @@ At `df377ca64`:
       and expects red, and writes and judges a change that widens the gated
       set.
       verify: `npx vitest run tests/scripts/ratification_subject_binding.test.ts` -> 0
-- [ ] **2.2 Each record answers for its own change.** A record validates a
+- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **2.2 Each record answers for its own change.** A record validates a
       diff only when its `subject` matches that diff's gated content; a second
       valid record for something else no longer carries it. The 23 records on
       the trunk are not rewritten: they were judged when they landed and are
@@ -284,14 +284,14 @@ At `df377ca64`:
 
 ## Phase 4 — The reviewer and the consequence class are inside the gate
 
-- [ ] **4.1 The review's own code is a gated surface.** The gate's watch list
+- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **4.1 The review's own code is a gated surface.** The gate's watch list
       gains the modules of Phases 2 and 3 — the digest and the writer, the
       questions, the verdict rule — and the artifact contract. Because they are modules of their
       own, an ordinary change to the council's prompts or transports stays
       ungated. A change to any watched one is a change to the reviewer: it
       needs a passing record and the owner.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_reviewer_paths.test.ts` -> 0
-- [ ] **4.2 Rule law beyond the nine kernel rules.** The gate's path set is
+- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **4.2 Rule law beyond the nine kernel rules.** The gate's path set is
       extended by the members of `src/config/rule-consequence-class.json` —
       28 at the pin, selected by a criterion and not by name. The gate reads
       that list from its own tree, as it reads its policy, and the list and
@@ -299,7 +299,7 @@ At `df377ca64`:
       change cannot drop a member in order to edit it. The schema is shared
       by every rule, so any edit to it then needs a record too.
       verify: `npx vitest run tests/scripts/check_kernel_edit_ratified_consequence_class.test.ts` -> 0
-- [ ] **4.3 The comment matches the hooks.** The gate's header stops saying
+- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **4.3 The comment matches the hooks.** The gate's header stops saying
       that the dispatcher source and the kernel list are denied at tool-call
       time.
       verify: `grep -c 'also denied at tool-call time' src/scripts/check_kernel_edit_ratified.ts` -> /^0$/
@@ -307,7 +307,7 @@ At `df377ca64`:
 
 ## Phase 5 — A council that cannot settle it stops the run for the user
 
-- [ ] **5.1 The conditions, once.** The contract lists when the user decides,
+- [x] **5.1 The conditions, once.** The contract lists when the user decides,
       in the order of ADR-268 § 4: the record is `non-convergent` after a
       different provider was tried; provider diversity is unavailable for a
       critical expansion; the change touches a row of the owner-reserved table
@@ -316,7 +316,7 @@ At `df377ca64`:
       the availability rule's substitute clause, each gain one sentence: not
       for a modification review.
       verify: `grep -l 'modification review' src/skills/ai-council/SKILL.md src/rules/council-availability.md | wc -l` -> /^2$/
-- [ ] **5.2 The stop has a shape.** In those cases the run ends with the
+- [ ] <!-- blocked-by: road-to-authority-routing-mechanism#external-bootstrap-boundary-for-phases-2-3 | asked: no — the owner-reserved question is registered on that roadmap and goes to the owner in the drain run's end report; blocking here records that these steps share its gate, and asks nothing new --> **5.2 The stop has a shape.** In those cases the run ends with the
       change open and labelled, the non-passing record in it, and one question
       for the user: the council's recommendation, the dissent, the exact
       change, what it is expected to gain, what it risks, and how it is
@@ -328,6 +328,35 @@ At `df377ca64`:
       This step implements the option the second blocker's answer names, and
       whatever it builds states in the contract what it cannot prove.
       verify: `npx vitest run tests/scripts/ratification_owner_route.test.ts` -> 0
+
+> **Screened 2026-10-10 — six steps are gated, and the gate said so itself.**
+> Step 4.3 was attempted as the cheapest possible probe: a comment-only
+> correction to `check_kernel_edit_ratified.ts` removing a sentence that was
+> factually wrong (it claimed the dispatcher source and the kernel list are
+> "also denied at tool-call time"; the plumbing guard protects three generated
+> build outputs and not `dispatch_hook.ts`, and the kernel-rule guard imports
+> `kernel_rules.ts` without protecting it). The edit changes no behaviour.
+>
+> The gate refused it: `scanned: 1 · Gated surfaces in this diff (1): the
+> ratification mechanism itself (gate, reader, policy or workflow)` — so even a
+> comment on that file needs a ratification record. The probe was reverted and
+> the finding kept; the correction itself is still owed and still true.
+>
+> That answers the question for the whole phase block rather than six times
+> over. 2.1, 2.2, 4.1, 4.2, 4.3 and 5.2 all edit the gate or its reader, so
+> each needs a record; and `ratification-artifact.md` § When the user decides
+> condition 4 — "the modules that compute the record's `subject`, write the
+> record, ask the questions and derive the verdict, and this contract" — names
+> 2.1 and 3.4 almost word for word. **Phase 3's four modules and Phase 6's two
+> steps are downstream rather than independently gated**: they are new files
+> the gate's path set does not yet watch (4.1 is what adds them), but 6.1
+> consumes the `subject` 2.1 defines, so nothing in Phase 6 lands first.
+>
+> The binding gate is `road-to-authority-routing-mechanism`'s blocker
+> `external-bootstrap-boundary-for-phases-2-3` (council 2026-10-10, 2/2): a
+> forge-side approval outside the candidate branch must precede the first
+> authority-expanding merge to this surface. It is registered there, addressed
+> to the owner, and this roadmap adds no question of its own.
 
 ## Phase 6 — One change nobody asked for travels the whole lane
 
