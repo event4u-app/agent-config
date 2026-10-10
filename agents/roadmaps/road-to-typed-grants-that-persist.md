@@ -1622,10 +1622,23 @@ PR carrying unique work · `G15` an authority-expanding kernel edit, inert until
 > **AC-6 open** — `ls src/scripts/check_typed_op_grant.ts` fails; control, the same `ls` against
 > `check_platform_anchor.ts` returns a 15,577-byte file.
 
-- [ ] AC-1 — `G1`-`G15` exist under `tests/e2e/autonomy/` and are green.
+- [ ] <!-- blocked-by: kernel-guard-first-crossing | asked: no — the blocker is registered in this file and already owner-owned; the marker records that the criterion shares its gate and asks nothing new --> AC-1 — `G1`-`G15` exist under `tests/e2e/autonomy/` and are green.
+      **Measured 2026-10-10 at `55360bb87`: 0 of 15.** `tests/e2e/autonomy/` does not
+      exist; `tests/e2e/` holds five unrelated specs. The fixtures are Phase 1's
+      output, so this reads as Phase 1's state rather than as its own gap.
 - [ ] AC-2 — `ask_block_census` over the 30-session corpus reports that every remaining owner
       ask is either a typed op or owner-owned residue; no ask remains for a push, a commit, a
       CI fix or a conflict.
+      **Measured 2026-10-10 at `55360bb87`, and deliberately NOT marked blocked.** The
+      census was run this date (637 files; see `road-to-decision-closure` AC-5 for the
+      same reading) and reports *zero commit/push/CI/conflict asks* **MET** on the static
+      corpus — which is the second half of this criterion. The first half asks for a
+      reading **over the 30-session corpus**, and the census's third target, *zero repeats
+      of an answered question*, reads **NOT MEASURED (transcript axis)**: the tree has a
+      transcript intake (`--native-asks` / `--unblocked-asks`, fed by `probe_unblocked_ask`)
+      but no producer for this measurement. No marker is written because no registered
+      blocker in this file gates it — a marker naming `kernel-guard-first-crossing` would
+      misstate what this criterion waits on, which is a transcript producer.
 - [x] AC-3 — ADR-239's `merge-authority` blocker reads `resolved` and points at ADR-268 § 3;
       ADR-255 § 4 carries a scoped `superseded_by`.
       **MET 2026-10-05 at `6aa3c36f9`, and discharged against the STRICTER of the two readings
@@ -1652,9 +1665,24 @@ PR carrying unique work · `G15` an authority-expanding kernel edit, inert until
       `src/scripts/_lib/mission_record.ts` (`:87`, `:128`) — a type with no writer, no reader and
       no file. So AC-3 is met and AC-6 is not, which is the correct split: this criterion is about
       the RECORDS pointing at each other, not about the mechanism existing.
-- [ ] AC-4 — the `legacy_human_gate` ratchet is registered and its count at HEAD is below the
+- [ ] <!-- blocked-by: kernel-guard-first-crossing | asked: no — the blocker is registered in this file and already owner-owned; the marker records that the criterion shares its gate and asks nothing new --> AC-4 — the `legacy_human_gate` ratchet is registered and its count at HEAD is below the
       count measured at this pin.
-- [ ] AC-5 — `personal.autonomy` ships `on` and no autonomy-detection context remains in the
+      **Measured 2026-10-10 at `55360bb87`: not registered.** `legacy_human_gate`
+      appears nowhere under `src/` in `*.ts` or `*.json`, and
+      `src/config/gate-violation-baselines.json` carries three keys, none of them
+      this one. The first limb fails, so the second is not yet askable.
+- [ ] <!-- blocked-by: kernel-guard-first-crossing | asked: no — the blocker is registered in this file and already owner-owned; the marker records that the criterion shares its gate and asks nothing new --> AC-5 — `personal.autonomy` ships `on` and no autonomy-detection context remains in the
       tree.
+      **Measured 2026-10-10 at `55360bb87`: both limbs fail.**
+      `src/config/agent-settings.template.yml:304` reads `autonomy: auto`, not `on`,
+      and `src/agent-src/contexts/execution/autonomy-detection.md` still ships. Both
+      are Phase 1 outputs.
 - [ ] AC-6 — a typed op with no matching grant object is red in CI on a fixture diff, so the
       narrowed floor has a mechanical replacement rather than prose.
+      **Re-measured 2026-10-10 at `55360bb87`, and unchanged from AC-3's reading.**
+      `grep -rn LedgerState src --include "*.ts"` returns **2** hits, both in
+      `src/scripts/_lib/mission_record.ts` (`:87` the interface, `:128` a parameter type) —
+      still a type with no writer, no reader and no file. **Deliberately NOT marked
+      blocked**: this criterion waits on Phase 3.1, which reads `[~]` deferred rather than
+      blocked, and writing a blocker marker for a deferred step would convert a deferral
+      into a gate this file never decided.
