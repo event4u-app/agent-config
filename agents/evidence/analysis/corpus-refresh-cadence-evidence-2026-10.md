@@ -307,6 +307,84 @@ is exempt from the reference check.
 Budget for the corpus, not just the one-line edit; use the corpus 1.2b
 wrote for `api-design` as the worked example.
 
+**RAN 2026-10-10 — occasion 3 of 4. One correction, two confirmations, and a
+near-miss that the primary source caught.**
+
+Authorised by the explicit `/roadmap:process-full` grant naming the draft
+roadmaps on this date, on the terms D4 records and D5 re-used: each occasion
+needs its own grant rather than inheriting one. Calendar axis clear — 2026-10-10
+is distinct from 1.2a's 2026-10-01 and 1.2b's 2026-10-04, and leaves 1.2d a
+fourth date before the ~2026-12-27 bound. **Run earlier than the suggested
+window** (late November): the suggestion is not the binding constraint,
+distinctness and the outer bound are, and deferring would have left the grant
+unused against an occasion that depends on a future grant arriving.
+
+### What was checked, and against what
+
+The three version-scoped annotations the 2026-09-27 re-derivation added are the
+falsifiable part of this corpus, so each was checked against the engine's own
+reference documentation rather than against recall.
+
+| Row | Claim | Source read | Verdict |
+|---|---|---|---|
+| 1 — Slow WHERE | PG18+ B-tree skip scan relaxes equality-first composite ordering | `docs/18/indexes-multicolumn.html` + `docs/18/release-18.html` | **holds as written** |
+| 5 — JOIN explosion | MySQL 9.7 Hypergraph Optimizer "now GA in Community Edition … on its own" | `refman/9.7/en/switchable-optimizations.html` + 9.7.0 release notes | **corrected** |
+| 12 — JSON filtering | PG18 flips GENERATED default to VIRTUAL; VIRTUAL not indexable | `docs/18/ddl-generated-columns.html`, `sql-createtable.html`, `release-18.html`, `release-18-4.html` | **holds as written** |
+
+**Row 1 — confirmed.** The PG18 release notes carry it as a new feature:
+*"Allow skip scans of btree indexes (Peter Geoghegan) — This allows
+multi-column btree indexes to be used in more cases such as when there are no
+restrictions on the first or early indexed columns."* The multicolumn-index
+page states the mechanism. The `PostgreSQL 18+` scoping in the row is right.
+
+**Row 5 — corrected, and this is the occasion's finding.** The Hypergraph
+Optimizer *is* in Community Edition from MySQL 9.7.0 (2026-04-21), but
+`switchable-optimizations.html` shows `hypergraph_optimizer=off` in the
+`optimizer_switch` default. "GA … and can materially improve join-order choices
+**on its own**" reads as on-by-default; it does nothing until switched on per
+session, globally, or per statement. The row now says so and keeps the
+verify-estimates instruction.
+
+**Row 12 — confirmed, after a near-miss worth recording as this occasion's
+control.** The default flip is verbatim in two places: *"A generated column is
+by default of the virtual kind"* and the release note *"Allow generated columns
+to be virtual, and make them the default."* The *indexability* half nearly went
+the other way: a web search summarised PostgreSQL 18.4 as having lifted the
+restriction. The 18.4 release notes (2026-05-14) say something narrower —
+*"Fix spurious 'indexes on virtual generated columns are not supported' errors
+… Creation of an expression index could sometimes incorrectly report this
+error."* That fixes a **spurious firing on an unrelated expression index**; the
+error class still exists, so the restriction stands and the row is right.
+
+**Why that near-miss is the control this occasion owes.** 1.2b ran under a
+control that proved the detector fires. Here the equivalent is that the method
+discriminated in both directions on the same day: it corrected row 5 and
+declined to "correct" row 12 when a secondary summary invited it, because the
+primary source said otherwise. A method that only ever finds drift is not
+measuring drift.
+
+**The other nine rows** (ORDER BY…LIMIT, N+1, LIKE, aggregation, deep offset,
+lock contention, stale statistics, over-indexing, SELECT *) carry no
+version-scoped claim; they are engine-behaviour patterns that PG18 and MySQL 9.7
+do not alter, and they hold as written.
+
+### What changed in the tree
+
+- `query-tuning.csv` row 5 Strategy field — the Hypergraph correction above.
+- `manifest.json` `upstream.sha` — replaced the ~700-character read-date-plus-
+  changelog value with the engine versions alone, per 1.2a's correction note and
+  1.2c's verbatim hand-over. The re-derivation's content lives here instead.
+- `manifest.json` `upstream.last_checked` — `2026-09-18` → `2026-10-10` (UTC).
+
+### Gate readings
+
+`check_corpus_staleness` — **green on the findings list, not merely the exit
+code**: 6 manifests, 41 CSVs, every declared cadence met, reference date
+2026-10-10. `check_routing_coverage` — the stamp pulled `database` into
+touched-skill scope exactly as D5 predicted; `src/skills/database/evals/triggers.json`
+was written (5 exemplars, 3 near-misses, 2 counterexamples, one German positive)
+and the gate now reads skills **124 / 299 = 0.4147**, up from the 0.4114 seed.
+
 ## Step 1.2d — `threat-modeling`
 
 **Evidence (2026-10-04) — still deferred, and the reason narrowed.**
