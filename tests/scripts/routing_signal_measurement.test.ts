@@ -210,8 +210,14 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // (0x46 = 70), `po-discovery` (0x60 = 96) and `source-discovery`
         // (0xe4 = 228) all train, moving the train count 92 -> 96; the holdout
         // is unchanged.
+        //
+        // 123 -> 124 on 2026-10-10: `road-to-corpus-refresh-cadence-shape` 1.2c
+        // stamped the `database` corpus, pulling that skill into
+        // `check_routing_coverage`'s touched-skill scope and so requiring its
+        // trigger corpus. `database` (0x35 = 53) is above the ceiling and
+        // trains, moving the train count 96 -> 97; the holdout is unchanged.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(123);
+        expect(all.length).toBe(124);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(27);
     });
 });
@@ -245,7 +251,8 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 91 -> 92 on 2026-10-07: `using-git-worktrees` trains.
         // 92 -> 96 on 2026-10-09: `command-routing`, `feature-planning`,
         // `po-discovery` and `source-discovery` train.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(96);
+        // 96 -> 97 on 2026-10-10: `database` trains. See the partition note above.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(97);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {
