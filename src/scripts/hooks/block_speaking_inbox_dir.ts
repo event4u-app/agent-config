@@ -149,9 +149,10 @@ function isGlobOverAcceptableInboxDir(name: string): boolean {
     if (!/[*?[\]]/.test(name)) {
         return false;
     }
-    // Only a single-range class like `[a-z]` is stripped; any other bracket
-    // payload stays in the literal and is judged, because `[acme]` names it.
-    const literal = name.replace(/[*?]|\[[a-z0-9]-[a-z0-9]\]/gi, '');
+    // Only a generic class is stripped. Any other bracket payload stays in the
+    // literal and is judged: `[acme]` names a source, and so does a run of
+    // singleton ranges like `[a-a][c-c]`.
+    const literal = name.replace(/[*?]|\[(?:a-z|0-9|a-f|0-9a-f|a-z0-9)\]/gi, '');
     if (OPAQUE_FAMILY_WILDCARD_RE.test(name)) {
         return true;
     }

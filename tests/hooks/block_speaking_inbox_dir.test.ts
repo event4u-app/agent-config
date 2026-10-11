@@ -281,8 +281,24 @@ describe('a glob over an acceptable name is not a creatable literal', () => {
             'agents/tmp/set-*acme/x.md',
             'agents/tmp/inbox-2026-09-[acme]/x.md',
             'agents/tmp/inbox-2026-09-[acme]*/x.md',
+            'agents/tmp/inbox-2026-09-[a-a][c-c][m-m][e-e]/x.md',
+            'agents/tmp/inbox-2026-09-[x-y]/x.md',
         ])('refuses %s', (p) => {
             expect(blocks(p)).toBe(true);
+        });
+
+        it('lets the original trigger command through end to end', () => {
+            const tokens = creatableTokens('for f in agents/tmp/round-*/*.md; do head -40 "$f"; done').filter(
+                (t) => t.includes('agents/tmp'),
+            );
+            expect(tokens.length).toBeGreaterThan(0);
+            expect(tokens.some((t) => blocks(t))).toBe(false);
+        });
+
+        it('allows the generic classes', () => {
+            for (const cls of ['[a-z]', '[0-9]', '[a-f]', '[0-9a-f]', '[a-z0-9]', '[A-Z]']) {
+                expect(blocks(`agents/tmp/inbox-2026-09-${cls}/x.md`)).toBe(false);
+            }
         });
 
         it('refuses a bracket payload in a full Bash command', () => {
