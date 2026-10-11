@@ -164,7 +164,7 @@ reading the code reaches them without finding this file.
   under either branch, and (b) becomes a live option only once 0.1 records a
   failure that is itself the reason to carry it (D4).
 - **Resolved when:** both limbs hold —
-  `grep -c '^- \[x\] \*\*1.1 Pick the loading strategy' agents/roadmaps/road-to-svg-rules-in-the-dispatch-path.md`
+  `grep -c '^- \[x\] \*\*1.1 Pick the loading strategy' agents/roadmaps/archive/road-to-svg-rules-in-the-dispatch-path.md`
   returns 1, and `./scripts-run src/scripts/check_hook_bundle_composition`
   exits 0 on the tree that carries the chosen strategy. Rewritten 2026-10-11 by
   `/roadmap:resolve-blockers`: the earlier condition was the byte check alone
