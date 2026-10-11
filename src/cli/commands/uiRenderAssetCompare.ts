@@ -95,6 +95,116 @@ export function cropRect(
     };
 }
 
+/**
+ * What the SOURCE raster shows at a list of points, and what its background is.
+ *
+ * Step 1.2 of `road-to-svg-from-a-live-session`. `geometry/near-white-hole`
+ * asks a question about the source — "is there a hole there?" — and until now
+ * nothing read the source to answer it. Measured consequence: the rule fired
+ * six times on paint an owner had chosen, and zero times on the file the same
+ * owner rejected.
+ *
+ * Points are in the VECTOR's user units; the registration maps them into the
+ * raster's own pixel frame, the same mapping the comparison uses, so the two
+ * cannot disagree about where a point is.
+ *
+ * The background is the raster's corner pixel. That is the same assumption the
+ * comparison's own background mask makes, and it is stated here rather than
+ * hidden: a source whose corner is not its background will answer `paint`
+ * everywhere, which is the direction that produces no finding.
+ */
+export interface SourceSample {
+    /** `true` when the source at this point matches its own background. */
+    isBackground: boolean;
+    rgb: [number, number, number];
+}
+
+export async function sampleSource(
+    context: Awaited<ReturnType<Browser['newContext']>>,
+    sourceFile: string,
+    vb: ViewBox,
+    registration: Registration,
+    points: ReadonlyArray<{ x: number; y: number }>,
+    blocked: string[],
+): Promise<SourceSample[] | null> {
+    if (points.length === 0) return [];
+    let buf: Buffer;
+    try {
+        buf = fs.readFileSync(sourceFile);
+    } catch {
+        return null;
+    }
+    const mime = /\.png$/i.test(sourceFile)
+        ? 'image/png'
+        : /\.webp$/i.test(sourceFile)
+          ? 'image/webp'
+          : /\.svg$/i.test(sourceFile)
+            ? 'image/svg+xml'
+            : 'image/jpeg';
+    const crop = cropRect(registration);
+    if (!crop) return null;
+
+    const page = await context.newPage();
+    await page.route('**/*', async (route: Route) => {
+        const url = route.request().url();
+        if (!ALLOWED_SCHEMES.some((p) => url.startsWith(p))) {
+            blocked.push(url);
+            await route.abort();
+            return;
+        }
+        await route.continue();
+    });
+    try {
+        await page.setContent('<!doctype html><body></body>');
+        return await page.evaluate(
+            async (args: {
+                url: string;
+                crop: { x: number; y: number; width: number; height: number };
+                vb: ViewBox;
+                points: ReadonlyArray<{ x: number; y: number }>;
+            }): Promise<SourceSample[] | null> => {
+                const img = new Image();
+                img.src = args.url;
+                try {
+                    await img.decode();
+                } catch {
+                    return null;
+                }
+                const w = Math.max(1, Math.round(args.crop.width));
+                const h = Math.max(1, Math.round(args.crop.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                if (!ctx) return null;
+                ctx.drawImage(img, args.crop.x, args.crop.y, args.crop.width, args.crop.height, 0, 0, w, h);
+                const data = ctx.getImageData(0, 0, w, h).data;
+                const at = (px: number, py: number): [number, number, number] => {
+                    const x = Math.min(w - 1, Math.max(0, Math.round(px)));
+                    const y = Math.min(h - 1, Math.max(0, Math.round(py)));
+                    const i = (y * w + x) * 4;
+                    return [data[i] as number, data[i + 1] as number, data[i + 2] as number];
+                };
+                const background = at(0, 0);
+                const near = (a: [number, number, number], b: [number, number, number]): boolean =>
+                    Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) <= 24;
+                return args.points.map((p) => {
+                    // User units → the crop's own pixels, which is the same
+                    // mapping the comparison stretches the vector through.
+                    const rgb = at(
+                        ((p.x - args.vb.x) / args.vb.w) * w,
+                        ((p.y - args.vb.y) / args.vb.h) * h,
+                    );
+                    return { isBackground: near(rgb, background), rgb };
+                });
+            },
+            { url: `data:${mime};base64,${buf.toString('base64')}`, crop, vb, points },
+        );
+    } finally {
+        await page.close();
+    }
+}
+
 export interface RasterRegionReading {
     region: string;
     silhouette_iou: number;

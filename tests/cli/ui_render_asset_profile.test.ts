@@ -44,11 +44,26 @@ interface FixtureRow {
     rule: string;
     file: string;
     twin: string;
+    /**
+     * The SOURCE raster this row is registered against, where the rule it
+     * plants asks a question about the source. Step 1.2 of
+     * `road-to-svg-from-a-live-session`: `geometry/near-white-hole` is about
+     * what the source shows under a near-white region, and before this the
+     * row carried no source for the engine to read.
+     */
+    source?: string;
+    registration?: string;
 }
 
 interface FixtureManifest {
     rows: FixtureRow[];
-    controls: Array<{ id: string; file: string; must_not_report: string[] }>;
+    controls: Array<{
+        id: string;
+        file: string;
+        must_not_report: string[];
+        source?: string;
+        registration?: string;
+    }>;
     fill_ratio_thresholds: Record<string, number>;
     geometry_tolerances: Record<string, { silhouette_iou_min: number; max_boundary_distance_units: number }>;
 }
@@ -80,6 +95,7 @@ interface RenderArgs {
     assetClass?: AssetClass;
     delivery?: DeliveryMode;
     compareTo?: string;
+    registration?: string;
 }
 
 async function renderAsset(args: RenderArgs): Promise<RenderManifest> {
@@ -93,6 +109,7 @@ async function renderAsset(args: RenderArgs): Promise<RenderManifest> {
         ...(args.assetClass ? { assetClass: args.assetClass } : {}),
         ...(args.delivery ? { delivery: args.delivery } : {}),
         ...(args.compareTo ? { compareTo: args.compareTo } : {}),
+        ...(args.registration ? { registration: parseRegistration(args.registration) ?? undefined } : {}),
     });
     expect(code, `ui:render exited ${code} for ${args.file}`).toBe(0);
     return manifestOf(args.slug);
@@ -120,6 +137,8 @@ describe('ui:render --profile asset', () => {
                     slug: `engine-${row.id}-planted`,
                     assetClass: row.asset_class,
                     delivery: row.delivery,
+                    ...(row.source ? { compareTo: path.join(FIXTURE_ROOT, row.source) } : {}),
+                    ...(row.registration ? { registration: row.registration } : {}),
                 });
                 expect(planted.profile, `${row.id}: the manifest must declare the asset profile`).toBe('asset');
                 expect(planted.verification, `${row.id}: Playwright resolved, so this is a real reading`).toBe(
@@ -136,6 +155,8 @@ describe('ui:render --profile asset', () => {
                     slug: `engine-${row.id}-twin`,
                     assetClass: row.asset_class,
                     delivery: row.delivery,
+                    ...(row.source ? { compareTo: path.join(FIXTURE_ROOT, row.source) } : {}),
+                    ...(row.registration ? { registration: row.registration } : {}),
                 });
                 expect(
                     rulesOf(twin),
@@ -151,6 +172,8 @@ describe('ui:render --profile asset', () => {
                 const reading = await renderAsset({
                     file: path.join(FIXTURE_ROOT, control.file),
                     slug: `control-${control.id}`,
+                    ...(control.source ? { compareTo: path.join(FIXTURE_ROOT, control.source) } : {}),
+                    ...(control.registration ? { registration: control.registration } : {}),
                 });
                 for (const rule of control.must_not_report) {
                     expect(rulesOf(reading), `${control.id} must never report ${rule}`).not.toContain(rule);
@@ -733,5 +756,94 @@ describe('the asset profile reports its own absence honestly', () => {
             });
         },
         180_000,
+    );
+});
+
+/**
+ * Phase 1 of `road-to-svg-from-a-live-session` — the witness stops warning
+ * about what is not there.
+ *
+ * Both rules fired on a real conversion session's files: the motion rule on
+ * all six, none of which contains `<animate`, `@keyframes` or `animation`, and
+ * the hole rule six times on paint the owner had chosen and zero times on the
+ * file the same owner rejected. A warning that appears on every file is a
+ * warning an operator learns to scroll past, which is Risk 1 of the parent
+ * roadmap arriving through a different door.
+ */
+describe('the witness stops warning about what is not there', () => {
+    it(
+        'static-file-through-img-has-no-motion-finding',
+        async () => {
+            // The control: a NON-animated SVG delivered through <img> with no
+            // <picture> route. There is nothing for a route to stop.
+            const clean = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'hosts/img-delivery-static.html'),
+                slug: 'img-static-control',
+                assetClass: 'animated',
+                delivery: 'img',
+            });
+            expect(rulesOf(clean)).not.toContain('motion/img-delivery-no-static-route');
+            expect(clean.asset?.reduced_motion.host_picture_route).toBe(false);
+            // The reading that decides it, recorded rather than inferred.
+            expect(clean.asset?.reduced_motion.delivered_animates).toBe(false);
+
+            // And the planted row still reports, so the gate silenced a false
+            // positive rather than the rule.
+            const planted = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'hosts/img-delivery.html'),
+                slug: 'img-animated-planted',
+                assetClass: 'animated',
+                delivery: 'img',
+            });
+            expect(rulesOf(planted)).toContain('motion/img-delivery-no-static-route');
+            expect(planted.asset?.reduced_motion.delivered_animates).toBe(true);
+        },
+        240_000,
+    );
+
+    it(
+        'near-white-hole-is-decided-by-the-source',
+        async () => {
+            // Same shape in both files. The SOURCE is the only difference, and
+            // it is the thing the rule's own message was always conditional on.
+            const hole = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'assets/near-white-hole.svg'),
+                slug: 'hole-with-source',
+                assetClass: 'mark',
+                delivery: 'inline',
+                compareTo: path.join(FIXTURE_ROOT, 'assets/near-white-hole.source.svg'),
+                registration: '0,0,100,100',
+            });
+            expect(rulesOf(hole)).toContain('geometry/near-white-hole');
+            expect(hole.asset?.near_white_regions[0]?.source_verdict).toBe('hole');
+
+            const paint = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'assets/near-white-paint.svg'),
+                slug: 'paint-with-source',
+                assetClass: 'mark',
+                delivery: 'inline',
+                compareTo: path.join(FIXTURE_ROOT, 'assets/near-white-paint.source.svg'),
+                registration: '0,0,100,100',
+            });
+            expect(rulesOf(paint)).not.toContain('geometry/near-white-hole');
+            expect(paint.asset?.near_white_regions[0]?.source_verdict).toBe('paint');
+
+            // Without a source the region is RECORDED and nothing is pushed —
+            // absent evidence reported as absent, never as a finding and never
+            // as clean. This is the case the six real files were in.
+            const noSource = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'assets/near-white-hole.svg'),
+                slug: 'hole-without-source',
+                assetClass: 'mark',
+                delivery: 'inline',
+            });
+            expect(rulesOf(noSource)).not.toContain('geometry/near-white-hole');
+            expect(noSource.asset?.near_white_regions).toHaveLength(1);
+            expect(noSource.asset?.near_white_regions[0]?.source_verdict).toBe('no-source');
+            // The region carries where it was measured, so a reader can repeat
+            // the reading with a source of their own.
+            expect(noSource.asset?.near_white_regions[0]?.centre).toEqual({ x: 50, y: 50 });
+        },
+        240_000,
     );
 });

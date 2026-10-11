@@ -221,7 +221,9 @@
       "file": "assets/near-white-hole.svg",
       "twin": "assets/near-white-hole.clean.svg",
       "twin_kind": "one-edit",
-      "note": "The two stacked circles become a single even-odd path, so the inner region is a real hole with alpha 0 instead of near-white paint (S5)."
+      "note": "The two stacked circles become a single even-odd path, so the inner region is a real hole with alpha 0 instead of near-white paint (S5). Step 1.2 of road-to-svg-from-a-live-session: the row now carries the SOURCE it is registered against, because the rule asks what the source shows under the near-white region and nothing used to read it.",
+      "source": "assets/near-white-hole.source.svg",
+      "registration": "0,0,100,100"
     },
     {
       "id": "d-morph-mismatch",
@@ -371,6 +373,16 @@
         "structure/loose-viewbox"
       ],
       "note": "Painted bbox 18 by 12 inside a 24 by 24 viewBox - a fill ratio of 0.375, which is designed padding. The prototype's global 0.5 threshold read it as loose (R12); at the icon-class threshold of 0.30 it must read clean."
+    },
+    {
+      "id": "near-white-paint",
+      "file": "assets/near-white-paint.svg",
+      "source": "assets/near-white-paint.source.svg",
+      "registration": "0,0,100,100",
+      "must_not_report": [
+        "geometry/near-white-hole"
+      ],
+      "note": "The same shape as the near-white-hole row, registered against a source that shows WHITE PAINT in the middle. The owner chose that colour, so the rule must stay silent \u2014 the measured false positive this control exists for fired six times on exactly this shape."
     }
   ],
   "surgical": [

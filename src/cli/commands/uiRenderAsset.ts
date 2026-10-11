@@ -47,7 +47,7 @@ import type { Browser, Page, Route } from '@playwright/test';
 import { elementExtent, parseElements, readViewBox, vectorVerdict } from '../../scripts/lint_svg_asset.js';
 import type { DeliveryMode, SvgElement, ViewBox } from '../../scripts/lint_svg_asset.js';
 import { hasCssAnimation, hasSmilMarkup } from '../../scripts/_lib/svg_motion.js';
-import { compareGeometry, type Registration } from './uiRenderAssetCompare.js';
+import { compareGeometry, sampleSource, type Registration } from './uiRenderAssetCompare.js';
 import {
     ASSET_CLASSES,
     BRAND_TOKEN_PATHS,
@@ -472,6 +472,7 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
         accessible_names: [],
         duplicate_accessible_names: [],
         frames: [],
+        animation_duration_s: 0,
         distinct_frames: 0,
         draw_on: [],
         icon_grid: null,
@@ -565,6 +566,7 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
         // Frames at t = 0, mid, end. SMIL is paused and sought; CSS/WAAPI
         // animations are paused and their currentTime is set (R6).
         const duration = await page.evaluate(readAnimationEndInPage);
+        reading.animation_duration_s = duration;
         if (duration > 0) {
             const points: Array<[FrameReading['label'], number]> = [
                 ['start', 0],
@@ -592,6 +594,7 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
             delivery,
             duration,
             isHost,
+            hostDir: path.dirname(path.resolve(opts.file)),
         });
 
         if (opts.compareTo) {
@@ -604,6 +607,22 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
                 ...(opts.registration ? { registration: opts.registration } : {}),
                 blocked,
             });
+
+            // Step 1.2: ask the SOURCE what is under each near-white region.
+            // Only reachable with a registration, which is the whole condition
+            // — without one the regions keep `no-source` and produce no
+            // finding, because the rule's claim is about the source and there
+            // is no source to make it against.
+            if (opts.registration && vb && reading.near_white_regions.length > 0) {
+                const points = reading.near_white_regions.map((n) => n.centre);
+                const samples = await sampleSource(context, opts.compareTo, vb, opts.registration, points, blocked);
+                if (samples !== null) {
+                    reading.near_white_regions = reading.near_white_regions.map((n, i) => ({
+                        ...n,
+                        source_verdict: (samples[i]?.isBackground ?? false) ? ('hole' as const) : ('paint' as const),
+                    }));
+                }
+            }
         }
     } finally {
         await context.close();
@@ -689,6 +708,21 @@ interface RawElementReading {
     pathLengthAttr: number | null;
     dashOffsetFrom: number | null;
     dashOffsetTo: number | null;
+    /**
+     * Indices of the elements whose FILL contains this element's centre,
+     * decided in-page by `isPointInFill`.
+     *
+     * Step 1.2 of `road-to-svg-from-a-live-session`. Containment used to be a
+     * bounding-box test, which calls a near-white shape "inside" a ring, an
+     * L-shape or a crescent it is nowhere near — and the measured consequence
+     * was six findings on paint an owner had deliberately chosen. A sampled
+     * point is what the renderer itself would answer.
+     *
+     * `getBBox` returns LOCAL user units, so this is exact for an untransformed
+     * tree and approximate under a transform — the same limit `staticBox`
+     * already declares rather than guesses around.
+     */
+    containedBy: number[];
 }
 
 interface RawTextReading {
@@ -830,6 +864,7 @@ function readAssetInPage(): RawAssetReading {
             dash: cs.strokeDasharray,
             totalLength,
             pathLengthAttr: Number.isFinite(pathLengthRaw) && pathLengthRaw > 0 ? pathLengthRaw : null,
+            containedBy: [],
             dashOffsetFrom: from,
             dashOffsetTo: to,
         });
@@ -865,6 +900,29 @@ function readAssetInPage(): RawAssetReading {
                 resolvedFamily: cssFamily,
                 firstFamilyResolved: hasDeclaration && resolves(first, sample || 'Hamburgefonstiv'),
             });
+        }
+    }
+
+    // Containment by SAMPLED FILL (step 1.2). A second pass rather than a
+    // branch in the loop above, because it needs every element to exist first.
+    // `isPointInFill` is what the renderer itself answers with, so a near-white
+    // shape beside a ring is no longer "inside" it for having a smaller box.
+    for (const inner of elements) {
+        if (!inner.geom) continue;
+        const cx = inner.geom.x + inner.geom.w / 2;
+        const cy = inner.geom.y + inner.geom.h / 2;
+        for (const outer of elements) {
+            if (outer.index === inner.index) continue;
+            const node = all[outer.index] as unknown as {
+                isPointInFill?: (p: { x: number; y: number }) => boolean;
+            };
+            if (typeof node.isPointInFill !== 'function') continue;
+            try {
+                if (node.isPointInFill({ x: cx, y: cy })) inner.containedBy.push(outer.index);
+            } catch {
+                // A node that refuses the question answers "not contained",
+                // which is the safe direction: it produces no finding.
+            }
         }
     }
     return { viewBox, elements, texts };
@@ -1041,18 +1099,14 @@ function applyGeometry(reading: AssetReading, raw: RawAssetReading, vb: ViewBox 
     };
     for (const inner of raw.elements) {
         if (!inner.opaque || !isNearWhite(inner.fill)) continue;
-        const ib = inner.geom;
-        if (!ib) continue;
+        if (!inner.geom) continue;
+        // Step 1.2: containment is the SAMPLED fill, computed in-page by
+        // `isPointInFill`, not a bounding-box comparison. A box test calls a
+        // near-white shape "inside" a ring, an L or a crescent it never
+        // touches, which is how this rule came to fire six times on paint an
+        // owner had deliberately chosen.
         const host = raw.elements.find(
-            (o) =>
-                o.index !== inner.index &&
-                o.opaque &&
-                !isNearWhite(o.fill) &&
-                o.geom !== null &&
-                ib.x > o.geom.x &&
-                ib.y > o.geom.y &&
-                ib.x + ib.w < o.geom.x + o.geom.w &&
-                ib.y + ib.h < o.geom.y + o.geom.h,
+            (o) => inner.containedBy.includes(o.index) && o.opaque && !isNearWhite(o.fill),
         );
         if (host) {
             reading.near_white_regions.push({
@@ -1060,6 +1114,10 @@ function applyGeometry(reading: AssetReading, raw: RawAssetReading, vb: ViewBox 
                 id: inner.id,
                 fill: inner.fill,
                 enclosed_by: host.id || `${host.tag}@${host.index}`,
+                centre: { x: inner.geom.x + inner.geom.w / 2, y: inner.geom.y + inner.geom.h / 2 },
+                // Filled in by the source sampling when a registered raster is
+                // supplied. Absent evidence stays absent.
+                source_verdict: 'no-source',
             });
         }
     }
@@ -1202,12 +1260,18 @@ function deriveFindings(r: AssetReading): AssetFinding[] {
     }
 
     for (const n of r.near_white_regions) {
+        // Step 1.2: a finding needs EVIDENCE of a hole. Without a registered
+        // source the region is recorded in the manifest and nothing is pushed —
+        // the rule's message was always conditional on what the source shows,
+        // and nothing was reading it.
+        if (n.source_verdict !== 'hole') continue;
         out.push({
             rule: 'geometry/near-white-hole',
             severity: 'warning',
             detail:
-                `${n.fill} is painted opaquely inside ${n.enclosed_by}; if the source shows a hole there it must be ` +
-                'cut out, not painted near-white — it reads white on a dark background (S5)',
+                `${n.fill} is painted opaquely inside ${n.enclosed_by}, and the registered source shows its own ` +
+                'background there — a hole must be cut out, not painted near-white, or it reads white on a dark ' +
+                'background (S5)',
         });
     }
 
@@ -1245,7 +1309,15 @@ function deriveFindings(r: AssetReading): AssetFinding[] {
         });
     }
 
-    if (r.reduced_motion.host_picture_route === false) {
+    // Step 1.1: gated on the duration, not only on the host's route. A host
+    // with no `<picture>` route is correct for a file that does not move, and
+    // this used to fire on all six files of a real conversion session — none
+    // of which carries `<animate`, `@keyframes` or `animation`. A warning that
+    // appears on every file is a warning an operator learns to scroll past,
+    // which is Risk 1 of the parent roadmap arriving by a different door.
+    const delivered = r.reduced_motion.delivered_animates;
+    const moves = delivered === null || delivered === undefined ? r.animation_duration_s > 0 : delivered;
+    if (r.reduced_motion.host_picture_route === false && moves) {
         out.push({
             rule: 'motion/img-delivery-no-static-route',
             severity: 'warning',
@@ -1282,6 +1354,8 @@ interface ReducedMotionSpec {
     delivery: DeliveryMode;
     duration: number;
     isHost: boolean;
+    /** Directory the host's relative image references resolve against. */
+    hostDir: string;
 }
 
 async function readReducedMotion(
@@ -1303,11 +1377,56 @@ async function readReducedMotion(
     });
     try {
         if (spec.delivery === 'img' || spec.delivery === 'css-bg') {
-            const route = await page.evaluate(() => {
+            const seen = await page.evaluate(() => {
                 const sources = Array.from(document.querySelectorAll('picture > source'));
-                return sources.some((s) => /prefers-reduced-motion\s*:\s*reduce/i.test(s.getAttribute('media') ?? ''));
+                const route = sources.some((s) =>
+                    /prefers-reduced-motion\s*:\s*reduce/i.test(s.getAttribute('media') ?? ''),
+                );
+                // Every file this host DELIVERS, by its own reference — the
+                // `<img>` src, each `<source srcset>`, and any CSS
+                // background-image url. Names only; they are resolved on disk.
+                const refs = new Set<string>();
+                for (const img of Array.from(document.querySelectorAll('img'))) {
+                    const src = img.getAttribute('src');
+                    if (src) refs.add(src);
+                }
+                for (const s of sources) {
+                    for (const part of (s.getAttribute('srcset') ?? '').split(',')) {
+                        const url = part.trim().split(/\s+/)[0];
+                        if (url) refs.add(url);
+                    }
+                }
+                for (const el of Array.from(document.querySelectorAll('*'))) {
+                    const bg = window.getComputedStyle(el).backgroundImage;
+                    const m = /url\((['"]?)([^)'"]+)\1\)/.exec(bg);
+                    if (m?.[2]) refs.add(m[2]);
+                }
+                return { route, refs: [...refs] };
             });
-            return { witnessable: false, frames_equal: null, reason: R5, host_picture_route: route };
+            // Step 1.1: the question is about the DELIVERED file, and the host
+            // page cannot answer it — its own duration is 0 for a spinner and
+            // for a static logo alike.
+            let animates: boolean | null = null;
+            for (const ref of seen.refs) {
+                if (/^(?:https?:|data:)/i.test(ref)) continue;
+                const abs = path.resolve(spec.hostDir, ref.replace(/^file:\/\//, ''));
+                if (!/\.svg$/i.test(abs)) continue;
+                let body: string;
+                try {
+                    body = fs.readFileSync(abs, 'utf8');
+                } catch {
+                    continue;
+                }
+                const moves = hasSmilMarkup(body) || hasCssAnimation(body);
+                animates = (animates ?? false) || moves;
+            }
+            return {
+                witnessable: false,
+                frames_equal: null,
+                reason: R5,
+                host_picture_route: seen.route,
+                delivered_animates: animates,
+            };
         }
         if (spec.duration <= 0) {
             return { witnessable: true, frames_equal: true, reason: 'nothing animates in this file' };

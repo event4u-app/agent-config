@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" role="img">
+  <title>Source for the ring mark — the inner region IS a hole</title>
+  <!-- The source raster the near-white-hole row is registered against (step 1.2
+       of road-to-svg-from-a-live-session). Background first, then the ring with
+       the middle left as background: a sample at the centre reads the corner
+       colour, which is what makes the near-white fill in the candidate a hole
+       that was painted over rather than a colour somebody chose. -->
+  <rect width="100" height="100" fill="#111827"/>
+  <path fill-rule="evenodd" fill="#2563eb" d="M10 50 A40 40 0 1 0 90 50 A40 40 0 1 0 10 50 Z M32 50 A18 18 0 1 0 68 50 A18 18 0 1 0 32 50 Z"/>
+</svg>

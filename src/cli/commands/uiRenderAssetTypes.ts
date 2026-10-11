@@ -156,6 +156,22 @@ export interface ReducedMotionReading {
     frames_equal: boolean | null;
     reason: string;
     host_picture_route?: boolean;
+    /**
+     * Whether the DELIVERED file moves — read from its own bytes, not from the
+     * host page.
+     *
+     * Step 1.1 of `road-to-svg-from-a-live-session`. For an `img` or CSS
+     * background delivery the animation lives inside the image document, which
+     * the host page cannot see: the host's own animation duration is 0 for a
+     * spinner and for a static logo alike. Gating the missing-route finding on
+     * the host's duration would have silenced the planted row it exists for,
+     * so the question is asked of the file that is actually delivered.
+     *
+     * `null` where the delivery is not through an image document, or where the
+     * referenced file could not be read — and `null` falls back to the page's
+     * own duration rather than to a guess.
+     */
+    delivered_animates?: boolean | null;
 }
 
 export interface AssetFinding {
@@ -187,9 +203,49 @@ export interface AssetReading {
     duplicate_accessible_names: string[];
     frames: FrameReading[];
     distinct_frames: number;
+    /**
+     * Seconds until the last animation on the page ends, 0 when nothing moves.
+     *
+     * Step 1.1 of `road-to-svg-from-a-live-session`. The engine already
+     * computed this to decide whether to capture frames at all, and then threw
+     * it away — so `motion/img-delivery-no-static-route` had no way to ask
+     * whether the file animates and fired on all six real conversion files,
+     * none of which contains `<animate`, `@keyframes` or `animation`.
+     */
+    animation_duration_s: number;
     draw_on: DrawOnReading[];
     icon_grid: IconGridReading | null;
-    near_white_regions: Array<{ index: number; id: string; fill: string; enclosed_by: string }>;
+    near_white_regions: Array<{
+        index: number;
+        id: string;
+        fill: string;
+        enclosed_by: string;
+        /**
+         * The point the source is sampled at, in the graphic's user units —
+         * the region's own centre. Recorded so a reader can repeat the reading
+         * and so the sampling does not have to re-derive it from a geometry
+         * pass that has already been thrown away.
+         */
+        centre: { x: number; y: number };
+        /**
+         * What the SOURCE shows under this region — step 1.2 of
+         * `road-to-svg-from-a-live-session`.
+         *
+         * `hole` the source shows its own background there, so near-white
+         *        paint is covering a hole and reads white on a dark ground;
+         * `paint` the source shows paint there, so the near-white fill is a
+         *        deliberate choice and there is nothing to report;
+         * `no-source` no registered raster was supplied, so the question was
+         *        not asked. The region is still RECORDED — absent evidence is
+         *        reported as absent, never as a finding and never as clean.
+         *
+         * The rule's own message was always conditional ("if the source shows
+         * a hole there"), and nothing was reading the source: it fired six
+         * times on paint an owner had chosen, and zero times on the file the
+         * same owner rejected.
+         */
+        source_verdict: 'hole' | 'paint' | 'no-source';
+    }>;
     network: { aborted: number; blocked_urls: string[] };
     findings: AssetFinding[];
     comparison?: GeometryComparison;
