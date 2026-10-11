@@ -15,6 +15,7 @@ relates:
   - slug: road-to-frontend-design-intelligence
     relation: disjoint
     note: "Archived. Its Step 7.3 (port a generative SVG-icon/logo asset corpus) was cancelled on the domain-adoption gates. Mechanism-match fails: this roadmap verifies SVG an agent already writes on six existing lanes, it ports no asset corpus and opens no domain."
+estate_growth_exempt: "Step 3.1 adds src/skills/svg-authoring/SKILL.md: skill_count +1 and its description tokens, both with 0 allowance in src/config/estate-count-budget.json. The owner is the artefact the whole roadmap exists to produce — six lanes hand-author SVG and none had a procedure — and decision E2 records why it cannot be a reference under any one skill: the lanes sit in three packs and packs: takes a list. The per-spawn preamble payload is paid back in the same change rather than claimed: the four lane descriptions this change already edits are trimmed by more than the new catalogue line costs, measured with check_preamble_payload_budget."
 estate_offset_exempt: "Adds one active roadmap with nothing to offset: none of the twenty top-level roadmaps owns a design, frontend or asset surface, so folding this into one would misfile it, and parking an unrelated roadmap would misstate it as blocked. The gap is reproduced, not asserted: an infinite SMIL animation with no reduced-motion branch reads clean under lint_design_quality today, and an .svg write is not a UI surface."
 ---
 # Road to SVG with a witness
@@ -141,7 +142,7 @@ renderer.
 
 ## Phase 0 — The fixture, and what today's instruments read on it
 
-- [ ] **0.1 Commit a planted-defect fixture.** Under
+- [x] **0.1 Commit a planted-defect fixture.** Under
       `tests/design-artifacts/fixtures/svg-assets/` <!-- ref-ignore -->
       one file per planted defect and a clean twin differing by exactly one
       edit, tagged by asset class (`icon`, `mark`, `illustration`, `diagram`,
@@ -175,7 +176,7 @@ renderer.
       the mark), so the ground-truth geometry of every region is known and no
       third-party brand image is committed (S1, S4).
       verify: `npx vitest run tests/design-artifacts/svg_assets_fixture.test.ts --reporter=verbose` -> /✓.*every-planted-file-has-a-one-edit-twin/ <!-- ref-ignore -->
-- [ ] **0.2 Record today's detection.** Run `lint_design_quality --dir` over
+- [x] **0.2 Record today's detection.** Run `lint_design_quality --dir` over
       the HTML fixtures, `isUiPath` over every fixture path, and the
       `<path>`-presence check `logo-generation` describes over the vector
       fixtures; write the per-row result into the README. Expected from R10
@@ -184,7 +185,7 @@ renderer.
       `rect`/`circle` mark.
       verify: the README's baseline table has one row per planted file with
       a non-empty cell per instrument.
-- [ ] **0.3 Pre-register the targets.** Static layer: every row tagged
+- [x] **0.3 Pre-register the targets.** Static layer: every row tagged
       `static` found, 0 findings on twins. Engine layer: every row tagged
       `engine` found where Playwright resolves, `unverified` otherwise — never
       a pass. Fill-ratio thresholds per asset class, never global.
@@ -193,7 +194,7 @@ renderer.
 
 ## Phase 1 — Static witness
 
-- [ ] **1.1 `lint_svg_asset.ts`, dependency-free, advisory.** <!-- ref-ignore -->
+- [x] **1.1 `lint_svg_asset.ts`, dependency-free, advisory.** <!-- ref-ignore -->
       Same conventions as `lint_design_quality` (inline-ignore, project
       config, exit 0/2/1, the scanned-nothing refusal). Rule families:
       structure (viewBox, xmlns, dangling `#id` references, unparseable path
@@ -211,7 +212,7 @@ renderer.
       or order). Draw-on dead time is not a static rule — it moves to
       2.1. `corrected-from-reproduction` (R9).
       verify: `npx vitest run tests/scripts/lint_svg_asset.test.ts --reporter=verbose` -> /✓.*every-static-row-found-and-twins-clean/ <!-- ref-ignore -->
-- [ ] **1.2 Preservation readout for a surgical edit.** `lint_svg_asset
+- [x] **1.2 Preservation readout for a surgical edit.** `lint_svg_asset
       --baseline <before.svg> --allow <id,…>` compares every element outside
       the allowed set after attribute canonicalisation (number formatting,
       attribute order, whitespace) and reports each one that changed, with
@@ -221,14 +222,14 @@ renderer.
       already states as prose.
       verify: the three surgical-edit pairs from 0.1 each report exactly the
       moved neighbour, and their clean twins report nothing.
-- [ ] **1.3 DQ4 learns the definite case, inline only.** For inline SVG in
+- [x] **1.3 DQ4 learns the definite case, inline only.** For inline SVG in
       HTML, `lint_design_quality` DQ4 reports SMIL with no reduced-motion route
       and SMIL whose only route is a CSS `animation: none` (R4). Standalone
       `.svg` stays in 1.1: a file cannot see its host's `<picture>` route, and
       flagging it there would break the linter's zero-false-positive header
       (`lint_design_quality.ts:12`).
       verify: `npx vitest run tests/scripts/lint_design_quality_dq4_smil.test.ts --reporter=verbose` -> /✓.*inline-smil-without-route-is-reported/ <!-- ref-ignore -->
-- [ ] **1.4 The design pass reads an `.svg` with the SVG rules, and nothing
+- [x] **1.4 The design pass reads an `.svg` with the SVG rules, and nothing
       else changes.** `design_pass_hook` already fires on an `.svg` inside a UI
       tree (`design_pass_hook.ts:132`) and then scans it with
       `lint_design_slop.scanFile` (`:520`), which has no SVG rule (D9). Route
@@ -241,7 +242,7 @@ renderer.
       `components/logo.svg`; `isUiWrite` stays `false` for `assets/logo.svg`
       and `true` for `components/logo.svg`, as today. No new hook concern.
       verify: `npx vitest run tests/scripts/design_pass_svg.test.ts --reporter=verbose` -> /✓.*svg-write-gets-svg-rules-and-no-new-nudge/ <!-- ref-ignore -->
-- [ ] **1.5 One safety profile per delivery mode.** The safety family reads
+- [x] **1.5 One safety profile per delivery mode.** The safety family reads
       the declared delivery mode and grades by what can execute there: inline
       DOM (scripts, `on*`, `javascript:` hrefs and `foreignObject` run in the
       host's origin — error); a standalone document opened directly (scripts
@@ -284,13 +285,13 @@ renderer.
       stays a devDependency; no rasteriser or renderer dependency is added.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts -t absent-path-reads-unverified --reporter=verbose` -> /✓.*absent-path-reads-unverified/ <!-- ref-ignore -->
       (the case runs the existing render-absent fixture with the asset profile).
-- [ ] **2.4 A time point is a primitive.** Add `frame_seek` to
+- [x] **2.4 A time point is a primitive.** Add `frame_seek` to
       `design-artifact-verification.md`'s primitive table ("an animation's
       state at a declared time", dependent on `playwright`), and a scope line
       on `media_emulation`: page document only — an image document was
       measured unreachable by emulation (R5).
       verify: `grep -cE '^[|] .frame_seek. [|]' docs/contracts/design-artifact-verification.md` -> /^1$/
-- [ ] **2.5 Fix the stale reference** at `uiRender.ts:26` (`package.json:97` →
+- [x] **2.5 Fix the stale reference** at `uiRender.ts:26` (`package.json:97` →
       the line that holds `@playwright/test`, `:111` today).
       verify: `grep -c 'package.json:97' src/cli/commands/uiRender.ts` -> /^0$/
 - [ ] **2.6 Geometry comparison with declared tolerances.** One comparison
@@ -314,7 +315,7 @@ renderer.
 
 ## Phase 3 — One owner for hand-authored SVG
 
-- [ ] **3.1 Create the `svg-authoring` skill.** <!-- ref-ignore -->
+- [x] **3.1 Create the `svg-authoring` skill.** <!-- ref-ignore -->
       `packs:` lists every pack a lane sits in — `frontend-design`,
       `ai-image`, `ai-video`, `engineering-base` — and the same diff carries
       `estate_growth_exempt` for `skill_count` +1 and its description tokens
@@ -354,19 +355,19 @@ renderer.
       deriving; the measurement, not the tool, is the procedure (E11). Motion, ARIA and render-security mechanism are
       pointers to their authorities, never restated.
       verify: `./scripts-run src/scripts/skill_linter src/skills/svg-authoring/SKILL.md` -> 0 <!-- ref-ignore -->
-- [ ] **3.2 Move the diagram pre-checks.** `integration-mapping.md:65-74`
+- [x] **3.2 Move the diagram pre-checks.** `integration-mapping.md:65-74`
       moves to the owner as witnessed checks (viewBox safety, arrow-through-box
       and label-fits-box map onto 2.1's geometry). The verb routing table and
       the noun-count triage stay and point to the owner.
       verify: `grep -c 'Geometric pre-checks' src/skills/design-intelligence/references/integration-mapping.md` -> /^0$/
-- [ ] **3.3 Point the six lanes at it.** One pointer line each, no restated
+- [x] **3.3 Point the six lanes at it.** One pointer line each, no restated
       rule: `iconography/SKILL.md:102-105` (missing glyph — read the incumbent
       set's grid, stroke and padding from its own SVGs); `logo-generation`
       step 2 and step 5; `canvas-design/SKILL.md:76` when the execution tool
       is SVG; `wireframe/SKILL.md:80-81`; the V5 remediation cell in
       `design-antipatterns.md:117`.
       verify: `grep -l 'svg-authoring' src/skills/iconography/SKILL.md src/skills/logo-generation/SKILL.md src/skills/canvas-design/SKILL.md src/skills/wireframe/SKILL.md docs/guidelines/design-antipatterns.md` -> /iconography.*\n.*logo-generation.*\n.*canvas-design.*\n.*wireframe.*\n.*design-antipatterns/
-- [ ] **3.4 Trigger rows.** An `evals/triggers.json` for the owner with
+- [x] **3.4 Trigger rows.** An `evals/triggers.json` for the owner with
       sibling negatives: icon-set lookup → `iconography`, brand pipeline →
       `logo-generation`, raster → `image-generation`, video motion →
       `motion-choreographer`; positives include "draw an SVG icon the set
@@ -382,7 +383,7 @@ renderer.
       learns `ui:render --profile asset`, so the turn-end gate accepts the
       check that actually looks at the file, and does not learn `xmllint`.
       verify: `npx vitest run tests/scripts/verification_command_asset_render.test.ts --reporter=verbose` -> /✓.*asset-render-verifies-and-xmllint-does-not/ <!-- ref-ignore -->
-- [ ] **3.6 Deliver, re-open, re-render.** The owner's last step reads every
+- [x] **3.6 Deliver, re-open, re-render.** The owner's last step reads every
       delivered file back from its final path in a fresh browser context
       (`file://`, other requests aborted), re-renders it from there — not from
       the source text it wrote — and reports path, byte size and digest; an
@@ -393,13 +394,13 @@ renderer.
 
 ## Phase 4 — Routing that ends in an asset
 
-- [ ] **4.1 Split `image-provider-routing/SKILL.md:40`.** Icon →
+- [x] **4.1 Split `image-provider-routing/SKILL.md:40`.** Icon →
       `iconography` (set first) → the owner for a missing glyph; simple
       geometric mark → the owner; complex illustrative vector art → the
       provider, with the adapter's lifecycle stated in the answer. Trigger
       rows of both skills updated in the same diff.
       verify: `./scripts-run src/scripts/check_trigger_evals` -> 0
-- [ ] **4.2 Replace the path-presence check.** `logo-generation/SKILL.md:53-55`
+- [x] **4.2 Replace the path-presence check.** `logo-generation/SKILL.md:53-55`
       and the good example at `:80-82` use 1.1's vector-honesty family plus the
       witness: a `rect`/`circle` mark stops failing, a raster beside a dummy
       path stops passing.

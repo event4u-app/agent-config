@@ -62,16 +62,19 @@ shape; 3–7 → one diagram; 8+ → split or summarize, never one dense picture
 | a **cycle** / loop / lifecycle | — | a **stepper widget**, never a hand-drawn ring |
 | a **DB schema / ERD** / entity relations | — | **mermaid**, never hand-placed SVG |
 
-### Geometric pre-checks (run BEFORE finalizing an SVG/diagram)
+### Drawing the diagram itself
 
-Ranked by failure rate — procedures, not constants:
+The verb routing above and the noun-count triage stay here — they decide WHAT to
+draw. **How** to draw it, and the check that the drawing is right, belong to
+[`svg-authoring`](../../svg-authoring/SKILL.md).
 
-1. **viewBox safety** — compute the lowest + rightmost element (plus a buffer)
-   and set the viewBox from that; never assume the default fits.
-2. **arrow-through-box trace** — trace every arrow's path and confirm it does
-   not cross through an unrelated box before drawing it.
-3. **box-width-from-longest-label** — size each box from its longest label
-   before placing it, so text never overflows.
+The three checks this section used to carry — viewBox safety, the
+arrow-through-box trace, and sizing a box from its longest label — were author
+self-checks with no witness, and a published example in this very file violated
+the viewBox rule it stated. They are now readings the asset profile takes in a
+real engine: every painted element against the viewBox, and every `<text>`
+against its declared box. A self-check that nothing measures is the failure
+mode, not the three rules.
 
 (Reference-only: any color/easing/frame values come from the consumer's tokens
 or a maintained upstream — this skill vendors no drawn-asset corpus.)
