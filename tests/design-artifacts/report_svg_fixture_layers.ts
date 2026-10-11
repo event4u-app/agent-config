@@ -34,6 +34,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 import type * as PlaywrightTest from '@playwright/test';
+import type * as UiRenderAsset from '../../src/cli/commands/uiRenderAsset.js';
 
 import { scanHostHtml, scanSvg, type DeliveryMode } from '../../src/scripts/lint_svg_asset.js';
 import { smilVerdict } from '../../src/scripts/_lib/svg_motion.js';
@@ -44,7 +45,7 @@ import { smilVerdict } from '../../src/scripts/_lib/svg_motion.js';
  * `unverified`, never a pass.
  */
 type AssetClass = 'icon' | 'mark' | 'illustration' | 'diagram' | 'animated';
-type AssetRenderModule = typeof import('../../src/cli/commands/uiRenderAsset.js');
+type AssetRenderModule = typeof UiRenderAsset;
 
 async function loadAssetRenderer(): Promise<AssetRenderModule | null> {
     try {
