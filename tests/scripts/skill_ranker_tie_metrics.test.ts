@@ -96,8 +96,16 @@ describe('tie metrics on the committed corpus (keyword-v1)', () => {
     const whole = readMatrixLabelledPrompts(REPO);
 
     it('the population is the one the evidence page measured', () => {
+        // 299 -> 300 on 2026-10-11: `svg-authoring` landed. Re-measured against
+        // the tree rather than loosened, and the canary did exactly what its
+        // header says it is for — it reddened on a catalogue move while the
+        // metric was intact. The published figures below were re-derived at 300
+        // and are UNCHANGED (315/67 tuning, 75/15 sealed), so the evidence page
+        // needs no re-take: the new skill scores on no labelled prompt in the
+        // routing matrix, which is why a bigger catalogue moved no tie. The
+        // labelled-row count is untouched at 390 — the branch added no fixture.
         expect(whole.length, 'routing-matrix labelled rows moved since 2026-10-01').toBe(390);
-        expect(_globSkillMd(SKILLS_DIR).length, 'skill catalogue moved since 2026-10-01').toBe(299);
+        expect(_globSkillMd(SKILLS_DIR).length, 'skill catalogue moved since 2026-10-11').toBe(300);
     });
 
     it('reproduces 67 of 315 on tuning and 15 of 75 on sealed', () => {
