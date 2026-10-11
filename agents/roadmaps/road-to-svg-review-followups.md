@@ -98,19 +98,40 @@ check must also require the full contrast to appear inside the window.
       open. (a) W 2.3 (W:282-286) corrected: "No Playwright → `verification:
       unverified`, and the **asset** profile exits non-zero with a code
       distinct from an internal error; the page profile keeps its exit 0
-      (`uiRender.ts:158-160`)." (b) W 3.5 (W:377-384) corrected: "`isVerificationCommand` learns neither `ui:render` nor `xmllint`.
-      For a turn whose last edit is an `.svg`, the verification detector
-      accepts the turn when the asset manifest under
-      `agents/runtime/state/render/` records `verification: verified` and a
-      digest equal to that file's current digest, on the record path and the
-      transcript path alike." W AC-9 (W:579-581) reads "the turn-end gate
-      accepts an `.svg` edit only on a verified, digest-matching asset
-      manifest" instead of "counts the asset render". The negative case is a
-      consumer without Playwright: a bare `ui:render --profile asset` call
-      after an `.svg` edit is refused.
+      (`uiRender.ts:158-160`). Every `unverified` manifest carries a
+      machine-readable `reason` beside the prose `degradation_reason`
+      (`uiRender.ts:150-153` writes only the prose today): `renderer-absent`
+      for the missing devDependency, `render-failed` for a renderer that ran
+      and failed, `pass-cap-reached` for 2.2." (b) W 3.5 (W:377-384)
+      corrected: "`isVerificationCommand` learns neither `ui:render` nor
+      `xmllint`. Every `.svg` edited in the turn whose current digest has no
+      matching manifest yet is an open SVG obligation — not only the turn's
+      last edit, so an `.svg` → `.html` sequence stays covered. The detector
+      discharges an obligation on exactly one of two records, on the record
+      path and the transcript path alike: (1) an asset manifest under
+      `agents/runtime/state/render/` with `verification: verified` and a
+      digest equal to the file's current digest; or (2) an asset manifest
+      with `reason: renderer-absent` **and** a `lint_svg_asset` run recorded
+      on the same digest with 0 error findings, which the turn records as
+      `static-only`. Unrelated verification commands (a test run, a linter on
+      other files) never discharge an SVG obligation." W AC-9 (W:579-581)
+      reads "the turn-end gate accepts an `.svg` edit only on a verified,
+      digest-matching asset manifest, or on a renderer-absent manifest plus a
+      clean static witness on the same digest" instead of "counts the asset
+      render". Path (2) is why a consumer without Playwright is not refused
+      forever on a blocking gate (`hook_manifest.yaml`, `turn-end-gate`,
+      `severity: blocking`) and why 4.2's static-only path is reachable; a
+      `render-failed` manifest discharges nothing. The negative cases: a bare
+      `ui:render --profile asset` call with nothing else is refused; a
+      `vitest` or `eslint` run after an `.svg` edit is refused; a
+      renderer-absent manifest whose static witness reports an error is
+      refused.
       verify: `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t bare-asset-render-without-playwright-is-refused --reporter=verbose` -> /✓.*bare-asset-render-without-playwright-is-refused/ <!-- ref-ignore -->
       and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t svg-edit-accepted-on-verified-matching-digest --reporter=verbose` -> /✓.*svg-edit-accepted-on-verified-matching-digest/ <!-- ref-ignore -->
       and `npx vitest run tests/cli/ui_render_asset_profile.test.ts -t asset-profile-exits-nonzero-on-unverified --reporter=verbose` -> /✓.*asset-profile-exits-nonzero-on-unverified/ <!-- ref-ignore -->
+      and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t renderer-absent-plus-clean-static-witness-is-static-only --reporter=verbose` -> /✓.*renderer-absent-plus-clean-static-witness-is-static-only/ <!-- ref-ignore -->
+      and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t unrelated-check-does-not-discharge-svg-edit --reporter=verbose` -> /✓.*unrelated-check-does-not-discharge-svg-edit/ <!-- ref-ignore -->
+      and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t svg-then-html-edit-keeps-the-svg-obligation --reporter=verbose` -> /✓.*svg-then-html-edit-keeps-the-svg-obligation/ <!-- ref-ignore -->
 - [ ] **2.2 Amend W 3.1 and W 3.5: `verified` needs a clean witness, and the
       pass cap is never success.** `verified` means a digest-bound render
       manifest (2.1) **and** 0 error findings from W 1.1 and W 2.1 on that
@@ -118,8 +139,10 @@ check must also require the full contrast to appear inside the window.
       witness or after three render passes; a stop at the cap with error
       findings open reports `unverified` with the reason `pass-cap-reached`
       and lists the open findings — never `verified`, never done." A fixture
-      whose planted error survives three passes pins it.
-      verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts -t pass-cap-with-open-findings-is-unverified --reporter=verbose` -> /✓.*pass-cap-with-open-findings-is-unverified/ <!-- ref-ignore -->
+      whose planted error survives three passes pins it. The pass cap is the
+      owner skill's behaviour — the renderer knows nothing of passes — so the
+      case lives with W's scenarios, not with the render profile's tests.
+      verify: `npx vitest run tests/design-artifacts/svg_scenarios.test.ts -t pass-cap-with-open-findings-is-unverified --reporter=verbose` -> /✓.*pass-cap-with-open-findings-is-unverified/ <!-- ref-ignore -->
 - [ ] **2.3 A second axis: render status is not goal status.** W 3.1's report
       (W:329-332) and W 3.5 gain a separate field: `goal: unassessed` by
       default, `accepted` or `rejected` only from an owner statement or from a
@@ -129,6 +152,7 @@ check must also require the full contrast to appear inside the window.
       report carries a goal field, and no layer derives `accepted` from a
       digest match."
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts -t renderer-never-writes-goal-accepted --reporter=verbose` -> /✓.*renderer-never-writes-goal-accepted/ <!-- ref-ignore -->
+      and, for the owner skill, `npx vitest run tests/design-artifacts/svg_scenarios.test.ts -t skill-never-derives-goal-accepted --reporter=verbose` -> /✓.*skill-never-derives-goal-accepted/ <!-- ref-ignore -->
 
 ## Phase 3 — The static witness reads a tree, and is measured on real SVGs
 
@@ -198,7 +222,8 @@ check must also require the full contrast to appear inside the window.
 | D5 | reversible-technical | evidence | W 3.6's prose-grep verify stays | C9: W 6.5 re-opens every delivered file from disk in a fresh context and is the behavioural proof | W 6.5 is cancelled or narrowed |
 | D6 | reversible-technical | evidence | "No new dependency, reuse Playwright" needs no amendment | C10 | — |
 | D7 | reversible-technical | evidence | `relates:` uses `extends`; `amends` is not a valid relation | `lint_roadmap_complexity.ts:480` lists extends, supersedes, depends, disjoint | the relation set gains an amendment relation |
-| D8 | reversible-technical | agent | The pass-cap status is `unverified` with a reason, not a fourth status token | 2.2: the three tokens W already defines (W:330-331) carry it when `verified` requires a clean witness | a consumer needs to tell "cap reached" from "renderer absent" by token alone |
+| D8 | reversible-technical | agent | The pass-cap status is `unverified` with a reason, not a fourth status token; the reason is a machine-readable field (`renderer-absent`, `render-failed`, `pass-cap-reached`) beside the prose `degradation_reason` | 2.1, 2.2: the three tokens W already defines (W:330-331) stay; the gate in 2.1 must tell an absent renderer from a failed render, which the prose field at `uiRender.ts:150-153` cannot carry | a consumer needs to tell the reasons apart by token alone |
+| D9 | reversible-technical | agent | This roadmap is temporary: on or after 2026-10-12 its amendments are folded into W and A under a new `reviewed:` stamp, and this file is then archived; the fold is not a checkbox here, because adding one today reds `lint_plan_risk_register` against the same-day stamp | `lint_plan_risk_register.ts:620-625` bases staleness on the commit that introduced the current `reviewed:` value and compares the date only, so a same-day re-review cannot be recorded (Risk 1 names the read-this-first coupling as the weak point); a revision number in the stamp would remove the cause | the lint learns a revision or time component in the stamp, after which a same-day fold is possible |
 
 ## Risk Register
 <!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
