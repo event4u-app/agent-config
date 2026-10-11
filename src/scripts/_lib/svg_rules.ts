@@ -476,7 +476,13 @@ export function safetySeverity(mode: DeliveryMode): Severity {
     return mode === 'img' || mode === 'css-bg' ? 'inert' : 'error';
 }
 
-const ACTIVE_ATTR_RE = /\son[a-z]+\s*=\s*["']/i;
+// An UNQUOTED value counts. Finding 1 of the fifth completion review: this
+// fallback exists because the attribute parser only sees quoted values, and it
+// required a quote itself — so `onload=alert(1)`, which every browser runs,
+// produced zero findings while `onload="alert(1)"` produced an error. The
+// safety family missing the unquoted spelling is the one miss that matters,
+// because an attacker writes whichever spelling is not checked.
+const ACTIVE_ATTR_RE = /\son[a-z]+\s*=\s*(["']|[^\s>"'])/i;
 
 function ruleActiveContent(
     content: string,
@@ -613,7 +619,6 @@ function ruleExternalReference(
 // Rule family — vector honesty (defect D3)
 // ---------------------------------------------------------------------------
 
-const RASTER_HREF_RE = /^(?:data:image\/(?:png|jpe?g|gif|webp|bmp|avif)|[^?#]*\.(?:png|jpe?g|gif|webp|bmp|avif)(?:[?#]|$))/i;
 
 /** Geometry elements that ARE vector drawing. `rect`/`circle` count (D3's false red). */
 export const VECTOR_GEOMETRY = new Set([
@@ -640,9 +645,16 @@ export function vectorVerdict(elements: SvgElement[]): VectorVerdict {
     for (const el of elements) {
         if (el.closing) continue;
         if (el.name === 'image') {
-            const href = el.attrs['href'] ?? el.attrs['xlink:href'] ?? '';
-            if (RASTER_HREF_RE.test(href) || href.startsWith('data:image/')) raster += 1;
-            else raster += 1; // an <image> of unknown type is still not vector geometry
+            // EVERY `<image>` counts, whatever it points at. Finding 7 of the
+            // fifth completion review: both arms of the `if` added 1, so the
+            // test and the regex behind it decided nothing — a dead constant
+            // and a dead branch dressed as a discrimination, which is the
+            // class this change has now found five times under other names.
+            // The comment on the else arm was the correct rule all along: an
+            // `<image>` of unknown type is still not vector geometry, and an
+            // href this scanner cannot classify is exactly the case where
+            // guessing "vector" would be the unsafe answer.
+            raster += 1;
             continue;
         }
         if (el.name === 'foreignobject') {
@@ -1173,19 +1185,61 @@ export function scanSvg(content: string, relPath: string, opts: ScanOptions = {}
  * which is the whole of R7: two graphics are each individually fine and
  * collide only together.
  */
+/**
+ * The TOP-LEVEL `<svg>` elements of a host document, by offset.
+ *
+ * Depth-counted, not matched. Finding 3 of the fifth completion review: the
+ * non-greedy `/<svg\b[\s\S]*?<\/svg\s*>/` ended at the FIRST `</svg>`, which
+ * on a graphic containing a nested `<svg>` — legal, and how a sprite or a
+ * symbol is embedded — is the inner one. The slice was then a truncated
+ * fragment, so the host reported a FALSE `svg-structure-not-well-formed` for
+ * an unclosed root AND missed everything after the inner close, including a
+ * real `<script>` that the same bytes report correctly when scanned flat. A
+ * false structure error and a missed active-content error, from one regex.
+ *
+ * A nested graphic is part of its parent and is not returned separately: the
+ * rules read the whole thing, exactly as a browser does.
+ */
+function topLevelGraphics(text: string): Array<{ start: number; end: number }> {
+    const out: Array<{ start: number; end: number }> = [];
+    const tagRe = /<(\/?)svg\b[^>]*?(\/?)>/gi;
+    let depth = 0;
+    let start = -1;
+    let t: RegExpExecArray | null;
+    while ((t = tagRe.exec(text)) !== null) {
+        const closing = t[1] === '/';
+        const selfClosing = t[2] === '/';
+        if (closing) {
+            if (depth === 0) continue;
+            depth -= 1;
+            if (depth === 0 && start !== -1) {
+                out.push({ start, end: t.index + t[0].length });
+                start = -1;
+            }
+            continue;
+        }
+        if (selfClosing) {
+            // An empty graphic at top level is still a graphic.
+            if (depth === 0) out.push({ start: t.index, end: t.index + t[0].length });
+            continue;
+        }
+        if (depth === 0) start = t.index;
+        depth += 1;
+    }
+    return out;
+}
+
 export function scanHostHtml(content: string, relPath: string, opts: ScanOptions = {}): Finding[] {
     const mode: DeliveryMode = opts.delivery ?? 'inline';
     const findings: Finding[] = [];
     const lineOf = lineIndexer(content);
-    const svgRe = /<svg\b[\s\S]*?<\/svg\s*>/gi;
     const graphics: Array<{ body: string; offset: number }> = [];
     // Finding 2.3 on the host side: a graphic inside an HTML comment is not on
     // the page, so it is not scanned and its ids do not collide with anything.
     // Masking preserves offsets, so `lineOf` — built from the raw text — still
     // answers correctly for the graphics that survive.
     const hostText = maskComments(content);
-    let m: RegExpExecArray | null;
-    while ((m = svgRe.exec(hostText)) !== null) {
+    for (const m of topLevelGraphics(hostText)) {
         // The MATCH is found in the masked text — a graphic inside an HTML
         // comment is not on the page — but the BODY is sliced from the raw
         // text at the same offsets.
@@ -1197,7 +1251,7 @@ export function scanHostHtml(content: string, relPath: string, opts: ScanOptions
         // this function re-filters on absolute lines at the end — the inner
         // pass was inert, and silently so, which made the outer re-filter
         // load-bearing without anything saying it was.
-        graphics.push({ body: content.slice(m.index, m.index + (m[0] ?? '').length), offset: m.index });
+        graphics.push({ body: content.slice(m.start, m.end), offset: m.start });
     }
 
     for (const g of graphics) {
@@ -1229,7 +1283,15 @@ export function scanHostHtml(content: string, relPath: string, opts: ScanOptions
             const key = id.toLowerCase();
             if (seen.has(key)) {
                 findings.push({
-                    rule: 'svg-a11y-generic-id',
+                    // ITS OWN RULE ID. Finding 4 of the fifth completion
+                    // review: this error shared `svg-a11y-generic-id` with the
+                    // single-graphic WARNING about a generic name, so one
+                    // `svg-asset-disable svg-a11y-generic-id` — a reasonable
+                    // thing to write when you have deliberately named
+                    // something `icon` — silenced a real collision between two
+                    // graphics as well. Two findings, two severities, two
+                    // remedies; one id was one too few.
+                    rule: 'svg-a11y-duplicate-id',
                     file: relPath,
                     line: el.line + baseLine,
                     snippet:
@@ -1253,14 +1315,29 @@ export function scanHostHtml(content: string, relPath: string, opts: ScanOptions
 // Inline-ignore + config
 // ---------------------------------------------------------------------------
 
-const ALL_LINES = 10_000;
+/**
+ * Which lines a rule is suppressed on, and whether the whole file is.
+ *
+ * Finding 6 of the fifth completion review: "whole file" used to be spelled as
+ * the numbers 1..10_000 in a Set — so a directive cost ten thousand entries on
+ * a path that now runs on every `.svg` write, AND a file longer than ten
+ * thousand lines silently stopped being suppressed past that line. A flag says
+ * the same thing in one bit and has no horizon.
+ */
+export interface RuleIgnore {
+    lines: Set<number>;
+    wholeFile: boolean;
+}
 
-export function parseIgnores(lines: string[]): Map<string, Set<number>> {
-    const ignores = new Map<string, Set<number>>();
+export function parseIgnores(lines: string[]): Map<string, RuleIgnore> {
+    const ignores = new Map<string, RuleIgnore>();
+    const slot = (rule: string): RuleIgnore => {
+        const found = ignores.get(rule) ?? { lines: new Set<number>(), wholeFile: false };
+        ignores.set(rule, found);
+        return found;
+    };
     const add = (rule: string, line: number): void => {
-        const set = ignores.get(rule) ?? new Set<number>();
-        set.add(line);
-        ignores.set(rule, set);
+        slot(rule).lines.add(line);
     };
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i] ?? '';
@@ -1270,14 +1347,14 @@ export function parseIgnores(lines: string[]): Map<string, Set<number>> {
         if (same?.[1]) add(same[1].toLowerCase(), i + 1);
         const whole = /svg-asset-disable\s+([\w-]+)/i.exec(line);
         if (whole?.[1] && !/-next-line|-line\s/.test(line)) {
-            const set = new Set<number>();
-            for (let n = 1; n <= ALL_LINES; n++) set.add(n);
-            ignores.set(whole[1].toLowerCase(), set);
+            slot(whole[1].toLowerCase()).wholeFile = true;
         }
     }
     return ignores;
 }
 
-function isIgnored(ignores: Map<string, Set<number>>, finding: Finding): boolean {
-    return ignores.get(finding.rule.toLowerCase())?.has(finding.line) ?? false;
+function isIgnored(ignores: Map<string, RuleIgnore>, finding: Finding): boolean {
+    const hit = ignores.get(finding.rule.toLowerCase());
+    if (hit === undefined) return false;
+    return hit.wholeFile || hit.lines.has(finding.line);
 }

@@ -257,7 +257,7 @@ a pass.
 | `assets/element-outside-viewbox.svg` | static | `structure/element-outside-viewbox` | lint_svg_asset svg-structure-outside-viewbox | found | 0 |
 | `assets/text-overflows-box.svg` | engine | `geometry/text-overflows-box` | ui:render --profile asset | found | 0 |
 | `assets/default-serif-fallback.svg` | engine | `geometry/default-font-fallback` | ui:render --profile asset | found | 0 |
-| `hosts/inline-generic-ids.html` | static | `accessibility/generic-id-collision` | lint_svg_asset svg-a11y-generic-id | found | 0 |
+| `hosts/inline-generic-ids.html` | static | `accessibility/generic-id-collision` | lint_svg_asset svg-a11y-duplicate-id | found | 0 |
 | `assets/meaningful-without-name.svg` | static | `accessibility/meaningful-without-name` | lint_svg_asset svg-a11y-no-accessible-name | found | 0 |
 | `assets/double-name.svg` | static | `accessibility/double-name` | lint_svg_asset svg-a11y-double-name | found | 0 |
 | `assets/keysplines-out-of-range.svg` | static | `motion/keysplines-out-of-range` | lint_svg_asset svg-motion-keysplines-range | found | 0 |

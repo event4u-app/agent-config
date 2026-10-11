@@ -98,7 +98,7 @@ const TAXONOMY_TO_RULE: Record<string, string> = {
     'safety/internal-dtd-subset': 'svg-safety-internal-subset',
     'safety/external-reference': 'svg-safety-external-reference',
     'vector-honesty/embedded-raster': 'svg-vector-embedded-raster',
-    'accessibility/generic-id-collision': 'svg-a11y-generic-id',
+    'accessibility/generic-id-collision': 'svg-a11y-duplicate-id',
     'accessibility/meaningful-without-name': 'svg-a11y-no-accessible-name',
     'accessibility/double-name': 'svg-a11y-double-name',
     'motion/keysplines-out-of-range': 'svg-motion-keysplines-range',
@@ -730,5 +730,135 @@ describe('what the fourth review round found', () => {
         const quarter = pathExtent('M 0 10 A 10 10 0 0 1 10 0');
         expect(quarter?.minX).toBeCloseTo(0, 6);
         expect(quarter?.maxX).toBeCloseTo(10, 6);
+    });
+});
+
+describe('what the fifth review round found', () => {
+    const mk = (attr: string): string =>
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">` +
+        `<title>t</title><rect ${attr} width="24" height="24"/></svg>\n`;
+
+    it('an unquoted event handler is active content too', () => {
+        // Finding 1. The fallback exists BECAUSE the attribute parser only
+        // sees quoted values — and it required a quote itself. So
+        // `onload=alert(1)`, which every browser runs, produced zero findings
+        // while `onload="alert(1)"` produced an error. An attacker writes
+        // whichever spelling is not checked.
+        for (const spelling of ['onload="alert(1)"', "onload='alert(1)'", 'onload=alert(1)', 'onclick=x']) {
+            expect(scanSvg(mk(spelling), 'a.svg').map((f) => f.rule)).toContain('svg-safety-active-content');
+        }
+        // And an ordinary attribute whose name merely starts with other
+        // letters is still not a handler — the widening must not fire on
+        // `font-size=12` or on a quoted colour.
+        for (const innocent of ['fill="#000"', 'font-size=12', 'stroke-width=2']) {
+            expect(scanSvg(mk(innocent), 'b.svg')).toEqual([]);
+        }
+    });
+
+    it('a nested graphic belongs to its parent, not to a truncated slice', () => {
+        // Finding 3. The non-greedy host regex ended at the FIRST `</svg>`,
+        // which on a graphic containing a nested one is the inner close. The
+        // slice was a fragment, so the host reported a FALSE unclosed-root
+        // error AND missed everything after it — here a real `<script>` that
+        // the same bytes report correctly when scanned flat.
+        const nested =
+            '<!doctype html><html><body>\n' +
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img"><title>outer</title>\n' +
+            '  <svg viewBox="0 0 8 8"><rect width="8" height="8"/></svg>\n' +
+            '  <script>alert(1)</script>\n' +
+            '</svg>\n</body></html>\n';
+        const rules = scanHostHtml(nested, 'a.html').map((f) => f.rule);
+        expect(rules).toContain('svg-safety-active-content');
+        expect(rules).not.toContain('svg-structure-not-well-formed');
+
+        // Two SEPARATE graphics are still two, which is what the cross-graphic
+        // id check needs — a depth counter that merged them would pass the
+        // case above and break this one.
+        const two =
+            '<!doctype html><html><body>\n' +
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>a</title>' +
+            '<rect id="dup" width="8" height="8"/></svg>\n' +
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>b</title>' +
+            '<rect id="dup" width="8" height="8"/></svg>\n</body></html>\n';
+        expect(scanHostHtml(two, 'b.html').map((f) => f.rule)).toContain('svg-a11y-duplicate-id');
+        // A self-closing graphic is a graphic, and a clean host is silent.
+        const selfClosing = '<!doctype html><html><body><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"/></body></html>\n';
+        expect(scanHostHtml(selfClosing, 'c.html').map((f) => f.rule)).toContain('svg-a11y-no-accessible-name');
+        const clean =
+            '<!doctype html><html><body>\n' +
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>a</title>' +
+            '<rect width="8" height="8"/></svg>\n</body></html>\n';
+        expect(scanHostHtml(clean, 'd.html')).toEqual([]);
+    });
+
+    it('a collision between graphics has its own id to silence', () => {
+        // Finding 4. The cross-graphic ERROR shared a rule id with the
+        // single-graphic WARNING about a generic name, so one disable
+        // directive — a reasonable thing to write when you deliberately named
+        // something `icon` — silenced a real collision as well.
+        const generic =
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>a</title>' +
+            '<rect id="layer1" width="8" height="8"/></svg>\n';
+        expect(scanSvg(generic, 'a.svg').map((f) => f.rule)).toContain('svg-a11y-generic-id');
+
+        const host =
+            '<!doctype html><html><body>\n' +
+            '<!-- svg-asset-disable svg-a11y-generic-id -->\n' +
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>a</title>' +
+            '<rect id="layer1" width="8" height="8"/></svg>\n' +
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>b</title>' +
+            '<rect id="layer1" width="8" height="8"/></svg>\n</body></html>\n';
+        const rules = scanHostHtml(host, 'b.html').map((f) => f.rule);
+        // The warning the author silenced is silent …
+        expect(rules).not.toContain('svg-a11y-generic-id');
+        // … and the collision they did not is not.
+        expect(rules).toContain('svg-a11y-duplicate-id');
+    });
+
+    it('a whole-file directive has no line horizon', () => {
+        // Finding 6. "Whole file" was spelled as the numbers 1..10_000, so a
+        // directive cost ten thousand Set entries on a path that now runs on
+        // every `.svg` write, and a file past that line silently stopped being
+        // suppressed.
+        //
+        // The finding has to be reported PAST the old horizon for the horizon
+        // to be what is tested: a rule that fires on the root element sits on
+        // line 1 and would pass either way.
+        const marker = '<!-- svg-asset-disable svg-structure-dangling-reference -->\n';
+        const deep =
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">\n' +
+            '<title>t</title>\n' +
+            marker +
+            `${'<!-- pad -->\n'.repeat(10_050)}` +
+            '<rect width="24" height="24" fill="url(#nowhere)"/>\n</svg>\n';
+        expect(scanSvg(deep, 'deep.svg').map((f) => f.rule)).not.toContain('svg-structure-dangling-reference');
+
+        // Unsuppressed, the same file still reports it, AND it reports it past
+        // line 10 000 — which is what makes the assertion above about the
+        // horizon rather than about a quiet rule.
+        const unmarked = deep.replace(marker, '');
+        const open = scanSvg(unmarked, 'deep2.svg').filter((f) => f.rule === 'svg-structure-dangling-reference');
+        expect(open).toHaveLength(1);
+        expect(open[0]?.line).toBeGreaterThan(10_000);
+    });
+
+    it('an <image> is raster whatever it points at', () => {
+        // Finding 7. Both arms of the `if` added 1, so the regex behind it
+        // decided nothing — a dead constant and a dead branch dressed as a
+        // discrimination. The else arm's comment was the rule all along.
+        const png =
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>t</title>' +
+            '<image href="a.png" width="8" height="8"/></svg>\n';
+        const unknown =
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>t</title>' +
+            '<image href="/service/pixels?id=7" width="8" height="8"/></svg>\n';
+        for (const [name, body] of [['png.svg', png], ['unknown.svg', unknown]] as const) {
+            expect(scanSvg(body, name).map((f) => f.rule)).toContain('svg-vector-embedded-raster');
+        }
+        // A file with no <image> is still vector.
+        const vector =
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8" role="img"><title>t</title>' +
+            '<rect width="8" height="8"/></svg>\n';
+        expect(scanSvg(vector, 'v.svg').map((f) => f.rule)).not.toContain('svg-vector-embedded-raster');
     });
 });

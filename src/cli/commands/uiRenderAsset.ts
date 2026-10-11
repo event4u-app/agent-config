@@ -959,8 +959,19 @@ function readAccessibleNamesInPage(): string[] {
         }
         const by = svg.getAttribute('aria-labelledby');
         if (by) {
-            const ref = document.getElementById(by.split(/\s+/)[0] ?? '');
-            out.push((ref?.textContent ?? '').trim());
+            // EVERY id, joined by a space. Finding 9 of the fifth completion
+            // review: this read the first id only, while the static rule in
+            // `svg_rules.ts` resolves the whole list — so for
+            // `aria-labelledby="a b"` the two halves of one change disagreed
+            // about what the accessible name IS, and the rendered reading
+            // reported a shorter name than the file actually exposes. The
+            // accname spec concatenates the referenced elements in order.
+            const parts = by
+                .split(/\s+/)
+                .filter((id) => id !== '')
+                .map((id) => (document.getElementById(id)?.textContent ?? '').trim())
+                .filter((t) => t !== '');
+            out.push(parts.join(' '));
             continue;
         }
         const title = svg.querySelector(':scope > title');

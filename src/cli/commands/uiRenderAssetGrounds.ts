@@ -220,12 +220,28 @@ export async function readGrounds(
                                 parseInt((m3[3] as string).repeat(2), 16),
                             ];
                         }
-                        const m6 = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(v);
-                        if (m6) {
+                        // 4 and 8 digits carry an ALPHA the ground does not
+                        // need; 6 is the plain case. Finding 5 of the fifth
+                        // completion review: this handled 3 and 6 while the
+                        // token reader that produces the value accepts 3 to 8,
+                        // so a `#rrggbbaa` background fell through to the
+                        // white fallback and every contrast ratio on that
+                        // ground was computed against a colour nobody chose —
+                        // silently, because white is a plausible answer.
+                        const m68 = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})(?:[0-9a-f]{2})?$/i.exec(v);
+                        if (m68) {
                             return [
-                                parseInt(m6[1] as string, 16),
-                                parseInt(m6[2] as string, 16),
-                                parseInt(m6[3] as string, 16),
+                                parseInt(m68[1] as string, 16),
+                                parseInt(m68[2] as string, 16),
+                                parseInt(m68[3] as string, 16),
+                            ];
+                        }
+                        const m4 = /^#([0-9a-f])([0-9a-f])([0-9a-f])[0-9a-f]$/i.exec(v);
+                        if (m4) {
+                            return [
+                                parseInt((m4[1] as string).repeat(2), 16),
+                                parseInt((m4[2] as string).repeat(2), 16),
+                                parseInt((m4[3] as string).repeat(2), 16),
                             ];
                         }
                         const rgb = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(v);

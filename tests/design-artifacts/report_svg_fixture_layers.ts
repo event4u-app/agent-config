@@ -88,7 +88,7 @@ export const TAXONOMY_TO_RULE: Readonly<Record<string, string>> = {
     'safety/internal-dtd-subset': 'svg-safety-internal-subset',
     'safety/external-reference': 'svg-safety-external-reference',
     'vector-honesty/embedded-raster': 'svg-vector-embedded-raster',
-    'accessibility/generic-id-collision': 'svg-a11y-generic-id',
+    'accessibility/generic-id-collision': 'svg-a11y-duplicate-id',
     'accessibility/meaningful-without-name': 'svg-a11y-no-accessible-name',
     'accessibility/double-name': 'svg-a11y-double-name',
     'motion/keysplines-out-of-range': 'svg-motion-keysplines-range',

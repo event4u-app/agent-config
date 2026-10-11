@@ -120,8 +120,14 @@ interface AssetManifestish {
     profile?: unknown;
     verification?: unknown;
     reason?: unknown;
-    asset?: { digest?: unknown } | undefined;
+    asset?: { digest?: unknown; findings?: unknown } | undefined;
     static?: { errors?: unknown; digest?: unknown } | undefined;
+}
+
+/** Does a manifest's asset reading carry an error-severity finding? */
+function hasErrorFinding(m: AssetManifestish): boolean {
+    const f = m.asset?.findings;
+    return Array.isArray(f) && f.some((x) => (x as { severity?: unknown })?.severity === 'error');
 }
 
 /**
@@ -188,7 +194,18 @@ export function readAssetManifests(root: string): AssetManifestish[] {
 export function dischargeFor(manifests: readonly AssetManifestish[], digest: string): DischargeKind | null {
     let staticOnly = false;
     for (const m of manifests) {
-        if (m.verification === 'verified' && m.asset?.digest === digest) return 'verified';
+        // AN ERROR FLOOR ON BOTH PATHS. Finding 2 of the fifth completion
+        // review: `verification: 'verified'` is written unconditionally by the
+        // render — it means a digest-bound render HAPPENED, which is what the
+        // skill's status table says and what it should keep meaning — and this
+        // branch discharged on it with no look at what the render FOUND. So a
+        // file whose own reading carries an error findings discharged a
+        // blocking gate through the strong path, while the weaker
+        // `renderer-absent` path below refused at a single error. The rigour
+        // was inverted: the path that saw more of the file demanded less of it.
+        if (m.verification === 'verified' && m.asset?.digest === digest && !hasErrorFinding(m)) {
+            return 'verified';
+        }
         if (m.reason === 'renderer-absent' && m.static?.digest === digest && m.static.errors === 0) {
             staticOnly = true;
         }

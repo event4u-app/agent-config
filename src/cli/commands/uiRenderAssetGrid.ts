@@ -274,8 +274,19 @@ export function gradeIconGrid(
                           ? 'no icon reference set was supplied, so the incumbent grid was never read (E6)'
                             : 'an icon reference set was supplied but no file in it yielded a reading, so there ' +
                               'is no grid to compare against') + unreadable
-                    : 'no reference icon shares this viewBox size, so there is no grid to compare against' +
-                      unreadable,
+                    : vb === null
+                      ? // Finding 8 of the fifth completion review: a CANDIDATE
+                        // with no readable viewBox reached the same branch as a
+                        // reference set that shares no size, and was told that
+                        // no reference shares its viewBox — a statement about
+                        // the references, when the unreadable thing is the file
+                        // in front of the author. The reason has to name what
+                        // is actually missing or the author fixes the wrong
+                        // file.
+                        'this file has no readable viewBox, so its grid cannot be compared against any ' +
+                        'reference' + unreadable
+                      : 'no reference icon shares this viewBox size, so there is no grid to compare against' +
+                        unreadable,
         };
     }
     const refStrokes = [...new Set(comparable.flatMap((r) => r.strokeWidths))].sort((a, b) => a - b);

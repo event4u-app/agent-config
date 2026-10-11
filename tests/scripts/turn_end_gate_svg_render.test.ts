@@ -357,3 +357,39 @@ describe('a render names a file, not a substring of its path', () => {
         expect(renderNames(r, 'other/icon.svg')).toBe(true);
     });
 });
+
+describe('both discharge paths have an error floor', () => {
+    it('a verified render whose own reading errs discharges nothing', () => {
+        // Finding 2 of the fifth completion review. `verification: 'verified'`
+        // is written unconditionally by the render and means a digest-bound
+        // render HAPPENED — which is what the skill's status table says and
+        // what it should keep meaning. This gate discharged on it without
+        // looking at what the render FOUND, while the weaker renderer-absent
+        // path refused at a single error. The rigour was inverted: the path
+        // that saw more of the file demanded less of it.
+        const file = writeSvg('assets/logo.svg', SVG_CLEAN);
+        const digest = digestOf(SVG_CLEAN);
+
+        writeManifest('logo', {
+            profile: 'asset',
+            verification: 'verified',
+            goal: 'unassessed',
+            asset: { digest, findings: [{ rule: 'geometry/background-bleed-inside-silhouette', detail: 'x', severity: 'error' }] },
+        });
+        expect(openSvgObligation(root, [edit(file), RENDER])).not.toBeNull();
+
+        // A WARNING is a reading, not a refusal — the same line the static
+        // witness draws, now drawn on both paths.
+        writeManifest('logo', {
+            profile: 'asset',
+            verification: 'verified',
+            goal: 'unassessed',
+            asset: { digest, findings: [{ rule: 'geometry/icon-off-grid', detail: 'x', severity: 'warning' }] },
+        });
+        expect(openSvgObligation(root, [edit(file), RENDER])).toBeNull();
+
+        // And no findings at all still discharges, which is the ordinary case.
+        writeManifest('logo', { profile: 'asset', verification: 'verified', goal: 'unassessed', asset: { digest } });
+        expect(openSvgObligation(root, [edit(file), RENDER])).toBeNull();
+    });
+});
