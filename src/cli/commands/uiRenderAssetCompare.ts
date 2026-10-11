@@ -36,6 +36,65 @@ export interface Registration {
     scale: number;
 }
 
+/**
+ * `--registration x,y,w,h[@scale]` — the source crop's own pixel frame (S9).
+ * An unparseable spec returns `null`, which leaves the raster reading
+ * `unverified` rather than letting the comparison guess an offset.
+ *
+ * Finding 2.4 of `road-to-svg-rules-in-the-dispatch-path`: `scale` was parsed
+ * and validated here and then read by nothing, so `@2` was a silent no-op. It
+ * now reaches the comparison, which multiplies the crop rect by it — the
+ * operator states the crop in logical units and `@2` says the raster is a 2x
+ * capture of them.
+ *
+ * `@0` and `@-1` still return `null`, and that is deliberate rather than
+ * leftover: a zero-scale crop has no pixels, so there is nothing to compare,
+ * and reporting the registration as absent is the same verdict a reader would
+ * reach from an empty crop. The caller prints the spec it could not parse, so
+ * "absent" is not the only thing the operator sees.
+ */
+export function parseRegistration(spec: string | undefined): Registration | null {
+    if (!spec) return null;
+    const [frame, scaleRaw] = spec.split('@');
+    const parts = (frame ?? '').split(',').map((n) => Number(n.trim()));
+    if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n))) return null;
+    const scale = scaleRaw === undefined ? 1 : Number(scaleRaw);
+    if (!Number.isFinite(scale) || scale <= 0) return null;
+    return {
+        x: parts[0] as number,
+        y: parts[1] as number,
+        width: parts[2] as number,
+        height: parts[3] as number,
+        scale,
+    };
+}
+
+/**
+ * The crop rect in the raster's OWN pixels.
+ *
+ * Finding 2.4 of `road-to-svg-rules-in-the-dispatch-path`: `Registration.scale`
+ * was parsed by the CLI, validated, recorded in the manifest and then read by
+ * nothing — `@2` was a silent no-op. The operator states the region in logical
+ * units; `@2` says the raster is a 2x capture of them, so the rect in image
+ * pixels is the region multiplied through.
+ *
+ * Its own exported function rather than four expressions inside a
+ * `page.evaluate` argument, because the defect was exactly that those four
+ * expressions were unreachable from any test that does not drive a browser.
+ */
+export function cropRect(
+    registration: Registration | null,
+): { x: number; y: number; width: number; height: number } | null {
+    if (!registration) return null;
+    const s = registration.scale;
+    return {
+        x: registration.x * s,
+        y: registration.y * s,
+        width: registration.width * s,
+        height: registration.height * s,
+    };
+}
+
 export interface RasterRegionReading {
     region: string;
     silhouette_iou: number;
@@ -337,9 +396,7 @@ async function rasterise(
             url: dataUrl,
             w: frame.w,
             h: frame.h,
-            reg: registration
-                ? { x: registration.x, y: registration.y, width: registration.width, height: registration.height }
-                : null,
+            reg: cropRect(registration),
         },
     );
     if (!out) return null;

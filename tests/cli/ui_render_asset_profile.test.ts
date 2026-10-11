@@ -20,7 +20,14 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { runUiRender } from '../../src/cli/commands/uiRender.js';
 import type { RenderManifest } from '../../src/cli/commands/uiRender.js';
+import {
+    cropRect,
+    gradeIconGrid,
+    readIconReferencesDetailed,
+} from '../../src/cli/commands/uiRenderAsset.js';
 import type { AssetClass } from '../../src/cli/commands/uiRenderAsset.js';
+import { parseRegistration } from '../../src/cli/commands/uiRenderAssetCompare.js';
+import { parseElements } from '../../src/scripts/lint_svg_asset.js';
 import type { DeliveryMode } from '../../src/scripts/lint_svg_asset.js';
 
 const FIXTURE_ROOT = path.resolve(process.cwd(), 'tests/design-artifacts/fixtures/svg-assets');
@@ -438,4 +445,136 @@ describe('ui:render --profile asset', () => {
         },
         300_000,
     );
+});
+
+/**
+ * The three carried R2 findings of `road-to-svg-rules-in-the-dispatch-path`
+ * that live on this surface. None of them needs a browser: each is a pure
+ * reading that was wrong before a pixel was ever captured, which is also why
+ * each one survived the engine suite being green.
+ */
+describe('carried R2 findings — the icon grid and the registration', () => {
+    const svg = (body: string, vb = '0 0 24 24'): string =>
+        `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${vb}" role="img"><title>t</title>${body}</svg>`;
+
+    const write = (dir: string, name: string, content: string): string => {
+        const p = path.join(dir, name);
+        fs.writeFileSync(p, content);
+        return p;
+    };
+
+    it('primitive-drawn-reference-is-read', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'icon-refs-'));
+
+        // (a) A reference drawn ENTIRELY with primitives. The old reader
+        //     scraped `d` only, found no finite extent, and dropped the file —
+        //     after which the reading said no reference set had been supplied.
+        const prims = write(
+            dir,
+            'prims.svg',
+            svg('<rect x="2" y="2" width="20" height="20" fill="#000"/><circle cx="12" cy="12" r="6"/>'),
+        );
+        const readPrims = readIconReferencesDetailed([prims]);
+        expect(readPrims.skipped).toEqual([]);
+        expect(readPrims.refs).toHaveLength(1);
+        // minX/minY = 2, maxX/maxY = 22 against a 0..24 box → 2 on every side.
+        expect(readPrims.refs[0]?.padding).toBeCloseTo(2, 6);
+
+        // (b) Relative path commands are WALKED, not read as absolute. The old
+        //     regex read this as the points (3,3) and (18,0), giving an extent
+        //     anchored near the origin and a padding of 0.
+        const rel = write(dir, 'rel.svg', svg('<path d="m 3 3 l 18 0 l 0 18 l -18 0 z"/>'));
+        const readRel = readIconReferencesDetailed([rel]);
+        expect(readRel.skipped).toEqual([]);
+        expect(readRel.refs[0]?.padding).toBeCloseTo(3, 6);
+        // The same shape written absolutely must read the same padding — which
+        // is the whole claim, and is false under the old reader.
+        const abs = write(dir, 'abs.svg', svg('<path d="M 3 3 L 21 3 L 21 21 L 3 21 Z"/>'));
+        expect(readIconReferencesDetailed([abs]).refs[0]?.padding).toBeCloseTo(
+            readRel.refs[0]?.padding as number,
+            6,
+        );
+
+        // (c) A file that genuinely cannot be read is REPORTED, never dropped
+        //     silently, and the grading says so in its reason.
+        const opaque = write(dir, 'opaque.svg', svg('<g transform="rotate(9)"><rect x="2" y="2" width="4" height="4"/></g>'));
+        const readOpaque = readIconReferencesDetailed([opaque]);
+        expect(readOpaque.refs).toEqual([]);
+        expect(readOpaque.skipped).toHaveLength(1);
+
+        const graded = gradeIconGrid(
+            path.join(dir, 'candidate.svg'),
+            { x: 0, y: 0, w: 24, h: 24 },
+            parseElements(svg('<rect x="4" y="4" width="16" height="16"/>')),
+            [opaque],
+            null,
+        );
+        expect(graded.status).toBe('unverified');
+        // The old reason claimed no set was supplied. One was.
+        expect(graded.reason).not.toContain('no icon reference set was supplied');
+        expect(graded.reason).toContain('opaque.svg');
+
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('padding-is-measured-the-same-way-on-both-sides', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'icon-pad-'));
+        // One stroked shape, used as BOTH the reference and the candidate. A
+        // file compared against itself must report its own padding, whatever
+        // the stroke width is. Under the old code the candidate came from a
+        // rendered box (half the stroke wider on each side) and the reference
+        // from centreline coordinates, so this read one half-stroke short and
+        // `structure/off-grid` could fire on a clean twin (Risk 7).
+        const body = '<path d="M 4 4 L 20 4 L 20 20 L 4 20 Z" fill="none" stroke="#000" stroke-width="3"/>';
+        const ref = write(dir, 'ref.svg', svg(body));
+        const vb = { x: 0, y: 0, w: 24, h: 24 };
+        const refRead = readIconReferencesDetailed([ref]);
+        expect(refRead.refs[0]?.padding).toBeCloseTo(4, 6);
+
+        const graded = gradeIconGrid(
+            path.join(dir, 'candidate.svg'),
+            vb,
+            parseElements(svg(body)),
+            [ref],
+            // A rendered painted box that is deliberately WIDER than the
+            // centreline — the old code read the candidate from exactly this.
+            { x: 2.5, y: 2.5, w: 19, h: 19 },
+        );
+        expect(graded.status).toBe('read');
+        expect(graded.padding).toBeCloseTo(refRead.refs[0]?.padding as number, 6);
+        // And specifically NOT the painted-box number, which is what it used
+        // to be: min(2.5, 2.5, 24-21.5, 24-21.5) = 2.5.
+        expect(graded.padding).not.toBeCloseTo(2.5, 2);
+
+        fs.rmSync(dir, { recursive: true, force: true });
+    });
+
+    it('a-declared-scale-changes-the-reading', () => {
+        // `Registration.scale` was parsed, validated, recorded in the manifest
+        // and read by nothing, so `@2` was a silent no-op.
+        const at1 = parseRegistration('10,20,100,200');
+        const at2 = parseRegistration('10,20,100,200@2');
+        expect(at1?.scale).toBe(1);
+        expect(at2?.scale).toBe(2);
+
+        expect(cropRect(at1)).toEqual({ x: 10, y: 20, width: 100, height: 200 });
+        // The reading changes — this is the assertion the finding is about.
+        expect(cropRect(at2)).toEqual({ x: 20, y: 40, width: 200, height: 400 });
+        expect(cropRect(at2)).not.toEqual(cropRect(at1));
+
+        // A half-scale capture reads smaller, so the direction is not an
+        // accident of one factor.
+        expect(cropRect(parseRegistration('10,20,100,200@0.5'))).toEqual({
+            x: 5,
+            y: 10,
+            width: 50,
+            height: 100,
+        });
+
+        // No registration stays no crop, and a zero scale is refused rather
+        // than silently drawing an empty rect.
+        expect(cropRect(null)).toBeNull();
+        expect(parseRegistration('10,20,100,200@0')).toBeNull();
+        expect(parseRegistration('10,20,100,200@-1')).toBeNull();
+    });
 });

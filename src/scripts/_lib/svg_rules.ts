@@ -422,6 +422,160 @@ function hasTransformedAncestor(elements: SvgElement[], index: number): boolean 
  * followed by the wrong number of coordinates, or a stray token. A path whose
  * numbers are odd but well-formed is a design question, not a parse error.
  */
+/**
+ * The extent of a path's own points, with relative commands walked properly.
+ *
+ * Finding 2.1 of `road-to-svg-rules-in-the-dispatch-path`. The icon reference
+ * reader used to scrape `d` with `/(-?[\d.]+)[\s,]+(-?[\d.]+)/g`, which reads
+ * every number pair as an absolute coordinate — so `m 2 2 l 4 0` was read as
+ * the points (2,2) and (4,0) rather than (2,2) and (6,2). That is not a
+ * rounding error: a path drawn entirely with relative commands reports an
+ * extent anchored at the origin.
+ *
+ * APPROXIMATE, AND DELIBERATELY SO. Curve control points are included rather
+ * than the curve's true hull, which can over-estimate a Bézier's extent by
+ * the control polygon. The alternative is a full flattener, and the consumer
+ * here is a padding comparison against other icons measured exactly the same
+ * way — a shared conservative bound is a comparison; a precise bound on one
+ * side and a loose one on the other is finding 2.2.
+ *
+ * Returns null for an empty or unparseable `d`, which is a separate finding
+ * (`pathDataError`) and not this function's to report.
+ */
+export function pathExtent(d: string): Box | null {
+    const tokens = d.trim().match(/[a-zA-Z]|-?\d*\.?\d+(?:[eE][-+]?\d+)?/g);
+    if (!tokens) return null;
+    const argCount: Record<string, number> = { m: 2, l: 2, t: 2, h: 1, v: 1, c: 6, s: 4, q: 4, a: 7, z: 0 };
+    let minX = Number.POSITIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+    const see = (x: number, y: number): void => {
+        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+    };
+    // Current point, and the subpath start `Z` returns to.
+    let cx = 0;
+    let cy = 0;
+    let sx = 0;
+    let sy = 0;
+    let i = 0;
+    let cmd = '';
+    let rel = false;
+    while (i < tokens.length) {
+        const tok = tokens[i] as string;
+        if (/^[a-zA-Z]$/.test(tok)) {
+            cmd = tok.toLowerCase();
+            rel = tok === tok.toLowerCase();
+            i += 1;
+            if (cmd === 'z') {
+                cx = sx;
+                cy = sy;
+                continue;
+            }
+            if (!(cmd in argCount)) return null;
+        } else if (cmd === '' || cmd === 'z') {
+            // A number where no repeatable command is open.
+            return null;
+        }
+        const need = argCount[cmd] as number;
+        if (need === 0) continue;
+        const args: number[] = [];
+        while (args.length < need && i < tokens.length && !/^[a-zA-Z]$/.test(tokens[i] as string)) {
+            args.push(Number(tokens[i]));
+            i += 1;
+        }
+        if (args.length < need) return null;
+        switch (cmd) {
+            case 'h': {
+                cx = rel ? cx + (args[0] as number) : (args[0] as number);
+                break;
+            }
+            case 'v': {
+                cy = rel ? cy + (args[0] as number) : (args[0] as number);
+                break;
+            }
+            case 'a': {
+                // rx ry rotation large-arc sweep x y — only the last pair is a point.
+                cx = rel ? cx + (args[5] as number) : (args[5] as number);
+                cy = rel ? cy + (args[6] as number) : (args[6] as number);
+                break;
+            }
+            default: {
+                // Every remaining command is a run of (x, y) pairs; the last
+                // pair is the new current point and the earlier ones are
+                // control points, which are included as the bound above says.
+                for (let k = 0; k + 1 < args.length; k += 2) {
+                    const px = rel ? cx + (args[k] as number) : (args[k] as number);
+                    const py = rel ? cy + (args[k + 1] as number) : (args[k + 1] as number);
+                    see(px, py);
+                    if (k + 2 >= args.length) {
+                        cx = px;
+                        cy = py;
+                    }
+                }
+                break;
+            }
+        }
+        see(cx, cy);
+        if (cmd === 'm') {
+            // `m`/`M` opens a subpath at its FIRST pair; `Z` returns there, not
+            // to wherever the run ended. One `need`-sized group is read per
+            // iteration, so this pair is that start.
+            sx = cx;
+            sy = cy;
+            // A repeated `m` argument group is an implicit lineto, per the path
+            // grammar — so the command for the next group is `l`, not `m`.
+            cmd = 'l';
+        }
+    }
+    if (!Number.isFinite(minX)) return null;
+    return { minX, minY, maxX, maxY };
+}
+
+/** Extent of a `points` list (`<polygon>`, `<polyline>`). Absolute by definition. */
+export function pointsExtent(points: string): Box | null {
+    const nums = points.trim().match(/-?\d*\.?\d+(?:[eE][-+]?\d+)?/g);
+    if (!nums || nums.length < 2) return null;
+    let minX = Number.POSITIVE_INFINITY;
+    let minY = Number.POSITIVE_INFINITY;
+    let maxX = Number.NEGATIVE_INFINITY;
+    let maxY = Number.NEGATIVE_INFINITY;
+    for (let i = 0; i + 1 < nums.length; i += 2) {
+        const x = Number(nums[i]);
+        const y = Number(nums[i + 1]);
+        if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+    }
+    return Number.isFinite(minX) ? { minX, minY, maxX, maxY } : null;
+}
+
+/**
+ * One element's own extent in user units, whichever way it was drawn.
+ *
+ * The union of `staticBox` (rect, circle, ellipse, line), `pathExtent` and
+ * `pointsExtent`. Finding 2.1's first half: a reference icon drawn with
+ * primitives used to yield no extent at all and was dropped from the set
+ * SILENTLY — after which the reading reported "no icon reference set was
+ * supplied" although one was.
+ *
+ * Returns null for a transformed element, inheriting `staticBox`'s refusal to
+ * guess at a transform, and for anything that carries no geometry.
+ */
+export function elementExtent(el: SvgElement): Box | null {
+    if (el.closing) return null;
+    if (el.attrs['transform'] || el.attrs['style']?.includes('transform')) return null;
+    if (el.name === 'path') return pathExtent(el.attrs['d'] ?? '');
+    if (el.name === 'polygon' || el.name === 'polyline') return pointsExtent(el.attrs['points'] ?? '');
+    return staticBox(el);
+}
+
 export function pathDataError(d: string): string | null {
     const trimmed = d.trim();
     if (!trimmed) return 'empty d attribute';

@@ -185,14 +185,14 @@ Four findings from the R2 completion review of the parent change are carried
 here rather than closed in it, each with the reason the same diff was the wrong
 place for it. The other nine were fixed there.
 
-- [ ] **2.1 The icon reference set reads only `d` coordinates.** A reference
+- [x] **2.1 The icon reference set reads only `d` coordinates.** A reference
       drawn with `<rect>`/`<circle>`/`<line>` yields no finite extent, is
       dropped silently, and the reading then reports that no reference set was
       supplied although one was; the same regex reads relative commands as
       absolute. The reading degrades to `unverified` rather than to a pass, so
       no verdict is wrong today.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*primitive-drawn-reference-is-read/ <!-- ref-ignore -->
-- [ ] **2.2 Candidate and reference padding are measured by different
+- [x] **2.2 Candidate and reference padding are measured by different
       methods.** The candidate's comes from a rendered box that includes half
       the stroke and the caps; the reference's from raw centreline coordinates.
       A candidate matching the reference exactly measures one half-stroke less.
@@ -203,7 +203,7 @@ place for it. The other nine were fixed there.
       `<defs>` entry used and a commented media query suppresses the
       no-reduced-motion rule. Fixing it touches every content-level rule.
       verify: `npx vitest run tests/scripts/lint_svg_asset.test.ts --reporter=verbose` -> /✓.*a-commented-out-reference-is-not-a-reference/ <!-- ref-ignore -->
-- [ ] **2.4 `Registration.scale` is parsed and read by nothing.** It is
+- [x] **2.4 `Registration.scale` is parsed and read by nothing.** It is
       validated and recorded in the manifest, so `@2` is a silent no-op while
       `@0` makes the comparison report a missing registration that was in fact
       supplied. Using it changes a measured comparison and owes its own
