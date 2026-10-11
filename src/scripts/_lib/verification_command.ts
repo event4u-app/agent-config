@@ -271,6 +271,21 @@ function segmentVerifies(rawWords: readonly string[]): boolean {
             // the old token-anywhere regex accepted it by accident and neither
             // explicit list named it, so the union seeding missed it too.
             return rest.some((a) => a === 'test' || a.startsWith('--test'));
+        case 'agent-config': {
+            // `ui:render --profile asset` is the one subcommand that opens the
+            // delivered file in a real engine and writes a manifest carrying
+            // that file's digest, so a turn which edited an `.svg` can satisfy
+            // the turn-end gate with the check that actually looked at it.
+            //
+            // `xmllint --noout` deliberately does NOT reach this list, and the
+            // omission is the point: the measured failure (S6 of
+            // `road-to-svg-with-a-witness`) is a session that answered a
+            // refused turn-end gate twice with a parser pass and a report that
+            // the file "is valid". A file can parse and still be wrong.
+            if (arg1 !== 'ui:render') return false;
+            const profileAt = rest.indexOf('--profile');
+            return profileAt !== -1 && rest[profileAt + 1] === 'asset';
+        }
         case 'scripts-run': {
             // `./scripts-run src/scripts/lint_x` verifies; `…/rule_activation_census`
             // writes a report and asserts nothing, which is why this keys on the

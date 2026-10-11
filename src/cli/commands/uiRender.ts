@@ -23,7 +23,7 @@
  * `b-page-capture-primitive` closed as a recorded null. This supplies the
  * primitive, so that null's own reopening condition fires.
  *
- * Playwright is a devDependency (`package.json:97`) and is therefore NOT
+ * Playwright is a devDependency (`package.json:111`) and is therefore NOT
  * guaranteed present in a consumer install. The import is dynamic and the
  * absence path is a clean, explained exit rather than a stack trace — and it
  * reports `verification: unverified` instead of writing an empty manifest that
