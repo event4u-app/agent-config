@@ -1,6 +1,31 @@
-# R2 completion review — feat-svg-roadmaps-all-20261011-r5
+# Findings: feat-svg-roadmaps-all-20261011-r5
+<!-- completion-review: v1 | reviewed: 2026-10-12 | scope: 70c318be5f0583019546cf78bdc2bda3fed3a301037c196dde8c7a8f63a0b802 | diff: a8eb715645f7367d9f039b0b2d2dcd19edd87e89 | reviewer: r2-fresh-subagent-feat-svg-roadmaps-all-20261011-r5 | prompt_hash: 8808bf44f24580880085b8e255851350e6ec147a517d6cced6fb3ceb64ca7802 -->
+<!-- {"review-independence":{"review_independence":"single-member","context_relation":"fresh","acceptance_status":"provisional","assurance":"single-pass","reviewers":["r2-fresh-subagent-feat-svg-roadmaps-all-20261011-r5"]}} -->
+<!-- evidence-type: v1 | type: current-binding | declared: 2026-10-12 -->
 
-Scope `70c318be5f0583019546cf78bdc2bda3fed3a301037c196dde8c7a8f63a0b802`, reviewed 2026-10-12.
+<!-- context-manifest: v1
+inputs:
+  diff_sha: a8eb715645f7367d9f039b0b2d2dcd19edd87e89
+  scope_hash: 70c318be5f0583019546cf78bdc2bda3fed3a301037c196dde8c7a8f63a0b802
+  roadmap: none
+  roadmap_hash: none
+  ac_hash: none
+excluded: [session-history, agents/runtime, implementation-context]
+tools: [git-diff-branch-scoped, file-read-branch-paths]
+dispatched: 2026-10-12T00:00:00Z
+-->
+
+<!--
+  THE HEADER ABOVE IS RECONSTRUCTED, and saying so is the point of this note.
+  The reviewer for this round wrote its own title block over the dispatcher's
+  scaffold, so the four metadata comments it had been given were gone by the
+  time the table arrived. Every value here is taken from a surviving artefact
+  rather than chosen: the scope hash and the branch head are quoted in
+  `review-input/prompt.md`, which the reviewer did read, and the prompt hash is
+  the sha256 of that same committed file. `dispatched` is the one field that is
+  approximate — the exact minute was not recoverable — and it is set to the
+  start of the day the round ran rather than to a precise time it was not.
+-->
 
 | # | Severity | File:Line | Finding | Status | Reason/Ref |
 |---|----------|-----------|---------|--------|------------|
