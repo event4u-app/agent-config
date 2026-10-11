@@ -198,7 +198,7 @@ place for it. The other nine were fixed there.
       A candidate matching the reference exactly measures one half-stroke less.
       Latent rather than live: the engine suite is green on the shipped pair.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*padding-is-measured-the-same-way-on-both-sides/ <!-- ref-ignore -->
-- [ ] **2.3 The content-level rules read commented-out markup.** `parseElements`
+- [x] **2.3 The content-level rules read commented-out markup.** `parseElements`
       strips comments; the regex rules do not, so a commented `url(#x)` marks a
       `<defs>` entry used and a commented media query suppresses the
       no-reduced-motion rule. Fixing it touches every content-level rule.

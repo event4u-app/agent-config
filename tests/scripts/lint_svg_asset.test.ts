@@ -11,6 +11,7 @@ import {
     safetySeverity,
     scanHostHtml,
     scanSvg,
+    maskComments,
     vectorVerdict,
     parseElements,
 } from '../../src/scripts/lint_svg_asset.js';
@@ -266,5 +267,74 @@ describe('surgical-edit-reports-exactly-the-moved-neighbour', () => {
         const moved = '<svg><path id="p" d="M 10 10 L 20 24"/></svg>';
         expect(preservationReadout(a, reformatted, [])).toEqual([]);
         expect(preservationReadout(a, moved, []).map((c) => c.attribute)).toEqual(['d']);
+    });
+});
+
+/**
+ * Finding 2.3 of `road-to-svg-rules-in-the-dispatch-path`, from the R2
+ * completion review: `parseElements` strips comments and the content-level
+ * regex rules did not, so the two disagreed about what the file contains.
+ * The disagreement is silent in both directions — a finding appears that
+ * should not, and a finding disappears that should.
+ */
+describe('a-commented-out-reference-is-not-a-reference', () => {
+    it('a-commented-out-reference-is-not-a-reference', () => {
+        // A `<defs>` entry whose ONLY use sits inside a comment is unused. The
+        // regex rule used to read the commented `url(#g)` as a live reference
+        // and report the file clean.
+        const commentedUse = [
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">',
+            '  <title>t</title>',
+            '  <defs><linearGradient id="g"><stop offset="0" stop-color="#000"/></linearGradient></defs>',
+            '  <!-- <rect width="24" height="24" fill="url(#g)"/> -->',
+            '  <rect width="24" height="24" fill="#123456"/>',
+            '</svg>',
+        ].join('\n');
+        expect(scanSvg(commentedUse, 'a.svg').map((f) => f.rule)).toContain('svg-structure-unused-defs');
+
+        // The same file with the use UNCOMMENTED is clean on that rule — so
+        // the assertion above is about the comment and not about the shape.
+        const liveUse = commentedUse.replace('<!-- <rect width="24"', '<rect width="24"').replace('/> -->', '/>');
+        expect(scanSvg(liveUse, 'a.svg').map((f) => f.rule)).not.toContain('svg-structure-unused-defs');
+
+        // And the mirror: a reference whose target id exists ONLY inside a
+        // comment is dangling, because the id is not in the document.
+        const commentedTarget = [
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">',
+            '  <title>t</title>',
+            '  <!-- <linearGradient id="g"><stop offset="0"/></linearGradient> -->',
+            '  <rect width="24" height="24" fill="url(#g)"/>',
+            '</svg>',
+        ].join('\n');
+        expect(scanSvg(commentedTarget, 'b.svg').map((f) => f.rule)).toContain(
+            'svg-structure-dangling-reference',
+        );
+    });
+
+    it('masking preserves every offset, so reported lines still name the right line', () => {
+        const src = 'line one\n<!-- two\nthree -->\nline four\n';
+        const masked = maskComments(src);
+        expect(masked.length).toBe(src.length);
+        expect(masked.split('\n').length).toBe(src.split('\n').length);
+        expect(masked.split('\n')[0]).toBe('line one');
+        expect(masked.split('\n')[3]).toBe('line four');
+        expect(masked).not.toContain('two');
+        // An unterminated comment masks to end of input — what a browser does.
+        expect(maskComments('a\n<!-- b\nc\n')).toBe('a\n      \n \n');
+    });
+
+    it('an inline ignore marker still works, because it lives in a comment', () => {
+        // The one place the RAW text is still the right input. Masking this
+        // would silently disable every `svg-asset-disable` marker in the tree.
+        const withIgnore = [
+            '<svg viewBox="0 0 24 24">',
+            '  <!-- svg-asset-disable svg-a11y-no-accessible-name -->',
+            '  <circle cx="12" cy="12" r="6"/>',
+            '</svg>',
+        ].join('\n');
+        const rules = scanSvg(withIgnore, 'c.svg').map((f) => f.rule);
+        expect(rules).not.toContain('svg-a11y-no-accessible-name');
+        // The marker suppresses that rule and nothing else.
+        expect(rules).toContain('svg-structure-missing-xmlns');
     });
 });

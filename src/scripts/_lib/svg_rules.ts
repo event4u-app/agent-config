@@ -165,6 +165,45 @@ function parseAttrs(raw: string): Record<string, string> {
     return attrs;
 }
 
+/**
+ * Blank out every XML comment, preserving offsets and line breaks.
+ *
+ * Finding 2.3 of `road-to-svg-rules-in-the-dispatch-path`, from the R2
+ * completion review of the parent change: `parseElements` skips comments and
+ * the content-level regex rules did not, so the two disagreed about what the
+ * file contains. A commented `url(#x)` marked a `<defs>` entry used, and a
+ * commented `@media (prefers-reduced-motion)` suppressed the
+ * no-reduced-motion rule — in both directions a finding was lost to markup
+ * that does not render.
+ *
+ * Every character inside `<!--` … `-->` becomes a space, the delimiters
+ * included, and newlines are kept. That keeps every offset and every line
+ * number identical to the raw text, so a rule can report a position in the
+ * masked string and have it mean the same thing in the file. An unterminated
+ * comment masks to end of input, which is what a browser does with it too.
+ *
+ * NOT applied to `parseIgnores`, deliberately: the inline
+ * `svg-asset-disable` markers LIVE in comments, so masking them would make every one of them silently stop
+ * working. The raw text is the right input there and the masked text is the
+ * right input everywhere else.
+ */
+export function maskComments(content: string): string {
+    if (!content.includes('<!--')) return content;
+    const out = content.split('');
+    let i = 0;
+    while (i < out.length) {
+        const start = content.indexOf('<!--', i);
+        if (start === -1) break;
+        const close = content.indexOf('-->', start + 4);
+        const end = close === -1 ? content.length : close + 3;
+        for (let j = start; j < end; j += 1) {
+            if (out[j] !== '\n' && out[j] !== '\r') out[j] = ' ';
+        }
+        i = end;
+    }
+    return out.join('');
+}
+
 function lineIndexer(content: string): (offset: number) => number {
     const starts: number[] = [0];
     for (let i = 0; i < content.length; i++) if (content[i] === '\n') starts.push(i + 1);
@@ -1037,25 +1076,30 @@ export interface ScanOptions {
 export function scanSvg(content: string, relPath: string, opts: ScanOptions = {}): Finding[] {
     const mode: DeliveryMode = opts.delivery ?? 'inline';
     const elements = parseElements(content);
+    // Finding 2.3: the content-level rules read the SAME file the element
+    // parser reads. `maskComments` keeps every offset, so a line number taken
+    // here still names the right line in the raw text.
+    const text = maskComments(content);
     const raw: Finding[] = [
         ...ruleMissingXmlns(elements, relPath),
         ...ruleOutsideViewBox(elements, relPath),
         ...ruleUnparseablePath(elements, relPath),
-        ...ruleUnusedDefs(content, elements, relPath),
-        ...ruleDanglingReference(content, elements, relPath),
-        ...ruleActiveContent(content, elements, relPath, mode),
-        ...ruleInternalSubset(content, relPath),
-        ...ruleExternalReference(content, elements, relPath, mode),
+        ...ruleUnusedDefs(text, elements, relPath),
+        ...ruleDanglingReference(text, elements, relPath),
+        ...ruleActiveContent(text, elements, relPath, mode),
+        ...ruleInternalSubset(text, relPath),
+        ...ruleExternalReference(text, elements, relPath, mode),
         ...ruleEmbeddedRaster(elements, relPath),
         ...ruleGenericId(elements, relPath),
-        ...ruleAccessibleName(content, elements, relPath),
-        ...ruleDoubleName(content, elements, relPath),
+        ...ruleAccessibleName(text, elements, relPath),
+        ...ruleDoubleName(text, elements, relPath),
         ...ruleKeySplinesRange(elements, relPath),
-        ...ruleTransformBox(content, elements, relPath),
-        ...ruleNoReducedMotion(content, elements, relPath),
-        ...ruleSmilCssOnlyBranch(content, relPath),
+        ...ruleTransformBox(text, elements, relPath),
+        ...ruleNoReducedMotion(text, elements, relPath),
+        ...ruleSmilCssOnlyBranch(text, relPath),
         ...ruleDMorphMismatch(elements, relPath),
     ];
+    // RAW, not masked — the inline `svg-asset-disable` markers live in comments.
     const ignores = parseIgnores(content.split('\n'));
     return dedupe(raw).filter((f) => !isIgnored(ignores, f));
 }
@@ -1074,8 +1118,13 @@ export function scanHostHtml(content: string, relPath: string, opts: ScanOptions
     const lineOf = lineIndexer(content);
     const svgRe = /<svg\b[\s\S]*?<\/svg\s*>/gi;
     const graphics: Array<{ body: string; offset: number }> = [];
+    // Finding 2.3 on the host side: a graphic inside an HTML comment is not on
+    // the page, so it is not scanned and its ids do not collide with anything.
+    // Masking preserves offsets, so `lineOf` — built from the raw text — still
+    // answers correctly for the graphics that survive.
+    const hostText = maskComments(content);
     let m: RegExpExecArray | null;
-    while ((m = svgRe.exec(content)) !== null) graphics.push({ body: m[0] ?? '', offset: m.index });
+    while ((m = svgRe.exec(hostText)) !== null) graphics.push({ body: m[0] ?? '', offset: m.index });
 
     for (const g of graphics) {
         const baseLine = lineOf(g.offset) - 1;
