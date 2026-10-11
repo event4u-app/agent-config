@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Marketing page — img delivery with a static route</title>
+</head>
+<body>
+  <h1>Rising</h1>
+  <!--
+    An image document never sees the OS motion preference: media emulation was
+    measured unreachable there. So the choice is made by the HOST, which can
+    see it, and the animated file is never delivered to a viewer who asked for
+    less motion.
+  -->
+  <picture>
+    <source media="(prefers-reduced-motion: reduce)" srcset="mark-static.svg">
+    <img src="mark-animated.svg" width="64" height="64" alt="Rising arrow in a rounded square">
+  </picture>
+</body>
+</html>

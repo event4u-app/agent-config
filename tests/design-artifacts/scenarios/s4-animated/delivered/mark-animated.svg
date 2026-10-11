@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" width="64" height="64">
+  <title id="rising-anim-title">Rising arrow in a rounded square, drawing on</title>
+  <style>
+    /* The route that actually reaches SMIL: under `reduce` the animated arrow
+       is removed and the finished shape takes its place. A CSS
+       `animation: none` would leave the SMIL running — measured, not assumed. */
+    #rising-anim-rest { display: none; }
+    @media (prefers-reduced-motion: reduce) {
+      #rising-anim-draw { display: none; }
+      #rising-anim-rest { display: inline; }
+    }
+  </style>
+  <rect id="rising-anim-plate" x="1" y="1" width="62" height="62" rx="14" fill="#1d4ed8"/>
+  <path id="rising-anim-rest" d="M16 44 L30 30 L38 38 L50 26" fill="none" stroke="#bfdbfe" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+  <path id="rising-anim-draw" d="M16 44 L30 30 L38 38 L50 26" fill="none" stroke="#bfdbfe" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100">
+    <animate attributeName="stroke-dashoffset" from="100" to="0" dur="0.9s" fill="freeze"/>
+  </path>
+  <path id="rising-anim-head" d="M38 20 L52 20 L52 34 Z" fill="#bfdbfe"/>
+</svg>
