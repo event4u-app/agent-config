@@ -126,7 +126,8 @@ published claim is the measured result per class per state, a null included.
       unchanged. The ADR answers the council's two objections of 2026-08-23 by
       name — no composition rule, and a hook that silently changes what runs —
       and records what would reopen it.
-      verify: `lint_hook_manifest` refuses a concern declaring a rewrite; `hook-architecture-v1.md` no longer calls the rewrite half open.
+      verify: `npx vitest run tests/scripts/lint_hook_manifest.test.ts -t rewrite-concern-refused --reporter=verbose` -> /✓.*rewrite-concern-refused/
+      — and `hook-architecture-v1.md` no longer calls the rewrite half open.
 - [ ] **1.2 Two views of one envelope, built by the payload-shape planner (D2).**
       The **placeholder view** — values replaced in the prompt, `tool_input` and
       `tool_response` — is what every recording and advisory concern receives,
@@ -231,7 +232,7 @@ published claim is the measured result per class per state, a null included.
 
 - [ ] **6.1 A rewrite axis in `host_lowering.yaml`** per slot — `output`, `input`,
       `prompt`, each `replace`, `gate` or `none` — dated like every other column.
-      verify: `lint_hook_manifest` refuses a rewrite emission toward a host whose axis says otherwise.
+      verify: `npx vitest run tests/scripts/lint_hook_manifest.test.ts -t rewrite-toward-non-replace-host-refused --reporter=verbose` -> /✓.*rewrite-toward-non-replace-host-refused/
 - [ ] **6.2 Bind the next host by evidence, one at a time.** Copilot CLI's
       transformed-prompt field is bound only after a command-hook probe; Gemini
       CLI only after its envelope exists. A host that can gate and not replace

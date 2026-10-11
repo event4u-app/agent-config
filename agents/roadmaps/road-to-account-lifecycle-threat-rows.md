@@ -76,8 +76,8 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       handle) and is never the default there; it is acceptable only for a
       public handle that is not a login identifier, rate-limited, and as an
       explicit project decision. Point at the enumeration row from 2.2.
-      verify: `grep -n 'canonical exception' src/skills/form-handler/SKILL.md`
-      returns 0 lines, and the rewritten lines name the enumeration row.
+      verify: `grep -c 'canonical exception' src/skills/form-handler/SKILL.md` -> /^0$/
+      and the rewritten lines name the enumeration row.
 - [ ] **1.2 Repin the authorities.** `authz-review/SKILL.md:250` → ASVS 5.0.0
       V8 Authorization; `data-flow-mapper/SKILL.md:159` → ASVS 5.0.0 V1 Encoding
       and Sanitization + V2 Validation and Business Logic, using the same
@@ -85,8 +85,8 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       records. Add V6 Authentication and NIST SP 800-63B (current revision,
       read live at execution) to threat-modeling's References as the authority
       the authentication rows defer to — names and chapters only, no values.
-      verify: `grep -rn '4\.0\.3' src/skills src/rules docs/guidelines` returns
-      only the provenance sentence at `threat-modeling/SKILL.md:220`.
+      verify: `grep -rl '4\.0\.3' src/skills src/rules docs/guidelines` -> /^src\/skills\/threat-modeling\/SKILL\.md\s*$/
+      — only the provenance sentence in threat-modeling remains.
 - [ ] **1.3 Key the PHP `auth` limiter on the account, not only the IP.**
       Change the example at `docs/guidelines/php/api-design.md:83-85` to limit
       on the normalised account identifier together with the IP (a composite
@@ -184,12 +184,12 @@ NIST SP 800-63B (0 hits for `\bNIST\b.*800-63`).
       `if_pepper` outside-the-credential-store-with-rotation-plan;
       `if_email_canonicalization` one-project-function-no-provider-alias-stripping-by-default;
       `if_provider_managed` verify-configuration-not-rebuild.
-      verify: `ground` on the registration prompt returns the new rules under
-      its reasoning block, and no `no reasoning rule matched` gap.
+      verify: `./scripts-run src/skills/corpus-grounding/scripts/ground ground --manifest src/skills/threat-modeling/data/manifest.json "build user registration with email verification"` -> /authentication/
+      — the new rules appear under its reasoning block, with no `no reasoning rule matched` gap.
 - [ ] **2.4 Record the re-derivation in the manifest.** Update
       `manifest.json` `upstream.sha` to name the added rows and their
       authorities.
-      verify: `./scripts-run src/scripts/check_corpus_staleness` exits 0.
+      verify: `./scripts-run src/scripts/check_corpus_staleness` -> 0
 
 ## Phase 3 — Reach the rows from the skills a consumer asks through
 
