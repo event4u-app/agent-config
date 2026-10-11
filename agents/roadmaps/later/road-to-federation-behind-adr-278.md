@@ -38,6 +38,21 @@ depends: [road-to-leading-every-row, road-to-a-tree-that-keeps-its-neighbours, r
 > **Source:** `agents/tmp.old/inbox-2026-10-b/` — the federation half of a second
 > author's proposal bundle, consolidated against this tree at `9bc8cd4` and against the
 > two coexistence lanes of the same set. Class: external proposal set + owner directive.
+>
+> **Arrivals:** 3 (at least) — latest `inbox-2026-10-k` (2026-10-11), which asked for
+> external skills to be consumed only as inspect → pin by digest → explicit capability
+> grant → ephemeral use, origin-labelled and never executed implicitly; earlier:
+> `inbox-2026-10-b` (this file's source), `inbox-2026-09-o`. Subject-matched floor;
+> the consumed-inbox tree is gitignored, so the count is machine-local.
+>
+> **The posed owner question — 3 arrivals.** Does consuming remote skills (inspect, pin by
+> digest, explicit grant, ephemeral use, no implicit execution) belong to this file? Exactly
+> one of: (1) yes, as a `content`-class provider under ADR-280's trust contract, added as a
+> phase once Phase 1 lands; (2) no — this package is a content layer, not a host, and remote
+> skill consumption is the host's; record it as a non-goal here with the reopen trigger "a
+> host asks the package for a trust check on a remote skill"; (3) a separate parked roadmap.
+> Recommendation: (2) — the round itself ranked it last, found no product bottleneck it
+> would remove, and the outbound client it needs does not exist in `src/` (0.1 above).
 
 ## Goal
 

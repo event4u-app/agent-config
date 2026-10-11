@@ -37,7 +37,7 @@ rather than asserted.
 | Component | Entry point | Class | What decides it |
 |---|---|---|---|
 | Hook dispatcher | `src/scripts/hooks/dispatch_hook.ts` | **A** | One process per hook event, resolves the concern chain, exits. `main()` returns an exit code; nothing survives it. |
-| Hook concerns (47) | `src/scripts/hooks/*.ts` | **A** | Each runs inside the dispatcher's process and returns a verdict. No concern opens a socket or a timer. |
+| Hook concerns (every entry under `concerns:` in `src/scripts/hook_manifest.yaml`) | `src/scripts/hooks/*.ts` | **A** | Each runs inside the dispatcher's process and returns a verdict. No concern opens a socket or a timer. |
 | Work engine | `src/agent-src/templates/scripts/work_engine/` | **A** | Command-scoped dispatcher; state is the run's own files under `agents/runtime/`. |
 | Code-graph engine | `src/scripts/code_graph/` (`agent-config code-graph`) | **A** | `build\|detect\|query\|affected\|path\|explain\|validate` — each a per-invocation command over a rebuildable index. The index is a gitignored artifact, which is what Class A permits rather than what Class C forbids: it is built from the tree, never from the network. |
 | Gates and linters (`check_*`, `lint_*`, `audit_*`) | `src/scripts/` | **A** | Read the tree, print, exit. The largest population and the least interesting row. |

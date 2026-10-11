@@ -107,6 +107,8 @@ estate_offset_exempt: "The offset is the governance roadmap flipping ready to dr
 > decision and the surface census is
 > `agents/evidence/analysis/runtime-reversal-owner-decision.md`.
 
+> **Arrivals:** 1 — latest `inbox-2026-10-i` (2026-10-11): an audit attributes the 85.7 % capture null to a worktree path; the 2026-08-30 evidence page treats the worktree effect as denominator attribution, not as the loss, so the claim was declined.
+
 > **Hard dependency — DISCHARGED 2026-08-27.** `road-to-runtime-governance-flip.md`
 > Phase 1 landed and that roadmap is closed. **ADR-249** supersedes `ADR-124:111`
 > in scope — a supervised resident process is permitted in core — and also amends

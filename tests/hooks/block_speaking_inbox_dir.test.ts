@@ -257,6 +257,62 @@ describe('a glob over an acceptable name is not a creatable literal', () => {
         expect(blocks('agents/tmp/inbox-2026-09-[a-z]/x.md')).toBe(false);
     });
 
+    describe('a glob over the bare head of an opaque family', () => {
+        const datedHeads = ['inbox', 'round', 'src-set', 'source-set'];
+        for (const head of datedHeads) {
+            for (const suffix of ['', '-2026', '-2026-10']) {
+                it(`allows ${head}${suffix}-*`, () => {
+                    expect(blocks(`agents/tmp/${head}${suffix}-*/x.md`)).toBe(false);
+                });
+            }
+        }
+        it('allows set-* (the hex-only family)', () => {
+            expect(blocks('agents/tmp/set-*/x.md')).toBe(false);
+        });
+        it('allows a ? wildcard tail', () => {
+            expect(blocks('agents/tmp/round-??????/x.md')).toBe(false);
+        });
+        it.each([
+            'agents/tmp/set-2026-*/x.md',
+            'agents/tmp/rounder-*/x.md',
+            'agents/tmp/round-x-*/x.md',
+            'agents/tmp/inbox-202-*/x.md',
+            'agents/tmp/round-2026-1-*/x.md',
+            'agents/tmp/my-round-*/x.md',
+            'agents/tmp/round-[acme]-*/x.md',
+            'agents/tmp/inbox-2026-[vendor]-*/x.md',
+            'agents/tmp/set-*acme/x.md',
+            'agents/tmp/inbox-2026-09-[acme]/x.md',
+            'agents/tmp/inbox-2026-09-[acme]*/x.md',
+            'agents/tmp/inbox-2026-09-[a-a][c-c][m-m][e-e]/x.md',
+            'agents/tmp/inbox-2026-09-[x-y]/x.md',
+        ])('refuses %s', (p) => {
+            expect(blocks(p)).toBe(true);
+        });
+
+        it('lets the original trigger command through end to end', () => {
+            const tokens = creatableTokens('for f in agents/tmp/round-*/*.md; do head -40 "$f"; done').filter(
+                (t) => t.includes('agents/tmp'),
+            );
+            expect(tokens.length).toBeGreaterThan(0);
+            expect(tokens.some((t) => blocks(t))).toBe(false);
+        });
+
+        it('allows the generic classes', () => {
+            for (const cls of ['[a-z]', '[0-9]', '[a-f]', '[0-9a-f]', '[a-z0-9]', '[A-Z]']) {
+                expect(blocks(`agents/tmp/inbox-2026-09-${cls}/x.md`)).toBe(false);
+            }
+        });
+
+        it('refuses a bracket payload in a full Bash command', () => {
+            const tokens = creatableTokens("mkdir -p 'agents/tmp/round-[acme]-*/x'").filter((t) =>
+                t.includes('agents/tmp'),
+            );
+            expect(tokens.length).toBeGreaterThan(0);
+            expect(tokens.some((t) => blocks(t))).toBe(true);
+        });
+    });
+
     it('refuses a glob whose literal part still speaks', () => {
         expect(blocks('agents/tmp/a-speaking-name-*/x.md')).toBe(true);
         expect(blocks('agents/tmp/my-source-[a-z]/x.md')).toBe(true);

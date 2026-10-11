@@ -52,6 +52,8 @@ estate_offset_exempt: "Offsets nothing. It disposes no roadmap and archives noth
 > ruling **E5** is decided in this file. Runs after `road-to-delivery-for-every-host`
 > Phase 4 so its measurement lands on the new baseline.
 
+> **Arrivals:** 1 — latest `inbox-2026-10-i` (2026-10-11): an audit asks to lower `user-invocable` / `disable-model-invocation` onto workflow-only skills; this file's step 1.2 correction already records why that lever does not exist.
+
 ## Parked 2026-09-09 — the blocker's own review trigger fired
 
 The trigger said, in its own words: *"if [condition (i)] closes and (ii)-(v) have
