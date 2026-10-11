@@ -37,7 +37,7 @@ promotion per `provider-lifecycle-discipline`.
 |---|---|---|
 | Text-in-image (logo, banner, typographic art) | **Ideogram** | Best glyph rendering; raster models garble text |
 | Photoreal (product shot, portrait, scene) | **Flux** | Photorealism specialist; routed via fal/Replicate |
-| Icon the set lacks | [`iconography`](../iconography/SKILL.md) first, then [`svg-authoring`](../svg-authoring/SKILL.md) | The incumbent set wins; a missing glyph is hand-authored against its grid and checked — no provider involved |
+| Icon the set lacks | `iconography` first, then [`svg-authoring`](../svg-authoring/SKILL.md) | The incumbent set wins; a missing glyph is hand-authored against its grid and checked — no provider involved |
 | Simple geometric mark | [`svg-authoring`](../svg-authoring/SKILL.md) | A `rect`/`circle`/`path` mark is cheaper and more editable hand-authored than generated, and it ends in a file rather than a plan |
 | Complex illustrative vector art | **Recraft** | The only job shape left for a vector provider. State the adapter's lifecycle in the answer: `experimental — scaffold tier, dry-run plumbing only`, so the caller knows no asset is produced |
 | General art / edit / multimodal | **Gemini-image** or **GPT Image 2** | Broad capability; natural-language prompts |

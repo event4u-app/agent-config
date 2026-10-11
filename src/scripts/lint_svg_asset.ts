@@ -63,9 +63,15 @@ export function canonicalAttrs(attrs: Record<string, string>): Record<string, st
         const v = (attrs[key] ?? '')
             .replace(/\s+/g, ' ')
             .trim()
-            .replace(/-?\d+\.?\d*(?:[eE][-+]?\d+)?/g, (n) => {
-                const num = Number(n);
-                return Number.isFinite(num) ? String(Number(num.toFixed(4))) : n;
+            // Numbers only where a number is what it is. A hex colour is a
+            // TOKEN, not a quantity: normalising inside `#00ff00` collapses it
+            // onto `#0ff0`, and the readout then reports no change for a colour
+            // edit outside the allowed ids — a surgical-edit witness that
+            // cannot see a recolour.
+            .replace(/#[0-9a-fA-F]+|-?\d+\.?\d*(?:[eE][-+]?\d+)?/g, (tok) => {
+                if (tok.startsWith('#')) return tok.toLowerCase();
+                const num = Number(tok);
+                return Number.isFinite(num) ? String(Number(num.toFixed(4))) : tok;
             });
         out[key] = v;
     }
@@ -276,7 +282,15 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         const scanDir = dirArg ? path.resolve(dirArg) : path.resolve(process.cwd(), 'src');
         roots = [scanDir];
         if (!fs.existsSync(scanDir)) {
+            // The two cases are NOT the same, and collapsing them into exit 0
+            // made a renamed or mistyped `--dir` report success in CI. An
+            // ABSENT DEFAULT root is the opt-in escape — a consumer with no
+            // `src/` has nothing to scan and must not red. An EXPLICIT `--dir`
+            // that does not resolve is a broken invocation, and this module's
+            // own header already says a gate that scanned no file is not a
+            // clean gate.
             if (!quiet) process.stderr.write(`[lint_svg_asset] scan directory not found: ${scanDir}\n`);
+            if (dirArg) return 1;
             process.stderr.write(
                 'This linter is opt-in. Run with --dir <path> or --file <a.svg> pointing at your assets.\n',
             );

@@ -1083,6 +1083,20 @@ function deriveFindings(r: AssetReading): AssetFinding[] {
         }
     }
 
+    // Measured, and previously derived nothing: an inline asset whose route was
+    // read in a real browser and did NOT stop the motion produced an empty
+    // findings array, so the one layer that can actually see the failure stayed
+    // silent about it.
+    if (r.reduced_motion.witnessable && r.reduced_motion.frames_equal === false) {
+        out.push({
+            rule: 'motion/reduced-motion-route-does-not-stop-it',
+            severity: 'error',
+            detail:
+                'under an emulated prefers-reduced-motion: reduce the frames still differ — the route this ' +
+                'file declares does not stop its animation, which is the R4 failure measured rather than inferred',
+        });
+    }
+
     if (r.reduced_motion.host_picture_route === false) {
         out.push({
             rule: 'motion/img-delivery-no-static-route',

@@ -1,15 +1,17 @@
 /**
  * svg_rules — the SVG rule set, with no command-line surface attached.
  *
- * Split out of `lint_svg_asset.ts` for a measured reason, not a tidy one. The
- * design pass routes an `.svg` write to these rules (step 1.4 of
- * `road-to-svg-with-a-witness`), and every hook concern is inlined into ONE
- * bundle that every hook event loads — so a dependency added for one concern is
- * paid by all of them, on every dispatch. Importing the linter whole put its
- * argv parsing, its directory walk, its project-config reader and its
- * scanned-nothing guard into that bundle along with the rules: measured, the
- * whole module cost 39,567 bytes and took the bundle 21,574 bytes past its
- * ceiling. The rules are the part the hook actually needs.
+ * Split out of `lint_svg_asset.ts` for a measured reason, not a tidy one, and
+ * the routing it was split FOR is not live: step 1.4 of
+ * `road-to-svg-with-a-witness` would route an `.svg` write to these rules
+ * inside the design pass, and it was withdrawn on an independent council
+ * verdict before it landed. Every hook concern is inlined into ONE bundle that
+ * every hook event loads, so a dependency added for one concern is paid by all
+ * of them on every dispatch; importing the rules there costs 30,924 bytes,
+ * which is 12,931 past the ceiling. The split stands on its own — it reclaimed
+ * 8,643 of that and leaves a rule set the follow-up can route to rather than a
+ * rewrite — but nothing in the hook path imports this module today. The only
+ * consumers are `lint_svg_asset` and the fixture report.
  *
  * `lint_svg_asset.ts` is now the CLI over this module and re-exports it, so
  * every existing import keeps resolving.
@@ -763,10 +765,27 @@ interface NameState {
     hasRoleImg: boolean;
 }
 
+/** Is `elements[index]` a direct child of the root `<svg>`? */
+function isDirectChildOfRoot(elements: SvgElement[], index: number): boolean {
+    let depth = 0;
+    for (let i = 0; i < index; i++) {
+        const el = elements[i] as SvgElement;
+        if (el.closing) depth -= 1;
+        else if (!el.selfClosing) depth += 1;
+    }
+    return depth === 1;
+}
+
 function rootNameState(content: string, elements: SvgElement[]): NameState {
     const rootIdx = elements.findIndex((el) => el.name === 'svg' && !el.closing);
     const root = rootIdx === -1 ? undefined : elements[rootIdx];
-    const titleIdx = elements.findIndex((el) => el.name === 'title' && !el.closing);
+    // A DIRECT child of the root only. The first `<title>` ANYWHERE was wrong
+    // in both directions: a chart's nested series title read as the graphic's
+    // name, producing a false `svg-a11y-double-name` beside an `aria-label`,
+    // and hiding a genuinely unnamed graphic behind a descendant's title.
+    const titleIdx = elements.findIndex(
+        (el, i) => el.name === 'title' && !el.closing && rootIdx !== -1 && isDirectChildOfRoot(elements, i),
+    );
     const hasTitle = titleIdx !== -1 && textOf(content, elements, titleIdx).trim().length > 0;
 
     // `aria-labelledby="x"` + `<title id="x">` is the CANONICAL pattern, not a

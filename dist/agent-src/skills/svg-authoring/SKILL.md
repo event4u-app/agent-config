@@ -197,31 +197,37 @@ report a non-zero natural width.
 
 ## See also
 
-- [`iconography`](../iconography/SKILL.md) — the set comes first; this skill is
+> Named rather than linked, and that is a correctness property rather than a
+> style one: this skill ships in four packs, so a relative link to an artefact
+> that lives in only one of them resolves for a consumer who installed that pack
+> and is dead for the other three. The names are stable; the paths are not
+> promises this skill can keep.
+
+- `iconography` — the set comes first; this skill is
   for the glyph it lacks.
-- [`logo-generation`](../logo-generation/SKILL.md) — the brand pipeline that
+- `logo-generation` — the brand pipeline that
   routes a geometric mark here.
-- [`image-provider-routing`](../image-provider-routing/SKILL.md) — illustrative
+- `image-provider-routing` — illustrative
   vector art goes to a provider, not here.
-- [`fe-design`](../fe-design/SKILL.md) § Motion — the motion authority, in
+- `fe-design` § Motion — the motion authority, in
   `references/design-patterns.md` § *Motion — decision-tree and rationale*. The
   SVG mechanism lines are step **6b, "Which mechanism carries it inside an
   SVG?"** — `transform-box`, `pathLength`, the `keySplines` range, path-morph
   command equality, and delivery mode picking the reduced-motion route. Cited
   here and never restated.
-- [`frontend-render-security`](../frontend-render-security/SKILL.md) § *The
+- `frontend-render-security` § *The
   patterns AI ships by default*, row **Untrusted SVG markup into an HTML sink**
   — the sinks an SVG carries into a host origin, and what each delivery mode
   can execute. Its § *Backstop greps* carries the grep that finds them.
-- [`design-intelligence`](../design-intelligence/SKILL.md) — diagram layout; its
+- `design-intelligence` — diagram layout; its
   geometric pre-checks are witnessed by the asset profile now.
-- [`accessibility-auditor`](../accessibility-auditor/SKILL.md) — the ARIA
+- `accessibility-auditor` — the ARIA
   corpus that answers what a graphic's accessible name has to be; its
   `data/aria-patterns.csv` carries the **Meaningful standalone graphic** and
   **Decorative graphic** rows this skill grounds against rather than copies.
-- [`canvas-design`](../canvas-design/SKILL.md), [`wireframe`](../wireframe/SKILL.md)
+- `canvas-design`, `wireframe`
   — the two lanes that use SVG as an execution surface.
-- [`design-fidelity`](../../rules/design-fidelity.md) — a provided artifact is
+- `design-fidelity` — a provided artifact is
   the spec; the baseline readout above is its surgical-edit witness.
 - `docs/contracts/design-artifact-verification.md` — `frame_seek` and the other
   primitives the witness depends on.

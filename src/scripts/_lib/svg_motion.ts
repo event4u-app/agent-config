@@ -163,11 +163,10 @@ export type SmilVerdict =
 /**
  * Does a reduced-motion route exist that can take effect on a SMIL subtree?
  *
- * Three kinds can: a declaration that is not an animation shorthand (a
+ * Two kinds can: a declaration that is not an animation shorthand (a
  * `display`/`visibility` switch, a swapped `fill`, a `d` override removes or
- * replaces the animating subtree); a `<set>` element, which is the SMIL-side
- * switch and cannot be written in CSS at all; and a `begin="indefinite"` the
- * document starts by script or by a media branch.
+ * replaces the animating subtree), and a `begin="indefinite"`, which says the
+ * animation does not start on its own.
  *
  * Deliberately generous in the "routed" direction. This rule ships advisory,
  * and the cost of a false red here is a linter the agent learns to ignore —
@@ -182,7 +181,12 @@ export function reducedMotionReachesSmil(content: string): boolean {
             return true;
         }
     }
-    if (/<set\b/i.test(content)) return true;
+    // A `<set>` is NOT a route, and treating it as one was a hole: `<set>` is
+    // itself a SMIL animation — it is in `SMIL_TAGS` — so a file that animates
+    // with one was its own reduced-motion branch, and both this rule and DQ4's
+    // SMIL half went silent on exactly the R4 case they exist to catch.
+    // `begin="indefinite"` stays, because it says something a `<set>` does not:
+    // the animation does not start on its own.
     if (/begin\s*=\s*["']indefinite["']/i.test(content)) return true;
     return false;
 }

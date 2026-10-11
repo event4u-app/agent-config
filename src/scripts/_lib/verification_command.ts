@@ -283,6 +283,10 @@ function segmentVerifies(rawWords: readonly string[]): boolean {
             // refused turn-end gate twice with a parser pass and a report that
             // the file "is valid". A file can parse and still be wrong.
             if (arg1 !== 'ui:render') return false;
+            // Both spellings. `--profile=asset` is the same invocation and was
+            // refused, so a turn that used it could not clear the gate with the
+            // one check that actually looks at the file.
+            if (rest.includes('--profile=asset')) return true;
             const profileAt = rest.indexOf('--profile');
             return profileAt !== -1 && rest[profileAt + 1] === 'asset';
         }

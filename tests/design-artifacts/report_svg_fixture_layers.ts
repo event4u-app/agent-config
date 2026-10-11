@@ -35,9 +35,24 @@ import path from 'node:path';
 
 import type * as PlaywrightTest from '@playwright/test';
 
-import { runAssetRender, type AssetClass } from '../cli/commands/uiRenderAsset.js';
-import { scanHostHtml, scanSvg, type DeliveryMode } from './lint_svg_asset.js';
-import { smilVerdict } from './_lib/svg_motion.js';
+import { scanHostHtml, scanSvg, type DeliveryMode } from '../../src/scripts/lint_svg_asset.js';
+import { smilVerdict } from '../../src/scripts/_lib/svg_motion.js';
+
+/**
+ * The engine half stays a guarded dynamic import even here, because the report
+ * treats that layer as optional by design: without it every engine row reads
+ * `unverified`, never a pass.
+ */
+type AssetClass = 'icon' | 'mark' | 'illustration' | 'diagram' | 'animated';
+type AssetRenderModule = typeof import('../../src/cli/commands/uiRenderAsset.js');
+
+async function loadAssetRenderer(): Promise<AssetRenderModule | null> {
+    try {
+        return (await import('../../src/cli/commands/uiRenderAsset.js')) as AssetRenderModule;
+    } catch {
+        return null;
+    }
+}
 
 const FIXTURE_REL = path.join('tests', 'design-artifacts', 'fixtures', 'svg-assets');
 
@@ -156,7 +171,7 @@ export async function measure(
 }
 
 /** A minimal structural type, so this module does not import Playwright's types. */
-export type EngineBrowser = Parameters<typeof runAssetRender>[0];
+export type EngineBrowser = PlaywrightTest.Browser;
 
 async function measureRow(root: string, row: Row, browser: EngineBrowser | null): Promise<RowReading> {
     {
@@ -253,7 +268,9 @@ async function engineRules(
                   path.join(root, FIXTURE_REL, f),
               )
             : undefined;
-    const result = await runAssetRender(browser, {
+    const renderer = await loadAssetRenderer();
+    if (!renderer) return [];
+    const result = await renderer.runAssetRender(browser as never, {
         file: path.join(root, FIXTURE_REL, rel),
         projectRoot: root,
         outDir,

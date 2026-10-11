@@ -190,6 +190,36 @@ async function main(rawArgv: readonly string[]): Promise<number> {
                     registration?: string;
                 },
             ) => {
+                // Validated, not cast. A cast let `--class Icon` through as an
+                // AssetClass that matches no threshold key, so
+                // `fill_ratio_threshold` came out `undefined`,
+                // `structure/loose-viewbox` could never fire, and the key
+                // vanished from the manifest — a silent downgrade of a reading
+                // to nothing. `lint_svg_asset` validates the same two
+                // vocabularies and exits 1; so does this.
+                const ASSET_CLASS_NAMES = ['icon', 'mark', 'illustration', 'diagram', 'animated'];
+                const DELIVERY_NAMES = ['inline', 'document', 'img', 'css-bg'];
+                if (opts.class !== undefined && !ASSET_CLASS_NAMES.includes(opts.class)) {
+                    process.stderr.write(
+                        `[ui:render] unknown --class "${opts.class}"; expected one of ${ASSET_CLASS_NAMES.join(', ')}\n`,
+                    );
+                    process.exitCode = 1;
+                    return;
+                }
+                if (opts.delivery !== undefined && !DELIVERY_NAMES.includes(opts.delivery)) {
+                    process.stderr.write(
+                        `[ui:render] unknown --delivery "${opts.delivery}"; expected one of ${DELIVERY_NAMES.join(', ')}\n`,
+                    );
+                    process.exitCode = 1;
+                    return;
+                }
+                if (opts.profile !== undefined && opts.profile !== 'page' && opts.profile !== 'asset') {
+                    process.stderr.write(
+                        `[ui:render] unknown --profile "${opts.profile}"; expected page or asset\n`,
+                    );
+                    process.exitCode = 1;
+                    return;
+                }
                 process.exitCode = await runUiRender({
                     target,
                     ...(opts.json === undefined ? {} : { json: opts.json }),

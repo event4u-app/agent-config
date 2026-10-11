@@ -112,11 +112,10 @@ describe('scoped-dangle follow rate — attempts is null, never 0, on a dead ins
         // `logo-generation` — three skills the scoped default prunes. That is
         // the existing pattern rather than a new class: `logo-generation`
         // already dangled from `brand-identity` and `brand-to-tokens` before
-        // this change. The published row
-        // (agents/evidence/metrics/scoped-dangle-follow-rate.json) is re-taken
-        // in the same change, because a census the gate's own collector
-        // produces and a published figure that disagrees with it is the drift
-        // that file's `_comment` exists to prevent. The instrument is still
+        // this change. The published row is re-taken in the same change,
+        // because a census the gate's own collector produces and a published
+        // figure that disagrees with it is the drift that file's own comment
+        // exists to prevent. The instrument is still
         // dead and the null branch still closes nothing, so NOTHING here
         // licenses leaving the links as they are — `measured_branch` still owns
         // that decision and still needs a live window to reach it.
