@@ -61,6 +61,7 @@ import { compareInputs } from '../_lib/probe_inputs.js';
 import { trigger_matches, type Trigger } from '../_lib/router_match.js';
 import { isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
+import { scanHostHtml, scanSvg, type Severity as SvgSeverity } from '../lint_svg_asset.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 
@@ -130,6 +131,54 @@ export function enabled(root: string, key = 'design_pass'): boolean {
 }
 
 export const isUiSurface = (p: string): boolean => isUiPath(p) || isUiTreePath(p);
+
+/** True when the path names a standalone SVG asset. */
+export const isSvgAsset = (p: string): boolean => /\.svg$/i.test(p);
+
+/**
+ * Step 1.4 of `road-to-svg-with-a-witness` — what this pass is willing to look at.
+ *
+ * An `.svg` INSIDE a UI tree already reached this hook (`isUiSurface` is true
+ * for `components/logo.svg`), and was then scanned with `lint_design_slop`,
+ * which holds zero SVG rules — so it reached the pass and learned nothing. An
+ * `.svg` OUTSIDE one (`public/logo.svg`, `assets/logo.svg`) never reached it
+ * at all. Both halves are the same defect, and both are closed here.
+ *
+ * `UI_EXTENSIONS` is deliberately NOT widened to carry `svg`. That predicate
+ * also gates `ui_route_nudge_hook`'s `isUiWrite`, and an icon dropped into
+ * `public/` is not a UI change worth a routing nudge and its tokens — adding
+ * it there would spend tokens on every asset write in the tree (decision E10,
+ * Risk 4). The widening lives here, in this hook, and nowhere else.
+ */
+export const isDesignPassTarget = (p: string): boolean => isUiSurface(p) || isSvgAsset(p);
+
+/**
+ * `lint_svg_asset`'s three grades onto this pass's four.
+ *
+ * Nothing maps to P0. P0 is the stop-slot BLOCKING verdict, and the SVG rule
+ * set ships advisory by decision E5 — a rule family on its first day does not
+ * get to stop a turn. Step 5.2 records the measured bar (zero twin findings
+ * across two consecutive runs) a later promotion would have to cite.
+ */
+export function svgSeverityToPass(severity: SvgSeverity): Finding['severity'] {
+    switch (severity) {
+        case 'error':
+            return 'P1';
+        case 'warning':
+            return 'P2';
+        default:
+            return 'P3';
+    }
+}
+
+/**
+ * `catalogId` names a row of the design-antipattern catalogue (`V1`, `C2`, …).
+ * The SVG rules have no catalogue row, so they carry the family name rather
+ * than a V-number they would be borrowing — a fabricated id reads to every
+ * downstream consumer as a catalogue entry that can be looked up, and this one
+ * cannot.
+ */
+export const SVG_CATALOG_ID = 'SVG';
 
 /**
  * The shadow read of `ui-conformance.json` — Phase 5 of
@@ -499,7 +548,7 @@ function main(): number {
         targets = state.touched;
     } else {
         const t = targetPath(payload);
-        if (!t || !isUiSurface(t)) return EXIT_ALLOW;
+        if (!t || !isDesignPassTarget(t)) return EXIT_ALLOW;
         targets = [t];
         if (!state.touched.includes(t)) state.touched.push(t);
     }
@@ -517,6 +566,21 @@ function main(): number {
             // itself rather than handing over a path, which is also what lets a
             // post-write pass see the bytes that were just written.
             const content = fs.readFileSync(abs, 'utf-8');
+            if (isSvgAsset(rel)) {
+                // The SVG rules, not the slop rules. `scanFile` has none, so a
+                // `.svg` used to pass through this pass learning nothing.
+                for (const f of scanSvg(content, rel)) {
+                    findings.push({
+                        file: rel,
+                        severity: svgSeverityToPass(f.severity),
+                        catalogId: SVG_CATALOG_ID,
+                        rule: f.rule,
+                        line: f.line,
+                        message: f.snippet,
+                    });
+                }
+                continue;
+            }
             for (const f of scanFile(content, rel, ctx)) {
                 findings.push({
                     file: rel,
@@ -526,6 +590,21 @@ function main(): number {
                     line: f.line,
                     message: f.message,
                 });
+            }
+            // An HTML surface can HOST an inline graphic, and the id-collision
+            // reading (R7) only exists across two graphics on one page — so it
+            // cannot come from the per-file SVG scan above.
+            if (/\.(html|htm|vue|svelte|astro)$/i.test(rel)) {
+                for (const f of scanHostHtml(content, rel)) {
+                    findings.push({
+                        file: rel,
+                        severity: svgSeverityToPass(f.severity),
+                        catalogId: SVG_CATALOG_ID,
+                        rule: f.rule,
+                        line: f.line,
+                        message: f.snippet,
+                    });
+                }
             }
         }
     } catch (err) {
