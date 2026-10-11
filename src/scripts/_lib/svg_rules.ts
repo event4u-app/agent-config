@@ -1008,6 +1008,66 @@ export function directChildrenOfRoot(content: string): XmlNode[] {
  * produce an error per remaining tag, and a wall of them buries the first,
  * which is the only one a reader can act on.
  */
+/**
+ * A gradient whose stops are all the same colour is a flat fill in costume.
+ *
+ * Step 3.1 of `road-to-svg-from-a-live-session`. A rejected 195 KB trace
+ * carried 355 gradient definitions, nine of them with identical stops, and the
+ * static witness reported one finding: a missing accessible name. Two external
+ * reviews counted the gradients by hand. This is cheap to decide from the
+ * bytes and nothing was deciding it.
+ *
+ * WARNING, not an error. A degenerate gradient renders correctly; it costs
+ * bytes and makes a file harder to edit, which is a reading rather than a
+ * defect — and the cost family above it is deliberately ungated for the same
+ * reason.
+ *
+ * Colour comparison is textual after whitespace and case normalisation, so
+ * `#FFF` and `#ffffff` are NOT reported as identical. That is the conservative
+ * direction: a false negative costs a reading, a false positive costs trust in
+ * every other finding beside it.
+ */
+function ruleDegenerateGradient(content: string, elements: SvgElement[], file: string): Finding[] {
+    const findings: Finding[] = [];
+    const open: Array<{ el: SvgElement; stops: Array<{ color: string; opacity: string }> }> = [];
+    for (const el of elements) {
+        if (el.name === 'lineargradient' || el.name === 'radialgradient') {
+            if (el.closing) {
+                const g = open.pop();
+                if (!g || g.stops.length < 2) continue;
+                const first = g.stops[0] as { color: string; opacity: string };
+                const same = g.stops.every((s) => s.color === first.color && s.opacity === first.opacity);
+                if (!same) continue;
+                findings.push({
+                    rule: 'svg-structure-degenerate-gradient',
+                    file,
+                    line: g.el.line,
+                    snippet:
+                        `<${g.el.name} id="${g.el.attrs['id'] ?? ''}"> has ${String(g.stops.length)} stops, all ` +
+                        `${first.color || '(inherited)'} at opacity ${first.opacity} — a flat fill in a gradient's ` +
+                        'clothes, which costs bytes and makes the file harder to edit',
+                    severity: 'warning',
+                });
+            } else if (!el.selfClosing) {
+                open.push({ el, stops: [] });
+            }
+            continue;
+        }
+        if (el.name === 'stop' && !el.closing) {
+            const host = open[open.length - 1];
+            if (!host) continue;
+            const style = el.attrs['style'] ?? '';
+            const fromStyle = /stop-color\s*:\s*([^;]+)/i.exec(style)?.[1];
+            const opacityFromStyle = /stop-opacity\s*:\s*([^;]+)/i.exec(style)?.[1];
+            host.stops.push({
+                color: (fromStyle ?? el.attrs['stop-color'] ?? '').trim().toLowerCase(),
+                opacity: (opacityFromStyle ?? el.attrs['stop-opacity'] ?? '1').trim(),
+            });
+        }
+    }
+    return findings;
+}
+
 function ruleWellFormed(content: string, file: string): Finding[] {
     const doc = parseDocument(content);
     if (doc.errors.length === 0) return [];
@@ -1299,6 +1359,7 @@ export function scanSvg(content: string, relPath: string, opts: ScanOptions = {}
     const text = maskComments(content);
     const raw: Finding[] = [
         ...ruleWellFormed(content, relPath),
+        ...ruleDegenerateGradient(text, elements, relPath),
         ...ruleMissingXmlns(elements, relPath),
         ...ruleOutsideViewBox(elements, relPath),
         ...ruleUnparseablePath(elements, relPath),

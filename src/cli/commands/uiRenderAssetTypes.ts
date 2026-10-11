@@ -71,6 +71,17 @@ export const BRAND_TOKEN_PATHS: readonly string[] = [
 export const ICON_SIZES: readonly number[] = [16, 24, 48];
 
 /**
+ * A `mark` is captured here too — step 4.3 of
+ * `road-to-svg-from-a-live-session`.
+ *
+ * A review sent an accepted mark back because its face turned to mush at
+ * 32 px, and a simplified small-size variant was built. Nothing in the profile
+ * produced a capture at those sizes, so the only way to know was to look at
+ * something that did not exist. 16 and 32 are the two the review named.
+ */
+export const MARK_SMALL_SIZES: readonly number[] = [16, 32];
+
+/**
  * Below this, a draw-on animation is not reported. The planted row reads
  * 0.283 (a 300-unit dash on a 215-unit path) and its twin reads 0.0, so the
  * band between them is wide; 0.05 is inside it with room on both sides.
@@ -174,6 +185,80 @@ export interface ReducedMotionReading {
     delivered_animates?: boolean | null;
 }
 
+/**
+ * Per-capture readings taken against that capture's OWN ground — steps 4.1 and
+ * 4.2 of `road-to-svg-from-a-live-session`.
+ *
+ * Both are about the dark ground specifically, which is where a conversion
+ * session lost twice: hairlines between abutting traced segments were invisible
+ * on white and obvious on black, and a wordmark in dark violet shipped
+ * unreadable on a dark ground with no variant built.
+ */
+export interface GroundReading {
+    background: 'light' | 'dark';
+    background_color: string;
+    /**
+     * Pixels inside the file's own OUTER silhouette, from the transparent
+     * render — opaque pixels AND the interior gaps between them.
+     *
+     * The second half is the whole point of step 4.1: a hairline seam is
+     * exactly where alpha is LOW, so a silhouette defined as "alpha is high"
+     * excludes the thing the reading is looking for. Measured on the planted
+     * fixture, which read 0 bleed pixels under that definition. The interior
+     * is found by flooding the transparent region inwards from the border;
+     * what the flood cannot reach is inside.
+     */
+    silhouette_px: number;
+    /** Of those, the opaque ones — where asking about contrast means anything. */
+    painted_px: number;
+    /** Of the PAINTED pixels, how many fall below 3:1 against this ground. */
+    low_contrast_px: number;
+    low_contrast_share: number;
+    /**
+     * Pixels INSIDE the silhouette whose colour sits within the anti-alias band
+     * of this ground — background showing through where the file claims to
+     * paint. Seams between abutting shapes, and the pinholes where three parts
+     * meet. Declared holes are excluded.
+     */
+    bleed_px: number;
+    bleed_share: number;
+}
+
+/**
+ * How a shape declares that a gap in the silhouette is DELIBERATE.
+ *
+ * Step 4.1. A ring has a hole in the middle and the ground shows through it on
+ * purpose; without a way to say so, every ring reads as a seam. By attribute
+ * rather than by geometry, because "is this gap intended" is a question only
+ * the author can answer.
+ */
+export const HOLE_ATTRIBUTE = 'data-hole';
+
+/**
+ * The bleed share above which `geometry/background-bleed-inside-silhouette`
+ * fires, pre-registered in `fixtures/svg-assets/README.md` before the reading
+ * was written.
+ *
+ * A seam is a hairline: one or two pixels wide along a shared edge. The
+ * overlap twin — the same two shapes overlapping by one unit — reads 0. The
+ * threshold sits between them with room on both sides, and it is a SHARE so
+ * it does not move with the render size.
+ */
+export const BLEED_SHARE_THRESHOLD = 0.002;
+
+/** Below this contrast ratio against its ground, a painted pixel is hard to see. */
+export const MIN_CONTRAST_RATIO = 3;
+
+/**
+ * The share of painted pixels below {@link MIN_CONTRAST_RATIO} above which
+ * `accessibility/low-contrast-on-background` fires.
+ *
+ * Half the mark, not a few anti-aliased edge pixels: an edge blends into its
+ * ground by construction, and a rule that fired on that would fire on every
+ * file. Pre-registered with the bleed threshold above.
+ */
+export const LOW_CONTRAST_SHARE_THRESHOLD = 0.5;
+
 export interface AssetFinding {
     rule: string;
     detail: string;
@@ -246,6 +331,26 @@ export interface AssetReading {
          */
         source_verdict: 'hole' | 'paint' | 'no-source';
     }>;
+    /**
+     * What the file COSTS — step 3.2 of `road-to-svg-from-a-live-session`.
+     *
+     * Reported and never gated, deliberately. No threshold was measured, and
+     * one would have refused a 195 KB trace and a 59 KB accepted figure alike:
+     * the same owner accepted a 4.6 KB mark and a 59 KB mascot, a 13x spread.
+     * Static cost went unremarked through a whole conversion session while two
+     * external reviews counted gradients by hand, which is the gap this closes
+     * — a number beside the fidelity numbers, for a human to weigh.
+     */
+    cost: {
+        bytes: number;
+        elements: number;
+        paths: number;
+        gradients: number;
+        /** Coordinate-looking numbers in every `d` and `points` attribute. */
+        coordinates: number;
+    };
+    /** One row per capture background — steps 4.1 and 4.2. */
+    grounds: GroundReading[];
     network: { aborted: number; blocked_urls: string[] };
     findings: AssetFinding[];
     comparison?: GeometryComparison;

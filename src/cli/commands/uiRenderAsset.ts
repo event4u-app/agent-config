@@ -56,8 +56,12 @@ import {
     DRAW_ON_DEAD_TIME_THRESHOLD,
     FALLBACK_BACKGROUNDS,
     ALLOWED_SCHEMES,
+    BLEED_SHARE_THRESHOLD,
+    HOLE_ATTRIBUTE,
     HOST_BASENAME,
     ICON_SIZES,
+    LOW_CONTRAST_SHARE_THRESHOLD,
+    MARK_SMALL_SIZES,
     NEAR_WHITE_CHANNEL,
     type AssetClass,
     type AssetFinding,
@@ -65,6 +69,7 @@ import {
     type Box,
     type FrameReading,
     type GeometryTolerance,
+    type GroundReading,
     type IconGridReading,
     type ReducedMotionReading,
 } from './uiRenderAssetTypes.js';
@@ -75,6 +80,34 @@ export * from './uiRenderAssetCompare.js';
 // ---------------------------------------------------------------------------
 // Pure readings — no browser
 // ---------------------------------------------------------------------------
+
+/**
+ * The cost reading — step 3.2 of `road-to-svg-from-a-live-session`.
+ *
+ * Counted from the bytes, so it needs no renderer and is the same number on
+ * every machine. `coordinates` counts the numbers inside `d` and `points`,
+ * which is the axis that makes a traced file hostile to edit: one accepted
+ * mark went 5.3 KB to 49.5 KB in a conversion and nothing measured it.
+ */
+export function costReading(content: string, elements: readonly SvgElement[]): AssetReading['cost'] {
+    let coordinates = 0;
+    for (const el of elements) {
+        if (el.closing) continue;
+        for (const key of ['d', 'points']) {
+            const v = el.attrs[key];
+            if (!v) continue;
+            coordinates += (v.match(/-?\d*\.?\d+(?:[eE][-+]?\d+)?/g) ?? []).length;
+        }
+    }
+    const open = elements.filter((el) => !el.closing);
+    return {
+        bytes: Buffer.byteLength(content, 'utf8'),
+        elements: open.length,
+        paths: open.filter((el) => el.name === 'path').length,
+        gradients: open.filter((el) => el.name === 'lineargradient' || el.name === 'radialgradient').length,
+        coordinates,
+    };
+}
 
 export function sha256(buf: Buffer | string): string {
     return crypto.createHash('sha256').update(buf).digest('hex');
@@ -110,7 +143,19 @@ export function intrinsicSize(root: SvgElement | undefined, vb: ViewBox | null):
     return { width: w, height: h };
 }
 
-/** Icons at 16/24/48; every other class at 1x and 2x its intrinsic size. */
+/**
+ * Icons at 16/24/48; a MARK additionally at 16 and 32; every other class at 1x
+ * and 2x its intrinsic size.
+ *
+ * Step 4.3 of `road-to-svg-from-a-live-session`. A review sent an accepted
+ * mark back because its face turned to mush at 32 px, and the only way anybody
+ * could know that was to look — there was no capture at a small size to look
+ * AT. Legibility stays a look; the capture is the evidence that the look
+ * happened, which is the same split the rest of this profile keeps.
+ *
+ * The small sizes come FIRST so a reader scanning the manifest meets them
+ * before the 1x the file was designed at.
+ */
 export function assetSizes(
     cls: AssetClass,
     intrinsic: { width: number; height: number },
@@ -119,11 +164,18 @@ export function assetSizes(
         return ICON_SIZES.map((px) => ({ label: `${px}`, width: px, height: px }));
     }
     const ratio = intrinsic.height / intrinsic.width;
-    return [1, 2].map((k) => ({
+    const scaled = [1, 2].map((k) => ({
         label: `${k}x`,
         width: Math.round(intrinsic.width * k),
         height: Math.round(intrinsic.width * k * ratio),
     }));
+    if (cls !== 'mark') return scaled;
+    const small = MARK_SMALL_SIZES.map((px) => ({
+        label: `${px}`,
+        width: px,
+        height: Math.max(1, Math.round(px * ratio)),
+    }));
+    return [...small, ...scaled];
 }
 
 export interface ThresholdSource {
@@ -431,6 +483,266 @@ async function captureWithOneRetry(page: Page, shot: string): Promise<void> {
     }
 }
 
+/**
+ * The per-ground readings — steps 4.1 and 4.2 of
+ * `road-to-svg-from-a-live-session`.
+ *
+ * Three images, read in one scratch page so nothing is decoded twice:
+ *
+ *   transparent  the file on no ground at all, which is where its own
+ *                silhouette comes from. A silhouette taken from the light
+ *                capture would lose every white part of the graphic, which is
+ *                precisely the paint these two readings are about.
+ *   light / dark the two captures the profile already wrote.
+ *
+ * Inside that silhouette, two counts per ground. A pixel whose contrast ratio
+ * against the ground is below 3:1 is hard to see there (4.2) — a wordmark in
+ * dark violet shipped unreadable on a dark ground and the variant was never
+ * built. A pixel whose colour sits within the anti-alias band of the ground is
+ * the ground showing THROUGH the graphic (4.1) — the hairline seams between
+ * abutting traced segments, invisible on white and obvious on black.
+ *
+ * Holes are excluded by declaration, never by geometry: a ring's middle is
+ * ground on purpose, and only the author can say which gaps are intended.
+ */
+async function readGrounds(
+    context: Awaited<ReturnType<Browser['newContext']>>,
+    spec: {
+        url: string;
+        hostHtml: string | null;
+        width: number;
+        height: number;
+        cssWidth: number;
+        blocked: string[];
+        backgrounds: AssetReading['backgrounds'];
+        holeBoxes: ReadonlyArray<Box>;
+        viewBox: ViewBox | null;
+    },
+): Promise<GroundReading[]> {
+    // The transparent render: `omitBackground` leaves alpha 0 where the file
+    // paints nothing, which is the only honest source for a silhouette.
+    const clear = await openPage(context, {
+        url: spec.url,
+        hostHtml: spec.hostHtml,
+        hostBasename: HOST_BASENAME,
+        width: spec.width,
+        height: spec.height,
+        background: 'transparent',
+        cssWidth: spec.cssWidth,
+        blocked: spec.blocked,
+    });
+    let silhouette: Buffer;
+    try {
+        silhouette = await clear.screenshot({ omitBackground: true });
+    } finally {
+        await clear.close();
+    }
+
+    const out: GroundReading[] = [];
+    for (const mode of ['light', 'dark'] as const) {
+        const colour = spec.backgrounds[mode];
+        const page = await openPage(context, {
+            url: spec.url,
+            hostHtml: spec.hostHtml,
+            hostBasename: HOST_BASENAME,
+            width: spec.width,
+            height: spec.height,
+            background: colour,
+            cssWidth: spec.cssWidth,
+            blocked: spec.blocked,
+        });
+        let shot: Buffer;
+        try {
+            shot = await page.screenshot();
+        } finally {
+            await page.close();
+        }
+
+        const scratch = await context.newPage();
+        try {
+            await scratch.setContent('<!doctype html><body></body>');
+            const counts = await scratch.evaluate(
+                async (args: {
+                    silhouette: string;
+                    ground: string;
+                    colour: string;
+                    holes: ReadonlyArray<Box>;
+                    vb: ViewBox | null;
+                }): Promise<{ silhouette: number; painted: number; low: number; bleed: number } | null> => {
+                    const load = async (b64: string): Promise<HTMLImageElement | null> => {
+                        const img = new Image();
+                        img.src = `data:image/png;base64,${b64}`;
+                        try {
+                            await img.decode();
+                        } catch {
+                            return null;
+                        }
+                        return img;
+                    };
+                    const a = await load(args.silhouette);
+                    const b = await load(args.ground);
+                    if (!a || !b) return null;
+                    const w = Math.min(a.naturalWidth, b.naturalWidth);
+                    const h = Math.min(a.naturalHeight, b.naturalHeight);
+                    if (w === 0 || h === 0) return null;
+                    const read = (img: HTMLImageElement): Uint8ClampedArray | null => {
+                        const c = document.createElement('canvas');
+                        c.width = w;
+                        c.height = h;
+                        const cx = c.getContext('2d', { willReadFrequently: true });
+                        if (!cx) return null;
+                        cx.clearRect(0, 0, w, h);
+                        cx.drawImage(img, 0, 0);
+                        return cx.getImageData(0, 0, w, h).data;
+                    };
+                    const alpha = read(a);
+                    const px = read(b);
+                    if (!alpha || !px) return null;
+
+                    const hex = args.colour.trim();
+                    const parse = (v: string): [number, number, number] => {
+                        const m3 = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i.exec(v);
+                        if (m3) {
+                            return [
+                                parseInt((m3[1] as string).repeat(2), 16),
+                                parseInt((m3[2] as string).repeat(2), 16),
+                                parseInt((m3[3] as string).repeat(2), 16),
+                            ];
+                        }
+                        const m6 = /^#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(v);
+                        if (m6) {
+                            return [
+                                parseInt(m6[1] as string, 16),
+                                parseInt(m6[2] as string, 16),
+                                parseInt(m6[3] as string, 16),
+                            ];
+                        }
+                        const rgb = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(v);
+                        if (rgb) {
+                            return [Number(rgb[1]), Number(rgb[2]), Number(rgb[3])];
+                        }
+                        return [255, 255, 255];
+                    };
+                    const ground = parse(hex);
+                    const lum = (c: [number, number, number]): number => {
+                        const f = (v: number): number => {
+                            const x = v / 255;
+                            return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
+                        };
+                        return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]);
+                    };
+                    const groundLum = lum(ground);
+                    const ratio = (c: [number, number, number]): number => {
+                        const l = lum(c);
+                        const hi = Math.max(l, groundLum);
+                        const lo = Math.min(l, groundLum);
+                        return (hi + 0.05) / (lo + 0.05);
+                    };
+
+                    // Declared holes, mapped from user units into this image.
+                    const inHole = (x: number, y: number): boolean => {
+                        if (!args.vb || args.holes.length === 0) return false;
+                        const ux = args.vb.x + (x / w) * args.vb.w;
+                        const uy = args.vb.y + (y / h) * args.vb.h;
+                        return args.holes.some(
+                            (box) => ux >= box.x && ux <= box.x + box.w && uy >= box.y && uy <= box.y + box.h,
+                        );
+                    };
+
+                    // The OUTER silhouette: flood the transparent region
+                    // inwards from the border. What the flood cannot reach is
+                    // inside the graphic — including the hairline gaps between
+                    // abutting shapes, which is the thing step 4.1 counts and
+                    // which an `alpha >= 200` definition excludes by
+                    // construction (measured: 0 bleed pixels on the planted
+                    // fixture before this).
+                    const opaque = (i: number): boolean => (alpha[i * 4 + 3] as number) >= 200;
+                    const outside = new Uint8Array(w * h);
+                    const stack: number[] = [];
+                    const push = (i: number): void => {
+                        if (outside[i] === 1 || opaque(i)) return;
+                        outside[i] = 1;
+                        stack.push(i);
+                    };
+                    for (let x = 0; x < w; x += 1) {
+                        push(x);
+                        push((h - 1) * w + x);
+                    }
+                    for (let y = 0; y < h; y += 1) {
+                        push(y * w);
+                        push(y * w + (w - 1));
+                    }
+                    while (stack.length > 0) {
+                        const i = stack.pop() as number;
+                        const x = i % w;
+                        const y = (i - x) / w;
+                        if (x > 0) push(i - 1);
+                        if (x + 1 < w) push(i + 1);
+                        if (y > 0) push(i - w);
+                        if (y + 1 < h) push(i + w);
+                    }
+
+                    let sil = 0;
+                    let painted = 0;
+                    let low = 0;
+                    let bleed = 0;
+                    for (let i = 0; i < w * h; i += 1) {
+                        if (outside[i] === 1) continue;
+                        sil += 1;
+                        const c: [number, number, number] = [
+                            px[i * 4] as number,
+                            px[i * 4 + 1] as number,
+                            px[i * 4 + 2] as number,
+                        ];
+                        // Contrast is asked of PAINTED pixels only: the ratio
+                        // of a gap against the ground showing through it is the
+                        // ratio of the ground against itself.
+                        if (opaque(i)) {
+                            painted += 1;
+                            if (ratio(c) < 3) low += 1;
+                        }
+                        // Bleed is an INTERIOR pixel the graphic does not fully
+                        // cover, so the ground shows through it.
+                        //
+                        // Measured, and this is the second definition: comparing
+                        // the pixel's colour against the ground within a
+                        // tolerance read 0 on the planted fixture, because a
+                        // half-covered seam composites to a BLEND of the two
+                        // greys and the ground — nowhere near the ground itself.
+                        // Alpha is the thing that is actually wrong, and it is
+                        // the same number whatever colour the ground is, which
+                        // is why the finding fires on the dark row: that is the
+                        // capture where the consequence is visible.
+                        if (!opaque(i) && !inHole(i % w, Math.floor(i / w))) bleed += 1;
+                    }
+                    return { silhouette: sil, painted, low, bleed };
+                },
+                {
+                    silhouette: silhouette.toString('base64'),
+                    ground: shot.toString('base64'),
+                    colour,
+                    holes: spec.holeBoxes,
+                    vb: spec.viewBox,
+                },
+            );
+            if (counts === null) continue;
+            out.push({
+                background: mode,
+                background_color: colour,
+                silhouette_px: counts.silhouette,
+                painted_px: counts.painted,
+                low_contrast_px: counts.low,
+                low_contrast_share: counts.painted === 0 ? 0 : counts.low / counts.painted,
+                bleed_px: counts.bleed,
+                bleed_share: counts.silhouette === 0 ? 0 : counts.bleed / counts.silhouette,
+            });
+        } finally {
+            await scratch.close();
+        }
+    }
+    return out;
+}
+
 /** A reading pass over one asset. The caller owns the browser's lifetime. */
 export async function runAssetRender(browser: Browser, opts: AssetRenderOptions): Promise<AssetRenderResult> {
     const bytes = fs.readFileSync(opts.file);
@@ -477,6 +789,8 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
         draw_on: [],
         icon_grid: null,
         near_white_regions: [],
+        cost: costReading(content, elements),
+        grounds: [],
         network: { aborted: 0, blocked_urls: blocked },
         findings: [],
         reduced_motion: { witnessable: false, frames_equal: null, reason: 'not read' },
@@ -623,6 +937,26 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
                     }));
                 }
             }
+        }
+        // Steps 4.1 and 4.2: the per-ground readings, taken at the biggest
+        // size so the counts are not dominated by anti-aliasing. Not for a
+        // host document — the silhouette of a page is the page.
+        if (!isHost) {
+            reading.grounds = await readGrounds(context, {
+                url: targetUrl,
+                hostHtml,
+                width: Math.max(biggest.width, 64),
+                height: Math.max(biggest.height, 64),
+                cssWidth: biggest.width,
+                blocked,
+                backgrounds,
+                holeBoxes: elements
+                    .filter((el) => !el.closing && (el.attrs[HOLE_ATTRIBUTE] ?? '') !== '')
+                    .map((el) => elementExtent(el))
+                    .filter((b): b is NonNullable<typeof b> => b !== null)
+                    .map((b) => ({ x: b.minX, y: b.minY, w: b.maxX - b.minX, h: b.maxY - b.minY })),
+                viewBox: vb,
+            });
         }
     } finally {
         await context.close();
@@ -1255,6 +1589,32 @@ function deriveFindings(r: AssetReading): AssetFinding[] {
                     `${(d.dead_fraction * 100).toFixed(1)}% of the draw-on duration paints nothing new: a ` +
                     `${d.dash_units.toFixed(1)}-unit dash on a ${d.total_length.toFixed(2)}-unit path` +
                     `${d.path_length_attr === null ? ' with no pathLength declared' : ''}`,
+            });
+        }
+    }
+
+    // Steps 4.1 and 4.2. Both name the GROUND they were read on, because
+    // "the mark is hard to see" is not a property of the mark.
+    for (const g of r.grounds) {
+        if (g.background === 'dark' && g.silhouette_px > 0 && g.bleed_share > BLEED_SHARE_THRESHOLD) {
+            out.push({
+                rule: 'geometry/background-bleed-inside-silhouette',
+                severity: 'warning',
+                detail:
+                    `${g.bleed_px} of ${g.silhouette_px} pixels inside the silhouette read as the ${g.background} ` +
+                    `ground (${g.background_color}) — background showing THROUGH the graphic, which is what a ` +
+                    'hairline seam between two abutting shapes looks like. Let the earlier surface reach about a ' +
+                    `pixel under its neighbour, or declare the gap with ${HOLE_ATTRIBUTE} if it is meant to be there`,
+            });
+        }
+        if (g.silhouette_px > 0 && g.low_contrast_share > LOW_CONTRAST_SHARE_THRESHOLD) {
+            out.push({
+                rule: 'accessibility/low-contrast-on-background',
+                severity: 'warning',
+                detail:
+                    `${(g.low_contrast_share * 100).toFixed(0)} % of the painted pixels fall below a 3:1 contrast ` +
+                    `ratio against the ${g.background} ground (${g.background_color}) — build a variant for that ` +
+                    'ground, or name it as missing',
             });
         }
     }

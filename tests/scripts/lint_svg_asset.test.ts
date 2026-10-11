@@ -88,6 +88,7 @@ const TAXONOMY_TO_RULE: Record<string, string> = {
     'structure/unparseable-path-data': 'svg-structure-unparseable-path',
     'structure/unused-defs-entry': 'svg-structure-unused-defs',
     'structure/dangling-reference': 'svg-structure-dangling-reference',
+    'structure/degenerate-gradient': 'svg-structure-degenerate-gradient',
     'structure/not-well-formed': 'svg-structure-not-well-formed',
     'safety/active-content': 'svg-safety-active-content',
     'safety/internal-dtd-subset': 'svg-safety-internal-subset',
@@ -507,5 +508,38 @@ describe('the-real-set-is-reported-separately', () => {
         for (const name of files) {
             expect(planted.has(`assets/${name}`), `${name} is also a planted row`).toBe(false);
         }
+    });
+});
+
+/** Step 3.1 of `road-to-svg-from-a-live-session` — cost the static layer can read. */
+describe('degenerate-gradient-is-found', () => {
+    it('degenerate-gradient-is-found', () => {
+        const r = manifest.rows.find((x) => x.id === 'degenerate-gradient');
+        expect(r, 'the row is not pre-registered in manifest.json').toBeDefined();
+        const row = r as Row;
+        expect(scan(row.file, row.delivery).map((f) => f.rule)).toContain('svg-structure-degenerate-gradient');
+        expect(scan(row.twin, row.delivery)).toEqual([]);
+    });
+
+    it('a stop difference in OPACITY alone is not degenerate', () => {
+        const grad = (stops: string): string =>
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" role="img"><title>t</title>' +
+            `<defs><linearGradient id="t-fade">${stops}</linearGradient></defs>` +
+            '<rect width="10" height="10" fill="url(#t-fade)"/></svg>';
+        const fade = grad('<stop offset="0" stop-color="#000" stop-opacity="1"/><stop offset="1" stop-color="#000" stop-opacity="0"/>');
+        expect(scanSvg(fade, 'a.svg').map((f) => f.rule)).not.toContain('svg-structure-degenerate-gradient');
+        // Same colour AND same opacity is the case the rule is about.
+        const flat = grad('<stop offset="0" stop-color="#000" stop-opacity="1"/><stop offset="1" stop-color="#000" stop-opacity="1"/>');
+        expect(scanSvg(flat, 'b.svg').map((f) => f.rule)).toContain('svg-structure-degenerate-gradient');
+        // A `style` attribute carries the same stop properties and is read.
+        const styled = grad('<stop offset="0" style="stop-color:#000"/><stop offset="1" style="stop-color:#000"/>');
+        expect(scanSvg(styled, 'c.svg').map((f) => f.rule)).toContain('svg-structure-degenerate-gradient');
+        // One stop is not a gradient to compare against itself.
+        const single = grad('<stop offset="0" stop-color="#000"/>');
+        expect(scanSvg(single, 'd.svg').map((f) => f.rule)).not.toContain('svg-structure-degenerate-gradient');
+        // And a spelling difference is NOT read as identical — the conservative
+        // direction, stated in the rule and pinned here.
+        const spelled = grad('<stop offset="0" stop-color="#FFF"/><stop offset="1" stop-color="#ffffff"/>');
+        expect(scanSvg(spelled, 'e.svg').map((f) => f.rule)).not.toContain('svg-structure-degenerate-gradient');
     });
 });

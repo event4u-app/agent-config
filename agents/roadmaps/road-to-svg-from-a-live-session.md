@@ -163,12 +163,12 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
 
 ## Phase 3 — The static witness reads cost
 
-- [ ] **3.1 `svg-structure-degenerate-gradient`.** A gradient whose stops all
+- [x] **3.1 `svg-structure-degenerate-gradient`.** A gradient whose stops all
       carry the same colour and opacity is a flat fill in a gradient's clothes;
       warn. Planted row and clean twin in `tests/design-artifacts/fixtures/svg-assets/`,
       pre-registered in its README before the rule is written. S26.
       verify: `npx vitest run tests/scripts/lint_svg_asset.test.ts --reporter=verbose` -> /✓.*degenerate-gradient-is-found/ <!-- ref-ignore -->
-- [ ] **3.2 A cost reading, reported and never gated.** The asset manifest
+- [x] **3.2 A cost reading, reported and never gated.** The asset manifest
       gains `cost: { bytes, elements, paths, gradients, coordinates }`, and the
       skill's report quotes it beside the fidelity numbers. No threshold: none
       was measured, and a gate on bytes would have refused the 195 KB trace and
@@ -177,7 +177,7 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
 
 ## Phase 4 — Seams, dark grounds and small sizes
 
-- [ ] **4.1 `geometry/background-bleed-inside-silhouette`.** On the dark
+- [x] **4.1 `geometry/background-bleed-inside-silhouette`.** On the dark
       capture, count pixels inside the file's own silhouette (from the
       transparent render) whose colour sits within the anti-alias band of the
       dark ground; ids declared as holes are excluded. Twins: two abutting
@@ -185,14 +185,14 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
       overlapping by one unit (clean). The count threshold is pre-registered
       in the fixture README before the reading is written. S16, S25.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*seam-between-abutting-shapes-is-found/ <!-- ref-ignore -->
-- [ ] **4.2 A contrast reading per background.** For each capture, the share
+- [x] **4.2 A contrast reading per background.** For each capture, the share
       of painted pixels whose contrast against that capture's background is
       below 3:1. A mark that is mostly below on one ground reads
       `accessibility/low-contrast-on-background` naming the ground. Twins: a
       dark-violet word on the dark capture (found) and a light one (clean).
       S20.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*dark-mark-on-dark-ground-is-found/ <!-- ref-ignore -->
-- [ ] **4.3 Marks are rendered small as well.** The `mark` class captures 16
+- [x] **4.3 Marks are rendered small as well.** The `mark` class captures 16
       and 32 px beside 1x and 2x, so the legibility look the review asked for
       has a capture to look at. Legibility stays a look; the capture is the
       evidence it happened. S16, S19.
@@ -263,18 +263,18 @@ Numbered after S1-S15. Timestamps are UTC; the paraphrase is short.
 
 ## Acceptance Criteria
 
-- [ ] AC-1 — A non-animated SVG delivered through `<img>` reads no motion
+- [x] AC-1 — A non-animated SVG delivered through `<img>` reads no motion
       finding, and a white region reads as a hole only where a registered
       source shows background there.
-- [ ] AC-2 — A registered raster of the reference vector, with neighbours and a
+- [x] AC-2 — A registered raster of the reference vector, with neighbours and a
       glow in the frame, compares as `pass`; a source cut by its frame is a
       finding; per-group regions name the worst part.
-- [ ] AC-3 — A degenerate gradient is a static finding, and every asset
+- [x] AC-3 — A degenerate gradient is a static finding, and every asset
       manifest carries a cost reading that no gate reads.
-- [ ] AC-4 — Background bleed inside a silhouette and a mark below 3:1 on a
+- [x] AC-4 — Background bleed inside a silhouette and a mark below 3:1 on a
       capture's ground are engine findings, and a mark has 16 and 32 px
       captures.
-- [ ] AC-5 — The skill's conversion branch defaults to construct over a traced
+- [x] AC-5 — The skill's conversion branch defaults to construct over a traced
       underlay, crops with margin, stops on a plateau, snapshots every
       delivered pass, names variants and outlined fonts, and records the
       registration and scorer of every number it reports.

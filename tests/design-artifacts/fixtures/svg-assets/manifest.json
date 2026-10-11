@@ -345,6 +345,39 @@
       "twin": "assets/title-not-a-direct-child.clean.svg",
       "twin_kind": "one-edit",
       "note": "The <title> names the group it sits in, not the graphic, so the graphic has no accessible name. Parentage, which no pattern over the text decides. Step 3.1."
+    },
+    {
+      "id": "degenerate-gradient",
+      "asset_class": "icon",
+      "delivery": "inline",
+      "layer": "static",
+      "rule": "structure/degenerate-gradient",
+      "file": "assets/degenerate-gradient.svg",
+      "twin": "assets/degenerate-gradient.clean.svg",
+      "twin_kind": "one-edit",
+      "note": "Both stops carry the same colour, so the gradient renders as a flat fill. A rejected 195 KB trace carried 355 gradients, nine of them like this, and the static witness reported only a missing accessible name \u2014 two external reviews counted them by hand. Step 3.1 of road-to-svg-from-a-live-session."
+    },
+    {
+      "id": "seam-between-shapes",
+      "asset_class": "mark",
+      "delivery": "inline",
+      "layer": "engine",
+      "rule": "geometry/background-bleed-inside-silhouette",
+      "file": "assets/seam-between-shapes.svg",
+      "twin": "assets/seam-between-shapes.clean.svg",
+      "twin_kind": "one-edit",
+      "note": "Two shapes abutting on a fractional edge leave a hairline of ground inside the silhouette. The twin overlaps them by one unit, which is the fix the session arrived at. Threshold pre-registered as bleed_share > 0.002 in README.md before the reading was written. Step 4.1."
+    },
+    {
+      "id": "dark-mark-on-dark",
+      "asset_class": "mark",
+      "delivery": "inline",
+      "layer": "engine",
+      "rule": "accessibility/low-contrast-on-background",
+      "file": "assets/dark-mark-on-dark.svg",
+      "twin": "assets/dark-mark-on-dark.clean.svg",
+      "twin_kind": "one-edit",
+      "note": "A dark-violet mark on the dark capture falls below 3:1 across most of its painted pixels; the twin is the light variant. Threshold pre-registered as low_contrast_share > 0.5 \u2014 half the mark, never a few anti-aliased edge pixels. Step 4.2."
     }
   ],
   "controls": [

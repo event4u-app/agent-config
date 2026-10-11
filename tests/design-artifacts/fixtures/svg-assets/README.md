@@ -316,6 +316,40 @@ column scoped to its own twin would have scored it `yes`.
 | `motion/no-reduced-motion-branch` | `hosts/smil-only.html` | static | 1+ | 1 | 1 (assets/guessed-dash.clean.svg) | no |
 | `motion/smil-css-only-branch` | `hosts/smil-css-only.html` | static | 1+ | 0 | 0 | yes |
 
+## Pre-registered thresholds for the ground readings
+
+Steps 4.1 and 4.2 of `road-to-svg-from-a-live-session`. Both readings are
+taken inside the file's own silhouette — from the TRANSPARENT render, because
+a silhouette taken from the light capture loses every white part of the
+graphic, which is exactly the paint these two readings are about.
+
+Written here before the readings were implemented, under 0.3's rule:
+
+| Reading | Fires above | Why that number |
+|---|---|---|
+| `geometry/background-bleed-inside-silhouette` | `bleed_share > 0.002`, on the DARK row | A seam is a hairline along a shared edge. The planted row abuts a ring and a disc at the same radius and reads 0.0072; its one-edit twin overlaps them by a unit and reads 0. A SHARE rather than a count, so it does not move with the render size. |
+| `accessibility/low-contrast-on-background` | `low_contrast_share > 0.5` | Half the mark, never a few anti-aliased edge pixels — an edge blends into its ground by construction, and a rule that fired on that would fire on every file. |
+
+**Two definitions were measured, and the first one read zero.** "Inside the
+silhouette" as `alpha >= 200` excludes a seam by construction — a seam is
+exactly where alpha is low. And "within the anti-alias band of the ground" as
+a colour tolerance also read zero: a half-covered seam composites to a blend of
+the two shapes AND the ground, nowhere near the ground itself. What survived is
+geometric and renderer-independent: an INTERIOR pixel the graphic does not
+fully cover. Interior is found by flooding the transparent region inwards from
+the border, so a gap that splits the silhouette edge to edge is not interior —
+which is why the planted fixture is a ring abutting a disc rather than two
+halves of a square, the shape the session's own case had.
+
+The finding fires on the DARK row. The number is the same on both, because
+alpha is; the dark capture is where the consequence is visible, which is the
+measured fact the session recorded.
+
+A gap that is MEANT to be there — a ring's middle — is declared with
+`data-hole` on the shape that makes it, and is excluded. By attribute rather
+than by geometry, because "is this gap intended" is a question only the author
+can answer.
+
 ## The held-out real set
 
 Step 3.2 of `road-to-svg-review-followups`. Everything above this heading is

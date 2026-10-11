@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" role="img">
+  <title>Planted — a dark-violet wordmark, unreadable on a dark ground</title>
+  <!-- Step 4.2 (S20). The fill is legible on white and nearly invisible on the
+       dark capture, and the dark variant was never built. -->
+  <rect x="4" y="10" width="112" height="20" rx="4" fill="#1e1b4b"/>
+</svg>

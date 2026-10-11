@@ -936,3 +936,178 @@ describe('the raster comparison reads the subject, not the frame', () => {
         240_000,
     );
 });
+
+/**
+ * Phase 3 of `road-to-svg-from-a-live-session` — the witness reads cost.
+ *
+ * A rejected 195 KB trace carried 355 gradient definitions and the static
+ * witness reported one finding: a missing accessible name. Two external
+ * reviews counted the gradients by hand. Cost went unremarked through a whole
+ * conversion session.
+ */
+describe('the witness reads cost', () => {
+    it(
+        'manifest-carries-a-cost-reading',
+        async () => {
+            const m = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'assets/degenerate-gradient.svg'),
+                slug: 'cost-reading',
+                assetClass: 'icon',
+                delivery: 'inline',
+            });
+            const cost = m.asset?.cost;
+            expect(cost).toBeDefined();
+            expect(cost?.bytes).toBe(
+                fs.statSync(path.join(FIXTURE_ROOT, 'assets/degenerate-gradient.svg')).size,
+            );
+            expect(cost?.gradients).toBe(1);
+            expect(cost?.paths).toBe(0);
+            expect(cost?.elements).toBeGreaterThan(3);
+            expect(cost?.coordinates).toBe(0);
+
+            // A file drawn with paths reports coordinates, so `0` above is a
+            // reading about that file and not a field that never fills.
+            const withPaths = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'conversion/subject-reference.svg'),
+                slug: 'cost-reading-paths',
+                assetClass: 'mark',
+                delivery: 'inline',
+            });
+            expect(withPaths.asset?.cost.paths).toBe(1);
+            expect(withPaths.asset?.cost.coordinates).toBeGreaterThan(5);
+
+            // NEVER GATED. No finding anywhere in this suite is derived from
+            // the cost reading — no threshold was measured, and one would have
+            // refused a 195 KB trace and a 59 KB accepted figure alike.
+            for (const manifest of [m, withPaths]) {
+                for (const f of manifest.asset?.findings ?? []) {
+                    expect(f.rule, `${f.rule} appears to gate on cost`).not.toMatch(/cost|bytes|size/i);
+                }
+            }
+        },
+        240_000,
+    );
+});
+
+/**
+ * Phase 4 of `road-to-svg-from-a-live-session` — seams, dark grounds and small
+ * sizes.
+ *
+ * All three come from the same review that sent an accepted mark back:
+ * hairlines between abutting traced segments, a wordmark unreadable on a dark
+ * ground with no variant built, and a face that turned to mush at 32 px with
+ * no capture at that size to look at.
+ */
+describe('seams, dark grounds and small sizes', () => {
+    const row = (id: string): FixtureRow => {
+        const fixture = JSON.parse(fs.readFileSync(FIXTURE_MANIFEST, 'utf8')) as FixtureManifest;
+        const r = fixture.rows.find((x) => x.id === id);
+        if (!r) throw new Error(`row ${id} is not pre-registered in manifest.json`);
+        return r;
+    };
+
+    it(
+        'seam-between-abutting-shapes-is-found',
+        async () => {
+            const r = row('seam-between-shapes');
+            const planted = await renderAsset({
+                file: path.join(FIXTURE_ROOT, r.file),
+                slug: 'seam-planted',
+                assetClass: r.asset_class,
+                delivery: r.delivery,
+            });
+            expect(rulesOf(planted)).toContain('geometry/background-bleed-inside-silhouette');
+            const dark = planted.asset?.grounds.find((g) => g.background === 'dark');
+            expect(dark?.bleed_px).toBeGreaterThan(0);
+            // The seam is INTERIOR: the silhouette covers it and the paint does
+            // not, which is the whole reading.
+            expect(dark?.silhouette_px).toBeGreaterThan(dark?.painted_px as number);
+
+            const twin = await renderAsset({
+                file: path.join(FIXTURE_ROOT, r.twin),
+                slug: 'seam-twin',
+                assetClass: r.asset_class,
+                delivery: r.delivery,
+            });
+            expect(rulesOf(twin)).not.toContain('geometry/background-bleed-inside-silhouette');
+            const twinDark = twin.asset?.grounds.find((g) => g.background === 'dark');
+            expect(twinDark?.bleed_px).toBe(0);
+            // Same outer silhouette — the twin is one edit, not a different file.
+            expect(twinDark?.silhouette_px).toBe(dark?.silhouette_px);
+        },
+        300_000,
+    );
+
+    it(
+        'dark-mark-on-dark-ground-is-found',
+        async () => {
+            const r = row('dark-mark-on-dark');
+            const planted = await renderAsset({
+                file: path.join(FIXTURE_ROOT, r.file),
+                slug: 'contrast-planted',
+                assetClass: r.asset_class,
+                delivery: r.delivery,
+            });
+            expect(rulesOf(planted)).toContain('accessibility/low-contrast-on-background');
+            // The finding NAMES the ground — "the mark is hard to see" is not a
+            // property of the mark.
+            const finding = (planted.asset?.findings ?? []).find(
+                (f) => f.rule === 'accessibility/low-contrast-on-background',
+            );
+            expect(finding?.detail).toContain('dark');
+            expect(planted.asset?.grounds.find((g) => g.background === 'dark')?.low_contrast_share).toBeGreaterThan(
+                0.5,
+            );
+            // And it is clean on the light ground, so the reading is per ground
+            // rather than per file.
+            expect(planted.asset?.grounds.find((g) => g.background === 'light')?.low_contrast_share).toBe(0);
+
+            const twin = await renderAsset({
+                file: path.join(FIXTURE_ROOT, r.twin),
+                slug: 'contrast-twin',
+                assetClass: r.asset_class,
+                delivery: r.delivery,
+            });
+            expect(rulesOf(twin)).not.toContain('accessibility/low-contrast-on-background');
+        },
+        300_000,
+    );
+
+    it(
+        'mark-class-captures-16-and-32',
+        async () => {
+            const m = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'conversion/subject-reference.svg'),
+                slug: 'mark-small-sizes',
+                assetClass: 'mark',
+                delivery: 'inline',
+            });
+            const labels = (m.asset?.sizes ?? []).map((s) => s.label);
+            expect(labels).toContain('16');
+            expect(labels).toContain('32');
+            // Beside the sizes that were already captured, never instead of them.
+            expect(labels).toContain('1x');
+            expect(labels).toContain('2x');
+            // Both grounds at every size, which is what makes a small capture
+            // worth looking at.
+            for (const px of ['16', '32']) {
+                const at = (m.asset?.sizes ?? []).filter((s) => s.label === px);
+                expect(at.map((s) => s.background).sort()).toEqual(['dark', 'light']);
+                for (const s of at) {
+                    expect(s.css_width).toBe(Number(px));
+                    expect(fs.existsSync(path.join(tmpRoot, s.screenshot)), s.screenshot).toBe(true);
+                }
+            }
+
+            // An ICON is unchanged — it already had 16/24/48 and gains nothing.
+            const icon = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'assets/hamburger-24-grid.svg'),
+                slug: 'icon-sizes-unchanged',
+                assetClass: 'icon',
+                delivery: 'inline',
+            });
+            expect([...new Set((icon.asset?.sizes ?? []).map((s) => s.label))]).toEqual(['16', '24', '48']);
+        },
+        300_000,
+    );
+});

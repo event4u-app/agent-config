@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 40" role="img">
+  <title>Clean twin — a mid tone, legible on both grounds</title>
+  <!-- The planted file is legible on white and nearly invisible on the dark
+       capture. The twin is NOT simply the light variant: a light mark fails the
+       same reading on the light ground, which would make the twin dirty for the
+       mirror reason. A mid tone clears 3:1 against #ffffff AND against
+       #111111, so the twin is clean on both — which is what a twin has to be. -->
+  <rect x="4" y="10" width="112" height="20" rx="4" fill="#767676"/>
+</svg>
