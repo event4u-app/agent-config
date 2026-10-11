@@ -60,7 +60,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  940945fe350f763e25483e4f8b78d03892c1bbfa0b637931abc430efb94c7b1a
+SET-SHA256  64e85c115a9271f8fbf4664c48a74b8745065d60f4eb90681471de4504e8c028
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -289,6 +289,7 @@ open and which this file does not settle.
 | `review-routing` | `9fd8b380be9addab50039ecba11ea668db0e57de27c57a65ca1b089acd3b8bcc` |
 | `schema-review` | `7c98b3409de8ebb6ef3ee999a46e9c07f69574809c42283b25d2ab384f6cd53f` |
 | `skill-improvement-pipeline` | `67e8594b0bbe6427ec2ad12d46e5910345725dd8ab8436b47a1bfa078a173135` |
+| `svg-authoring` | `3dd3e8463a2f8383a9e86a5ee7785661a0e9b73eda5f09d4aac0669ec66abe9f` |
 | `tailwind-engineer` | `7b925bfdaca4a4f315bea04c1ae63a9a98a4e6766d7ce951a7c1c56fbd2e5014` |
 | `test-performance` | `67d425384f8507688fdbe18d18d8235fa3dcf7fd1e2d4213a8e581f27fd80152` |
 | `testing-anti-patterns` | `66240715be7873af8ae59d00c416bd048e9699672ea00d0a604957fd6b6d8762` |
@@ -472,7 +473,7 @@ open and which this file does not settle.
 | `image-analyser` | `47735add726cdb3b86e8a08c66fca17a824acc63ac4a788fe29083b61f5a8ebb` |
 | `image-creator` | `0c4b5598b10ae0f53ccbef2a6e0c863f353b849e152dcf51a197652266954292` |
 | `image-editing` | `2b3fe1109fb8be12a9e42bcfb9ff587f07a37ad3fb926dc538b335f5c8fbf3b8` |
-| `image-provider-routing` | `3600d651bc128a9f8c5c1edc16a4c206d95ac19511b60e4e0f687a5c08b29f78` |
+| `image-provider-routing` | `63ad30ab3ce1548a7f067a97c77019e55c9fd8c63caa711dde02acb9ae1ce102` |
 | `incident-commander` | `7e9371f328c7b1751c083688f77a34af2db2b901befc78eed7c8400ae5b2019e` |
 | `jira-integration` | `fe9ba2d101335b5446f7efb6fcc22e8db93edf21be00e4cd23774789a01ec28d` |
 | `js-library-packaging` | `8b64d0222ee1228950056004a752b4dc168f8f571e037ec38791258ec305bacd` |
@@ -766,3 +767,49 @@ names the JSON as the current reading, release finding `237f203916c5`.)
   train set, or forms a second frozen generation is a Phase 5 decision; the
   honest default is that this generation's hash stops describing the corpus the
   moment a file is added, which the set hash makes visible rather than silent.
+
+## Growth 2026-10-11 — one new TRAIN corpus, one TRAIN corpus edited
+
+```
+BOTH ROWS THAT MOVED ARE TRAIN-SIDE. NO HOLDOUT FILE'S BYTES CHANGED.
+THE SEAL'S ORDERING CLAIM IS UNTOUCHED, AND IT STILL COVERS ONLY THE
+18 ROWS SEALED ON 2026-08-30 — THIS SECTION ADDS NOTHING TO IT.
+```
+
+**What changed.** `road-to-svg-with-a-witness` added the `svg-authoring` skill
+with a routing corpus, and the vector split moved two rows of
+`image-provider-routing`'s. `lint_skill_trigger_corpus` then required a declared
+case class per query, a counterexample, and a German positive on both files,
+which is what actually re-wrote their bytes — the discipline is the gate's own
+remedy, the same shape as the 2026-09-30, 2026-10-01 and 2026-10-01b entries.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `svg-authoring` | train | `77` = 119 ≥ 51 | added |
+| `image-provider-routing` | train | `3a` = 58 ≥ 51 | re-hashed |
+
+**What provably did NOT change, checked rather than asserted.** Recomputing this
+file's own recipe over the tree and diffing every row against the published
+tables leaves **zero** mismatched holdout rows — the check printed the holdout
+subset of the stale list and it was empty, which is the direction that matters:
+a train-side growth cannot be confused with an edit to a frozen file unless
+somebody looks.
+
+- the partition **rule** is untouched — ceiling 51, name-derived, no discretion;
+- no holdout file's bytes moved, so no holdout result is voided;
+- the corpus is now **125 files, 27 holdout and 98 train** — a realised split of
+  21.6 % against the rule's 19.9 % target.
+
+**The standing repair was followed.** `trigger_corpus_holdout_pin.test.ts` was
+run as the LAST act before publishing this section, after the final edit to both
+corpus files — not when the numbers were first computed. It is also what caught
+this: the `image-provider-routing` row had been stale since earlier in the same
+branch, when the vector split first edited that corpus without re-pinning.
+
+**The residual every section since 2026-09-19 has named is unchanged and was
+paid again.** `SET-SHA256` is computed over the undivided list, so it moves
+whenever the corpus grows on either side and cannot on its own distinguish
+"grew" from "edited a frozen file". The per-row holdout diff above is what
+distinguishes them, which is why this section carries it rather than only the
+new number.
+
