@@ -104,23 +104,24 @@ describe('scoped-dangle follow rate — attempts is null, never 0, on a dead ins
         expect(r.pruned_targets_hit).toBeNull();
         expect(r.instrument_reason).toContain('instrument dead');
         expect(r.null_branch).toContain('closes nothing');
-        // The census half is still real regardless of the instrument.
-        //
-        // 24 -> 27 and 17 -> 18 on 2026-10-11, re-measured from the tree. All
-        // three new dangles belong to ONE new survivor, `svg-authoring`, which
-        // links to `canvas-design`, `image-provider-routing` and
-        // `logo-generation` — three skills the scoped default prunes. That is
-        // the existing pattern rather than a new class: `logo-generation`
-        // already dangled from `brand-identity` and `brand-to-tokens` before
-        // this change. The published row is re-taken in the same change,
-        // because a census the gate's own collector produces and a published
-        // figure that disagrees with it is the drift that file's own comment
-        // exists to prevent. The instrument is still
-        // dead and the null branch still closes nothing, so NOTHING here
-        // licenses leaving the links as they are — `measured_branch` still owns
-        // that decision and still needs a live window to reach it.
-        expect(r.scoped_dangles).toBe(27);
-        expect(r.survivors_with_dangle).toBe(18);
+        // The census half is still real regardless of the instrument, and it is
+        // unchanged by this branch — a fact worth recording, because it was
+        // briefly otherwise. `svg-authoring` was added
+        // here with See-also LINKS to `canvas-design`, `image-provider-routing`
+        // and `logo-generation` — three skills the scoped default prunes — which
+        // took this to 27/18. `lint_pack_boundaries` then rejected those links
+        // for an unrelated reason: a four-pack skill's relative link is dead in
+        // three of its packs. Replacing them with NAMES removed the links, and
+        // with them the three dangles. Re-measured from the tree at 24/17, and
+        // the published row was re-taken in the same change, because a census
+        // the gate's own collector produces and a published figure that
+        // disagrees with it is the drift that file's own comment exists to
+        // prevent. The instrument is still dead and the null branch still
+        // closes nothing, so NOTHING here licenses leaving any remaining link
+        // as it is — `measured_branch` still owns that decision and still needs
+        // a live window to reach it.
+        expect(r.scoped_dangles).toBe(24);
+        expect(r.survivors_with_dangle).toBe(17);
     });
 
     it('a live instrument counts only FOLLOW_KINDS against a pruned slug', () => {
