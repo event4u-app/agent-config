@@ -271,25 +271,28 @@ function segmentVerifies(rawWords: readonly string[]): boolean {
             // the old token-anywhere regex accepted it by accident and neither
             // explicit list named it, so the union seeding missed it too.
             return rest.some((a) => a === 'test' || a.startsWith('--test'));
-        case 'agent-config': {
-            // `ui:render --profile asset` is the one subcommand that opens the
-            // delivered file in a real engine and writes a manifest carrying
-            // that file's digest, so a turn which edited an `.svg` can satisfy
-            // the turn-end gate with the check that actually looked at it.
+        case 'agent-config':
+            // NEITHER `ui:render` NOR `xmllint` verifies here, and the first
+            // half of that was true, then false, and is true again.
             //
-            // `xmllint --noout` deliberately does NOT reach this list, and the
-            // omission is the point: the measured failure (S6 of
-            // `road-to-svg-with-a-witness`) is a session that answered a
-            // refused turn-end gate twice with a parser pass and a report that
-            // the file "is valid". A file can parse and still be wrong.
-            if (arg1 !== 'ui:render') return false;
-            // Both spellings. `--profile=asset` is the same invocation and was
-            // refused, so a turn that used it could not clear the gate with the
-            // one check that actually looks at the file.
-            if (rest.includes('--profile=asset')) return true;
-            const profileAt = rest.indexOf('--profile');
-            return profileAt !== -1 && rest[profileAt + 1] === 'asset';
-        }
+            // Step 3.5 of `road-to-svg-with-a-witness` taught this predicate
+            // `ui:render --profile asset`, reasoning that it is the one
+            // subcommand which opens the delivered file in a real engine. Step
+            // 2.1(b) of `road-to-svg-review-followups` removed it again on
+            // review claim C2, which is narrower than the first argument and
+            // refutes it: the turn-end gate's TRANSCRIPT path matches a command
+            // and never sees an exit code, so a call that rendered nothing —
+            // the ordinary case on a machine with no Playwright, where the
+            // command also exited 0 until the same day — discharged the
+            // obligation from its text alone.
+            //
+            // What replaces it reads the RENDER instead of the call:
+            // `hooks/svg_obligation.ts` matches a manifest to the file's own
+            // digest, and accepts a renderer-absent manifest only together with
+            // a clean static witness on those same bytes. `xmllint --noout`
+            // stays out for its original reason (S6): a file can parse and
+            // still be the wrong picture.
+            return false;
         case 'scripts-run': {
             // `./scripts-run src/scripts/lint_x` verifies; `…/rule_activation_census`
             // writes a report and asserts nothing, which is why this keys on the

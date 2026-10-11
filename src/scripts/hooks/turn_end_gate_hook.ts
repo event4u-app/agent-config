@@ -198,6 +198,7 @@ import {
 } from '../_lib/graph_feeder_record.js';
 import { type GraphState, graphState } from '../code_graph/detect.js';
 import { isVerificationCommand } from '../_lib/verification_command.js';
+import { isAssetRenderCommand, readSvgObligations } from './svg_obligation.js';
 // Round 8 — the record path detector C prefers over its own regex. The regex
 // reads a command's TEXT and `echo test` matches it; these read what the run
 // exited with and what it printed.
@@ -778,6 +779,72 @@ export function detectUnverifiedEdit(
     };
 }
 
+/**
+ * An `.svg` this turn edited that no render describes — step 2.1(b) of
+ * `road-to-svg-review-followups`.
+ *
+ * REPORTED UNDER `verification`, not under a new detector id, and that is a
+ * choice rather than a shortcut: this IS a verification finding — a file
+ * changed and nothing that can fail was run over it — and a seventh id would
+ * ripple through `DETECTOR_IDS`, the per-detector counters and the demotion
+ * contract for a distinction the operator never makes.
+ *
+ * IT RUNS EVEN WHEN `detectUnverifiedEdit` IS SATISFIED. That is the point:
+ * review claim C2 is about a turn that edits an `.svg` and then runs something
+ * — a test suite, a linter, a bare `ui:render` — which looks like verification
+ * and did not look at the graphic. An unrelated check discharges nothing here.
+ *
+ * The companion half is that `isVerificationCommand` learns NEITHER `ui:render`
+ * NOR `xmllint`. Teaching it either would discharge the obligation on the
+ * transcript path from the command text alone, which is the hole rather than
+ * the fix. `svg_obligation.ts` carries the two records that do discharge it.
+ */
+export function detectOpenSvgObligation(workspaceRoot: string, toolCalls: readonly ToolCall[]): Finding | null {
+    const editedPaths: string[] = [];
+    let lastSvgEdit = -1;
+    for (let i = 0; i < toolCalls.length; i += 1) {
+        const c = toolCalls[i]!;
+        if (!_EDIT_TOOLS.has(c.name) || c.path === undefined) continue;
+        editedPaths.push(c.path);
+        if (/\.svg$/i.test(c.path)) lastSvgEdit = i;
+    }
+    if (lastSvgEdit === -1) return null;
+
+    // Precision (iii). The render has to come AFTER the edit it is supposed to
+    // describe, on both evidence paths — `toolCalls` is assembled for both, so
+    // one rule covers them rather than two that can disagree.
+    let renderObserved = false;
+    for (let i = lastSvgEdit + 1; i < toolCalls.length; i += 1) {
+        const c = toolCalls[i]!;
+        if (c.name === 'Bash' && c.command !== undefined && isAssetRenderCommand(c.command)) {
+            renderObserved = true;
+            break;
+        }
+    }
+
+    let reading: ReturnType<typeof readSvgObligations>;
+    try {
+        reading = readSvgObligations(workspaceRoot, { editedPaths, renderObserved });
+    } catch {
+        // A gate that crashed on its own instrument is a new failure mode on a
+        // path meant to be inert. An unreadable render directory is no finding.
+        return null;
+    }
+    const first = reading.open[0];
+    if (first === undefined) return null;
+
+    const more = reading.open.length > 1 ? ` (and ${String(reading.open.length - 1)} more)` : '';
+    return {
+        detector: 'verification',
+        evidence: first.file,
+        reason:
+            `this turn edited an .svg and no render describes it${more} — ${first.reason}. ` +
+            'A bare `ui:render --profile asset` that rendered nothing, and a test or lint run over other ' +
+            'files, both discharge nothing: the gate reads the render, never the call.',
+        mode: 'transcript',
+    };
+}
+
 // ---------------------------------------------------------------------------
 // Detector F — a completion claim over production code no test accompanies
 // ---------------------------------------------------------------------------
@@ -1281,6 +1348,12 @@ function runDetectors(inputs: DetectorInputs): Finding[] {
         // on a completion CLAIM, and a turn waiting on a subagent has not
         // finished — so its closing is not the claim F is about. Same slot,
         // opposite trigger, opposite treatment of `dispatchOpen`.
+        // UNCONDITIONAL, like E and for the same kind of reason: an open
+        // dispatch means the turn is still working, and it says nothing
+        // about whether the .svg this turn already wrote was ever looked
+        // at. Nothing about a subagent makes an unrendered graphic
+        // rendered.
+        detectOpenSvgObligation(workspaceRoot, toolCalls),
         dispatchOpen ? null : detectUntestedChange(lastAssistant, toolCalls, runState),
     ]) {
         if (f) findings.push(f);

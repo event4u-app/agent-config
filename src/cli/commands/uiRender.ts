@@ -30,6 +30,7 @@
  * would read as a successful capture of nothing.
  */
 
+import * as crypto from 'node:crypto';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
@@ -40,6 +41,7 @@ import type { chromium as Chromium } from '@playwright/test';
 
 import { runAssetRender } from './uiRenderAsset.js';
 import type { AssetClass, AssetReading, Registration } from './uiRenderAsset.js';
+import { scanSvg } from '../../scripts/lint_svg_asset.js';
 import type { DeliveryMode } from '../../scripts/lint_svg_asset.js';
 
 /** The three viewports E3.1 names. Widths are the contract, not a preference. */
@@ -91,9 +93,67 @@ export interface RenderManifest {
      */
     profile?: 'asset';
     asset?: AssetReading;
+    /**
+     * WHY the verification is not `verified`, as a token rather than as prose.
+     *
+     * Step 2.1 of `road-to-svg-review-followups` (D8). `degradation_reason` is
+     * a sentence for a human; the turn-end gate has to tell an ABSENT renderer
+     * from one that ran and failed, because the first is a capability fact a
+     * consumer cannot fix and the second is a real failure. Three tokens, and
+     * the status vocabulary above is unchanged — a fourth status would have
+     * been a grammar change where a reason field was what was missing.
+     */
+    reason?: 'renderer-absent' | 'render-failed' | 'pass-cap-reached';
+    /**
+     * Whether the GRAPHIC is right, which no renderer and no skill may answer.
+     *
+     * Step 2.3. `verified` says a digest-bound render happened and the witness
+     * found no errors; it has never said "the user's goal is met", and it was
+     * read that way. `unassessed` is the only value any automated layer writes;
+     * `accepted` / `rejected` come from an owner statement or a pre-registered
+     * scenario witness.
+     */
+    goal?: 'unassessed' | 'accepted' | 'rejected';
+    /**
+     * The static witness, run by the ASSET profile itself on the renderer-absent
+     * path, bound to the same digest.
+     *
+     * Precision (i) of step 2.1: without this the gate's static-only discharge
+     * would have to find a separately-stored `lint_svg_asset` run and trust how
+     * it was named. One file, one digest, one read.
+     */
+    static?: { errors: number; digest: string };
 }
 
 export const RENDER_REL = path.join('agents', 'runtime', 'state', 'render');
+
+/**
+ * `--profile asset` with no renderer. Distinct from 1, which this command
+ * already uses for an internal error (a missing path, a URL handed to the
+ * asset profile), because a caller has to tell "nothing rendered" from
+ * "you called it wrong" — the first is a consumer's ordinary state.
+ */
+export const EXIT_RENDERER_ABSENT = 3;
+
+/**
+ * The static witness, bound to the bytes it read.
+ *
+ * `errors` counts `severity: 'error'` findings only: a warning is a reading,
+ * not a refusal, and the static-only discharge in the turn-end gate is about
+ * whether the file is broken. The digest is of the SAME bytes, so a later
+ * reader can tell whether this reading describes the file in front of it.
+ */
+export function staticWitness(absFile: string): { errors: number; digest: string } | null {
+    let content: string;
+    try {
+        content = fs.readFileSync(absFile, 'utf8');
+    } catch {
+        return null;
+    }
+    const digest = crypto.createHash('sha256').update(content).digest('hex');
+    const errors = scanSvg(content, path.basename(absFile)).filter((f) => f.severity === 'error').length;
+    return { errors, digest };
+}
 
 export function slugify(target: string): string {
     return (
@@ -167,6 +227,11 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
         // Step 2.3, and the reason the absence path sits ABOVE the profile
         // branch rather than inside either one: both profiles reach it by
         // construction, so there is no second absence path to keep honest.
+        // Step 2.1(i): on the ASSET profile the renderer-absent path runs the
+        // static witness itself and binds it to the same digest, so the gate's
+        // static-only discharge reads ONE file and never depends on how a
+        // separate lint run was named or stored.
+        const staticReading = isAsset && !isUrl ? staticWitness(abs) : null;
         const manifest: RenderManifest = {
             schema: 1,
             generated_at: new Date().toISOString(),
@@ -176,7 +241,8 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
             palette: [],
             type_families: [],
             verification: 'unverified',
-            ...(isAsset ? { profile: 'asset' as const } : {}),
+            ...(isAsset ? { profile: 'asset' as const, reason: 'renderer-absent' as const, goal: 'unassessed' as const } : {}),
+            ...(staticReading ? { static: staticReading } : {}),
             degradation_reason:
                 '@playwright/test is not installed — it is a devDependency, so a consumer install has no browser. ' +
                 'Install it, or scope any verdict to the static checks that actually ran.',
@@ -184,9 +250,18 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
         writeManifest(outDir, manifest);
         process.stderr.write(`[ui:render] ${manifest.degradation_reason}\n`);
         if (opts.json) process.stdout.write(`${JSON.stringify(manifest, null, 2)}\n`);
-        // Exit 0, deliberately: an absent devDependency is a capability fact,
-        // not a failure of this command. The manifest carries the honest state.
-        return 0;
+        // The PAGE profile keeps exit 0: an absent devDependency is a
+        // capability fact, not a failure of that command, and the manifest
+        // carries the honest state.
+        //
+        // The ASSET profile exits NON-ZERO (step 2.1(a), review claim C2). The
+        // turn-end gate's transcript path never sees an exit code, so a
+        // non-zero exit alone does not close the hole — but the record path
+        // reads one, and a bare `ui:render --profile asset` that rendered
+        // nothing must not look like a check that passed. The code is distinct
+        // from 1, which this command already uses for an internal error such as
+        // a missing path or a URL handed to the asset profile.
+        return isAsset ? EXIT_RENDERER_ABSENT : 0;
     }
 
     fs.mkdirSync(outDir, { recursive: true });
@@ -322,8 +397,20 @@ async function runAssetProfile(
             type_families: [],
             verification: result.verification,
             profile: 'asset',
+            // Step 2.3. Written on EVERY asset render, by the only layer that
+            // could plausibly be mistaken for the one deciding it. A reader who
+            // sees `verification: verified` and no goal field has to supply the
+            // missing half themselves, which is exactly how `verified` came to
+            // be read as "the graphic is right".
+            goal: 'unassessed',
             asset: result.reading,
+            // The static witness on the same digest, on the verified path too —
+            // the gate's digest-match discharge reads the ASSET reading, but a
+            // human comparing two manifests should not have to tell whether the
+            // static layer ran from which path produced the file.
+            ...(staticWitness(opts.abs) ? { static: staticWitness(opts.abs) as { errors: number; digest: string } } : {}),
             ...(result.degradationReason ? { degradation_reason: result.degradationReason } : {}),
+            ...(result.verification === 'verified' ? {} : { reason: 'render-failed' as const }),
         };
         writeManifest(opts.outDir, manifest);
         if (opts.json) process.stdout.write(`${JSON.stringify(manifest, null, 2)}\n`);
@@ -349,6 +436,11 @@ async function runAssetProfile(
             type_families: [],
             verification: 'degraded',
             profile: 'asset',
+            // A renderer that RAN and failed, which is not the same fact as a
+            // renderer that is absent — the turn-end gate discharges an SVG
+            // obligation on the second and never on the first.
+            reason: 'render-failed',
+            goal: 'unassessed',
             degradation_reason: `asset capture failed: ${String(err)}`,
         };
         writeManifest(opts.outDir, manifest);

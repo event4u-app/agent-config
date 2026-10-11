@@ -3,31 +3,39 @@ import { describe, expect, it } from 'vitest';
 import { isVerificationCommand } from '../../src/scripts/_lib/verification_command.js';
 
 /**
- * Step 3.5 of `road-to-svg-with-a-witness` — the turn-end gate learns the check
- * that actually looks at the file, and deliberately does not learn the one that
- * only parses it.
+ * Step 2.1(b) of `road-to-svg-review-followups`, which REVERSES one half of
+ * step 3.5 of `road-to-svg-with-a-witness` on review claim C2.
  *
- * The measured failure this pins (S6): a session converting a raster logo to
- * SVG had its turn-end gate refuse twice, and both times answered with
- * `xmllint --noout` plus a report that the SVG "is valid". A file can parse and
- * still be the wrong picture. Before this change an `.svg` edit could satisfy
- * the gate with a syntax check or not at all — `isVerificationCommand` returned
- * `false` for `ui:render` as well, so there was no honest way through.
+ * W 3.5 taught this predicate `ui:render --profile asset`, reasoning that it is
+ * the one check which opens the delivered file in a real engine. The review
+ * read the gate rather than the command and found the argument insufficient:
+ * the turn-end gate's TRANSCRIPT path matches a command and never sees an exit
+ * code, so a call that rendered nothing — the ordinary case on a machine with
+ * no Playwright, where it also exited 0 until the same day — discharged the
+ * obligation from its text alone. Both exits are needed; teaching the
+ * predicate was the one that made the hole look closed.
  *
- * Both directions were observed RED before the change: the asset-render rows
- * returned `false` and were the gap; the `xmllint` rows already returned
- * `false` and are kept here so a later widening of the predicate cannot quietly
- * admit a parser as a visual check.
+ * So NEITHER command verifies here now. The replacement reads the RENDER:
+ * `detectOpenSvgObligation` matches a manifest against the file's own digest,
+ * and accepts a renderer-absent manifest only together with a clean static
+ * witness on those same bytes (`turn_end_gate_svg_render.test.ts`).
+ *
+ * The `xmllint` rows are unchanged and keep their original reason (S6): a
+ * session answered a refused gate twice with a parser pass and a report that
+ * the file "is valid". A file can parse and still be the wrong picture.
  */
-describe('asset-render-verifies-and-xmllint-does-not', () => {
-    it('asset-render-verifies-and-xmllint-does-not', () => {
-        // --- accepted: the render that binds a manifest to the file's digest ---
+describe('neither-asset-render-nor-xmllint-verifies', () => {
+    it('neither-asset-render-nor-xmllint-verifies', () => {
+        // --- refused: the render, because this predicate cannot see its result -
+        // The gate reads the manifest instead. A command that rendered nothing
+        // must not look like a check that passed.
         for (const command of [
             'agent-config ui:render assets/logo.svg --profile asset',
             './agent-config ui:render assets/logo.svg --profile asset',
             './agent-config ui:render assets/logo.svg --profile asset --json',
+            'agent-config ui:render assets/logo.svg --profile=asset',
         ]) {
-            expect(isVerificationCommand(command), command).toBe(true);
+            expect(isVerificationCommand(command), command).toBe(false);
         }
 
         // --- refused: a parser pass is `static-only`, never `verified` --------
@@ -63,11 +71,20 @@ describe('asset-render-verifies-and-xmllint-does-not', () => {
             expect(isVerificationCommand(command), command).toBe(false);
         }
 
-        // --- the discard rule still applies -----------------------------------
-        // A render whose failure the shell throws away proves nothing, exactly
-        // as it does for every other verification command.
-        expect(
-            isVerificationCommand('agent-config ui:render a.svg --profile asset || true'),
-        ).toBe(false);
+        // --- and no other agent-config form sneaks back in --------------------
+        // The branch is gone rather than narrowed, so there is no spelling of
+        // this subcommand that returns true.
+        for (const command of [
+            'agent-config ui:render a.svg --profile asset || true',
+            'agent-config ui:render a.svg --profile asset && echo done',
+            'npx agent-config ui:render a.svg --profile asset',
+        ]) {
+            expect(isVerificationCommand(command), command).toBe(false);
+        }
+
+        // The predicate still answers TRUE for a real check, so the rows above
+        // are about this subcommand and not about a predicate that broke.
+        expect(isVerificationCommand('npx vitest run tests/x.test.ts')).toBe(true);
+        expect(isVerificationCommand('npx tsc --noEmit')).toBe(true);
     });
 });

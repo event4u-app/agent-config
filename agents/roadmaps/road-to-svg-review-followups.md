@@ -80,7 +80,7 @@ check must also require the full contrast to appear inside the window.
 
 ## Phase 1 — The authorities roadmap's parser rule
 
-- [ ] **1.1 Amend A 0.1 and A 0.2: the regex ends at the first UNESCAPED `/`.**
+- [x] **1.1 Amend A 0.1 and A 0.2: the regex ends at the first UNESCAPED `/`.**
       A 0.2 (A:89-92) corrected wording: "The backticked tail accepts a
       slash-delimited regex up to the first unescaped closing `/` — one not
       preceded by an odd number of backslashes — that is followed by
@@ -93,7 +93,7 @@ check must also require the full contrast to appear inside the window.
 
 ## Phase 2 — Status, gate and goal (W 2.3, 3.1, 3.5, AC-9)
 
-- [ ] **2.1 Amend W 3.5 and W 2.3: the gate reads the render, never the
+- [x] **2.1 Amend W 3.5 and W 2.3: the gate reads the render, never the
       call.** Both exits from C2, because either alone leaves one gate path
       open. (a) W 2.3 (W:282-286) corrected: "No Playwright → `verification:
       unverified`, and the **asset** profile exits non-zero with a code

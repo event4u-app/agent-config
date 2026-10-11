@@ -278,8 +278,14 @@ describe('ui:render --profile asset', () => {
                     delivery: 'inline',
                     thresholds: FIXTURE_MANIFEST,
                 });
-                // An absent devDependency is a capability fact, not a failure.
-                expect(code).toBe(0);
+                // asset-profile-exits-nonzero-on-unverified. Changed by step
+                // 2.1(a) of `road-to-svg-review-followups`, review claim C2:
+                // the asset profile used to exit 0 here, so a turn whose only
+                // check was `ui:render --profile asset` looked like a check
+                // that passed while nothing had rendered. The code is distinct
+                // from 1, which this command uses for an internal error.
+                expect(code).toBe(mod.EXIT_RENDERER_ABSENT);
+                expect(code).not.toBe(0);
 
                 const manifest = manifestOf('absent-asset');
                 expect(manifest.verification).toBe('unverified');
@@ -290,6 +296,21 @@ describe('ui:render --profile asset', () => {
                 // Never a pass, and never a silent one: the honest state is on the
                 // record, which is what the owner (3.1) reads as `static-only`.
                 expect(manifest.verification).not.toBe('verified');
+                // renderer-absent-manifest-carries-static-digest. The token the
+                // gate reads, beside the prose a human reads, and the static
+                // witness bound to the SAME bytes — so the static-only
+                // discharge is one file read rather than a search for a
+                // separately-stored lint run (precision (i)).
+                expect(manifest.reason).toBe('renderer-absent');
+                expect(manifest.goal).toBe('unassessed');
+                expect(manifest.static).toBeDefined();
+                expect(manifest.static?.digest).toBe(
+                    (await import('node:crypto'))
+                        .createHash('sha256')
+                        .update(fs.readFileSync(path.join(FIXTURE_ROOT, 'assets/loose-viewbox.svg'), 'utf8'))
+                        .digest('hex'),
+                );
+                expect(typeof manifest.static?.errors).toBe('number');
 
                 // The page profile degrades identically — one absence path, not two.
                 const pageCode = await mod.runUiRender({
@@ -297,10 +318,14 @@ describe('ui:render --profile asset', () => {
                     projectRoot: tmpRoot,
                     slug: 'absent-page',
                 });
+                // The PAGE profile keeps exit 0 — an absent devDependency is a
+                // capability fact there, and nothing gates on a page render.
                 expect(pageCode).toBe(0);
                 const pageManifest = manifestOf('absent-page');
                 expect(pageManifest.verification).toBe('unverified');
                 expect(pageManifest.profile).toBeUndefined();
+                expect(pageManifest.reason).toBeUndefined();
+                expect(pageManifest.static).toBeUndefined();
             } finally {
                 vi.doUnmock('@playwright/test');
                 vi.resetModules();
@@ -577,4 +602,133 @@ describe('carried R2 findings — the icon grid and the registration', () => {
         expect(parseRegistration('10,20,100,200@0')).toBeNull();
         expect(parseRegistration('10,20,100,200@-1')).toBeNull();
     });
+});
+
+/**
+ * Steps 2.1 and 2.3 of `road-to-svg-review-followups`, as their own named
+ * cases because the roadmap's `verify:` clauses select them by name.
+ *
+ * The renderer-absent path is driven through a module mock rather than by
+ * uninstalling Playwright, which is the only way to reach it on a machine that
+ * has the devDependency — and it is the path a consumer actually walks.
+ */
+describe('the asset profile reports its own absence honestly', () => {
+    const withoutPlaywright = async <T>(fn: (mod: typeof import('../../src/cli/commands/uiRender.js')) => Promise<T>): Promise<T> => {
+        vi.resetModules();
+        vi.doMock('@playwright/test', () => {
+            throw new Error("Cannot find package '@playwright/test'");
+        });
+        try {
+            return await fn(await import('../../src/cli/commands/uiRender.js'));
+        } finally {
+            vi.doUnmock('@playwright/test');
+            vi.resetModules();
+        }
+    };
+
+    it('asset-profile-exits-nonzero-on-unverified', async () => {
+        await withoutPlaywright(async (mod) => {
+            const code = await mod.runUiRender({
+                target: path.join(FIXTURE_ROOT, 'assets/loose-viewbox.svg'),
+                projectRoot: tmpRoot,
+                slug: 'nonzero-asset',
+                profile: 'asset',
+                assetClass: 'icon',
+                delivery: 'inline',
+                thresholds: FIXTURE_MANIFEST,
+            });
+            // The hole review claim C2 named: a bare `ui:render --profile asset`
+            // that rendered nothing used to exit 0, so a turn whose only check
+            // was that call looked like a check that passed.
+            expect(code).not.toBe(0);
+            expect(code).toBe(mod.EXIT_RENDERER_ABSENT);
+            // Distinct from the internal-error code, so a caller can tell
+            // "nothing rendered" from "you called it wrong".
+            expect(code).not.toBe(1);
+            expect(manifestOf('nonzero-asset').verification).toBe('unverified');
+
+            // The page profile is deliberately NOT changed by this.
+            const pageCode = await mod.runUiRender({
+                target: path.join(FIXTURE_ROOT, 'hosts/img-delivery.html'),
+                projectRoot: tmpRoot,
+                slug: 'nonzero-page',
+            });
+            expect(pageCode).toBe(0);
+        });
+    });
+
+    it('renderer-absent-manifest-carries-static-digest', async () => {
+        await withoutPlaywright(async (mod) => {
+            const target = path.join(FIXTURE_ROOT, 'assets/loose-viewbox.svg');
+            await mod.runUiRender({
+                target,
+                projectRoot: tmpRoot,
+                slug: 'static-digest',
+                profile: 'asset',
+                assetClass: 'icon',
+                delivery: 'inline',
+                thresholds: FIXTURE_MANIFEST,
+            });
+            const m = manifestOf('static-digest');
+            // The token the gate reads, told apart from a render that RAN and
+            // failed — which discharges nothing.
+            expect(m.reason).toBe('renderer-absent');
+            // One file, one digest: the static-only discharge never has to find
+            // a separately-stored lint run or trust how it was named.
+            const expected = (await import('node:crypto'))
+                .createHash('sha256')
+                .update(fs.readFileSync(target, 'utf8'))
+                .digest('hex');
+            expect(m.static?.digest).toBe(expected);
+            expect(m.static?.errors).toBe(0);
+
+            // And a file that IS broken reports its errors, so `errors: 0` is
+            // not simply what this field always says.
+            const broken = path.join(tmpRoot, 'broken.svg');
+            fs.writeFileSync(broken, '<svg viewBox="0 0 24 24"><use href="#nothing"/></svg>\n');
+            await mod.runUiRender({
+                target: broken,
+                projectRoot: tmpRoot,
+                slug: 'static-digest-broken',
+                profile: 'asset',
+                assetClass: 'icon',
+                delivery: 'inline',
+            });
+            expect(manifestOf('static-digest-broken').static?.errors).toBeGreaterThan(0);
+        });
+    });
+
+    it(
+        'renderer-never-writes-goal-accepted',
+        async () => {
+            // Step 2.3. `verified` says a digest-bound render happened and the
+            // witness found no errors. It has never said "the graphic is
+            // right", and it was read that way — so the manifest carries the
+            // second axis explicitly and the renderer only ever writes
+            // `unassessed` into it.
+            const verified = await renderAsset({
+                file: path.join(FIXTURE_ROOT, 'assets/hamburger-24-grid.svg'),
+                slug: 'goal-axis',
+                assetClass: 'icon',
+                delivery: 'inline',
+            });
+            expect(verified.verification).toBe('verified');
+            expect(verified.goal).toBe('unassessed');
+            expect(verified.goal).not.toBe('accepted');
+
+            // Including on the absence path, where there is even less to claim.
+            await withoutPlaywright(async (mod) => {
+                await mod.runUiRender({
+                    target: path.join(FIXTURE_ROOT, 'assets/hamburger-24-grid.svg'),
+                    projectRoot: tmpRoot,
+                    slug: 'goal-axis-absent',
+                    profile: 'asset',
+                    assetClass: 'icon',
+                    delivery: 'inline',
+                });
+                expect(manifestOf('goal-axis-absent').goal).toBe('unassessed');
+            });
+        },
+        180_000,
+    );
 });
