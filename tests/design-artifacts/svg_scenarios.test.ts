@@ -4,7 +4,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { Browser } from '@playwright/test';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import os from 'node:os';
+
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
     compareGeometry,
@@ -60,6 +62,20 @@ const count = (content: string, tag: string): number =>
 
 let browser: Browser | null = null;
 let outRoot = '';
+
+/**
+ * The zoom readings, carried out of `scales-3000x-sharp` so the raster control
+ * has its own named case — step 4.1 of `road-to-svg-review-followups`. Shared
+ * state between two cases is normally a smell; here it is the alternative to
+ * rendering the same four surfaces twice, and the control case asserts the
+ * reading was taken rather than assuming it.
+ */
+let zoomControl: {
+    vector: { band: number; contrast: number };
+    raster: { band: number; contrast: number };
+    bound: number;
+    scale: number;
+} | null = null;
 
 beforeAll(async () => {
     const { chromium } = await import('@playwright/test');
@@ -255,8 +271,16 @@ describe('svg end-to-end scenarios', () => {
             const edge = { x: 1, y: 32 };
             const viewBox = `${edge.x - span / 2} ${edge.y - span / 2} ${span} ${span}`;
 
-            /** Lay one graphic out at the crop and read the transition band. */
-            const bandOf = async (markup: string): Promise<number> => {
+            /**
+             * Lay one graphic out at the crop and read the transition band —
+             * and the window's own contrast, which is the half R-Z3 showed was
+             * missing. A raster whose edge ramp is WIDER than the whole window
+             * reads a narrow band for the wrong reason: the row never reaches
+             * either the foreground or the background, so the transition count
+             * alone cannot tell it from a sharp vector. The full contrast has
+             * to appear INSIDE the window before the band means anything.
+             */
+            const bandOf = async (markup: string): Promise<{ band: number; contrast: number }> => {
                 const context = await browser!.newContext({ viewport: { width: tile, height: tile } });
                 const page = await context.newPage();
                 try {
@@ -295,13 +319,21 @@ describe('svg end-to-end scenarios', () => {
                                 Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]) + Math.abs(a[2] - b[2]) <= 12;
                             // A uniform row means the crop missed the edge — a
                             // band of 0 would then be an artefact, not a reading.
-                            if (near(left, right)) return -1;
+                            if (near(left, right)) return { band: -1, contrast: 0 };
                             let band = 0;
                             for (let i = 0; i < c.width; i++) {
                                 const p = px(i);
                                 if (!near(p, left) && !near(p, right)) band += 1;
                             }
-                            return band;
+                            // The window's own contrast, in the same units the
+                            // `near` tolerance uses: how far the two ends are
+                            // apart. R-Z3 measured a raster row spanning only
+                            // 101 to 112 of a 40-to-184 range.
+                            const contrast =
+                                Math.abs(left[0] - right[0]) +
+                                Math.abs(left[1] - right[1]) +
+                                Math.abs(left[2] - right[2]);
+                            return { band, contrast };
                         }, shot);
                     } finally {
                         await reader.close();
@@ -312,11 +344,21 @@ describe('svg end-to-end scenarios', () => {
                 }
             };
 
+            // R-Z4, and it is a constraint rather than a comment. The probed
+            // edge has to lie INSIDE the graphic and never on the bounds of an
+            // embedded image: an edge that coincides with the image's own
+            // rectangle reads 0 px for a raster too, and the check then cannot
+            // tell a vector from one. The window is `span` units wide centred
+            // on `edge`, so both its sides must sit strictly inside 0..64.
+            expect(edge.x - span / 2, 'the probe window starts on the graphic bounds (R-Z4)').toBeGreaterThan(0);
+            expect(edge.x + span / 2, 'the probe window ends on the graphic bounds (R-Z4)').toBeLessThan(64);
+
             // The vector, re-rasterised by the engine at the final resolution.
             const inner = source.replace(/^[\s\S]*?<svg\b[^>]*>/, '').replace(/<\/svg\s*>\s*$/, '');
-            const vectorBand = await bandOf(
+            const vector = await bandOf(
                 `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="${tile}" height="${tile}">${inner}</svg>`,
             );
+            const vectorBand = vector.band;
 
             // THE CONTROL, and it is not optional. The same mark rasterised at
             // its intrinsic 64 px and magnified through the identical path must
@@ -339,15 +381,24 @@ describe('svg end-to-end scenarios', () => {
                     await context.close();
                 }
             })();
-            const rasterBand = await bandOf(
+            const raster = await bandOf(
                 `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" width="${tile}" height="${tile}">` +
                     `<image href="data:image/png;base64,${png}" x="0" y="0" width="64" height="64"/></svg>`,
             );
+            const rasterBand = raster.band;
 
             const bound = s.asserts['max_edge_transition_device_px'] as number;
             expect(vectorBand, 'the crop did not land on an edge — the reading is an artefact').toBeGreaterThanOrEqual(
                 0,
             );
+            // R-Z3. The band is only meaningful once the FULL foreground /
+            // background contrast is present in the window; the vector's is,
+            // which is what makes its narrow band a reading rather than a row
+            // that never left the middle of a ramp.
+            expect(
+                vector.contrast,
+                `the vector window spans only ${vector.contrast} of colour — the full contrast is not inside it`,
+            ).toBeGreaterThan(90);
             expect(
                 rasterBand,
                 `the rasterised control blurred across only ${rasterBand} device px, against the vector's ` +
@@ -357,6 +408,11 @@ describe('svg end-to-end scenarios', () => {
                 vectorBand,
                 `edge transition is ${vectorBand} device px at ${scale}x (raster control: ${rasterBand})`,
             ).toBeLessThanOrEqual(bound);
+
+            // Carried so the control has its own named case (step 4.1 of
+            // `road-to-svg-review-followups`): a reader looking for "does a
+            // raster fail this?" should find a case, not a clause.
+            zoomControl = { vector, raster, bound, scale };
         },
         240_000,
     );
@@ -479,4 +535,136 @@ describe('svg end-to-end scenarios', () => {
         },
         300_000,
     );
+    /**
+     * Step 4.1 of `road-to-svg-review-followups`, R-Z3. The control was a
+     * clause inside `scales-3000x-sharp`; a reader looking for "does a raster
+     * fail this check?" should find a case.
+     */
+    it('raster-control-fails-the-3000x-zoom', () => {
+        expect(
+            zoomControl,
+            'the zoom scenario did not run, so there is no control reading to assert over',
+        ).not.toBeNull();
+        const z = zoomControl!;
+        // The control must FAIL the bound the vector passes. A measurement
+        // that both sides pass is not a measurement.
+        expect(z.raster.band, `raster band ${z.raster.band} at ${z.scale}x`).toBeGreaterThan(z.bound);
+        expect(z.vector.band).toBeLessThanOrEqual(z.bound);
+        expect(z.raster.band).toBeGreaterThan(z.vector.band);
+    });
+});
+
+/**
+ * The owner-skill contract these amendments change — steps 2.2, 2.3 and 4.2 of
+ * `road-to-svg-review-followups`.
+ *
+ * The pass cap, the goal axis and the static-only path are behaviours of the
+ * SKILL, not of the renderer: the renderer knows nothing about passes and is
+ * forbidden from deciding a goal. So the falsifiable half is what the skill
+ * text commits to, asserted against the committed file, plus the engine
+ * behaviour it rests on where there is one. A test that only greps prose is
+ * weak evidence, which is why each case also exercises the layer underneath.
+ */
+describe('the owner skill reports what it is allowed to report', () => {
+    const SKILL = fs.readFileSync(path.join(ROOT, 'src/skills/svg-authoring/SKILL.md'), 'utf-8');
+    // The skill is hard-wrapped, so a sentence that reads as one line in the
+    // source spans two in the file. Asserting against the raw text would make
+    // every case depend on where the wrap happens to fall, which is a property
+    // of the formatter rather than of the contract.
+    const FLAT = SKILL.replace(/\s+/g, ' ');
+
+    it('pass-cap-with-open-findings-is-unverified', () => {
+        // The rule, stated where an executor reads it.
+        expect(SKILL).toMatch(/pass-cap-reached/);
+        expect(FLAT).toMatch(/never `verified`, and never done/);
+        // `unverified` carries the cap as one of its allowed reasons, so the
+        // status table and the stop rule cannot drift apart.
+        expect(SKILL).toMatch(/\| `unverified` \|[^|]*pass cap[^|]*\|/);
+
+        // And the layer underneath: a planted error does not go clean by being
+        // looked at again, which is what makes a stop at the cap a stop WITH
+        // findings rather than a stop at a clean witness.
+        const planted = fs.readFileSync(path.join(FIXTURES, 'assets/dangling-reference.svg'), 'utf-8');
+        for (let pass = 1; pass <= 3; pass += 1) {
+            const errors = scanSvg(planted, 'planted.svg').filter((f) => f.severity === 'error');
+            expect(errors.length, `pass ${String(pass)} found no error to still be open`).toBeGreaterThan(0);
+        }
+    });
+
+    it('skill-never-derives-goal-accepted', () => {
+        // The second axis exists, and the skill may write exactly one value.
+        expect(SKILL).toMatch(/`unassessed`/);
+        expect(FLAT).toMatch(/Never derived from a digest match/);
+        // The skill never instructs itself to write `accepted`: the only
+        // sentences carrying that word say who else does.
+        for (const line of SKILL.split('\n').filter((l) => /`accepted`/.test(l))) {
+            expect(line, `"${line.trim()}" reads as the skill writing \`accepted\``).toMatch(
+                /owner statement|pre-registered|Never derived|an owner/i,
+            );
+        }
+    });
+
+    it('consumer-without-renderer-reports-static-only', async () => {
+        // The RECORDED run, re-derived rather than read. `s6-static-only/
+        // report.md` is the record a human reads; the assertions below run the
+        // same path again so the scenario cannot rot into a file nobody
+        // re-produces — the failure the whole scenario directory exists to
+        // prevent.
+        const sc = scenario('consumer-without-renderer');
+        const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'static-only-'));
+        try {
+            vi.resetModules();
+            vi.doMock('@playwright/test', () => {
+                throw new Error("Cannot find package '@playwright/test'");
+            });
+            const mod = await import('../../src/cli/commands/uiRender.js');
+            const code = await mod.runUiRender({
+                target: path.join(DIR, sc.input as string),
+                projectRoot: tmp,
+                slug: 'consumer-static-only',
+                profile: 'asset',
+                assetClass: 'mark',
+                delivery: 'inline',
+            });
+            expect(code).toBe(sc.asserts['exit_code']);
+            const m = JSON.parse(
+                fs.readFileSync(
+                    path.join(tmp, 'agents/runtime/state/render/consumer-static-only/manifest.json'),
+                    'utf8',
+                ),
+            ) as Record<string, unknown>;
+            expect(m['verification']).toBe(sc.asserts['verification']);
+            expect(m['reason']).toBe(sc.asserts['reason']);
+            expect(m['goal']).toBe(sc.asserts['goal']);
+            expect((m['static'] as { errors: number }).errors).toBe(sc.asserts['static_errors']);
+            // Bound to the bytes, which is what makes `static-only` a claim
+            // about THIS file rather than about a file with the same name.
+            expect((m['static'] as { digest: string }).digest).toBe(
+                crypto
+                    .createHash('sha256')
+                    .update(fs.readFileSync(path.join(DIR, sc.input as string), 'utf8'))
+                    .digest('hex'),
+            );
+            // The record on disk describes the run that just happened.
+            const report = fs.readFileSync(path.join(DIR, 's6-static-only/report.md'), 'utf-8');
+            expect(report).toContain((m['static'] as { digest: string }).digest.slice(0, 16));
+            expect(report).toContain('renderer-absent');
+        } finally {
+            vi.doUnmock('@playwright/test');
+            vi.resetModules();
+            fs.rmSync(tmp, { recursive: true, force: true });
+        }
+
+        // Step 4.2. The consumer path is walked CLEANLY: the static witness
+        // runs, the status is `static-only`, the missing capability is named
+        // once — and opening the file in a browser is never a step.
+        expect(FLAT).toMatch(/renderer is \*\*absent\*\*/);
+        expect(FLAT).toMatch(/report `static-only`/);
+        expect(FLAT).toMatch(/name the missing capability in one line/);
+        expect(FLAT).toMatch(/opening the file in a browser is never a step/);
+
+        // The procedure contains no instruction to open a browser by hand,
+        // which is the failure mode the amendment names.
+        expect(FLAT).not.toMatch(/open (?:it|the file) in (?:a|your) browser\b(?![^.]*never)/i);
+    });
 });

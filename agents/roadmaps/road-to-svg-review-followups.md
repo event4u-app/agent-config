@@ -156,7 +156,7 @@ check must also require the full contrast to appear inside the window.
       and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t planted-fixture-edit-is-no-svg-obligation --reporter=verbose` -> /✓.*planted-fixture-edit-is-no-svg-obligation/ <!-- ref-ignore -->
       and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t hand-written-manifest-discharges-nothing --reporter=verbose` -> /✓.*hand-written-manifest-discharges-nothing/ <!-- ref-ignore -->
       and `npx vitest run tests/scripts/turn_end_gate_svg_render.test.ts -t deleted-svg-opens-no-obligation --reporter=verbose` -> /✓.*deleted-svg-opens-no-obligation/ <!-- ref-ignore -->
-- [ ] **2.2 Amend W 3.1 and W 3.5: `verified` needs a clean witness, and the
+- [x] **2.2 Amend W 3.1 and W 3.5: `verified` needs a clean witness, and the
       pass cap is never success.** `verified` means a digest-bound render
       manifest (2.1) **and** 0 error findings from W 1.1 and W 2.1 on that
       digest. W 3.1's stop rule (W:328-331) corrected: "stop at a clean
@@ -167,7 +167,7 @@ check must also require the full contrast to appear inside the window.
       owner skill's behaviour — the renderer knows nothing of passes — so the
       case lives with W's scenarios, not with the render profile's tests.
       verify: `npx vitest run tests/design-artifacts/svg_scenarios.test.ts -t pass-cap-with-open-findings-is-unverified --reporter=verbose` -> /✓.*pass-cap-with-open-findings-is-unverified/ <!-- ref-ignore -->
-- [ ] **2.3 A second axis: render status is not goal status.** W 3.1's report
+- [x] **2.3 A second axis: render status is not goal status.** W 3.1's report
       (W:329-332) and W 3.5 gain a separate field: `goal: unassessed` by
       default, `accepted` or `rejected` only from an owner statement or from a
       Phase 6 scenario's pre-registered witness (W 6.1-6.5). The renderer and
@@ -205,14 +205,14 @@ check must also require the full contrast to appear inside the window.
       W 5.2's bar (W:414-420) counts findings on the real set beside the twin
       count.
       verify: `grep -cE '^##\s.*[Rr]eal' tests/design-artifacts/fixtures/svg-assets/README.md` -> /^[1-9]/ <!-- ref-ignore -->
-- [ ] **3.3 Fix W:98-99's wording.** "fill ratio is per class (0.3)" →
+- [x] **3.3 Fix W:98-99's wording.** "fill ratio is per class (0.3)" →
       "fill-ratio thresholds are per asset class, pre-registered in 0.3's
       table". Prose only; no heading, checkbox or AC moves. C7.
       verify: `grep -c 'per class (0.3)' agents/roadmaps/road-to-svg-with-a-witness.md` -> /^0$/
 
 ## Phase 4 — Scenarios and the consumer path
 
-- [ ] **4.1 Amend W 6.3: zoom by `viewBox`, not device scale.** W 6.3
+- [x] **4.1 Amend W 6.3: zoom by `viewBox`, not device scale.** W 6.3
       (W:450-455) corrected: "A 512 px window whose `viewBox` spans
       512/3000 of the intrinsic render's units, centred on an edge interior to
       6.1's output — never on the bounds of an embedded image (R-Z4). The full
@@ -223,7 +223,7 @@ check must also require the full contrast to appear inside the window.
       the factor. The test name W's verify uses is kept; the control is its
       own case. R-Z1 to R-Z4.
       verify: `npx vitest run tests/design-artifacts/svg_scenarios.test.ts -t raster-control-fails-the-3000x-zoom --reporter=verbose` -> /✓.*raster-control-fails-the-3000x-zoom/ <!-- ref-ignore -->
-- [ ] **4.2 Amend W 3.1 and E9: the static-only path is walked cleanly in a
+- [x] **4.2 Amend W 3.1 and E9: the static-only path is walked cleanly in a
       consumer.** W 3.1 gains: "Where `ui:render` reports the renderer absent,
       the owner runs the static witness, reports `static-only`, names the
       missing capability in one line, and never makes opening the file in a

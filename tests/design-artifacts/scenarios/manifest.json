@@ -10,7 +10,9 @@
       "task": "s1-new-logo/task.md",
       "asset_class": "mark",
       "delivery": "inline",
-      "delivered": ["s1-new-logo/delivered/mark.svg"],
+      "delivered": [
+        "s1-new-logo/delivered/mark.svg"
+      ],
       "asserts": {
         "image_elements": 0,
         "foreign_objects": 0,
@@ -27,7 +29,9 @@
       "asset_class": "mark",
       "delivery": "inline",
       "source_reference": "../fixtures/svg-assets/conversion/reference.svg",
-      "delivered": ["s1b-conversion/delivered/mark.svg"],
+      "delivered": [
+        "s1b-conversion/delivered/mark.svg"
+      ],
       "asserts": {
         "image_elements": 0,
         "wordmark_or_slogan_region": false,
@@ -43,12 +47,21 @@
       "asset_class": "illustration",
       "delivery": "inline",
       "input": "s2-surgical-face/input/figure.svg",
-      "allowed_ids": ["face-group"],
-      "delivered": ["s2-surgical-face/delivered/figure.svg"],
+      "allowed_ids": [
+        "face-group"
+      ],
+      "delivered": [
+        "s2-surgical-face/delivered/figure.svg"
+      ],
       "asserts": {
         "preservation_changes_outside_allowed": 0,
         "silhouette_change_outside_box": "within the anti-aliasing band only",
-        "changed_box": { "x": 18, "y": 46, "width": 84, "height": 80 }
+        "changed_box": {
+          "x": 18,
+          "y": 46,
+          "width": 84,
+          "height": 80
+        }
       }
     },
     {
@@ -79,7 +92,11 @@
         "s4-animated/delivered/host.html"
       ],
       "asserts": {
-        "frame_seek_points": [0, 0.45, 0.9],
+        "frame_seek_points": [
+          0,
+          0.45,
+          0.9
+        ],
         "distinct_frames": 3,
         "reduced_motion_inline_frames_equal": true,
         "img_delivery_reduced_motion": "not_witnessable",
@@ -104,6 +121,23 @@
         "parses": true,
         "reopens_non_empty_from_disk": true,
         "img_delivery_natural_width_non_zero": true
+      }
+    },
+    {
+      "id": "consumer-without-renderer",
+      "dir": "s6-static-only",
+      "task": "s6-static-only/task.md",
+      "asset_class": "mark",
+      "delivery": "inline",
+      "input": "s1-new-logo/delivered/mark.svg",
+      "delivered": [],
+      "asserts": {
+        "exit_code": 3,
+        "verification": "unverified",
+        "reason": "renderer-absent",
+        "goal": "unassessed",
+        "static_errors": 0,
+        "browser_opening_steps": 0
       }
     }
   ]

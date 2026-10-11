@@ -84,9 +84,16 @@ execution:
    ```
 7. **Look at the render.** Looking stays mandatory for *meaning*; it is never the
    pass for *geometry*. Fix what both the checks and the look found.
-8. **Stop** at a clean witness or after three render passes, whichever comes first.
+8. **Stop** at a clean witness or after three render passes, whichever comes
+   first. A stop **at the cap with error findings still open** reports
+   `unverified` with the reason `pass-cap-reached` and lists what is open —
+   never `verified`, and never done.
 9. **Report** the renderer and the checks that actually ran — `verified`,
-   `static-only` or `unverified` — and name only output files read back from disk.
+   `static-only` or `unverified` — plus `goal: unassessed`, and name only
+   output files read back from disk. Where the renderer is **absent**, run the
+   static witness, report `static-only`, and name the missing capability in one
+   line; opening the file in a browser is never a step of this procedure or of
+   the user's.
 
 ## Status — what each word is allowed to mean
 
@@ -94,7 +101,18 @@ execution:
 |---|---|
 | `verified` | a render manifest from the asset profile exists **whose recorded file digest equals the delivered file's digest on disk**. A manifest from an earlier pass does not count. |
 | `static-only` | the static check ran and no render did. A parser pass (`xmllint --noout`) is this, never `verified` — a file can parse and still be the wrong picture. |
-| `unverified` | no browser resolved. Never a pass; never silently upgraded. |
+| `unverified` | no browser resolved, or the pass cap was reached with error findings open (`pass-cap-reached`). Never a pass; never silently upgraded. |
+
+**A second axis, and it is not this table's.** Every status above is about
+whether a CHECK ran and what it found. Whether the graphic is *right* is a
+different question, and `verified` was being read as an answer to it. So every
+report carries `goal:` beside the status, and this skill writes exactly one
+value into it:
+
+| Goal | Written by |
+|---|---|
+| `unassessed` | **always, by this skill and by the renderer.** The default, and the only value either may write. |
+| `accepted` / `rejected` | an owner statement, or a pre-registered scenario witness. Never derived from a digest match, a clean witness, or a score. |
 
 ## Editing an existing SVG — the baseline replaces the look
 
@@ -122,13 +140,39 @@ Drawing it from a look fails, and it fails the same way every time: the outlines
 "coincide within a few pixels" by eye and read 0.883 silhouette IoU when
 measured. The procedure below reached 0.984 with the same tools.
 
-1. **Crop the source region and make that crop the coordinate system.** Write
-   every vector coordinate in the crop's pixel units; fit the viewBox to the
-   content at the end, not at the start.
-2. **Derive geometry from the pixels, never by eye.** One traced silhouette that
-   clips everything, then named regions split along an edge map; smooth,
-   resample and simplify each contour. The outer edge comes from one contour and
-   the holes come from the source.
+### Trace to measure, construct to deliver
+
+**The trace is the underlay by default, not the deliverable.** Trace the source
+to measure and to align; then construct the deliverable over that underlay from
+few points, palette colours and named shapes. Keep a trace AS the deliverable
+only when the owner asks for maximum fidelity over editability, and say that is
+what they are getting.
+
+The reason is measured, not stylistic. In one session the traced mark scored
+0.989 region IoU against the constructed one's 0.935 — and the trace was sent
+back fifteen minutes after it was accepted, on criteria no score sees: a crown
+cut at the crop edge, hairlines between segments, an off-palette spot, jagged
+edges, 49 KB of edit-hostile points, and a face unreadable at 32 px. The
+rebuild was 4.5 KB with 14 shapes and about 180 points. **The score is the
+alignment check. It is never the acceptance.**
+
+**When the score stops applying.** Once the owner's goal becomes a redesign
+rather than a reproduction — different fingers, depth taken from a style
+reference — the source-fidelity number measures agreement with something
+nobody is still trying to match. Stop reporting it as progress and say why.
+
+1. **Crop the source region with a margin, and make that crop the coordinate
+   system.** Write every vector coordinate in the crop's pixel units; fit the
+   viewBox to the content at the end, not at the start. **Widen the crop
+   whenever source content touches its edge** — a trace takes the crop border
+   for a contour, and a comparison against that same crop cannot see the cut.
+   One session lost a crown that way: the crop started five pixels below it.
+   The engine's `geometry/source-cut-by-frame` reading is the check.
+2. **Derive geometry from the pixels, never by eye — then build over it.** One
+   traced silhouette that clips everything, then named regions split along an
+   edge map; smooth, resample and simplify each contour. The outer edge comes
+   from one contour and the holes come from the source. That trace is the
+   underlay; the shapes you ship are constructed on top of it.
 3. **Fit colour, do not pick it.** Least-squares per region against that region's
    own pixels; swap a linear gradient for a radial one only when the residual
    actually drops.
@@ -140,12 +184,32 @@ measured. The procedure below reached 0.984 with the same tools.
    the score improves — a tried-and-worse idea is dropped by the number, not by
    taste. Use the two readings the geometry comparison produces: silhouette IoU
    over saturated regions, and mean colour error plus the share of pixels off by
-   more than 40/255 — broken down per region, so the worst region is named.
-7. **Stop** at the declared tolerance or at the user's pass budget, whichever
-   comes first.
-8. **Report the per-pass numbers, the cause of the remaining residual, and the
+   more than 40/255 — broken down per region, so the worst region is named. The
+   score ranks passes against the source; it does not decide acceptance, and it
+   stops meaning anything once the goal becomes a redesign.
+7. **Stop** at the declared tolerance, at the user's pass budget, or **on a
+   plateau** — whichever comes first. A plateau is two consecutive passes each
+   improving the score by less than 5 % relative: stop, report the residual's
+   cause, and offer the construct-or-redesign option instead of starting
+   another pass. An explicit pass budget from the user still wins when it is
+   smaller. Measured: twelve further scored passes took mean error 16.78 to
+   6.12 and the share off by 40 from 9.1 % to 1.5 %, and the owner said "still
+   unclean" twice; the plateau was named only after they brought a reference.
+8. **Snapshot every delivered pass** as `<name>.pass-<n>.svg`, and diff the next
+   pass against the last accepted snapshot with `lint_svg_asset --baseline`.
+   Report which accepted properties carried forward. Restoring "version 4" is
+   then a copy, not a reconstruction — one session lost the same accepted
+   detail twice between hand edits, and the owner had to supply the file back
+   from their own downloads.
+9. **Report the per-pass numbers, the cause of the remaining residual, and the
    file size.** Fidelity costs bytes — one accepted conversion went 5.3 KB →
-   49.5 KB and nothing measured it.
+   49.5 KB and nothing measured it. Each number carries the **registration**
+   it was taken against as `x,y,w,h` in the source's pixel frame, the
+   **scorer** that produced it (`ui:render`, or a named script) and the sample
+   resolution. Two scorers disagreed on one file by a factor of four and
+   neither number could be told from the other afterwards; a wordmark's frame
+   could not be recovered at all, and three plausible ones moved its IoU from
+   0.56 to 0.81.
 
 Any tracing tool the host has may do the deriving, and a host with none can
 write one. **The measurement is the procedure, not the tool.**
@@ -166,8 +230,25 @@ report a non-zero natural width.
 2. **The file** — path, byte size, digest.
 3. **Checks that ran** — the static check's finding count, the witness's
    readings, and the status word from the table above.
-4. **For a conversion** — the per-pass score table and the residual's cause.
-5. **What was looked at** — honestly, or nothing.
+4. **For a conversion** — the per-pass score table and the residual's cause,
+   each number carrying its **registration** (`x,y,w,h` in the source's pixel
+   frame), the scorer that produced it and the sample resolution, so a later
+   run can repeat the reading and no second scorer's number is quoted as the
+   first's.
+5. **Variants** — for a `mark`, the small-size variant when the 16 and 32 px
+   captures lose the detail, and a light-on-dark variant when the contrast
+   reading is low on a capture's ground. Built, or named as missing. Never
+   silent: one wordmark shipped in a dark violet that is unreadable on a dark
+   ground, and the dark variant was simply not mentioned.
+6. **Outlined lettering** — a word set from an installed font and converted to
+   outlines is reported with the font's name and whether its licence allows
+   outlining into a distributed asset. An unknown licence is reported as
+   unknown, never as permitted.
+7. **Cost** — the reading the manifest carries (`bytes`, `elements`, `paths`,
+   `gradients`, `coordinates`), beside the fidelity numbers. No threshold: none
+   was measured, and a gate on bytes would have refused a 195 KB trace and a
+   59 KB accepted figure alike.
+8. **What was looked at** — honestly, or nothing.
 
 ## Gotcha
 
