@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" role="img">
+  <title>Easing marker</title>
+  <circle cx="20" cy="24" r="8" fill="#2563eb">
+    <!-- clean twin: both control points lie inside [0,1] -->
+    <animate attributeName="cx" values="20;180" dur="1.5s" calcMode="spline" keyTimes="0;1" keySplines="0.34 0 0.64 1" fill="freeze"/>
+  </circle>
+</svg>

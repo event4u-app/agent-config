@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" role="img">
+  <title>Interactive illustration</title>
+  <rect x="0" y="0" width="200" height="120" fill="#f1f5f9"/>
+  <circle cx="60" cy="60" r="24" fill="#2563eb"/>
+  <!-- clean twin: no script, no event handler, no foreignObject and no javascript: href -->
+  <rect x="100" y="40" width="40" height="40" fill="#60a5fa"/>
+  <text x="10" y="112" font-family="system-ui, sans-serif" font-size="10">run</text>
+</svg>

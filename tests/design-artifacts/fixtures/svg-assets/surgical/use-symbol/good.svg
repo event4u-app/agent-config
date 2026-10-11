@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60" role="img">
+  <title>Two tiles instanced from one symbol</title>
+  <defs>
+    <symbol id="tile" viewBox="0 0 20 20"><rect x="0" y="0" width="20" height="20" rx="4" fill="#2563eb"/></symbol>
+    <symbol id="tile-alt" viewBox="0 0 20 20"><rect x="0" y="0" width="20" height="20" rx="4" fill="#f59e0b"/></symbol>
+  </defs>
+  <use id="use-left" href="#tile" x="10" y="20" width="20" height="20"/>
+  <use id="use-right" href="#tile-alt" x="70" y="20" width="20" height="20"/>
+</svg>

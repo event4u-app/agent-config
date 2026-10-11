@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- STRUCTURAL twin, not a one-edit twin. A sprite sheet: every symbol id is addressed from
+     hosts/sprite-host.html via <use href="...#id">, so an id with no in-file reference is
+     correct here and must read clean. A one-edit twin cannot express that - the defect is a
+     dead reference inside one file, the clean form is a file whose references live outside it. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" style="display:none" aria-hidden="true">
+  <symbol id="sprite-check" viewBox="0 0 24 24">
+    <path d="M4 13 L9 18 L20 6" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+  <symbol id="sprite-close" viewBox="0 0 24 24">
+    <path d="M6 6 L18 18 M18 6 L6 18" fill="none" stroke="currentColor" stroke-width="2"/>
+  </symbol>
+</svg>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 110" role="img">
+  <title>Draw-on checkmark</title>
+  <!-- clean twin: pathLength normalises the geometry, so the dash is exact whatever the true length is -->
+  <path id="stroke" d="M10 20 L58 56 L106 20 L163 96" pathLength="100" fill="none" stroke="#2563eb" stroke-width="6" stroke-dasharray="100" stroke-dashoffset="100">
+    <animate attributeName="stroke-dashoffset" from="100" to="0" dur="1.2s" fill="freeze"/>
+  </path>
+</svg>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img">
+  <title>Broken glyph</title>
+  <!-- clean twin: every command carries the coordinate count its grammar requires -->
+  <path d="M 10 10 L 20 24 Q 30 38 40 20" fill="none" stroke="#0f172a" stroke-width="3"/>
+</svg>

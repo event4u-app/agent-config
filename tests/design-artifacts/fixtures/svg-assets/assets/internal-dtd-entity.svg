@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- planted: an internal DTD subset with an ENTITY declaration (declared, deliberately unreferenced so the twin stays one edit) -->
+<!DOCTYPE svg [ <!ENTITY brand "#2563eb"> ]>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img">
+  <title>Entity mark</title>
+  <rect x="8" y="8" width="48" height="48" rx="10" fill="#2563eb"/>
+  <path d="M20 32 L29 41 L46 22" fill="none" stroke="#ffffff" stroke-width="5"/>
+</svg>

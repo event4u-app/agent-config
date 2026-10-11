@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 50" role="img">
+  <title>Morphing chevron</title>
+  <path d="M10 40 L40 10 L70 40" fill="none" stroke="#2563eb" stroke-width="4">
+    <!-- clean twin: both values carry the same commands in the same order (M L L) -->
+    <animate attributeName="d" dur="1s" repeatCount="indefinite" values="M10 40 L40 10 L70 40; M10 40 L40 30 L70 40"/>
+  </path>
+</svg>

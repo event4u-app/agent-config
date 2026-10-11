@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- CONTROL (R12): an intentional spinner dash pattern. stroke-dasharray="90 150" without
+     pathLength is the pattern, not a guessed length. No static guessed-dash rule may fire. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img">
+  <title>Loading</title>
+  <circle class="motion" cx="24" cy="24" r="20" fill="none" stroke="#2563eb" stroke-width="4" stroke-linecap="round" stroke-dasharray="90 150">
+    <animateTransform attributeName="transform" type="rotate" from="0 24 24" to="360 24 24" dur="1s" repeatCount="indefinite"/>
+  </circle>
+  <style>.still { display: none } @media (prefers-reduced-motion: reduce) { .motion { display: none } .still { display: inline } }</style>
+  <circle class="still" cx="24" cy="24" r="20" fill="none" stroke="#2563eb" stroke-width="4" stroke-linecap="round" stroke-dasharray="90 150"/>
+</svg>

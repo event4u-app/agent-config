@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" role="img">
+  <title>Pulsing status dot</title>
+  <circle class="motion" cx="24" cy="24" r="8" fill="#2563eb">
+    <animate attributeName="r" values="8;12;8" dur="1.2s" repeatCount="indefinite"/>
+  </circle>
+  <!-- clean twin: under reduce the animated element is swapped for a still one -->
+  <style>.still { display: none } @media (prefers-reduced-motion: reduce) { .motion { display: none } .still { display: inline } }</style>
+  <circle class="still" cx="24" cy="24" r="8" fill="#2563eb"/>
+</svg>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img">
+  <title>Menu</title>
+  <!-- clean twin: 2-unit stroke and 3 units of padding, read from the incumbent set's own SVGs -->
+  <path d="M3 7 H21 M3 12 H21 M3 17 H21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>

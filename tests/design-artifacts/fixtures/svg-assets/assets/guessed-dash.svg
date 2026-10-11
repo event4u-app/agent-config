@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 110" role="img">
+  <title>Draw-on checkmark</title>
+  <!-- planted (R8): dasharray 300 on a path whose true length is exactly 215, so the first third draws nothing -->
+  <path id="stroke" d="M10 20 L58 56 L106 20 L163 96" fill="none" stroke="#2563eb" stroke-width="6" stroke-dasharray="300" stroke-dashoffset="300">
+    <animate attributeName="stroke-dashoffset" from="300" to="0" dur="1.2s" fill="freeze"/>
+  </path>
+</svg>

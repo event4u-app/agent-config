@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Animated SVG delivered as img</title></head>
+<body>
+  <h1>Status</h1>
+  <!-- clean twin: the host carries the static route, which is the only place it can live -->
+  <picture>
+    <source media="(prefers-reduced-motion: reduce)" srcset="pulse-static.svg">
+    <img src="pulse-animated.svg" width="48" height="48" alt="Loading">
+  </picture>
+</body>
+</html>

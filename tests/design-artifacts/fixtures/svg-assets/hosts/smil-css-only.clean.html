@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><title>SMIL with a CSS-only branch</title>
+  <!-- clean twin: the media query swaps the animated element for the still one instead of asking a
+       CSS motion property to stop a SMIL timeline that CSS does not drive. The route is the only
+       difference from the planted file. -->
+  <style>body { font-family: system-ui, sans-serif; font-size: 16px; color: #0f172a; background: #ffffff } .still { display: none } @media (prefers-reduced-motion: reduce) { .motion { display: none } .still { display: inline } }</style>
+</head>
+<body>
+  <h1>Status</h1>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" width="200" height="48" role="img">
+    <title>Progress</title>
+    <circle class="still" cx="20" cy="24" r="6" fill="#2563eb"/>
+    <circle class="motion" cx="20" cy="24" r="6" fill="#2563eb"><animate attributeName="cx" values="20;180" dur="0.7s" repeatCount="indefinite"/></circle>
+  </svg>
+</body>
+</html>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60" role="img">
+  <title>Figure in three flat sibling paths</title>
+  <path id="hat" d="M20 20 L40 6 L60 20 Z" fill="#0f172a"/>
+  <path id="base" d="M10 52 L110 52" fill="none" stroke="#94a3b8" stroke-width="4"/>
+</svg>

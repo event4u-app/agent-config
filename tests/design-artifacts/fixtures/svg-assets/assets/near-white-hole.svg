@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img">
+  <title>Ring mark</title>
+  <!-- planted (S5): the inner region the source shows as a hole is painted near-white instead of cut out -->
+  <circle cx="50" cy="50" r="40" fill="#2563eb"/>
+  <circle cx="50" cy="50" r="18" fill="#fdfdfd"/>
+</svg>
