@@ -325,6 +325,33 @@ interface Allowed {
 
 const norm = (s: string): string => s.replace(/\s+/g, ' ').trim();
 
+/**
+ * The reviewed statements, one verdict each.
+ *
+ * THE AUTHORITY IS NOT IN THIS TABLE, AND THAT IS THE DESIGN. The table is what
+ * the five DEPENDENTS are checked against; `design-patterns.md` § Motion is the
+ * thing they are compared TO, so it is PARSED — bands, ceiling, both curves —
+ * and never passed to {@link checkStatement}. A row keyed to it would be inert,
+ * and an inert row reads as enforcement.
+ *
+ * Measured 2026-10-11, when § Motion gained step 6b (the SVG mechanisms): of
+ * the 49 lines the authority gained, {@link carriesMotionValue} flags two when
+ * applied to them directly, and this gate reads neither, because neither
+ * reaches the scan path. Both verdicts are `permitted`, recorded here rather
+ * than left to be rediscovered by whoever next widens the scanned set:
+ *
+ *   · "Step 2's bounce prohibition already rules the intent out" — a deferral
+ *     to the prohibition, not a curve. The `keySplines` bullet states which
+ *     values the MECHANISM accepts; step 2 still owns whether to want one.
+ *   · "All of them still obey step 3's bands, step 2's single `ease-out` curve"
+ *     — the authority naming its own curve, in a sentence widened from the six
+ *     HTML mechanisms to those plus the SVG ones. No band, curve or duration
+ *     moved with it.
+ *
+ * If the authority is ever added to the scanned set, those two are the rows it
+ * needs on day one — and every band line in § Motion needs one too, which is
+ * the cost that keeps it parsed instead.
+ */
 export const PROSE_ALLOWLIST: readonly Allowed[] = [
     {
         file: CHECKLIST_REL, key: 'table:7',

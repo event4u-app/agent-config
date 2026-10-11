@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The conversion ground truth. The raster the conversion scenario starts from is rendered
+     FROM this file by Chromium at test time, so the geometry of every region is known exactly
+     and no third-party brand image is committed. Flat two-stop gradients and no <text>, so a
+     re-derivation does not depend on the renderer's font stack. Regions: mark, mark-hole,
+     wordmark, slogan - the hole is a real hole (alpha 0), not near-white paint (S5). -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 160" width="240" height="160" role="img">
+  <title>Reference lockup</title>
+  <defs>
+    <linearGradient id="grad-mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1d4ed8"/>
+      <stop offset="1" stop-color="#60a5fa"/>
+    </linearGradient>
+    <linearGradient id="grad-word" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0f172a"/>
+      <stop offset="1" stop-color="#334155"/>
+    </linearGradient>
+    <mask id="mark-cut">
+      <rect x="0" y="0" width="240" height="160" fill="#ffffff"/>
+      <circle id="mark-hole" cx="60" cy="60" r="18" fill="#000000"/>
+    </mask>
+  </defs>
+  <path id="mark" d="M20 36 A16 16 0 0 1 36 20 H84 A16 16 0 0 1 100 36 V84 A16 16 0 0 1 84 100 H36 A16 16 0 0 1 20 84 Z" fill="url(#grad-mark)" mask="url(#mark-cut)"/>
+  <g id="wordmark" fill="url(#grad-word)">
+    <rect x="124" y="34" width="10" height="42"/>
+    <rect x="124" y="34" width="34" height="10"/>
+    <rect x="124" y="50" width="28" height="10"/>
+    <rect x="170" y="34" width="10" height="42"/>
+    <rect x="186" y="34" width="10" height="42"/>
+    <rect x="170" y="66" width="26" height="10"/>
+  </g>
+  <g id="slogan" fill="#64748b">
+    <rect x="124" y="92" width="46" height="6"/>
+    <rect x="176" y="92" width="30" height="6"/>
+    <rect x="124" y="104" width="62" height="6"/>
+  </g>
+</svg>

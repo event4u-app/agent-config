@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" role="img">
+  <title>Labelled illustration</title>
+  <rect x="0" y="0" width="200" height="60" fill="#f8fafc"/>
+  <!-- planted (R1): no font-family, so the label resolves to the renderer default (Times) -->
+  <text x="16" y="38" font-size="18" fill="#0f172a">Ledger</text>
+</svg>

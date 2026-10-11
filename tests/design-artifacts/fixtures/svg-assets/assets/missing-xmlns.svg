@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- planted: no xmlns, so this is not a standalone SVG document and an img delivery renders nothing -->
+<svg viewBox="0 0 24 24" width="24" height="24" role="img">
+  <title>Plus</title>
+  <path d="M12 4 V20 M4 12 H20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,110 @@
+{
+  "fixture": "svg end-to-end scenarios",
+  "roadmap": "road-to-svg-with-a-witness",
+  "step": "Phase 6",
+  "note": "Each scenario is a recorded run of the svg-authoring skill. The witnesses decide the outcome; this file is what svg_scenarios.test.ts reads so the assertions are declared beside the artefacts rather than buried in the test.",
+  "scenarios": [
+    {
+      "id": "new-logo-true-vector",
+      "dir": "s1-new-logo",
+      "task": "s1-new-logo/task.md",
+      "asset_class": "mark",
+      "delivery": "inline",
+      "delivered": ["s1-new-logo/delivered/mark.svg"],
+      "asserts": {
+        "image_elements": 0,
+        "foreign_objects": 0,
+        "text_elements": 0,
+        "lint_errors": 0,
+        "fill_ratio_within_class_threshold": true,
+        "status": "verified"
+      }
+    },
+    {
+      "id": "new-logo-from-raster",
+      "dir": "s1b-conversion",
+      "task": "s1b-conversion/task.md",
+      "asset_class": "mark",
+      "delivery": "inline",
+      "source_reference": "../fixtures/svg-assets/conversion/reference.svg",
+      "delivered": ["s1b-conversion/delivered/mark.svg"],
+      "asserts": {
+        "image_elements": 0,
+        "wordmark_or_slogan_region": false,
+        "hole_is_transparent_on_dark": true,
+        "max_scored_passes": 5,
+        "tolerance_from": "../fixtures/svg-assets/manifest.json#raster_conversion_tolerance"
+      }
+    },
+    {
+      "id": "face-removed-hat-unchanged",
+      "dir": "s2-surgical-face",
+      "task": "s2-surgical-face/task.md",
+      "asset_class": "illustration",
+      "delivery": "inline",
+      "input": "s2-surgical-face/input/figure.svg",
+      "allowed_ids": ["face-group"],
+      "delivered": ["s2-surgical-face/delivered/figure.svg"],
+      "asserts": {
+        "preservation_changes_outside_allowed": 0,
+        "silhouette_change_outside_box": "within the anti-aliasing band only",
+        "changed_box": { "x": 18, "y": 46, "width": 84, "height": 80 }
+      }
+    },
+    {
+      "id": "scales-3000x-sharp",
+      "dir": "s3-scale",
+      "task": "s3-scale/task.md",
+      "asset_class": "mark",
+      "delivery": "inline",
+      "input": "s1-new-logo/delivered/mark.svg",
+      "delivered": [],
+      "asserts": {
+        "device_scale": 3000,
+        "tile_units": 512,
+        "max_edge_transition_device_px": 2,
+        "image_elements": 0,
+        "resolution_fixed_filters": 0
+      }
+    },
+    {
+      "id": "animated-with-reduced-motion-route",
+      "dir": "s4-animated",
+      "task": "s4-animated/task.md",
+      "asset_class": "animated",
+      "delivery": "inline+img",
+      "delivered": [
+        "s4-animated/delivered/mark-animated.svg",
+        "s4-animated/delivered/mark-static.svg",
+        "s4-animated/delivered/host.html"
+      ],
+      "asserts": {
+        "frame_seek_points": [0, 0.45, 0.9],
+        "distinct_frames": 3,
+        "reduced_motion_inline_frames_equal": true,
+        "img_delivery_reduced_motion": "not_witnessable",
+        "host_picture_route": true,
+        "dq4_findings": 0,
+        "motion_family_findings": 0
+      }
+    },
+    {
+      "id": "delivered-files-reopen",
+      "dir": "s5-reopen",
+      "task": "s5-reopen/task.md",
+      "covers": [
+        "new-logo-true-vector",
+        "new-logo-from-raster",
+        "face-removed-hat-unchanged",
+        "animated-with-reduced-motion-route"
+      ],
+      "asserts": {
+        "exists_at_reported_path": true,
+        "digest_matches": true,
+        "parses": true,
+        "reopens_non_empty_from_disk": true,
+        "img_delivery_natural_width_non_zero": true
+      }
+    }
+  ]
+}

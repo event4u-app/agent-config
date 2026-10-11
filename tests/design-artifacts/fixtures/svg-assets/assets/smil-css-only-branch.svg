@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" role="img">
+  <title>Sliding marker</title>
+  <!-- planted (R4): the only reduced-motion branch is a CSS kill switch, which does not stop SMIL -->
+  <style>@media (prefers-reduced-motion: reduce) { svg * { animation: none !important } }</style>
+  <circle class="motion" cx="20" cy="24" r="6" fill="#2563eb">
+    <animate attributeName="cx" values="20;180" dur="0.7s" repeatCount="indefinite"/>
+  </circle>
+</svg>

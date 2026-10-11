@@ -13,7 +13,8 @@
  *   DQ1 contrast       — Text/background contrast < WCAG AA (4.5:1 normal, 3:1 large)
  *   DQ2 font-size      — Body font-size < 14px (floor; 16px strongly preferred)
  *   DQ3 line-length    — Prose line-length > 75ch without column constraint
- *   DQ4 reduced-motion — @keyframes / animation present without prefers-reduced-motion alt
+ *   DQ4 reduced-motion — @keyframes / animation present without prefers-reduced-motion alt,
+ *                        and (for INLINE SVG in HTML) SMIL with no route or a CSS-only one
  *   DQ5 heading-skip   — Heading levels skipped (h1 → h3 without h2)
  *   DQ6 focus-indicator— Interactive element with no :focus-visible indicator
  *
@@ -45,6 +46,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { assertScanned, DeadScopeError } from "./_lib/scan_scope.js";
+import { firstSmilLine, smilVerdict } from "./_lib/svg_motion.js";
 
 interface Finding {
   rule: string;
@@ -94,25 +96,71 @@ function checkFontSize(lines: string[], filePath: string): Finding[] {
   return findings;
 }
 
-/** DQ4: @keyframes / animation without @media (prefers-reduced-motion) */
+/**
+ * DQ4: animation without a reduced-motion route.
+ *
+ * Two halves. The CSS half is the original rule. The SMIL half (step 1.3 of
+ * `road-to-svg-with-a-witness`) covers INLINE SVG inside an HTML document and
+ * closes a measured blind spot: an HTML file whose only animation is an
+ * infinite `<animate>` read "clean — 1 file(s) checked" here, because
+ * `@keyframes` and `animation:` are the only two things the CSS half looks
+ * for, and SMIL is neither (R10).
+ *
+ * It also reports the subtler case: SMIL whose ONLY reduced-motion route is a
+ * CSS declaration. Under an emulated `reduce`, a page-level
+ * `svg * { animation: none !important }` left an `<animate>` moving `cx` from
+ * 20.2 to 76.8 in 700 ms (R4) — CSS animation properties do not reach SMIL, so
+ * the file looks covered and is not.
+ *
+ * STANDALONE `.svg` IS DELIBERATELY NOT HERE. A file cannot see its host's
+ * `<picture>` route, so judging the route from inside it would red correct
+ * assets and break this linter's zero-false-positive promise (line 12). That
+ * case belongs to `lint_svg_asset`, which knows it is reading a whole asset.
+ * Both halves read the same `_lib/svg_motion.ts`, so the two cannot drift.
+ */
 function checkReducedMotion(content: string, filePath: string, lines: string[]): Finding[] {
+  const findings: Finding[] = [];
+
   const hasAnimation = /@keyframes\s+\w+|animation\s*:/i.test(content);
-  if (!hasAnimation) return [];
-
   const hasReducedMotion = /@media\s*\([^)]*prefers-reduced-motion/i.test(content);
-  if (hasReducedMotion) return [];
-
-  // Find first animation declaration for the line number
-  const animLine = lines.findIndex((l) => /@keyframes\s+\w+|animation\s*:/.test(l));
-  return [
-    {
+  if (hasAnimation && !hasReducedMotion) {
+    const animLine = lines.findIndex((l) => /@keyframes\s+\w+|animation\s*:/.test(l));
+    findings.push({
       rule: "dq4-reduced-motion",
       file: filePath,
       line: animLine + 1,
       snippet: "@keyframes or animation present without @media (prefers-reduced-motion) alternative",
       severity: "error",
-    },
-  ];
+    });
+  }
+
+  // The SMIL half runs for documents that can HOST an inline graphic. A `.css`
+  // file cannot carry one, and a standalone `.svg` is the other linter's.
+  if (!/\.(html|htm|vue|svelte|astro)$/i.test(filePath)) return findings;
+
+  const verdict = smilVerdict(content);
+  if (verdict === "no-route") {
+    findings.push({
+      rule: "dq4-reduced-motion",
+      file: filePath,
+      line: firstSmilLine(content),
+      snippet:
+        "inline SVG animates with SMIL (<animate>/<animateTransform>/<set>) and the document carries " +
+        "no @media (prefers-reduced-motion) route at all",
+      severity: "error",
+    });
+  } else if (verdict === "css-only") {
+    findings.push({
+      rule: "dq4-reduced-motion",
+      file: filePath,
+      line: firstSmilLine(content),
+      snippet:
+        "inline SVG animates with SMIL and the only reduced-motion route is a CSS animation/transition " +
+        "declaration — CSS does not reach SMIL, so the animation keeps running under `reduce`",
+      severity: "error",
+    });
+  }
+  return findings;
 }
 
 /** DQ5: heading levels skipped (h1 → h3 without h2) in HTML */

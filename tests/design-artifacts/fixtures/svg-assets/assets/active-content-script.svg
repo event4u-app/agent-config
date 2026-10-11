@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" role="img">
+  <title>Interactive illustration</title>
+  <rect x="0" y="0" width="200" height="120" fill="#f1f5f9"/>
+  <circle cx="60" cy="60" r="24" fill="#2563eb"/>
+  <!-- planted: four active-content vectors in one block - script, on* handler, foreignObject, javascript: href -->
+  <script>window.__svgRan = true;</script>
+  <rect x="100" y="40" width="40" height="40" fill="#60a5fa" onclick="window.__svgClicked = true"/>
+  <foreignObject x="100" y="90" width="90" height="24"><div xmlns="http://www.w3.org/1999/xhtml">html inside svg</div></foreignObject>
+  <a href="javascript:void(0)"><text x="10" y="112" font-family="system-ui, sans-serif" font-size="10">run</text></a>
+</svg>

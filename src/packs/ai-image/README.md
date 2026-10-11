@@ -7,7 +7,7 @@ AI image generation — multi-provider, governed (image as a sibling of video).
 - **id**: `ai-image`
 - **owner**: small-business
 - **requires**: —
-- **artefacts**: 9
+- **artefacts**: 10
 
 ## Rules (3)
 
@@ -15,11 +15,12 @@ AI image generation — multi-provider, governed (image as a sibling of video).
 - **`media-governance-routing`** — Generating AI video/image/voice — surface the project-local media policies (likeness, style, voice-cloning, disclosure)
 - **`provider-lifecycle-discipline`** — Editing an AI video/image/audio adapter — declare lifecycle tier; never default to non-stable
 
-## Skills (6)
+## Skills (7)
 
 - **`brand-asset-generation`** — Generate brand assets — banners, social cards, CIP elements — with brand-token injection + provider routing. Use when generating a banner / social image / branded asset.
 - **`image-editing`** — Edit an existing image — inpaint, background swap, variation — via providers that support it. Use when editing/modifying/inpainting an image or making variations.
 - **`image-generation`** — Generate an image from a brief — provider-agnostic blueprint then provider-specific translation, with ref-image/seed reuse for consistency. Use when generating/creating an image.
-- **`image-provider-routing`** — Select the right image-generation provider from job shape — text-in-image to Ideogram, photoreal to Flux, vector/logo to Recraft, general to Gemini/GPT.
-- **`logo-generation`** — Generate a logo or brand mark — structured prompt + provider routing, with a true-vector path (vector-native provider or LLM-authored SVG). Use for logo or brand mark generation.
+- **`image-provider-routing`** — Pick the image provider from job shape — text-in-image to Ideogram, photoreal to Flux, illustrative vector to Recraft, general to Gemini/GPT.
+- **`logo-generation`** — Generate a logo or brand mark — structured prompt, provider routing, and a true-vector path. Use for logo or brand mark generation.
 - **`prompt-engineering-image`** — Translate an image brief into provider-specific prompt grammar per model. Use when writing or refining an image-generation prompt for Ideogram, Flux, Gemini, GPT Image 2, or Recraft.
+- **`svg-authoring`** — Hand-author or edit an SVG — icon, mark, illustration, diagram, animation, raster-to-vector — checked and rendered.

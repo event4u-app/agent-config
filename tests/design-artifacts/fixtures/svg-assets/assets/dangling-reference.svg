@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">
+  <title>Dangling icon</title>
+  <!-- planted: neither #nope nor #alsonope is defined anywhere in this file -->
+  <rect x="2" y="2" width="20" height="20" fill="url(#nope)"/>
+  <use href="#alsonope" x="0" y="0"/>
+</svg>

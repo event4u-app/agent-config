@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: wireframe
-description: "Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure."
+description: "Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis. Use when the user wants to sketch directions or explore structure."
 domain: product
 personas: []
 workspaces:
@@ -80,7 +80,10 @@ branded, recommendation-bearing). A single refined implementation →
 
 1. **One file** (HTML or annotated markdown/SVG canvas) with ≥3 greyscale
    variations side-by-side — flows as small storyboards (3–5 screens each);
-   no brand color, no styled typography, no real imagery.
+   no brand color, no styled typography, no real imagery. An SVG canvas is
+   authored under [`svg-authoring`](../svg-authoring/SKILL.md); its grays are
+   the wireframe's own non-decisions, so the fidelity floor does not reproduce
+   them as choices.
 2. **Per-variation annotations** — 2–4 callouts naming the structural bet and
    its trade-off, inline next to the variation.
 3. **Decision-capture block** (after user pick) — chosen direction,

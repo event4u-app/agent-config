@@ -204,6 +204,7 @@ parses decays.
 | `tests.yml` | `golden-tests` | golden corpora live under `tests/` and `internal/`, neither admitted |
 | `tests.yml` | `collector-lifecycle` | exercises collector scripts under `src/scripts/`, none admitted |
 | `tests.yml` | `workspace-tests` | exercises workspace wiring under `src/` and `tests/`; the admitted pack and domain files are metadata those tests do not read |
+| `tests.yml` | `svg-witness-tests` | drives a real Chromium over the SVG fixture corpus under `tests/design-artifacts/**` and the render engine under `src/cli/**`; the allowlist admits no test source and no TypeScript, so the job has no admitted input at all. It is also the most expensive job on this list — it installs a browser — which is the reason to be sure of the argument rather than a part of it |
 | `smoke-public-install.yml` | `smoke` | no `src/scripts/install*`, matching this job's own `paths:` filter. TWO admitted paths ARE among its triggers: `package.json`, whose content `check_release_manifest_content` reads in the `release-shape` job (opening blockquote), and `src/agent-src/templates/agents/agent-project-settings.example.yml`, a version-pinned example file whose pin `check_template_pin_drift` gates on the kept surface |
 
 `push:` to `main` and the weekly cron on `smoke-public-install.yml` stay

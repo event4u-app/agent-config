@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60" role="img">
+  <title>Figure in two transformed groups</title>
+  <g id="hat-group" transform="translate(10 4)">
+    <path d="M10 16 L30 2 L50 16 Z" fill="#0f172a"/>
+  </g>
+  <g id="face-group" transform="translate(10 20)">
+  </g>
+</svg>

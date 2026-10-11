@@ -292,30 +292,47 @@ describe('the clause body is the clause, never the step', () => {
     });
 });
 
-describe('the two forms and the one space-bearing expectation they disagree on', () => {
+describe('the two forms and the space-bearing expectation they now agree on', () => {
     /**
-     * Stated as a pinned LIMIT rather than left to be discovered. The backticked
-     * form caps its tail at one non-space token, so a regex containing a space
-     * loses its arrow; the annotation form is `$`-anchored and keeps it. The
-     * module docstring presented the cap as a uniform property of the grammar,
-     * which it is not. Pinned here so that closing the gap is a deliberate act
-     * with a failing test, rather than a silent drift nobody notices.
+     * This block pinned the gap as a LIMIT until 2026-10-11. The backticked form
+     * capped its tail at one non-space token, so a regex carrying a space lost
+     * its arrow while the `$`-anchored annotation form kept it — a clause ending
+     * in `-> /Icon-only button/` read as a step with no expectation, and nothing
+     * reported the loss. The pin existed so that closing the gap would be a
+     * deliberate act against a failing assertion: the case below was renamed and
+     * flipped FIRST and seen red against the old parser, and only then did the
+     * backticked tail learn to read a slash-delimited regex to its closing `/`.
      */
     it('the annotation form keeps a space-bearing regex', () => {
         const clause = parseVerifyClause('- [ ] x <!-- verify: cmd -> /a b/ -->');
         expect(clause?.expect).toEqual({ kind: 'regex', source: 'a b' });
     });
 
-    it('the backticked form does not — it loses the arrow rather than half-matching', () => {
+    it('backticked-form-keeps-a-space-bearing-regex', () => {
         const clause = parseVerifyClause('- [ ] x\n      verify: `cmd` -> /a b/');
-        expect(clause?.expect).toBeNull();
+        expect(clause?.expect).toEqual({ kind: 'regex', source: 'a b' });
+        // The shape that surfaced it — a corpus-grounding query whose expected
+        // component name is two words. It had to be written `Icon-only\sbutton`
+        // to survive the cap at all.
+        const surfaced = parseVerifyClause('- [ ] x\n      verify: `ground search "icon only close button"` -> /Icon-only button/');
+        expect(surfaced?.expect).toEqual({ kind: 'regex', source: 'Icon-only button' });
     });
 
-    it('both forms agree on every space-free expectation, which is every one in the tree', () => {
-        for (const tail of ['-> 0', '-> 2', '-> /[1-9]/', '-> /unfalsifiable-verify/']) {
+    it('both forms agree on every expectation, not only the space-free ones', () => {
+        const tails = ['-> 0', '-> 2', '-> /[1-9]/', '-> /unfalsifiable-verify/', '-> /a b/', '-> /Icon-only button/'];
+        for (const tail of tails) {
             const html = parseVerifyClause(`- [ ] x <!-- verify: cmd ${tail} -->`);
             const tick = parseVerifyClause(`- [ ] x\n      verify: \`cmd\` ${tail}`);
             expect(tick?.expect, tail).toEqual(html?.expect);
+            expect(tick?.expect, tail).not.toBeNull();
         }
+    });
+
+    it('a bare word is still not an expectation, in either form', () => {
+        // Widening the tail's BOUNDARY must not widen the grammar: the
+        // slash-delimited alternative ends at a delimiter, and anything that is
+        // neither an exit code nor a compiled regex still decides nothing.
+        expect(parseVerifyClause('- [ ] x\n      verify: `cmd` -> green')?.expect).toBeNull();
+        expect(parseVerifyClause('- [ ] x\n      verify: `cmd` -> /a b')?.expect).toBeNull();
     });
 });

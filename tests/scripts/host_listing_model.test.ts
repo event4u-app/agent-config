@@ -143,8 +143,8 @@ describe('host_listing_model — pinned against the 2026-08-08 observation', () 
     it('reproduces the observation\u2019s qualitative claim: a substantial majority arrive bare', () => {
         // The observation refuses to state a rate ("no total N of 414 arrived
         // bare is claimed here"), so the only thing to pin is the direction.
-        // Measured on the current corpus: 44 of 292 descriptions survive an
-        // 8,000-char budget, spending 7,822 of it. The exact pair is left out
+        // Measured on the current corpus: 45 of 300 descriptions survive an
+        // 8,000-char budget, spending 7,975 of it. The exact pair is left out
         // of the assertion on purpose \u2014 it moves whenever a skill is added,
         // and the direction is the claim the observation actually supports.
         expect(result.surviving.length).toBeLessThan(catalogue.length / 4);
@@ -197,17 +197,39 @@ describe('host_listing_model — pinned against the 2026-08-08 observation', () 
     // disagreements remain. Nothing about the model or the observation changed;
     // only the corpus did, which is exactly the movement the block above says
     // per-skill fate is subject to without a usage order.
+    // MOVED BACK, 2026-10-11, and recorded for the same reason the 2026-08-24
+    // note above was: a per-skill fate that moves is the finding, not the pin.
+    // `composer-packages` crossed from the model's bare set to its SURVIVES set
+    // again as the projected catalogue reached 300 skills with 45 surviving,
+    // spending 7,975 of the 8,000-char budget — it is now the LAST entry the
+    // fill admits. The cause is not the new skill: `svg-authoring` sorts past
+    // the boundary and never competes for the budget. It is that the same
+    // branch SHORTENED five design-family descriptions, and one of them
+    // (`canvas-design`, 174 -> 125 chars) sorts ahead of `composer-packages`
+    // under the alphabetical fallback, so the freed characters loosened the
+    // boundary past it.
+    //
+    // The direction is the opposite of 2026-08-24 and is stated rather than
+    // smoothed over: the observation says BARE, so the model has DIVERGED from
+    // the observation again and the sample agrees on FOUR of eight, not five.
+    // That is a return to the state the KNOWN GAP block above describes, not a
+    // new defect — it is the same `fill-order-is-invocation-frequency`
+    // assumption showing through, and it is the second time this one entry has
+    // flipped on a corpus change alone. Nothing about the model or the
+    // observation changed; only the corpus did. The entry is moved between the
+    // pinned lists rather than dropped from them, so its fate stays asserted in
+    // both tests and cannot move again unremarked.
     const AGREE_SURVIVES = ['accessibility-auditor'] as const;
-    const AGREE_BARE = ['condense-memory', 'contract-review', 'dcf-modeling', 'composer-packages'] as const;
+    const AGREE_BARE = ['condense-memory', 'contract-review', 'dcf-modeling'] as const;
     const DISAGREE_MODEL_SAYS_BARE = ['context-document', 'mcp'] as const;
-    const DISAGREE_MODEL_SAYS_SURVIVES = ['comp-banding'] as const;
+    const DISAGREE_MODEL_SAYS_SURVIVES = ['comp-banding', 'composer-packages'] as const;
 
-    it('agrees with the observation on exactly five of the eight sampled entries', () => {
+    it('agrees with the observation on exactly four of the eight sampled entries', () => {
         for (const name of AGREE_SURVIVES) expect(survived.has(name), name).toBe(true);
         for (const name of AGREE_BARE) expect(survived.has(name), name).toBe(false);
     });
 
-    it('records the three known disagreements so they cannot silently move', () => {
+    it('records the four known disagreements so they cannot silently move', () => {
         for (const name of DISAGREE_MODEL_SAYS_BARE) {
             expect(survived.has(name), `${name} is a KNOWN GAP \u2014 see the block above`).toBe(false);
         }

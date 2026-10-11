@@ -79,14 +79,14 @@ and the delivery mode that neutralises them. No value, band or curve moves.
 
 ## Phase 0 — A space no longer erases a verify expectation
 
-- [ ] **0.1 Flip the pinned limit, red first.** Rename the case at
+- [x] **0.1 Flip the pinned limit, red first.** Rename the case at
       `verify_clause.test.ts:309` to
       `backticked-form-keeps-a-space-bearing-regex` and assert
       `{ kind: 'regex', source: 'a b' }` for a backticked clause ending in
       `-> /a b/`, plus `Icon-only button` for the shape that surfaced it. Run it against today's parser and record the failure
       before 0.2 touches the parser.
       verify: `npx vitest run tests/scripts/_lib/verify_clause.test.ts --reporter=verbose` -> /✓.*backticked-form-keeps-a-space-bearing-regex/
-- [ ] **0.2 Close the gap in the one parser.** The backticked tail accepts a
+- [x] **0.2 Close the gap in the one parser.** The backticked tail accepts a
       slash-delimited regex up to the first closing `/` that is followed by
       whitespace or the end of the text, so `-> /a b/` keeps its source and a
       step that continues after `-> /[1-9]/` still keeps `[1-9]` (the case at
@@ -98,7 +98,7 @@ and the delivery mode that neutralises them. No value, band or curve moves.
 
 ## Phase 1 — The motion authority learns SVG
 
-- [ ] **1.1 SVG lines inside § Motion step 6.** In
+- [x] **1.1 SVG lines inside § Motion step 6.** In
       `design-patterns.md:212-245`, the sole carrier. Mechanism, not values:
       `transform-box: fill-box` with any CSS transform or `transform-origin` on
       an SVG child, and the `transform-origin` line at `:235-238` gains that
@@ -116,7 +116,7 @@ and the delivery mode that neutralises them. No value, band or curve moves.
       was selected correctly under emulation. No statement about animating
       the CSS `d` property — its cross-engine support is unmeasured.
       verify: `npx tsx src/scripts/lint_motion_authority_drift.ts` -> 0
-- [ ] **1.2 Record the drift verdicts.** Any new line the drift gate reads as
+- [x] **1.2 Record the drift verdicts.** Any new line the drift gate reads as
       a motion value gets a `PROSE_ALLOWLIST` verdict
       (`src/scripts/lint_motion_authority_drift.ts:328`) stating it is a
       mechanism, not a value; no band, curve or duration changes.
@@ -124,7 +124,7 @@ and the delivery mode that neutralises them. No value, band or curve moves.
 
 ## Phase 2 — The ARIA corpus answers "graphic"
 
-- [ ] **2.1 Two `aria-patterns.csv` rows.** A meaningful standalone graphic:
+- [x] **2.1 Two `aria-patterns.csv` rows.** A meaningful standalone graphic:
       `role="img"` on the `<svg>`, a direct `<title>` (and optional `<desc>`)
       referenced by namespaced ids, never `aria-label` plus `<title>`, and host
       alt text when delivered through `<img>`. A decorative graphic:
@@ -132,14 +132,14 @@ and the delivery mode that neutralises them. No value, band or curve moves.
       generic `id="title"` collision. Same seven columns, WCAG 1.1.1 / 4.1.2
       refs, APG or WAI docs URL.
       verify: `./scripts-run src/skills/corpus-grounding/scripts/ground search --manifest src/skills/accessibility-auditor/data/manifest.json "meaningful standalone svg chart graphic accessible name"` -> /Result\s1\n-\s\*\*Component:\*\*\s(?!Icon-only)/
-- [ ] **2.2 Keep the icon-button query where it is.** The existing row must
+- [x] **2.2 Keep the icon-button query where it is.** The existing row must
       still win its own query, and the manifest records the re-derivation.
       verify: `./scripts-run src/skills/corpus-grounding/scripts/ground search --manifest src/skills/accessibility-auditor/data/manifest.json "icon only close button"` -> /Icon-only\sbutton/
       and `./scripts-run src/scripts/check_corpus_staleness` -> 0
 
 ## Phase 3 — The render-security skill names the SVG sinks
 
-- [ ] **3.1 One patterns-table row.** In
+- [x] **3.1 One patterns-table row.** In
       `frontend-render-security/SKILL.md` § The patterns AI ships by default:
       untrusted SVG markup into `innerHTML` / `v-html` /
       `dangerouslySetInnerHTML` or inlined server-side — event attributes,
@@ -153,7 +153,7 @@ and the delivery mode that neutralises them. No value, band or curve moves.
       Point at `threats.csv:9` as the authority for uploads instead of
       restating it.
       verify: `grep -ci 'foreignObject' src/skills/frontend-render-security/SKILL.md` -> /^[1-9]/
-- [ ] **3.2 One backstop grep.** Extend § Backstop greps with a pattern that
+- [x] **3.2 One backstop grep.** Extend § Backstop greps with a pattern that
       locates SVG active content in source (`foreignObject`, an `on*`
       attribute inside `<svg`, a `javascript:` href).
       The fixture lives in the tree: three planted SVGs (an `onload`
@@ -192,16 +192,16 @@ the implementation.
 
 ## Acceptance Criteria
 
-- [ ] AC-0 — A backticked verify clause keeps a space-bearing regex
+- [x] AC-0 — A backticked verify clause keeps a space-bearing regex
       expectation, the step-continuation case keeps its expectation, and the
       test that pinned the old limit was seen red before the parser changed.
-- [ ] AC-1 — § Motion names `transform-box`, `pathLength`, the `keySplines`
+- [x] AC-1 — § Motion names `transform-box`, `pathLength`, the `keySplines`
       range and the SMIL reduced-motion route, and `lint_motion_authority_drift`
       is green with no band, curve or duration changed.
-- [ ] AC-2 — A "meaningful standalone graphic" query grounds to a graphic row,
+- [x] AC-2 — A "meaningful standalone graphic" query grounds to a graphic row,
       not to the icon-button row, and the icon-button query still grounds to
       its own row.
-- [ ] AC-3 — `frontend-render-security` names the SVG active-content sinks
+- [x] AC-3 — `frontend-render-security` names the SVG active-content sinks
       for inline, standalone-document and `<img>` delivery, and its backstop
       grep finds all three planted files in the committed fixture and not
       the twin.

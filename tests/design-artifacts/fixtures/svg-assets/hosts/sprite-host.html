@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Sprite host</title></head>
+<body>
+  <h1>Sprite</h1>
+  <!-- SUPPORT, not a planted row: this page is the reason assets/unused-defs.clean.svg must read
+       clean. Each symbol id is referenced from OUTSIDE the file it is declared in, so an
+       unused-defs rule that reads one file at a time would report both of them. -->
+  <svg width="24" height="24" aria-hidden="true"><use href="../assets/unused-defs.clean.svg#sprite-check"></use></svg>
+  <svg width="24" height="24" aria-hidden="true"><use href="../assets/unused-defs.clean.svg#sprite-close"></use></svg>
+</body>
+</html>

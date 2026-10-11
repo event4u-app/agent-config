@@ -32,7 +32,7 @@ adds a router rather than a 295th entry to it.
 | Verb | Routes to | What it does |
 |---|---|---|
 | `audit` | `agent-config ui:audit` | Inventory the tree into `agents/runtime/state/ui-audit.json`. Class A. |
-| `render` | `agent-config ui:render` | Capture desktop / 375 / 320 into `agents/runtime/state/render/`. Class A. |
+| `render` | `agent-config ui:render` | Capture desktop / 375 / 320 into `agents/runtime/state/render/`; `--profile asset` renders one SVG per asset class on a light and a dark background instead. Class A. |
 | `review` | [`design-review`](../../../skills/design-review/SKILL.md) | Two-pass review — judgement before detector, or the `DEGRADED: single-context` banner. |
 | `polish` | [`fe-design`](../../../skills/fe-design/SKILL.md) | Spacing, rhythm, alignment. |
 | `quieter` | `fe-design` | Spacing, weight, contrast within the palette. |

@@ -27,8 +27,8 @@
   "owner": "package-maintainer",
   "refresh_cadence": "quarterly",
   "upstream": {
-    "repo": "derived: W3C ARIA Authoring Practices Guide + WCAG 2.2",
-    "sha": "WCAG 2.2 W3C-REC-2024-12-12; APG continuously-published, menu-button canonical slug",
-    "last_checked": "2026-10-01"
+    "repo": "derived: W3C ARIA Authoring Practices Guide + WCAG 2.2 + W3C WAI Images Tutorial",
+    "sha": "WCAG 2.2 W3C-REC-2024-12-12; APG continuously-published, menu-button canonical slug; the two graphic rows re-derived 2026-10-11 from the WAI Images Tutorial (complex, decorative) against WCAG 1.1.1 / 4.1.2, and both retrieval queries re-run after the append — 'meaningful standalone svg chart graphic accessible name' moved off the icon-button row, 'icon only close button' kept it",
+    "last_checked": "2026-10-11"
   }
 }

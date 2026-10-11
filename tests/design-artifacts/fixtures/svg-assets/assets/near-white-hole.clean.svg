@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img">
+  <title>Ring mark</title>
+  <!-- clean twin: the inner region is a real hole (even-odd), so alpha is 0 there on any background -->
+  <path fill-rule="evenodd" fill="#2563eb" d="M10 50 A40 40 0 1 0 90 50 A40 40 0 1 0 10 50 Z M32 50 A18 18 0 1 0 68 50 A18 18 0 1 0 32 50 Z"/>
+</svg>

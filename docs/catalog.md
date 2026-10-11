@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **745 public artefacts** shipped by
+Consumer-facing catalog of all **746 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `./scripts-run src/scripts/generate_index`
 > Auto-generated — do not edit manually.
 
-## Skills (299)
+## Skills (300)
 
 > **Behavioural-eval coverage is measured, not implied.** A skill is
 > behaviourally evaluated only if it ships `evals/evals.json`; most do
@@ -58,7 +58,7 @@ are excluded.
 | skill | [`brand-to-tokens`](../dist/agent-src/skills/brand-to-tokens/SKILL.md) | official | Turn a confirmed brand identity into a DTCG .tokens.json source of truth — emit CSS vars + Tailwind via design-tokens, export locked brand deck templates. |
 | skill | [`bug-analyzer`](../dist/agent-src/skills/bug-analyzer/SKILL.md) | official | Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs. |
 | skill | [`build-buy-partner`](../dist/agent-src/skills/build-buy-partner/SKILL.md) | official | Use when deciding insource vs outsource vs acquire — integration-cost analysis, dependency-risk, optionality preservation. Triggers on 'should we build', 'buy vs partner'. |
-| skill | [`canvas-design`](../dist/agent-src/skills/canvas-design/SKILL.md) | official | Creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — on 'design a poster' or 'mach uns ein Visual'. Grounded by design-intelligence. |
+| skill | [`canvas-design`](../dist/agent-src/skills/canvas-design/SKILL.md) | official | Static visual art — posters, marketing visuals, brand assets, PDF/PNG pieces — on 'design a poster' or 'mach uns ein Visual'. |
 | skill | [`character-consistency`](../dist/agent-src/skills/character-consistency/SKILL.md) | official | Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'. |
 | skill | [`check-refs`](../dist/agent-src/skills/check-refs/SKILL.md) | official | Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions. |
 | skill | [`churn-prevention`](../dist/agent-src/skills/churn-prevention/SKILL.md) | official | Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'. |
@@ -138,12 +138,12 @@ are excluded.
 | skill | [`history-design`](../dist/agent-src/skills/history-design/SKILL.md) | official | Use when choosing HOW to record change history / audit trails — walks the tier matrix (columns → audit log → temporal → event sourcing). Triggers on 'wer hat was wann', 'audit log'. |
 | skill | [`html-deck`](../dist/agent-src/skills/html-deck/SKILL.md) | official | Build a slide presentation as one HTML file — fixed 1920×1080 canvas letterboxed to any viewport, layout-system-first, type floors. Use for deck, slides, presentation, or pitch requests. |
 | skill | [`humanizer`](../dist/agent-src/skills/humanizer/SKILL.md) | official | Use when removing AI-writing tells from deliverable prose — posts, articles, drafts. Triggers on 'make this sound less like AI', 'humanize this draft', 'this reads like ChatGPT wrote it'. |
-| skill | [`iconography`](../dist/agent-src/skills/iconography/SKILL.md) | official | Resolve an icon request to a concrete Iconify name and emit the embedding for the project's stack. Use when adding icons, picking an icon set, or wiring Lucide/Heroicons/Phosphor/Tabler. |
+| skill | [`iconography`](../dist/agent-src/skills/iconography/SKILL.md) | official | Resolve an icon request to an Iconify name and emit the stack's embedding. Use when adding icons, picking an icon set, or wiring Lucide/Heroicons/Phosphor/Tabler. |
 | skill | [`image-analyser`](../dist/agent-src/skills/image-analyser/SKILL.md) | official | Use to analyse a character image down to the smallest mole and diff against a canon — per-feature spec, OCR-reads tattoo text, flags drift. Triggers 'analyse this image', 'match the canon'. |
 | skill | [`image-creator`](../dist/agent-src/skills/image-creator/SKILL.md) | official | Use to generate a character image to spec — max-fidelity reproducible prompt from a Canon Spec, anchors-first, provider/governance-gated. Triggers 'generate this character', 'render to spec'. |
 | skill | [`image-editing`](../dist/agent-src/skills/image-editing/SKILL.md) | official | Edit an existing image — inpaint, background swap, variation — via providers that support it. Use when editing/modifying/inpainting an image or making variations. |
 | skill | [`image-generation`](../dist/agent-src/skills/image-generation/SKILL.md) | official | Generate an image from a brief — provider-agnostic blueprint then provider-specific translation, with ref-image/seed reuse for consistency. Use when generating/creating an image. |
-| skill | [`image-provider-routing`](../dist/agent-src/skills/image-provider-routing/SKILL.md) | official | Select the right image-generation provider from job shape — text-in-image to Ideogram, photoreal to Flux, vector/logo to Recraft, general to Gemini/GPT. |
+| skill | [`image-provider-routing`](../dist/agent-src/skills/image-provider-routing/SKILL.md) | official | Pick the image provider from job shape — text-in-image to Ideogram, photoreal to Flux, illustrative vector to Recraft, general to Gemini/GPT. |
 | skill | [`incident-commander`](../dist/agent-src/skills/incident-commander/SKILL.md) | official | Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'. |
 | skill | [`jira-integration`](../dist/agent-src/skills/jira-integration/SKILL.md) | official | Use when the user says \"check Jira\", \"create ticket\", \"update issue\", or needs JQL queries, ticket transitions, or branch-to-ticket linking. |
 | skill | [`jobs-events`](../dist/agent-src/skills/jobs-events/SKILL.md) | official | Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling. |
@@ -183,7 +183,7 @@ are excluded.
 | skill | [`livewire-architect`](../dist/agent-src/skills/livewire-architect/SKILL.md) | official | Use when shaping a Livewire component before code — full-page vs partial, parent/child split, event flow, state-vs-props boundary, hydration cost — even on 'add this Livewire component'. |
 | skill | [`llm-provider-knowledge`](../dist/agent-src/skills/llm-provider-knowledge/SKILL.md) | official | Before stating any specific fact about an LLM provider's product — models, pricing, limits, context windows, SDK/API — for OpenAI, Gemini, Claude & others, verify against official docs, not memory. |
 | skill | [`logging-monitoring`](../dist/agent-src/skills/logging-monitoring/SKILL.md) | official | Use when establishing what observability a project actually has — the four Golden Signals, required signal to detected implementation to evidence, and SLI/SLO provenance. |
-| skill | [`logo-generation`](../dist/agent-src/skills/logo-generation/SKILL.md) | official | Generate a logo or brand mark — structured prompt + provider routing, with a true-vector path (vector-native provider or LLM-authored SVG). Use for logo or brand mark generation. |
+| skill | [`logo-generation`](../dist/agent-src/skills/logo-generation/SKILL.md) | official | Generate a logo or brand mark — structured prompt, provider routing, and a true-vector path. Use for logo or brand mark generation. |
 | skill | [`market-entry-analysis`](../dist/agent-src/skills/market-entry-analysis/SKILL.md) | official | Use when sequencing market entry — geo / segment / vertical, beachhead selection, regulatory-delta. Triggers on 'should we enter market X', 'which segment first'. |
 | skill | [`markitdown`](../dist/agent-src/skills/markitdown/SKILL.md) | official | Convert PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown via the markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'. |
 | skill | [`mcp`](../dist/agent-src/skills/mcp/SKILL.md) | official | Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows. |
@@ -294,6 +294,7 @@ are excluded.
 | skill | [`storybook-workshop`](../dist/agent-src/skills/storybook-workshop/SKILL.md) | official | Use when a component library needs a workshop — one story per concept, JSDoc summaries the manifest can carry, stories run as tests, and an opt-in MCP channel that replaces guessing with querying. |
 | skill | [`subagent-orchestration`](../dist/agent-src/skills/subagent-orchestration/SKILL.md) | official | Use when orchestrating implementer/judge subagents — form gate + nine modes (do-and-judge ±two-stage, steps/parallel/worktrees, competitively, debate, live-app-judge, adversarial-council). |
 | skill | [`supply-chain-intake`](../dist/agent-src/skills/supply-chain-intake/SKILL.md) | official | Before adding/installing any dependency the agent named — verify the package exists (slopsquatting: ~1 in 5 AI suggestions are hallucinated), isn't typo-adjacent, is pinned + locked, and CVE-scanned |
+| skill | [`svg-authoring`](../dist/agent-src/skills/svg-authoring/SKILL.md) | official | Hand-author or edit an SVG — icon, mark, illustration, diagram, animation, raster-to-vector — checked and rendered. |
 | skill | [`symfony-workflow`](../dist/agent-src/skills/symfony-workflow/SKILL.md) | official | Writes Symfony PHP — DI container, bundles, Doctrine, Messenger, Security voters, console commands. For Laravel / Eloquent / Artisan use `laravel`. For framework-free PHP use `php-coder`. |
 | skill | [`systematic-debugging`](../dist/agent-src/skills/systematic-debugging/SKILL.md) | official | Use on a bug, test failure, crash, or unexpected behavior — enforce reproduce → isolate → hypothesize → verify before any fix; fires even on 'this is broken' / 'quick fix'. |
 | skill | [`tailwind-engineer`](../dist/agent-src/skills/tailwind-engineer/SKILL.md) | official | Writing or reviewing Tailwind CSS — utility-first, design tokens, no inline-style drift, responsive variants, dark mode — 'style this' or 'mach das hübsch'. Pairs with react-shadcn-ui. |
@@ -323,7 +324,7 @@ are excluded.
 | skill | [`vision-articulation`](../dist/agent-src/skills/vision-articulation/SKILL.md) | official | Use when articulating internal vision — where we're going / why now / why us, founder-mode anchor, distinct from fundraising pitch. Triggers on 'what's our vision', 'why are we doing this'. |
 | skill | [`voc-extract`](../dist/agent-src/skills/voc-extract/SKILL.md) | official | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../dist/agent-src/skills/voice-and-tone-design/SKILL.md) | official | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
-| skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis, before any hi-fi work. Use when the user wants to sketch directions or explore structure. |
+| skill | [`wireframe`](../dist/agent-src/skills/wireframe/SKILL.md) | official | Explore a flow or layout with 3+ disposable lo-fi greyscale wireframes on a named axis. Use when the user wants to sketch directions or explore structure. |
 | skill | [`workspace-link`](../dist/agent-src/skills/workspace-link/SKILL.md) | official | Use when a cross-workspace import will not resolve — cannot find module @org/*, TS2307 — to link the packages properly with the workspace: protocol instead of patching tsconfig paths. |
 | skill | [`worktree-lifecycle`](../dist/agent-src/skills/worktree-lifecycle/SKILL.md) | official | Use when governing a worktree across its whole life — scope-lock declaration, merge-readiness status, scoped verification, and safe cleanup that refuses while unique unmerged commits exist. |
 

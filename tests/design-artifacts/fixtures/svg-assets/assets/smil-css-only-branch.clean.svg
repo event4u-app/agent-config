@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" role="img">
+  <title>Sliding marker</title>
+  <!-- clean twin: the media query swaps the animated element for a still one whose set freezes the value -->
+  <style>.still { display: none } @media (prefers-reduced-motion: reduce) { .motion { display: none } .still { display: inline } }</style>
+  <circle class="still" cx="20" cy="24" r="6" fill="#2563eb"><set attributeName="cx" to="20"/></circle>
+  <circle class="motion" cx="20" cy="24" r="6" fill="#2563eb">
+    <animate attributeName="cx" values="20;180" dur="0.7s" repeatCount="indefinite"/>
+  </circle>
+</svg>

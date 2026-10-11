@@ -235,12 +235,59 @@ silently does nothing and a shared-element route change gets hand-rolled.
 - **`transform-origin`** decides where a `scale()` grows from. A menu or popover
   scaling in should originate at its trigger, not at its own centre, or it reads
   as arriving from nowhere. Scale in from ~0.96, never from `scale(0)`: growing
-  from nothing is an entrance, and steps 1-2 asked for feedback.
+  from nothing is an entrance, and steps 1-2 asked for feedback. This line is
+  about an HTML box. On an SVG child the same declaration resolves against the
+  viewBox instead, which is the first bullet of 6b below.
 - **`@media (hover: hover)`** gates any hover-carried motion. Without it a touch
   device fires the hover treatment on tap and leaves it stuck, because there is
   no pointer to leave.
 
-All six still obey step 3's bands, step 2's single `ease-out` curve, and the
+**6b. Which mechanism carries it inside an SVG?**
+
+An SVG child is not an HTML box, and the asset is often delivered somewhere the
+page's own CSS cannot reach. Four mechanisms differ there, and the delivery mode
+decides which of them is even available. Mechanism only: none of these states a
+duration, a band or a curve, and an SVG animation is banded by steps 1-3 like
+any other.
+
+- **`transform-box: fill-box`** is required before any CSS `transform` or
+  `transform-origin` on an SVG child means what it reads as. The initial
+  reference box is the nearest viewport — the `viewBox` — not the element's own
+  bounds, so `transform-origin: center` on a shape away from the origin scales
+  it about the canvas center and translates it as a side effect. The shape still
+  moves, nothing errors, and the value looks correct in the stylesheet, which is
+  why this is a silent failure rather than a visible one.
+- **`pathLength="1"`** normalises a path's length for a draw-on, so
+  `stroke-dasharray` and `stroke-dashoffset` are written as fractions of the
+  stroke instead of as units of a geometry nobody measured. A dash guessed too
+  long leaves the stroke invisible for the opening part of its run and then
+  snaps; guessed too short, it draws and stops early. Set the attribute and the
+  guess disappears.
+- **`keySplines`** takes control-point values inside `[0,1]`. An overshoot is
+  not expressible there and an out-of-range value is not clamped — the element
+  holds its start value for the whole run instead of easing, while an in-range
+  twin finishes normally. Step 2's bounce prohibition already rules the intent
+  out; this is the mechanism refusing it as well.
+- **A path morph** interpolates only between two `d` values carrying the same
+  number of commands, of the same type, in the same order. Anything else is a
+  discrete swap wearing an animation's syntax. Author both paths against one
+  command list rather than simplifying each in isolation. (The CSS `d` property
+  is deliberately not addressed here — its cross-engine behavior is unmeasured
+  in this tree.)
+- **Delivery mode picks the mechanism, and picks the reduced-motion route with
+  it.** A self-contained asset animates with internal CSS keyframes inside
+  `@media (prefers-reduced-motion: no-preference)`, which satisfies step 3's
+  requirement from inside the file. Reach for SMIL (`<animate>`,
+  `<animateTransform>`) only for what CSS cannot carry — and then the
+  reduced-motion route cannot be a CSS rule, because a page-level
+  `svg * { animation: none !important }` leaves an `<animate>` running. Use a
+  static twin selected by the media query, or `pauseAnimations()` under
+  `matchMedia`. An animated SVG delivered through `<img>` or a CSS background
+  cannot be reached by the host's CSS at all, so the host supplies the static
+  route — `<picture><source media="(prefers-reduced-motion: reduce)">` — or the
+  asset carries its own internal media query.
+
+All of them still obey step 3's bands, step 2's single `ease-out` curve, and the
 `@media (prefers-reduced-motion: reduce)` requirement above — a newer mechanism
 is not an exemption from the authority, it is another way of spending it.
 

@@ -51,6 +51,7 @@ NO SECRET, PRIVILEGED KEY, OR SESSION TOKEN LIVES IN CLIENT CODE OR localStorage
 | `eval` / `new Function` / string-`setTimeout` on input | Eval injection / RCE (CWE-95) | a parser or explicit allow-list |
 | `target="_blank"` without `rel="noopener"` | Reverse tabnabbing (CWE-1022) | add `rel="noopener noreferrer"` |
 | Missing CSP; missing alt/label/contrast | No XSS second line of defense; a11y failures | strict CSP (no `unsafe-inline`); alt text, labels, AA contrast |
+| Untrusted SVG markup into an HTML sink — `innerHTML` / `v-html` / `dangerouslySetInnerHTML`, or inlined server-side | An inlined SVG is live DOM, not an image: `on*` event attributes, `<script>`, `foreignObject`, a `javascript:` href and external references all execute, and a DOCTYPE with entities reads local files (CWE-79, CWE-611) | sanitize with an SVG profile chosen for the **delivery context** — inline DOM runs script and handlers in the host origin; a standalone `.svg` opened directly runs them in its own; `<img>` and CSS `background-image` run no script and load no external reference — or deliver through `<img>`, with CSP as the second line. Uploads are `threat-modeling`'s `data/threats.csv:9`, not this row |
 
 ## The server-composed bootstrap payload
 
@@ -108,6 +109,12 @@ rg -n "origin:\s*['\"]\*['\"]|Access-Control-Allow-Origin.*\*"
 rg -n "addEventListener\(\s*['\"]message['\"]"   # then confirm each checks event.origin
 # Unhardened external links
 rg -n 'target=["'\'']_blank["'\'']'   # then confirm rel="noopener" present
+# SVG active content — markup that executes once the SVG is inlined.
+# Scoped to *.svg, where an on* attribute is always a defect. In .jsx/.tsx an
+# on* attribute is ordinary React and matching it there would bury the signal;
+# an on* on INLINE svg inside a host document is DQ4's case, not this grep's.
+# <script is listed because the row above names it and the pattern did not.
+rg -n '<foreignObject|<script[\s>]|\son[a-z]+\s*=|(?:xlink:)?href\s*=\s*["'\'']?\s*javascript:' -g '*.svg'
 # Server-composed bootstrap payload — LOCATES it; the per-field judgement is yours
 rg -n '__NEXT_DATA__|__NUXT__|window\.__INITIAL_STATE__|@json\(|json_encode\([^)]*\)\s*\)?\s*</script>|dehydratedState'
 ```

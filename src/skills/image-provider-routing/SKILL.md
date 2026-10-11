@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: image-provider-routing
-description: "Select the right image-generation provider from job shape — text-in-image to Ideogram, photoreal to Flux, vector/logo to Recraft, general to Gemini/GPT."
+description: "Pick the image provider from job shape — text-in-image to Ideogram, photoreal to Flux, illustrative vector to Recraft, general to Gemini/GPT."
 domain: product
 personas: []
 workspaces:
@@ -37,13 +37,24 @@ promotion per `provider-lifecycle-discipline`.
 |---|---|---|
 | Text-in-image (logo, banner, typographic art) | **Ideogram** | Best glyph rendering; raster models garble text |
 | Photoreal (product shot, portrait, scene) | **Flux** | Photorealism specialist; routed via fal/Replicate |
-| Vector / SVG logo or icon | **Recraft** | Produces genuine `<path>` SVG; raster cannot |
+| Icon the set lacks | `iconography` first, then [`svg-authoring`](../svg-authoring/SKILL.md) | The incumbent set wins; a missing glyph is hand-authored against its grid and checked — no provider involved |
+| Simple geometric mark | [`svg-authoring`](../svg-authoring/SKILL.md) | A `rect`/`circle`/`path` mark is cheaper and more editable hand-authored than generated, and it ends in a file rather than a plan |
+| Complex illustrative vector art | **Recraft** | The only job shape left for a vector provider. State the adapter's lifecycle in the answer: `experimental — scaffold tier, dry-run plumbing only`, so the caller knows no asset is produced |
 | General art / edit / multimodal | **Gemini-image** or **GPT Image 2** | Broad capability; natural-language prompts |
 | Budget-conscious 4K upscale | Flux via Replicate | Cost-competitive at high resolution |
 
-Decision order: text-in-image → Ideogram; must-be-vector → Recraft; photoreal → Flux;
-everything else → Gemini-image (default) or GPT Image 2 (when OpenAI key available
-and editing an existing image).
+Decision order: an icon → the incumbent set, then `svg-authoring` for a missing
+glyph; a simple geometric mark → `svg-authoring`; text-in-image → Ideogram;
+complex illustrative vector art → Recraft, with its scaffold-tier lifecycle
+stated; photoreal → Flux; everything else → Gemini-image (default) or GPT
+Image 2 (when an OpenAI key is available and an existing image is being edited).
+
+The split exists because the single "Vector / SVG logo or icon" row sent every
+icon and every geometric mark to an adapter whose header reads `experimental —
+scaffold tier. dry-run plumbing only` and whose live calls exit at
+the adapter's own live-call guard. The routed path ended in a plan;
+the icon floor meanwhile sent icons to the set. Neither produced an asset for
+the one case that needs one — a glyph the set does not have.
 
 ## Procedure
 

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img">
+  <title>Raster wrapped in a vector file</title>
+  <!-- planted (D3): a raster beside exactly one dummy path, which the path-presence check accepts -->
+  <image href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==" x="0" y="0" width="64" height="64"/>
+  <path d="M0 0 L1 0"/>
+</svg>

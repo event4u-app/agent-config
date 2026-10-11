@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><title>SMIL only</title>
+  <!-- clean twin: under reduce the animated element is swapped for the still one, which removes
+       the motion instead of asking a CSS property to stop a SMIL timeline it does not drive.
+       The swap is the only difference from the planted file. -->
+  <style>body { font-family: system-ui, sans-serif; font-size: 16px; color: #0f172a; background: #ffffff } .still { display: none } @media (prefers-reduced-motion: reduce) { .motion { display: none } .still { display: inline } }</style>
+</head>
+<body>
+  <h1>Status</h1>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img">
+    <title>Loading</title>
+    <circle class="still" cx="24" cy="24" r="11" fill="#2563eb"/>
+    <circle class="motion" cx="24" cy="24" r="8" fill="#2563eb"><animate attributeName="r" values="8;14;8" dur="1s" repeatCount="indefinite"/></circle>
+  </svg>
+</body>
+</html>

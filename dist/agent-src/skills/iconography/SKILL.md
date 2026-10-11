@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: iconography
-description: "Resolve an icon request to a concrete Iconify name and emit the embedding for the project's stack. Use when adding icons, picking an icon set, or wiring Lucide/Heroicons/Phosphor/Tabler."
+description: "Resolve an icon request to an Iconify name and emit the stack's embedding. Use when adding icons, picking an icon set, or wiring Lucide/Heroicons/Phosphor/Tabler."
 domain: product
 personas: []
 workspaces:
@@ -102,7 +102,9 @@ Inspect stage of the
 - **No hand-rolled icons when a set exists.** If the project has an icon library
   or brand mark, use it — do not hand-author a one-off SVG that drifts from the
   system. Hand-rolling is for a genuinely missing glyph, and then it matches the
-  set's grid + stroke.
+  set's grid + stroke — read the grid, stroke and padding off the set's OWN
+  SVGs and author it under [`svg-authoring`](../svg-authoring/SKILL.md), which
+  checks the result instead of trusting that it matched.
 - **Flag substitutions when the exact asset is absent.** When the needed icon or
   brand mark does not exist in the set, pick the nearest and **state the
   substitution** ("no exact 'sync' glyph in Heroicons; used `arrow-path`") rather

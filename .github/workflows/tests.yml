@@ -535,6 +535,62 @@ jobs:
       - name: Vitest (tests/golden — fork-parallel)
         run: npm run test:ts --silent -- tests/golden
 
+  svg-witness-tests:
+    # The two suites that drive a REAL browser: the asset profile's engine
+    # readings and the five end-to-end SVG scenarios. Excluded from the sharded
+    # matrix and given a dedicated runner for one reason — Playwright's browser
+    # binaries are not on a GitHub-hosted runner, and installing Chromium on
+    # all eight shards to serve two files would pay that cost eight times.
+    #
+    # They are RUN rather than skipped, which is the point of the roadmap they
+    # come from: fill ratio, text fit against the resolved font family, a frame
+    # at a declared time and a hole that is actually near-white paint are
+    # readings no static check can take, and a witness that never executes in
+    # CI is the state that roadmap argues against. The absence path — no
+    # Playwright resolves, the manifest reads `unverified` and nothing reports a
+    # pass — is covered by `absent-path-reads-unverified`, which needs no
+    # browser and therefore stays in the sharded matrix with everything else.
+    name: SVG Witness Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020  # v7.0.0
+        with:
+          # 22, like every other job that invokes Vitest.
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies (hoists installer toolchain)
+        run: npm ci --no-audit --no-fund --prefer-offline
+
+      - name: Install the Chromium the witness reads with
+        # Chromium only. The witness opens local files and takes readings; it
+        # needs no second engine, and `--with-deps` is the documented way to
+        # get the shared libraries a headless browser needs on a bare runner.
+        run: npx playwright install --with-deps chromium
+
+      - name: Build (dist/cli + UI bundle)
+        run: npm run build --silent
+
+      - name: Vitest (the browser witness)
+        # The env var is what puts these two files back: `vitest.config.ts`
+        # excludes them at the PROJECT level, because a `--exclude` flag does
+        # not reach a project's include set and the file runs anyway.
+        env:
+          AGENT_CONFIG_BROWSER_SUITES: '1'
+        run: >-
+          npm run test:ts --silent --
+          tests/cli/ui_render_asset_profile.test.ts
+          tests/design-artifacts/svg_scenarios.test.ts
+
   collector-lifecycle:
     # The five process-level lifecycle properties of the telemetry collector
     # (road-to-supervised-telemetry-collector step 5.1, AC-8). Spawns real

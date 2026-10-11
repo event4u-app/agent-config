@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- CONTROL: a mark built only from rect, circle and polygon, with zero path elements. This is
+     the "simple geometric mark" logo-generation recommends, and the presence check in
+     logo-generation step 5 fails it. The vector-honesty rule must NOT report it as non-vector.
+     The literal element name is spelled out rather than written in angle brackets on purpose:
+     a comment carrying it would itself satisfy the presence check this control exists to fail. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img">
+  <title>Primitive-only mark</title>
+  <rect x="4" y="4" width="56" height="56" rx="14" fill="#0f172a"/>
+  <circle cx="32" cy="26" r="10" fill="#60a5fa"/>
+  <polygon points="16,52 32,34 48,52" fill="#2563eb"/>
+</svg>

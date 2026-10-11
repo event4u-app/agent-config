@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><title>SMIL with a CSS-only branch</title>
+  <!-- planted (R4, D8): the page HAS a prefers-reduced-motion branch, so DQ4 is satisfied, but the
+       declaration inside it governs CSS animations and leaves the SMIL timeline running - measured
+       at cx 20.2 to 76.8 in 700 ms. The still twin below is present but hidden. -->
+  <style>body { font-family: system-ui, sans-serif; font-size: 16px; color: #0f172a; background: #ffffff } .still { display: none } @media (prefers-reduced-motion: reduce) { svg * { animation: none !important } }</style>
+</head>
+<body>
+  <h1>Status</h1>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" width="200" height="48" role="img">
+    <title>Progress</title>
+    <circle class="still" cx="20" cy="24" r="6" fill="#2563eb"/>
+    <circle class="motion" cx="20" cy="24" r="6" fill="#2563eb"><animate attributeName="cx" values="20;180" dur="0.7s" repeatCount="indefinite"/></circle>
+  </svg>
+</body>
+</html>

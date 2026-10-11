@@ -30,6 +30,24 @@ const SHARED_EXCLUDE = [
     'tests/golden/sandbox/repo/**',
 ];
 
+// The two suites that drive a REAL browser. They are excluded HERE, in the
+// project, and not with a `--exclude` flag on the command line — measured: with
+// `projects:` configured, a CLI `--exclude` does not reach a project's own
+// include set, so the file runs anyway. Probed directly: running two files with
+// `--exclude` naming one of them ran both. The dedicated CI job that installs
+// Chromium sets `AGENT_CONFIG_BROWSER_SUITES=1` to put them back.
+//
+// Playwright's browser binaries are not present on a bare runner and are not a
+// dependency of this package, so without that job these two files fail on
+// `browserType.launch: Executable doesn't exist` rather than on anything they
+// assert.
+const BROWSER_SUITES = [
+    'tests/cli/ui_render_asset_profile.test.ts',
+    'tests/design-artifacts/svg_scenarios.test.ts',
+];
+const WITH_BROWSER = process.env['AGENT_CONFIG_BROWSER_SUITES'] === '1';
+const NODE_EXCLUDE = WITH_BROWSER ? SHARED_EXCLUDE : [...SHARED_EXCLUDE, ...BROWSER_SUITES];
+
 export default defineConfig({
     plugins: [preact()],
     resolve: {
@@ -63,7 +81,7 @@ export default defineConfig({
                     name: 'node',
                     environment: 'node',
                     include: ['tests/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
-                    exclude: [...SHARED_EXCLUDE, 'tests/ui/**', 'src/ui/**'],
+                    exclude: [...NODE_EXCLUDE, 'tests/ui/**', 'src/ui/**'],
                 },
             },
             {

@@ -60,7 +60,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  88b547804787ae73feb971e69bf2232baee942ff04e07387fc6d93895c15fd12
+SET-SHA256  64e85c115a9271f8fbf4664c48a74b8745065d60f4eb90681471de4504e8c028
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -403,6 +403,22 @@ open and which this file does not settle.
 > growth moves it every time. The pin test is what caught it.
 
 
+> **+1 and one EDIT on 2026-10-11** (`feat/svg-with-a-witness-20261011`).
+> `svg-authoring` landed as a new skill and shipped its own trigger corpus;
+> `sha256('svg-authoring')[0:2]` is 0x77 = 119, above the ceiling of 51, so it
+> is **train**. The same branch also EDITED an existing train corpus,
+> `image-provider-routing` (0x3a = 58), which split the vector job shapes
+> between a provider and hand-authoring — a row whose hash moves while the file
+> COUNT does not, which is the case § Re-pin 2026-10-01 describes and the one a
+> reader counting files would miss. No holdout row moves in either direction:
+> the sealed set is the same 27, every sealed hash is byte-identical, and the
+> ordering claim is untouched. `SET-SHA256` moves because it is computed over
+> ALL rows — `88b54780…` -> `940945fe…`. Both train-side published measurements
+> are re-taken in the same change: delta-recall moved 2.360 -> 3.383 pp (still
+> below the 5.0 pp bar) and delta-false-activation moved 6.751 -> 7.495 pp
+> (still above the 2.0 pp guard). The verdict is unchanged in kind — `harmful`,
+> on the same false-activation guard it already failed. No bar was edited.
+
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|
 | `adr-create` | `18995bba7bbdc905296f545a25c90cd94fa306909d78af8fc79e3d5621f313f6` |
@@ -456,7 +472,7 @@ open and which this file does not settle.
 | `image-analyser` | `47735add726cdb3b86e8a08c66fca17a824acc63ac4a788fe29083b61f5a8ebb` |
 | `image-creator` | `0c4b5598b10ae0f53ccbef2a6e0c863f353b849e152dcf51a197652266954292` |
 | `image-editing` | `2b3fe1109fb8be12a9e42bcfb9ff587f07a37ad3fb926dc538b335f5c8fbf3b8` |
-| `image-provider-routing` | `b55853630843300a0e6c8911b5a70069158c28c701af8060646012411945083c` |
+| `image-provider-routing` | `63ad30ab3ce1548a7f067a97c77019e55c9fd8c63caa711dde02acb9ae1ce102` |
 | `incident-commander` | `7e9371f328c7b1751c083688f77a34af2db2b901befc78eed7c8400ae5b2019e` |
 | `jira-integration` | `fe9ba2d101335b5446f7efb6fcc22e8db93edf21be00e4cd23774789a01ec28d` |
 | `js-library-packaging` | `8b64d0222ee1228950056004a752b4dc168f8f571e037ec38791258ec305bacd` |
@@ -492,6 +508,7 @@ open and which this file does not settle.
 | `spreadsheet-authoring` | `959466aba0e7f34aae0d8eb69ee427d94049627d905410b322045ac6be0a1599` |
 | `storybook-workshop` | `3aff4c3fddd06e0e265ca4afbb02cdbce16b000dd2d3fd6405504d015a1efd27` |
 | `supply-chain-intake` | `e61b2fcb6409cf0817ea8527a1fda3b1cdabb35e28264146a0d449991e9fe87c` |
+| `svg-authoring` | `3dd3e8463a2f8383a9e86a5ee7785661a0e9b73eda5f09d4aac0669ec66abe9f` |
 | `test-case-discovery` | `563ff838264c39c9e132e1e18206c7b0d52639bd42203f790109f9ec0df2603d` |
 | `test-driven-development` | `9a1ec696c72915adde002efffdc6a887c967b63f5330c616126d07617be7aa0b` |
 | `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |
@@ -749,3 +766,60 @@ names the JSON as the current reading, release finding `237f203916c5`.)
   train set, or forms a second frozen generation is a Phase 5 decision; the
   honest default is that this generation's hash stops describing the corpus the
   moment a file is added, which the set hash makes visible rather than silent.
+
+## Re-pin 2026-10-11 — two TRAIN corpora re-hashed; the corpus did not grow
+
+```
+NEITHER ROW IS NEW. BOTH ARE TRAIN-SIDE RE-HASHES.
+NO HOLDOUT FILE'S BYTES CHANGED, AND THE HOLDOUT ROW COUNT IS UNMOVED AT 27.
+THE SEAL'S ORDERING CLAIM IS UNTOUCHED, AND IT STILL COVERS ONLY THE
+18 ROWS SEALED ON 2026-08-30 — THIS SECTION ADDS NOTHING TO IT.
+```
+
+**What changed.** Both rows were already in the tables; both carried bytes that
+no longer existed. `road-to-svg-with-a-witness` added the `svg-authoring` skill
+with a routing corpus earlier in the same branch, and the vector split moved two
+rows of `image-provider-routing`'s — neither re-pinned at the time.
+`lint_skill_trigger_corpus` then required a declared case class per query, a
+counterexample and a German positive on both files, which re-wrote their bytes a
+second time. The discipline is the gate's own remedy, the same shape as the
+2026-09-30, 2026-10-01 and 2026-10-01b entries; the difference here is that this
+is a correction of two stale rows rather than growth, so no count moves.
+
+| Row | Partition | `sha256(name)[0:2]` | Now |
+|---|---|---|---|
+| `svg-authoring` | train | `77` = 119 ≥ 51 | re-hashed |
+| `image-provider-routing` | train | `3a` = 58 ≥ 51 | re-hashed |
+
+**What provably did NOT change, checked rather than asserted.** Recomputing this
+file's own recipe over the tree and diffing every row against the published
+tables leaves **zero** mismatched holdout rows — the check printed the holdout
+subset of the stale list and it was empty, which is the direction that matters:
+a train-side growth cannot be confused with an edit to a frozen file unless
+somebody looks.
+
+- the partition **rule** is untouched — ceiling 51, name-derived, no discretion;
+- no holdout file's bytes moved, so no holdout result is voided;
+- the corpus is **125 files, 27 holdout and 98 train**, unchanged by this
+  section — a realised split of 21.6 % against the rule's 19.9 % target.
+
+**The standing repair was followed, and a SECOND gate was needed.**
+`trigger_corpus_holdout_pin.test.ts` was run as the LAST act after the final edit
+to both corpus files, and it is what caught the two stale rows. It did NOT catch
+the first attempt at this re-pin, which inserted the `svg-authoring` row into the
+sealed table instead of the train one: that test asks only whether
+``| `skill` | `hash` |`` appears somewhere in the document, so a row in the wrong
+table satisfies it. `routing_signal_measurement.test.ts` § 5.1 is what refused —
+it reads the partition the loader derives and compares it against the published
+holdout rows, so it saw the holdout count go 27 → 28 and named the row. Whoever
+writes the next section should run BOTH: one checks that the hashes are current,
+the other that they are on the correct side of the seal, and neither substitutes
+for the other.
+
+**The residual every section since 2026-09-19 has named is unchanged and was
+paid again.** `SET-SHA256` is computed over the undivided list, so it moves
+whenever the corpus grows on either side and cannot on its own distinguish
+"grew" from "edited a frozen file". The per-row holdout diff above is what
+distinguishes them, which is why this section carries it rather than only the
+new number.
+

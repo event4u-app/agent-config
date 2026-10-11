@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Scenario 2 delivered: the same figure whose hat and face are separate subtrees, with a
+  group transform on each and a <use> instancing a shared eye symbol. The three
+  structural shapes a surgical edit has to survive — a flat sibling, a
+  transformed group, and an instanced symbol — are all present on purpose.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" role="img" width="120" height="140">
+  <title id="figure-title">A figure wearing a brimmed hat</title>
+  <defs>
+    <symbol id="figure-eye" viewBox="0 0 8 8">
+      <circle cx="4" cy="4" r="2.4" fill="#1f2933"/>
+    </symbol>
+  </defs>
+
+  <g id="hat-group" transform="translate(10 4)">
+    <path id="hat-crown" d="M22 30 L22 10 Q50 0 78 10 L78 30 Z" fill="#2f4858"/>
+    <rect id="hat-brim" x="6" y="30" width="88" height="9" rx="4.5" fill="#1f3340"/>
+    <rect id="hat-band" x="22" y="22" width="56" height="7" fill="#d9a441"/>
+  </g>
+
+
+  <rect id="shoulders" x="18" y="118" width="84" height="22" rx="10" fill="#3f6d7a"/>
+</svg>

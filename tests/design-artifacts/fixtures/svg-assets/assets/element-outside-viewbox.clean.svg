@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img">
+  <title>Mark with a stray element</title>
+  <circle cx="50" cy="50" r="40" fill="#0f172a"/>
+  <path d="M30 50 L45 65 L70 35" fill="none" stroke="#ffffff" stroke-width="8"/>
+  <!-- clean twin: the same rect moved inside the viewBox -->
+  <rect x="6" y="78" width="30" height="20" fill="#ef4444"/>
+</svg>

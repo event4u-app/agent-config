@@ -216,8 +216,16 @@ describe('5.1 — the seal is enforced by refusal, not by filtering', () => {
         // `check_routing_coverage`'s touched-skill scope and so requiring its
         // trigger corpus. `database` (0x35 = 53) is above the ceiling and
         // trains, moving the train count 96 -> 97; the holdout is unchanged.
+        //
+        // 124 -> 125 on 2026-10-11: `svg-authoring` landed as a new skill and
+        // shipped its own trigger corpus. `svg-authoring` (0x77 = 119) is above
+        // the ceiling and trains, moving the train count 97 -> 98; the holdout
+        // is unchanged, so the seal is untouched by this growth. The same branch
+        // EDITED `image-provider-routing`'s corpus (also train) without changing
+        // the file count — that moves the holdout pin's per-file row and the set
+        // hash, and nothing here.
         const all = corpusSkills(REPO);
-        expect(all.length).toBe(124);
+        expect(all.length).toBe(125);
         expect(all.filter((r) => r.partition === 'holdout').length).toBe(27);
     });
 });
@@ -252,7 +260,9 @@ describe('5.1 — the measurement is non-vacuous', () => {
         // 92 -> 96 on 2026-10-09: `command-routing`, `feature-planning`,
         // `po-discovery` and `source-discovery` train.
         // 96 -> 97 on 2026-10-10: `database` trains. See the partition note above.
-        expect(new Set(cases.map((c) => c.skill)).size).toBe(97);
+        // 97 -> 98 on 2026-10-11: `svg-authoring` trains. See the partition note
+        // above.
+        expect(new Set(cases.map((c) => c.skill)).size).toBe(98);
     });
 
     it('both legacy-shaped train corpora are read, not silently dropped', () => {

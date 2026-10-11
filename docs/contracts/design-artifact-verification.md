@@ -56,10 +56,11 @@ Each design-verification gate needs one of these host primitives:
 | `computed_style` | A node's **resolved** style matches the intent — after the cascade, tokens and fallbacks, not as authored | read `getComputedStyle` in a live engine |
 | `interaction` | A state the resting frame cannot contain — hover, focus, active, keyboard, a handler that fires | drive the state, then read the resolved style or the DOM effect |
 | `viewport_matrix` | The layout property that is supposed to change at a breakpoint actually changes | resize, then read the resolved property at each declared width |
-| `media_emulation` | A media-preference branch is honoured — `prefers-reduced-motion`, `prefers-color-scheme` | emulate the preference, then read the resolved style |
+| `media_emulation` | A media-preference branch is honoured — `prefers-reduced-motion`, `prefers-color-scheme`. **Scope: the page document only.** An image document — an `.svg` delivered through `<img>` or as a CSS background — was measured unreachable by emulation, so a branch inside that file is not witnessable this way and needs a host `<picture>` route instead | emulate the preference, then read the resolved style |
+| `frame_seek` | An animation's state at a **declared time** — t = 0, mid, end — rather than whenever the capture happened to land. Dependent on `playwright` | `pauseAnimations()` + `setCurrentTime()` for SMIL; `document.getAnimations()` and `currentTime` for CSS/WAAPI |
 | `static_inspect` | Source/markup read without rendering | file read + parse (always available) |
 
-**Why these four are separate primitives and not `screenshot` used harder.** A
+**Why these five are separate primitives and not `screenshot` used harder.** A
 screenshot proves what a frame looked like. Hover, focus, keyboard, a breakpoint
 crossing and a media-preference branch are not properties of a frame — they are
 properties of a *transition into a state*, and the resting capture that a review
@@ -71,9 +72,17 @@ any viewport, and a pixel comparison additionally has no channel through which a
 deviation can be *declared*, so it reports an approved change as a difference.
 Both figures are pre-registered in that fixture's README.
 
-All four resolve to `❌` wherever `playwright` does — they are that primitive's
+All five resolve to `❌` wherever `playwright` does — they are that primitive's
 dependants, never a second capability. A host that has `playwright` has these;
-a host that does not cannot fake them from markup.
+a host that does not cannot fake them from markup. That is also why the host-class
+table below carries no `frame_seek` row of its own: a dependant's row would restate
+the `playwright` row and could then drift away from it.
+
+`frame_seek` is separate from `screenshot` for a measured reason rather than a tidy
+one: Playwright's `screenshot({ animations: 'disabled' })` does **not** freeze SMIL —
+three captures 300 ms apart read `cx` 21.3, 46.3 and 70.9, while `pauseAnimations()`
+plus `setCurrentTime(1)` held 100 and 100. A capture parameter cannot name a moment;
+this primitive does.
 
 ## Host-class capability table
 

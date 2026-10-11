@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- CONTROL (R12): a 24-unit-grid hamburger. Painted bbox is 18 x 12 of a 24 x 24 viewBox,
+     a fill ratio of 0.375 - designed padding, which the prototype's global 0.5 threshold
+     read as a loose viewBox. At the icon-class threshold (0.30) it must read clean. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" role="img">
+  <title>Menu</title>
+  <path d="M3 7 H21 M3 12 H21 M3 17 H21" fill="none" stroke="currentColor" stroke-width="2"/>
+</svg>

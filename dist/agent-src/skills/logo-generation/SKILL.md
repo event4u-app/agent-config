@@ -1,7 +1,7 @@
 ---
 model_tier: inherit
 name: logo-generation
-description: "Generate a logo or brand mark — structured prompt + provider routing, with a true-vector path (vector-native provider or LLM-authored SVG). Use for logo or brand mark generation."
+description: "Generate a logo or brand mark — structured prompt, provider routing, and a true-vector path. Use for logo or brand mark generation."
 domain: product
 personas:
   - design-director
@@ -40,9 +40,10 @@ governance. All adapters are scaffold-tier (dry-run) until promoted to `stable`.
    icon mark / combination), colour palette, do/don't constraints (e.g. "no gradients",
    "must be legible at 16 px").
 2. **Choose the path** — raster concept (text-in-mark → Ideogram for legible type)
-   vs. **true vector** (vector-native provider emitting `<path>` SVG for editable
-   marks, or LLM-authored SVG for simple geometric marks). Raster output is a
-   concept only — not a shippable logo asset.
+   vs. **true vector** (a vector-native provider for editable marks, or a
+   hand-authored one for simple geometric marks — authored under
+   [`svg-authoring`](../svg-authoring/SKILL.md), never free-hand). Raster output
+   is a concept only — not a shippable logo asset.
 3. **Inject brand tokens when a brand layer is present** (`pack-brand`) — pull the
    registered palette, typeface, and spacing tokens. When no brand layer exists,
    use the brief's palette and type choices directly.
@@ -51,8 +52,11 @@ governance. All adapters are scaffold-tier (dry-run) until promoted to `stable`.
    provider-specific grammar (text-literal first for Ideogram, `style: vector` param
    for a vector-native provider, direct SVG authoring for simple geometric shapes).
 5. **Dry-run + validate** — invoke the adapter (scaffold-tier; returns a dry-run
-   plan). If the vector path is taken, validate that the output contains `<path>`
-   elements before treating it as an editable mark.
+   plan). If the vector path is taken, the vector verdict comes from
+   `lint_svg_asset`'s vector-honesty family plus the render witness, not from
+   counting `<path>` elements: a raster embedded beside one dummy path passes
+   that count and is not a vector, and a mark built from `rect`/`circle` fails
+   it and is one. See [`svg-authoring`](../svg-authoring/SKILL.md).
 6. **Rights check** — never reproduce a mark that resembles an existing trademarked
    logo. Run [`image-likeness-and-rights`](../../rules/image-likeness-and-rights.md)
    when the brief names a brand, references a known mark style, or targets a
@@ -78,8 +82,8 @@ governance. All adapters are scaffold-tier (dry-run) until promoted to `stable`.
   is `stable` misleads the caller.
 
 **Good example:** Brief for a wordmark → route to a vector-native provider with
-`style: vector`, validate `<path>` elements in output, note "experimental —
-dry-run plan only."
+`style: vector`, run `lint_svg_asset` over the output and confirm it carries no
+embedded raster, note "experimental — dry-run plan only."
 
 **Bad example:** Routing a logo brief to a photoreal raster model and delivering the
 PNG as the final logo file.
