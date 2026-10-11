@@ -241,8 +241,8 @@ report a non-zero natural width.
    silent: one wordmark shipped in a dark violet that is unreadable on a dark
    ground, and the dark variant was simply not mentioned.
 6. **Outlined lettering** — a word set from an installed font and converted to
-   outlines is reported with the font's name and whether its licence allows
-   outlining into a distributed asset. An unknown licence is reported as
+   outlines is reported with the font's name and whether its license allows
+   outlining into a distributed asset. An unknown license is reported as
    unknown, never as permitted.
 7. **Cost** — the reading the manifest carries (`bytes`, `elements`, `paths`,
    `gradients`, `coordinates`), beside the fidelity numbers. No threshold: none
