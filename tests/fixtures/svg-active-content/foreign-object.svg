@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">
+  <foreignObject x="0" y="0" width="10" height="10">
+    <body xmlns="http://www.w3.org/1999/xhtml"><img src="x" onerror="alert(1)"/></body>
+  </foreignObject>
+</svg>

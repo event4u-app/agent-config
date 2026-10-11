@@ -63,9 +63,10 @@ execution:
 4. **Write with the invariants.**
    - ids namespaced to the graphic — a bare `id="title"` names the second
      inline graphic on the page after the first.
-   - `<title>` (plus `role="img"`) when the graphic means something;
-     `aria-hidden="true"` when it is decorative. Exactly one accessible name —
-     `aria-label` **and** `<title>` is two, and which wins is renderer-dependent.
+   - the accessible name comes from the ARIA corpus, not from here: ground
+     `meaningful standalone svg chart graphic accessible name` against
+     `accessibility-auditor`'s `aria-patterns.csv` and follow the
+     **Meaningful standalone graphic** or **Decorative graphic** row.
    - colour from the project's tokens or `currentColor`, never a loose hex.
    - an explicit `font-family` with a fallback the target actually ships; a
      `<text>` with none resolves to the platform serif.
@@ -202,12 +203,22 @@ report a non-zero natural width.
   routes a geometric mark here.
 - [`image-provider-routing`](../image-provider-routing/SKILL.md) — illustrative
   vector art goes to a provider, not here.
-- [`fe-design`](../fe-design/SKILL.md) § Motion — the motion authority. Reduced
-  motion, duration and easing are its rules, cited here and never restated.
-- [`frontend-render-security`](../frontend-render-security/SKILL.md) — the sinks
-  an SVG can carry into a host origin.
+- [`fe-design`](../fe-design/SKILL.md) § Motion — the motion authority, in
+  `references/design-patterns.md` § *Motion — decision-tree and rationale*. The
+  SVG mechanism lines are step **6b, "Which mechanism carries it inside an
+  SVG?"** — `transform-box`, `pathLength`, the `keySplines` range, path-morph
+  command equality, and delivery mode picking the reduced-motion route. Cited
+  here and never restated.
+- [`frontend-render-security`](../frontend-render-security/SKILL.md) § *The
+  patterns AI ships by default*, row **Untrusted SVG markup into an HTML sink**
+  — the sinks an SVG carries into a host origin, and what each delivery mode
+  can execute. Its § *Backstop greps* carries the grep that finds them.
 - [`design-intelligence`](../design-intelligence/SKILL.md) — diagram layout; its
   geometric pre-checks are witnessed by the asset profile now.
+- [`accessibility-auditor`](../accessibility-auditor/SKILL.md) — the ARIA
+  corpus that answers what a graphic's accessible name has to be; its
+  `data/aria-patterns.csv` carries the **Meaningful standalone graphic** and
+  **Decorative graphic** rows this skill grounds against rather than copies.
 - [`canvas-design`](../canvas-design/SKILL.md), [`wireframe`](../wireframe/SKILL.md)
   — the two lanes that use SVG as an execution surface.
 - [`design-fidelity`](../../rules/design-fidelity.md) — a provided artifact is

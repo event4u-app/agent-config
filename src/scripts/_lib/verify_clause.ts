@@ -126,25 +126,25 @@ function lastMatch(re: RegExp, text: string): RegExpExecArray | null {
  * carries `(?!`)`: a label followed by a backtick is the delimited form, which
  * branch one already owns.
  *
- * The tail is capped at a single non-space token on purpose. A caller may hand
- * this parser a whole step BLOCK already joined into one line, so "the rest of
- * the line" can mean "the rest of the step" — and a step that continues after
- * its verify clause would then push the expectation away from the end anchor
- * and lose it silently. The cost is that a regex expectation here may not
- * contain a space; `/[1-9]/` and `/unfalsifiable-verify/` are the shapes in
- * use, and a space-bearing expectation loses its arrow loudly (it parses as no
- * expectation) rather than half-matching.
+ * The tail is bounded by the EXPECTATION'S OWN DELIMITERS, not by the end of
+ * the line. A caller may hand this parser a whole step BLOCK already joined
+ * into one line, so "the rest of the line" can mean "the rest of the step": an
+ * end-anchored tail would lose the expectation of any step that carries prose
+ * after its clause. A slash-delimited regex therefore runs to the first closing
+ * `/` that is followed by whitespace or the end of the text, and an exit code
+ * is one non-space token — both self-terminating, so the step may continue and
+ * `-> /[1-9]/ and then note the result` still yields `[1-9]`.
  *
- * THE CAP IS THIS FORM'S, NOT THE GRAMMAR'S — said plainly because an earlier
- * revision of this comment implied otherwise. The annotation form is
- * `$`-anchored through {@link VERIFY_ARROW_SOURCE} and DOES keep `-> /a b/`;
- * this form does not. The two agree on every space-free expectation, which is
- * every expectation in the tree. Both directions are pinned by test, so closing
- * the gap is a deliberate act against a failing assertion rather than a silent
- * drift — which is the failure the WHY ONE PARSER note above exists to prevent,
- * and it applies to this module's own two readers first.
+ * It was capped at a single non-space token until 2026-10-11, which cost this
+ * form every expectation containing a space: `-> /Icon-only button/` parsed as
+ * a clause with NO expectation, and nothing reported the loss — the step simply
+ * read as unfalsifiable. The two forms now agree on every expectation rather
+ * than only the space-free ones; {@link VERIFY_ARROW_SOURCE} stays the single
+ * `$`-anchored decision about what an expectation IS, and this regex decides
+ * only where the tail ENDS. A bare word stays refused by the constant, so
+ * widening the boundary widened no grammar.
  */
-const BACKTICKED_RE = /(?:`verify:`|verify:(?!`))\s*`([^`]+)`[ \t]*((?:->|→)[ \t]*\S+)?/g;
+const BACKTICKED_RE = /(?:`verify:`|verify:(?!`))\s*`([^`]+)`[ \t]*((?:->|→)[ \t]*(?:\/.*?\/(?=\s|$)|\S+))?/g;
 
 /** Prose after the label. The MANUAL form; the body is bounded separately. */
 const PROSE_RE = /(?:`verify:`|verify:(?!`))[ \t]*/g;
