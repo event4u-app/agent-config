@@ -157,7 +157,7 @@ place for it. The other nine were fixed there.
       verify: `npx vitest run tests/cli/ui_render_asset_profile.test.ts --reporter=verbose` -> /✓.*a-declared-scale-changes-the-reading/ <!-- ref-ignore -->
 
 ## Risk Register
-<!-- risk-review: v2 | reviewed: 2026-10-11 | reviewer: claude -->
+<!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|
@@ -165,9 +165,9 @@ place for it. The other nine were fixed there.
 | 2 | The chunk's first-use cost is worse than the bytes it saves | implementation | A one-time parse paid on the first `.svg` write could exceed the per-dispatch cost of 30,924 bytes if `.svg` writes are frequent | 0.2 measures both, on the same tree, before 1.1 chooses | Phase 0 — Make the alternative decidable |
 | 3 | A rule failure reaches an unrelated hook event | implementation | The rules enter the process that handles every hook event; an import-time throw or a loop would break events that never touched an `.svg` | 0.3 proves containment before 1.2 enables anything | Phase 0 — Make the alternative decidable |
 | 4 | A second ratification attempt repeats the first one's error | product | The refused proposal misattributed the cost by 138 %; a re-submission that carries the same framing wastes a review round and erodes the gate | 1.1 names the metafile as the source of the attribution, so the number comes from the bundler rather than from arithmetic on two totals | Phase 1 — Choose, and record the choice |
+| 5 | The ceiling becomes a precedent for bundling any domain concern | product | Both reviewers named this: approving one domain-specific rule set into universal dispatch makes the next one easier, and five iterations later every hook event pays for concerns it never uses | 1.1 prefers the strategy that does not grow the shared bundle; a raise, if taken, records that it does not authorise the next one | Phase 1 — Choose, and record the choice |
 | 6 | A carried review finding is read as closed because it is listed | implementation | Four R2 findings are carried here rather than fixed in the parent change; a reader who sees them in a roadmap can take the listing for a disposition | Each carried step names the reason the same diff was the wrong place for it, and the findings artefact records the same four as `open` with that reason — the two agree or one of them is wrong | Carried review findings |
 | 7 | A latent false positive becomes live when the fixture changes | implementation | The padding method mismatch (2.2) does not red today only because the shipped icon pair happens to sit outside the band; a new icon fixture at a different stroke width would make it fire on a clean twin | 2.2 fixes the measurement rather than the threshold, and its verify names a case that pins both sides reading the same way | Carried review findings |
-| 5 | The ceiling becomes a precedent for bundling any domain concern | product | Both reviewers named this: approving one domain-specific rule set into universal dispatch makes the next one easier, and five iterations later every hook event pays for concerns it never uses | 1.1 prefers the strategy that does not grow the shared bundle; a raise, if taken, records that it does not authorise the next one | Phase 1 — Choose, and record the choice |
 
 ## Decisions
 
