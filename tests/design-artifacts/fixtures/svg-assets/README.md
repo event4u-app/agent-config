@@ -232,12 +232,86 @@ A font-only delta reads `degraded` with both resolved families named, never
 `fail`, and a raster comparison without a declared registration reads
 `unverified` rather than the best of several guesses.
 
-## § Promotion bar (reserved for step 5.2)
+## § Measured — every layer on (step 5.1)
 
-Empty by design. Step 5.2 fills it from two consecutive measured runs; a rule is
-a blocking candidate only at zero twin findings in **both** runs and at least one
-true finding on its planted row. Promotion itself stays out of this roadmap (E5).
+Identical row set to the baseline table above, which is the point: a row that
+appears in one and not the other is a row somebody stopped measuring. The
+engine layer reads `unverified` wherever the asset profile did not run — never
+a pass.
 
-| rule | layer | true findings on planted | twin findings run 1 | twin findings run 2 | meets bar |
+| file | layer | pre-registered rule | answered by | planted | twin findings |
 |---|---|---|---|---|---|
-| _(pending step 5.2)_ | | | | | |
+| `assets/loose-viewbox.svg` | engine | `structure/loose-viewbox` | ui:render --profile asset | found | 0 |
+| `assets/element-outside-viewbox.svg` | static | `structure/element-outside-viewbox` | lint_svg_asset svg-structure-outside-viewbox | found | 0 |
+| `assets/text-overflows-box.svg` | engine | `geometry/text-overflows-box` | ui:render --profile asset | found | 0 |
+| `assets/default-serif-fallback.svg` | engine | `geometry/default-font-fallback` | ui:render --profile asset | found | 0 |
+| `hosts/inline-generic-ids.html` | static | `accessibility/generic-id-collision` | lint_svg_asset svg-a11y-generic-id | found | 0 |
+| `assets/meaningful-without-name.svg` | static | `accessibility/meaningful-without-name` | lint_svg_asset svg-a11y-no-accessible-name | found | 0 |
+| `assets/double-name.svg` | static | `accessibility/double-name` | lint_svg_asset svg-a11y-double-name | found | 0 |
+| `assets/keysplines-out-of-range.svg` | static | `motion/keysplines-out-of-range` | lint_svg_asset svg-motion-keysplines-range | found | 0 |
+| `assets/transform-origin-no-box.svg` | static | `motion/transform-origin-without-box` | lint_svg_asset svg-motion-transform-box | found | 0 |
+| `assets/animation-no-reduced-motion.svg` | static | `motion/no-reduced-motion-branch` | lint_svg_asset svg-motion-no-reduced-motion | found | 0 |
+| `assets/smil-css-only-branch.svg` | static | `motion/smil-css-only-branch` | lint_svg_asset svg-motion-smil-css-only | found | 0 |
+| `assets/guessed-dash.svg` | engine | `motion/draw-on-dead-time` | ui:render --profile asset | found | 0 |
+| `assets/active-content-script.svg` | static | `safety/active-content` | lint_svg_asset svg-safety-active-content | found | 0 |
+| `assets/internal-dtd-entity.svg` | static | `safety/internal-dtd-subset` | lint_svg_asset svg-safety-internal-subset | found | 0 |
+| `assets/missing-xmlns.svg` | static | `structure/missing-xmlns` | lint_svg_asset svg-structure-missing-xmlns | found | 0 |
+| `assets/unparseable-path.svg` | static | `structure/unparseable-path-data` | lint_svg_asset svg-structure-unparseable-path | found | 0 |
+| `assets/unused-defs.svg` | static | `structure/unused-defs-entry` | lint_svg_asset svg-structure-unused-defs | found | 0 |
+| `assets/near-white-hole.svg` | engine | `geometry/near-white-hole` | ui:render --profile asset | found | 0 |
+| `assets/d-morph-mismatch.svg` | static | `motion/d-morph-command-mismatch` | lint_svg_asset svg-motion-d-morph-mismatch | found | 0 |
+| `assets/external-reference.svg` | static | `safety/external-reference` | lint_svg_asset svg-safety-external-reference | found | 0 |
+| `assets/dangling-reference.svg` | static | `structure/dangling-reference` | lint_svg_asset svg-structure-dangling-reference | found | 0 |
+| `assets/raster-in-vector.svg` | static | `vector-honesty/embedded-raster` | lint_svg_asset svg-vector-embedded-raster | found | 0 |
+| `assets/icon-off-grid.svg` | engine | `geometry/icon-off-grid` | ui:render --profile asset | found | 0 |
+| `hosts/img-delivery.html` | engine | `motion/img-delivery-no-static-route` | ui:render --profile asset | found | 0 |
+| `hosts/smil-only.html` | static | `motion/no-reduced-motion-branch` | lint_design_quality DQ4 | found | 0 |
+| `hosts/smil-css-only.html` | static | `motion/smil-css-only-branch` | lint_design_quality DQ4 | found | 0 |
+| `assets/primitive-only-mark.svg` | static | `vector-honesty/embedded-raster / vector-honesty/not-a-true-vector` | must stay silent | n/a — control | 0 |
+| `assets/spinner-intentional-dash.svg` | static | `motion/draw-on-dead-time / motion/guessed-dash` | must stay silent | n/a — control | 0 |
+| `assets/hamburger-24-grid.svg` | static | `structure/loose-viewbox` | must stay silent | n/a — control | 0 |
+
+## § Promotion bar (step 5.2)
+
+The BAR a later promotion would have to cite, not the promotion. Every rule here
+ships advisory (decision E5). A rule becomes a blocking candidate only at zero
+twin findings across TWO CONSECUTIVE measured runs and at least one true finding
+on its planted row — two runs rather than one, because a single run cannot tell a
+rule that is stable from a rule that happened to be quiet. Promoting any of them
+stays outside this roadmap.
+
+The twin column is measured over EVERY clean file in the corpus, not over the
+rule's own twin alone — a rule that reds a different row's clean file has not
+cleared a zero-false-positive bar in any sense a consumer would recognise, and a
+column scoped to its own twin would have scored it `yes`.
+
+**Outcome of this run: 23 of 26 rules meet the bar, 3 do not.** Each miss names the clean file it fired on, in its own row.
+
+| rule | file | layer | true findings on planted | twin findings run 1 | twin findings run 2 | meets bar |
+|---|---|---|---|---|---|---|
+| `structure/loose-viewbox` | `assets/loose-viewbox.svg` | engine | 1+ | 1 | 1 (assets/text-overflows-box.clean.svg) | no |
+| `structure/element-outside-viewbox` | `assets/element-outside-viewbox.svg` | static | 1+ | 0 | 0 | yes |
+| `geometry/text-overflows-box` | `assets/text-overflows-box.svg` | engine | 1+ | 0 | 0 | yes |
+| `geometry/default-font-fallback` | `assets/default-serif-fallback.svg` | engine | 1+ | 0 | 0 | yes |
+| `accessibility/generic-id-collision` | `hosts/inline-generic-ids.html` | static | 1+ | 0 | 0 | yes |
+| `accessibility/meaningful-without-name` | `assets/meaningful-without-name.svg` | static | 1+ | 0 | 0 | yes |
+| `accessibility/double-name` | `assets/double-name.svg` | static | 1+ | 0 | 0 | yes |
+| `motion/keysplines-out-of-range` | `assets/keysplines-out-of-range.svg` | static | 1+ | 0 | 0 | yes |
+| `motion/transform-origin-without-box` | `assets/transform-origin-no-box.svg` | static | 1+ | 0 | 0 | yes |
+| `motion/no-reduced-motion-branch` | `assets/animation-no-reduced-motion.svg` | static | 1+ | 1 | 1 (assets/guessed-dash.clean.svg) | no |
+| `motion/smil-css-only-branch` | `assets/smil-css-only-branch.svg` | static | 1+ | 0 | 0 | yes |
+| `motion/draw-on-dead-time` | `assets/guessed-dash.svg` | engine | 1+ | 0 | 0 | yes |
+| `safety/active-content` | `assets/active-content-script.svg` | static | 1+ | 0 | 0 | yes |
+| `safety/internal-dtd-subset` | `assets/internal-dtd-entity.svg` | static | 1+ | 0 | 0 | yes |
+| `structure/missing-xmlns` | `assets/missing-xmlns.svg` | static | 1+ | 0 | 0 | yes |
+| `structure/unparseable-path-data` | `assets/unparseable-path.svg` | static | 1+ | 0 | 0 | yes |
+| `structure/unused-defs-entry` | `assets/unused-defs.svg` | static | 1+ | 0 | 0 | yes |
+| `geometry/near-white-hole` | `assets/near-white-hole.svg` | engine | 1+ | 0 | 0 | yes |
+| `motion/d-morph-command-mismatch` | `assets/d-morph-mismatch.svg` | static | 1+ | 0 | 0 | yes |
+| `safety/external-reference` | `assets/external-reference.svg` | static | 1+ | 0 | 0 | yes |
+| `structure/dangling-reference` | `assets/dangling-reference.svg` | static | 1+ | 0 | 0 | yes |
+| `vector-honesty/embedded-raster` | `assets/raster-in-vector.svg` | static | 1+ | 0 | 0 | yes |
+| `geometry/icon-off-grid` | `assets/icon-off-grid.svg` | engine | 1+ | 0 | 0 | yes |
+| `motion/img-delivery-no-static-route` | `hosts/img-delivery.html` | engine | 1+ | 0 | 0 | yes |
+| `motion/no-reduced-motion-branch` | `hosts/smil-only.html` | static | 1+ | 1 | 1 (assets/guessed-dash.clean.svg) | no |
+| `motion/smil-css-only-branch` | `hosts/smil-css-only.html` | static | 1+ | 0 | 0 | yes |

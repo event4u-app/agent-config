@@ -535,6 +535,18 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
     const targetUrl = isHost ? `file://${opts.file}` : `file://${path.join(dir, HOST_BASENAME)}`;
 
     const context = await browser.newContext();
+    // A transpiler shim, and it belongs here rather than in a test helper.
+    // Running this file through `tsx` — which is how `./scripts-run` and every
+    // consumer script reach it — emits `__name(...)` wrappers around the
+    // functions handed to `page.evaluate`. The browser has no such global, so
+    // the first evaluate dies with `ReferenceError: __name is not defined`
+    // while the same code passes under vitest, whose transform does not add it.
+    // Defining an identity shim before any page script runs makes both paths
+    // behave the same; it is a no-op where the wrapper was never emitted.
+    await context.addInitScript(() => {
+        const g = globalThis as unknown as { __name?: (fn: unknown) => unknown };
+        if (typeof g.__name !== 'function') g.__name = (fn: unknown) => fn;
+    });
     try {
         // Sizes x backgrounds. Icons get 16/24/48; everything else 1x and 2x.
         const sizes = isHost

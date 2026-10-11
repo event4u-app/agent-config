@@ -33,6 +33,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { runAssetRender, type AssetClass } from '../cli/commands/uiRenderAsset.js';
 import { scanHostHtml, scanSvg, type DeliveryMode } from './lint_svg_asset.js';
 import { smilVerdict } from './_lib/svg_motion.js';
 
@@ -91,6 +92,9 @@ const DQ4_ROWS: Readonly<Record<string, 'no-route' | 'css-only'>> = {
 
 export interface RowReading {
     id: string;
+    file: string;
+    /** A planted defect, or a control that must stay silent. */
+    kind: 'planted' | 'control';
     layer: 'static' | 'engine';
     rule: string;
     answeredBy: string;
@@ -111,14 +115,56 @@ function scanOne(root: string, rel: string, delivery: DeliveryMode): string[] {
     return findings.map((f) => f.rule);
 }
 
-/** Every row's reading, with the engine layer honestly reported as unknown here. */
-export function measure(root: string, manifest: Manifest, engineAvailable: boolean): RowReading[] {
-    return manifest.rows.map((row): RowReading => {
+/**
+ * Every row's reading.
+ *
+ * `engine` is a real browser pass when one resolves and `unverified` when none
+ * does — never a pass. That asymmetry is the whole reason the two layers are
+ * reported in separate columns instead of collapsed into one verdict.
+ */
+export async function measure(
+    root: string,
+    manifest: Manifest,
+    browser: EngineBrowser | null,
+): Promise<RowReading[]> {
+    const out: RowReading[] = [];
+    for (const row of manifest.rows) {
+        out.push(await measureRow(root, row, browser));
+    }
+    // The controls belong in this table too. The baseline table carries them,
+    // and 5.1 asks for identical row sets — a measured table that quietly drops
+    // the three files whose whole job is to stay silent would be measuring the
+    // easy half.
+    for (const control of manifest.controls) {
+        const fired = scanOne(root, control.file, 'inline').map(taxonomyOf);
+        const offending = control.must_not_report.filter((r) => fired.includes(r));
+        out.push({
+            id: control.id,
+            file: control.file,
+            kind: 'control',
+            layer: 'static',
+            rule: control.must_not_report.join(' / '),
+            answeredBy: 'must stay silent',
+            plantedFound: null,
+            twinFindings: offending.length,
+            note: offending.length ? `fired: ${offending.join(', ')}` : '',
+        });
+    }
+    return out;
+}
+
+/** A minimal structural type, so this module does not import Playwright's types. */
+export type EngineBrowser = Parameters<typeof runAssetRender>[0];
+
+async function measureRow(root: string, row: Row, browser: EngineBrowser | null): Promise<RowReading> {
+    {
         if (row.id in DQ4_ROWS) {
             const planted = smilVerdict(readFile(root, row.file));
             const twin = smilVerdict(readFile(root, row.twin));
             return {
                 id: row.id,
+                file: row.file,
+                kind: 'planted',
                 layer: row.layer,
                 rule: row.rule,
                 answeredBy: 'lint_design_quality DQ4',
@@ -128,26 +174,39 @@ export function measure(root: string, manifest: Manifest, engineAvailable: boole
             };
         }
         if (row.layer === 'engine') {
+            if (!browser) {
+                return {
+                    id: row.id,
+                    file: row.file,
+                    kind: 'planted',
+                    layer: 'engine',
+                    rule: row.rule,
+                    answeredBy: 'ui:render --profile asset',
+                    plantedFound: null,
+                    twinFindings: null,
+                    note: 'unverified — no browser resolved; never reported as a pass',
+                };
+            }
+            const planted = await engineRules(root, browser, row, row.file);
+            const twin = await engineRules(root, browser, row, row.twin);
             return {
                 id: row.id,
+                file: row.file,
+                kind: 'planted',
                 layer: 'engine',
                 rule: row.rule,
                 answeredBy: 'ui:render --profile asset',
-                // Null in BOTH directions, and that is the honest reading: this
-                // report does not drive a browser, so it knows the engine layer
-                // exists without knowing what it read. The scenario suite
-                // collects those numbers.
-                plantedFound: null,
-                twinFindings: null,
-                note: engineAvailable
-                    ? 'engine reading not collected by this report — run the scenario suite'
-                    : 'unverified — no browser resolved; never reported as a pass',
+                plantedFound: planted.includes(row.rule),
+                twinFindings: twin.filter((r) => r === row.rule).length,
+                note: twin.length ? `twin also reports: ${[...new Set(twin)].join(', ')}` : '',
             };
         }
         const expected = TAXONOMY_TO_RULE[row.rule];
         if (!expected) {
             return {
                 id: row.id,
+                file: row.file,
+                kind: 'planted',
                 layer: row.layer,
                 rule: row.rule,
                 answeredBy: '(unmapped)',
@@ -160,6 +219,8 @@ export function measure(root: string, manifest: Manifest, engineAvailable: boole
         const twin = scanOne(root, row.twin, row.delivery);
         return {
             id: row.id,
+            file: row.file,
+            kind: 'planted',
             layer: row.layer,
             rule: row.rule,
             answeredBy: `lint_svg_asset ${expected}`,
@@ -167,7 +228,81 @@ export function measure(root: string, manifest: Manifest, engineAvailable: boole
             twinFindings: new Set(twin).size,
             note: '',
         };
+    }
+}
+
+/** The engine layer's finding ids for one file. */
+async function engineRules(
+    root: string,
+    browser: EngineBrowser,
+    row: Row,
+    rel: string,
+): Promise<string[]> {
+    const outDir = path.join(root, 'agents', 'runtime', 'state', 'render', `fixture-${row.id}-${path.basename(rel)}`);
+    // The icon-grid reading needs a reference SET to read the grid, stroke and
+    // padding OFF — decision E6: the grid is read from the incumbent set's own
+    // SVGs, never declared or vendored. The fixture carries no icon-set key, so
+    // the two on-grid icons in the corpus stand in for one. Without a set, or
+    // without a reference sharing the candidate's viewBox, the reading is
+    // `unverified` with a reason — never a pass and never a finding.
+    const iconSet =
+        row.asset_class === 'icon'
+            ? ['assets/hamburger-24-grid.svg', 'assets/icon-off-grid.clean.svg'].map((f) =>
+                  path.join(root, FIXTURE_REL, f),
+              )
+            : undefined;
+    const result = await runAssetRender(browser, {
+        file: path.join(root, FIXTURE_REL, rel),
+        projectRoot: root,
+        outDir,
+        assetClass: row.asset_class as AssetClass,
+        delivery: row.delivery,
+        thresholdsFile: path.join(root, FIXTURE_REL, 'manifest.json'),
+        iconSet,
     });
+    return result.reading.findings.map((f) => f.rule);
+}
+
+/**
+ * Every rule that fires on a file the corpus declares CLEAN — every one-edit
+ * twin and every control, each read at its own declared class and delivery.
+ */
+export async function collectCleanFindings(
+    root: string,
+    manifest: Manifest,
+    browser: EngineBrowser | null,
+): Promise<Map<string, string[]>> {
+    const out = new Map<string, string[]>();
+    const note = (rule: string, file: string): void => {
+        const list = out.get(rule) ?? [];
+        if (!list.includes(file)) list.push(file);
+        out.set(rule, list);
+    };
+    const seen = new Set<string>();
+    for (const row of manifest.rows) {
+        for (const rel of [row.twin]) {
+            if (seen.has(rel)) continue;
+            seen.add(rel);
+            for (const rule of scanOne(root, rel, row.delivery)) note(taxonomyOf(rule), rel);
+            if (browser && row.layer === 'engine') {
+                for (const rule of await engineRules(root, browser, row, rel)) note(rule, rel);
+            }
+        }
+    }
+    for (const control of manifest.controls) {
+        if (seen.has(control.file)) continue;
+        seen.add(control.file);
+        for (const rule of scanOne(root, control.file, 'inline')) note(taxonomyOf(rule), control.file);
+    }
+    return out;
+}
+
+/** The linter's own id back to the pre-registered taxonomy id, where one maps. */
+function taxonomyOf(linterRule: string): string {
+    for (const [taxonomy, rule] of Object.entries(TAXONOMY_TO_RULE)) {
+        if (rule === linterRule) return taxonomy;
+    }
+    return linterRule;
 }
 
 function cell(value: boolean | number | null, trueWord = 'found', falseWord = 'MISSED'): string {
@@ -178,13 +313,13 @@ function cell(value: boolean | number | null, trueWord = 'found', falseWord = 'M
 
 export function renderMeasuredTable(readings: readonly RowReading[]): string {
     const lines = [
-        '| row | layer | pre-registered rule | answered by | planted | twin findings |',
+        '| file | layer | pre-registered rule | answered by | planted | twin findings |',
         '|---|---|---|---|---|---|',
     ];
     for (const r of readings) {
         lines.push(
-            `| ${r.id} | ${r.layer} | \`${r.rule}\` | ${r.answeredBy} | ` +
-                `${cell(r.plantedFound)} | ${cell(r.twinFindings)} |`,
+            `| \`${r.file}\` | ${r.layer} | \`${r.rule}\` | ${r.answeredBy} | ` +
+                `${r.kind === 'control' ? 'n/a — control' : cell(r.plantedFound)} | ${cell(r.twinFindings)} |`,
         );
     }
     return lines.join('\n');
@@ -196,22 +331,41 @@ export function renderMeasuredTable(readings: readonly RowReading[]): string {
  * runs and a column pre-filled from one run would be the claim the bar exists
  * to prevent.
  */
+/**
+ * The bar, measured over EVERY clean file in the corpus — not over the rule's
+ * own twin alone.
+ *
+ * Measured during the Phase 2 run and the reason this column is corpus-wide:
+ * `structure/loose-viewbox` reports its own twin cleanly and still fires on
+ * `assets/text-overflows-box.clean.svg` (fill ratio 0.300 against the
+ * `illustration` threshold 0.40) and on the support file
+ * `hosts/pulse-animated.svg` (0.112 against `animated` 0.35). Both are correct
+ * readings of the declared per-class thresholds. But a rule that reds a
+ * DIFFERENT row's clean file has not cleared a zero-false-positive bar in any
+ * sense a consumer would recognise, and a column that measured only the rule's
+ * own twin would have scored it `yes` — which is the laundering this table
+ * exists to make impossible.
+ */
 export function renderPromotionTable(
     readings: readonly RowReading[],
     previous: ReadonlyMap<string, number>,
+    cleanFindings: ReadonlyMap<string, readonly string[]>,
 ): string {
     const lines = [
-        '| rule | layer | true findings on planted | twin findings run 1 | twin findings run 2 | meets bar |',
-        '|---|---|---|---|---|---|',
+        '| rule | file | layer | true findings on planted | twin findings run 1 | twin findings run 2 | meets bar |',
+        '|---|---|---|---|---|---|---|',
     ];
     for (const r of readings) {
-        const run1 = previous.get(r.id);
-        const run2 = r.twinFindings;
+        if (r.kind === 'control') continue;
+        const offenders = cleanFindings.get(r.rule) ?? [];
+        const run1 = previous.get(r.file);
+        const run2 = r.plantedFound === null ? null : offenders.length;
         const bothZero = run1 === 0 && run2 === 0;
         const meets = r.plantedFound === true && bothZero ? 'yes' : 'no';
+        const where = offenders.length ? ` (${offenders.join(', ')})` : '';
         lines.push(
-            `| ${r.id} | ${r.layer} | ${cell(r.plantedFound, '1+', '0')} | ` +
-                `${run1 === undefined ? 'pending' : String(run1)} | ${cell(run2)} | ${meets} |`,
+            `| \`${r.rule}\` | \`${r.file}\` | ${r.layer} | ${cell(r.plantedFound, '1+', '0')} | ` +
+                `${run1 === undefined ? 'pending' : String(run1)} | ${cell(run2)}${where} | ${meets} |`,
         );
     }
     return lines.join('\n');
@@ -225,7 +379,7 @@ function replaceSection(readme: string, heading: string, body: string): string {
     return `${readme.slice(0, start)}${heading}\n\n${body}\n${readme.slice(end)}`;
 }
 
-export function main(argv: readonly string[] = process.argv.slice(2)): number {
+export async function main(argv: readonly string[] = process.argv.slice(2)): Promise<number> {
     const root = process.cwd();
     const manifestPath = path.join(root, FIXTURE_REL, 'manifest.json');
     if (!fs.existsSync(manifestPath)) {
@@ -234,39 +388,70 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
     }
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8')) as Manifest;
 
-    let engineAvailable = false;
-    try {
-        require.resolve('@playwright/test');
-        engineAvailable = true;
-    } catch {
-        engineAvailable = false;
+    // `--static-only` is for a host with no browser, and for a reader who wants
+    // the cheap half. It changes what the engine column SAYS, never whether the
+    // column exists: an absent reading stays `unverified`, never a pass.
+    const staticOnly = argv.includes('--static-only');
+    let browser: EngineBrowser | null = null;
+    if (!staticOnly) {
+        try {
+            const { chromium } = (await import('@playwright/test')) as typeof import('@playwright/test');
+            browser = (await chromium.launch({ headless: true })) as unknown as EngineBrowser;
+        } catch {
+            browser = null;
+        }
     }
 
-    const readings = measure(root, manifest, engineAvailable);
+    let readings: RowReading[];
+    try {
+        readings = await measure(root, manifest, browser);
+    } finally {
+        // The Class-A boundary: no browser survives this command, on any path.
+        await (browser as { close?: () => Promise<void> } | null)?.close?.();
+    }
 
     // Run 1's twin counts, if a previous run left them in the README.
     const readmePath = path.join(root, FIXTURE_REL, 'README.md');
     const readme = fs.existsSync(readmePath) ? fs.readFileSync(readmePath, 'utf-8') : '';
     const previous = new Map<string, number>();
     for (const line of readme.split('\n')) {
-        const m = /^\|\s*([a-z0-9-]+)\s*\|\s*(static|engine)\s*\|.*\|\s*(\d+|pending|unverified)\s*\|\s*(\d+|pending|unverified)\s*\|\s*(yes|no)\s*\|$/.exec(
+        const m = /^\|\s*`[^`]+`\s*\|\s*`([^`]+)`\s*\|\s*(static|engine)\s*\|[^|]*\|\s*(\d+|pending|unverified)[^|]*\|\s*(\d+|pending|unverified)[^|]*\|\s*(yes|no)\s*\|$/.exec(
             line,
         );
         if (m && /^\d+$/.test(m[4] ?? '')) previous.set(m[1] as string, Number(m[4]));
     }
 
     const measured = renderMeasuredTable(readings);
-    const promotion = renderPromotionTable(readings, previous);
+    let cleanFindings: Map<string, string[]>;
+    let sweepBrowser: EngineBrowser | null = null;
+    try {
+        if (!staticOnly) {
+            try {
+                const { chromium } = (await import('@playwright/test')) as typeof import('@playwright/test');
+                sweepBrowser = (await chromium.launch({ headless: true })) as unknown as EngineBrowser;
+            } catch {
+                sweepBrowser = null;
+            }
+        }
+        cleanFindings = await collectCleanFindings(root, manifest, sweepBrowser);
+    } finally {
+        await (sweepBrowser as { close?: () => Promise<void> } | null)?.close?.();
+    }
+    const promotion = renderPromotionTable(readings, previous, cleanFindings);
+    const candidates = readings.filter((r) => r.kind === 'planted');
+    const missCount = candidates.filter((r) => (cleanFindings.get(r.rule) ?? []).length > 0).length;
+    const candidateCount = candidates.length;
+    const meetsCount = candidateCount - missCount;
 
     if (argv.includes('--json')) {
-        process.stdout.write(`${JSON.stringify({ engineAvailable, readings }, null, 2)}\n`);
+        process.stdout.write(`${JSON.stringify({ engine: browser !== null, readings }, null, 2)}\n`);
         return 0;
     }
 
     if (argv.includes('--write')) {
         let next = replaceSection(
             readme,
-            '## Measured — every layer on (step 5.1)',
+            '## § Measured — every layer on (step 5.1)',
             'Identical row set to the baseline table above, which is the point: a row that\n' +
                 'appears in one and not the other is a row somebody stopped measuring. The\n' +
                 'engine layer reads `unverified` wherever the asset profile did not run — never\n' +
@@ -275,13 +460,19 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         );
         next = replaceSection(
             next,
-            '## Promotion bar (step 5.2)',
+            '## § Promotion bar (step 5.2)',
             'The BAR a later promotion would have to cite, not the promotion. Every rule here\n' +
                 'ships advisory (decision E5). A rule becomes a blocking candidate only at zero\n' +
                 'twin findings across TWO CONSECUTIVE measured runs and at least one true finding\n' +
                 'on its planted row — two runs rather than one, because a single run cannot tell a\n' +
                 'rule that is stable from a rule that happened to be quiet. Promoting any of them\n' +
                 'stays outside this roadmap.\n\n' +
+                'The twin column is measured over EVERY clean file in the corpus, not over the\n' +
+                "rule's own twin alone — a rule that reds a different row's clean file has not\n" +
+                'cleared a zero-false-positive bar in any sense a consumer would recognise, and a\n' +
+                'column scoped to its own twin would have scored it `yes`.\n\n' +
+                `**Outcome of this run: ${meetsCount} of ${candidateCount} rules meet the bar, ${missCount} do not.** ` +
+                'Each miss names the clean file it fired on, in its own row.\n\n' +
                 promotion,
         );
         fs.writeFileSync(readmePath, next);
@@ -289,8 +480,8 @@ export function main(argv: readonly string[] = process.argv.slice(2)): number {
         return 0;
     }
 
-    process.stdout.write(`## Measured — every layer on (step 5.1)\n\n${measured}\n\n`);
-    process.stdout.write(`## Promotion bar (step 5.2)\n\n${promotion}\n`);
+    process.stdout.write(`## § Measured — every layer on (step 5.1)\n\n${measured}\n\n`);
+    process.stdout.write(`## § Promotion bar (step 5.2)\n\n${promotion}\n`);
     return 0;
 }
 
@@ -299,5 +490,5 @@ const invokedDirectly =
     typeof process !== 'undefined' &&
     Array.isArray(process.argv) &&
     /report_svg_fixture_layers\.(ts|js)$/.test(process.argv[1] ?? '');
-if (invokedDirectly) process.exit(main());
+if (invokedDirectly) void main().then((code) => process.exit(code));
 /* c8 ignore stop */
