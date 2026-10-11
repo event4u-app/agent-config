@@ -258,15 +258,19 @@ describe('a glob over an acceptable name is not a creatable literal', () => {
     });
 
     describe('a glob over the bare head of an opaque family', () => {
-        const heads = ['inbox', 'round', 'set', 'src-set', 'source-set'];
-        for (const head of heads) {
+        const datedHeads = ['inbox', 'round', 'src-set', 'source-set'];
+        for (const head of datedHeads) {
             for (const suffix of ['', '-2026', '-2026-10']) {
                 it(`allows ${head}${suffix}-*`, () => {
                     expect(blocks(`agents/tmp/${head}${suffix}-*/x.md`)).toBe(false);
                 });
             }
         }
+        it('allows set-* (the hex-only family)', () => {
+            expect(blocks('agents/tmp/set-*/x.md')).toBe(false);
+        });
         it.each([
+            'agents/tmp/set-2026-*/x.md',
             'agents/tmp/rounder-*/x.md',
             'agents/tmp/round-x-*/x.md',
             'agents/tmp/inbox-202-*/x.md',

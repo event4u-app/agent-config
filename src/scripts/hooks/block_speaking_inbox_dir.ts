@@ -165,7 +165,8 @@ function isGlobOverAcceptableInboxDir(name: string): boolean {
  * carries no source. Brackets are excluded because their payload survives as
  * literal text: `round-[acme]-*` must not pass by stripping to `round`.
  */
-const OPAQUE_FAMILY_WILDCARD_RE = /^(?:inbox|round|set|src-set|source-set)(?:-\d{4}(?:-\d{2})?)?-[*?]+$/i;
+const OPAQUE_FAMILY_WILDCARD_RE =
+    /^(?:(?:inbox|round|src-set|source-set)(?:-\d{4}(?:-\d{2})?)?|set)-[*?]+$/i;
 
 /**
  * The paths a redirect inside one segment would create.
