@@ -51,6 +51,8 @@ depends: [road-to-leading-every-row]
 > corpus. Corrected from the supplied draft where reproduction diverged (tagged
 > `corrected-from-reproduction`).
 
+> **Arrivals:** 1 — latest `inbox-2026-10-i` (2026-10-11): an audit lists the code graph's missing CI consumer as a defect and draws no row for it.
+
 ## Goal
 
 The code graph reaches the searches an agent actually runs and feeds a gate decision in

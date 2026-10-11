@@ -55,6 +55,8 @@ estate_offset_exempt: "Offsets nothing. It retires the L4 'no equivalent today' 
 > after `road-to-delivery-for-every-host` Phase 1 has merged (host-scoped
 > `lean_projection.hosts`).
 
+> **Arrivals:** 1 — latest `inbox-2026-10-i` (2026-10-11): an audit asks to extend the thinned delivery projection beyond one host; that is this file's Phase 2 (E3), not re-planned.
+
 ## Goal
 
 Every host other than Claude Code is measured for whether hook stdout on

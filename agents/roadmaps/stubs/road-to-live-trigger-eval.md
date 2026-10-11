@@ -5,8 +5,8 @@ review_by: 2026-09-25
 
 # Stub: road to the live trigger-eval reading
 
-> **Arrivals:** 11 (at least) - latest `inbox-2026-09-ab` (2026-09-29); earlier:
-> `inbox-2026-09-y` (2026-09-11). Counted as
+> **Arrivals:** 13 (at least) - latest `inbox-2026-10-i` (2026-10-11): an audit points at the host's own skill evaluator; reproduced on the maintainer machine (Claude Code 2.1.296), it runs non-interactively (`--trust-plugin`) with a no-plugin baseline arm, which bears on this stub's interactive-terminal obstacle but not on P3's corpus size. `road-to-a-trigger-suite-the-host-grades` compiles the corpus into its case format and runs nothing. Earlier: `inbox-2026-10-k` (2026-10-11),
+> `inbox-2026-09-ab` (2026-09-29), `inbox-2026-09-y` (2026-09-11). Counted as
 > distinct prior round directories under the consumed-inbox tree, which is gitignored -
 > so the count is machine-local and the ordering is the finding, not the exact figure.
 > Read `(at least)` strictly: a broad keyword sweep returns a larger set that includes

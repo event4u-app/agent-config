@@ -5,6 +5,8 @@ review_by: 2026-12-24
 
 # Stub: road to team telemetry behind the experimental flag
 
+> **Arrivals:** 1 — latest `inbox-2026-10-i` (2026-10-11): an audit proposes binding the host's team-task completion event to block an untested change from claiming done; still gated on this stub's payload evidence.
+
 > **Stub — not active work.** Transferred out of
 > `road-to-always-on-orchestration.md` (Phase 5.4 + blocker
 > `team-telemetry-behind-flag`) by the autonomous drain run of 2026-08-20.

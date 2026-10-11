@@ -33,6 +33,11 @@ estate_growth_exempt: "Parked, not active: it may not start before its parent sh
 > plan — the two benchmark **subjects** ADR-260 § 5 reserves are test subjects the owner
 > names in the corpus header, and this file wakes on that edit.
 
+> **Arrivals:** 1 — latest `inbox-2026-10-j` (2026-10-11), asking for step 1.2's
+> `route` relation so account-flow entry points (login, reset, OAuth callback)
+> can be classified and graph-backed missing-control checks become decidable;
+> earlier: none.
+
 > Woken by its parent. The parent makes the graph *exist*; this one makes it *the reason a
 > reviewer ranks the system above the field*. Both halves are measurements the field does
 > not publish: an oracle-truth benchmark on third-party repositories with both arms' traces

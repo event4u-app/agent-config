@@ -12,6 +12,9 @@ relates:
   - slug: road-to-gate-preauth-authorization
     relation: disjoint
     note: "Stub. Owns the undecided matter of where an authorisation only a person may give is kept. The second blocker here meets the same matter for the owner's permission and builds no answer of its own."
+  - slug: road-to-a-danger-gate-that-sees-what-governs
+    relation: extends
+    note: "Repairs the danger gate ADR-282 added after this roadmap, so a gated-surface pull request reaches the owner rather than resting on a council clearance. Steps 1.4 and 1.5 here carry the text half of the same round."
   - slug: road-to-ac-deep-capabilities
     relation: disjoint
     note: "Later, draft. Its Workstream C owns learning evidence and the promotion boundary. Phase 6 here builds none of it and leaves one dated note beside its step C3."
@@ -33,6 +36,10 @@ relates:
 > Round `agents/tmp.old/inbox-2026-10-d/`. Re-verified anchor by anchor at
 > `main` @ `975d03d01` on 2026-10-05 by five independent read-only passes;
 > the one commit since the pin moved no anchor, and their corrections are in.
+>
+> **Arrivals:** 2 — latest `inbox-2026-10-h` (2026-10-11); earlier:
+> `inbox-2026-10-d`. The second round added steps 1.4 and 1.5 and AC-8 here
+> and `road-to-a-danger-gate-that-sees-what-governs` beside this file.
 
 ## Goal
 
@@ -205,6 +212,47 @@ At `df377ca64`:
       step, blocker field or decision in either file is edited, and the deny
       is not touched here.
       verify: `grep -l 'council-confirmed-self-modification' agents/roadmaps/road-to-typed-grants-that-persist.md agents/roadmaps/later/road-to-ac-deep-capabilities.md | wc -l` -> /^2$/
+- [ ] **1.4 The sentences 1.2 wrote follow the amendment of 2026-10-07.**
+      ADR-281 was amended (`f76e83e47`, § Amendment `:216-231`) so that a
+      council verdict recommends passage and a favourable one is advisory until
+      authenticated owner authorisation is bound to the same digest. The
+      amendment edited the ADR only; three shipped texts 1.2 corrected still say
+      the council's record is the approval:
+      `docs/contracts/ratification-artifact.md:500-502` ("the council is the
+      lowest rung that can pass"),
+      `docs/guidelines/agent-infra/self-improvement-pipeline.md:4-8` and its
+      Stage 5 trigger (`:90-94`), and
+      `src/skills/skill-improvement-pipeline/SKILL.md:244-248` ("the AI
+      council's ratification record (user as last rung, ADR-281)"). Each
+      states the amended rule in its words: the council's record is required
+      and is a review; the owner authorises; a council refusal fails closed.
+      The contract's ladder adds that under ADR-282 a pull request touching
+      the gated surface is handed to the owner rather than cleared by the
+      council, and names `road-to-a-danger-gate-that-sees-what-governs`. The
+      contract is on the reviewer list, so this lands by the owner's act.
+      verify: `grep -c -e 'lowest rung that can pass' -e "council's ratification record, and the user is its last rung" -e 'user as last rung' docs/contracts/ratification-artifact.md docs/guidelines/agent-infra/self-improvement-pipeline.md src/skills/skill-improvement-pipeline/SKILL.md | grep -c ':[1-9]'` -> /^0$/
+      Positive control: the same command at `d41121927` prints 3.
+- [ ] **1.5 No shipped sentence names a binding the gate does not perform, and
+      the consumer template says where a kernel rule changes.** Three
+      sentences describe a subject binding the reader and the gate do not
+      have yet (`grep -c subject` is 0 in both): ADR-281's consequence that
+      "the gate binds each record to the content it reviewed" (`:168`), which
+      is not rewritten, and the pipeline guideline's Stage 5 "whose `subject`
+      matches" (`:91`), which is. The contract's § Honest enforcement gains
+      one dated sentence: at this pin a record is not bound to the content it
+      reviewed, and the binding is steps 2.1 and 2.2 here; the guideline drops
+      "whose `subject` matches" until 2.2 lands and says why. The consumer
+      template (`src/agent-src/templates/AGENTS.md:17`, "Kernel rules change
+      only by a ratified edit") states that kernel rules change upstream only,
+      in the package and through its ratified flow, and that in a consumer
+      project an override may tighten one and nothing edits one — the gate
+      that makes an edit ratified runs only in this repository's workflow
+      (`.github/workflows/consistency.yml:920-949`), and on a host without a
+      hook API that sentence is the only layer before the write
+      (`docs/threat-model.md:57`). It does not say "immutable", so AC-6 still
+      holds; `docs/threat-model.md:42-47` follows in the same words, and the
+      projections are re-emitted by `task sync`.
+      verify: `grep -c 'not bound to the content' docs/contracts/ratification-artifact.md` -> /^[1-9]/
 
 ## Phase 2 — An approval is bound to what it approved
 
@@ -567,6 +615,10 @@ At `df377ca64`:
       `check_*.ts` gates — which is the point of the criterion: this roadmap adds
       a review, not a new thing that can fail a build.
 
+- [ ] AC-8 — No shipped text says a council record is the approval of a
+      package self-modification, and none names a content binding the gate
+      does not perform.
+
 ## Decisions
 
 | ID | ownership | resolved by | decision | evidence | revisit if |
@@ -600,7 +652,7 @@ At `df377ca64`:
 | K11 | Automated promotion of learnings | `road-to-leading-every-row.md:231`; `later/road-to-ac-deep-capabilities.md:163-192` | The directive is noted there by 1.3 and decided by its owner |
 
 ## Risk Register
-<!-- risk-review: v1 | reviewed: 2026-10-10 | reviewer: claude/host -->
+<!-- risk-review: v1 | reviewed: 2026-10-11 | reviewer: claude -->
 
 | Rank | Item | Risk type | Description | Mitigation | Anchored under |
 |------|------|-----------|-------------|------------|----------------|

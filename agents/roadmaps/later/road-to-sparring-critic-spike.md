@@ -5,6 +5,8 @@ complexity: lightweight
 
 # Road to sparring-critic spike — one falsification run decides whether the critic exists
 
+> **Arrivals:** 1 — latest `inbox-2026-10-i` (2026-10-11): a supplied playbook analysis asks for an adversarial lens selected automatically on asymmetric-downside decisions; the spike's own gates still decide whether the critic exists.
+
 > **Blocked until BOTH hold:** (1) `road-to-lean-agent-init.md` is closed and
 > its telemetry reviewed (council 2026-07-28 sequencing: the quantified
 > token-waste fix ships before any speculative sparring work), AND

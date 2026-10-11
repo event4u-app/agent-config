@@ -5,6 +5,10 @@ review_by: 2026-09-26
 
 # Stub: restore the never-act-while-asking literal
 
+> **Arrivals:** 1 — latest `inbox-2026-10-k` (2026-10-11), the first inbox round to raise
+> this stub; it named the restore its most important owner-only item and noted
+> that `review_by: 2026-09-26` has lapsed with `check_rule_invariants` still red.
+
 > **Stub — not active work.** A **drain-run transfer**, created 2026-08-27 when
 > [`road-to-kernel-invariant-restoration.md`](../archive/road-to-kernel-invariant-restoration.md)
 > was drained. The parent closed against outcome state **`transferred`**: its

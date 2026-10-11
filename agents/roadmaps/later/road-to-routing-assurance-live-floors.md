@@ -10,7 +10,17 @@ estate_offset_exempt: "Not a new plan. This is the live-harness SUFFIX of road-t
 ---
 # Road to routing assurance — the live-harness floors
 
-> **Arrivals:** 2 (at least) — latest `inbox-2026-09-l` (2026-09-05); earlier: agents/roadmaps/archive/road-to-routing-assurance.md.
+> **Arrivals:** 3 (at least) — latest `inbox-2026-10-i` (2026-10-11): an audit names the host's own skill evaluator (with/without delta, ablation) as the independent grader this file was parked for. The count before it read: 2 (at least) — latest `inbox-2026-09-l` (2026-09-05); earlier: agents/roadmaps/archive/road-to-routing-assurance.md.
+
+> **The posed question — 3 arrivals, council-decidable per this file's own Authority paragraph.**
+> Does a scored run on the host's own skill evaluator, with the execution protocol
+> (model version, prompts, runs, retries, exclusions, aggregation) frozen in a file
+> by a session that did not author the corpus BEFORE any baseline is captured,
+> satisfy the un-park condition below? Exactly one of: (1) yes — step 0.2 runs on
+> the host evaluator through the print-only command of
+> `road-to-a-trigger-suite-the-host-grades`, protocol file first; (2) no — the
+> existing live harness stays the only admissible instrument; (3) stay parked, the
+> question recorded as open.
 
 > **Parent:** `road-to-routing-assurance`, closed at its Phase 2 cut line on
 > 2026-08-25. That roadmap's own text declares the stop: *"Stopping after Phase

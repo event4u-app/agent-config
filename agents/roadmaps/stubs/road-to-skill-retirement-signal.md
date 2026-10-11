@@ -4,6 +4,8 @@ review_by: 2026-12-24
 ---
 # Stub: the skill-retirement signal
 
+> **Arrivals:** 1 — latest `inbox-2026-10-i` (2026-10-11): an audit names the host's per-skill usage report as a candidate never-triggered input; unprobed here, so condition 1 of the probe below is unchanged.
+
 > **Stub — not active work, and a DRAIN-RUN TRANSFER** in the sense
 > [`README.md`](README.md) § The two classes defines. **Capability-gated:** the
 > retirement mechanism is decided, wired and tested; what is missing is the
