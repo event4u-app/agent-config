@@ -61,7 +61,7 @@ import { compareInputs } from '../_lib/probe_inputs.js';
 import { trigger_matches, type Trigger } from '../_lib/router_match.js';
 import { isUiPath, isUiTreePath } from '../_lib/ui_surface.js';
 import { loadDesignContext, scanFile } from '../lint_design_slop.js';
-import { scanHostHtml, scanSvg, type Severity as SvgSeverity } from '../lint_svg_asset.js';
+import { scanHostHtml, scanSvg, type Severity as SvgSeverity } from '../_lib/svg_rules.js';
 import { readHookStdin } from './hook_stdin.js';
 import { EXIT_ALLOW, EXIT_WARN } from './exit_codes.js';
 

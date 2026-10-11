@@ -208,7 +208,7 @@ describe('svg-assets fixture', () => {
         expect(manifest.raster_conversion_tolerance.silhouette_iou_min).toBe(0.984);
     });
 
-    it('carries the 0.2 baseline table, the 0.3 target table and the 5.2 placeholder header', () => {
+    it('carries the 0.2 baseline table, the 0.3 target table and the 5.2 promotion-bar header', () => {
         expect(readme).toContain("## § Baseline — what today's instruments read (step 0.2)");
         expect(readme).toContain('## § Targets — pre-registered before any checker exists (step 0.3)');
 
@@ -237,10 +237,18 @@ describe('svg-assets fixture', () => {
             expect(readme, `the target table must name the ${row.rule} rule`).toContain(`\`${row.rule}\``);
         }
 
-        const promotionHeader =
-            '| rule | layer | true findings on planted | twin findings run 1 | twin findings run 2 | meets bar |';
-        expect(readme, 'the 5.2 placeholder header must match its verify grep exactly').toContain(promotionHeader);
+        // Step 5.2's own verify is `grep -cE '^\|\s*rule\s*\|.*twin' … -> /^1$/`, so
+        // THAT is what this pins — the shape the clause greps for, and exactly
+        // one of it. Freezing the placeholder's literal column list instead
+        // would red the moment the real table replaced it, which is the one
+        // event the placeholder existed to anticipate. The real table carries a
+        // `file` column the placeholder did not, because a rule can be planted
+        // in more than one file and the bar is per planted row.
         const promotionMatches = bodyLines.filter((l) => /^\|\s*rule\s*\|.*twin/.test(l));
         expect(promotionMatches.length, '5.2 greps for exactly one such header').toBe(1);
+        const promotionHeader = promotionMatches[0] as string;
+        for (const column of ['rule', 'true findings on planted', 'twin findings run 1', 'twin findings run 2', 'meets bar']) {
+            expect(promotionHeader, `the 5.2 header must carry a "${column}" column`).toContain(column);
+        }
     });
 });
