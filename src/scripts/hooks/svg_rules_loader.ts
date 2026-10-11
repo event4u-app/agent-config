@@ -121,7 +121,7 @@ export function loadSvgScanUncached(
     }
 }
 
-/** Test seam: forget a cached verdict. Never called by the hook path. */
+/** Test seam: forget every cached verdict. Never called by the hook path. */
 export function _resetSvgScanCache(): void {
-    cached = undefined;
+    cache.clear();
 }
