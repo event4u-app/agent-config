@@ -6,6 +6,7 @@ import * as path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { openSvgObligation } from '../../src/scripts/hooks/svg_obligation.js';
+import { renderNames } from '../../src/scripts/hooks/svg_obligation.js';
 import { isVerificationAttempt, isVerificationCommand } from '../../src/scripts/_lib/verification_command.js';
 import { detectUnverifiedEdit } from '../../src/scripts/hooks/turn_end_gate_hook.js';
 import { isAssetRenderCommand } from '../../src/scripts/hooks/svg_obligation.js';
@@ -331,5 +332,28 @@ describe('what the second review round found by reading, and a run confirmed', (
         expect(isVerificationAttempt('npx vitest run tests/x.test.ts')).toBe(true);
         // A page render is not an asset render and satisfies neither.
         expect(isVerificationAttempt('agent-config ui:render page.html')).toBe(false);
+    });
+});
+
+describe('a render names a file, not a substring of its path', () => {
+    it('public/icon.svg does not name n.svg', () => {
+        // Finding 3 of the fourth completion review. The path branch was a
+        // bare `includes`, so any file whose path is a substring of another
+        // file's path was discharged by a render it had nothing to do with —
+        // the any-render-unlocks-everything hole this function replaced,
+        // reopened one character at a time.
+        const r = ['agent-config ui:render public/icon.svg --profile asset'];
+        expect(renderNames(r, 'n.svg')).toBe(false);
+        expect(renderNames(r, 'on.svg')).toBe(false);
+        expect(renderNames(r, 'con.svg')).toBe(false);
+
+        // What must keep working: the path as written, a `./` prefix, and a
+        // caller who `cd`-ed first and wrote only the basename.
+        expect(renderNames(r, 'public/icon.svg')).toBe(true);
+        expect(renderNames(['agent-config ui:render ./public/icon.svg --profile asset'], 'public/icon.svg')).toBe(true);
+        expect(renderNames(['agent-config ui:render icon.svg --profile asset'], 'public/icon.svg')).toBe(true);
+        // The documented narrower hole is unchanged and still deliberate: a
+        // basename collision inside one turn still matches.
+        expect(renderNames(r, 'other/icon.svg')).toBe(true);
     });
 });

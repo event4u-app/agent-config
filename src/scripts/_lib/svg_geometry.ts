@@ -170,9 +170,34 @@ export function pathExtent(d: string): Box | null {
                 break;
             }
             case 'a': {
-                // rx ry rotation large-arc sweep x y — only the last pair is a point.
-                cx = rel ? cx + (args[5] as number) : (args[5] as number);
-                cy = rel ? cy + (args[6] as number) : (args[6] as number);
+                // rx ry rotation large-arc sweep x y — only the last pair is a
+                // point, and the SWEEP between the two is most of the shape.
+                //
+                // Finding 4 of the fourth completion review: this used to take
+                // the endpoints alone, so `M 10 12 A 20 20 0 0 1 90 12` read as
+                // a flat box of zero height while the curve reaches y = -28.
+                // Everything downstream is a comparison — the icon-grid padding
+                // on both sides, and the `data-hole` and translucent masks the
+                // grounds reading excludes by box — so a too-small extent is a
+                // wrong NUMBER, not a missing one, which is the failure this
+                // branch keeps finding in its own work.
+                const ex = rel ? cx + (args[5] as number) : (args[5] as number);
+                const ey = rel ? cy + (args[6] as number) : (args[6] as number);
+                for (const [px, py] of arcExtremes(
+                    cx,
+                    cy,
+                    ex,
+                    ey,
+                    args[0] as number,
+                    args[1] as number,
+                    args[2] as number,
+                    (args[3] as number) !== 0,
+                    (args[4] as number) !== 0,
+                )) {
+                    see(px, py);
+                }
+                cx = ex;
+                cy = ey;
                 break;
             }
             default: {
@@ -276,6 +301,103 @@ export function tokenisePath(d: string): string[] | null {
         out.push(n);
     }
     return out.length > 0 ? out : null;
+}
+
+/**
+ * The axis extremes an elliptical arc actually reaches, endpoints included.
+ *
+ * The endpoint parameterisation SVG writes is converted to the centre
+ * parameterisation the geometry needs (F.6.5 of the SVG 1.1 implementation
+ * notes), and then each of the four axis-aligned extremes of the ellipse is
+ * kept when its angle lies inside the swept range. For a rotated ellipse the
+ * extremes are not at the axis endpoints, so the angles are derived from the
+ * rotation rather than assumed.
+ *
+ * Degenerate input — a zero radius, or coincident endpoints — is a straight
+ * line per the spec, and the endpoints are then the whole extent.
+ */
+function arcExtremes(
+    x1: number,
+    y1: number,
+    x2: number,
+    y2: number,
+    rxIn: number,
+    ryIn: number,
+    rotationDeg: number,
+    largeArc: boolean,
+    sweep: boolean,
+): Array<[number, number]> {
+    const ends: Array<[number, number]> = [
+        [x1, y1],
+        [x2, y2],
+    ];
+    let rx = Math.abs(rxIn);
+    let ry = Math.abs(ryIn);
+    if (rx === 0 || ry === 0 || (x1 === x2 && y1 === y2)) return ends;
+
+    const phi = (rotationDeg * Math.PI) / 180;
+    const cosP = Math.cos(phi);
+    const sinP = Math.sin(phi);
+    const dx2 = (x1 - x2) / 2;
+    const dy2 = (y1 - y2) / 2;
+    const x1p = cosP * dx2 + sinP * dy2;
+    const y1p = -sinP * dx2 + cosP * dy2;
+
+    // Scale the radii up when they are too small to span the endpoints (F.6.6).
+    const lambda = (x1p * x1p) / (rx * rx) + (y1p * y1p) / (ry * ry);
+    if (lambda > 1) {
+        const k = Math.sqrt(lambda);
+        rx *= k;
+        ry *= k;
+    }
+
+    const num = rx * rx * ry * ry - rx * rx * y1p * y1p - ry * ry * x1p * x1p;
+    const den = rx * rx * y1p * y1p + ry * ry * x1p * x1p;
+    if (den === 0) return ends;
+    const coef = (largeArc === sweep ? -1 : 1) * Math.sqrt(Math.max(0, num / den));
+    const cxp = (coef * rx * y1p) / ry;
+    const cyp = (-coef * ry * x1p) / rx;
+    const ccx = cosP * cxp - sinP * cyp + (x1 + x2) / 2;
+    const ccy = sinP * cxp + cosP * cyp + (y1 + y2) / 2;
+
+    const angleOf = (px: number, py: number): number => {
+        const ux = (cosP * (px - ccx) + sinP * (py - ccy)) / rx;
+        const uy = (-sinP * (px - ccx) + cosP * (py - ccy)) / ry;
+        return Math.atan2(uy, ux);
+    };
+    const start = angleOf(x1, y1);
+    const end = angleOf(x2, y2);
+    const TAU = Math.PI * 2;
+    // Normalised sweep, in the direction the flag names.
+    let delta = end - start;
+    if (sweep && delta < 0) delta += TAU;
+    if (!sweep && delta > 0) delta -= TAU;
+
+    const within = (theta: number): boolean => {
+        let t = theta - start;
+        if (sweep) {
+            while (t < 0) t += TAU;
+            return t <= delta + 1e-9;
+        }
+        while (t > 0) t -= TAU;
+        return t >= delta - 1e-9;
+    };
+    const at = (theta: number): [number, number] => [
+        ccx + rx * Math.cos(theta) * cosP - ry * Math.sin(theta) * sinP,
+        ccy + rx * Math.cos(theta) * sinP + ry * Math.sin(theta) * cosP,
+    ];
+
+    const out: Array<[number, number]> = [...ends];
+    // The parameter angles at which x and y are stationary on the rotated
+    // ellipse; each has a partner half a turn away.
+    const tx = Math.atan2(-ry * sinP, rx * cosP);
+    const ty = Math.atan2(ry * cosP, rx * sinP);
+    for (const base of [tx, ty]) {
+        for (const theta of [base, base + Math.PI]) {
+            if (within(theta)) out.push(at(theta));
+        }
+    }
+    return out;
 }
 
 /** Extent of a `points` list (`<polygon>`, `<polyline>`). Absolute by definition. */

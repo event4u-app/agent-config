@@ -60,6 +60,12 @@ export function parseRegistration(spec: string | undefined): Registration | null
     if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n))) return null;
     const scale = scaleRaw === undefined ? 1 : Number(scaleRaw);
     if (!Number.isFinite(scale) || scale <= 0) return null;
+    // The CROP has to be a crop. Finding 7 of the fourth completion review:
+    // `scale <= 0` was refused with a reason — a zero or negative scale is not
+    // a frame — and the same reason applies to the rectangle, which was never
+    // checked. `0,0,0,0` and `10,10,-5,-5` were both accepted, and a crop with
+    // no area registers a subject that is not there.
+    if ((parts[2] as number) <= 0 || (parts[3] as number) <= 0) return null;
     return {
         x: parts[0] as number,
         y: parts[1] as number,

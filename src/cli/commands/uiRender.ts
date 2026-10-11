@@ -41,7 +41,7 @@ import type { chromium as Chromium } from '@playwright/test';
 
 import { runAssetRender } from './uiRenderAsset.js';
 import type { AssetClass, AssetReading, Registration } from './uiRenderAsset.js';
-import { scanSvg } from '../../scripts/lint_svg_asset.js';
+import { scanHostHtml, scanSvg } from '../../scripts/lint_svg_asset.js';
 import type { DeliveryMode } from '../../scripts/lint_svg_asset.js';
 
 /** The three viewports E3.1 names. Widths are the contract, not a preference. */
@@ -94,17 +94,20 @@ export interface RenderManifest {
     profile?: 'asset';
     asset?: AssetReading;
     /**
-     * WHY the verification is not `verified`, as a token rather than as prose.
+     * WHY the verification is not `verified`, as a token rather than as prose,
+     * and only when the COMMAND can say why.
      *
      * Step 2.1 of `road-to-svg-review-followups` (D8). `degradation_reason` is
      * a sentence for a human; the turn-end gate has to tell an ABSENT renderer
      * from one that ran and failed, because the first is a capability fact a
-     * consumer cannot fix and the second is a real failure. Three tokens, and
-     * the status vocabulary above is unchanged — a fourth status would have
-     * been a grammar change where a reason field was what was missing.
-     */
-    /**
-     * Why the render is not `verified`, when the COMMAND can say why.
+     * consumer cannot fix and the second is a real failure. The status
+     * vocabulary above is unchanged — a fourth status would have been a
+     * grammar change where a reason field was what was missing.
+     *
+     * TWO tokens. Finding 12 of the third review removed a third and finding 5
+     * of the fourth found that this block still said "Three tokens" and that
+     * the removal had left a SECOND doc comment stacked under it — two blocks
+     * describing one field, the older one wrong. Merged into this one.
      *
      * `pass-cap-reached` used to be in this union and nothing ever wrote it.
      * Finding 12 of the third completion review, and it is the right call in
@@ -195,7 +198,17 @@ export function staticWitness(
     // same command line — so defaulting raised the safety family to `error` for
     // an asset that cannot execute anything, and a correct `img`-delivered file
     // was refused the static-only discharge it qualifies for.
-    const errors = scanSvg(content, path.basename(absFile), { delivery }).filter(
+    // AN HTML HOST IS SCANNED AS A HOST, NOT AS A GRAPHIC.
+    //
+    // Finding 1 of the fourth completion review, reproduced on this repo's own
+    // `hosts/img-delivery-static.html` fixture: `scanSvg` over a host document
+    // reports `svg-structure-not-well-formed` for every HTML void element —
+    // `<meta>` and `<img>` never close, which is correct HTML and malformed
+    // XML — so the witness read 2 errors where `scanHostHtml` over the same
+    // bytes reports none. Under the blocking-family count those are structure
+    // errors, so a correct host document could not discharge its obligation.
+    const scan = /\.html?$/i.test(absFile) ? scanHostHtml : scanSvg;
+    const errors = scan(content, path.basename(absFile), { delivery }).filter(
         (f) => f.severity === 'error' && BLOCKING_FAMILIES.some((fam) => f.rule.startsWith(fam)),
     ).length;
     return { errors, digest };

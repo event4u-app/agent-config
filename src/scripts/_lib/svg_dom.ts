@@ -271,12 +271,22 @@ export function parseDocument(content: string): XmlDocument {
                     line: p.line,
                     column: p.column,
                 });
-                // Recover by popping to the matching open element when there is
-                // one, so a single mistake does not cascade into an error per
-                // remaining tag.
+                // Recover by popping to the matching open element WHEN THERE
+                // IS ONE, so a single mistake does not cascade into an error
+                // per remaining tag.
+                //
+                // When there is none, pop NOTHING. Finding 2 of the fourth
+                // completion review: the `else stack.pop()` detached a
+                // perfectly good ancestor to pay for a stray tag that never
+                // opened anything — a file whose `</g>` has no `<g>` lost its
+                // `<svg>` from the stack, so the real `</svg>` at the end then
+                // had no open element and the file collected a SECOND error it
+                // had not earned. Cascading is exactly what this branch exists
+                // to prevent, and the unmatched case was the one where it did
+                // the cascading itself. A closing tag with no match is a stray
+                // tag: report it and carry on.
                 const idx = stack.map((n) => n.name).lastIndexOf(name);
                 if (idx !== -1) stack.length = idx;
-                else stack.pop();
             } else {
                 stack.pop();
             }

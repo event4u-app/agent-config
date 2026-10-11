@@ -670,3 +670,65 @@ describe('what the third review round found by running the code', () => {
         expect(scanSvg(real, 'real.svg').map((f) => f.rule)).toContain('svg-safety-active-content');
     });
 });
+
+describe('what the fourth review round found', () => {
+    it('a stray closing tag costs one error, not two', () => {
+        // Finding 2. The recovery branch popped the stack even when NOTHING on
+        // it matched, so a `</g>` with no `<g>` detached the `<svg>` — and the
+        // real `</svg>` at the end then had no open element and the file
+        // collected a second error it had not earned. Cascading is what that
+        // branch exists to prevent.
+        const stray =
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">\n' +
+            '  <title>A square</title>\n' +
+            '  </g>\n' +
+            '  <rect width="24" height="24" fill="#000"/>\n' +
+            '</svg>\n';
+        const errs = scanSvg(stray, 'a.svg').filter((f) => f.rule === 'svg-structure-not-well-formed');
+        expect(errs).toHaveLength(1);
+        expect(errs[0]?.snippet).toContain('</g>');
+
+        // A MATCHING mis-nesting still recovers by unwinding to it, which is
+        // the case the branch was written for and must keep.
+        const mis =
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">\n' +
+            '  <title>t</title>\n' +
+            '  <g><a><rect width="24" height="24"/></g></a>\n' +
+            '</svg>\n';
+        expect(
+            scanSvg(mis, 'b.svg').filter((f) => f.rule === 'svg-structure-not-well-formed').length,
+        ).toBeGreaterThan(0);
+        // And a well-formed file still reports nothing at all.
+        const good =
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">\n' +
+            '  <title>t</title><g><rect width="24" height="24"/></g>\n</svg>\n';
+        expect(scanSvg(good, 'c.svg')).toEqual([]);
+    });
+
+    it('an arc contributes its sweep, not only its endpoints', () => {
+        // Finding 4. `M 10 12 A 20 20 0 0 1 90 12` read as a box of zero
+        // height while the curve reaches y = -28: a wrong NUMBER feeding the
+        // icon-grid padding and the hole and translucent masks, not a missing
+        // one.
+        const up = pathExtent('M 10 12 A 20 20 0 0 1 90 12');
+        expect(up?.minY).toBeCloseTo(-28, 6);
+        expect(up?.maxY).toBeCloseTo(12, 6);
+        // The other sweep flag bulges the other way, by the same amount.
+        const down = pathExtent('M 10 12 A 20 20 0 0 0 90 12');
+        expect(down?.maxY).toBeCloseTo(52, 6);
+        expect(down?.minY).toBeCloseTo(12, 6);
+        // A near-full circle is its own bounding box.
+        const circle = pathExtent('M 12 2 A 10 10 0 1 1 11.99 2');
+        expect(circle?.minX).toBeCloseTo(2, 1);
+        expect(circle?.maxX).toBeCloseTo(22, 1);
+        expect(circle?.maxY).toBeCloseTo(22, 1);
+        // A zero radius is a straight line per the spec — endpoints only, and
+        // no NaN from the conversion.
+        expect(pathExtent('M 0 0 A 0 0 0 0 1 10 10')).toEqual({ minX: 0, minY: 0, maxX: 10, maxY: 10 });
+        // A quarter arc curving inward adds nothing beyond its endpoints,
+        // which is the case a too-generous bound would get wrong.
+        const quarter = pathExtent('M 0 10 A 10 10 0 0 1 10 0');
+        expect(quarter?.minX).toBeCloseTo(0, 6);
+        expect(quarter?.maxX).toBeCloseTo(10, 6);
+    });
+});

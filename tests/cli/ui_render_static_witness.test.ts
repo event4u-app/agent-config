@@ -77,6 +77,25 @@ describe('the static witness counts brokenness, not improvability', () => {
         expect(staticWitness(abs, 'img')?.errors).toBe(0);
     });
 
+    it('a host document is scanned as a host, not as a graphic', () => {
+        // Finding 1 of the fourth completion review, reproduced on this repo's
+        // own host fixture: `scanSvg` over an HTML document reports
+        // `svg-structure-not-well-formed` for every void element — `<meta>`
+        // and `<img>` never close, which is correct HTML and malformed XML —
+        // so the witness read errors where `scanHostHtml` over the same bytes
+        // reports none, and a correct host could not discharge its obligation.
+        const host =
+            '<!doctype html>\n<html><head><meta charset="utf-8">\n' +
+            '<title>t</title></head><body>\n' +
+            '<img src="logo.svg" alt="A logo" width="48" height="48">\n' +
+            '</body></html>\n';
+        expect(staticWitness(write('host.html', host))?.errors).toBe(0);
+
+        // The same bytes under a `.svg` name are a malformed graphic, which is
+        // the control: the fix is the EXTENSION branch, not a quieter scan.
+        expect(staticWitness(write('host.svg', host))?.errors).toBeGreaterThan(0);
+    });
+
     it('an unreadable file is null, never 0', () => {
         // 0 errors and "I could not read it" must not be the same answer: the
         // discharge path tests `errors === 0`.

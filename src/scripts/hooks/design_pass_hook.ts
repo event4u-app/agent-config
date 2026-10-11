@@ -676,10 +676,20 @@ function main(): number {
         // Degraded, not unverified: the rest of the pass ran. An absent chunk
         // is reported rather than silently producing a clean SVG verdict —
         // "absent is not clean" is the same rule the conformance verdict keeps.
+        // APPENDED, never overwritten. Finding 6 of the fourth completion
+        // review: `decide` may already have set a reason — the renderer being
+        // absent is the one it sets — and assigning here threw it away, so a
+        // turn where both degradations held reported only the newer one. Two
+        // degradations are two facts; the operator needs both or they fix one
+        // and are surprised by the other.
+        const svgReason = `the SVG rule set could not be loaded (expected dist/hooks/${CHUNK_BASENAME} beside the dispatch bundle) — the .svg files in this turn were not checked`;
         result = {
             ...result,
             verification: 'degraded',
-            degradation_reason: `the SVG rule set could not be loaded (expected dist/hooks/${CHUNK_BASENAME} beside the dispatch bundle) — the .svg files in this turn were not checked`,
+            degradation_reason:
+                result.degradation_reason === undefined || result.degradation_reason === ''
+                    ? svgReason
+                    : `${result.degradation_reason}; ${svgReason}`,
         };
     }
 

@@ -302,7 +302,18 @@ export function renderNames(commands: readonly string[], relPath: string): boole
         // The path as written, or its basename — a caller may `cd` first, and a
         // basename collision inside one turn is a narrower hole than the
         // any-render-unlocks-everything it replaces.
-        return slashed.includes(relPath) || new RegExp(`(^|[\\s/'"])${escapeRe(base)}(\\s|$|['"])`).test(slashed);
+        //
+        // BOTH tests are anchored. Finding 3 of the fourth completion review:
+        // the path branch was a bare `includes`, so a render of
+        // `public/icon.svg` counted as naming `n.svg` and `on.svg` — any file
+        // whose path is a substring of another file's path was discharged by a
+        // render it had nothing to do with, which is the
+        // any-render-unlocks-everything hole this function replaced, reopened
+        // one character at a time. The boundary admits `/` before, so a path
+        // written `./public/icon.svg` still names `public/icon.svg`.
+        const bounded = (needle: string): boolean =>
+            new RegExp(`(^|[\\s/'"])${escapeRe(needle)}(\\s|$|['"])`).test(slashed);
+        return bounded(relPath) || bounded(base);
     });
 }
 
