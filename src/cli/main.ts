@@ -24,6 +24,8 @@ import { runDoctorShell } from './commands/doctorShell.js';
 import { runRtkDetect } from './commands/rtkDetect.js';
 import { runUiAudit } from './commands/uiAudit.js';
 import { runUiRender } from './commands/uiRender.js';
+import type { AssetClass, Registration } from './commands/uiRenderAsset.js';
+import type { DeliveryMode } from '../scripts/lint_svg_asset.js';
 import { runUiServe } from './commands/uiServe.js';
 import { shouldInitLaunchGui, buildInitGuiOptions, buildProjectInitDelegation, findInitGuiConflict, withoutGuiFlag } from './initRouting.js';
 import { maybePrintFirstRunNotice } from './firstRunNotice.js';
@@ -41,6 +43,27 @@ import { buildVersionReadout } from '../shared/capabilities.js';
 function readVersion(): string {
     const pkg = JSON.parse(readFileSync(PACKAGE_JSON, 'utf8')) as { version?: unknown };
     return typeof pkg.version === 'string' ? pkg.version : '0.0.0';
+}
+
+/**
+ * `--registration x,y,w,h[@scale]` — the source crop's own pixel frame (S9).
+ * An unparseable spec returns `null`, which leaves the raster reading
+ * `unverified` rather than letting the comparison guess an offset.
+ */
+function parseRegistration(spec: string | undefined): Registration | null {
+    if (!spec) return null;
+    const [frame, scaleRaw] = spec.split('@');
+    const parts = (frame ?? '').split(',').map((n) => Number(n.trim()));
+    if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n))) return null;
+    const scale = scaleRaw === undefined ? 1 : Number(scaleRaw);
+    if (!Number.isFinite(scale) || scale <= 0) return null;
+    return {
+        x: parts[0] as number,
+        y: parts[1] as number,
+        width: parts[2] as number,
+        height: parts[3] as number,
+        scale,
+    };
 }
 
 async function main(rawArgv: readonly string[]): Promise<number> {
@@ -144,9 +167,46 @@ async function main(rawArgv: readonly string[]): Promise<number> {
         .option('--json', 'Print the manifest on stdout as well as writing it')
         .option('--project-root <path>', 'Override the project root')
         .option('--slug <name>', 'Override the output directory name')
-        .action(async (target: string, opts: { json?: boolean; projectRoot?: string; slug?: string }) => {
-            process.exitCode = await runUiRender({ target, ...opts });
-        });
+        .option('--profile <name>', 'page (default) or asset — a single SVG, per class, light and dark')
+        .option('--class <name>', 'Asset class: icon | mark | illustration | diagram | animated')
+        .option('--delivery <mode>', 'Delivery mode: inline | document | img | css-bg')
+        .option('--thresholds <file>', 'JSON carrying fill_ratio_thresholds / geometry_tolerances')
+        .option('--icon-set <paths>', 'Comma-separated incumbent icon SVGs, read for their own grid')
+        .option('--compare <file>', 'Second render of the same frame to compare against')
+        .option('--registration <spec>', 'Raster source region as x,y,w,h[@scale]')
+        .action(
+            async (
+                target: string,
+                opts: {
+                    json?: boolean;
+                    projectRoot?: string;
+                    slug?: string;
+                    profile?: string;
+                    class?: string;
+                    delivery?: string;
+                    thresholds?: string;
+                    iconSet?: string;
+                    compare?: string;
+                    registration?: string;
+                },
+            ) => {
+                process.exitCode = await runUiRender({
+                    target,
+                    ...(opts.json === undefined ? {} : { json: opts.json }),
+                    ...(opts.projectRoot === undefined ? {} : { projectRoot: opts.projectRoot }),
+                    ...(opts.slug === undefined ? {} : { slug: opts.slug }),
+                    ...(opts.profile === 'asset' ? { profile: 'asset' as const } : {}),
+                    ...(opts.class === undefined ? {} : { assetClass: opts.class as AssetClass }),
+                    ...(opts.delivery === undefined ? {} : { delivery: opts.delivery as DeliveryMode }),
+                    ...(opts.thresholds === undefined ? {} : { thresholds: opts.thresholds }),
+                    ...(opts.iconSet === undefined ? {} : { iconSet: opts.iconSet.split(',').map((s) => s.trim()) }),
+                    ...(opts.compare === undefined ? {} : { compareTo: opts.compare }),
+                    ...(parseRegistration(opts.registration) === null
+                        ? {}
+                        : { registration: parseRegistration(opts.registration) as Registration }),
+                });
+            },
+        );
 
     program
         .command('ui:serve')

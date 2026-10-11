@@ -38,6 +38,10 @@ import * as path from 'node:path';
 // consumer install without the devDependency on the clean "unverified" path.
 import type { chromium as Chromium } from '@playwright/test';
 
+import { runAssetRender } from './uiRenderAsset.js';
+import type { AssetClass, AssetReading, Registration } from './uiRenderAsset.js';
+import type { DeliveryMode } from '../../scripts/lint_svg_asset.js';
+
 /** The three viewports E3.1 names. Widths are the contract, not a preference. */
 export const VIEWPORTS = [
     { name: 'desktop', width: 1440, height: 900 },
@@ -78,6 +82,15 @@ export interface RenderManifest {
     type_families: string[];
     verification: 'verified' | 'degraded' | 'unverified';
     degradation_reason?: string;
+    /**
+     * Step 2.2, and the whole of its contract: the two asset keys below are
+     * OPTIONAL and written only by `--profile asset`. `schema` stays `1` and no
+     * second manifest schema exists — a reader of today's page manifest sees
+     * exactly what it saw before this profile existed, because an absent
+     * optional key is not serialised at all.
+     */
+    profile?: 'asset';
+    asset?: AssetReading;
 }
 
 export const RENDER_REL = path.join('agents', 'runtime', 'state', 'render');
@@ -121,6 +134,17 @@ export interface UiRenderOptions {
     json?: boolean | undefined;
     projectRoot?: string | undefined;
     slug?: string | undefined;
+    /** `page` (the default, unchanged) or `asset` (step 2.1). */
+    profile?: 'page' | 'asset' | undefined;
+    assetClass?: AssetClass | undefined;
+    delivery?: DeliveryMode | undefined;
+    /** A JSON file carrying `fill_ratio_thresholds` / `geometry_tolerances`. */
+    thresholds?: string | undefined;
+    /** The incumbent icon set, read for its own grid — never declared (E6). */
+    iconSet?: readonly string[] | undefined;
+    /** Step 2.6: the other render of the same frame. */
+    compareTo?: string | undefined;
+    registration?: Registration | undefined;
 }
 
 export async function runUiRender(opts: UiRenderOptions): Promise<number> {
@@ -134,11 +158,15 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
 
     const slug = opts.slug ?? slugify(opts.target);
     const outDir = path.join(projectRoot, RENDER_REL, slug);
+    const isAsset = opts.profile === 'asset';
 
     let chromium: typeof Chromium;
     try {
         ({ chromium } = await import('@playwright/test'));
     } catch {
+        // Step 2.3, and the reason the absence path sits ABOVE the profile
+        // branch rather than inside either one: both profiles reach it by
+        // construction, so there is no second absence path to keep honest.
         const manifest: RenderManifest = {
             schema: 1,
             generated_at: new Date().toISOString(),
@@ -148,6 +176,7 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
             palette: [],
             type_families: [],
             verification: 'unverified',
+            ...(isAsset ? { profile: 'asset' as const } : {}),
             degradation_reason:
                 '@playwright/test is not installed — it is a devDependency, so a consumer install has no browser. ' +
                 'Install it, or scope any verdict to the static checks that actually ran.',
@@ -161,6 +190,15 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
     }
 
     fs.mkdirSync(outDir, { recursive: true });
+
+    if (isAsset) {
+        if (isUrl) {
+            process.stderr.write('[ui:render] --profile asset reads a file on disk, not a URL\n');
+            return 1;
+        }
+        return runAssetProfile({ ...opts, projectRoot, abs, slug, outDir }, chromium);
+    }
+
     const captures: ViewportCapture[] = [];
     const allStyles: Array<Record<string, string>> = [];
     let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
@@ -249,6 +287,77 @@ export async function runUiRender(opts: UiRenderOptions): Promise<number> {
         );
     }
     return 0;
+}
+
+/**
+ * The asset profile. Same manifest, same output directory, same Class-A
+ * boundary — the browser is closed in a `finally` on every path including a
+ * throw, exactly as the page profile closes its own.
+ */
+async function runAssetProfile(
+    opts: UiRenderOptions & { projectRoot: string; abs: string; slug: string; outDir: string },
+    chromium: typeof Chromium,
+): Promise<number> {
+    let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
+    try {
+        browser = await chromium.launch({ headless: true });
+        const result = await runAssetRender(browser, {
+            file: opts.abs,
+            projectRoot: opts.projectRoot,
+            outDir: opts.outDir,
+            assetClass: opts.assetClass,
+            delivery: opts.delivery,
+            thresholdsFile: opts.thresholds,
+            iconSet: opts.iconSet,
+            compareTo: opts.compareTo,
+            registration: opts.registration,
+        });
+        const manifest: RenderManifest = {
+            schema: 1,
+            generated_at: new Date().toISOString(),
+            target: opts.target,
+            slug: opts.slug,
+            captures: [],
+            palette: [],
+            type_families: [],
+            verification: result.verification,
+            profile: 'asset',
+            asset: result.reading,
+            ...(result.degradationReason ? { degradation_reason: result.degradationReason } : {}),
+        };
+        writeManifest(opts.outDir, manifest);
+        if (opts.json) process.stdout.write(`${JSON.stringify(manifest, null, 2)}\n`);
+        else {
+            const r = result.reading;
+            process.stdout.write(
+                `✅  ui:render --profile asset — ${r.asset_class}` +
+                    `${r.asset_class_inferred ? ' (inferred)' : ''}, ${r.sizes.length} capture(s), ` +
+                    `${r.findings.length} finding(s), ${r.network.aborted} request(s) aborted\n` +
+                    `    ${path.relative(opts.projectRoot, opts.outDir)}\n` +
+                    r.findings.map((f) => `    ⚠️  ${f.rule} — ${f.detail}\n`).join(''),
+            );
+        }
+        return 0;
+    } catch (err) {
+        const manifest: RenderManifest = {
+            schema: 1,
+            generated_at: new Date().toISOString(),
+            target: opts.target,
+            slug: opts.slug,
+            captures: [],
+            palette: [],
+            type_families: [],
+            verification: 'degraded',
+            profile: 'asset',
+            degradation_reason: `asset capture failed: ${String(err)}`,
+        };
+        writeManifest(opts.outDir, manifest);
+        process.stderr.write(`[ui:render] ${manifest.degradation_reason}\n`);
+        return 1;
+    } finally {
+        // The Class-A boundary, same clause as the page profile's.
+        await browser?.close();
+    }
 }
 
 function writeManifest(outDir: string, manifest: RenderManifest): void {
