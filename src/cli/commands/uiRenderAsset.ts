@@ -158,6 +158,29 @@ export function intrinsicSize(root: SvgElement | undefined, vb: ViewBox | null):
  * The small sizes come FIRST so a reader scanning the manifest meets them
  * before the 1x the file was designed at.
  */
+/**
+ * The LARGEST capture, which is not the last one.
+ *
+ * Finding 6 of the third completion review. `assetSizes` PREPENDS
+ * `MARK_SMALL_SIZES` for a mark — so a reader taking `sizes[sizes.length - 1]`
+ * gets the 2x scaled size, which is smaller than 32 whenever the intrinsic
+ * width is under 16. Reproduced: intrinsic width 10 gives a last entry of 20
+ * against a maximum of 32, so the geometry pass read the asset at a size it
+ * was not biggest at and the grounds reading used a capture that was not the
+ * largest taken.
+ *
+ * A named function rather than an inline `reduce`, because the defect was
+ * exactly that the selection looked obvious enough not to be read — and an
+ * inline expression is not something a test can hold.
+ */
+export function biggestSize(
+    sizes: ReadonlyArray<{ label: string; width: number; height: number }>,
+): { label: string; width: number; height: number } {
+    let best: { label: string; width: number; height: number } | null = null;
+    for (const s of sizes) if (best === null || s.width > best.width) best = s;
+    return best ?? { label: '1x', width: 64, height: 64 };
+}
+
 export function assetSizes(
     cls: AssetClass,
     intrinsic: { width: number; height: number },
@@ -347,16 +370,27 @@ async function captureWithOneRetry(page: Page, shot: string): Promise<void> {
 }
 
 /** Does this element declare itself less than fully opaque? */
-function isDeclaredTranslucent(el: SvgElement): boolean {
+export function isDeclaredTranslucent(el: SvgElement): boolean {
     const style = el.attrs['style'] ?? '';
     const read = (key: string): number | null => {
         const fromStyle = new RegExp(`(?:^|;)\\s*${key}\\s*:\\s*([^;]+)`).exec(style)?.[1];
         const raw = (fromStyle ?? el.attrs[key] ?? '').trim();
         if (raw === '') return null;
-        const v = Number(raw);
+        // A PERCENTAGE IS LEGAL CSS AND `Number()` CANNOT READ IT.
+        //
+        // Finding 8 of the third completion review: `Number('50%')` is NaN, so
+        // `fill-opacity="50%"` read as "not declared translucent" and every
+        // pixel of that half-transparent shape was counted as background
+        // bleeding through the author's paint — the exact false warning the
+        // comment above this function says the declaration prevents.
+        const pct = /^([+-]?(?:\d*\.\d+|\d+\.?))\s*%$/.exec(raw);
+        const v = pct ? Number(pct[1]) / 100 : Number(raw);
         return Number.isFinite(v) ? v : null;
     };
-    for (const key of ['opacity', 'fill-opacity']) {
+    // `stroke-opacity` belongs here for the same reason the other two do: a
+    // stroke the author made translucent is a declaration, not a seam. It was
+    // missing from the list, which finding 8 also names.
+    for (const key of ['opacity', 'fill-opacity', 'stroke-opacity']) {
         const v = read(key);
         if (v !== null && v < 0.99) return true;
     }
@@ -479,7 +513,7 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
         // One geometry pass. Every reading below is in viewBox units, which do
         // not move with the render size — so reading them once and SAYING where
         // beats re-reading them six times and implying they might differ.
-        const biggest = sizes[sizes.length - 1] ?? { label: '1x', width: 64, height: 64 };
+        const biggest = biggestSize(sizes);
         // The moment the geometry was read, named rather than implied: an
         // animated asset's painted box is a property of a time, and t = 0 is a
         // declared one.

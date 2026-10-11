@@ -259,8 +259,25 @@ export const HOLE_ATTRIBUTE = 'data-hole';
  *
  * A seam is a hairline: one or two pixels wide along a shared edge. The
  * overlap twin — the same two shapes overlapping by one unit — reads 0. The
- * threshold sits between them with room on both sides, and it is a SHARE so
- * it does not move with the render size.
+ * threshold sits between them with room on both sides.
+ *
+ * IT DOES MOVE WITH THE RENDER SIZE, and this doc used to claim it does not.
+ * Finding 7 of the third completion review. A share is scale-free only when
+ * both terms scale together: a seam whose width is a fraction of a USER UNIT
+ * grows with the capture and its share is stable, but one that is an
+ * anti-aliasing artefact stays one or two DEVICE pixels wide at every size, so
+ * its count grows with the perimeter while the denominator grows with the
+ * area — the share falls roughly as 1/width. The planted fixture is the second
+ * kind (a ring of inner radius 20 against a disc of radius 20), so this number
+ * is pre-registered against the capture sizes THIS PROFILE TAKES, which top
+ * out at 2x the intrinsic width. A caller rendering the same file at several
+ * thousand pixels would read a share below the threshold on a file that still
+ * has the seam.
+ *
+ * Not re-derived here: fixing it means making the reading a function of the
+ * seam's width in user units rather than of its pixel count, which is a
+ * different measurement and a larger change than a remediation should take.
+ * Stated so a reader is not told the opposite.
  */
 export const BLEED_SHARE_THRESHOLD = 0.002;
 

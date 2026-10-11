@@ -657,8 +657,18 @@ function main(): number {
         scanFailed = String(err);
     }
 
-    const auditMissing = targets.filter((t) => !auditIsFresh(root, t));
-    recordAuditDischarge(root, targets, auditMissing);
+    // The audit question is asked of UI SURFACES, never of the pass surface.
+    // Findings 1 and 2 of the third completion review, both reproduced by
+    // running the hook: round one split the entry gate from the UI predicate,
+    // and `targets` carried the `.svg` past the split anyway. So a clean
+    // conformant icon write exited WARN with "no ui-audit.json newer than
+    // public/icon.svg" — an asset has no component inventory to be audited
+    // against — and, worse, `recordAuditDischarge` returns early on a non-empty
+    // `auditMissing`, so writing ONE `.svg` in a turn silently suppressed the
+    // ui-audit discharge row for every real UI file in that same turn.
+    const auditTargets = targets.filter((t) => isUiSurface(t));
+    const auditMissing = auditTargets.filter((t) => !auditIsFresh(root, t));
+    recordAuditDischarge(root, auditTargets, auditMissing);
     let result = decide(slot, findings, auditMissing, new Set(state.surfaced), renderAvailable(root));
     if (scanFailed) {
         result = { ...result, verification: 'unverified', degradation_reason: `detector unavailable: ${scanFailed}` };

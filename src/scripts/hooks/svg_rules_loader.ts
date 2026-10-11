@@ -74,18 +74,28 @@ export function rulesSpecifier(selfUrl: string, bundled: boolean): string {
     return path.join(dir, '..', '_lib', `svg_rules${ext}`);
 }
 
-let cached: SvgScan | null | undefined;
+const cache = new Map<string, SvgScan | null>();
 
 /**
  * The rule set, or `null` when it could not be loaded.
  *
  * Cached including the failure: a consumer whose install is missing the chunk
  * would otherwise pay a failed module resolution on every `.svg` write.
+ *
+ * Keyed BY `selfUrl`. Finding 13 of the third completion review: a single
+ * slot meant the first call's verdict answered every later call whatever url
+ * it passed, so the parameter was accepted and ignored — the shape this
+ * change's own review found three times under other names. It is one caller
+ * and one url on the hook path, so nothing observable changed; a cache whose
+ * key is not its input is wrong regardless of who currently calls it, and
+ * that is cheaper to fix than to remember.
  */
 export function loadSvgScan(selfUrl: string = import.meta.url): SvgScan | null {
-    if (cached !== undefined) return cached;
-    cached = loadSvgScanUncached(selfUrl);
-    return cached;
+    const hit = cache.get(selfUrl);
+    if (hit !== undefined || cache.has(selfUrl)) return hit ?? null;
+    const scan = loadSvgScanUncached(selfUrl);
+    cache.set(selfUrl, scan);
+    return scan;
 }
 
 /**

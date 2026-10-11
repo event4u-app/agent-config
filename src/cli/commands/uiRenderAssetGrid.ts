@@ -169,9 +169,16 @@ export function readIconReferencesDetailed(files: readonly string[]): IconRefere
             skipped.push({ file, reason: 'no readable viewBox' });
             continue;
         }
+        // The SAME walk the candidate's stroke reading uses. Finding 5 of the
+        // third completion review: the candidate side was moved onto
+        // `renderingElements` and the reference side was not, so a reference
+        // icon's clip path contributed a stroke the viewer never sees.
+        // Reproduced: two byte-identical files reported 1.5 against [1.5, 8].
+        // The same defect as finding 9 of the previous round, in the other
+        // half of the same pair — which is what a defect-pattern sweep over
+        // the construct, rather than over the one reported site, is for.
         const strokes = new Set<number>();
-        for (const el of elements) {
-            if (el.closing) continue;
+        for (const el of renderingElements(elements)) {
             const sw = Number(el.attrs['stroke-width']);
             if (Number.isFinite(sw) && sw > 0) strokes.add(sw);
         }

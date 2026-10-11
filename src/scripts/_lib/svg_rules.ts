@@ -28,7 +28,7 @@
  * every existing import keeps resolving.
  */
 
-import { parseDocument, type XmlNode } from './svg_dom.js';
+import { attrsOf, parseDocument, tagEnd, type XmlDocument, type XmlNode } from './svg_dom.js';
 import {
     type Box,
     elementExtent,
@@ -122,7 +122,28 @@ export function parseElements(content: string): SvgElement[] {
             i = end === -1 ? content.length : end + 3;
             continue;
         }
-        if (content.startsWith('<!', lt) || content.startsWith('<?', lt)) {
+        if (content.startsWith('<?', lt)) {
+            // A PROCESSING INSTRUCTION ENDS AT `?>`, NEVER AT THE FIRST `>`.
+            //
+            // Finding 3 of the third completion review, reproduced by running
+            // `scanSvg`: this branch shared the DOCTYPE's first-`>` search, so
+            // `<?xml-stylesheet href="a.css?x=1><script/>"?>` — a legal PI
+            // whose quoted pseudo-attribute contains a `>` — ended early and
+            // the remainder was parsed as markup. `<script/>` then became a
+            // real element and the file was reported
+            // `svg-safety-active-content` at severity `error`, on a document
+            // that contains no script. Under finding 4's static-only path that
+            // false error is a BLOCKING refusal, so the two compound.
+            //
+            // `svg_dom.parseDocument` always did this correctly; the two
+            // scanners disagreeing about where the prolog ends is what the
+            // module header below now says plainly instead of claiming they
+            // are one scan.
+            const end = content.indexOf('?>', lt + 2);
+            i = end === -1 ? content.length : end + 2;
+            continue;
+        }
+        if (content.startsWith('<!', lt)) {
             // A DOCTYPE may carry a bracketed internal subset; skip past it.
             const bracket = content.indexOf('[', lt);
             const close = content.indexOf('>', lt);
@@ -135,7 +156,7 @@ export function parseElements(content: string): SvgElement[] {
             }
             continue;
         }
-        const gt = findTagEnd(content, lt);
+        const gt = tagEnd(content, lt);
         if (gt === -1) break;
         const raw = content.slice(lt, gt + 1);
         const closing = raw.startsWith('</');
@@ -147,7 +168,7 @@ export function parseElements(content: string): SvgElement[] {
         }
         out.push({
             name: (nameMatch[1] ?? '').toLowerCase(),
-            attrs: closing ? {} : parseAttrs(raw),
+            attrs: closing ? {} : attrsOf(raw),
             line: lineOf(lt),
             start: lt,
             selfClosing,
@@ -160,34 +181,7 @@ export function parseElements(content: string): SvgElement[] {
 }
 
 /** End of the tag, honouring quoted attribute values that may contain `>`. */
-function findTagEnd(content: string, from: number): number {
-    let quote: string | null = null;
-    for (let i = from + 1; i < content.length; i++) {
-        const ch = content[i] as string;
-        if (quote) {
-            if (ch === quote) quote = null;
-            continue;
-        }
-        if (ch === '"' || ch === "'") {
-            quote = ch;
-            continue;
-        }
-        if (ch === '>') return i;
-    }
-    return -1;
-}
 
-function parseAttrs(raw: string): Record<string, string> {
-    const attrs: Record<string, string> = {};
-    const re = /([A-Za-z_:][\w.:-]*)\s*=\s*("([^"]*)"|'([^']*)')/g;
-    let m: RegExpExecArray | null;
-    while ((m = re.exec(raw)) !== null) {
-        const key = (m[1] ?? '').toLowerCase();
-        const value = m[3] ?? m[4] ?? '';
-        attrs[key] = value.replace(/&amp;/g, '&');
-    }
-    return attrs;
-}
 
 /**
  * Blank out every XML comment, preserving offsets and line breaks.
@@ -763,8 +757,7 @@ function isDirectChildOfRoot(elements: SvgElement[], index: number): boolean {
  * is not, because a stray closing tag moves a depth counter and does not move
  * an ancestor chain.
  */
-export function directChildrenOfRoot(content: string): XmlNode[] {
-    const doc = parseDocument(content);
+export function directChildrenOfRoot(doc: XmlDocument): XmlNode[] {
     const root = doc.elements.find((el) => el.name === 'svg');
     if (root === undefined) return [];
     return root.children.filter((n) => n.kind === 'element');
@@ -843,8 +836,7 @@ function ruleDegenerateGradient(elements: SvgElement[], file: string): Finding[]
     return findings;
 }
 
-function ruleWellFormed(content: string, file: string): Finding[] {
-    const doc = parseDocument(content);
+function ruleWellFormed(doc: XmlDocument, file: string): Finding[] {
     if (doc.errors.length === 0) return [];
     const shown = doc.errors.slice(0, 5);
     const more = doc.errors.length - shown.length;
@@ -859,7 +851,7 @@ function ruleWellFormed(content: string, file: string): Finding[] {
     }));
 }
 
-function rootNameState(content: string, elements: SvgElement[]): NameState {
+function rootNameState(content: string, doc: XmlDocument, elements: SvgElement[]): NameState {
     const rootIdx = elements.findIndex((el) => el.name === 'svg' && !el.closing);
     const root = rootIdx === -1 ? undefined : elements[rootIdx];
     // A DIRECT child of the root only. The first `<title>` ANYWHERE was wrong
@@ -875,7 +867,7 @@ function rootNameState(content: string, elements: SvgElement[]): NameState {
     // `svg-structure-not-well-formed` already reports, and the tree is the one
     // that is still right — a stray closing tag moves a depth counter and does
     // not move an ancestor chain.
-    const titleIsDirectChild = directChildrenOfRoot(content).some((n) => n.name === 'title');
+    const titleIsDirectChild = directChildrenOfRoot(doc).some((n) => n.name === 'title');
     const hasTitle =
         titleIsDirectChild && titleIdx !== -1 && textOf(content, elements, titleIdx).trim().length > 0;
 
@@ -905,8 +897,7 @@ function rootNameState(content: string, elements: SvgElement[]): NameState {
     };
 }
 
-function ruleAccessibleName(content: string, elements: SvgElement[], file: string): Finding[] {
-    const s = rootNameState(content, elements);
+function ruleAccessibleName(s: NameState, file: string): Finding[] {
     if (!s.root) return [];
     // A graphic declared decorative is correct with no name — that is the
     // other half of the pattern, not a gap in it.
@@ -925,8 +916,7 @@ function ruleAccessibleName(content: string, elements: SvgElement[], file: strin
     ];
 }
 
-function ruleDoubleName(content: string, elements: SvgElement[], file: string): Finding[] {
-    const s = rootNameState(content, elements);
+function ruleDoubleName(s: NameState, file: string): Finding[] {
     if (!s.root) return [];
     // A labelledby that resolves to this graphic's own <title> is the SAME
     // name reached through a reference, so it is not counted twice.
@@ -1128,12 +1118,24 @@ export interface ScanOptions {
 export function scanSvg(content: string, relPath: string, opts: ScanOptions = {}): Finding[] {
     const mode: DeliveryMode = opts.delivery ?? 'inline';
     const elements = parseElements(content);
+    // ONE parse, and ONE name state. Finding 10 of the third completion
+    // review, re-measured because the previous round's disposition was taken
+    // on the wrong regime: over the seven small real fixtures the duplicate
+    // parse is 0.03% of the dispatch, which is why it was accepted then — but
+    // on a 760 KB file `parseDocument` is 8.2 ms against a 163 ms `scanSvg`,
+    // so two redundant parses plus a recomputed name state are about 10% of a
+    // pass that now runs on every `.svg` write. The document and the state are
+    // passed rather than cached: a module-level cache in a hook is shared
+    // mutable state, and the only thing that needed fixing was recomputation
+    // inside one call.
+    const doc = parseDocument(content);
+    const nameState = rootNameState(content, doc, elements);
     // Finding 2.3: the content-level rules read the SAME file the element
     // parser reads. `maskComments` keeps every offset, so a line number taken
     // here still names the right line in the raw text.
     const text = maskComments(content);
     const raw: Finding[] = [
-        ...ruleWellFormed(content, relPath),
+        ...ruleWellFormed(doc, relPath),
         // No `text` argument: the rule reads elements only, and comment
         // skipping already happened inside `parseElements`. Passing the masked
         // text told a reader the parameter was load-bearing (finding 12);
@@ -1150,8 +1152,8 @@ export function scanSvg(content: string, relPath: string, opts: ScanOptions = {}
         ...ruleExternalReference(text, elements, relPath, mode),
         ...ruleEmbeddedRaster(elements, relPath),
         ...ruleGenericId(elements, relPath),
-        ...ruleAccessibleName(text, elements, relPath),
-        ...ruleDoubleName(text, elements, relPath),
+        ...ruleAccessibleName(nameState, relPath),
+        ...ruleDoubleName(nameState, relPath),
         ...ruleKeySplinesRange(elements, relPath),
         ...ruleTransformBox(text, elements, relPath),
         ...ruleNoReducedMotion(text, elements, relPath),

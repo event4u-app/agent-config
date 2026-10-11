@@ -1,10 +1,12 @@
 import * as fs from 'node:fs';
 import * as os from 'node:os';
 import * as path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { describe, expect, it } from 'vitest';
 
 import {
+    auditIsFresh,
     isPassSurface,
     isSvgAsset,
     isUiSurface,
@@ -17,6 +19,7 @@ import { UI_EXTENSIONS, isUiPath } from '../../src/scripts/_lib/ui_surface.js';
 import { scanSvg } from '../../src/scripts/_lib/svg_rules.js';
 import {
     CHUNK_BASENAME,
+    loadSvgScan,
     loadSvgScanUncached,
     rulesSpecifier,
 } from '../../src/scripts/hooks/svg_rules_loader.js';
@@ -164,5 +167,77 @@ describe('step 1.4, closed — the routing, and the predicate it must not widen'
         expect(rules).toContain('svg-structure-dangling-reference');
         expect(rules).toContain('svg-a11y-no-accessible-name');
         expect(rules).toContain('svg-structure-missing-xmlns');
+    });
+});
+
+describe('the audit question is asked of UI surfaces, never of an asset', () => {
+    it('an .svg has no component inventory to be audited against', () => {
+        // Findings 1 and 2 of the third completion review, both reproduced by
+        // running the hook. Round one split the ENTRY gate from the UI
+        // predicate; `targets` then carried the `.svg` past the split into
+        // `auditMissing`, so a clean conformant icon write exited WARN with
+        // "no ui-audit.json newer than public/icon.svg".
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-surface-'));
+        try {
+            const audit = path.join(root, 'agents', 'runtime', 'state', 'ui-audit.json');
+            fs.mkdirSync(path.dirname(audit), { recursive: true });
+            fs.writeFileSync(audit, '{}');
+            const icon = path.join(root, 'public', 'icon.svg');
+            fs.mkdirSync(path.dirname(icon), { recursive: true });
+            fs.writeFileSync(icon, '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"/>');
+            // The audit file is OLDER than the icon, which is the state the
+            // WARN came from. The predicate, not the freshness, is the fix.
+            fs.utimesSync(audit, new Date(0), new Date(0));
+            expect(auditIsFresh(root, 'public/icon.svg')).toBe(false);
+
+            // So the filter has to drop it before the freshness test runs.
+            const targets = ['public/icon.svg', 'components/Logo.tsx'];
+            expect(targets.filter((t) => isUiSurface(t))).toEqual(['components/Logo.tsx']);
+            // And the pass still REACHES the asset — the entry gate is the
+            // other predicate, which is the distinction round one introduced
+            // and this one had to finish applying.
+            expect(targets.filter((t) => isPassSurface(t))).toEqual(targets);
+        } finally {
+            fs.rmSync(root, { recursive: true, force: true });
+        }
+    });
+});
+
+describe('the loader cache is keyed by what it was asked', () => {
+    it('a second url is not answered by the first one\'s verdict', () => {
+        // Finding 13 of the third completion review. A single slot meant the
+        // first call's verdict answered every later call whatever url it
+        // passed, so the parameter was accepted and ignored — the shape this
+        // change's own review found three times under other names.
+        //
+        // One caller and one url on the hook path, so nothing observable
+        // changed. A cache whose key is not its input is wrong regardless of
+        // who currently calls it, and this pins it before a second caller
+        // arrives rather than after.
+        // A url that RESOLVES: the source-tree layout the loader computes,
+        // `<dir>/../_lib/svg_rules.js`, built in a temp tree.
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'loader-key-'));
+        try {
+            fs.mkdirSync(path.join(dir, 'hooks'));
+            fs.mkdirSync(path.join(dir, '_lib'));
+            fs.writeFileSync(
+                path.join(dir, '_lib', 'svg_rules.js'),
+                'module.exports = { scanSvg: () => [] };\n',
+            );
+            const good = pathToFileURL(path.join(dir, 'hooks', 'loader.js')).href;
+            const bad = pathToFileURL(path.join(os.tmpdir(), 'no-such-dir-at-all', 'loader.js')).href;
+
+            // Ask the BAD one first, so a single-slot cache would answer the
+            // good one with `null` — which is the direction that actually
+            // broke, and the order the old code passed under by accident if
+            // the good one happened to be asked first.
+            expect(loadSvgScan(bad)).toBeNull();
+            expect(typeof loadSvgScan(good)).toBe('function');
+            // Both stay themselves on a second ask.
+            expect(loadSvgScan(bad)).toBeNull();
+            expect(typeof loadSvgScan(good)).toBe('function');
+        } finally {
+            fs.rmSync(dir, { recursive: true, force: true });
+        }
     });
 });

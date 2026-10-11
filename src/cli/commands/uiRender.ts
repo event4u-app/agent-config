@@ -103,7 +103,18 @@ export interface RenderManifest {
      * the status vocabulary above is unchanged — a fourth status would have
      * been a grammar change where a reason field was what was missing.
      */
-    reason?: 'renderer-absent' | 'render-failed' | 'pass-cap-reached';
+    /**
+     * Why the render is not `verified`, when the COMMAND can say why.
+     *
+     * `pass-cap-reached` used to be in this union and nothing ever wrote it.
+     * Finding 12 of the third completion review, and it is the right call in
+     * the other direction: the pass cap is a count of the AGENT's render
+     * passes, which one invocation of this command cannot see. It belongs in
+     * the agent's own report, where the skill asks for it, and a manifest
+     * field that can only ever be unset is a field a reader will one day
+     * believe.
+     */
+    reason?: 'renderer-absent' | 'render-failed';
     /**
      * Whether the GRAPHIC is right, which no renderer and no skill may answer.
      *
@@ -136,12 +147,35 @@ export const RENDER_REL = path.join('agents', 'runtime', 'state', 'render');
 export const EXIT_RENDERER_ABSENT = 3;
 
 /**
+ * The families whose ERROR means the file is broken, as opposed to improvable.
+ *
+ * Finding 4 of the third completion review, reproduced by running `scanSvg`:
+ * an ordinary stroke icon with no `<title>` yields exactly one error —
+ * `svg-a11y-no-accessible-name` — so `errors` was never 0, the static-only
+ * discharge never fired, and a consumer with no Playwright was refused by a
+ * BLOCKING turn-end gate on every `.svg` they wrote, with no way out. That is
+ * the opposite of the path's stated purpose, which the obligation module's own
+ * header spells out: it exists so a Playwright-less install is not refused
+ * forever.
+ *
+ * `structure` is "this file does not parse or does not resolve" and `safety`
+ * is "this file does something it should not". Both are brokenness, and both
+ * SHOULD stop a discharge taken without a render. Accessibility, motion and
+ * geometry are readings about a file that works — they are reported by the
+ * design pass in their own right, and a missing title is not a reason to
+ * refuse a turn on a machine that could not render.
+ */
+const BLOCKING_FAMILIES = ['svg-structure-', 'svg-safety-'];
+
+/**
  * The static witness, bound to the bytes it read.
  *
- * `errors` counts `severity: 'error'` findings only: a warning is a reading,
- * not a refusal, and the static-only discharge in the turn-end gate is about
- * whether the file is broken. The digest is of the SAME bytes, so a later
- * reader can tell whether this reading describes the file in front of it.
+ * `errors` counts `severity: 'error'` findings in the blocking families only —
+ * see `BLOCKING_FAMILIES` for which, and for the refusal that made the
+ * distinction necessary. A warning is a reading, not a refusal, and the
+ * static-only discharge in the turn-end gate is about whether the file is
+ * BROKEN. The digest is of the SAME bytes, so a later reader can tell whether
+ * this reading describes the file in front of it.
  */
 export function staticWitness(
     absFile: string,
@@ -162,7 +196,7 @@ export function staticWitness(
     // an asset that cannot execute anything, and a correct `img`-delivered file
     // was refused the static-only discharge it qualifies for.
     const errors = scanSvg(content, path.basename(absFile), { delivery }).filter(
-        (f) => f.severity === 'error',
+        (f) => f.severity === 'error' && BLOCKING_FAMILIES.some((fam) => f.rule.startsWith(fam)),
     ).length;
     return { errors, digest };
 }

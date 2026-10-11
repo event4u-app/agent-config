@@ -87,7 +87,9 @@ execution:
 8. **Stop** at a clean witness or after three render passes, whichever comes
    first. A stop **at the cap with error findings still open** reports
    `unverified` with the reason `pass-cap-reached` and lists what is open —
-   never `verified`, and never done.
+   never `verified`, and never done. That reason is yours to report: the render
+   manifest never carries it, because one invocation of `ui:render` cannot see
+   how many passes you have made.
 9. **Report** the renderer and the checks that actually ran — `verified`,
    `static-only` or `unverified` — plus `goal: unassessed`, and name only
    output files read back from disk. Where the renderer is **absent**, run the

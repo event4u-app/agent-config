@@ -648,3 +648,25 @@ describe('what the second review round found in the geometry readings', () => {
         });
     });
 });
+
+describe('what the third review round found by running the code', () => {
+    it('a processing instruction ends at ?>, not at the first >', () => {
+        // Finding 3. This branch shared the DOCTYPE's first-`>` search, so a
+        // legal PI whose quoted pseudo-attribute contains a `>` ended early and
+        // the rest was parsed as markup — `<script/>` became a real element and
+        // the file was reported `svg-safety-active-content` at severity
+        // `error`, on a document with no script in it.
+        const pi =
+            '<?xml-stylesheet href="a.css?x=1><script/>"?>\n' +
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">' +
+            '<title>t</title><rect width="24" height="24"/></svg>\n';
+        expect(scanSvg(pi, 'pi.svg')).toEqual([]);
+
+        // The rule itself is untouched: a real script is still found, which is
+        // what makes the assertion above a fix rather than a suppression.
+        const real =
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" role="img">' +
+            '<title>t</title><script/><rect width="24" height="24"/></svg>\n';
+        expect(scanSvg(real, 'real.svg').map((f) => f.rule)).toContain('svg-safety-active-content');
+    });
+});

@@ -15,8 +15,17 @@
  * carries — elements with their attributes, comments, CDATA sections,
  * processing instructions, DOCTYPEs and text — each with a line and a column,
  * assembled into a tree with parent links, plus a list of well-formedness
- * errors. `parseElements` is derived from the same scan, so the flat view and
- * the tree can never disagree about what the file contains.
+ * errors.
+ *
+ * TWO SCANNERS, NOT ONE, and this header used to claim otherwise.
+ * `parseElements` in `svg_rules.ts` is an independent scanner over the same
+ * bytes, so the two CAN disagree about what a file contains — finding 3 of the
+ * third completion review of this change found a case where they did, and the
+ * disagreement produced an error-severity false positive. That one is fixed
+ * where it was (the prolog), but the general claim was false and is not
+ * restored: a reader deciding whether a fix here also lands there must check,
+ * not assume. Merging them is a larger change than the finding asked for and
+ * is not attempted under a remediation.
  *
  * WHAT IT IS NOT. Not a validating parser, not namespace-aware beyond keeping
  * the prefix in the name, and it does not expand entities. It reports that a
@@ -84,8 +93,16 @@ function positions(content: string): (offset: number) => { line: number; column:
     };
 }
 
-/** End of the tag, honouring quoted attribute values that may contain `>`. */
-function tagEnd(content: string, from: number): number {
+/**
+ * End of the tag, honouring quoted attribute values that may contain `>`.
+ *
+ * Exported because `svg_rules.parseElements` scans the same bytes and had its
+ * own byte-identical copy — finding 9 of the third completion review, which
+ * also noted that BOTH copies ship in the per-`.svg`-write hook chunk. Two
+ * scanners is a fact this file's header now states plainly; two copies of
+ * their shared primitives is not a consequence of it.
+ */
+export function tagEnd(content: string, from: number): number {
     let quote: string | null = null;
     for (let i = from + 1; i < content.length; i += 1) {
         const ch = content[i] as string;
@@ -102,7 +119,8 @@ function tagEnd(content: string, from: number): number {
     return -1;
 }
 
-function attrsOf(raw: string): Record<string, string> {
+/** Attributes of one tag, lowercased keys. Shared with `svg_rules` — see `tagEnd`. */
+export function attrsOf(raw: string): Record<string, string> {
     const attrs: Record<string, string> = {};
     const re = /([A-Za-z_:][\w.:-]*)\s*=\s*("([^"]*)"|'([^']*)')/g;
     let m: RegExpExecArray | null;
@@ -283,18 +301,8 @@ export function parseDocument(content: string): XmlDocument {
     return { roots, elements, errors };
 }
 
-/** Every ancestor of a node, nearest first. */
-export function ancestors(node: XmlNode): XmlNode[] {
-    const out: XmlNode[] = [];
-    let p = node.parent;
-    while (p !== null) {
-        out.push(p);
-        p = p.parent;
-    }
-    return out;
-}
-
-/** The document's first element, which for an SVG is its root graphic. */
-export function documentElement(doc: XmlDocument): XmlNode | undefined {
-    return doc.elements[0];
-}
+// `ancestors` and `documentElement` used to live here. Finding 11 of the third
+// completion review: both were exported, called by nothing, and bundled into
+// the per-`.svg`-write dispatch chunk — own-orphans of this same diff, which
+// `minimal-safe-diff` says the diff that made them removes. `XmlNode.parent`
+// is the primitive either would have been built on and it is still here.
