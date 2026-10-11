@@ -59,19 +59,14 @@ import {
     HOST_BASENAME,
     ICON_SIZES,
     NEAR_WHITE_CHANNEL,
-    SAMPLE_RES,
     type AssetClass,
     type AssetFinding,
     type AssetReading,
-    type AssetSizeCapture,
     type Box,
-    type DrawOnReading,
     type FrameReading,
     type GeometryTolerance,
     type IconGridReading,
-    type OutsideViewBoxElement,
     type ReducedMotionReading,
-    type TextReading,
 } from './uiRenderAssetTypes.js';
 
 export * from './uiRenderAssetTypes.js';

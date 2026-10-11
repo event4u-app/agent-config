@@ -33,6 +33,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import type * as PlaywrightTest from '@playwright/test';
+
 import { runAssetRender, type AssetClass } from '../cli/commands/uiRenderAsset.js';
 import { scanHostHtml, scanSvg, type DeliveryMode } from './lint_svg_asset.js';
 import { smilVerdict } from './_lib/svg_motion.js';
@@ -395,7 +397,7 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
     let browser: EngineBrowser | null = null;
     if (!staticOnly) {
         try {
-            const { chromium } = (await import('@playwright/test')) as typeof import('@playwright/test');
+            const { chromium } = (await import('@playwright/test')) as typeof PlaywrightTest;
             browser = (await chromium.launch({ headless: true })) as unknown as EngineBrowser;
         } catch {
             browser = null;
@@ -427,7 +429,7 @@ export async function main(argv: readonly string[] = process.argv.slice(2)): Pro
     try {
         if (!staticOnly) {
             try {
-                const { chromium } = (await import('@playwright/test')) as typeof import('@playwright/test');
+                const { chromium } = (await import('@playwright/test')) as typeof PlaywrightTest;
                 sweepBrowser = (await chromium.launch({ headless: true })) as unknown as EngineBrowser;
             } catch {
                 sweepBrowser = null;

@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -31,10 +32,9 @@ afterAll(() => fs.rmSync(tmp, { recursive: true, force: true }));
 function run(name: string, body: string): { code: number; out: string } {
     const file = path.join(tmp, name);
     fs.writeFileSync(file, body);
-    // Import lazily and per-file: the linter is a module with a `main()` that
-    // reads argv, so the test drives `scanFile` through the CLI the same way
-    // CI does — via a child process, so `process.exit` stays contained.
-    const { execFileSync } = require('node:child_process') as typeof import('node:child_process');
+    // Driven through a child process, the way CI drives it: the linter is a
+    // module with a `main()` that reads argv and calls `process.exit`, so
+    // importing it into the test would take the test runner down with it.
     const script = path.resolve(__dirname, '../../src/scripts/lint_design_quality.ts');
     try {
         const out = execFileSync('npx', ['tsx', script, '--dir', tmp, '--quiet'], {
@@ -126,7 +126,6 @@ describe('inline-smil-without-route-is-reported', () => {
                 `<circle cx="1" cy="5" r="1"><animate attributeName="cx" from="1" to="9" dur="1s" ` +
                 `repeatCount="indefinite"/></circle></svg>`,
         );
-        const { execFileSync } = require('node:child_process') as typeof import('node:child_process');
         const script = path.resolve(__dirname, '../../src/scripts/lint_design_quality.ts');
         let code = 0;
         let out = '';
