@@ -182,6 +182,16 @@ export function parseDocument(content: string): XmlDocument {
         }
         if (content.startsWith('<?', lt)) {
             const end = content.indexOf('?>', lt + 2);
+            if (end === -1) {
+                // Finding 11 of this change's completion review: this and the
+                // declaration below swallowed the rest of the document into one
+                // node and returned cleanly, so a file ending in
+                // `<?xml version="1.0"` read as WELL-FORMED — a skip, under a
+                // contract whose whole point is that a file which does not
+                // parse is a finding rather than a skipped file.
+                const p = at(lt);
+                errors.push({ message: 'unterminated processing instruction', line: p.line, column: p.column });
+            }
             const stop = end === -1 ? content.length : end + 2;
             append(make('pi', lt, '', content.slice(lt + 2, end === -1 ? content.length : end)));
             i = stop;
@@ -199,6 +209,10 @@ export function parseDocument(content: string): XmlDocument {
             } else {
                 stop = close === -1 ? content.length : close + 1;
             }
+            if (close === -1) {
+                const p = at(lt);
+                errors.push({ message: 'unterminated declaration', line: p.line, column: p.column });
+            }
             append(make('doctype', lt, '', content.slice(lt + 2, Math.max(lt + 2, stop - 1))));
             i = stop;
             continue;
@@ -213,6 +227,11 @@ export function parseDocument(content: string): XmlDocument {
         const raw = content.slice(lt, gt + 1);
         const nameMatch = /^<\/?\s*([A-Za-z_][\w.:-]*)/.exec(raw);
         if (!nameMatch) {
+            // Finding 11, third case: a `<` that opens something with no legal
+            // element name is malformed markup, not whitespace. Skipping it
+            // silently is the same skip the other two were.
+            const p = at(lt);
+            errors.push({ message: `"${raw.slice(0, 24)}" is not a tag`, line: p.line, column: p.column });
             i = gt + 1;
             continue;
         }

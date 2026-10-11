@@ -387,6 +387,12 @@ async function runAssetProfile(
             compareTo: opts.compareTo,
             registration: opts.registration,
         });
+        // Finding 8 of this change's completion review: ONE evaluation. The
+        // spread below used to call this twice — once as the truthiness guard,
+        // once for the value — so the verified path re-read the file, re-hashed
+        // it and re-ran the whole rule suite, and the two reads could disagree
+        // if the file moved between them.
+        const staticReading = staticWitness(opts.abs);
         const manifest: RenderManifest = {
             schema: 1,
             generated_at: new Date().toISOString(),
@@ -408,7 +414,7 @@ async function runAssetProfile(
             // the gate's digest-match discharge reads the ASSET reading, but a
             // human comparing two manifests should not have to tell whether the
             // static layer ran from which path produced the file.
-            ...(staticWitness(opts.abs) ? { static: staticWitness(opts.abs) as { errors: number; digest: string } } : {}),
+            ...(staticReading ? { static: staticReading } : {}),
             ...(result.degradationReason ? { degradation_reason: result.degradationReason } : {}),
             ...(result.verification === 'verified' ? {} : { reason: 'render-failed' as const }),
         };

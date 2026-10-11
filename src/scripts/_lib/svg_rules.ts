@@ -2,22 +2,45 @@
  * svg_rules — the SVG rule set, with no command-line surface attached.
  *
  * Split out of `lint_svg_asset.ts` for a measured reason, not a tidy one, and
- * the routing it was split FOR is not live: step 1.4 of
- * `road-to-svg-with-a-witness` would route an `.svg` write to these rules
- * inside the design pass, and it was withdrawn on an independent council
- * verdict before it landed. Every hook concern is inlined into ONE bundle that
- * every hook event loads, so a dependency added for one concern is paid by all
- * of them on every dispatch; importing the rules there costs 30,924 bytes,
- * which is 12,931 past the ceiling. The split stands on its own — it reclaimed
- * 8,643 of that and leaves a rule set the follow-up can route to rather than a
- * rewrite — but nothing in the hook path imports this module today. The only
- * consumers are `lint_svg_asset` and the fixture report.
+ * the routing it was split FOR IS NOW LIVE.
+ *
+ * THIS PARAGRAPH USED TO SAY THE OPPOSITE, and it was false the moment the
+ * routing landed — finding 10 of that change's own completion review, which is
+ * the cheapest kind of defect to leave behind and the most expensive to read: a
+ * reader opening this file to decide whether it sits on a hot path was told it
+ * does not.
+ *
+ * It does. `hooks/design_pass_hook.ts` routes every `.svg` write here through
+ * `hooks/svg_rules_loader.ts`, and `package.json`'s `build:hook-chunks` emits
+ * this module as `dist/hooks/svg_rules.chunk.cjs` for exactly that. The chunk
+ * is why it is live without being expensive: step 1.4 of
+ * `road-to-svg-with-a-witness` imported these rules STATICALLY into the one
+ * bundle every hook event loads — 30,924 bytes, 12,931 past the ceiling — and
+ * an independent council refused it 2/2. Loaded as a chunk the same rules cost
+ * 2,128 bytes in that bundle and are `require`d only for a path ending in
+ * `.svg`.
+ *
+ * So: this module is on the `.svg` write path and on no other. Anything added
+ * here is paid by an SVG write and by nothing else — a budget, not a licence.
+ * Its other consumers are `lint_svg_asset` and the fixture report.
  *
  * `lint_svg_asset.ts` is now the CLI over this module and re-exports it, so
  * every existing import keeps resolving.
  */
 
 import { parseDocument, type XmlNode } from './svg_dom.js';
+import {
+    type Box,
+    elementExtent,
+    pathDataError,
+    pathExtent,
+    pointsExtent,
+    staticBox,
+    tokenisePath,
+} from './svg_geometry.js';
+
+export { elementExtent, pathDataError, pathExtent, pointsExtent, staticBox, tokenisePath };
+export type { Box };
 import {
     SMIL_TAGS,
     declarationsOf,
@@ -290,70 +313,6 @@ function ruleMissingXmlns(elements: SvgElement[], file: string): Finding[] {
     ];
 }
 
-interface Box {
-    minX: number;
-    minY: number;
-    maxX: number;
-    maxY: number;
-}
-
-/**
- * The box of an element whose geometry is fully numeric and untransformed.
- *
- * Returns `null` for anything else — a transform, a percentage, a unit, a
- * `path`. That conservatism is the rule's whole safety margin: a box this
- * function guesses at is a box the "entirely outside" test would flag wrongly.
- */
-export function staticBox(el: SvgElement): Box | null {
-    if (el.attrs['transform'] || el.attrs['style']?.includes('transform')) return null;
-    const num = (k: string): number | null => {
-        const v = el.attrs[k];
-        if (v === undefined) return null;
-        if (!/^-?\d+(\.\d+)?$/.test(v.trim())) return null;
-        return Number(v);
-    };
-    switch (el.name) {
-        case 'rect': {
-            const x = num('x') ?? 0;
-            const y = num('y') ?? 0;
-            const w = num('width');
-            const h = num('height');
-            if (w === null || h === null) return null;
-            return { minX: x, minY: y, maxX: x + w, maxY: y + h };
-        }
-        case 'circle': {
-            const cx = num('cx') ?? 0;
-            const cy = num('cy') ?? 0;
-            const r = num('r');
-            if (r === null) return null;
-            return { minX: cx - r, minY: cy - r, maxX: cx + r, maxY: cy + r };
-        }
-        case 'ellipse': {
-            const cx = num('cx') ?? 0;
-            const cy = num('cy') ?? 0;
-            const rx = num('rx');
-            const ry = num('ry');
-            if (rx === null || ry === null) return null;
-            return { minX: cx - rx, minY: cy - ry, maxX: cx + rx, maxY: cy + ry };
-        }
-        case 'line': {
-            const x1 = num('x1');
-            const y1 = num('y1');
-            const x2 = num('x2');
-            const y2 = num('y2');
-            if (x1 === null || y1 === null || x2 === null || y2 === null) return null;
-            return {
-                minX: Math.min(x1, x2),
-                minY: Math.min(y1, y2),
-                maxX: Math.max(x1, x2),
-                maxY: Math.max(y1, y2),
-            };
-        }
-        default:
-            return null;
-    }
-}
-
 /** Is this element inside a `<defs>`, `<symbol>`, `<clipPath>`, `<mask>` or `<marker>`? */
 function buildContainerDepth(elements: SvgElement[]): Map<number, string[]> {
     const stack: string[] = [];
@@ -423,190 +382,6 @@ function hasTransformedAncestor(elements: SvgElement[], index: number): boolean 
  * followed by the wrong number of coordinates, or a stray token. A path whose
  * numbers are odd but well-formed is a design question, not a parse error.
  */
-/**
- * The extent of a path's own points, with relative commands walked properly.
- *
- * Finding 2.1 of `road-to-svg-rules-in-the-dispatch-path`. The icon reference
- * reader used to scrape `d` with `/(-?[\d.]+)[\s,]+(-?[\d.]+)/g`, which reads
- * every number pair as an absolute coordinate — so `m 2 2 l 4 0` was read as
- * the points (2,2) and (4,0) rather than (2,2) and (6,2). That is not a
- * rounding error: a path drawn entirely with relative commands reports an
- * extent anchored at the origin.
- *
- * APPROXIMATE, AND DELIBERATELY SO. Curve control points are included rather
- * than the curve's true hull, which can over-estimate a Bézier's extent by
- * the control polygon. The alternative is a full flattener, and the consumer
- * here is a padding comparison against other icons measured exactly the same
- * way — a shared conservative bound is a comparison; a precise bound on one
- * side and a loose one on the other is finding 2.2.
- *
- * Returns null for an empty or unparseable `d`, which is a separate finding
- * (`pathDataError`) and not this function's to report.
- */
-export function pathExtent(d: string): Box | null {
-    const tokens = d.trim().match(/[a-zA-Z]|-?\d*\.?\d+(?:[eE][-+]?\d+)?/g);
-    if (!tokens) return null;
-    const argCount: Record<string, number> = { m: 2, l: 2, t: 2, h: 1, v: 1, c: 6, s: 4, q: 4, a: 7, z: 0 };
-    let minX = Number.POSITIVE_INFINITY;
-    let minY = Number.POSITIVE_INFINITY;
-    let maxX = Number.NEGATIVE_INFINITY;
-    let maxY = Number.NEGATIVE_INFINITY;
-    const see = (x: number, y: number): void => {
-        if (!Number.isFinite(x) || !Number.isFinite(y)) return;
-        minX = Math.min(minX, x);
-        maxX = Math.max(maxX, x);
-        minY = Math.min(minY, y);
-        maxY = Math.max(maxY, y);
-    };
-    // Current point, and the subpath start `Z` returns to.
-    let cx = 0;
-    let cy = 0;
-    let sx = 0;
-    let sy = 0;
-    let i = 0;
-    let cmd = '';
-    let rel = false;
-    while (i < tokens.length) {
-        const tok = tokens[i] as string;
-        if (/^[a-zA-Z]$/.test(tok)) {
-            cmd = tok.toLowerCase();
-            rel = tok === tok.toLowerCase();
-            i += 1;
-            if (cmd === 'z') {
-                cx = sx;
-                cy = sy;
-                continue;
-            }
-            if (!(cmd in argCount)) return null;
-        } else if (cmd === '' || cmd === 'z') {
-            // A number where no repeatable command is open.
-            return null;
-        }
-        const need = argCount[cmd] as number;
-        if (need === 0) continue;
-        const args: number[] = [];
-        while (args.length < need && i < tokens.length && !/^[a-zA-Z]$/.test(tokens[i] as string)) {
-            args.push(Number(tokens[i]));
-            i += 1;
-        }
-        if (args.length < need) return null;
-        switch (cmd) {
-            case 'h': {
-                cx = rel ? cx + (args[0] as number) : (args[0] as number);
-                break;
-            }
-            case 'v': {
-                cy = rel ? cy + (args[0] as number) : (args[0] as number);
-                break;
-            }
-            case 'a': {
-                // rx ry rotation large-arc sweep x y — only the last pair is a point.
-                cx = rel ? cx + (args[5] as number) : (args[5] as number);
-                cy = rel ? cy + (args[6] as number) : (args[6] as number);
-                break;
-            }
-            default: {
-                // Every remaining command is a run of (x, y) pairs; the last
-                // pair is the new current point and the earlier ones are
-                // control points, which are included as the bound above says.
-                for (let k = 0; k + 1 < args.length; k += 2) {
-                    const px = rel ? cx + (args[k] as number) : (args[k] as number);
-                    const py = rel ? cy + (args[k + 1] as number) : (args[k + 1] as number);
-                    see(px, py);
-                    if (k + 2 >= args.length) {
-                        cx = px;
-                        cy = py;
-                    }
-                }
-                break;
-            }
-        }
-        see(cx, cy);
-        if (cmd === 'm') {
-            // `m`/`M` opens a subpath at its FIRST pair; `Z` returns there, not
-            // to wherever the run ended. One `need`-sized group is read per
-            // iteration, so this pair is that start.
-            sx = cx;
-            sy = cy;
-            // A repeated `m` argument group is an implicit lineto, per the path
-            // grammar — so the command for the next group is `l`, not `m`.
-            cmd = 'l';
-        }
-    }
-    if (!Number.isFinite(minX)) return null;
-    return { minX, minY, maxX, maxY };
-}
-
-/** Extent of a `points` list (`<polygon>`, `<polyline>`). Absolute by definition. */
-export function pointsExtent(points: string): Box | null {
-    const nums = points.trim().match(/-?\d*\.?\d+(?:[eE][-+]?\d+)?/g);
-    if (!nums || nums.length < 2) return null;
-    let minX = Number.POSITIVE_INFINITY;
-    let minY = Number.POSITIVE_INFINITY;
-    let maxX = Number.NEGATIVE_INFINITY;
-    let maxY = Number.NEGATIVE_INFINITY;
-    for (let i = 0; i + 1 < nums.length; i += 2) {
-        const x = Number(nums[i]);
-        const y = Number(nums[i + 1]);
-        if (!Number.isFinite(x) || !Number.isFinite(y)) continue;
-        minX = Math.min(minX, x);
-        maxX = Math.max(maxX, x);
-        minY = Math.min(minY, y);
-        maxY = Math.max(maxY, y);
-    }
-    return Number.isFinite(minX) ? { minX, minY, maxX, maxY } : null;
-}
-
-/**
- * One element's own extent in user units, whichever way it was drawn.
- *
- * The union of `staticBox` (rect, circle, ellipse, line), `pathExtent` and
- * `pointsExtent`. Finding 2.1's first half: a reference icon drawn with
- * primitives used to yield no extent at all and was dropped from the set
- * SILENTLY — after which the reading reported "no icon reference set was
- * supplied" although one was.
- *
- * Returns null for a transformed element, inheriting `staticBox`'s refusal to
- * guess at a transform, and for anything that carries no geometry.
- */
-export function elementExtent(el: SvgElement): Box | null {
-    if (el.closing) return null;
-    if (el.attrs['transform'] || el.attrs['style']?.includes('transform')) return null;
-    if (el.name === 'path') return pathExtent(el.attrs['d'] ?? '');
-    if (el.name === 'polygon' || el.name === 'polyline') return pointsExtent(el.attrs['points'] ?? '');
-    return staticBox(el);
-}
-
-export function pathDataError(d: string): string | null {
-    const trimmed = d.trim();
-    if (!trimmed) return 'empty d attribute';
-    if (!/^[mM]/.test(trimmed)) return 'path data does not start with a moveto command';
-    const argCount: Record<string, number> = {
-        m: 2, l: 2, t: 2, h: 1, v: 1, c: 6, s: 4, q: 4, a: 7, z: 0,
-    };
-    const tokens = trimmed.match(/[a-zA-Z]|-?\d*\.?\d+(?:[eE][-+]?\d+)?/g);
-    if (!tokens) return 'path data holds no commands';
-    let i = 0;
-    while (i < tokens.length) {
-        const tok = tokens[i] as string;
-        if (!/^[a-zA-Z]$/.test(tok)) return `unexpected token "${tok}" where a command letter was required`;
-        const cmd = tok.toLowerCase();
-        if (!(cmd in argCount)) return `unknown path command "${tok}"`;
-        const need = argCount[cmd] as number;
-        i += 1;
-        if (need === 0) continue;
-        let consumed = 0;
-        while (i < tokens.length && !/^[a-zA-Z]$/.test(tokens[i] as string)) {
-            i += 1;
-            consumed += 1;
-        }
-        if (consumed === 0 || consumed % need !== 0) {
-            return `command "${tok}" takes ${need} coordinate(s) per repetition, got ${consumed}`;
-        }
-    }
-    return null;
-}
-
 function ruleUnparseablePath(elements: SvgElement[], file: string): Finding[] {
     const findings: Finding[] = [];
     for (const el of elements) {
@@ -1027,7 +802,7 @@ export function directChildrenOfRoot(content: string): XmlNode[] {
  * direction: a false negative costs a reading, a false positive costs trust in
  * every other finding beside it.
  */
-function ruleDegenerateGradient(content: string, elements: SvgElement[], file: string): Finding[] {
+function ruleDegenerateGradient(elements: SvgElement[], file: string): Finding[] {
     const findings: Finding[] = [];
     const open: Array<{ el: SvgElement; stops: Array<{ color: string; opacity: string }> }> = [];
     for (const el of elements) {
@@ -1359,7 +1134,12 @@ export function scanSvg(content: string, relPath: string, opts: ScanOptions = {}
     const text = maskComments(content);
     const raw: Finding[] = [
         ...ruleWellFormed(content, relPath),
-        ...ruleDegenerateGradient(text, elements, relPath),
+        // No `text` argument: the rule reads elements only, and comment
+        // skipping already happened inside `parseElements`. Passing the masked
+        // text told a reader the parameter was load-bearing (finding 12);
+        // `no-unused-vars` could not catch it because two later parameters were
+        // used.
+        ...ruleDegenerateGradient(elements, relPath),
         ...ruleMissingXmlns(elements, relPath),
         ...ruleOutsideViewBox(elements, relPath),
         ...ruleUnparseablePath(elements, relPath),
@@ -1403,7 +1183,20 @@ export function scanHostHtml(content: string, relPath: string, opts: ScanOptions
     // answers correctly for the graphics that survive.
     const hostText = maskComments(content);
     let m: RegExpExecArray | null;
-    while ((m = svgRe.exec(hostText)) !== null) graphics.push({ body: m[0] ?? '', offset: m.index });
+    while ((m = svgRe.exec(hostText)) !== null) {
+        // The MATCH is found in the masked text — a graphic inside an HTML
+        // comment is not on the page — but the BODY is sliced from the raw
+        // text at the same offsets.
+        //
+        // Finding 16 of this change's completion review: handing the masked
+        // slice to `scanSvg` meant its own `parseIgnores` saw every
+        // `svg-asset-disable` marker blanked, which is precisely the failure
+        // `maskComments`' doc warns about. Suppression survived only because
+        // this function re-filters on absolute lines at the end — the inner
+        // pass was inert, and silently so, which made the outer re-filter
+        // load-bearing without anything saying it was.
+        graphics.push({ body: content.slice(m.index, m.index + (m[0] ?? '').length), offset: m.index });
+    }
 
     for (const g of graphics) {
         const baseLine = lineOf(g.offset) - 1;

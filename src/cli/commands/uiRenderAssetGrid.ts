@@ -15,6 +15,15 @@ import { elementExtent, parseElements, readViewBox } from '../../scripts/lint_sv
 import type { SvgElement, ViewBox } from '../../scripts/lint_svg_asset.js';
 import type { Box, IconGridReading } from './uiRenderAssetTypes.js';
 
+/**
+ * Elements whose contents DEFINE something rather than paint it.
+ *
+ * A shape inside one of these never appears on the canvas on its own, so it
+ * must not contribute to the graphic's extent. `<pattern>` and `<symbol>` join
+ * the three obvious ones for the same reason.
+ */
+const NON_RENDERING = new Set(['defs', 'clippath', 'mask', 'symbol', 'marker', 'pattern']);
+
 export interface IconReference {
     file: string;
     viewBox: ViewBox;
@@ -59,21 +68,33 @@ export function centrelineExtent(elements: readonly SvgElement[]): {
     let minY = Number.POSITIVE_INFINITY;
     let maxX = Number.NEGATIVE_INFINITY;
     let maxY = Number.NEGATIVE_INFINITY;
-    // How many open ancestors carry a transform. Non-zero ⇒ skip.
-    const openTransforms: boolean[] = [];
-    let transformedDepth = 0;
+    // Two reasons to skip a subtree, tracked on one stack: an ancestor carries
+    // a transform, or an ancestor DOES NOT RENDER.
+    //
+    // The second is finding 3 of this change's completion review. Geometry
+    // inside `<defs>`, `<clipPath>`, `<mask>`, `<symbol>`, `<marker>` or
+    // `<pattern>` is a definition, not paint — and a clip path is usually a
+    // full-bleed rect, so an exported icon reported padding 0 on BOTH sides
+    // and the comparison finding 2.2 exists to make meaningful compared two
+    // zeroes. The old `d`-scraping reader had the same blind spot; reading
+    // primitives widened it, because clip and mask shapes are rects and
+    // circles.
+    const openSkips: boolean[] = [];
+    let skipDepth = 0;
     for (const el of elements) {
         if (el.closing) {
-            const was = openTransforms.pop();
-            if (was === true) transformedDepth -= 1;
+            const was = openSkips.pop();
+            if (was === true) skipDepth -= 1;
             continue;
         }
-        const carries = Boolean(el.attrs['transform'] || el.attrs['style']?.includes('transform'));
+        const carries =
+            Boolean(el.attrs['transform'] || el.attrs['style']?.includes('transform')) ||
+            NON_RENDERING.has(el.name);
         if (!el.selfClosing) {
-            openTransforms.push(carries);
-            if (carries) transformedDepth += 1;
+            openSkips.push(carries);
+            if (carries) skipDepth += 1;
         }
-        if (transformedDepth > 0 || (el.selfClosing && carries)) continue;
+        if (skipDepth > 0 || (el.selfClosing && carries)) continue;
         const box = elementExtent(el);
         if (!box) continue;
         minX = Math.min(minX, box.minX);
@@ -220,10 +241,13 @@ export function gradeIconGrid(
             padding,
             reason:
                 refs.length === 0
-                    ? (iconSet.length === 0
+                    ? (refs.length === 0 && skipped.length === 0 && iconSet.length > 0
+                          ? 'every file in the supplied icon reference set is the file under test, so there is ' +
+                            'nothing to compare against'
+                          : iconSet.length === 0
                           ? 'no icon reference set was supplied, so the incumbent grid was never read (E6)'
-                          : 'an icon reference set was supplied but no file in it yielded a reading, so there is no grid to compare against') +
-                      unreadable
+                            : 'an icon reference set was supplied but no file in it yielded a reading, so there ' +
+                              'is no grid to compare against') + unreadable
                     : 'no reference icon shares this viewBox size, so there is no grid to compare against' +
                       unreadable,
         };

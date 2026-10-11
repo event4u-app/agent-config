@@ -359,7 +359,16 @@ export async function compareGeometry(
         // questions have different right answers at the boundary.
         const subjectForJudging = judgeSubjectOnly ? baselineMask.painted : null;
         const subjectForForeign = judgeSubjectOnly
-            ? dilate(baselineMask.painted, frame.w, frame.h, Math.max(1, Math.ceil(unitsPerSample)))
+            ? // ONE SAMPLE, and the units are the point. `unitsPerSample` is
+              // user units per sample — `dilate`'s own doc says its radius is
+              // in SAMPLES, so passing it read a units value as a sample count
+              // (finding 5). It happened to equal 1 only while
+              // `frame.scale >= 1`; on a coarse frame — a large viewBox against
+              // a small raster — it dilated by several samples and
+              // `foreign_content_share` under-reported exactly where the
+              // sampling is least precise. The anti-alias band IS one sample by
+              // construction, whatever that sample is worth in user units.
+              dilate(baselineMask.painted, frame.w, frame.h, 1)
             : null;
         const candidateForJudging =
             subjectForJudging === null

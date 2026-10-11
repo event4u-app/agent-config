@@ -14,7 +14,13 @@
 import type { Browser, Page } from '@playwright/test';
 
 import type { ViewBox } from '../../scripts/lint_svg_asset.js';
-import { HOST_BASENAME, type AssetReading, type Box, type GroundReading } from './uiRenderAssetTypes.js';
+import {
+    HOST_BASENAME,
+    MIN_CONTRAST_RATIO,
+    type AssetReading,
+    type Box,
+    type GroundReading,
+} from './uiRenderAssetTypes.js';
 
 /** The subset of the caller's page opener this pass needs. */
 export type OpenPage = (
@@ -65,6 +71,8 @@ export async function readGrounds(
         blocked: string[];
         backgrounds: AssetReading['backgrounds'];
         holeBoxes: ReadonlyArray<Box>;
+        /** Finding 7: shapes declared translucent, excluded from the bleed count. */
+        softBoxes: ReadonlyArray<Box>;
         viewBox: ViewBox | null;
     },
 ): Promise<GroundReading[]> {
@@ -116,7 +124,15 @@ export async function readGrounds(
                     ground: string;
                     colour: string;
                     holes: ReadonlyArray<Box>;
+                    /** Extents of shapes the author made translucent on purpose. */
+                    soft: ReadonlyArray<Box>;
                     vb: ViewBox | null;
+                    // Finding 4: PASSED, not closed over. A `page.evaluate`
+                    // body cannot see module scope, so the constant was
+                    // exported, linked from a doc comment, and silently
+                    // replaced by a literal `3` — the same defect class this
+                    // change fixes two files away for `Registration.scale`.
+                    minContrast: number;
                 }): Promise<{ silhouette: number; painted: number; low: number; bleed: number } | null> => {
                     const load = async (b64: string): Promise<HTMLImageElement | null> => {
                         const img = new Image();
@@ -188,15 +204,18 @@ export async function readGrounds(
                         return (hi + 0.05) / (lo + 0.05);
                     };
 
-                    // Declared holes, mapped from user units into this image.
-                    const inHole = (x: number, y: number): boolean => {
-                        if (!args.vb || args.holes.length === 0) return false;
+                    // Declared holes and translucent shapes, mapped from user
+                    // units into this image.
+                    const within = (boxes: ReadonlyArray<Box>, x: number, y: number): boolean => {
+                        if (!args.vb || boxes.length === 0) return false;
                         const ux = args.vb.x + (x / w) * args.vb.w;
                         const uy = args.vb.y + (y / h) * args.vb.h;
-                        return args.holes.some(
+                        return boxes.some(
                             (box) => ux >= box.x && ux <= box.x + box.w && uy >= box.y && uy <= box.y + box.h,
                         );
                     };
+                    const inHole = (x: number, y: number): boolean => within(args.holes, x, y);
+                    const inSoft = (x: number, y: number): boolean => within(args.soft, x, y);
 
                     // The OUTER silhouette: flood the transparent region
                     // inwards from the border. What the flood cannot reach is
@@ -248,7 +267,7 @@ export async function readGrounds(
                         // ratio of the ground against itself.
                         if (opaque(i)) {
                             painted += 1;
-                            if (ratio(c) < 3) low += 1;
+                            if (ratio(c) < args.minContrast) low += 1;
                         }
                         // Bleed is an INTERIOR pixel the graphic does not fully
                         // cover, so the ground shows through it.
@@ -262,7 +281,19 @@ export async function readGrounds(
                         // the same number whatever colour the ground is, which
                         // is why the finding fires on the dark row: that is the
                         // capture where the consequence is visible.
-                        if (!opaque(i) && !inHole(i % w, Math.floor(i / w))) bleed += 1;
+                        // Finding 7: a legitimately TRANSLUCENT interior is
+                        // not a seam. A `fill-opacity="0.5"` shape is excluded
+                        // from `painted` and would otherwise be counted as
+                        // near-total bleed against a 0.002 threshold — a
+                        // warning on a correct file, which is the Risk 1
+                        // failure this whole concern is shaped around. The
+                        // caller passes those shapes' extents the same way it
+                        // passes declared holes, because "is this coverage
+                        // intended" is again a question only the author
+                        // answers.
+                        const x = i % w;
+                        const y = Math.floor(i / w);
+                        if (!opaque(i) && !inHole(x, y) && !inSoft(x, y)) bleed += 1;
                     }
                     return { silhouette: sil, painted, low, bleed };
                 },
@@ -271,7 +302,9 @@ export async function readGrounds(
                     ground: shot.toString('base64'),
                     colour,
                     holes: spec.holeBoxes,
+                    soft: spec.softBoxes,
                     vb: spec.viewBox,
+                    minContrast: MIN_CONTRAST_RATIO,
                 },
             );
             if (counts === null) continue;

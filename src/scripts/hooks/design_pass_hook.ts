@@ -73,7 +73,7 @@
  *        the pass reports `verification: degraded` naming the missing file,
  *        and every other finding family is unaffected. This is the per-install
  *        off switch the static import could not have had.
- *     2. Drop `isSvgAsset` from `isUiSurface` below. An `.svg` outside a UI
+ *     2. Drop `isSvgAsset` from `isPassSurface` below. An `.svg` outside a UI
  *        tree stops reaching the pass at all; one inside it reads as it did
  *        before this step.
  *     3. Turn the concern off entirely (`hooks.design_pass.enabled: false`),
@@ -175,7 +175,27 @@ export function enabled(root: string, key = 'design_pass'): boolean {
  */
 export const isSvgAsset = (p: string): boolean => /\.svg$/i.test(p);
 
-export const isUiSurface = (p: string): boolean => isUiPath(p) || isUiTreePath(p) || isSvgAsset(p);
+/**
+ * UNCHANGED, and that is the point of the predicate below it.
+ *
+ * Finding 6 of this change's own completion review: widening THIS predicate to
+ * admit every `.svg` would have moved the UI-turn denominator the
+ * consultation-rate measurement is defined against — which the
+ * `HANDOVER_TRIGGERS` note further down reserves, in writing, as a different
+ * decision than any routing change. It was widened and is widened no longer.
+ */
+export const isUiSurface = (p: string): boolean => isUiPath(p) || isUiTreePath(p);
+
+/**
+ * What this PASS looks at — a UI surface, or any `.svg`.
+ *
+ * The routing step 1.2 of `road-to-svg-rules-in-the-dispatch-path` asked for,
+ * in the one place it belongs: the pass's own entry gate. Keeping it out of
+ * `isUiSurface` leaves every other reading that predicate feeds — the
+ * conformance verdict's noteworthy test, the denominator above — reading
+ * exactly what it read before.
+ */
+export const isPassSurface = (p: string): boolean => isUiSurface(p) || isSvgAsset(p);
 
 /**
  * The shadow read of `ui-conformance.json` — Phase 5 of
@@ -592,7 +612,7 @@ function main(): number {
         targets = state.touched;
     } else {
         const t = targetPath(payload);
-        if (!t || !isUiSurface(t)) return EXIT_ALLOW;
+        if (!t || !isPassSurface(t)) return EXIT_ALLOW;
         targets = [t];
         if (!state.touched.includes(t)) state.touched.push(t);
     }

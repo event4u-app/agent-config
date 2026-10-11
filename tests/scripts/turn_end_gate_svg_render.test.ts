@@ -154,7 +154,7 @@ describe('the turn-end gate reads the render, never the call', () => {
         });
         const noRender = openSvgObligation(root, [edit(file), bash('npx vitest run x')]);
         expect(noRender).not.toBeNull();
-        expect(noRender?.reason).toContain('no `ui:render --profile asset` ran after the edit');
+        expect(noRender?.reason).toContain('naming this file ran after the edit');
     });
 
     it('svg-then-html-edit-keeps-the-svg-obligation', () => {
@@ -202,7 +202,49 @@ describe('the turn-end gate reads the render, never the call', () => {
             edit('agents/runtime/state/render/hand-written/manifest.json'),
         ]);
         expect(finding).not.toBeNull();
-        expect(finding?.reason).toContain('discharges nothing');
+        expect(finding?.reason).toContain('discharge nothing');
+    });
+
+    it('a render of SOME OTHER file discharges nothing', () => {
+        // Finding 2 of this change's completion review. `renderObserved` used
+        // to be one boolean for the whole turn, so ANY asset render unlocked
+        // every manifest on disk: a hand-written manifest plus a decoy render
+        // on an unrelated file discharged the obligation — the exact hole the
+        // module header claimed to have closed.
+        const file = writeSvg('assets/logo.svg', SVG_CLEAN);
+        writeSvg('assets/other.svg', SVG_CLEAN.replace('#2563eb', '#16a34a'));
+        writeManifest('logo', {
+            profile: 'asset',
+            verification: 'verified',
+            asset: { digest: digestOf(SVG_CLEAN) },
+        });
+        const decoy = bash('agent-config ui:render assets/other.svg --profile asset');
+        expect(openSvgObligation(root, [edit(file), decoy])).not.toBeNull();
+
+        // The same manifest, with a render that NAMES the file, discharges.
+        expect(
+            openSvgObligation(root, [edit(file), bash('agent-config ui:render assets/logo.svg --profile asset')]),
+        ).toBeNull();
+        // A bare basename after a `cd` counts too, which is the shape a real
+        // turn uses and the reason the match is not path-equality.
+        expect(openSvgObligation(root, [edit(file), bash('agent-config ui:render logo.svg --profile asset')])).toBeNull();
+    });
+
+    it('an absolute path still reaches the planted-fixture exemption', () => {
+        // Finding 1, and it was a live gate risk: the exemption matched a
+        // forward-slashed path as given, so an ABSOLUTE edit to a
+        // deliberately-broken fixture opened an obligation no render could ever
+        // discharge — on a gate declared blocking.
+        const planted = writeSvg('tests/design-artifacts/fixtures/svg-assets/bad.svg', SVG_BROKEN);
+        expect(openSvgObligation(root, [edit(planted)])).toBeNull();
+        expect(openSvgObligation(root, [edit(path.join(root, planted))])).toBeNull();
+
+        // And an absolute path OUTSIDE those prefixes is still an obligation,
+        // so the exemption did not widen into "absolute paths are exempt".
+        const normal = writeSvg('assets/logo.svg', SVG_CLEAN);
+        expect(openSvgObligation(root, [edit(path.join(root, normal)), RENDER])).not.toBeNull();
+        // Reported repo-relative, which is what `SvgObligation.file` promises.
+        expect(openSvgObligation(root, [edit(path.join(root, normal)), RENDER])?.evidence).toBe('assets/logo.svg');
     });
 
     it('deleted-svg-opens-no-obligation', () => {

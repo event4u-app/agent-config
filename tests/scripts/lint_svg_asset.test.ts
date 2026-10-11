@@ -9,9 +9,11 @@ import {
     type Finding,
     preservationReadout,
     safetySeverity,
+    pathExtent,
     scanHostHtml,
     scanSvg,
     maskComments,
+    tokenisePath,
     vectorVerdict,
     parseElements,
 } from '../../src/scripts/lint_svg_asset.js';
@@ -541,5 +543,69 @@ describe('degenerate-gradient-is-found', () => {
         // direction, stated in the rule and pinned here.
         const spelled = grad('<stop offset="0" stop-color="#FFF"/><stop offset="1" stop-color="#ffffff"/>');
         expect(scanSvg(spelled, 'e.svg').map((f) => f.rule)).not.toContain('svg-structure-degenerate-gradient');
+    });
+});
+
+describe("the two readings a completion review found wrong rather than missing", () => {
+    it('an inline graphic keeps its own svg-asset-disable markers', () => {
+        // Finding 16. `scanHostHtml` matched in the MASKED text and then sliced
+        // the body out of it too, so the inner `scanSvg`'s `parseIgnores` read
+        // a graphic whose every comment had been blanked to spaces — every
+        // in-graphic suppression marker with it.
+        const graphic =
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">' +
+            '<!-- svg-asset-disable svg-a11y-no-accessible-name -->' +
+            '<rect width="10" height="10" fill="#000"/></svg>';
+        // The marker works on the standalone file — that is the control, and
+        // without it a green host assertion proves only that the rule is quiet.
+        expect(scanSvg(graphic, 'a.svg').map((f) => f.rule)).not.toContain('svg-a11y-no-accessible-name');
+        const unmarked = graphic.replace(/<!--[\s\S]*?-->/, '');
+        expect(scanSvg(unmarked, 'a.svg').map((f) => f.rule)).toContain('svg-a11y-no-accessible-name');
+
+        // And it works the same way inside a host document.
+        const host = `<!doctype html>\n<html><body>\n${graphic}\n</body></html>\n`;
+        expect(scanHostHtml(host, 'a.html').map((f) => f.rule)).not.toContain('svg-a11y-no-accessible-name');
+        const hostUnmarked = `<!doctype html>\n<html><body>\n${unmarked}\n</body></html>\n`;
+        expect(scanHostHtml(hostUnmarked, 'a.html').map((f) => f.rule)).toContain('svg-a11y-no-accessible-name');
+
+        // Said plainly, because a green assertion that would also be green on
+        // the defect proves nothing: the four lines above pass EITHER WAY. The
+        // function re-filters on host-absolute lines at the end, so the inert
+        // inner pass is invisible to a short host — which is exactly why the
+        // defect survived review of the output and had to be found by reading
+        // the slice. The case BELOW is the one that separates them.
+        //
+        // `svg-asset-disable <rule>` without a line suffix suppresses the whole
+        // FILE, and `parseIgnores` spells "whole file" as lines 1..10_000. Past
+        // that depth the outer re-filter stops covering for the inner pass: the
+        // finding's absolute line is outside the set, while its graphic-local
+        // line is inside it. So on a deep host the suppression works only if
+        // the graphic reached `scanSvg` with its own comments intact.
+        const deep = `${'\n'.repeat(10_050)}${graphic}\n`;
+        expect(scanHostHtml(deep, 'a.html').map((f) => f.rule)).not.toContain('svg-a11y-no-accessible-name');
+        const deepUnmarked = `${'\n'.repeat(10_050)}${unmarked}\n`;
+        expect(scanHostHtml(deepUnmarked, 'a.html').map((f) => f.rule)).toContain('svg-a11y-no-accessible-name');
+
+        // The masking itself is unchanged: a graphic that lives INSIDE an HTML
+        // comment is still not on the page and is still not scanned.
+        const commented = `<!doctype html>\n<html><body>\n<!-- ${unmarked} -->\n</body></html>\n`;
+        expect(scanHostHtml(commented, 'a.html')).toEqual([]);
+    });
+
+    it('path tokens read compact arc flags and a leading plus', () => {
+        // Finding 17. `a 5 5 0 0130 30` is legal: the two flags are single
+        // digits and may run together with what follows. The old number-or-
+        // letter alternation read `0130` as ONE number, shifted every argument
+        // after it, and returned a WRONG box rather than null.
+        expect(tokenisePath('M 0 0 a 5 5 0 0130 30')).toEqual(['M', '0', '0', 'a', '5', '5', '0', '0', '1', '30', '30']);
+        // The spaced spelling of the same path must tokenise identically, or
+        // the two forms would disagree about the same geometry.
+        expect(tokenisePath('M 0 0 a 5 5 0 0 1 30 30')).toEqual(tokenisePath('M 0 0 a 5 5 0 0130 30'));
+        const compact = pathExtent('M 0 0 a 5 5 0 0130 30');
+        expect(compact).not.toBeNull();
+        expect(compact).toEqual(pathExtent('M 0 0 a 5 5 0 0 1 30 30'));
+        // A leading `+` is legal and was dropped by the same alternation.
+        expect(tokenisePath('M +10 +20')).toEqual(['M', '+10', '+20']);
+        expect(pathExtent('M +10 +20 L +30 +40')).toEqual(pathExtent('M 10 20 L 30 40'));
     });
 });

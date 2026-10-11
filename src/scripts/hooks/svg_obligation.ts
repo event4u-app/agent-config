@@ -31,11 +31,20 @@
  *         that touches one would be refused on a blocking gate. By PATH, not by
  *         an inline ignore marker — a marker would hide the planted error from
  *         the very test that has to find it.
- *   (iii) A manifest counts only if THIS turn's render wrote it. Otherwise an
- *         agent could write a manifest by hand, digest included, and discharge
- *         its own obligation. The caller supplies `renderObserved`, which the
- *         record path proves from an invocation and the transcript path from a
- *         matching `ui:render --profile asset` Bash call after the edit.
+ *   (iii) A manifest counts only where THIS turn ran a render NAMING THAT
+ *         FILE after the edit. Otherwise an agent could write a manifest by
+ *         hand, digest included, and discharge its own obligation.
+ *
+ *         THE RESIDUAL, stated rather than implied. What is enforced is that a
+ *         render naming the file ran; what is not enforced is that the manifest
+ *         on disk is the one that render produced. A manifest left by an
+ *         EARLIER turn whose digest still matches therefore discharges — and
+ *         that is defensible, because a matching digest means the bytes have
+ *         not moved since it was taken, which is the whole claim a digest
+ *         makes. It is recorded here because the first version of this
+ *         paragraph promised more than the code did (finding 2 of this
+ *         change's own completion review), and a gate whose documented
+ *         assurance outruns its implementation is quoted as written.
  *   (iv)  A deleted `.svg` opens no obligation — it has no current digest, so
  *         there is nothing a render could be bound to.
  *
@@ -105,10 +114,30 @@ interface AssetManifestish {
     static?: { errors?: unknown; digest?: unknown } | undefined;
 }
 
-const rel = (p: string): string => p.split(path.sep).join('/');
+/**
+ * Repo-relative, forward slashes — whatever the host handed us.
+ *
+ * Finding 1 of this change's completion review, and it was a live gate risk
+ * rather than a tidiness point: this used to normalise separators only, so an
+ * ABSOLUTE tool-call path never started with `tests/design-artifacts/…` and the
+ * planted-fixture exemption silently missed. A blocking gate would then have
+ * refused every turn that edits one of the ~25 deliberately-broken fixtures
+ * this very change adds — and no test caught it, because every case passed a
+ * relative path. The function four lines down already treated an absolute path
+ * as expected input, which is the contradiction inside one file that made the
+ * finding decidable.
+ */
+const rel = (root: string, p: string): string => {
+    const slashed = p.split(path.sep).join('/');
+    if (!path.isAbsolute(p)) return slashed.replace(/^\.\//, '');
+    const inside = path.relative(root, p).split(path.sep).join('/');
+    // `path.relative` escaping the root with `..` means the path is NOT in this
+    // workspace; keep it as given rather than inventing a relation to it.
+    return inside === '' || inside.startsWith('../') ? slashed : inside;
+};
 
-export function isPlantedFixture(relPath: string): boolean {
-    const norm = rel(relPath).replace(/^\.\//, '');
+export function isPlantedFixture(relPath: string, root = ''): boolean {
+    const norm = rel(root, relPath);
     return PLANTED_PREFIXES.some((prefix) => norm.startsWith(prefix));
 }
 
@@ -161,11 +190,18 @@ export interface SvgObligationInputs {
     /** Repo-relative paths the turn EDITED, in order, `.svg` and otherwise. */
     editedPaths: readonly string[];
     /**
-     * Whether this turn is known to have run an asset render AFTER its last
-     * edit. Precision (iii): a manifest written by hand discharges nothing, and
-     * this detector cannot tell one from a rendered one by reading it.
+     * The `ui:render --profile asset` command lines this turn ran AFTER its
+     * last `.svg` edit, verbatim.
+     *
+     * Precision (iii), and it is now PER FILE. It used to be a single boolean:
+     * any asset render anywhere unlocked every manifest on disk, so a
+     * hand-written manifest plus a decoy render on an unrelated file
+     * discharged the obligation — which is exactly the hole the header claims
+     * to have closed. Finding 2 of this change's own completion review.
+     *
+     * A command must NAME the file it discharges.
      */
-    renderObserved: boolean;
+    renderedTargets: readonly string[];
 }
 
 /**
@@ -180,11 +216,15 @@ export function readSvgObligations(root: string, inputs: SvgObligationInputs): S
 
     for (const raw of inputs.editedPaths) {
         if (!/\.svg$/i.test(raw)) continue;
-        const relPath = rel(raw);
+        // Repo-relative FIRST, so `seen`, the planted exemption and the
+        // reported `file` all speak the same dialect — the doc on
+        // `SvgObligation.file` promises repo-relative and used to be false for
+        // an absolute tool call.
+        const relPath = rel(root, raw);
         if (seen.has(relPath)) continue;
         seen.add(relPath);
         // (ii) planted fixtures carry errors on purpose.
-        if (isPlantedFixture(relPath)) continue;
+        if (isPlantedFixture(relPath, root)) continue;
 
         // (iv) a deleted file has no current digest, so nothing could be bound
         // to it and no render could ever discharge it.
@@ -200,12 +240,13 @@ export function readSvgObligations(root: string, inputs: SvgObligationInputs): S
         // (iii) The manifests are only consulted once a render was observed.
         // Reading them first and then discarding the verdict would make the
         // ordering look like a performance detail rather than the rule.
-        if (!inputs.renderObserved) {
+        if (!renderNames(inputs.renderedTargets, relPath)) {
             open.push({
                 file: relPath,
                 reason:
-                    'no `ui:render --profile asset` ran after the edit, so no manifest on disk can describe ' +
-                    'these bytes — a manifest written by any other route discharges nothing',
+                    'no `ui:render --profile asset` naming this file ran after the edit, so no manifest on ' +
+                    'disk can be attributed to it — a manifest written by any other route, and a render of ' +
+                    'some other file, both discharge nothing',
             });
             continue;
         }
@@ -232,6 +273,22 @@ export function readSvgObligations(root: string, inputs: SvgObligationInputs): S
  * makes the command a precondition for reading a manifest, while matching
  * there would make it a discharge on its own — which is the hole.
  */
+export function renderNames(commands: readonly string[], relPath: string): boolean {
+    const base = relPath.split('/').pop() ?? relPath;
+    return commands.some((c) => {
+        const slashed = c.split(path.sep).join('/');
+        // The path as written, or its basename — a caller may `cd` first, and a
+        // basename collision inside one turn is a narrower hole than the
+        // any-render-unlocks-everything it replaces.
+        return slashed.includes(relPath) || new RegExp(`(^|[\\s/'"])${escapeRe(base)}(\\s|$|['"])`).test(slashed);
+    });
+}
+
+/** Escape a path component for use inside a RegExp. */
+function escapeRe(s: string): string {
+    return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export function isAssetRenderCommand(command: string): boolean {
     return /\bui:render\b/.test(command) && /--profile[= ]\s*asset\b/.test(command);
 }
@@ -273,18 +330,17 @@ export function openSvgObligation(
     // Precision (iii). The render has to come AFTER the edit it is supposed to
     // describe, on both evidence paths — `toolCalls` is assembled for both, so
     // one rule covers them rather than two that can disagree.
-    let renderObserved = false;
+    const renderedTargets: string[] = [];
     for (let i = lastSvgEdit + 1; i < toolCalls.length; i += 1) {
         const c = toolCalls[i]!;
         if (c.name === 'Bash' && c.command !== undefined && isAssetRenderCommand(c.command)) {
-            renderObserved = true;
-            break;
+            renderedTargets.push(c.command);
         }
     }
 
     let reading: SvgObligationReading;
     try {
-        reading = readSvgObligations(workspaceRoot, { editedPaths, renderObserved });
+        reading = readSvgObligations(workspaceRoot, { editedPaths, renderedTargets });
     } catch {
         // A gate that crashed on its own instrument is a new failure mode on a
         // path meant to be inert. An unreadable render directory is no finding.

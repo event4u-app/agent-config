@@ -183,6 +183,15 @@ export interface ReducedMotionReading {
      * own duration rather than to a guess.
      */
     delivered_animates?: boolean | null;
+    /**
+     * Delivered `.svg` references this host names that could not be read.
+     *
+     * Finding 13: absent evidence, reported as absent. They used to be skipped
+     * into the page-duration fallback, which is 0 for a spinner and a static
+     * logo alike — so an animating file behind an unreadable path produced no
+     * warning.
+     */
+    delivered_unreadable?: string[];
 }
 
 /**
@@ -245,6 +254,19 @@ export const HOLE_ATTRIBUTE = 'data-hole';
  * it does not move with the render size.
  */
 export const BLEED_SHARE_THRESHOLD = 0.002;
+
+/**
+ * Above this share of the registered source's painted pixels lying OUTSIDE the
+ * subject, `geometry/foreign-content-in-frame` fires.
+ *
+ * Finding 14 of this change's completion review: it was an inline `0.02` beside
+ * two named, documented, pre-registered thresholds. 2 % is the band an
+ * anti-aliased outline can occupy on a small mark without anything foreign
+ * being in the frame — it is a NOISE FLOOR, not a measured quality line, and
+ * saying so is the difference between a number a reader can argue with and one
+ * they cannot find.
+ */
+export const FOREIGN_CONTENT_SHARE_THRESHOLD = 0.02;
 
 /** Below this contrast ratio against its ground, a painted pixel is hard to see. */
 export const MIN_CONTRAST_RATIO = 3;

@@ -60,6 +60,7 @@ import {
     FALLBACK_BACKGROUNDS,
     ALLOWED_SCHEMES,
     BLEED_SHARE_THRESHOLD,
+    FOREIGN_CONTENT_SHARE_THRESHOLD,
     HOLE_ATTRIBUTE,
     HOST_BASENAME,
     ICON_SIZES,
@@ -345,6 +346,34 @@ async function captureWithOneRetry(page: Page, shot: string): Promise<void> {
     }
 }
 
+/** Does this element declare itself less than fully opaque? */
+function isDeclaredTranslucent(el: SvgElement): boolean {
+    const style = el.attrs['style'] ?? '';
+    const read = (key: string): number | null => {
+        const fromStyle = new RegExp(`(?:^|;)\\s*${key}\\s*:\\s*([^;]+)`).exec(style)?.[1];
+        const raw = (fromStyle ?? el.attrs[key] ?? '').trim();
+        if (raw === '') return null;
+        const v = Number(raw);
+        return Number.isFinite(v) ? v : null;
+    };
+    for (const key of ['opacity', 'fill-opacity']) {
+        const v = read(key);
+        if (v !== null && v < 0.99) return true;
+    }
+    return false;
+}
+
+/** Boxes, in user units, of every element matching `pick`. */
+function extentsOf(elements: readonly SvgElement[], pick: (el: SvgElement) => boolean): Box[] {
+    const out: Box[] = [];
+    for (const el of elements) {
+        if (el.closing || !pick(el)) continue;
+        const b = elementExtent(el);
+        if (b) out.push({ x: b.minX, y: b.minY, w: b.maxX - b.minX, h: b.maxY - b.minY });
+    }
+    return out;
+}
+
 /** A reading pass over one asset. The caller owns the browser's lifetime. */
 export async function runAssetRender(browser: Browser, opts: AssetRenderOptions): Promise<AssetRenderResult> {
     const bytes = fs.readFileSync(opts.file);
@@ -552,11 +581,9 @@ export async function runAssetRender(browser: Browser, opts: AssetRenderOptions)
                 cssWidth: biggest.width,
                 blocked,
                 backgrounds,
-                holeBoxes: elements
-                    .filter((el) => !el.closing && (el.attrs[HOLE_ATTRIBUTE] ?? '') !== '')
-                    .map((el) => elementExtent(el))
-                    .filter((b): b is NonNullable<typeof b> => b !== null)
-                    .map((b) => ({ x: b.minX, y: b.minY, w: b.maxX - b.minX, h: b.maxY - b.minY })),
+                holeBoxes: extentsOf(elements, (el) => (el.attrs[HOLE_ATTRIBUTE] ?? '') !== ''),
+                // Finding 7: a shape the author made translucent is not a seam.
+                softBoxes: extentsOf(elements, isDeclaredTranslucent),
                 viewBox: vb,
             });
         }
@@ -843,7 +870,25 @@ function readAssetInPage(): RawAssetReading {
     // branch in the loop above, because it needs every element to exist first.
     // `isPointInFill` is what the renderer itself answers with, so a near-white
     // shape beside a ring is no longer "inside" it for having a smaller box.
-    for (const inner of elements) {
+    // Finding 9: the OUTER loop is restricted to the only consumer. The pass
+    // used to call `isPointInFill` for every ordered pair of geometry-bearing
+    // elements and `applyGeometry` then read `containedBy` for opaque
+    // near-white elements alone — on the 195 KB, 355-gradient trace this change
+    // cites as its motivation that is 10^5-10^6 cross-process calls whose
+    // results are discarded. The reading is identical; only the pairs nobody
+    // asks about are gone.
+    //
+    // The predicate is INLINE rather than imported: this body runs in the page
+    // and cannot close over module scope — the same trap finding 4 names two
+    // files away. The channel floor is the one constant it needs and it is
+    // spelled here with the reason, not silently duplicated.
+    const NEAR_WHITE = 237; // uiRenderAssetTypes.NEAR_WHITE_CHANNEL
+    const candidates = elements.filter((el) => {
+        if (el.geom === null || !el.opaque) return false;
+        const m = /rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/.exec(el.fill);
+        return m !== null && [m[1], m[2], m[3]].every((c) => Number(c) >= NEAR_WHITE);
+    });
+    for (const inner of candidates) {
         if (!inner.geom) continue;
         const cx = inner.geom.x + inner.geom.w / 2;
         const cy = inner.geom.y + inner.geom.h / 2;
@@ -1148,7 +1193,7 @@ function deriveFindings(r: AssetReading): AssetFinding[] {
                     'reading cannot see the cut. Widen the crop and re-register before trusting the numbers',
             });
         }
-        if (raster.foreign_content_share > 0.02) {
+        if (raster.foreign_content_share > FOREIGN_CONTENT_SHARE_THRESHOLD) {
             out.push({
                 rule: 'geometry/foreign-content-in-frame',
                 severity: 'warning',
@@ -1217,12 +1262,26 @@ function deriveFindings(r: AssetReading): AssetFinding[] {
     // appears on every file is a warning an operator learns to scroll past,
     // which is Risk 1 of the parent roadmap arriving by a different door.
     const delivered = r.reduced_motion.delivered_animates;
-    const moves = delivered === null || delivered === undefined ? r.animation_duration_s > 0 : delivered;
+    const unread = r.reduced_motion.delivered_unreadable ?? [];
+    // Finding 13. An unreadable delivered file is UNKNOWN, and unknown is
+    // reported rather than passed: the page-duration fallback reads 0 for a
+    // spinner and a static logo alike, so falling back to it here would be the
+    // absent-is-not-clean failure the rest of this change argues against.
+    const moves =
+        unread.length > 0
+            ? true
+            : delivered === null || delivered === undefined
+              ? r.animation_duration_s > 0
+              : delivered;
     if (r.reduced_motion.host_picture_route === false && moves) {
         out.push({
             rule: 'motion/img-delivery-no-static-route',
             severity: 'warning',
             detail:
+                (unread.length > 0
+                    ? `${unread.join(', ')} could not be read, so whether it animates is unknown — reported ` +
+                      'rather than passed. '
+                    : '') +
                 'an animated SVG is delivered through <img> or a CSS background and the host carries no ' +
                 '<picture><source media="(prefers-reduced-motion: reduce)"> route — the emulated preference ' +
                 'does not reach an image document (R5), so this is the only place the route can live',
@@ -1308,6 +1367,7 @@ async function readReducedMotion(
             // page cannot answer it — its own duration is 0 for a spinner and
             // for a static logo alike.
             let animates: boolean | null = null;
+            const unreadable: string[] = [];
             for (const ref of seen.refs) {
                 if (/^(?:https?:|data:)/i.test(ref)) continue;
                 const abs = path.resolve(spec.hostDir, ref.replace(/^file:\/\//, ''));
@@ -1316,6 +1376,13 @@ async function readReducedMotion(
                 try {
                     body = fs.readFileSync(abs, 'utf8');
                 } catch {
+                    // Finding 13: an `.svg` this host DELIVERS that could not
+                    // be read is absent evidence, and absent is not clean. It
+                    // used to `continue` into the page-duration fallback, which
+                    // that duration's own doc calls useless for an image
+                    // delivery — so an animating file behind an unreadable path
+                    // produced no warning at all.
+                    unreadable.push(ref);
                     continue;
                 }
                 const moves = hasSmilMarkup(body) || hasCssAnimation(body);
@@ -1327,6 +1394,7 @@ async function readReducedMotion(
                 reason: R5,
                 host_picture_route: seen.route,
                 delivered_animates: animates,
+                ...(unreadable.length > 0 ? { delivered_unreadable: unreadable } : {}),
             };
         }
         if (spec.duration <= 0) {

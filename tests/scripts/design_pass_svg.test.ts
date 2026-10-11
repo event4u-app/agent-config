@@ -5,6 +5,7 @@ import * as path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+    isPassSurface,
     isSvgAsset,
     isUiSurface,
     svgFindings,
@@ -33,9 +34,17 @@ import {
  * E10, Risk 4; carried as D3 in the follow-up roadmap). The routing reaches
  * the asset through a LOCAL disjunct in `design_pass_hook` instead.
  *
- * WHAT CHANGED. `isUiSurface` now admits an `.svg` anywhere, so the pass
- * reaches `assets/logo.svg` as well as `components/logo.svg`, and the rules it
- * meets there come from a chunk loaded only for that path.
+ * WHAT CHANGED. A SECOND predicate, `isPassSurface`, admits an `.svg`
+ * anywhere, so the pass reaches `assets/logo.svg` as well as
+ * `components/logo.svg`, and the rules it meets there come from a chunk loaded
+ * only for that path.
+ *
+ * Finding 6 of this change's completion review: the disjunct was first added
+ * to `isUiSurface` itself, which is also the predicate every UI-only reading
+ * downstream asks — so an `.svg` in `assets/` started reading as a UI surface
+ * for those too. The entry gate and the UI question are now two names, and
+ * this file pins BOTH, because a widened predicate is invisible to a test that
+ * only ever asks the widened one.
  */
 describe('step 1.4, closed — the routing, and the predicate it must not widen', () => {
     it('UI_EXTENSIONS does not carry svg, in either direction', () => {
@@ -56,11 +65,20 @@ describe('step 1.4, closed — the routing, and the predicate it must not widen'
     it('svg-write-gets-svg-rules-and-no-new-nudge', () => {
         // The pass reaches an `.svg` inside AND outside a UI tree — the gap the
         // withdrawn step left open. `public/` is the case decision E10 names.
-        expect(isUiSurface('assets/logo.svg')).toBe(true);
-        expect(isUiSurface('public/logo.svg')).toBe(true);
-        expect(isUiSurface('components/logo.svg')).toBe(true);
+        expect(isPassSurface('assets/logo.svg')).toBe(true);
+        expect(isPassSurface('public/logo.svg')).toBe(true);
+        expect(isPassSurface('components/logo.svg')).toBe(true);
         expect(isSvgAsset('assets/logo.svg')).toBe(true);
         expect(isSvgAsset('assets/logo.svgx')).toBe(false);
+
+        // And `isUiSurface` is NOT what was widened: an `.svg` outside a UI
+        // tree is not a UI surface, which is what every downstream UI-only
+        // reading asks. Pinned on the false side, because that is the side a
+        // re-widening would break.
+        expect(isUiSurface('assets/logo.svg')).toBe(false);
+        expect(isUiSurface('public/logo.svg')).toBe(false);
+        expect(isUiSurface('components/logo.svg')).toBe(true);
+        expect(isUiSurface('components/Logo.tsx')).toBe(true);
 
         // And the nudge predicate is untouched for exactly those paths.
         const write = (file: string) => ({ isWrite: true, file }) as Parameters<typeof isUiWrite>[0];
