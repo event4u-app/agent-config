@@ -229,7 +229,7 @@ renderer.
       flagging it there would break the linter's zero-false-positive header
       (`lint_design_quality.ts:12`).
       verify: `npx vitest run tests/scripts/lint_design_quality_dq4_smil.test.ts --reporter=verbose` -> /✓.*inline-smil-without-route-is-reported/ <!-- ref-ignore -->
-- [x] **1.4 The design pass reads an `.svg` with the SVG rules, and nothing
+- [~] **1.4 The design pass reads an `.svg` with the SVG rules, and nothing
       else changes.** `design_pass_hook` already fires on an `.svg` inside a UI
       tree (`design_pass_hook.ts:132`) and then scans it with
       `lint_design_slop.scanFile` (`:520`), which has no SVG rule (D9). Route
@@ -242,6 +242,21 @@ renderer.
       `components/logo.svg`; `isUiWrite` stays `false` for `assets/logo.svg`
       and `true` for `components/logo.svg`, as today. No new hook concern.
       verify: `npx vitest run tests/scripts/design_pass_svg.test.ts --reporter=verbose` -> /✓.*svg-write-gets-svg-rules-and-no-new-nudge/ <!-- ref-ignore -->
+      **DEFERRED 2026-10-11 — carried, not dropped.** Implemented, measured and
+      withdrawn in the same change. The import adds 30,924 B to
+      `dist/hooks/dispatch.js`, the one bundle every hook event loads, taking it
+      12,931 B past its ceiling; a proposed raise to 1,575,000 was refused 2/2 by
+      an independent two-provider council (2026-10-11, two rounds, peer review,
+      blind chairman, subscription transport, $0.0000): authority
+      `confirmed-non-expanding`, engineering refused. Both seats found the same
+      error in the proposal — 12,931 is the ceiling overage, the cost is 30,924 —
+      and both named the same sequencing: extract the rules, settle the loading
+      strategy with a prototype and runtime readings, ratify any budget change on
+      corrected numbers, enable the routing last. Carried into
+      `road-to-svg-rules-in-the-dispatch-path`, created in the same change, with
+      the blocker and the verdict. The extraction (`_lib/svg_rules.ts`) landed and
+      is not reopened; `tests/scripts/design_pass_svg.test.ts` pins the predicate
+      this step must not widen, so a later attempt cannot take the cheap route.
 - [x] **1.5 One safety profile per delivery mode.** The safety family reads
       the declared delivery mode and grades by what can execute there: inline
       DOM (scripts, `on*`, `javascript:` hrefs and `foreignObject` run in the
@@ -566,10 +581,12 @@ The two plans argue in their own ids; each lands here, in
 - [x] AC-4 — Every `engine` row is reported by the asset profile where
       Playwright resolves; without it the manifest reads `unverified` and no
       layer reports a pass.
-- [x] AC-5 — An inline SMIL animation with no reduced-motion route, or with
+- [~] AC-5 — An inline SMIL animation with no reduced-motion route, or with
       only a CSS route, is reported by DQ4; an `.svg` write receives
       `lint_svg_asset` findings from the design pass, and `isUiWrite` is
-      unchanged for `.svg` paths.
+      unchanged for `.svg` paths. **Partially met, and carried with 1.4:** the
+      DQ4 half is done and tested; the design-pass half is deferred on the
+      council verdict recorded at 1.4. `isUiWrite` is unchanged and pinned.
 - [x] AC-6 — "SVG icon the set lacks" and "simple geometric logo" requests
       route to an asset-producing lane in the trigger corpus; the dry-run
       provider is reached only for illustrative vector art and says so.

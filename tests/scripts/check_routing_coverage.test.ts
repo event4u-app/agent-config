@@ -179,7 +179,12 @@ describe('the live tree', () => {
         expect(s.rules - s.skills).toBeGreaterThan(0.4);
     });
 
-    it('measures 107 routed rules and 299 routed skills', () => {
+    it('measures 107 routed rules and 300 routed skills', () => {
+        // 299 -> 300 skills on 2026-10-11: `svg-authoring`. The first skill-side
+        // DENOMINATOR move this pin has recorded — the entries below are all
+        // rules-side. It shipped its own corpus in the same change, so the ratio
+        // rose across the increase rather than falling; the seed entry in
+        // src/config/routing-coverage-seed.json carries that reasoning.
         // 106 -> 107 on 2026-10-06: `neighbour-precedence`
         // (road-to-neighbours-that-pull-their-weight 2.1).
         // 105 -> 106 on 2026-09-13: `test-first`
@@ -189,7 +194,7 @@ describe('the live tree', () => {
         // move, while the unit count changing means the estate changed, which is
         // a thing a reader should be told about rather than have absorbed.
         expect(measureRules(REPO).units).toBe(107);
-        expect(measureSkills(REPO).units).toBe(299);
+        expect(measureSkills(REPO).units).toBe(300);
     });
 });
 

@@ -60,7 +60,7 @@ prevent.
 ## The set hash
 
 ```
-SET-SHA256  88b547804787ae73feb971e69bf2232baee942ff04e07387fc6d93895c15fd12
+SET-SHA256  940945fe350f763e25483e4f8b78d03892c1bbfa0b637931abc430efb94c7b1a
 ```
 
 Computed over the lines `<skill> <sha256-of-file> <partition>\n` for **every**
@@ -403,6 +403,22 @@ open and which this file does not settle.
 > growth moves it every time. The pin test is what caught it.
 
 
+> **+1 and one EDIT on 2026-10-11** (`feat/svg-with-a-witness-20261011`).
+> `svg-authoring` landed as a new skill and shipped its own trigger corpus;
+> `sha256('svg-authoring')[0:2]` is 0x77 = 119, above the ceiling of 51, so it
+> is **train**. The same branch also EDITED an existing train corpus,
+> `image-provider-routing` (0x3a = 58), which split the vector job shapes
+> between a provider and hand-authoring — a row whose hash moves while the file
+> COUNT does not, which is the case § Re-pin 2026-10-01 describes and the one a
+> reader counting files would miss. No holdout row moves in either direction:
+> the sealed set is the same 27, every sealed hash is byte-identical, and the
+> ordering claim is untouched. `SET-SHA256` moves because it is computed over
+> ALL rows — `88b54780…` -> `940945fe…`. Both train-side published measurements
+> are re-taken in the same change: delta-recall moved 2.360 -> 3.383 pp (still
+> below the 5.0 pp bar) and delta-false-activation moved 6.751 -> 7.495 pp
+> (still above the 2.0 pp guard). The verdict is unchanged in kind — `harmful`,
+> on the same false-activation guard it already failed. No bar was edited.
+
 | Skill | sha256 of `evals/triggers.json` |
 |---|---|
 | `adr-create` | `18995bba7bbdc905296f545a25c90cd94fa306909d78af8fc79e3d5621f313f6` |
@@ -456,7 +472,7 @@ open and which this file does not settle.
 | `image-analyser` | `47735add726cdb3b86e8a08c66fca17a824acc63ac4a788fe29083b61f5a8ebb` |
 | `image-creator` | `0c4b5598b10ae0f53ccbef2a6e0c863f353b849e152dcf51a197652266954292` |
 | `image-editing` | `2b3fe1109fb8be12a9e42bcfb9ff587f07a37ad3fb926dc538b335f5c8fbf3b8` |
-| `image-provider-routing` | `b55853630843300a0e6c8911b5a70069158c28c701af8060646012411945083c` |
+| `image-provider-routing` | `3600d651bc128a9f8c5c1edc16a4c206d95ac19511b60e4e0f687a5c08b29f78` |
 | `incident-commander` | `7e9371f328c7b1751c083688f77a34af2db2b901befc78eed7c8400ae5b2019e` |
 | `jira-integration` | `fe9ba2d101335b5446f7efb6fcc22e8db93edf21be00e4cd23774789a01ec28d` |
 | `js-library-packaging` | `8b64d0222ee1228950056004a752b4dc168f8f571e037ec38791258ec305bacd` |
@@ -492,6 +508,7 @@ open and which this file does not settle.
 | `spreadsheet-authoring` | `959466aba0e7f34aae0d8eb69ee427d94049627d905410b322045ac6be0a1599` |
 | `storybook-workshop` | `3aff4c3fddd06e0e265ca4afbb02cdbce16b000dd2d3fd6405504d015a1efd27` |
 | `supply-chain-intake` | `e61b2fcb6409cf0817ea8527a1fda3b1cdabb35e28264146a0d449991e9fe87c` |
+| `svg-authoring` | `cad77dee5064d8529a5c236f876c1757a624e6d46822c06b7cf3643885f553a1` |
 | `test-case-discovery` | `563ff838264c39c9e132e1e18206c7b0d52639bd42203f790109f9ec0df2603d` |
 | `test-driven-development` | `9a1ec696c72915adde002efffdc6a887c967b63f5330c616126d07617be7aa0b` |
 | `typography-system` | `ab3dbde9a42077d682115a1707d6fa4686e5d3155eef0998f1e240b0b86bb73a` |

@@ -112,7 +112,7 @@ describe('the token dimension is independent of the count', () => {
 });
 
 describe('the live corpus', () => {
-    it('reads 299 maintained skills and an exact token total', () => {
+    it('reads 300 maintained skills and an exact token total', () => {
         // Pinned so a later reader can tell movement from a re-derivation. If
         // this fails after a legitimate change, the gate has already said so.
         //
@@ -148,9 +148,20 @@ describe('the live corpus', () => {
         // raised. Sixteen tokens buys ten router edges; each description still
         // sits under the 200-character cap, and the 32-query trigger corpus
         // scores zero regressions after the compression.
+        //
+        // 299 -> 300 and 11460 -> 11456 on 2026-10-11: `svg-authoring` landed
+        // as the design family's vector member. The count moves by one, and the
+        // token dimension moves DOWN by four although a description was added:
+        // the five nearest design-family descriptions (`canvas-design`,
+        // `iconography`, `image-provider-routing`, `logo-generation`,
+        // `wireframe`) were compressed in the same branch to pay for the new
+        // one, so the corpus carries an extra routed skill for less standing
+        // payload than before. A re-derivation of both pins after a decided
+        // change, not a loosened bar — the compression is in the ceiling's
+        // direction and the new description sits under the 200-character cap.
         const e = measureSkillEstate(REPO);
-        expect(e.skill_count).toBe(299);
-        expect(e.skill_description_tokens).toBe(11460);
+        expect(e.skill_count).toBe(300);
+        expect(e.skill_description_tokens).toBe(11456);
         expect(e.deprecated_count).toBe(0);
     });
 
