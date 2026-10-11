@@ -257,6 +257,13 @@ describe('a glob over an acceptable name is not a creatable literal', () => {
         expect(blocks('agents/tmp/inbox-2026-09-[a-z]/x.md')).toBe(false);
     });
 
+    it('allows a glob over the bare prefix of an opaque family', () => {
+        expect(blocks('agents/tmp/round-*/prompt.md')).toBe(false);
+        expect(blocks('agents/tmp/set-*/x.md')).toBe(false);
+        expect(blocks('agents/tmp/inbox-2026-*/x.md')).toBe(false);
+        expect(blocks('agents/tmp/rounder-*/x.md')).toBe(true);
+    });
+
     it('refuses a glob whose literal part still speaks', () => {
         expect(blocks('agents/tmp/a-speaking-name-*/x.md')).toBe(true);
         expect(blocks('agents/tmp/my-source-[a-z]/x.md')).toBe(true);

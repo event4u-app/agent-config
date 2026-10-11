@@ -151,8 +151,14 @@ function isGlobOverAcceptableInboxDir(name: string): boolean {
     }
     const literal = name.replace(/[*?]|\[[^\]]*\]/g, '');
     const trimmed = literal.replace(/-+$/, '');
-    return trimmed !== '' && isAcceptableInboxDir(trimmed);
+    return trimmed !== '' && (isAcceptableInboxDir(trimmed) || OPAQUE_FAMILY_PREFIX_RE.test(trimmed));
 }
+
+/**
+ * The fixed head of an opaque identifier family. `round-*` lists hex rounds; as
+ * a literal it would create `round-*`, which carries no source either.
+ */
+const OPAQUE_FAMILY_PREFIX_RE = /^(?:inbox|round|set|src-set|source-set)(?:-\d{4}(?:-\d{2})?)?$/i;
 
 /**
  * The paths a redirect inside one segment would create.
